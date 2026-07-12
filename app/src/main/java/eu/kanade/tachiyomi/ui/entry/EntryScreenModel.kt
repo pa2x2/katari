@@ -99,6 +99,7 @@ import tachiyomi.domain.entry.interactor.SetEntryCategories
 import tachiyomi.domain.entry.interactor.SetEntryChapterFlags
 import tachiyomi.domain.entry.interactor.SetEntryFavorite
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
+import tachiyomi.domain.entry.interactor.UpdateEntry
 import tachiyomi.domain.entry.interactor.UpdateMergedEntry
 import tachiyomi.domain.entry.model.DuplicateEntryCandidate
 import tachiyomi.domain.entry.model.Entry
@@ -147,6 +148,7 @@ class EntryScreenModel(
     private val setEntryChapterFlags: SetEntryChapterFlags = Injekt.get(),
     private val setEntryFavorite: SetEntryFavorite = Injekt.get(),
     private val setEntryCategories: SetEntryCategories = Injekt.get(),
+    private val updateEntry: UpdateEntry = Injekt.get(),
     private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
     private val entryRepository: EntryRepository = Injekt.get(),
     private val categoryRepository: CategoryRepository = Injekt.get(),
@@ -719,7 +721,7 @@ class EntryScreenModel(
                 if (setEntryFavorite.await(entry.id, false)) {
                     // Remove covers and update last modified in db
                     if (entry.removeCovers() != entry) {
-                        entryRepository.update(entry.copy(coverLastModified = Instant.now().toEpochMilli()))
+                        updateEntry.awaitUpdateCoverLastModified(entry.id)
                     }
                     withUIContext { onRemoved() }
                 }
@@ -1943,7 +1945,7 @@ class EntryScreenModel(
             val entry = getEntryOrNull(memberEntryId) ?: return@forEach
             if (setEntryFavorite.await(entry.id, false)) {
                 if (entry.removeCovers() != entry) {
-                    entryRepository.update(entry.copy(coverLastModified = Instant.now().toEpochMilli()))
+                    updateEntry.awaitUpdateCoverLastModified(entry.id)
                 }
             }
             entryDownloadInteraction.deleteEntryDownloads(entry)
@@ -1957,7 +1959,7 @@ class EntryScreenModel(
                 updateMergedEntry.awaitDeleteGroup(state.mergeTargetId)
                 entries.forEach { entry ->
                     if (setEntryFavorite.await(entry.id, false) && entry.removeCovers() != entry) {
-                        entryRepository.update(entry.copy(coverLastModified = Instant.now().toEpochMilli()))
+                        updateEntry.awaitUpdateCoverLastModified(entry.id)
                     }
                 }
             }
