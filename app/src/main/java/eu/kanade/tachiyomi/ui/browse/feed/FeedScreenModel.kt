@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicLong
 
 abstract class FeedScreenModel<T : Any>(
     private val feedId: String,
@@ -30,6 +31,7 @@ abstract class FeedScreenModel<T : Any>(
     private var currentSavedAnchor = browseFeedService.anchorSnapshot(feedId).resolvedAnchor()
     private var persistedAnchor = currentSavedAnchor
     private var resolvedFilters: EntryFilterList? = null
+    private val refreshGeneration = AtomicLong()
 
     init {
         screenModelScope.launch(workerDispatcher) {
@@ -57,7 +59,18 @@ abstract class FeedScreenModel<T : Any>(
     }
 
     fun refresh(manual: Boolean = false) {
-        if (state.value.isRefreshing) return
+        val currentState = state.value
+        if (currentState.isRefreshing || currentState.isBridgingRefresh) return
+
+        val pendingRefresh = currentState.pendingRefresh
+        if (pendingRefresh != null) {
+            if (pendingRefresh.nextPageKey == null) return
+            screenModelScope.launch(workerDispatcher) {
+                resumePendingRefresh(currentState, pendingRefresh)
+            }
+            return
+        }
+
         screenModelScope.launch(workerDispatcher) {
             refreshInternal(manual = manual)
         }
@@ -65,7 +78,15 @@ abstract class FeedScreenModel<T : Any>(
 
     fun loadMore() {
         val currentState = state.value
-        if (currentState.isRefreshing || currentState.isAppending || currentState.nextPageKey == null) return
+        if (
+            currentState.isRefreshing ||
+            currentState.isBridgingRefresh ||
+            currentState.isAppending ||
+            currentState.pendingRefresh != null ||
+            currentState.nextPageKey == null
+        ) {
+            return
+        }
 
         screenModelScope.launch(workerDispatcher) {
             appendInternal()
@@ -78,6 +99,11 @@ abstract class FeedScreenModel<T : Any>(
         if (currentSavedAnchor == anchor) return
 
         currentSavedAnchor = anchor
+
+        // Staged bridge items are not persisted until their pages overlap the saved timeline.
+        // Keep their anchor in memory so scrolling can proceed without saving an anchor that
+        // the persisted timeline cannot resolve yet.
+        if (state.value.pendingRefresh != null) return
 
         if (persistedAnchor != anchor) {
             persistedAnchor = anchor
@@ -100,6 +126,7 @@ abstract class FeedScreenModel<T : Any>(
     }
 
     fun showNewItems() {
+        refreshGeneration.incrementAndGet()
         while (true) {
             val currentState = mutableState.value
             val pendingRefresh = currentState.pendingRefresh
@@ -114,6 +141,7 @@ abstract class FeedScreenModel<T : Any>(
                 nextPageKey = pendingRefresh.nextPageKey,
                 savedAnchor = anchor,
                 pendingRefresh = null,
+                isBridgingRefresh = false,
                 newItemsAvailableCount = 0,
                 newItemsCountIsLowerBound = false,
             )
@@ -149,6 +177,7 @@ abstract class FeedScreenModel<T : Any>(
         }
 
         val currentState = state.value
+        val generation = refreshGeneration.incrementAndGet()
         val existingRefs = currentState.itemRefs
         val existingRefSet = existingRefs.toHashSet()
         var error: Throwable? = null
@@ -211,15 +240,24 @@ abstract class FeedScreenModel<T : Any>(
             )
             mutableState.update {
                 it.copy(
+                    itemRefs = (pageRefs + existingRefs).distinct(),
                     isRefreshing = false,
                     isManualRefresh = false,
                     pendingRefresh = pendingRefresh,
+                    isBridgingRefresh = page.nextKey != null,
                     newItemsAvailableCount = pageRefs.size,
                     newItemsCountIsLowerBound = page.nextKey != null,
                     hasLoaded = true,
                     error = null,
                 )
             }
+            bridgePendingRefresh(
+                pagingSource = pagingSource,
+                generation = generation,
+                existingRefs = existingRefs,
+                existingNextPageKey = currentState.nextPageKey,
+                initialRefresh = pendingRefresh,
+            )
             return
         }
 
@@ -246,6 +284,158 @@ abstract class FeedScreenModel<T : Any>(
                 error = error,
             )
         }
+    }
+
+    private suspend fun bridgePendingRefresh(
+        pagingSource: PagingSource<Long, T>,
+        generation: Long,
+        existingRefs: List<FeedItemRef>,
+        existingNextPageKey: Long?,
+        initialRefresh: PendingRefresh,
+    ) {
+        val existingRefSet = existingRefs.toHashSet()
+        val bridgedRefs = initialRefresh.itemRefs.toMutableList()
+        val bridgedRefSet = bridgedRefs.toHashSet()
+        var nextPageKey = initialRefresh.nextPageKey
+        var pagesLoaded = 1
+
+        while (
+            nextPageKey != null &&
+            pagesLoaded < MAX_REFRESH_BRIDGE_PAGES &&
+            refreshGeneration.get() == generation
+        ) {
+            val page = try {
+                loadPage(pagingSource, nextPageKey)
+            } catch (e: Throwable) {
+                if (e is CancellationException) throw e
+                if (refreshGeneration.get() == generation) {
+                    mutableState.update {
+                        if (refreshGeneration.get() != generation || it.pendingRefresh == null) {
+                            it
+                        } else {
+                            it.copy(
+                                isBridgingRefresh = false,
+                                error = e,
+                            )
+                        }
+                    }
+                }
+                return
+            }
+
+            if (refreshGeneration.get() != generation) return
+
+            pagesLoaded++
+            val pageRefs = visibleRefs(page.data)
+            val overlapIndex = pageRefs.indexOfFirst { it in existingRefSet }
+
+            if (overlapIndex >= 0) {
+                pageRefs.take(overlapIndex).forEach { ref ->
+                    if (bridgedRefSet.add(ref)) bridgedRefs += ref
+                }
+                val mergedRefs = (bridgedRefs + existingRefs).distinct()
+
+                while (refreshGeneration.get() == generation) {
+                    val currentState = mutableState.value
+                    if (currentState.pendingRefresh == null) return
+                    val mergedState = currentState.copy(
+                        itemRefs = mergedRefs,
+                        nextPageKey = existingNextPageKey,
+                        pendingRefresh = null,
+                        isBridgingRefresh = false,
+                        newItemsAvailableCount = bridgedRefs.size,
+                        newItemsCountIsLowerBound = false,
+                        error = null,
+                    )
+                    if (mutableState.compareAndSet(currentState, mergedState)) {
+                        persistTimeline(
+                            itemRefs = mergedRefs,
+                            nextPageKey = existingNextPageKey,
+                        )
+                        if (persistedAnchor != currentSavedAnchor) {
+                            persistedAnchor = currentSavedAnchor
+                            browseFeedService.saveAnchor(feedId = feedId, anchor = currentSavedAnchor)
+                        }
+                        return
+                    }
+                }
+                return
+            }
+
+            pageRefs.forEach { ref ->
+                if (bridgedRefSet.add(ref)) bridgedRefs += ref
+            }
+            nextPageKey = page.nextKey
+            mutableState.update {
+                if (refreshGeneration.get() != generation || it.pendingRefresh == null) {
+                    it
+                } else {
+                    it.copy(
+                        itemRefs = (bridgedRefs + existingRefs).distinct(),
+                        pendingRefresh = PendingRefresh(
+                            itemRefs = bridgedRefs.toList(),
+                            nextPageKey = nextPageKey,
+                        ),
+                        isBridgingRefresh = nextPageKey != null && pagesLoaded < MAX_REFRESH_BRIDGE_PAGES,
+                        newItemsAvailableCount = bridgedRefs.size,
+                        newItemsCountIsLowerBound = nextPageKey != null,
+                        error = null,
+                    )
+                }
+            }
+        }
+
+        if (refreshGeneration.get() == generation) {
+            mutableState.update {
+                if (refreshGeneration.get() != generation || it.pendingRefresh == null) {
+                    it
+                } else {
+                    it.copy(isBridgingRefresh = false)
+                }
+            }
+        }
+    }
+
+    private suspend fun resumePendingRefresh(
+        currentState: State,
+        pendingRefresh: PendingRefresh,
+    ) {
+        val generation = refreshGeneration.incrementAndGet()
+        mutableState.update {
+            if (it.pendingRefresh != pendingRefresh) {
+                it
+            } else {
+                it.copy(
+                    isBridgingRefresh = true,
+                    error = null,
+                )
+            }
+        }
+
+        val pagingSource = try {
+            newPagingSource()
+        } catch (e: Throwable) {
+            if (e is CancellationException) throw e
+            mutableState.update {
+                if (refreshGeneration.get() != generation || it.pendingRefresh == null) {
+                    it
+                } else {
+                    it.copy(
+                        isBridgingRefresh = false,
+                        error = e,
+                    )
+                }
+            }
+            return
+        }
+
+        bridgePendingRefresh(
+            pagingSource = pagingSource,
+            generation = generation,
+            existingRefs = currentState.itemRefs.drop(pendingRefresh.itemRefs.size),
+            existingNextPageKey = currentState.nextPageKey,
+            initialRefresh = pendingRefresh,
+        )
     }
 
     private suspend fun refreshCurrentPageInternal(manual: Boolean) {
@@ -466,6 +656,7 @@ abstract class FeedScreenModel<T : Any>(
         val isRefreshing: Boolean = false,
         val isManualRefresh: Boolean = false,
         val isAppending: Boolean = false,
+        val isBridgingRefresh: Boolean = false,
         val newItemsAvailableCount: Int = 0,
         val newItemsCountIsLowerBound: Boolean = false,
         val pendingRefresh: PendingRefresh? = null,
@@ -481,6 +672,7 @@ abstract class FeedScreenModel<T : Any>(
 
     companion object {
         private const val PAGE_SIZE = 25
+        private const val MAX_REFRESH_BRIDGE_PAGES = 10
         private const val MAX_APPEND_PAGE_SCANS = 10
 
         private fun initialState(

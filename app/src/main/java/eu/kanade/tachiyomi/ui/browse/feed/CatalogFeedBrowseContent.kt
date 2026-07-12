@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -24,6 +25,7 @@ import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
@@ -339,6 +341,7 @@ fun CatalogFeedBrowseContent(
             NewItemsChip(
                 count = state.newItemsAvailableCount,
                 countIsLowerBound = state.newItemsCountIsLowerBound,
+                isBridging = state.isBridgingRefresh,
                 onClick = {
                     screenModel.showNewItems()
                     scope.launch {
@@ -374,6 +377,7 @@ private data class FeedViewport(
 internal fun NewItemsChip(
     count: Int,
     countIsLowerBound: Boolean,
+    isBridging: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -390,10 +394,17 @@ internal fun NewItemsChip(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
         ) {
-            Icon(
-                imageVector = Icons.Outlined.KeyboardArrowUp,
-                contentDescription = null,
-            )
+            if (isBridging) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    strokeWidth = 2.dp,
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Outlined.KeyboardArrowUp,
+                    contentDescription = null,
+                )
+            }
             Text(
                 style = MaterialTheme.typography.labelLarge,
                 text = pluralStringResource(
