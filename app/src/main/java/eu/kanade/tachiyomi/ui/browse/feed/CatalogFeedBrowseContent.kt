@@ -166,8 +166,9 @@ fun CatalogFeedBrowseContent(
             }
     }
 
-    LaunchedEffect(displayMode, state.newItemsAvailableCount) {
+    LaunchedEffect(displayMode, state.newItemsAvailableCount, state.pendingRefresh) {
         if (state.newItemsAvailableCount == 0) return@LaunchedEffect
+        if (state.pendingRefresh != null) return@LaunchedEffect
 
         val viewportFlow = when (displayMode) {
             LibraryDisplayMode.List -> snapshotFlow {
@@ -334,11 +335,12 @@ fun CatalogFeedBrowseContent(
             LibraryDisplayMode.List -> listState.canScrollBackward
             else -> gridState.canScrollBackward
         }
-        if (state.newItemsAvailableCount > 0 && !state.isRefreshing && canScrollBackward) {
+        if (shouldShowNewItemsChip(state, canScrollBackward)) {
             NewItemsChip(
                 count = state.newItemsAvailableCount,
+                countIsLowerBound = state.newItemsCountIsLowerBound,
                 onClick = {
-                    screenModel.consumeNewItemsIndicator()
+                    screenModel.showNewItems()
                     scope.launch {
                         when (displayMode) {
                             LibraryDisplayMode.List -> listState.animateScrollToItem(0)
@@ -354,14 +356,24 @@ fun CatalogFeedBrowseContent(
     }
 }
 
+internal fun shouldShowNewItemsChip(
+    state: FeedScreenModel.State,
+    canScrollBackward: Boolean,
+): Boolean {
+    return state.newItemsAvailableCount > 0 &&
+        !state.isRefreshing &&
+        (state.pendingRefresh != null || canScrollBackward)
+}
+
 private data class FeedViewport(
     val canScrollBackward: Boolean,
     val totalItemsCount: Int,
 )
 
 @Composable
-private fun NewItemsChip(
+internal fun NewItemsChip(
     count: Int,
+    countIsLowerBound: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -384,7 +396,15 @@ private fun NewItemsChip(
             )
             Text(
                 style = MaterialTheme.typography.labelLarge,
-                text = pluralStringResource(MR.plurals.browse_feed_new_items, count, count),
+                text = pluralStringResource(
+                    if (countIsLowerBound) {
+                        MR.plurals.browse_feed_new_items_at_least
+                    } else {
+                        MR.plurals.browse_feed_new_items
+                    },
+                    count,
+                    count,
+                ),
             )
         }
     }

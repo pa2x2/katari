@@ -37,6 +37,26 @@ import tachiyomi.domain.source.model.CatalogListItem
 class ChronologicalFeedScreenModelTest {
 
     @Test
+    fun `pending refresh indicator remains visible at the top of the feed`() {
+        val pendingRefresh = FeedScreenModel.PendingRefresh(
+            itemRefs = listOf(FeedItemRef(1L, EntryType.MANGA)),
+            nextPageKey = 1L,
+        )
+
+        shouldShowNewItemsChip(
+            state = FeedScreenModel.State(
+                newItemsAvailableCount = 1,
+                pendingRefresh = pendingRefresh,
+            ),
+            canScrollBackward = false,
+        ) shouldBe true
+        shouldShowNewItemsChip(
+            state = FeedScreenModel.State(newItemsAvailableCount = 1),
+            canScrollBackward = false,
+        ) shouldBe false
+    }
+
+    @Test
     fun `init cleans saved favorites while preserving surviving anchor`() = feedTest {
         val preferences = SourcePreferences(TestPreferenceStore(), testJson)
         preferences.hideInLibraryItems.set(true)
@@ -210,7 +230,7 @@ class ChronologicalFeedScreenModelTest {
     }
 
     @Test
-    fun `refresh reuses one paging source so duplicates across scanned pages are suppressed`() = feedTest {
+    fun `overlapping refresh prepends new items and preserves the existing tail cursor`() = feedTest {
         val preferences = SourcePreferences(TestPreferenceStore(), testJson)
         val browseFeedService = BrowseFeedService(preferences)
         browseFeedService.saveTimeline(
@@ -266,8 +286,102 @@ class ChronologicalFeedScreenModelTest {
                     FeedItemRef(11L, EntryType.ANIME),
                     FeedItemRef(12L, EntryType.MANGA),
                 ),
+                nextPageKey = 3L,
+            )
+        } finally {
+            screenModel.onDispose()
+        }
+    }
+
+    @Test
+    fun `refresh without overlap loads one page and waits for user before replacing timeline`() = feedTest {
+        val preferences = SourcePreferences(TestPreferenceStore(), testJson)
+        val browseFeedService = BrowseFeedService(preferences)
+        val oldRef = FeedItemRef(100L, EntryType.MANGA)
+        browseFeedService.saveTimeline(
+            FEED_ID,
+            SourceFeedTimeline.fromItems(listOf(oldRef), nextPageKey = 10L),
+        )
+        browseFeedService.saveAnchor(
+            FEED_ID,
+            SourceFeedAnchor.fromItem(oldRef, scrollOffset = 32),
+        )
+        val pagingSource = RecordingPagingSource(
+            pages = mapOf(
+                null to pageResult(
+                    data = listOf(
+                        FakeItem(id = 1L, type = EntryType.MANGA, favorite = false),
+                        FakeItem(id = 2L, type = EntryType.ANIME, favorite = false),
+                    ),
+                    nextKey = 1L,
+                ),
+                1L to pageResult(
+                    data = listOf(FakeItem(id = 3L, type = EntryType.MANGA, favorite = false)),
+                    nextKey = 2L,
+                ),
+            ),
+        )
+        val screenModel = FakeFeedScreenModel(
+            feedId = FEED_ID,
+            browseFeedService = browseFeedService,
+            workerDispatcher = Dispatchers.Main,
+            itemsById = mapOf(
+                1L to FakeItem(id = 1L, type = EntryType.MANGA, favorite = false),
+                2L to FakeItem(id = 2L, type = EntryType.ANIME, favorite = false),
+                3L to FakeItem(id = 3L, type = EntryType.MANGA, favorite = false),
+                100L to FakeItem(id = 100L, type = EntryType.MANGA, favorite = false),
+            ),
+            pagingSourceFactory = { pagingSource },
+        )
+
+        try {
+            advanceUntilIdle()
+            screenModel.refresh(manual = true)
+            advanceUntilIdle()
+
+            pagingSource.loadKeys shouldBe listOf(null)
+            screenModel.state.value.itemRefs shouldBe listOf(oldRef)
+            screenModel.state.value.nextPageKey shouldBe 10L
+            screenModel.state.value.newItemsAvailableCount shouldBe 2
+            screenModel.state.value.newItemsCountIsLowerBound shouldBe true
+            screenModel.state.value.pendingRefresh shouldBe FeedScreenModel.PendingRefresh(
+                itemRefs = listOf(
+                    FeedItemRef(1L, EntryType.MANGA),
+                    FeedItemRef(2L, EntryType.ANIME),
+                ),
                 nextPageKey = 1L,
             )
+            browseFeedService.timelineSnapshot(FEED_ID) shouldBe
+                SourceFeedTimeline.fromItems(listOf(oldRef), nextPageKey = 10L)
+
+            screenModel.consumeNewItemsIndicator()
+
+            screenModel.state.value.pendingRefresh shouldBe FeedScreenModel.PendingRefresh(
+                itemRefs = listOf(
+                    FeedItemRef(1L, EntryType.MANGA),
+                    FeedItemRef(2L, EntryType.ANIME),
+                ),
+                nextPageKey = 1L,
+            )
+            screenModel.state.value.newItemsAvailableCount shouldBe 2
+            browseFeedService.timelineSnapshot(FEED_ID) shouldBe
+                SourceFeedTimeline.fromItems(listOf(oldRef), nextPageKey = 10L)
+
+            screenModel.showNewItems()
+            advanceUntilIdle()
+
+            val newRefs = listOf(
+                FeedItemRef(1L, EntryType.MANGA),
+                FeedItemRef(2L, EntryType.ANIME),
+            )
+            screenModel.state.value.itemRefs shouldBe newRefs
+            screenModel.state.value.nextPageKey shouldBe 1L
+            screenModel.state.value.pendingRefresh shouldBe null
+            screenModel.state.value.newItemsAvailableCount shouldBe 0
+            browseFeedService.timelineSnapshot(FEED_ID) shouldBe
+                SourceFeedTimeline.fromItems(newRefs, nextPageKey = 1L)
+            browseFeedService.anchorSnapshot(FEED_ID) shouldBe
+                SourceFeedAnchor.fromItem(newRefs.first(), scrollOffset = 0)
         } finally {
             screenModel.onDispose()
         }

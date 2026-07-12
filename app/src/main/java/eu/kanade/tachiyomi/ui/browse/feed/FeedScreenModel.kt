@@ -91,10 +91,41 @@ abstract class FeedScreenModel<T : Any>(
 
     fun consumeNewItemsIndicator() {
         mutableState.update {
-            if (it.newItemsAvailableCount == 0) {
+            if (it.newItemsAvailableCount == 0 || it.pendingRefresh != null) {
                 it
             } else {
                 it.copy(newItemsAvailableCount = 0)
+            }
+        }
+    }
+
+    fun showNewItems() {
+        while (true) {
+            val currentState = mutableState.value
+            val pendingRefresh = currentState.pendingRefresh
+            if (pendingRefresh == null) {
+                consumeNewItemsIndicator()
+                return
+            }
+
+            val anchor = SourceFeedAnchor.fromItem(pendingRefresh.itemRefs.firstOrNull(), scrollOffset = 0)
+            val activatedState = currentState.copy(
+                itemRefs = pendingRefresh.itemRefs,
+                nextPageKey = pendingRefresh.nextPageKey,
+                savedAnchor = anchor,
+                pendingRefresh = null,
+                newItemsAvailableCount = 0,
+                newItemsCountIsLowerBound = false,
+            )
+            if (mutableState.compareAndSet(currentState, activatedState)) {
+                currentSavedAnchor = anchor
+                persistedAnchor = anchor
+                browseFeedService.saveAnchor(feedId = feedId, anchor = anchor)
+                persistTimeline(
+                    itemRefs = pendingRefresh.itemRefs,
+                    nextPageKey = pendingRefresh.nextPageKey,
+                )
+                return
             }
         }
     }
@@ -120,17 +151,17 @@ abstract class FeedScreenModel<T : Any>(
         val currentState = state.value
         val existingRefs = currentState.itemRefs
         val existingRefSet = existingRefs.toHashSet()
-        val prependedRefs = mutableListOf<FeedItemRef>()
-        var nextPageKey: Long? = null
-        var currentPageKey: Long? = null
-        var pageCount = 0
         var error: Throwable? = null
 
         mutableState.update {
             it.copy(
                 isRefreshing = true,
                 isManualRefresh = manual,
-                newItemsAvailableCount = if (manual) 0 else it.newItemsAvailableCount,
+                newItemsAvailableCount = if (manual && it.pendingRefresh == null) {
+                    0
+                } else {
+                    it.newItemsAvailableCount
+                },
                 error = null,
             )
         }
@@ -150,48 +181,57 @@ abstract class FeedScreenModel<T : Any>(
             return
         }
 
-        while (pageCount < MAX_REFRESH_PAGES) {
-            val page = try {
-                loadPage(pagingSource, currentPageKey)
-            } catch (e: Throwable) {
-                if (e is CancellationException) throw e
-                error = e
-                break
-            }
-
-            pageCount++
-            val pageRefs = visibleRefs(page.data)
-            nextPageKey = page.nextKey
-
-            if (existingRefs.isEmpty()) {
-                prependedRefs += pageRefs
-                break
-            }
-
-            val overlapIndex = pageRefs.indexOfFirst { it in existingRefSet }
-            if (overlapIndex >= 0) {
-                prependedRefs += pageRefs.take(overlapIndex)
-                break
-            }
-
-            prependedRefs += pageRefs.filterNot(existingRefSet::contains)
-
-            currentPageKey = page.nextKey
-            if (currentPageKey == null) {
-                break
-            }
+        val page = try {
+            loadPage(pagingSource, null)
+        } catch (e: Throwable) {
+            if (e is CancellationException) throw e
+            error = e
+            null
         }
 
-        val mergedRefs = if (existingRefs.isEmpty()) {
-            prependedRefs
+        if (page == null) {
+            mutableState.update {
+                it.copy(
+                    isRefreshing = false,
+                    isManualRefresh = false,
+                    hasLoaded = true,
+                    error = error,
+                )
+            }
+            return
+        }
+
+        val pageRefs = visibleRefs(page.data)
+        val overlapIndex = pageRefs.indexOfFirst { it in existingRefSet }
+
+        if (existingRefs.isNotEmpty() && overlapIndex < 0 && pageRefs.isNotEmpty()) {
+            val pendingRefresh = PendingRefresh(
+                itemRefs = pageRefs,
+                nextPageKey = page.nextKey,
+            )
+            mutableState.update {
+                it.copy(
+                    isRefreshing = false,
+                    isManualRefresh = false,
+                    pendingRefresh = pendingRefresh,
+                    newItemsAvailableCount = pageRefs.size,
+                    newItemsCountIsLowerBound = page.nextKey != null,
+                    hasLoaded = true,
+                    error = null,
+                )
+            }
+            return
+        }
+
+        val prependedRefs = if (existingRefs.isEmpty()) {
+            pageRefs
         } else {
-            (prependedRefs + existingRefs).distinct()
+            pageRefs.take(overlapIndex.coerceAtLeast(0))
         }
+        val mergedRefs = if (existingRefs.isEmpty()) pageRefs else (prependedRefs + existingRefs).distinct()
+        val nextPageKey = if (existingRefs.isEmpty()) page.nextKey else currentState.nextPageKey
 
-        persistTimeline(
-            itemRefs = mergedRefs,
-            nextPageKey = nextPageKey,
-        )
+        persistTimeline(itemRefs = mergedRefs, nextPageKey = nextPageKey)
 
         mutableState.update {
             it.copy(
@@ -200,6 +240,8 @@ abstract class FeedScreenModel<T : Any>(
                 isRefreshing = false,
                 isManualRefresh = false,
                 newItemsAvailableCount = if (manual && error == null) prependedRefs.size else 0,
+                newItemsCountIsLowerBound = false,
+                pendingRefresh = null,
                 hasLoaded = true,
                 error = error,
             )
@@ -425,13 +467,20 @@ abstract class FeedScreenModel<T : Any>(
         val isManualRefresh: Boolean = false,
         val isAppending: Boolean = false,
         val newItemsAvailableCount: Int = 0,
+        val newItemsCountIsLowerBound: Boolean = false,
+        val pendingRefresh: PendingRefresh? = null,
         val hasLoaded: Boolean = false,
         val error: Throwable? = null,
     )
 
+    @Immutable
+    data class PendingRefresh(
+        val itemRefs: List<FeedItemRef>,
+        val nextPageKey: Long?,
+    )
+
     companion object {
         private const val PAGE_SIZE = 25
-        private const val MAX_REFRESH_PAGES = 10
         private const val MAX_APPEND_PAGE_SCANS = 10
 
         private fun initialState(

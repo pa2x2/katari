@@ -22,7 +22,7 @@ Feed configuration and scroll state are profile-specific.
 
 ## Regular and chronological views
 
-Regular mode uses familiar catalogue grid or list layouts. Every feed preserves its timeline and position. When a chronological feed refreshes, newly discovered results are prepended instead of replacing the current page; when newer content is available, the interface offers a jump to the newest result. Pagination depends on the source and preset; a feed cannot produce more results after its source reports the end.
+Regular mode uses familiar catalogue grid or list layouts. Every feed preserves its timeline and position. When a chronological feed refreshes, it checks the newest source page without downloading the entire missed backlog. New results that overlap the saved timeline are prepended in place. If the saved timeline is older, the interface offers a user-controlled switch to the newest results, which then load older pages normally as you continue browsing. Pagination depends on the source and preset; a feed cannot produce more results after its source reports the end.
 
 ## Immersive feeds
 

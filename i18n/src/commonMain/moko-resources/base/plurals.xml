@@ -141,6 +141,10 @@
         <item quantity="one">%1$d new item</item>
         <item quantity="other">%1$d new items</item>
     </plurals>
+    <plurals name="browse_feed_new_items_at_least">
+        <item quantity="one">%1$d+ new item</item>
+        <item quantity="other">%1$d+ new items</item>
+    </plurals>
 
     <plurals name="notification_chapters_multiple_and_more">
         <item quantity="one">Chapters %1$s and 1 more</item>

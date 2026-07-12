@@ -183,58 +183,81 @@ internal fun EntryImmersiveFeedContent(
         return
     }
 
-    VerticalPager(
-        state = pagerState,
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color.Black),
-        key = { immersiveFeedItemKey(timelineState.itemRefs[it]) },
-        userScrollEnabled = !isZoomed,
-        beyondViewportPageCount = PRELOAD_RADIUS,
-    ) { page ->
-        val itemRef = timelineState.itemRefs[page]
-        val entry = rememberFeedEntry(itemRef, timelineModel)
-        val itemState = immersiveState.items[itemRef]
-        val isActive = page == pagerState.settledPage
-        val preloadRange = (pagerState.currentPage - PRELOAD_RADIUS)..(pagerState.currentPage + PRELOAD_RADIUS)
-        val shouldLoad = page in preloadRange || isActive
+    Box(modifier = modifier) {
+        VerticalPager(
+            state = pagerState,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black),
+            key = { immersiveFeedItemKey(timelineState.itemRefs[it]) },
+            userScrollEnabled = !isZoomed,
+            beyondViewportPageCount = PRELOAD_RADIUS,
+        ) { page ->
+            val itemRef = timelineState.itemRefs[page]
+            val entry = rememberFeedEntry(itemRef, timelineModel)
+            val itemState = immersiveState.items[itemRef]
+            val isActive = page == pagerState.settledPage
+            val preloadRange = (pagerState.currentPage - PRELOAD_RADIUS)..(pagerState.currentPage + PRELOAD_RADIUS)
+            val shouldLoad = page in preloadRange || isActive
 
-        if (entry != null && shouldLoad) {
-            LaunchedEffect(itemRef) { immersiveModel.load(context, entry) }
+            if (entry != null && shouldLoad) {
+                LaunchedEffect(itemRef) { immersiveModel.load(context, entry) }
+            }
+
+            EntryImmersiveFeedPage(
+                entry = entry,
+                itemState = itemState,
+                isActive = isActive,
+                immersiveModel = immersiveModel,
+                activeSource = activeSource,
+                feedLabel = feedLabel,
+                controlsVisible = controlsVisible,
+                onToggleControls = { controlsVisible = !controlsVisible },
+                onShowFeedPicker = onShowFeedPicker,
+                onExitImmersive = onExitImmersive,
+                onEntryClick = onEntryClick,
+                onLibraryAction = onLibraryAction,
+                showBackToTop = pagerState.currentPage > 0,
+                onBackToTop = { scope.launch { pagerState.animateScrollToPage(0) } },
+                onOpenChapter = if (
+                    entry != null &&
+                    itemState is EntryImmersiveFeedScreenModel.ItemState.Ready
+                ) {
+                    {
+                        entryOpenInteraction.open(
+                            context = context,
+                            entry = entry,
+                            chapter = itemState.chapter,
+                        )
+                    }
+                } else {
+                    null
+                },
+                onZoomStateChange = { zoomed ->
+                    isZoomed = zoomed
+                    onZoomStateChange(zoomed)
+                },
+                onRetry = { entry?.let { immersiveModel.retry(context, it) } },
+            )
         }
 
-        EntryImmersiveFeedPage(
-            entry = entry,
-            itemState = itemState,
-            isActive = isActive,
-            immersiveModel = immersiveModel,
-            activeSource = activeSource,
-            feedLabel = feedLabel,
-            controlsVisible = controlsVisible,
-            onToggleControls = { controlsVisible = !controlsVisible },
-            onShowFeedPicker = onShowFeedPicker,
-            onExitImmersive = onExitImmersive,
-            onEntryClick = onEntryClick,
-            onLibraryAction = onLibraryAction,
-            showBackToTop = pagerState.currentPage > 0,
-            onBackToTop = { scope.launch { pagerState.animateScrollToPage(0) } },
-            onOpenChapter = if (entry != null && itemState is EntryImmersiveFeedScreenModel.ItemState.Ready) {
-                {
-                    entryOpenInteraction.open(
-                        context = context,
-                        entry = entry,
-                        chapter = itemState.chapter,
-                    )
-                }
-            } else {
-                null
-            },
-            onZoomStateChange = { zoomed ->
-                isZoomed = zoomed
-                onZoomStateChange(zoomed)
-            },
-            onRetry = { entry?.let { immersiveModel.retry(context, it) } },
-        )
+        if (timelineState.newItemsAvailableCount > 0 && !timelineState.isRefreshing) {
+            NewItemsChip(
+                count = timelineState.newItemsAvailableCount,
+                countIsLowerBound = timelineState.newItemsCountIsLowerBound,
+                onClick = {
+                    timelineModel.showNewItems()
+                    scope.launch { pagerState.scrollToPage(0) }
+                },
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(
+                        top = WindowInsets.statusBarsIgnoringVisibility
+                            .asPaddingValues()
+                            .calculateTopPadding() + 16.dp,
+                    ),
+            )
+        }
     }
 }
 
