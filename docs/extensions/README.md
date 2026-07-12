@@ -4,6 +4,8 @@ Katari extensions connect the app to external catalogues. They provide metadata 
 
 Katari uses [`entry-source-api`](https://github.com/katariapp/katari/tree/main/entry-source-api) for new extensions. Although Katari can still load compatible [Mihon](https://mihon.app/) extensions, new extensions should not depend on the legacy `source-api` module or use its `SManga`, `SChapter`, `MangasPage`, `Page`, or RxJava contracts.
 
+The public [`katari-extensions`](https://github.com/katariapp/katari-extensions) repository contains Katari extensions and their contribution workflow. Use it as the starting point when adding or maintaining an extension intended for public distribution.
+
 ## The model
 
 The manifest entry point can be a `UnifiedSource` implementation or an `EntrySourceFactory` that creates one or more sources. A factory is useful when one extension exposes multiple sources:

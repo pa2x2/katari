@@ -10,6 +10,10 @@ Legacy sources are adapted into Katari's unified source model and produce the en
 
 Katari treats extension signatures as trust identities. A first installation may require trust confirmation. Updates must retain the package name and signing certificate.
 
+## Public extension repository
+
+Katari's public extensions and repository setup instructions are available in [`katari-extensions`](https://github.com/katariapp/katari-extensions). Extensions remain separate from the app and do not bundle or host content.
+
 ## Entry-native extensions
 
 New extensions should use `entry-source-api`. Entry-native sources can:
