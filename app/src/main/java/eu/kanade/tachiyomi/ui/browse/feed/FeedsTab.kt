@@ -11,12 +11,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -25,19 +24,22 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.filled.ViewModule
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.ArrowDropDown
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DragHandle
 import androidx.compose.material.icons.outlined.Fullscreen
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,7 +53,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -103,8 +104,6 @@ import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import mihon.feature.migration.dialog.MigrateEntryDialog
 import mihon.feature.profiles.core.ProfileManager
@@ -291,7 +290,6 @@ private fun Screen.FeedsTabContent(
         )
     } else if (activeFeed != null && activeSource != null && activePreset != null) {
         val enabledFeeds = state.enabledFeeds
-        val chipListState = rememberLazyListState()
         val activeIndex = remember(enabledFeeds, activeFeed.id) {
             enabledFeeds.indexOfFirst { it.id == activeFeed.id }
         }
@@ -301,7 +299,7 @@ private fun Screen.FeedsTabContent(
         )
         val hasPreviousFeed = activeIndex > 0
         val hasNextFeed = activeIndex in 0 until enabledFeeds.lastIndex
-        var showImmersiveFeedPicker by remember(activeFeed.id) { mutableStateOf(false) }
+        var showFeedPicker by remember(activeFeed.id) { mutableStateOf(false) }
         var jumpToNewestRequest by remember(activeFeed.id) { mutableIntStateOf(0) }
 
         Column(
@@ -373,7 +371,7 @@ private fun Screen.FeedsTabContent(
                             snackbarHostState = snackbarHostState,
                             activeSource = activeSource,
                             feedLabel = activePreset.name,
-                            onShowFeedPicker = { showImmersiveFeedPicker = true },
+                            onShowFeedPicker = { showFeedPicker = true },
                             onExitImmersive = { onFeedViewModeChange(FeedViewMode.Regular) },
                             onEntryClick = { navigator.push(EntryScreen(it.id, fromSource = true)) },
                             onLibraryAction = actionModel::confirmBrowseLibraryAction,
@@ -425,26 +423,43 @@ private fun Screen.FeedsTabContent(
                     }
                 }
 
-                if (showImmersiveFeedPicker) {
-                    FeedImmersivePickerSheet(
+                if (showFeedPicker && feedViewMode == FeedViewMode.Immersive) {
+                    FeedPickerSheet(
                         feeds = enabledFeeds,
                         selectedFeedId = activeFeed.id,
                         screenModel = screenModel,
-                        canJumpToNewest = timelineState.itemRefs.isNotEmpty() &&
+                        canJumpToNewest = feedViewMode == FeedViewMode.Immersive &&
+                            timelineState.itemRefs.isNotEmpty() &&
                             timelineModel.savedAnchorSnapshot().resolvedItem() != timelineState.itemRefs.firstOrNull(),
                         onSelect = { feedId ->
-                            showImmersiveFeedPicker = false
+                            showFeedPicker = false
                             screenModel.selectFeed(feedId)
                         },
-                        onRefresh = {
-                            showImmersiveFeedPicker = false
-                            timelineModel.refresh(manual = true)
+                        onRefresh = if (feedViewMode == FeedViewMode.Immersive) {
+                            {
+                                showFeedPicker = false
+                                timelineModel.refresh(manual = true)
+                            }
+                        } else {
+                            null
                         },
-                        onJumpToNewest = {
-                            showImmersiveFeedPicker = false
-                            jumpToNewestRequest++
+                        onJumpToNewest = if (feedViewMode == FeedViewMode.Immersive) {
+                            {
+                                showFeedPicker = false
+                                jumpToNewestRequest++
+                            }
+                        } else {
+                            null
                         },
-                        onDismissRequest = { showImmersiveFeedPicker = false },
+                        onAddFeed = {
+                            showFeedPicker = false
+                            screenModel.showCreateDialog()
+                        },
+                        onManageFeeds = {
+                            showFeedPicker = false
+                            screenModel.showManageDialog()
+                        },
+                        onDismissRequest = { showFeedPicker = false },
                     )
                 }
 
@@ -460,7 +475,6 @@ private fun Screen.FeedsTabContent(
                     feeds = enabledFeeds,
                     selectedFeedId = activeFeed.id,
                     selectedDisplayMode = activeDisplayMode,
-                    chipListState = chipListState,
                     screenModel = screenModel,
                     canGoPrevious = hasPreviousFeed,
                     canGoNext = hasNextFeed,
@@ -473,6 +487,21 @@ private fun Screen.FeedsTabContent(
                     },
                     onNextClick = {
                         enabledFeeds.getOrNull(activeIndex + 1)?.let { screenModel.selectFeed(it.id) }
+                    },
+                    pickerExpanded = showFeedPicker,
+                    onPickerClick = { showFeedPicker = true },
+                    onPickerDismiss = { showFeedPicker = false },
+                    onFeedSelect = { feedId ->
+                        showFeedPicker = false
+                        screenModel.selectFeed(feedId)
+                    },
+                    onAddFeed = {
+                        showFeedPicker = false
+                        screenModel.showCreateDialog()
+                    },
+                    onManageFeeds = {
+                        showFeedPicker = false
+                        screenModel.showManageDialog()
                     },
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -622,7 +651,6 @@ private fun FeedNavigationBar(
     feeds: List<SourceFeed>,
     selectedFeedId: String,
     selectedDisplayMode: LibraryDisplayMode,
-    chipListState: LazyListState,
     screenModel: FeedsScreenModel,
     canGoPrevious: Boolean,
     canGoNext: Boolean,
@@ -632,22 +660,17 @@ private fun FeedNavigationBar(
     onDisplayModeChange: (LibraryDisplayMode) -> Unit,
     onPreviousClick: () -> Unit,
     onNextClick: () -> Unit,
+    pickerExpanded: Boolean,
+    onPickerClick: () -> Unit,
+    onPickerDismiss: () -> Unit,
+    onFeedSelect: (String) -> Unit,
+    onAddFeed: () -> Unit,
+    onManageFeeds: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    LaunchedEffect(selectedFeedId, feeds) {
-        val selectedIndex = feeds.indexOfFirst { it.id == selectedFeedId }
-        if (selectedIndex < 0) return@LaunchedEffect
-
-        val visibleItemIndexes = snapshotFlow {
-            chipListState.layoutInfo.visibleItemsInfo.map { it.index }
-        }
-            .filter { it.isNotEmpty() }
-            .first()
-
-        if (selectedIndex !in visibleItemIndexes) {
-            chipListState.scrollToItem(selectedIndex)
-        }
-    }
+    val selectedFeed = feeds.firstOrNull { it.id == selectedFeedId }
+    val selectedSource = selectedFeed?.let { screenModel.sourceFor(it.sourceId) }
+    val selectedPreset = selectedFeed?.let(screenModel::presetFor)
 
     Column(
         modifier = modifier
@@ -671,24 +694,22 @@ private fun FeedNavigationBar(
                     contentDescription = stringResource(MR.strings.transition_previous),
                 )
             }
-            LazyRow(
-                modifier = Modifier.weight(1f),
-                state = chipListState,
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-            ) {
-                items(
-                    items = feeds,
-                    key = { it.id },
-                ) { feed ->
-                    val source = screenModel.sourceFor(feed.sourceId) ?: return@items
-                    val preset = screenModel.presetFor(feed) ?: return@items
-                    FeedChip(
-                        source = source,
-                        preset = preset,
-                        selected = selectedFeedId == feed.id,
-                        onClick = { screenModel.selectFeed(feed.id) },
-                    )
-                }
+            if (selectedSource != null && selectedPreset != null) {
+                FeedSelectorMenu(
+                    feeds = feeds,
+                    selectedFeedId = selectedFeedId,
+                    selectedSource = selectedSource,
+                    selectedPreset = selectedPreset,
+                    screenModel = screenModel,
+                    expanded = pickerExpanded,
+                    onExpandedChange = { expanded ->
+                        if (expanded) onPickerClick() else onPickerDismiss()
+                    },
+                    onFeedSelect = onFeedSelect,
+                    onAddFeed = onAddFeed,
+                    onManageFeeds = onManageFeeds,
+                    modifier = Modifier.weight(1f),
+                )
             }
             IconButton(onClick = onNextClick, enabled = canGoNext) {
                 Icon(
@@ -773,43 +794,138 @@ private fun FeedDisplayModeButton(
 }
 
 @Composable
-private fun FeedChip(
+private fun FeedSelectorMenu(
+    feeds: List<SourceFeed>,
+    selectedFeedId: String,
+    selectedSource: Source,
+    selectedPreset: SourceFeedPreset,
+    screenModel: FeedsScreenModel,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    onFeedSelect: (String) -> Unit,
+    onAddFeed: () -> Unit,
+    onManageFeeds: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = onExpandedChange,
+        modifier = modifier,
+    ) {
+        FeedSelectorButton(
+            source = selectedSource,
+            preset = selectedPreset,
+            modifier = Modifier
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                .fillMaxWidth(),
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { onExpandedChange(false) },
+            modifier = Modifier.exposedDropdownSize(matchAnchorWidth = true),
+        ) {
+            feeds.forEach { feed ->
+                val source = screenModel.sourceFor(feed.sourceId) ?: return@forEach
+                val preset = screenModel.presetFor(feed) ?: return@forEach
+                DropdownMenuItem(
+                    text = {
+                        Column {
+                            Text(
+                                text = preset.name,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Text(
+                                text = source.name,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    },
+                    onClick = { onFeedSelect(feed.id) },
+                    leadingIcon = {
+                        SourceIcon(
+                            source = source,
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(MaterialTheme.shapes.extraSmall),
+                        )
+                    },
+                    trailingIcon = if (feed.id == selectedFeedId) {
+                        {
+                            Icon(
+                                imageVector = Icons.Outlined.Check,
+                                contentDescription = stringResource(MR.strings.selected),
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    } else {
+                        null
+                    },
+                )
+            }
+            HorizontalDivider()
+            DropdownMenuItem(
+                text = { Text(text = stringResource(MR.strings.action_add)) },
+                onClick = onAddFeed,
+                leadingIcon = { Icon(imageVector = Icons.Outlined.Add, contentDescription = null) },
+            )
+            DropdownMenuItem(
+                text = { Text(text = stringResource(MR.strings.browse_manage_feeds)) },
+                onClick = onManageFeeds,
+                leadingIcon = { Icon(imageVector = Icons.Outlined.DragHandle, contentDescription = null) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun FeedSelectorButton(
     source: Source,
     preset: SourceFeedPreset,
-    selected: Boolean,
-    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    AssistChip(
-        onClick = onClick,
-        colors = AssistChipDefaults.assistChipColors(
-            containerColor = if (selected) {
-                MaterialTheme.colorScheme.secondaryContainer
-            } else {
-                MaterialTheme.colorScheme.surfaceContainerHigh
-            },
-            labelColor = if (selected) {
-                MaterialTheme.colorScheme.onSecondaryContainer
-            } else {
-                MaterialTheme.colorScheme.onSurface
-            },
-        ),
-        border = null,
-        leadingIcon = {
+    Surface(
+        modifier = modifier.heightIn(min = 48.dp),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             SourceIcon(
                 source = source,
                 modifier = Modifier
-                    .size(FilterChipDefaults.IconSize)
+                    .size(24.dp)
                     .clip(MaterialTheme.shapes.extraSmall),
             )
-        },
-        label = {
-            Text(
-                text = preset.name,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = preset.name,
+                    style = MaterialTheme.typography.labelLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = source.name,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Icon(
+                imageVector = Icons.Outlined.ArrowDropDown,
+                contentDescription = null,
             )
-        },
-    )
+        }
+    }
 }
 
 @Composable

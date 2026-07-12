@@ -12,9 +12,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.DragHandle
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -69,14 +72,16 @@ internal fun FeedImmersivePill(
 }
 
 @Composable
-internal fun FeedImmersivePickerSheet(
+internal fun FeedPickerSheet(
     feeds: List<SourceFeed>,
     selectedFeedId: String,
     screenModel: FeedsScreenModel,
     canJumpToNewest: Boolean,
     onSelect: (String) -> Unit,
-    onRefresh: () -> Unit,
-    onJumpToNewest: () -> Unit,
+    onRefresh: (() -> Unit)?,
+    onJumpToNewest: (() -> Unit)?,
+    onAddFeed: () -> Unit,
+    onManageFeeds: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
     AdaptiveSheet(onDismissRequest = onDismissRequest) {
@@ -90,12 +95,14 @@ internal fun FeedImmersivePickerSheet(
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
             )
-            FeedSheetAction(
-                label = stringResource(MR.strings.action_refresh),
-                icon = Icons.Outlined.Refresh,
-                onClick = onRefresh,
-            )
-            if (canJumpToNewest) {
+            if (onRefresh != null) {
+                FeedSheetAction(
+                    label = stringResource(MR.strings.action_refresh),
+                    icon = Icons.Outlined.Refresh,
+                    onClick = onRefresh,
+                )
+            }
+            if (canJumpToNewest && onJumpToNewest != null) {
                 FeedSheetAction(
                     label = stringResource(MR.strings.action_move_to_top),
                     icon = Icons.Outlined.KeyboardArrowUp,
@@ -121,13 +128,21 @@ internal fun FeedImmersivePickerSheet(
                                 .size(32.dp)
                                 .clip(MaterialTheme.shapes.small),
                         )
-                        Text(
-                            text = preset.name,
-                            modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.bodyLarge,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = preset.name,
+                                style = MaterialTheme.typography.bodyLarge,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Text(
+                                text = source.name,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
                         if (selected) {
                             Icon(
                                 imageVector = Icons.Outlined.Check,
@@ -138,6 +153,17 @@ internal fun FeedImmersivePickerSheet(
                     }
                 }
             }
+            HorizontalDivider()
+            FeedSheetAction(
+                label = stringResource(MR.strings.action_add),
+                icon = Icons.Outlined.Add,
+                onClick = onAddFeed,
+            )
+            FeedSheetAction(
+                label = stringResource(MR.strings.browse_manage_feeds),
+                icon = Icons.Outlined.DragHandle,
+                onClick = onManageFeeds,
+            )
         }
     }
 }

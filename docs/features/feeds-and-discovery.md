@@ -16,7 +16,7 @@ Open feed management to:
 - Reorder feeds
 - Remove feeds
 
-In the regular feed view, use the navigation bar to move between the previous and next enabled feed and to select that feed's display mode.
+In the regular feed view, use the navigation bar to move between the previous and next enabled feed and to select that feed's display mode. Tap the current feed to open the feed picker, jump directly to any enabled feed, or open the add and management actions.
 
 Feed configuration and scroll state are profile-specific.
 
