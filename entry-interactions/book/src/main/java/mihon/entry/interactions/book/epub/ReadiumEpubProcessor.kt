@@ -1,0 +1,143 @@
+package mihon.entry.interactions.book.epub
+
+import kotlinx.coroutines.CancellationException
+import mihon.book.api.BookContentDescriptor
+import mihon.book.api.BookFailure
+import mihon.book.api.BookFailureReason
+import mihon.book.api.BookLocator
+import mihon.book.api.BookPublication
+import mihon.entry.interactions.book.BookContentSession
+import mihon.entry.interactions.book.BookOpenResult
+import mihon.entry.interactions.book.BookProcessor
+import mihon.entry.interactions.book.BookPublicationSession
+import mihon.entry.interactions.book.BookSessionCloseStack
+import mihon.entry.interactions.book.MaterializedBookResource
+import org.readium.r2.shared.publication.Publication
+import org.readium.r2.shared.util.AbsoluteUrl
+import org.readium.r2.shared.util.Try
+import org.readium.r2.shared.util.asset.Asset
+import org.readium.r2.shared.util.asset.AssetRetriever
+import org.readium.r2.shared.util.asset.DefaultArchiveOpener
+import org.readium.r2.shared.util.asset.DefaultFormatSniffer
+import org.readium.r2.shared.util.http.DefaultHttpClient
+import org.readium.r2.shared.util.resource.Resource
+import org.readium.r2.shared.util.resource.ResourceFactory
+import org.readium.r2.streamer.PublicationOpener
+import org.readium.r2.streamer.parser.epub.EpubParser
+
+internal class ReadiumEpubProcessor : BookProcessor {
+    private val httpClient = DefaultHttpClient()
+    private val assetRetriever = AssetRetriever(
+        resourceFactory = MaterializedFileOnlyResourceFactory,
+        archiveOpener = DefaultArchiveOpener(),
+        formatSniffer = DefaultFormatSniffer(),
+    )
+    private val publicationOpener = PublicationOpener(EpubParser(httpClient))
+
+    override fun supports(descriptor: BookContentDescriptor): Boolean =
+        descriptor.format == EPUB_MEDIA_TYPE &&
+            descriptor.protection == "none" &&
+            descriptor.profile != "fixed-layout"
+
+    override suspend fun open(content: BookContentSession): BookOpenResult {
+        if (!supports(content.descriptor)) {
+            return BookOpenResult.Failure(
+                BookFailure(BookFailureReason.FORMAT_UNSUPPORTED, "Unsupported EPUB descriptor"),
+            )
+        }
+
+        val lease = content.materializePrimaryResource().getOrElse {
+            return BookOpenResult.Failure(
+                BookFailure(BookFailureReason.CONTENT_UNAVAILABLE, it.message ?: "Unable to materialize EPUB"),
+            )
+        }
+
+        var asset: Asset? = null
+        var publication: Publication? = null
+        try {
+            val assetResult = assetRetriever.retrieve(lease.file)
+            asset = assetResult.getOrNull()
+                ?: return failureAndClose(
+                    lease,
+                    BookFailureReason.MALFORMED_CONTENT,
+                    assetResult.failureOrNull()?.message ?: "Unable to recognize EPUB",
+                )
+            val publicationResult = publicationOpener.open(asset, allowUserInteraction = false)
+            publication = publicationResult.getOrNull()
+                ?: run {
+                    asset.close()
+                    asset = null
+                    return failureAndClose(
+                        lease,
+                        BookFailureReason.MALFORMED_CONTENT,
+                        publicationResult.failureOrNull()?.message ?: "Unable to parse EPUB",
+                    )
+                }
+            return BookOpenResult.Success(
+                ReadiumPublicationSession(
+                    enginePublication = publication,
+                    lease = lease,
+                    publicationId = content.publicationId,
+                    revision = content.revision,
+                ),
+            ).also {
+                publication = null
+                asset = null
+            }
+        } catch (error: CancellationException) {
+            publication?.close() ?: asset?.close()
+            lease.close()
+            throw error
+        } catch (error: Exception) {
+            publication?.close() ?: asset?.close()
+            return failureAndClose(
+                lease,
+                BookFailureReason.MALFORMED_CONTENT,
+                error.message ?: "Unexpected EPUB error",
+            )
+        }
+    }
+
+    private fun failureAndClose(
+        lease: MaterializedBookResource,
+        reason: BookFailureReason,
+        message: String,
+    ): BookOpenResult.Failure {
+        lease.close()
+        return BookOpenResult.Failure(BookFailure(reason, message))
+    }
+
+    private companion object {
+        const val EPUB_MEDIA_TYPE = "application/epub+zip"
+    }
+}
+
+internal class ReadiumPublicationSession(
+    private val enginePublication: Publication,
+    private val lease: MaterializedBookResource,
+    publicationId: String,
+    revision: String,
+) : BookPublicationSession {
+    private val closeStack = BookSessionCloseStack().apply {
+        own(lease)
+        own(AutoCloseable(enginePublication::close))
+    }
+
+    override val publication: BookPublication = ReadiumPublicationAdapter.adapt(
+        publication = enginePublication,
+        publicationId = publicationId,
+        revision = revision,
+    )
+
+    override fun validate(locator: BookLocator): Boolean =
+        ReadiumLocatorAdapter.restore(locator, enginePublication) != null
+
+    fun readiumPublication(): Publication = enginePublication
+
+    override fun close() = closeStack.close()
+}
+
+private object MaterializedFileOnlyResourceFactory : ResourceFactory {
+    override suspend fun create(url: AbsoluteUrl): Try<Resource, ResourceFactory.Error> =
+        Try.failure(ResourceFactory.Error.SchemeNotSupported(url.scheme))
+}
