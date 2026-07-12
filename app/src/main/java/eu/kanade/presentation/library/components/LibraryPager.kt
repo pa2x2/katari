@@ -1,15 +1,11 @@
 package eu.kanade.presentation.library.components
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -19,11 +15,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import eu.kanade.core.preference.PreferenceMutableState
-import eu.kanade.tachiyomi.ui.library.LibraryItem
-import tachiyomi.domain.category.model.Category
+import eu.kanade.tachiyomi.ui.library.LibraryPage
 import tachiyomi.domain.library.model.LibraryDisplayMode
-import tachiyomi.domain.library.model.LibraryManga
+import tachiyomi.domain.library.model.LibraryItem
+import tachiyomi.domain.library.model.LibraryItemKey
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.util.plus
 
@@ -32,16 +29,17 @@ fun LibraryPager(
     state: PagerState,
     contentPadding: PaddingValues,
     hasActiveFilters: Boolean,
-    selection: Set<Long>,
+    selection: Set<LibraryItemKey>,
     searchQuery: String?,
     onGlobalSearchClicked: () -> Unit,
-    getCategoryForPage: (Int) -> Category,
+    getPageForIndex: (Int) -> LibraryPage,
     getDisplayMode: (Int) -> PreferenceMutableState<LibraryDisplayMode>,
     getColumnsForOrientation: (Boolean) -> PreferenceMutableState<Int>,
-    getItemsForCategory: (Category) -> List<LibraryItem>,
-    onClickManga: (Category, LibraryManga) -> Unit,
-    onLongClickManga: (Category, LibraryManga) -> Unit,
-    onClickContinueReading: ((LibraryManga) -> Unit)?,
+    getItemsForPage: (LibraryPage) -> List<LibraryItem>,
+    displaySettings: LibraryDisplaySettings,
+    onClickItem: (LibraryPage, LibraryItem) -> Unit,
+    onLongClickItem: (LibraryPage, LibraryItem) -> Unit,
+    onClickContinueReading: ((LibraryItem) -> Unit)?,
 ) {
     HorizontalPager(
         modifier = Modifier.fillMaxSize(),
@@ -52,11 +50,11 @@ fun LibraryPager(
             // To make sure only one offscreen page is being composed
             return@HorizontalPager
         }
-        val category = getCategoryForPage(page)
-        val items = getItemsForCategory(category)
+        val libraryPage = getPageForIndex(page)
+        val items = getItemsForPage(libraryPage)
 
         if (items.isEmpty()) {
-            LibraryPagerEmptyScreen(
+            LibraryPageEmptyScreen(
                 searchQuery = searchQuery,
                 hasActiveFilters = hasActiveFilters,
                 contentPadding = contentPadding,
@@ -66,7 +64,10 @@ fun LibraryPager(
         }
 
         val displayMode by getDisplayMode(page)
-        val columns by if (displayMode != LibraryDisplayMode.List) {
+        val columns by if (
+            displayMode != LibraryDisplayMode.List &&
+            displayMode != LibraryDisplayMode.ComfortableList
+        ) {
             val configuration = LocalConfiguration.current
             val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
@@ -75,8 +76,8 @@ fun LibraryPager(
             remember { mutableIntStateOf(0) }
         }
 
-        val onClickManga: (LibraryManga) -> Unit = { onClickManga(category, it) }
-        val onLongClickManga: (LibraryManga) -> Unit = { onLongClickManga(category, it) }
+        val onClick: (LibraryItem) -> Unit = { onClickItem(libraryPage, it) }
+        val onLongClick: (LibraryItem) -> Unit = { onLongClickItem(libraryPage, it) }
 
         when (displayMode) {
             LibraryDisplayMode.List -> {
@@ -84,11 +85,12 @@ fun LibraryPager(
                     items = items,
                     contentPadding = contentPadding,
                     selection = selection,
-                    onClick = onClickManga,
-                    onLongClick = onLongClickManga,
+                    onClick = onClick,
+                    onLongClick = onLongClick,
                     onClickContinueReading = onClickContinueReading,
                     searchQuery = searchQuery,
                     onGlobalSearchClicked = onGlobalSearchClicked,
+                    displaySettings = displaySettings,
                 )
             }
             LibraryDisplayMode.CompactGrid, LibraryDisplayMode.CoverOnlyGrid -> {
@@ -98,11 +100,12 @@ fun LibraryPager(
                     columns = columns,
                     contentPadding = contentPadding,
                     selection = selection,
-                    onClick = onClickManga,
-                    onLongClick = onLongClickManga,
+                    onClick = onClick,
+                    onLongClick = onLongClick,
                     onClickContinueReading = onClickContinueReading,
                     searchQuery = searchQuery,
                     onGlobalSearchClicked = onGlobalSearchClicked,
+                    displaySettings = displaySettings,
                 )
             }
             LibraryDisplayMode.ComfortableGrid -> {
@@ -111,11 +114,26 @@ fun LibraryPager(
                     columns = columns,
                     contentPadding = contentPadding,
                     selection = selection,
-                    onClick = onClickManga,
-                    onLongClick = onLongClickManga,
+                    onClick = onClick,
+                    onLongClick = onLongClick,
                     onClickContinueReading = onClickContinueReading,
                     searchQuery = searchQuery,
                     onGlobalSearchClicked = onGlobalSearchClicked,
+                    displaySettings = displaySettings,
+                )
+            }
+            LibraryDisplayMode.ComfortableList -> {
+                LibraryComfortableGrid(
+                    items = items,
+                    columns = 1,
+                    contentPadding = contentPadding,
+                    selection = selection,
+                    onClick = onClick,
+                    onLongClick = onLongClick,
+                    onClickContinueReading = onClickContinueReading,
+                    searchQuery = searchQuery,
+                    onGlobalSearchClicked = onGlobalSearchClicked,
+                    displaySettings = displaySettings,
                 )
             }
         }
@@ -123,7 +141,7 @@ fun LibraryPager(
 }
 
 @Composable
-private fun LibraryPagerEmptyScreen(
+fun LibraryPageEmptyScreen(
     searchQuery: String?,
     hasActiveFilters: Boolean,
     contentPadding: PaddingValues,
@@ -132,28 +150,28 @@ private fun LibraryPagerEmptyScreen(
     val msg = when {
         !searchQuery.isNullOrEmpty() -> MR.strings.no_results_found
         hasActiveFilters -> MR.strings.error_no_match
-        else -> MR.strings.information_no_manga_category
+        else -> MR.strings.information_no_manga_group
     }
 
-    Column(
-        modifier = Modifier
-            .padding(contentPadding + PaddingValues(8.dp))
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
+    FastScrollLazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = contentPadding + PaddingValues(8.dp),
     ) {
-        if (!searchQuery.isNullOrEmpty()) {
-            GlobalSearchItem(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.CenterHorizontally),
-                searchQuery = searchQuery,
-                onClick = onGlobalSearchClicked,
-            )
+        item {
+            if (!searchQuery.isNullOrEmpty()) {
+                GlobalSearchItem(
+                    modifier = Modifier.fillMaxWidth(),
+                    searchQuery = searchQuery,
+                    onClick = onGlobalSearchClicked,
+                )
+            }
         }
 
-        EmptyScreen(
-            stringRes = msg,
-            modifier = Modifier.weight(1f),
-        )
+        item {
+            EmptyScreen(
+                stringRes = msg,
+                modifier = Modifier.fillParentMaxSize(),
+            )
+        }
     }
 }

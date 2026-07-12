@@ -5,11 +5,11 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
 import eu.kanade.tachiyomi.data.track.EnhancedTracker
+import eu.kanade.tachiyomi.data.track.EntryTrackingSource
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
-import eu.kanade.tachiyomi.source.Source
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.track.model.EntryTrack
 import tachiyomi.i18n.MR
-import tachiyomi.domain.manga.model.Manga as DomainManga
-import tachiyomi.domain.track.model.Track as DomainTrack
 
 class Suwayomi(id: Long) : BaseTracker(id, "Suwayomi"), EnhancedTracker {
 
@@ -43,7 +43,7 @@ class Suwayomi(id: Long) : BaseTracker(id, "Suwayomi"), EnhancedTracker {
 
     override fun getScoreList(): List<String> = listOf()
 
-    override fun displayScore(track: DomainTrack): String = ""
+    override fun displayScore(track: EntryTrack): String = ""
 
     override suspend fun update(track: Track, didReadChapter: Boolean): Track {
         if (track.status != COMPLETED) {
@@ -84,24 +84,24 @@ class Suwayomi(id: Long) : BaseTracker(id, "Suwayomi"), EnhancedTracker {
 
     override fun getAcceptedSources(): List<String> = listOf("eu.kanade.tachiyomi.extension.all.tachidesk.Tachidesk")
 
-    override suspend fun match(manga: DomainManga): TrackSearch? =
+    override suspend fun match(entry: Entry): TrackSearch? =
         try {
-            api.getTrackSearch(manga.url.getMangaId())
+            api.getTrackSearch(entry.url.getEntryId())
         } catch (e: Exception) {
             null
         }
 
-    override fun isTrackFrom(track: DomainTrack, manga: DomainManga, source: Source?): Boolean =
-        track.remoteUrl == manga.url && source?.let { accept(it) } == true
+    override fun isTrackFrom(track: EntryTrack, entry: Entry, source: EntryTrackingSource?): Boolean =
+        track.remoteUrl == entry.url && source?.let { accept(it) } == true
 
-    override fun migrateTrack(track: DomainTrack, manga: DomainManga, newSource: Source): DomainTrack? =
+    override fun migrateTrack(track: EntryTrack, entry: Entry, newSource: EntryTrackingSource): EntryTrack? =
         if (accept(newSource)) {
-            track.copy(remoteUrl = manga.url)
+            track.copy(remoteUrl = entry.url)
         } else {
             null
         }
 
-    private fun String.getMangaId(): Long =
+    private fun String.getEntryId(): Long =
         this.substringAfterLast('/').toLong()
 
     private fun getPrefTrackerDelete(): Boolean {

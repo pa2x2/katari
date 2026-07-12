@@ -1,0 +1,80 @@
+import kotlin.Boolean;
+
+CREATE TABLE entry_sync(
+    _id INTEGER PRIMARY KEY AUTOINCREMENT,
+    profile_id INTEGER NOT NULL DEFAULT 1,
+    entry_id INTEGER NOT NULL,
+    sync_id INTEGER NOT NULL,
+    remote_id INTEGER NOT NULL,
+    library_id INTEGER,
+    title TEXT NOT NULL,
+    last_chapter_read REAL NOT NULL,
+    total_chapters INTEGER NOT NULL,
+    status INTEGER NOT NULL,
+    score REAL NOT NULL,
+    remote_url TEXT NOT NULL,
+    start_date INTEGER NOT NULL,
+    finish_date INTEGER NOT NULL,
+    private INTEGER AS Boolean DEFAULT 0 NOT NULL,
+    UNIQUE (profile_id, entry_id, sync_id) ON CONFLICT REPLACE,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    FOREIGN KEY(profile_id) REFERENCES profiles(_id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_entry_sync_entry_id ON entry_sync(profile_id, entry_id);
+
+delete:
+DELETE FROM entry_sync
+WHERE profile_id = :profileId
+AND entry_id = :entryId
+AND sync_id = :syncId;
+
+deleteByProfile:
+DELETE FROM entry_sync
+WHERE profile_id = :profileId;
+
+moveEntryToProfile:
+UPDATE entry_sync
+SET profile_id = :destinationProfileId
+WHERE profile_id = :sourceProfileId
+AND entry_id = :entryId;
+
+getTracks:
+SELECT *
+FROM entry_sync
+WHERE profile_id = :profileId;
+
+getTrackById:
+SELECT *
+FROM entry_sync
+WHERE _id = :id
+AND profile_id = :profileId;
+
+getTracksByEntryId:
+SELECT *
+FROM entry_sync
+WHERE profile_id = :profileId
+AND entry_id = :entryId;
+
+insert:
+INSERT INTO entry_sync(profile_id, entry_id, sync_id, remote_id, library_id, title, last_chapter_read, total_chapters, status, score, remote_url, start_date, finish_date, private)
+VALUES (:profileId, :entryId, :syncId, :remoteId, :libraryId, :title, :lastChapterRead, :totalChapters, :status, :score, :remoteUrl, :startDate, :finishDate, :private);
+
+update:
+UPDATE entry_sync
+SET
+    entry_id = coalesce(:entryId, entry_id),
+    sync_id = coalesce(:syncId, sync_id),
+    remote_id = coalesce(:mediaId, remote_id),
+    library_id = coalesce(:libraryId, library_id),
+    title = coalesce(:title, title),
+    last_chapter_read = coalesce(:lastChapterRead, last_chapter_read),
+    total_chapters = coalesce(:totalChapter, total_chapters),
+    status = coalesce(:status, status),
+    score = coalesce(:score, score),
+    remote_url = coalesce(:trackingUrl, remote_url),
+    start_date = coalesce(:startDate, start_date),
+    finish_date = coalesce(:finishDate, finish_date),
+    private = coalesce(:private, private)
+WHERE _id = :id
+AND profile_id = :profileId;

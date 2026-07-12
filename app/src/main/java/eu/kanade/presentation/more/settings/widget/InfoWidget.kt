@@ -19,7 +19,10 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.secondaryItemAlpha
 
 @Composable
-internal fun InfoWidget(text: String) {
+internal fun InfoWidget(
+    text: String,
+    showIcon: Boolean = true,
+) {
     Column(
         modifier = Modifier
             .padding(
@@ -29,10 +32,12 @@ internal fun InfoWidget(text: String) {
             .secondaryItemAlpha(),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
     ) {
-        Icon(
-            imageVector = Icons.Outlined.Info,
-            contentDescription = null,
-        )
+        if (showIcon) {
+            Icon(
+                imageVector = Icons.Outlined.Info,
+                contentDescription = null,
+            )
+        }
         Text(
             text = text,
             style = MaterialTheme.typography.bodySmall,

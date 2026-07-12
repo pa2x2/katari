@@ -1,0 +1,74 @@
+CREATE TABLE merged_entries(
+    _id INTEGER PRIMARY KEY AUTOINCREMENT,
+    profile_id INTEGER NOT NULL DEFAULT 1,
+    target_entry_id INTEGER NOT NULL,
+    entry_id INTEGER NOT NULL,
+    position INTEGER NOT NULL,
+    UNIQUE(profile_id, entry_id),
+    UNIQUE(profile_id, target_entry_id, position),
+    FOREIGN KEY(target_entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    FOREIGN KEY(profile_id) REFERENCES profiles(_id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_merged_entries_target ON merged_entries(profile_id, target_entry_id);
+CREATE INDEX idx_merged_entries_entry ON merged_entries(profile_id, entry_id);
+
+getAll:
+SELECT target_entry_id, entry_id, position
+FROM merged_entries
+WHERE profile_id = :profileId
+ORDER BY target_entry_id, position;
+
+getTargetIdByEntryId:
+SELECT target_entry_id
+FROM merged_entries
+WHERE profile_id = :profileId
+AND entry_id = :entryId
+LIMIT 1;
+
+getEntriesByTargetId:
+SELECT target_entry_id, entry_id, position
+FROM merged_entries
+WHERE profile_id = :profileId
+AND target_entry_id = :targetEntryId
+ORDER BY position;
+
+getEntriesByEntryId:
+SELECT ME.target_entry_id, ME.entry_id, ME.position
+FROM merged_entries ME
+WHERE ME.profile_id = :profileId
+AND ME.target_entry_id = (
+    SELECT target_entry_id
+    FROM merged_entries
+    WHERE profile_id = :profileId
+    AND entry_id = :entryId
+    LIMIT 1
+)
+ORDER BY ME.position;
+
+insert:
+INSERT INTO merged_entries(profile_id, target_entry_id, entry_id, position)
+VALUES (:profileId, :targetEntryId, :entryId, :position);
+
+deleteByTargetId:
+DELETE FROM merged_entries
+WHERE profile_id = :profileId
+AND target_entry_id = :targetEntryId;
+
+deleteByEntryId:
+DELETE FROM merged_entries
+WHERE profile_id = :profileId
+AND entry_id = :entryId;
+
+deleteGroupsContainingEntry:
+DELETE FROM merged_entries
+WHERE profile_id = :profileId
+AND (
+    entry_id = :entryId
+    OR target_entry_id = :entryId
+);
+
+deleteByProfile:
+DELETE FROM merged_entries
+WHERE profile_id = :profileId;

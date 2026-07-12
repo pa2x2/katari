@@ -14,7 +14,7 @@ interface ConfigurableSource : Source {
      * @since extensions-lib 1.5
      */
     fun getSourcePreferences(): SharedPreferences =
-        Injekt.get<Application>().getSharedPreferences(preferenceKey(), Context.MODE_PRIVATE)
+        sourcePreferences(preferenceKey())
 
     fun setupPreferenceScreen(screen: PreferenceScreen)
 }
@@ -22,8 +22,7 @@ interface ConfigurableSource : Source {
 fun ConfigurableSource.preferenceKey(): String = "source_$id"
 
 // TODO: use getSourcePreferences once all extensions are on ext-lib 1.5
-fun ConfigurableSource.sourcePreferences(): SharedPreferences =
-    Injekt.get<Application>().getSharedPreferences(preferenceKey(), Context.MODE_PRIVATE)
+fun ConfigurableSource.sourcePreferences(): SharedPreferences = sourcePreferences(preferenceKey())
 
 fun sourcePreferences(key: String): SharedPreferences =
     Injekt.get<Application>().getSharedPreferences(key, Context.MODE_PRIVATE)

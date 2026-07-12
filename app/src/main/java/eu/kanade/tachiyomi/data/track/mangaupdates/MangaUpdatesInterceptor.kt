@@ -6,26 +6,24 @@ import okhttp3.Response
 import java.io.IOException
 
 class MangaUpdatesInterceptor(
-    mangaUpdates: MangaUpdates,
+    private val mangaUpdates: MangaUpdates,
 ) : Interceptor {
-
-    private var token: String? = mangaUpdates.restoreSession()
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
 
-        val token = token ?: throw IOException("Not authenticated with MangaUpdates")
+        val token = mangaUpdates.restoreSession() ?: throw IOException("Not authenticated with MangaUpdates")
 
         // Add the authorization header to the original request.
         val authRequest = originalRequest.newBuilder()
             .addHeader("Authorization", "Bearer $token")
-            .header("User-Agent", "Mihon v${BuildConfig.VERSION_NAME} (${BuildConfig.APPLICATION_ID})")
+            .header("User-Agent", "Katari v${BuildConfig.VERSION_NAME} (${BuildConfig.APPLICATION_ID})")
             .build()
 
         return chain.proceed(authRequest)
     }
 
     fun newAuth(token: String?) {
-        this.token = token
+        mangaUpdates.saveSession(token)
     }
 }

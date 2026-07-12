@@ -22,6 +22,7 @@ fun <T> MultiSelectListPreferenceWidget(
     title: String,
     subtitle: String?,
     icon: ImageVector?,
+    isProfileSpecific: Boolean = false,
     entries: Map<out T, String>,
     onValuesChange: (Set<T>) -> Unit,
 ) {
@@ -31,6 +32,7 @@ fun <T> MultiSelectListPreferenceWidget(
         title = title,
         subtitle = subtitle,
         icon = icon,
+        isProfileSpecific = isProfileSpecific,
         onPreferenceClick = { isDialogShown = true },
     )
 

@@ -32,9 +32,10 @@ class GetExtensionsByType(
             val untrusted = _untrusted
                 .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
 
+            val installedByPkg = _installed.associateBy { it.pkgName }
             val available = _available
                 .filter { extension ->
-                    _installed.none { it.pkgName == extension.pkgName } &&
+                    installedByPkg[extension.pkgName] == null &&
                         _untrusted.none { it.pkgName == extension.pkgName } &&
                         (showNsfwSources || !extension.isNsfw)
                 }

@@ -1,16 +1,16 @@
 package tachiyomi.source.local.metadata
 
-import eu.kanade.tachiyomi.source.model.SChapter
-import eu.kanade.tachiyomi.source.model.SManga
 import mihon.core.archive.EpubReader
+import tachiyomi.source.local.LocalEntryChapterMetadata
+import tachiyomi.source.local.LocalEntryMetadata
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 /**
- * Fills manga and chapter metadata using this epub file's metadata.
+ * Fills entry and chapter metadata using this epub file's metadata.
  */
-fun EpubReader.fillMetadata(manga: SManga, chapter: SChapter) {
+internal fun EpubReader.fillMetadata(entry: LocalEntryMetadata, chapter: LocalEntryChapterMetadata) {
     val ref = getPackageHref()
     val doc = getPackageDocument(ref)
 
@@ -23,8 +23,8 @@ fun EpubReader.fillMetadata(manga: SManga, chapter: SChapter) {
         date = doc.select("meta[property=dcterms:modified]").first()
     }
 
-    creator?.text()?.let { manga.author = it }
-    description?.text()?.let { manga.description = it }
+    creator?.text()?.let { entry.author = it }
+    description?.text()?.let { entry.description = it }
 
     title?.text()?.let { chapter.name = it }
 
@@ -39,7 +39,7 @@ fun EpubReader.fillMetadata(manga: SManga, chapter: SChapter) {
         try {
             val parsedDate = dateFormat.parse(date.text())
             if (parsedDate != null) {
-                chapter.date_upload = parsedDate.time
+                chapter.dateUpload = parsedDate.time
             }
         } catch (e: ParseException) {
             // Empty

@@ -6,12 +6,18 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.pm.PackageInfoCompat
+import dalvik.system.DelegateLastClassLoader
 import eu.kanade.domain.extension.interactor.TrustExtension
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.LoadResult
+import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.SourceFactory
+import eu.kanade.tachiyomi.source.adapter.asUnifiedSource
+import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
+import eu.kanade.tachiyomi.source.entry.EntrySourceFactory
+import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.util.lang.Hash
 import eu.kanade.tachiyomi.util.storage.copyAndSetReadOnlyTo
 import eu.kanade.tachiyomi.util.system.ChildFirstPathClassLoader
@@ -54,7 +60,13 @@ internal object ExtensionLoader {
     private const val METADATA_EXTENSION_LIB = "tachiyomix.extensionLib"
     private const val METADATA_CONTENT_WARNING = "tachiyomix.contentWarning"
 
-    private val SUPPORTED_LIB_VERSIONS = listOf(1.4, 1.6)
+    private val UPSTREAM_SOURCE_API_VERSION_RANGES = listOf(
+        libVersionRange("1.4", "1.4"),
+        libVersionRange("1.6", "1.6"),
+    )
+    private val ENTRY_SOURCE_API_VERSION_FAMILIES = listOf(
+        LibVersion.parse("2.0")!!,
+    )
 
     @Suppress("DEPRECATION")
     private val PACKAGE_FLAGS = PackageManager.GET_CONFIGURATIONS or
@@ -232,8 +244,10 @@ internal object ExtensionLoader {
         val appInfo = pkgInfo.applicationInfo!!
         val pkgName = pkgInfo.packageName
 
-        val extName = appInfo.metaData.getString(METADATA_NAME)
-            ?: pkgManager.getApplicationLabel(appInfo).toString().substringAfter("Tachiyomi: ")
+        val extName = (appInfo.metaData.getString(METADATA_NAME) ?: pkgManager.getApplicationLabel(appInfo).toString())
+            .removePrefix("Tachiyomi: ")
+            .removePrefix("Katari: ")
+            .removePrefix("K-Mihon: ")
         val versionName = pkgInfo.versionName
         val versionCode = PackageInfoCompat.getLongVersionCode(pkgInfo)
 
@@ -243,14 +257,14 @@ internal object ExtensionLoader {
         }
 
         // Validate lib version
-        val libVersion = appInfo.metaData.getFloat(METADATA_EXTENSION_LIB)
-            .takeUnless { it == 0.0f }
-            ?.toString()
-            ?.toDouble()
-            ?: versionName.substringBeforeLast('.').toDoubleOrNull()
-        if (libVersion == null || libVersion !in SUPPORTED_LIB_VERSIONS) {
+        @Suppress("DEPRECATION")
+        val libVersionName = getExtensionLibVersion(appInfo.metaData.get(METADATA_EXTENSION_LIB))
+            ?: versionName.substringBeforeLast('.')
+        val libVersion = LibVersion.parse(libVersionName)
+        if (libVersion == null || !isLibVersionNameCompatible(libVersionName)) {
             logcat(LogPriority.WARN) {
-                "Lib version is $libVersion, while only version(s) ${SUPPORTED_LIB_VERSIONS.joinToString()} are supported"
+                "Lib version is $libVersionName, while only versions " +
+                    "${supportedLibVersionRangesString()} are allowed"
             }
             return LoadResult.Error
         }
@@ -265,7 +279,7 @@ internal object ExtensionLoader {
                 pkgName,
                 versionName,
                 versionCode,
-                libVersion,
+                libVersion.toDouble(),
                 signatures.last(),
             )
             logcat(LogPriority.WARN) { "Extension $pkgName isn't trusted" }
@@ -280,13 +294,13 @@ internal object ExtensionLoader {
         }
 
         val classLoader = try {
-            ChildFirstPathClassLoader(appInfo.sourceDir, null, context.classLoader)
+            createExtensionClassLoader(appInfo, context, libVersionName)
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Extension load error: $extName ($pkgName)" }
             return LoadResult.Error
         }
 
-        val sources = appInfo.metaData.getString(METADATA_SOURCE_CLASS)!!
+        val sourceClasses = appInfo.metaData.getString(METADATA_SOURCE_CLASS)!!
             .split(";")
             .map {
                 val sourceClass = it.trim()
@@ -296,20 +310,31 @@ internal object ExtensionLoader {
                     sourceClass
                 }
             }
-            .flatMap {
-                try {
-                    when (val obj = Class.forName(it, false, classLoader).getDeclaredConstructor().newInstance()) {
-                        is Source -> listOf(obj)
-                        is SourceFactory -> obj.createSources()
-                        else -> throw Exception("Unknown source class type: ${obj.javaClass}")
-                    }
-                } catch (e: Throwable) {
-                    logcat(LogPriority.ERROR, e) { "Extension load error: $extName ($it)" }
-                    return LoadResult.Error
-                }
-            }
 
-        val langs = sources.map { it.lang }.toSet()
+        val sources = sourceClasses.flatMap { sourceClass ->
+            try {
+                when (
+                    val obj = Class.forName(
+                        sourceClass,
+                        false,
+                        classLoader,
+                    ).getDeclaredConstructor().newInstance()
+                ) {
+                    is UnifiedSource -> listOf(obj)
+                    is EntrySourceFactory -> obj.createSources()
+                    is Source -> listOf(obj.asUnifiedSource())
+                    is SourceFactory -> obj.createSources().map { it.asUnifiedSource() }
+                    else -> throw Exception("Unknown source class type: ${obj.javaClass}")
+                }
+            } catch (e: Throwable) {
+                logcat(LogPriority.ERROR, e) { "Extension load error: $extName ($sourceClass)" }
+                return LoadResult.Error
+            }
+        }
+
+        val langs = sources.filterIsInstance<EntryCatalogueSource>()
+            .map { it.lang }
+            .toSet()
         val lang = when (langs.size) {
             0 -> ""
             1 -> langs.first()
@@ -321,11 +346,11 @@ internal object ExtensionLoader {
             pkgName = pkgName,
             versionName = versionName,
             versionCode = versionCode,
-            libVersion = libVersion,
+            libVersion = libVersion.toDouble(),
             lang = lang,
             isNsfw = isNsfw,
-            sources = sources,
             pkgFactory = appInfo.metaData.getString(METADATA_SOURCE_FACTORY),
+            sources = sources,
             icon = appInfo.loadIcon(pkgManager),
             isShared = extensionInfo.isShared,
         )
@@ -361,6 +386,157 @@ internal object ExtensionLoader {
      */
     private fun isPackageAnExtension(pkgInfo: PackageInfo): Boolean {
         return pkgInfo.reqFeatures.orEmpty().any { it.name == EXTENSION_FEATURE }
+    }
+
+    fun isLibVersionCompatible(versionName: String): Boolean {
+        return parseVersionNameAsLibVersion(versionName)
+            ?.let(::isLibVersionCompatible)
+            ?: false
+    }
+
+    fun isRawLibVersionCompatible(versionName: String): Boolean {
+        return LibVersion.parse(versionName)
+            ?.let(::isLibVersionCompatible)
+            ?: false
+    }
+
+    private fun isLibVersionNameCompatible(versionName: String): Boolean {
+        return isRawLibVersionCompatible(versionName)
+    }
+
+    private fun isLibVersionCompatible(libVersion: LibVersion): Boolean {
+        return supportedLibVersionRanges().any { libVersion in it } ||
+            supportedEntrySourceApiFamilies().any { family ->
+                libVersion.major == family.major && libVersion.minor == family.minor
+            }
+    }
+
+    fun compareLibVersions(firstVersionName: String, secondVersionName: String): Int? {
+        val first = parseVersionNameAsLibVersion(firstVersionName) ?: return null
+        val second = parseVersionNameAsLibVersion(secondVersionName) ?: return null
+        return first.compareTo(second)
+    }
+
+    private fun parseVersionNameAsLibVersion(versionName: String): LibVersion? {
+        return LibVersion.parse(versionName.substringBeforeLast('.'))
+            ?: LibVersion.parse(versionName)
+    }
+
+    private fun supportedLibVersionRanges(): List<ClosedRange<LibVersion>> {
+        return UPSTREAM_SOURCE_API_VERSION_RANGES
+    }
+
+    private fun supportedEntrySourceApiFamilies(): List<LibVersion> {
+        return ENTRY_SOURCE_API_VERSION_FAMILIES
+    }
+
+    private fun supportedLibVersionRangesString(): String {
+        val ranges = supportedLibVersionRanges().map { range ->
+            if (range.start == range.endInclusive) {
+                range.start.toString()
+            } else {
+                "${range.start} to ${range.endInclusive}"
+            }
+        }
+        val families = supportedEntrySourceApiFamilies().map { family ->
+            "${family.major}.${family.minor}.*"
+        }
+        return (ranges + families).joinToString()
+    }
+
+    private fun libVersionRange(start: String, endInclusive: String): ClosedRange<LibVersion> {
+        return LibVersion.parse(start)!!..LibVersion.parse(endInclusive)!!
+    }
+
+    internal fun getExtensionLibVersion(value: Any?): String? {
+        return when (value) {
+            is Float -> value.takeUnless { it == 0.0f }?.toString()
+            is Double -> value.takeUnless { it == 0.0 }?.toString()
+            is String -> value.takeUnless { it.isBlank() || it == "0" || it == "0.0" }
+            else -> null
+        }
+    }
+
+    private fun createExtensionClassLoader(
+        appInfo: ApplicationInfo,
+        context: Context,
+        libVersionName: String,
+    ): ClassLoader {
+        if (shouldUseDelegateLastClassLoader(libVersionName, Build.VERSION.SDK_INT)) {
+            try {
+                // Installed APKs are optimized for PathClassLoader. Loading a private cache copy
+                // prevents ART from reusing that incompatible context with DelegateLastClassLoader.
+                val cachedExtension = cacheExtensionApk(
+                    source = File(appInfo.sourceDir),
+                    cacheDir = File(context.codeCacheDir, "extension_apks"),
+                    packageName = appInfo.packageName,
+                )
+                return DelegateLastClassLoader(cachedExtension.absolutePath, null, context.classLoader)
+            } catch (e: Exception) {
+                logcat(LogPriority.WARN, e) {
+                    "Failed to prepare the optimized extension class loader for ${appInfo.packageName}"
+                }
+            }
+        }
+
+        return ChildFirstPathClassLoader(appInfo.sourceDir, null, context.classLoader)
+    }
+
+    internal fun cacheExtensionApk(source: File, cacheDir: File, packageName: String): File {
+        val filePrefix = "$packageName-"
+        val target = File(cacheDir, "$filePrefix${source.length()}-${source.lastModified()}.apk")
+
+        if (!target.isFile || target.length() != source.length()) {
+            source.copyAndSetReadOnlyTo(target, overwrite = true)
+            cacheDir.listFiles()
+                ?.filter { it.isFile && it != target && it.name.startsWith(filePrefix) }
+                ?.forEach(File::delete)
+        }
+
+        return target
+    }
+
+    internal fun shouldUseDelegateLastClassLoader(libVersionName: String, sdkInt: Int): Boolean {
+        if (sdkInt < Build.VERSION_CODES.O_MR1) return false
+
+        val libVersion = parseVersionNameAsLibVersion(libVersionName) ?: return false
+        return supportedLibVersionRanges().any { libVersion in it }
+    }
+
+    private data class LibVersion(
+        val major: Int,
+        val minor: Int,
+        val patch: Int = 0,
+    ) : Comparable<LibVersion> {
+
+        override fun compareTo(other: LibVersion): Int {
+            return compareValuesBy(this, other, LibVersion::major, LibVersion::minor, LibVersion::patch)
+        }
+
+        override fun toString(): String {
+            return if (patch == 0) {
+                "$major.$minor"
+            } else {
+                "$major.$minor.$patch"
+            }
+        }
+
+        fun toDouble(): Double {
+            return "$major.$minor".toDouble()
+        }
+
+        companion object {
+            fun parse(value: String): LibVersion? {
+                val parts = value.split('.')
+                if (parts.size !in 2..3) return null
+
+                return LibVersion(
+                    major = parts[0].toIntOrNull() ?: return null,
+                    minor = parts[1].toIntOrNull() ?: return null,
+                    patch = parts.getOrNull(2)?.toIntOrNull() ?: 0,
+                )
+            }
+        }
     }
 
     /**

@@ -16,10 +16,10 @@ import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.track.interactor.InsertTrack
+import tachiyomi.domain.track.model.EntryTrack
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
-import tachiyomi.domain.track.model.Track as DomainTrack
 
 abstract class BaseTracker(
     override val id: Long,
@@ -40,7 +40,7 @@ abstract class BaseTracker(
     override val supportsPrivateTracking: Boolean = false
 
     // TODO: Store all scores as 10 point in the future maybe?
-    override fun get10PointScore(track: DomainTrack): Double {
+    override fun get10PointScore(track: EntryTrack): Double {
         return track.score
     }
 
@@ -51,6 +51,7 @@ abstract class BaseTracker(
     @CallSuper
     override fun logout() {
         trackPreferences.setCredentials(this, "", "")
+        trackPreferences.trackDisplayUsername(this).delete()
     }
 
     override val isLoggedIn: Boolean
@@ -78,10 +79,10 @@ abstract class BaseTracker(
         trackPreferences.setCredentials(this, username, password)
     }
 
-    override suspend fun register(item: Track, mangaId: Long) {
-        item.manga_id = mangaId
+    override suspend fun register(item: Track, entryId: Long) {
+        item.manga_id = entryId
         try {
-            addTracks.bind(this, item, mangaId)
+            addTracks.bind(this, item, entryId)
         } catch (e: Throwable) {
             withUIContext { Injekt.get<Application>().toast(e.message) }
         }

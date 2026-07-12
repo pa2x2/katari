@@ -7,6 +7,7 @@ import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.model.SMangaUpdate
 import rx.Observable
+import tachiyomi.core.common.util.lang.awaitSingle
 
 /**
  * A basic interface for creating a source. It could be an online source, a local source, etc...
@@ -85,6 +86,16 @@ interface Source {
         fetchChapters: Boolean,
     ): SMangaUpdate
 
+    /** Compatibility bridge for extensions built against the original upstream 1.4 ABI. */
+    @Suppress("DEPRECATION")
+    @Deprecated("Use getMangaUpdate instead", ReplaceWith("getMangaUpdate"))
+    suspend fun getMangaDetails(manga: SManga): SManga = fetchMangaDetails(manga).awaitSingle()
+
+    /** Compatibility bridge for extensions built against the original upstream 1.4 ABI. */
+    @Suppress("DEPRECATION")
+    @Deprecated("Use getMangaUpdate instead", ReplaceWith("getMangaUpdate"))
+    suspend fun getChapterList(manga: SManga): List<SChapter> = fetchChapterList(manga).awaitSingle()
+
     /**
      * Get the list of pages a chapter has. Pages should be returned
      * in the expected order; the index is ignored.
@@ -93,7 +104,8 @@ interface Source {
      * @param chapter the chapter.
      * @return the pages for the chapter.
      */
-    suspend fun getPageList(chapter: SChapter): List<Page>
+    @Suppress("DEPRECATION")
+    suspend fun getPageList(chapter: SChapter): List<Page> = fetchPageList(chapter).awaitSingle()
 
     @Deprecated("Use the combined suspend API instead", ReplaceWith("getMangaUpdate"))
     fun fetchMangaDetails(manga: SManga): Observable<SManga> = throw UnsupportedOperationException()

@@ -13,6 +13,7 @@ data class BackupPreference(
 data class BackupSourcePreferences(
     @ProtoNumber(1) val sourceKey: String,
     @ProtoNumber(2) val prefs: List<BackupPreference>,
+    @ProtoNumber(3) val sourceId: Long? = null,
 )
 
 @Serializable

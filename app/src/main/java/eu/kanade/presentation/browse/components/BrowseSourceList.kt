@@ -8,40 +8,47 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
-import eu.kanade.presentation.library.components.CommonMangaItemDefaults
-import eu.kanade.presentation.library.components.MangaListItem
+import eu.kanade.presentation.entry.components.toListCoverType
+import eu.kanade.presentation.library.components.CommonEntryItemDefaults
+import eu.kanade.presentation.library.components.EntryListItem
+import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import kotlinx.coroutines.flow.StateFlow
-import tachiyomi.domain.manga.model.Manga
-import tachiyomi.domain.manga.model.MangaCover
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.model.EntryCover
 import tachiyomi.presentation.core.util.plus
 
 @Composable
 fun BrowseSourceList(
-    mangaList: LazyPagingItems<StateFlow<Manga>>,
+    entries: LazyPagingItems<StateFlow<Entry>>,
     contentPadding: PaddingValues,
-    onMangaClick: (Manga) -> Unit,
-    onMangaLongClick: (Manga) -> Unit,
+    sourceItemOrientation: EntryItemOrientation,
+    onEntryClick: (Entry) -> Unit,
+    onEntryLongClick: (Entry) -> Unit,
 ) {
     LazyColumn(
         contentPadding = contentPadding + PaddingValues(vertical = 8.dp),
     ) {
         item {
-            if (mangaList.loadState.prepend is LoadState.Loading) {
+            if (entries.loadState.prepend is LoadState.Loading) {
                 BrowseSourceLoadingItem()
             }
         }
 
-        items(count = mangaList.itemCount) { index ->
-            val manga by mangaList[index]?.collectAsState() ?: return@items
+        items(
+            count = entries.itemCount,
+            key = { index -> entries.peek(index)?.value?.id ?: "browse-list-$index" },
+        ) { index ->
+            val entry by entries[index]?.collectAsState() ?: return@items
             BrowseSourceListItem(
-                manga = manga,
-                onClick = { onMangaClick(manga) },
-                onLongClick = { onMangaLongClick(manga) },
+                entry = entry,
+                sourceItemOrientation = sourceItemOrientation,
+                onClick = { onEntryClick(entry) },
+                onLongClick = { onEntryLongClick(entry) },
             )
         }
 
         item {
-            if (mangaList.loadState.refresh is LoadState.Loading || mangaList.loadState.append is LoadState.Loading) {
+            if (entries.loadState.refresh is LoadState.Loading || entries.loadState.append is LoadState.Loading) {
                 BrowseSourceLoadingItem()
             }
         }
@@ -50,22 +57,24 @@ fun BrowseSourceList(
 
 @Composable
 private fun BrowseSourceListItem(
-    manga: Manga,
+    entry: Entry,
+    sourceItemOrientation: EntryItemOrientation,
     onClick: () -> Unit = {},
     onLongClick: () -> Unit = onClick,
 ) {
-    MangaListItem(
-        title = manga.title,
-        coverData = MangaCover(
-            mangaId = manga.id,
-            sourceId = manga.source,
-            isMangaFavorite = manga.favorite,
-            url = manga.thumbnailUrl,
-            lastModified = manga.coverLastModified,
+    EntryListItem(
+        title = entry.title,
+        coverData = EntryCover(
+            entryId = entry.id,
+            sourceId = entry.source,
+            isFavorite = entry.favorite,
+            url = entry.thumbnailUrl,
+            lastModified = entry.coverLastModified,
         ),
-        coverAlpha = if (manga.favorite) CommonMangaItemDefaults.BrowseFavoriteCoverAlpha else 1f,
+        coverType = sourceItemOrientation.toListCoverType(),
+        coverAlpha = if (entry.favorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f,
         badge = {
-            InLibraryBadge(enabled = manga.favorite)
+            InLibraryBadge(enabled = entry.favorite)
         },
         onLongClick = onLongClick,
         onClick = onClick,

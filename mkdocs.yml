@@ -1,0 +1,95 @@
+# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
+
+site_name: Katari documentation
+site_description: Documentation for Katari and its Entry-based extension API
+site_url: https://katariapp.github.io/
+repo_url: https://github.com/katariapp/katari
+repo_name: katariapp/katari
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  language: en
+  logo: assets/katari.svg
+  favicon: assets/katari.svg
+  font: false
+  palette:
+    - media: "(prefers-color-scheme)"
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-auto
+        name: Follow system theme
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Use dark theme
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Use light theme
+  features:
+    - content.code.copy
+    - navigation.footer
+    - navigation.indexes
+    - navigation.path
+    - navigation.top
+    - toc.follow
+    - search.highlight
+    - search.suggest
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/external-links.js
+
+nav:
+  - Home: README.md
+  - Relationship with Mihon: relationship-with-mihon.md
+  - Migrating to Katari: migrating-to-katari.md
+  - Katari features:
+      - Unified library: features/unified-library.md
+      - Profiles: features/profiles.md
+      - Merged entries: features/merged-entries.md
+      - Video playback: features/video-playback.md
+      - Feeds and discovery: features/feeds-and-discovery.md
+  - Katari differences:
+      - Backup and restore: differences/backup-and-restore.md
+      - Extensions and compatibility: differences/extensions-and-compatibility.md
+      - Builds, telemetry, and privacy: differences/builds-telemetry-and-privacy.md
+  - Inherited Mihon features:
+      - Curated links to Mihon documentation: inherited-features.md
+  - Extension development:
+      - extensions/README.md
+      - Getting started: extensions/getting-started.md
+      - Entry Source API: extensions/entry-source-api.md
+      - HTTP and parsing: extensions/http-and-parsing.md
+      - Media cookbooks:
+          - Image media: extensions/image-media.md
+          - Playback media: extensions/playback-media.md
+      - Migrating from Mihon: extensions/migrating-from-mihon.md
+      - Publishing and maintenance: extensions/publishing.md
+      - API compatibility and versioning: extensions/api-compatibility.md
+
+strict: true

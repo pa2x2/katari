@@ -1,0 +1,179 @@
+-- Phase 2: Database schema unification (part 3).
+-- Drops legacy tables and temporary mappings, then recreates triggers and views.
+
+-- 1. Drop legacy tables.
+DROP TABLE IF EXISTS mangas;
+DROP TABLE IF EXISTS animes;
+DROP TABLE IF EXISTS old_chapters;
+DROP TABLE IF EXISTS anime_episodes;
+DROP TABLE IF EXISTS anime_history;
+DROP TABLE IF EXISTS merged_mangas;
+DROP TABLE IF EXISTS merged_animes;
+DROP TABLE IF EXISTS anime_playback_state;
+DROP TABLE IF EXISTS anime_playback_preferences;
+DROP TABLE IF EXISTS anime_download_preferences;
+
+-- 2. Drop temporary mapping tables.
+DROP TABLE IF EXISTS __id_map;
+DROP TABLE IF EXISTS __chapter_id_map;
+
+-- 3. Recreate triggers for entries.
+CREATE TRIGGER update_last_favorited_at_entries
+AFTER UPDATE OF favorite ON entries
+BEGIN
+    UPDATE entries
+    SET favorite_modified_at = strftime('%s', 'now')
+    WHERE _id = new._id;
+END;
+
+CREATE TRIGGER update_last_modified_at_entries
+AFTER UPDATE ON entries
+FOR EACH ROW
+BEGIN
+    UPDATE entries
+    SET last_modified_at = strftime('%s', 'now')
+    WHERE _id = new._id;
+END;
+
+CREATE TRIGGER update_entry_version AFTER UPDATE ON entries
+BEGIN
+    UPDATE entries SET version = version + 1
+    WHERE _id = new._id AND new.is_syncing = 0 AND (
+        new.url != old.url OR
+        new.description != old.description OR
+        new.favorite != old.favorite
+    );
+END;
+
+-- 4. Recreate triggers for chapters.
+CREATE TRIGGER update_last_modified_at_chapters
+AFTER UPDATE ON chapters
+FOR EACH ROW
+BEGIN
+    UPDATE chapters
+    SET last_modified_at = strftime('%s', 'now')
+    WHERE _id = new._id;
+END;
+
+CREATE TRIGGER update_chapter_and_entry_version AFTER UPDATE ON chapters
+WHEN new.is_syncing = 0 AND (
+    new.read != old.read OR
+    new.bookmark != old.bookmark OR
+    new.last_page_read != old.last_page_read
+)
+BEGIN
+    UPDATE chapters SET version = version + 1
+    WHERE _id = new._id;
+
+    UPDATE entries SET version = version + 1
+    WHERE _id = new.entry_id AND (SELECT is_syncing FROM entries WHERE _id = new.entry_id) = 0;
+END;
+
+-- 5. Recreate trigger for entries_categories.
+CREATE TRIGGER insert_entry_category_update_version AFTER INSERT ON entries_categories
+BEGIN
+    UPDATE entries
+    SET version = version + 1
+    WHERE _id = new.entry_id
+      AND (SELECT is_syncing FROM entries WHERE _id = new.entry_id) = 0;
+END;
+
+-- 6. Recreate views.
+CREATE VIEW libraryView AS
+SELECT
+    ENT.*,
+    coalesce(C.total, 0) AS totalCount,
+    coalesce(C.readCount, 0) AS readCount,
+    coalesce(C.latestUpload, 0) AS latestUpload,
+    coalesce(C.fetchedAt, 0) AS chapterFetchedAt,
+    coalesce(C.lastRead, 0) AS lastRead,
+    coalesce(C.bookmarkCount, 0) AS bookmarkCount,
+    coalesce(EC.categories, '0') AS categories
+FROM entries ENT
+LEFT JOIN (
+    SELECT
+        chapters.entry_id,
+        count(*) AS total,
+        sum(read) AS readCount,
+        coalesce(max(chapters.date_upload), 0) AS latestUpload,
+        coalesce(max(history.last_read), 0) AS lastRead,
+        coalesce(max(chapters.date_fetch), 0) AS fetchedAt,
+        sum(chapters.bookmark) AS bookmarkCount
+    FROM chapters
+    LEFT JOIN excluded_scanlators
+    ON chapters.entry_id = excluded_scanlators.entry_id
+    AND chapters.scanlator = excluded_scanlators.scanlator
+    LEFT JOIN history
+    ON chapters._id = history.chapter_id
+    WHERE excluded_scanlators.scanlator IS NULL
+    GROUP BY chapters.entry_id
+) AS C
+ON ENT._id = C.entry_id
+LEFT JOIN (
+    SELECT profile_id, entry_id, group_concat(category_id) AS categories
+    FROM entries_categories
+    GROUP BY profile_id, entry_id
+) AS EC
+ON EC.profile_id = ENT.profile_id
+AND EC.entry_id = ENT._id
+WHERE ENT.favorite = 1;
+
+CREATE VIEW historyView AS
+SELECT
+    ENT.profile_id,
+    history._id AS id,
+    ENT._id AS entryId,
+    ENT.type,
+    chapters._id AS chapterId,
+    ENT.title,
+    ENT.thumbnail_url AS thumbnailUrl,
+    ENT.source,
+    ENT.favorite,
+    ENT.cover_last_modified,
+    chapters.name AS chapterName,
+    chapters.chapter_number AS chapterNumber,
+    history.last_read AS readAt,
+    history.time_read AS readDuration,
+    max_last_read.last_read AS maxReadAt,
+    max_last_read.chapter_id AS maxReadAtChapterId
+FROM entries ENT
+JOIN chapters
+ON ENT._id = chapters.entry_id
+JOIN history
+ON chapters._id = history.chapter_id
+JOIN (
+    SELECT chapters.entry_id, chapters._id AS chapter_id, MAX(history.last_read) AS last_read
+    FROM chapters JOIN history
+    ON chapters._id = history.chapter_id
+    GROUP BY chapters.entry_id
+) AS max_last_read
+ON chapters.entry_id = max_last_read.entry_id;
+
+CREATE VIEW updatesView AS
+SELECT
+    entries.profile_id,
+    entries._id AS entryId,
+    entries.type AS entryType,
+    entries.title AS entryTitle,
+    chapters._id AS chapterId,
+    chapters.name AS chapterName,
+    chapters.scanlator,
+    chapters.url AS chapterUrl,
+    chapters.read,
+    chapters.bookmark,
+    chapters.last_page_read,
+    entries.source,
+    entries.favorite,
+    entries.thumbnail_url AS thumbnailUrl,
+    entries.cover_last_modified AS coverLastModified,
+    chapters.date_upload AS dateUpload,
+    chapters.date_fetch AS datefetch,
+    excluded_scanlators.scanlator AS excludedScanlator
+FROM entries JOIN chapters
+ON entries._id = chapters.entry_id
+LEFT JOIN excluded_scanlators
+ON entries._id = excluded_scanlators.entry_id
+AND chapters.scanlator = excluded_scanlators.scanlator
+WHERE favorite = 1
+AND date_fetch > date_added
+ORDER BY date_fetch DESC;

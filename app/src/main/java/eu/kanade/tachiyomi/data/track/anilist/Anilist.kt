@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.data.track.anilist
 
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.domain.track.model.toDbTrack
+import eu.kanade.domain.track.service.GlobalTrackPreferences
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
@@ -11,7 +12,7 @@ import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import kotlinx.serialization.json.Json
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.injectLazy
-import tachiyomi.domain.track.model.Track as DomainTrack
+import tachiyomi.domain.track.model.EntryTrack as DomainTrack
 
 class Anilist(id: Long) : BaseTracker(id, "AniList"), DeletableTracker {
 
@@ -32,7 +33,7 @@ class Anilist(id: Long) : BaseTracker(id, "AniList"), DeletableTracker {
 
     private val json: Json by injectLazy()
 
-    private val interceptor by lazy { AnilistInterceptor(this, getPassword()) }
+    private val interceptor by lazy { AnilistInterceptor(this) }
 
     private val api by lazy { AnilistApi(client, interceptor) }
 
@@ -40,7 +41,8 @@ class Anilist(id: Long) : BaseTracker(id, "AniList"), DeletableTracker {
 
     override val supportsPrivateTracking: Boolean = true
 
-    private val scorePreference = trackPreferences.anilistScoreType
+    private val globalTrackPreferences: GlobalTrackPreferences by injectLazy()
+    private val scorePreference = globalTrackPreferences.anilistScoreType
 
     init {
         // If the preference is an int from APIv1, logout user to force using APIv2

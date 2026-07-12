@@ -12,17 +12,17 @@ class BasePreferences(
     preferenceStore: PreferenceStore,
 ) {
 
-    val downloadedOnly: Preference<Boolean> = preferenceStore.getBoolean(
-        Preference.appStateKey("pref_downloaded_only"),
-        false,
-    )
-
     val incognitoMode: Preference<Boolean> = preferenceStore.getBoolean(Preference.appStateKey("incognito_mode"), false)
 
     val extensionInstaller: ExtensionInstallerPreference = ExtensionInstallerPreference(context, preferenceStore)
 
     val shownOnboardingFlow: Preference<Boolean> = preferenceStore.getBoolean(
         Preference.appStateKey("onboarding_complete"),
+        false,
+    )
+
+    val mihonMigrationPromptHandled: Preference<Boolean> = preferenceStore.getBoolean(
+        Preference.appStateKey("mihon_migration_prompt_handled"),
         false,
     )
 

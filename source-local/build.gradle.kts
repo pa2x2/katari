@@ -15,7 +15,7 @@ kotlin {
 
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     dependencies {
-        implementation(projects.sourceApi)
+        api(projects.entrySourceApi)
         api(projects.i18n)
 
         implementation(libs.unifile)
@@ -32,6 +32,7 @@ kotlin {
                 implementation(projects.domain)
 
                 implementation(libs.bundles.serialization)
+                implementation(libs.jsoup)
             }
         }
     }

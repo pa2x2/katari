@@ -10,6 +10,7 @@ import androidx.annotation.CallSuper
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.model.InstallStep
+import eu.kanade.tachiyomi.extension.util.ExtensionInstaller.UserActionBehavior
 import uy.kohesive.injekt.injectLazy
 import java.util.Collections
 import kotlin.concurrent.atomics.AtomicReference
@@ -19,7 +20,7 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
  * Base implementation class for extension installer. To be used inside a foreground [Service].
  */
 @OptIn(ExperimentalAtomicApi::class)
-abstract class Installer(private val service: Service) {
+internal abstract class Installer(private val service: Service) {
 
     private val extensionManager: ExtensionManager by injectLazy()
 
@@ -46,8 +47,12 @@ abstract class Installer(private val service: Service) {
      * @param downloadId Download ID as known by [ExtensionManager]
      * @param uri Uri of APK to install
      */
-    fun addToQueue(downloadId: Long, uri: Uri) {
-        queue.add(Entry(downloadId, uri))
+    fun addToQueue(
+        downloadId: Long,
+        uri: Uri,
+        userActionBehavior: UserActionBehavior,
+    ) {
+        queue.add(Entry(downloadId, uri, userActionBehavior))
         checkQueue()
     }
 
@@ -134,8 +139,9 @@ abstract class Installer(private val service: Service) {
             queue.remove(toCancel)
             if (waitingInstall == toCancel) {
                 // Currently processing removed entry, continue queue
-                this.waitingInstall.store(null)
-                checkQueue()
+                if (this.waitingInstall.compareAndSet(toCancel, null)) {
+                    checkQueue()
+                }
             }
             extensionManager.updateInstallStep(downloadId, InstallStep.Idle)
         }
@@ -147,7 +153,11 @@ abstract class Installer(private val service: Service) {
      * @param downloadId Download ID as known by [ExtensionManager]
      * @param uri Uri of APK to install
      */
-    data class Entry(val downloadId: Long, val uri: Uri)
+    data class Entry(
+        val downloadId: Long,
+        val uri: Uri,
+        val userActionBehavior: UserActionBehavior,
+    )
 
     init {
         val filter = IntentFilter(ACTION_CANCEL_QUEUE)

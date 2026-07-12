@@ -30,6 +30,7 @@ fun LabeledCheckbox(
             .fillMaxWidth()
             .heightIn(min = 48.dp)
             .clickable(
+                enabled = enabled,
                 role = Role.Checkbox,
                 onClick = {
                     if (enabled) {

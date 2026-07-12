@@ -43,7 +43,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import eu.kanade.domain.extension.interactor.ExtensionSourceItem
 import eu.kanade.presentation.browse.components.ExtensionIcon
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
@@ -52,10 +51,11 @@ import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.TrailingWidgetBuffer
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.extension.model.Extension
-import eu.kanade.tachiyomi.source.ConfigurableSource
-import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsScreenModel
+import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsSourceUiModel
+import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsState
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import eu.kanade.tachiyomi.util.system.copyToClipboard
+import kotlinx.collections.immutable.ImmutableList
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -66,7 +66,7 @@ import tachiyomi.presentation.core.screens.EmptyScreen
 @Composable
 fun ExtensionDetailsScreen(
     navigateUp: () -> Unit,
-    state: ExtensionDetailsScreenModel.State,
+    state: ExtensionDetailsState,
     onClickSourcePreferences: (sourceId: Long) -> Unit,
     onClickEnableAll: () -> Unit,
     onClickDisableAll: () -> Unit,
@@ -153,7 +153,7 @@ fun ExtensionDetailsScreen(
 private fun ExtensionDetails(
     contentPadding: PaddingValues,
     extension: Extension.Installed,
-    sources: List<ExtensionSourceItem>,
+    sources: ImmutableList<ExtensionDetailsSourceUiModel>,
     incognitoMode: Boolean,
     onClickSourcePreferences: (sourceId: Long) -> Unit,
     onClickUninstall: () -> Unit,
@@ -193,7 +193,7 @@ private fun ExtensionDetails(
 
         items(
             items = sources,
-            key = { it.source.id },
+            key = { it.id },
         ) { source ->
             SourceSwitchPreference(
                 modifier = Modifier.animateItem(),
@@ -413,7 +413,7 @@ private fun InfoDivider() {
 
 @Composable
 private fun SourceSwitchPreference(
-    source: ExtensionSourceItem,
+    source: ExtensionDetailsSourceUiModel,
     onClickSourcePreferences: (sourceId: Long) -> Unit,
     onClickSource: (sourceId: Long) -> Unit,
     modifier: Modifier = Modifier,
@@ -423,16 +423,17 @@ private fun SourceSwitchPreference(
     TextPreferenceWidget(
         modifier = modifier,
         title = if (source.labelAsName) {
-            source.source.toString()
+            source.name
         } else {
-            LocaleHelper.getSourceDisplayName(source.source.lang, context)
+            LocaleHelper.getSourceDisplayName(source.lang, context)
         },
+        subtitle = source.title.takeUnless { it == source.name },
         widget = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (source.source is ConfigurableSource) {
-                    IconButton(onClick = { onClickSourcePreferences(source.source.id) }) {
+                if (source.hasSettings) {
+                    IconButton(onClick = { onClickSourcePreferences(source.id) }) {
                         Icon(
                             imageVector = Icons.Outlined.Settings,
                             contentDescription = stringResource(MR.strings.label_settings),
@@ -448,7 +449,7 @@ private fun SourceSwitchPreference(
                 )
             }
         },
-        onPreferenceClick = { onClickSource(source.source.id) },
+        onPreferenceClick = { onClickSource(source.id) },
     )
 }
 

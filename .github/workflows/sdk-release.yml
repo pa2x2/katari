@@ -1,0 +1,72 @@
+name: Warm SDK Release
+
+on:
+  push:
+    tags:
+      - sdk-*
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  warm_jitpack:
+    name: Warm JitPack
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      JITPACK_BASE_URL: https://jitpack.io/com/github/katariapp/katari
+      TAG: ${{ github.ref_name }}
+
+    steps:
+      - name: Trigger build and wait for published artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          build_log_url="$JITPACK_BASE_URL/$TAG/build.log"
+          artifact_urls=(
+            "$JITPACK_BASE_URL/entry-source-api/$TAG/entry-source-api-$TAG.pom"
+            "$JITPACK_BASE_URL/entry-source-api/$TAG/entry-source-api-$TAG.module"
+            "$JITPACK_BASE_URL/entry-source-api/$TAG/entry-source-api-$TAG.jar"
+            "$JITPACK_BASE_URL/entry-source-api-android/$TAG/entry-source-api-android-$TAG.module"
+            "$JITPACK_BASE_URL/entry-source-api-android/$TAG/entry-source-api-android-$TAG.aar"
+          )
+
+          echo "Triggering JitPack build for $TAG"
+          curl --silent --show-error --location "${artifact_urls[0]}" >/dev/null
+
+          deadline=$((SECONDS + 900))
+
+          while (( SECONDS < deadline )); do
+            log="$(curl --silent --show-error --location "$build_log_url" || true)"
+
+            if [[ "$log" == *"BUILD SUCCESSFUL"* ]]; then
+              echo "JitPack build completed successfully."
+              break
+            fi
+
+            if [[ "$log" == *"BUILD FAILED"* ]] || [[ "$log" =~ Build\ tool\ exit\ code:\ [1-9][0-9]* ]] || [[ "$log" =~ Exit\ code:\ [1-9][0-9]* ]]; then
+              printf '%s\n' "$log"
+              exit 1
+            fi
+
+            sleep 15
+          done
+
+          if (( SECONDS >= deadline )); then
+            curl --silent --show-error --location "$build_log_url" || true
+            echo "Timed out waiting for JitPack build for $TAG" >&2
+            exit 1
+          fi
+
+          for url in "${artifact_urls[@]}"; do
+            echo "Waiting for $url"
+
+            until curl --silent --show-error --fail --location "$url" >/dev/null; do
+              sleep 5
+            done
+          done

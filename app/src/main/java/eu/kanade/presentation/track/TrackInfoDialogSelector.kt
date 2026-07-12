@@ -32,7 +32,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import dev.icerock.moko.resources.StringResource
+import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
+import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.WheelNumberPicker
@@ -91,6 +93,7 @@ fun TrackStatusSelector(
 
 @Composable
 fun TrackChapterSelector(
+    entryType: EntryType,
     selection: Int,
     onSelectionChange: (Int) -> Unit,
     range: Iterable<Int>,
@@ -98,7 +101,7 @@ fun TrackChapterSelector(
     onDismissRequest: () -> Unit,
 ) {
     BaseSelector(
-        title = stringResource(MR.strings.chapters),
+        title = stringResource(entryType.entryTypePresentation().childListTitle),
         content = {
             WheelNumberPicker(
                 items = range.toList(),

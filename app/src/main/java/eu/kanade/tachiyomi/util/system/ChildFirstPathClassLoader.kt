@@ -19,8 +19,15 @@ class ChildFirstPathClassLoader(
 ) : PathClassLoader(dexPath, librarySearchPath, parent) {
 
     private val systemClassLoader: ClassLoader? = getSystemClassLoader()
+    private val parentFirstPackagePrefixes = listOf(
+        "kotlin.",
+    )
 
     override fun loadClass(name: String?, resolve: Boolean): Class<*> {
+        if (name != null && parentFirstPackagePrefixes.any(name::startsWith)) {
+            return super.loadClass(name, resolve)
+        }
+
         var c = findLoadedClass(name)
 
         if (c == null && systemClassLoader != null) {

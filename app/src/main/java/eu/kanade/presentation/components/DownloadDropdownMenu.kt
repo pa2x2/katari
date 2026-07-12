@@ -5,7 +5,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.DpOffset
-import eu.kanade.presentation.manga.DownloadAction
+import eu.kanade.presentation.entry.DownloadAction
+import eu.kanade.presentation.entry.EntryTypePresentation
+import eu.kanade.presentation.entry.entryTypePresentation
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
@@ -16,6 +18,7 @@ fun DownloadDropdownMenu(
     expanded: Boolean,
     onDismissRequest: () -> Unit,
     onDownloadClicked: (DownloadAction) -> Unit,
+    presentation: EntryTypePresentation = null.entryTypePresentation(),
     offset: DpOffset? = null,
 ) {
     if (offset != null) {
@@ -28,6 +31,7 @@ fun DownloadDropdownMenu(
                 DownloadDropdownMenuItems(
                     onDismissRequest = onDismissRequest,
                     onDownloadClicked = onDownloadClicked,
+                    presentation = presentation,
                 )
             },
         )
@@ -40,6 +44,7 @@ fun DownloadDropdownMenu(
                 DownloadDropdownMenuItems(
                     onDismissRequest = onDismissRequest,
                     onDownloadClicked = onDownloadClicked,
+                    presentation = presentation,
                 )
             },
         )
@@ -50,15 +55,18 @@ fun DownloadDropdownMenu(
 private fun DownloadDropdownMenuItems(
     onDismissRequest: () -> Unit,
     onDownloadClicked: (DownloadAction) -> Unit,
+    presentation: EntryTypePresentation,
 ) {
-    val options = listOf(
-        DownloadAction.NEXT_1_CHAPTER to pluralStringResource(MR.plurals.download_amount, 1, 1),
-        DownloadAction.NEXT_5_CHAPTERS to pluralStringResource(MR.plurals.download_amount, 5, 5),
-        DownloadAction.NEXT_10_CHAPTERS to pluralStringResource(MR.plurals.download_amount, 10, 10),
-        DownloadAction.NEXT_25_CHAPTERS to pluralStringResource(MR.plurals.download_amount, 25, 25),
-        DownloadAction.UNREAD_CHAPTERS to stringResource(MR.strings.download_unread),
-        DownloadAction.BOOKMARKED_CHAPTERS to stringResource(MR.strings.download_bookmarked),
-    )
+    val options = buildList {
+        add(DownloadAction.NEXT_1_CHAPTER to pluralStringResource(presentation.downloadAmountPlural, 1, 1))
+        add(DownloadAction.NEXT_5_CHAPTERS to pluralStringResource(presentation.downloadAmountPlural, 5, 5))
+        add(DownloadAction.NEXT_10_CHAPTERS to pluralStringResource(presentation.downloadAmountPlural, 10, 10))
+        add(DownloadAction.NEXT_25_CHAPTERS to pluralStringResource(presentation.downloadAmountPlural, 25, 25))
+        add(DownloadAction.UNREAD_CHAPTERS to stringResource(presentation.downloadUnconsumedLabel))
+        if (presentation.downloadBookmarkedSupported) {
+            add(DownloadAction.BOOKMARKED_CHAPTERS to stringResource(MR.strings.download_bookmarked))
+        }
+    }
 
     options.map { (downloadAction, string) ->
         DropdownMenuItem(

@@ -7,9 +7,10 @@ import eu.kanade.tachiyomi.network.POST
 import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.network.jsonMime
 import eu.kanade.tachiyomi.network.parseAs
-import eu.kanade.tachiyomi.source.ConfigurableSource
-import eu.kanade.tachiyomi.source.online.HttpSource
-import eu.kanade.tachiyomi.source.sourcePreferences
+import eu.kanade.tachiyomi.source.entry.ConfigurableSource
+import eu.kanade.tachiyomi.source.entry.EntryImageSource
+import eu.kanade.tachiyomi.source.entry.SourceHomePage
+import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.addAll
 import kotlinx.serialization.json.buildJsonObject
@@ -28,13 +29,16 @@ class SuwayomiApi(private val trackId: Long) {
     private val json: Json by injectLazy()
 
     private val sourceManager: SourceManager by injectLazy()
-    private val source: HttpSource by lazy { (sourceManager.get(sourceId) as HttpSource) }
-    private val configurableSource: ConfigurableSource by lazy { (sourceManager.get(sourceId) as ConfigurableSource) }
-    private val client: OkHttpClient by lazy { source.client }
-    private val baseUrl: String by lazy { source.baseUrl.trimEnd('/') }
+    private val source: UnifiedSource by lazy { sourceManager.getOrStub(sourceId) }
+    private val configurableSource: ConfigurableSource by lazy { source as ConfigurableSource }
+    private val client: OkHttpClient by lazy { (source as EntryImageSource).client }
+    private val baseUrl: String by lazy {
+        ((source as? SourceHomePage)?.getHomeUrl() ?: error("Source ${source.name} does not expose a home URL"))
+            .trimEnd('/')
+    }
     private val apiUrl: String by lazy { "$baseUrl/api/graphql" }
 
-    fun sourcePreferences(): SharedPreferences = configurableSource.sourcePreferences()
+    fun sourcePreferences(): SharedPreferences = configurableSource.getSourcePreferences()
 
     suspend fun getTrackSearch(mangaId: Long): TrackSearch = withIOContext {
         val query = $$"""

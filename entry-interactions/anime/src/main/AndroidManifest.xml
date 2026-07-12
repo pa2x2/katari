@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Android 16 reports audio focus changes with an empty attribution tag. -->
+    <attribution
+        android:label="@string/video_playback_attribution_label"
+        android:tag="@string/empty_audio_attribution_tag" />
+
+    <application>
+        <activity
+            android:name="eu.kanade.tachiyomi.ui.video.player.VideoPlayerActivity"
+            android:configChanges="keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:supportsPictureInPicture="true"
+            android:theme="@style/Theme.AnimePlayer" />
+    </application>
+
+</manifest>

@@ -20,12 +20,12 @@ import eu.kanade.tachiyomi.network.POST
 import eu.kanade.tachiyomi.network.PUT
 import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.network.parseAs
-import eu.kanade.tachiyomi.util.PkceUtil
 import eu.kanade.tachiyomi.util.lang.toLocalDate
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import okhttp3.FormBody
+import okhttp3.Headers
 import okhttp3.Headers.Companion.headersOf
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -33,8 +33,8 @@ import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.injectLazy
 import java.math.RoundingMode
-import java.security.SecureRandom
-import java.util.Base64
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.Locale
 import kotlin.time.Instant
 import tachiyomi.domain.track.model.Track as DomainTrack
@@ -54,7 +54,7 @@ class MangaBakaApi(
                 buildString {
                     append("${MR.strings.app_name}/v${BuildConfig.VERSION_NAME} ")
                     append("(${BuildConfig.APPLICATION_ID} ${BuildConfig.COMMIT_SHA}) ")
-                    append("(Android) (https://github.com/mihonapp/mihon)")
+                    append("(Android) (https://github.com/katariapp/katari)")
                 },
             )
             .build()
@@ -88,6 +88,7 @@ class MangaBakaApi(
             authClient
                 .newCall(POST(url, body = body, headers = headersOf("Content-Type", APP_JSON)))
                 .awaitSuccess()
+                .close()
 
             // only returns 201 with the body { "status": 201, "data": true }, so no library ID for us
             track
@@ -101,6 +102,7 @@ class MangaBakaApi(
             authClient
                 .newCall(DELETE(url))
                 .awaitSuccess()
+                .close()
         }
     }
 
@@ -124,9 +126,8 @@ class MangaBakaApi(
                         title = additionalData.chooseBestTitle()
                         status = userData.getStatus()
                         score = userData.rating?.toDouble() ?: 0.0
-                        started_reading_date = userData.startDate?.let { Instant.parse(it).toEpochMilliseconds() } ?: 0
-                        finished_reading_date =
-                            userData.finishDate?.let { Instant.parse(it).toEpochMilliseconds() } ?: 0
+                        started_reading_date = userData.startDate?.let(::parseResponseDate) ?: 0
+                        finished_reading_date = userData.finishDate?.let(::parseResponseDate) ?: 0
                         last_chapter_read = userData.progressChapter ?: 0.0
                         private = userData.isPrivate
                     }
@@ -174,6 +175,7 @@ class MangaBakaApi(
             authClient
                 .newCall(PUT(url, body = body, headers = headersOf("Content-Type", APP_JSON)))
                 .awaitSuccess()
+                .close()
 
             track
         }
@@ -235,10 +237,11 @@ class MangaBakaApi(
         }
     }
 
-    suspend fun getCurrentUser(): MangaBakaUserProfile {
+    suspend fun getCurrentUser(accessToken: String): MangaBakaUserProfile {
         return withIOContext {
             with(json) {
-                authClient.newCall(GET("$API_BASE_URL/v1/my/profile"))
+                val headers = Headers.Builder().add("Authorization", "Bearer $accessToken").build()
+                client.newCall(GET("$API_BASE_URL/v1/my/profile", headers = headers))
                     .awaitSuccess()
                     .parseAs<MangaBakaUserProfileResponse>()
                     .data
@@ -246,7 +249,7 @@ class MangaBakaApi(
         }
     }
 
-    suspend fun getAccessToken(code: String): MangaBakaOAuth {
+    suspend fun getAccessToken(code: String, codeVerifier: String): MangaBakaOAuth {
         return withIOContext {
             val formBody = FormBody.Builder()
                 .add("client_id", CLIENT_ID)
@@ -265,8 +268,6 @@ class MangaBakaApi(
         }
     }
 
-    fun verifyOAuthState(state: String): Boolean = state == oauthStateParam
-
     companion object {
         private const val CLIENT_ID = "zEZYMHXLWsLsafgbvJHXqzGvqQNOdkpo"
 
@@ -276,21 +277,18 @@ class MangaBakaApi(
         private const val OAUTH_URL = "$BASE_URL/auth/oauth2"
         private const val SCOPES = "library.read library.write offline_access openid"
 
-        private const val REDIRECT_URI = "mihon://mangabaka-auth"
+        private const val REDIRECT_URI = "katari://mangabaka-auth"
 
         private const val APP_JSON = "application/json"
 
-        private var codeVerifier: String = ""
-        private var oauthStateParam: String = ""
-
-        fun authUrl(): Uri = "$OAUTH_URL/authorize".toUri().buildUpon() //
+        fun authUrl(codeChallenge: String, state: String): Uri = "$OAUTH_URL/authorize".toUri().buildUpon() //
             .appendQueryParameter("client_id", CLIENT_ID)
-            .appendQueryParameter("code_challenge", getPkceS256ChallengeCode())
+            .appendQueryParameter("code_challenge", codeChallenge)
             .appendQueryParameter("code_challenge_method", "S256")
             .appendQueryParameter("response_type", "code")
             .appendQueryParameter("scope", SCOPES)
             .appendQueryParameter("redirect_uri", REDIRECT_URI)
-            .appendQueryParameter("state", getOAuthStateParam())
+            .appendQueryParameter("state", state)
             .build()
 
         fun refreshTokenRequest(token: String) = POST(
@@ -302,26 +300,15 @@ class MangaBakaApi(
                 .add("redirect_uri", REDIRECT_URI)
                 .build(),
         )
-
-        private fun getOAuthStateParam(): String {
-            val bytes = ByteArray(16)
-            SecureRandom().nextBytes(bytes)
-            oauthStateParam = Base64.getUrlEncoder()
-                .withoutPadding()
-                .encodeToString(bytes)
-
-            return oauthStateParam
-        }
-
-        private fun getPkceS256ChallengeCode(): String {
-            // MangaBaka requires an actually conformant PKCE process, unlike MAL
-            // 1. create verifier
-            // 2. create challenge from verifier (S256 hash -> base64 URL encode)
-            // 3. send challenge to /authorize
-            // 4. send verifier for access tokens to /token
-            val codes = PkceUtil.generateS256Codes()
-            codeVerifier = codes.codeVerifier
-            return codes.codeChallenge
-        }
     }
+}
+
+internal fun parseResponseDate(value: String): Long {
+    return runCatching { Instant.parse(value).toEpochMilliseconds() }
+        .getOrElse {
+            LocalDate.parse(value)
+                .atStartOfDay(ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli()
+        }
 }

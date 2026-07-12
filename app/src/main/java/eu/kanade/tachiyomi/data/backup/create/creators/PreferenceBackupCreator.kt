@@ -8,18 +8,19 @@ import eu.kanade.tachiyomi.data.backup.models.IntPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.LongPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringSetPreferenceValue
-import eu.kanade.tachiyomi.source.ConfigurableSource
-import eu.kanade.tachiyomi.source.preferenceKey
 import eu.kanade.tachiyomi.source.sourcePreferences
+import mihon.feature.profiles.core.ProfileAwarePreferenceStore
+import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
-import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.source.repository.SourceRepository
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 class PreferenceBackupCreator(
-    private val sourceManager: SourceManager = Injekt.get(),
+    private val sourceRepository: SourceRepository = Injekt.get(),
     private val preferenceStore: PreferenceStore = Injekt.get(),
+    private val profileStore: ProfileStore = Injekt.get(),
 ) {
 
     fun createApp(includePrivatePreferences: Boolean): List<BackupPreference> {
@@ -28,13 +29,35 @@ class PreferenceBackupCreator(
     }
 
     fun createSource(includePrivatePreferences: Boolean): List<BackupSourcePreferences> {
-        return sourceManager.getAll()
-            .filterIsInstance<ConfigurableSource>()
-            .map {
+        return sourceRepository.getConfigurableSourceIds()
+            .map { sourceId ->
+                val sourceKey = profileStore.sourcePreferenceKey(sourceId)
                 BackupSourcePreferences(
-                    it.preferenceKey(),
-                    it.sourcePreferences().all.toBackupPreferences()
+                    sourceKey = sourceKey,
+                    prefs = sourcePreferences(sourceKey).all.toBackupPreferences()
                         .withPrivatePreferences(includePrivatePreferences),
+                    sourceId = sourceId,
+                )
+            }
+            .filter { it.prefs.isNotEmpty() }
+    }
+
+    fun createApp(profileId: Long, includePrivatePreferences: Boolean): List<BackupPreference> {
+        return profileStore.profileStore(profileId)
+            .getAll()
+            .toBackupPreferences()
+            .withPrivatePreferences(includePrivatePreferences)
+    }
+
+    fun createSource(profileId: Long, includePrivatePreferences: Boolean): List<BackupSourcePreferences> {
+        return sourceRepository.getConfigurableSourceIds()
+            .map { sourceId ->
+                val sourceKey = profileStore.sourcePreferenceKey(sourceId, profileId)
+                BackupSourcePreferences(
+                    sourceKey = sourceKey,
+                    prefs = sourcePreferences(sourceKey).all.toBackupPreferences()
+                        .withPrivatePreferences(includePrivatePreferences),
+                    sourceId = sourceId,
                 )
             }
             .filter { it.prefs.isNotEmpty() }
@@ -43,6 +66,7 @@ class PreferenceBackupCreator(
     @Suppress("UNCHECKED_CAST")
     private fun Map<String, *>.toBackupPreferences(): List<BackupPreference> {
         return this
+            .filterKeys { !ProfileAwarePreferenceStore.Namespace.isNamespacedKey(it) }
             .filterKeys { !Preference.isAppState(it) }
             .mapNotNull { (key, value) ->
                 when (value) {

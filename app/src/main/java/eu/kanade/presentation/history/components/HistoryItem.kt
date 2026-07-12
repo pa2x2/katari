@@ -8,14 +8,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -23,73 +22,72 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.manga.components.MangaCover
+import eu.kanade.presentation.entry.InlineEntryTypeIndicator
+import eu.kanade.presentation.entry.components.EntryCover
+import eu.kanade.presentation.entry.historySubtitle
+import eu.kanade.presentation.history.HistoryUiItem
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
-import eu.kanade.presentation.util.formatChapterNumber
-import eu.kanade.tachiyomi.util.lang.toTimestampString
-import tachiyomi.domain.history.model.HistoryWithRelations
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
-private val HistoryItemHeight = 96.dp
-
 @Composable
-fun HistoryItem(
-    history: HistoryWithRelations,
+fun HistoryListItem(
+    item: HistoryUiItem,
     onClickCover: () -> Unit,
     onClickResume: () -> Unit,
     onClickDelete: () -> Unit,
-    onClickFavorite: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val historyItem = item.historyItem
+
     Row(
         modifier = modifier
             .clickable(onClick = onClickResume)
-            .height(HistoryItemHeight)
+            .height(56.dp)
             .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        MangaCover.Book(
+        EntryCover.Square(
             modifier = Modifier.fillMaxHeight(),
-            data = history.coverData,
+            data = item.visibleCoverData,
             onClick = onClickCover,
         )
+
         Column(
             modifier = Modifier
                 .weight(1f)
-                .padding(start = MaterialTheme.padding.medium, end = MaterialTheme.padding.small),
+                .padding(horizontal = MaterialTheme.padding.medium),
         ) {
-            val textStyle = MaterialTheme.typography.bodyMedium
             Text(
-                text = history.title,
+                text = item.visibleTitle,
                 fontWeight = FontWeight.SemiBold,
-                maxLines = 2,
+                maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                style = textStyle,
+                style = MaterialTheme.typography.bodyMedium,
             )
-            val readAt = remember { history.readAt?.toTimestampString() ?: "" }
-            Text(
-                text = if (history.chapterNumber > -1) {
-                    stringResource(
-                        MR.strings.recent_manga_time,
-                        formatChapterNumber(history.chapterNumber),
-                        readAt,
-                    )
-                } else {
-                    readAt
-                },
-                modifier = Modifier.padding(top = 4.dp),
-                style = textStyle,
-            )
-        }
 
-        if (!history.coverData.isMangaFavorite) {
-            IconButton(onClick = onClickFavorite) {
-                Icon(
-                    imageVector = Icons.Outlined.FavoriteBorder,
-                    contentDescription = stringResource(MR.strings.add_to_library),
-                    tint = MaterialTheme.colorScheme.onSurface,
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                historyItem.entryType.InlineEntryTypeIndicator(
+                    modifier = Modifier
+                        .padding(end = 4.dp),
+                )
+
+                Text(
+                    text = historyItem.entryType.historySubtitle(
+                        childName = historyItem.history.chapterName,
+                        childNumber = historyItem.history.chapterNumber,
+                        consumedAt = historyItem.history.readAt,
+                        consumedDuration = historyItem.history.readDuration,
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = LocalContentColor.current.copy(alpha = DISABLED_ALPHA),
+                    modifier = Modifier.weight(weight = 1f, fill = false),
                 )
             }
         }
@@ -106,18 +104,17 @@ fun HistoryItem(
 
 @PreviewLightDark
 @Composable
-private fun HistoryItemPreviews(
-    @PreviewParameter(HistoryWithRelationsProvider::class)
-    historyWithRelations: HistoryWithRelations,
+private fun HistoryListItemPreviews(
+    @PreviewParameter(HistoryItemProvider::class)
+    item: HistoryUiItem,
 ) {
     TachiyomiPreviewTheme {
         Surface {
-            HistoryItem(
-                history = historyWithRelations,
+            HistoryListItem(
+                item = item,
                 onClickCover = {},
                 onClickResume = {},
                 onClickDelete = {},
-                onClickFavorite = {},
             )
         }
     }

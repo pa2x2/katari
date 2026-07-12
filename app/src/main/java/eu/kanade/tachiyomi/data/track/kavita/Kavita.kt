@@ -5,16 +5,15 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
 import eu.kanade.tachiyomi.data.track.EnhancedTracker
+import eu.kanade.tachiyomi.data.track.EntryTrackingSource
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
-import eu.kanade.tachiyomi.source.ConfigurableSource
-import eu.kanade.tachiyomi.source.Source
-import eu.kanade.tachiyomi.source.sourcePreferences
-import tachiyomi.domain.manga.model.Manga
+import eu.kanade.tachiyomi.source.entry.ConfigurableSource
+import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.track.model.EntryTrack
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.injectLazy
 import java.security.MessageDigest
-import tachiyomi.domain.track.model.Track as DomainTrack
 
 class Kavita(id: Long) : BaseTracker(id, "Kavita"), EnhancedTracker {
 
@@ -50,7 +49,7 @@ class Kavita(id: Long) : BaseTracker(id, "Kavita"), EnhancedTracker {
 
     override fun getScoreList(): List<String> = listOf()
 
-    override fun displayScore(track: DomainTrack): String = ""
+    override fun displayScore(track: EntryTrack): String = ""
 
     override suspend fun update(track: Track, didReadChapter: Boolean): Track {
         if (track.status != COMPLETED) {
@@ -92,19 +91,19 @@ class Kavita(id: Long) : BaseTracker(id, "Kavita"), EnhancedTracker {
 
     override fun getAcceptedSources() = listOf("eu.kanade.tachiyomi.extension.all.kavita.Kavita")
 
-    override suspend fun match(manga: Manga): TrackSearch? =
+    override suspend fun match(entry: Entry): TrackSearch? =
         try {
-            api.getTrackSearch(manga.url)
+            api.getTrackSearch(entry.url)
         } catch (e: Exception) {
             null
         }
 
-    override fun isTrackFrom(track: DomainTrack, manga: Manga, source: Source?): Boolean =
-        track.remoteUrl == manga.url && source?.let { accept(it) } == true
+    override fun isTrackFrom(track: EntryTrack, entry: Entry, source: EntryTrackingSource?): Boolean =
+        track.remoteUrl == entry.url && source?.let { accept(it) } == true
 
-    override fun migrateTrack(track: DomainTrack, manga: Manga, newSource: Source): DomainTrack? =
+    override fun migrateTrack(track: EntryTrack, entry: Entry, newSource: EntryTrackingSource): EntryTrack? =
         if (accept(newSource)) {
-            track.copy(remoteUrl = manga.url)
+            track.copy(remoteUrl = entry.url)
         } else {
             null
         }
@@ -119,7 +118,7 @@ class Kavita(id: Long) : BaseTracker(id, "Kavita"), EnhancedTracker {
                 (0..7).map { bytes[it].toLong() and 0xff shl 8 * (7 - it) }
                     .reduce(Long::or) and Long.MAX_VALUE
             }
-            val preferences = (sourceManager.get(sourceId) as ConfigurableSource).sourcePreferences()
+            val preferences = (sourceManager.get(sourceId) as ConfigurableSource).getSourcePreferences()
 
             val prefApiUrl = preferences.getString("APIURL", "")
             val prefApiKey = preferences.getString("APIKEY", "")

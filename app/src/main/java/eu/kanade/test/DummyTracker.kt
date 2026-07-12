@@ -7,7 +7,7 @@ import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import okhttp3.OkHttpClient
-import tachiyomi.domain.track.model.Track
+import tachiyomi.domain.track.model.EntryTrack
 import tachiyomi.i18n.MR
 
 data class DummyTracker(
@@ -52,11 +52,11 @@ data class DummyTracker(
 
     override fun getScoreList(): List<String> = valScoreList
 
-    override fun get10PointScore(track: Track): Double = val10PointScore
+    override fun get10PointScore(track: EntryTrack): Double = val10PointScore
 
     override fun indexToScore(index: Int): Double = getScoreList()[index].toDouble()
 
-    override fun displayScore(track: Track): String =
+    override fun displayScore(track: EntryTrack): String =
         track.score.toString()
 
     override suspend fun update(
@@ -91,7 +91,7 @@ data class DummyTracker(
 
     override suspend fun register(
         item: eu.kanade.tachiyomi.data.database.models.Track,
-        mangaId: Long,
+        entryId: Long,
     ) = Unit
 
     override suspend fun setRemoteStatus(

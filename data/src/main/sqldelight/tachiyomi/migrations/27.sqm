@@ -1,0 +1,90 @@
+-- Phase 4: Profile unification & category migration.
+-- Drops the manga/anime profile type and unifies mangas_categories + animes_categories.
+
+-- 1. Deduplicate profile names by appending #2, #3, etc.
+CREATE TABLE __profile_name_dedup(
+    profile_id INTEGER NOT NULL PRIMARY KEY,
+    deduplicated_name TEXT NOT NULL
+);
+
+INSERT INTO __profile_name_dedup(profile_id, deduplicated_name)
+SELECT _id, name || ' #' || duplicate_position
+FROM (
+    SELECT
+        _id,
+        name,
+        row_number() OVER (PARTITION BY lower(name) ORDER BY _id) AS duplicate_position,
+        count(*) OVER (PARTITION BY lower(name)) AS duplicate_count
+    FROM profiles
+)
+WHERE duplicate_count > 1
+AND duplicate_position > 1;
+
+UPDATE profiles
+SET name = (
+    SELECT deduplicated_name
+    FROM __profile_name_dedup
+    WHERE profile_id = profiles._id
+)
+WHERE _id IN (SELECT profile_id FROM __profile_name_dedup);
+
+DROP TABLE __profile_name_dedup;
+
+-- 2. Remove the obsolete profile type without dropping the referenced parent table.
+-- Dropping profiles with foreign keys enabled cascades into all profile-owned data.
+-- The legacy category trigger must be replaced first because its double-quoted
+-- error message cannot be reparsed by SQLite while altering the schema.
+DROP TRIGGER IF EXISTS system_category_delete_trigger;
+
+ALTER TABLE profiles DROP COLUMN type;
+
+CREATE TRIGGER system_category_delete_trigger BEFORE DELETE
+ON categories
+BEGIN SELECT CASE
+    WHEN old._id <= 0 THEN
+        RAISE(ABORT, 'System category can''t be deleted')
+    END;
+END;
+
+-- 3. Create the unified entries_categories join table.
+CREATE TABLE entries_categories(
+    _id INTEGER NOT NULL PRIMARY KEY,
+    profile_id INTEGER NOT NULL,
+    entry_id INTEGER NOT NULL,
+    entry_type TEXT NOT NULL,
+    category_id INTEGER NOT NULL,
+    FOREIGN KEY(category_id) REFERENCES categories(_id) ON DELETE CASCADE,
+    FOREIGN KEY(profile_id) REFERENCES profiles(_id) ON DELETE CASCADE
+);
+
+-- 4. Migrate existing category mappings.
+INSERT INTO entries_categories(profile_id, entry_id, entry_type, category_id)
+SELECT profile_id, manga_id, 'manga', category_id
+FROM mangas_categories;
+
+INSERT INTO entries_categories(profile_id, entry_id, entry_type, category_id)
+SELECT profile_id, anime_id, 'anime', category_id
+FROM animes_categories;
+
+-- 5. Add indexes for the unified table.
+CREATE INDEX idx_entries_categories_entry ON entries_categories(profile_id, entry_id, entry_type);
+CREATE INDEX idx_entries_categories_category ON entries_categories(profile_id, category_id);
+
+-- 6. Bump manga/anime version when an entry is categorized.
+CREATE TRIGGER insert_entry_category_update_version AFTER INSERT ON entries_categories
+BEGIN
+    UPDATE mangas
+    SET version = version + 1
+    WHERE _id = new.entry_id
+      AND new.entry_type = 'manga'
+      AND (SELECT is_syncing FROM mangas WHERE _id = new.entry_id) = 0;
+
+    UPDATE animes
+    SET version = version + 1
+    WHERE _id = new.entry_id
+      AND new.entry_type = 'anime';
+END;
+
+-- 7. Drop legacy join tables (read-only fallback removed; cleanup done in Phase 4).
+DROP TABLE mangas_categories;
+DROP TABLE animes_categories;

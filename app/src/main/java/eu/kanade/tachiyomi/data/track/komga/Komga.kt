@@ -5,13 +5,13 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
 import eu.kanade.tachiyomi.data.track.EnhancedTracker
+import eu.kanade.tachiyomi.data.track.EntryTrackingSource
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
-import eu.kanade.tachiyomi.source.Source
 import okhttp3.Dns
 import okhttp3.OkHttpClient
-import tachiyomi.domain.manga.model.Manga
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.track.model.EntryTrack
 import tachiyomi.i18n.MR
-import tachiyomi.domain.track.model.Track as DomainTrack
 
 class Komga(id: Long) : BaseTracker(id, "Komga"), EnhancedTracker {
 
@@ -47,7 +47,7 @@ class Komga(id: Long) : BaseTracker(id, "Komga"), EnhancedTracker {
 
     override fun getScoreList(): List<String> = listOf()
 
-    override fun displayScore(track: DomainTrack): String = ""
+    override fun displayScore(track: EntryTrack): String = ""
 
     override suspend fun update(track: Track, didReadChapter: Boolean): Track {
         if (track.status != COMPLETED) {
@@ -90,19 +90,19 @@ class Komga(id: Long) : BaseTracker(id, "Komga"), EnhancedTracker {
 
     override fun getAcceptedSources() = listOf("eu.kanade.tachiyomi.extension.all.komga.Komga")
 
-    override suspend fun match(manga: Manga): TrackSearch? =
+    override suspend fun match(entry: Entry): TrackSearch? =
         try {
-            api.getTrackSearch(manga.url)
+            api.getTrackSearch(entry.url)
         } catch (e: Exception) {
             null
         }
 
-    override fun isTrackFrom(track: DomainTrack, manga: Manga, source: Source?): Boolean =
-        track.remoteUrl == manga.url && source?.let { accept(it) } == true
+    override fun isTrackFrom(track: EntryTrack, entry: Entry, source: EntryTrackingSource?): Boolean =
+        track.remoteUrl == entry.url && source?.let { accept(it) } == true
 
-    override fun migrateTrack(track: DomainTrack, manga: Manga, newSource: Source): DomainTrack? =
+    override fun migrateTrack(track: EntryTrack, entry: Entry, newSource: EntryTrackingSource): EntryTrack? =
         if (accept(newSource)) {
-            track.copy(remoteUrl = manga.url)
+            track.copy(remoteUrl = entry.url)
         } else {
             null
         }

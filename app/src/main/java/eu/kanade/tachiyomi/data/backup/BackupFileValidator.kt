@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.data.backup
 import android.content.Context
 import android.net.Uri
 import eu.kanade.tachiyomi.data.track.TrackerManager
+import eu.kanade.tachiyomi.source.visualName
 import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -34,14 +35,16 @@ class BackupFileValidator(
                 if (id == null) {
                     it
                 } else {
-                    sourceManager.getOrStub(id).toString()
+                    sourceManager.getDisplayInfo(id).visualName()
                 }
             }
             .distinct()
             .sorted()
 
-        val trackers = backup.backupManga
-            .flatMap { it.tracking }
+        val trackers = buildList {
+            addAll(backup.backupManga.flatMap { it.tracking })
+            addAll(backup.backupProfiles.flatMap { profile -> profile.manga.flatMap { it.tracking } })
+        }
             .map { it.syncId }
             .distinct()
         val missingTrackers = trackers

@@ -1,0 +1,51 @@
+import kotlin.String;
+
+CREATE TABLE download_preferences(
+    _id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entry_id INTEGER NOT NULL,
+    dub_key TEXT,
+    stream_key TEXT,
+    subtitle_key TEXT,
+    quality_mode TEXT NOT NULL DEFAULT 'balanced',
+    updated_at INTEGER NOT NULL,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    UNIQUE(entry_id)
+);
+
+CREATE INDEX idx_download_preferences_entry_id ON download_preferences(entry_id);
+
+getByEntryId:
+SELECT *
+FROM download_preferences
+WHERE entry_id = :entryId;
+
+deleteByProfile:
+DELETE FROM download_preferences
+WHERE entry_id IN (SELECT _id FROM entries WHERE profile_id = :profileId);
+
+upsertUpdate:
+UPDATE download_preferences
+SET dub_key = :dubKey,
+    stream_key = :streamKey,
+    subtitle_key = :subtitleKey,
+    quality_mode = :qualityMode,
+    updated_at = :updatedAt
+WHERE entry_id = :entryId;
+
+upsertInsert:
+INSERT OR IGNORE INTO download_preferences(
+    entry_id,
+    dub_key,
+    stream_key,
+    subtitle_key,
+    quality_mode,
+    updated_at
+)
+VALUES (
+    :entryId,
+    :dubKey,
+    :streamKey,
+    :subtitleKey,
+    :qualityMode,
+    :updatedAt
+);

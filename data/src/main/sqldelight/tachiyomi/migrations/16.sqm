@@ -1,0 +1,18 @@
+CREATE TABLE anime_playback_preferences(
+    _id INTEGER NOT NULL PRIMARY KEY,
+    profile_id INTEGER NOT NULL DEFAULT 1,
+    anime_id INTEGER NOT NULL,
+    dub_key TEXT,
+    stream_key TEXT,
+    source_quality_key TEXT,
+    player_quality_mode TEXT NOT NULL DEFAULT 'auto',
+    player_quality_height INTEGER,
+    updated_at INTEGER NOT NULL,
+    FOREIGN KEY(anime_id) REFERENCES animes (_id)
+    ON DELETE CASCADE,
+    FOREIGN KEY(profile_id) REFERENCES profiles (_id)
+    ON DELETE CASCADE,
+    UNIQUE(profile_id, anime_id)
+);
+
+CREATE INDEX idx_anime_playback_preferences_anime_id ON anime_playback_preferences(profile_id, anime_id);

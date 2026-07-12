@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
 import mihon.feature.upcoming.components.UpcomingItem
 import mihon.feature.upcoming.components.calendar.Calendar
 import tachiyomi.core.common.Constants
-import tachiyomi.domain.manga.model.Manga
+import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.components.TwoPanelBox
@@ -43,7 +43,7 @@ import java.time.YearMonth
 fun UpcomingScreenContent(
     state: UpcomingScreenModel.State,
     setSelectedYearMonth: (YearMonth) -> Unit,
-    onClickUpcoming: (manga: Manga) -> Unit,
+    onClickUpcoming: (manga: Entry) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
@@ -140,7 +140,7 @@ private fun UpcomingScreenSmallImpl(
     selectedYearMonth: YearMonth,
     setSelectedYearMonth: (YearMonth) -> Unit,
     onClickDay: (LocalDate) -> Unit,
-    onClickUpcoming: (manga: Manga) -> Unit,
+    onClickUpcoming: (manga: Entry) -> Unit,
 ) {
     FastScrollLazyColumn(
         contentPadding = paddingValues,
@@ -167,14 +167,14 @@ private fun UpcomingScreenSmallImpl(
             when (item) {
                 is UpcomingUIModel.Item -> {
                     UpcomingItem(
-                        upcoming = item.manga,
-                        onClick = { onClickUpcoming(item.manga) },
+                        upcoming = item.entry,
+                        onClick = { onClickUpcoming(item.entry) },
                     )
                 }
                 is UpcomingUIModel.Header -> {
                     DateHeading(
                         date = item.date,
-                        mangaCount = item.mangaCount,
+                        mangaCount = item.entryCount,
                     )
                 }
             }
@@ -191,7 +191,7 @@ private fun UpcomingScreenLargeImpl(
     selectedYearMonth: YearMonth,
     setSelectedYearMonth: (YearMonth) -> Unit,
     onClickDay: (LocalDate) -> Unit,
-    onClickUpcoming: (manga: Manga) -> Unit,
+    onClickUpcoming: (manga: Entry) -> Unit,
 ) {
     TwoPanelBox(
         modifier = Modifier.padding(paddingValues),
@@ -218,14 +218,14 @@ private fun UpcomingScreenLargeImpl(
                     when (item) {
                         is UpcomingUIModel.Item -> {
                             UpcomingItem(
-                                upcoming = item.manga,
-                                onClick = { onClickUpcoming(item.manga) },
+                                upcoming = item.entry,
+                                onClick = { onClickUpcoming(item.entry) },
                             )
                         }
                         is UpcomingUIModel.Header -> {
                             DateHeading(
                                 date = item.date,
-                                mangaCount = item.mangaCount,
+                                mangaCount = item.entryCount,
                             )
                         }
                     }

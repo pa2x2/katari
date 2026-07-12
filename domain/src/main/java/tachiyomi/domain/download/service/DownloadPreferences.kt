@@ -32,19 +32,19 @@ class DownloadPreferences(
         emptySet(),
     )
 
-    val downloadNewChapters: Preference<Boolean> = preferenceStore.getBoolean("download_new", false)
+    val downloadNewEntryChapters: Preference<Boolean> = preferenceStore.getBoolean("download_new", false)
 
-    val downloadNewChapterCategories: Preference<Set<String>> = preferenceStore.getStringSet(
+    val downloadNewEntryChapterCategories: Preference<Set<String>> = preferenceStore.getStringSet(
         DOWNLOAD_NEW_CATEGORIES_PREF_KEY,
         emptySet(),
     )
 
-    val downloadNewChapterCategoriesExclude: Preference<Set<String>> = preferenceStore.getStringSet(
+    val downloadNewEntryChapterCategoriesExclude: Preference<Set<String>> = preferenceStore.getStringSet(
         DOWNLOAD_NEW_CATEGORIES_EXCLUDE_PREF_KEY,
         emptySet(),
     )
 
-    val downloadNewUnreadChaptersOnly: Preference<Boolean> = preferenceStore.getBoolean(
+    val downloadNewUnreadEntryChaptersOnly: Preference<Boolean> = preferenceStore.getBoolean(
         "download_new_unread_chapters_only",
         false,
     )

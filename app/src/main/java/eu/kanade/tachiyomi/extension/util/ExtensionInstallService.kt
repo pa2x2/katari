@@ -12,6 +12,7 @@ import eu.kanade.tachiyomi.extension.installer.Installer
 import eu.kanade.tachiyomi.extension.installer.PackageInstallerInstaller
 import eu.kanade.tachiyomi.extension.installer.ShizukuInstaller
 import eu.kanade.tachiyomi.extension.util.ExtensionInstaller.Companion.EXTRA_DOWNLOAD_ID
+import eu.kanade.tachiyomi.extension.util.ExtensionInstaller.UserActionBehavior
 import eu.kanade.tachiyomi.util.system.getSerializableExtraCompat
 import eu.kanade.tachiyomi.util.system.notificationBuilder
 import logcat.LogPriority
@@ -19,13 +20,13 @@ import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.MR
 
-class ExtensionInstallService : Service() {
+internal class ExtensionInstallService : Service() {
 
     private var installer: Installer? = null
 
     override fun onCreate() {
         val notification = notificationBuilder(Notifications.CHANNEL_EXTENSIONS_UPDATE) {
-            setSmallIcon(R.drawable.ic_mihon)
+            setSmallIcon(R.drawable.ic_katari)
             setAutoCancel(false)
             setOngoing(true)
             setShowWhen(false)
@@ -39,7 +40,8 @@ class ExtensionInstallService : Service() {
         val uri = intent?.data
         val id = intent?.getLongExtra(EXTRA_DOWNLOAD_ID, -1)?.takeIf { it != -1L }
         val installerUsed = intent?.getSerializableExtraCompat<BasePreferences.ExtensionInstaller>(EXTRA_INSTALLER)
-        if (uri == null || id == null || installerUsed == null) {
+        val userActionBehavior = intent?.getSerializableExtraCompat<UserActionBehavior>(EXTRA_USER_ACTION_BEHAVIOR)
+        if (uri == null || id == null || installerUsed == null || userActionBehavior == null) {
             stopSelf()
             return START_NOT_STICKY
         }
@@ -55,7 +57,7 @@ class ExtensionInstallService : Service() {
                 }
             }
         }
-        installer!!.addToQueue(id, uri)
+        installer!!.addToQueue(id, uri, userActionBehavior)
         return START_NOT_STICKY
     }
 
@@ -68,17 +70,20 @@ class ExtensionInstallService : Service() {
 
     companion object {
         private const val EXTRA_INSTALLER = "EXTRA_INSTALLER"
+        private const val EXTRA_USER_ACTION_BEHAVIOR = "EXTRA_USER_ACTION_BEHAVIOR"
 
         fun getIntent(
             context: Context,
             downloadId: Long,
             uri: Uri,
             installer: BasePreferences.ExtensionInstaller,
+            userActionBehavior: UserActionBehavior,
         ): Intent {
             return Intent(context, ExtensionInstallService::class.java)
                 .setDataAndType(uri, ExtensionInstaller.APK_MIME)
                 .putExtra(EXTRA_DOWNLOAD_ID, downloadId)
                 .putExtra(EXTRA_INSTALLER, installer)
+                .putExtra(EXTRA_USER_ACTION_BEHAVIOR, userActionBehavior)
         }
     }
 }

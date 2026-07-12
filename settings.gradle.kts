@@ -28,7 +28,7 @@ dependencyResolutionManagement {
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
-rootProject.name = "Mihon"
+rootProject.name = "Katari"
 include(":app")
 include(":baseline-profile")
 include(":core-metadata")
@@ -39,6 +39,13 @@ include(":domain")
 include(":i18n")
 include(":presentation-core")
 include(":presentation-widget")
+include(":entry-interactions")
+include(":entry-interactions:api")
+include(":entry-interactions:spi")
+include(":entry-interactions:manga")
+include(":entry-interactions:anime")
+include(":entry-source-api")
 include(":source-api")
+include(":source-compat")
 include(":source-local")
 include(":telemetry")

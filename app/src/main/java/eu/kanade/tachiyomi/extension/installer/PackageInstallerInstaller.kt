@@ -12,13 +12,16 @@ import android.os.Build
 import androidx.core.content.ContextCompat
 import androidx.core.content.IntentSanitizer
 import eu.kanade.tachiyomi.extension.model.InstallStep
+import eu.kanade.tachiyomi.extension.util.ExtensionInstaller.UserActionBehavior
 import eu.kanade.tachiyomi.util.lang.use
 import eu.kanade.tachiyomi.util.system.getParcelableExtraCompat
 import eu.kanade.tachiyomi.util.system.getUriSize
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 
-class PackageInstallerInstaller(private val service: Service) : Installer(service) {
+internal class PackageInstallerInstaller(
+    private val service: Service,
+) : Installer(service) {
 
     private val packageInstaller = service.packageManager.packageInstaller
 
@@ -26,6 +29,11 @@ class PackageInstallerInstaller(private val service: Service) : Installer(servic
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE)) {
                 PackageInstaller.STATUS_PENDING_USER_ACTION -> {
+                    if (activeSession?.first?.userActionBehavior == UserActionBehavior.MarkAsRequiresUserAction) {
+                        activeSession?.second?.let(packageInstaller::abandonSession)
+                        continueQueue(InstallStep.RequiresUserAction)
+                        return
+                    }
                     val userAction = intent.getParcelableExtraCompat<Intent>(Intent.EXTRA_INTENT)
                         ?.run {
                             // Doesn't actually needed as the receiver is actually not exported
@@ -71,9 +79,9 @@ class PackageInstallerInstaller(private val service: Service) : Installer(servic
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 installParams.setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
             }
-            activeSession = entry to packageInstaller.createSession(installParams)
             val fileSize = service.getUriSize(entry.uri) ?: throw IllegalStateException()
             installParams.setSize(fileSize)
+            activeSession = entry to packageInstaller.createSession(installParams)
 
             val inputStream = service.contentResolver.openInputStream(entry.uri) ?: throw IllegalStateException()
             val session = packageInstaller.openSession(activeSession!!.second)
@@ -99,6 +107,7 @@ class PackageInstallerInstaller(private val service: Service) : Installer(servic
             activeSession?.let { (_, sessionId) ->
                 packageInstaller.abandonSession(sessionId)
             }
+            service.contentResolver.delete(entry.uri, null, null)
             continueQueue(InstallStep.Error)
         }
     }

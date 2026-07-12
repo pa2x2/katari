@@ -1,0 +1,6 @@
+ALTER TABLE anime_playback_preferences ADD COLUMN subtitle_offset_x REAL;
+ALTER TABLE anime_playback_preferences ADD COLUMN subtitle_offset_y REAL;
+ALTER TABLE anime_playback_preferences ADD COLUMN subtitle_text_size REAL;
+ALTER TABLE anime_playback_preferences ADD COLUMN subtitle_text_color INTEGER;
+ALTER TABLE anime_playback_preferences ADD COLUMN subtitle_background_color INTEGER;
+ALTER TABLE anime_playback_preferences ADD COLUMN subtitle_background_opacity REAL;

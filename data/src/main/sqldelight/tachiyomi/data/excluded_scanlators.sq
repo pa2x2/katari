@@ -1,23 +1,36 @@
 CREATE TABLE excluded_scanlators(
-    manga_id INTEGER NOT NULL,
+    profile_id INTEGER NOT NULL DEFAULT 1,
+    entry_id INTEGER NOT NULL,
     scanlator TEXT NOT NULL,
-    FOREIGN KEY(manga_id) REFERENCES mangas (_id)
-    ON DELETE CASCADE
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    FOREIGN KEY(profile_id) REFERENCES profiles(_id) ON DELETE CASCADE
 );
 
-CREATE INDEX excluded_scanlators_manga_id_index ON excluded_scanlators(manga_id);
-CREATE INDEX idx_excluded_scanlators_scanlator ON excluded_scanlators(scanlator);
+CREATE INDEX excluded_scanlators_entry_id_index ON excluded_scanlators(profile_id, entry_id);
+CREATE INDEX idx_excluded_scanlators_scanlator ON excluded_scanlators(profile_id, scanlator);
 
 insert:
-INSERT INTO excluded_scanlators(manga_id, scanlator)
-VALUES (:mangaId, :scanlator);
+INSERT INTO excluded_scanlators(profile_id, entry_id, scanlator)
+VALUES (:profileId, :entryId, :scanlator);
 
 remove:
 DELETE FROM excluded_scanlators
-WHERE manga_id = :mangaId
+WHERE profile_id = :profileId
+AND entry_id = :entryId
 AND scanlator IN :scanlators;
 
-getExcludedScanlatorsByMangaId:
+deleteByProfile:
+DELETE FROM excluded_scanlators
+WHERE profile_id = :profileId;
+
+moveEntryToProfile:
+UPDATE excluded_scanlators
+SET profile_id = :destinationProfileId
+WHERE profile_id = :sourceProfileId
+AND entry_id = :entryId;
+
+getExcludedScanlatorsByEntryId:
 SELECT scanlator
 FROM excluded_scanlators
-WHERE manga_id = :mangaId;
+WHERE profile_id = :profileId
+AND entry_id = :entryId;

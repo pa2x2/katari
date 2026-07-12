@@ -28,7 +28,9 @@ kotlin {
 }
 
 dependencies {
+    implementation(projects.entrySourceApi)
     implementation(projects.sourceApi)
+    implementation(projects.sourceCompat)
     implementation(projects.domain)
     implementation(projects.core.common)
 
@@ -37,4 +39,9 @@ dependencies {
     implementation(libs.kotlinx.serialization.protobuf)
 
     api(libs.bundles.sqldelight)
+
+    testImplementation(libs.bundles.test)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.sqldelight.sqliteDriver)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }

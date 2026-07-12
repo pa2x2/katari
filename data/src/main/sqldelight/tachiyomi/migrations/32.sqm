@@ -1,0 +1,4 @@
+UPDATE entries
+SET chapter_flags = (chapter_flags & -769) | 256
+WHERE (chapter_flags & 768) = 0
+AND (chapter_flags & 1) = 0;

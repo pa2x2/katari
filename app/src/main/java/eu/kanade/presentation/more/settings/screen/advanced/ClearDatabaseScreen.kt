@@ -46,8 +46,9 @@ import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchUI
 import tachiyomi.core.common.util.lang.toLong
 import tachiyomi.core.common.util.lang.withNonCancellableContext
+import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.Database
-import tachiyomi.domain.source.interactor.GetSourcesWithNonLibraryManga
+import tachiyomi.domain.source.interactor.GetSourcesWithNonLibraryEntries
 import tachiyomi.domain.source.model.Source
 import tachiyomi.domain.source.model.SourceWithCount
 import tachiyomi.i18n.MR
@@ -221,12 +222,13 @@ class ClearDatabaseScreen : Screen() {
 }
 
 private class ClearDatabaseScreenModel : StateScreenModel<ClearDatabaseScreenModel.State>(State.Loading) {
-    private val getSourcesWithNonLibraryManga: GetSourcesWithNonLibraryManga = Injekt.get()
+    private val getSourcesWithNonLibraryEntries: GetSourcesWithNonLibraryEntries = Injekt.get()
     private val database: Database = Injekt.get()
+    private val profileProvider: ActiveProfileProvider = Injekt.get()
 
     init {
         screenModelScope.launchIO {
-            getSourcesWithNonLibraryManga.subscribe()
+            getSourcesWithNonLibraryEntries.subscribe()
                 .collectLatest { list ->
                     mutableState.update { old ->
                         val items = list.sortedBy { it.name }
@@ -241,7 +243,11 @@ private class ClearDatabaseScreenModel : StateScreenModel<ClearDatabaseScreenMod
 
     suspend fun removeMangaBySourceId(keepReadManga: Boolean) = withNonCancellableContext {
         val state = state.value as? State.Ready ?: return@withNonCancellableContext
-        database.mangasQueries.deleteNonLibraryManga(state.selection, keepReadManga.toLong())
+        database.entriesQueries.deleteNonLibraryEntries(
+            profileProvider.activeProfileId,
+            state.selection,
+            keepReadManga.toLong(),
+        )
         database.historyQueries.removeResettedHistory()
     }
 

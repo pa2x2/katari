@@ -2,10 +2,10 @@ package tachiyomi.source.local.image
 
 import android.content.Context
 import com.hippo.unifile.UniFile
-import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import tachiyomi.core.common.storage.nameWithoutExtension
 import tachiyomi.core.common.util.system.ImageUtil
+import tachiyomi.source.local.LocalEntryMetadata
 import tachiyomi.source.local.io.LocalSourceFileSystem
 import java.io.InputStream
 
@@ -24,17 +24,17 @@ actual class LocalCoverManager(
             .firstOrNull { ImageUtil.isImage(it.name) { it.openInputStream() } }
     }
 
-    actual fun update(
-        manga: SManga,
+    internal actual fun update(
+        entry: LocalEntryMetadata,
         inputStream: InputStream,
     ): UniFile? {
-        val directory = fileSystem.getMangaDirectory(manga.url)
+        val directory = fileSystem.getMangaDirectory(entry.url)
         if (directory == null) {
             inputStream.close()
             return null
         }
 
-        val targetFile = find(manga.url) ?: directory.createFile(DEFAULT_COVER_NAME)!!
+        val targetFile = find(entry.url) ?: directory.createFile(DEFAULT_COVER_NAME)!!
 
         inputStream.use { input ->
             targetFile.openOutputStream().use { output ->
@@ -44,7 +44,11 @@ actual class LocalCoverManager(
 
         DiskUtil.createNoMediaFile(directory, context)
 
-        manga.thumbnail_url = targetFile.uri.toString()
+        entry.thumbnailUrl = targetFile.uri.toString()
         return targetFile
+    }
+
+    actual fun update(mangaUrl: String, inputStream: InputStream): UniFile? {
+        return update(LocalEntryMetadata(url = mangaUrl, title = mangaUrl), inputStream)
     }
 }

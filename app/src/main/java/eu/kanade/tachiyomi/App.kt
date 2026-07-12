@@ -31,10 +31,9 @@ import eu.kanade.tachiyomi.core.security.PrivacyPreferences
 import eu.kanade.tachiyomi.crash.CrashActivity
 import eu.kanade.tachiyomi.crash.GlobalExceptionHandler
 import eu.kanade.tachiyomi.data.coil.BufferedSourceFetcher
-import eu.kanade.tachiyomi.data.coil.MangaCoverFetcher
-import eu.kanade.tachiyomi.data.coil.MangaCoverKeyer
-import eu.kanade.tachiyomi.data.coil.MangaKeyer
-import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
+import eu.kanade.tachiyomi.data.coil.EntryCoverFetcher
+import eu.kanade.tachiyomi.data.coil.EntryCoverKeyer
+import eu.kanade.tachiyomi.data.coil.EntryKeyer
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.di.AppModule
 import eu.kanade.tachiyomi.di.PreferenceModule
@@ -55,6 +54,7 @@ import logcat.LogPriority
 import logcat.LogcatLogger
 import mihon.core.migration.Migrator
 import mihon.core.migration.migrations.migrations
+import mihon.entry.interactions.addEntryInteractionImageComponents
 import mihon.telemetry.TelemetryConfig
 import org.conscrypt.Conscrypt
 import tachiyomi.core.common.i18n.stringResource
@@ -97,8 +97,8 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         }
 
         Injekt.importModule(PreferenceModule(this))
-        Injekt.importModule(AppModule(this))
         Injekt.importModule(DomainModule())
+        Injekt.importModule(AppModule(this))
 
         setupNotificationChannels()
 
@@ -192,15 +192,14 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
             components {
                 // NetworkFetcher.Factory
                 add(OkHttpNetworkFetcherFactory(callFactoryLazy::value))
-                // Decoder.Factory
-                add(TachiyomiImageDecoder.Factory())
                 // Fetcher.Factory
                 add(BufferedSourceFetcher.Factory())
-                add(MangaCoverFetcher.MangaCoverFactory(callFactoryLazy))
-                add(MangaCoverFetcher.MangaFactory(callFactoryLazy))
+                add(EntryCoverFetcher.EntryCoverFactory(callFactoryLazy))
+                add(EntryCoverFetcher.EntryFactory(callFactoryLazy))
+                addEntryInteractionImageComponents()
                 // Keyer
-                add(MangaCoverKeyer())
-                add(MangaKeyer())
+                add(EntryCoverKeyer())
+                add(EntryKeyer())
             }
 
             memoryCache(

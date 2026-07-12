@@ -2,7 +2,6 @@ package eu.kanade.domain.track.service
 
 import eu.kanade.domain.track.model.AutoTrackState
 import eu.kanade.tachiyomi.data.track.Tracker
-import eu.kanade.tachiyomi.data.track.anilist.Anilist
 import eu.kanade.tachiyomi.data.track.mangabaka.MangaBaka
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
@@ -12,23 +11,31 @@ class TrackPreferences(
     private val preferenceStore: PreferenceStore,
 ) {
 
-    fun trackUsername(tracker: Tracker) = preferenceStore.getString(
-        Preference.privateKey("pref_mangasync_username_${tracker.id}"),
+    fun trackUsername(tracker: Tracker) = trackUsername(tracker.id)
+
+    fun trackUsername(trackerId: Long) = preferenceStore.getString(
+        Preference.privateKey("pref_mangasync_username_$trackerId"),
         "",
     )
 
-    fun trackDisplayUsername(tracker: Tracker) = preferenceStore.getString(
-        Preference.privateKey("pref_mangasync_displayname_${tracker.id}"),
+    fun trackDisplayUsername(tracker: Tracker) = trackDisplayUsername(tracker.id)
+
+    fun trackDisplayUsername(trackerId: Long) = preferenceStore.getString(
+        Preference.privateKey("pref_mangasync_displayname_$trackerId"),
         "",
     )
 
-    fun trackPassword(tracker: Tracker) = preferenceStore.getString(
-        Preference.privateKey("pref_mangasync_password_${tracker.id}"),
+    fun trackPassword(tracker: Tracker) = trackPassword(tracker.id)
+
+    fun trackPassword(trackerId: Long) = preferenceStore.getString(
+        Preference.privateKey("pref_mangasync_password_$trackerId"),
         "",
     )
 
-    fun trackAuthExpired(tracker: Tracker) = preferenceStore.getBoolean(
-        Preference.privateKey("pref_tracker_auth_expired_${tracker.id}"),
+    fun trackAuthExpired(tracker: Tracker) = trackAuthExpired(tracker.id)
+
+    fun trackAuthExpired(trackerId: Long) = preferenceStore.getBoolean(
+        Preference.privateKey("pref_tracker_auth_expired_$trackerId"),
         false,
     )
 
@@ -38,9 +45,23 @@ class TrackPreferences(
         trackAuthExpired(tracker).set(false)
     }
 
-    fun trackToken(tracker: Tracker) = preferenceStore.getString(Preference.privateKey("track_token_${tracker.id}"), "")
+    fun trackToken(tracker: Tracker) = trackToken(tracker.id)
 
-    val anilistScoreType: Preference<String> = preferenceStore.getString("anilist_score_type", Anilist.POINT_10)
+    fun trackToken(trackerId: Long) = preferenceStore.getString(Preference.privateKey("track_token_$trackerId"), "")
+
+    fun oauthState(tracker: Tracker) = oauthState(tracker.id)
+
+    fun oauthState(trackerId: Long) = preferenceStore.getString(
+        Preference.privateKey("track_oauth_state_$trackerId"),
+        "",
+    )
+
+    fun oauthCodeVerifier(tracker: Tracker) = oauthCodeVerifier(tracker.id)
+
+    fun oauthCodeVerifier(trackerId: Long) = preferenceStore.getString(
+        Preference.privateKey("track_oauth_code_verifier_$trackerId"),
+        "",
+    )
 
     val mangabakaScoreType: Preference<String> = preferenceStore.getString("mangabaka_score_type", MangaBaka.STEP_1)
 

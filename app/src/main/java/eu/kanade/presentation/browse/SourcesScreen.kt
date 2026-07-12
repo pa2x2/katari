@@ -20,9 +20,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import eu.kanade.domain.source.interactor.SourceListListing
+import eu.kanade.domain.source.interactor.SourceListState
 import eu.kanade.presentation.browse.components.BaseSourceItem
-import eu.kanade.tachiyomi.ui.browse.source.SourcesScreenModel
-import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceScreenModel.Listing
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import tachiyomi.domain.source.model.Pin
 import tachiyomi.domain.source.model.Source
@@ -40,11 +40,12 @@ import tachiyomi.source.local.isLocal
 
 @Composable
 fun SourcesScreen(
-    state: SourcesScreenModel.State,
+    state: SourceListState,
     contentPadding: PaddingValues,
-    onClickItem: (Source, Listing) -> Unit,
+    onClickItem: (Source, SourceListListing) -> Unit,
     onClickPin: (Source) -> Unit,
     onLongClickItem: (Source) -> Unit,
+    itemClicksEnabled: Boolean = true,
 ) {
     when {
         state.isLoading -> LoadingScreen(Modifier.padding(contentPadding))
@@ -84,6 +85,7 @@ fun SourcesScreen(
                             onClickItem = onClickItem,
                             onLongClickItem = onLongClickItem,
                             onClickPin = onClickPin,
+                            itemClicksEnabled = itemClicksEnabled,
                         )
                     }
                 }
@@ -109,19 +111,24 @@ private fun SourceHeader(
 @Composable
 private fun SourceItem(
     source: Source,
-    onClickItem: (Source, Listing) -> Unit,
+    onClickItem: (Source, SourceListListing) -> Unit,
     onLongClickItem: (Source) -> Unit,
     onClickPin: (Source) -> Unit,
+    itemClicksEnabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
     BaseSourceItem(
         modifier = modifier,
         source = source,
-        onClickItem = { onClickItem(source, Listing.Popular) },
+        onClickItem = {
+            if (itemClicksEnabled) {
+                onClickItem(source, SourceListListing.Popular)
+            }
+        },
         onLongClickItem = { onLongClickItem(source) },
         action = {
-            if (source.supportsLatest) {
-                TextButton(onClick = { onClickItem(source, Listing.Latest) }) {
+            if (itemClicksEnabled && source.supportsLatest) {
+                TextButton(onClick = { onClickItem(source, SourceListListing.Latest) }) {
                     Text(
                         text = stringResource(MR.strings.latest),
                         style = LocalTextStyle.current.copy(

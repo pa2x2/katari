@@ -3,10 +3,11 @@ package eu.kanade.tachiyomi.ui.browse.source
 import androidx.compose.runtime.Immutable
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import eu.kanade.domain.source.interactor.GetLanguagesWithSources
+import eu.kanade.domain.source.interactor.GetLanguagesWithCatalogSources
 import eu.kanade.domain.source.interactor.ToggleLanguage
 import eu.kanade.domain.source.interactor.ToggleSource
 import eu.kanade.domain.source.service.SourcePreferences
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -19,7 +20,7 @@ import java.util.SortedMap
 
 class SourcesFilterScreenModel(
     private val preferences: SourcePreferences = Injekt.get(),
-    private val getLanguagesWithSources: GetLanguagesWithSources = Injekt.get(),
+    private val getLanguagesWithCatalogSources: GetLanguagesWithCatalogSources = Injekt.get(),
     private val toggleSource: ToggleSource = Injekt.get(),
     private val toggleLanguage: ToggleLanguage = Injekt.get(),
 ) : StateScreenModel<SourcesFilterScreenModel.State>(State.Loading) {
@@ -27,9 +28,9 @@ class SourcesFilterScreenModel(
     init {
         screenModelScope.launch {
             combine(
-                getLanguagesWithSources.subscribe(),
+                languageItemsFlow(),
                 preferences.enabledLanguages.changes(),
-                preferences.disabledSources.changes(),
+                disabledSourcesFlow(),
             ) { a, b, c -> Triple(a, b, c) }
                 .catch { throwable ->
                     mutableState.update {
@@ -48,6 +49,14 @@ class SourcesFilterScreenModel(
                     }
                 }
         }
+    }
+
+    private fun languageItemsFlow(): Flow<SortedMap<String, List<Source>>> {
+        return getLanguagesWithCatalogSources.subscribe()
+    }
+
+    private fun disabledSourcesFlow(): Flow<Set<String>> {
+        return preferences.disabledSources.changes()
     }
 
     fun toggleSource(source: Source) {

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -20,6 +21,9 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 internal class GuidesStep(
     private val onRestoreBackup: () -> Unit,
+    private val showMihonMigration: Boolean,
+    private val onOpenMihon: () -> Unit,
+    private val onMigrateFromMihon: () -> Unit,
 ) : OnboardingStep {
 
     override val isComplete: Boolean = true
@@ -45,12 +49,41 @@ internal class GuidesStep(
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
             )
 
-            Text(stringResource(MR.strings.onboarding_guides_returning_user, stringResource(MR.strings.app_name)))
-            Button(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = onRestoreBackup,
-            ) {
-                Text(stringResource(MR.strings.pref_restore_backup))
+            if (showMihonMigration) {
+                Text(
+                    text = stringResource(MR.strings.onboarding_mihon_migration_title),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(stringResource(MR.strings.onboarding_mihon_migration_description))
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = onOpenMihon,
+                ) {
+                    Text(stringResource(MR.strings.onboarding_mihon_migration_open))
+                }
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = onMigrateFromMihon,
+                ) {
+                    Text(stringResource(MR.strings.onboarding_mihon_migration_choose_backup))
+                }
+                Text(
+                    text = stringResource(MR.strings.onboarding_mihon_migration_note),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            } else {
+                Text(
+                    stringResource(
+                        MR.strings.onboarding_guides_returning_user,
+                        stringResource(MR.strings.app_name),
+                    ),
+                )
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = onRestoreBackup,
+                ) {
+                    Text(stringResource(MR.strings.pref_restore_backup))
+                }
             }
         }
     }
@@ -64,6 +97,9 @@ private fun GuidesStepPreview() {
     TachiyomiPreviewTheme {
         GuidesStep(
             onRestoreBackup = {},
+            showMihonMigration = true,
+            onOpenMihon = {},
+            onMigrateFromMihon = {},
         ).Content()
     }
 }

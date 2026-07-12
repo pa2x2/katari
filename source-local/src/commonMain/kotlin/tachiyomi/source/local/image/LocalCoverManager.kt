@@ -1,12 +1,14 @@
 package tachiyomi.source.local.image
 
 import com.hippo.unifile.UniFile
-import eu.kanade.tachiyomi.source.model.SManga
+import tachiyomi.source.local.LocalEntryMetadata
 import java.io.InputStream
 
 expect class LocalCoverManager {
 
     fun find(mangaUrl: String): UniFile?
 
-    fun update(manga: SManga, inputStream: InputStream): UniFile?
+    internal fun update(entry: LocalEntryMetadata, inputStream: InputStream): UniFile?
+
+    fun update(mangaUrl: String, inputStream: InputStream): UniFile?
 }

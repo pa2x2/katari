@@ -28,8 +28,8 @@ abstract class BaseSmartSearchEngine<T>(
         val queries = getDeepSearchQueries(cleanedTitle)
 
         return baseSearch(searchAction, queries) {
-            val cleanedMangaTitle = cleanDeepSearchTitle(getTitle(it))
-            normalizedLevenshtein.similarity(cleanedTitle, cleanedMangaTitle)
+            val cleanedEntryTitle = cleanDeepSearchTitle(getTitle(it))
+            normalizedLevenshtein.similarity(cleanedTitle, cleanedEntryTitle)
         }
     }
 
@@ -38,7 +38,7 @@ abstract class BaseSmartSearchEngine<T>(
         queries: List<String>,
         calculateDistance: (T) -> Double,
     ): T? {
-        val eligibleManga = supervisorScope {
+        val eligibleEntries = supervisorScope {
             queries.map { query ->
                 async(Dispatchers.Default) {
                     val builtQuery = if (!extraSearchParams.isNullOrBlank()) {
@@ -63,7 +63,7 @@ abstract class BaseSmartSearchEngine<T>(
                 .flatMap { it.await() }
         }
 
-        return eligibleManga.maxByOrNull { it.distance }?.entry
+        return eligibleEntries.maxByOrNull { it.distance }?.entry
     }
 
     private fun cleanDeepSearchTitle(title: String): String {

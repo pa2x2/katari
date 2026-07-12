@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.data.track.anilist
 
-import eu.kanade.domain.track.service.TrackPreferences
+import eu.kanade.domain.track.service.GlobalTrackPreferences
 import eu.kanade.tachiyomi.data.database.models.Track
 import uy.kohesive.injekt.injectLazy
-import tachiyomi.domain.track.model.Track as DomainTrack
+import tachiyomi.domain.track.model.EntryTrack as DomainTrack
 
 fun Track.toApiStatus() = when (status) {
     Anilist.READING -> "CURRENT"
@@ -15,7 +15,7 @@ fun Track.toApiStatus() = when (status) {
     else -> throw NotImplementedError("Unknown status: $status")
 }
 
-private val preferences: TrackPreferences by injectLazy()
+private val preferences: GlobalTrackPreferences by injectLazy()
 
 fun DomainTrack.toApiScore(): String = when (preferences.anilistScoreType.get()) {
     // 10 point

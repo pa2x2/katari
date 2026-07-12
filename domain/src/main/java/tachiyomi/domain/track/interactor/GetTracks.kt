@@ -3,14 +3,14 @@ package tachiyomi.domain.track.interactor
 import kotlinx.coroutines.flow.Flow
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.track.model.Track
+import tachiyomi.domain.track.model.EntryTrack
 import tachiyomi.domain.track.repository.TrackRepository
 
 class GetTracks(
     private val trackRepository: TrackRepository,
 ) {
 
-    suspend fun awaitOne(id: Long): Track? {
+    suspend fun awaitOne(id: Long): EntryTrack? {
         return try {
             trackRepository.getTrackById(id)
         } catch (e: Exception) {
@@ -19,16 +19,16 @@ class GetTracks(
         }
     }
 
-    suspend fun await(mangaId: Long): List<Track> {
+    suspend fun await(entryId: Long): List<EntryTrack> {
         return try {
-            trackRepository.getTracksByMangaId(mangaId)
+            trackRepository.getTracksByEntryId(entryId)
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e)
             emptyList()
         }
     }
 
-    fun subscribe(mangaId: Long): Flow<List<Track>> {
-        return trackRepository.getTracksByMangaIdAsFlow(mangaId)
+    fun subscribe(entryId: Long): Flow<List<EntryTrack>> {
+        return trackRepository.getTracksByEntryIdAsFlow(entryId)
     }
 }

@@ -1,20 +1,29 @@
 package eu.kanade.tachiyomi.data.track.mangabaka
 
+import android.net.Uri
 import dev.icerock.moko.resources.StringResource
+import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
 import eu.kanade.tachiyomi.data.track.DeletableTracker
 import eu.kanade.tachiyomi.data.track.mangabaka.dto.MangaBakaOAuth
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
+import eu.kanade.tachiyomi.util.PkceUtil
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.json.Json
+import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.injectLazy
+import java.security.SecureRandom
+import java.util.Base64
 import tachiyomi.domain.track.model.Track as DomainTrack
 
-class MangaBaka(id: Long) : BaseTracker(id, "MangaBaka"), DeletableTracker {
+class MangaBaka(
+    id: Long,
+    private val profileStore: ProfileStore? = null,
+) : BaseTracker(id, "MangaBaka"), DeletableTracker {
 
     private val json: Json by injectLazy()
 
@@ -24,7 +33,8 @@ class MangaBaka(id: Long) : BaseTracker(id, "MangaBaka"), DeletableTracker {
     override val supportsReadingDates: Boolean = true
     override val supportsPrivateTracking: Boolean = true
 
-    private val scorePreference = trackPreferences.mangabakaScoreType
+    private val scorePreference
+        get() = trackPreferences.mangabakaScoreType
 
     override fun getLogo(): Int = R.drawable.brand_mangabaka
 
@@ -92,7 +102,7 @@ class MangaBaka(id: Long) : BaseTracker(id, "MangaBaka"), DeletableTracker {
     ): Track {
         val remoteTrack = api.findLibManga(track)
         return if (remoteTrack != null) {
-            track.copyPersonalFrom(remoteTrack, copyRemotePrivate = false)
+            track.copyPersonalFrom(remoteTrack)
             track.title = remoteTrack.title
             track.remote_id = remoteTrack.remote_id
 
@@ -129,13 +139,19 @@ class MangaBaka(id: Long) : BaseTracker(id, "MangaBaka"), DeletableTracker {
         return track
     }
 
-    override suspend fun login(username: String, password: String) = login(password)
+    override suspend fun login(username: String, password: String) {
+        throw UnsupportedOperationException("MangaBaka requires OAuth")
+    }
 
-    suspend fun login(code: String) {
-        try {
-            val oauth = api.getAccessToken(code)
-            interceptor.setAuth(oauth)
-            val currentUser = api.getCurrentUser()
+    suspend fun completeOAuth(code: String, state: String): Boolean {
+        val profileId = state.substringBefore('.').toLongOrNull() ?: return false
+        val preferences = preferences(profileId)
+        if (preferences.oauthState(this).get() != state) return false
+
+        return try {
+            val codeVerifier = preferences.oauthCodeVerifier(this).get()
+            val oauth = api.getAccessToken(code, codeVerifier)
+            val currentUser = api.getCurrentUser(oauth.accessToken)
             val scoreType = when (currentUser.ratingSteps) {
                 1 -> STEP_1
                 5 -> STEP_5
@@ -144,32 +160,75 @@ class MangaBaka(id: Long) : BaseTracker(id, "MangaBaka"), DeletableTracker {
                 25 -> STEP_25
                 else -> throw Exception("Unknown score step size ${currentUser.ratingSteps}")
             }
-            scorePreference.set(scoreType)
-            saveDisplayUsername(currentUser.nickname ?: currentUser.preferredUsername ?: currentUser.id)
-            saveCredentials("user", oauth.accessToken)
+            preferences.mangabakaScoreType.set(scoreType)
+            preferences.trackDisplayUsername(this).set(
+                currentUser.nickname ?: currentUser.preferredUsername ?: currentUser.id,
+            )
+            preferences.trackToken(this).set(json.encodeToString(oauth))
+            preferences.setCredentials(this, "user", oauth.accessToken)
+            true
         } catch (_: Exception) {
-            logout()
+            logout(profileId)
+            false
+        } finally {
+            preferences.oauthState(this).delete()
+            preferences.oauthCodeVerifier(this).delete()
         }
     }
 
-    fun saveToken(oauth: MangaBakaOAuth?) {
-        trackPreferences.trackToken(this).set(json.encodeToString(oauth))
+    fun authUrl(): Uri {
+        val profileId = profileStore?.currentProfileId ?: 0L
+        val preferences = preferences(profileId)
+        val codes = PkceUtil.generateS256Codes()
+        val random = ByteArray(16).also(SecureRandom()::nextBytes)
+        val state = "$profileId.${Base64.getUrlEncoder().withoutPadding().encodeToString(random)}"
+        preferences.oauthState(this).set(state)
+        preferences.oauthCodeVerifier(this).set(codes.codeVerifier)
+        return MangaBakaApi.authUrl(codes.codeChallenge, state)
     }
 
-    fun restoreToken(): MangaBakaOAuth? {
+    fun saveToken(oauth: MangaBakaOAuth?, profileId: Long = currentProfileId()) {
+        val preference = preferences(profileId).trackToken(this)
+        if (oauth == null) preference.delete() else preference.set(json.encodeToString(oauth))
+    }
+
+    fun restoreToken(profileId: Long = currentProfileId()): MangaBakaOAuth? {
         return try {
-            json.decodeFromString(trackPreferences.trackToken(this).get())
+            json.decodeFromString(preferences(profileId).trackToken(this).get())
         } catch (_: Exception) {
             null
         }
     }
 
-    fun verifyOAuthState(state: String): Boolean = api.verifyOAuthState(state)
-
     override fun logout() {
         super.logout()
         trackPreferences.trackToken(this).delete()
-        interceptor.setAuth(null)
+        trackPreferences.oauthState(this).delete()
+        trackPreferences.oauthCodeVerifier(this).delete()
+    }
+
+    private fun logout(profileId: Long) {
+        val preferences = preferences(profileId)
+        preferences.setCredentials(this, "", "")
+        preferences.trackDisplayUsername(this).delete()
+        preferences.trackToken(this).delete()
+        preferences.oauthState(this).delete()
+        preferences.oauthCodeVerifier(this).delete()
+    }
+
+    fun cancelOAuth(state: String): Boolean {
+        val profileId = state.substringBefore('.').toLongOrNull() ?: return false
+        val preferences = preferences(profileId)
+        if (preferences.oauthState(this).get() != state) return false
+        preferences.oauthState(this).delete()
+        preferences.oauthCodeVerifier(this).delete()
+        return true
+    }
+
+    internal fun currentProfileId(): Long = profileStore?.currentProfileId ?: 0L
+
+    private fun preferences(profileId: Long): TrackPreferences {
+        return profileStore?.let { TrackPreferences(it.privateStore(profileId)) } ?: trackPreferences
     }
 
     override suspend fun delete(track: DomainTrack) {

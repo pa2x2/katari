@@ -1,0 +1,1 @@
+ALTER TABLE anime_playback_preferences ADD COLUMN subtitle_key TEXT;

@@ -1,0 +1,70 @@
+import kotlin.Boolean;
+import kotlin.String;
+
+CREATE TABLE profiles(
+    _id INTEGER NOT NULL PRIMARY KEY,
+    uuid TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL,
+    color_seed INTEGER NOT NULL,
+    position INTEGER NOT NULL,
+    requires_auth INTEGER AS Boolean NOT NULL DEFAULT 0,
+    is_archived INTEGER AS Boolean NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL DEFAULT 0,
+    updated_at INTEGER NOT NULL DEFAULT 0
+);
+
+INSERT OR IGNORE INTO profiles(_id, uuid, name, color_seed, position, requires_auth, is_archived, created_at, updated_at)
+VALUES (1, 'default', 'Default', 5200626, 0, 0, 0, strftime('%s', 'now'), strftime('%s', 'now'));
+
+CREATE TRIGGER profiles_updated_at_trigger
+AFTER UPDATE ON profiles
+FOR EACH ROW
+BEGIN
+    UPDATE profiles
+    SET updated_at = strftime('%s', 'now')
+    WHERE _id = new._id;
+END;
+
+getProfiles:
+SELECT *
+FROM profiles
+WHERE :includeArchived OR is_archived = 0
+ORDER BY position, _id;
+
+getProfileById:
+SELECT *
+FROM profiles
+WHERE _id = :id
+LIMIT 1;
+
+getProfileByUuid:
+SELECT *
+FROM profiles
+WHERE uuid = :uuid
+LIMIT 1;
+
+getVisibleProfileCount:
+SELECT count(*)
+FROM profiles
+WHERE is_archived = 0;
+
+insert:
+INSERT INTO profiles(uuid, name, color_seed, position, requires_auth, is_archived, created_at, updated_at)
+VALUES (:uuid, :name, :colorSeed, :position, :requiresAuth, :isArchived, strftime('%s', 'now'), strftime('%s', 'now'));
+
+update:
+UPDATE profiles
+SET
+    name = coalesce(:name, name),
+    color_seed = coalesce(:colorSeed, color_seed),
+    position = coalesce(:position, position),
+    requires_auth = coalesce(:requiresAuth, requires_auth),
+    is_archived = coalesce(:isArchived, is_archived)
+WHERE _id = :id;
+
+delete:
+DELETE FROM profiles
+WHERE _id = :id;
+
+selectLastInsertedRowId:
+SELECT last_insert_rowid();

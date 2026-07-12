@@ -5,7 +5,13 @@ plugins {
     alias(mihonx.plugins.spotless)
 
     alias(libs.plugins.kotlin.serialization)
+    id("maven-publish")
 }
+
+group = "com.github.katariapp.katari"
+version = providers.gradleProperty("sourceApiVersion")
+    .orElse(System.getenv("VERSION") ?: "local-SNAPSHOT")
+    .get()
 
 kotlin {
     @Suppress("UnstableApiUsage")
@@ -24,7 +30,10 @@ kotlin {
 
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     dependencies {
+        api(projects.core.common)
+
         api(libs.kotlinx.serialization.json)
+        api(libs.kotlinx.serialization.jsonOkio)
         api(libs.injekt)
         api(libs.rxJava)
         api(libs.jsoup)
@@ -34,10 +43,16 @@ kotlin {
     }
 
     sourceSets {
+        commonTest {
+            dependencies {
+                implementation(kotlin("test"))
+            }
+        }
         androidMain {
             dependencies {
-                implementation(projects.core.common)
+                implementation(projects.i18n)
                 api(libs.androidx.preference)
+                implementation(libs.androidx.annotation)
             }
         }
     }

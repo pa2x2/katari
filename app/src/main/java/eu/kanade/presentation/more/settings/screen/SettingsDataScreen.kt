@@ -51,7 +51,6 @@ import eu.kanade.presentation.more.settings.widget.PrefsHorizontalPadding
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.data.backup.create.BackupCreateJob
 import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreJob
-import eu.kanade.tachiyomi.data.cache.ChapterCache
 import eu.kanade.tachiyomi.data.export.LibraryExporter
 import eu.kanade.tachiyomi.data.export.LibraryExporter.ExportOptions
 import eu.kanade.tachiyomi.util.system.DeviceUtil
@@ -59,15 +58,17 @@ import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.entry.interactions.EntryMediaCacheBucketKeys
+import mihon.entry.interactions.EntryMediaCacheMaintenance
+import mihon.entry.interactions.settings.EntryMediaCachePreferences
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.storage.displayablePath
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.backup.service.BackupPreferences
-import tachiyomi.domain.library.service.LibraryPreferences
-import tachiyomi.domain.manga.interactor.GetFavorites
-import tachiyomi.domain.manga.model.Manga
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.storage.service.StoragePreferences
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.TextButton
@@ -279,50 +280,75 @@ object SettingsDataScreen : SearchableSettings {
     private fun getDataGroup(): Preference.PreferenceGroup {
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
-        val libraryPreferences = remember { Injekt.get<LibraryPreferences>() }
+        val mediaCachePreferences = remember { Injekt.get<EntryMediaCachePreferences>() }
 
-        val chapterCache = remember { Injekt.get<ChapterCache>() }
-        var cacheReadableSizeSema by remember { mutableIntStateOf(0) }
-        val cacheReadableSize = remember(cacheReadableSizeSema) { chapterCache.readableSize }
+        val mediaCacheMaintenance = remember { Injekt.get<EntryMediaCacheMaintenance>() }
+        var cacheSizeSema by remember { mutableIntStateOf(0) }
+        val mediaCacheBuckets = remember(cacheSizeSema) {
+            mediaCacheMaintenance.buckets()
+        }
 
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_storage_usage),
-            preferenceItems = listOf(
-                Preference.PreferenceItem.CustomPreference(
-                    title = stringResource(MR.strings.pref_storage_usage),
-                ) {
-                    BasePreferenceWidget(
-                        subcomponent = {
-                            StorageInfo(
-                                modifier = Modifier.padding(horizontal = PrefsHorizontalPadding),
-                            )
-                        },
-                    )
-                },
-
-                Preference.PreferenceItem.TextPreference(
-                    title = stringResource(MR.strings.pref_clear_chapter_cache),
-                    subtitle = stringResource(MR.strings.used_cache, cacheReadableSize),
-                    onClick = {
-                        scope.launchNonCancellable {
-                            try {
-                                val deletedFiles = chapterCache.clear()
-                                withUIContext {
-                                    context.toast(context.stringResource(MR.strings.cache_deleted, deletedFiles))
-                                    cacheReadableSizeSema++
-                                }
-                            } catch (e: Throwable) {
-                                logcat(LogPriority.ERROR, e)
-                                withUIContext { context.toast(MR.strings.cache_delete_error) }
-                            }
-                        }
+            preferenceItems = buildList {
+                add(
+                    Preference.PreferenceItem.CustomPreference(
+                        title = stringResource(MR.strings.pref_storage_usage),
+                    ) {
+                        BasePreferenceWidget(
+                            subcomponent = {
+                                StorageInfo(
+                                    modifier = Modifier.padding(horizontal = PrefsHorizontalPadding),
+                                )
+                            },
+                        )
                     },
-                ),
-                Preference.PreferenceItem.SwitchPreference(
-                    preference = libraryPreferences.autoClearChapterCache,
-                    title = stringResource(MR.strings.pref_auto_clear_chapter_cache),
-                ),
-            ),
+                )
+
+                mediaCacheBuckets.forEach { bucket ->
+                    val title = when (bucket.key) {
+                        EntryMediaCacheBucketKeys.MANGA_PAGE_IMAGE -> MR.strings.pref_clear_chapter_cache
+                        EntryMediaCacheBucketKeys.ANIME_PLAYBACK -> MR.strings.pref_clear_anime_playback_cache
+                        else -> null
+                    } ?: return@forEach
+
+                    add(
+                        Preference.PreferenceItem.TextPreference(
+                            title = stringResource(title),
+                            subtitle = stringResource(MR.strings.used_cache, bucket.readableSize),
+                            onClick = {
+                                scope.launchNonCancellable {
+                                    try {
+                                        val deletedFiles = mediaCacheMaintenance.clear(bucket.key)
+                                        withUIContext {
+                                            context.toast(
+                                                context.stringResource(MR.strings.cache_deleted, deletedFiles),
+                                            )
+                                            cacheSizeSema++
+                                        }
+                                    } catch (e: Throwable) {
+                                        logcat(LogPriority.ERROR, e)
+                                        withUIContext { context.toast(MR.strings.cache_delete_error) }
+                                    }
+                                }
+                            },
+                        ),
+                    )
+                }
+
+                add(
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = mediaCachePreferences.autoClearEntryPageImageCache,
+                        title = stringResource(MR.strings.pref_auto_clear_chapter_cache),
+                    ),
+                )
+                add(
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = mediaCachePreferences.autoClearAnimePlaybackCache,
+                        title = stringResource(MR.strings.pref_auto_clear_anime_playback_cache),
+                    ),
+                )
+            },
         )
     }
 
@@ -341,10 +367,10 @@ object SettingsDataScreen : SearchableSettings {
 
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
-        val getFavorites = remember { Injekt.get<GetFavorites>() }
-        var favorites by remember { mutableStateOf<List<Manga>>(emptyList()) }
+        val entryRepository = remember { Injekt.get<EntryRepository>() }
+        var favorites by remember { mutableStateOf<List<Entry>>(emptyList()) }
         LaunchedEffect(Unit) {
-            favorites = getFavorites.await()
+            favorites = entryRepository.getFavorites()
         }
 
         val saveFileLauncher = rememberLauncherForActivityResult(

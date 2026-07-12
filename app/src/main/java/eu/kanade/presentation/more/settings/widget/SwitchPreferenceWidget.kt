@@ -18,6 +18,7 @@ fun SwitchPreferenceWidget(
     title: String,
     subtitle: String? = null,
     icon: ImageVector? = null,
+    isProfileSpecific: Boolean = false,
     checked: Boolean = false,
     onCheckedChanged: (Boolean) -> Unit,
 ) {
@@ -26,6 +27,7 @@ fun SwitchPreferenceWidget(
         title = title,
         subtitle = subtitle,
         icon = icon,
+        isProfileSpecific = isProfileSpecific,
         widget = {
             Switch(
                 checked = checked,

@@ -9,20 +9,20 @@ import eu.kanade.tachiyomi.util.lang.toLocalDate
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mihon.domain.upcoming.interactor.GetUpcomingManga
-import tachiyomi.domain.manga.model.Manga
+import mihon.domain.upcoming.interactor.GetUpcomingEntries
+import tachiyomi.domain.entry.model.Entry
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.time.LocalDate
 import java.time.YearMonth
 
 class UpcomingScreenModel(
-    private val getUpcomingManga: GetUpcomingManga = Injekt.get(),
+    private val getUpcomingEntries: GetUpcomingEntries = Injekt.get(),
 ) : StateScreenModel<UpcomingScreenModel.State>(State()) {
 
     init {
         screenModelScope.launch {
-            getUpcomingManga.subscribe().collectLatest {
+            getUpcomingEntries.subscribe().collectLatest {
                 mutableState.update { state ->
                     val upcomingItems = it.toUpcomingUIModels()
                     state.copy(
@@ -35,17 +35,17 @@ class UpcomingScreenModel(
         }
     }
 
-    private fun List<Manga>.toUpcomingUIModels(): List<UpcomingUIModel> {
-        var mangaCount = 0
+    private fun List<Entry>.toUpcomingUIModels(): List<UpcomingUIModel> {
+        var entryCount = 0
         return fastMap { UpcomingUIModel.Item(it) }
             .insertSeparatorsReversed { before, after ->
-                if (after != null) mangaCount++
+                if (after != null) entryCount++
 
-                val beforeDate = before?.manga?.expectedNextUpdate?.toLocalDate()
-                val afterDate = after?.manga?.expectedNextUpdate?.toLocalDate()
+                val beforeDate = before?.entry?.expectedNextUpdate?.toLocalDate()
+                val afterDate = after?.entry?.expectedNextUpdate?.toLocalDate()
 
                 if (beforeDate != afterDate && afterDate != null) {
-                    UpcomingUIModel.Header(afterDate, mangaCount).also { mangaCount = 0 }
+                    UpcomingUIModel.Header(afterDate, entryCount).also { entryCount = 0 }
                 } else {
                     null
                 }
@@ -54,7 +54,7 @@ class UpcomingScreenModel(
 
     private fun List<UpcomingUIModel>.toEvents(): Map<LocalDate, Int> {
         return filterIsInstance<UpcomingUIModel.Header>()
-            .associate { it.date to it.mangaCount }
+            .associate { it.date to it.entryCount }
     }
 
     private fun List<UpcomingUIModel>.getHeaderIndexes(): Map<LocalDate, Int> {

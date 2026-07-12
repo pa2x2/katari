@@ -137,3 +137,10 @@ data class LibrarySort(
 
 val Category?.sort: LibrarySort
     get() = LibrarySort.valueOf(this?.flags)
+
+fun Category?.effectiveLibrarySort(globalSort: LibrarySort): LibrarySort {
+    return this
+        ?.takeIf { !it.isSystemCategory }
+        ?.sort
+        ?: globalSort
+}

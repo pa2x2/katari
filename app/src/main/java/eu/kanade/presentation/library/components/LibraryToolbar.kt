@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.SearchToolbar
+import kotlinx.collections.immutable.toPersistentList
+import tachiyomi.domain.library.model.LibraryGroupType
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.Pill
 import tachiyomi.presentation.core.i18n.stringResource
@@ -29,13 +31,14 @@ fun LibraryToolbar(
     hasActiveFilters: Boolean,
     selectedCount: Int,
     title: LibraryToolbarTitle,
+    currentGroupType: LibraryGroupType,
     onClickUnselectAll: () -> Unit,
     onClickSelectAll: () -> Unit,
     onClickInvertSelection: () -> Unit,
     onClickFilter: () -> Unit,
-    onClickRefresh: () -> Unit,
-    onClickGlobalUpdate: () -> Unit,
-    onClickOpenRandomManga: () -> Unit,
+    onClickRefresh: (() -> Unit)?,
+    onClickGlobalUpdate: (() -> Unit)?,
+    onClickOpenRandomEntry: () -> Unit,
     searchQuery: String?,
     onSearchQueryChange: (String?) -> Unit,
     scrollBehavior: TopAppBarScrollBehavior?,
@@ -49,12 +52,13 @@ fun LibraryToolbar(
     else -> LibraryRegularToolbar(
         title = title,
         hasFilters = hasActiveFilters,
+        currentGroupType = currentGroupType,
         searchQuery = searchQuery,
         onSearchQueryChange = onSearchQueryChange,
         onClickFilter = onClickFilter,
         onClickRefresh = onClickRefresh,
         onClickGlobalUpdate = onClickGlobalUpdate,
-        onClickOpenRandomManga = onClickOpenRandomManga,
+        onClickOpenRandomEntry = onClickOpenRandomEntry,
         scrollBehavior = scrollBehavior,
     )
 }
@@ -63,15 +67,26 @@ fun LibraryToolbar(
 private fun LibraryRegularToolbar(
     title: LibraryToolbarTitle,
     hasFilters: Boolean,
+    currentGroupType: LibraryGroupType,
     searchQuery: String?,
     onSearchQueryChange: (String?) -> Unit,
     onClickFilter: () -> Unit,
-    onClickRefresh: () -> Unit,
-    onClickGlobalUpdate: () -> Unit,
-    onClickOpenRandomManga: () -> Unit,
+    onClickRefresh: (() -> Unit)?,
+    onClickGlobalUpdate: (() -> Unit)?,
+    onClickOpenRandomEntry: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior?,
 ) {
     val pillAlpha = if (isSystemInDarkTheme()) 0.12f else 0.08f
+    val updateCurrentGroupTitle = when (currentGroupType) {
+        LibraryGroupType.Category -> stringResource(MR.strings.action_update_category)
+        LibraryGroupType.Type -> stringResource(MR.strings.action_update_type)
+        LibraryGroupType.Extension -> stringResource(MR.strings.action_update_extension)
+        LibraryGroupType.TypeCategory,
+        LibraryGroupType.CategoryType,
+        LibraryGroupType.ExtensionCategory,
+        LibraryGroupType.CategoryExtension,
+        -> stringResource(MR.strings.action_update_group)
+    }
     SearchToolbar(
         titleContent = {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -81,9 +96,9 @@ private fun LibraryRegularToolbar(
                     modifier = Modifier.weight(1f, false),
                     overflow = TextOverflow.Ellipsis,
                 )
-                if (title.numberOfManga != null) {
+                if (title.numberOfEntries != null) {
                     Pill(
-                        text = "${title.numberOfManga}",
+                        text = "${title.numberOfEntries}",
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = pillAlpha),
                         fontSize = 14.sp,
                     )
@@ -95,26 +110,38 @@ private fun LibraryRegularToolbar(
         actions = {
             val filterTint = if (hasFilters) MaterialTheme.colorScheme.active else LocalContentColor.current
             AppBarActions(
-                listOf(
-                    AppBar.Action(
-                        title = stringResource(MR.strings.action_filter),
-                        icon = Icons.Outlined.FilterList,
-                        iconTint = filterTint,
-                        onClick = onClickFilter,
-                    ),
-                    AppBar.OverflowAction(
-                        title = stringResource(MR.strings.action_update_library),
-                        onClick = onClickGlobalUpdate,
-                    ),
-                    AppBar.OverflowAction(
-                        title = stringResource(MR.strings.action_update_category),
-                        onClick = onClickRefresh,
-                    ),
-                    AppBar.OverflowAction(
-                        title = stringResource(MR.strings.action_open_random_manga),
-                        onClick = onClickOpenRandomManga,
-                    ),
-                ),
+                buildList<AppBar.AppBarAction> {
+                    add(
+                        AppBar.Action(
+                            title = stringResource(MR.strings.action_filter),
+                            icon = Icons.Outlined.FilterList,
+                            iconTint = filterTint,
+                            onClick = onClickFilter,
+                        ),
+                    )
+                    onClickGlobalUpdate?.let {
+                        add(
+                            AppBar.OverflowAction(
+                                title = stringResource(MR.strings.action_update_library),
+                                onClick = it,
+                            ),
+                        )
+                    }
+                    onClickRefresh?.let {
+                        add(
+                            AppBar.OverflowAction(
+                                title = updateCurrentGroupTitle,
+                                onClick = it,
+                            ),
+                        )
+                    }
+                    add(
+                        AppBar.OverflowAction(
+                            title = stringResource(MR.strings.action_open_random_manga),
+                            onClick = onClickOpenRandomEntry,
+                        ),
+                    )
+                }.toPersistentList(),
             )
         },
         scrollBehavior = scrollBehavior,
@@ -154,5 +181,5 @@ private fun LibrarySelectionToolbar(
 @Immutable
 data class LibraryToolbarTitle(
     val text: String,
-    val numberOfManga: Int? = null,
+    val numberOfEntries: Int? = null,
 )

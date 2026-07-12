@@ -11,7 +11,7 @@ import eu.kanade.tachiyomi.data.track.mangaupdates.dto.copyTo
 import eu.kanade.tachiyomi.data.track.mangaupdates.dto.toTrackSearch
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import tachiyomi.i18n.MR
-import tachiyomi.domain.track.model.Track as DomainTrack
+import tachiyomi.domain.track.model.EntryTrack as DomainTrack
 
 class MangaUpdates(id: Long) : BaseTracker(id, "MangaUpdates"), DeletableTracker {
 
@@ -111,6 +111,10 @@ class MangaUpdates(id: Long) : BaseTracker(id, "MangaUpdates"), DeletableTracker
         val currentUser = api.getCurrentUser()
         saveDisplayUsername(currentUser.username)
         saveCredentials(authenticated.uid.toString(), authenticated.sessionToken)
+    }
+
+    fun saveSession(token: String?) {
+        trackPreferences.trackPassword(this).set(token.orEmpty())
     }
 
     fun restoreSession(): String? {

@@ -28,7 +28,9 @@ import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-internal class StorageStep : OnboardingStep {
+internal class StorageStep(
+    private val migratingFromMihon: Boolean,
+) : OnboardingStep {
 
     private val storagePref = Injekt.get<StoragePreferences>().baseStorageDirectory
 
@@ -55,6 +57,13 @@ internal class StorageStep : OnboardingStep {
                     SettingsDataScreen.storageLocationText(storagePref),
                 ),
             )
+
+            if (migratingFromMihon) {
+                Text(
+                    text = stringResource(MR.strings.onboarding_mihon_migration_storage),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
 
             Button(
                 modifier = Modifier.fillMaxWidth(),

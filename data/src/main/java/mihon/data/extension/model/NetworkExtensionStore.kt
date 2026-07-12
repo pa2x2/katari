@@ -7,7 +7,7 @@ import kotlinx.serialization.protobuf.ProtoNumber
 import mihon.data.extension.model.NetworkExtensionStore.ContentWarning
 import mihon.data.extension.model.NetworkExtensionStore.ExtensionList
 import mihon.domain.extension.model.ExtensionStore
-import eu.kanade.tachiyomi.extension.model.Extension as TachiyomiExtension
+import eu.kanade.tachiyomi.extension.model.Extension as DomainExtension
 
 @SuppressLint("UnsafeOptInUsageError")
 @Serializable
@@ -38,6 +38,7 @@ data class NetworkExtensionStore(
         @ProtoNumber(6) val versionName: String,
         @ProtoNumber(7) val contentWarning: ContentWarning,
         @ProtoNumber(8) val sources: List<Source>,
+        // Proto field 9 was the legacy extension content type and must not be reused.
     )
 
     @Serializable
@@ -92,21 +93,21 @@ data class NetworkExtensionStore(
     }
 }
 
-fun ExtensionList.toAvailableExtensions(store: ExtensionStore): List<TachiyomiExtension.Available> {
+fun ExtensionList.toAvailableExtensions(store: ExtensionStore): List<DomainExtension.Available> {
     return extensions.map { extension ->
         val lang = extension.sources.map { it.language }.toSet()
-        TachiyomiExtension.Available(
+        DomainExtension.Available(
             name = extension.name,
             pkgName = extension.packageName,
             apkUrl = extension.resources.apkUrl,
             iconUrl = extension.resources.iconUrl,
-            libVersion = extension.extensionLib.toDouble(),
+            libVersion = extension.extensionLib.toLibVersionDouble(),
             versionCode = extension.versionCode,
             versionName = extension.versionName,
             lang = if (lang.size == 1) lang.first() else "all",
             isNsfw = extension.contentWarning >= ContentWarning.MIXED,
             sources = extension.sources.map { source ->
-                TachiyomiExtension.Available.Source(
+                DomainExtension.Available.Source(
                     id = source.id,
                     name = source.name,
                     lang = source.language,
@@ -114,6 +115,16 @@ fun ExtensionList.toAvailableExtensions(store: ExtensionStore): List<TachiyomiEx
                 )
             },
             store = store,
+            libVersionName = extension.extensionLib,
         )
+    }
+}
+
+private fun String.toLibVersionDouble(): Double {
+    val parts = split('.')
+    return if (parts.size >= 2) {
+        "${parts[0]}.${parts[1]}".toDouble()
+    } else {
+        toDouble()
     }
 }

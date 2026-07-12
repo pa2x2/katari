@@ -30,6 +30,12 @@ fun PreferenceScreen(
 ) {
     val state = rememberLazyListState()
     val highlightKey = SearchableSettings.highlightKey
+    val allItemsProfileSpecific = items.isNotEmpty() && items.all { preference ->
+        when (preference) {
+            is Preference.PreferenceGroup -> preference.isFullyProfileSpecific()
+            is Preference.PreferenceItem<*, *> -> preference.isProfileSpecific
+        }
+    }
     if (highlightKey != null) {
         LaunchedEffect(Unit) {
             val i = items.findHighlightedIndex(highlightKey)
@@ -51,16 +57,21 @@ fun PreferenceScreen(
                 // Create Preference Group
                 is Preference.PreferenceGroup -> {
                     if (!preference.enabled) return@fastForEachIndexed
+                    val showGroupChip = !allItemsProfileSpecific && preference.isFullyProfileSpecific()
 
                     item {
                         Column {
-                            PreferenceGroupHeader(title = preference.title)
+                            PreferenceGroupHeader(
+                                title = preference.title,
+                                isProfileSpecific = showGroupChip,
+                            )
                         }
                     }
                     items(preference.preferenceItems) { item ->
                         PreferenceItem(
                             item = item,
                             highlightKey = highlightKey,
+                            showProfileChip = !allItemsProfileSpecific && !showGroupChip,
                         )
                     }
                     item {
@@ -75,6 +86,7 @@ fun PreferenceScreen(
                     PreferenceItem(
                         item = preference,
                         highlightKey = highlightKey,
+                        showProfileChip = !allItemsProfileSpecific,
                     )
                 }
             }

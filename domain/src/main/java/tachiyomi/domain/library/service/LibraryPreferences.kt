@@ -4,13 +4,19 @@ import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.preference.getEnum
+import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.library.model.LibraryDisplayMode
+import tachiyomi.domain.library.model.LibraryGroupType
 import tachiyomi.domain.library.model.LibrarySort
-import tachiyomi.domain.manga.model.Manga
 
 class LibraryPreferences(
     private val preferenceStore: PreferenceStore,
 ) {
+
+    val downloadedOnly: Preference<Boolean> = preferenceStore.getBoolean(
+        Preference.appStateKey("pref_downloaded_only"),
+        false,
+    )
 
     val displayMode: Preference<LibraryDisplayMode> = preferenceStore.getObjectFromString(
         "pref_display_mode_library",
@@ -44,13 +50,13 @@ class LibraryPreferences(
             DEVICE_ONLY_ON_WIFI,
         ),
     )
-    val autoUpdateMangaRestrictions: Preference<Set<String>> = preferenceStore.getStringSet(
+    val autoUpdateEntryRestrictions: Preference<Set<String>> = preferenceStore.getStringSet(
         "library_update_manga_restriction",
         setOf(
-            MANGA_HAS_UNREAD,
-            MANGA_NON_COMPLETED,
-            MANGA_NON_READ,
-            MANGA_OUTSIDE_RELEASE_PERIOD,
+            ENTRY_HAS_UNCONSUMED,
+            ENTRY_NON_COMPLETED,
+            ENTRY_NON_STARTED,
+            ENTRY_OUTSIDE_RELEASE_PERIOD,
         ),
     )
 
@@ -59,11 +65,6 @@ class LibraryPreferences(
     val showContinueReadingButton: Preference<Boolean> = preferenceStore.getBoolean(
         "display_continue_reading_button",
         false,
-    )
-
-    val markDuplicateReadChapterAsRead: Preference<Set<String>> = preferenceStore.getStringSet(
-        "mark_duplicate_read_chapter_read",
-        emptySet(),
     )
 
     // region Filter
@@ -75,11 +76,6 @@ class LibraryPreferences(
 
     val filterUnread: Preference<TriState> = preferenceStore.getEnum("pref_filter_library_unread_v2", TriState.DISABLED)
 
-    val filterStarted: Preference<TriState> = preferenceStore.getEnum(
-        "pref_filter_library_started_v2",
-        TriState.DISABLED,
-    )
-
     val filterBookmarked: Preference<TriState> = preferenceStore.getEnum(
         "pref_filter_library_bookmarked_v2",
         TriState.DISABLED,
@@ -87,6 +83,11 @@ class LibraryPreferences(
 
     val filterCompleted: Preference<TriState> = preferenceStore.getEnum(
         "pref_filter_library_completed_v2",
+        TriState.DISABLED,
+    )
+
+    val filterNotStarted: Preference<TriState> = preferenceStore.getEnum(
+        "pref_filter_library_not_started",
         TriState.DISABLED,
     )
 
@@ -102,6 +103,15 @@ class LibraryPreferences(
 
     // endregion
 
+    // region Group
+
+    val groupType: Preference<LibraryGroupType> = preferenceStore.getEnum(
+        "pref_group_library_type",
+        LibraryGroupType.Category,
+    )
+
+    // endregion
+
     // region Badges
 
     val downloadBadge: Preference<Boolean> = preferenceStore.getBoolean("display_download_badge", false)
@@ -111,6 +121,8 @@ class LibraryPreferences(
     val localBadge: Preference<Boolean> = preferenceStore.getBoolean("display_local_badge", true)
 
     val languageBadge: Preference<Boolean> = preferenceStore.getBoolean("display_language_badge", false)
+
+    val entryTypeBadge: Preference<Boolean> = preferenceStore.getBoolean("display_entry_type_badge", true)
 
     val newShowUpdatesCount: Preference<Boolean> = preferenceStore.getBoolean("library_show_updates_count", true)
     val newUpdatesCount: Preference<Int> = preferenceStore.getInt(
@@ -148,47 +160,45 @@ class LibraryPreferences(
 
     val filterChapterByRead: Preference<Long> = preferenceStore.getLong(
         "default_chapter_filter_by_read",
-        Manga.SHOW_ALL,
+        Entry.SHOW_ALL,
     )
 
     val filterChapterByDownloaded: Preference<Long> = preferenceStore.getLong(
         "default_chapter_filter_by_downloaded",
-        Manga.SHOW_ALL,
+        Entry.SHOW_ALL,
     )
 
     val filterChapterByBookmarked: Preference<Long> = preferenceStore.getLong(
         "default_chapter_filter_by_bookmarked",
-        Manga.SHOW_ALL,
+        Entry.SHOW_ALL,
     )
 
     // and upload date
     val sortChapterBySourceOrNumber: Preference<Long> = preferenceStore.getLong(
         "default_chapter_sort_by_source_or_number",
-        Manga.CHAPTER_SORTING_SOURCE,
+        Entry.DEFAULT_CHAPTER_FLAGS and Entry.CHAPTER_SORTING_MASK,
     )
 
     val displayChapterByNameOrNumber: Preference<Long> = preferenceStore.getLong(
         "default_chapter_display_by_name_or_number",
-        Manga.CHAPTER_DISPLAY_NAME,
+        Entry.DEFAULT_CHAPTER_FLAGS and Entry.CHAPTER_DISPLAY_MASK,
     )
 
     val sortChapterByAscendingOrDescending: Preference<Long> = preferenceStore.getLong(
         "default_chapter_sort_by_ascending_or_descending",
-        Manga.CHAPTER_SORT_DESC,
+        Entry.DEFAULT_CHAPTER_FLAGS and Entry.CHAPTER_SORT_DIR_MASK,
     )
 
-    fun setChapterSettingsDefault(manga: Manga) {
+    fun setChapterSettingsDefault(manga: Entry) {
         filterChapterByRead.set(manga.unreadFilterRaw)
         filterChapterByDownloaded.set(manga.downloadedFilterRaw)
         filterChapterByBookmarked.set(manga.bookmarkedFilterRaw)
         sortChapterBySourceOrNumber.set(manga.sorting)
         displayChapterByNameOrNumber.set(manga.displayMode)
         sortChapterByAscendingOrDescending.set(
-            if (manga.sortDescending()) Manga.CHAPTER_SORT_DESC else Manga.CHAPTER_SORT_ASC,
+            if (manga.sortDescending()) Entry.CHAPTER_SORT_DESC else Entry.CHAPTER_SORT_ASC,
         )
     }
-
-    val autoClearChapterCache: Preference<Boolean> = preferenceStore.getBoolean("auto_clear_chapter_cache", false)
 
     val hideMissingChapters: Preference<Boolean> = preferenceStore.getBoolean(
         "pref_hide_missing_chapter_indicators",
@@ -210,11 +220,6 @@ class LibraryPreferences(
 
     val updateMangaTitles: Preference<Boolean> = preferenceStore.getBoolean("pref_update_library_manga_titles", false)
 
-    val disallowNonAsciiFilenames: Preference<Boolean> = preferenceStore.getBoolean(
-        "disallow_non_ascii_filenames",
-        false,
-    )
-
     // endregion
 
     enum class ChapterSwipeAction {
@@ -229,10 +234,10 @@ class LibraryPreferences(
         const val DEVICE_NETWORK_NOT_METERED = "network_not_metered"
         const val DEVICE_CHARGING = "ac"
 
-        const val MANGA_NON_COMPLETED = "manga_ongoing"
-        const val MANGA_HAS_UNREAD = "manga_fully_read"
-        const val MANGA_NON_READ = "manga_started"
-        const val MANGA_OUTSIDE_RELEASE_PERIOD = "manga_outside_release_period"
+        const val ENTRY_NON_COMPLETED = "manga_ongoing"
+        const val ENTRY_HAS_UNCONSUMED = "manga_fully_read"
+        const val ENTRY_NON_STARTED = "manga_started"
+        const val ENTRY_OUTSIDE_RELEASE_PERIOD = "manga_outside_release_period"
 
         const val MARK_DUPLICATE_CHAPTER_READ_NEW = "new"
         const val MARK_DUPLICATE_CHAPTER_READ_EXISTING = "existing"

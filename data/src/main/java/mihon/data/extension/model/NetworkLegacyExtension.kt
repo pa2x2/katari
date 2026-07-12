@@ -31,7 +31,7 @@ data class NetworkLegacyExtension(
             pkgName = pkg,
             apkUrl = "$storeBaseUrl/apk/$apk",
             iconUrl = "$storeBaseUrl/icon/$pkg.png",
-            libVersion = version.substringBeforeLast('.').toDouble(),
+            libVersion = version.substringBeforeLast('.').toLibVersionDouble(),
             versionCode = code,
             versionName = version,
             lang = lang,
@@ -56,6 +56,16 @@ data class NetworkLegacyExtension(
                 }
             },
             store = store,
+            libVersionName = version.substringBeforeLast('.'),
         )
+    }
+}
+
+private fun String.toLibVersionDouble(): Double {
+    val parts = split('.')
+    return if (parts.size >= 2) {
+        "${parts[0]}.${parts[1]}".toDouble()
+    } else {
+        toDouble()
     }
 }

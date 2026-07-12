@@ -1,25 +1,32 @@
 CREATE TABLE categories(
     _id INTEGER NOT NULL PRIMARY KEY,
+    profile_id INTEGER NOT NULL DEFAULT 1,
     name TEXT NOT NULL,
     sort INTEGER NOT NULL,
-    flags INTEGER NOT NULL
+    flags INTEGER NOT NULL,
+    FOREIGN KEY(profile_id) REFERENCES profiles (_id)
+    ON DELETE CASCADE
 );
 
--- Insert system category
-INSERT OR IGNORE INTO categories(_id, name, sort, flags) VALUES (0, "", -1, 0);
--- Disallow deletion of default category
+INSERT OR IGNORE INTO categories(_id, profile_id, name, sort, flags) VALUES (0, 1, "", -1, 0);
+
 CREATE TRIGGER IF NOT EXISTS system_category_delete_trigger BEFORE DELETE
 ON categories
 BEGIN SELECT CASE
     WHEN old._id <= 0 THEN
-        RAISE(ABORT, "System category can't be deleted")
+        RAISE(ABORT, 'System category can''t be deleted')
     END;
 END;
 
 getCategory:
-SELECT *
+SELECT
+_id AS id,
+name,
+sort AS `order`,
+flags
 FROM categories
 WHERE _id = :id
+AND (_id = 0 OR profile_id = :profileId)
 LIMIT 1;
 
 getCategories:
@@ -29,34 +36,56 @@ name,
 sort AS `order`,
 flags
 FROM categories
+WHERE _id = 0 OR profile_id = :profileId
 ORDER BY sort;
 
-getCategoriesByMangaId:
+getCategoriesByEntryId:
 SELECT
 C._id AS id,
 C.name,
 C.sort AS `order`,
 C.flags
 FROM categories C
-JOIN mangas_categories MC
-ON C._id = MC.category_id
-WHERE MC.manga_id = :mangaId;
+JOIN entries_categories EC
+ON C._id = EC.category_id
+WHERE EC.profile_id = :profileId
+AND EC.entry_id = :entryId;
+
+getEntryCategoryMappings:
+SELECT
+EC.entry_id,
+EC.category_id
+FROM entries_categories EC
+WHERE EC.profile_id = :profileId
+AND EC.entry_id IN :entryIds;
 
 insert:
-INSERT INTO categories(name, sort, flags)
-VALUES (:name, :order, :flags);
+INSERT INTO categories(profile_id, name, sort, flags)
+VALUES (:profileId, :name, :order, :flags);
 
 delete:
 DELETE FROM categories
-WHERE _id = :categoryId;
+WHERE profile_id = :profileId
+AND _id = :categoryId;
+
+deleteByProfile:
+DELETE FROM categories
+WHERE profile_id = :profileId;
 
 update:
 UPDATE categories
 SET name = coalesce(:name, name),
     sort = coalesce(:order, sort),
     flags = coalesce(:flags, flags)
-WHERE _id = :categoryId;
+WHERE _id = :categoryId
+AND _id != 0
+AND profile_id = :profileId;
 
 updateAllFlags:
 UPDATE categories SET
-flags = coalesce(?, flags);
+flags = coalesce(:flags, flags)
+WHERE _id != 0
+AND profile_id = :profileId;
+
+selectLastInsertedRowId:
+SELECT last_insert_rowid();

@@ -16,11 +16,15 @@ kotlin {
 }
 
 dependencies {
+    api(projects.i18n)
+
+    implementation(projects.entrySourceApi)
     implementation(projects.sourceApi)
     implementation(projects.core.common)
 
     implementation(libs.bundles.kotlinx.coroutines)
     implementation(libs.bundles.serialization)
+    implementation(libs.stringSimilarity)
 
     implementation(libs.unifile)
 

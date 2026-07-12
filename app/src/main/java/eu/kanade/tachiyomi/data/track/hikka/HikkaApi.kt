@@ -35,14 +35,15 @@ class HikkaApi(
     private val client: OkHttpClient,
     interceptor: HikkaInterceptor,
 ) {
-    suspend fun getCurrentUser(): HKUser {
+    suspend fun getCurrentUser(accessToken: String): HKUser {
         return withIOContext {
             val request = Request.Builder()
                 .url("${BASE_API_URL}/user/me")
+                .header("auth", accessToken)
                 .get()
                 .build()
             with(json) {
-                authClient.newCall(request)
+                client.newCall(request)
                     .awaitSuccess()
                     .parseAs<HKUser>()
             }
@@ -143,6 +144,7 @@ class HikkaApi(
 
             authClient.newCall(DELETE(url.toString()))
                 .awaitSuccess()
+                .close()
         }
     }
 

@@ -11,3 +11,13 @@ import uy.kohesive.injekt.api.get
 fun ifSourcesLoaded(): Boolean {
     return remember { Injekt.get<SourceManager>().isInitialized }.collectAsState().value
 }
+
+@Composable
+fun ifAnimeSourcesLoaded(): Boolean {
+    return remember { Injekt.get<SourceManager>().isInitialized }.collectAsState().value
+}
+
+@Composable
+fun ifCatalogSourcesLoaded(): Boolean {
+    return ifSourcesLoaded() && ifAnimeSourcesLoaded()
+}

@@ -129,15 +129,15 @@ object SettingsDownloadScreen : SearchableSettings {
         downloadPreferences: DownloadPreferences,
         allCategories: List<Category>,
     ): Preference.PreferenceGroup {
-        val downloadNewChaptersPref = downloadPreferences.downloadNewChapters
-        val downloadNewUnreadChaptersOnlyPref = downloadPreferences.downloadNewUnreadChaptersOnly
-        val downloadNewChapterCategoriesPref = downloadPreferences.downloadNewChapterCategories
-        val downloadNewChapterCategoriesExcludePref = downloadPreferences.downloadNewChapterCategoriesExclude
+        val downloadNewEntryChaptersPref = downloadPreferences.downloadNewEntryChapters
+        val downloadNewUnreadEntryChaptersOnlyPref = downloadPreferences.downloadNewUnreadEntryChaptersOnly
+        val downloadNewEntryChapterCategoriesPref = downloadPreferences.downloadNewEntryChapterCategories
+        val downloadNewEntryChapterCategoriesExcludePref = downloadPreferences.downloadNewEntryChapterCategoriesExclude
 
-        val downloadNewChapters by downloadNewChaptersPref.collectAsState()
+        val downloadNewEntryChapters by downloadNewEntryChaptersPref.collectAsState()
 
-        val included by downloadNewChapterCategoriesPref.collectAsState()
-        val excluded by downloadNewChapterCategoriesExcludePref.collectAsState()
+        val included by downloadNewEntryChapterCategoriesPref.collectAsState()
+        val excluded by downloadNewEntryChapterCategoriesExcludePref.collectAsState()
         var showDialog by rememberSaveable { mutableStateOf(false) }
         if (showDialog) {
             TriStateListDialog(
@@ -149,8 +149,8 @@ object SettingsDownloadScreen : SearchableSettings {
                 itemLabel = { it.visualName },
                 onDismissRequest = { showDialog = false },
                 onValueChanged = { newIncluded, newExcluded ->
-                    downloadNewChapterCategoriesPref.set(newIncluded.fastMap { it.id.toString() }.toSet())
-                    downloadNewChapterCategoriesExcludePref.set(newExcluded.fastMap { it.id.toString() }.toSet())
+                    downloadNewEntryChapterCategoriesPref.set(newIncluded.fastMap { it.id.toString() }.toSet())
+                    downloadNewEntryChapterCategoriesExcludePref.set(newExcluded.fastMap { it.id.toString() }.toSet())
                     showDialog = false
                 },
             )
@@ -160,13 +160,13 @@ object SettingsDownloadScreen : SearchableSettings {
             title = stringResource(MR.strings.pref_category_auto_download),
             preferenceItems = listOf(
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = downloadNewChaptersPref,
+                    preference = downloadNewEntryChaptersPref,
                     title = stringResource(MR.strings.pref_download_new),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = downloadNewUnreadChaptersOnlyPref,
+                    preference = downloadNewUnreadEntryChaptersOnlyPref,
                     title = stringResource(MR.strings.pref_download_new_unread_chapters_only),
-                    enabled = downloadNewChapters,
+                    enabled = downloadNewEntryChapters,
                 ),
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.categories),
@@ -175,7 +175,7 @@ object SettingsDownloadScreen : SearchableSettings {
                         included = included,
                         excluded = excluded,
                     ),
-                    enabled = downloadNewChapters,
+                    enabled = downloadNewEntryChapters,
                     onClick = { showDialog = true },
                 ),
             ),

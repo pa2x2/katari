@@ -1,0 +1,328 @@
+import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy;
+import kotlin.Boolean;
+import kotlin.String;
+import kotlin.collections.List;
+import kotlinx.serialization.json.JsonObject;
+
+CREATE TABLE entries (
+    _id INTEGER PRIMARY KEY AUTOINCREMENT,
+    profile_id INTEGER NOT NULL DEFAULT 1,
+    source INTEGER NOT NULL,
+    url TEXT NOT NULL,
+    title TEXT NOT NULL,
+    display_name TEXT,
+    artist TEXT,
+    author TEXT,
+    description TEXT,
+    genre TEXT AS List<String>,
+    status INTEGER NOT NULL DEFAULT 0,
+    thumbnail_url TEXT,
+    favorite INTEGER AS Boolean NOT NULL DEFAULT 0,
+    last_update INTEGER,
+    next_update INTEGER,
+    initialized INTEGER AS Boolean NOT NULL DEFAULT 0,
+    viewer INTEGER NOT NULL DEFAULT 0,
+    chapter_flags INTEGER NOT NULL DEFAULT 0,
+    cover_last_modified INTEGER NOT NULL DEFAULT 0,
+    date_added INTEGER NOT NULL DEFAULT 0,
+    update_strategy INTEGER AS EntryUpdateStrategy NOT NULL DEFAULT 0,
+    calculate_interval INTEGER NOT NULL DEFAULT 0,
+    last_modified_at INTEGER NOT NULL DEFAULT 0,
+    favorite_modified_at INTEGER,
+    version INTEGER NOT NULL DEFAULT 0,
+    is_syncing INTEGER AS Boolean NOT NULL DEFAULT 0,
+    notes TEXT NOT NULL DEFAULT "",
+    memo BLOB AS JsonObject NOT NULL DEFAULT '{}',
+    type TEXT NOT NULL DEFAULT 'manga',
+    FOREIGN KEY (profile_id) REFERENCES profiles(_id) ON DELETE CASCADE
+);
+
+CREATE UNIQUE INDEX idx_entries_profile_source_url_type ON entries(profile_id, source, url, type);
+CREATE INDEX idx_entries_favorite ON entries(profile_id, favorite) WHERE favorite = 1;
+CREATE INDEX idx_entries_url ON entries(profile_id, url);
+CREATE INDEX idx_entries_source ON entries(profile_id, source);
+
+CREATE TRIGGER update_last_favorited_at_entries
+AFTER UPDATE OF favorite ON entries
+BEGIN
+    UPDATE entries
+    SET favorite_modified_at = strftime('%s', 'now')
+    WHERE _id = new._id;
+END;
+
+CREATE TRIGGER update_last_modified_at_entries
+AFTER UPDATE ON entries
+FOR EACH ROW
+BEGIN
+    UPDATE entries
+    SET last_modified_at = strftime('%s', 'now')
+    WHERE _id = new._id;
+END;
+
+CREATE TRIGGER update_entry_version AFTER UPDATE ON entries
+BEGIN
+    UPDATE entries SET version = version + 1
+    WHERE _id = new._id AND new.is_syncing = 0 AND (
+        new.url != old.url OR
+        new.description != old.description OR
+        new.favorite != old.favorite
+    );
+END;
+
+getEntryById:
+SELECT *
+FROM entries
+WHERE _id = :id
+AND profile_id = :profileId;
+
+getEntryByUrlAndSource:
+SELECT *
+FROM entries
+WHERE profile_id = :profileId
+AND url = :url
+AND source = :source
+AND type = :type
+LIMIT 1;
+
+getFavorites:
+SELECT *
+FROM entries
+WHERE profile_id = :profileId
+AND favorite = 1;
+
+getNonFavoriteIds:
+SELECT _id
+FROM entries
+WHERE profile_id = :profileId
+AND favorite = 0
+AND _id IN :entryIds;
+
+getReadEntriesNotInLibrary:
+SELECT *
+FROM entries
+WHERE profile_id = :profileId
+AND favorite = 0
+AND _id IN (
+    SELECT DISTINCT entry_id
+    FROM chapters
+    WHERE read = 1 OR last_page_read != 0
+);
+
+getAllEntries:
+SELECT *
+FROM entries
+WHERE profile_id = :profileId;
+
+getAllEntriesSourceAndUrl:
+SELECT source, url, type
+FROM entries
+WHERE profile_id = :profileId;
+
+getEntryIdsAndTypes:
+SELECT _id, type
+FROM entries
+WHERE profile_id = :profileId
+AND _id IN :entryIds;
+
+getEntriesWithFavoriteTimestamp:
+SELECT *
+FROM entries
+WHERE profile_id = :profileId
+AND favorite_modified_at IS NOT NULL;
+
+getSourceIdWithFavoriteCount:
+SELECT
+    source,
+    count(*)
+FROM entries
+WHERE profile_id = :profileId
+AND favorite = 1
+GROUP BY source;
+
+getFavoritesBySourceId:
+SELECT *
+FROM entries
+WHERE profile_id = :profileId
+AND favorite = 1
+AND source = :sourceId;
+
+getUpcomingEntries:
+SELECT *
+FROM entries
+WHERE profile_id = :profileId
+AND next_update >= :startOfDay
+AND favorite = 1
+AND status IN :statuses
+AND type IN :types
+ORDER BY next_update ASC;
+
+resetViewerFlags:
+UPDATE entries
+SET viewer = 0
+WHERE profile_id = :profileId;
+
+resetIsSyncing:
+UPDATE entries
+SET is_syncing = 0
+WHERE profile_id = :profileId
+AND is_syncing = 1;
+
+getSourceIdsWithNonLibraryEntries:
+SELECT source, COUNT(*) AS entry_count
+FROM entries
+WHERE profile_id = :profileId
+AND favorite = 0
+GROUP BY source;
+
+deleteNonLibraryEntries:
+DELETE FROM entries
+WHERE profile_id = :profileId
+AND favorite = 0
+AND source IN :sourceIds
+AND (
+    :keepReadEntries = 0
+    OR _id NOT IN (
+        SELECT DISTINCT entry_id
+        FROM chapters
+        WHERE read = 1 OR last_page_read != 0
+    )
+);
+
+deleteById:
+DELETE FROM entries
+WHERE profile_id = :profileId
+AND _id = :entryId;
+
+moveToProfile:
+UPDATE entries
+SET profile_id = :destinationProfileId
+WHERE profile_id = :sourceProfileId
+AND _id = :entryId;
+
+setFavoriteForProfile:
+UPDATE entries
+SET favorite = :favorite
+WHERE profile_id = :profileId
+AND _id = :entryId;
+
+deleteByProfile:
+DELETE FROM entries
+WHERE profile_id = :profileId;
+
+countProfileFavorites:
+SELECT count(*)
+FROM entries
+WHERE profile_id = :profileId
+AND favorite = 1;
+
+insert:
+INSERT INTO entries(
+    profile_id, source, url, title, display_name, artist, author, description, genre,
+    status, thumbnail_url, favorite, last_update, next_update, initialized, viewer,
+    chapter_flags, cover_last_modified, date_added, update_strategy, calculate_interval,
+    last_modified_at, version, notes, memo, type
+)
+VALUES (
+    :profileId, :source, :url, :title, :displayName, :artist, :author, :description, :genre,
+    :status, :thumbnailUrl, :favorite, :lastUpdate, :nextUpdate, :initialized, :viewerFlags,
+    :chapterFlags, :coverLastModified, :dateAdded, :updateStrategy, :calculateInterval,
+    0, :version, :notes, :memo, :type
+);
+
+insertReturningId:
+INSERT INTO entries(
+    profile_id, source, url, title, display_name, artist, author, description, genre,
+    status, thumbnail_url, favorite, last_update, next_update, initialized, viewer,
+    chapter_flags, cover_last_modified, date_added, update_strategy, calculate_interval,
+    last_modified_at, version, notes, memo, type
+)
+VALUES (
+    :profileId, :source, :url, :title, :displayName, :artist, :author, :description, :genre,
+    :status, :thumbnailUrl, :favorite, :lastUpdate, :nextUpdate, :initialized, :viewerFlags,
+    :chapterFlags, :coverLastModified, :dateAdded, :updateStrategy, :calculateInterval,
+    0, :version, :notes, :memo, :type
+)
+RETURNING _id;
+
+update:
+UPDATE entries SET
+    source = coalesce(:source, source),
+    url = coalesce(:url, url),
+    title = coalesce(:title, title),
+    display_name = coalesce(:displayName, display_name),
+    artist = coalesce(:artist, artist),
+    author = coalesce(:author, author),
+    description = coalesce(:description, description),
+    genre = coalesce(:genre, genre),
+    status = coalesce(:status, status),
+    thumbnail_url = coalesce(:thumbnailUrl, thumbnail_url),
+    favorite = coalesce(:favorite, favorite),
+    last_update = coalesce(:lastUpdate, last_update),
+    next_update = coalesce(:nextUpdate, next_update),
+    initialized = coalesce(:initialized, initialized),
+    viewer = coalesce(:viewer, viewer),
+    chapter_flags = coalesce(:chapterFlags, chapter_flags),
+    cover_last_modified = coalesce(:coverLastModified, cover_last_modified),
+    date_added = coalesce(:dateAdded, date_added),
+    update_strategy = coalesce(:updateStrategy, update_strategy),
+    calculate_interval = coalesce(:calculateInterval, calculate_interval),
+    version = coalesce(:version, version),
+    is_syncing = coalesce(:isSyncing, is_syncing),
+    notes = coalesce(:notes, notes),
+    memo = coalesce(:memo, memo),
+    type = coalesce(:type, type)
+WHERE _id = :entryId
+AND profile_id = :profileId;
+
+updateDisplayName:
+UPDATE entries SET
+    display_name = :displayName
+WHERE _id = :entryId
+AND profile_id = :profileId;
+
+insertNetworkEntry {
+    INSERT INTO entries(
+        profile_id, source, url, title, display_name, artist, author, description, genre,
+        status, thumbnail_url, favorite, last_update, next_update, initialized, viewer,
+        chapter_flags, cover_last_modified, date_added, update_strategy, calculate_interval,
+        last_modified_at, version, memo, type
+    )
+    SELECT
+        :profileId, :source, :url, :title, NULL, :artist, :author, :description, :genre,
+        :status, :thumbnailUrl, :favorite, :lastUpdate, :nextUpdate, :initialized, :viewerFlags,
+        :chapterFlags, :coverLastModified, :dateAdded, :updateStrategy, :calculateInterval,
+        0, :version, :memo, :type
+    WHERE NOT EXISTS(
+        SELECT 0 FROM entries
+        WHERE profile_id = :profileId
+        AND source = :source
+        AND url = :url
+        AND type = :type
+    );
+
+    UPDATE entries
+    SET
+        title = CASE WHEN :updateTitle THEN :title ELSE title END,
+        thumbnail_url = CASE WHEN :updateCover THEN :thumbnailUrl ELSE thumbnail_url END,
+        author = CASE WHEN :updateDetails THEN :author ELSE author END,
+        artist = CASE WHEN :updateDetails THEN :artist ELSE artist END,
+        description = CASE WHEN :updateDetails THEN :description ELSE description END,
+        genre = CASE WHEN :updateDetails THEN :genre ELSE genre END,
+        status = CASE WHEN :updateDetails THEN :status ELSE status END,
+        update_strategy = CASE WHEN :updateDetails THEN :updateStrategy ELSE update_strategy END,
+        initialized = :updateDetails,
+        memo = :memo
+    WHERE profile_id = :profileId
+    AND source = :source
+    AND url = :url
+    AND type = :type
+    AND favorite = 0;
+
+    SELECT *
+    FROM entries
+    WHERE profile_id = :profileId
+    AND source = :source
+    AND url = :url
+    AND type = :type
+    LIMIT 1;
+}

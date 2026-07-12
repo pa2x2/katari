@@ -2,7 +2,7 @@ package eu.kanade.tachiyomi.data.cache
 
 import android.content.Context
 import eu.kanade.tachiyomi.util.storage.DiskUtil
-import tachiyomi.domain.manga.model.Manga
+import tachiyomi.domain.entry.model.Entry
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -44,25 +44,30 @@ class CoverCache(private val context: Context) {
     /**
      * Returns the custom cover from cache.
      *
-     * @param mangaId the manga id.
+     * @param entryId the entry id.
      * @return cover image.
      */
-    fun getCustomCoverFile(mangaId: Long?): File {
-        return File(customCoverCacheDir, DiskUtil.hashKeyForDisk(mangaId.toString()))
+    fun getCustomCoverFile(entryId: Long?): File {
+        return File(customCoverCacheDir, DiskUtil.hashKeyForDisk(entryId.toString()))
     }
 
     /**
-     * Saves the given stream as the manga's custom cover to cache.
+     * Saves the given stream as the entry's custom cover to cache.
      *
-     * @param manga the manga.
+     * @param entryId the entry id.
      * @param inputStream the stream to copy.
      * @throws IOException if there's any error.
      */
     @Throws(IOException::class)
-    fun setCustomCoverToCache(manga: Manga, inputStream: InputStream) {
-        getCustomCoverFile(manga.id).outputStream().use {
+    fun setCustomCoverToCache(entryId: Long, inputStream: InputStream) {
+        getCustomCoverFile(entryId).outputStream().use {
             inputStream.copyTo(it)
         }
+    }
+
+    @Throws(IOException::class)
+    fun setCustomCoverToCache(manga: Entry, inputStream: InputStream) {
+        setCustomCoverToCache(manga.id, inputStream)
     }
 
     /**
@@ -72,7 +77,7 @@ class CoverCache(private val context: Context) {
      * @param deleteCustomCover whether the custom cover should be deleted.
      * @return number of files that were deleted.
      */
-    fun deleteFromCache(manga: Manga, deleteCustomCover: Boolean = false): Int {
+    fun deleteFromCache(manga: Entry, deleteCustomCover: Boolean = false): Int {
         var deleted = 0
 
         getCoverFile(manga.thumbnailUrl)?.let {

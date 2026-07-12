@@ -55,7 +55,7 @@ import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.presentation.track.components.TrackLogoIcon
 import eu.kanade.tachiyomi.data.track.Tracker
-import eu.kanade.tachiyomi.ui.manga.track.TrackItem
+import eu.kanade.tachiyomi.ui.entry.track.TrackItem
 import eu.kanade.tachiyomi.util.lang.toLocalDate
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import tachiyomi.i18n.MR
@@ -96,11 +96,11 @@ fun TrackInfoDialogHome(
                     tracker = item.tracker,
                     status = item.tracker.getStatus(item.track.status),
                     onStatusClick = { onStatusClick(item) },
-                    chapters = "${item.track.lastChapterRead.toInt()}".let {
-                        val totalChapters = item.track.totalChapters
-                        if (totalChapters > 0) {
+                    chapters = "${item.track.progress.toInt()}".let {
+                        val total = item.track.total
+                        if (total > 0) {
                             // Add known total chapter count
-                            "$it / $totalChapters"
+                            "$it / $total"
                         } else {
                             it
                         }

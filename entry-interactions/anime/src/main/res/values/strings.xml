@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="empty_audio_attribution_tag" translatable="false"></string>
+    <string name="video_playback_attribution_label">Video playback</string>
+</resources>

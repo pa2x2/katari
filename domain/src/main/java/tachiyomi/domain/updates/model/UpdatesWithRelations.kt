@@ -1,10 +1,12 @@
 package tachiyomi.domain.updates.model
 
-import tachiyomi.domain.manga.model.MangaCover
+import eu.kanade.tachiyomi.source.entry.EntryType
+import tachiyomi.domain.entry.model.EntryCover
 
 data class UpdatesWithRelations(
-    val mangaId: Long,
-    val mangaTitle: String,
+    val entryId: Long,
+    val entryType: EntryType,
+    val entryTitle: String,
     val chapterId: Long,
     val chapterName: String,
     val scanlator: String?,
@@ -14,5 +16,7 @@ data class UpdatesWithRelations(
     val lastPageRead: Long,
     val sourceId: Long,
     val dateFetch: Long,
-    val coverData: MangaCover,
+    val coverData: EntryCover,
+    val dateUpload: Long = 0,
+    val excludedScanlator: String? = null,
 )

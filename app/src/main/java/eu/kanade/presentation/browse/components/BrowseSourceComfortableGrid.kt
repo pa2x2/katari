@@ -11,43 +11,50 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
-import eu.kanade.presentation.library.components.CommonMangaItemDefaults
-import eu.kanade.presentation.library.components.MangaComfortableGridItem
+import eu.kanade.presentation.entry.components.toGridCoverType
+import eu.kanade.presentation.library.components.CommonEntryItemDefaults
+import eu.kanade.presentation.library.components.EntryComfortableGridItem
+import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import kotlinx.coroutines.flow.StateFlow
-import tachiyomi.domain.manga.model.Manga
-import tachiyomi.domain.manga.model.MangaCover
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.model.EntryCover
 import tachiyomi.presentation.core.util.plus
 
 @Composable
 fun BrowseSourceComfortableGrid(
-    mangaList: LazyPagingItems<StateFlow<Manga>>,
+    entries: LazyPagingItems<StateFlow<Entry>>,
     columns: GridCells,
     contentPadding: PaddingValues,
-    onMangaClick: (Manga) -> Unit,
-    onMangaLongClick: (Manga) -> Unit,
+    sourceItemOrientation: EntryItemOrientation,
+    onEntryClick: (Entry) -> Unit,
+    onEntryLongClick: (Entry) -> Unit,
 ) {
     LazyVerticalGrid(
         columns = columns,
         contentPadding = contentPadding + PaddingValues(8.dp),
-        verticalArrangement = Arrangement.spacedBy(CommonMangaItemDefaults.GridVerticalSpacer),
-        horizontalArrangement = Arrangement.spacedBy(CommonMangaItemDefaults.GridHorizontalSpacer),
+        verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
+        horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
     ) {
-        if (mangaList.loadState.prepend is LoadState.Loading) {
+        if (entries.loadState.prepend is LoadState.Loading) {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 BrowseSourceLoadingItem()
             }
         }
 
-        items(count = mangaList.itemCount) { index ->
-            val manga by mangaList[index]?.collectAsState() ?: return@items
+        items(
+            count = entries.itemCount,
+            key = { index -> entries.peek(index)?.value?.id ?: "browse-comfortable-grid-$index" },
+        ) { index ->
+            val entry by entries[index]?.collectAsState() ?: return@items
             BrowseSourceComfortableGridItem(
-                manga = manga,
-                onClick = { onMangaClick(manga) },
-                onLongClick = { onMangaLongClick(manga) },
+                entry = entry,
+                sourceItemOrientation = sourceItemOrientation,
+                onClick = { onEntryClick(entry) },
+                onLongClick = { onEntryLongClick(entry) },
             )
         }
 
-        if (mangaList.loadState.refresh is LoadState.Loading || mangaList.loadState.append is LoadState.Loading) {
+        if (entries.loadState.refresh is LoadState.Loading || entries.loadState.append is LoadState.Loading) {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 BrowseSourceLoadingItem()
             }
@@ -57,22 +64,24 @@ fun BrowseSourceComfortableGrid(
 
 @Composable
 private fun BrowseSourceComfortableGridItem(
-    manga: Manga,
+    entry: Entry,
+    sourceItemOrientation: EntryItemOrientation,
     onClick: () -> Unit = {},
     onLongClick: () -> Unit = onClick,
 ) {
-    MangaComfortableGridItem(
-        title = manga.title,
-        coverData = MangaCover(
-            mangaId = manga.id,
-            sourceId = manga.source,
-            isMangaFavorite = manga.favorite,
-            url = manga.thumbnailUrl,
-            lastModified = manga.coverLastModified,
+    EntryComfortableGridItem(
+        title = entry.title,
+        coverData = EntryCover(
+            entryId = entry.id,
+            sourceId = entry.source,
+            isFavorite = entry.favorite,
+            url = entry.thumbnailUrl,
+            lastModified = entry.coverLastModified,
         ),
-        coverAlpha = if (manga.favorite) CommonMangaItemDefaults.BrowseFavoriteCoverAlpha else 1f,
+        coverType = sourceItemOrientation.toGridCoverType(),
+        coverAlpha = if (entry.favorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f,
         coverBadgeStart = {
-            InLibraryBadge(enabled = manga.favorite)
+            InLibraryBadge(enabled = entry.favorite)
         },
         onLongClick = onLongClick,
         onClick = onClick,

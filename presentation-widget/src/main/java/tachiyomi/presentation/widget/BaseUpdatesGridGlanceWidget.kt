@@ -35,7 +35,7 @@ import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.util.system.dpToPx
 import kotlinx.coroutines.flow.map
 import tachiyomi.core.common.util.lang.withIOContext
-import tachiyomi.domain.manga.model.MangaCover
+import tachiyomi.domain.entry.model.EntryCover
 import tachiyomi.domain.updates.interactor.GetUpdates
 import tachiyomi.domain.updates.model.UpdatesWithRelations
 import tachiyomi.presentation.widget.components.CoverHeight
@@ -117,15 +117,15 @@ abstract class BaseUpdatesGridGlanceWidget(
         val roundPx = context.resources.getDimension(R.dimen.appwidget_inner_radius)
         return withIOContext {
             this@prepareData
-                .distinctBy { it.mangaId }
+                .distinctBy { it.entryId }
                 .take(rowCount * columnCount)
                 .map { updatesView ->
                     val request = ImageRequest.Builder(context)
                         .data(
-                            MangaCover(
-                                mangaId = updatesView.mangaId,
+                            EntryCover(
+                                entryId = updatesView.entryId,
                                 sourceId = updatesView.sourceId,
-                                isMangaFavorite = true,
+                                isFavorite = true,
                                 url = updatesView.coverData.url,
                                 lastModified = updatesView.coverData.lastModified,
                             ),
@@ -146,7 +146,7 @@ abstract class BaseUpdatesGridGlanceWidget(
                         .image
                         ?.asDrawable(context.resources)
                         ?.toBitmap()
-                    Pair(updatesView.mangaId, bitmap)
+                    Pair(updatesView.entryId, bitmap)
                 }
         }
     }

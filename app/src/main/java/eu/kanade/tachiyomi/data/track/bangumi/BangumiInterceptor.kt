@@ -12,15 +12,10 @@ class BangumiInterceptor(private val bangumi: Bangumi) : Interceptor {
 
     private val json: Json by injectLazy()
 
-    /**
-     * OAuth object used for authenticated requests.
-     */
-    private var oauth: BGMOAuth? = bangumi.restoreToken()
-
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
 
-        var currAuth: BGMOAuth = oauth ?: throw Exception("Not authenticated with Bangumi")
+        var currAuth: BGMOAuth = bangumi.restoreToken() ?: throw Exception("Not authenticated with Bangumi")
 
         if (currAuth.isExpired()) {
             val response = chain.proceed(BangumiApi.refreshTokenRequest(currAuth.refreshToken!!))
@@ -35,7 +30,7 @@ class BangumiInterceptor(private val bangumi: Bangumi) : Interceptor {
         return originalRequest.newBuilder()
             .header(
                 "User-Agent",
-                "antsylich/Mihon/v${BuildConfig.VERSION_NAME} (Android) (http://github.com/mihonapp/mihon)",
+                "katariapp/Katari/v${BuildConfig.VERSION_NAME} (Android) (https://github.com/katariapp/katari)",
             )
             .apply {
                 addHeader("Authorization", "Bearer ${currAuth.accessToken}")
@@ -45,7 +40,7 @@ class BangumiInterceptor(private val bangumi: Bangumi) : Interceptor {
     }
 
     fun newAuth(oauth: BGMOAuth?) {
-        this.oauth = if (oauth == null) {
+        val normalizedOAuth = if (oauth == null) {
             null
         } else {
             BGMOAuth(
@@ -54,10 +49,10 @@ class BangumiInterceptor(private val bangumi: Bangumi) : Interceptor {
                 System.currentTimeMillis() / 1000,
                 oauth.expiresIn,
                 oauth.refreshToken,
-                this.oauth?.userId,
+                bangumi.restoreToken()?.userId,
             )
         }
 
-        bangumi.saveToken(oauth)
+        bangumi.saveToken(normalizedOAuth)
     }
 }

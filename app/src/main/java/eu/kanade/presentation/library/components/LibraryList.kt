@@ -4,12 +4,17 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import eu.kanade.tachiyomi.ui.library.LibraryItem
-import tachiyomi.domain.library.model.LibraryManga
-import tachiyomi.domain.manga.model.MangaCover
+import eu.kanade.presentation.entry.components.toListCoverType
+import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
+import tachiyomi.domain.entry.model.asEntryCover
+import tachiyomi.domain.library.model.LibraryItem
+import tachiyomi.domain.library.model.LibraryItemKey
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.util.plus
 
@@ -17,12 +22,13 @@ import tachiyomi.presentation.core.util.plus
 internal fun LibraryList(
     items: List<LibraryItem>,
     contentPadding: PaddingValues,
-    selection: Set<Long>,
-    onClick: (LibraryManga) -> Unit,
-    onLongClick: (LibraryManga) -> Unit,
-    onClickContinueReading: ((LibraryManga) -> Unit)?,
+    selection: Set<LibraryItemKey>,
+    onClick: (LibraryItem) -> Unit,
+    onLongClick: (LibraryItem) -> Unit,
+    onClickContinueReading: ((LibraryItem) -> Unit)?,
     searchQuery: String?,
     onGlobalSearchClicked: () -> Unit,
+    displaySettings: LibraryDisplaySettings,
 ) {
     FastScrollLazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -42,29 +48,40 @@ internal fun LibraryList(
             items = items,
             contentType = { "library_list_item" },
         ) { libraryItem ->
-            val manga = libraryItem.libraryManga.manga
-            MangaListItem(
-                isSelected = manga.id in selection,
-                title = manga.title,
-                coverData = MangaCover(
-                    mangaId = manga.id,
-                    sourceId = manga.source,
-                    isMangaFavorite = manga.favorite,
-                    url = manga.thumbnailUrl,
-                    lastModified = manga.coverLastModified,
-                ),
-                badge = {
-                    DownloadsBadge(count = libraryItem.badges.downloadCount)
-                    UnreadBadge(count = libraryItem.badges.unreadCount)
-                    LanguageBadge(
-                        isLocal = libraryItem.badges.isLocal,
-                        sourceLanguage = libraryItem.badges.sourceLanguage,
-                    )
+            val useFitCover = libraryItem.sourceItemOrientation == EntryItemOrientation.HORIZONTAL
+            EntryListItem(
+                isSelected = libraryItem.key in selection,
+                title = libraryItem.title,
+                coverData = libraryItem.entry.asEntryCover(),
+                coverType = libraryItem.sourceItemOrientation.toListCoverType(),
+                coverContentScale = if (useFitCover) ContentScale.Fit else ContentScale.Crop,
+                coverBackgroundColor = if (useFitCover) {
+                    MaterialTheme.colorScheme.surfaceContainerHigh
+                } else {
+                    Color.Transparent
                 },
-                onLongClick = { onLongClick(libraryItem.libraryManga) },
-                onClick = { onClick(libraryItem.libraryManga) },
-                onClickContinueReading = if (onClickContinueReading != null && libraryItem.unreadCount > 0) {
-                    { onClickContinueReading(libraryItem.libraryManga) }
+                badge = {
+                    if (displaySettings.downloadBadge) {
+                        DownloadsBadge(count = libraryItem.downloadCount)
+                    }
+                    if (displaySettings.unreadBadge) {
+                        UnreadBadge(count = libraryItem.unconsumedCount)
+                    }
+                    if (displaySettings.entryTypeBadge) {
+                        EntryTypeBadge(entryType = libraryItem.entry.type)
+                    }
+                    if (displaySettings.localBadge) {
+                        LocalBadge(isLocal = libraryItem.isLocal)
+                    }
+                    if (displaySettings.languageBadge) {
+                        LanguageBadge(sourceLanguage = libraryItem.sourceLanguage)
+                    }
+                },
+                onLongClick = { onLongClick(libraryItem) },
+                onClick = { onClick(libraryItem) },
+                continueReadingProgress = libraryItem.progressFraction.takeIf { libraryItem.hasInProgress },
+                onClickContinueReading = if (onClickContinueReading != null && libraryItem.canContinue) {
+                    { onClickContinueReading(libraryItem) }
                 } else {
                     null
                 },

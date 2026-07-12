@@ -1,0 +1,4 @@
+jdk:
+  - openjdk17
+install:
+  - ./gradlew :core:common:publishToMavenLocal :entry-source-api:publishToMavenLocal

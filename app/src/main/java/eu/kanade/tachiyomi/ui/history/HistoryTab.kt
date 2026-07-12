@@ -9,6 +9,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -17,30 +19,36 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
+import eu.kanade.presentation.entry.components.DuplicateEntryDialog
+import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.history.HistoryScreen
 import eu.kanade.presentation.history.components.HistoryDeleteAllDialog
 import eu.kanade.presentation.history.components.HistoryDeleteDialog
-import eu.kanade.presentation.manga.DuplicateMangaDialog
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
+import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
-import eu.kanade.tachiyomi.ui.manga.MangaScreen
-import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
-import mihon.feature.migration.dialog.MigrateMangaDialog
+import kotlinx.coroutines.launch
+import mihon.entry.interactions.EntryContinueInteraction
+import mihon.entry.interactions.EntryOpenInteraction
+import mihon.feature.migration.dialog.MigrateEntryDialog
 import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.domain.chapter.model.Chapter
+import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.history.model.HistoryItem
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 
 data object HistoryTab : Tab {
 
     private val snackbarHostState = SnackbarHostState()
 
-    private val resumeLastChapterReadEvent = Channel<Unit>()
+    private val resumeLastReadEvent = Channel<Unit>()
 
     override val options: TabOptions
         @Composable
@@ -49,19 +57,22 @@ data object HistoryTab : Tab {
             val image = AnimatedImageVector.animatedVectorResource(R.drawable.anim_history_enter)
             return TabOptions(
                 index = 2u,
-                title = stringResource(MR.strings.label_recent_manga),
+                title = stringResource(MR.strings.history),
                 icon = rememberAnimatedVectorPainter(image, isSelected),
             )
         }
 
     override suspend fun onReselect(navigator: Navigator) {
-        resumeLastChapterReadEvent.send(Unit)
+        resumeLastReadEvent.send(Unit)
     }
 
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
+        val scope = rememberCoroutineScope()
+        val entryContinueInteraction = remember { Injekt.get<EntryContinueInteraction>() }
+        val entryOpenInteraction = remember { Injekt.get<EntryOpenInteraction>() }
         val screenModel = rememberScreenModel { HistoryScreenModel() }
         val state by screenModel.state.collectAsState()
 
@@ -69,10 +80,20 @@ data object HistoryTab : Tab {
             state = state,
             snackbarHostState = snackbarHostState,
             onSearchQueryChange = screenModel::updateSearchQuery,
-            onClickCover = { navigator.push(MangaScreen(it)) },
-            onClickResume = screenModel::getNextChapterForManga,
+            onClickCover = { item ->
+                scope.launch {
+                    navigator.push(EntryScreen(screenModel.getVisibleEntryId(item.historyItem.entryId)))
+                }
+            },
+            onClickResume = { item ->
+                scope.launch {
+                    val entry = screenModel.getEntryById(item.historyItem.entryId) ?: return@launch
+                    entryContinueInteraction.continueEntry(context, entry)
+                }
+            },
+            onClickDelete = { history -> screenModel.setDialog(HistoryScreenModel.Dialog.Delete(history)) },
+            onClickFavorite = { item -> screenModel.addFavorite(item.historyItem.entryId) },
             onDialogChange = screenModel::setDialog,
-            onClickFavorite = screenModel::addFavorite,
         )
 
         val onDismissRequest = { screenModel.setDialog(null) }
@@ -80,13 +101,7 @@ data object HistoryTab : Tab {
             is HistoryScreenModel.Dialog.Delete -> {
                 HistoryDeleteDialog(
                     onDismissRequest = onDismissRequest,
-                    onDelete = { all ->
-                        if (all) {
-                            screenModel.removeAllFromHistory(dialog.history.mangaId)
-                        } else {
-                            screenModel.removeFromHistory(dialog.history)
-                        }
-                    },
+                    onDelete = { all -> screenModel.removeFromHistory(dialog.history, all) },
                 )
             }
             is HistoryScreenModel.Dialog.DeleteAll -> {
@@ -95,13 +110,17 @@ data object HistoryTab : Tab {
                     onDelete = screenModel::removeAllHistory,
                 )
             }
-            is HistoryScreenModel.Dialog.DuplicateManga -> {
-                DuplicateMangaDialog(
+            is HistoryScreenModel.Dialog.DuplicateEntry -> {
+                DuplicateEntryDialog(
                     duplicates = dialog.duplicates,
                     onDismissRequest = onDismissRequest,
-                    onConfirm = { screenModel.addFavorite(dialog.manga) },
-                    onOpenManga = { navigator.push(MangaScreen(it.id)) },
-                    onMigrate = { screenModel.showMigrateDialog(dialog.manga, it) },
+                    onConfirm = { screenModel.addFavorite(dialog.entry) },
+                    onOpenEntry = {
+                        scope.launch {
+                            navigator.push(EntryScreen(screenModel.getVisibleEntryId(it.id)))
+                        }
+                    },
+                    onMigrate = { screenModel.showMigrateDialog(dialog.entry, it) },
                 )
             }
             is HistoryScreenModel.Dialog.ChangeCategory -> {
@@ -110,16 +129,20 @@ data object HistoryTab : Tab {
                     onDismissRequest = onDismissRequest,
                     onEditCategories = { navigator.push(CategoryScreen()) },
                     onConfirm = { include, _ ->
-                        screenModel.moveMangaToCategoriesAndAddToLibrary(dialog.manga, include)
+                        screenModel.moveEntryToCategoriesAndAddToLibrary(dialog.entry, include)
                     },
                 )
             }
             is HistoryScreenModel.Dialog.Migrate -> {
-                MigrateMangaDialog(
+                MigrateEntryDialog(
                     current = dialog.current,
                     target = dialog.target,
                     // Initiated from the context of [dialog.target] so we show [dialog.current].
-                    onClickTitle = { navigator.push(MangaScreen(dialog.current.id)) },
+                    onClickTitle = {
+                        scope.launch {
+                            navigator.push(EntryScreen(screenModel.getVisibleEntryId(dialog.current.id)))
+                        }
+                    },
                     onDismissRequest = onDismissRequest,
                 )
             }
@@ -139,24 +162,53 @@ data object HistoryTab : Tab {
                         snackbarHostState.showSnackbar(context.stringResource(MR.strings.internal_error))
                     HistoryScreenModel.Event.HistoryCleared ->
                         snackbarHostState.showSnackbar(context.stringResource(MR.strings.clear_history_completed))
-                    is HistoryScreenModel.Event.OpenChapter -> openChapter(context, e.chapter)
+                    is HistoryScreenModel.Event.OpenChapter ->
+                        openChapter(context, screenModel, entryOpenInteraction, e.chapter)
                 }
             }
         }
 
         LaunchedEffect(Unit) {
-            resumeLastChapterReadEvent.receiveAsFlow().collectLatest {
-                openChapter(context, screenModel.getNextChapter())
+            resumeLastReadEvent.receiveAsFlow().collectLatest {
+                val history = screenModel.getMostRecentItem()?.historyItem
+                if (history == null) {
+                    snackbarHostState.showSnackbar(context.stringResource(MR.strings.no_next_item))
+                    return@collectLatest
+                }
+
+                val entry = screenModel.getEntryById(history.entryId)
+                if (entry == null) {
+                    snackbarHostState.showSnackbar(
+                        context.stringResource(history.entryType.entryTypePresentation().noNextChildLabel),
+                    )
+                    return@collectLatest
+                }
+
+                val chapter = entryContinueInteraction.continueEntry(context, entry)
+                if (chapter == null) {
+                    snackbarHostState.showSnackbar(
+                        context.stringResource(entry.type.entryTypePresentation().noNextChildLabel),
+                    )
+                }
             }
         }
     }
 
-    private suspend fun openChapter(context: Context, chapter: Chapter?) {
+    private suspend fun openChapter(
+        context: Context,
+        screenModel: HistoryScreenModel,
+        entryOpenInteraction: EntryOpenInteraction,
+        chapter: EntryChapter?,
+    ) {
         if (chapter != null) {
-            val intent = ReaderActivity.newIntent(context, chapter.mangaId, chapter.id)
-            context.startActivity(intent)
+            val entry = screenModel.getEntryById(chapter.entryId)
+            if (entry != null) {
+                entryOpenInteraction.open(context, entry, chapter)
+            } else {
+                snackbarHostState.showSnackbar(context.stringResource(MR.strings.internal_error))
+            }
         } else {
-            snackbarHostState.showSnackbar(context.stringResource(MR.strings.no_next_chapter))
+            snackbarHostState.showSnackbar(context.stringResource(MR.strings.no_next_item))
         }
     }
 }

@@ -68,7 +68,7 @@ private fun LazyItemScope.OverviewSection(
             modifier = Modifier.height(IntrinsicSize.Min),
         ) {
             StatsOverviewItem(
-                title = data.libraryMangaCount.toString(),
+                title = data.libraryEntryCount.toString(),
                 subtitle = stringResource(MR.strings.in_library),
                 icon = Icons.Outlined.CollectionsBookmark,
             )
@@ -78,7 +78,7 @@ private fun LazyItemScope.OverviewSection(
                 icon = Icons.Outlined.Schedule,
             )
             StatsOverviewItem(
-                title = data.completedMangaCount.toString(),
+                title = data.completedEntryCount.toString(),
                 subtitle = stringResource(MR.strings.label_completed_titles),
                 icon = Icons.Outlined.LocalLibrary,
             )
@@ -97,11 +97,11 @@ private fun LazyItemScope.TitlesStats(
                 stringResource(MR.strings.label_titles_in_global_update),
             )
             StatsItem(
-                data.startedMangaCount.toString(),
+                data.startedEntryCount.toString(),
                 stringResource(MR.strings.label_started),
             )
             StatsItem(
-                data.localMangaCount.toString(),
+                data.localEntryCount.toString(),
                 stringResource(MR.strings.label_local),
             )
         }
@@ -112,7 +112,7 @@ private fun LazyItemScope.TitlesStats(
 private fun LazyItemScope.ChapterStats(
     data: StatsData.Chapters,
 ) {
-    SectionCard(MR.strings.chapters) {
+    SectionCard(MR.strings.label_items_section) {
         Row {
             StatsItem(
                 data.totalChapterCount.toString(),

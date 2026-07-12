@@ -28,5 +28,5 @@ fun DependencyHandlerScope.implementation(dependencyNotation: Provider<MinimalEx
 }
 
 fun DependencyHandlerScope.implementation(dependencyNotation: Project) {
-    add("implementation", dependencyNotation)
+    add("implementation", dependencies.project(mapOf("path" to dependencyNotation.path)))
 }

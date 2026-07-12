@@ -1,17 +1,17 @@
 name: 🐞 Issue report
-description: Report an issue in Mihon
+description: Report a problem in Katari
 labels: [bug]
 body:
   - type: textarea
     id: reproduce-steps
     attributes:
       label: Steps to reproduce
-      description: Provide an example of the issue.
+      description: Provide a minimal, specific example of the problem.
       placeholder: |
         Example:
-          1. First step
-          2. Second step
-          3. Issue here
+          1. Open ...
+          2. Select ...
+          3. The problem occurs
     validations:
       required: true
 
@@ -19,10 +19,7 @@ body:
     id: expected-behavior
     attributes:
       label: Expected behavior
-      description: Explain what you should expect to happen.
-      placeholder: |
-        Example:
-          "This should happen..."
+      description: Explain what you expected to happen.
     validations:
       required: true
 
@@ -30,10 +27,7 @@ body:
     id: actual-behavior
     attributes:
       label: Actual behavior
-      description: Explain what actually happens.
-      placeholder: |
-        Example:
-          "This happened instead..."
+      description: Explain what happened instead.
     validations:
       required: true
 
@@ -42,17 +36,28 @@ body:
     attributes:
       label: Crash logs
       description: |
-        If you're experiencing crashes, if possible, go to the app's **More → Settings → Advanced** page, press **Dump crash logs** and share the crash logs here.
-      placeholder: |
-        You can upload the crash log file as an attachment, or paste the crash logs in plain text if needed.
+        For crashes, if possible, go to **More → Settings → Advanced**, press **Dump crash logs**, and attach the generated file. Review logs for private information before sharing them.
+      placeholder: Attach the crash log file or paste the relevant section here.
 
   - type: input
-    id: mihon-version
+    id: katari-version
     attributes:
-      label: Mihon version
-      description: You can find your Mihon version in **More → About**.
-      placeholder: |
-        Example: "0.20.1"
+      label: Katari version
+      description: Find this in **More → About**. Include the full version shown there.
+      placeholder: 'Example: "1.0.1"'
+    validations:
+      required: true
+
+  - type: dropdown
+    id: build-variant
+    attributes:
+      label: Build variant
+      description: Select the Katari build you installed.
+      options:
+        - Standard release
+        - FOSS release
+        - Debug or self-built
+        - Unknown
     validations:
       required: true
 
@@ -60,9 +65,7 @@ body:
     id: android-version
     attributes:
       label: Android version
-      description: You can find this somewhere in your Android settings.
-      placeholder: |
-        Example: "Android 11"
+      placeholder: 'Example: "Android 15"'
     validations:
       required: true
 
@@ -70,34 +73,45 @@ body:
     id: device
     attributes:
       label: Device
-      description: List your device and model.
-      placeholder: |
-        Example: "Google Pixel 5"
+      description: Include the manufacturer and model.
+      placeholder: 'Example: "Google Pixel 9"'
     validations:
       required: true
+
+  - type: input
+    id: entry-type
+    attributes:
+      label: Affected entry type
+      description: State whether this affects manga, anime, or another entry type. Use "Not applicable" when appropriate.
+      placeholder: 'Example: "Anime"'
+    validations:
+      required: true
+
+  - type: textarea
+    id: source-extension-details
+    attributes:
+      label: Source or extension details
+      description: If relevant, include the source name and extension package/version. Do not include credentials, tokens, or signed media URLs.
 
   - type: textarea
     id: other-details
     attributes:
       label: Other details
-      placeholder: |
-        Additional details and attachments.
+      description: Add screenshots, recordings, or any other useful context.
 
   - type: checkboxes
     id: acknowledgements
     attributes:
       label: Acknowledgements
-      description: Read this carefully, we will close and ignore your issue if you skimmed through this.
+      description: Please confirm each item before submitting the report.
       options:
-        - label: I have searched the existing issues and this is a new ticket, **NOT** a duplicate or related to another open or closed issue.
+        - label: I have searched the existing issues and this is not a duplicate of an open or closed issue.
           required: true
-        - label: I have written a short but informative title.
+        - label: I have written a short, informative title.
           required: true
-        - label: I have gone through the [FAQ](https://mihon.app/docs/faq/general) and [troubleshooting guide](https://mihon.app/docs/guides/troubleshooting/).
+        - label: I have checked the [Katari documentation](https://katariapp.github.io/) and updated to the [latest Katari release](https://github.com/katariapp/katari/releases/latest).
           required: true
-        - label: I have updated the app to version **[0.20.1](https://github.com/mihonapp/mihon/releases/latest)**.
+        - label: I have provided specific version numbers and all other information requested by this form.
           required: true
-        - label: I have filled out all of the requested information in this form, including specific version numbers.
-          required: true
-        - label: I understand that **Mihon does not have or fix any extensions**, and I **will not receive help** for any issues related to sources or extensions.
+        - label: I understand that source-site or extension-content failures may need to be reported to that source or extension's maintainer rather than fixed in Katari.
           required: true

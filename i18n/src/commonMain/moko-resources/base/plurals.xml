@@ -21,8 +21,8 @@
     </plurals>
 
     <plurals name="next_unread_chapters">
-        <item quantity="one">Next unread chapter</item>
-        <item quantity="other">Next %d unread chapters</item>
+        <item quantity="one">Next unseen item</item>
+        <item quantity="other">Next %d unseen items</item>
     </plurals>
 
     <plurals name="restore_completed_message">
@@ -51,14 +51,59 @@
         <item quantity="other">Missing %1$s chapters</item>
     </plurals>
 
+    <plurals name="missing_episodes">
+        <item quantity="one">Missing %1$s episode</item>
+        <item quantity="other">Missing %1$s episodes</item>
+    </plurals>
+
+    <plurals name="missing_items">
+        <item quantity="one">Missing %1$s item</item>
+        <item quantity="other">Missing %1$s items</item>
+    </plurals>
+
     <plurals name="manga_num_chapters">
         <item quantity="one">%1$s chapter</item>
         <item quantity="other">%1$s chapters</item>
     </plurals>
 
+    <plurals name="anime_num_episodes">
+        <item quantity="one">%1$s episode</item>
+        <item quantity="other">%1$s episodes</item>
+    </plurals>
+
+    <plurals name="entry_num_items">
+        <item quantity="one">%1$s item</item>
+        <item quantity="other">%1$s items</item>
+    </plurals>
+
+    <plurals name="anime_num_scheduled_episodes">
+        <item quantity="one">%1$s scheduled</item>
+        <item quantity="other">%1$s scheduled</item>
+    </plurals>
+
+    <plurals name="anime_num_upcoming_episodes">
+        <item quantity="one">%1$s upcoming</item>
+        <item quantity="other">%1$s upcoming</item>
+    </plurals>
+
+    <plurals name="anime_num_seasons">
+        <item quantity="one">%1$s season</item>
+        <item quantity="other">%1$s seasons</item>
+    </plurals>
+
     <plurals name="download_amount">
         <item quantity="one">Next chapter</item>
         <item quantity="other">Next %d chapters</item>
+    </plurals>
+
+    <plurals name="download_amount_episodes">
+        <item quantity="one">Next episode</item>
+        <item quantity="other">Next %d episodes</item>
+    </plurals>
+
+    <plurals name="download_amount_items">
+        <item quantity="one">Next item</item>
+        <item quantity="other">Next %d items</item>
     </plurals>
 
     <plurals name="num_trackers">
@@ -75,14 +120,35 @@
         <item quantity="one">For %d entry</item>
         <item quantity="other">For %d entries</item>
     </plurals>
+    <plurals name="notification_new_episodes_summary">
+        <item quantity="one">For %d entry</item>
+        <item quantity="other">For %d entries</item>
+    </plurals>
     <plurals name="notification_chapters_generic">
         <item quantity="one">%1$d new chapter</item>
         <item quantity="other">%1$d new chapters</item>
+    </plurals>
+    <plurals name="notification_episodes_generic">
+        <item quantity="one">%1$d new episode</item>
+        <item quantity="other">%1$d new episodes</item>
+    </plurals>
+    <plurals name="notification_updates_generic">
+        <item quantity="one">%1$d new update</item>
+        <item quantity="other">%1$d new updates</item>
+    </plurals>
+
+    <plurals name="browse_feed_new_items">
+        <item quantity="one">%1$d new item</item>
+        <item quantity="other">%1$d new items</item>
     </plurals>
 
     <plurals name="notification_chapters_multiple_and_more">
         <item quantity="one">Chapters %1$s and 1 more</item>
         <item quantity="other">Chapters %1$s and %2$d more</item>
+    </plurals>
+    <plurals name="notification_episodes_multiple_and_more">
+        <item quantity="one">Episodes %1$s and 1 more</item>
+        <item quantity="other">Episodes %1$s and %2$d more</item>
     </plurals>
 
     <!--Extension Updates Notifications-->
@@ -91,9 +157,19 @@
         <item quantity="other">%d extension updates available</item>
     </plurals>
 
+    <plurals name="extension_auto_update_notification_updated">
+        <item quantity="one">1 extension updated automatically</item>
+        <item quantity="other">%d extensions updated automatically</item>
+    </plurals>
+
     <plurals name="num_repos">
         <item quantity="one">%d store</item>
         <item quantity="other">%d stores</item>
+    </plurals>
+
+    <plurals name="pref_duplicate_detection_title_exclusions_count">
+        <item quantity="one">%d exclusion rule</item>
+        <item quantity="other">%d exclusion rules</item>
     </plurals>
 
     <!--Migration-->

@@ -1,27 +1,29 @@
 package tachiyomi.domain.history.interactor
 
-import tachiyomi.domain.chapter.interactor.GetChaptersByMangaId
-import tachiyomi.domain.chapter.model.Chapter
-import tachiyomi.domain.chapter.service.getChapterSort
+import tachiyomi.domain.entry.interactor.GetEntry
+import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.repository.EntryChapterRepository
+import tachiyomi.domain.entry.service.sortedForReading
 import tachiyomi.domain.history.repository.HistoryRepository
-import tachiyomi.domain.manga.interactor.GetManga
-import kotlin.math.max
+import tachiyomi.domain.source.service.HiddenSourceIds
 
 class GetNextChapters(
-    private val getChaptersByMangaId: GetChaptersByMangaId,
-    private val getManga: GetManga,
+    private val getEntry: GetEntry,
+    private val entryChapterRepository: EntryChapterRepository,
     private val historyRepository: HistoryRepository,
+    private val hiddenSourceIds: HiddenSourceIds,
 ) {
 
-    suspend fun await(onlyUnread: Boolean = true): List<Chapter> {
+    suspend fun await(onlyUnread: Boolean = true): List<EntryChapter> {
         val history = historyRepository.getLastHistory() ?: return emptyList()
-        return await(history.mangaId, history.chapterId, onlyUnread)
+        if (history.coverData.sourceId in hiddenSourceIds.get()) return emptyList()
+        return await(history.entryId, history.chapterId, onlyUnread)
     }
 
-    suspend fun await(mangaId: Long, onlyUnread: Boolean = true): List<Chapter> {
-        val manga = getManga.await(mangaId) ?: return emptyList()
-        val chapters = getChaptersByMangaId.await(mangaId, applyScanlatorFilter = true)
-            .sortedWith(getChapterSort(manga, sortDescending = false))
+    suspend fun await(entryId: Long, onlyUnread: Boolean = true): List<EntryChapter> {
+        val entry = getEntry.await(entryId) ?: return emptyList()
+        val chapters = entryChapterRepository.getChaptersByEntryIdAwait(entryId, applyScanlatorFilter = true)
+            .sortedForReading(entry)
 
         return if (onlyUnread) {
             chapters.filterNot { it.read }
@@ -31,26 +33,30 @@ class GetNextChapters(
     }
 
     suspend fun await(
-        mangaId: Long,
+        entryId: Long,
         fromChapterId: Long,
         onlyUnread: Boolean = true,
-    ): List<Chapter> {
-        val chapters = await(mangaId, onlyUnread)
-        val currChapterIndex = chapters.indexOfFirst { it.id == fromChapterId }
-        val nextChapters = chapters.subList(max(0, currChapterIndex), chapters.size)
+    ): List<EntryChapter> {
+        val allChapters = await(entryId, onlyUnread = false)
+        val currChapterIndex = allChapters.indexOfFirst { it.id == fromChapterId }
+        if (currChapterIndex == -1) {
+            return if (onlyUnread) allChapters.filterNot(EntryChapter::read) else allChapters
+        }
+
+        val currentOrFollowing = allChapters.drop(currChapterIndex)
 
         if (onlyUnread) {
-            return nextChapters
+            return currentOrFollowing.filterNot(EntryChapter::read)
         }
 
         // The "next chapter" is either:
         // - The current chapter if it isn't completely read
         // - The chapters after the current chapter if the current one is completely read
-        val fromChapter = chapters.getOrNull(currChapterIndex)
-        return if (fromChapter != null && !fromChapter.read) {
-            nextChapters
+        val fromChapter = allChapters[currChapterIndex]
+        return if (!fromChapter.read) {
+            currentOrFollowing
         } else {
-            nextChapters.drop(1)
+            currentOrFollowing.drop(1)
         }
     }
 }

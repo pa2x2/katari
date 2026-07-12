@@ -13,11 +13,11 @@ interface HistoryRepository {
 
     suspend fun getTotalReadDuration(): Long
 
-    suspend fun getHistoryByMangaId(mangaId: Long): List<History>
+    suspend fun getHistoryByEntryId(entryId: Long): List<History>
 
     suspend fun resetHistory(historyId: Long)
 
-    suspend fun resetHistoryByMangaId(mangaId: Long)
+    suspend fun resetHistoryByEntryId(entryId: Long)
 
     suspend fun deleteAllHistory(): Boolean
 

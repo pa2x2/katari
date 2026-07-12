@@ -1,73 +1,83 @@
 package tachiyomi.data.track
 
-import app.cash.sqldelight.async.coroutines.awaitAsList
-import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import tachiyomi.data.Database
-import tachiyomi.data.subscribeToList
-import tachiyomi.domain.track.model.Track
+import kotlinx.coroutines.flow.flatMapLatest
+import tachiyomi.data.ActiveProfileProvider
+import tachiyomi.data.DatabaseHandler
+import tachiyomi.domain.track.model.EntryTrack
 import tachiyomi.domain.track.repository.TrackRepository
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class TrackRepositoryImpl(
-    private val database: Database,
+    private val handler: DatabaseHandler,
+    private val profileProvider: ActiveProfileProvider,
 ) : TrackRepository {
 
-    override suspend fun getTrackById(id: Long): Track? {
-        return database.manga_syncQueries
-            .getTrackById(id, TrackMapper::mapTrack)
-            .awaitAsOneOrNull()
+    override suspend fun getTrackById(id: Long): EntryTrack? {
+        return handler.awaitOneOrNull {
+            entry_syncQueries.getTrackById(id, profileProvider.activeProfileId, TrackMapper::mapTrack)
+        }
     }
 
-    override suspend fun getTracksByMangaId(mangaId: Long): List<Track> {
-        return database.manga_syncQueries
-            .getTracksByMangaId(mangaId, TrackMapper::mapTrack)
-            .awaitAsList()
+    override suspend fun getTracksByEntryId(entryId: Long): List<EntryTrack> {
+        return handler.awaitList {
+            entry_syncQueries.getTracksByEntryId(profileProvider.activeProfileId, entryId, TrackMapper::mapTrack)
+        }
     }
 
-    override fun getTracksAsFlow(): Flow<List<Track>> {
-        return database.manga_syncQueries
-            .getTracks(TrackMapper::mapTrack)
-            .subscribeToList()
+    override fun getTracksAsFlow(): Flow<List<EntryTrack>> {
+        return profileProvider.activeProfileIdFlow.flatMapLatest { profileId ->
+            handler.subscribeToList {
+                entry_syncQueries.getTracks(profileId, TrackMapper::mapTrack)
+            }
+        }
     }
 
-    override fun getTracksByMangaIdAsFlow(mangaId: Long): Flow<List<Track>> {
-        return database.manga_syncQueries
-            .getTracksByMangaId(mangaId, TrackMapper::mapTrack)
-            .subscribeToList()
+    override fun getTracksByEntryIdAsFlow(entryId: Long): Flow<List<EntryTrack>> {
+        return profileProvider.activeProfileIdFlow.flatMapLatest { profileId ->
+            handler.subscribeToList {
+                entry_syncQueries.getTracksByEntryId(profileId, entryId, TrackMapper::mapTrack)
+            }
+        }
     }
 
-    override suspend fun delete(mangaId: Long, trackerId: Long) {
-        database.manga_syncQueries.delete(
-            mangaId = mangaId,
-            syncId = trackerId,
-        )
+    override suspend fun delete(entryId: Long, trackerId: Long) {
+        handler.await {
+            entry_syncQueries.delete(
+                profileId = profileProvider.activeProfileId,
+                entryId = entryId,
+                syncId = trackerId,
+            )
+        }
     }
 
-    override suspend fun insert(track: Track) {
+    override suspend fun insert(track: EntryTrack) {
         insertValues(track)
     }
 
-    override suspend fun insertAll(tracks: List<Track>) {
+    override suspend fun insertAll(tracks: List<EntryTrack>) {
         insertValues(*tracks.toTypedArray())
     }
 
-    private suspend fun insertValues(vararg tracks: Track) {
-        database.transaction {
-            tracks.forEach { mangaTrack ->
-                database.manga_syncQueries.insert(
-                    mangaId = mangaTrack.mangaId,
-                    syncId = mangaTrack.trackerId,
-                    remoteId = mangaTrack.remoteId,
-                    libraryId = mangaTrack.libraryId,
-                    title = mangaTrack.title,
-                    lastChapterRead = mangaTrack.lastChapterRead,
-                    totalChapters = mangaTrack.totalChapters,
-                    status = mangaTrack.status,
-                    score = mangaTrack.score,
-                    remoteUrl = mangaTrack.remoteUrl,
-                    startDate = mangaTrack.startDate,
-                    finishDate = mangaTrack.finishDate,
-                    private = mangaTrack.private,
+    private suspend fun insertValues(vararg tracks: EntryTrack) {
+        handler.await(inTransaction = true) {
+            tracks.forEach { track ->
+                entry_syncQueries.insert(
+                    profileId = profileProvider.activeProfileId,
+                    entryId = track.entryId,
+                    syncId = track.trackerId,
+                    remoteId = track.remoteId,
+                    libraryId = track.libraryId,
+                    title = track.title,
+                    lastChapterRead = track.progress,
+                    totalChapters = track.total,
+                    status = track.status,
+                    score = track.score,
+                    remoteUrl = track.remoteUrl,
+                    startDate = track.startDate,
+                    finishDate = track.finishDate,
+                    private = track.private,
                 )
             }
         }

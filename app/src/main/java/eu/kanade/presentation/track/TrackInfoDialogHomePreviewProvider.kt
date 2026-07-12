@@ -2,24 +2,24 @@ package eu.kanade.presentation.track
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-import eu.kanade.tachiyomi.ui.manga.track.TrackItem
+import eu.kanade.tachiyomi.ui.entry.track.TrackItem
 import eu.kanade.test.DummyTracker
-import tachiyomi.domain.track.model.Track
+import tachiyomi.domain.track.model.EntryTrack
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
 internal class TrackInfoDialogHomePreviewProvider :
     PreviewParameterProvider<@Composable () -> Unit> {
 
-    private val aTrack = Track(
+    private val aTrack = EntryTrack(
         id = 1L,
-        mangaId = 2L,
+        entryId = 2L,
         trackerId = 3L,
         remoteId = 4L,
         libraryId = null,
         title = "Manage Name On Tracker Site",
-        lastChapterRead = 2.0,
-        totalChapters = 12L,
+        progress = 2.0,
+        total = 12L,
         status = 1L,
         score = 2.0,
         remoteUrl = "https://example.com",

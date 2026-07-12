@@ -3,18 +3,17 @@ package eu.kanade.tachiyomi.ui.deeplink
 import androidx.compose.runtime.Immutable
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import eu.kanade.tachiyomi.source.Source
-import eu.kanade.tachiyomi.source.model.SChapter
-import eu.kanade.tachiyomi.source.online.ResolvableSource
-import eu.kanade.tachiyomi.source.online.UriType
+import eu.kanade.tachiyomi.source.entry.EntryUriType
+import eu.kanade.tachiyomi.source.entry.ResolvableSource
+import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import kotlinx.coroutines.flow.update
-import mihon.domain.manga.model.toDomainManga
-import mihon.domain.source.interactor.UpdateMangaFromRemote
 import tachiyomi.core.common.util.lang.launchIO
-import tachiyomi.domain.chapter.interactor.GetChapterByUrlAndMangaId
-import tachiyomi.domain.chapter.model.Chapter
-import tachiyomi.domain.manga.interactor.NetworkToLocalManga
-import tachiyomi.domain.manga.model.Manga
+import tachiyomi.domain.entry.adapter.toEntry
+import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
+import tachiyomi.domain.entry.interactor.SyncEntryWithSource
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -22,48 +21,50 @@ import uy.kohesive.injekt.api.get
 class DeepLinkScreenModel(
     query: String = "",
     private val sourceManager: SourceManager = Injekt.get(),
-    private val networkToLocalManga: NetworkToLocalManga = Injekt.get(),
-    private val getChapterByUrlAndMangaId: GetChapterByUrlAndMangaId = Injekt.get(),
-    private val updateMangaFromRemote: UpdateMangaFromRemote = Injekt.get(),
+    private val networkToLocalEntry: NetworkToLocalEntry = Injekt.get(),
+    private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
+    private val syncEntryWithSource: SyncEntryWithSource = Injekt.get(),
 ) : StateScreenModel<DeepLinkScreenModel.State>(State.Loading) {
 
     init {
         screenModelScope.launchIO {
             val source = sourceManager.getAll()
                 .filterIsInstance<ResolvableSource>()
-                .firstOrNull { it.getUriType(query) != UriType.Unknown }
+                .firstOrNull { it.getUriType(query) != EntryUriType.Unknown }
 
-            val manga = source?.getManga(query)?.let {
-                networkToLocalManga(it.toDomainManga(source.id))
+            val entry = source?.getEntry(query)?.let {
+                networkToLocalEntry(it.toEntry(source.id))
             }
 
-            val chapter = if (source?.getUriType(query) == UriType.Chapter && manga != null) {
-                source.getChapter(query)?.let { getChapterFromSChapter(it, manga, source) }
+            val chapter = if (source?.getUriType(query) == EntryUriType.Chapter && entry != null) {
+                source.getChapter(query)?.let { getChapterFromSEntryChapter(it, entry) }
             } else {
                 null
             }
 
             mutableState.update {
-                if (manga == null) {
+                if (entry == null) {
                     State.NoResults
                 } else {
                     if (chapter == null) {
-                        State.Result(manga)
+                        State.Result(entry)
                     } else {
-                        State.Result(manga, chapter.id)
+                        State.Result(entry, chapter.id)
                     }
                 }
             }
         }
     }
 
-    private suspend fun getChapterFromSChapter(sChapter: SChapter, manga: Manga, source: Source): Chapter? {
-        val localChapter = getChapterByUrlAndMangaId.await(sChapter.url, manga.id)
+    private suspend fun getChapterFromSEntryChapter(
+        sChapter: SEntryChapter,
+        entry: Entry,
+    ): EntryChapter? {
+        val localChapter = entryChapterRepository.getChapterByUrlAndEntryId(sChapter.url, entry.id)
 
         return localChapter
-            ?: updateMangaFromRemote(manga, fetchChapters = true)
-                .getOrElse { return null }
-                .newChapters
+            ?: syncEntryWithSource(entry)
+                .insertedChapters
                 .find { it.url == sChapter.url }
     }
 
@@ -75,6 +76,6 @@ class DeepLinkScreenModel(
         data object NoResults : State
 
         @Immutable
-        data class Result(val manga: Manga, val chapterId: Long? = null) : State
+        data class Result(val entry: Entry, val chapterId: Long? = null) : State
     }
 }

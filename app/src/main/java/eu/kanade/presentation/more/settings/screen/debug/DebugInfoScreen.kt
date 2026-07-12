@@ -47,6 +47,10 @@ class DebugInfoScreen : Screen() {
                         onClick = { navigator.push(WorkerInfoScreen()) },
                     ),
                     Preference.PreferenceItem.TextPreference(
+                        title = AnimePlayerLauncherScreen.TITLE,
+                        onClick = { navigator.push(AnimePlayerLauncherScreen()) },
+                    ),
+                    Preference.PreferenceItem.TextPreference(
                         title = BackupSchemaScreen.TITLE,
                         onClick = { navigator.push(BackupSchemaScreen()) },
                     ),

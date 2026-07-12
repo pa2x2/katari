@@ -1,0 +1,298 @@
+-- Phase 2: Database schema unification (part 1).
+-- Creates the unified entries/chapters tables and migrates core manga/anime data.
+
+-- 1. Drop views that reference the legacy tables.
+DROP VIEW IF EXISTS libraryView;
+DROP VIEW IF EXISTS historyView;
+DROP VIEW IF EXISTS updatesView;
+
+-- 2. Drop triggers that reference legacy tables or will be recreated later.
+DROP TRIGGER IF EXISTS update_last_favorited_at_mangas;
+DROP TRIGGER IF EXISTS update_last_modified_at_mangas;
+DROP TRIGGER IF EXISTS update_manga_version;
+DROP TRIGGER IF EXISTS update_last_favorited_at_animes;
+DROP TRIGGER IF EXISTS update_last_modified_at_animes;
+DROP TRIGGER IF EXISTS update_anime_version;
+DROP TRIGGER IF EXISTS update_last_modified_at_chapters;
+DROP TRIGGER IF EXISTS update_chapter_and_manga_version;
+DROP TRIGGER IF EXISTS update_last_modified_at_anime_episodes;
+DROP TRIGGER IF EXISTS update_anime_episode_and_anime_version;
+DROP TRIGGER IF EXISTS insert_entry_category_update_version;
+
+-- 3. Rename legacy chapters table so the unified table can use the canonical name.
+ALTER TABLE chapters RENAME TO old_chapters;
+DROP INDEX IF EXISTS chapters_manga_id_index;
+DROP INDEX IF EXISTS chapters_unread_by_manga_index;
+DROP INDEX IF EXISTS idx_chapters_url;
+DROP INDEX IF EXISTS idx_chapters_profile_manga_url;
+
+-- 4. Create the unified entries table.
+CREATE TABLE entries (
+    _id INTEGER PRIMARY KEY AUTOINCREMENT,
+    profile_id INTEGER NOT NULL DEFAULT 1,
+    source INTEGER NOT NULL,
+    url TEXT NOT NULL,
+    title TEXT NOT NULL,
+    display_name TEXT,
+    artist TEXT,
+    author TEXT,
+    description TEXT,
+    genre TEXT,
+    status INTEGER NOT NULL DEFAULT 0,
+    thumbnail_url TEXT,
+    favorite INTEGER NOT NULL DEFAULT 0,
+    last_update INTEGER,
+    next_update INTEGER,
+    initialized INTEGER NOT NULL DEFAULT 0,
+    viewer INTEGER NOT NULL DEFAULT 0,
+    chapter_flags INTEGER NOT NULL DEFAULT 0,
+    cover_last_modified INTEGER NOT NULL DEFAULT 0,
+    date_added INTEGER NOT NULL DEFAULT 0,
+    update_strategy INTEGER NOT NULL DEFAULT 0,
+    calculate_interval INTEGER NOT NULL DEFAULT 0,
+    last_modified_at INTEGER NOT NULL DEFAULT 0,
+    favorite_modified_at INTEGER,
+    version INTEGER NOT NULL DEFAULT 0,
+    is_syncing INTEGER NOT NULL DEFAULT 0,
+    notes TEXT NOT NULL DEFAULT "",
+    memo BLOB NOT NULL DEFAULT '{}',
+    type TEXT NOT NULL DEFAULT 'manga',
+    FOREIGN KEY (profile_id) REFERENCES profiles(_id) ON DELETE CASCADE
+);
+
+CREATE UNIQUE INDEX idx_entries_profile_source_url_type ON entries(profile_id, source, url, type);
+CREATE INDEX idx_entries_favorite ON entries(profile_id, favorite) WHERE favorite = 1;
+CREATE INDEX idx_entries_url ON entries(profile_id, url);
+CREATE INDEX idx_entries_source ON entries(profile_id, source);
+
+-- 5. Create the unified chapters table.
+CREATE TABLE chapters(
+    _id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entry_id INTEGER NOT NULL,
+    url TEXT NOT NULL,
+    name TEXT NOT NULL,
+    read INTEGER NOT NULL DEFAULT 0,
+    bookmark INTEGER NOT NULL DEFAULT 0,
+    last_page_read INTEGER NOT NULL DEFAULT 0,
+    chapter_number REAL NOT NULL DEFAULT 0,
+    scanlator TEXT,
+    date_upload INTEGER NOT NULL DEFAULT 0,
+    date_fetch INTEGER NOT NULL DEFAULT 0,
+    source_order INTEGER NOT NULL DEFAULT 0,
+    last_modified_at INTEGER NOT NULL DEFAULT 0,
+    version INTEGER NOT NULL DEFAULT 0,
+    is_syncing INTEGER NOT NULL DEFAULT 0,
+    memo BLOB NOT NULL DEFAULT '{}',
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_chapters_entry_id ON chapters(entry_id);
+CREATE INDEX idx_chapters_unread_by_entry ON chapters(entry_id, read) WHERE read = 0;
+CREATE INDEX idx_chapters_url ON chapters(url);
+CREATE UNIQUE INDEX idx_chapters_entry_url ON chapters(entry_id, url);
+
+-- 6. Create generalized playback tables.
+CREATE TABLE playback_state(
+    _id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entry_id INTEGER NOT NULL,
+    chapter_id INTEGER NOT NULL,
+    position_ms INTEGER NOT NULL,
+    duration_ms INTEGER NOT NULL,
+    completed INTEGER NOT NULL,
+    last_watched_at INTEGER NOT NULL,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    FOREIGN KEY(chapter_id) REFERENCES chapters(_id) ON DELETE CASCADE,
+    UNIQUE(entry_id, chapter_id)
+);
+
+CREATE INDEX idx_playback_state_entry_id ON playback_state(entry_id);
+CREATE INDEX idx_playback_state_last_watched_at ON playback_state(last_watched_at);
+
+CREATE TABLE playback_preferences(
+    _id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entry_id INTEGER NOT NULL,
+    dub_key TEXT,
+    stream_key TEXT,
+    source_quality_key TEXT,
+    subtitle_key TEXT,
+    player_quality_mode TEXT NOT NULL DEFAULT 'auto',
+    player_quality_height INTEGER,
+    subtitle_offset_x REAL,
+    subtitle_offset_y REAL,
+    subtitle_text_size REAL,
+    subtitle_text_color INTEGER,
+    subtitle_background_color INTEGER,
+    subtitle_background_opacity REAL,
+    updated_at INTEGER NOT NULL,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    UNIQUE(entry_id)
+);
+
+CREATE INDEX idx_playback_preferences_entry_id ON playback_preferences(entry_id);
+
+CREATE TABLE download_preferences(
+    _id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entry_id INTEGER NOT NULL,
+    dub_key TEXT,
+    stream_key TEXT,
+    subtitle_key TEXT,
+    quality_mode TEXT NOT NULL DEFAULT 'balanced',
+    updated_at INTEGER NOT NULL,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    UNIQUE(entry_id)
+);
+
+CREATE INDEX idx_download_preferences_entry_id ON download_preferences(entry_id);
+
+-- 7. Temporary mapping tables to remap legacy IDs to unified IDs.
+CREATE TABLE __id_map(
+    old_table TEXT NOT NULL,
+    old_id INTEGER NOT NULL,
+    entry_id INTEGER NOT NULL,
+    PRIMARY KEY(old_table, old_id)
+);
+
+CREATE TABLE __chapter_id_map(
+    old_table TEXT NOT NULL,
+    old_id INTEGER NOT NULL,
+    chapter_id INTEGER NOT NULL,
+    PRIMARY KEY(old_table, old_id)
+);
+
+-- 8. Migrate manga rows into entries.
+INSERT INTO entries(
+    profile_id, source, url, title, display_name, artist, author, description, genre,
+    status, thumbnail_url, favorite, last_update, next_update, initialized, viewer,
+    chapter_flags, cover_last_modified, date_added, update_strategy, calculate_interval,
+    last_modified_at, favorite_modified_at, version, is_syncing, notes, memo, type
+)
+SELECT
+    profile_id, source, url, title, display_name, artist, author, description, genre,
+    status, thumbnail_url, favorite, last_update, next_update, initialized, viewer,
+    chapter_flags, cover_last_modified, date_added, update_strategy, calculate_interval,
+    last_modified_at, favorite_modified_at, version, is_syncing, notes, memo, 'manga'
+FROM mangas;
+
+INSERT INTO __id_map(old_table, old_id, entry_id)
+SELECT 'mangas', M._id, ENT._id
+FROM mangas M
+JOIN entries ENT
+ON M.profile_id = ENT.profile_id
+AND M.source = ENT.source
+AND M.url = ENT.url
+AND ENT.type = 'manga';
+
+-- 9. Migrate anime rows into entries, mapping status values and dropping anime-only fields.
+INSERT INTO entries(
+    profile_id, source, url, title, display_name, artist, author, description, genre,
+    status, thumbnail_url, favorite, last_update, next_update, initialized, viewer,
+    chapter_flags, cover_last_modified, date_added, update_strategy, calculate_interval,
+    last_modified_at, favorite_modified_at, version, is_syncing, notes, memo, type
+)
+SELECT
+    profile_id, source, url, title, display_name, NULL, NULL, description, genre,
+    CASE status
+        WHEN 3 THEN 5
+        WHEN 4 THEN 6
+        ELSE status
+    END,
+    thumbnail_url, favorite, last_update, NULL, initialized, 0,
+    episode_flags, cover_last_modified, date_added, 0, 0,
+    last_modified_at, favorite_modified_at, version, 0, notes, '{}', 'anime'
+FROM animes;
+
+INSERT INTO __id_map(old_table, old_id, entry_id)
+SELECT 'animes', A._id, ENT._id
+FROM animes A
+JOIN entries ENT
+ON A.profile_id = ENT.profile_id
+AND A.source = ENT.source
+AND A.url = ENT.url
+AND ENT.type = 'anime';
+
+-- 10. Migrate legacy manga chapters into the unified chapters table.
+INSERT INTO chapters(
+    entry_id, url, name, scanlator, read, bookmark, last_page_read, chapter_number,
+    source_order, date_fetch, date_upload, last_modified_at, version, is_syncing, memo
+)
+SELECT
+    M.entry_id, OC.url, OC.name, OC.scanlator, OC.read, OC.bookmark, OC.last_page_read,
+    OC.chapter_number, OC.source_order, OC.date_fetch, OC.date_upload, OC.last_modified_at,
+    OC.version, OC.is_syncing, OC.memo
+FROM old_chapters OC
+JOIN __id_map M
+ON M.old_table = 'mangas' AND OC.manga_id = M.old_id
+WHERE true
+ON CONFLICT(entry_id, url) DO UPDATE SET
+    name = CASE
+        WHEN excluded.last_modified_at >= chapters.last_modified_at THEN excluded.name
+        ELSE chapters.name
+    END,
+    scanlator = CASE
+        WHEN excluded.last_modified_at >= chapters.last_modified_at THEN excluded.scanlator
+        ELSE chapters.scanlator
+    END,
+    read = max(chapters.read, excluded.read),
+    bookmark = max(chapters.bookmark, excluded.bookmark),
+    last_page_read = max(chapters.last_page_read, excluded.last_page_read),
+    chapter_number = CASE
+        WHEN excluded.last_modified_at >= chapters.last_modified_at THEN excluded.chapter_number
+        ELSE chapters.chapter_number
+    END,
+    source_order = CASE
+        WHEN excluded.last_modified_at >= chapters.last_modified_at THEN excluded.source_order
+        ELSE chapters.source_order
+    END,
+    date_fetch = max(chapters.date_fetch, excluded.date_fetch),
+    date_upload = max(chapters.date_upload, excluded.date_upload),
+    last_modified_at = max(chapters.last_modified_at, excluded.last_modified_at),
+    version = max(chapters.version, excluded.version),
+    is_syncing = max(chapters.is_syncing, excluded.is_syncing),
+    memo = CASE
+        WHEN excluded.last_modified_at >= chapters.last_modified_at THEN excluded.memo
+        ELSE chapters.memo
+    END;
+
+INSERT INTO __chapter_id_map(old_table, old_id, chapter_id)
+SELECT 'old_chapters', OC._id, C._id
+FROM old_chapters OC
+JOIN chapters C ON OC.url = C.url
+JOIN __id_map M ON M.old_table = 'mangas' AND OC.manga_id = M.old_id AND C.entry_id = M.entry_id;
+
+-- 11. Migrate anime episodes into the unified chapters table.
+INSERT INTO chapters(
+    entry_id, url, name, scanlator, read, bookmark, last_page_read, chapter_number,
+    source_order, date_fetch, date_upload, last_modified_at, version, is_syncing, memo
+)
+SELECT
+    M.entry_id, AE.url, AE.name, NULL, AE.completed, 0, 0,
+    AE.episode_number, AE.source_order, AE.date_fetch, AE.date_upload, AE.last_modified_at,
+    AE.version, 0, '{}'
+FROM anime_episodes AE
+JOIN __id_map M
+ON M.old_table = 'animes' AND AE.anime_id = M.old_id
+WHERE true
+ON CONFLICT(entry_id, url) DO UPDATE SET
+    name = CASE
+        WHEN excluded.last_modified_at >= chapters.last_modified_at THEN excluded.name
+        ELSE chapters.name
+    END,
+    read = max(chapters.read, excluded.read),
+    chapter_number = CASE
+        WHEN excluded.last_modified_at >= chapters.last_modified_at THEN excluded.chapter_number
+        ELSE chapters.chapter_number
+    END,
+    source_order = CASE
+        WHEN excluded.last_modified_at >= chapters.last_modified_at THEN excluded.source_order
+        ELSE chapters.source_order
+    END,
+    date_fetch = max(chapters.date_fetch, excluded.date_fetch),
+    date_upload = max(chapters.date_upload, excluded.date_upload),
+    last_modified_at = max(chapters.last_modified_at, excluded.last_modified_at),
+    version = max(chapters.version, excluded.version);
+
+INSERT INTO __chapter_id_map(old_table, old_id, chapter_id)
+SELECT 'anime_episodes', AE._id, C._id
+FROM anime_episodes AE
+JOIN chapters C ON AE.url = C.url
+JOIN __id_map M ON M.old_table = 'animes' AND AE.anime_id = M.old_id AND C.entry_id = M.entry_id;

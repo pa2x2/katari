@@ -1,21 +1,21 @@
 package tachiyomi.domain.track.repository
 
 import kotlinx.coroutines.flow.Flow
-import tachiyomi.domain.track.model.Track
+import tachiyomi.domain.track.model.EntryTrack
 
 interface TrackRepository {
 
-    suspend fun getTrackById(id: Long): Track?
+    suspend fun getTrackById(id: Long): EntryTrack?
 
-    suspend fun getTracksByMangaId(mangaId: Long): List<Track>
+    suspend fun getTracksByEntryId(entryId: Long): List<EntryTrack>
 
-    fun getTracksAsFlow(): Flow<List<Track>>
+    fun getTracksAsFlow(): Flow<List<EntryTrack>>
 
-    fun getTracksByMangaIdAsFlow(mangaId: Long): Flow<List<Track>>
+    fun getTracksByEntryIdAsFlow(entryId: Long): Flow<List<EntryTrack>>
 
-    suspend fun delete(mangaId: Long, trackerId: Long)
+    suspend fun delete(entryId: Long, trackerId: Long)
 
-    suspend fun insert(track: Track)
+    suspend fun insert(track: EntryTrack)
 
-    suspend fun insertAll(tracks: List<Track>)
+    suspend fun insertAll(tracks: List<EntryTrack>)
 }

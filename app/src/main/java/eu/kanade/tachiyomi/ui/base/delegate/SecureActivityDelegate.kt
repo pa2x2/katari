@@ -23,6 +23,8 @@ import uy.kohesive.injekt.injectLazy
 interface SecureActivityDelegate {
     fun registerSecureActivity(activity: AppCompatActivity)
 
+    fun shouldRequestAppUnlock(activity: AppCompatActivity): Boolean = true
+
     companion object {
         /**
          * Set to true if we need the first activity to authenticate.
@@ -107,6 +109,7 @@ class SecureActivityDelegateImpl : SecureActivityDelegate, DefaultLifecycleObser
         if (!securityPreferences.useAuthenticator.get()) return
         if (activity.isAuthenticationSupported()) {
             if (!SecureActivityDelegate.requireUnlock) return
+            if (!(activity as SecureActivityDelegate).shouldRequestAppUnlock(activity)) return
             activity.startActivity(Intent(activity, UnlockActivity::class.java))
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 activity.overrideActivityTransition(Activity.OVERRIDE_TRANSITION_OPEN, 0, 0)

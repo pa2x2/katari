@@ -1,31 +1,25 @@
 package eu.kanade.tachiyomi.ui.browse.extension
 
 import android.app.Application
-import androidx.compose.runtime.Immutable
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import dev.icerock.moko.resources.StringResource
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.extension.interactor.GetExtensionsByType
-import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
-import eu.kanade.tachiyomi.source.online.HttpSource
+import eu.kanade.tachiyomi.source.entry.SourceHomePage
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import tachiyomi.core.common.util.lang.launchIO
@@ -35,13 +29,10 @@ import uy.kohesive.injekt.api.get
 import kotlin.time.Duration.Companion.seconds
 
 class ExtensionsScreenModel(
-    preferences: SourcePreferences = Injekt.get(),
     basePreferences: BasePreferences = Injekt.get(),
     private val extensionManager: ExtensionManager = Injekt.get(),
     private val getExtensions: GetExtensionsByType = Injekt.get(),
-) : StateScreenModel<ExtensionsScreenModel.State>(State()) {
-
-    private val currentDownloads = MutableStateFlow<Map<String, InstallStep>>(hashMapOf())
+) : StateScreenModel<ExtensionListState>(ExtensionListState()) {
 
     init {
         val context = Injekt.get<Application>()
@@ -57,7 +48,7 @@ class ExtensionsScreenModel(
                     .distinctUntilChanged()
                     .debounce(0.25.seconds)
                     .map { searchQueryPredicate(it ?: "") },
-                currentDownloads,
+                extensionManager.installSteps(),
                 getExtensions.subscribe(),
             ) { predicate, downloads, (_updates, _installed, _available, _untrusted) ->
                 buildMap {
@@ -97,7 +88,12 @@ class ExtensionsScreenModel(
 
         screenModelScope.launchIO { findAvailableExtensions() }
 
-        preferences.extensionUpdatesCount.changes()
+        combine(
+            extensionManager.pendingUpdatesCount,
+            extensionManager.isAutoUpdateInProgress,
+        ) { updates, inProgress ->
+            if (inProgress) 0 else updates
+        }
             .onEach { mutableState.update { state -> state.copy(updates = it) } }
             .launchIn(screenModelScope)
 
@@ -120,7 +116,11 @@ class ExtensionsScreenModel(
                 when (extension) {
                     is Extension.Installed -> extension.sources.any { source ->
                         source.name.contains(subquery, ignoreCase = true) ||
-                            (source as? HttpSource)?.getHomeUrl()?.contains(subquery, ignoreCase = true) == true ||
+                            (source as? SourceHomePage)?.getHomeUrl()?.contains(
+                                subquery,
+                                ignoreCase = true,
+                            ) ==
+                            true ||
                             source.id == subquery.toLongOrNull()
                     }
 
@@ -166,23 +166,11 @@ class ExtensionsScreenModel(
 
     fun cancelInstallUpdateExtension(extension: Extension) {
         extensionManager.cancelInstallUpdateExtension(extension)
-        removeDownloadState(extension)
-    }
-
-    private fun addDownloadState(extension: Extension, installStep: InstallStep) {
-        currentDownloads.update { it + Pair(extension.pkgName, installStep) }
-    }
-
-    private fun removeDownloadState(extension: Extension) {
-        currentDownloads.update { it - extension.pkgName }
     }
 
     private suspend fun Flow<InstallStep>.collectToInstallUpdate(extension: Extension) =
         this
-            .onEach { installStep -> addDownloadState(extension, installStep) }
-            .takeWhile { installStep -> installStep != InstallStep.Installed }
-            .onCompletion { removeDownloadState(extension) }
-            .collect()
+            .firstOrNull { it.isCompleted() }
 
     fun uninstallExtension(extension: Extension) {
         extensionManager.uninstallExtension(extension)
@@ -192,7 +180,7 @@ class ExtensionsScreenModel(
         screenModelScope.launchIO {
             mutableState.update { it.copy(isRefreshing = true) }
 
-            extensionManager.findAvailableExtensions()
+            extensionManager.findAvailableExtensions(forceRefresh = true)
 
             // Fake slower refresh so it doesn't seem like it's not doing anything
             delay(1.seconds)
@@ -206,30 +194,4 @@ class ExtensionsScreenModel(
             extensionManager.trust(extension)
         }
     }
-
-    @Immutable
-    data class State(
-        val isLoading: Boolean = true,
-        val isRefreshing: Boolean = false,
-        val items: ItemGroups = mutableMapOf(),
-        val updates: Int = 0,
-        val installer: BasePreferences.ExtensionInstaller? = null,
-        val searchQuery: String? = null,
-    ) {
-        val isEmpty = items.isEmpty()
-    }
-}
-
-typealias ItemGroups = Map<ExtensionUiModel.Header, List<ExtensionUiModel.Item>>
-
-object ExtensionUiModel {
-    sealed interface Header {
-        data class Resource(val textRes: StringResource) : Header
-        data class Text(val text: String) : Header
-    }
-
-    data class Item(
-        val extension: Extension,
-        val installStep: InstallStep,
-    )
 }

@@ -18,10 +18,12 @@ class GetSourcesWithFavoriteCount(
         return combine(
             preferences.migrationSortingDirection.changes(),
             preferences.migrationSortingMode.changes(),
+            preferences.disabledSources.changes(),
             repository.getSourcesWithFavoriteCount(),
-        ) { direction, mode, list ->
+        ) { direction, mode, hiddenSources, list ->
             list
                 .filterNot { it.first.isLocal() }
+                .filterNot { it.first.id.toString() in hiddenSources }
                 .sortedWith(sortFn(direction, mode))
         }
     }

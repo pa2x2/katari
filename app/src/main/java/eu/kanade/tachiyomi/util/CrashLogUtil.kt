@@ -25,7 +25,7 @@ class CrashLogUtil(
 
     suspend fun dumpLogs(exception: Throwable? = null) = withNonCancellableContext {
         try {
-            val file = context.createFileInCacheDir("mihon_crash_logs.txt")
+            val file = context.createFileInCacheDir("katari_crash_logs.txt")
 
             file.appendText(getDebugInfo() + "\n\n")
             getExtensionsInfo()?.let { file.appendText("$it\n\n") }
@@ -59,6 +59,7 @@ class CrashLogUtil(
         val availableExtensions = extensionManager.availableExtensionsFlow.value.associateBy { it.pkgName }
 
         val extensionInfoList = extensionManager.installedExtensionsFlow.value
+            .filterIsInstance<eu.kanade.tachiyomi.extension.model.Extension.Installed>()
             .sortedBy { it.name }
             .mapNotNull {
                 val availableExtension = availableExtensions[it.pkgName]

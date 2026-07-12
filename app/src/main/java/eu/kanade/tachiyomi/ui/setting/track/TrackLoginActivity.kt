@@ -57,13 +57,11 @@ class TrackLoginActivity : BaseOAuthLoginActivity() {
             return
         }
         if (code != null) {
-            if (!trackerManager.mangaBaka.verifyOAuthState(state)) {
-                logcat(LogPriority.WARN) { "Received wrong OAuth state back from MangaBaka" }
-                return
+            if (!trackerManager.mangaBaka.completeOAuth(code, state)) {
+                logcat(LogPriority.WARN) { "MangaBaka OAuth callback was rejected" }
             }
-            trackerManager.mangaBaka.login(code)
-        } else {
-            trackerManager.mangaBaka.logout()
+        } else if (!trackerManager.mangaBaka.cancelOAuth(state)) {
+            logcat(LogPriority.WARN) { "MangaBaka OAuth callback without a code was rejected" }
         }
     }
 
@@ -84,10 +82,14 @@ class TrackLoginActivity : BaseOAuthLoginActivity() {
     }
 
     private suspend fun handleHikka(reference: String?) {
-        if (reference != null) {
-            trackerManager.hikka.login(reference)
-        } else {
-            trackerManager.hikka.logout()
+        if (reference == null) {
+            logcat(LogPriority.WARN) { "Hikka OAuth callback has no reference" }
+            return
         }
+        val profileId = trackerManager.hikka.consumeOAuthProfileId() ?: run {
+            logcat(LogPriority.WARN) { "Hikka OAuth callback has no initiating profile" }
+            return
+        }
+        trackerManager.hikka.login(reference, profileId)
     }
 }

@@ -58,6 +58,7 @@ fun StatusWrapper(
 internal fun PreferenceItem(
     item: Preference.PreferenceItem<*, *>,
     highlightKey: String?,
+    showProfileChip: Boolean,
 ) {
     val scope = rememberCoroutineScope()
     StatusWrapper(
@@ -71,6 +72,7 @@ internal fun PreferenceItem(
                     title = item.title,
                     subtitle = item.subtitle,
                     icon = item.icon,
+                    isProfileSpecific = showProfileChip && item.isProfileSpecific,
                     checked = value,
                     onCheckedChanged = { newValue ->
                         scope.launch {
@@ -108,7 +110,9 @@ internal fun PreferenceItem(
                     title = item.title,
                     subtitle = item.internalSubtitleProvider(value, item.entries),
                     icon = item.icon,
+                    isProfileSpecific = showProfileChip && item.isProfileSpecific,
                     entries = item.entries,
+                    entryEnabled = { item.internalEntryEnabled(it!!) },
                     onValueChange = { newValue ->
                         scope.launch {
                             if (item.internalOnValueChanged(newValue!!)) {
@@ -124,7 +128,9 @@ internal fun PreferenceItem(
                     title = item.title,
                     subtitle = item.subtitleProvider(item.value, item.entries),
                     icon = item.icon,
+                    isProfileSpecific = showProfileChip && item.isProfileSpecific,
                     entries = item.entries,
+                    entryEnabled = item.entryEnabledProvider,
                     onValueChange = { scope.launch { item.onValueChanged(it) } },
                 )
             }
@@ -135,6 +141,7 @@ internal fun PreferenceItem(
                     title = item.title,
                     subtitle = item.internalSubtitleProvider(values, item.entries),
                     icon = item.icon,
+                    isProfileSpecific = showProfileChip && item.isProfileSpecific,
                     entries = item.entries,
                     onValuesChange = { newValues ->
                         scope.launch {
@@ -150,6 +157,7 @@ internal fun PreferenceItem(
                     title = item.title,
                     subtitle = item.subtitle,
                     icon = item.icon,
+                    isProfileSpecific = showProfileChip && item.isProfileSpecific,
                     widget = item.widget,
                     onPreferenceClick = item.onClick,
                 )
@@ -160,6 +168,7 @@ internal fun PreferenceItem(
                     title = item.title,
                     subtitle = item.subtitle,
                     icon = item.icon,
+                    isProfileSpecific = showProfileChip && item.isProfileSpecific,
                     value = values,
                     onConfirm = {
                         val accepted = item.onValueChanged(it)
@@ -179,7 +188,10 @@ internal fun PreferenceItem(
                 )
             }
             is Preference.PreferenceItem.InfoPreference -> {
-                InfoWidget(text = item.title)
+                InfoWidget(
+                    text = item.title,
+                    showIcon = item.showIcon,
+                )
             }
             is Preference.PreferenceItem.CustomPreference -> {
                 item.content()

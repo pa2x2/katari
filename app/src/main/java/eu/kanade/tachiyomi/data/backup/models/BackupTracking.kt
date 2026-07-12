@@ -2,7 +2,7 @@ package eu.kanade.tachiyomi.data.backup.models
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
-import tachiyomi.domain.track.model.Track
+import tachiyomi.domain.track.model.EntryTrack
 
 @Serializable
 data class BackupTracking(
@@ -30,10 +30,10 @@ data class BackupTracking(
 ) {
 
     @Suppress("DEPRECATION")
-    fun getTrackImpl(): Track {
-        return Track(
+    fun getTrackImpl(): EntryTrack {
+        return EntryTrack(
             id = -1,
-            mangaId = -1,
+            entryId = -1,
             trackerId = this@BackupTracking.syncId.toLong(),
             remoteId = if (this@BackupTracking.mediaIdInt != 0) {
                 this@BackupTracking.mediaIdInt.toLong()
@@ -42,8 +42,8 @@ data class BackupTracking(
             },
             libraryId = this@BackupTracking.libraryId,
             title = this@BackupTracking.title,
-            lastChapterRead = this@BackupTracking.lastChapterRead.toDouble(),
-            totalChapters = this@BackupTracking.totalChapters.toLong(),
+            progress = this@BackupTracking.lastChapterRead.toDouble(),
+            total = this@BackupTracking.totalChapters.toLong(),
             score = this@BackupTracking.score.toDouble(),
             status = this@BackupTracking.status.toLong(),
             startDate = this@BackupTracking.startedReadingDate,
@@ -55,6 +55,7 @@ data class BackupTracking(
 }
 
 val backupTrackMapper = {
+        _: Long,
         _: Long,
         _: Long,
         syncId: Long,

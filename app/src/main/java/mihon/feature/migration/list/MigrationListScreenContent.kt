@@ -50,13 +50,13 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
-import eu.kanade.presentation.manga.components.MangaCover
+import eu.kanade.presentation.entry.components.EntryCover
 import eu.kanade.presentation.util.animateItemFastScroll
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.presentation.util.rememberResourceBitmapPainter
 import eu.kanade.tachiyomi.R
-import mihon.feature.migration.list.models.MigratingManga
-import tachiyomi.domain.manga.model.Manga
+import mihon.feature.migration.list.models.MigratingEntry
+import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.Badge
 import tachiyomi.presentation.core.components.BadgeGroup
@@ -69,11 +69,11 @@ import tachiyomi.presentation.core.util.plus
 
 @Composable
 fun MigrationListScreenContent(
-    items: List<MigratingManga>,
+    items: List<MigratingEntry>,
     migrationComplete: Boolean,
     finishedCount: Int,
-    onItemClick: (Manga) -> Unit,
-    onSearchManually: (MigratingManga) -> Unit,
+    onItemClick: (Entry) -> Unit,
+    onSearchManually: (MigratingEntry) -> Unit,
     onSkip: (Long) -> Unit,
     onMigrate: (Long) -> Unit,
     onCopy: (Long) -> Unit,
@@ -110,7 +110,7 @@ fun MigrationListScreenContent(
         },
     ) { contentPadding ->
         FastScrollLazyColumn(contentPadding = contentPadding + topSmallPaddingValues) {
-            items(items, key = { it.manga.id }) { item ->
+            items(items, key = { it.entry.id }) { item ->
                 Row(
                     Modifier
                         .fillMaxWidth()
@@ -128,11 +128,11 @@ fun MigrationListScreenContent(
                             .weight(1f)
                             .align(Alignment.Top)
                             .fillMaxHeight(),
-                        manga = item.manga,
+                        entry = item.entry,
                         source = item.source,
                         chapterCount = item.chapterCount,
                         latestChapter = item.latestChapter,
-                        onClick = { onItemClick(item.manga) },
+                        onClick = { onItemClick(item.entry) },
                     )
 
                     Icon(
@@ -155,9 +155,9 @@ fun MigrationListScreenContent(
                         modifier = Modifier.weight(0.2f),
                         result = result,
                         onSearchManually = { onSearchManually(item) },
-                        onSkip = { onSkip(item.manga.id) },
-                        onMigrate = { onMigrate(item.manga.id) },
-                        onCopy = { onCopy(item.manga.id) },
+                        onSkip = { onSkip(item.entry.id) },
+                        onMigrate = { onMigrate(item.entry.id) },
+                        onCopy = { onCopy(item.entry.id) },
                     )
                 }
             }
@@ -168,7 +168,7 @@ fun MigrationListScreenContent(
 @Composable
 fun MigrationListItem(
     modifier: Modifier,
-    manga: Manga,
+    entry: Entry,
     source: String,
     chapterCount: Int,
     latestChapter: Double?,
@@ -185,11 +185,11 @@ fun MigrationListItem(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(MangaCover.Book.ratio),
+                .aspectRatio(EntryCover.Book.ratio),
         ) {
-            MangaCover.Book(
+            EntryCover.Book(
                 modifier = Modifier.fillMaxWidth(),
-                data = manga,
+                data = entry,
             )
             Box(
                 modifier = Modifier
@@ -208,7 +208,7 @@ fun MigrationListItem(
                 modifier = Modifier
                     .padding(8.dp)
                     .align(Alignment.BottomStart),
-                text = manga.title,
+                text = entry.title,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 2,
                 style = MaterialTheme.typography.labelMedium,
@@ -248,23 +248,23 @@ fun MigrationListItem(
 @Composable
 fun MigrationListItemResult(
     modifier: Modifier,
-    result: MigratingManga.SearchResult,
-    onItemClick: (Manga) -> Unit,
+    result: MigratingEntry.SearchResult,
+    onItemClick: (Entry) -> Unit,
 ) {
     Box(modifier.height(IntrinsicSize.Min)) {
         when (result) {
-            MigratingManga.SearchResult.Searching -> {
+            MigratingEntry.SearchResult.Searching -> {
                 Box(
                     modifier = Modifier
                         .widthIn(max = 150.dp)
                         .fillMaxSize()
-                        .aspectRatio(MangaCover.Book.ratio),
+                        .aspectRatio(EntryCover.Book.ratio),
                     contentAlignment = Alignment.Center,
                 ) {
                     CircularProgressIndicator()
                 }
             }
-            MigratingManga.SearchResult.NotFound -> {
+            MigratingEntry.SearchResult.NotFound -> {
                 Column(
                     Modifier
                         .widthIn(max = 150.dp)
@@ -276,7 +276,7 @@ fun MigrationListItemResult(
                         contentDescription = null,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .aspectRatio(MangaCover.Book.ratio)
+                            .aspectRatio(EntryCover.Book.ratio)
                             .clip(MaterialTheme.shapes.extraSmall),
                         contentScale = ContentScale.Crop,
                     )
@@ -287,14 +287,14 @@ fun MigrationListItemResult(
                     )
                 }
             }
-            is MigratingManga.SearchResult.Success -> {
+            is MigratingEntry.SearchResult.Success -> {
                 MigrationListItem(
                     modifier = Modifier.fillMaxSize(),
-                    manga = result.manga,
+                    entry = result.entry,
                     source = result.source,
                     chapterCount = result.chapterCount,
                     latestChapter = result.latestChapter,
-                    onClick = { onItemClick(result.manga) },
+                    onClick = { onItemClick(result.entry) },
                 )
             }
         }
@@ -304,7 +304,7 @@ fun MigrationListItemResult(
 @Composable
 private fun MigrationListItemAction(
     modifier: Modifier,
-    result: MigratingManga.SearchResult,
+    result: MigratingEntry.SearchResult,
     onSearchManually: () -> Unit,
     onSkip: () -> Unit,
     onMigrate: () -> Unit,
@@ -314,7 +314,7 @@ private fun MigrationListItemAction(
     val closeMenu = { menuExpanded = false }
     Box(modifier) {
         when (result) {
-            MigratingManga.SearchResult.Searching -> {
+            MigratingEntry.SearchResult.Searching -> {
                 IconButton(onClick = onSkip) {
                     Icon(
                         imageVector = Icons.Outlined.Close,
@@ -322,7 +322,7 @@ private fun MigrationListItemAction(
                     )
                 }
             }
-            MigratingManga.SearchResult.NotFound, is MigratingManga.SearchResult.Success -> {
+            MigratingEntry.SearchResult.NotFound, is MigratingEntry.SearchResult.Success -> {
                 IconButton(onClick = { menuExpanded = true }) {
                     Icon(
                         imageVector = Icons.Outlined.MoreVert,
@@ -348,7 +348,7 @@ private fun MigrationListItemAction(
                             onSkip()
                         },
                     )
-                    if (result is MigratingManga.SearchResult.Success) {
+                    if (result is MigratingEntry.SearchResult.Success) {
                         DropdownMenuItem(
                             text = { Text(stringResource(MR.strings.migrationListScreen_migrateNowActionLabel)) },
                             onClick = {

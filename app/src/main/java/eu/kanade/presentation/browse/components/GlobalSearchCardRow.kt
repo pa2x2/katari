@@ -14,21 +14,24 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.library.components.CommonMangaItemDefaults
-import eu.kanade.presentation.library.components.MangaComfortableGridItem
-import tachiyomi.domain.manga.model.Manga
-import tachiyomi.domain.manga.model.MangaCover
-import tachiyomi.domain.manga.model.asMangaCover
+import eu.kanade.presentation.entry.components.toGridCoverType
+import eu.kanade.presentation.library.components.CommonEntryItemDefaults
+import eu.kanade.presentation.library.components.EntryComfortableGridItem
+import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
+import eu.kanade.tachiyomi.source.entry.EntryType
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.model.EntryCover
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
 fun GlobalSearchCardRow(
-    titles: List<Manga>,
-    getManga: @Composable (Manga) -> State<Manga>,
-    onClick: (Manga) -> Unit,
-    onLongClick: (Manga) -> Unit,
+    titles: List<Entry>,
+    getEntryState: @Composable (Entry) -> State<Entry>,
+    sourceItemOrientation: EntryItemOrientation,
+    onClick: (Entry) -> Unit,
+    onLongClick: (Entry) -> Unit,
 ) {
     if (titles.isEmpty()) {
         EmptyResultItem()
@@ -40,11 +43,19 @@ fun GlobalSearchCardRow(
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
     ) {
         items(titles) {
-            val title by getManga(it)
-            MangaItem(
+            val title by getEntryState(it)
+            EntryItem(
                 title = title.title,
-                cover = title.asMangaCover(),
+                cover = EntryCover(
+                    entryId = title.id,
+                    sourceId = title.source,
+                    isFavorite = title.favorite,
+                    url = title.thumbnailUrl,
+                    lastModified = title.coverLastModified,
+                ),
+                sourceItemOrientation = sourceItemOrientation,
                 isFavorite = title.favorite,
+                entryType = title.type,
                 onClick = { onClick(title) },
                 onLongClick = { onLongClick(title) },
             )
@@ -53,22 +64,25 @@ fun GlobalSearchCardRow(
 }
 
 @Composable
-private fun MangaItem(
+private fun EntryItem(
     title: String,
-    cover: MangaCover,
+    cover: EntryCover,
+    sourceItemOrientation: EntryItemOrientation,
     isFavorite: Boolean,
+    entryType: EntryType,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
     Box(modifier = Modifier.width(96.dp)) {
-        MangaComfortableGridItem(
+        EntryComfortableGridItem(
             title = title,
             titleMaxLines = 3,
             coverData = cover,
-            coverBadgeStart = {
-                InLibraryBadge(enabled = isFavorite)
+            coverType = sourceItemOrientation.toGridCoverType(),
+            coverBadgeEnd = {
+                CatalogBadges(isFavorite = isFavorite, entryType = entryType)
             },
-            coverAlpha = if (isFavorite) CommonMangaItemDefaults.BrowseFavoriteCoverAlpha else 1f,
+            coverAlpha = if (isFavorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f,
             onClick = onClick,
             onLongClick = onLongClick,
         )

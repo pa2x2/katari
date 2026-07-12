@@ -1,57 +1,59 @@
 package tachiyomi.data.history
 
-import app.cash.sqldelight.async.coroutines.awaitAsList
-import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.data.Database
-import tachiyomi.data.subscribeToList
+import tachiyomi.data.ActiveProfileProvider
+import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.history.model.History
 import tachiyomi.domain.history.model.HistoryUpdate
 import tachiyomi.domain.history.model.HistoryWithRelations
 import tachiyomi.domain.history.repository.HistoryRepository
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class HistoryRepositoryImpl(
-    private val database: Database,
+    private val handler: DatabaseHandler,
+    private val profileProvider: ActiveProfileProvider,
 ) : HistoryRepository {
 
     override fun getHistory(query: String): Flow<List<HistoryWithRelations>> {
-        return database.historyViewQueries
-            .history(query, HistoryMapper::mapHistoryWithRelations)
-            .subscribeToList()
+        return profileProvider.activeProfileIdFlow.flatMapLatest { profileId ->
+            handler.subscribeToList {
+                historyViewQueries.history(profileId, query, HistoryMapper::mapHistoryWithRelations)
+            }
+        }
     }
 
     override suspend fun getLastHistory(): HistoryWithRelations? {
-        return database.historyViewQueries
-            .getLatestHistory(HistoryMapper::mapHistoryWithRelations)
-            .awaitAsOneOrNull()
+        return handler.awaitOneOrNull {
+            historyViewQueries.getLatestHistory(profileProvider.activeProfileId, HistoryMapper::mapHistoryWithRelations)
+        }
     }
 
     override suspend fun getTotalReadDuration(): Long {
-        return database.historyQueries
-            .getReadDuration()
-            .awaitAsOne()
+        return handler.awaitOne { historyQueries.getReadDuration() }
     }
 
-    override suspend fun getHistoryByMangaId(mangaId: Long): List<History> {
-        return database.historyQueries
-            .getHistoryByMangaId(mangaId, HistoryMapper::mapHistory)
-            .awaitAsList()
+    override suspend fun getHistoryByEntryId(entryId: Long): List<History> {
+        return handler.awaitList {
+            historyQueries.getHistoryByEntryId(entryId, HistoryMapper::mapHistory)
+        }
     }
 
     override suspend fun resetHistory(historyId: Long) {
         try {
-            database.historyQueries.resetHistoryById(historyId)
+            handler.await { historyQueries.resetHistoryById(historyId) }
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, throwable = e)
         }
     }
 
-    override suspend fun resetHistoryByMangaId(mangaId: Long) {
+    override suspend fun resetHistoryByEntryId(entryId: Long) {
         try {
-            database.historyQueries.resetHistoryByMangaId(mangaId)
+            handler.await { historyQueries.resetHistoryByEntryId(entryId) }
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, throwable = e)
         }
@@ -59,7 +61,7 @@ class HistoryRepositoryImpl(
 
     override suspend fun deleteAllHistory(): Boolean {
         return try {
-            database.historyQueries.removeAllHistory()
+            handler.await { historyQueries.removeAllHistory() }
             true
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, throwable = e)
@@ -69,11 +71,22 @@ class HistoryRepositoryImpl(
 
     override suspend fun upsertHistory(historyUpdate: HistoryUpdate) {
         try {
-            database.historyQueries.upsert(
-                historyUpdate.chapterId,
-                historyUpdate.readAt,
-                historyUpdate.sessionReadDuration,
-            )
+            handler.await(inTransaction = true) {
+                val entryId =
+                    chaptersQueries.getChapterById(historyUpdate.chapterId).awaitAsOneOrNull()?.entry_id
+                        ?: return@await
+                historyQueries.upsertUpdate(
+                    historyUpdate.readAt,
+                    historyUpdate.sessionReadDuration,
+                    historyUpdate.chapterId,
+                )
+                historyQueries.upsertInsert(
+                    entryId,
+                    historyUpdate.chapterId,
+                    historyUpdate.readAt,
+                    historyUpdate.sessionReadDuration,
+                )
+            }
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, throwable = e)
         }

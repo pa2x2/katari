@@ -8,7 +8,9 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.util.ioCoroutineScope
 import eu.kanade.tachiyomi.extension.ExtensionManager
-import eu.kanade.tachiyomi.source.Source
+import eu.kanade.tachiyomi.source.defaultBackgroundFilterList
+import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
+import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
@@ -19,12 +21,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import mihon.domain.manga.model.toDomainManga
 import tachiyomi.core.common.preference.toggle
 import tachiyomi.core.common.util.lang.launchIO
-import tachiyomi.domain.manga.interactor.GetManga
-import tachiyomi.domain.manga.interactor.NetworkToLocalManga
-import tachiyomi.domain.manga.model.Manga
+import tachiyomi.domain.entry.adapter.toEntry
+import tachiyomi.domain.entry.interactor.GetEntry
+import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
+import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -35,8 +37,8 @@ abstract class SearchScreenModel(
     sourcePreferences: SourcePreferences = Injekt.get(),
     private val sourceManager: SourceManager = Injekt.get(),
     private val extensionManager: ExtensionManager = Injekt.get(),
-    private val networkToLocalManga: NetworkToLocalManga = Injekt.get(),
-    private val getManga: GetManga = Injekt.get(),
+    private val networkToLocalEntry: NetworkToLocalEntry = Injekt.get(),
+    private val getEntry: GetEntry = Injekt.get(),
     private val preferences: SourcePreferences = Injekt.get(),
 ) : StateScreenModel<SearchScreenModel.State>(initialState) {
 
@@ -52,11 +54,11 @@ abstract class SearchScreenModel(
 
     protected var extensionFilter: String? = null
 
-    open val sortComparator = { map: Map<Source, SearchItemResult> ->
-        compareBy<Source>(
+    open val sortComparator = { map: Map<UnifiedSource, SearchItemResult> ->
+        compareBy<UnifiedSource>(
             { (map[it] as? SearchItemResult.Success)?.isEmpty ?: true },
             { "${it.id}" !in pinnedSources },
-            { "${it.name.lowercase()} (${it.lang})" },
+            { "${it.name.lowercase()} (${(it as? EntryCatalogueSource)?.lang ?: ""})" },
         )
     }
 
@@ -69,28 +71,28 @@ abstract class SearchScreenModel(
     }
 
     @Composable
-    fun getManga(initialManga: Manga): androidx.compose.runtime.State<Manga> {
-        return produceState(initialValue = initialManga) {
-            getManga.subscribe(initialManga.url, initialManga.source)
+    fun getEntryState(initialEntry: Entry): androidx.compose.runtime.State<Entry> {
+        return produceState(initialValue = initialEntry) {
+            getEntry.subscribe(initialEntry.url, initialEntry.source, initialEntry.type)
                 .filterNotNull()
-                .collectLatest { manga ->
-                    value = manga
+                .collectLatest { entry ->
+                    value = entry
                 }
         }
     }
 
-    open fun getEnabledSources(): List<Source> {
-        return sourceManager.getAll()
-            .filter { it.lang in enabledLanguages && "${it.id}" !in disabledSources }
+    open fun getEnabledSources(): List<UnifiedSource> {
+        return sourceManager.getCatalogueSources()
+            .filter { (it as? EntryCatalogueSource)?.lang in enabledLanguages && "${it.id}" !in disabledSources }
             .sortedWith(
                 compareBy(
                     { "${it.id}" !in pinnedSources },
-                    { "${it.name.lowercase()} (${it.lang})" },
+                    { "${it.name.lowercase()} (${(it as? EntryCatalogueSource)?.lang ?: ""})" },
                 ),
             )
     }
 
-    private fun getSelectedSources(): List<Source> {
+    private fun getSelectedSources(): List<UnifiedSource> {
         val enabledSources = getEnabledSources()
 
         val filter = extensionFilter
@@ -100,7 +102,8 @@ abstract class SearchScreenModel(
 
         return extensionManager.installedExtensionsFlow.value
             .filter { it.pkgName == filter }
-            .flatMap { it.sources }
+            .filterIsInstance<eu.kanade.tachiyomi.extension.model.Extension.Installed>()
+            .flatMap { extension -> extension.sources }
             .filter { it in enabledSources }
     }
 
@@ -156,13 +159,14 @@ abstract class SearchScreenModel(
 
                     try {
                         val page = withContext(coroutineDispatcher) {
-                            source.getSearchManga(1, query, source.getFilterList())
+                            source.getSearchContent(1, query, source.defaultBackgroundFilterList())
                         }
 
-                        val titles = page.mangas
-                            .map { it.toDomainManga(source.id) }
-                            .distinctBy { it.url }
-                            .let { networkToLocalManga(it) }
+                        val titles = page.items
+                            .map { it.toEntry(source.id) }
+                            .distinctBy { it.type to it.url }
+                            .let(::filterSearchResults)
+                            .let { networkToLocalEntry(it) }
 
                         if (isActive) {
                             updateItem(source, SearchItemResult.Success(titles))
@@ -178,7 +182,7 @@ abstract class SearchScreenModel(
         }
     }
 
-    private fun updateItems(items: Map<Source, SearchItemResult>) {
+    private fun updateItems(items: Map<UnifiedSource, SearchItemResult>) {
         mutableState.update {
             it.copy(
                 items = items
@@ -187,16 +191,18 @@ abstract class SearchScreenModel(
         }
     }
 
-    private fun updateItem(source: Source, result: SearchItemResult) {
+    private fun updateItem(source: UnifiedSource, result: SearchItemResult) {
         updateItems(state.value.items + (source to result))
     }
 
-    fun setMigrateDialog(currentId: Long, target: Manga) {
+    fun setMigrateDialog(currentId: Long, target: Entry) {
         screenModelScope.launchIO {
-            val current = getManga.await(currentId) ?: return@launchIO
+            val current = getEntry.await(currentId) ?: return@launchIO
             mutableState.update { it.copy(dialog = Dialog.Migrate(target, current)) }
         }
     }
+
+    protected open fun filterSearchResults(entries: List<Entry>): List<Entry> = entries
 
     fun clearDialog() {
         mutableState.update { it.copy(dialog = null) }
@@ -204,11 +210,11 @@ abstract class SearchScreenModel(
 
     @Immutable
     data class State(
-        val from: Manga? = null,
+        val from: Entry? = null,
         val searchQuery: String? = null,
         val sourceFilter: SourceFilter = SourceFilter.PinnedOnly,
         val onlyShowHasResults: Boolean = false,
-        val items: Map<Source, SearchItemResult> = mapOf(),
+        val items: Map<UnifiedSource, SearchItemResult> = mapOf(),
         val dialog: Dialog? = null,
     ) {
         val progress: Int = items.count { it.value !is SearchItemResult.Loading }
@@ -217,7 +223,7 @@ abstract class SearchScreenModel(
     }
 
     sealed interface Dialog {
-        data class Migrate(val target: Manga, val current: Manga) : Dialog
+        data class Migrate(val target: Entry, val current: Entry) : Dialog
     }
 }
 
@@ -234,7 +240,7 @@ sealed interface SearchItemResult {
     ) : SearchItemResult
 
     data class Success(
-        val result: List<Manga>,
+        val result: List<Entry>,
     ) : SearchItemResult {
         val isEmpty: Boolean
             get() = result.isEmpty()

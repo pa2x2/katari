@@ -11,14 +11,16 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import eu.kanade.domain.source.interactor.SourceListListing
 import eu.kanade.presentation.browse.SourceOptionsDialog
 import eu.kanade.presentation.browse.SourcesScreen
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.TabContent
-import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceScreen
+import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import tachiyomi.domain.source.interactor.GetRemoteCatalog
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -44,10 +46,10 @@ fun Screen.sourcesTab(): TabContent {
         ),
         content = { contentPadding, snackbarHostState ->
             SourcesScreen(
-                state = state,
+                state = state.listState,
                 contentPadding = contentPadding,
                 onClickItem = { source, listing ->
-                    navigator.push(BrowseSourceScreen(source.id, listing.query))
+                    navigator.push(CatalogScreen(source.id, listingQuery(listing)))
                 },
                 onClickPin = screenModel::togglePin,
                 onLongClickItem = screenModel::showSourceDialog,
@@ -81,4 +83,11 @@ fun Screen.sourcesTab(): TabContent {
             }
         },
     )
+}
+
+private fun listingQuery(listing: SourceListListing): String? {
+    return when (listing) {
+        SourceListListing.Popular -> GetRemoteCatalog.QUERY_POPULAR
+        SourceListListing.Latest -> GetRemoteCatalog.QUERY_LATEST
+    }
 }

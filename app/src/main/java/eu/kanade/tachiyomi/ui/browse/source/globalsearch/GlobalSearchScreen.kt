@@ -6,15 +6,17 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.core.util.ifSourcesLoaded
+import eu.kanade.core.util.ifCatalogSourcesLoaded
 import eu.kanade.presentation.browse.GlobalSearchScreen
 import eu.kanade.presentation.util.Screen
-import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceScreen
-import eu.kanade.tachiyomi.ui.manga.MangaScreen
+import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
+import eu.kanade.tachiyomi.ui.entry.EntryScreen
+import kotlinx.coroutines.launch
 import tachiyomi.presentation.core.screens.LoadingScreen
 
 class GlobalSearchScreen(
@@ -24,12 +26,13 @@ class GlobalSearchScreen(
 
     @Composable
     override fun Content() {
-        if (!ifSourcesLoaded()) {
+        if (!ifCatalogSourcesLoaded()) {
             LoadingScreen()
             return
         }
 
         val navigator = LocalNavigator.currentOrThrow
+        val scope = rememberCoroutineScope()
 
         val screenModel = rememberScreenModel {
             GlobalSearchScreenModel(
@@ -47,13 +50,12 @@ class GlobalSearchScreen(
 
             LaunchedEffect(state.items) {
                 when (val result = state.items.values.singleOrNull()) {
-                    SearchItemResult.Loading -> return@LaunchedEffect
-                    is SearchItemResult.Success -> {
-                        val manga = result.result.singleOrNull()
-                        if (manga != null) {
-                            navigator.replace(MangaScreen(manga.id, true))
+                    GlobalSearchItemResult.Loading -> return@LaunchedEffect
+                    is GlobalSearchItemResult.Success -> {
+                        val item = result.result.singleOrNull()
+                        if (item != null) {
+                            navigator.replace(EntryScreen(item.id, fromSource = true))
                         } else {
-                            // Backoff to result screen
                             showSingleLoadingScreen = false
                         }
                     }
@@ -66,14 +68,18 @@ class GlobalSearchScreen(
                 navigateUp = navigator::pop,
                 onChangeSearchQuery = screenModel::updateSearchQuery,
                 onSearch = { screenModel.search() },
-                getManga = { screenModel.getManga(it) },
+                getItem = { screenModel.getItem(it) },
                 onChangeSearchFilter = screenModel::setSourceFilter,
                 onToggleResults = screenModel::toggleFilterResults,
                 onClickSource = {
-                    navigator.push(BrowseSourceScreen(it.id, state.searchQuery))
+                    navigator.push(CatalogScreen(it.id, state.searchQuery))
                 },
-                onClickItem = { navigator.push(MangaScreen(it.id, true)) },
-                onLongClickItem = { navigator.push(MangaScreen(it.id, true)) },
+                onClickItem = { item ->
+                    navigator.push(EntryScreen(item.id, fromSource = true))
+                },
+                onLongClickItem = { item ->
+                    navigator.push(EntryScreen(item.id, fromSource = true))
+                },
             )
         }
     }

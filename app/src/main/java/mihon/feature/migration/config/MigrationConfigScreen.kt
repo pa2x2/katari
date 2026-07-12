@@ -46,7 +46,7 @@ import eu.kanade.presentation.browse.components.SourceIcon
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.util.Screen
-import eu.kanade.tachiyomi.source.online.HttpSource
+import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.ui.browse.migration.search.MigrateSearchScreen
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import kotlinx.coroutines.flow.update
@@ -69,9 +69,9 @@ import tachiyomi.presentation.core.util.shouldExpandFAB
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-class MigrationConfigScreen(private val mangaIds: Collection<Long>) : Screen() {
+class MigrationConfigScreen(private val entryIds: Collection<Long>) : Screen() {
 
-    constructor(mangaId: Long) : this(listOf(mangaId))
+    constructor(entryId: Long) : this(listOf(entryId))
 
     @Composable
     override fun Content() {
@@ -83,15 +83,15 @@ class MigrationConfigScreen(private val mangaIds: Collection<Long>) : Screen() {
         var migrationSheetOpen by rememberSaveable { mutableStateOf(false) }
 
         fun continueMigration(openSheet: Boolean, extraSearchQuery: String?) {
-            val mangaId = mangaIds.singleOrNull()
-            if (mangaId == null && openSheet) {
+            val entryId = entryIds.singleOrNull()
+            if (entryId == null && openSheet) {
                 migrationSheetOpen = true
                 return
             }
-            val screen = if (mangaId == null) {
-                MigrationListScreen(mangaIds, extraSearchQuery)
+            val screen = if (entryId == null) {
+                MigrationListScreen(entryIds, extraSearchQuery)
             } else {
-                MigrateSearchScreen(mangaId)
+                MigrateSearchScreen(entryId)
             }
             navigator.replace(screen)
         }
@@ -343,14 +343,14 @@ class MigrationConfigScreen(private val mangaIds: Collection<Long>) : Screen() {
                 .mapNotNull { it.toLongOrNull() }
             val sources = sourceManager.getAll()
                 .asSequence()
-                .filterIsInstance<HttpSource>()
+                .filterIsInstance<EntryCatalogueSource>()
                 .filter { it.lang in languages }
                 .map {
                     val source = Source(
                         id = it.id,
                         lang = it.lang,
                         name = it.name,
-                        supportsLatest = false,
+                        supportsLatest = it.supportsLatest,
                         isStub = false,
                     )
                     MigrationSource(

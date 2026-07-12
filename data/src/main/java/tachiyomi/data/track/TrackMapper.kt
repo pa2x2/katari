@@ -1,11 +1,13 @@
 package tachiyomi.data.track
 
-import tachiyomi.domain.track.model.Track
+import tachiyomi.domain.track.model.EntryTrack
 
 object TrackMapper {
     fun mapTrack(
         id: Long,
-        mangaId: Long,
+        @Suppress("UNUSED_PARAMETER")
+        profileId: Long,
+        entryId: Long,
         syncId: Long,
         remoteId: Long,
         libraryId: Long?,
@@ -18,15 +20,15 @@ object TrackMapper {
         startDate: Long,
         finishDate: Long,
         private: Boolean,
-    ): Track = Track(
+    ): EntryTrack = EntryTrack(
         id = id,
-        mangaId = mangaId,
+        entryId = entryId,
         trackerId = syncId,
         remoteId = remoteId,
         libraryId = libraryId,
         title = title,
-        lastChapterRead = lastChapterRead,
-        totalChapters = totalChapters,
+        progress = lastChapterRead,
+        total = totalChapters,
         status = status,
         score = score,
         remoteUrl = remoteUrl,

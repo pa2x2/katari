@@ -1,5 +1,4 @@
 package eu.kanade.tachiyomi.data.library
-
 import android.content.Context
 import android.content.pm.ServiceInfo
 import android.os.Build
@@ -22,13 +21,13 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import logcat.LogPriority
-import mihon.domain.source.interactor.UpdateMangaFromRemote
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.library.model.LibraryManga
-import tachiyomi.domain.manga.interactor.GetLibraryManga
-import tachiyomi.domain.manga.model.Manga
-import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.entry.interactor.GetLibraryEntries
+import tachiyomi.domain.entry.interactor.SyncEntryWithSource
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.library.model.LibraryItem
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.concurrent.CopyOnWriteArrayList
@@ -40,18 +39,18 @@ import kotlin.concurrent.atomics.fetchAndIncrement
 class MetadataUpdateJob(private val context: Context, workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {
 
-    private val sourceManager: SourceManager = Injekt.get()
-    private val getLibraryManga: GetLibraryManga = Injekt.get()
-    private val updateMangaFromRemote: UpdateMangaFromRemote = Injekt.get()
+    private val getLibraryEntries: GetLibraryEntries = Injekt.get()
+    private val entryRepository: EntryRepository = Injekt.get()
+    private val syncEntryWithSource: SyncEntryWithSource = Injekt.get()
 
     private val notifier = LibraryUpdateNotifier(context)
 
-    private var mangaToUpdate: List<LibraryManga> = mutableListOf()
+    private var entriesToUpdate: List<Entry> = mutableListOf()
 
     override suspend fun doWork(): Result {
         setForegroundSafely()
 
-        addMangaToQueue()
+        addEntriesToQueue()
 
         return withIOContext {
             try {
@@ -85,40 +84,56 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
     }
 
     /**
-     * Adds list of manga to be updated.
+     * Adds list of entries to be updated.
      */
-    private suspend fun addMangaToQueue() {
-        mangaToUpdate = getLibraryManga.await()
-        notifier.showQueueSizeWarningNotificationIfNeeded(mangaToUpdate)
+    private suspend fun addEntriesToQueue() {
+        val libraryItems = getLibraryEntries.await()
+        notifier.showQueueSizeWarningNotificationIfNeeded(libraryItems)
+        entriesToUpdate = libraryItems.expandToMemberEntries()
+    }
+
+    private suspend fun List<LibraryItem>.expandToMemberEntries(): List<Entry> {
+        return flatMap { libraryItem ->
+            libraryItem.memberEntryIds.mapNotNull { memberKey ->
+                if (memberKey.id == libraryItem.entry.id) {
+                    libraryItem.entry
+                } else {
+                    entryRepository.getEntryById(memberKey.id)
+                }
+            }
+        }
+            .distinctBy(Entry::id)
     }
 
     private suspend fun updateMetadata() {
         val semaphore = Semaphore(5)
         val progressCount = AtomicInt(0)
-        val currentlyUpdatingManga = CopyOnWriteArrayList<Manga>()
+        val currentlyUpdatingEntries = CopyOnWriteArrayList<Entry>()
 
         coroutineScope {
-            mangaToUpdate.groupBy { it.manga.source }
+            entriesToUpdate.groupBy { it.source }
                 .values
-                .map { mangaInSource ->
+                .map { entriesInSource ->
                     async {
                         semaphore.withPermit {
-                            mangaInSource.forEach { libraryManga ->
-                                val manga = libraryManga.manga
+                            entriesInSource.forEach { entry ->
                                 ensureActive()
 
                                 withUpdateNotification(
-                                    currentlyUpdatingManga,
+                                    currentlyUpdatingEntries,
                                     progressCount,
-                                    manga,
+                                    entry,
                                 ) {
-                                    val source = sourceManager.get(manga.source) ?: return@withUpdateNotification
+                                    val freshEntry = entryRepository.getEntryById(entry.id)
+                                    if (freshEntry?.favorite != true) {
+                                        return@withUpdateNotification
+                                    }
                                     try {
-                                        updateMangaFromRemote(
-                                            source = source,
-                                            manga = manga,
+                                        syncEntryWithSource(
+                                            freshEntry,
                                             fetchDetails = true,
-                                        ).getOrThrow()
+                                            fetchChapters = false,
+                                        )
                                     } catch (e: Throwable) {
                                         // Ignore errors and continue
                                         logcat(LogPriority.ERROR, e)
@@ -135,38 +150,36 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
     }
 
     private suspend fun withUpdateNotification(
-        updatingManga: CopyOnWriteArrayList<Manga>,
+        updatingEntries: CopyOnWriteArrayList<Entry>,
         completed: AtomicInt,
-        manga: Manga,
+        entry: Entry,
         block: suspend () -> Unit,
     ) = coroutineScope {
         ensureActive()
 
-        updatingManga.add(manga)
+        updatingEntries.add(entry)
         notifier.showProgressNotification(
-            updatingManga,
+            updatingEntries,
             completed.load(),
-            mangaToUpdate.size,
+            entriesToUpdate.size,
         )
 
         block()
 
         ensureActive()
 
-        updatingManga.remove(manga)
+        updatingEntries.remove(entry)
         completed.fetchAndIncrement()
         notifier.showProgressNotification(
-            updatingManga,
+            updatingEntries,
             completed.load(),
-            mangaToUpdate.size,
+            entriesToUpdate.size,
         )
     }
 
     companion object {
         private const val TAG = "MetadataUpdate"
         private const val WORK_NAME_MANUAL = "MetadataUpdate"
-
-        private const val MANGA_PER_SOURCE_QUEUE_WARNING_THRESHOLD = 60
 
         fun startNow(context: Context): Boolean {
             val wm = context.workManager

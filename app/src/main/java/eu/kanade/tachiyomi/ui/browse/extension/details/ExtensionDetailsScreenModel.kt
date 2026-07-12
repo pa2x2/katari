@@ -1,10 +1,8 @@
 package eu.kanade.tachiyomi.ui.browse.extension.details
 
 import android.content.Context
-import androidx.compose.runtime.Immutable
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import eu.kanade.domain.extension.interactor.ExtensionSourceItem
 import eu.kanade.domain.extension.interactor.GetExtensionSources
 import eu.kanade.domain.source.interactor.ToggleIncognito
 import eu.kanade.domain.source.interactor.ToggleSource
@@ -12,8 +10,12 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.network.NetworkHelper
-import eu.kanade.tachiyomi.source.online.HttpSource
+import eu.kanade.tachiyomi.source.entry.ConfigurableSource
+import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
+import eu.kanade.tachiyomi.source.entry.SourceHomePage
 import eu.kanade.tachiyomi.util.system.LocaleHelper
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -38,7 +40,7 @@ class ExtensionDetailsScreenModel(
     private val toggleSource: ToggleSource = Injekt.get(),
     private val toggleIncognito: ToggleIncognito = Injekt.get(),
     private val preferences: SourcePreferences = Injekt.get(),
-) : StateScreenModel<ExtensionDetailsScreenModel.State>(State()) {
+) : StateScreenModel<ExtensionDetailsState>(ExtensionDetailsState()) {
 
     private val _events: Channel<ExtensionDetailsEvent> = Channel()
     val events: Flow<ExtensionDetailsEvent> = _events.receiveAsFlow()
@@ -47,7 +49,9 @@ class ExtensionDetailsScreenModel(
         screenModelScope.launch {
             launch {
                 extensionManager.installedExtensionsFlow
-                    .map { it.firstOrNull { extension -> extension.pkgName == pkgName } }
+                    .map { extensions ->
+                        extensions.firstOrNull { extension -> extension.pkgName == pkgName }
+                    }
                     .collectLatest { extension ->
                         if (extension == null) {
                             _events.send(ExtensionDetailsEvent.Uninstalled)
@@ -60,25 +64,46 @@ class ExtensionDetailsScreenModel(
             }
             launch {
                 state.collectLatest { state ->
-                    if (state.extension == null) return@collectLatest
-                    getExtensionSources.subscribe(state.extension)
+                    val extension = state.extension ?: return@collectLatest
+                    getExtensionSources.subscribe(extension)
                         .map {
                             it.sortedWith(
                                 compareBy(
                                     { !it.enabled },
                                     { item ->
+                                        val catalogueSource = item.source as? EntryCatalogueSource
                                         item.source.name.takeIf { item.labelAsName }
-                                            ?: LocaleHelper.getSourceDisplayName(item.source.lang, context).lowercase()
+                                            ?: LocaleHelper.getSourceDisplayName(
+                                                catalogueSource?.lang.orEmpty(),
+                                                context,
+                                            ).lowercase()
                                     },
                                 ),
                             )
                         }
                         .catch { throwable ->
                             logcat(LogPriority.ERROR, throwable)
-                            mutableState.update { it.copy(_sources = listOf()) }
+                            mutableState.update { it.copyWithSources(persistentListOf()) }
                         }
                         .collectLatest { sources ->
-                            mutableState.update { it.copy(_sources = sources) }
+                            mutableState.update {
+                                it.copyWithSources(
+                                    sources
+                                        .map { source ->
+                                            val catalogueSource = source.source as? EntryCatalogueSource
+                                            ExtensionDetailsSourceUiModel(
+                                                id = source.source.id,
+                                                name = source.source.name,
+                                                title = source.source.name,
+                                                lang = catalogueSource?.lang.orEmpty(),
+                                                labelAsName = source.labelAsName,
+                                                enabled = source.enabled,
+                                                hasSettings = source.source is ConfigurableSource,
+                                            )
+                                        }
+                                        .toImmutableList(),
+                                )
+                            }
                         }
                 }
             }
@@ -98,8 +123,7 @@ class ExtensionDetailsScreenModel(
         val extension = state.value.extension ?: return
 
         val urls = extension.sources
-            .filterIsInstance<HttpSource>()
-            .flatMap { listOf(it.baseUrl, it.getHomeUrl()) }
+            .mapNotNull { (it as? SourceHomePage)?.getHomeUrl() }
             .filter { it.isNotEmpty() }
             .distinct()
 
@@ -134,20 +158,6 @@ class ExtensionDetailsScreenModel(
         state.value.extension?.pkgName?.let { packageName ->
             toggleIncognito.await(packageName, enable)
         }
-    }
-
-    @Immutable
-    data class State(
-        val extension: Extension.Installed? = null,
-        val isIncognito: Boolean = false,
-        private val _sources: List<ExtensionSourceItem>? = null,
-    ) {
-
-        val sources: List<ExtensionSourceItem>
-            get() = _sources ?: listOf()
-
-        val isLoading: Boolean
-            get() = extension == null || _sources == null
     }
 }
 

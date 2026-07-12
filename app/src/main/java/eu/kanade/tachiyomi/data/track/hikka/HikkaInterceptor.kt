@@ -9,43 +9,37 @@ import uy.kohesive.injekt.injectLazy
 
 class HikkaInterceptor(private val hikka: Hikka) : Interceptor {
     private val json: Json by injectLazy()
-    private var oauth: HKOAuth? = hikka.loadOAuth()
-
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
+        val profileId = hikka.currentProfileId()
+        var currentAuth = hikka.loadOAuth(profileId) ?: throw Exception("Hikka: You are not authorized")
 
-        val currAuth = oauth ?: throw Exception("Hikka: You are not authorized")
-
-        if (currAuth.isExpired()) {
-            val refreshTokenResponse = chain.proceed(HikkaApi.refreshTokenRequest(currAuth.accessToken))
+        if (currentAuth.isExpired()) {
+            val refreshTokenResponse = chain.proceed(HikkaApi.refreshTokenRequest(currentAuth.accessToken))
             if (!refreshTokenResponse.isSuccessful) {
                 refreshTokenResponse.close()
-                hikka.logout()
+                hikka.clearAuth(profileId)
                 throw Exception("Hikka: The token is expired")
             } else {
                 refreshTokenResponse.close()
             }
 
-            val authTokenInfoResponse = chain.proceed(HikkaApi.authTokenInfo(currAuth.accessToken))
+            val authTokenInfoResponse = chain.proceed(HikkaApi.authTokenInfo(currentAuth.accessToken))
             if (!authTokenInfoResponse.isSuccessful) {
                 authTokenInfoResponse.close()
                 throw Exception("Hikka: Auth token info failed")
             }
 
             val authTokenInfo = json.decodeFromString<HKAuthTokenInfo>(authTokenInfoResponse.body.string())
-            setAuth(HKOAuth(currAuth.accessToken, authTokenInfo.expiration, authTokenInfo.created))
+            currentAuth = HKOAuth(currentAuth.accessToken, authTokenInfo.expiration, authTokenInfo.created)
+            hikka.saveOAuth(currentAuth, profileId)
         }
 
         val authRequest = originalRequest.newBuilder()
-            .addHeader("auth", currAuth.accessToken)
+            .addHeader("auth", currentAuth.accessToken)
             .addHeader("accept", "application/json")
             .build()
 
         return chain.proceed(authRequest)
-    }
-
-    fun setAuth(oauth: HKOAuth?) {
-        this.oauth = oauth
-        hikka.saveOAuth(oauth)
     }
 }

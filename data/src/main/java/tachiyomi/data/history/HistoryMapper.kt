@@ -1,8 +1,9 @@
 package tachiyomi.data.history
 
+import eu.kanade.tachiyomi.source.entry.EntryType
+import tachiyomi.domain.entry.model.EntryCover
 import tachiyomi.domain.history.model.History
 import tachiyomi.domain.history.model.HistoryWithRelations
-import tachiyomi.domain.manga.model.MangaCover
 import java.util.Date
 
 object HistoryMapper {
@@ -20,28 +21,32 @@ object HistoryMapper {
 
     fun mapHistoryWithRelations(
         historyId: Long,
-        mangaId: Long,
+        entryId: Long,
+        entryType: String,
         chapterId: Long,
         title: String,
         thumbnailUrl: String?,
-        sourceId: Long,
-        isFavorite: Boolean,
+        source: Long,
+        favorite: Boolean,
         coverLastModified: Long,
+        chapterName: String,
         chapterNumber: Double,
         readAt: Date?,
         readDuration: Long,
     ): HistoryWithRelations = HistoryWithRelations(
         id = historyId,
         chapterId = chapterId,
-        mangaId = mangaId,
+        entryId = entryId,
+        entryType = EntryType.valueOf(entryType.uppercase()),
         title = title,
+        chapterName = chapterName,
         chapterNumber = chapterNumber,
         readAt = readAt,
         readDuration = readDuration,
-        coverData = MangaCover(
-            mangaId = mangaId,
-            sourceId = sourceId,
-            isMangaFavorite = isFavorite,
+        coverData = EntryCover(
+            entryId = entryId,
+            sourceId = source,
+            isFavorite = favorite,
             url = thumbnailUrl,
             lastModified = coverLastModified,
         ),

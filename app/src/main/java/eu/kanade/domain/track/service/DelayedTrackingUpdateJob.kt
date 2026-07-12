@@ -39,13 +39,13 @@ class DelayedTrackingUpdateJob(private val context: Context, workerParams: Worke
                     if (track == null) {
                         delayedTrackingStore.remove(it.trackId)
                     }
-                    track?.copy(lastChapterRead = it.lastChapterRead.toDouble())
+                    track?.copy(progress = it.progress.toDouble())
                 }
                 .forEach { track ->
                     logcat(LogPriority.DEBUG) {
-                        "Updating delayed track item: ${track.mangaId}, last chapter read: ${track.lastChapterRead}"
+                        "Updating delayed track item: ${track.entryId}, progress: ${track.progress}"
                     }
-                    trackChapter.await(context, track.mangaId, track.lastChapterRead, setupJobOnFailure = false)
+                    trackChapter.await(context, track.entryId, track.progress, setupJobOnFailure = false)
                 }
         }
 

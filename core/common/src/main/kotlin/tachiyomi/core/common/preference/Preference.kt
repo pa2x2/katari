@@ -2,7 +2,10 @@ package tachiyomi.core.common.preference
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
 interface Preference<T> {
 
@@ -29,6 +32,11 @@ interface Preference<T> {
         fun isPrivate(key: String): Boolean {
             return key.startsWith(PRIVATE_PREFIX)
         }
+
+        fun stripPrivateKey(key: String): String {
+            return key.removePrefix(PRIVATE_PREFIX)
+        }
+
         fun privateKey(key: String): String {
             return "$PRIVATE_PREFIX$key"
         }
@@ -40,6 +48,11 @@ interface Preference<T> {
         fun isAppState(key: String): Boolean {
             return key.startsWith(APP_STATE_PREFIX)
         }
+
+        fun stripAppStateKey(key: String): String {
+            return key.removePrefix(APP_STATE_PREFIX)
+        }
+
         fun appStateKey(key: String): String {
             return "$APP_STATE_PREFIX$key"
         }
@@ -68,4 +81,29 @@ operator fun <T> Preference<Set<T>>.minusAssign(item: T) {
 fun Preference<Boolean>.toggle(): Boolean {
     set(!get())
     return get()
+}
+
+fun Preference<Int>.coerceIn(range: IntRange): Preference<Int> {
+    val delegate = this
+    return object : Preference<Int> {
+        override fun key(): String = delegate.key()
+
+        override fun get(): Int = delegate.get().coerceIn(range)
+
+        override fun set(value: Int) {
+            delegate.set(value.coerceIn(range))
+        }
+
+        override fun isSet(): Boolean = delegate.isSet()
+
+        override fun delete() = delegate.delete()
+
+        override fun defaultValue(): Int = delegate.defaultValue().coerceIn(range)
+
+        override fun changes(): Flow<Int> = delegate.changes().map { it.coerceIn(range) }
+
+        override fun stateIn(scope: CoroutineScope): StateFlow<Int> {
+            return changes().stateIn(scope, SharingStarted.Eagerly, get())
+        }
+    }
 }

@@ -6,28 +6,29 @@ import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.data.backup.BackupFileValidator
 import eu.kanade.tachiyomi.data.backup.create.creators.CategoriesBackupCreator
+import eu.kanade.tachiyomi.data.backup.create.creators.EntryBackupCreator
 import eu.kanade.tachiyomi.data.backup.create.creators.ExtensionStoresBackupCreator
-import eu.kanade.tachiyomi.data.backup.create.creators.MangaBackupCreator
 import eu.kanade.tachiyomi.data.backup.create.creators.PreferenceBackupCreator
 import eu.kanade.tachiyomi.data.backup.create.creators.SourcesBackupCreator
 import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
+import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.models.BackupExtensionStore
-import eu.kanade.tachiyomi.data.backup.models.BackupManga
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BackupSource
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
+import mihon.feature.profiles.core.ProfileBackup
+import mihon.feature.profiles.core.ProfileManager
+import mihon.feature.profiles.core.ProfileScopedBackup
 import okio.buffer
 import okio.gzip
 import okio.sink
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.backup.service.BackupPreferences
-import tachiyomi.domain.manga.interactor.GetFavorites
-import tachiyomi.domain.manga.model.Manga
-import tachiyomi.domain.manga.repository.MangaRepository
+import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -42,12 +43,12 @@ class BackupCreator(
     private val isAutoBackup: Boolean,
 
     private val parser: ProtoBuf = Injekt.get(),
-    private val getFavorites: GetFavorites = Injekt.get(),
     private val backupPreferences: BackupPreferences = Injekt.get(),
-    private val mangaRepository: MangaRepository = Injekt.get(),
+    private val profileManager: ProfileManager = Injekt.get(),
+    private val entryRepository: EntryRepository = Injekt.get(),
 
     private val categoriesBackupCreator: CategoriesBackupCreator = CategoriesBackupCreator(),
-    private val mangaBackupCreator: MangaBackupCreator = MangaBackupCreator(),
+    private val entryBackupCreator: EntryBackupCreator = EntryBackupCreator(),
     private val preferenceBackupCreator: PreferenceBackupCreator = PreferenceBackupCreator(),
     private val extensionStoresBackupCreator: ExtensionStoresBackupCreator = ExtensionStoresBackupCreator(),
     private val sourcesBackupCreator: SourcesBackupCreator = SourcesBackupCreator(),
@@ -77,16 +78,22 @@ class BackupCreator(
                 throw IllegalStateException(context.stringResource(MR.strings.create_backup_file_error))
             }
 
-            val nonFavoriteManga = if (options.readEntries) mangaRepository.getReadMangaNotInLibrary() else emptyList()
-            val backupManga = backupMangas(getFavorites.await() + nonFavoriteManga, options)
+            val activeProfile = profileManager.activeProfile.value
+            val backupEntries = backupEntries(activeProfile?.id, options)
+            val backupProfiles = backupProfiles(options)
+            val backupSources = backupSources(
+                entries = backupEntries + backupProfiles.flatMap(ProfileScopedBackup::entries),
+            )
 
             val backup = Backup(
-                backupManga = backupManga,
                 backupCategories = backupCategories(options),
-                backupSources = backupSources(backupManga),
+                backupSources = backupSources,
                 backupPreferences = backupAppPreferences(options),
                 backupExtensionStores = backupExtensionStores(options),
                 backupSourcePreferences = backupSourcePreferences(options),
+                backupProfiles = backupProfiles,
+                activeProfileUuid = activeProfile?.uuid,
+                backupEntries = backupEntries,
             )
 
             val byteArray = parser.encodeToByteArray(Backup.serializer(), backup)
@@ -122,17 +129,33 @@ class BackupCreator(
     private suspend fun backupCategories(options: BackupOptions): List<BackupCategory> {
         if (!options.categories) return emptyList()
 
-        return categoriesBackupCreator()
+        val activeProfileId = profileManager.activeProfile.value?.id
+        return if (activeProfileId != null) {
+            categoriesBackupCreator(activeProfileId)
+        } else {
+            categoriesBackupCreator()
+        }
     }
 
-    private suspend fun backupMangas(mangas: List<Manga>, options: BackupOptions): List<BackupManga> {
+    private suspend fun backupEntries(profileId: Long?, options: BackupOptions): List<BackupEntry> {
         if (!options.libraryEntries) return emptyList()
 
-        return mangaBackupCreator(mangas, options)
+        val entries = if (profileId != null) {
+            entryRepository.getFavoritesByProfile(profileId) +
+                if (options.readEntries) entryRepository.getReadEntriesNotInLibraryByProfile(profileId) else emptyList()
+        } else {
+            entryRepository.getFavorites() +
+                if (options.readEntries) entryRepository.getReadEntriesNotInLibrary() else emptyList()
+        }
+        return if (profileId != null) {
+            entryBackupCreator(profileId, entries.distinctBy { it.id }, options)
+        } else {
+            entryBackupCreator(entries.distinctBy { it.id }, options)
+        }
     }
 
-    private fun backupSources(mangas: List<BackupManga>): List<BackupSource> {
-        return sourcesBackupCreator(mangas)
+    private fun backupSources(entries: List<BackupEntry>): List<BackupSource> {
+        return sourcesBackupCreator(entries)
     }
 
     private fun backupAppPreferences(options: BackupOptions): List<BackupPreference> {
@@ -151,6 +174,59 @@ class BackupCreator(
         if (!options.sourceSettings) return emptyList()
 
         return preferenceBackupCreator.createSource(includePrivatePreferences = options.privateSettings)
+    }
+
+    private suspend fun backupProfiles(options: BackupOptions): List<ProfileScopedBackup> {
+        val bundles = profileManager.getProfileBundles(includeArchived = true)
+        if (bundles.isEmpty()) return emptyList()
+
+        return bundles.map { bundle ->
+            val profileId = bundle.profile.id
+            val entries = if (options.libraryEntries) {
+                backupEntries(profileId, options)
+            } else {
+                emptyList()
+            }
+
+            val categories = if (options.categories) {
+                categoriesBackupCreator(profileId)
+            } else {
+                emptyList()
+            }
+
+            val appPreferences = if (options.appSettings) {
+                preferenceBackupCreator.createApp(
+                    profileId = profileId,
+                    includePrivatePreferences = options.privateSettings,
+                )
+            } else {
+                emptyList()
+            }
+
+            val sourcePreferences = if (options.sourceSettings) {
+                preferenceBackupCreator.createSource(
+                    profileId = profileId,
+                    includePrivatePreferences = options.privateSettings,
+                )
+            } else {
+                emptyList()
+            }
+
+            ProfileScopedBackup(
+                profile = ProfileBackup(
+                    uuid = bundle.profile.uuid,
+                    name = bundle.profile.name,
+                    colorSeed = bundle.profile.colorSeed,
+                    position = bundle.profile.position,
+                    requiresAuth = bundle.profile.requiresAuth,
+                    isArchived = bundle.profile.isArchived,
+                ),
+                categories = categories,
+                entries = entries,
+                preferences = appPreferences,
+                sourcePreferences = sourcePreferences,
+            )
+        }
     }
 
     companion object {

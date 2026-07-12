@@ -32,7 +32,7 @@ DO UPDATE
 SET
     name = :name,
     badge_label = :badgeLabel,
-    signing_key =: signingKey,
+    signing_key = :signingKey,
     contact_website = :contactWebsite,
     contact_discord = :contactDiscord,
     is_legacy = :isLegacy,

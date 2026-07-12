@@ -12,7 +12,6 @@ class MyAnimeListInterceptor(private val myanimelist: MyAnimeList) : Interceptor
 
     private val json: Json by injectLazy()
 
-    private var oauth: MALOAuth? = myanimelist.loadOAuth()
     private val tokenExpired get() = myanimelist.getIfAuthExpired()
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -20,9 +19,10 @@ class MyAnimeListInterceptor(private val myanimelist: MyAnimeList) : Interceptor
             throw MALTokenExpired()
         }
         val originalRequest = chain.request()
+        var oauth = myanimelist.loadOAuth()
 
         if (oauth?.isExpired() == true) {
-            refreshToken(chain)
+            oauth = refreshToken(chain)
         }
 
         if (oauth == null) {
@@ -33,7 +33,7 @@ class MyAnimeListInterceptor(private val myanimelist: MyAnimeList) : Interceptor
         val authRequest = originalRequest.newBuilder()
             .addHeader("Authorization", "Bearer ${oauth!!.accessToken}")
             // TODO(antsy): Add back custom user agent when they stop blocking us for no apparent reason
-            // .header("User-Agent", "Mihon v${BuildConfig.VERSION_NAME} (${BuildConfig.APPLICATION_ID})")
+            // .header("User-Agent", "Katari v${BuildConfig.VERSION_NAME} (${BuildConfig.APPLICATION_ID})")
             .build()
 
         return chain.proceed(authRequest)
@@ -44,13 +44,13 @@ class MyAnimeListInterceptor(private val myanimelist: MyAnimeList) : Interceptor
      * and the oauth object.
      */
     fun setAuth(oauth: MALOAuth?) {
-        this.oauth = oauth
         myanimelist.saveOAuth(oauth)
     }
 
     private fun refreshToken(chain: Interceptor.Chain): MALOAuth = synchronized(this) {
         if (tokenExpired) throw MALTokenExpired()
-        oauth?.takeUnless { it.isExpired() }?.let { return@synchronized it }
+        val oauth = myanimelist.loadOAuth() ?: throw MALTokenRefreshFailed()
+        oauth.takeUnless { it.isExpired() }?.let { return@synchronized it }
 
         val response = try {
             chain.proceed(MyAnimeListApi.refreshTokenRequest(oauth!!))
@@ -73,7 +73,6 @@ class MyAnimeListInterceptor(private val myanimelist: MyAnimeList) : Interceptor
         }
             .getOrNull()
             ?.also {
-                this.oauth = it
                 myanimelist.saveOAuth(it)
             }
             ?: throw MALTokenRefreshFailed()

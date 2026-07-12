@@ -1,9 +1,11 @@
 package eu.kanade.presentation.history
 
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.history.HistoryScreenModel
+import tachiyomi.domain.entry.model.EntryCover
+import tachiyomi.domain.history.model.HistoryItem
 import tachiyomi.domain.history.model.HistoryWithRelations
-import tachiyomi.domain.manga.model.MangaCover
 import java.time.Instant
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -71,8 +73,7 @@ class HistoryScreenModelStateProvider : PreviewParameterProvider<HistoryScreenMo
 
     private object HistoryUiModelExamples {
         val headerToday = header()
-        val headerTomorrow =
-            HistoryUiModel.Header(LocalDate.now().plusDays(1))
+        val headerTomorrow = HistoryUiModel.Header(LocalDate.now().plusDays(1))
 
         fun header(instantBuilder: (Instant) -> Instant = { it }) =
             HistoryUiModel.Header(LocalDate.from(instantBuilder(Instant.now())))
@@ -80,31 +81,59 @@ class HistoryScreenModelStateProvider : PreviewParameterProvider<HistoryScreenMo
         fun items() = sequence {
             var count = 1
             while (true) {
-                yield(randItem { it.copy(title = "Example Title $count") })
+                yield(randItem { it.copy(visibleTitle = "Example Title $count") })
                 count += 1
             }
         }
 
-        fun randItem(historyBuilder: (HistoryWithRelations) -> HistoryWithRelations = { it }) =
-            HistoryUiModel.Item(
-                historyBuilder(
+        fun randItem(historyBuilder: (HistoryUiItem) -> HistoryUiItem = { it }): HistoryUiModel.Item {
+            val isManga = Random.nextBoolean()
+            val historyItem = if (isManga) {
+                HistoryItem.EntryHistory(
                     HistoryWithRelations(
                         id = Random.nextLong(),
                         chapterId = Random.nextLong(),
-                        mangaId = Random.nextLong(),
-                        title = "Test Title",
+                        entryId = Random.nextLong(),
+                        entryType = EntryType.MANGA,
+                        title = "Test Manga",
+                        chapterName = "Chapter 1",
                         chapterNumber = Random.nextDouble(),
                         readAt = Date.from(Instant.now()),
                         readDuration = Random.nextLong(),
-                        coverData = MangaCover(
-                            mangaId = Random.nextLong(),
-                            sourceId = Random.nextLong(),
-                            isMangaFavorite = Random.nextBoolean(),
-                            url = "https://example.com/cover.png",
-                            lastModified = Random.nextLong(),
-                        ),
+                        coverData = randomCover(),
                     ),
-                ),
+                )
+            } else {
+                HistoryItem.EntryHistory(
+                    HistoryWithRelations(
+                        id = Random.nextLong(),
+                        chapterId = Random.nextLong(),
+                        entryId = Random.nextLong(),
+                        entryType = EntryType.ANIME,
+                        title = "Test Anime",
+                        chapterName = "Episode 1",
+                        chapterNumber = Random.nextDouble(),
+                        readAt = Date.from(Instant.now()),
+                        readDuration = Random.nextLong(),
+                        coverData = randomCover(),
+                    ),
+                )
+            }
+            val uiItem = HistoryUiItem(
+                historyItem = historyItem,
+                visibleEntryId = historyItem.entryId,
+                visibleTitle = historyItem.entryTitle,
+                visibleCoverData = historyItem.coverData,
             )
+            return HistoryUiModel.Item(historyBuilder(uiItem))
+        }
+
+        private fun randomCover() = EntryCover(
+            entryId = Random.nextLong(),
+            sourceId = Random.nextLong(),
+            isFavorite = Random.nextBoolean(),
+            url = "https://example.com/cover.png",
+            lastModified = Random.nextLong(),
+        )
     }
 }

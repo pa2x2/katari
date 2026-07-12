@@ -1,0 +1,83 @@
+import kotlin.String;
+
+CREATE TABLE playback_preferences(
+    _id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entry_id INTEGER NOT NULL,
+    dub_key TEXT,
+    stream_key TEXT,
+    source_quality_key TEXT,
+    subtitle_key TEXT,
+    player_quality_mode TEXT NOT NULL DEFAULT 'auto',
+    player_quality_height INTEGER,
+    subtitle_offset_x REAL,
+    subtitle_offset_y REAL,
+    subtitle_text_size REAL,
+    subtitle_text_color INTEGER,
+    subtitle_background_color INTEGER,
+    subtitle_background_opacity REAL,
+    updated_at INTEGER NOT NULL,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    UNIQUE(entry_id)
+);
+
+CREATE INDEX idx_playback_preferences_entry_id ON playback_preferences(entry_id);
+
+getByEntryId:
+SELECT *
+FROM playback_preferences
+WHERE entry_id = :entryId;
+
+deleteByProfile:
+DELETE FROM playback_preferences
+WHERE entry_id IN (SELECT _id FROM entries WHERE profile_id = :profileId);
+
+upsertUpdate:
+UPDATE playback_preferences
+SET dub_key = :dubKey,
+    stream_key = :streamKey,
+    source_quality_key = :sourceQualityKey,
+    subtitle_key = :subtitleKey,
+    player_quality_mode = :playerQualityMode,
+    player_quality_height = :playerQualityHeight,
+    subtitle_offset_x = :subtitleOffsetX,
+    subtitle_offset_y = :subtitleOffsetY,
+    subtitle_text_size = :subtitleTextSize,
+    subtitle_text_color = :subtitleTextColor,
+    subtitle_background_color = :subtitleBackgroundColor,
+    subtitle_background_opacity = :subtitleBackgroundOpacity,
+    updated_at = :updatedAt
+WHERE entry_id = :entryId;
+
+upsertInsert:
+INSERT OR IGNORE INTO playback_preferences(
+    entry_id,
+    dub_key,
+    stream_key,
+    source_quality_key,
+    subtitle_key,
+    player_quality_mode,
+    player_quality_height,
+    subtitle_offset_x,
+    subtitle_offset_y,
+    subtitle_text_size,
+    subtitle_text_color,
+    subtitle_background_color,
+    subtitle_background_opacity,
+    updated_at
+)
+VALUES (
+    :entryId,
+    :dubKey,
+    :streamKey,
+    :sourceQualityKey,
+    :subtitleKey,
+    :playerQualityMode,
+    :playerQualityHeight,
+    :subtitleOffsetX,
+    :subtitleOffsetY,
+    :subtitleTextSize,
+    :subtitleTextColor,
+    :subtitleBackgroundColor,
+    :subtitleBackgroundOpacity,
+    :updatedAt
+);

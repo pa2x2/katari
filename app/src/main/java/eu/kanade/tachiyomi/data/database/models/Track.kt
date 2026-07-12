@@ -22,6 +22,18 @@ interface Track : Serializable {
 
     var total_chapters: Long
 
+    var progress: Double
+        get() = last_chapter_read
+        set(value) {
+            last_chapter_read = value
+        }
+
+    var total: Long
+        get() = total_chapters
+        set(value) {
+            total_chapters = value
+        }
+
     var score: Double
 
     var status: Long
@@ -35,7 +47,7 @@ interface Track : Serializable {
     var private: Boolean
 
     fun copyPersonalFrom(other: Track, copyRemotePrivate: Boolean = true) {
-        last_chapter_read = other.last_chapter_read
+        progress = other.progress
         score = other.score
         status = other.status
         started_reading_date = other.started_reading_date

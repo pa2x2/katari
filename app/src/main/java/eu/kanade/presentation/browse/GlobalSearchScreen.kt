@@ -5,31 +5,33 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
-import eu.kanade.presentation.browse.components.GlobalSearchCardRow
 import eu.kanade.presentation.browse.components.GlobalSearchErrorResultItem
+import eu.kanade.presentation.browse.components.GlobalSearchItemCardRow
 import eu.kanade.presentation.browse.components.GlobalSearchLoadingResultItem
 import eu.kanade.presentation.browse.components.GlobalSearchResultItem
 import eu.kanade.presentation.browse.components.GlobalSearchToolbar
-import eu.kanade.tachiyomi.source.Source
-import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchItemResult
-import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchScreenModel
+import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
+import eu.kanade.tachiyomi.source.entry.UnifiedSource
+import eu.kanade.tachiyomi.source.sourceItemOrientation
+import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchItem
+import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchItemResult
+import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreenModel
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SourceFilter
 import eu.kanade.tachiyomi.util.system.LocaleHelper
-import tachiyomi.domain.manga.model.Manga
 import tachiyomi.presentation.core.components.material.Scaffold
 
 @Composable
 fun GlobalSearchScreen(
-    state: SearchScreenModel.State,
+    state: GlobalSearchScreenModel.State,
     navigateUp: () -> Unit,
     onChangeSearchQuery: (String?) -> Unit,
     onSearch: (String) -> Unit,
     onChangeSearchFilter: (SourceFilter) -> Unit,
     onToggleResults: () -> Unit,
-    getManga: @Composable (Manga) -> State<Manga>,
-    onClickSource: (Source) -> Unit,
-    onClickItem: (Manga) -> Unit,
-    onLongClickItem: (Manga) -> Unit,
+    getItem: @Composable (GlobalSearchItem) -> State<GlobalSearchItem>,
+    onClickSource: (UnifiedSource) -> Unit,
+    onClickItem: (GlobalSearchItem) -> Unit,
+    onLongClickItem: (GlobalSearchItem) -> Unit,
 ) {
     Scaffold(
         topBar = { scrollBehavior ->
@@ -52,7 +54,7 @@ fun GlobalSearchScreen(
         GlobalSearchContent(
             items = state.filteredItems,
             contentPadding = paddingValues,
-            getManga = getManga,
+            getItem = getItem,
             onClickSource = onClickSource,
             onClickItem = onClickItem,
             onLongClickItem = onLongClickItem,
@@ -62,12 +64,12 @@ fun GlobalSearchScreen(
 
 @Composable
 internal fun GlobalSearchContent(
-    items: Map<Source, SearchItemResult>,
+    items: Map<UnifiedSource, GlobalSearchItemResult>,
     contentPadding: PaddingValues,
-    getManga: @Composable (Manga) -> State<Manga>,
-    onClickSource: (Source) -> Unit,
-    onClickItem: (Manga) -> Unit,
-    onLongClickItem: (Manga) -> Unit,
+    getItem: @Composable (GlobalSearchItem) -> State<GlobalSearchItem>,
+    onClickSource: (UnifiedSource) -> Unit,
+    onClickItem: (GlobalSearchItem) -> Unit,
+    onLongClickItem: (GlobalSearchItem) -> Unit,
     fromSourceId: Long? = null,
 ) {
     LazyColumn(
@@ -75,27 +77,30 @@ internal fun GlobalSearchContent(
     ) {
         items.forEach { (source, result) ->
             item(key = source.id) {
+                val lang = (source as? EntryCatalogueSource)?.lang.orEmpty()
+                val orientation = source.sourceItemOrientation()
                 GlobalSearchResultItem(
                     title = fromSourceId?.let {
                         "▶ ${source.name}".takeIf { source.id == fromSourceId }
                     } ?: source.name,
-                    subtitle = LocaleHelper.getLocalizedDisplayName(source.lang),
+                    subtitle = LocaleHelper.getLocalizedDisplayName(lang),
                     onClick = { onClickSource(source) },
                     modifier = Modifier.animateItem(),
                 ) {
                     when (result) {
-                        SearchItemResult.Loading -> {
+                        GlobalSearchItemResult.Loading -> {
                             GlobalSearchLoadingResultItem()
                         }
-                        is SearchItemResult.Success -> {
-                            GlobalSearchCardRow(
+                        is GlobalSearchItemResult.Success -> {
+                            GlobalSearchItemCardRow(
                                 titles = result.result,
-                                getManga = getManga,
+                                getItem = getItem,
+                                sourceItemOrientation = orientation,
                                 onClick = onClickItem,
                                 onLongClick = onLongClickItem,
                             )
                         }
-                        is SearchItemResult.Error -> {
+                        is GlobalSearchItemResult.Error -> {
                             GlobalSearchErrorResultItem(message = result.throwable.message)
                         }
                     }

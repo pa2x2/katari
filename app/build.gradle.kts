@@ -18,10 +18,8 @@ plugins {
 }
 
 if (Config.includeTelemetry) {
-    pluginManager.apply {
-        apply(libs.plugins.google.services.get().pluginId)
-        apply(libs.plugins.firebase.crashlytics.get().pluginId)
-    }
+    apply(plugin = libs.plugins.google.services.get().pluginId)
+    apply(plugin = libs.plugins.firebase.crashlytics.get().pluginId)
 }
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
@@ -30,10 +28,10 @@ android {
     namespace = "eu.kanade.tachiyomi"
 
     defaultConfig {
-        applicationId = "app.mihon"
+        applicationId = "app.katari"
 
-        versionCode = 26
-        versionName = "0.20.1"
+        versionCode = 2
+        versionName = "1.0.1"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getLatestCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getLatestCommitSha()}\"")
@@ -44,7 +42,9 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    if (System.getenv("MIHON_GITHUB_RELEASE").toBoolean()) {
+    testBuildType = "foss"
+
+    if (System.getenv("KATARI_GITHUB_RELEASE").toBoolean()) {
         val tempStoreFile = file(System.getenv("RUNNER_TEMP")).resolve("antsy.keystore")
 
         val storeFileBytes = System.getenv("storeFileBase64").let(Base64::decode)
@@ -204,19 +204,27 @@ baselineProfile {
 }
 
 dependencies {
-    baselineProfile(projects.baselineProfile)
+    constraints {
+        implementation(libs.androidx.concurrent.futures)
+        implementation(libs.androidx.concurrent.futures.ktx)
+    }
 
-    implementation(projects.i18n)
-    implementation(projects.core.archive)
-    implementation(projects.core.common)
-    implementation(projects.coreMetadata)
-    implementation(projects.sourceApi)
-    implementation(projects.sourceLocal)
-    implementation(projects.data)
-    implementation(projects.domain)
-    implementation(projects.presentationCore)
-    implementation(projects.presentationWidget)
-    implementation(projects.telemetry)
+    baselineProfile(dependencies.project(mapOf("path" to projects.baselineProfile.path)))
+
+    implementation(dependencies.project(mapOf("path" to projects.i18n.path)))
+    implementation(dependencies.project(mapOf("path" to projects.core.archive.path)))
+    implementation(dependencies.project(mapOf("path" to projects.core.common.path)))
+    implementation(dependencies.project(mapOf("path" to projects.coreMetadata.path)))
+    implementation(dependencies.project(mapOf("path" to projects.entryInteractions.path)))
+    implementation(dependencies.project(mapOf("path" to projects.entrySourceApi.path)))
+    implementation(dependencies.project(mapOf("path" to projects.sourceApi.path)))
+    implementation(dependencies.project(mapOf("path" to projects.sourceCompat.path)))
+    implementation(dependencies.project(mapOf("path" to projects.sourceLocal.path)))
+    implementation(dependencies.project(mapOf("path" to projects.data.path)))
+    implementation(dependencies.project(mapOf("path" to projects.domain.path)))
+    implementation(dependencies.project(mapOf("path" to projects.presentationCore.path)))
+    implementation(dependencies.project(mapOf("path" to projects.presentationWidget.path)))
+    implementation(dependencies.project(mapOf("path" to projects.telemetry.path)))
 
     // Compose
     implementation(libs.androidx.activity.compose)
@@ -249,6 +257,11 @@ dependencies {
     implementation(libs.androidx.constraintLayout)
     implementation(libs.androidx.core)
     implementation(libs.androidx.coreSplashScreen)
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.exoplayerHls)
+    implementation(libs.androidx.media3.session)
+    implementation(libs.androidx.media3.ui)
+    implementation(libs.androidx.media3.datasourceOkhttp)
     implementation(libs.androidx.recyclerView)
     implementation(libs.androidx.viewPager)
     implementation(libs.androidx.profileInstaller)
@@ -319,6 +332,10 @@ dependencies {
     // Tests
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.junit.platform.launcher)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.uiTestJunit4)
+    androidTestImplementation(libs.androidx.test.junit)
+    debugImplementation(libs.androidx.compose.uiTestManifest)
 
     // For detecting memory leaks; see https://square.github.io/leakcanary/
     // debugImplementation(libs.leakCanary.android)

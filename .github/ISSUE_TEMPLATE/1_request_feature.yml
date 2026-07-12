@@ -1,12 +1,12 @@
 name: ⭐ Feature request
-description: Suggest a feature to improve Mihon
+description: Suggest a feature to improve Katari
 labels: [feature request]
 body:
   - type: textarea
     id: feature-description
     attributes:
       label: Describe your suggested feature
-      description: How can Mihon be improved?
+      description: What should Katari do, and what problem would it solve?
       placeholder: |
         Example:
           "It should work like this..."
@@ -17,20 +17,19 @@ body:
     id: other-details
     attributes:
       label: Other details
-      placeholder: |
-        Additional details and attachments.
+      description: Add mockups, examples, or other context that may help explain the request.
 
   - type: checkboxes
     id: acknowledgements
     attributes:
       label: Acknowledgements
-      description: Read this carefully, we will close and ignore your issue if you skimmed through this.
+      description: Please confirm each item before submitting the request.
       options:
-        - label: I have searched the existing issues and this is a new ticket, **NOT** a duplicate or related to another open or closed issue.
+        - label: I have searched the existing issues and this is not a duplicate of an open or closed issue.
           required: true
-        - label: I have written a short but informative title.
+        - label: I have written a short, informative title.
           required: true
-        - label: I have updated the app to version **[0.20.1](https://github.com/mihonapp/mihon/releases/latest)**.
+        - label: I have checked the [latest Katari release](https://github.com/katariapp/katari/releases/latest) and the feature is not already available.
           required: true
-        - label: I will fill out all of the requested information in this form.
+        - label: I have provided all information requested by this form.
           required: true

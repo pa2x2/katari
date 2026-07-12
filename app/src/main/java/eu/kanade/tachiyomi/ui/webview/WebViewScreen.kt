@@ -13,6 +13,7 @@ class WebViewScreen(
     private val url: String,
     private val initialTitle: String? = null,
     private val sourceId: Long? = null,
+    private val headers: Map<String, String> = emptyMap(),
 ) : Screen(), AssistContentScreen {
 
     private var assistUrl: String? = null
@@ -29,7 +30,7 @@ class WebViewScreen(
             onNavigateUp = { navigator.pop() },
             initialTitle = initialTitle,
             url = url,
-            headers = screenModel.headers,
+            headers = screenModel.headers + headers,
             onUrlChange = { assistUrl = it },
             onShare = { screenModel.shareWebpage(context, it) },
             onOpenInBrowser = { screenModel.openInBrowser(context, it) },

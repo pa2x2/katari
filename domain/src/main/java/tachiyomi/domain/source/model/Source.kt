@@ -5,6 +5,7 @@ data class Source(
     val lang: String,
     val name: String,
     val supportsLatest: Boolean,
+    val supportsImmersiveFeed: Boolean = false,
     val isStub: Boolean,
     val pin: Pins = Pins.unpinned,
     val isUsedLast: Boolean = false,

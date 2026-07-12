@@ -26,8 +26,8 @@ class CategoryPreferencesCleanupMigration : Migration {
             libraryPreferences.updateCategories,
             libraryPreferences.updateCategoriesExclude,
             downloadPreferences.removeExcludeCategories,
-            downloadPreferences.downloadNewChapterCategories,
-            downloadPreferences.downloadNewChapterCategoriesExclude,
+            downloadPreferences.downloadNewEntryChapterCategories,
+            downloadPreferences.downloadNewEntryChapterCategoriesExclude,
         )
         categoryPreferences.forEach { preference ->
             val ids = preference.get()

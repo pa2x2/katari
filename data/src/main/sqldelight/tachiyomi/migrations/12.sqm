@@ -1,2 +1,20 @@
-ALTER TABLE mangas ADD COLUMN memo BLOB NOT NULL DEFAULT '{}';
-ALTER TABLE chapters ADD COLUMN memo BLOB NOT NULL DEFAULT '{}';
+ALTER TABLE mangas ADD COLUMN display_name TEXT;
+
+CREATE TABLE merged_mangas(
+    _id INTEGER NOT NULL PRIMARY KEY,
+    profile_id INTEGER NOT NULL DEFAULT 1,
+    target_manga_id INTEGER NOT NULL,
+    manga_id INTEGER NOT NULL,
+    position INTEGER NOT NULL,
+    UNIQUE(profile_id, manga_id),
+    UNIQUE(profile_id, target_manga_id, position),
+    FOREIGN KEY(target_manga_id) REFERENCES mangas (_id)
+    ON DELETE CASCADE,
+    FOREIGN KEY(manga_id) REFERENCES mangas (_id)
+    ON DELETE CASCADE,
+    FOREIGN KEY(profile_id) REFERENCES profiles (_id)
+    ON DELETE CASCADE
+);
+
+CREATE INDEX idx_merged_mangas_target ON merged_mangas(profile_id, target_manga_id);
+CREATE INDEX idx_merged_mangas_manga ON merged_mangas(profile_id, manga_id);

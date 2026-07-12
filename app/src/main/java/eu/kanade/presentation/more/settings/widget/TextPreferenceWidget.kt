@@ -23,12 +23,18 @@ fun TextPreferenceWidget(
     subtitle: String? = null,
     icon: ImageVector? = null,
     iconTint: Color = MaterialTheme.colorScheme.primary,
+    isProfileSpecific: Boolean = false,
     widget: @Composable (() -> Unit)? = null,
     onPreferenceClick: (() -> Unit)? = null,
 ) {
     BasePreferenceWidget(
         modifier = modifier,
         title = title,
+        titleSuffix = if (isProfileSpecific) {
+            { ProfileSpecificChip() }
+        } else {
+            null
+        },
         subcomponent = if (!subtitle.isNullOrBlank()) {
             {
                 Text(

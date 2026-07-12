@@ -1,6 +1,9 @@
 package eu.kanade.tachiyomi.data.track.hikka
 
+import android.net.Uri
 import dev.icerock.moko.resources.StringResource
+import eu.kanade.domain.track.service.GlobalTrackPreferences
+import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
@@ -10,11 +13,16 @@ import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.json.Json
+import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.injectLazy
 import tachiyomi.domain.track.model.Track as DomainTrack
 
-class Hikka(id: Long) : BaseTracker(id, "Hikka"), DeletableTracker {
+class Hikka(
+    id: Long,
+    private val profileStore: ProfileStore? = null,
+    private val globalTrackPreferences: GlobalTrackPreferences? = null,
+) : BaseTracker(id, "Hikka"), DeletableTracker {
 
     companion object {
         const val READING = 0L
@@ -136,18 +144,33 @@ class Hikka(id: Long) : BaseTracker(id, "Hikka"), DeletableTracker {
         return track
     }
 
-    override suspend fun login(username: String, password: String) = login(password)
+    override suspend fun login(username: String, password: String) {
+        throw UnsupportedOperationException("Hikka requires OAuth")
+    }
 
-    suspend fun login(reference: String) {
+    suspend fun login(reference: String, profileId: Long) {
+        val preferences = preferences(profileId)
         try {
             val oauth = api.accessToken(reference)
-            interceptor.setAuth(oauth)
-            val user = api.getCurrentUser()
-            saveDisplayUsername(user.username)
-            saveCredentials(user.reference, oauth.accessToken)
+            val user = api.getCurrentUser(oauth.accessToken)
+            preferences.trackToken(this).set(json.encodeToString(oauth))
+            preferences.trackDisplayUsername(this).set(user.username)
+            preferences.setCredentials(this, user.reference, oauth.accessToken)
         } catch (_: Throwable) {
-            logout()
+            logout(profileId)
         }
+    }
+
+    fun authUrl(): Uri {
+        globalTrackPreferences?.pendingHikkaOAuthProfileId?.set(currentProfileId())
+        return HikkaApi.authUrl()
+    }
+
+    fun consumeOAuthProfileId(): Long? {
+        val preference = globalTrackPreferences?.pendingHikkaOAuthProfileId ?: return currentProfileId()
+        val profileId = preference.get()
+        preference.delete()
+        return profileId.takeUnless { it == GlobalTrackPreferences.NO_PENDING_PROFILE }
     }
 
     override suspend fun delete(track: DomainTrack) = api.deleteUserManga(track)
@@ -155,18 +178,33 @@ class Hikka(id: Long) : BaseTracker(id, "Hikka"), DeletableTracker {
     override fun logout() {
         super.logout()
         trackPreferences.trackToken(this).delete()
-        interceptor.setAuth(null)
     }
 
-    fun saveOAuth(oAuth: HKOAuth?) {
-        trackPreferences.trackToken(this).set(json.encodeToString(oAuth))
+    private fun logout(profileId: Long) {
+        val preferences = preferences(profileId)
+        preferences.setCredentials(this, "", "")
+        preferences.trackDisplayUsername(this).delete()
+        preferences.trackToken(this).delete()
     }
 
-    fun loadOAuth(): HKOAuth? {
+    internal fun clearAuth(profileId: Long) = logout(profileId)
+
+    fun saveOAuth(oAuth: HKOAuth?, profileId: Long = currentProfileId()) {
+        val preference = preferences(profileId).trackToken(this)
+        if (oAuth == null) preference.delete() else preference.set(json.encodeToString(oAuth))
+    }
+
+    fun loadOAuth(profileId: Long = currentProfileId()): HKOAuth? {
         return try {
-            json.decodeFromString<HKOAuth>(trackPreferences.trackToken(this).get())
+            json.decodeFromString<HKOAuth>(preferences(profileId).trackToken(this).get())
         } catch (_: Exception) {
             null
         }
+    }
+
+    internal fun currentProfileId(): Long = profileStore?.currentProfileId ?: 0L
+
+    private fun preferences(profileId: Long): TrackPreferences {
+        return profileStore?.let { TrackPreferences(it.privateStore(profileId)) } ?: trackPreferences
     }
 }

@@ -26,6 +26,20 @@
 -keep,allowoptimization class eu.kanade.tachiyomi.network.RequestsKt { public protected *; }
 -keep,allowoptimization class eu.kanade.tachiyomi.AppInfo { public protected *; }
 
+# Preserve the extension runtime ABI from extensions-lib. External extension APKs link
+# against these exact classes and Kotlin synthetic default-arg bridges, so R8 must not
+# rewrite signatures or method finality on this surface.
+-keep class eu.kanade.tachiyomi.source.** { *; }
+-keep class eu.kanade.tachiyomi.source.entry.** { *; }
+-keep class eu.kanade.tachiyomi.network.** { *; }
+-keep class eu.kanade.tachiyomi.util.JsoupExtensionsKt { *; }
+-keep class eu.kanade.tachiyomi.util.RxExtensionKt { *; }
+-keep class tachiyomi.core.common.util.lang.RxCoroutineBridgeKt { *; }
+
+# AndroidX Window reflectively checks optional platform extension and sidecar APIs.
+-dontwarn androidx.window.extensions.**
+-dontwarn androidx.window.sidecar.**
+
 -keepclassmembers class * implements java.io.Serializable {
     java.lang.Object writeReplace();
     java.lang.Object readResolve();

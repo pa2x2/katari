@@ -1,0 +1,33 @@
+CREATE TABLE entries_categories(
+    _id INTEGER PRIMARY KEY AUTOINCREMENT,
+    profile_id INTEGER NOT NULL,
+    entry_id INTEGER NOT NULL,
+    category_id INTEGER NOT NULL,
+    FOREIGN KEY(category_id) REFERENCES categories(_id) ON DELETE CASCADE,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    FOREIGN KEY(profile_id) REFERENCES profiles(_id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_entries_categories_entry ON entries_categories(profile_id, entry_id);
+CREATE INDEX idx_entries_categories_category ON entries_categories(profile_id, category_id);
+
+CREATE TRIGGER insert_entry_category_update_version AFTER INSERT ON entries_categories
+BEGIN
+    UPDATE entries
+    SET version = version + 1
+    WHERE _id = new.entry_id
+      AND (SELECT is_syncing FROM entries WHERE _id = new.entry_id) = 0;
+END;
+
+insert:
+INSERT INTO entries_categories(profile_id, entry_id, category_id)
+VALUES (:profileId, :entryId, :categoryId);
+
+deleteByEntryId:
+DELETE FROM entries_categories
+WHERE profile_id = :profileId
+AND entry_id = :entryId;
+
+deleteByProfile:
+DELETE FROM entries_categories
+WHERE profile_id = :profileId;

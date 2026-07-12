@@ -28,16 +28,24 @@ import tachiyomi.presentation.core.screens.InfoScreen
 fun OnboardingScreen(
     onComplete: () -> Unit,
     onRestoreBackup: () -> Unit,
+    showMihonMigration: Boolean,
+    onOpenMihon: () -> Unit,
+    onMigrateFromMihon: () -> Unit,
 ) {
     val slideDistance = rememberSlideDistance()
 
     var currentStep by rememberSaveable { mutableIntStateOf(0) }
-    val steps = remember {
+    val steps = remember(showMihonMigration, onRestoreBackup, onOpenMihon, onMigrateFromMihon) {
         listOf(
             ThemeStep(),
-            StorageStep(),
+            StorageStep(migratingFromMihon = showMihonMigration),
             PermissionStep(),
-            GuidesStep(onRestoreBackup = onRestoreBackup),
+            GuidesStep(
+                onRestoreBackup = onRestoreBackup,
+                showMihonMigration = showMihonMigration,
+                onOpenMihon = onOpenMihon,
+                onMigrateFromMihon = onMigrateFromMihon,
+            ),
         )
     }
     val isLastStep = currentStep == steps.lastIndex

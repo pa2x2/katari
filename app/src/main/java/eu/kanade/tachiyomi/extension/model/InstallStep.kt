@@ -6,10 +6,11 @@ enum class InstallStep {
     Downloading,
     Installing,
     Installed,
+    RequiresUserAction,
     Error,
     ;
 
     fun isCompleted(): Boolean {
-        return this == Installed || this == Error || this == Idle
+        return this == Installed || this == RequiresUserAction || this == Error || this == Idle
     }
 }

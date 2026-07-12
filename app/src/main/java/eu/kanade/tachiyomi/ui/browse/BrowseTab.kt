@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.Navigator
@@ -18,16 +19,22 @@ import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionsScreenModel
 import eu.kanade.tachiyomi.ui.browse.extension.extensionsTab
+import eu.kanade.tachiyomi.ui.browse.feed.feedsTab
 import eu.kanade.tachiyomi.ui.browse.migration.sources.migrateSourceTab
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.browse.source.sourcesTab
 import eu.kanade.tachiyomi.ui.main.MainActivity
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
+import mihon.core.common.CustomPreferences
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.collectAsState
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 
 data object BrowseTab : Tab {
 
@@ -56,18 +63,38 @@ data object BrowseTab : Tab {
     @Composable
     override fun Content() {
         val context = LocalContext.current
+        val customPreferences = remember { Injekt.get<CustomPreferences>() }
+        val feedsEnabled by customPreferences.enableFeeds.collectAsState()
 
         // Hoisted for extensions tab's search bar
         val extensionsScreenModel = rememberScreenModel { ExtensionsScreenModel() }
         val extensionsState by extensionsScreenModel.state.collectAsState()
 
-        val tabs = listOf(
-            sourcesTab(),
-            extensionsTab(extensionsScreenModel),
-            migrateSourceTab(),
-        )
+        val tabs = if (feedsEnabled) {
+            persistentListOf(
+                feedsTab(),
+                sourcesTab(),
+                extensionsTab(extensionsScreenModel),
+                migrateSourceTab(),
+            )
+        } else {
+            persistentListOf(
+                sourcesTab(),
+                extensionsTab(extensionsScreenModel),
+                migrateSourceTab(),
+            )
+        }
+
+        val extensionsTabIndex = if (feedsEnabled) 2 else 1
 
         val state = rememberPagerState { tabs.size }
+
+        LaunchedEffect(tabs.size) {
+            val maxIndex = tabs.lastIndex.coerceAtLeast(0)
+            if (state.currentPage > maxIndex) {
+                state.scrollToPage(maxIndex)
+            }
+        }
 
         TabbedScreen(
             titleRes = MR.strings.browse,
@@ -76,9 +103,9 @@ data object BrowseTab : Tab {
             searchQuery = extensionsState.searchQuery,
             onChangeSearchQuery = extensionsScreenModel::search,
         )
-        LaunchedEffect(Unit) {
+        LaunchedEffect(state, extensionsTabIndex) {
             switchToExtensionTabChannel.receiveAsFlow()
-                .collectLatest { state.scrollToPage(1) }
+                .collectLatest { state.scrollToPage(extensionsTabIndex) }
         }
 
         LaunchedEffect(Unit) {

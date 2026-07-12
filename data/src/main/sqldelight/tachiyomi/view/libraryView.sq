@@ -1,17 +1,17 @@
 CREATE VIEW libraryView AS
 SELECT
-    M.*,
+    ENT.*,
     coalesce(C.total, 0) AS totalCount,
     coalesce(C.readCount, 0) AS readCount,
     coalesce(C.latestUpload, 0) AS latestUpload,
     coalesce(C.fetchedAt, 0) AS chapterFetchedAt,
     coalesce(C.lastRead, 0) AS lastRead,
     coalesce(C.bookmarkCount, 0) AS bookmarkCount,
-    coalesce(MC.categories, '0') AS categories
-FROM mangas M
+    coalesce(EC.categories, '0') AS categories
+FROM entries ENT
 LEFT JOIN (
     SELECT
-        chapters.manga_id,
+        chapters.entry_id,
         count(*) AS total,
         sum(read) AS readCount,
         coalesce(max(chapters.date_upload), 0) AS latestUpload,
@@ -20,22 +20,29 @@ LEFT JOIN (
         sum(chapters.bookmark) AS bookmarkCount
     FROM chapters
     LEFT JOIN excluded_scanlators
-    ON chapters.manga_id = excluded_scanlators.manga_id
+    ON chapters.entry_id = excluded_scanlators.entry_id
     AND chapters.scanlator = excluded_scanlators.scanlator
     LEFT JOIN history
     ON chapters._id = history.chapter_id
     WHERE excluded_scanlators.scanlator IS NULL
-    GROUP BY chapters.manga_id
+    GROUP BY chapters.entry_id
 ) AS C
-ON M._id = C.manga_id
+ON ENT._id = C.entry_id
 LEFT JOIN (
-    SELECT manga_id, group_concat(category_id) AS categories
-    FROM mangas_categories
-    GROUP BY manga_id
-) AS MC
-ON MC.manga_id = M._id
-WHERE M.favorite = 1;
+    SELECT profile_id, entry_id, group_concat(category_id) AS categories
+    FROM entries_categories
+    GROUP BY profile_id, entry_id
+) AS EC
+ON EC.profile_id = ENT.profile_id
+AND EC.entry_id = ENT._id
+WHERE ENT.favorite = 1;
 
 library:
 SELECT *
-FROM libraryView;
+FROM libraryView
+WHERE profile_id = :profileId;
+
+libraryLastRead:
+SELECT _id AS entryId, lastRead
+FROM libraryView
+WHERE profile_id = :profileId;

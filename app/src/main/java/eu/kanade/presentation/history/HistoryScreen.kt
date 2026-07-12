@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DeleteSweep
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -14,13 +13,14 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.AppBarTitle
+import eu.kanade.presentation.components.AppSnackbarHost
 import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.components.relativeDateText
-import eu.kanade.presentation.history.components.HistoryItem
+import eu.kanade.presentation.history.components.HistoryListItem
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.presentation.util.animateItemFastScroll
 import eu.kanade.tachiyomi.ui.history.HistoryScreenModel
-import tachiyomi.domain.history.model.HistoryWithRelations
+import tachiyomi.domain.history.model.HistoryItem
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.components.ListGroupHeader
@@ -35,9 +35,10 @@ fun HistoryScreen(
     state: HistoryScreenModel.State,
     snackbarHostState: SnackbarHostState,
     onSearchQueryChange: (String?) -> Unit,
-    onClickCover: (mangaId: Long) -> Unit,
-    onClickResume: (mangaId: Long, chapterId: Long) -> Unit,
-    onClickFavorite: (mangaId: Long) -> Unit,
+    onClickCover: (HistoryUiItem) -> Unit,
+    onClickResume: (HistoryUiItem) -> Unit,
+    onClickDelete: (HistoryItem) -> Unit,
+    onClickFavorite: (HistoryUiItem) -> Unit,
     onDialogChange: (HistoryScreenModel.Dialog?) -> Unit,
 ) {
     Scaffold(
@@ -62,7 +63,7 @@ fun HistoryScreen(
                 scrollBehavior = scrollBehavior,
             )
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = { AppSnackbarHost(hostState = snackbarHostState) },
     ) { contentPadding ->
         state.list.let {
             if (it == null) {
@@ -71,7 +72,7 @@ fun HistoryScreen(
                 val msg = if (!state.searchQuery.isNullOrEmpty()) {
                     MR.strings.no_results_found
                 } else {
-                    MR.strings.information_no_recent_manga
+                    MR.strings.information_no_recent_history
                 }
                 EmptyScreen(
                     stringRes = msg,
@@ -81,10 +82,10 @@ fun HistoryScreen(
                 HistoryScreenContent(
                     history = it,
                     contentPadding = contentPadding,
-                    onClickCover = { history -> onClickCover(history.mangaId) },
-                    onClickResume = { history -> onClickResume(history.mangaId, history.chapterId) },
-                    onClickDelete = { item -> onDialogChange(HistoryScreenModel.Dialog.Delete(item)) },
-                    onClickFavorite = { history -> onClickFavorite(history.mangaId) },
+                    onClickCover = onClickCover,
+                    onClickResume = onClickResume,
+                    onClickDelete = onClickDelete,
+                    onClickFavorite = onClickFavorite,
                 )
             }
         }
@@ -95,10 +96,10 @@ fun HistoryScreen(
 private fun HistoryScreenContent(
     history: List<HistoryUiModel>,
     contentPadding: PaddingValues,
-    onClickCover: (HistoryWithRelations) -> Unit,
-    onClickResume: (HistoryWithRelations) -> Unit,
-    onClickDelete: (HistoryWithRelations) -> Unit,
-    onClickFavorite: (HistoryWithRelations) -> Unit,
+    onClickCover: (HistoryUiItem) -> Unit,
+    onClickResume: (HistoryUiItem) -> Unit,
+    onClickDelete: (HistoryItem) -> Unit,
+    onClickFavorite: (HistoryUiItem) -> Unit,
 ) {
     FastScrollLazyColumn(
         contentPadding = contentPadding,
@@ -121,14 +122,12 @@ private fun HistoryScreenContent(
                     )
                 }
                 is HistoryUiModel.Item -> {
-                    val value = item.item
-                    HistoryItem(
+                    HistoryListItem(
                         modifier = Modifier.animateItemFastScroll(),
-                        history = value,
-                        onClickCover = { onClickCover(value) },
-                        onClickResume = { onClickResume(value) },
-                        onClickDelete = { onClickDelete(value) },
-                        onClickFavorite = { onClickFavorite(value) },
+                        item = item.item,
+                        onClickCover = { onClickCover(item.item) },
+                        onClickResume = { onClickResume(item.item) },
+                        onClickDelete = { onClickDelete(item.item.historyItem) },
                     )
                 }
             }
@@ -136,9 +135,9 @@ private fun HistoryScreenContent(
     }
 }
 
-sealed interface HistoryUiModel {
-    data class Header(val date: LocalDate) : HistoryUiModel
-    data class Item(val item: HistoryWithRelations) : HistoryUiModel
+sealed class HistoryUiModel {
+    data class Header(val date: LocalDate) : HistoryUiModel()
+    data class Item(val item: HistoryUiItem) : HistoryUiModel()
 }
 
 @PreviewLightDark
@@ -153,9 +152,10 @@ internal fun HistoryScreenPreviews(
             snackbarHostState = SnackbarHostState(),
             onSearchQueryChange = {},
             onClickCover = {},
-            onClickResume = { _, _ -> run {} },
-            onDialogChange = {},
+            onClickResume = {},
+            onClickDelete = {},
             onClickFavorite = {},
+            onDialogChange = {},
         )
     }
 }

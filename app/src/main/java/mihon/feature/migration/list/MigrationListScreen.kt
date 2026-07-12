@@ -6,20 +6,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.migration.search.MigrateSearchScreen
-import eu.kanade.tachiyomi.ui.manga.MangaScreen
+import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.util.system.toast
+import kotlinx.coroutines.launch
+import mihon.feature.migration.list.components.MigrationEntryDialog
 import mihon.feature.migration.list.components.MigrationExitDialog
-import mihon.feature.migration.list.components.MigrationMangaDialog
 import mihon.feature.migration.list.components.MigrationProgressDialog
 import tachiyomi.i18n.MR
 
-class MigrationListScreen(private val mangaIds: Collection<Long>, private val extraSearchQuery: String?) : Screen() {
+class MigrationListScreen(private val entryIds: Collection<Long>, private val extraSearchQuery: String?) : Screen() {
 
     private var matchOverride: Pair<Long, Long>? = null
 
@@ -30,13 +33,14 @@ class MigrationListScreen(private val mangaIds: Collection<Long>, private val ex
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val screenModel = rememberScreenModel { MigrationListScreenModel(mangaIds, extraSearchQuery) }
+        val screenModel = rememberScreenModel { MigrationListScreenModel(entryIds, extraSearchQuery) }
         val state by screenModel.state.collectAsState()
         val context = LocalContext.current
+        val scope = rememberCoroutineScope()
 
         LaunchedEffect(matchOverride) {
             val (current, target) = matchOverride ?: return@LaunchedEffect
-            screenModel.useMangaForMigration(
+            screenModel.useEntryForMigration(
                 current = current,
                 target = target,
                 onMissingChapters = {
@@ -56,29 +60,29 @@ class MigrationListScreen(private val mangaIds: Collection<Long>, private val ex
             migrationComplete = state.migrationComplete,
             finishedCount = state.finishedCount,
             onItemClick = {
-                navigator.push(MangaScreen(it.id, true))
+                navigator.push(EntryScreen(it.id, fromSource = true))
             },
             onSearchManually = { migrationItem ->
-                navigator push MigrateSearchScreen(migrationItem.manga.id)
+                navigator push MigrateSearchScreen(migrationItem.entry.id)
             },
-            onSkip = { screenModel.removeManga(it) },
-            onMigrate = { screenModel.migrateNow(mangaId = it, replace = true) },
-            onCopy = { screenModel.migrateNow(mangaId = it, replace = false) },
+            onSkip = { screenModel.removeEntry(it) },
+            onMigrate = { screenModel.migrateNow(entryId = it, replace = true) },
+            onCopy = { screenModel.migrateNow(entryId = it, replace = false) },
             openMigrationDialog = screenModel::showMigrateDialog,
         )
 
         when (val dialog = state.dialog) {
             is MigrationListScreenModel.Dialog.Migrate -> {
-                MigrationMangaDialog(
+                MigrationEntryDialog(
                     onDismissRequest = screenModel::dismissDialog,
                     copy = dialog.copy,
                     totalCount = dialog.totalCount,
                     skippedCount = dialog.skippedCount,
                     onMigrate = {
                         if (dialog.copy) {
-                            screenModel.copyMangas()
+                            screenModel.copyEntries()
                         } else {
-                            screenModel.migrateMangas()
+                            screenModel.migrateEntries()
                         }
                     },
                 )

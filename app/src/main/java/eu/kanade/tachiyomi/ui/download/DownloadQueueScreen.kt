@@ -60,6 +60,7 @@ import tachiyomi.presentation.core.screens.EmptyScreen
 import kotlin.math.roundToInt
 
 object DownloadQueueScreen : Screen() {
+    private fun readResolve(): Any = DownloadQueueScreen
 
     @Composable
     override fun Content() {
@@ -70,6 +71,11 @@ object DownloadQueueScreen : Screen() {
         val downloadCount by remember {
             derivedStateOf { downloadList.sumOf { it.subItems.size } }
         }
+        val numberSortLabel = downloadList.firstOrNull()
+            ?.model
+            ?.contentType
+            ?.numberSortLabel
+            ?: MR.strings.action_order_by_chapter_number
 
         val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
         var fabExpanded by remember { mutableStateOf(true) }
@@ -134,7 +140,7 @@ object DownloadQueueScreen : Screen() {
                                             text = { Text(text = stringResource(MR.strings.action_newest)) },
                                             onClick = {
                                                 screenModel.reorderQueue(
-                                                    { it.download.chapter.dateUpload },
+                                                    { item -> item.payloadAsDownloadQueueItem().dateUpload },
                                                     true,
                                                 )
                                                 closeMenu()
@@ -144,7 +150,7 @@ object DownloadQueueScreen : Screen() {
                                             text = { Text(text = stringResource(MR.strings.action_oldest)) },
                                             onClick = {
                                                 screenModel.reorderQueue(
-                                                    { it.download.chapter.dateUpload },
+                                                    { item -> item.payloadAsDownloadQueueItem().dateUpload },
                                                     false,
                                                 )
                                                 closeMenu()
@@ -153,13 +159,13 @@ object DownloadQueueScreen : Screen() {
                                     },
                                 )
                                 NestedMenuItem(
-                                    text = { Text(text = stringResource(MR.strings.action_order_by_chapter_number)) },
+                                    text = { Text(text = stringResource(numberSortLabel)) },
                                     children = { closeMenu ->
                                         DropdownMenuItem(
                                             text = { Text(text = stringResource(MR.strings.action_asc)) },
                                             onClick = {
                                                 screenModel.reorderQueue(
-                                                    { it.download.chapter.chapterNumber },
+                                                    { item -> item.payloadAsDownloadQueueItem().chapterNumber },
                                                     false,
                                                 )
                                                 closeMenu()
@@ -169,7 +175,7 @@ object DownloadQueueScreen : Screen() {
                                             text = { Text(text = stringResource(MR.strings.action_desc)) },
                                             onClick = {
                                                 screenModel.reorderQueue(
-                                                    { it.download.chapter.chapterNumber },
+                                                    { item -> item.payloadAsDownloadQueueItem().chapterNumber },
                                                     true,
                                                 )
                                                 closeMenu()
@@ -251,7 +257,7 @@ object DownloadQueueScreen : Screen() {
                     modifier = Modifier.fillMaxWidth(),
                     factory = { context ->
                         screenModel.controllerBinding = DownloadListBinding.inflate(LayoutInflater.from(context))
-                        screenModel.adapter = DownloadAdapter(screenModel.listener)
+                        screenModel.adapter = DownloadQueueAdapter(screenModel.listener)
                         screenModel.controllerBinding.root.adapter = screenModel.adapter
                         screenModel.adapter?.isHandleDragEnabled = true
                         screenModel.controllerBinding.root.layoutManager = LinearLayoutManager(context)
@@ -264,7 +270,7 @@ object DownloadQueueScreen : Screen() {
                         }
                         scope.launchUI {
                             screenModel.getDownloadProgressFlow()
-                                .collect(screenModel::onUpdateDownloadedPages)
+                                .collect(screenModel::onUpdateStepProgress)
                         }
 
                         screenModel.controllerBinding.root

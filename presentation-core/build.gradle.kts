@@ -25,6 +25,7 @@ kotlin {
 
 dependencies {
     api(projects.core.common)
+    implementation(projects.domain)
     api(projects.i18n)
 
     // Compose
@@ -40,4 +41,6 @@ dependencies {
 
     implementation(libs.androidx.paging.runtime)
     implementation(libs.androidx.paging.compose)
+    implementation(libs.injekt)
+    implementation(libs.materialKolor)
 }

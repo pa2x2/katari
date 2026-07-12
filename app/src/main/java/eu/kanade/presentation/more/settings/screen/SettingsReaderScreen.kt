@@ -6,10 +6,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalView
 import eu.kanade.presentation.more.settings.Preference
-import eu.kanade.tachiyomi.ui.reader.setting.ReaderOrientation
-import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
-import eu.kanade.tachiyomi.ui.reader.setting.ReadingMode
 import eu.kanade.tachiyomi.util.system.hasDisplayCutout
+import mihon.entry.interactions.reader.settings.ReaderOrientation
+import mihon.entry.interactions.reader.settings.ReaderPreferences
+import mihon.entry.interactions.reader.settings.ReadingMode
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
@@ -64,6 +64,7 @@ object SettingsReaderScreen : SearchableSettings {
             getPagedGroup(readerPreferences = readerPref),
             getWebtoonGroup(readerPreferences = readerPref),
             getNavigationGroup(readerPreferences = readerPref),
+            getAutoScrollGroup(readerPreferences = readerPref),
             getActionsGroup(readerPreferences = readerPref),
         )
     }
@@ -133,14 +134,17 @@ object SettingsReaderScreen : SearchableSettings {
                 ),
                 Preference.PreferenceItem.SliderPreference(
                     value = flashMillis / ReaderPreferences.MILLI_CONVERSION,
+                    preference = flashMillisPref,
                     valueRange = 1..15,
                     title = stringResource(MR.strings.pref_flash_duration),
                     valueString = stringResource(MR.strings.pref_flash_duration_summary, flashMillis),
+                    isProfileSpecific = false,
                     enabled = flashPageState,
                     onValueChanged = { flashMillisPref.set(it * ReaderPreferences.MILLI_CONVERSION) },
                 ),
                 Preference.PreferenceItem.SliderPreference(
                     value = flashInterval,
+                    preference = flashIntervalPref,
                     valueRange = 1..10,
                     title = stringResource(MR.strings.pref_flash_page_interval),
                     valueString = pluralStringResource(MR.plurals.pref_pages, flashInterval, flashInterval),
@@ -318,6 +322,7 @@ object SettingsReaderScreen : SearchableSettings {
                 ),
                 Preference.PreferenceItem.SliderPreference(
                     value = webtoonSidePadding,
+                    preference = webtoonSidePaddingPref,
                     valueRange = ReaderPreferences.let {
                         it.WEBTOON_PADDING_MIN..it.WEBTOON_PADDING_MAX
                     },
@@ -417,6 +422,32 @@ object SettingsReaderScreen : SearchableSettings {
                     title = stringResource(MR.strings.pref_vertical_navigator_height),
                     onValueChanged = { verticalNavigatorHeightPref.set(it) },
                     enabled = verticalNavigator.isNotEmpty(),
+                ),
+            ),
+        )
+    }
+
+    @Composable
+    private fun getAutoScrollGroup(readerPreferences: ReaderPreferences): Preference.PreferenceGroup {
+        val autoScrollEnabled by readerPreferences.autoScrollEnabled.collectAsState()
+        val autoScrollSpeed by readerPreferences.autoScrollSpeed.collectAsState()
+
+        return Preference.PreferenceGroup(
+            title = stringResource(MR.strings.pref_auto_scroll),
+            preferenceItems = listOf(
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = readerPreferences.autoScrollEnabled,
+                    title = stringResource(MR.strings.pref_enable_auto_scroll),
+                    subtitle = stringResource(MR.strings.pref_auto_scroll_summary),
+                ),
+                Preference.PreferenceItem.SliderPreference(
+                    value = autoScrollSpeed,
+                    preference = readerPreferences.autoScrollSpeed,
+                    valueRange = ReaderPreferences.AUTO_SCROLL_SPEED_RANGE,
+                    title = stringResource(MR.strings.pref_auto_scroll_speed),
+                    valueString = stringResource(ReaderPreferences.AutoScrollLevelLabels[autoScrollSpeed]),
+                    enabled = autoScrollEnabled,
+                    onValueChanged = { readerPreferences.autoScrollSpeed.set(it) },
                 ),
             ),
         )

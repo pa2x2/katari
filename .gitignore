@@ -2,16 +2,23 @@
 .gradle
 .kotlin
 build
+gradle/tmp
 
 # IDE files
 *.iml
 .idea/*
 !.idea/icon.svg
 /captures
+/site
+/.venv-docs
 
 # Configuration files
 keystore.properties
 local.properties
+
+# Python bytecode
+__pycache__/
+*.py[cod]
 
 # macOS specific files
 .DS_Store

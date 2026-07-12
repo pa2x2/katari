@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import okhttp3.OkHttpClient
@@ -26,6 +27,7 @@ import tachiyomi.core.common.util.system.logcat
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * The installer which installs, updates and uninstalls the extensions.
@@ -36,12 +38,21 @@ internal class ExtensionInstaller(
     private val context: Context,
 ) {
 
+    enum class UserActionBehavior {
+        LaunchPrompt,
+        MarkAsRequiresUserAction,
+    }
+
     private val scope = CoroutineScope(Dispatchers.IO)
-    private val activeJobs = mutableMapOf<String, Job>()
-    private val activeSteps = mutableMapOf<Long, MutableStateFlow<InstallStep>>()
+    private val activeJobs = ConcurrentHashMap<String, Job>()
+    private val activeSteps = ConcurrentHashMap<Long, MutableStateFlow<InstallStep>>()
+    private val downloadPackageNames = ConcurrentHashMap<Long, String>()
+    private val packageInstallSteps = MutableStateFlow<Map<String, InstallStep>>(emptyMap())
     private val extensionInstaller = Injekt.get<BasePreferences>().extensionInstaller
 
     private val httpClient: OkHttpClient = Injekt.get<NetworkHelper>().client
+
+    val installSteps = packageInstallSteps.asStateFlow()
 
     /**
      * Adds the given extension to the downloads queue and returns an observable containing its
@@ -50,17 +61,23 @@ internal class ExtensionInstaller(
      * @param url The url of the apk.
      * @param extension The extension to install.
      */
-    fun downloadAndInstall(url: String, extension: Extension): Flow<InstallStep> {
+    fun downloadAndInstall(
+        url: String,
+        extension: Extension,
+        userActionBehavior: UserActionBehavior = UserActionBehavior.LaunchPrompt,
+    ): Flow<InstallStep> {
         val downloadId = extension.pkgName.hashCode().toLong()
         cancelInstall(extension.pkgName)
 
         val step = MutableStateFlow(InstallStep.Pending)
         activeSteps[downloadId] = step
+        downloadPackageNames[downloadId] = extension.pkgName
+        packageInstallSteps.update { it + (extension.pkgName to InstallStep.Pending) }
 
         val job = scope.launch {
             val tmpFile = File(context.cacheDir, "extension_${extension.pkgName}.apk")
             try {
-                step.value = InstallStep.Downloading
+                updateInstallStep(downloadId, InstallStep.Downloading)
                 val request = Request.Builder().url(url).build()
                 val response = httpClient.newCall(request).execute()
 
@@ -73,14 +90,14 @@ internal class ExtensionInstaller(
                     }
                 }
 
-                step.value = InstallStep.Installing
-                installApk(downloadId, tmpFile)
+                updateInstallStep(downloadId, InstallStep.Installing)
+                installApk(downloadId, tmpFile, userActionBehavior)
             } catch (e: Exception) {
                 if (e is InterruptedException) {
                     // Canceled
                 } else {
                     logcat(LogPriority.ERROR, e)
-                    step.value = InstallStep.Error
+                    updateInstallStep(downloadId, InstallStep.Error)
                 }
             }
         }
@@ -91,6 +108,10 @@ internal class ExtensionInstaller(
             .onCompletion {
                 activeJobs.remove(extension.pkgName)
                 activeSteps.remove(downloadId)
+                downloadPackageNames.remove(downloadId)
+                if (packageInstallSteps.value[extension.pkgName] != InstallStep.RequiresUserAction) {
+                    packageInstallSteps.update { it - extension.pkgName }
+                }
                 job.cancel()
             }
     }
@@ -100,9 +121,18 @@ internal class ExtensionInstaller(
      *
      * @param tempFile The file of the extension to install. Delete after use.
      */
-    private fun installApk(downloadId: Long, tempFile: File) {
+    private fun installApk(
+        downloadId: Long,
+        tempFile: File,
+        userActionBehavior: UserActionBehavior,
+    ) {
         when (val installer = extensionInstaller.get()) {
             BasePreferences.ExtensionInstaller.LEGACY -> {
+                if (userActionBehavior == UserActionBehavior.MarkAsRequiresUserAction) {
+                    updateInstallStep(downloadId, InstallStep.RequiresUserAction)
+                    tempFile.delete()
+                    return
+                }
                 val intent = Intent(context, ExtensionInstallActivity::class.java)
                     .setDataAndType(tempFile.getUriCompat(context), APK_MIME)
                     .putExtra(EXTRA_DOWNLOAD_ID, downloadId)
@@ -130,6 +160,7 @@ internal class ExtensionInstaller(
                     downloadId,
                     tempFile.getUriCompat(context),
                     installer,
+                    userActionBehavior,
                 )
                 ContextCompat.startForegroundService(context, intent)
             }
@@ -169,6 +200,13 @@ internal class ExtensionInstaller(
      */
     fun updateInstallStep(downloadId: Long, step: InstallStep) {
         activeSteps[downloadId]?.let { it.value = step }
+        downloadPackageNames[downloadId]?.let { pkgName ->
+            packageInstallSteps.update { it + (pkgName to step) }
+        }
+    }
+
+    fun clearInstallStep(pkgName: String) {
+        packageInstallSteps.update { it - pkgName }
     }
 
     companion object {

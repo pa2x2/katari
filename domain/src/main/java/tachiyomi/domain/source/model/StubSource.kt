@@ -38,6 +38,19 @@ class StubSource(
     override fun toString(): String =
         if (!isInvalid) "$name (${lang.uppercase()})" else id.toString()
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is StubSource) return false
+        return id == other.id && lang == other.lang && name == other.name
+    }
+
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + lang.hashCode()
+        result = 31 * result + name.hashCode()
+        return result
+    }
+
     companion object {
         fun from(source: Source): StubSource {
             return StubSource(id = source.id, lang = source.lang, name = source.name)

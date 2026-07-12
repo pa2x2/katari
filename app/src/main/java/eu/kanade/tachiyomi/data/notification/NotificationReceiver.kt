@@ -7,31 +7,35 @@ import android.content.Intent
 import android.net.Uri
 import androidx.core.net.toUri
 import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreJob
-import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.data.updater.AppUpdateDownloadJob
 import eu.kanade.tachiyomi.ui.main.MainActivity
-import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.util.system.cancelNotification
 import eu.kanade.tachiyomi.util.system.getParcelableExtraCompat
 import eu.kanade.tachiyomi.util.system.notificationManager
 import eu.kanade.tachiyomi.util.system.toShareIntent
 import eu.kanade.tachiyomi.util.system.toast
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import mihon.entry.interactions.EntryConsumptionInteraction
+import mihon.entry.interactions.EntryDownloadInteraction
+import mihon.entry.interactions.EntryOpenInteraction
+import mihon.entry.interactions.EntryOpenOptions
 import tachiyomi.core.common.Constants
-import tachiyomi.core.common.util.lang.launchIO
-import tachiyomi.domain.chapter.interactor.GetChapter
-import tachiyomi.domain.chapter.interactor.UpdateChapter
-import tachiyomi.domain.chapter.model.Chapter
-import tachiyomi.domain.chapter.model.toChapterUpdate
-import tachiyomi.domain.download.service.DownloadPreferences
-import tachiyomi.domain.manga.interactor.GetManga
-import tachiyomi.domain.manga.model.Manga
-import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.entry.interactor.GetMergedEntry
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.repository.EntryChapterRepository
+import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 import eu.kanade.tachiyomi.BuildConfig.APPLICATION_ID as ID
 
 /**
@@ -41,21 +45,39 @@ import eu.kanade.tachiyomi.BuildConfig.APPLICATION_ID as ID
  */
 class NotificationReceiver : BroadcastReceiver() {
 
-    private val getManga: GetManga by injectLazy()
-    private val getChapter: GetChapter by injectLazy()
-    private val updateChapter: UpdateChapter by injectLazy()
-    private val downloadManager: DownloadManager by injectLazy()
+    private val getMergedEntry: GetMergedEntry by injectLazy()
+    private val entryRepository: EntryRepository by injectLazy()
+    private val entryChapterRepository: EntryChapterRepository by injectLazy()
+    private val entryConsumptionInteraction: EntryConsumptionInteraction by injectLazy()
+    private val entryDownloadInteraction: EntryDownloadInteraction by injectLazy()
+    private val entryOpenInteraction: EntryOpenInteraction by injectLazy()
+    private val scope: CoroutineScope by injectLazy()
+    private val entryActionHandler by lazy {
+        NotificationEntryActionHandler(
+            entryRepository = entryRepository,
+            entryChapterRepository = entryChapterRepository,
+            entryConsumptionInteraction = entryConsumptionInteraction,
+            entryDownloadInteraction = entryDownloadInteraction,
+            entryOpenInteraction = entryOpenInteraction,
+        )
+    }
 
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
             // Dismiss notification
             ACTION_DISMISS_NOTIFICATION -> dismissNotification(context, intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1))
             // Resume the download service
-            ACTION_RESUME_DOWNLOADS -> downloadManager.startDownloads()
+            ACTION_RESUME_DOWNLOADS -> {
+                entryDownloadInteraction.startDownloads()
+            }
             // Pause the download service
-            ACTION_PAUSE_DOWNLOADS -> downloadManager.pauseDownloads()
+            ACTION_PAUSE_DOWNLOADS -> {
+                entryDownloadInteraction.pauseDownloads()
+            }
             // Clear the download queue
-            ACTION_CLEAR_DOWNLOADS -> downloadManager.clearQueue()
+            ACTION_CLEAR_DOWNLOADS -> {
+                entryDownloadInteraction.clearQueue()
+            }
             // Launch share activity and dismiss notification
             ACTION_SHARE_IMAGE ->
                 shareImage(
@@ -76,38 +98,42 @@ class NotificationReceiver : BroadcastReceiver() {
             ACTION_START_APP_UPDATE -> startDownloadAppUpdate(context, intent)
             // Cancel downloading app update
             ACTION_CANCEL_APP_UPDATE_DOWNLOAD -> cancelDownloadAppUpdate(context)
-            // Open reader activity
+            ACTION_OPEN_EPISODE -> {
+                openChild(context, intent.legacyEpisodeOpenChildPayload())
+            }
+            ACTION_OPEN_CHILD -> {
+                openChild(context, intent.openChildPayload())
+            }
             ACTION_OPEN_CHAPTER -> {
-                openChapter(
-                    context,
-                    intent.getLongExtra(EXTRA_MANGA_ID, -1),
-                    intent.getLongExtra(EXTRA_CHAPTER_ID, -1),
-                )
+                openLegacyChild(context, intent.legacyChapterOpenChildPayload())
             }
-            // Mark updated manga chapters as read
             ACTION_MARK_AS_READ -> {
-                val notificationId = intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1)
-                if (notificationId > -1) {
-                    dismissNotification(context, notificationId, intent.getIntExtra(EXTRA_GROUP_ID, 0))
-                }
-                val urls = intent.getStringArrayExtra(EXTRA_CHAPTER_URL) ?: return
-                val mangaId = intent.getLongExtra(EXTRA_MANGA_ID, -1)
-                if (mangaId > -1) {
-                    markAsRead(urls, mangaId)
-                }
+                dismissNotification(context, intent)
+                markConsumed(intent.legacyChapterUrlsPayload())
             }
-            // Download manga chapters
             ACTION_DOWNLOAD_CHAPTER -> {
-                val notificationId = intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1)
-                if (notificationId > -1) {
-                    dismissNotification(context, notificationId, intent.getIntExtra(EXTRA_GROUP_ID, 0))
-                }
-                val urls = intent.getStringArrayExtra(EXTRA_CHAPTER_URL) ?: return
-                val mangaId = intent.getLongExtra(EXTRA_MANGA_ID, -1)
-                if (mangaId > -1) {
-                    downloadChapters(urls, mangaId)
-                }
+                dismissNotification(context, intent)
+                downloadChildren(intent.legacyChapterUrlsPayload())
             }
+            ACTION_MARK_CONSUMED -> {
+                dismissNotification(context, intent)
+                markConsumed(intent.childIdsPayload())
+            }
+            ACTION_DOWNLOAD_CHILDREN -> {
+                dismissNotification(context, intent)
+                downloadChildren(intent.childIdsPayload())
+            }
+            ACTION_MARK_AS_WATCHED -> {
+                dismissNotification(context, intent)
+                markConsumed(intent.legacyEpisodeIdsPayload())
+            }
+        }
+    }
+
+    private fun openChild(context: Context, payload: OpenChildPayload?) {
+        payload ?: return
+        async(scope, Dispatchers.IO) {
+            entryActionHandler.openChild(context, payload.visibleEntryId, payload.ownerEntryId, payload.childId)
         }
     }
 
@@ -140,23 +166,16 @@ class NotificationReceiver : BroadcastReceiver() {
         context.startActivity(uri.toShareIntent(context, fileMimeType))
     }
 
-    /**
-     * Starts reader activity
-     *
-     * @param context context of application
-     * @param mangaId id of manga
-     * @param chapterId id of chapter
-     */
-    private fun openChapter(context: Context, mangaId: Long, chapterId: Long) {
-        val manga = runBlocking { getManga.await(mangaId) }
-        val chapter = runBlocking { getChapter.await(chapterId) }
-        if (manga != null && chapter != null) {
-            val intent = ReaderActivity.newIntent(context, manga.id, chapter.id).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+    private fun openLegacyChild(context: Context, payload: LegacyOpenChildPayload?) {
+        payload ?: return
+        async(scope, Dispatchers.IO) {
+            val visibleEntryId = getMergedEntry.awaitVisibleTargetId(payload.ownerEntryId)
+            val opened = entryActionHandler.openChild(context, visibleEntryId, payload.ownerEntryId, payload.childId)
+            if (!opened) {
+                withContext(Dispatchers.Main) {
+                    context.toast(MR.strings.chapter_error)
+                }
             }
-            context.startActivity(intent)
-        } else {
-            context.toast(MR.strings.chapter_error)
         }
     }
 
@@ -187,47 +206,146 @@ class NotificationReceiver : BroadcastReceiver() {
         AppUpdateDownloadJob.stop(context)
     }
 
-    /**
-     * Method called when user wants to mark manga chapters as read
-     *
-     * @param chapterUrls URLs of chapter to mark as read
-     * @param mangaId id of manga
-     */
-    private fun markAsRead(chapterUrls: Array<String>, mangaId: Long) {
-        val downloadPreferences: DownloadPreferences = Injekt.get()
-        val sourceManager: SourceManager = Injekt.get()
-
-        launchIO {
-            val toUpdate = chapterUrls.mapNotNull { getChapter.await(it, mangaId) }
-                .map {
-                    val chapter = it.copy(read = true)
-                    if (downloadPreferences.removeAfterMarkedAsRead.get()) {
-                        val manga = getManga.await(mangaId)
-                        if (manga != null) {
-                            val source = sourceManager.get(manga.source)
-                            if (source != null) {
-                                downloadManager.deleteChapters(listOf(it), manga, source)
-                            }
-                        }
-                    }
-                    chapter.toChapterUpdate()
-                }
-            updateChapter.awaitAll(toUpdate)
+    private fun dismissNotification(context: Context, intent: Intent) {
+        val notificationId = intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1)
+        if (notificationId > -1) {
+            dismissNotification(context, notificationId, intent.getIntExtra(EXTRA_GROUP_ID, 0))
         }
     }
 
-    /**
-     * Method called when user wants to download chapters
-     *
-     * @param chapterUrls URLs of chapter to download
-     * @param mangaId id of manga
-     */
-    private fun downloadChapters(chapterUrls: Array<String>, mangaId: Long) {
-        launchIO {
-            val manga = getManga.await(mangaId) ?: return@launchIO
-            val chapters = chapterUrls.mapNotNull { getChapter.await(it, mangaId) }
-            downloadManager.downloadChapters(manga, chapters)
+    private fun markConsumed(payload: ChildIdsPayload?) {
+        payload ?: return
+        markConsumed(payload.entryId, payload.childIds)
+    }
+
+    private fun markConsumed(payload: ChildUrlsPayload?) {
+        payload ?: return
+        markConsumed(payload.entryId, payload.childUrls)
+    }
+
+    private fun markConsumed(entryId: Long, childIds: LongArray) {
+        async(scope, Dispatchers.IO) {
+            entryActionHandler.markConsumed(entryId, childIds)
         }
+    }
+
+    private fun markConsumed(entryId: Long, childUrls: Array<String>) {
+        async(scope, Dispatchers.IO) {
+            entryActionHandler.markConsumed(entryId, childUrls)
+        }
+    }
+
+    private fun downloadChildren(payload: ChildIdsPayload?) {
+        payload ?: return
+        downloadChildren(payload.entryId, payload.childIds)
+    }
+
+    private fun downloadChildren(payload: ChildUrlsPayload?) {
+        payload ?: return
+        downloadChildren(payload.entryId, payload.childUrls)
+    }
+
+    private fun downloadChildren(entryId: Long, childIds: LongArray) {
+        async(scope, Dispatchers.IO) {
+            entryActionHandler.downloadChildren(entryId, childIds)
+        }
+    }
+
+    private fun downloadChildren(entryId: Long, childUrls: Array<String>) {
+        async(scope, Dispatchers.IO) {
+            entryActionHandler.downloadChildren(entryId, childUrls)
+        }
+    }
+
+    private fun BroadcastReceiver.async(
+        scope: CoroutineScope,
+        context: CoroutineContext = EmptyCoroutineContext,
+        start: CoroutineStart = CoroutineStart.DEFAULT,
+        block: suspend CoroutineScope.() -> Unit,
+    ) {
+        val result = goAsync()
+        scope.launch(context, start) {
+            try {
+                block()
+            } finally {
+                result.finish()
+            }
+        }
+    }
+
+    private data class OpenChildPayload(
+        val visibleEntryId: Long,
+        val ownerEntryId: Long,
+        val childId: Long,
+    )
+
+    private data class LegacyOpenChildPayload(
+        val ownerEntryId: Long,
+        val childId: Long,
+    )
+
+    private data class ChildIdsPayload(
+        val entryId: Long,
+        val childIds: LongArray,
+    )
+
+    private data class ChildUrlsPayload(
+        val entryId: Long,
+        val childUrls: Array<String>,
+    )
+
+    private fun Intent.openChildPayload(): OpenChildPayload? {
+        val visibleEntryId = getLongExtra(EXTRA_VISIBLE_ENTRY_ID, -1)
+        val ownerEntryId = getLongExtra(EXTRA_OWNER_ENTRY_ID, visibleEntryId)
+        val childId = getLongExtra(EXTRA_CHILD_ID, -1)
+        return OpenChildPayload(visibleEntryId, ownerEntryId, childId).takeIf { it.isValid() }
+    }
+
+    private fun Intent.legacyEpisodeOpenChildPayload(): OpenChildPayload? {
+        val visibleEntryId = getLongExtra(EXTRA_ANIME_ID, -1)
+        val ownerEntryId = getLongExtra(EXTRA_OWNER_ANIME_ID, visibleEntryId)
+        val childId = getLongExtra(EXTRA_EPISODE_ID, -1)
+        return OpenChildPayload(visibleEntryId, ownerEntryId, childId).takeIf { it.isValid() }
+    }
+
+    private fun Intent.legacyChapterOpenChildPayload(): LegacyOpenChildPayload? {
+        val ownerEntryId = getLongExtra(EXTRA_MANGA_ID, -1)
+        val childId = getLongExtra(EXTRA_CHAPTER_ID, -1)
+        return LegacyOpenChildPayload(ownerEntryId, childId).takeIf { it.isValid() }
+    }
+
+    private fun Intent.childIdsPayload(): ChildIdsPayload? {
+        val entryId = getLongExtra(EXTRA_ENTRY_ID, -1)
+        val childIds = getLongArrayExtra(EXTRA_CHILD_IDS) ?: return null
+        return ChildIdsPayload(entryId, childIds).takeIf { it.isValid() }
+    }
+
+    private fun Intent.legacyEpisodeIdsPayload(): ChildIdsPayload? {
+        val entryId = getLongExtra(EXTRA_ANIME_ID, -1)
+        val childIds = getLongArrayExtra(EXTRA_EPISODE_IDS) ?: return null
+        return ChildIdsPayload(entryId, childIds).takeIf { it.isValid() }
+    }
+
+    private fun Intent.legacyChapterUrlsPayload(): ChildUrlsPayload? {
+        val entryId = getLongExtra(EXTRA_MANGA_ID, -1)
+        val childUrls = getStringArrayExtra(EXTRA_CHAPTER_URL) ?: return null
+        return ChildUrlsPayload(entryId, childUrls).takeIf { it.isValid() }
+    }
+
+    private fun OpenChildPayload.isValid(): Boolean {
+        return visibleEntryId > -1 && ownerEntryId > -1 && childId > -1
+    }
+
+    private fun LegacyOpenChildPayload.isValid(): Boolean {
+        return ownerEntryId > -1 && childId > -1
+    }
+
+    private fun ChildIdsPayload.isValid(): Boolean {
+        return entryId > -1 && childIds.isNotEmpty()
+    }
+
+    private fun ChildUrlsPayload.isValid(): Boolean {
+        return entryId > -1 && childUrls.isNotEmpty()
     }
 
     companion object {
@@ -244,11 +362,14 @@ class NotificationReceiver : BroadcastReceiver() {
         private const val ACTION_START_APP_UPDATE = "$ID.$NAME.ACTION_START_APP_UPDATE"
         private const val ACTION_CANCEL_APP_UPDATE_DOWNLOAD = "$ID.$NAME.CANCEL_APP_UPDATE_DOWNLOAD"
 
+        private const val ACTION_OPEN_EPISODE = "$ID.$NAME.ACTION_OPEN_EPISODE"
+        private const val ACTION_OPEN_CHILD = "$ID.$NAME.ACTION_OPEN_CHILD"
         private const val ACTION_MARK_AS_READ = "$ID.$NAME.MARK_AS_READ"
+        private const val ACTION_MARK_AS_WATCHED = "$ID.$NAME.MARK_AS_WATCHED"
+        private const val ACTION_MARK_CONSUMED = "$ID.$NAME.MARK_CONSUMED"
         private const val ACTION_OPEN_CHAPTER = "$ID.$NAME.ACTION_OPEN_CHAPTER"
         private const val ACTION_DOWNLOAD_CHAPTER = "$ID.$NAME.ACTION_DOWNLOAD_CHAPTER"
-
-        private const val ACTION_OPEN_ENTRY = "$ID.$NAME.ACTION_OPEN_ENTRY"
+        private const val ACTION_DOWNLOAD_CHILDREN = "$ID.$NAME.ACTION_DOWNLOAD_CHILDREN"
 
         private const val ACTION_RESUME_DOWNLOADS = "$ID.$NAME.ACTION_RESUME_DOWNLOADS"
         private const val ACTION_PAUSE_DOWNLOADS = "$ID.$NAME.ACTION_PAUSE_DOWNLOADS"
@@ -259,9 +380,18 @@ class NotificationReceiver : BroadcastReceiver() {
         private const val EXTRA_URI = "$ID.$NAME.URI"
         private const val EXTRA_NOTIFICATION_ID = "$ID.$NAME.NOTIFICATION_ID"
         private const val EXTRA_GROUP_ID = "$ID.$NAME.EXTRA_GROUP_ID"
+        private const val EXTRA_ANIME_ID = "$ID.$NAME.EXTRA_ANIME_ID"
+        private const val EXTRA_OWNER_ANIME_ID = "$ID.$NAME.EXTRA_OWNER_ANIME_ID"
+        private const val EXTRA_EPISODE_ID = "$ID.$NAME.EXTRA_EPISODE_ID"
+        private const val EXTRA_EPISODE_IDS = "$ID.$NAME.EXTRA_EPISODE_IDS"
         private const val EXTRA_MANGA_ID = "$ID.$NAME.EXTRA_MANGA_ID"
         private const val EXTRA_CHAPTER_ID = "$ID.$NAME.EXTRA_CHAPTER_ID"
         private const val EXTRA_CHAPTER_URL = "$ID.$NAME.EXTRA_CHAPTER_URL"
+        private const val EXTRA_VISIBLE_ENTRY_ID = "$ID.$NAME.EXTRA_VISIBLE_ENTRY_ID"
+        private const val EXTRA_OWNER_ENTRY_ID = "$ID.$NAME.EXTRA_OWNER_ENTRY_ID"
+        private const val EXTRA_ENTRY_ID = "$ID.$NAME.EXTRA_ENTRY_ID"
+        private const val EXTRA_CHILD_ID = "$ID.$NAME.EXTRA_CHILD_ID"
+        private const val EXTRA_CHILD_IDS = "$ID.$NAME.EXTRA_CHILD_IDS"
 
         /**
          * Returns a [PendingIntent] that resumes the download of a chapter
@@ -394,18 +524,72 @@ class NotificationReceiver : BroadcastReceiver() {
             )
         }
 
-        /**
-         * Returns [PendingIntent] that starts a reader activity containing chapter.
-         *
-         * @param context context of application
-         * @param manga manga of chapter
-         * @param chapter chapter that needs to be opened
-         */
-        internal fun openChapterPendingActivity(context: Context, manga: Manga, chapter: Chapter): PendingIntent {
-            val newIntent = ReaderActivity.newIntent(context, manga.id, chapter.id)
-            return PendingIntent.getActivity(
+        @Deprecated("Use openChildPendingActivity instead.")
+        internal fun openEntryChapterPendingActivity(
+            context: Context,
+            entry: Entry,
+            chapter: EntryChapter,
+        ): PendingIntent {
+            return openChildPendingActivity(context, entry, chapter)
+        }
+
+        internal fun openChildPendingActivity(
+            context: Context,
+            entry: Entry,
+            child: EntryChapter,
+        ): PendingIntent {
+            return Injekt.get<EntryOpenInteraction>().pendingIntent(
+                context = context,
+                entry = entry,
+                chapter = child,
+            )
+        }
+
+        @Deprecated("Use openChildPendingActivity instead.")
+        internal fun openEntryEpisodePendingActivity(
+            context: Context,
+            visibleAnimeId: Long,
+            ownerAnimeId: Long,
+            episodeId: Long,
+        ): PendingIntent {
+            return openChildPendingActivity(context, visibleAnimeId, ownerAnimeId, episodeId)
+        }
+
+        internal fun openChildPendingActivity(
+            context: Context,
+            visibleEntryId: Long,
+            ownerEntryId: Long,
+            childId: Long,
+        ): PendingIntent {
+            val newIntent = Intent(context, NotificationReceiver::class.java).apply {
+                action = ACTION_OPEN_CHILD
+                putExtra(EXTRA_VISIBLE_ENTRY_ID, visibleEntryId)
+                putExtra(EXTRA_OWNER_ENTRY_ID, ownerEntryId)
+                putExtra(EXTRA_CHILD_ID, childId)
+            }
+            return PendingIntent.getBroadcast(
                 context,
-                manga.id.hashCode(),
+                childId.hashCode(),
+                newIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            )
+        }
+
+        internal fun openChildPendingActivity(
+            context: Context,
+            visibleEntry: Entry,
+            ownerEntry: Entry,
+            chapter: EntryChapter,
+        ): PendingIntent {
+            val newIntent = Intent(context, NotificationReceiver::class.java).apply {
+                action = ACTION_OPEN_CHILD
+                putExtra(EXTRA_VISIBLE_ENTRY_ID, visibleEntry.id)
+                putExtra(EXTRA_OWNER_ENTRY_ID, ownerEntry.id)
+                putExtra(EXTRA_CHILD_ID, chapter.id)
+            }
+            return PendingIntent.getBroadcast(
+                context,
+                chapter.id.hashCode(),
                 newIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
@@ -415,75 +599,93 @@ class NotificationReceiver : BroadcastReceiver() {
          * Returns [PendingIntent] that opens the manga info controller.
          *
          * @param context context of application
-         * @param manga manga of chapter
+         * @param entry entry of chapter
          */
-        internal fun openChapterPendingActivity(context: Context, manga: Manga, groupId: Int): PendingIntent {
+        internal fun openEntryChapterPendingActivity(context: Context, entry: Entry, groupId: Int): PendingIntent {
             val newIntent =
                 Intent(context, MainActivity::class.java).setAction(Constants.SHORTCUT_MANGA)
                     .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                    .putExtra(Constants.MANGA_EXTRA, manga.id)
-                    .putExtra("notificationId", manga.id.hashCode())
+                    .putExtra(Constants.ENTRY_EXTRA, entry.id)
+                    .putExtra("notificationId", entry.id.hashCode())
                     .putExtra("groupId", groupId)
             return PendingIntent.getActivity(
                 context,
-                manga.id.hashCode(),
+                entry.id.hashCode(),
                 newIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
         }
 
-        /**
-         * Returns [PendingIntent] that marks a chapter as read and deletes it if preferred
-         *
-         * @param context context of application
-         * @param manga manga of chapter
-         */
-        internal fun markAsReadPendingBroadcast(
+        @Deprecated("Use markConsumedPendingBroadcast instead.")
+        internal fun markEntryChaptersReadPendingBroadcast(
             context: Context,
-            manga: Manga,
-            chapters: Array<Chapter>,
+            entry: Entry,
+            children: Array<EntryChapter>,
+            groupId: Int,
+        ): PendingIntent {
+            return markConsumedPendingBroadcast(context, entry, children, groupId)
+        }
+
+        internal fun markConsumedPendingBroadcast(
+            context: Context,
+            entry: Entry,
+            children: Array<EntryChapter>,
             groupId: Int,
         ): PendingIntent {
             val newIntent = Intent(context, NotificationReceiver::class.java).apply {
-                action = ACTION_MARK_AS_READ
-                putExtra(EXTRA_CHAPTER_URL, chapters.map { it.url }.toTypedArray())
-                putExtra(EXTRA_MANGA_ID, manga.id)
-                putExtra(EXTRA_NOTIFICATION_ID, manga.id.hashCode())
+                action = ACTION_MARK_CONSUMED
+                putExtra(EXTRA_ENTRY_ID, entry.id)
+                putExtra(EXTRA_CHILD_IDS, children.map { it.id }.toLongArray())
+                putExtra(EXTRA_NOTIFICATION_ID, entry.id.hashCode())
                 putExtra(EXTRA_GROUP_ID, groupId)
             }
             return PendingIntent.getBroadcast(
                 context,
-                manga.id.hashCode(),
+                entry.id.hashCode(),
                 newIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
         }
 
-        /**
-         * Returns [PendingIntent] that downloads chapters
-         *
-         * @param context context of application
-         * @param manga manga of chapter
-         */
-        internal fun downloadChaptersPendingBroadcast(
+        @Deprecated("Use downloadChildrenPendingBroadcast instead.")
+        internal fun downloadEntryChaptersPendingBroadcast(
             context: Context,
-            manga: Manga,
-            chapters: Array<Chapter>,
+            entry: Entry,
+            children: Array<EntryChapter>,
+            groupId: Int,
+        ): PendingIntent {
+            return downloadChildrenPendingBroadcast(context, entry, children, groupId)
+        }
+
+        internal fun downloadChildrenPendingBroadcast(
+            context: Context,
+            entry: Entry,
+            children: Array<EntryChapter>,
             groupId: Int,
         ): PendingIntent {
             val newIntent = Intent(context, NotificationReceiver::class.java).apply {
-                action = ACTION_DOWNLOAD_CHAPTER
-                putExtra(EXTRA_CHAPTER_URL, chapters.map { it.url }.toTypedArray())
-                putExtra(EXTRA_MANGA_ID, manga.id)
-                putExtra(EXTRA_NOTIFICATION_ID, manga.id.hashCode())
+                action = ACTION_DOWNLOAD_CHILDREN
+                putExtra(EXTRA_ENTRY_ID, entry.id)
+                putExtra(EXTRA_CHILD_IDS, children.map { it.id }.toLongArray())
+                putExtra(EXTRA_NOTIFICATION_ID, entry.id.hashCode())
                 putExtra(EXTRA_GROUP_ID, groupId)
             }
             return PendingIntent.getBroadcast(
                 context,
-                manga.id.hashCode(),
+                entry.id.hashCode(),
                 newIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
+        }
+
+        @Deprecated("Use markConsumedPendingBroadcast instead.")
+        internal fun markEntryEpisodesWatchedPendingBroadcast(
+            context: Context,
+            entry: Entry,
+            children: Array<EntryChapter>,
+            groupId: Int,
+        ): PendingIntent {
+            return markConsumedPendingBroadcast(context, entry, children, groupId)
         }
 
         /**
@@ -492,18 +694,27 @@ class NotificationReceiver : BroadcastReceiver() {
          * @param context context of application
          * @param mangaId id of the entry to open
          */
-        internal fun openEntryPendingActivity(context: Context, mangaId: Long): PendingIntent {
+        internal fun openEntryPendingActivity(
+            context: Context,
+            entryId: Long,
+            groupId: Int? = null,
+        ): PendingIntent {
             val newIntent = Intent(context, MainActivity::class.java).setAction(Constants.SHORTCUT_MANGA)
                 .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                .putExtra(Constants.MANGA_EXTRA, mangaId)
-                .putExtra("notificationId", mangaId.hashCode())
+                .putExtra(Constants.ENTRY_EXTRA, entryId)
+                .putExtra("notificationId", entryId.hashCode())
+            groupId?.let { newIntent.putExtra("groupId", it) }
 
             return PendingIntent.getActivity(
                 context,
-                mangaId.hashCode(),
+                entryId.hashCode(),
                 newIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
+        }
+
+        internal fun openAnimeTypedEntryPendingActivity(context: Context, entryId: Long, groupId: Int): PendingIntent {
+            return openEntryPendingActivity(context, entryId, groupId)
         }
 
         /**
@@ -564,7 +775,7 @@ class NotificationReceiver : BroadcastReceiver() {
         }
 
         /**
-         * Returns [PendingIntent] that opens the extensions controller.
+         * Returns [PendingIntent] that opens the extensions screen.
          *
          * @param context context of application
          * @return [PendingIntent]
@@ -636,5 +847,85 @@ class NotificationReceiver : BroadcastReceiver() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
         }
+    }
+}
+
+internal class NotificationEntryActionHandler(
+    private val entryRepository: EntryRepository,
+    private val entryChapterRepository: EntryChapterRepository,
+    private val entryConsumptionInteraction: EntryConsumptionInteraction,
+    private val entryDownloadInteraction: EntryDownloadInteraction,
+    private val entryOpenInteraction: EntryOpenInteraction,
+) {
+    suspend fun openChild(
+        context: Context,
+        visibleEntryId: Long,
+        ownerEntryId: Long,
+        childId: Long,
+    ): Boolean {
+        if (visibleEntryId <= -1 || ownerEntryId <= -1 || childId <= -1) {
+            return false
+        }
+
+        val entry = entryRepository.getEntryById(visibleEntryId) ?: return false
+        val chapter = entryChapterRepository.getChapterById(childId) ?: return false
+
+        entryOpenInteraction.open(
+            context = context,
+            entry = entry,
+            chapter = chapter,
+            options = EntryOpenOptions(
+                ownerEntryId = ownerEntryId,
+                newTask = true,
+                clearTop = true,
+            ),
+        )
+        return true
+    }
+
+    suspend fun markConsumed(entryId: Long, childIds: LongArray) {
+        val entry = entryRepository.getEntryById(entryId) ?: return
+        val chapters = loadChapters(childIds)
+        if (chapters.isNotEmpty()) {
+            entryConsumptionInteraction.setConsumed(entry, chapters, consumed = true)
+        }
+    }
+
+    suspend fun markConsumed(entryId: Long, childUrls: Array<String>) {
+        val childIds = loadChildIds(entryId, childUrls)
+        if (childIds.isNotEmpty()) {
+            markConsumed(entryId, childIds)
+        }
+    }
+
+    suspend fun downloadChildren(entryId: Long, childIds: LongArray) {
+        val entry = entryRepository.getEntryById(entryId) ?: return
+        val chapters = loadChapters(childIds)
+        if (chapters.isNotEmpty()) {
+            entryDownloadInteraction.download(entry, chapters)
+        }
+    }
+
+    suspend fun downloadChildren(entryId: Long, childUrls: Array<String>) {
+        val childIds = loadChildIds(entryId, childUrls)
+        if (childIds.isNotEmpty()) {
+            downloadChildren(entryId, childIds)
+        }
+    }
+
+    private suspend fun loadChapters(childIds: LongArray): List<EntryChapter> {
+        return buildList {
+            childIds.forEach { childId ->
+                entryChapterRepository.getChapterById(childId)?.let(::add)
+            }
+        }
+    }
+
+    private suspend fun loadChildIds(entryId: Long, childUrls: Array<String>): LongArray {
+        val urls = childUrls.toSet()
+        return entryChapterRepository.getChaptersByEntryIdAwait(entryId)
+            .filter { it.url in urls }
+            .map { it.id }
+            .toLongArray()
     }
 }

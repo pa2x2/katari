@@ -35,6 +35,14 @@ dependencies {
     // These allow us to reference the dependency catalog inside our compiled plugins
     compileOnly(files(libs::class.java.superclass.protectionDomain.codeSource.location))
     compileOnly(files(mihonx::class.java.superclass.protectionDomain.codeSource.location))
+
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.kotest.assertions)
+    testRuntimeOnly(libs.junit.platform.launcher)
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }
 
 samWithReceiver {

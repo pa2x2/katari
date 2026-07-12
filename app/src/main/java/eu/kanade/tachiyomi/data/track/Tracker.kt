@@ -7,9 +7,9 @@ import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import kotlinx.coroutines.flow.Flow
 import okhttp3.OkHttpClient
-import tachiyomi.domain.track.model.Track as DomainTrack
+import tachiyomi.domain.track.model.EntryTrack
 
-interface Tracker {
+interface Tracker : TrackerCapabilities {
 
     val id: Long
 
@@ -38,11 +38,11 @@ interface Tracker {
     fun getScoreList(): List<String>
 
     // TODO: Store all scores as 10 point in the future maybe?
-    fun get10PointScore(track: DomainTrack): Double
+    fun get10PointScore(track: EntryTrack): Double
 
     fun indexToScore(index: Int): Double
 
-    fun displayScore(track: DomainTrack): String
+    fun displayScore(track: EntryTrack): String
 
     suspend fun update(track: Track, didReadChapter: Boolean = false): Track
 
@@ -72,7 +72,7 @@ interface Tracker {
     fun saveCredentials(username: String, password: String)
 
     // TODO: move this to an interactor, and update all trackers based on common data
-    suspend fun register(item: Track, mangaId: Long)
+    suspend fun register(item: Track, entryId: Long)
 
     suspend fun setRemoteStatus(track: Track, status: Long)
 

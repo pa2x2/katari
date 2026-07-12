@@ -1,0 +1,45 @@
+import kotlin.Boolean;
+
+CREATE TABLE playback_state(
+    _id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entry_id INTEGER NOT NULL,
+    chapter_id INTEGER NOT NULL,
+    position_ms INTEGER NOT NULL,
+    duration_ms INTEGER NOT NULL,
+    completed INTEGER AS Boolean NOT NULL,
+    last_watched_at INTEGER NOT NULL,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    FOREIGN KEY(chapter_id) REFERENCES chapters(_id) ON DELETE CASCADE,
+    UNIQUE(entry_id, chapter_id)
+);
+
+CREATE INDEX idx_playback_state_entry_id ON playback_state(entry_id);
+CREATE INDEX idx_playback_state_last_watched_at ON playback_state(last_watched_at);
+
+getByChapterId:
+SELECT *
+FROM playback_state
+WHERE chapter_id = :chapterId;
+
+getByEntryId:
+SELECT PS.*
+FROM playback_state PS
+JOIN chapters C ON PS.chapter_id = C._id
+WHERE C.entry_id = :entryId;
+
+deleteByProfile:
+DELETE FROM playback_state
+WHERE entry_id IN (SELECT _id FROM entries WHERE profile_id = :profileId);
+
+upsertUpdate:
+UPDATE playback_state
+SET position_ms = :positionMs,
+    duration_ms = :durationMs,
+    completed = :completed,
+    last_watched_at = :lastWatchedAt
+WHERE entry_id = :entryId
+AND chapter_id = :chapterId;
+
+upsertInsert:
+INSERT OR IGNORE INTO playback_state(entry_id, chapter_id, position_ms, duration_ms, completed, last_watched_at)
+VALUES (:entryId, :chapterId, :positionMs, :durationMs, :completed, :lastWatchedAt);

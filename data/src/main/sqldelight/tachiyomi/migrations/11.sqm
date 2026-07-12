@@ -1,16 +1,172 @@
-import kotlin.Boolean;
-
-CREATE TABLE extension_store(
-    index_url TEXT NOT NULL PRIMARY KEY,
+CREATE TABLE profiles(
+    _id INTEGER NOT NULL PRIMARY KEY,
+    uuid TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL,
-    badge_label TEXT NOT NULL,
-    signing_key TEXT NOT NULL,
-    contact_website TEXT NOT NULL,
-    contact_discord TEXT,
-    is_legacy INTEGER AS Boolean NOT NULL
+    color_seed INTEGER NOT NULL,
+    position INTEGER NOT NULL,
+    requires_auth INTEGER NOT NULL DEFAULT 0,
+    is_archived INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL DEFAULT 0,
+    updated_at INTEGER NOT NULL DEFAULT 0
 );
 
-INSERT INTO extension_store(index_url, name, badge_label, signing_key, contact_website, contact_discord, is_legacy)
-SELECT base_url || '/repo.json', name, coalesce(short_name, name), signing_key_fingerprint, website, NULL, 1 FROM extension_repos;
+INSERT INTO profiles(_id, uuid, name, color_seed, position, requires_auth, is_archived, created_at, updated_at)
+VALUES (1, 'default', 'Default', 5200626, 0, 0, 0, strftime('%s', 'now'), strftime('%s', 'now'));
 
-DROP TABLE extension_repos;
+ALTER TABLE mangas ADD COLUMN profile_id INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE chapters ADD COLUMN profile_id INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE categories ADD COLUMN profile_id INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE mangas_categories ADD COLUMN profile_id INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE history ADD COLUMN profile_id INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE excluded_scanlators ADD COLUMN profile_id INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE manga_sync ADD COLUMN profile_id INTEGER NOT NULL DEFAULT 1;
+
+UPDATE chapters
+SET profile_id = (
+    SELECT profile_id FROM mangas WHERE mangas._id = chapters.manga_id
+)
+WHERE profile_id = 1;
+
+UPDATE mangas_categories
+SET profile_id = (
+    SELECT profile_id FROM mangas WHERE mangas._id = mangas_categories.manga_id
+)
+WHERE profile_id = 1;
+
+UPDATE history
+SET profile_id = (
+    SELECT profile_id FROM chapters WHERE chapters._id = history.chapter_id
+)
+WHERE profile_id = 1;
+
+UPDATE excluded_scanlators
+SET profile_id = (
+    SELECT profile_id FROM mangas WHERE mangas._id = excluded_scanlators.manga_id
+)
+WHERE profile_id = 1;
+
+UPDATE manga_sync
+SET profile_id = (
+    SELECT profile_id FROM mangas WHERE mangas._id = manga_sync.manga_id
+)
+WHERE profile_id = 1;
+
+DROP VIEW IF EXISTS libraryView;
+CREATE VIEW libraryView AS
+SELECT
+    M.*,
+    coalesce(C.total, 0) AS totalCount,
+    coalesce(C.readCount, 0) AS readCount,
+    coalesce(C.latestUpload, 0) AS latestUpload,
+    coalesce(C.fetchedAt, 0) AS chapterFetchedAt,
+    coalesce(C.lastRead, 0) AS lastRead,
+    coalesce(C.bookmarkCount, 0) AS bookmarkCount,
+    coalesce(MC.categories, '0') AS categories
+FROM mangas M
+LEFT JOIN (
+    SELECT
+        chapters.profile_id,
+        chapters.manga_id,
+        count(*) AS total,
+        sum(read) AS readCount,
+        coalesce(max(chapters.date_upload), 0) AS latestUpload,
+        coalesce(max(history.last_read), 0) AS lastRead,
+        coalesce(max(chapters.date_fetch), 0) AS fetchedAt,
+        sum(chapters.bookmark) AS bookmarkCount
+    FROM chapters
+    LEFT JOIN excluded_scanlators
+    ON chapters.profile_id = excluded_scanlators.profile_id
+    AND chapters.manga_id = excluded_scanlators.manga_id
+    AND chapters.scanlator = excluded_scanlators.scanlator
+    LEFT JOIN history
+    ON chapters.profile_id = history.profile_id
+    AND chapters._id = history.chapter_id
+    WHERE excluded_scanlators.scanlator IS NULL
+    GROUP BY chapters.profile_id, chapters.manga_id
+) AS C
+ON M.profile_id = C.profile_id
+AND M._id = C.manga_id
+LEFT JOIN (
+    SELECT profile_id, manga_id, group_concat(category_id) AS categories
+    FROM mangas_categories
+    GROUP BY profile_id, manga_id
+) AS MC
+ON MC.profile_id = M.profile_id
+AND MC.manga_id = M._id
+WHERE M.favorite = 1;
+
+DROP VIEW IF EXISTS historyView;
+CREATE VIEW historyView AS
+SELECT
+    history.profile_id,
+    history._id AS id,
+    mangas._id AS mangaId,
+    chapters._id AS chapterId,
+    mangas.title,
+    mangas.thumbnail_url AS thumbnailUrl,
+    mangas.source,
+    mangas.favorite,
+    mangas.cover_last_modified,
+    chapters.chapter_number AS chapterNumber,
+    history.last_read AS readAt,
+    history.time_read AS readDuration,
+    max_last_read.last_read AS maxReadAt,
+    max_last_read.chapter_id AS maxReadAtChapterId
+FROM mangas
+JOIN chapters
+ON mangas.profile_id = chapters.profile_id
+AND mangas._id = chapters.manga_id
+JOIN history
+ON chapters.profile_id = history.profile_id
+AND chapters._id = history.chapter_id
+JOIN (
+    SELECT chapters.profile_id, chapters.manga_id, chapters._id AS chapter_id, MAX(history.last_read) AS last_read
+    FROM chapters JOIN history
+    ON chapters.profile_id = history.profile_id
+    AND chapters._id = history.chapter_id
+    GROUP BY chapters.profile_id, chapters.manga_id
+) AS max_last_read
+ON chapters.profile_id = max_last_read.profile_id
+AND chapters.manga_id = max_last_read.manga_id;
+
+DROP VIEW IF EXISTS updatesView;
+CREATE VIEW updatesView AS
+SELECT
+    mangas.profile_id,
+    mangas._id AS mangaId,
+    mangas.title AS mangaTitle,
+    chapters._id AS chapterId,
+    chapters.name AS chapterName,
+    chapters.scanlator,
+    chapters.url AS chapterUrl,
+    chapters.read,
+    chapters.bookmark,
+    chapters.last_page_read,
+    mangas.source,
+    mangas.favorite,
+    mangas.thumbnail_url AS thumbnailUrl,
+    mangas.cover_last_modified AS coverLastModified,
+    chapters.date_upload AS dateUpload,
+    chapters.date_fetch AS datefetch,
+    excluded_scanlators.scanlator AS excludedScanlator
+FROM mangas JOIN chapters
+ON mangas.profile_id = chapters.profile_id
+AND mangas._id = chapters.manga_id
+LEFT JOIN excluded_scanlators
+ON mangas.profile_id = excluded_scanlators.profile_id
+AND mangas._id = excluded_scanlators.manga_id
+AND chapters.scanlator = excluded_scanlators.scanlator
+WHERE favorite = 1
+AND date_fetch > date_added
+ORDER BY date_fetch DESC;
+
+CREATE INDEX IF NOT EXISTS idx_mangas_profile_source ON mangas(profile_id, source);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_mangas_profile_source_url ON mangas(profile_id, source, url);
+CREATE INDEX IF NOT EXISTS idx_chapters_profile_url ON chapters(profile_id, url);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_chapters_profile_manga_url ON chapters(profile_id, manga_id, url);
+CREATE INDEX IF NOT EXISTS idx_categories_profile_sort ON categories(profile_id, sort);
+CREATE INDEX IF NOT EXISTS idx_mangas_categories_profile_manga_id ON mangas_categories(profile_id, manga_id);
+CREATE INDEX IF NOT EXISTS idx_mangas_categories_profile_category_id ON mangas_categories(profile_id, category_id);
+CREATE INDEX IF NOT EXISTS idx_excluded_scanlators_profile_scanlator ON excluded_scanlators(profile_id, scanlator);
+CREATE INDEX IF NOT EXISTS idx_manga_sync_profile_manga_id ON manga_sync(profile_id, manga_id);
+CREATE INDEX IF NOT EXISTS idx_history_profile_last_read ON history(profile_id, last_read);

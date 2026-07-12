@@ -1,0 +1,309 @@
+-- Phase 2: Database schema unification (part 2).
+-- Migrates dependent tables to reference the unified entries/chapters tables.
+
+-- 1. Migrate anime playback state to the generalized table.
+INSERT INTO playback_state(entry_id, chapter_id, position_ms, duration_ms, completed, last_watched_at)
+SELECT
+    C.entry_id,
+    CM.chapter_id,
+    APS.position_ms,
+    APS.duration_ms,
+    APS.completed,
+    APS.last_watched_at
+FROM anime_playback_state APS
+CROSS JOIN __chapter_id_map CM ON CM.old_table = 'anime_episodes' AND CM.old_id = APS.episode_id
+JOIN chapters C ON C._id = CM.chapter_id
+WHERE true
+ON CONFLICT(entry_id, chapter_id) DO UPDATE SET
+    position_ms = CASE
+        WHEN excluded.last_watched_at >= playback_state.last_watched_at THEN excluded.position_ms
+        ELSE playback_state.position_ms
+    END,
+    duration_ms = CASE
+        WHEN excluded.last_watched_at >= playback_state.last_watched_at THEN excluded.duration_ms
+        ELSE playback_state.duration_ms
+    END,
+    completed = max(playback_state.completed, excluded.completed),
+    last_watched_at = max(playback_state.last_watched_at, excluded.last_watched_at);
+
+-- 2. Migrate anime playback preferences to the generalized table.
+INSERT INTO playback_preferences(
+    entry_id, dub_key, stream_key, source_quality_key, subtitle_key,
+    player_quality_mode, player_quality_height, subtitle_offset_x, subtitle_offset_y,
+    subtitle_text_size, subtitle_text_color, subtitle_background_color,
+    subtitle_background_opacity, updated_at
+)
+SELECT
+    IM.entry_id,
+    APP.dub_key, APP.stream_key, APP.source_quality_key, APP.subtitle_key,
+    APP.player_quality_mode, APP.player_quality_height, APP.subtitle_offset_x, APP.subtitle_offset_y,
+    APP.subtitle_text_size, APP.subtitle_text_color, APP.subtitle_background_color,
+    APP.subtitle_background_opacity, APP.updated_at
+FROM anime_playback_preferences APP
+JOIN __id_map IM ON IM.old_table = 'animes' AND APP.anime_id = IM.old_id
+WHERE true
+ON CONFLICT(entry_id) DO UPDATE SET
+    dub_key = CASE
+        WHEN excluded.updated_at >= playback_preferences.updated_at THEN excluded.dub_key
+        ELSE playback_preferences.dub_key
+    END,
+    stream_key = CASE
+        WHEN excluded.updated_at >= playback_preferences.updated_at THEN excluded.stream_key
+        ELSE playback_preferences.stream_key
+    END,
+    source_quality_key = CASE
+        WHEN excluded.updated_at >= playback_preferences.updated_at THEN excluded.source_quality_key
+        ELSE playback_preferences.source_quality_key
+    END,
+    subtitle_key = CASE
+        WHEN excluded.updated_at >= playback_preferences.updated_at THEN excluded.subtitle_key
+        ELSE playback_preferences.subtitle_key
+    END,
+    player_quality_mode = CASE
+        WHEN excluded.updated_at >= playback_preferences.updated_at THEN excluded.player_quality_mode
+        ELSE playback_preferences.player_quality_mode
+    END,
+    player_quality_height = CASE
+        WHEN excluded.updated_at >= playback_preferences.updated_at THEN excluded.player_quality_height
+        ELSE playback_preferences.player_quality_height
+    END,
+    subtitle_offset_x = CASE
+        WHEN excluded.updated_at >= playback_preferences.updated_at THEN excluded.subtitle_offset_x
+        ELSE playback_preferences.subtitle_offset_x
+    END,
+    subtitle_offset_y = CASE
+        WHEN excluded.updated_at >= playback_preferences.updated_at THEN excluded.subtitle_offset_y
+        ELSE playback_preferences.subtitle_offset_y
+    END,
+    subtitle_text_size = CASE
+        WHEN excluded.updated_at >= playback_preferences.updated_at THEN excluded.subtitle_text_size
+        ELSE playback_preferences.subtitle_text_size
+    END,
+    subtitle_text_color = CASE
+        WHEN excluded.updated_at >= playback_preferences.updated_at THEN excluded.subtitle_text_color
+        ELSE playback_preferences.subtitle_text_color
+    END,
+    subtitle_background_color = CASE
+        WHEN excluded.updated_at >= playback_preferences.updated_at THEN excluded.subtitle_background_color
+        ELSE playback_preferences.subtitle_background_color
+    END,
+    subtitle_background_opacity = CASE
+        WHEN excluded.updated_at >= playback_preferences.updated_at THEN excluded.subtitle_background_opacity
+        ELSE playback_preferences.subtitle_background_opacity
+    END,
+    updated_at = max(playback_preferences.updated_at, excluded.updated_at);
+
+-- 3. Migrate anime download preferences to the generalized table.
+INSERT INTO download_preferences(
+    entry_id, dub_key, stream_key, subtitle_key, quality_mode, updated_at
+)
+SELECT
+    IM.entry_id,
+    ADP.dub_key, ADP.stream_key, ADP.subtitle_key, ADP.quality_mode, ADP.updated_at
+FROM anime_download_preferences ADP
+JOIN __id_map IM ON IM.old_table = 'animes' AND ADP.anime_id = IM.old_id
+WHERE true
+ON CONFLICT(entry_id) DO UPDATE SET
+    dub_key = CASE
+        WHEN excluded.updated_at >= download_preferences.updated_at THEN excluded.dub_key
+        ELSE download_preferences.dub_key
+    END,
+    stream_key = CASE
+        WHEN excluded.updated_at >= download_preferences.updated_at THEN excluded.stream_key
+        ELSE download_preferences.stream_key
+    END,
+    subtitle_key = CASE
+        WHEN excluded.updated_at >= download_preferences.updated_at THEN excluded.subtitle_key
+        ELSE download_preferences.subtitle_key
+    END,
+    quality_mode = CASE
+        WHEN excluded.updated_at >= download_preferences.updated_at THEN excluded.quality_mode
+        ELSE download_preferences.quality_mode
+    END,
+    updated_at = max(download_preferences.updated_at, excluded.updated_at);
+
+-- 4. Recreate history with entry_id before migrating manga/anime history.
+CREATE TABLE history_new(
+    _id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entry_id INTEGER NOT NULL,
+    chapter_id INTEGER NOT NULL,
+    last_read INTEGER,
+    time_read INTEGER NOT NULL,
+    UNIQUE(chapter_id),
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    FOREIGN KEY(chapter_id) REFERENCES chapters(_id) ON DELETE CASCADE
+);
+
+INSERT INTO history_new(entry_id, chapter_id, last_read, time_read)
+SELECT
+    C.entry_id,
+    CM.chapter_id,
+    H.last_read,
+    H.time_read
+FROM history H
+CROSS JOIN __chapter_id_map CM ON CM.old_table = 'old_chapters' AND CM.old_id = H.chapter_id
+JOIN chapters C ON C._id = CM.chapter_id
+WHERE true
+ON CONFLICT(chapter_id) DO UPDATE SET
+    last_read = CASE
+        WHEN excluded.last_read IS NULL THEN history_new.last_read
+        WHEN history_new.last_read IS NULL OR excluded.last_read > history_new.last_read THEN excluded.last_read
+        ELSE history_new.last_read
+    END,
+    time_read = max(history_new.time_read, excluded.time_read);
+
+-- 5. Migrate anime history into the unified history table.
+INSERT INTO history_new(entry_id, chapter_id, last_read, time_read)
+SELECT
+    C.entry_id,
+    CM.chapter_id,
+    AH.last_watched,
+    AH.time_watched
+FROM anime_history AH
+CROSS JOIN __chapter_id_map CM ON CM.old_table = 'anime_episodes' AND CM.old_id = AH.episode_id
+JOIN chapters C ON C._id = CM.chapter_id
+WHERE true
+ON CONFLICT(chapter_id) DO UPDATE SET
+    last_read = CASE
+        WHEN excluded.last_read IS NULL THEN history_new.last_read
+        WHEN history_new.last_read IS NULL OR excluded.last_read > history_new.last_read THEN excluded.last_read
+        ELSE history_new.last_read
+    END,
+    time_read = max(history_new.time_read, excluded.time_read);
+
+DROP TABLE history;
+ALTER TABLE history_new RENAME TO history;
+
+CREATE INDEX history_history_chapter_id_index ON history(entry_id, chapter_id);
+CREATE INDEX idx_history_last_read ON history(last_read);
+
+-- 6. Migrate excluded scanlators to use entry_id.
+CREATE TABLE excluded_scanlators_new(
+    profile_id INTEGER NOT NULL DEFAULT 1,
+    entry_id INTEGER NOT NULL,
+    scanlator TEXT NOT NULL,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    FOREIGN KEY(profile_id) REFERENCES profiles(_id) ON DELETE CASCADE
+);
+
+INSERT INTO excluded_scanlators_new(profile_id, entry_id, scanlator)
+SELECT ES.profile_id, IM.entry_id, ES.scanlator
+FROM excluded_scanlators ES
+JOIN __id_map IM ON IM.old_table = 'mangas' AND ES.manga_id = IM.old_id;
+
+DROP TABLE excluded_scanlators;
+ALTER TABLE excluded_scanlators_new RENAME TO excluded_scanlators;
+
+CREATE INDEX excluded_scanlators_entry_id_index ON excluded_scanlators(profile_id, entry_id);
+CREATE INDEX idx_excluded_scanlators_scanlator ON excluded_scanlators(profile_id, scanlator);
+
+-- 7. Rename manga_sync to entry_sync and remap manga_id to entry_id.
+CREATE TABLE entry_sync(
+    _id INTEGER PRIMARY KEY AUTOINCREMENT,
+    profile_id INTEGER NOT NULL DEFAULT 1,
+    entry_id INTEGER NOT NULL,
+    sync_id INTEGER NOT NULL,
+    remote_id INTEGER NOT NULL,
+    library_id INTEGER,
+    title TEXT NOT NULL,
+    last_chapter_read REAL NOT NULL,
+    total_chapters INTEGER NOT NULL,
+    status INTEGER NOT NULL,
+    score REAL NOT NULL,
+    remote_url TEXT NOT NULL,
+    start_date INTEGER NOT NULL,
+    finish_date INTEGER NOT NULL,
+    private INTEGER DEFAULT 0 NOT NULL,
+    UNIQUE (profile_id, entry_id, sync_id) ON CONFLICT REPLACE,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    FOREIGN KEY(profile_id) REFERENCES profiles(_id) ON DELETE CASCADE
+);
+
+INSERT INTO entry_sync(
+    profile_id, entry_id, sync_id, remote_id, library_id, title, last_chapter_read,
+    total_chapters, status, score, remote_url, start_date, finish_date, private
+)
+SELECT
+    MS.profile_id, IM.entry_id, MS.sync_id, MS.remote_id, MS.library_id, MS.title,
+    MS.last_chapter_read, MS.total_chapters, MS.status, MS.score, MS.remote_url,
+    MS.start_date, MS.finish_date, MS.private
+FROM manga_sync MS
+JOIN __id_map IM ON IM.old_table = 'mangas' AND MS.manga_id = IM.old_id;
+
+DROP TABLE manga_sync;
+
+CREATE INDEX idx_entry_sync_entry_id ON entry_sync(profile_id, entry_id);
+
+-- 8. Rename manga_cover_hashes to entry_cover_hashes and remap manga_id to entry_id.
+CREATE TABLE entry_cover_hashes(
+    entry_id INTEGER NOT NULL,
+    profile_id INTEGER NOT NULL DEFAULT 1,
+    cover_last_modified INTEGER NOT NULL,
+    hash INTEGER NOT NULL,
+    PRIMARY KEY(entry_id, profile_id, cover_last_modified),
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    FOREIGN KEY(profile_id) REFERENCES profiles(_id) ON DELETE CASCADE
+);
+
+INSERT INTO entry_cover_hashes(entry_id, profile_id, cover_last_modified, hash)
+SELECT IM.entry_id, MCH.profile_id, MCH.cover_last_modified, MCH.hash
+FROM manga_cover_hashes MCH
+JOIN __id_map IM ON IM.old_table = 'mangas' AND MCH.manga_id = IM.old_id;
+
+DROP TABLE manga_cover_hashes;
+
+CREATE INDEX idx_entry_cover_hashes_profile_entry ON entry_cover_hashes(profile_id, entry_id);
+
+-- 9. Migrate merged manga/anime relationships into merged_entries.
+CREATE TABLE merged_entries(
+    _id INTEGER PRIMARY KEY AUTOINCREMENT,
+    profile_id INTEGER NOT NULL DEFAULT 1,
+    target_entry_id INTEGER NOT NULL,
+    entry_id INTEGER NOT NULL,
+    position INTEGER NOT NULL,
+    UNIQUE(profile_id, entry_id),
+    UNIQUE(profile_id, target_entry_id, position),
+    FOREIGN KEY(target_entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    FOREIGN KEY(profile_id) REFERENCES profiles(_id) ON DELETE CASCADE
+);
+
+INSERT INTO merged_entries(profile_id, target_entry_id, entry_id, position)
+SELECT MM.profile_id, TIM.entry_id, SIM.entry_id, MM.position
+FROM merged_mangas MM
+JOIN __id_map TIM ON TIM.old_table = 'mangas' AND MM.target_manga_id = TIM.old_id
+JOIN __id_map SIM ON SIM.old_table = 'mangas' AND MM.manga_id = SIM.old_id;
+
+INSERT INTO merged_entries(profile_id, target_entry_id, entry_id, position)
+SELECT MA.profile_id, TIM.entry_id, SIM.entry_id, MA.position
+FROM merged_animes MA
+JOIN __id_map TIM ON TIM.old_table = 'animes' AND MA.target_anime_id = TIM.old_id
+JOIN __id_map SIM ON SIM.old_table = 'animes' AND MA.anime_id = SIM.old_id;
+
+CREATE INDEX idx_merged_entries_target ON merged_entries(profile_id, target_entry_id);
+CREATE INDEX idx_merged_entries_entry ON merged_entries(profile_id, entry_id);
+
+-- 10. Recreate entries_categories without entry_type and remap entry_id values.
+CREATE TABLE entries_categories_new(
+    _id INTEGER PRIMARY KEY AUTOINCREMENT,
+    profile_id INTEGER NOT NULL,
+    entry_id INTEGER NOT NULL,
+    category_id INTEGER NOT NULL,
+    FOREIGN KEY(category_id) REFERENCES categories(_id) ON DELETE CASCADE,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    FOREIGN KEY(profile_id) REFERENCES profiles(_id) ON DELETE CASCADE
+);
+
+INSERT INTO entries_categories_new(profile_id, entry_id, category_id)
+SELECT EC.profile_id, IM.entry_id, EC.category_id
+FROM entries_categories EC
+JOIN __id_map IM ON (
+    (EC.entry_type = 'manga' AND IM.old_table = 'mangas' AND EC.entry_id = IM.old_id)
+    OR (EC.entry_type = 'anime' AND IM.old_table = 'animes' AND EC.entry_id = IM.old_id)
+);
+
+DROP TABLE entries_categories;
+ALTER TABLE entries_categories_new RENAME TO entries_categories;
+
+CREATE INDEX idx_entries_categories_entry ON entries_categories(profile_id, entry_id);
+CREATE INDEX idx_entries_categories_category ON entries_categories(profile_id, category_id);

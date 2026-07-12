@@ -20,18 +20,24 @@ import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TriStateListDialog
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.launch
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.interactor.ResetCategoryFlags
 import tachiyomi.domain.category.model.Category
+import tachiyomi.domain.library.model.LibraryDisplayMode
+import tachiyomi.domain.library.model.LibraryGroupType
+import tachiyomi.domain.library.model.LibrarySort
+import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_CHARGING
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_NETWORK_NOT_METERED
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_ONLY_ON_WIFI
-import tachiyomi.domain.library.service.LibraryPreferences.Companion.MANGA_HAS_UNREAD
-import tachiyomi.domain.library.service.LibraryPreferences.Companion.MANGA_NON_COMPLETED
-import tachiyomi.domain.library.service.LibraryPreferences.Companion.MANGA_NON_READ
-import tachiyomi.domain.library.service.LibraryPreferences.Companion.MANGA_OUTSIDE_RELEASE_PERIOD
+import tachiyomi.domain.library.service.LibraryPreferences.Companion.ENTRY_HAS_UNCONSUMED
+import tachiyomi.domain.library.service.LibraryPreferences.Companion.ENTRY_NON_COMPLETED
+import tachiyomi.domain.library.service.LibraryPreferences.Companion.ENTRY_NON_STARTED
+import tachiyomi.domain.library.service.LibraryPreferences.Companion.ENTRY_OUTSIDE_RELEASE_PERIOD
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.MARK_DUPLICATE_CHAPTER_READ_EXISTING
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.MARK_DUPLICATE_CHAPTER_READ_NEW
 import tachiyomi.i18n.MR
@@ -40,6 +46,24 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+
+internal enum class LibrarySettingsSection {
+    Categories,
+    Display,
+    Group,
+    LibraryUpdate,
+    Behavior,
+}
+
+internal fun visibleLibrarySettingsSections(): List<LibrarySettingsSection> {
+    return listOf(
+        LibrarySettingsSection.Categories,
+        LibrarySettingsSection.Display,
+        LibrarySettingsSection.Group,
+        LibrarySettingsSection.LibraryUpdate,
+        LibrarySettingsSection.Behavior,
+    )
+}
 
 object SettingsLibraryScreen : SearchableSettings {
 
@@ -51,12 +75,39 @@ object SettingsLibraryScreen : SearchableSettings {
     override fun getPreferences(): List<Preference> {
         val getCategories = remember { Injekt.get<GetCategories>() }
         val libraryPreferences = remember { Injekt.get<LibraryPreferences>() }
+        val globalLibraryPreferences = remember { Injekt.get<GlobalLibraryPreferences>() }
         val allCategories by getCategories.subscribe().collectAsState(initial = emptyList())
+        val navigator = LocalNavigator.currentOrThrow
+        val visibleSections = remember {
+            visibleLibrarySettingsSections()
+        }
 
-        return listOf(
-            getCategoriesGroup(LocalNavigator.currentOrThrow, allCategories, libraryPreferences),
-            getGlobalUpdateGroup(allCategories, libraryPreferences),
-            getBehaviorGroup(libraryPreferences),
+        return listOfNotNull(
+            if (LibrarySettingsSection.Categories in visibleSections) {
+                getCategoriesGroup(navigator, allCategories, libraryPreferences)
+            } else {
+                null
+            },
+            if (LibrarySettingsSection.Display in visibleSections) {
+                getDisplayGroup(libraryPreferences)
+            } else {
+                null
+            },
+            if (LibrarySettingsSection.Group in visibleSections) {
+                getGroupGroup(libraryPreferences)
+            } else {
+                null
+            },
+            if (LibrarySettingsSection.LibraryUpdate in visibleSections) {
+                getGlobalUpdateGroup(allCategories, libraryPreferences)
+            } else {
+                null
+            },
+            if (LibrarySettingsSection.Behavior in visibleSections) {
+                getBehaviorGroup(libraryPreferences, globalLibraryPreferences)
+            } else {
+                null
+            },
         )
     }
 
@@ -191,12 +242,12 @@ object SettingsLibraryScreen : SearchableSettings {
                     subtitle = stringResource(MR.strings.pref_library_update_refresh_metadata_summary),
                 ),
                 Preference.PreferenceItem.MultiSelectListPreference(
-                    preference = libraryPreferences.autoUpdateMangaRestrictions,
+                    preference = libraryPreferences.autoUpdateEntryRestrictions,
                     entries = mapOf(
-                        MANGA_HAS_UNREAD to stringResource(MR.strings.pref_update_only_completely_read),
-                        MANGA_NON_READ to stringResource(MR.strings.pref_update_only_started),
-                        MANGA_NON_COMPLETED to stringResource(MR.strings.pref_update_only_non_completed),
-                        MANGA_OUTSIDE_RELEASE_PERIOD to stringResource(MR.strings.pref_update_only_in_release_period),
+                        ENTRY_HAS_UNCONSUMED to stringResource(MR.strings.pref_update_only_completely_read),
+                        ENTRY_NON_STARTED to stringResource(MR.strings.pref_update_only_started),
+                        ENTRY_NON_COMPLETED to stringResource(MR.strings.pref_update_only_non_completed),
+                        ENTRY_OUTSIDE_RELEASE_PERIOD to stringResource(MR.strings.pref_update_only_in_release_period),
                     ),
                     title = stringResource(MR.strings.pref_library_update_smart_update),
                 ),
@@ -211,6 +262,7 @@ object SettingsLibraryScreen : SearchableSettings {
     @Composable
     private fun getBehaviorGroup(
         libraryPreferences: LibraryPreferences,
+        globalLibraryPreferences: GlobalLibraryPreferences,
     ): Preference.PreferenceGroup {
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_behavior),
@@ -223,7 +275,7 @@ object SettingsLibraryScreen : SearchableSettings {
                         LibraryPreferences.ChapterSwipeAction.ToggleBookmark to
                             stringResource(MR.strings.action_bookmark),
                         LibraryPreferences.ChapterSwipeAction.ToggleRead to
-                            stringResource(MR.strings.action_mark_as_read),
+                            stringResource(MR.strings.action_mark_as_seen),
                         LibraryPreferences.ChapterSwipeAction.Download to
                             stringResource(MR.strings.action_download),
                     ),
@@ -237,15 +289,15 @@ object SettingsLibraryScreen : SearchableSettings {
                         LibraryPreferences.ChapterSwipeAction.ToggleBookmark to
                             stringResource(MR.strings.action_bookmark),
                         LibraryPreferences.ChapterSwipeAction.ToggleRead to
-                            stringResource(MR.strings.action_mark_as_read),
+                            stringResource(MR.strings.action_mark_as_seen),
                         LibraryPreferences.ChapterSwipeAction.Download to
                             stringResource(MR.strings.action_download),
                     ),
                     title = stringResource(MR.strings.pref_chapter_swipe_end),
                 ),
                 Preference.PreferenceItem.MultiSelectListPreference(
-                    preference = libraryPreferences.markDuplicateReadChapterAsRead,
-                    entries = mapOf(
+                    preference = globalLibraryPreferences.markDuplicateReadChapterAsRead,
+                    entries = persistentMapOf(
                         MARK_DUPLICATE_CHAPTER_READ_EXISTING to
                             stringResource(MR.strings.pref_mark_duplicate_read_chapter_read_existing),
                         MARK_DUPLICATE_CHAPTER_READ_NEW to
@@ -256,6 +308,133 @@ object SettingsLibraryScreen : SearchableSettings {
                 Preference.PreferenceItem.SwitchPreference(
                     preference = libraryPreferences.hideMissingChapters,
                     title = stringResource(MR.strings.pref_hide_missing_chapter_indicators),
+                ),
+            ),
+        )
+    }
+
+    @Composable
+    private fun getDisplayGroup(
+        libraryPreferences: LibraryPreferences,
+    ): Preference.PreferenceGroup {
+        val displayMode by libraryPreferences.displayMode.collectAsState()
+        val portraitColumns by libraryPreferences.portraitColumns.collectAsState()
+        val landscapeColumns by libraryPreferences.landscapeColumns.collectAsState()
+        val unreadBadgeTitle = MR.strings.action_display_unseen_badge
+        val continueButtonTitle = MR.strings.action_display_show_continue_button
+
+        return Preference.PreferenceGroup(
+            title = stringResource(MR.strings.action_display),
+            preferenceItems = persistentListOf(
+                Preference.PreferenceItem.ListPreference(
+                    preference = libraryPreferences.displayMode,
+                    entries = persistentMapOf(
+                        LibraryDisplayMode.CompactGrid to stringResource(MR.strings.action_display_grid),
+                        LibraryDisplayMode.ComfortableGrid to stringResource(
+                            MR.strings.action_display_comfortable_grid,
+                        ),
+                        LibraryDisplayMode.ComfortableList to stringResource(
+                            MR.strings.action_display_comfortable_list,
+                        ),
+                        LibraryDisplayMode.CoverOnlyGrid to stringResource(MR.strings.action_display_cover_only_grid),
+                        LibraryDisplayMode.List to stringResource(MR.strings.action_display_list),
+                    ),
+                    title = stringResource(MR.strings.action_display_mode),
+                ),
+                Preference.PreferenceItem.SliderPreference(
+                    value = portraitColumns,
+                    preference = libraryPreferences.portraitColumns,
+                    valueRange = 0..10,
+                    title = stringResource(MR.strings.portrait),
+                    subtitle = stringResource(MR.strings.pref_library_columns),
+                    valueString = if (portraitColumns > 0) {
+                        portraitColumns.toString()
+                    } else {
+                        stringResource(MR.strings.label_auto)
+                    },
+                    enabled = displayMode != LibraryDisplayMode.List &&
+                        displayMode != LibraryDisplayMode.ComfortableList,
+                    onValueChanged = { libraryPreferences.portraitColumns.set(it) },
+                ),
+                Preference.PreferenceItem.SliderPreference(
+                    value = landscapeColumns,
+                    preference = libraryPreferences.landscapeColumns,
+                    valueRange = 0..10,
+                    title = stringResource(MR.strings.landscape),
+                    subtitle = stringResource(MR.strings.pref_library_columns),
+                    valueString = if (landscapeColumns > 0) {
+                        landscapeColumns.toString()
+                    } else {
+                        stringResource(MR.strings.label_auto)
+                    },
+                    enabled = displayMode != LibraryDisplayMode.List &&
+                        displayMode != LibraryDisplayMode.ComfortableList,
+                    onValueChanged = { libraryPreferences.landscapeColumns.set(it) },
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = libraryPreferences.unreadBadge,
+                    title = stringResource(unreadBadgeTitle),
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = libraryPreferences.languageBadge,
+                    title = stringResource(MR.strings.action_display_language_badge),
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = libraryPreferences.entryTypeBadge,
+                    title = stringResource(MR.strings.action_display_entry_type_badge),
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = libraryPreferences.showContinueReadingButton,
+                    title = stringResource(continueButtonTitle),
+                ),
+            ),
+        )
+    }
+
+    @Composable
+    private fun getGroupGroup(
+        libraryPreferences: LibraryPreferences,
+    ): Preference.PreferenceGroup {
+        val groupType by libraryPreferences.groupType.collectAsState()
+
+        return Preference.PreferenceGroup(
+            title = stringResource(MR.strings.action_group),
+            preferenceItems = persistentListOf(
+                Preference.PreferenceItem.ListPreference(
+                    preference = libraryPreferences.groupType,
+                    entries = persistentMapOf(
+                        LibraryGroupType.Category to stringResource(MR.strings.action_group_category),
+                        LibraryGroupType.Type to stringResource(MR.strings.action_group_type),
+                        LibraryGroupType.Extension to stringResource(MR.strings.action_group_extension),
+                        LibraryGroupType.TypeCategory to stringResource(MR.strings.action_group_type_category),
+                        LibraryGroupType.CategoryType to stringResource(MR.strings.action_group_category_type),
+                        LibraryGroupType.ExtensionCategory to stringResource(
+                            MR.strings.action_group_extension_category,
+                        ),
+                        LibraryGroupType.CategoryExtension to stringResource(
+                            MR.strings.action_group_category_extension,
+                        ),
+                    ),
+                    title = stringResource(MR.strings.action_group),
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = libraryPreferences.categoryTabs,
+                    title = stringResource(
+                        when (groupType) {
+                            LibraryGroupType.Category -> MR.strings.action_display_show_tabs
+                            LibraryGroupType.Type -> MR.strings.action_display_show_type_tabs
+                            LibraryGroupType.Extension -> MR.strings.action_display_show_extension_tabs
+                            LibraryGroupType.TypeCategory,
+                            LibraryGroupType.CategoryType,
+                            LibraryGroupType.ExtensionCategory,
+                            LibraryGroupType.CategoryExtension,
+                            -> MR.strings.action_display_show_group_tabs
+                        },
+                    ),
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = libraryPreferences.categoryNumberOfItems,
+                    title = stringResource(MR.strings.action_display_show_number_of_items),
                 ),
             ),
         )

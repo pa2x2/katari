@@ -3,10 +3,20 @@ plugins {
     alias(mihonx.plugins.spotless)
 
     alias(libs.plugins.kotlin.serialization)
+    id("maven-publish")
 }
+
+group = "com.github.katariapp.katari"
+version = providers.gradleProperty("sourceApiVersion")
+    .orElse(System.getenv("VERSION") ?: "local-SNAPSHOT")
+    .get()
 
 android {
     namespace = "eu.kanade.tachiyomi.core.common"
+
+    publishing {
+        singleVariant("release")
+    }
 }
 
 kotlin {
@@ -52,4 +62,15 @@ dependencies {
 
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.junit.platform.launcher)
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            create<MavenPublication>("release") {
+                artifactId = "core-common"
+                from(components["release"])
+            }
+        }
+    }
 }
