@@ -6,6 +6,10 @@ Katari would not exist without Mihon and its contributors. Katari is not an offi
 
 For features inherited unchanged, see [documentation for inherited features](./inherited-features.md). When Katari behaves differently, follow the Katari guide.
 
+## The name
+
+“Katari” evokes the Japanese word *katari* (語り), meaning storytelling or the telling of stories. The name reflects Katari's goal of bringing different kinds of stories into one library.
+
 ## Terminology
 
 Mihon's documentation is written for manga and commonly uses terms such as **series** and **chapter**. Katari generalizes the underlying model:
