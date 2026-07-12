@@ -109,7 +109,7 @@ body:
           required: true
         - label: I have written a short, informative title.
           required: true
-        - label: I have checked the [Katari documentation](https://katariapp.github.io/) and updated to the [latest Katari release](https://github.com/katariapp/katari/releases/latest).
+        - label: I have checked the [Katari documentation](https://katariapp.github.io/katari/) and updated to the [latest Katari release](https://github.com/katariapp/katari/releases/latest).
           required: true
         - label: I have provided specific version numbers and all other information requested by this form.
           required: true

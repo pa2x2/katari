@@ -8,7 +8,7 @@
 
 Read, watch, and explore in one familiar Android app—built to welcome new ways of enjoying stories.
 
-[Download](https://github.com/katariapp/katari/releases/latest) · [Documentation](https://katariapp.github.io/)
+[Download](https://github.com/katariapp/katari/releases/latest) · [Documentation](https://katariapp.github.io/katari/)
 
 [![Latest release](https://img.shields.io/github/v/release/katariapp/katari?display_name=tag&sort=semver&label=release)](https://github.com/katariapp/katari/releases/latest)
 ![Android 8+](https://img.shields.io/badge/Android-8%2B-3DDC84?logo=android&logoColor=white)

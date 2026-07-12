@@ -2,7 +2,7 @@
 
 site_name: Katari documentation
 site_description: Documentation for Katari and its Entry-based extension API
-site_url: https://katariapp.github.io/
+site_url: https://katariapp.github.io/katari/
 repo_url: https://github.com/katariapp/katari
 repo_name: katariapp/katari
 edit_uri: edit/main/docs/

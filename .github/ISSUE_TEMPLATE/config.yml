@@ -1,7 +1,7 @@
 blank_issues_enabled: false
 contact_links:
   - name: 📖 Katari documentation
-    url: https://katariapp.github.io/
+    url: https://katariapp.github.io/katari/
     about: Guides, migration information, extension documentation, and Katari-specific behavior
   - name: ⬇️ Katari releases
     url: https://github.com/katariapp/katari/releases/latest
