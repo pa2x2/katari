@@ -13,7 +13,9 @@ Katari's changelog focused on behavior that differs from Mihon.
 1. Require exactly one stable semantic version. Normalize `1.1.0` to `v1.1.0`; reject
    prereleases, ranges, branches, and arbitrary commits.
 2. Read `AGENTS.md`. Verify the repository root, worktree state, `origin` URL, and GitHub
-   authentication. Preserve unrelated worktree changes.
+   authentication. Derive the GitHub `owner/repo` from `origin` and use it explicitly for
+   every subsequent `gh` command; never rely on `gh`'s default repository selection.
+   Preserve unrelated worktree changes.
 3. Fetch tags from `origin` without pushing or changing branches. Run:
 
    ```bash
@@ -90,16 +92,18 @@ Katari's changelog focused on behavior that differs from Mihon.
 5. Immediately before updating, re-read the release with:
 
    ```bash
-   gh release view <tag> --json tagName,name,isDraft,isPrerelease,body,url
+   gh release view <tag> --repo <origin-owner/repo> \
+     --json tagName,name,isDraft,isPrerelease,body,url
    ```
 
    Stop if it is missing, no longer a draft, or its tag differs. If its body changed since
    the preview, show the change and ask again instead of overwriting it.
 6. Write the approved body through a temporary file and run `gh release edit <tag>
-   --notes-file <file>`. Always remove the temporary file. Never change draft/prerelease
-   state, title, tag, target, or assets.
-7. Read the release back, verify the body, and report its URL plus the uncommitted changelog
-   path. Never publish, commit, stage, tag, or push.
+   --repo <origin-owner/repo> --notes-file <file>`. Always remove the temporary file.
+   Never change draft/prerelease state, title, tag, target, or assets.
+7. Read the release back with the same explicit `--repo <origin-owner/repo>`, verify the
+   body, and report its URL plus the uncommitted changelog path. Never publish, commit,
+   stage, tag, or push.
 
 ## Safety rules
 

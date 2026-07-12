@@ -9,6 +9,19 @@ this file covers the features and behavior that distinguish Katari.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-07-12
+
+### Improved
+
+- Refreshed high-volume custom feeds without prolonged loading and showed the available
+  new items promptly.
+- Made new-item indicators clearer and available in immersive feeds.
+- Unmuted immersive-feed video when raising the device volume.
+
+### Fixed
+
+- Restored removal of entries from the library.
+
 ## [1.0.0] - 2026-07-11
 
 Based on [Mihon v0.20.1](https://github.com/mihonapp/mihon/releases/tag/v0.20.1).
@@ -33,4 +46,5 @@ Based on [Mihon v0.20.1](https://github.com/mihonapp/mihon/releases/tag/v0.20.1)
   identity, release pipeline, and documentation.
 
 [Unreleased]: https://github.com/katariapp/katari/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/katariapp/katari/releases/tag/v1.0.1
 [1.0.0]: https://github.com/katariapp/katari/releases/tag/v1.0.0
