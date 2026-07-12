@@ -3,13 +3,19 @@ package mihon.entry.interactions.book.epub
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonPrimitive
 import mihon.book.api.BookContentDescriptor
+import mihon.book.api.BookContentResource
+import mihon.book.api.BookContentResourcePage
 import mihon.book.api.BookFailureReason
 import mihon.book.api.BookLocator
 import mihon.book.api.BookReadingDirection
+import mihon.book.api.BookResourceCacheState
+import mihon.book.api.BookResourceCapability
 import mihon.book.api.BookTextContext
+import mihon.entry.interactions.book.BookByteRange
 import mihon.entry.interactions.book.BookContentSession
 import mihon.entry.interactions.book.BookOpenResult
 import mihon.entry.interactions.book.MaterializedBookResource
+import mihon.entry.interactions.book.OpenedBookResource
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -101,6 +107,22 @@ class ReadiumEpubProcessorTest {
         assertFalse(content.closed)
     }
 
+    @Test
+    fun `requires a materializable primary resource`() = runBlocking {
+        val fixture = EpubFixture.write(temporaryDirectory().resolve("stream-only.epub"), version = 3)
+        val content = TestContentSession(
+            fixture,
+            publicationId = "book:stream-only",
+            revision = "v1",
+            capabilities = setOf(BookResourceCapability.STREAM),
+        )
+
+        val result = assertIs<BookOpenResult.Failure>(ReadiumEpubProcessor().open(content))
+
+        assertEquals(BookFailureReason.CONTENT_UNAVAILABLE, result.failure.reason)
+        assertEquals(0, content.leaseCloseCount.get())
+    }
+
     private fun temporaryDirectory(): Path = Files.createTempDirectory("katari-readium-spike")
 }
 
@@ -108,15 +130,39 @@ private class TestContentSession(
     private val publicationFile: File,
     override val publicationId: String,
     override val revision: String,
+    capabilities: Set<BookResourceCapability> = setOf(BookResourceCapability.MATERIALIZE),
 ) : BookContentSession {
     override val descriptor = BookContentDescriptor(format = "application/epub+zip")
+    private val resource = BookContentResource(
+        id = "publication.epub",
+        mediaType = "application/epub+zip",
+        size = publicationFile.length(),
+        revision = revision,
+        cacheState = BookResourceCacheState.CACHED,
+        capabilities = capabilities,
+    )
+    override val primaryResourceIds = listOf(resource.id)
     val leaseCloseCount = AtomicInteger()
     var closed = false
         private set
 
-    override suspend fun materializePrimaryResource(): Result<MaterializedBookResource> =
-        Result.success(
+    override suspend fun listResources(cursor: String?, limit: Int): Result<BookContentResourcePage> =
+        Result.success(BookContentResourcePage(listOf(resource)))
+
+    override suspend fun getResource(resourceId: String): Result<BookContentResource> = if (resourceId == resource.id) {
+        Result.success(resource)
+    } else {
+        Result.failure(NoSuchElementException(resourceId))
+    }
+
+    override suspend fun openResource(resourceId: String, range: BookByteRange?): Result<OpenedBookResource> =
+        Result.failure(UnsupportedOperationException("Streaming is not supported by this fixture"))
+
+    override suspend fun materializeResource(resourceId: String): Result<MaterializedBookResource> {
+        if (resourceId != resource.id) return Result.failure(NoSuchElementException(resourceId))
+        return Result.success(
             object : MaterializedBookResource {
+                override val metadata = resource
                 override val file = publicationFile
                 private var closed = false
 
@@ -126,6 +172,7 @@ private class TestContentSession(
                 }
             },
         )
+    }
 
     override fun close() {
         closed = true

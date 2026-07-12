@@ -11,6 +11,42 @@ data class BookContentDescriptor(
 )
 
 @Serializable
+data class BookContentResource(
+    val id: String,
+    val mediaType: String? = null,
+    val size: Long? = null,
+    val revision: String? = null,
+    val cacheState: BookResourceCacheState = BookResourceCacheState.UNKNOWN,
+    val capabilities: Set<BookResourceCapability> = emptySet(),
+) {
+    init {
+        require(id.isNotBlank()) { "resource id must not be blank" }
+        require(size == null || size >= 0) { "resource size must not be negative" }
+    }
+}
+
+@Serializable
+data class BookContentResourcePage(
+    val resources: List<BookContentResource>,
+    val nextCursor: String? = null,
+)
+
+@Serializable
+enum class BookResourceCapability {
+    STREAM,
+    RANGE,
+    MATERIALIZE,
+}
+
+@Serializable
+enum class BookResourceCacheState {
+    UNKNOWN,
+    NOT_CACHED,
+    PARTIALLY_CACHED,
+    CACHED,
+}
+
+@Serializable
 data class BookPublication(
     val id: String,
     val revision: String,

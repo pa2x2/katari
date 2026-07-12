@@ -9,6 +9,32 @@ import kotlin.test.assertEquals
 class BookModelsTest {
 
     @Test
+    fun `content resource metadata preserves access capabilities`() {
+        val resource = BookContentResource(
+            id = "chapter-1",
+            mediaType = "text/html",
+            size = 42,
+            revision = "v2",
+            cacheState = BookResourceCacheState.PARTIALLY_CACHED,
+            capabilities = setOf(BookResourceCapability.STREAM, BookResourceCapability.RANGE),
+        )
+
+        val restored = Json.decodeFromString<BookContentResource>(Json.encodeToString(resource))
+
+        assertEquals(resource, restored)
+    }
+
+    @Test
+    fun `content resource rejects invalid stable metadata`() {
+        kotlin.test.assertFailsWith<IllegalArgumentException> {
+            BookContentResource(id = "")
+        }
+        kotlin.test.assertFailsWith<IllegalArgumentException> {
+            BookContentResource(id = "chapter", size = -1)
+        }
+    }
+
+    @Test
     fun `locator serialization is independent of a processor engine`() {
         val locator = BookLocator(
             resourceId = "text/chapter-1.xhtml",

@@ -32,6 +32,7 @@ direction and remaining work, not discussion history or superseded alternatives.
 | BOOK-024 | Katari owns one content-session lease per invocation |
 | BOOK-025 | Built-in SPI separates content, publication, and reader sessions |
 | BOOK-026 | Readium Kotlin 3.3.0 is conditionally adopted as the EPUB engine |
+| BOOK-027 | Content sessions expose a uniform resource catalog with per-resource capabilities |
 
 ## Scope and first processor
 
@@ -106,6 +107,12 @@ capability-based, including enumeration, streaming, ranges, and local
 materialization where supported. Katari/source retain authentication, headers,
 permissions, caching, cancellation, and lifecycle; processors never receive
 source credentials or implementation access.
+
+The resource catalog is cursor-paged and exposes stable metadata, size/revision
+when known, cache state, and `STREAM`, `RANGE`, or `MATERIALIZE` capabilities.
+Sessions support metadata lookup, leased streaming with an optional byte range,
+and local materialization by stable resource ID. A processor checks capabilities
+instead of branching on closed transport kinds.
 
 Katari creates and owns one content-session lease per reader, preview, indexing,
 or background invocation. Nested resource handles must close before their parent
@@ -193,8 +200,9 @@ separately and never selects location.
 
 ## Remaining work
 
-1. Harden the capability-based content-session SPI beyond the evaluation's
-   materialized-primary-resource path before production integration.
+1. Implement production app/source/cache backends for the content-session SPI,
+   including authentication isolation, cancellation, hostile-resource limits,
+   and durable cache ownership.
 2. Satisfy the Readium production gates: effective Media3 validation, minified
    app/R8 build, final APK-size measurement, license attribution, hostile archive
    limits, and separately authorized device verification.

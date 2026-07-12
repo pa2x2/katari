@@ -6,6 +6,7 @@ import mihon.book.api.BookFailure
 import mihon.book.api.BookFailureReason
 import mihon.book.api.BookLocator
 import mihon.book.api.BookPublication
+import mihon.book.api.BookResourceCapability
 import mihon.entry.interactions.book.BookContentSession
 import mihon.entry.interactions.book.BookOpenResult
 import mihon.entry.interactions.book.BookProcessor
@@ -46,10 +47,23 @@ internal class ReadiumEpubProcessor : BookProcessor {
             )
         }
 
-        val lease = content.materializePrimaryResource().getOrElse {
+        val primaryResourceId = content.primaryResourceIds.singleOrNull()
+            ?: return contentFailure("EPUB content must provide exactly one primary resource")
+        val primaryResource = content.getResource(primaryResourceId).getOrElse {
+            return contentFailure(it.message ?: "Unable to resolve the primary EPUB resource")
+        }
+        if (BookResourceCapability.MATERIALIZE !in primaryResource.capabilities) {
+            return contentFailure("The primary EPUB resource cannot be materialized")
+        }
+
+        val lease = content.materializeResource(primaryResourceId).getOrElse {
             return BookOpenResult.Failure(
                 BookFailure(BookFailureReason.CONTENT_UNAVAILABLE, it.message ?: "Unable to materialize EPUB"),
             )
+        }
+        if (lease.metadata.id != primaryResourceId) {
+            lease.close()
+            return contentFailure("Materialized EPUB resource identity does not match the requested resource")
         }
 
         var asset: Asset? = null
@@ -106,6 +120,9 @@ internal class ReadiumEpubProcessor : BookProcessor {
         lease.close()
         return BookOpenResult.Failure(BookFailure(reason, message))
     }
+
+    private fun contentFailure(message: String): BookOpenResult.Failure =
+        BookOpenResult.Failure(BookFailure(BookFailureReason.CONTENT_UNAVAILABLE, message))
 
     private companion object {
         const val EPUB_MEDIA_TYPE = "application/epub+zip"
