@@ -59,7 +59,6 @@ import eu.kanade.tachiyomi.source.sourceItemOrientation
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.CatalogListItem
@@ -170,15 +169,27 @@ fun CatalogFeedBrowseContent(
     LaunchedEffect(displayMode, state.newItemsAvailableCount) {
         if (state.newItemsAvailableCount == 0) return@LaunchedEffect
 
-        val firstVisibleFlow = when (displayMode) {
-            LibraryDisplayMode.List -> snapshotFlow { listState.firstVisibleItemIndex }
-            else -> snapshotFlow { gridState.firstVisibleItemIndex }
+        val viewportFlow = when (displayMode) {
+            LibraryDisplayMode.List -> snapshotFlow {
+                FeedViewport(
+                    canScrollBackward = listState.canScrollBackward,
+                    totalItemsCount = listState.layoutInfo.totalItemsCount,
+                )
+            }
+            else -> snapshotFlow {
+                FeedViewport(
+                    canScrollBackward = gridState.canScrollBackward,
+                    totalItemsCount = gridState.layoutInfo.totalItemsCount,
+                )
+            }
         }
-        firstVisibleFlow
+        viewportFlow
             .distinctUntilChanged()
-            .drop(1)
-            .collectLatest { firstVisibleItemIndex ->
-                if (firstVisibleItemIndex < state.newItemsAvailableCount) {
+            .collectLatest { viewport ->
+                if (
+                    viewport.totalItemsCount >= state.itemRefs.size &&
+                    !viewport.canScrollBackward
+                ) {
                     screenModel.consumeNewItemsIndicator()
                 }
             }
@@ -319,7 +330,11 @@ fun CatalogFeedBrowseContent(
             )
         }
 
-        if (state.newItemsAvailableCount > 0 && !state.isRefreshing) {
+        val canScrollBackward = when (displayMode) {
+            LibraryDisplayMode.List -> listState.canScrollBackward
+            else -> gridState.canScrollBackward
+        }
+        if (state.newItemsAvailableCount > 0 && !state.isRefreshing && canScrollBackward) {
             NewItemsChip(
                 count = state.newItemsAvailableCount,
                 onClick = {
@@ -338,6 +353,11 @@ fun CatalogFeedBrowseContent(
         }
     }
 }
+
+private data class FeedViewport(
+    val canScrollBackward: Boolean,
+    val totalItemsCount: Int,
+)
 
 @Composable
 private fun NewItemsChip(
