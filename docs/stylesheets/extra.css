@@ -1,6 +1,5 @@
 :root {
   --katari-accent: #6750a4;
-  --katari-accent-light: #8b78c5;
   --katari-accent-dark: #4f378b;
 }
 
@@ -128,83 +127,70 @@
   background: rgba(103, 80, 164, 0.28);
 }
 
-.katari-hero {
-  max-width: 44rem;
-  padding: 0.25rem 0 1.25rem;
+.katari-home-hero {
+  align-items: center;
+  display: grid;
+  gap: 1.75rem;
+  grid-template-columns: 5rem minmax(0, 1fr);
 }
 
-.katari-hero > p:first-child {
+.katari-home-hero > p {
+  margin: 0;
+}
+
+.katari-home-hero > p > img {
+  border-radius: 1.15rem;
+  width: 5rem;
+}
+
+.katari-home-hero > div > p {
   color: var(--md-default-fg-color--light);
-  font-size: 0.9rem;
-  line-height: 1.65;
-  margin-bottom: 1.5rem;
+  margin: 0 0 1rem;
+  max-width: 38rem;
 }
 
 .katari-button {
   border: 1px solid var(--md-default-fg-color--lightest);
-  border-radius: 0.5rem;
+  border-radius: 0.35rem;
   display: inline-block;
   font-weight: 600;
-  margin: 0 0.5rem 0.5rem 0;
-  padding: 0.65rem 1rem;
-  transition: background-color 150ms, border-color 150ms, color 150ms;
+  margin: 0 0.4rem 0.4rem 0;
+  padding: 0.55rem 0.8rem;
 }
 
 .katari-button--primary {
-  background: var(--katari-accent);
-  border-color: var(--katari-accent);
+  background: #253b62;
+  border-color: #253b62;
   color: #ffffff !important;
 }
 
 .katari-button:hover {
-  background: var(--md-accent-fg-color--transparent);
   border-color: var(--md-accent-fg-color);
 }
 
 .katari-button--primary:hover {
-  background: var(--katari-accent-dark);
-  color: #ffffff;
+  background: #18253f;
+  color: #ffffff !important;
 }
 
-.katari-card-grid {
+.katari-doc-groups {
   display: grid;
-  gap: 1rem;
-  grid-auto-rows: 1fr;
+  gap: 2rem;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin-top: 1.25rem;
 }
 
-.katari-card-grid > p {
-  display: flex;
-  margin: 0;
+.md-typeset .katari-doc-groups h3 {
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+  padding-bottom: 0.45rem;
 }
 
-.katari-card {
-  border: 1px solid var(--md-default-fg-color--lightest);
-  border-radius: 0.65rem;
-  box-sizing: border-box;
-  color: var(--md-default-fg-color) !important;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  height: 100%;
-  padding: 1.15rem;
-  transition: border-color 150ms, transform 150ms;
+.katari-doc-groups ul {
+  margin-left: 0;
 }
 
-.katari-card:hover {
-  border-color: var(--md-accent-fg-color);
-  transform: translateY(-2px);
-}
-
-.katari-card strong {
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.katari-card span {
-  color: var(--md-default-fg-color--light);
-  line-height: 1.55;
+.katari-doc-groups li {
+  list-style: none;
+  margin-left: 0;
 }
 
 @media screen and (max-width: 44.984375em) {
@@ -213,12 +199,12 @@
     padding-top: 1.2rem;
   }
 
-  .katari-card-grid {
-    grid-auto-rows: auto;
+  .katari-home-hero,
+  .katari-doc-groups {
     grid-template-columns: 1fr;
   }
 
-  .katari-card {
-    height: auto;
+  .katari-home-hero {
+    gap: 1rem;
   }
 }

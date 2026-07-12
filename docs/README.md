@@ -1,36 +1,45 @@
-# Katari documentation
+<div class="katari-home-hero" markdown>
 
-<div class="katari-hero" markdown>
+<img src="assets/katari.svg" alt="Katari" />
 
-Katari is an independent fork of Mihon, built around a unified library for reading and watching. These docs focus on what Katari adds or changes and point to Mihon for inherited behavior.
+<div markdown>
 
-[Get to know Katari](relationship-with-mihon.md){ .katari-button .katari-button--primary }
+Katari brings manga and anime into one library, with shared profiles, discovery, updates, and history. It is an independent fork of Mihon.
+
+[Download Katari](https://github.com/katariapp/katari/releases/latest){ .katari-button .katari-button--primary }
 [Migrate from Mihon](migrating-to-katari.md){ .katari-button }
 
 </div>
 
-## Explore Katari
+</div>
 
-<div class="katari-card-grid" markdown>
+<div class="katari-doc-groups" markdown>
 
-<a class="katari-card" href="features/unified-library/">
-  <strong>Katari features</strong>
-  <span>Explore the unified library, profiles, merged entries, video playback, and feeds.</span>
-</a>
+<div markdown>
 
-<a class="katari-card" href="differences/backup-and-restore/">
-  <strong>Differences from Mihon</strong>
-  <span>Understand changes to backups, extensions, builds, telemetry, and privacy.</span>
-</a>
+### Get started
 
-<a class="katari-card" href="inherited-features/">
-  <strong>Inherited features</strong>
-  <span>Find the right Mihon guide for behavior that Katari shares with its upstream project.</span>
-</a>
-
-<a class="katari-card" href="extensions/">
-  <strong>Extension development</strong>
-  <span>Build image and playback sources with Katari's Entry Source API.</span>
-</a>
+- [Relationship with Mihon](relationship-with-mihon.md)
+- [Migrate from Mihon](migrating-to-katari.md)
+- [Features inherited from Mihon](inherited-features.md)
+- [Backup and restore differences](differences/backup-and-restore.md)
 
 </div>
+
+<div markdown>
+
+### Features
+
+- [Unified library](features/unified-library.md)
+- [Profiles](features/profiles.md)
+- [Merged entries](features/merged-entries.md)
+- [Video playback](features/video-playback.md)
+- [Feeds and discovery](features/feeds-and-discovery.md)
+
+</div>
+
+</div>
+
+## Extension development
+
+Katari supports image and playback sources through its Entry Source API. Start with the [extension development guide](extensions/), or read about [compatibility with Mihon extensions](differences/extensions-and-compatibility.md).
