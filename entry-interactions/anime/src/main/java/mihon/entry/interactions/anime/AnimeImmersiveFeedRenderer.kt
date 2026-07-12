@@ -1,5 +1,11 @@
 package mihon.entry.interactions.anime
 
+import android.content.Context
+import android.database.ContentObserver
+import android.media.AudioManager
+import android.os.Handler
+import android.os.Looper
+import android.provider.Settings
 import android.view.ViewGroup
 import androidx.annotation.OptIn
 import androidx.compose.animation.core.animateFloatAsState
@@ -125,6 +131,9 @@ internal class AnimeImmersiveFeedRenderer(
         var speedBoostActive by remember(player) { mutableStateOf(false) }
         var playIntent by remember(player) { mutableStateOf(true) }
         var muted by remember(player) { mutableStateOf(preferences.immersiveFeedMuted.get()) }
+        val audioManager = remember(context) {
+            context.applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        }
         val latestPlayIntent by rememberUpdatedState(playIntent)
         val videoAlpha by animateFloatAsState(
             targetValue = if (hasRenderedFirstFrame) 1f else 0f,
@@ -154,6 +163,27 @@ internal class AnimeImmersiveFeedRenderer(
             } else if (!active) {
                 player.pause()
             }
+        }
+        DisposableEffect(active, audioManager) {
+            if (!active) return@DisposableEffect onDispose {}
+
+            var previousVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+            val volumeObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
+                override fun onChange(selfChange: Boolean) {
+                    val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                    if (shouldUnmuteAfterVolumeChange(muted, previousVolume, currentVolume)) {
+                        muted = false
+                        preferences.immersiveFeedMuted.set(false)
+                    }
+                    previousVolume = currentVolume
+                }
+            }
+            context.contentResolver.registerContentObserver(
+                Settings.System.CONTENT_URI,
+                true,
+                volumeObserver,
+            )
+            onDispose { context.contentResolver.unregisterContentObserver(volumeObserver) }
         }
         LifecycleStartEffect(player, active) {
             if (active && latestPlayIntent) player.play()
@@ -385,6 +415,12 @@ internal class AnimeImmersiveFeedRenderer(
         }
     }
 }
+
+internal fun shouldUnmuteAfterVolumeChange(
+    muted: Boolean,
+    previousVolume: Int,
+    currentVolume: Int,
+): Boolean = muted && currentVolume > previousVolume
 
 @Composable
 private fun AnimeImmersiveFeedTimeline(
