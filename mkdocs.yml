@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
 
 site_name: Katari documentation
-site_description: Documentation for Katari and its Entry-based extension API
+site_description: Katari is an open-source Android app for reading manga, watching anime, and discovering stories in one unified library. Built on Mihon.
 site_url: https://katariapp.github.io/katari/
 repo_url: https://github.com/katariapp/katari
 repo_name: katariapp/katari
