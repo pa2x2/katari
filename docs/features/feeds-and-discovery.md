@@ -16,13 +16,13 @@ Open feed management to:
 - Reorder feeds
 - Remove feeds
 
-In the regular feed view, use the navigation bar to move between the previous and next enabled feed and to select that feed's display mode.
+In the regular feed view, use the navigation bar to move between the previous and next enabled feed and to select that feed's display mode. Tap the current feed to open the feed picker, jump directly to any enabled feed, or open the add and management actions.
 
 Feed configuration and scroll state are profile-specific.
 
 ## Regular and chronological views
 
-Regular mode uses familiar catalogue grid or list layouts. Every feed preserves its timeline and position. When a chronological feed refreshes, it checks the newest source page without downloading the entire missed backlog. New results that overlap the saved timeline are prepended in place. If the saved timeline is older, the interface offers a user-controlled switch to the newest results, which then load older pages normally as you continue browsing. Pagination depends on the source and preset; a feed cannot produce more results after its source reports the end.
+Regular mode uses familiar catalogue grid or list layouts. Every feed preserves its timeline and position. When a chronological feed refreshes, it checks the newest source page first, then fills any gap from the saved timeline in the background. The saved timeline remains available while a loading boundary at its top prevents partially loaded pages from appearing out of chronological order. Once the gap is connected, all newer results are prepended without moving the visible item and you can scroll through them continuously. The new-items chip shows progress and remains an immediate shortcut to the newest result. If the source cannot bridge the gap within a bounded number of pages, the chip still offers a user-controlled switch to the newest results, which then load older pages normally as you continue browsing. Pagination depends on the source and preset; a feed cannot produce more results after its source reports the end.
 
 ## Immersive feeds
 

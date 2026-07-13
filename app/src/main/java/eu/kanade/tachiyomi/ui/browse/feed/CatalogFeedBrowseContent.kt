@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -24,6 +25,7 @@ import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
@@ -95,6 +97,7 @@ fun CatalogFeedBrowseContent(
     val listState = rememberLazyListState()
     val gridState = rememberLazyGridState()
     val scope = rememberCoroutineScope()
+    val bridgeItemCount = if (state.isBridgingRefresh) 1 else 0
     // This content leaves composition while immersive mode is shown. Keep this guard
     // composition-local so returning to the regular feed restores its latest anchor.
     var restoredDisplayMode by remember { mutableStateOf<String?>(null) }
@@ -119,16 +122,18 @@ fun CatalogFeedBrowseContent(
         }
     }
 
-    LaunchedEffect(displayMode, state.itemRefs, savedAnchor) {
+    LaunchedEffect(displayMode, state.itemRefs, state.isBridgingRefresh, savedAnchor) {
         if (state.itemRefs.isEmpty()) return@LaunchedEffect
 
         val modeKey = displayMode.serialize()
         if (restoredDisplayMode == modeKey) return@LaunchedEffect
 
-        val anchorIndex = savedAnchor.resolvedItem()
-            ?.let(state.itemRefs::indexOf)
-            ?.takeIf { it >= 0 }
-            ?: 0
+        val anchorIndex = (
+            savedAnchor.resolvedItem()
+                ?.let(state.itemRefs::indexOf)
+                ?.takeIf { it >= 0 }
+                ?: 0
+            ) + bridgeItemCount
 
         when (displayMode) {
             LibraryDisplayMode.List -> listState.scrollToItem(anchorIndex, savedAnchor.scrollOffset)
@@ -138,29 +143,33 @@ fun CatalogFeedBrowseContent(
         restoredDisplayMode = modeKey
     }
 
-    LaunchedEffect(displayMode, state.itemRefs) {
+    LaunchedEffect(displayMode, state.itemRefs, state.isBridgingRefresh) {
         if (displayMode != LibraryDisplayMode.List) return@LaunchedEffect
 
         snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
             .distinctUntilChanged()
             .debounce(ANCHOR_SAVE_DEBOUNCE_MILLIS)
             .collectLatest { (index, offset) ->
+                val itemIndex = index - bridgeItemCount
+                if (itemIndex < 0) return@collectLatest
                 screenModel.saveAnchor(
-                    itemRef = state.itemRefs.getOrNull(index),
+                    itemRef = state.itemRefs.getOrNull(itemIndex),
                     scrollOffset = offset,
                 )
             }
     }
 
-    LaunchedEffect(displayMode, state.itemRefs) {
+    LaunchedEffect(displayMode, state.itemRefs, state.isBridgingRefresh) {
         if (displayMode == LibraryDisplayMode.List) return@LaunchedEffect
 
         snapshotFlow { gridState.firstVisibleItemIndex to gridState.firstVisibleItemScrollOffset }
             .distinctUntilChanged()
             .debounce(ANCHOR_SAVE_DEBOUNCE_MILLIS)
             .collectLatest { (index, offset) ->
+                val itemIndex = index - bridgeItemCount
+                if (itemIndex < 0) return@collectLatest
                 screenModel.saveAnchor(
-                    itemRef = state.itemRefs.getOrNull(index),
+                    itemRef = state.itemRefs.getOrNull(itemIndex),
                     scrollOffset = offset,
                 )
             }
@@ -262,6 +271,7 @@ fun CatalogFeedBrowseContent(
                     contentPadding = contentPadding,
                     gridState = gridState,
                     sourceItemOrientation = sourceItemOrientation,
+                    isBridgingRefresh = state.isBridgingRefresh,
                     isAppending = state.isAppending,
                     onItemClick = onItemClick,
                     onItemLongClick = onItemLongClick,
@@ -275,6 +285,7 @@ fun CatalogFeedBrowseContent(
                     contentPadding = contentPadding,
                     gridState = gridState,
                     sourceItemOrientation = sourceItemOrientation,
+                    isBridgingRefresh = state.isBridgingRefresh,
                     isAppending = state.isAppending,
                     onItemClick = onItemClick,
                     onItemLongClick = onItemLongClick,
@@ -287,6 +298,7 @@ fun CatalogFeedBrowseContent(
                     contentPadding = contentPadding,
                     listState = listState,
                     sourceItemOrientation = sourceItemOrientation,
+                    isBridgingRefresh = state.isBridgingRefresh,
                     isAppending = state.isAppending,
                     onItemClick = onItemClick,
                     onItemLongClick = onItemLongClick,
@@ -300,6 +312,7 @@ fun CatalogFeedBrowseContent(
                     contentPadding = contentPadding,
                     gridState = gridState,
                     sourceItemOrientation = sourceItemOrientation,
+                    isBridgingRefresh = state.isBridgingRefresh,
                     isAppending = state.isAppending,
                     onItemClick = onItemClick,
                     onItemLongClick = onItemLongClick,
@@ -339,6 +352,7 @@ fun CatalogFeedBrowseContent(
             NewItemsChip(
                 count = state.newItemsAvailableCount,
                 countIsLowerBound = state.newItemsCountIsLowerBound,
+                isBridging = state.isBridgingRefresh,
                 onClick = {
                     screenModel.showNewItems()
                     scope.launch {
@@ -374,6 +388,7 @@ private data class FeedViewport(
 internal fun NewItemsChip(
     count: Int,
     countIsLowerBound: Boolean,
+    isBridging: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -390,10 +405,17 @@ internal fun NewItemsChip(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
         ) {
-            Icon(
-                imageVector = Icons.Outlined.KeyboardArrowUp,
-                contentDescription = null,
-            )
+            if (isBridging) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    strokeWidth = 2.dp,
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Outlined.KeyboardArrowUp,
+                    contentDescription = null,
+                )
+            }
             Text(
                 style = MaterialTheme.typography.labelLarge,
                 text = pluralStringResource(
@@ -447,6 +469,7 @@ private fun CatalogFeedList(
     contentPadding: PaddingValues,
     listState: androidx.compose.foundation.lazy.LazyListState,
     sourceItemOrientation: EntryItemOrientation,
+    isBridgingRefresh: Boolean,
     isAppending: Boolean,
     onItemClick: (CatalogListItem) -> Unit,
     onItemLongClick: (CatalogListItem) -> Unit,
@@ -455,6 +478,12 @@ private fun CatalogFeedList(
         state = listState,
         contentPadding = contentPadding + PaddingValues(vertical = 8.dp),
     ) {
+        if (isBridgingRefresh) {
+            item(key = BRIDGE_LOADING_ITEM_KEY) {
+                FeedBridgeLoadingItem()
+            }
+        }
+
         items(
             items = itemRefs,
             key = FeedItemRef::saveableKey,
@@ -484,6 +513,7 @@ private fun CatalogFeedCompactGrid(
     contentPadding: PaddingValues,
     gridState: androidx.compose.foundation.lazy.grid.LazyGridState,
     sourceItemOrientation: EntryItemOrientation,
+    isBridgingRefresh: Boolean,
     isAppending: Boolean,
     onItemClick: (CatalogListItem) -> Unit,
     onItemLongClick: (CatalogListItem) -> Unit,
@@ -495,6 +525,15 @@ private fun CatalogFeedCompactGrid(
         verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
         horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
     ) {
+        if (isBridgingRefresh) {
+            item(
+                key = BRIDGE_LOADING_ITEM_KEY,
+                span = { GridItemSpan(maxLineSpan) },
+            ) {
+                FeedBridgeLoadingItem()
+            }
+        }
+
         items(
             items = itemRefs,
             key = FeedItemRef::saveableKey,
@@ -524,6 +563,7 @@ private fun CatalogFeedComfortableGrid(
     contentPadding: PaddingValues,
     gridState: androidx.compose.foundation.lazy.grid.LazyGridState,
     sourceItemOrientation: EntryItemOrientation,
+    isBridgingRefresh: Boolean,
     isAppending: Boolean,
     onItemClick: (CatalogListItem) -> Unit,
     onItemLongClick: (CatalogListItem) -> Unit,
@@ -535,6 +575,15 @@ private fun CatalogFeedComfortableGrid(
         verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
         horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
     ) {
+        if (isBridgingRefresh) {
+            item(
+                key = BRIDGE_LOADING_ITEM_KEY,
+                span = { GridItemSpan(maxLineSpan) },
+            ) {
+                FeedBridgeLoadingItem()
+            }
+        }
+
         items(
             items = itemRefs,
             key = FeedItemRef::saveableKey,
@@ -555,6 +604,28 @@ private fun CatalogFeedComfortableGrid(
         }
     }
 }
+
+@Composable
+private fun FeedBridgeLoadingItem() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 64.dp, bottom = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp, androidx.compose.ui.Alignment.CenterHorizontally),
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(20.dp),
+            strokeWidth = 2.dp,
+        )
+        Text(
+            text = stringResource(MR.strings.browse_feed_loading_newer_items),
+            style = MaterialTheme.typography.labelLarge,
+        )
+    }
+}
+
+private const val BRIDGE_LOADING_ITEM_KEY = "feed-bridge-loading"
 
 private fun FeedItemRef.saveableKey(): String {
     return "feed-${type.name}-$id"

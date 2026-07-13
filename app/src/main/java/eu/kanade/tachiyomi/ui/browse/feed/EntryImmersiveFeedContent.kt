@@ -245,6 +245,7 @@ internal fun EntryImmersiveFeedContent(
             NewItemsChip(
                 count = timelineState.newItemsAvailableCount,
                 countIsLowerBound = timelineState.newItemsCountIsLowerBound,
+                isBridging = timelineState.isBridgingRefresh,
                 onClick = {
                     timelineModel.showNewItems()
                     scope.launch { pagerState.scrollToPage(0) }

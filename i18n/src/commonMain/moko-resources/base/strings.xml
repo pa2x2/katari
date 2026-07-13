@@ -949,6 +949,7 @@
     <string name="browse_feed_update_current_preset">Update "%1$s"</string>
     <string name="browse_feed_chronological">Chronological feed</string>
     <string name="browse_feed_chronological_summary">When enabled, feeds reopen from the last seen position and refresh by prepending newer items above it.</string>
+    <string name="browse_feed_loading_newer_items">Loading newer items…</string>
     <string name="browse_feed_preset_exists">A preset with this name already exists</string>
     <string name="browse_filter_presets">Filter presets</string>
     <string name="browse_delete_preset_confirmation">Delete preset "%1$s"? Feeds using it will also be removed.</string>

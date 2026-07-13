@@ -10,6 +10,7 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,6 +27,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.serialization.json.Json
@@ -294,7 +296,7 @@ class ChronologicalFeedScreenModelTest {
     }
 
     @Test
-    fun `refresh without overlap loads one page and waits for user before replacing timeline`() = feedTest {
+    fun `refresh without first-page overlap bridges to the saved timeline in the background`() = feedTest {
         val preferences = SourcePreferences(TestPreferenceStore(), testJson)
         val browseFeedService = BrowseFeedService(preferences)
         val oldRef = FeedItemRef(100L, EntryType.MANGA)
@@ -316,7 +318,10 @@ class ChronologicalFeedScreenModelTest {
                     nextKey = 1L,
                 ),
                 1L to pageResult(
-                    data = listOf(FakeItem(id = 3L, type = EntryType.MANGA, favorite = false)),
+                    data = listOf(
+                        FakeItem(id = 3L, type = EntryType.MANGA, favorite = false),
+                        FakeItem(id = 100L, type = EntryType.MANGA, favorite = false),
+                    ),
                     nextKey = 2L,
                 ),
             ),
@@ -339,49 +344,186 @@ class ChronologicalFeedScreenModelTest {
             screenModel.refresh(manual = true)
             advanceUntilIdle()
 
-            pagingSource.loadKeys shouldBe listOf(null)
-            screenModel.state.value.itemRefs shouldBe listOf(oldRef)
-            screenModel.state.value.nextPageKey shouldBe 10L
-            screenModel.state.value.newItemsAvailableCount shouldBe 2
-            screenModel.state.value.newItemsCountIsLowerBound shouldBe true
-            screenModel.state.value.pendingRefresh shouldBe FeedScreenModel.PendingRefresh(
-                itemRefs = listOf(
-                    FeedItemRef(1L, EntryType.MANGA),
-                    FeedItemRef(2L, EntryType.ANIME),
-                ),
-                nextPageKey = 1L,
+            pagingSource.loadKeys shouldBe listOf(null, 1L)
+            val mergedRefs = listOf(
+                FeedItemRef(1L, EntryType.MANGA),
+                FeedItemRef(2L, EntryType.ANIME),
+                FeedItemRef(3L, EntryType.MANGA),
+                oldRef,
             )
+            screenModel.state.value.itemRefs shouldBe mergedRefs
+            screenModel.state.value.nextPageKey shouldBe 10L
+            screenModel.state.value.newItemsAvailableCount shouldBe 3
+            screenModel.state.value.newItemsCountIsLowerBound shouldBe false
+            screenModel.state.value.pendingRefresh shouldBe null
+            screenModel.state.value.isBridgingRefresh shouldBe false
             browseFeedService.timelineSnapshot(FEED_ID) shouldBe
-                SourceFeedTimeline.fromItems(listOf(oldRef), nextPageKey = 10L)
+                SourceFeedTimeline.fromItems(mergedRefs, nextPageKey = 10L)
+            browseFeedService.anchorSnapshot(FEED_ID) shouldBe
+                SourceFeedAnchor.fromItem(oldRef, scrollOffset = 32)
 
             screenModel.consumeNewItemsIndicator()
 
-            screenModel.state.value.pendingRefresh shouldBe FeedScreenModel.PendingRefresh(
-                itemRefs = listOf(
-                    FeedItemRef(1L, EntryType.MANGA),
-                    FeedItemRef(2L, EntryType.ANIME),
+            screenModel.state.value.pendingRefresh shouldBe null
+            screenModel.state.value.newItemsAvailableCount shouldBe 0
+            browseFeedService.timelineSnapshot(FEED_ID) shouldBe
+                SourceFeedTimeline.fromItems(mergedRefs, nextPageKey = 10L)
+        } finally {
+            screenModel.onDispose()
+        }
+    }
+
+    @Test
+    fun `partial bridge pages stay behind the loading boundary until overlap`() = feedTest {
+        val preferences = SourcePreferences(TestPreferenceStore(), testJson)
+        val browseFeedService = BrowseFeedService(preferences)
+        val oldRef = FeedItemRef(100L, EntryType.MANGA)
+        browseFeedService.saveTimeline(
+            FEED_ID,
+            SourceFeedTimeline.fromItems(listOf(oldRef), nextPageKey = 10L),
+        )
+        browseFeedService.saveAnchor(
+            FEED_ID,
+            SourceFeedAnchor.fromItem(oldRef, scrollOffset = 32),
+        )
+        val continueBridge = CompletableDeferred<Unit>()
+        val pagingSource = RecordingPagingSource(
+            pages = mapOf(
+                null to pageResult(
+                    data = listOf(
+                        FakeItem(id = 1L, type = EntryType.MANGA, favorite = false),
+                        FakeItem(id = 2L, type = EntryType.ANIME, favorite = false),
+                    ),
+                    nextKey = 1L,
                 ),
+                1L to pageResult(
+                    data = listOf(FakeItem(id = 100L, type = EntryType.MANGA, favorite = false)),
+                    nextKey = 2L,
+                ),
+            ),
+            beforeLoad = { key ->
+                if (key == 1L) continueBridge.await()
+            },
+        )
+        val screenModel = FakeFeedScreenModel(
+            feedId = FEED_ID,
+            browseFeedService = browseFeedService,
+            workerDispatcher = Dispatchers.Main,
+            itemsById = mapOf(
+                1L to FakeItem(id = 1L, type = EntryType.MANGA, favorite = false),
+                2L to FakeItem(id = 2L, type = EntryType.ANIME, favorite = false),
+                100L to FakeItem(id = 100L, type = EntryType.MANGA, favorite = false),
+            ),
+            pagingSourceFactory = { pagingSource },
+        )
+
+        try {
+            advanceUntilIdle()
+            screenModel.refresh(manual = true)
+            runCurrent()
+
+            val bridgedRefs = listOf(
+                FeedItemRef(1L, EntryType.MANGA),
+                FeedItemRef(2L, EntryType.ANIME),
+            )
+            screenModel.state.value.itemRefs shouldBe listOf(oldRef)
+            screenModel.state.value.isBridgingRefresh shouldBe true
+            screenModel.state.value.pendingRefresh shouldBe FeedScreenModel.PendingRefresh(
+                itemRefs = bridgedRefs,
                 nextPageKey = 1L,
             )
-            screenModel.state.value.newItemsAvailableCount shouldBe 2
             browseFeedService.timelineSnapshot(FEED_ID) shouldBe
                 SourceFeedTimeline.fromItems(listOf(oldRef), nextPageKey = 10L)
+
+            screenModel.saveAnchor(oldRef, scrollOffset = 12)
+            browseFeedService.anchorSnapshot(FEED_ID) shouldBe
+                SourceFeedAnchor.fromItem(oldRef, scrollOffset = 12)
+
+            continueBridge.complete(Unit)
+            advanceUntilIdle()
+
+            val mergedRefs = bridgedRefs + oldRef
+            screenModel.state.value.itemRefs shouldBe mergedRefs
+            screenModel.state.value.pendingRefresh shouldBe null
+            browseFeedService.timelineSnapshot(FEED_ID) shouldBe
+                SourceFeedTimeline.fromItems(mergedRefs, nextPageKey = 10L)
+            browseFeedService.anchorSnapshot(FEED_ID) shouldBe
+                SourceFeedAnchor.fromItem(oldRef, scrollOffset = 12)
+        } finally {
+            screenModel.onDispose()
+        }
+    }
+
+    @Test
+    fun `refresh without any overlap keeps an explicit switch to the newest timeline`() = feedTest {
+        val preferences = SourcePreferences(TestPreferenceStore(), testJson)
+        val browseFeedService = BrowseFeedService(preferences)
+        val oldRef = FeedItemRef(100L, EntryType.MANGA)
+        browseFeedService.saveTimeline(
+            FEED_ID,
+            SourceFeedTimeline.fromItems(listOf(oldRef), nextPageKey = 10L),
+        )
+        browseFeedService.saveAnchor(
+            FEED_ID,
+            SourceFeedAnchor.fromItem(oldRef, scrollOffset = 32),
+        )
+        val pagingSource = RecordingPagingSource(
+            pages = mapOf(
+                null to pageResult(
+                    data = listOf(
+                        FakeItem(id = 1L, type = EntryType.MANGA, favorite = false),
+                        FakeItem(id = 2L, type = EntryType.ANIME, favorite = false),
+                    ),
+                    nextKey = 1L,
+                ),
+                1L to pageResult(
+                    data = listOf(FakeItem(id = 3L, type = EntryType.MANGA, favorite = false)),
+                    nextKey = null,
+                ),
+            ),
+        )
+        val screenModel = FakeFeedScreenModel(
+            feedId = FEED_ID,
+            browseFeedService = browseFeedService,
+            workerDispatcher = Dispatchers.Main,
+            itemsById = mapOf(
+                1L to FakeItem(id = 1L, type = EntryType.MANGA, favorite = false),
+                2L to FakeItem(id = 2L, type = EntryType.ANIME, favorite = false),
+                3L to FakeItem(id = 3L, type = EntryType.MANGA, favorite = false),
+                100L to FakeItem(id = 100L, type = EntryType.MANGA, favorite = false),
+            ),
+            pagingSourceFactory = { pagingSource },
+        )
+
+        try {
+            advanceUntilIdle()
+            screenModel.refresh(manual = true)
+            advanceUntilIdle()
+
+            val newestRefs = listOf(
+                FeedItemRef(1L, EntryType.MANGA),
+                FeedItemRef(2L, EntryType.ANIME),
+                FeedItemRef(3L, EntryType.MANGA),
+            )
+            pagingSource.loadKeys shouldBe listOf(null, 1L)
+            screenModel.state.value.itemRefs shouldBe listOf(oldRef)
+            screenModel.state.value.pendingRefresh shouldBe FeedScreenModel.PendingRefresh(
+                itemRefs = newestRefs,
+                nextPageKey = null,
+            )
+            screenModel.state.value.newItemsAvailableCount shouldBe 3
+            screenModel.state.value.newItemsCountIsLowerBound shouldBe false
+            screenModel.state.value.isBridgingRefresh shouldBe false
 
             screenModel.showNewItems()
             advanceUntilIdle()
 
-            val newRefs = listOf(
-                FeedItemRef(1L, EntryType.MANGA),
-                FeedItemRef(2L, EntryType.ANIME),
-            )
-            screenModel.state.value.itemRefs shouldBe newRefs
-            screenModel.state.value.nextPageKey shouldBe 1L
+            screenModel.state.value.itemRefs shouldBe newestRefs
             screenModel.state.value.pendingRefresh shouldBe null
-            screenModel.state.value.newItemsAvailableCount shouldBe 0
             browseFeedService.timelineSnapshot(FEED_ID) shouldBe
-                SourceFeedTimeline.fromItems(newRefs, nextPageKey = 1L)
+                SourceFeedTimeline.fromItems(newestRefs, nextPageKey = null)
             browseFeedService.anchorSnapshot(FEED_ID) shouldBe
-                SourceFeedAnchor.fromItem(newRefs.first(), scrollOffset = 0)
+                SourceFeedAnchor.fromItem(newestRefs.first(), scrollOffset = 0)
         } finally {
             screenModel.onDispose()
         }
@@ -457,12 +599,14 @@ private class FakeFeedScreenModel(
 
 private class RecordingPagingSource<T : Any>(
     private val pages: Map<Long?, PagingSource.LoadResult.Page<Long, T>>,
+    private val beforeLoad: suspend (Long?) -> Unit = {},
 ) : PagingSource<Long, T>() {
 
     val loadKeys = mutableListOf<Long?>()
 
     override suspend fun load(params: LoadParams<Long>): LoadResult<Long, T> {
         loadKeys += params.key
+        beforeLoad(params.key)
         return pages[params.key]
             ?: LoadResult.Error(NoResultsException())
     }
