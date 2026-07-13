@@ -10,6 +10,10 @@ import kotlinx.serialization.Serializable
  * the resulting [PlaybackDescriptor].
  *
  * For manga this object is ignored by the adapter.
+ *
+ * @property dubKey requested dub option key.
+ * @property streamKey requested stream key.
+ * @property sourceQualityKey requested source-quality option key.
  */
 @Serializable
 data class PlaybackSelection(

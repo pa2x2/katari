@@ -158,22 +158,8 @@ internal class ExampleSource : EntryImageHttpSource() {
 
 Catalogue entries should set `type` as soon as it is known; do not wait for the details request if the listing already provides enough information.
 
-Continue with [the Entry API guide](./entry-source-api.md) for concrete entry and media payloads.
+Continue with the [Entry SDK overview](../developers/sdk/README.md) and [data model](../developers/sdk/data-model.md) for concrete entry and media payloads.
 
 ## Test against a local Katari checkout
 
-Publish the SDK from the Katari repository:
-
-```bash
-./gradlew --quiet :core:common:publishToMavenLocal :entry-source-api:publishToMavenLocal
-```
-
-Add `mavenLocal()` to the extension project's dependency repositories and temporarily use:
-
-```kotlin
-compileOnly("com.github.katariapp.katari:entry-source-api:local-SNAPSHOT")
-```
-
-Build the extension's debug APK with its Gradle module task. Install that APK on the same Android device as Katari, then review the source under **Browse → Extensions**. Katari asks the user to trust an ad-hoc extension version that is not covered by a configured store's trusted signing fingerprint.
-
-Do not publish an extension that depends on `local-SNAPSHOT`; return to a tagged SDK version first.
+For coordinated app and extension changes, follow [local SDK development](../developers/sdk/local-development.md). It covers publishing `local-SNAPSHOT`, testing an extension against it, and returning to a tagged SDK before publication.

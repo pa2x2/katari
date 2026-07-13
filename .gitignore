@@ -11,6 +11,7 @@ gradle/tmp
 /captures
 /site
 /.venv-docs
+/docs/developers/sdk/api/
 
 # Configuration files
 keystore.properties

@@ -3,6 +3,11 @@ package eu.kanade.tachiyomi.source.entry
 import kotlinx.serialization.json.JsonObject
 import mihon.core.common.extensions.EMPTY
 
+/**
+ * Default mutable implementation returned by [SEntry.create].
+ *
+ * @suppress Use [SEntry.create] instead of depending on this implementation class.
+ */
 class SEntryImpl : SEntry {
 
     override lateinit var url: String

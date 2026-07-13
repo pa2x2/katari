@@ -4,8 +4,13 @@ package eu.kanade.tachiyomi.source.entry
  * Classification of a URI resolved by a [ResolvableSource].
  */
 sealed interface EntryUriType {
+    /** URI identifies an entry details page. */
     data object Entry : EntryUriType
+
+    /** URI identifies an openable child item. */
     data object Chapter : EntryUriType
+
+    /** URI is not supported by this source. */
     data object Unknown : EntryUriType
 }
 

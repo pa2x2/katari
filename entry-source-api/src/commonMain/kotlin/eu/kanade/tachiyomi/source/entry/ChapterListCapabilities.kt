@@ -12,6 +12,12 @@ interface EmptyChapterListSource
  * Source capability for chapter refreshes that need the currently stored chapter list.
  */
 interface IncrementalChapterSource {
+    /**
+     * Refreshes [entry] while taking the currently stored [existingChapters] into account.
+     *
+     * The returned list is the refreshed authoritative child list. Implementations must not mutate
+     * [existingChapters] or assume that refreshes are serialized.
+     */
     suspend fun getChapterList(
         entry: SEntry,
         existingChapters: List<SEntryChapter>,

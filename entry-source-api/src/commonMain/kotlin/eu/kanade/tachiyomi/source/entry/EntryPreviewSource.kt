@@ -17,6 +17,11 @@ interface EntryPreviewSource : UnifiedSource {
  * A static image supplied by an [EntryPreviewSource].
  *
  * [title] and [url] are optional source metadata for clients that present richer preview surfaces.
+ *
+ * @property index unique zero-based position in display order.
+ * @property imageUrl absolute preview image URL.
+ * @property title optional user-visible preview label.
+ * @property url optional canonical page associated with the preview.
  */
 data class EntryPreviewImage(
     val index: Int,

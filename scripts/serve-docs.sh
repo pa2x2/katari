@@ -6,6 +6,9 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 venv="$repo_root/.venv-docs"
 requirements="$repo_root/requirements-docs.txt"
 installed_requirements="$venv/.requirements-docs.txt"
+sdk_api_output="$repo_root/entry-source-api/build/dokka/html"
+sdk_api_docs="$repo_root/docs/developers/sdk/api"
+sdk_doc_version="${SDK_DOC_VERSION:-development}"
 
 if ! command -v python3 >/dev/null 2>&1; then
     echo "Python 3 is required to preview the documentation." >&2
@@ -27,6 +30,15 @@ if [[ ! -f "$installed_requirements" ]] || ! cmp --silent "$requirements" "$inst
     "$venv/bin/python" -m pip install --disable-pip-version-check --quiet -r "$requirements"
     cp "$requirements" "$installed_requirements"
 fi
+
+echo "Generating Entry SDK API reference ($sdk_doc_version)..."
+"$repo_root/gradlew" --quiet \
+    :entry-source-api:dokkaGeneratePublicationHtml \
+    -PsourceApiVersion="$sdk_doc_version"
+
+rm -rf "$sdk_api_docs"
+mkdir -p "$sdk_api_docs"
+cp -R "$sdk_api_output"/. "$sdk_api_docs"/
 
 has_address=false
 for argument in "$@"; do

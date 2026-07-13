@@ -34,6 +34,12 @@ Stories do not all fit the same format. Katari gives them the same home, with an
 
 Katari would not exist without [Mihon](https://github.com/mihonapp/mihon) and the many people who contribute to it. This is an independent, preference-driven fork—not an official Mihon project.
 
+## Developers
+
+Katari provides an Entry SDK for building sources that can expose different content types and media experiences. See the [developer documentation](https://katariapp.github.io/katari/developers/) for extension guides, SDK concepts, compatibility rules, and the API reference.
+
+For changes to Katari itself, see the [contribution guide](./CONTRIBUTING.md).
+
 ## Disclaimer
 
 The developer(s) of this application does not have any affiliation with the content providers available, and this application hosts zero content.
