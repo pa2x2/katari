@@ -14,11 +14,11 @@ import mihon.entry.interactions.EntryImmersiveFeedProgress
 import mihon.entry.interactions.EntryImmersiveFeedRenderer
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.domain.entry.repository.PlaybackStateRepository
+import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.history.repository.HistoryRepository
 
 internal class AnimeImmersiveFeedProcessor(
-    private val playbackStateRepository: PlaybackStateRepository,
+    private val entryProgressRepository: EntryProgressRepository,
     private val historyRepository: HistoryRepository?,
     private val resolveVideoStream: () -> VideoStreamResolver,
 ) : EntryImmersiveFeedProcessor {
@@ -43,15 +43,16 @@ internal class AnimeImmersiveFeedProcessor(
             )
         ) {
             is ResolveVideoStream.Result.Success -> {
-                val session = VideoPlaybackSession(entry.id, chapter.id).apply {
-                    restore(0L)
+                val progress = entryProgressRepository.get(entry.id, "", chapter.url)
+                val session = VideoPlaybackSession(entry.id, chapter.id, chapter.url).apply {
+                    restore(progress)
                 }
                 EntryImmersiveFeedHandle.Playback(
                     entryType = type,
                     chapterId = chapter.id,
                     stream = result.stream,
                     subtitles = result.subtitles,
-                    resumePositionMs = 0L,
+                    resumePositionMs = progress?.positionMs ?: 0L,
                     delegate = session,
                 )
             }
@@ -77,7 +78,7 @@ internal class AnimeImmersiveFeedProcessor(
                 positionMs = playbackProgress.positionMs,
                 durationMs = playbackProgress.durationMs,
             )
-            playbackStateRepository.upsertAndSyncEpisodeState(snapshot.playbackState)
+            entryProgressRepository.mergeAndSyncChild(snapshot.progressState)
             snapshot.historyUpdate?.let { historyRepository?.upsertHistory(it) }
             if (playbackProgress.resetSession) session.restore(0L)
         }

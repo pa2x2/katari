@@ -22,16 +22,17 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import mihon.entry.interactions.anime.positionMs
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.model.PlaybackPreferences
-import tachiyomi.domain.entry.model.PlaybackState
 import tachiyomi.domain.entry.model.PlayerQualityMode
 import tachiyomi.domain.entry.repository.EntryChapterRepository
+import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
-import tachiyomi.domain.entry.repository.PlaybackStateRepository
 import tachiyomi.domain.entry.service.sortedForReading
 import tachiyomi.domain.history.repository.HistoryRepository
 import uy.kohesive.injekt.Injekt
@@ -48,7 +49,7 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
         Injekt.get<GetEntryWithChapters>()
     }.getOrNull(),
     private val entryRepository: EntryRepository? = runCatching { Injekt.get<EntryRepository>() }.getOrNull(),
-    private val playbackStateRepository: PlaybackStateRepository = Injekt.get(),
+    private val entryProgressRepository: EntryProgressRepository = Injekt.get(),
     private val historyRepository: HistoryRepository = Injekt.get(),
     private val resolveDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val persistenceDispatcher: CoroutineDispatcher = Dispatchers.IO,
@@ -307,18 +308,22 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
         val current = mutableState.value as? State.Ready ?: return
         val safePositionMs = positionMs.coerceAtLeast(0L)
         val safeDurationMs = durationMs.coerceAtLeast(0L)
-        val session = playbackSession ?: VideoPlaybackSession(current.ownerEntryId, current.chapterId)
+        val session = playbackSession ?: VideoPlaybackSession(
+            current.ownerEntryId,
+            current.chapterId,
+            current.chapterResourceKey,
+        )
             .also { playbackSession = it }
         val snapshot = session.snapshot(positionMs = safePositionMs, durationMs = safeDurationMs)
         mutableState.value = current.copy(
             resumePositionMs = safePositionMs,
-            playbackStateByChapterId = current.playbackStateByChapterId + (current.chapterId to snapshot.playbackState),
+            playbackStateByChapterId = current.playbackStateByChapterId + (current.chapterId to snapshot.progressState),
         )
 
         viewModelScope.launch(persistenceDispatcher) {
             withContext(NonCancellable) {
                 persistMutex.withLock {
-                    playbackStateRepository.upsertAndSyncEpisodeState(snapshot.playbackState)
+                    entryProgressRepository.mergeAndSyncChild(snapshot.progressState)
                     snapshot.historyUpdate?.let { historyUpdate ->
                         historyRepository.upsertHistory(historyUpdate)
                     }
@@ -470,7 +475,12 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
         val current = mutableState.value
         if (current is State.Ready) {
             val session = playbackSession?.takeIf { !initial }
-                ?: VideoPlaybackSession(current.ownerEntryId, current.chapterId)
+                ?: VideoPlaybackSession(
+                    current.ownerEntryId,
+                    current.chapterId,
+                    current.chapterResourceKey,
+                )
+            session.restore(current.playbackStateByChapterId[current.chapterId])
             session.restore(current.resumePositionMs)
             playbackSession = session
         }
@@ -516,8 +526,9 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
                 ?: fallbackTitles[memberId].orEmpty()
         }
         val playbackStateByEpisodeId = memberIds
-            .flatMap { memberId -> playbackStateRepository.getByEntryIdAsFlow(memberId).first() }
-            .associateBy(PlaybackState::chapterId)
+            .flatMap { memberId -> entryProgressRepository.getByEntryId(memberId) }
+            .mapNotNull { state -> state.chapterId?.let { it to state } }
+            .toMap()
 
         return EpisodeDrawerData(
             entry = entry,
@@ -555,7 +566,7 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
         playbackRevision: Long,
     ): State.Ready {
         val resumePositionMs = preservePositionMs
-            ?: playbackStateRepository.getByChapterId(result.chapter.id)?.positionMs
+            ?: entryProgressRepository.get(result.ownerEntry.id, "", result.chapter.url)?.positionMs
             ?: 0L
         val navigation = resolveEpisodeNavigation(
             visibleEntryId = result.visibleEntry.id,
@@ -577,6 +588,7 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
             visibleEntryId = result.visibleEntry.id,
             ownerEntryId = result.ownerEntry.id,
             chapterId = result.chapter.id,
+            chapterResourceKey = result.chapter.url,
             previousChapterId = navigation.previousChapterId,
             nextChapterId = navigation.nextChapterId,
             entry = episodeDrawerData.entry,
@@ -744,13 +756,14 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
             val visibleEntryId: Long,
             val ownerEntryId: Long,
             val chapterId: Long,
+            val chapterResourceKey: String,
             val previousChapterId: Long?,
             val nextChapterId: Long?,
             val entry: Entry,
             val allChapters: List<EntryChapter>,
             val memberIds: List<Long>,
             val memberTitleById: Map<Long, String>,
-            val playbackStateByChapterId: Map<Long, PlaybackState>,
+            val playbackStateByChapterId: Map<Long, EntryProgressState>,
             val sourceAvailable: Boolean,
             val chapterTitle: String,
             val chapterName: String,
@@ -817,7 +830,7 @@ private data class EpisodeDrawerData(
     val chapters: List<EntryChapter>,
     val memberIds: List<Long>,
     val memberTitleById: Map<Long, String>,
-    val playbackStateByChapterId: Map<Long, PlaybackState>,
+    val playbackStateByChapterId: Map<Long, EntryProgressState>,
 )
 
 private data class SelectionCacheKey(

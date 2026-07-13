@@ -18,18 +18,19 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import mihon.entry.interactions.anime.animeProgressState
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.model.PlaybackPreferences
-import tachiyomi.domain.entry.model.PlaybackState
 import tachiyomi.domain.entry.model.PlayerQualityMode
 import tachiyomi.domain.entry.repository.EntryChapterRepository
+import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
-import tachiyomi.domain.entry.repository.PlaybackStateRepository
 import tachiyomi.domain.history.model.History
 import tachiyomi.domain.history.model.HistoryUpdate
 import tachiyomi.domain.history.model.HistoryWithRelations
@@ -52,14 +53,16 @@ class VideoPlayerViewModelTest {
 
     @Test
     fun `init exposes resume position from saved playback state`() = runTest(dispatcher) {
-        val playbackRepository = FakePlaybackStateRepository(
-            existingState = PlaybackState(
+        val playbackRepository = FakeEntryProgressRepository(
+            existingState = animeProgressState(
                 entryId = 1L,
                 chapterId = 2L,
+                resourceKey = "/chapter/2",
                 positionMs = 12_345L,
                 durationMs = 99_999L,
                 completed = false,
-                lastWatchedAt = 500L,
+                locatorUpdatedAt = 500L,
+                completionUpdatedAt = 0L,
             ),
         )
         val historyRepository = FakeHistoryRepository()
@@ -84,13 +87,13 @@ class VideoPlayerViewModelTest {
         state.previousChapterId shouldBe 1L
         state.nextChapterId shouldBe 3L
         state.resumePositionMs shouldBe 12_345L
-        playbackRepository.requestedChapterIds shouldBe listOf(2L)
+        playbackRepository.requestedResourceKeys shouldBe listOf("/chapter/2")
         historyRepository.upserts shouldBe emptyList()
     }
 
     @Test
     fun `persist playback writes playback state and history delta`() = runTest(dispatcher) {
-        val playbackRepository = FakePlaybackStateRepository(existingState = null)
+        val playbackRepository = FakeEntryProgressRepository(existingState = null)
         val historyRepository = FakeHistoryRepository()
         val viewModel = createViewModel(
             entryChapterRepository = FakeEntryChapterRepository(emptyList()),
@@ -106,8 +109,8 @@ class VideoPlayerViewModelTest {
         advanceUntilIdle()
 
         playbackRepository.upserts.single().chapterId shouldBe 2L
-        playbackRepository.upserts.single().positionMs shouldBe 15_000L
-        playbackRepository.upserts.single().durationMs shouldBe 100_000L
+        playbackRepository.upserts.single().locator.position shouldBe 15_000L
+        playbackRepository.upserts.single().locator.extent shouldBe 100_000L
         playbackRepository.upserts.single().completed shouldBe false
         historyRepository.upserts.single().chapterId shouldBe 2L
         historyRepository.upserts.single().sessionReadDuration shouldBe 15_000L
@@ -115,7 +118,7 @@ class VideoPlayerViewModelTest {
 
     @Test
     fun `play next chapter resolves adjacent chapter in source order`() = runTest(dispatcher) {
-        val playbackRepository = FakePlaybackStateRepository(existingState = null)
+        val playbackRepository = FakeEntryProgressRepository(existingState = null)
         val historyRepository = FakeHistoryRepository()
         val resolver = RecordingVideoStreamResolver()
         val viewModel = createViewModel(
@@ -145,7 +148,7 @@ class VideoPlayerViewModelTest {
 
     @Test
     fun `play next chapter uses merged sequence when bypassMerge is false`() = runTest(dispatcher) {
-        val playbackRepository = FakePlaybackStateRepository(existingState = null)
+        val playbackRepository = FakeEntryProgressRepository(existingState = null)
         val historyRepository = FakeHistoryRepository()
         val resolver = RecordingVideoStreamResolver()
         val getEntryWithChapters = mockk<GetEntryWithChapters>()
@@ -189,7 +192,7 @@ class VideoPlayerViewModelTest {
 
     @Test
     fun `play next chapter stays on owner sequence when bypassMerge is true`() = runTest(dispatcher) {
-        val playbackRepository = FakePlaybackStateRepository(existingState = null)
+        val playbackRepository = FakeEntryProgressRepository(existingState = null)
         val historyRepository = FakeHistoryRepository()
         val resolver = RecordingVideoStreamResolver()
         val getEntryWithChapters = mockk<GetEntryWithChapters>()
@@ -232,7 +235,7 @@ class VideoPlayerViewModelTest {
 
     private fun createViewModel(
         entryChapterRepository: EntryChapterRepository,
-        playbackRepository: PlaybackStateRepository,
+        playbackRepository: EntryProgressRepository,
         historyRepository: HistoryRepository,
         resolver: VideoStreamResolver,
         getEntryWithChapters: GetEntryWithChapters? = null,
@@ -243,7 +246,7 @@ class VideoPlayerViewModelTest {
             playbackPreferencesRepository = FakePlaybackPreferencesRepository(),
             entryChapterRepository = entryChapterRepository,
             getEntryWithChapters = getEntryWithChapters,
-            playbackStateRepository = playbackRepository,
+            entryProgressRepository = playbackRepository,
             historyRepository = historyRepository,
             resolveDispatcher = dispatcher,
             persistenceDispatcher = dispatcher,
@@ -329,28 +332,40 @@ class VideoPlayerViewModelTest {
         override suspend fun upsert(preferences: PlaybackPreferences) = Unit
     }
 
-    private class FakePlaybackStateRepository(
-        private val existingState: PlaybackState?,
-    ) : PlaybackStateRepository {
-        val requestedChapterIds = mutableListOf<Long>()
-        val upserts = mutableListOf<PlaybackState>()
+    private class FakeEntryProgressRepository(
+        existingState: EntryProgressState?,
+    ) : EntryProgressRepository {
+        private val states = existingState?.let(::mutableListOf) ?: mutableListOf()
+        val requestedResourceKeys = mutableListOf<String>()
+        val upserts = mutableListOf<EntryProgressState>()
 
-        override suspend fun getByChapterId(chapterId: Long): PlaybackState? {
-            requestedChapterIds += chapterId
-            return existingState?.takeIf { it.chapterId == chapterId }
+        override suspend fun get(entryId: Long, contentKey: String, resourceKey: String): EntryProgressState? {
+            requestedResourceKeys += resourceKey
+            return states.firstOrNull {
+                it.entryId == entryId && it.contentKey == contentKey && it.resourceKey == resourceKey
+            }
         }
 
-        override fun getByChapterIdAsFlow(chapterId: Long): Flow<PlaybackState?> = emptyFlow()
+        override suspend fun getByEntryId(entryId: Long): List<EntryProgressState> =
+            states.filter { it.entryId == entryId }
 
-        override fun getByEntryIdAsFlow(entryId: Long): Flow<List<PlaybackState>> = flowOf(
-            existingState?.takeIf { it.entryId == entryId }?.let(::listOf) ?: emptyList(),
-        )
+        override fun getByEntryIdAsFlow(entryId: Long): Flow<List<EntryProgressState>> =
+            flowOf(states.filter { it.entryId == entryId })
 
-        override suspend fun upsert(state: PlaybackState) {
-            upserts += state
-        }
+        override fun getByChapterIdAsFlow(chapterId: Long): Flow<List<EntryProgressState>> =
+            flowOf(states.filter { it.chapterId == chapterId })
 
-        override suspend fun upsertAndSyncEpisodeState(state: PlaybackState) {
+        override suspend fun upsert(state: EntryProgressState) = record(state)
+
+        override suspend fun upsertAndSyncChild(state: EntryProgressState) = record(state)
+
+        override suspend fun merge(state: EntryProgressState): EntryProgressState = state.also(::record)
+
+        override suspend fun mergeAndSyncChild(state: EntryProgressState): EntryProgressState = state.also(::record)
+
+        private fun record(state: EntryProgressState) {
+            states.removeAll { it.identity == state.identity }
+            states += state
             upserts += state
         }
     }

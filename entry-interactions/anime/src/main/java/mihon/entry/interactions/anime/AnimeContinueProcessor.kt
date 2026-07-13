@@ -8,11 +8,11 @@ import mihon.entry.interactions.EntryOpenOptions
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.domain.entry.repository.PlaybackStateRepository
+import tachiyomi.domain.entry.repository.EntryProgressRepository
 
 internal class AnimeContinueProcessor(
     private val getEntryWithChapters: GetEntryWithChapters,
-    private val playbackStateRepository: PlaybackStateRepository,
+    private val entryProgressRepository: EntryProgressRepository,
     private val openProcessor: AnimeOpenProcessor,
 ) : EntryContinueProcessor {
     override val type: EntryType = EntryType.ANIME
@@ -26,7 +26,7 @@ internal class AnimeContinueProcessor(
         val states = chapters
             .map { it.entryId }
             .distinct()
-            .flatMap { entryId -> playbackStateRepository.getByEntryIdAsFlow(entryId).first() }
+            .flatMap { entryId -> entryProgressRepository.getByEntryId(entryId) }
             .filter { it.chapterId in chapterIds }
         val stateByChapterId = states.associateBy { it.chapterId }
 
@@ -34,7 +34,7 @@ internal class AnimeContinueProcessor(
             .sortedBy { it.sourceOrder }
             .firstOrNull { chapter ->
                 val state = stateByChapterId[chapter.id]
-                state != null && state.positionMs > 0 && !state.completed
+                state != null && state.positionMs > 0L && !state.completed
             }
             ?: chapters
                 .sortedBy { it.sourceOrder }

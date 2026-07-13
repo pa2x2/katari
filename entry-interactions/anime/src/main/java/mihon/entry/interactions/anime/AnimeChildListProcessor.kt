@@ -12,13 +12,13 @@ import mihon.entry.interactions.EntryChildProgressLabel
 import mihon.entry.interactions.EntryChildProgressRequest
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.domain.entry.repository.PlaybackStateRepository
+import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.service.sortedForMergedDisplay
 import tachiyomi.domain.entry.service.sortedForReading
 import tachiyomi.i18n.MR
 
 internal class AnimeChildListProcessor(
-    private val playbackStateRepository: PlaybackStateRepository,
+    private val entryProgressRepository: EntryProgressRepository,
 ) : EntryChildListProcessor {
     override val type: EntryType = EntryType.ANIME
 
@@ -67,7 +67,7 @@ internal class AnimeChildListProcessor(
     override fun progressLabels(request: EntryChildProgressRequest): Flow<Map<Long, EntryChildProgressLabel>> {
         val stateFlows = request.memberIds
             .distinct()
-            .map(playbackStateRepository::getByEntryIdAsFlow)
+            .map(entryProgressRepository::getByEntryIdAsFlow)
 
         if (stateFlows.isEmpty()) {
             return flowOf(emptyMap())

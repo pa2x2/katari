@@ -128,11 +128,11 @@ interface EntryProgressProcessor {
     )
 }
 
-interface EntryPlaybackProcessor {
+interface EntryPlaybackPreferencesProcessor {
     val type: EntryType
-    suspend fun snapshot(entry: Entry): EntryPlaybackSnapshot
-    suspend fun restore(entry: Entry, snapshot: EntryPlaybackSnapshot)
-    suspend fun copy(sourceEntry: Entry, targetEntry: Entry, chapterMappings: List<EntryPlaybackChapterMapping>)
+    suspend fun snapshot(entry: Entry): EntryPlaybackPreferencesSnapshot?
+    suspend fun restore(entry: Entry, snapshot: EntryPlaybackPreferencesSnapshot)
+    suspend fun copy(sourceEntry: Entry, targetEntry: Entry)
 }
 
 interface EntryImmersiveFeedProcessor : EntryImmersiveFeedInteraction {
@@ -183,7 +183,7 @@ interface EntryInteractionRegistry {
     fun registerConsumptionProcessor(processor: EntryConsumptionProcessor)
     fun registerUpdateEligibilityProcessor(processor: EntryUpdateEligibilityProcessor)
     fun registerProgressProcessor(processor: EntryProgressProcessor)
-    fun registerPlaybackProcessor(processor: EntryPlaybackProcessor)
+    fun registerPlaybackPreferencesProcessor(processor: EntryPlaybackPreferencesProcessor)
     fun registerChildListProcessor(processor: EntryChildListProcessor)
     fun registerChildGroupFilterProcessor(processor: EntryChildGroupFilterProcessor)
     fun registerLibraryFilterProcessor(processor: EntryLibraryFilterProcessor)

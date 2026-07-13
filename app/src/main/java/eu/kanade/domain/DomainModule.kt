@@ -44,7 +44,6 @@ import tachiyomi.data.entry.EntryRepositoryImpl
 import tachiyomi.data.entry.EntrySyncRepositoryImpl
 import tachiyomi.data.entry.MergedEntryRepositoryImpl
 import tachiyomi.data.entry.PlaybackPreferencesRepositoryImpl
-import tachiyomi.data.entry.PlaybackStateRepositoryImpl
 import tachiyomi.data.history.HistoryRepositoryImpl
 import tachiyomi.data.release.ReleaseServiceImpl
 import tachiyomi.data.source.CatalogSourceRepositoryImpl
@@ -87,7 +86,6 @@ import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.EntrySyncRepository
 import tachiyomi.domain.entry.repository.MergedEntryRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
-import tachiyomi.domain.entry.repository.PlaybackStateRepository
 import tachiyomi.domain.entry.service.EntryLibraryProgressResolver
 import tachiyomi.domain.entry.service.FetchInterval
 import tachiyomi.domain.history.interactor.GetHistory
@@ -136,7 +134,6 @@ class DomainModule : InjektModule {
         addSingletonFactory<EntryRepository> { EntryRepositoryImpl(get(), get()) }
         addSingletonFactory<EntryChapterRepository> { EntryChapterRepositoryImpl(get(), get()) }
         addSingletonFactory<EntryProgressRepository> { EntryProgressRepositoryImpl(get()) }
-        addSingletonFactory<PlaybackStateRepository> { PlaybackStateRepositoryImpl(get()) }
         addSingletonFactory<PlaybackPreferencesRepository> { PlaybackPreferencesRepositoryImpl(get()) }
         addSingletonFactory<DownloadPreferencesRepository> { DownloadPreferencesRepositoryImpl(get()) }
         addSingletonFactory<EntrySyncRepository> { EntrySyncRepositoryImpl(get(), get()) }
@@ -169,7 +166,7 @@ class DomainModule : InjektModule {
         addFactory { GetEnhancedDuplicateLibraryEntries(get(), get(), get(), get()) }
         addFactory {
             MigrateEntryUseCase(
-                get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(),
+                get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(),
             )
         }
 

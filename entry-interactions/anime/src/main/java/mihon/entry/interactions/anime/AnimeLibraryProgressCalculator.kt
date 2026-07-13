@@ -1,24 +1,23 @@
 package mihon.entry.interactions.anime
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import kotlinx.coroutines.flow.first
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.domain.entry.model.PlaybackState
-import tachiyomi.domain.entry.repository.PlaybackStateRepository
+import tachiyomi.domain.entry.model.EntryProgressState
+import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.service.EntryLibraryProgressCalculator
 import tachiyomi.domain.entry.service.EntryLibraryState
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.ProgressState
 
 fun animeEntryLibraryProgressCalculator(
-    playbackStateRepository: PlaybackStateRepository,
+    entryProgressRepository: EntryProgressRepository,
 ): EntryLibraryProgressCalculator {
-    return AnimeLibraryProgressCalculator(playbackStateRepository)
+    return AnimeLibraryProgressCalculator(entryProgressRepository)
 }
 
 private class AnimeLibraryProgressCalculator(
-    private val playbackStateRepository: PlaybackStateRepository,
+    private val entryProgressRepository: EntryProgressRepository,
 ) : EntryLibraryProgressCalculator {
     override val entryType = EntryType.ANIME
 
@@ -71,16 +70,15 @@ private class AnimeLibraryProgressCalculator(
     private suspend fun getPlaybackStates(
         entry: Entry,
         chapters: List<EntryChapter>,
-    ): List<PlaybackState> {
+    ): List<EntryProgressState> {
         val chapterIds = chapters.map { it.id }.toSet()
-        return playbackStateRepository.getByEntryIdAsFlow(entry.id)
-            .first()
+        return entryProgressRepository.getByEntryId(entry.id)
             .filter { it.chapterId in chapterIds }
     }
 
     private fun selectPrimaryEpisode(
         chapters: List<EntryChapter>,
-        playbackStates: List<PlaybackState>,
+        playbackStates: List<EntryProgressState>,
     ): EntryChapter? {
         val playbackStateByChapterId by lazy { playbackStates.associateBy { it.chapterId } }
         val inProgressChapter = chapters

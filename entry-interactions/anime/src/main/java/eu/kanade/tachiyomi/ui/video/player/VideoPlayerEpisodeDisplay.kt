@@ -1,9 +1,11 @@
 package eu.kanade.tachiyomi.ui.video.player
 
 import androidx.compose.runtime.Immutable
+import mihon.entry.interactions.anime.lastWatchedAt
+import mihon.entry.interactions.anime.positionMs
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.domain.entry.model.PlaybackState
+import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.service.getChapterSort
 import tachiyomi.domain.entry.service.groupedByMergedMember
 import tachiyomi.domain.entry.service.sortedForMergedDisplay
@@ -12,7 +14,7 @@ import tachiyomi.domain.util.applyFilter
 
 internal data class VideoPlayerEpisodeDisplayData(
     val chapters: List<EntryChapter>,
-    val playbackStateByChapterId: Map<Long, PlaybackState>,
+    val playbackStateByChapterId: Map<Long, EntryProgressState>,
     val primaryChapterId: Long?,
     val chapterListItems: List<VideoPlayerEpisodeListEntry>,
 )
@@ -22,9 +24,11 @@ internal fun buildVideoPlayerEpisodeDisplayData(
     chapters: List<EntryChapter>,
     memberIds: List<Long>,
     memberTitleById: Map<Long, String>,
-    playbackStates: List<PlaybackState>,
+    playbackStates: List<EntryProgressState>,
 ): VideoPlayerEpisodeDisplayData {
-    val playbackStateByEpisodeId = playbackStates.associateBy(PlaybackState::chapterId)
+    val playbackStateByEpisodeId = playbackStates
+        .mapNotNull { state -> state.chapterId?.let { it to state } }
+        .toMap()
     val filteredEpisodes = chapters.filterEpisodesForDisplay(entry)
     val displayedEpisodes = filteredEpisodes.sortEpisodesForDisplay(entry, memberIds)
 
@@ -106,7 +110,7 @@ private fun List<EntryChapter>.sortEpisodesForDisplay(
 
 private fun selectPrimaryEpisodeIdForDisplay(
     episodes: List<EntryChapter>,
-    playbackStateByEpisodeId: Map<Long, PlaybackState>,
+    playbackStateByEpisodeId: Map<Long, EntryProgressState>,
 ): Long? {
     val inProgressEpisode = episodes
         .asSequence()

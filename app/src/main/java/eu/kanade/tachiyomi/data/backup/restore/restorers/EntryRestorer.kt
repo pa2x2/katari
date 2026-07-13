@@ -11,13 +11,12 @@ import eu.kanade.tachiyomi.data.backup.models.BackupPlaybackState
 import eu.kanade.tachiyomi.data.backup.models.BackupTracking
 import eu.kanade.tachiyomi.data.backup.models.toEntryProgressStateSnapshot
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.EntryPlaybackInteraction
+import mihon.entry.interactions.EntryPlaybackPreferencesInteraction
 import mihon.entry.interactions.EntryPlaybackPreferencesSnapshot
 import mihon.entry.interactions.EntryPlaybackQualityMode
-import mihon.entry.interactions.EntryPlaybackSnapshot
-import mihon.entry.interactions.EntryPlaybackStateSnapshot
 import mihon.entry.interactions.EntryProgressInteraction
 import mihon.entry.interactions.EntryProgressSnapshot
+import mihon.entry.interactions.EntryProgressStateSnapshot
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.category.interactor.GetCategories
@@ -25,6 +24,7 @@ import tachiyomi.domain.entry.interactor.UpdateMergedEntry
 import tachiyomi.domain.entry.model.DownloadPreferences
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryIdentity
+import tachiyomi.domain.entry.model.EntryProgressLocator
 import tachiyomi.domain.entry.model.VideoDownloadQualityMode
 import tachiyomi.domain.entry.model.identity
 import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
@@ -52,7 +52,7 @@ class EntryRestorer(
     private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
     private val downloadPreferencesRepository: DownloadPreferencesRepository = Injekt.get(),
     private val progressInteraction: EntryProgressInteraction = Injekt.get(),
-    private val playbackInteraction: EntryPlaybackInteraction = Injekt.get(),
+    private val playbackPreferencesInteraction: EntryPlaybackPreferencesInteraction = Injekt.get(),
     private val upsertHistory: UpsertHistory = Injekt.get(),
     private val historyRepository: HistoryRepository = Injekt.get(),
     private val getTracks: GetTracks = Injekt.get(),
@@ -204,8 +204,8 @@ class EntryRestorer(
             restoreTracking(entry, backupEntry.tracking)
             restoreExcludedScanlators(entry, backupEntry.excludedScanlators)
         }
-        restorePlayback(entry, backupEntry.playbackStates, backupEntry.playbackPreferences)
-        restoreProgress(entry, backupEntry.progressStates)
+        restorePlaybackPreferences(entry, backupEntry.playbackPreferences)
+        restoreProgress(entry, backupEntry.playbackStates, backupEntry.progressStates)
         if (entry.type == EntryType.ANIME) {
             restoreDownloadPreferences(entry, backupEntry.downloadPreferences)
         }
@@ -215,11 +215,20 @@ class EntryRestorer(
         entryRepository.update(withInterval)
     }
 
-    private suspend fun restoreProgress(entry: Entry, states: List<BackupEntryProgressState>) {
+    private suspend fun restoreProgress(
+        entry: Entry,
+        legacyPlaybackStates: List<BackupPlaybackState>,
+        states: List<BackupEntryProgressState>,
+    ) {
+        val genericStates = states.map { it.toEntryProgressStateSnapshot() }
+        val genericIdentities = genericStates.mapTo(hashSetOf()) { it.contentKey to it.resourceKey }
+        val legacyStates = legacyPlaybackStates
+            .mapNotNull { it.toProgressSnapshot() }
+            .filterNot { (it.contentKey to it.resourceKey) in genericIdentities }
         progressInteraction.restore(
             entry,
             EntryProgressSnapshot(
-                states = states.map { it.toEntryProgressStateSnapshot() },
+                states = legacyStates + genericStates,
             ),
         )
     }
@@ -376,28 +385,33 @@ class EntryRestorer(
         }
     }
 
-    private suspend fun restorePlayback(
+    private suspend fun restorePlaybackPreferences(
         entry: Entry,
-        backupStates: List<BackupPlaybackState>,
         backupPreferences: BackupPlaybackPreferences?,
     ) {
-        val states = backupStates.mapNotNull { backupState ->
-            val chapter = entryChapterRepository.getChapterByUrlAndEntryId(backupState.url, entry.id)
-                ?: return@mapNotNull null
-            EntryPlaybackStateSnapshot(
-                chapterId = chapter.id,
-                positionMs = backupState.positionMs,
-                durationMs = backupState.durationMs,
-                completed = backupState.completed,
-                lastWatchedAt = backupState.lastWatchedAt,
-            )
-        }
-        playbackInteraction.restore(
-            entry = entry,
-            snapshot = EntryPlaybackSnapshot(
-                states = states,
-                preferences = backupPreferences?.toPlaybackSnapshot(),
+        val preferences = backupPreferences?.toPlaybackSnapshot() ?: return
+        playbackPreferencesInteraction.restore(entry, preferences)
+    }
+
+    private fun BackupPlaybackState.toProgressSnapshot(): EntryProgressStateSnapshot? {
+        if (url.isBlank() || (!completed && positionMs <= 0L)) return null
+        val safePosition = positionMs.coerceAtLeast(0L)
+        val safeDuration = durationMs.takeIf { it > 0L }
+        val timestamp = lastWatchedAt.coerceAtLeast(0L)
+        return EntryProgressStateSnapshot(
+            resourceKey = url,
+            sourceChildKey = url,
+            locator = EntryProgressLocator(
+                kind = "time",
+                position = safePosition,
+                extent = safeDuration,
+                progression = safeDuration?.let {
+                    (safePosition.toDouble() / it.toDouble()).coerceIn(0.0, 1.0)
+                },
             ),
+            completed = completed,
+            locatorUpdatedAt = timestamp,
+            completionUpdatedAt = timestamp,
         )
     }
 

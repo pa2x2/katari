@@ -91,13 +91,14 @@ class EntryInteractionRegistryTest {
     }
 
     @Test
-    fun `empty plugin list treats playback as empty no-op`() = runTest {
+    fun `empty plugin list treats playback preferences as empty no-op`() = runTest {
         val interactions = createEntryInteractions(emptyList())
         val manga = entry(EntryType.MANGA)
+        val preferences = EntryPlaybackPreferencesSnapshot()
 
-        interactions.playback.snapshot(manga) shouldBe EntryPlaybackSnapshot()
-        interactions.playback.restore(manga, EntryPlaybackSnapshot())
-        interactions.playback.copy(manga, manga.copy(id = 2L), emptyList())
+        interactions.playbackPreferences.snapshot(manga) shouldBe null
+        interactions.playbackPreferences.restore(manga, preferences)
+        interactions.playbackPreferences.copy(manga, manga.copy(id = 2L))
     }
 
     @Test
@@ -228,17 +229,17 @@ class EntryInteractionRegistryTest {
     }
 
     @Test
-    fun `duplicate playback processor registration fails`() {
+    fun `duplicate playback preferences processor registration fails`() {
         val plugin = EntryInteractionPlugin { registry ->
-            registry.registerPlaybackProcessor(RecordingPlaybackProcessor(EntryType.ANIME))
-            registry.registerPlaybackProcessor(RecordingPlaybackProcessor(EntryType.ANIME))
+            registry.registerPlaybackPreferencesProcessor(RecordingPlaybackPreferencesProcessor(EntryType.ANIME))
+            registry.registerPlaybackPreferencesProcessor(RecordingPlaybackPreferencesProcessor(EntryType.ANIME))
         }
 
         val exception = assertThrows<IllegalStateException> {
             createEntryInteractions(listOf(plugin))
         }
 
-        exception.message shouldContain "Duplicate playback processor registered for EntryType ANIME"
+        exception.message shouldContain "Duplicate playback preferences processor registered for EntryType ANIME"
     }
 
     @Test
@@ -563,31 +564,29 @@ class EntryInteractionRegistryTest {
     }
 
     @Test
-    fun `playback dispatch selects processor by entry type`() = runTest {
-        val mangaProcessor = RecordingPlaybackProcessor(EntryType.MANGA)
-        val animeProcessor = RecordingPlaybackProcessor(EntryType.ANIME)
+    fun `playback preferences dispatch selects processor by entry type`() = runTest {
+        val mangaProcessor = RecordingPlaybackPreferencesProcessor(EntryType.MANGA)
+        val animeProcessor = RecordingPlaybackPreferencesProcessor(EntryType.ANIME)
         val interactions = createEntryInteractions(
             listOf(
                 EntryInteractionPlugin { registry ->
-                    registry.registerPlaybackProcessor(mangaProcessor)
-                    registry.registerPlaybackProcessor(animeProcessor)
+                    registry.registerPlaybackPreferencesProcessor(mangaProcessor)
+                    registry.registerPlaybackPreferencesProcessor(animeProcessor)
                 },
             ),
         )
         val anime = entry(EntryType.ANIME, id = 70L)
         val target = anime.copy(id = 71L)
-        val mappings = listOf(EntryPlaybackChapterMapping(sourceChapterId = 1L, targetChapterId = 2L))
 
-        val snapshot = interactions.playback.snapshot(anime)
-        interactions.playback.restore(anime, snapshot)
-        interactions.playback.copy(anime, target, mappings)
+        val snapshot = interactions.playbackPreferences.snapshot(anime)!!
+        interactions.playbackPreferences.restore(anime, snapshot)
+        interactions.playbackPreferences.copy(anime, target)
 
         snapshot shouldBe animeProcessor.snapshot
         mangaProcessor.snapshotEntryIds shouldBe emptyList()
         animeProcessor.snapshotEntryIds shouldBe listOf(70L)
         animeProcessor.restoredEntryIds shouldBe listOf(70L)
         animeProcessor.copyRequests shouldBe listOf(70L to 71L)
-        animeProcessor.copyMappings shouldBe listOf(mappings)
     }
 
     @Test
@@ -1204,47 +1203,30 @@ class EntryInteractionRegistryTest {
         }
     }
 
-    private class RecordingPlaybackProcessor(
+    private class RecordingPlaybackPreferencesProcessor(
         override val type: EntryType,
-    ) : EntryPlaybackProcessor {
-        val snapshot = EntryPlaybackSnapshot(
-            states = listOf(
-                EntryPlaybackStateSnapshot(
-                    chapterId = 1L,
-                    positionMs = 2L,
-                    durationMs = 3L,
-                    completed = false,
-                    lastWatchedAt = 4L,
-                ),
-            ),
-            preferences = EntryPlaybackPreferencesSnapshot(
-                streamKey = "stream",
-                playerQualityMode = EntryPlaybackQualityMode.SPECIFIC_HEIGHT,
-                playerQualityHeight = 1080,
-                updatedAt = 5L,
-            ),
+    ) : EntryPlaybackPreferencesProcessor {
+        val snapshot = EntryPlaybackPreferencesSnapshot(
+            streamKey = "stream",
+            playerQualityMode = EntryPlaybackQualityMode.SPECIFIC_HEIGHT,
+            playerQualityHeight = 1080,
+            updatedAt = 5L,
         )
         val snapshotEntryIds = mutableListOf<Long>()
         val restoredEntryIds = mutableListOf<Long>()
         val copyRequests = mutableListOf<Pair<Long, Long>>()
-        val copyMappings = mutableListOf<List<EntryPlaybackChapterMapping>>()
 
-        override suspend fun snapshot(entry: Entry): EntryPlaybackSnapshot {
+        override suspend fun snapshot(entry: Entry): EntryPlaybackPreferencesSnapshot {
             snapshotEntryIds += entry.id
             return snapshot
         }
 
-        override suspend fun restore(entry: Entry, snapshot: EntryPlaybackSnapshot) {
+        override suspend fun restore(entry: Entry, snapshot: EntryPlaybackPreferencesSnapshot) {
             restoredEntryIds += entry.id
         }
 
-        override suspend fun copy(
-            sourceEntry: Entry,
-            targetEntry: Entry,
-            chapterMappings: List<EntryPlaybackChapterMapping>,
-        ) {
+        override suspend fun copy(sourceEntry: Entry, targetEntry: Entry) {
             copyRequests += sourceEntry.id to targetEntry.id
-            copyMappings += chapterMappings
         }
     }
 

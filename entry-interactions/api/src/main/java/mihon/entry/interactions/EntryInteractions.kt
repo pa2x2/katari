@@ -18,7 +18,7 @@ interface EntryInteractions {
     val preview: EntryPreviewInteraction
     val immersiveFeed: EntryImmersiveFeedInteraction
     val progress: EntryProgressInteraction
-    val playback: EntryPlaybackInteraction
+    val playbackPreferences: EntryPlaybackPreferencesInteraction
     val childList: EntryChildListInteraction
     val childGroupFilter: EntryChildGroupFilterInteraction
     val libraryFilter: EntryLibraryFilterInteraction

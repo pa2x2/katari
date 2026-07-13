@@ -19,8 +19,8 @@ research record differ, the research record wins.
 
 | Phase | Status |
 | --- | --- |
-| 1 — shared progress foundation | Ready for review; uncommitted |
-| 2 — anime one-shot cutover | Not started |
+| 1 — shared progress foundation | Complete (`5edd3e12a`) |
+| 2 — anime one-shot cutover | Ready for review; uncommitted |
 | 3 — manga one-shot cutover | Not started |
 | 4 — BOOK SDK/runtime | Not started |
 | 5 — EPUB production integration | Not started |

@@ -11,7 +11,8 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import mihon.domain.migration.models.MigrationFlag
 import mihon.entry.interactions.EntryDownloadInteraction
-import mihon.entry.interactions.EntryPlaybackInteraction
+import mihon.entry.interactions.EntryPlaybackPreferencesInteraction
+import mihon.entry.interactions.EntryProgressInteraction
 import org.junit.jupiter.api.Named
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -79,7 +80,8 @@ class MigrateEntryUseCaseTest {
         private val sourceManager = mockk<SourceManager>()
         private val entryRepository = mockk<EntryRepository>(relaxed = true)
         private val entryChapterRepository = mockk<EntryChapterRepository>(relaxed = true)
-        private val playbackInteraction = mockk<EntryPlaybackInteraction>(relaxed = true)
+        private val progressInteraction = mockk<EntryProgressInteraction>(relaxed = true)
+        private val playbackPreferencesInteraction = mockk<EntryPlaybackPreferencesInteraction>(relaxed = true)
         val downloadInteraction = mockk<EntryDownloadInteraction>(relaxed = true)
         private val categoryRepository = mockk<CategoryRepository>(relaxed = true)
         private val getTracks = mockk<GetTracks>()
@@ -95,7 +97,8 @@ class MigrateEntryUseCaseTest {
             sourceManager = sourceManager,
             entryRepository = entryRepository,
             entryChapterRepository = entryChapterRepository,
-            playbackInteraction = playbackInteraction,
+            progressInteraction = progressInteraction,
+            playbackPreferencesInteraction = playbackPreferencesInteraction,
             downloadInteraction = downloadInteraction,
             categoryRepository = categoryRepository,
             getTracks = getTracks,

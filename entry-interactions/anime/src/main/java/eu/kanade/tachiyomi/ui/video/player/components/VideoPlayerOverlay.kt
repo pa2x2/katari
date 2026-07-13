@@ -33,7 +33,7 @@ import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekFeedbackState
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekPreviewState
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.domain.entry.model.PlaybackState
+import tachiyomi.domain.entry.model.EntryProgressState
 
 private val overlayBarsSlideAnimationSpec = tween<IntOffset>(190)
 private val overlayBarsFadeAnimationSpec = tween<Float>(125)
@@ -52,7 +52,7 @@ internal fun VideoPlayerOverlay(
     anime: Entry,
     currentEpisodeId: Long,
     episodeListItems: List<VideoPlayerEpisodeListEntry>,
-    playbackStateByEpisodeId: Map<Long, PlaybackState>,
+    playbackStateByEpisodeId: Map<Long, EntryProgressState>,
     sourceAvailable: Boolean,
     hasPreviousEpisode: Boolean,
     hasNextEpisode: Boolean,

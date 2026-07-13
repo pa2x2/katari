@@ -38,9 +38,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerEpisodeListEntry
+import mihon.entry.interactions.anime.durationMs
+import mihon.entry.interactions.anime.positionMs
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.domain.entry.model.PlaybackState
+import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.OverlayActionButton
 import tachiyomi.presentation.core.i18n.stringResource
@@ -51,7 +53,7 @@ internal fun VideoPlayerEpisodesDrawer(
     anime: Entry,
     episodeListItems: List<VideoPlayerEpisodeListEntry>,
     currentEpisodeId: Long,
-    playbackStateByEpisodeId: Map<Long, PlaybackState>,
+    playbackStateByEpisodeId: Map<Long, EntryProgressState>,
     sourceAvailable: Boolean,
     onEpisodeClick: (EntryChapter) -> Unit,
     onDismissRequest: () -> Unit,
@@ -160,7 +162,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.videoPlayerEpisodeIte
     anime: Entry,
     episodeListItems: List<VideoPlayerEpisodeListEntry>,
     currentEpisodeId: Long,
-    playbackStateByEpisodeId: Map<Long, PlaybackState>,
+    playbackStateByEpisodeId: Map<Long, EntryProgressState>,
     sourceAvailable: Boolean,
     onEpisodeClick: (EntryChapter) -> Unit,
 ) {
@@ -223,7 +225,7 @@ private fun VideoPlayerEpisodeRow(
     anime: Entry,
     episode: EntryChapter,
     selected: Boolean,
-    playbackState: PlaybackState?,
+    playbackState: EntryProgressState?,
     enabled: Boolean,
     onClick: () -> Unit,
 ) {
@@ -291,7 +293,7 @@ private fun VideoPlayerEpisodeRow(
     }
 }
 
-private fun PlaybackState?.progressFraction(): Float? {
+private fun EntryProgressState?.progressFraction(): Float? {
     if (this == null || durationMs <= 0L || positionMs <= 0L || completed) return null
     return (positionMs.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f)
 }

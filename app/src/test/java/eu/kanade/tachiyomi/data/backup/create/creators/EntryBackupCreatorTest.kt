@@ -9,11 +9,9 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.protobuf.ProtoBuf
-import mihon.entry.interactions.EntryPlaybackInteraction
+import mihon.entry.interactions.EntryPlaybackPreferencesInteraction
 import mihon.entry.interactions.EntryPlaybackPreferencesSnapshot
 import mihon.entry.interactions.EntryPlaybackQualityMode
-import mihon.entry.interactions.EntryPlaybackSnapshot
-import mihon.entry.interactions.EntryPlaybackStateSnapshot
 import mihon.entry.interactions.EntryProgressInteraction
 import mihon.entry.interactions.EntryProgressSnapshot
 import mihon.entry.interactions.EntryProgressStateSnapshot
@@ -60,11 +58,7 @@ class EntryBackupCreatorTest {
 
         decoded.type shouldBe type
         decoded.chapters.map { it.url } shouldBe if (chaptersEnabled) listOf(chapter.url) else emptyList()
-        decoded.playbackStates.map { it.url } shouldBe if (type == EntryType.ANIME && chaptersEnabled) {
-            listOf(chapter.url)
-        } else {
-            emptyList()
-        }
+        decoded.playbackStates shouldBe emptyList()
         decoded.progressStates.map { it.resourceKey } shouldBe if (chaptersEnabled) {
             listOf(chapter.url)
         } else {
@@ -94,8 +88,8 @@ class EntryBackupCreatorTest {
         coVerify(exactly = if (type == EntryType.ANIME && chaptersEnabled) 1 else 0) {
             fixture.downloadPreferencesRepository.getByEntryId(entry.id)
         }
-        coVerify(exactly = if (type == EntryType.ANIME || chaptersEnabled) 1 else 0) {
-            fixture.playbackInteraction.snapshot(entry)
+        coVerify(exactly = if (type == EntryType.ANIME) 1 else 0) {
+            fixture.playbackPreferencesInteraction.snapshot(entry)
         }
         coVerify(exactly = if (chaptersEnabled) 1 else 0) {
             fixture.progressInteraction.snapshot(entry)
@@ -113,7 +107,7 @@ class EntryBackupCreatorTest {
         val entryChapterRepository = mockk<EntryChapterRepository>()
         val downloadPreferencesRepository = mockk<DownloadPreferencesRepository>()
         val progressInteraction = mockk<EntryProgressInteraction>()
-        val playbackInteraction = mockk<EntryPlaybackInteraction>()
+        val playbackPreferencesInteraction = mockk<EntryPlaybackPreferencesInteraction>()
 
         val creator = EntryBackupCreator(
             handler = handler,
@@ -122,7 +116,7 @@ class EntryBackupCreatorTest {
             entryChapterRepository = entryChapterRepository,
             downloadPreferencesRepository = downloadPreferencesRepository,
             progressInteraction = progressInteraction,
-            playbackInteraction = playbackInteraction,
+            playbackPreferencesInteraction = playbackPreferencesInteraction,
         )
 
         init {
@@ -138,28 +132,17 @@ class EntryBackupCreatorTest {
                 qualityMode = VideoDownloadQualityMode.DATA_SAVING,
                 updatedAt = 20L,
             )
-            coEvery { playbackInteraction.snapshot(entry) } returns if (entry.type == EntryType.ANIME) {
-                EntryPlaybackSnapshot(
-                    states = listOf(
-                        EntryPlaybackStateSnapshot(
-                            chapterId = chapter.id,
-                            positionMs = 100L,
-                            durationMs = 200L,
-                            completed = false,
-                            lastWatchedAt = 300L,
-                        ),
-                    ),
-                    preferences = EntryPlaybackPreferencesSnapshot(
-                        dubKey = "playback-dub",
-                        streamKey = "playback-stream",
-                        subtitleKey = "playback-subtitle",
-                        playerQualityMode = EntryPlaybackQualityMode.SPECIFIC_HEIGHT,
-                        playerQualityHeight = 1080,
-                        updatedAt = 10L,
-                    ),
+            coEvery { playbackPreferencesInteraction.snapshot(entry) } returns if (entry.type == EntryType.ANIME) {
+                EntryPlaybackPreferencesSnapshot(
+                    dubKey = "playback-dub",
+                    streamKey = "playback-stream",
+                    subtitleKey = "playback-subtitle",
+                    playerQualityMode = EntryPlaybackQualityMode.SPECIFIC_HEIGHT,
+                    playerQualityHeight = 1080,
+                    updatedAt = 10L,
                 )
             } else {
-                EntryPlaybackSnapshot()
+                null
             }
             coEvery { progressInteraction.snapshot(entry) } returns EntryProgressSnapshot(
                 states = listOf(

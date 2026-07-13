@@ -37,11 +37,11 @@ import mihon.entry.interactions.EntryDownloadOptionSelection
 import mihon.entry.interactions.EntryDownloadState
 import mihon.entry.interactions.EntryInteractionPlugin
 import mihon.entry.interactions.EntryOpenOptions
-import mihon.entry.interactions.EntryPlaybackChapterMapping
 import mihon.entry.interactions.EntryPlaybackPreferencesSnapshot
 import mihon.entry.interactions.EntryPlaybackQualityMode
-import mihon.entry.interactions.EntryPlaybackSnapshot
-import mihon.entry.interactions.EntryPlaybackStateSnapshot
+import mihon.entry.interactions.EntryProgressResourceMapping
+import mihon.entry.interactions.EntryProgressSnapshot
+import mihon.entry.interactions.EntryProgressStateSnapshot
 import mihon.entry.interactions.anime.download.AnimeDownloadCache
 import mihon.entry.interactions.anime.download.AnimeDownloadManager
 import mihon.entry.interactions.anime.download.model.AnimeDownload
@@ -54,16 +54,17 @@ import tachiyomi.domain.entry.model.DownloadPreferences
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryMerge
+import tachiyomi.domain.entry.model.EntryProgressLocator
+import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.model.PlaybackPreferences
-import tachiyomi.domain.entry.model.PlaybackState
 import tachiyomi.domain.entry.model.PlayerQualityMode
 import tachiyomi.domain.entry.model.VideoDownloadQualityMode
 import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
+import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.MergedEntryRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
-import tachiyomi.domain.entry.repository.PlaybackStateRepository
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.ProgressState
 import tachiyomi.domain.source.service.SourceManager
@@ -212,7 +213,7 @@ class AnimeEntryInteractionPluginTest {
 
     @Test
     fun `anime merged library progress keeps first member continue target`() {
-        val calculator = animeEntryLibraryProgressCalculator(FakePlaybackStateRepository(emptyList()))
+        val calculator = animeEntryLibraryProgressCalculator(FakeEntryProgressRepository(emptyList()))
 
         val state = calculator.merge(
             listOf(
@@ -362,7 +363,7 @@ class AnimeEntryInteractionPluginTest {
     }
 
     @Test
-    fun `anime playback snapshot preserves state and preferences`() = runTest {
+    fun `anime progress and playback preference snapshots stay separate`() = runTest {
         val dependencies = dependencies(
             playbackStates = listOf(
                 playbackState(
@@ -383,74 +384,87 @@ class AnimeEntryInteractionPluginTest {
         )
         val interactions = createEntryInteractions(listOf(animeEntryInteractionPlugin(dependencies)))
 
-        val snapshot = interactions.playback.snapshot(entry(EntryType.ANIME, id = 1L))
+        val anime = entry(EntryType.ANIME, id = 1L)
+        val progressSnapshot = interactions.progress.snapshot(anime)
+        val preferencesSnapshot = interactions.playbackPreferences.snapshot(anime)
 
-        snapshot shouldBe EntryPlaybackSnapshot(
+        progressSnapshot shouldBe EntryProgressSnapshot(
             states = listOf(
-                EntryPlaybackStateSnapshot(
-                    chapterId = 10L,
-                    positionMs = 12_000L,
-                    durationMs = 60_000L,
+                EntryProgressStateSnapshot(
+                    resourceKey = "/episode/10",
+                    sourceChildKey = "/episode/10",
+                    locator = EntryProgressLocator(
+                        kind = "time",
+                        position = 12_000L,
+                        extent = 60_000L,
+                        progression = 0.2,
+                    ),
                     completed = false,
-                    lastWatchedAt = 123L,
+                    locatorUpdatedAt = 123L,
+                    completionUpdatedAt = 123L,
                 ),
             ),
-            preferences = EntryPlaybackPreferencesSnapshot(
-                sourceQualityKey = "source-1080",
-                subtitleKey = "subs",
+        )
+        preferencesSnapshot shouldBe EntryPlaybackPreferencesSnapshot(
+            sourceQualityKey = "source-1080",
+            subtitleKey = "subs",
+            playerQualityMode = EntryPlaybackQualityMode.SPECIFIC_HEIGHT,
+            playerQualityHeight = 1080,
+            subtitleOffsetX = 0.1,
+            subtitleOffsetY = 0.2,
+            subtitleTextSize = 1.3,
+            subtitleTextColor = 0xFFFFFF,
+            subtitleBackgroundColor = 0,
+            subtitleBackgroundOpacity = 0.4,
+            updatedAt = 99L,
+        )
+    }
+
+    @Test
+    fun `anime progress restore maps portable child key and preferences restore independently`() = runTest {
+        val progressRepository = FakeEntryProgressRepository(emptyList())
+        val preferencesRepository = FakePlaybackPreferencesRepository()
+        val progressProcessor = AnimeProgressProcessor(
+            entryProgressRepository = progressRepository,
+            entryChapterRepository = FakeEntryChapterRepository(listOf(chapter(id = 20L, entryId = 2L))),
+        )
+        val preferencesProcessor = AnimePlaybackPreferencesProcessor(preferencesRepository)
+
+        progressProcessor.restore(
+            entry = entry(EntryType.ANIME, id = 2L),
+            snapshot = EntryProgressSnapshot(
+                states = listOf(
+                    EntryProgressStateSnapshot(
+                        resourceKey = "/episode/20",
+                        sourceChildKey = "/episode/20",
+                        locator = EntryProgressLocator(kind = "time", position = 1_000L, extent = 2_000L),
+                        completed = true,
+                        locatorUpdatedAt = 50L,
+                        completionUpdatedAt = 50L,
+                    ),
+                ),
+            ),
+        )
+        preferencesProcessor.restore(
+            entry(EntryType.ANIME, id = 2L),
+            EntryPlaybackPreferencesSnapshot(
+                dubKey = "dub",
+                streamKey = "stream",
+                sourceQualityKey = "quality",
+                subtitleKey = "subtitle",
                 playerQualityMode = EntryPlaybackQualityMode.SPECIFIC_HEIGHT,
-                playerQualityHeight = 1080,
+                playerQualityHeight = 720,
                 subtitleOffsetX = 0.1,
                 subtitleOffsetY = 0.2,
                 subtitleTextSize = 1.3,
                 subtitleTextColor = 0xFFFFFF,
                 subtitleBackgroundColor = 0,
                 subtitleBackgroundOpacity = 0.4,
-                updatedAt = 99L,
-            ),
-        )
-    }
-
-    @Test
-    fun `anime playback restore persists state and preferences through repositories`() = runTest {
-        val playbackRepository = FakePlaybackStateRepository(emptyList())
-        val preferencesRepository = FakePlaybackPreferencesRepository()
-        val processor = AnimePlaybackProcessor(
-            playbackStateRepository = playbackRepository,
-            playbackPreferencesRepository = preferencesRepository,
-        )
-
-        processor.restore(
-            entry = entry(EntryType.ANIME, id = 2L),
-            snapshot = EntryPlaybackSnapshot(
-                states = listOf(
-                    EntryPlaybackStateSnapshot(
-                        chapterId = 20L,
-                        positionMs = 1_000L,
-                        durationMs = 2_000L,
-                        completed = true,
-                        lastWatchedAt = 50L,
-                    ),
-                ),
-                preferences = EntryPlaybackPreferencesSnapshot(
-                    dubKey = "dub",
-                    streamKey = "stream",
-                    sourceQualityKey = "quality",
-                    subtitleKey = "subtitle",
-                    playerQualityMode = EntryPlaybackQualityMode.SPECIFIC_HEIGHT,
-                    playerQualityHeight = 720,
-                    subtitleOffsetX = 0.1,
-                    subtitleOffsetY = 0.2,
-                    subtitleTextSize = 1.3,
-                    subtitleTextColor = 0xFFFFFF,
-                    subtitleBackgroundColor = 0,
-                    subtitleBackgroundOpacity = 0.4,
-                    updatedAt = 60L,
-                ),
+                updatedAt = 60L,
             ),
         )
 
-        playbackRepository.upsertedStates.shouldContainExactly(
+        progressRepository.upsertedStates.shouldContainExactly(
             playbackState(
                 entryId = 2L,
                 chapterId = 20L,
@@ -458,7 +472,7 @@ class AnimeEntryInteractionPluginTest {
                 durationMs = 2_000L,
                 completed = true,
                 lastWatchedAt = 50L,
-            ),
+            ).copy(locator = EntryProgressLocator(kind = "time", position = 1_000L, extent = 2_000L)),
         )
         preferencesRepository.upsertedPreferences.shouldContainExactly(
             playbackPreferences(
@@ -475,8 +489,8 @@ class AnimeEntryInteractionPluginTest {
     }
 
     @Test
-    fun `anime playback copy maps chapter state and entry preferences to target`() = runTest {
-        val playbackRepository = FakePlaybackStateRepository(
+    fun `anime progress copy maps resource state and preferences copy independently`() = runTest {
+        val progressRepository = FakeEntryProgressRepository(
             listOf(
                 playbackState(entryId = 1L, chapterId = 10L, positionMs = 3_000L, completed = false),
                 playbackState(entryId = 1L, chapterId = 11L, positionMs = 4_000L, completed = true),
@@ -485,20 +499,23 @@ class AnimeEntryInteractionPluginTest {
         val preferencesRepository = FakePlaybackPreferencesRepository(
             playbackPreferences(entryId = 1L, streamKey = "stream", updatedAt = 70L),
         )
-        val processor = AnimePlaybackProcessor(
-            playbackStateRepository = playbackRepository,
-            playbackPreferencesRepository = preferencesRepository,
-        )
+        val progressProcessor = AnimeProgressProcessor(progressRepository, FakeEntryChapterRepository(emptyList()))
+        val preferencesProcessor = AnimePlaybackPreferencesProcessor(preferencesRepository)
 
-        processor.copy(
+        progressProcessor.copy(
             sourceEntry = entry(EntryType.ANIME, id = 1L),
             targetEntry = entry(EntryType.ANIME, id = 2L),
-            chapterMappings = listOf(
-                EntryPlaybackChapterMapping(sourceChapterId = 10L, targetChapterId = 20L),
+            resourceMappings = listOf(
+                EntryProgressResourceMapping(
+                    sourceResourceKey = "/episode/10",
+                    targetResourceKey = "/episode/20",
+                    targetChapterId = 20L,
+                ),
             ),
         )
+        preferencesProcessor.copy(entry(EntryType.ANIME, id = 1L), entry(EntryType.ANIME, id = 2L))
 
-        playbackRepository.upsertedStates.shouldContainExactly(
+        progressRepository.upsertedStates.shouldContainExactly(
             playbackState(entryId = 2L, chapterId = 20L, positionMs = 3_000L, completed = false),
         )
         preferencesRepository.upsertedPreferences.shouldContainExactly(
@@ -512,13 +529,12 @@ class AnimeEntryInteractionPluginTest {
         val openProcessor = AnimeOpenProcessor()
         val continueProcessor = AnimeContinueProcessor(
             getEntryWithChapters = dependencies.getEntryWithChapters,
-            playbackStateRepository = dependencies.playbackStateRepository,
+            entryProgressRepository = dependencies.entryProgressRepository,
             openProcessor = openProcessor,
         )
         val downloadProcessor = AnimeDownloadProcessor(dependencies)
         val consumptionProcessor = AnimeConsumptionProcessor(
-            entryChapterRepository = dependencies.entryChapterRepository,
-            playbackStateRepository = dependencies.playbackStateRepository,
+            entryProgressRepository = dependencies.entryProgressRepository,
         )
         val mangaEntry = entry(EntryType.MANGA)
 
@@ -558,7 +574,7 @@ class AnimeEntryInteractionPluginTest {
         )
         val processor = AnimeContinueProcessor(
             getEntryWithChapters = dependencies.getEntryWithChapters,
-            playbackStateRepository = dependencies.playbackStateRepository,
+            entryProgressRepository = dependencies.entryProgressRepository,
             openProcessor = AnimeOpenProcessor(),
         )
 
@@ -583,7 +599,7 @@ class AnimeEntryInteractionPluginTest {
         )
         val processor = AnimeContinueProcessor(
             getEntryWithChapters = dependencies.getEntryWithChapters,
-            playbackStateRepository = dependencies.playbackStateRepository,
+            entryProgressRepository = dependencies.entryProgressRepository,
             openProcessor = AnimeOpenProcessor(),
         )
 
@@ -606,7 +622,7 @@ class AnimeEntryInteractionPluginTest {
         )
         val processor = AnimeContinueProcessor(
             getEntryWithChapters = dependencies.getEntryWithChapters,
-            playbackStateRepository = dependencies.playbackStateRepository,
+            entryProgressRepository = dependencies.entryProgressRepository,
             openProcessor = AnimeOpenProcessor(),
         )
 
@@ -630,7 +646,7 @@ class AnimeEntryInteractionPluginTest {
                     registry.registerContinueProcessor(
                         AnimeContinueProcessor(
                             getEntryWithChapters = dependencies.getEntryWithChapters,
-                            playbackStateRepository = dependencies.playbackStateRepository,
+                            entryProgressRepository = dependencies.entryProgressRepository,
                             openProcessor = openProcessor,
                         ),
                     )
@@ -673,7 +689,7 @@ class AnimeEntryInteractionPluginTest {
                     registry.registerContinueProcessor(
                         AnimeContinueProcessor(
                             getEntryWithChapters = dependencies.getEntryWithChapters,
-                            playbackStateRepository = dependencies.playbackStateRepository,
+                            entryProgressRepository = dependencies.entryProgressRepository,
                             openProcessor = openProcessor,
                         ),
                     )
@@ -705,15 +721,15 @@ class AnimeEntryInteractionPluginTest {
                 chapter(id = 2L, read = true),
             ),
         )
-        val playbackRepository = FakePlaybackStateRepository(
+        val playbackRepository = FakeEntryProgressRepository(
             listOf(
                 playbackState(chapterId = 1L, positionMs = 20_000L, completed = true),
                 playbackState(chapterId = 2L, positionMs = 10_000L, completed = true),
             ),
         )
         val processor = AnimeConsumptionProcessor(
-            entryChapterRepository = chapterRepository,
-            playbackStateRepository = playbackRepository,
+            entryProgressRepository = playbackRepository,
+            now = { 100L },
         )
 
         processor.setConsumed(
@@ -725,13 +741,11 @@ class AnimeEntryInteractionPluginTest {
             consumed = false,
         )
 
-        chapterRepository.updatedChapters.shouldContainExactly(
-            chapter(id = 1L, read = false),
-            chapter(id = 2L, read = false),
-        )
         playbackRepository.upsertedStates.shouldContainExactly(
-            playbackState(chapterId = 1L, positionMs = 0L, completed = false),
-            playbackState(chapterId = 2L, positionMs = 0L, completed = false),
+            playbackState(chapterId = 1L, positionMs = 0L, durationMs = 0L, completed = false, lastWatchedAt = 100L)
+                .copy(locator = EntryProgressLocator(kind = "time")),
+            playbackState(chapterId = 2L, positionMs = 0L, durationMs = 0L, completed = false, lastWatchedAt = 100L)
+                .copy(locator = EntryProgressLocator(kind = "time")),
         )
     }
 
@@ -743,15 +757,15 @@ class AnimeEntryInteractionPluginTest {
                 chapter(id = 2L, read = true),
             ),
         )
-        val playbackRepository = FakePlaybackStateRepository(
+        val playbackRepository = FakeEntryProgressRepository(
             listOf(
                 playbackState(chapterId = 1L, positionMs = 20_000L, completed = false),
                 playbackState(chapterId = 2L, positionMs = 10_000L, completed = false),
             ),
         )
         val processor = AnimeConsumptionProcessor(
-            entryChapterRepository = chapterRepository,
-            playbackStateRepository = playbackRepository,
+            entryProgressRepository = playbackRepository,
+            now = { 100L },
         )
 
         processor.setConsumed(
@@ -763,12 +777,9 @@ class AnimeEntryInteractionPluginTest {
             consumed = true,
         )
 
-        chapterRepository.updatedChapters.shouldContainExactly(
-            chapter(id = 1L, read = true),
-        )
         playbackRepository.upsertedStates.shouldContainExactly(
-            playbackState(chapterId = 1L, positionMs = 20_000L, completed = true),
-            playbackState(chapterId = 2L, positionMs = 10_000L, completed = true),
+            playbackState(chapterId = 1L, positionMs = 20_000L, completed = true)
+                .copy(completionUpdatedAt = 100L),
         )
     }
 
@@ -844,7 +855,7 @@ class AnimeEntryInteractionPluginTest {
         chapters: List<EntryChapter> = emptyList(),
         entries: List<Entry> = listOf(entry(EntryType.ANIME)),
         merges: List<EntryMerge> = emptyList(),
-        playbackStates: List<PlaybackState> = emptyList(),
+        playbackStates: List<EntryProgressState> = emptyList(),
         playbackPreferences: PlaybackPreferences? = null,
         episodeDownloaded: Boolean = false,
         entryInteractionPreferences: EntryInteractionPreferences =
@@ -861,7 +872,7 @@ class AnimeEntryInteractionPluginTest {
                 entryChapterRepository = entryChapterRepository,
                 mergedEntryRepository = fakeMergedEntryRepository(merges),
             ),
-            playbackStateRepository = FakePlaybackStateRepository(playbackStates),
+            entryProgressRepository = FakeEntryProgressRepository(playbackStates),
             playbackPreferencesRepository = FakePlaybackPreferencesRepository(playbackPreferences),
             animeDownloadManager = animeDownloadManager ?: mockAnimeDownloadManager(episodeDownloaded),
             animeDownloadCache = mockAnimeDownloadCache(),
@@ -977,6 +988,7 @@ class AnimeEntryInteractionPluginTest {
         return EntryChapter.create().copy(
             id = id,
             entryId = entryId,
+            url = "/episode/$id",
             name = name,
             read = read,
             lastPageRead = lastPageRead,
@@ -993,14 +1005,16 @@ class AnimeEntryInteractionPluginTest {
         completed: Boolean = false,
         durationMs: Long = 60_000L,
         lastWatchedAt: Long = 0L,
-    ): PlaybackState {
-        return PlaybackState(
+    ): EntryProgressState {
+        return animeProgressState(
             entryId = entryId,
             chapterId = chapterId,
+            resourceKey = "/episode/$chapterId",
             positionMs = positionMs,
             durationMs = durationMs,
             completed = completed,
-            lastWatchedAt = lastWatchedAt,
+            locatorUpdatedAt = lastWatchedAt,
+            completionUpdatedAt = lastWatchedAt,
         )
     }
 
@@ -1103,28 +1117,40 @@ class AnimeEntryInteractionPluginTest {
         }
     }
 
-    private class FakePlaybackStateRepository(
-        private val states: List<PlaybackState>,
-    ) : PlaybackStateRepository {
-        val upsertedStates = mutableListOf<PlaybackState>()
+    private class FakeEntryProgressRepository(
+        initialStates: List<EntryProgressState>,
+    ) : EntryProgressRepository {
+        private val states = initialStates.toMutableList()
+        val upsertedStates = mutableListOf<EntryProgressState>()
 
-        override suspend fun getByChapterId(chapterId: Long): PlaybackState? {
-            return states.firstOrNull { it.chapterId == chapterId }
+        override suspend fun get(entryId: Long, contentKey: String, resourceKey: String): EntryProgressState? {
+            return states.firstOrNull {
+                it.entryId == entryId && it.contentKey == contentKey && it.resourceKey == resourceKey
+            }
         }
 
-        override fun getByChapterIdAsFlow(chapterId: Long): Flow<PlaybackState?> {
-            return flowOf(states.firstOrNull { it.chapterId == chapterId })
-        }
+        override suspend fun getByEntryId(entryId: Long): List<EntryProgressState> =
+            states.filter { it.entryId == entryId }
 
-        override fun getByEntryIdAsFlow(entryId: Long): Flow<List<PlaybackState>> {
-            return flowOf(states.filter { it.entryId == entryId })
-        }
+        override fun getByEntryIdAsFlow(entryId: Long): Flow<List<EntryProgressState>> =
+            flowOf(states.filter { it.entryId == entryId })
 
-        override suspend fun upsert(state: PlaybackState) {
+        override fun getByChapterIdAsFlow(chapterId: Long): Flow<List<EntryProgressState>> =
+            flowOf(states.filter { it.chapterId == chapterId })
+
+        override suspend fun upsert(state: EntryProgressState) = record(state)
+
+        override suspend fun upsertAndSyncChild(state: EntryProgressState) = record(state)
+
+        override suspend fun merge(state: EntryProgressState): EntryProgressState = state.also(::record)
+
+        override suspend fun mergeAndSyncChild(state: EntryProgressState): EntryProgressState = state.also(::record)
+
+        private fun record(state: EntryProgressState) {
+            states.removeAll { it.identity == state.identity }
+            states += state
             upsertedStates += state
         }
-
-        override suspend fun upsertAndSyncEpisodeState(state: PlaybackState) = Unit
     }
 
     private class FakePlaybackPreferencesRepository(

@@ -56,12 +56,15 @@ AND (
                     read = 1
                     OR EXISTS (
                         SELECT 1
-                        FROM playback_state
-                        WHERE playback_state.entry_id = updatesView.entryId
-                        AND playback_state.chapter_id = updatesView.chapterId
+                        FROM entry_progress_state
+                        WHERE entry_progress_state.entry_id = updatesView.entryId
+                        AND entry_progress_state.chapter_id = updatesView.chapterId
                         AND (
-                            playback_state.completed = 1
-                            OR playback_state.position_ms > 0
+                            entry_progress_state.completed = 1
+                            OR (
+                                entry_progress_state.locator_kind = 'time'
+                                AND entry_progress_state.position > 0
+                            )
                         )
                     )
                 )
@@ -81,12 +84,15 @@ AND (
                 AND read = 0
                 AND NOT EXISTS (
                     SELECT 1
-                    FROM playback_state
-                    WHERE playback_state.entry_id = updatesView.entryId
-                    AND playback_state.chapter_id = updatesView.chapterId
+                    FROM entry_progress_state
+                    WHERE entry_progress_state.entry_id = updatesView.entryId
+                    AND entry_progress_state.chapter_id = updatesView.chapterId
                     AND (
-                        playback_state.completed != 0
-                        OR playback_state.position_ms != 0
+                        entry_progress_state.completed != 0
+                        OR (
+                            entry_progress_state.locator_kind = 'time'
+                            AND entry_progress_state.position != 0
+                        )
                     )
                 )
             )

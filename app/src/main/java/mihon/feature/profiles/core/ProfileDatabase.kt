@@ -82,7 +82,6 @@ class ProfileDatabase(
         handler.await(inTransaction = true) {
             download_preferencesQueries.deleteByProfile(profileId)
             playback_preferencesQueries.deleteByProfile(profileId)
-            playback_stateQueries.deleteByProfile(profileId)
             entry_progress_stateQueries.deleteByProfile(profileId)
             entries_categoriesQueries.deleteByProfile(profileId)
             merged_entriesQueries.deleteByProfile(profileId)

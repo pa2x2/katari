@@ -83,7 +83,7 @@ fun InjektRegistrar.addEntryInteractionRuntime(
                     AnimeEntryInteractionDependencies(
                         entryChapterRepository = get(),
                         getEntryWithChapters = get(),
-                        playbackStateRepository = get(),
+                        entryProgressRepository = get(),
                         playbackPreferencesRepository = get(),
                         downloadPreferences = get(),
                         downloadPreferencesRepository = get(),
@@ -102,7 +102,7 @@ fun InjektRegistrar.addEntryInteractionRuntime(
     addSingletonFactory<EntryConsumptionInteraction> { get<EntryInteractions>().consumption }
     addSingletonFactory<EntryUpdateEligibilityInteraction> { get<EntryInteractions>().updateEligibility }
     addSingletonFactory<EntryProgressInteraction> { get<EntryInteractions>().progress }
-    addSingletonFactory<EntryPlaybackInteraction> { get<EntryInteractions>().playback }
+    addSingletonFactory<EntryPlaybackPreferencesInteraction> { get<EntryInteractions>().playbackPreferences }
     addSingletonFactory<EntryChildListInteraction> { get<EntryInteractions>().childList }
     addSingletonFactory<EntryChildGroupFilterInteraction> { get<EntryInteractions>().childGroupFilter }
     addSingletonFactory<EntryLibraryFilterInteraction> { get<EntryInteractions>().libraryFilter }

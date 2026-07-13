@@ -8,8 +8,9 @@ import eu.kanade.tachiyomi.data.track.TrackerManager
 import kotlinx.coroutines.CancellationException
 import mihon.domain.migration.models.MigrationFlag
 import mihon.entry.interactions.EntryDownloadInteraction
-import mihon.entry.interactions.EntryPlaybackChapterMapping
-import mihon.entry.interactions.EntryPlaybackInteraction
+import mihon.entry.interactions.EntryPlaybackPreferencesInteraction
+import mihon.entry.interactions.EntryProgressInteraction
+import mihon.entry.interactions.EntryProgressResourceMapping
 import tachiyomi.domain.category.repository.CategoryRepository
 import tachiyomi.domain.entry.interactor.GetMergedEntry
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
@@ -32,7 +33,8 @@ class MigrateEntryUseCase(
     private val sourceManager: SourceManager,
     private val entryRepository: EntryRepository,
     private val entryChapterRepository: EntryChapterRepository,
-    private val playbackInteraction: EntryPlaybackInteraction,
+    private val progressInteraction: EntryProgressInteraction,
+    private val playbackPreferencesInteraction: EntryPlaybackPreferencesInteraction,
     private val downloadInteraction: EntryDownloadInteraction,
     private val categoryRepository: CategoryRepository,
     private val getTracks: GetTracks,
@@ -59,12 +61,13 @@ class MigrateEntryUseCase(
         try {
             syncEntryWithSource(target)
 
-            val playbackChapterMappings = if (MigrationFlag.CHAPTER in flags) {
+            val progressResourceMappings = if (MigrationFlag.CHAPTER in flags) {
                 migrateChapters(current, target)
             } else {
                 emptyList()
             }
-            playbackInteraction.copy(current, target, playbackChapterMappings)
+            progressInteraction.copy(current, target, progressResourceMappings)
+            playbackPreferencesInteraction.copy(current, target)
 
             if (MigrationFlag.CATEGORY in flags) {
                 val categoryIds = categoryRepository.getCategoriesByEntryId(current.id)
@@ -120,7 +123,7 @@ class MigrateEntryUseCase(
         }
     }
 
-    private suspend fun migrateChapters(current: Entry, target: Entry): List<EntryPlaybackChapterMapping> {
+    private suspend fun migrateChapters(current: Entry, target: Entry): List<EntryProgressResourceMapping> {
         val previousChapters = entryChapterRepository.getChaptersByEntryIdAwait(current.id)
         val targetChapters = entryChapterRepository.getChaptersByEntryIdAwait(target.id)
 
@@ -130,7 +133,7 @@ class MigrateEntryUseCase(
             .maxOrNull()
 
         val chaptersToUpdate = mutableListOf<EntryChapter>()
-        val playbackChapterMappings = mutableListOf<EntryPlaybackChapterMapping>()
+        val progressResourceMappings = mutableListOf<EntryProgressResourceMapping>()
 
         targetChapters.forEach { targetChapter ->
             val previousChapter = findMatchingChapter(targetChapter, previousChapters)
@@ -142,8 +145,9 @@ class MigrateEntryUseCase(
                 read = previousChapter.read
                 bookmark = previousChapter.bookmark
                 dateFetch = previousChapter.dateFetch
-                playbackChapterMappings += EntryPlaybackChapterMapping(
-                    sourceChapterId = previousChapter.id,
+                progressResourceMappings += EntryProgressResourceMapping(
+                    sourceResourceKey = previousChapter.url,
+                    targetResourceKey = targetChapter.url,
                     targetChapterId = targetChapter.id,
                 )
             }
@@ -168,7 +172,7 @@ class MigrateEntryUseCase(
         if (chaptersToUpdate.isNotEmpty()) {
             entryChapterRepository.updateAll(chaptersToUpdate)
         }
-        return playbackChapterMappings
+        return progressResourceMappings
     }
 
     private fun findMatchingChapter(targetChapter: EntryChapter, previousChapters: List<EntryChapter>): EntryChapter? {

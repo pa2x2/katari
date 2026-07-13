@@ -28,7 +28,7 @@ private class DefaultEntryInteractionRegistry : EntryInteractionRegistry {
     private val consumptionProcessors = mutableMapOf<EntryType, EntryConsumptionProcessor>()
     private val updateEligibilityProcessors = mutableMapOf<EntryType, EntryUpdateEligibilityProcessor>()
     private val progressProcessors = mutableMapOf<EntryType, EntryProgressProcessor>()
-    private val playbackProcessors = mutableMapOf<EntryType, EntryPlaybackProcessor>()
+    private val playbackPreferencesProcessors = mutableMapOf<EntryType, EntryPlaybackPreferencesProcessor>()
     private val childListProcessors = mutableMapOf<EntryType, EntryChildListProcessor>()
     private val childGroupFilterProcessors = mutableMapOf<EntryType, EntryChildGroupFilterProcessor>()
     private val libraryFilterProcessors = mutableMapOf<EntryType, EntryLibraryFilterProcessor>()
@@ -63,8 +63,8 @@ private class DefaultEntryInteractionRegistry : EntryInteractionRegistry {
         registerProcessor("progress", processor.type, processor, progressProcessors)
     }
 
-    override fun registerPlaybackProcessor(processor: EntryPlaybackProcessor) {
-        registerProcessor("playback", processor.type, processor, playbackProcessors)
+    override fun registerPlaybackPreferencesProcessor(processor: EntryPlaybackPreferencesProcessor) {
+        registerProcessor("playback preferences", processor.type, processor, playbackPreferencesProcessors)
     }
 
     override fun registerChildListProcessor(processor: EntryChildListProcessor) {
@@ -96,7 +96,7 @@ private class DefaultEntryInteractionRegistry : EntryInteractionRegistry {
             consumptionProcessors = consumptionProcessors.toMap(),
             updateEligibilityProcessors = updateEligibilityProcessors.toMap(),
             progressProcessors = progressProcessors.toMap(),
-            playbackProcessors = playbackProcessors.toMap(),
+            playbackPreferencesProcessors = playbackPreferencesProcessors.toMap(),
             childListProcessors = childListProcessors.toMap(),
             childGroupFilterProcessors = childGroupFilterProcessors.toMap(),
             libraryFilterProcessors = libraryFilterProcessors.toMap(),
@@ -127,7 +127,7 @@ private class DefaultEntryInteractions(
     consumptionProcessors: Map<EntryType, EntryConsumptionProcessor>,
     updateEligibilityProcessors: Map<EntryType, EntryUpdateEligibilityProcessor>,
     progressProcessors: Map<EntryType, EntryProgressProcessor>,
-    playbackProcessors: Map<EntryType, EntryPlaybackProcessor>,
+    playbackPreferencesProcessors: Map<EntryType, EntryPlaybackPreferencesProcessor>,
     childListProcessors: Map<EntryType, EntryChildListProcessor>,
     childGroupFilterProcessors: Map<EntryType, EntryChildGroupFilterProcessor>,
     libraryFilterProcessors: Map<EntryType, EntryLibraryFilterProcessor>,
@@ -143,7 +143,8 @@ private class DefaultEntryInteractions(
     override val updateEligibility: EntryUpdateEligibilityInteraction =
         RegistryEntryUpdateEligibilityInteraction(updateEligibilityProcessors)
     override val progress: EntryProgressInteraction = RegistryEntryProgressInteraction(progressProcessors)
-    override val playback: EntryPlaybackInteraction = RegistryEntryPlaybackInteraction(playbackProcessors)
+    override val playbackPreferences: EntryPlaybackPreferencesInteraction =
+        RegistryEntryPlaybackPreferencesInteraction(playbackPreferencesProcessors)
     override val childList: EntryChildListInteraction = RegistryEntryChildListInteraction(childListProcessors)
     override val childGroupFilter: EntryChildGroupFilterInteraction =
         RegistryEntryChildGroupFilterInteraction(childGroupFilterProcessors)
@@ -573,31 +574,27 @@ private class RegistryEntryProgressInteraction(
     }
 }
 
-private class RegistryEntryPlaybackInteraction(
-    private val processors: Map<EntryType, EntryPlaybackProcessor>,
-) : EntryPlaybackInteraction {
-    override suspend fun snapshot(entry: Entry): EntryPlaybackSnapshot {
-        val processor = processors[entry.type] ?: return EntryPlaybackSnapshot()
-        processor.requireMatchingEntryType("playback", entry, processors.keys)
+private class RegistryEntryPlaybackPreferencesInteraction(
+    private val processors: Map<EntryType, EntryPlaybackPreferencesProcessor>,
+) : EntryPlaybackPreferencesInteraction {
+    override suspend fun snapshot(entry: Entry): EntryPlaybackPreferencesSnapshot? {
+        val processor = processors[entry.type] ?: return null
+        processor.requireMatchingEntryType("playback preferences", entry, processors.keys)
         return processor.snapshot(entry)
     }
 
-    override suspend fun restore(entry: Entry, snapshot: EntryPlaybackSnapshot) {
+    override suspend fun restore(entry: Entry, snapshot: EntryPlaybackPreferencesSnapshot) {
         val processor = processors[entry.type] ?: return
-        processor.requireMatchingEntryType("playback", entry, processors.keys)
+        processor.requireMatchingEntryType("playback preferences", entry, processors.keys)
         processor.restore(entry, snapshot)
     }
 
-    override suspend fun copy(
-        sourceEntry: Entry,
-        targetEntry: Entry,
-        chapterMappings: List<EntryPlaybackChapterMapping>,
-    ) {
+    override suspend fun copy(sourceEntry: Entry, targetEntry: Entry) {
         if (sourceEntry.type != targetEntry.type) return
         val processor = processors[sourceEntry.type] ?: return
-        processor.requireMatchingEntryType("playback", sourceEntry, processors.keys)
-        processor.requireMatchingEntryType("playback", targetEntry, processors.keys)
-        processor.copy(sourceEntry, targetEntry, chapterMappings)
+        processor.requireMatchingEntryType("playback preferences", sourceEntry, processors.keys)
+        processor.requireMatchingEntryType("playback preferences", targetEntry, processors.keys)
+        processor.copy(sourceEntry, targetEntry)
     }
 }
 
@@ -758,7 +755,7 @@ private fun EntryUpdateEligibilityProcessor.requireMatchingEntryType(
     }
 }
 
-private fun EntryPlaybackProcessor.requireMatchingEntryType(
+private fun EntryPlaybackPreferencesProcessor.requireMatchingEntryType(
     category: String,
     entry: Entry,
     registeredTypes: Set<EntryType>,

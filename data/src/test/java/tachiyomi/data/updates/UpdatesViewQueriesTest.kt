@@ -96,11 +96,13 @@ class UpdatesViewQueriesTest {
         driver.await(
             identifier = null,
             sql = """
-                INSERT INTO playback_state(entry_id, chapter_id, position_ms, duration_ms, completed, last_watched_at)
+                INSERT INTO entry_progress_state(
+                    entry_id, chapter_id, resource_key, locator_kind, position, extent, completed, locator_updated_at
+                )
                 VALUES
-                    (2, 22, 100, 1000, 0, 10),
-                    (2, 23, 1000, 1000, 1, 10),
-                    (2, 25, 100, 0, 0, 10)
+                    (2, 22, '/anime/partial', 'time', 100, 1000, 0, 10),
+                    (2, 23, '/anime/completed', 'time', 1000, 1000, 1, 10),
+                    (2, 25, '/anime/partial-unknown', 'time', 100, NULL, 0, 10)
             """.trimIndent(),
             parameters = 0,
         )
