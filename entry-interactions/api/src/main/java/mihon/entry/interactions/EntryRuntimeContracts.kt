@@ -12,6 +12,7 @@ interface EntryPageImageCache {
 object EntryMediaCacheBucketKeys {
     const val MANGA_PAGE_IMAGE: String = "manga_page_image"
     const val ANIME_PLAYBACK: String = "anime_playback"
+    const val BOOK_MATERIALIZED: String = "book_materialized"
 }
 
 interface EntryMediaCacheBucket {

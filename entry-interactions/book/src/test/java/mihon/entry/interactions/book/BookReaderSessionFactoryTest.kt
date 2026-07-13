@@ -98,6 +98,7 @@ class BookReaderSessionFactoryTest {
             incognitoState = mockk {
                 every { isIncognito(entry.source) } returns false
             },
+            materializationStore = mockk(relaxed = true),
             now = { 100L },
         )
 

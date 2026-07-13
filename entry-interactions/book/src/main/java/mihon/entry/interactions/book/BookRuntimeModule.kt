@@ -1,5 +1,7 @@
 package mihon.entry.interactions.book
 
+import android.app.Application
+import mihon.entry.interactions.EntryMediaCacheBucket
 import mihon.entry.interactions.EntryReaderIncognitoState
 import mihon.entry.interactions.book.epub.ReadiumEpubProcessor
 import tachiyomi.core.common.preference.PreferenceStore
@@ -9,8 +11,11 @@ import uy.kohesive.injekt.api.get
 
 /** Installs generic BOOK host services. Built-in format processors are registered here when ready. */
 fun InjektRegistrar.addBookEntryInteractionRuntime(
+    app: Application,
     profilePreferenceStore: PreferenceStore,
-) {
+): EntryMediaCacheBucket {
+    val materializationCache = BookMaterializationCache(app)
+    addSingletonFactory<BookMaterializationStore> { materializationCache }
     addSingletonFactory { BookProcessorRegistry(processors = listOf(ReadiumEpubProcessor())) }
     addSingletonFactory { BookProcessorPreferences(profilePreferenceStore) }
     addSingletonFactory {
@@ -37,6 +42,8 @@ fun InjektRegistrar.addBookEntryInteractionRuntime(
             processorRegistry = get(),
             networkHelper = get(),
             incognitoState = get<EntryReaderIncognitoState>(),
+            materializationStore = get(),
         )
     }
+    return materializationCache
 }

@@ -19,7 +19,6 @@ import mihon.book.api.BookResourceCacheState
 import mihon.book.api.BookResourceCapability
 import tachiyomi.domain.entry.model.Entry
 import java.io.ByteArrayInputStream
-import java.io.File
 import java.io.InputStream
 
 /**
@@ -34,7 +33,7 @@ internal class SourceBookContentSession(
     entry: Entry,
     media: EntryMedia.Book,
     private val externalResolver: BookExternalResourceResolver,
-    private val materializationDirectory: File,
+    private val materializationStore: BookMaterializationStore,
 ) : BookContentSession {
     private val lock = Any()
     private val activeLeases = LinkedHashSet<AutoCloseable>()
@@ -52,14 +51,12 @@ internal class SourceBookContentSession(
     override val primaryResourceIds = listOfNotNull(
         media.initialResourceId ?: media.catalog.resources.singleOrNull()?.id,
     )
+    private val publicationRevision = media.publicationRevision
 
     init {
         entry.requireBook()
         require(entry.source == source.id) {
             "BOOK entry source ${entry.source} does not match session source ${source.id}"
-        }
-        require(materializationDirectory.run { !exists() || isDirectory }) {
-            "BOOK materialization path must be a directory"
         }
     }
 
@@ -70,7 +67,7 @@ internal class SourceBookContentSession(
         }
         val offset = parseCursor(cursor)
         require(offset in 0..resources.size) { "resource cursor is outside the catalog" }
-        val page = resources.drop(offset).take(limit).map(ResourceRecord::metadata)
+        val page = resources.drop(offset).take(limit).map { it.currentMetadata() }
         BookContentResourcePage(
             resources = page,
             nextCursor = (offset + page.size)
@@ -81,7 +78,7 @@ internal class SourceBookContentSession(
 
     override suspend fun getResource(resourceId: String): Result<BookContentResource> = resultOf {
         checkOpen()
-        resource(resourceId).metadata
+        resource(resourceId).currentMetadata()
     }
 
     override suspend fun openResource(
@@ -91,7 +88,8 @@ internal class SourceBookContentSession(
         checkOpen()
         val record = resource(resourceId)
         record.requireAccessible()
-        validateRange(record.metadata.size, range)
+        val metadata = record.currentMetadata()
+        validateRange(metadata.size, range)
 
         val terminal = resolveTerminalLocation(
             resourceId = record.id,
@@ -101,7 +99,7 @@ internal class SourceBookContentSession(
         )
         val raw = openTerminalLocation(terminal, range)
         val lease = SessionOpenedBookResource(
-            metadata = record.metadata,
+            metadata = metadata,
             stream = raw.stream,
             delegate = raw,
             onClose = ::unregisterLease,
@@ -112,31 +110,29 @@ internal class SourceBookContentSession(
 
     override suspend fun materializeResource(resourceId: String): Result<MaterializedBookResource> = resultOf {
         checkOpen()
-        val metadata = resource(resourceId).metadata
+        val record = resource(resourceId)
+        val metadata = record.currentMetadata()
         metadata.size?.let { size ->
             require(size <= MAX_MATERIALIZED_BYTES) {
                 "BOOK resource $resourceId exceeds the materialization limit"
             }
         }
 
-        val opened = openResource(resourceId).getOrThrow()
-        val file = createMaterializationFile(metadata)
-        try {
-            copyToMaterialization(opened.stream, file)
-        } catch (error: Throwable) {
-            file.delete()
-            throw error
-        } finally {
-            opened.close()
+        materializationStore.acquire(record.materializationKey(), metadata) { file ->
+            val opened = openResource(resourceId).getOrThrow()
+            try {
+                copyToMaterialization(opened.stream, file)
+            } finally {
+                opened.close()
+            }
         }
-
-        val lease = SessionMaterializedBookResource(
-            metadata = metadata,
-            file = file,
+    }.map { cachedLease ->
+        val sessionLease = SessionMaterializedBookResource(
+            delegate = cachedLease,
             onClose = ::unregisterLease,
         )
-        registerLease(lease)
-        lease
+        registerLease(sessionLease)
+        sessionLease
     }
 
     override fun close() {
@@ -239,14 +235,7 @@ internal class SourceBookContentSession(
         return SimpleExternalBookResource(stream)
     }
 
-    private fun createMaterializationFile(metadata: BookContentResource): File {
-        check(materializationDirectory.mkdirs() || materializationDirectory.isDirectory) {
-            "Unable to create BOOK materialization directory"
-        }
-        return File.createTempFile("book-resource-", metadata.fileSuffix(), materializationDirectory)
-    }
-
-    private suspend fun copyToMaterialization(input: InputStream, output: File) = withContext(Dispatchers.IO) {
+    private suspend fun copyToMaterialization(input: InputStream, output: java.io.File) = withContext(Dispatchers.IO) {
         output.outputStream().buffered().use { target ->
             val buffer = ByteArray(COPY_BUFFER_SIZE)
             var copied = 0L
@@ -290,6 +279,21 @@ internal class SourceBookContentSession(
         const val MAX_RESOURCE_PAGE_SIZE = 500
         const val MAX_SOURCE_CHILD_DEPTH = 16
         const val MAX_MATERIALIZED_BYTES = 512L * 1024L * 1024L
+    }
+
+    private fun ResourceRecord.materializationKey(): BookMaterializationKey? {
+        val stableRevision = metadata.revision ?: publicationRevision ?: return null
+        return BookMaterializationKey(
+            publicationId = publicationId,
+            resourceId = id,
+            revision = stableRevision,
+            mediaType = metadata.mediaType,
+        )
+    }
+
+    private fun ResourceRecord.currentMetadata(): BookContentResource {
+        if (metadata.cacheState == BookResourceCacheState.CACHED) return metadata
+        return metadata.copy(cacheState = materializationStore.cacheState(materializationKey()))
     }
 }
 
@@ -338,10 +342,13 @@ private class SessionOpenedBookResource(
 }
 
 private class SessionMaterializedBookResource(
-    override val metadata: BookContentResource,
-    override val file: File,
+    private val delegate: MaterializedBookResource,
     private val onClose: (AutoCloseable) -> Unit,
 ) : MaterializedBookResource {
+    override val metadata: BookContentResource
+        get() = delegate.metadata
+    override val file: java.io.File
+        get() = delegate.file
     private var closed = false
 
     override fun close() {
@@ -350,7 +357,7 @@ private class SessionMaterializedBookResource(
             closed = true
         }
         try {
-            file.delete()
+            delegate.close()
         } finally {
             onClose(this)
         }
@@ -463,13 +470,6 @@ private fun BookResourceHierarchyNode.toProcessorGroup(): BookContentResourceGro
     resourceIds = resourceIds,
     children = children.map(BookResourceHierarchyNode::toProcessorGroup),
 )
-
-private fun BookContentResource.fileSuffix(): String = when (mediaType) {
-    "application/epub+zip" -> ".epub"
-    "text/html", "application/xhtml+xml" -> ".html"
-    "text/plain" -> ".txt"
-    else -> ".bin"
-}
 
 private fun buildPublicationId(sourceId: Long, entryUrl: String, override: String?): String = buildString {
     append("source:")

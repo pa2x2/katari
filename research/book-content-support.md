@@ -238,9 +238,20 @@ Evaluation facts:
   dependency direction;
 - the telemetry/updater-enabled minified release assembly passes with the
   built-in processor and reader runtime.
+- production materialization uses a 1 GiB revision-keyed cache with a 512 MiB
+  per-resource ceiling. Stable revisions reuse one atomic download across
+  concurrent opens; unversioned resources remain lease-owned temporary files;
+  active files survive user cache clearing and failed/cancelled writes leave no
+  partial entry;
+- the EPUB processor scans every ZIP entry before Readium. Defaults limit the
+  archive to 512 MiB compressed, 1 GiB expanded, 128 MiB per entry, 10,000
+  entries, a 100:1 compression ratio for entries of at least 1 MiB, and
+  1,024-character portable paths. Missing EPUB structure, duplicate or unsafe
+  paths, size mismatches, and archive bombs report malformed content; parsed
+  non-reflowable layouts report unsupported format.
 
 Remaining production adoption work includes final APK-size comparison, complete
-attribution, hostile-archive limits, unsupported EPUB fixtures, and separately
+attribution, broader real-world/unsupported EPUB fixtures, and separately
 authorized device checks for rendering, pagination, gestures, lifecycle,
 restoration, and resource loading.
 

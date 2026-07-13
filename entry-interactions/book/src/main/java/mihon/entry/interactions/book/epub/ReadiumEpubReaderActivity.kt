@@ -19,6 +19,7 @@ import mihon.entry.interactions.book.BookReaderRequest
 import mihon.entry.interactions.book.BookReaderSessionFactory
 import mihon.entry.interactions.book.OpenedBookReaderSession
 import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.displayName
 import org.readium.r2.navigator.epub.EpubNavigatorFragment
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import uy.kohesive.injekt.Injekt
@@ -64,7 +65,13 @@ internal class ReadiumEpubReaderActivity : FragmentActivity() {
             )
             when (result) {
                 is BookReaderOpenResult.Failure -> lifecycle.withStarted {
-                    showError(result.failure.message)
+                    showError(
+                        getString(
+                            R.string.book_reader_unavailable_message,
+                            result.failure.reason.displayName(),
+                            result.failure.message,
+                        ),
+                    )
                 }
                 is BookReaderOpenResult.Success -> {
                     var installed = false

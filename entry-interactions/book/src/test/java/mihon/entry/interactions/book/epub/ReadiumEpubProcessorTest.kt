@@ -121,6 +121,21 @@ class ReadiumEpubProcessorTest {
     }
 
     @Test
+    fun `rejects fixed-layout EPUB discovered during parsing`() = runBlocking {
+        val fixture = EpubFixture.write(
+            temporaryDirectory().resolve("fixed-layout.epub"),
+            version = 3,
+            fixedLayout = true,
+        )
+        val content = TestContentSession(fixture, publicationId = "book:fixed", revision = "v1")
+
+        val result = assertIs<BookOpenResult.Failure>(ReadiumEpubProcessor().open(content))
+
+        assertEquals(BookFailureReason.FORMAT_UNSUPPORTED, result.failure.reason)
+        assertEquals(1, content.leaseCloseCount.get())
+    }
+
+    @Test
     fun `requires a materializable primary resource`() = runBlocking {
         val fixture = EpubFixture.write(temporaryDirectory().resolve("stream-only.epub"), version = 3)
         val content = TestContentSession(
@@ -197,7 +212,12 @@ private class TestContentSession(
 
 /** Minimal redistribution-safe fixtures authored specifically for this spike. */
 private object EpubFixture {
-    fun write(path: Path, version: Int, rtl: Boolean = false): File {
+    fun write(
+        path: Path,
+        version: Int,
+        rtl: Boolean = false,
+        fixedLayout: Boolean = false,
+    ): File {
         ZipOutputStream(path.outputStream()).use { zip ->
             zip.writeStored("mimetype", "application/epub+zip")
             zip.write(
@@ -209,7 +229,7 @@ private object EpubFixture {
                     </container>
                 """.trimIndent(),
             )
-            if (version == 2) writeEpub2(zip) else writeEpub3(zip, rtl)
+            if (version == 2) writeEpub2(zip) else writeEpub3(zip, rtl, fixedLayout)
             zip.write("OEBPS/styles/book.css", "body { font-family: serif; }")
             zip.write(
                 "OEBPS/images/cover.svg",
@@ -253,15 +273,16 @@ private object EpubFixture {
         )
     }
 
-    private fun writeEpub3(zip: ZipOutputStream, rtl: Boolean) {
+    private fun writeEpub3(zip: ZipOutputStream, rtl: Boolean, fixedLayout: Boolean) {
         val direction = if (rtl) " page-progression-direction=\"rtl\"" else ""
         val language = if (rtl) "ar" else "en"
+        val layout = if (fixedLayout) "<meta property=\"rendition:layout\">pre-paginated</meta>" else ""
         zip.write(
             "OEBPS/content.opf",
             """
                 <?xml version="1.0" encoding="UTF-8"?>
                 <package xmlns="http://www.idpf.org/2007/opf" unique-identifier="id" version="3.0" xml:lang="$language">
-                  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="id">urn:katari:fixture:epub3</dc:identifier><dc:title>Authored EPUB 3</dc:title><dc:language>$language</dc:language><meta property="dcterms:modified">2026-07-12T00:00:00Z</meta></metadata>
+                  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="id">urn:katari:fixture:epub3</dc:identifier><dc:title>Authored EPUB 3</dc:title><dc:language>$language</dc:language><meta property="dcterms:modified">2026-07-12T00:00:00Z</meta>$layout</metadata>
                   <manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/><item id="c1" href="chapter1.xhtml" media-type="application/xhtml+xml"/><item id="c2" href="chapter2.xhtml" media-type="application/xhtml+xml"/><item id="css" href="styles/book.css" media-type="text/css"/><item id="image" href="images/cover.svg" media-type="image/svg+xml"/><item id="font" href="fonts/test.woff" media-type="font/woff"/></manifest>
                   <spine$direction><itemref idref="c1"/><itemref idref="c2"/></spine>
                 </package>

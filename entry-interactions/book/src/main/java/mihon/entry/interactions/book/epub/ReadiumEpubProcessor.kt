@@ -16,6 +16,7 @@ import mihon.entry.interactions.book.BookPublicationSession
 import mihon.entry.interactions.book.BookReaderRequest
 import mihon.entry.interactions.book.BookSessionCloseStack
 import mihon.entry.interactions.book.MaterializedBookResource
+import org.readium.r2.shared.publication.Layout
 import org.readium.r2.shared.publication.Publication
 import org.readium.r2.shared.util.AbsoluteUrl
 import org.readium.r2.shared.util.Try
@@ -29,7 +30,9 @@ import org.readium.r2.shared.util.resource.ResourceFactory
 import org.readium.r2.streamer.PublicationOpener
 import org.readium.r2.streamer.parser.epub.EpubParser
 
-internal class ReadiumEpubProcessor : BookProcessor {
+internal class ReadiumEpubProcessor(
+    private val archiveValidator: EpubArchiveValidator = EpubArchiveValidator(),
+) : BookProcessor {
     override val id: String = "builtin.readium.epub"
     override val displayName: String = "EPUB reader"
 
@@ -75,6 +78,10 @@ internal class ReadiumEpubProcessor : BookProcessor {
             lease.close()
             return contentFailure("Materialized EPUB resource identity does not match the requested resource")
         }
+        archiveValidator.validate(lease.file)?.let { failure ->
+            lease.close()
+            return BookOpenResult.Failure(failure)
+        }
 
         var asset: Asset? = null
         var publication: Publication? = null
@@ -97,6 +104,24 @@ internal class ReadiumEpubProcessor : BookProcessor {
                         publicationResult.failureOrNull()?.message ?: "Unable to parse EPUB",
                     )
                 }
+            if (publication.metadata.layout != null && publication.metadata.layout != Layout.REFLOWABLE) {
+                publication.close()
+                publication = null
+                return failureAndClose(
+                    lease,
+                    BookFailureReason.FORMAT_UNSUPPORTED,
+                    "This EPUB uses a fixed or otherwise unsupported layout",
+                )
+            }
+            if (publication.readingOrder.isEmpty()) {
+                publication.close()
+                publication = null
+                return failureAndClose(
+                    lease,
+                    BookFailureReason.MALFORMED_CONTENT,
+                    "EPUB publication has no readable content",
+                )
+            }
             return BookOpenResult.Success(
                 ReadiumPublicationSession(
                     enginePublication = publication,

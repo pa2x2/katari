@@ -150,6 +150,6 @@ internal class BookReaderHostActivity : ComponentActivity() {
     }
 }
 
-private fun mihon.book.api.BookFailureReason.displayName(): String {
+internal fun mihon.book.api.BookFailureReason.displayName(): String {
     return name.lowercase().replace('_', ' ').replaceFirstChar(Char::uppercase)
 }

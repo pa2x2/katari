@@ -1,5 +1,6 @@
 package mihon.entry.interactions.book
 
+import android.app.Application
 import eu.kanade.tachiyomi.source.entry.BookResourceCatalog
 import eu.kanade.tachiyomi.source.entry.BookResourceHierarchyNode
 import eu.kanade.tachiyomi.source.entry.BookResourceLocation
@@ -260,8 +261,9 @@ class SourceBookContentSessionTest {
     }
 
     @Test
-    fun `materialized files are bounded and owned by their leases`() = runTest {
+    fun `versioned materializations are cached across leases and remain clearable`() = runTest {
         val directory = Files.createTempDirectory("katari-book-session-test").toFile()
+        val cache = BookMaterializationCache(application(), directory)
         val session = session(
             media = bookMedia(
                 resources = listOf(
@@ -274,7 +276,7 @@ class SourceBookContentSessionTest {
                 initialResourceId = "epub",
                 initialLocation = BookResourceLocation.InlineBytes("epub-content".encodeToByteArray()),
             ),
-            directory = directory,
+            materializationStore = cache,
         )
 
         val materialized = session.materializeResource("epub").getOrThrow()
@@ -283,10 +285,13 @@ class SourceBookContentSessionTest {
         assertEquals("epub-content", materialized.file.readText())
 
         materialized.close()
-        assertFalse(materialized.file.exists())
+        assertTrue(materialized.file.exists())
 
         val outstanding = session.materializeResource("epub").getOrThrow()
+        assertEquals(materialized.file, outstanding.file)
         session.close()
+        assertTrue(outstanding.file.exists())
+        assertEquals(1, cache.clear())
         assertFalse(outstanding.file.exists())
         assertTrue(session.getResource("epub").isFailure)
     }
@@ -362,6 +367,7 @@ class SourceBookContentSessionTest {
         source: UnifiedSource = source(),
         resolver: BookExternalResourceResolver = FakeExternalResolver(emptyMap()),
         directory: File = Files.createTempDirectory("katari-book-materialized").toFile(),
+        materializationStore: BookMaterializationStore = BookMaterializationCache(application(), directory),
     ): SourceBookContentSession {
         return SourceBookContentSession(
             source = source,
@@ -373,9 +379,11 @@ class SourceBookContentSessionTest {
             ),
             media = media,
             externalResolver = resolver,
-            materializationDirectory = directory,
+            materializationStore = materializationStore,
         )
     }
+
+    private fun application(): Application = mockk(relaxed = true)
 
     private fun source(): UnifiedSource = mockk {
         every { id } returns 42L

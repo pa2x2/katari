@@ -30,6 +30,7 @@ internal class BookReaderSessionFactory(
     private val processorRegistry: BookProcessorRegistry,
     private val networkHelper: NetworkHelper,
     private val incognitoState: mihon.entry.interactions.EntryReaderIncognitoState,
+    private val materializationStore: BookMaterializationStore,
     private val now: () -> Long = System::currentTimeMillis,
 ) {
     suspend fun open(
@@ -83,7 +84,7 @@ internal class BookReaderSessionFactory(
                 context = context.applicationContext,
                 httpClient = (source as? EntryHttpSource)?.client ?: networkHelper.client,
             ),
-            materializationDirectory = context.cacheDir.resolve("book-materialized"),
+            materializationStore = materializationStore,
         )
         val opened = try {
             processor.open(contentSession)

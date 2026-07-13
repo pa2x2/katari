@@ -677,6 +677,7 @@
     <string name="available_disk_space_info">Available: %1$s / Total: %2$s</string>
     <string name="pref_clear_chapter_cache">Clear page cache</string>
     <string name="pref_clear_anime_playback_cache">Clear playback cache</string>
+    <string name="pref_clear_book_cache">Clear book cache</string>
     <string name="used_cache">Used: %1$s</string>
     <string name="cache_deleted">Cache cleared, %1$d files deleted</string>
     <string name="cache_delete_error">Error occurred while clearing</string>

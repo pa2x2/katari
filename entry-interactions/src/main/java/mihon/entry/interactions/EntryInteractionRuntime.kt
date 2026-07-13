@@ -58,14 +58,16 @@ fun InjektRegistrar.addEntryInteractionRuntime(
 
     val mangaWarmup = addMangaEntryInteractionRuntime(app)
     val animeWarmup = addAnimeEntryInteractionRuntime(app)
-    addBookEntryInteractionRuntime(dependencies.profilePreferenceStore)
+    val bookMaterializationCache = addBookEntryInteractionRuntime(app, dependencies.profilePreferenceStore)
 
     addSingletonFactory<EntryMediaCacheMaintenance> {
         DefaultEntryMediaCacheMaintenance(
-            buckets = dependencies.mediaCacheBuckets + LazyEntryMediaCacheBucket(
-                key = EntryMediaCacheBucketKeys.ANIME_PLAYBACK,
-                delegateProvider = { get<EntryPlayerCache>() },
-            ),
+            buckets = dependencies.mediaCacheBuckets +
+                bookMaterializationCache +
+                LazyEntryMediaCacheBucket(
+                    key = EntryMediaCacheBucketKeys.ANIME_PLAYBACK,
+                    delegateProvider = { get<EntryPlayerCache>() },
+                ),
         )
     }
 
