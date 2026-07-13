@@ -5,14 +5,17 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 
+/** Returns text from the first element matching [css], or [defaultValue] when absent. */
 fun Element.selectText(css: String, defaultValue: String? = null): String? {
     return select(css).first()?.text() ?: defaultValue
 }
 
+/** Returns an integer parsed from the first element matching [css], or [defaultValue] when absent. */
 fun Element.selectInt(css: String, defaultValue: Int = 0): Int {
     return select(css).first()?.text()?.toInt() ?: defaultValue
 }
 
+/** Returns this element's text for `text`, otherwise the attribute selected by [css]. */
 fun Element.attrOrText(css: String): String {
     return if (css != "text") attr(css) else text()
 }

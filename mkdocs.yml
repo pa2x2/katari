@@ -80,16 +80,25 @@ nav:
       - Builds, telemetry, and privacy: differences/builds-telemetry-and-privacy.md
   - Inherited Mihon features:
       - Curated links to Mihon documentation: inherited-features.md
-  - Extension development:
-      - extensions/README.md
-      - Getting started: extensions/getting-started.md
-      - Entry Source API: extensions/entry-source-api.md
-      - HTTP and parsing: extensions/http-and-parsing.md
-      - Media cookbooks:
-          - Image media: extensions/image-media.md
-          - Playback media: extensions/playback-media.md
-      - Migrating from Mihon: extensions/migrating-from-mihon.md
-      - Publishing and maintenance: extensions/publishing.md
-      - API compatibility and versioning: extensions/api-compatibility.md
+  - Developers:
+      - developers/README.md
+      - Extension development:
+          - extensions/README.md
+          - Getting started: extensions/getting-started.md
+          - HTTP and parsing: extensions/http-and-parsing.md
+          - Media cookbooks:
+              - Image media: extensions/image-media.md
+              - Playback media: extensions/playback-media.md
+          - Migrating from Mihon: extensions/migrating-from-mihon.md
+          - Publishing and maintenance: extensions/publishing.md
+      - Entry SDK:
+          - developers/sdk/README.md
+          - Data model: developers/sdk/data-model.md
+          - Content types: developers/sdk/content-types.md
+          - Capabilities: developers/sdk/capabilities.md
+          - Compatibility and versioning: developers/sdk/versioning.md
+          - Local SDK development: developers/sdk/local-development.md
+          - SDK changelog: developers/sdk/changelog.md
+          - API reference: developers/sdk/api/index.html
 
 strict: true

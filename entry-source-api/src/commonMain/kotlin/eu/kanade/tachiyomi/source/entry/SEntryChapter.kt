@@ -7,14 +7,19 @@ import kotlinx.serialization.json.JsonObject
  */
 interface SEntryChapter {
 
+    /** Stable child-item identity within the source. */
     var url: String
 
+    /** User-visible child-item label. */
     var name: String
 
+    /** Upload timestamp in Unix epoch milliseconds, or zero when unknown. */
     var dateUpload: Long
 
+    /** Parsed child number, or `-1.0` when unknown. */
     var chapterNumber: Double
 
+    /** Scanlator, release group, or another provider attribution, when known. */
     var scanlator: String?
 
     /**
@@ -26,6 +31,7 @@ interface SEntryChapter {
      */
     var memo: JsonObject
 
+    /** Copies every public field from [other] into this instance. */
     fun copyFrom(other: SEntryChapter) {
         name = other.name
         url = other.url
@@ -35,6 +41,7 @@ interface SEntryChapter {
         memo = other.memo
     }
 
+    /** Creates a detached mutable copy preserving all current fields. */
     fun copy() = create().also {
         it.url = url
         it.name = name
@@ -44,7 +51,9 @@ interface SEntryChapter {
         it.memo = memo
     }
 
+    /** Factory for [SEntryChapter]. */
     companion object {
+        /** Creates an empty mutable source child item. */
         fun create(): SEntryChapter = SEntryChapterImpl()
     }
 }

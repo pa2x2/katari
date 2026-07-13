@@ -27,7 +27,7 @@ Start with the [extension development overview](../extensions/README.md).
 
 ## Compatibility families
 
-An extension's structured `versionName` declares its API family and extension revision. Katari validates the derived family before loading classes. See [API compatibility and versioning](../extensions/api-compatibility.md).
+An extension's structured `versionName` declares its API family and extension revision. Katari validates the derived family before loading classes. See [SDK compatibility and versioning](../developers/sdk/versioning.md).
 
 ## Troubleshooting
 

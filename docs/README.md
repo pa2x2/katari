@@ -40,6 +40,6 @@ Katari brings manga and anime into one library, with shared profiles, discovery,
 
 </div>
 
-## Extension development
+## Developers
 
-Katari supports image and playback sources through its Entry Source API. Start with the [extension development guide](extensions/), or read about [compatibility with Mihon extensions](differences/extensions-and-compatibility.md).
+Katari's Entry SDK lets extensions expose different content types and media experiences. Start with the [developer documentation](developers/README.md), follow the [extension development guide](extensions/README.md), or read about [compatibility with Mihon extensions](differences/extensions-and-compatibility.md).
