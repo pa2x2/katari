@@ -1,210 +1,247 @@
-# BOOK content support decisions
+# BOOK content support research
 
-Compact decision record for introducing `EntryType.BOOK`. It contains accepted
-direction and remaining work, not discussion history or superseded alternatives.
+Authoritative design record for `EntryType.BOOK`. It describes the accepted
+architecture and invariants; implementation sequencing lives in
+[`book-implementation-reference.md`](book-implementation-reference.md).
 
-## Locked decisions
+## Decision index
 
-| ID | Decision |
-| --- | --- |
-| BOOK-001 | Audiobooks are outside `BOOK` scope |
-| BOOK-002 | BOOK uses pluggable content processors |
-| BOOK-003 | DRM is deferred indefinitely and may never be supported |
-| BOOK-004 | Sources describe resolved content with open identifiers |
-| BOOK-005 | EPUB is the first processor target |
-| BOOK-006 | Processors are initially built in, with a future reader-extension boundary |
-| BOOK-007 | Missing/incompatible processors produce dedicated explanatory UI |
-| BOOK-008 | Content descriptors include an optional profile |
-| BOOK-009 | Media types are format identifiers |
-| BOOK-010 | Initial EPUB scope is passive reflowable EPUB 2/3 |
-| BOOK-011 | Multiple compatible processors require a rememberable chooser |
-| BOOK-012 | Processors expose a format-neutral publication model |
-| BOOK-013 | Katari owns the format-neutral public model |
-| BOOK-014 | Locators have Katari-owned common fields plus processor extensions |
-| BOOK-015 | Publication revisions reconcile progress without silent reset/misplacement |
-| BOOK-016 | Locators use a balanced common field set |
-| BOOK-017 | The latest explicit reading event wins progress conflicts |
-| BOOK-018 | Processor API uses a mandatory core plus optional capabilities |
-| BOOK-019 | The selected processor owns the complete reader UI |
-| BOOK-020 | Processors obtain content through a Katari-owned access session |
-| BOOK-021 | Content sessions expose capability-based resource access |
-| BOOK-023 | Stable data models are separated from the built-in runtime SPI |
-| BOOK-024 | Katari owns one content-session lease per invocation |
-| BOOK-025 | Built-in SPI separates content, publication, and reader sessions |
-| BOOK-026 | Readium Kotlin 3.3.0 is conditionally adopted as the EPUB engine |
-| BOOK-027 | Content sessions expose a uniform resource catalog with per-resource capabilities |
+| Area | Decision IDs | Locked direction |
+| --- | --- | --- |
+| Scope and first format | BOOK-001–010 | Readable content only; DRM deferred; EPUB is first |
+| Processor/runtime boundary | BOOK-011–021, 023–027 | Pluggable processors, Katari-owned models/sessions, processor-owned reader |
+| Source/content boundary | BOOK-028–040 | Explicit `EntryMedia.Book`, lazy data-only resources, existing generic source gateway |
+| Shared progress | BOOK-041–069 | Generic sparse progress, one-shot anime/manga migrations before BOOK |
+
+The ranges preserve the decision history while the sections below are the
+normative specification. Superseded alternatives are intentionally omitted.
 
 ## Scope and first processor
 
-`BOOK` is readable content. Audiobooks are a separate listenable content type;
-text-to-speech may still be an accessibility feature. DRM is out of scope for an
-unspecified period. Protection remains distinct from representation, but no
-hypothetical DRM integration expands the initial design.
+`BOOK` is readable content. Audiobooks are a separate listenable type; TTS may
+later be an accessibility capability. DRM is deferred indefinitely and may never
+be supported. Protection remains distinct descriptor metadata.
 
-The first built-in processor targets DRM-free, passive, reflowable EPUB 2 and 3:
-ordinary XHTML/CSS, images, SVG, fonts, links, footnotes, navigation, language,
-and writing direction. Fixed layout, scripting, media overlays, synchronized
-narration, and embedded audio/video are excluded initially.
+The first built-in processor handles DRM-free, passive, reflowable EPUB 2/3:
+text, XHTML/CSS, images, SVG, fonts, links, footnotes, navigation, language, and
+writing direction. Fixed layout, scripting, media overlays, embedded audio/video,
+and synchronized narration are excluded initially.
 
-Readium Kotlin 3.3.0 is conditionally adopted as the private internal EPUB
-engine after a successful host-side evaluation. Readium types must not cross the
-EPUB processor boundary. Production integration remains gated by the conditions
-recorded in [`book-readium-evaluation.md`](book-readium-evaluation.md).
+Only built-in processors ship initially. Stable identifiers and data models must
+nevertheless leave a credible future reader-extension/IPC path without freezing
+the current in-process Kotlin or Compose SPI as an external ABI.
 
-## Processor architecture
+## Runtime ownership
 
 ```text
 EntryType.BOOK
     -> BOOK interaction plugin
-        -> resolved content descriptor
+        -> resolved EntryMedia.Book
         -> processor selection
-        -> processor-owned reader and session
+        -> BookContentSession
+        -> BookPublicationSession
+        -> processor-owned BookReaderSession
 ```
 
-Processors handle representation contracts, not normally websites. Sources own
-discovery, authentication, updates, and retrieval. Selection applies to resolved
-content, not permanently to an entry; merged entries may contain different
-formats and sources.
+- Sources own discovery, authentication, updates, retrieval, and site-specific
+  transformation.
+- Processors own representation parsing, normalized publication output, complete
+  reader UI, locator handling, failures, and cleanup.
+- Katari owns processor selection, session lifecycle, progress, history,
+  cache/download storage, and generic UI.
+- Close order is reader, publication, then content. Sessions/handles are scoped,
+  cancellable, idempotently closed, and never serialized.
 
-Every processor declares support, resolves/validates a publication, owns its
-reader, produces/restores locators, reports structured failures, and releases
-resources. Download/cache, search, selection, annotations, preview, TTS, and
-format settings are optional capabilities. Generic UI only exposes supported
-actions.
+Processors declare a mandatory core plus optional capabilities such as search,
+selection, annotations, preview, TTS, download support, and format settings.
+Generic UI exposes only supported actions. Processor selection automatically
+uses a sole candidate, honors a valid remembered choice, and presents a chooser
+with “remember” when several candidates remain. Missing or incompatible support
+uses dedicated explanatory UI with structured reasons.
 
-The processor owns all reader rendering, controls, gestures, layout, and
-format-specific interactions. Katari owns the format-neutral launch/session
-boundary and persists reported location, progress, completion, time, errors, and
-closure. A processor may reuse Katari components but no shared shell or Compose
-ABI is required.
+## Source SDK and entry screen
 
-Only built-ins exist initially. Contracts nevertheless use stable identifiers,
-do not depend on registration order or implementation class names, and leave a
-credible future path to independently installed readers.
+`UnifiedSource` remains the sole generic source gateway. `ImagePages` and
+`Playback` remain first-class; BOOK adds explicit `EntryMedia.Book`. Source-child
+resources continue resolving through `UnifiedSource.getMedia(chapter)`—there is
+no additional BOOK fetch API.
 
-## Public data contracts
-
-### Content descriptor
+Each `EntryMedia.Book` result is self-contained but not eager:
 
 ```text
-BookContentDescriptor
-├── format       open media type, e.g. application/epub+zip
-├── profile      optional representation variant
-└── protection   open identifier; initially none
+EntryMedia.Book
+├── descriptor: media type, optional profile, protection
+├── optional publication-key override
+├── catalog + catalog revision + coverage
+├── optional hierarchy hints
+├── optional initial resource
+└── resolved initial-resource location
 ```
 
-Katari-defined formats use vendor media types. Profile is content metadata, not
-processor API version. Content transport and credentials are not descriptor
-fields.
+The default publication identity is `Entry.source + Entry.url`; an override is
+only for one entry containing multiple logical publications. Catalog and
+resource revisions are independent. Publications may be packaged, lazy,
+ongoing, partially enumerated, partially accessible, or partially cached.
 
-### Content access
+Catalog facts may include stable IDs, titles, order, grouping, and child
+mappings. The processor validates and normalizes them. Persisted `resourceId` is
+separate from retrieval identity (`SEntryChapter.url`); database chapter IDs are
+runtime-only.
 
-Processors receive a Katari-owned session containing stable content identity,
-revision, descriptor, resource metadata, and cache/offline state. Resources have
-publication/revision-stable identities suitable for persisted locators; each
-session maps them to ephemeral URLs, handles, or transport requests. Access is
-capability-based, including enumeration, streaming, ranges, and local
-materialization where supported. Katari/source retain authentication, headers,
-permissions, caching, cancellation, and lifecycle; processors never receive
-source credentials or implementation access.
+Source resource locations form a closed data-only set:
 
-The resource catalog is cursor-paged and exposes stable metadata, size/revision
-when known, cache state, and `STREAM`, `RANGE`, or `MATERIALIZE` capabilities.
-Sessions support metadata lookup, leased streaming with an optional byte range,
-and local materialization by stable resource ID. A processor checks capabilities
-instead of branching on closed transport kinds.
+- `SourceChild(resourceId, sourceChildKey)`;
+- `RemoteRequest(url, headers)`;
+- bounded `InlineText` and `InlineBytes`;
+- validated `LocalUri` or app-issued reference.
 
-Katari creates and owns one content-session lease per reader, preview, indexing,
-or background invocation. Nested resource handles must close before their parent
-session. Closing the invocation cancels outstanding operations and releases the
-session. Live sessions and handles are never serialized; process restoration
-recreates them from stable content identity, revision, and persisted locators.
-Durable downloads and caches outlive sessions through separate storage.
+Resolution cannot loop on the same source child. Large packages are not inline,
+arbitrary filesystem paths are invalid, and credentials never reach processors.
+Package-internal files remain processor concerns.
 
-The built-in SPI has three scoped stages. `BookContentSession` provides
-Katari-owned resource access. A selected processor opens it into a
-`BookPublicationSession` containing the normalized publication and locator
-operations. That session launches a processor-owned `BookReaderSession` which
-emits state and errors. Close order is reader, publication, then content. Preview,
-indexing, and background work may stop at the publication stage without creating
-reader UI.
+`book-api` owns shared stable semantics and is published transitively.
+`entry-source-api` owns `EntryMedia.Book`, source resource descriptions, and
+locations; equivalent BOOK descriptors are not duplicated.
 
-### Publication model
+The entry screen displays source `EntryChapter` acquisition/access units; the
+reader displays normalized publication navigation. Gutenberg-like rows may be
+EPUB/HTML/text renditions whose internal chapters exist only in the reader.
+Web-novel chapters may be both entry rows and publication resources. Catalog
+presence never proves entitlement.
 
-Every processor maps native content into Katari-owned, serializable types:
+Availability is contextual and structured: unknown, available, authentication
+or purchase required, unsupported app-only access, removed, or region-restricted.
+Downloads are resource-scoped.
+
+## Processor-facing data and access
+
+`BookContentSession` exposes stable identity/revision and a cursor-paged catalog.
+Resources report metadata, revision, cache/availability state, and `STREAM`,
+`RANGE`, or `MATERIALIZE` capabilities. Access returns scoped handles; durable
+caches outlive sessions.
+
+Processors emit Katari-owned serializable models:
 
 ```text
-BookPublication
-├── identity and revision
-├── descriptor
-├── ordered readable resources
-├── navigation tree
-└── locators
+BookPublication                    BookLocator
+├── identity and revision          ├── resourceId
+├── descriptor                     ├── progression / totalProgression
+├── readable resources             ├── logicalPosition
+└── navigation tree                ├── fragments / bounded text context
+                                    └── namespaced extensions
 ```
 
-This model serves packaged, serialized, single-document, paged, and future
-formats. `Entry`/merge may retain source/library identity, while `EntryChapter`
-may remain a synchronization or acquisition unit; neither defines universal
-book structure.
+Locators contain only meaningful common fields plus processor extensions.
+Revision reconciliation uses stable resource identity, structure, text context,
+and progress. Confident relocation is automatic; approximate relocation informs
+the user; unresolved relocation asks and retains old state. The newest explicit
+locator event wins, including deliberate backward movement.
 
-### Locator
+## Shared progress architecture
+
+BOOK does not introduce isolated persistence. Generic `entry_progress_state`
+replaces anime `playback_state` and manga `chapters.last_page_read` before BOOK
+depends on it.
 
 ```text
-BookLocator
-├── resourceId          required
-├── progression         optional within-resource progress
-├── totalProgression    optional publication progress
-├── logicalPosition     optional discrete position
-├── fragments           optional precise references
-├── boundedTextContext  optional relocation context
-└── extensions          namespaced serialized processor values
+entry_progress_state
+├── entry_id; optional chapter_id mapping
+├── content_key; resource_key; optional resource revision
+├── locator kind; position; extent
+├── progression; total progression; namespaced extension JSON
+├── completed
+├── locator_updated_at
+└── completion_updated_at
 ```
 
-Katari can display, back up, synchronize, and approximately recover common
-location data. Processors use the complete locator for maximum precision and do
-not invent common fields that are meaningless for their format.
+### Identity and lifecycle
 
-### API stability boundary
+- The owning entry FK cascades. The nullable child FK uses `ON DELETE SET NULL`;
+  stable progress survives temporary child removal.
+- Empty `content_key` means the entry's default content. Only exceptional
+  multi-publication BOOK media supplies a discriminator.
+- Manga/anime use `EntryChapter.url` as `resource_key`; BOOK uses stable
+  publication resource IDs. Backup portability adds source ID and entry URL.
+- Rows are sparse: partial/completed state, extensions, and explicit reset
+  tombstones exist; untouched resources do not.
+- Completion is authoritative here and transactionally projected to
+  `EntryChapter.read` when mapped. Child bookmarks and future precise BOOK
+  bookmarks/annotations remain separate.
 
-Descriptors, publications, resources, navigation, locators, structured errors,
-and capability identifiers form Katari-owned serializable models designed for
-long-term compatibility. Processor, content-session, resource-handle, reader
-launch, and lifecycle interfaces remain an evolvable in-process SPI while only
-built-in processors exist. They should map cleanly to IPC concepts without
-freezing an external Kotlin/Android ABI prematurely. A future reader-extension
-protocol will reuse the stable models but define its packaging and IPC boundary
-separately.
+### Locator and conflict rules
 
-## Selection, errors, and persistence
+- Canonical SQL columns hold common locator values; namespaced JSON holds only
+  type-specific extensions. There is no duplicate full locator blob.
+- Locator kinds are open: manga uses zero-based `page`, anime uses millisecond
+  `time`, and BOOK maps its common fields plus precise extensions.
+- Unknown kinds/extensions survive backup, restore, and copy. Generic fields
+  remain visible, while Resume reports unsupported locator until an interaction
+  can interpret it.
+- Newest `locator_updated_at` chooses position; newest `completion_updated_at`
+  chooses completion. Exact clock ties retain existing local state.
+- Reset stores empty locator/incomplete state with new clocks so old state cannot
+  resurrect. Manga/anime preserve reset-to-start behavior; BOOK retains precise
+  location on mark-unread unless the user explicitly resets progress.
+- Each interaction owns automatic completion policy; persistence never infers it
+  from progression.
 
-Processor selection filters compatible and available candidates, uses a valid
-remembered choice, automatically uses a sole candidate, asks with a “remember”
-option when several remain, and returns a machine-readable reason when none do.
-Installation never silently replaces a remembered reader.
+### History and interaction boundary
 
-Dedicated unsupported-content UI explains unknown format, unsupported profile,
-version or protection, unavailable/incompatible processor, and invalid
-descriptor. Screen versus dialog remains a UX detail.
+History remains separate and authoritative for actual consumption time/duration,
+independent clearing, and optional backup. Initial BOOK history remains backed
+by the mapped web-novel child or selected packaged rendition child. Resume reads
+progress, not history.
 
-BOOK reading state is keyed by publication identity/revision and stores locator,
-progress, completion, last-opened time, and reading duration. Navigation may be
-reconstructed or cached rather than fully materialized; annotations and sparse
-per-resource state may use separate one-to-many storage later.
+`EntryProgressInteraction` owns generic snapshot, restore, and mapped-copy.
+Backup, merge, Continue, library progress, and child labels use it rather than
+repositories directly. Anime playback preferences become a separate interaction.
 
-On publication change, the processor reconciles using resource identity,
-structure, text context, and progress. Confident migration replaces the locator;
-approximate migration informs the user; unresolved migration asks the user and
-retains old state until resolved. Conflicts use the latest explicit reading
-event, including intentional backward movement. Reading duration merges
-separately and never selects location.
+### Migration rules
 
-## Remaining work
+Migration phases are foundation, anime, manga, then BOOK. Anime and manga each
+use an atomic one-shot backfill and immediate cutover: no dual-write and no
+legacy-read fallback. Anime removes `playback_state`; manga rebuilds `chapters`
+without `last_page_read`.
 
-1. Implement production app/source/cache backends for the content-session SPI,
-   including authentication isolation, cancellation, hostile-resource limits,
-   and durable cache ownership.
-2. Satisfy the Readium production gates: effective Media3 validation, minified
-   app/R8 build, final APK-size measurement, license attribution, hostile archive
-   limits, and separately authorized device verification.
-3. If reader extensions enter scope, define packaging, discovery, trust, loading,
-   IPC/session transport, and ABI policy.
+Only meaningful legacy rows migrate. Native page/time units are preserved;
+unknown extents/progressions remain absent. Trustworthy consumption timestamps
+seed clocks; metadata time and migration time never pretend to be user events.
+Recoverable invalid values are deterministically normalized before insertion.
+SQL enforces key, range, clock, and uniqueness invariants.
+
+New backups write generic progress only. Restore indefinitely accepts legacy
+manga `lastPageRead` and anime playback payloads; field numbers remain reserved.
+When generic and legacy payloads coexist, generic state wins.
+
+## Readium EPUB evaluation
+
+Readium Kotlin 3.3.0 is conditionally adopted as the private EPUB engine. The
+host spike proved EPUB 2 NCX and EPUB 3 navigation, RTL/language mapping, nested
+anchors, Katari identity/revision ownership, locator serialization/restoration,
+structured malformed-content failure, and reverse-order lifecycle cleanup.
+Readium imports remain confined to `:entry-interactions:book`; the module is not
+yet wired into `EntryType`, app runtime, source API, persistence, downloads, or a
+production reader UI.
+
+Evaluation facts:
+
+- selected artifacts are `shared`, `streamer`, and `navigator` 3.3.0;
+- direct AARs total 2,975,665 compressed bytes before R8/overlap;
+- no native libraries, manifest components/permissions, consumer R8 rules, LCP,
+  or DRM binary were found;
+- Readium is BSD-3-Clause; embedded PhotoView/font attribution needs verification;
+- navigator brings Media3 1.10.0 while Katari currently catalogs 1.8.0.
+
+Production adoption requires effective app dependency/Media3 validation against
+anime, minified R8 build, final APK-size comparison, complete attribution,
+hostile-archive limits, unsupported EPUB fixtures, and separately authorized
+device checks for rendering, pagination, gestures, lifecycle, restoration, and
+resource loading.
+
+## Deferred scope
+
+- DRM and audiobooks;
+- reader-extension packaging, discovery, trust, loading, IPC/session transport,
+  and ABI policy;
+- annotations and precise reader bookmarks;
+- additional formats/processors after EPUB.
