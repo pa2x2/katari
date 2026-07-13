@@ -97,6 +97,12 @@ private fun libraryItem(
                 hasStarted = false,
                 continueMode = ProgressState.ContinueMode.TARGET_AVAILABLE,
             )
+            EntryType.BOOK -> ProgressState(
+                totalCount = 0L,
+                consumedCount = 0L,
+                bookmarkCount = 0L,
+                hasStarted = false,
+            )
         },
         latestUpload = 0L,
         lastRead = 0L,

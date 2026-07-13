@@ -17,11 +17,13 @@ class FeedItemRefTest {
     }
 
     @Test
-    fun `decodes legacy manga and anime ref payloads`() {
+    fun `decodes lowercase entry ref payloads`() {
         json.decodeFromString<FeedItemRef>("""{"type":"manga","id":1}""") shouldBe
             FeedItemRef(1L, EntryType.MANGA)
         json.decodeFromString<FeedItemRef>("""{"type":"anime","id":2}""") shouldBe
             FeedItemRef(2L, EntryType.ANIME)
+        json.decodeFromString<FeedItemRef>("""{"type":"book","id":3}""") shouldBe
+            FeedItemRef(3L, EntryType.BOOK)
     }
 
     @Test

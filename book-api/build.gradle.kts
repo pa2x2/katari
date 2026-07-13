@@ -4,7 +4,13 @@ plugins {
     alias(mihonx.plugins.kotlin.multiplatform)
     alias(mihonx.plugins.spotless)
     alias(libs.plugins.kotlin.serialization)
+    id("maven-publish")
 }
+
+group = "com.github.katariapp.katari"
+version = providers.gradleProperty("sourceApiVersion")
+    .orElse(System.getenv("VERSION") ?: "local-SNAPSHOT")
+    .get()
 
 kotlin {
     @Suppress("UnstableApiUsage")

@@ -10,6 +10,8 @@ android {
 
 dependencies {
     api(projects.bookApi)
+    api(projects.domain)
+    api(projects.entryInteractions.spi)
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.fragment)

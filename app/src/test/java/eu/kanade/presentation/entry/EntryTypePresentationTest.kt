@@ -86,6 +86,17 @@ class EntryTypePresentationTest {
     }
 
     @Test
+    fun `book presentation is explicit rather than generic fallback`() {
+        val presentation = EntryType.BOOK.entryTypePresentation()
+
+        presentation.displayNameLabel shouldBe MR.strings.entry_type_book
+        presentation.badgeIcon shouldBe Icons.AutoMirrored.Outlined.MenuBook
+        presentation.smallIcon shouldBe R.drawable.ic_book_24dp
+        presentation.coverOverlayIcon shouldNotBe null
+        presentation.downloadBookmarkedSupported shouldBe false
+    }
+
+    @Test
     fun `fallback presentation uses neutral labels and icons`() {
         val presentation = (null as EntryType?).entryTypePresentation()
 

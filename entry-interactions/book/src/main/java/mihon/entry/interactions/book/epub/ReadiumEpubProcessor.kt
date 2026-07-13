@@ -27,6 +27,9 @@ import org.readium.r2.streamer.PublicationOpener
 import org.readium.r2.streamer.parser.epub.EpubParser
 
 internal class ReadiumEpubProcessor : BookProcessor {
+    override val id: String = "builtin.readium.epub"
+    override val displayName: String = "EPUB reader"
+
     private val httpClient = DefaultHttpClient()
     private val assetRetriever = AssetRetriever(
         resourceFactory = MaterializedFileOnlyResourceFactory,

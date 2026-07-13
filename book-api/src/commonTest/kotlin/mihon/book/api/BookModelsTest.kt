@@ -5,8 +5,22 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class BookModelsTest {
+
+    @Test
+    fun `descriptor keeps open format profile and protection identifiers`() {
+        val descriptor = BookContentDescriptor(
+            format = "application/epub+zip",
+            profile = "https://example.invalid/profile/reflowable",
+            protection = "none",
+        )
+
+        assertEquals(descriptor, Json.decodeFromString<BookContentDescriptor>(Json.encodeToString(descriptor)))
+        assertFailsWith<IllegalArgumentException> { BookContentDescriptor(format = "") }
+        assertFailsWith<IllegalArgumentException> { BookContentDescriptor(format = "epub", profile = "") }
+    }
 
     @Test
     fun `content resource metadata preserves access capabilities`() {
@@ -31,6 +45,11 @@ class BookModelsTest {
         }
         kotlin.test.assertFailsWith<IllegalArgumentException> {
             BookContentResource(id = "chapter", size = -1)
+        }
+        kotlin.test.assertFailsWith<IllegalArgumentException> {
+            BookContentResourcePage(
+                resources = listOf(BookContentResource("chapter"), BookContentResource("chapter")),
+            )
         }
     }
 

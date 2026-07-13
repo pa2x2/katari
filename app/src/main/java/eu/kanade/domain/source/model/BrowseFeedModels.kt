@@ -66,6 +66,7 @@ data class FeedItemRef(
             return when (this) {
                 EntryType.MANGA.name, "manga" -> EntryType.MANGA
                 EntryType.ANIME.name, "anime" -> EntryType.ANIME
+                EntryType.BOOK.name, "book" -> EntryType.BOOK
                 else -> throw SerializationException("Unknown FeedItemRef.type: $this")
             }
         }

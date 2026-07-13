@@ -34,8 +34,12 @@ class LibraryTypeGroupingTest {
     fun `type grouping creates stable pages in entry type order`() {
         val pages = pagesFor(LibraryGroupType.Type)
 
-        pages.map { it.id } shouldContainExactly listOf("type:MANGA", "type:ANIME")
-        pages.map { it.entryType } shouldContainExactly listOf(EntryType.MANGA, EntryType.ANIME)
+        pages.map { it.id } shouldContainExactly listOf("type:MANGA", "type:ANIME", "type:BOOK")
+        pages.map { it.entryType } shouldContainExactly listOf(
+            EntryType.MANGA,
+            EntryType.ANIME,
+            EntryType.BOOK,
+        )
         pages.flatMap { it.itemIds }.toSet() shouldBe items.map { it.key }.toSet()
     }
 

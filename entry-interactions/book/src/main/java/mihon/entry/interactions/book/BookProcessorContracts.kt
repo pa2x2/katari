@@ -54,6 +54,12 @@ internal interface MaterializedBookResource : AutoCloseable {
 }
 
 internal interface BookProcessor {
+    /** Stable across app updates so a remembered user choice can be restored. */
+    val id: String
+
+    /** User-facing processor name for the compatibility chooser. */
+    val displayName: String
+
     fun supports(descriptor: BookContentDescriptor): Boolean
 
     suspend fun open(content: BookContentSession): BookOpenResult
