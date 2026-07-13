@@ -10,7 +10,7 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
 internal class BookOpenProcessor(
-    private val createIntent: (Context, Entry, EntryChapter) -> Intent = BookReaderUnavailableActivity::newIntent,
+    private val createIntent: (Context, Entry, EntryChapter) -> Intent = BookReaderHostActivity::newIntent,
 ) : EntryOpenProcessor {
     override val type: EntryType = EntryType.BOOK
 

@@ -31,6 +31,8 @@ internal class BookProcessorRegistry(
 
     fun compatibleProcessors(descriptor: BookContentDescriptor): List<BookProcessor> =
         processors.values.filter { it.supports(descriptor) }
+
+    fun get(processorId: String): BookProcessor? = processors[processorId]
 }
 
 internal sealed interface BookProcessorSelection {

@@ -1,5 +1,7 @@
 package mihon.entry.interactions.book.epub
 
+import android.content.Context
+import android.content.Intent
 import kotlinx.coroutines.CancellationException
 import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookFailure
@@ -11,6 +13,7 @@ import mihon.entry.interactions.book.BookContentSession
 import mihon.entry.interactions.book.BookOpenResult
 import mihon.entry.interactions.book.BookProcessor
 import mihon.entry.interactions.book.BookPublicationSession
+import mihon.entry.interactions.book.BookReaderRequest
 import mihon.entry.interactions.book.BookSessionCloseStack
 import mihon.entry.interactions.book.MaterializedBookResource
 import org.readium.r2.shared.publication.Publication
@@ -41,7 +44,11 @@ internal class ReadiumEpubProcessor : BookProcessor {
     override fun supports(descriptor: BookContentDescriptor): Boolean =
         descriptor.format == EPUB_MEDIA_TYPE &&
             descriptor.protection == "none" &&
-            descriptor.profile != "fixed-layout"
+            (descriptor.profile == null || descriptor.profile == REFLOWABLE_PROFILE)
+
+    override fun createReaderIntent(context: Context, request: BookReaderRequest): Intent {
+        return ReadiumEpubReaderActivity.newIntent(context, request, id)
+    }
 
     override suspend fun open(content: BookContentSession): BookOpenResult {
         if (!supports(content.descriptor)) {
@@ -129,6 +136,7 @@ internal class ReadiumEpubProcessor : BookProcessor {
 
     private companion object {
         const val EPUB_MEDIA_TYPE = "application/epub+zip"
+        const val REFLOWABLE_PROFILE = "reflowable"
     }
 }
 

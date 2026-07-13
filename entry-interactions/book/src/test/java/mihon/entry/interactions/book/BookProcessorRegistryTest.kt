@@ -1,5 +1,7 @@
 package mihon.entry.interactions.book
 
+import android.content.Context
+import android.content.Intent
 import mihon.book.api.BookContentDescriptor
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -73,6 +75,8 @@ private class FakeBookProcessor(
     private val format: String,
 ) : BookProcessor {
     override fun supports(descriptor: BookContentDescriptor): Boolean = descriptor.format == format
+
+    override fun createReaderIntent(context: Context, request: BookReaderRequest): Intent = Intent()
 
     override suspend fun open(content: BookContentSession): BookOpenResult = error("Not used")
 }

@@ -25,18 +25,22 @@ internal class BookProgressIdentityResolver(
             ?: error("BOOK source ${owner.source} is not available")
         val media = source.getMedia(chapter.toSEntryChapter()) as? EntryMedia.Book
             ?: error("BOOK source returned non-book media for child ${chapter.id}")
-        val resourceKey = media.initialResourceId
-            ?: media.catalog.resources.singleOrNull()?.id
-            ?: error("BOOK child ${chapter.id} does not identify one publication resource")
-        val resourceRevision = media.catalog.resources
-            .firstOrNull { it.id == resourceKey }
-            ?.revision
-            ?: media.publicationRevision
-
-        return BookProgressIdentity(
-            contentKey = media.publicationKeyOverride.orEmpty(),
-            resourceKey = resourceKey,
-            resourceRevision = resourceRevision,
-        )
+        return media.progressIdentity(chapter.id)
     }
+}
+
+internal fun EntryMedia.Book.progressIdentity(chapterId: Long): BookProgressIdentity {
+    val resourceKey = initialResourceId
+        ?: catalog.resources.singleOrNull()?.id
+        ?: error("BOOK child $chapterId does not identify one publication resource")
+    val resourceRevision = catalog.resources
+        .firstOrNull { it.id == resourceKey }
+        ?.revision
+        ?: publicationRevision
+
+    return BookProgressIdentity(
+        contentKey = publicationKeyOverride.orEmpty(),
+        resourceKey = resourceKey,
+        resourceRevision = resourceRevision,
+    )
 }

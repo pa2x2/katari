@@ -38,6 +38,17 @@ import kotlin.test.assertTrue
 class ReadiumEpubProcessorTest {
 
     @Test
+    fun `supports only unprotected reflowable EPUB descriptors`() {
+        val processor = ReadiumEpubProcessor()
+
+        assertTrue(processor.supports(BookContentDescriptor("application/epub+zip")))
+        assertTrue(processor.supports(BookContentDescriptor("application/epub+zip", profile = "reflowable")))
+        assertFalse(processor.supports(BookContentDescriptor("application/epub+zip", profile = "fixed-layout")))
+        assertFalse(processor.supports(BookContentDescriptor("application/epub+zip", protection = "drm")))
+        assertFalse(processor.supports(BookContentDescriptor("text/html")))
+    }
+
+    @Test
     fun `opens authored EPUB 2 and maps reading order and nested navigation`() = runBlocking {
         val fixture = EpubFixture.write(temporaryDirectory().resolve("epub2.epub"), version = 2)
         val content = TestContentSession(fixture, publicationId = "book:epub2", revision = "v1")

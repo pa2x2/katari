@@ -1,5 +1,7 @@
 package mihon.entry.interactions.book
 
+import mihon.entry.interactions.EntryReaderIncognitoState
+import mihon.entry.interactions.book.epub.ReadiumEpubProcessor
 import tachiyomi.core.common.preference.PreferenceStore
 import uy.kohesive.injekt.api.InjektRegistrar
 import uy.kohesive.injekt.api.addSingletonFactory
@@ -9,7 +11,7 @@ import uy.kohesive.injekt.api.get
 fun InjektRegistrar.addBookEntryInteractionRuntime(
     profilePreferenceStore: PreferenceStore,
 ) {
-    addSingletonFactory { BookProcessorRegistry(processors = emptyList()) }
+    addSingletonFactory { BookProcessorRegistry(processors = listOf(ReadiumEpubProcessor())) }
     addSingletonFactory { BookProcessorPreferences(profilePreferenceStore) }
     addSingletonFactory {
         BookProcessorSelectionCoordinator(
@@ -23,6 +25,18 @@ fun InjektRegistrar.addBookEntryInteractionRuntime(
             entryChapterRepository = get(),
             sourceManager = get(),
             selectionCoordinator = get(),
+        )
+    }
+    addSingletonFactory {
+        BookReaderSessionFactory(
+            entryRepository = get(),
+            entryChapterRepository = get(),
+            entryProgressRepository = get(),
+            historyRepository = get(),
+            sourceManager = get(),
+            processorRegistry = get(),
+            networkHelper = get(),
+            incognitoState = get<EntryReaderIncognitoState>(),
         )
     }
 }

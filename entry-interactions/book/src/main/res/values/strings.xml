@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="book_reader_unavailable_title">Book reader unavailable</string>
+    <string name="book_reader_host_title">Book reader</string>
     <string name="book_reader_loading">Checking book reader compatibility…</string>
     <string name="book_reader_unavailable_message">%1$s\n\n%2$s</string>
     <string name="book_reader_choose_title">Choose a book reader</string>
     <string name="book_reader_remember_choice">Remember for this kind of book content</string>
-    <string name="book_reader_selected_message">%1$s is compatible, but its reader UI is not enabled in this build.</string>
     <string name="book_reader_confirm">Continue</string>
     <string name="book_reader_close">Close</string>
+    <string name="book_reader_invalid_request">The selected book item is invalid.</string>
+    <string name="book_reader_incompatible_session">The EPUB reader could not open this publication session.</string>
 </resources>

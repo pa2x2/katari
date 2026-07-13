@@ -22,8 +22,8 @@ research record differ, the research record wins.
 | 1 — shared progress foundation | Complete (`5edd3e12a`) |
 | 2 — anime one-shot cutover | Complete (`0de598118`) |
 | 3 — manga one-shot cutover | Complete (`fa552ecf6`) |
-| 4 — BOOK SDK/runtime | In progress (SDK and content-session foundations complete; runtime milestone pending review) |
-| 5 — EPUB production integration | Not started |
+| 4 — BOOK SDK/runtime | Complete (`6c62bef61`) |
+| 5 — EPUB production integration | In progress (built-in processor, reader runtime, and release assembly milestone pending review) |
 
 ## Phase 1 — shared progress foundation
 

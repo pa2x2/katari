@@ -1,5 +1,7 @@
 package mihon.entry.interactions.book
 
+import android.content.Context
+import android.content.Intent
 import mihon.book.api.BookCatalogCoverage
 import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookContentResource
@@ -67,8 +69,16 @@ internal interface BookProcessor {
 
     fun supports(descriptor: BookContentDescriptor): Boolean
 
+    /** Creates the processor-owned reader UI entry point for a resolved BOOK child. */
+    fun createReaderIntent(context: Context, request: BookReaderRequest): Intent
+
     suspend fun open(content: BookContentSession): BookOpenResult
 }
+
+internal data class BookReaderRequest(
+    val entryId: Long,
+    val chapterId: Long,
+)
 
 internal sealed interface BookOpenResult {
     data class Success(val session: BookPublicationSession) : BookOpenResult

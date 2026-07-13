@@ -23,8 +23,12 @@ internal class ReadiumEpubReaderHost(
     fun observeLocations(
         navigator: EpubNavigatorFragment,
         scope: CoroutineScope,
-        onLocation: (BookLocator) -> Unit,
+        onLocation: suspend (BookLocator) -> Unit,
     ): Job = navigator.currentLocator
         .onEach { onLocation(ReadiumLocatorAdapter.adapt(it)) }
         .launchIn(scope)
+
+    fun currentLocation(navigator: EpubNavigatorFragment): BookLocator? {
+        return navigator.currentLocator.value?.let(ReadiumLocatorAdapter::adapt)
+    }
 }

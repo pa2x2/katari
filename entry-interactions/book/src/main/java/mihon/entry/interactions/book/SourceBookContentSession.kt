@@ -49,7 +49,9 @@ internal class SourceBookContentSession(
     override val catalogRevision = media.catalog.revision
     override val catalogCoverage = media.catalog.coverage
     override val resourceHierarchy = media.hierarchy.map(BookResourceHierarchyNode::toProcessorGroup)
-    override val primaryResourceIds = listOfNotNull(media.initialResourceId)
+    override val primaryResourceIds = listOfNotNull(
+        media.initialResourceId ?: media.catalog.resources.singleOrNull()?.id,
+    )
 
     init {
         entry.requireBook()

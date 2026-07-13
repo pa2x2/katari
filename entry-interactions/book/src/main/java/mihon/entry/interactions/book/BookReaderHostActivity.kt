@@ -19,13 +19,13 @@ import tachiyomi.domain.entry.model.EntryChapter
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-/** Dedicated fallback host used until a compatible BOOK processor can own the reader UI. */
-internal class BookReaderUnavailableActivity : ComponentActivity() {
+/** Generic BOOK host for processor selection, launch, and structured unsupported-content failures. */
+internal class BookReaderHostActivity : ComponentActivity() {
     private lateinit var messageView: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        title = getString(R.string.book_reader_unavailable_title)
+        title = getString(R.string.book_reader_host_title)
 
         val spacing = (resources.displayMetrics.density * 24).toInt()
         setContentView(
@@ -36,7 +36,7 @@ internal class BookReaderUnavailableActivity : ComponentActivity() {
 
                 addView(
                     TextView(context).apply {
-                        text = getString(R.string.book_reader_unavailable_title)
+                        text = getString(R.string.book_reader_host_title)
                         textSize = 24f
                         gravity = Gravity.CENTER
                     },
@@ -89,10 +89,8 @@ internal class BookReaderUnavailableActivity : ComponentActivity() {
             }
             is BookReaderHostState.ChoiceRequired -> showProcessorChooser(state)
             is BookReaderHostState.ReaderSelected -> {
-                messageView.text = getString(
-                    R.string.book_reader_selected_message,
-                    state.processorName,
-                )
+                startActivity(state.processor.createReaderIntent(this, state.request))
+                finish()
             }
         }
     }
@@ -144,7 +142,7 @@ internal class BookReaderUnavailableActivity : ComponentActivity() {
 
         fun newIntent(context: Context, entry: Entry, chapter: EntryChapter): Intent {
             entry.requireBook()
-            return Intent(context, BookReaderUnavailableActivity::class.java).apply {
+            return Intent(context, BookReaderHostActivity::class.java).apply {
                 putExtra(EXTRA_ENTRY_ID, entry.id)
                 putExtra(EXTRA_CHAPTER_ID, chapter.id)
             }

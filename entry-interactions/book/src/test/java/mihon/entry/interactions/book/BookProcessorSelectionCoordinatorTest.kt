@@ -1,5 +1,7 @@
 package mihon.entry.interactions.book
 
+import android.content.Context
+import android.content.Intent
 import mihon.book.api.BookContentDescriptor
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
@@ -75,6 +77,8 @@ private class SelectionFakeProcessor(
     override val displayName: String = id
 
     override fun supports(descriptor: BookContentDescriptor): Boolean = true
+
+    override fun createReaderIntent(context: Context, request: BookReaderRequest): Intent = Intent()
 
     override suspend fun open(content: BookContentSession): BookOpenResult = error("Not used")
 }

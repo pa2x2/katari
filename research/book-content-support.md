@@ -219,9 +219,10 @@ Readium Kotlin 3.3.0 is conditionally adopted as the private EPUB engine. The
 host spike proved EPUB 2 NCX and EPUB 3 navigation, RTL/language mapping, nested
 anchors, Katari identity/revision ownership, locator serialization/restoration,
 structured malformed-content failure, and reverse-order lifecycle cleanup.
-Readium imports remain confined to `:entry-interactions:book`; the module is not
-yet wired into `EntryType`, app runtime, source API, persistence, downloads, or a
-production reader UI.
+Readium imports remain confined to `:entry-interactions:book`. The built-in
+processor is now wired through the generic BOOK host to a processor-owned EPUB
+reader Activity, generic progress/history persistence, and ordered session
+cleanup. Production hardening and separately authorized device validation remain.
 
 Evaluation facts:
 
@@ -230,13 +231,18 @@ Evaluation facts:
 - no native libraries, manifest components/permissions, consumer R8 rules, LCP,
   or DRM binary were found;
 - Readium is BSD-3-Clause; embedded PhotoView/font attribution needs verification;
-- navigator brings Media3 1.10.0 while Katari currently catalogs 1.8.0.
+- navigator and Katari explicitly align on Media3 1.10.0;
+- Readium's navigator AAR embeds PhotoView 2.3.0 while Katari already owns that
+  dependency for manga and cover reading. A scoped artifact transform removes
+  only Readium's duplicate copy, preserving the existing generic interaction
+  dependency direction;
+- the telemetry/updater-enabled minified release assembly passes with the
+  built-in processor and reader runtime.
 
-Production adoption requires effective app dependency/Media3 validation against
-anime, minified R8 build, final APK-size comparison, complete attribution,
-hostile-archive limits, unsupported EPUB fixtures, and separately authorized
-device checks for rendering, pagination, gestures, lifecycle, restoration, and
-resource loading.
+Remaining production adoption work includes final APK-size comparison, complete
+attribution, hostile-archive limits, unsupported EPUB fixtures, and separately
+authorized device checks for rendering, pagination, gestures, lifecycle,
+restoration, and resource loading.
 
 ## Deferred scope
 

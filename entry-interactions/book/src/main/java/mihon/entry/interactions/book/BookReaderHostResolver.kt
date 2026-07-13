@@ -20,6 +20,7 @@ internal class BookReaderHostResolver(
     private val selectionCoordinator: BookProcessorSelectionCoordinator,
 ) {
     suspend fun resolve(entryId: Long, chapterId: Long): BookReaderHostState {
+        val request = BookReaderRequest(entryId, chapterId)
         val visibleEntry = entryRepository.getEntryById(entryId)
             ?: return unavailable(BookFailureReason.CONTENT_UNAVAILABLE, "The book entry no longer exists.")
         if (!visibleEntry.isBook()) {
@@ -61,10 +62,12 @@ internal class BookReaderHostResolver(
             is BookProcessorSelection.ChoiceRequired -> BookReaderHostState.ChoiceRequired(
                 descriptor = media.descriptor,
                 choices = selection.processors.map { BookProcessorChoice(it.id, it.displayName) },
+                request = request,
             )
             is BookProcessorSelection.Selected -> BookReaderHostState.ReaderSelected(
                 descriptor = media.descriptor,
-                processorName = selection.processor.displayName,
+                processor = selection.processor,
+                request = request,
             )
         }
     }
@@ -75,7 +78,11 @@ internal class BookReaderHostResolver(
         remember: Boolean,
     ): BookReaderHostState.ReaderSelected {
         val selected = selectionCoordinator.choose(state.descriptor, processorId, remember)
-        return BookReaderHostState.ReaderSelected(state.descriptor, selected.processor.displayName)
+        return BookReaderHostState.ReaderSelected(
+            descriptor = state.descriptor,
+            processor = selected.processor,
+            request = state.request,
+        )
     }
 
     private fun unavailable(reason: BookFailureReason, message: String): BookReaderHostState.Unavailable {
@@ -92,11 +99,13 @@ internal sealed interface BookReaderHostState {
     data class ChoiceRequired(
         val descriptor: BookContentDescriptor,
         val choices: List<BookProcessorChoice>,
+        val request: BookReaderRequest,
     ) : BookReaderHostState
 
     data class ReaderSelected(
         val descriptor: BookContentDescriptor,
-        val processorName: String,
+        val processor: BookProcessor,
+        val request: BookReaderRequest,
     ) : BookReaderHostState
 }
 

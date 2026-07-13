@@ -3,7 +3,10 @@
 
     <application>
         <activity
-            android:name="mihon.entry.interactions.book.BookReaderUnavailableActivity"
+            android:name="mihon.entry.interactions.book.BookReaderHostActivity"
+            android:exported="false" />
+        <activity
+            android:name="mihon.entry.interactions.book.epub.ReadiumEpubReaderActivity"
             android:exported="false" />
     </application>
 
