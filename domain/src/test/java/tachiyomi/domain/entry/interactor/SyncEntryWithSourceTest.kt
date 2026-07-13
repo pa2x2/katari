@@ -26,6 +26,7 @@ import tachiyomi.domain.chapter.model.NoChaptersException
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
+import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.service.EntryMetadataUpdateHooks
 import tachiyomi.domain.entry.service.FetchInterval
@@ -80,6 +81,31 @@ class SyncEntryWithSourceTest {
         sync(source, repository = repository)(entry(), fetchDetails = false)
 
         updates.captured.single().memo shouldBe newMemo
+    }
+
+    @Test
+    fun `chapter url changes rekey generic progress`() = runTest {
+        val existing = chapter(id = 1L, url = "/old")
+        val source = TestSource(chapters = listOf(sourceChapter(url = "/new")))
+        val repository = chapterRepository(listOf(existing))
+        val progressRepository = mockk<EntryProgressRepository>(relaxed = true)
+
+        sync(
+            source = source,
+            repository = repository,
+            progressRepository = progressRepository,
+        )(entry(), fetchDetails = false)
+
+        coVerify(exactly = 1) {
+            progressRepository.rekey(
+                entryId = 1L,
+                chapterId = 1L,
+                oldContentKey = "",
+                oldResourceKey = "/old",
+                newContentKey = "",
+                newResourceKey = "/new",
+            )
+        }
     }
 
     @Test
@@ -169,6 +195,7 @@ class SyncEntryWithSourceTest {
     private fun sync(
         source: UnifiedSource,
         repository: EntryChapterRepository = chapterRepository(emptyList()),
+        progressRepository: EntryProgressRepository = mockk(relaxed = true),
         entryRepository: EntryRepository = mockEntryRepository(),
         libraryPreferences: LibraryPreferences = LibraryPreferences(InMemoryPreferenceStore()),
         fetchInterval: FetchInterval = mockFetchInterval(),
@@ -181,6 +208,7 @@ class SyncEntryWithSourceTest {
         return SyncEntryWithSource(
             entryRepository = entryRepository,
             entryChapterRepository = repository,
+            entryProgressRepository = progressRepository,
             sourceManager = sourceManager,
             libraryPreferences = libraryPreferences,
             fetchInterval = fetchInterval,

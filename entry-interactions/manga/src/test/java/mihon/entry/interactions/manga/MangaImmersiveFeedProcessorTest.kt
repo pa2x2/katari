@@ -21,7 +21,9 @@ import okhttp3.Request
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.repository.EntryChapterRepository
+import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.history.model.HistoryUpdate
 import tachiyomi.domain.history.repository.HistoryRepository
 
@@ -56,8 +58,43 @@ class MangaImmersiveFeedProcessorTest {
     }
 
     @Test
+    fun `load restores generic page position`() = runTest {
+        val pages = (0..4).map { index -> EntryImagePage(index = index, url = "/page/$index") }
+        val source = mockk<EntryImageSource> {
+            every { id } returns 1L
+            every { name } returns "Source"
+            coEvery { getMedia(any(), any()) } returns EntryMedia.ImagePages(pages)
+            coEvery { getImageUrl(any()) } answers { "https://example.invalid/${firstArg<EntryImagePage>().index}" }
+            every { imageRequest(any(), any()) } answers {
+                Request.Builder().url(secondArg<String>()).build()
+            }
+        }
+        val progressRepository = mockk<EntryProgressRepository> {
+            coEvery { get(10L, "", "/chapter") } returns mangaProgressState(
+                entryId = 10L,
+                chapterId = 20L,
+                resourceKey = "/chapter",
+                pageIndex = 3L,
+                pageCount = 5L,
+                completed = false,
+                locatorUpdatedAt = 1L,
+                completionUpdatedAt = 0L,
+            )
+        }
+
+        val handle = MangaImmersiveFeedProcessor(entryProgressRepository = progressRepository).load(
+            context = mockk(relaxed = true),
+            entry = Entry.create().copy(id = 10L, type = EntryType.MANGA),
+            chapter = EntryChapter.create().copy(id = 20L, entryId = 10L, url = "/chapter"),
+            source = source,
+        ) as EntryImmersiveFeedHandle.ImagePages
+
+        (handle.delegate as MangaImmersiveFeedMedia).initialPageIndex shouldBe 3
+    }
+
+    @Test
     fun `persists page progress and reading time`() = runTest {
-        val chapter = EntryChapter.create().copy(id = 20L, entryId = 10L)
+        val chapter = EntryChapter.create().copy(id = 20L, entryId = 10L, url = "/chapter/20")
         val repository = mockk<EntryChapterRepository> {
             coEvery { getChapterById(20L) } returns chapter
             coEvery { update(any()) } returns true
@@ -65,8 +102,13 @@ class MangaImmersiveFeedProcessorTest {
         val history = mockk<HistoryRepository> {
             coEvery { upsertHistory(any()) } returns Unit
         }
+        val progressRepository = mockk<EntryProgressRepository> {
+            coEvery { get(10L, "", any()) } returns null
+            coEvery { mergeAndSyncChild(any()) } answers { firstArg() }
+        }
         val processor = MangaImmersiveFeedProcessor(
             entryChapterRepository = repository,
+            entryProgressRepository = progressRepository,
             historyRepository = history,
             readerIncognitoState = mockk {
                 every { isIncognito(1L) } returns false
@@ -79,10 +121,10 @@ class MangaImmersiveFeedProcessorTest {
             EntryImmersiveFeedProgress.ImagePage(pageIndex = 2, pageCount = 5, sessionDurationMs = 400L),
         )
 
-        val updated = slot<EntryChapter>()
-        coVerify { repository.update(capture(updated)) }
-        updated.captured.lastPageRead shouldBe 2L
-        updated.captured.read shouldBe false
+        val updated = slot<EntryProgressState>()
+        coVerify { progressRepository.mergeAndSyncChild(capture(updated)) }
+        updated.captured.pageIndex shouldBe 2L
+        updated.captured.completed shouldBe false
         val historyUpdate = slot<HistoryUpdate>()
         coVerify { history.upsertHistory(capture(historyUpdate)) }
         historyUpdate.captured.sessionReadDuration shouldBe 400L
@@ -90,7 +132,12 @@ class MangaImmersiveFeedProcessorTest {
 
     @Test
     fun `final page marks chapter read and syncs tracking once`() = runTest {
-        val chapter = EntryChapter.create().copy(id = 20L, entryId = 10L, chapterNumber = 3.0)
+        val chapter = EntryChapter.create().copy(
+            id = 20L,
+            entryId = 10L,
+            url = "/chapter/20",
+            chapterNumber = 3.0,
+        )
         val repository = mockk<EntryChapterRepository> {
             coEvery { getChapterById(20L) } returns chapter
             coEvery { update(any()) } returns true
@@ -98,8 +145,13 @@ class MangaImmersiveFeedProcessorTest {
         val tracking = mockk<EntryReaderTracking> {
             coEvery { updateChapterRead(any(), any(), any()) } returns Unit
         }
+        val progressRepository = mockk<EntryProgressRepository> {
+            coEvery { get(10L, "", any()) } returns null
+            coEvery { mergeAndSyncChild(any()) } answers { firstArg() }
+        }
         val processor = MangaImmersiveFeedProcessor(
             entryChapterRepository = repository,
+            entryProgressRepository = progressRepository,
             readerIncognitoState = mockk {
                 every { isIncognito(1L) } returns false
             },
@@ -111,9 +163,9 @@ class MangaImmersiveFeedProcessorTest {
             EntryImmersiveFeedProgress.ImagePage(pageIndex = 4, pageCount = 5, sessionDurationMs = 0L),
         )
 
-        val updated = slot<EntryChapter>()
-        coVerify { repository.update(capture(updated)) }
-        updated.captured.read shouldBe true
+        val updated = slot<EntryProgressState>()
+        coVerify { progressRepository.mergeAndSyncChild(capture(updated)) }
+        updated.captured.completed shouldBe true
         coVerify(exactly = 1) { tracking.updateChapterRead(any(), 10L, 3.0) }
     }
 
@@ -122,6 +174,7 @@ class MangaImmersiveFeedProcessorTest {
         val repository = mockk<EntryChapterRepository>(relaxed = true)
         val processor = MangaImmersiveFeedProcessor(
             entryChapterRepository = repository,
+            entryProgressRepository = mockk(relaxed = true),
             readerIncognitoState = mockk<EntryReaderIncognitoState> {
                 every { isIncognito(1L) } returns true
             },
@@ -133,7 +186,6 @@ class MangaImmersiveFeedProcessorTest {
         )
 
         coVerify(exactly = 0) { repository.getChapterById(any()) }
-        coVerify(exactly = 0) { repository.update(any()) }
     }
 
     private fun imageHandle(

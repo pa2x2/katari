@@ -24,6 +24,7 @@ class UpdatesViewQueriesTest {
         withSeededDatabase { database ->
             database.updatesViewQueries.filteredChapterNames(started = true) shouldContainExactlyInAnyOrder listOf(
                 "Manga started",
+                "Manga consumed",
                 "Anime partial",
                 "Anime partial unknown duration",
                 "Anime playback completed",
@@ -79,17 +80,17 @@ class UpdatesViewQueriesTest {
             identifier = null,
             sql = """
                 INSERT INTO chapters(
-                    _id, entry_id, url, name, read, last_page_read, date_upload, date_fetch
+                    _id, entry_id, url, name, read, date_upload, date_fetch
                 )
                 VALUES
-                    (11, 1, '/manga/untouched', 'Manga untouched', 0, 0, 10, 10),
-                    (12, 1, '/manga/started', 'Manga started', 0, 4, 10, 10),
-                    (13, 1, '/manga/consumed', 'Manga consumed', 1, 4, 10, 10),
-                    (21, 2, '/anime/untouched', 'Anime untouched', 0, 0, 10, 10),
-                    (22, 2, '/anime/partial', 'Anime partial', 0, 0, 10, 10),
-                    (23, 2, '/anime/completed', 'Anime playback completed', 0, 0, 10, 10),
-                    (24, 2, '/anime/consumed', 'Anime consumed', 1, 0, 10, 10),
-                    (25, 2, '/anime/partial-unknown', 'Anime partial unknown duration', 0, 0, 10, 10)
+                    (11, 1, '/manga/untouched', 'Manga untouched', 0, 10, 10),
+                    (12, 1, '/manga/started', 'Manga started', 0, 10, 10),
+                    (13, 1, '/manga/consumed', 'Manga consumed', 1, 10, 10),
+                    (21, 2, '/anime/untouched', 'Anime untouched', 0, 10, 10),
+                    (22, 2, '/anime/partial', 'Anime partial', 0, 10, 10),
+                    (23, 2, '/anime/completed', 'Anime playback completed', 0, 10, 10),
+                    (24, 2, '/anime/consumed', 'Anime consumed', 1, 10, 10),
+                    (25, 2, '/anime/partial-unknown', 'Anime partial unknown duration', 0, 10, 10)
             """.trimIndent(),
             parameters = 0,
         )
@@ -100,6 +101,7 @@ class UpdatesViewQueriesTest {
                     entry_id, chapter_id, resource_key, locator_kind, position, extent, completed, locator_updated_at
                 )
                 VALUES
+                    (1, 12, '/manga/started', 'page', 4, NULL, 0, 10),
                     (2, 22, '/anime/partial', 'time', 100, 1000, 0, 10),
                     (2, 23, '/anime/completed', 'time', 1000, 1000, 1, 10),
                     (2, 25, '/anime/partial-unknown', 'time', 100, NULL, 0, 10)

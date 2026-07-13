@@ -64,6 +64,12 @@ deleteByProfile:
 DELETE FROM entry_progress_state
 WHERE entry_id IN (SELECT _id FROM entries WHERE profile_id = :profileId);
 
+deleteByKey:
+DELETE FROM entry_progress_state
+WHERE entry_id = :entryId
+AND content_key = :contentKey
+AND resource_key = :resourceKey;
+
 upsert:
 INSERT INTO entry_progress_state(
     entry_id,

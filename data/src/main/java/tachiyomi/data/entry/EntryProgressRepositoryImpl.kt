@@ -66,6 +66,40 @@ class EntryProgressRepositoryImpl(
         }
     }
 
+    override suspend fun rekey(
+        entryId: Long,
+        chapterId: Long?,
+        oldContentKey: String,
+        oldResourceKey: String,
+        newContentKey: String,
+        newResourceKey: String,
+    ) {
+        if (oldContentKey == newContentKey && oldResourceKey == newResourceKey) return
+        handler.await(inTransaction = true) {
+            val old = entry_progress_stateQueries.getByKey(
+                entryId,
+                oldContentKey,
+                oldResourceKey,
+                EntryProgressStateMapper::mapState,
+            ).awaitAsOneOrNull() ?: return@await
+            val moved = old.copy(
+                chapterId = chapterId ?: old.chapterId,
+                contentKey = newContentKey,
+                resourceKey = newResourceKey,
+            )
+            val existing = entry_progress_stateQueries.getByKey(
+                entryId,
+                newContentKey,
+                newResourceKey,
+                EntryProgressStateMapper::mapState,
+            ).awaitAsOneOrNull()
+            val merged = existing?.mergeWith(moved) ?: moved
+            upsertProgress(merged)
+            entry_progress_stateQueries.deleteByKey(entryId, oldContentKey, oldResourceKey)
+            syncChildCompletion(merged)
+        }
+    }
+
     private suspend fun Database.mergeProgress(incoming: EntryProgressState): EntryProgressState {
         val current = entry_progress_stateQueries.getByKey(
             entryId = incoming.entryId,
@@ -106,7 +140,6 @@ class EntryProgressRepositoryImpl(
             scanlator = null,
             read = state.completed,
             bookmark = null,
-            lastPageRead = null,
             chapterNumber = null,
             sourceOrder = null,
             dateFetch = null,

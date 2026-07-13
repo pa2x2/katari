@@ -323,7 +323,7 @@ class AnimeEntryInteractionPluginTest {
                     chapter(id = 2L, read = true),
                     chapter(id = 3L, read = false),
                     chapter(id = 4L, read = false),
-                    chapter(id = 5L, read = false, lastPageRead = 4L),
+                    chapter(id = 5L, read = false),
                 ),
             ),
         ).first()
@@ -980,7 +980,6 @@ class AnimeEntryInteractionPluginTest {
         entryId: Long = 1L,
         name: String = "Episode",
         read: Boolean = false,
-        lastPageRead: Long = 0L,
         sourceOrder: Long = 0L,
         dateUpload: Long = 0L,
         chapterNumber: Double = 0.0,
@@ -991,7 +990,6 @@ class AnimeEntryInteractionPluginTest {
             url = "/episode/$id",
             name = name,
             read = read,
-            lastPageRead = lastPageRead,
             sourceOrder = sourceOrder,
             dateUpload = dateUpload,
             chapterNumber = chapterNumber,
@@ -1145,6 +1143,15 @@ class AnimeEntryInteractionPluginTest {
         override suspend fun merge(state: EntryProgressState): EntryProgressState = state.also(::record)
 
         override suspend fun mergeAndSyncChild(state: EntryProgressState): EntryProgressState = state.also(::record)
+
+        override suspend fun rekey(
+            entryId: Long,
+            chapterId: Long?,
+            oldContentKey: String,
+            oldResourceKey: String,
+            newContentKey: String,
+            newResourceKey: String,
+        ) = Unit
 
         private fun record(state: EntryProgressState) {
             states.removeAll { it.identity == state.identity }

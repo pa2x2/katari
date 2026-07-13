@@ -148,7 +148,7 @@ class DomainModule : InjektModule {
         addFactory { NetworkToLocalEntry(get()) }
         addFactory { EntryLibraryProgressResolver(entryLibraryProgressCalculators(get())) }
         addFactory { GetLibraryEntries(get(), get(), get(), get(), get(), get(), get()) }
-        addFactory { SyncEntryWithSource(get(), get(), get(), get(), get(), get()) }
+        addFactory { SyncEntryWithSource(get(), get(), get(), get(), get(), get(), get()) }
         addFactory { GetDuplicateLibraryEntries(get(), get(), get(), get(), get()) }
         addFactory { GetMergedEntry(get()) }
         addFactory { UpdateMergedEntry(get(), get()) }

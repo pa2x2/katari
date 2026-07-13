@@ -363,6 +363,15 @@ class VideoPlayerViewModelTest {
 
         override suspend fun mergeAndSyncChild(state: EntryProgressState): EntryProgressState = state.also(::record)
 
+        override suspend fun rekey(
+            entryId: Long,
+            chapterId: Long?,
+            oldContentKey: String,
+            oldResourceKey: String,
+            newContentKey: String,
+            newResourceKey: String,
+        ) = Unit
+
         private fun record(state: EntryProgressState) {
             states.removeAll { it.identity == state.identity }
             states += state

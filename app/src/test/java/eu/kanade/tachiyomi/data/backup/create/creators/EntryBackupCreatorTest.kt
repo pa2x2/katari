@@ -58,6 +58,7 @@ class EntryBackupCreatorTest {
 
         decoded.type shouldBe type
         decoded.chapters.map { it.url } shouldBe if (chaptersEnabled) listOf(chapter.url) else emptyList()
+        decoded.chapters.map { it.lastPageRead } shouldBe if (chaptersEnabled) listOf(0L) else emptyList()
         decoded.playbackStates shouldBe emptyList()
         decoded.progressStates.map { it.resourceKey } shouldBe if (chaptersEnabled) {
             listOf(chapter.url)

@@ -125,6 +125,26 @@ class EntryProgressRepositoryImplTest {
         }
     }
 
+    @Test
+    fun `rekey moves progress identity when a source changes its child url`() = runTest {
+        withDatabase { _, repository ->
+            val state = state()
+            repository.upsert(state)
+
+            repository.rekey(
+                entryId = 1,
+                chapterId = 2,
+                oldContentKey = "",
+                oldResourceKey = "/chapter",
+                newContentKey = "",
+                newResourceKey = "/chapter-new",
+            )
+
+            repository.get(1, "", "/chapter") shouldBe null
+            repository.get(1, "", "/chapter-new") shouldBe state.copy(resourceKey = "/chapter-new")
+        }
+    }
+
     private suspend fun withDatabase(block: suspend (Database, EntryProgressRepositoryImpl) -> Unit) {
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         try {

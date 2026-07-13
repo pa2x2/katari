@@ -373,6 +373,7 @@ private fun EntryScreenSmallImpl(
             }
             SharedEntryBottomActionMenu(
                 selected = selectedChapters,
+                childProgressLabels = state.childProgressLabels,
                 onMultiBookmarkClicked = onMultiBookmarkClicked,
                 onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
                 onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked,
@@ -653,6 +654,7 @@ fun EntryScreenLargeImpl(
                 }
                 SharedEntryBottomActionMenu(
                     selected = selectedChapters,
+                    childProgressLabels = state.childProgressLabels,
                     onMultiBookmarkClicked = onMultiBookmarkClicked,
                     onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
                     onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked,
@@ -850,6 +852,7 @@ private fun MergeNotice(
 @Composable
 private fun SharedEntryBottomActionMenu(
     selected: List<EntryChapterList.Item>,
+    childProgressLabels: Map<Long, EntryChildProgressLabel>,
     onMultiBookmarkClicked: (List<EntryChapter>, bookmarked: Boolean) -> Unit,
     onMultiMarkAsReadClicked: (List<EntryChapter>, markAsRead: Boolean) -> Unit,
     onMarkPreviousAsReadClicked: (EntryChapter) -> Unit,
@@ -874,7 +877,7 @@ private fun SharedEntryBottomActionMenu(
         }.takeIf { selected.fastAny { !it.chapter.read } },
         onMarkAsUnreadClicked = {
             onMultiMarkAsReadClicked(selected.fastMap { it.chapter }, false)
-        }.takeIf { selected.fastAny { it.chapter.read || it.chapter.lastPageRead > 0L } },
+        }.takeIf { selected.fastAny { it.chapter.read || it.chapter.id in childProgressLabels } },
         markAsReadLabel = selected.map { it.entry.type }.entrySelectionActionLabels().markAsReadLabel,
         markAsUnreadLabel = selected.map { it.entry.type }.entrySelectionActionLabels().markAsUnreadLabel,
         markPreviousAsReadLabel = selected.map { it.entry.type }

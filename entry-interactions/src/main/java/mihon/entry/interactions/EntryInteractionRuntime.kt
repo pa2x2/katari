@@ -72,6 +72,7 @@ fun InjektRegistrar.addEntryInteractionRuntime(
                     MangaEntryInteractionDependencies(
                         getEntryWithChapters = get(),
                         entryChapterRepository = get(),
+                        entryProgressRepository = get(),
                         filterEntryChaptersForDownload = FilterEntryChaptersForDownload(get(), get(), get()),
                         childGroupFilterDataSource = dependencies.mangaChildGroupFilterDataSource,
                         downloadPreferences = get(),

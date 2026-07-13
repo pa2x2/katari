@@ -44,6 +44,8 @@ import mihon.entry.interactions.EntryReaderTracking
 import mihon.entry.interactions.manga.download.DownloadManager
 import mihon.entry.interactions.manga.download.DownloadProvider
 import mihon.entry.interactions.manga.download.model.MangaDownload
+import mihon.entry.interactions.manga.mangaProgressState
+import mihon.entry.interactions.manga.pageIndex
 import mihon.entry.interactions.reader.settings.ReaderOrientation
 import mihon.entry.interactions.reader.settings.ReaderPreferences
 import mihon.entry.interactions.reader.settings.ReaderTrackPreferences
@@ -62,6 +64,7 @@ import tachiyomi.domain.entry.interactor.SetEntryViewerFlags
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
+import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.service.sortedForReading
 import tachiyomi.domain.history.interactor.UpsertHistory
@@ -93,6 +96,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
     private val getEntry: GetEntry = Injekt.get(),
     private val getMergedEntry: GetMergedEntry = Injekt.get(),
     private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
+    private val entryProgressRepository: EntryProgressRepository = Injekt.get(),
     private val entryRepository: EntryRepository = Injekt.get(),
     private val upsertHistory: UpsertHistory = Injekt.get(),
     private val setEntryViewerFlags: SetEntryViewerFlags = Injekt.get(),
@@ -163,6 +167,9 @@ internal class ReaderViewModel @JvmOverloads constructor(
             ?: error("Entry ${manga.id} not found")
         val chapters = runBlocking { getAllEntryChapters(manga.id, applyScanlatorFilter = true) }
         val mergedEntryIds = chapters.map { it.entryId }.distinct()
+        val progressByChapterId = mergedEntryIds
+            .flatMap { entryId -> runBlocking { entryProgressRepository.getByEntryId(entryId) } }
+            .associateBy { it.chapterId }
         val mangaById = mergedEntryIds.associateWith { entryId ->
             runBlocking { getEntry.await(entryId) }
         }
@@ -237,7 +244,9 @@ internal class ReaderViewModel @JvmOverloads constructor(
                 ReaderChapter(
                     chapter = domainChapter,
                     manga = originManga,
-                )
+                ).apply {
+                    requestedPage = progressByChapterId[domainChapter.id]?.pageIndex?.toInt() ?: 0
+                }
             }
     }
 
@@ -254,8 +263,6 @@ internal class ReaderViewModel @JvmOverloads constructor(
                     // Restore from SavedState
                     currentChapter.requestedPage = chapterPageIndex
                     initialPageIndexPending = false
-                } else if (!currentChapter.chapter.read) {
-                    currentChapter.requestedPage = currentChapter.chapter.last_page_read
                 }
                 chapterId = currentChapter.chapter.id!!
             }
@@ -578,20 +585,25 @@ internal class ReaderViewModel @JvmOverloads constructor(
         chapterPageIndex = pageIndex
 
         if (!incognitoMode && page.status !is Page.State.Error) {
-            readerChapter.chapter.last_page_read = pageIndex
-
             if (readerChapter.pages?.lastIndex == pageIndex) {
                 updateChapterProgressOnComplete(readerChapter)
             }
 
             val entryChapter = readerChapter.chapter.toDomainChapter()?.toEntryChapter()
                 ?: return
-            entryChapterRepository.updateAll(
-                listOf(
-                    entryChapter.copy(
-                        read = readerChapter.chapter.read,
-                        lastPageRead = readerChapter.chapter.last_page_read.toLong(),
-                    ),
+            val current = entryProgressRepository.get(entryChapter.entryId, "", entryChapter.url)
+            val timestamp = System.currentTimeMillis()
+            val completedNow = readerChapter.chapter.read && current?.completed != true
+            entryProgressRepository.mergeAndSyncChild(
+                mangaProgressState(
+                    entryId = entryChapter.entryId,
+                    chapterId = entryChapter.id,
+                    resourceKey = entryChapter.url,
+                    pageIndex = pageIndex.toLong(),
+                    pageCount = readerChapter.pages?.size?.toLong(),
+                    completed = current?.completed == true || readerChapter.chapter.read,
+                    locatorUpdatedAt = timestamp,
+                    completionUpdatedAt = if (completedNow) timestamp else current?.completionUpdatedAt ?: 0L,
                 ),
             )
         }
@@ -618,7 +630,22 @@ internal class ReaderViewModel @JvmOverloads constructor(
                     null
                 }
             }
-        entryChapterRepository.updateAll(duplicateUnreadChapters)
+        val timestamp = System.currentTimeMillis()
+        duplicateUnreadChapters.forEach { chapter ->
+            val current = entryProgressRepository.get(chapter.entryId, "", chapter.url)
+            entryProgressRepository.mergeAndSyncChild(
+                mangaProgressState(
+                    entryId = chapter.entryId,
+                    chapterId = chapter.id,
+                    resourceKey = chapter.url,
+                    pageIndex = current?.pageIndex,
+                    pageCount = current?.locator?.extent,
+                    completed = true,
+                    locatorUpdatedAt = current?.locatorUpdatedAt ?: 0L,
+                    completionUpdatedAt = timestamp,
+                ),
+            )
+        }
     }
 
     fun restartReadTimer() {
@@ -733,7 +760,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
             if (currChapters != null) {
                 // Save current page
                 val currChapter = currChapters.currChapter
-                currChapter.requestedPage = currChapter.chapter.last_page_read
+                currChapter.requestedPage = chapterPageIndex.coerceAtLeast(0)
 
                 mutableState.update {
                     it.copy(
@@ -771,7 +798,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
             if (currChapters != null) {
                 // Save current page
                 val currChapter = currChapters.currChapter
-                currChapter.requestedPage = currChapter.chapter.last_page_read
+                currChapter.requestedPage = chapterPageIndex.coerceAtLeast(0)
 
                 mutableState.update {
                     it.copy(

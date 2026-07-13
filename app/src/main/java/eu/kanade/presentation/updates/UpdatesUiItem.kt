@@ -261,7 +261,7 @@ internal fun UnifiedUpdatesUiItem(
                 modifier = Modifier.weight(weight = 1f, fill = false),
             )
 
-            val readProgress = update.update.lastPageRead
+            val readProgress = update.update.progressPosition
                 .takeIf { !update.update.read }
                 ?.let { update.entryType.partialProgressLabel(it) }
             if (readProgress != null) {

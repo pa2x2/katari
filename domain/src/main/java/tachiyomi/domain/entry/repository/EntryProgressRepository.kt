@@ -19,4 +19,13 @@ interface EntryProgressRepository {
     suspend fun merge(state: EntryProgressState): EntryProgressState
 
     suspend fun mergeAndSyncChild(state: EntryProgressState): EntryProgressState
+
+    suspend fun rekey(
+        entryId: Long,
+        chapterId: Long?,
+        oldContentKey: String,
+        oldResourceKey: String,
+        newContentKey: String,
+        newResourceKey: String,
+    )
 }

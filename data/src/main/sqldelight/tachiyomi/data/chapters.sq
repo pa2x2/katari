@@ -8,7 +8,6 @@ CREATE TABLE chapters(
     name TEXT NOT NULL,
     read INTEGER AS Boolean NOT NULL DEFAULT 0,
     bookmark INTEGER AS Boolean NOT NULL DEFAULT 0,
-    last_page_read INTEGER NOT NULL DEFAULT 0,
     chapter_number REAL NOT NULL DEFAULT 0,
     scanlator TEXT,
     date_upload INTEGER NOT NULL DEFAULT 0,
@@ -39,8 +38,7 @@ END;
 CREATE TRIGGER update_chapter_and_entry_version AFTER UPDATE ON chapters
 WHEN new.is_syncing = 0 AND (
     new.read != old.read OR
-    new.bookmark != old.bookmark OR
-    new.last_page_read != old.last_page_read
+    new.bookmark != old.bookmark
 )
 BEGIN
     UPDATE chapters SET version = version + 1
@@ -109,12 +107,12 @@ SET is_syncing = 0
 WHERE is_syncing = 1;
 
 insert:
-INSERT INTO chapters(entry_id, url, name, scanlator, read, bookmark, last_page_read, chapter_number, source_order, date_fetch, date_upload, last_modified_at, version, is_syncing, memo)
-VALUES (:entryId, :url, :name, :scanlator, :read, :bookmark, :lastPageRead, :chapterNumber, :sourceOrder, :dateFetch, :dateUpload, 0, :version, 0, :memo);
+INSERT INTO chapters(entry_id, url, name, scanlator, read, bookmark, chapter_number, source_order, date_fetch, date_upload, last_modified_at, version, is_syncing, memo)
+VALUES (:entryId, :url, :name, :scanlator, :read, :bookmark, :chapterNumber, :sourceOrder, :dateFetch, :dateUpload, 0, :version, 0, :memo);
 
 insertReturningId:
-INSERT INTO chapters(entry_id, url, name, scanlator, read, bookmark, last_page_read, chapter_number, source_order, date_fetch, date_upload, last_modified_at, version, is_syncing, memo)
-VALUES (:entryId, :url, :name, :scanlator, :read, :bookmark, :lastPageRead, :chapterNumber, :sourceOrder, :dateFetch, :dateUpload, 0, :version, 0, :memo)
+INSERT INTO chapters(entry_id, url, name, scanlator, read, bookmark, chapter_number, source_order, date_fetch, date_upload, last_modified_at, version, is_syncing, memo)
+VALUES (:entryId, :url, :name, :scanlator, :read, :bookmark, :chapterNumber, :sourceOrder, :dateFetch, :dateUpload, 0, :version, 0, :memo)
 RETURNING _id;
 
 update:
@@ -125,7 +123,6 @@ SET entry_id = coalesce(:entryId, entry_id),
     scanlator = coalesce(:scanlator, scanlator),
     read = coalesce(:read, read),
     bookmark = coalesce(:bookmark, bookmark),
-    last_page_read = coalesce(:lastPageRead, last_page_read),
     chapter_number = coalesce(:chapterNumber, chapter_number),
     source_order = coalesce(:sourceOrder, source_order),
     date_fetch = coalesce(:dateFetch, date_fetch),

@@ -176,11 +176,11 @@ data class EntryConsumptionStatus(
     val hasPartialProgress: Boolean,
 )
 
-fun EntryChapter.consumptionStatus(): EntryConsumptionStatus {
+fun EntryChapter.consumptionStatus(hasPartialProgress: Boolean = false): EntryConsumptionStatus {
     return EntryConsumptionStatus(
         consumed = read,
         bookmarked = bookmark,
-        hasPartialProgress = lastPageRead > 0,
+        hasPartialProgress = hasPartialProgress,
     )
 }
 

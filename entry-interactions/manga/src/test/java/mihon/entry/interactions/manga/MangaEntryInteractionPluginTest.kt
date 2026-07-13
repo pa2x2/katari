@@ -27,6 +27,7 @@ import mihon.entry.interactions.EntryDownloadState
 import mihon.entry.interactions.EntryInteractionPlugin
 import mihon.entry.interactions.EntryOpenOptions
 import mihon.entry.interactions.EntryPreviewSize
+import mihon.entry.interactions.EntryProgressResourceMapping
 import mihon.entry.interactions.createEntryInteractions
 import mihon.entry.interactions.manga.download.DownloadCache
 import mihon.entry.interactions.manga.download.DownloadManager
@@ -40,7 +41,9 @@ import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.repository.EntryChapterRepository
+import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.MR
 
@@ -73,7 +76,7 @@ class MangaEntryInteractionPluginTest {
 
     @Test
     fun `manga library progress preserves last read timestamp`() = runTest {
-        val state = mangaEntryLibraryProgressCalculator().calculate(
+        val state = mangaEntryLibraryProgressCalculator(FakeEntryProgressRepository(emptyList())).calculate(
             entry = entry(EntryType.MANGA),
             chapters = listOf(chapter(read = true)),
             lastRead = 1234L,
@@ -83,8 +86,33 @@ class MangaEntryInteractionPluginTest {
     }
 
     @Test
+    fun `manga library progress exposes generic partial page state`() = runTest {
+        val state = mangaEntryLibraryProgressCalculator(
+            FakeEntryProgressRepository(
+                listOf(pageProgress(chapterId = 2L, pageIndex = 4L, updatedAt = 2_000L)),
+            ),
+        ).calculate(
+            entry = entry(EntryType.MANGA),
+            chapters = listOf(chapter(id = 1L), chapter(id = 2L)),
+            lastRead = 1_000L,
+        )
+
+        state.progress.hasStarted shouldBe true
+        state.progress.inProgressItemId shouldBe 2L
+        state.progress.inProgressFraction shouldBe (4f / 9f)
+        state.lastRead shouldBe 2_000L
+        state.continueEntryId shouldBe 2L
+    }
+
+    @Test
     fun `manga child list preserves missing chapter insertion`() = runTest {
-        val interactions = createEntryInteractions(listOf(mangaEntryInteractionPlugin(dependencies())))
+        val interactions = createEntryInteractions(
+            listOf(
+                mangaEntryInteractionPlugin(
+                    dependencies(progressStates = listOf(pageProgress(chapterId = 7L, pageIndex = 4L))),
+                ),
+            ),
+        )
         val entry = entry(EntryType.MANGA).copy(
             chapterFlags = Entry.CHAPTER_SORTING_NUMBER or Entry.CHAPTER_SORT_ASC,
         )
@@ -139,12 +167,19 @@ class MangaEntryInteractionPluginTest {
 
     @Test
     fun `partial unread manga chapter returns chapter progress label`() = runTest {
-        val interactions = createEntryInteractions(listOf(mangaEntryInteractionPlugin(dependencies())))
+        val interactions = createEntryInteractions(
+            listOf(
+                mangaEntryInteractionPlugin(
+                    dependencies(progressStates = listOf(pageProgress(chapterId = 7L, pageIndex = 4L))),
+                ),
+            ),
+        )
 
         val labels = interactions.childList.progressLabels(
             EntryChildProgressRequest(
                 entry = entry(EntryType.MANGA),
-                chapters = listOf(chapter(id = 7L, read = false, lastPageRead = 4L)),
+                chapters = listOf(chapter(id = 7L, read = false)),
+                memberIds = listOf(1L),
             ),
         ).first()
 
@@ -154,12 +189,19 @@ class MangaEntryInteractionPluginTest {
 
     @Test
     fun `read manga chapter returns no progress label`() = runTest {
-        val interactions = createEntryInteractions(listOf(mangaEntryInteractionPlugin(dependencies())))
+        val interactions = createEntryInteractions(
+            listOf(
+                mangaEntryInteractionPlugin(
+                    dependencies(progressStates = listOf(pageProgress(chapterId = 7L, pageIndex = 4L))),
+                ),
+            ),
+        )
 
         val labels = interactions.childList.progressLabels(
             EntryChildProgressRequest(
                 entry = entry(EntryType.MANGA),
-                chapters = listOf(chapter(id = 7L, read = true, lastPageRead = 4L)),
+                chapters = listOf(chapter(id = 7L, read = true)),
+                memberIds = listOf(1L),
             ),
         ).first()
 
@@ -170,10 +212,15 @@ class MangaEntryInteractionPluginTest {
     fun `manga processors reject anime entries`() = runTest {
         val dependencies = dependencies()
         val openProcessor = MangaOpenProcessor()
-        val continueProcessor = MangaContinueProcessor(dependencies.getEntryWithChapters, openProcessor)
+        val continueProcessor = MangaContinueProcessor(
+            dependencies.getEntryWithChapters,
+            dependencies.entryProgressRepository,
+            openProcessor,
+        )
         val downloadProcessor = MangaDownloadProcessor(dependencies)
         val consumptionProcessor = MangaConsumptionProcessor(
             entryChapterRepository = dependencies.entryChapterRepository,
+            entryProgressRepository = dependencies.entryProgressRepository,
             downloadPreferences = dependencies.downloadPreferences,
             downloadManager = dependencies.downloadManager,
             sourceManager = dependencies.sourceManager,
@@ -200,6 +247,30 @@ class MangaEntryInteractionPluginTest {
     }
 
     @Test
+    fun `manga progress copy maps page state to target resource`() = runTest {
+        val progressRepository = FakeEntryProgressRepository(
+            listOf(pageProgress(entryId = 1L, chapterId = 10L, pageIndex = 4L)),
+        )
+        val processor = MangaProgressProcessor(progressRepository, FakeEntryChapterRepository(emptyList()))
+
+        processor.copy(
+            sourceEntry = entry(EntryType.MANGA, id = 1L),
+            targetEntry = entry(EntryType.MANGA, id = 2L),
+            resourceMappings = listOf(
+                EntryProgressResourceMapping(
+                    sourceResourceKey = "/chapter/10",
+                    targetResourceKey = "/chapter/20",
+                    targetChapterId = 20L,
+                ),
+            ),
+        )
+
+        progressRepository.upsertedStates.shouldContainExactly(
+            pageProgress(entryId = 2L, chapterId = 20L, pageIndex = 4L),
+        )
+    }
+
+    @Test
     fun `manga continue selects next unread chapter`() = runTest {
         val nextUnread = chapter(id = 3L, read = false, sourceOrder = 2L)
         val dependencies = dependencies(
@@ -211,6 +282,7 @@ class MangaEntryInteractionPluginTest {
         )
         val processor = MangaContinueProcessor(
             getEntryWithChapters = dependencies.getEntryWithChapters,
+            entryProgressRepository = dependencies.entryProgressRepository,
             openProcessor = MangaOpenProcessor(),
         )
 
@@ -228,7 +300,35 @@ class MangaEntryInteractionPluginTest {
                 siblingChapter,
             )
         }
-        val processor = MangaContinueProcessor(getEntryWithChapters, MangaOpenProcessor())
+        val processor = MangaContinueProcessor(
+            getEntryWithChapters,
+            FakeEntryProgressRepository(emptyList()),
+            MangaOpenProcessor(),
+        )
+
+        val result = processor.findNext(entry(EntryType.MANGA, id = 1L))
+
+        result shouldBe siblingChapter
+    }
+
+    @Test
+    fun `manga continue prefers most recently updated partial chapter from merged member`() = runTest {
+        val rootChapter = chapter(id = 1L, entryId = 1L, read = false)
+        val siblingChapter = chapter(id = 3L, entryId = 2L, read = false)
+        val getEntryWithChapters = mockk<GetEntryWithChapters> {
+            coEvery { awaitChapters(1L) } returns listOf(rootChapter, siblingChapter)
+        }
+        val progressRepository = FakeEntryProgressRepository(
+            listOf(
+                pageProgress(entryId = 1L, chapterId = 1L, pageIndex = 2L, updatedAt = 10L),
+                pageProgress(entryId = 2L, chapterId = 3L, pageIndex = 4L, updatedAt = 20L),
+            ),
+        )
+        val processor = MangaContinueProcessor(
+            getEntryWithChapters,
+            progressRepository,
+            MangaOpenProcessor(),
+        )
 
         val result = processor.findNext(entry(EntryType.MANGA, id = 1L))
 
@@ -250,6 +350,7 @@ class MangaEntryInteractionPluginTest {
                     registry.registerContinueProcessor(
                         MangaContinueProcessor(
                             getEntryWithChapters = dependencies.getEntryWithChapters,
+                            entryProgressRepository = dependencies.entryProgressRepository,
                             openProcessor = openProcessor,
                         ),
                     )
@@ -297,7 +398,8 @@ class MangaEntryInteractionPluginTest {
                 chapter(id = 2L, read = true),
             ),
         )
-        val processor = mangaConsumptionProcessor(repository)
+        val progressRepository = FakeEntryProgressRepository(emptyList())
+        val processor = mangaConsumptionProcessor(repository, progressRepository = progressRepository)
 
         processor.setConsumed(
             entry = entry(EntryType.MANGA),
@@ -308,34 +410,40 @@ class MangaEntryInteractionPluginTest {
             consumed = true,
         )
 
-        repository.updatedChapters.shouldContainExactly(
-            chapter(id = 1L, read = true),
-        )
+        progressRepository.upsertedStates.map { it.chapterId to it.completed }
+            .shouldContainExactly(1L to true)
     }
 
     @Test
     fun `manga consumption marks unread and resets progress`() = runTest {
         val repository = FakeEntryChapterRepository(
             listOf(
-                chapter(id = 1L, read = true, lastPageRead = 5L),
-                chapter(id = 2L, read = false, lastPageRead = 4L),
+                chapter(id = 1L, read = true),
+                chapter(id = 2L, read = false),
             ),
         )
-        val processor = mangaConsumptionProcessor(repository)
+        val progressRepository = FakeEntryProgressRepository(
+            listOf(
+                pageProgress(chapterId = 1L, pageIndex = 5L, completed = true),
+                pageProgress(chapterId = 2L, pageIndex = 4L),
+            ),
+        )
+        val processor = mangaConsumptionProcessor(repository, progressRepository = progressRepository)
 
         processor.setConsumed(
             entry = entry(EntryType.MANGA),
             chapters = listOf(
-                chapter(id = 1L, read = true, lastPageRead = 5L),
-                chapter(id = 2L, read = false, lastPageRead = 4L),
+                chapter(id = 1L, read = true),
+                chapter(id = 2L, read = false),
             ),
             consumed = false,
         )
 
-        repository.updatedChapters.shouldContainExactly(
-            chapter(id = 1L, read = false, lastPageRead = 0L),
-            chapter(id = 2L, read = false, lastPageRead = 0L),
-        )
+        progressRepository.upsertedStates.map { Triple(it.chapterId, it.pageIndex, it.completed) }
+            .shouldContainExactly(
+                Triple(1L, 0L, false),
+                Triple(2L, 0L, false),
+            )
     }
 
     @Test
@@ -353,7 +461,7 @@ class MangaEntryInteractionPluginTest {
         val chapter = chapter(id = 1L, read = false)
 
         processor.setConsumed(entry, listOf(chapter), consumed = true)
-        processor.setConsumed(entry, listOf(chapter.copy(read = true, lastPageRead = 5L)), consumed = false)
+        processor.setConsumed(entry, listOf(chapter.copy(read = true)), consumed = false)
 
         verify(exactly = 1) {
             downloadManager.deleteChapters(
@@ -464,6 +572,7 @@ class MangaEntryInteractionPluginTest {
 
     private fun dependencies(
         chapters: List<EntryChapter> = emptyList(),
+        progressStates: List<EntryProgressState> = emptyList(),
         chapterDownloaded: Boolean = false,
         entryInteractionPreferences: EntryInteractionPreferences =
             EntryInteractionPreferences(InMemoryPreferenceStore()),
@@ -473,6 +582,7 @@ class MangaEntryInteractionPluginTest {
                 coEvery { awaitChapters(any()) } returns chapters.sortedBy { it.sourceOrder }
             },
             entryChapterRepository = FakeEntryChapterRepository(chapters),
+            entryProgressRepository = FakeEntryProgressRepository(progressStates),
             filterEntryChaptersForDownload = mockk(relaxed = true),
             childGroupFilterDataSource = FakeEntryChildGroupFilterDataSource(),
             downloadPreferences = mockDownloadPreferences(),
@@ -485,12 +595,14 @@ class MangaEntryInteractionPluginTest {
 
     private fun mangaConsumptionProcessor(
         repository: EntryChapterRepository,
+        progressRepository: EntryProgressRepository = FakeEntryProgressRepository(emptyList()),
         removeAfterMarkedAsRead: Boolean = false,
         downloadManager: DownloadManager = mockDownloadManager(chapterDownloaded = false),
         sourceManager: SourceManager = mockSourceManager(),
     ): MangaConsumptionProcessor {
         return MangaConsumptionProcessor(
             entryChapterRepository = repository,
+            entryProgressRepository = progressRepository,
             downloadPreferences = mockDownloadPreferences(removeAfterMarkedAsRead),
             downloadManager = downloadManager,
             sourceManager = sourceManager,
@@ -552,7 +664,6 @@ class MangaEntryInteractionPluginTest {
         name: String = "Chapter",
         read: Boolean = false,
         bookmark: Boolean = false,
-        lastPageRead: Long = 0L,
         sourceOrder: Long = 0L,
         dateUpload: Long = 0L,
         chapterNumber: Double = 0.0,
@@ -560,13 +671,32 @@ class MangaEntryInteractionPluginTest {
         return EntryChapter.create().copy(
             id = id,
             entryId = entryId,
+            url = "/chapter/$id",
             name = name,
             read = read,
             bookmark = bookmark,
-            lastPageRead = lastPageRead,
             sourceOrder = sourceOrder,
             dateUpload = dateUpload,
             chapterNumber = chapterNumber,
+        )
+    }
+
+    private fun pageProgress(
+        entryId: Long = 1L,
+        chapterId: Long,
+        pageIndex: Long,
+        completed: Boolean = false,
+        updatedAt: Long = 1L,
+    ): EntryProgressState {
+        return mangaProgressState(
+            entryId = entryId,
+            chapterId = chapterId,
+            resourceKey = "/chapter/$chapterId",
+            pageIndex = pageIndex,
+            pageCount = 10L,
+            completed = completed,
+            locatorUpdatedAt = updatedAt,
+            completionUpdatedAt = updatedAt,
         )
     }
 
@@ -621,6 +751,51 @@ class MangaEntryInteractionPluginTest {
 
         override suspend fun getChapterByUrlAndEntryId(url: String, entryId: Long): EntryChapter? {
             return chapters.firstOrNull { it.url == url && it.entryId == entryId }
+        }
+    }
+
+    private class FakeEntryProgressRepository(
+        initialStates: List<EntryProgressState>,
+    ) : EntryProgressRepository {
+        private val states = initialStates.toMutableList()
+        val upsertedStates = mutableListOf<EntryProgressState>()
+
+        override suspend fun get(entryId: Long, contentKey: String, resourceKey: String): EntryProgressState? {
+            return states.firstOrNull {
+                it.entryId == entryId && it.contentKey == contentKey && it.resourceKey == resourceKey
+            }
+        }
+
+        override suspend fun getByEntryId(entryId: Long): List<EntryProgressState> =
+            states.filter { it.entryId == entryId }
+
+        override fun getByEntryIdAsFlow(entryId: Long): Flow<List<EntryProgressState>> =
+            flowOf(states.filter { it.entryId == entryId })
+
+        override fun getByChapterIdAsFlow(chapterId: Long): Flow<List<EntryProgressState>> =
+            flowOf(states.filter { it.chapterId == chapterId })
+
+        override suspend fun upsert(state: EntryProgressState) = record(state)
+
+        override suspend fun upsertAndSyncChild(state: EntryProgressState) = record(state)
+
+        override suspend fun merge(state: EntryProgressState): EntryProgressState = state.also(::record)
+
+        override suspend fun mergeAndSyncChild(state: EntryProgressState): EntryProgressState = state.also(::record)
+
+        override suspend fun rekey(
+            entryId: Long,
+            chapterId: Long?,
+            oldContentKey: String,
+            oldResourceKey: String,
+            newContentKey: String,
+            newResourceKey: String,
+        ) = Unit
+
+        private fun record(state: EntryProgressState) {
+            states.removeAll { it.identity == state.identity }
+            states += state
+            upsertedStates += state
         }
     }
 

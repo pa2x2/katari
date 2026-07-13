@@ -1,0 +1,233 @@
+DROP VIEW IF EXISTS libraryView;
+DROP VIEW IF EXISTS historyView;
+DROP VIEW IF EXISTS updatesView;
+
+INSERT INTO entry_progress_state(
+    entry_id,
+    chapter_id,
+    content_key,
+    resource_key,
+    locator_kind,
+    position,
+    completed,
+    locator_updated_at,
+    completion_updated_at
+)
+SELECT
+    C.entry_id,
+    C._id,
+    '',
+    CASE
+        WHEN length(trim(C.url)) > 0 THEN C.url
+        ELSE 'legacy-chapter:' || C._id
+    END,
+    'page',
+    CASE WHEN C.last_page_read > 0 THEN C.last_page_read ELSE NULL END,
+    C.read,
+    max(coalesce(H.last_read, 0), 0),
+    max(coalesce(H.last_read, 0), 0)
+FROM chapters C
+JOIN entries ENT ON ENT._id = C.entry_id
+LEFT JOIN history H ON H.entry_id = C.entry_id AND H.chapter_id = C._id
+WHERE ENT.type = 'manga'
+AND (C.read != 0 OR C.last_page_read > 0)
+ON CONFLICT(entry_id, content_key, resource_key) DO NOTHING;
+
+UPDATE chapters
+SET read = coalesce((
+    SELECT EPS.completed
+    FROM entry_progress_state EPS
+    WHERE EPS.entry_id = chapters.entry_id
+    AND EPS.chapter_id = chapters._id
+    AND EPS.content_key = ''
+    LIMIT 1
+), read)
+WHERE entry_id IN (SELECT _id FROM entries WHERE type = 'manga');
+
+CREATE TABLE chapters_new(
+    _id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entry_id INTEGER NOT NULL,
+    url TEXT NOT NULL,
+    name TEXT NOT NULL,
+    read INTEGER NOT NULL DEFAULT 0,
+    bookmark INTEGER NOT NULL DEFAULT 0,
+    chapter_number REAL NOT NULL DEFAULT 0,
+    scanlator TEXT,
+    date_upload INTEGER NOT NULL DEFAULT 0,
+    date_fetch INTEGER NOT NULL DEFAULT 0,
+    source_order INTEGER NOT NULL DEFAULT 0,
+    last_modified_at INTEGER NOT NULL DEFAULT 0,
+    version INTEGER NOT NULL DEFAULT 0,
+    is_syncing INTEGER NOT NULL DEFAULT 0,
+    memo BLOB NOT NULL DEFAULT '{}',
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
+);
+
+INSERT INTO chapters_new(
+    _id, entry_id, url, name, read, bookmark, chapter_number, scanlator,
+    date_upload, date_fetch, source_order, last_modified_at, version, is_syncing, memo
+)
+SELECT
+    _id, entry_id, url, name, read, bookmark, chapter_number, scanlator,
+    date_upload, date_fetch, source_order, last_modified_at, version, is_syncing, memo
+FROM chapters;
+
+DROP TRIGGER IF EXISTS detach_entry_progress_state_chapter;
+DROP TABLE chapters;
+ALTER TABLE chapters_new RENAME TO chapters;
+
+CREATE INDEX idx_chapters_entry_id ON chapters(entry_id);
+CREATE INDEX idx_chapters_unread_by_entry ON chapters(entry_id, read) WHERE read = 0;
+CREATE INDEX idx_chapters_url ON chapters(url);
+CREATE UNIQUE INDEX idx_chapters_entry_url ON chapters(entry_id, url);
+CREATE UNIQUE INDEX idx_chapters_entry_id_id ON chapters(entry_id, _id);
+
+CREATE TRIGGER update_last_modified_at_chapters
+AFTER UPDATE ON chapters
+FOR EACH ROW
+BEGIN
+    UPDATE chapters
+    SET last_modified_at = strftime('%s', 'now')
+    WHERE _id = new._id;
+END;
+
+CREATE TRIGGER update_chapter_and_entry_version AFTER UPDATE ON chapters
+WHEN new.is_syncing = 0 AND (
+    new.read != old.read OR
+    new.bookmark != old.bookmark
+)
+BEGIN
+    UPDATE chapters SET version = version + 1
+    WHERE _id = new._id;
+
+    UPDATE entries SET version = version + 1
+    WHERE _id = new.entry_id AND (SELECT is_syncing FROM entries WHERE _id = new.entry_id) = 0;
+END;
+
+CREATE TRIGGER detach_entry_progress_state_chapter
+BEFORE DELETE ON chapters
+FOR EACH ROW
+BEGIN
+    UPDATE entry_progress_state
+    SET chapter_id = NULL
+    WHERE chapter_id = old._id;
+END;
+
+CREATE VIEW libraryView AS
+SELECT
+    ENT.*,
+    coalesce(C.total, 0) AS totalCount,
+    coalesce(C.readCount, 0) AS readCount,
+    coalesce(C.latestUpload, 0) AS latestUpload,
+    coalesce(C.fetchedAt, 0) AS chapterFetchedAt,
+    coalesce(C.lastRead, 0) AS lastRead,
+    coalesce(C.bookmarkCount, 0) AS bookmarkCount,
+    coalesce(EC.categories, '0') AS categories
+FROM entries ENT
+LEFT JOIN (
+    SELECT
+        chapters.entry_id,
+        count(*) AS total,
+        sum(read) AS readCount,
+        coalesce(max(chapters.date_upload), 0) AS latestUpload,
+        coalesce(max(history.last_read), 0) AS lastRead,
+        coalesce(max(chapters.date_fetch), 0) AS fetchedAt,
+        sum(chapters.bookmark) AS bookmarkCount
+    FROM chapters
+    LEFT JOIN excluded_scanlators
+    ON chapters.entry_id = excluded_scanlators.entry_id
+    AND chapters.scanlator = excluded_scanlators.scanlator
+    LEFT JOIN history
+    ON chapters._id = history.chapter_id
+    WHERE excluded_scanlators.scanlator IS NULL
+    GROUP BY chapters.entry_id
+) AS C
+ON ENT._id = C.entry_id
+LEFT JOIN (
+    SELECT profile_id, entry_id, group_concat(category_id) AS categories
+    FROM entries_categories
+    GROUP BY profile_id, entry_id
+) AS EC
+ON EC.profile_id = ENT.profile_id
+AND EC.entry_id = ENT._id
+WHERE ENT.favorite = 1;
+
+CREATE VIEW historyView AS
+SELECT
+    ENT.profile_id,
+    history._id AS id,
+    ENT._id AS entryId,
+    ENT.type,
+    chapters._id AS chapterId,
+    ENT.title,
+    ENT.thumbnail_url AS thumbnailUrl,
+    ENT.source,
+    ENT.favorite,
+    ENT.cover_last_modified,
+    chapters.name AS chapterName,
+    chapters.chapter_number AS chapterNumber,
+    history.last_read AS readAt,
+    history.time_read AS readDuration,
+    max_last_read.last_read AS maxReadAt,
+    max_last_read.chapter_id AS maxReadAtChapterId
+FROM entries ENT
+JOIN chapters
+ON ENT._id = chapters.entry_id
+JOIN history
+ON chapters._id = history.chapter_id
+JOIN (
+    SELECT chapters.entry_id, chapters._id AS chapter_id, MAX(history.last_read) AS last_read
+    FROM chapters JOIN history
+    ON chapters._id = history.chapter_id
+    GROUP BY chapters.entry_id
+) AS max_last_read
+ON chapters.entry_id = max_last_read.entry_id;
+
+CREATE VIEW updatesView AS
+SELECT
+    entries.profile_id,
+    entries._id AS entryId,
+    entries.type AS entryType,
+    entries.title AS entryTitle,
+    chapters._id AS chapterId,
+    chapters.name AS chapterName,
+    chapters.scanlator,
+    chapters.url AS chapterUrl,
+    chapters.read,
+    chapters.bookmark,
+    CASE
+        WHEN chapters.read != 0 OR EXISTS (
+            SELECT 1
+            FROM entry_progress_state
+            WHERE entry_progress_state.entry_id = chapters.entry_id
+            AND entry_progress_state.chapter_id = chapters._id
+            AND (
+                entry_progress_state.completed != 0
+                OR coalesce(entry_progress_state.position, 0) > 0
+            )
+        ) THEN 1
+        ELSE 0
+    END AS started,
+    coalesce((
+        SELECT max(entry_progress_state.position)
+        FROM entry_progress_state
+        WHERE entry_progress_state.entry_id = chapters.entry_id
+        AND entry_progress_state.chapter_id = chapters._id
+        AND entry_progress_state.locator_kind = 'page'
+        AND entry_progress_state.completed = 0
+    ), 0) AS progressPosition,
+    entries.source,
+    entries.favorite,
+    entries.thumbnail_url AS thumbnailUrl,
+    entries.cover_last_modified AS coverLastModified,
+    chapters.date_upload AS dateUpload,
+    chapters.date_fetch AS datefetch,
+    excluded_scanlators.scanlator AS excludedScanlator
+FROM entries JOIN chapters
+ON entries._id = chapters.entry_id
+LEFT JOIN excluded_scanlators
+ON entries._id = excluded_scanlators.entry_id
+AND chapters.scanlator = excluded_scanlators.scanlator
+WHERE favorite = 1
+AND date_fetch > date_added
+ORDER BY date_fetch DESC;

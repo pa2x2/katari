@@ -205,7 +205,13 @@ class EntryRestorer(
             restoreExcludedScanlators(entry, backupEntry.excludedScanlators)
         }
         restorePlaybackPreferences(entry, backupEntry.playbackPreferences)
-        restoreProgress(entry, backupEntry.playbackStates, backupEntry.progressStates)
+        restoreProgress(
+            entry = entry,
+            backupChapters = backupEntry.chapters,
+            backupHistory = backupEntry.history,
+            legacyPlaybackStates = backupEntry.playbackStates,
+            states = backupEntry.progressStates,
+        )
         if (entry.type == EntryType.ANIME) {
             restoreDownloadPreferences(entry, backupEntry.downloadPreferences)
         }
@@ -217,6 +223,8 @@ class EntryRestorer(
 
     private suspend fun restoreProgress(
         entry: Entry,
+        backupChapters: List<BackupChapter>,
+        backupHistory: List<BackupHistory>,
         legacyPlaybackStates: List<BackupPlaybackState>,
         states: List<BackupEntryProgressState>,
     ) {
@@ -225,10 +233,18 @@ class EntryRestorer(
         val legacyStates = legacyPlaybackStates
             .mapNotNull { it.toProgressSnapshot() }
             .filterNot { (it.contentKey to it.resourceKey) in genericIdentities }
+        val legacyMangaStates = if (entry.type == EntryType.MANGA) {
+            val historyByUrl = backupHistory.associateBy { it.url }
+            backupChapters
+                .mapNotNull { it.toMangaProgressSnapshot(historyByUrl[it.url]?.lastRead ?: 0L) }
+                .filterNot { (it.contentKey to it.resourceKey) in genericIdentities }
+        } else {
+            emptyList()
+        }
         progressInteraction.restore(
             entry,
             EntryProgressSnapshot(
-                states = legacyStates + genericStates,
+                states = legacyStates + legacyMangaStates + genericStates,
             ),
         )
     }
@@ -289,11 +305,6 @@ class EntryRestorer(
             if (dbChapter.read && !updatedChapter.read) {
                 updatedChapter = updatedChapter.copy(
                     read = true,
-                    lastPageRead = dbChapter.lastPageRead,
-                )
-            } else if (updatedChapter.lastPageRead == 0L && dbChapter.lastPageRead != 0L) {
-                updatedChapter = updatedChapter.copy(
-                    lastPageRead = dbChapter.lastPageRead,
                 )
             }
             updatedChapter
@@ -492,6 +503,22 @@ class EntryRestorer(
     private data class PendingMergeMember(
         val identity: EntryIdentity,
         val position: Int,
+    )
+}
+
+internal fun BackupChapter.toMangaProgressSnapshot(historyTimestamp: Long): EntryProgressStateSnapshot? {
+    if (url.isBlank() || (!read && lastPageRead <= 0L)) return null
+    val timestamp = historyTimestamp.coerceAtLeast(0L)
+    return EntryProgressStateSnapshot(
+        resourceKey = url,
+        sourceChildKey = url,
+        locator = EntryProgressLocator(
+            kind = "page",
+            position = lastPageRead.takeIf { it > 0L },
+        ),
+        completed = read,
+        locatorUpdatedAt = timestamp,
+        completionUpdatedAt = timestamp,
     )
 }
 

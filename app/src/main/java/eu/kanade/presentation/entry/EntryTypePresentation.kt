@@ -174,11 +174,11 @@ fun EntryType.historySubtitle(
 }
 
 @Composable
-fun EntryType.partialProgressLabel(lastPageRead: Long): String? {
-    if (lastPageRead <= 0L) return null
+fun EntryType.partialProgressLabel(position: Long): String? {
+    if (position <= 0L) return null
 
     return when (this) {
-        EntryType.MANGA -> stringResource(MR.strings.chapter_progress, lastPageRead + 1)
+        EntryType.MANGA -> stringResource(MR.strings.chapter_progress, position + 1)
         EntryType.ANIME -> stringResource(MR.strings.label_started)
     }
 }

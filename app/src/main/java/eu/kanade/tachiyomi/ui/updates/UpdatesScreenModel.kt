@@ -550,6 +550,6 @@ private fun UpdateItem.EntryUpdate.consumptionStatus(): EntryConsumptionStatus {
     return EntryConsumptionStatus(
         consumed = update.read,
         bookmarked = update.bookmark,
-        hasPartialProgress = update.lastPageRead > 0,
+        hasPartialProgress = !update.read && update.started,
     )
 }

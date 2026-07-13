@@ -24,7 +24,7 @@ sealed class UpdateItem {
         override val sourceId = update.sourceId
         override val dateFetch = update.dateFetch
         override val consumed = update.read
-        override val started = update.read || update.lastPageRead > 0
+        override val started = update.started
     }
 }
 

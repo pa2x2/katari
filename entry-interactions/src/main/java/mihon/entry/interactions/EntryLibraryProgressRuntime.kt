@@ -9,7 +9,7 @@ fun entryLibraryProgressCalculators(
     entryProgressRepository: EntryProgressRepository,
 ): List<EntryLibraryProgressCalculator> {
     return listOf(
-        mangaEntryLibraryProgressCalculator(),
+        mangaEntryLibraryProgressCalculator(entryProgressRepository),
         animeEntryLibraryProgressCalculator(entryProgressRepository),
     )
 }
