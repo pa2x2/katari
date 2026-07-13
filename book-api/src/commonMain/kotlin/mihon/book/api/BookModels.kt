@@ -21,6 +21,9 @@ data class BookContentDescriptor(
 @Serializable
 data class BookContentResource(
     val id: String,
+    val title: String? = null,
+    val order: Long? = null,
+    val groupId: String? = null,
     val mediaType: String? = null,
     val size: Long? = null,
     val revision: String? = null,
@@ -30,9 +33,26 @@ data class BookContentResource(
 ) {
     init {
         require(id.isNotBlank()) { "resource id must not be blank" }
+        require(order == null || order >= 0L) { "resource order must not be negative" }
+        require(groupId == null || groupId.isNotBlank()) { "resource group id must not be blank" }
         require(mediaType == null || mediaType.isNotBlank()) { "resource media type must not be blank" }
         require(size == null || size >= 0) { "resource size must not be negative" }
         require(revision == null || revision.isNotBlank()) { "resource revision must not be blank" }
+    }
+}
+
+/** Processor-facing nested grouping hints for catalog resources. */
+@Serializable
+data class BookContentResourceGroup(
+    val id: String,
+    val title: String? = null,
+    val resourceIds: List<String> = emptyList(),
+    val children: List<BookContentResourceGroup> = emptyList(),
+) {
+    init {
+        require(id.isNotBlank()) { "resource group id must not be blank" }
+        require(resourceIds.none(String::isBlank)) { "group resource ids must not be blank" }
+        require(resourceIds.distinct().size == resourceIds.size) { "group resource ids must be unique" }
     }
 }
 

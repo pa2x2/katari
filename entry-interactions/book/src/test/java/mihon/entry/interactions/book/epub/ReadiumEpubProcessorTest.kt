@@ -2,8 +2,10 @@ package mihon.entry.interactions.book.epub
 
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonPrimitive
+import mihon.book.api.BookCatalogCoverage
 import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookContentResource
+import mihon.book.api.BookContentResourceGroup
 import mihon.book.api.BookContentResourcePage
 import mihon.book.api.BookFailureReason
 import mihon.book.api.BookLocator
@@ -133,6 +135,9 @@ private class TestContentSession(
     capabilities: Set<BookResourceCapability> = setOf(BookResourceCapability.MATERIALIZE),
 ) : BookContentSession {
     override val descriptor = BookContentDescriptor(format = "application/epub+zip")
+    override val catalogRevision: String? = null
+    override val catalogCoverage = BookCatalogCoverage.COMPLETE
+    override val resourceHierarchy = emptyList<BookContentResourceGroup>()
     private val resource = BookContentResource(
         id = "publication.epub",
         mediaType = "application/epub+zip",

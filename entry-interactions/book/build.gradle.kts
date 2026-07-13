@@ -13,6 +13,7 @@ dependencies {
     api(projects.domain)
     api(projects.entryInteractions.spi)
 
+    implementation(projects.core.common)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.fragment)
     implementation(libs.kotlinx.coroutines.core)

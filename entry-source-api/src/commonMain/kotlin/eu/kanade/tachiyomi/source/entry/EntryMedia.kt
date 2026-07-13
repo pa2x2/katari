@@ -30,6 +30,7 @@ sealed interface EntryMedia {
      *
      * @property descriptor open format, profile, and protection identifiers used for processor selection.
      * @property publicationKeyOverride optional discriminator when one entry contains multiple publications.
+     * @property publicationRevision optional revision of the logical publication, independent of its catalog.
      * @property catalog bounded snapshot of source-known resources.
      * @property hierarchy optional entry-screen grouping hints.
      * @property initialResourceId optional resource selected by this source child.
@@ -38,6 +39,7 @@ sealed interface EntryMedia {
     data class Book(
         val descriptor: BookContentDescriptor,
         val publicationKeyOverride: String? = null,
+        val publicationRevision: String? = null,
         val catalog: BookResourceCatalog = BookResourceCatalog(),
         val hierarchy: List<BookResourceHierarchyNode> = emptyList(),
         val initialResourceId: String? = null,
@@ -46,6 +48,9 @@ sealed interface EntryMedia {
         init {
             require(publicationKeyOverride == null || publicationKeyOverride.isNotBlank()) {
                 "publication key override must not be blank"
+            }
+            require(publicationRevision == null || publicationRevision.isNotBlank()) {
+                "publication revision must not be blank"
             }
             require(initialResourceId == null || initialResourceId.isNotBlank()) {
                 "initial resource id must not be blank"

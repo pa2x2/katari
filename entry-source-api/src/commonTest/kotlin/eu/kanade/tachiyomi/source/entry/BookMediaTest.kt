@@ -19,6 +19,7 @@ class BookMediaTest {
     fun `book media keeps stable resource ids separate from retrieval locations`() {
         val media = EntryMedia.Book(
             descriptor = BookContentDescriptor(format = "application/epub+zip"),
+            publicationRevision = "publication-v1",
             catalog = BookResourceCatalog(
                 resources = listOf(
                     BookSourceResource(
@@ -43,6 +44,7 @@ class BookMediaTest {
         )
 
         assertEquals("epub", media.catalog.resources.single().id)
+        assertEquals("publication-v1", media.publicationRevision)
         assertEquals(
             "/download/epub",
             (media.catalog.resources.single().location as BookResourceLocation.SourceChild).sourceChildKey,

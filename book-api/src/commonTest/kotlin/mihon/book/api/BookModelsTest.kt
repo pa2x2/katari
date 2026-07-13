@@ -26,6 +26,9 @@ class BookModelsTest {
     fun `content resource metadata preserves access capabilities`() {
         val resource = BookContentResource(
             id = "chapter-1",
+            title = "Chapter 1",
+            order = 0,
+            groupId = "volume-1",
             mediaType = "text/html",
             size = 42,
             revision = "v2",
@@ -47,9 +50,27 @@ class BookModelsTest {
             BookContentResource(id = "chapter", size = -1)
         }
         kotlin.test.assertFailsWith<IllegalArgumentException> {
+            BookContentResource(id = "chapter", order = -1)
+        }
+        kotlin.test.assertFailsWith<IllegalArgumentException> {
             BookContentResourcePage(
                 resources = listOf(BookContentResource("chapter"), BookContentResource("chapter")),
             )
+        }
+    }
+
+    @Test
+    fun `resource grouping hints remain processor neutral`() {
+        val group = BookContentResourceGroup(
+            id = "volume-1",
+            title = "Volume 1",
+            resourceIds = listOf("chapter-1"),
+            children = listOf(BookContentResourceGroup(id = "part-1")),
+        )
+
+        assertEquals(group, Json.decodeFromString<BookContentResourceGroup>(Json.encodeToString(group)))
+        assertFailsWith<IllegalArgumentException> {
+            BookContentResourceGroup(id = "volume", resourceIds = listOf("chapter", "chapter"))
         }
     }
 

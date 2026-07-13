@@ -1,8 +1,10 @@
 package mihon.entry.interactions.book
 
 import kotlinx.coroutines.test.runTest
+import mihon.book.api.BookCatalogCoverage
 import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookContentResource
+import mihon.book.api.BookContentResourceGroup
 import mihon.book.api.BookContentResourcePage
 import mihon.book.api.BookResourceCacheState
 import mihon.book.api.BookResourceCapability
@@ -68,6 +70,9 @@ private class FakeBookContentSession : BookContentSession {
     override val descriptor = BookContentDescriptor(format = "application/vnd.katari.book.serialized+json")
     override val publicationId = "book:fixture"
     override val revision = "v1"
+    override val catalogRevision = "catalog-v1"
+    override val catalogCoverage = BookCatalogCoverage.COMPLETE
+    override val resourceHierarchy = emptyList<BookContentResourceGroup>()
     override val primaryResourceIds = listOf("chapter-1")
     var closed = false
         private set

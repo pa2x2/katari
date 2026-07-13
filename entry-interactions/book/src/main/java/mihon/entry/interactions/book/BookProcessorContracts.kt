@@ -1,7 +1,9 @@
 package mihon.entry.interactions.book
 
+import mihon.book.api.BookCatalogCoverage
 import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookContentResource
+import mihon.book.api.BookContentResourceGroup
 import mihon.book.api.BookContentResourcePage
 import mihon.book.api.BookFailure
 import mihon.book.api.BookLocator
@@ -13,6 +15,9 @@ internal interface BookContentSession : AutoCloseable {
     val descriptor: BookContentDescriptor
     val publicationId: String
     val revision: String
+    val catalogRevision: String?
+    val catalogCoverage: BookCatalogCoverage
+    val resourceHierarchy: List<BookContentResourceGroup>
     val primaryResourceIds: List<String>
 
     suspend fun listResources(
