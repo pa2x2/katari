@@ -374,7 +374,7 @@ class ChronologicalFeedScreenModelTest {
     }
 
     @Test
-    fun `loaded bridge pages are immediately scrollable while overlap is still loading`() = feedTest {
+    fun `partial bridge pages stay behind the loading boundary until overlap`() = feedTest {
         val preferences = SourcePreferences(TestPreferenceStore(), testJson)
         val browseFeedService = BrowseFeedService(preferences)
         val oldRef = FeedItemRef(100L, EntryType.MANGA)
@@ -422,33 +422,33 @@ class ChronologicalFeedScreenModelTest {
             screenModel.refresh(manual = true)
             runCurrent()
 
-            val stagedRefs = listOf(
+            val bridgedRefs = listOf(
                 FeedItemRef(1L, EntryType.MANGA),
                 FeedItemRef(2L, EntryType.ANIME),
-                oldRef,
             )
-            screenModel.state.value.itemRefs shouldBe stagedRefs
+            screenModel.state.value.itemRefs shouldBe listOf(oldRef)
             screenModel.state.value.isBridgingRefresh shouldBe true
             screenModel.state.value.pendingRefresh shouldBe FeedScreenModel.PendingRefresh(
-                itemRefs = stagedRefs.dropLast(1),
+                itemRefs = bridgedRefs,
                 nextPageKey = 1L,
             )
             browseFeedService.timelineSnapshot(FEED_ID) shouldBe
                 SourceFeedTimeline.fromItems(listOf(oldRef), nextPageKey = 10L)
 
-            screenModel.saveAnchor(stagedRefs.first(), scrollOffset = 12)
+            screenModel.saveAnchor(oldRef, scrollOffset = 12)
             browseFeedService.anchorSnapshot(FEED_ID) shouldBe
-                SourceFeedAnchor.fromItem(oldRef, scrollOffset = 32)
+                SourceFeedAnchor.fromItem(oldRef, scrollOffset = 12)
 
             continueBridge.complete(Unit)
             advanceUntilIdle()
 
-            screenModel.state.value.itemRefs shouldBe stagedRefs
+            val mergedRefs = bridgedRefs + oldRef
+            screenModel.state.value.itemRefs shouldBe mergedRefs
             screenModel.state.value.pendingRefresh shouldBe null
             browseFeedService.timelineSnapshot(FEED_ID) shouldBe
-                SourceFeedTimeline.fromItems(stagedRefs, nextPageKey = 10L)
+                SourceFeedTimeline.fromItems(mergedRefs, nextPageKey = 10L)
             browseFeedService.anchorSnapshot(FEED_ID) shouldBe
-                SourceFeedAnchor.fromItem(stagedRefs.first(), scrollOffset = 12)
+                SourceFeedAnchor.fromItem(oldRef, scrollOffset = 12)
         } finally {
             screenModel.onDispose()
         }
@@ -506,7 +506,7 @@ class ChronologicalFeedScreenModelTest {
                 FeedItemRef(3L, EntryType.MANGA),
             )
             pagingSource.loadKeys shouldBe listOf(null, 1L)
-            screenModel.state.value.itemRefs shouldBe newestRefs + oldRef
+            screenModel.state.value.itemRefs shouldBe listOf(oldRef)
             screenModel.state.value.pendingRefresh shouldBe FeedScreenModel.PendingRefresh(
                 itemRefs = newestRefs,
                 nextPageKey = null,

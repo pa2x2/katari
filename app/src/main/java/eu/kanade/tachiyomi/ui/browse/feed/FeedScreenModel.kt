@@ -100,11 +100,6 @@ abstract class FeedScreenModel<T : Any>(
 
         currentSavedAnchor = anchor
 
-        // Staged bridge items are not persisted until their pages overlap the saved timeline.
-        // Keep their anchor in memory so scrolling can proceed without saving an anchor that
-        // the persisted timeline cannot resolve yet.
-        if (state.value.pendingRefresh != null) return
-
         if (persistedAnchor != anchor) {
             persistedAnchor = anchor
             browseFeedService.saveAnchor(feedId = feedId, anchor = anchor)
@@ -240,7 +235,6 @@ abstract class FeedScreenModel<T : Any>(
             )
             mutableState.update {
                 it.copy(
-                    itemRefs = (pageRefs + existingRefs).distinct(),
                     isRefreshing = false,
                     isManualRefresh = false,
                     pendingRefresh = pendingRefresh,
@@ -352,10 +346,6 @@ abstract class FeedScreenModel<T : Any>(
                             itemRefs = mergedRefs,
                             nextPageKey = existingNextPageKey,
                         )
-                        if (persistedAnchor != currentSavedAnchor) {
-                            persistedAnchor = currentSavedAnchor
-                            browseFeedService.saveAnchor(feedId = feedId, anchor = currentSavedAnchor)
-                        }
                         return
                     }
                 }
@@ -371,7 +361,6 @@ abstract class FeedScreenModel<T : Any>(
                     it
                 } else {
                     it.copy(
-                        itemRefs = (bridgedRefs + existingRefs).distinct(),
                         pendingRefresh = PendingRefresh(
                             itemRefs = bridgedRefs.toList(),
                             nextPageKey = nextPageKey,
