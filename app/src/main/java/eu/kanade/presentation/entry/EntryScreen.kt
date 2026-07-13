@@ -125,7 +125,7 @@ fun EntryScreen(
     onEditNotesClicked: () -> Unit,
 
     // For bottom action menu
-    onMultiBookmarkClicked: (List<EntryChapter>, bookmarked: Boolean) -> Unit,
+    onMultiBookmarkClicked: ((List<EntryChapter>, bookmarked: Boolean) -> Unit)?,
     onMultiMarkAsReadClicked: (List<EntryChapter>, markAsRead: Boolean) -> Unit,
     onMarkPreviousAsReadClicked: (EntryChapter) -> Unit,
     onMultiDeleteClicked: (List<EntryChapter>) -> Unit,
@@ -292,7 +292,7 @@ private fun EntryScreenSmallImpl(
     onEditNotesClicked: () -> Unit,
 
     // For bottom action menu
-    onMultiBookmarkClicked: (List<EntryChapter>, bookmarked: Boolean) -> Unit,
+    onMultiBookmarkClicked: ((List<EntryChapter>, bookmarked: Boolean) -> Unit)?,
     onMultiMarkAsReadClicked: (List<EntryChapter>, markAsRead: Boolean) -> Unit,
     onMarkPreviousAsReadClicked: (EntryChapter) -> Unit,
     onMultiDeleteClicked: (List<EntryChapter>) -> Unit,
@@ -576,7 +576,7 @@ fun EntryScreenLargeImpl(
     onEditNotesClicked: () -> Unit,
 
     // For bottom action menu
-    onMultiBookmarkClicked: (List<EntryChapter>, bookmarked: Boolean) -> Unit,
+    onMultiBookmarkClicked: ((List<EntryChapter>, bookmarked: Boolean) -> Unit)?,
     onMultiMarkAsReadClicked: (List<EntryChapter>, markAsRead: Boolean) -> Unit,
     onMarkPreviousAsReadClicked: (EntryChapter) -> Unit,
     onMultiDeleteClicked: (List<EntryChapter>) -> Unit,
@@ -853,7 +853,7 @@ private fun MergeNotice(
 private fun SharedEntryBottomActionMenu(
     selected: List<EntryChapterList.Item>,
     childProgressLabels: Map<Long, EntryChildProgressLabel>,
-    onMultiBookmarkClicked: (List<EntryChapter>, bookmarked: Boolean) -> Unit,
+    onMultiBookmarkClicked: ((List<EntryChapter>, bookmarked: Boolean) -> Unit)?,
     onMultiMarkAsReadClicked: (List<EntryChapter>, markAsRead: Boolean) -> Unit,
     onMarkPreviousAsReadClicked: (EntryChapter) -> Unit,
     onDownloadChapter: ((List<EntryChapterList.Item>, ChapterDownloadAction) -> Unit)?,
@@ -864,12 +864,12 @@ private fun SharedEntryBottomActionMenu(
     EntryBottomActionMenu(
         visible = selected.isNotEmpty(),
         modifier = modifier.fillMaxWidth(fillFraction),
-        onBookmarkClicked = {
-            onMultiBookmarkClicked.invoke(selected.fastMap { it.chapter }, true)
-        }.takeIf { selected.fastAny { !it.chapter.bookmark } },
-        onRemoveBookmarkClicked = {
-            onMultiBookmarkClicked.invoke(selected.fastMap { it.chapter }, false)
-        }.takeIf { selected.fastAll { it.chapter.bookmark } },
+        onBookmarkClicked = onMultiBookmarkClicked?.let { callback ->
+            { callback(selected.fastMap { it.chapter }, true) }
+        }?.takeIf { selected.fastAny { !it.chapter.bookmark } },
+        onRemoveBookmarkClicked = onMultiBookmarkClicked?.let { callback ->
+            { callback(selected.fastMap { it.chapter }, false) }
+        }?.takeIf { selected.fastAll { it.chapter.bookmark } },
         bookmarkLabel = selected.map { it.entry.type }.selectionEntryTypePresentation().bookmarkChildLabel,
         removeBookmarkLabel = selected.map { it.entry.type }.selectionEntryTypePresentation().removeBookmarkChildLabel,
         onMarkAsReadClicked = {
@@ -956,7 +956,7 @@ private fun LazyListScope.sharedChapterItems(
                     read = item.chapter.read,
                     bookmark = item.chapter.bookmark,
                     selected = item.selected,
-                    downloadIndicatorEnabled = !isAnyChapterSelected && entry.source != LocalSource.ID,
+                    downloadIndicatorEnabled = !isAnyChapterSelected && onDownloadChapter != null,
                     downloadStateProvider = { item.downloadState },
                     downloadProgressProvider = { item.downloadProgress },
                     unconsumedIndicatorLabel = item.entry.type.entryTypePresentation().unconsumedIndicatorLabel,

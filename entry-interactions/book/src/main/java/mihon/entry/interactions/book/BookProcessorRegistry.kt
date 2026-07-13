@@ -19,7 +19,7 @@ internal class BookProcessorRegistry(
         descriptor: BookContentDescriptor,
         rememberedProcessorId: String? = null,
     ): BookProcessorSelection {
-        val candidates = processors.values.filter { it.supports(descriptor) }
+        val candidates = compatibleProcessors(descriptor)
         if (candidates.isEmpty()) return BookProcessorSelection.Unsupported
 
         val remembered = rememberedProcessorId?.let(processors::get)?.takeIf { it in candidates }
@@ -28,6 +28,9 @@ internal class BookProcessorRegistry(
 
         return BookProcessorSelection.ChoiceRequired(candidates)
     }
+
+    fun compatibleProcessors(descriptor: BookContentDescriptor): List<BookProcessor> =
+        processors.values.filter { it.supports(descriptor) }
 }
 
 internal sealed interface BookProcessorSelection {

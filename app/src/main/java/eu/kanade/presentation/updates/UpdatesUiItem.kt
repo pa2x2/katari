@@ -274,7 +274,7 @@ internal fun UnifiedUpdatesUiItem(
                 )
             }
         },
-        trailing = if (update is UpdateItem.EntryUpdate && !selectionMode) {
+        trailing = if (update is UpdateItem.EntryUpdate && !selectionMode && item.downloadSupported) {
             {
                 EntryChapterDownloadIndicator(
                     enabled = true,

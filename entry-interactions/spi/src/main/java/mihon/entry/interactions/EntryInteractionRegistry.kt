@@ -314,7 +314,7 @@ private class RegistryEntryDownloadInteraction(
     }
 
     override suspend fun renameEntry(entry: Entry, newTitle: String) {
-        val processor = processors.requireProcessor("download", entry.type)
+        val processor = processors[entry.type] ?: return
         processor.requireMatchingEntryType("download", entry, processors.keys)
         processor.renameEntry(entry, newTitle)
     }
@@ -335,6 +335,10 @@ private class RegistryEntryDownloadInteraction(
             .forEach { (type, typedItems) ->
                 processors.requireProcessor("download", type).cancelQueuedDownloads(typedItems)
             }
+    }
+
+    override fun supportsDownloads(entryType: EntryType): Boolean {
+        return entryType in processors
     }
 
     override suspend fun queue(entry: Entry, chapters: List<EntryChapter>, autoStart: Boolean) {
@@ -361,7 +365,7 @@ private class RegistryEntryDownloadInteraction(
     }
 
     override fun supportsDownloadOptions(entry: Entry): Boolean {
-        val processor = processors.requireProcessor("download", entry.type)
+        val processor = processors[entry.type] ?: return false
         processor.requireMatchingEntryType("download", entry, processors.keys)
         return processor.supportsDownloadOptions(entry)
     }
@@ -371,13 +375,13 @@ private class RegistryEntryDownloadInteraction(
         entry: Entry,
         chapter: EntryChapter,
     ): EntryDownloadOptions? {
-        val processor = processors.requireProcessor("download", entry.type)
+        val processor = processors[entry.type] ?: return null
         processor.requireMatchingEntryType("download", entry, processors.keys)
         return processor.resolveDownloadOptions(context, entry, chapter)
     }
 
     override fun supportsBulkDownload(entry: Entry): Boolean {
-        val processor = processors.requireProcessor("download", entry.type)
+        val processor = processors[entry.type] ?: return false
         processor.requireMatchingEntryType("download", entry, processors.keys)
         return processor.supportsBulkDownload(entry)
     }
@@ -388,7 +392,7 @@ private class RegistryEntryDownloadInteraction(
         candidates: List<EntryChapter>?,
         memberEntryIds: List<Long>,
     ): EntryBulkDownloadCandidateResult {
-        val processor = processors.requireProcessor("download", entry.type)
+        val processor = processors[entry.type] ?: return EntryBulkDownloadCandidateResult.Unsupported
         processor.requireMatchingEntryType("download", entry, processors.keys)
         return processor.resolveBulkDownloadCandidates(entry, action, candidates, memberEntryIds)
     }
@@ -397,31 +401,31 @@ private class RegistryEntryDownloadInteraction(
         entry: Entry,
         chapters: List<EntryChapter>,
     ): List<EntryChapter> {
-        val processor = processors.requireProcessor("download", entry.type)
+        val processor = processors[entry.type] ?: return emptyList()
         processor.requireMatchingEntryType("download", entry, processors.keys)
         return processor.filterAutoDownloadCandidates(entry, chapters)
     }
 
     override suspend fun delete(entry: Entry, chapters: List<EntryChapter>) {
-        val processor = processors.requireProcessor("download", entry.type)
+        val processor = processors[entry.type] ?: return
         processor.requireMatchingEntryType("download", entry, processors.keys)
         processor.delete(entry, chapters)
     }
 
     override suspend fun deleteEntryDownloads(entry: Entry) {
-        val processor = processors.requireProcessor("download", entry.type)
+        val processor = processors[entry.type] ?: return
         processor.requireMatchingEntryType("download", entry, processors.keys)
         processor.deleteEntryDownloads(entry)
     }
 
     override fun hasDownloads(entry: Entry): Boolean {
-        val processor = processors.requireProcessor("download", entry.type)
+        val processor = processors[entry.type] ?: return false
         processor.requireMatchingEntryType("download", entry, processors.keys)
         return processor.hasDownloads(entry)
     }
 
     override fun getDownloadCount(entry: Entry): Int {
-        val processor = processors.requireProcessor("download", entry.type)
+        val processor = processors[entry.type] ?: return 0
         processor.requireMatchingEntryType("download", entry, processors.keys)
         return processor.getDownloadCount(entry)
     }
@@ -431,7 +435,7 @@ private class RegistryEntryDownloadInteraction(
     }
 
     override fun isDownloaded(entry: Entry, chapter: EntryChapter, skipCache: Boolean): Boolean {
-        val processor = processors.requireProcessor("download", entry.type)
+        val processor = processors[entry.type] ?: return false
         processor.requireMatchingEntryType("download", entry, processors.keys)
         return processor.isDownloaded(entry, chapter, skipCache)
     }
@@ -445,7 +449,9 @@ private class RegistryEntryDownloadInteraction(
         entryTitle: String,
         sourceId: Long,
     ): EntryDownloadStatus {
-        return processors.requireProcessor("download", entryType).getStatus(
+        val processor = processors[entryType]
+            ?: return EntryDownloadStatus(entryType, chapterId, EntryDownloadState.NOT_DOWNLOADED)
+        return processor.getStatus(
             chapterId = chapterId,
             chapterName = chapterName,
             chapterScanlator = chapterScanlator,
@@ -456,7 +462,7 @@ private class RegistryEntryDownloadInteraction(
     }
 
     override fun cancelQueuedDownload(entryType: EntryType, chapterId: Long): EntryDownloadStatus? {
-        return processors.requireProcessor("download", entryType).cancelQueuedDownload(chapterId)
+        return processors[entryType]?.cancelQueuedDownload(chapterId)
     }
 }
 

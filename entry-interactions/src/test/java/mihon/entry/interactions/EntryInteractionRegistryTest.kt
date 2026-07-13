@@ -64,6 +64,39 @@ class EntryInteractionRegistryTest {
     }
 
     @Test
+    fun `missing download processor exposes unsupported capability with neutral query results`() = runTest {
+        val interactions = createEntryInteractions(emptyList())
+        val entry = entry(EntryType.BOOK)
+
+        interactions.download.supportsDownloads(EntryType.BOOK) shouldBe false
+        interactions.download.supportsDownloadOptions(entry) shouldBe false
+        interactions.download.supportsBulkDownload(entry) shouldBe false
+        interactions.download.resolveDownloadOptions(context, entry, chapter).shouldBeNull()
+        interactions.download.resolveBulkDownloadCandidates(
+            entry = entry,
+            action = EntryBulkDownloadAction.unread,
+        ) shouldBe EntryBulkDownloadCandidateResult.Unsupported
+        interactions.download.filterAutoDownloadCandidates(entry, listOf(chapter)) shouldBe emptyList()
+        interactions.download.hasDownloads(entry) shouldBe false
+        interactions.download.getDownloadCount(entry) shouldBe 0
+        interactions.download.isDownloaded(entry, chapter) shouldBe false
+        interactions.download.getStatus(
+            entryType = EntryType.BOOK,
+            chapterId = chapter.id,
+            chapterName = chapter.name,
+            chapterScanlator = chapter.scanlator,
+            chapterUrl = chapter.url,
+            entryTitle = entry.title,
+            sourceId = entry.source,
+        ) shouldBe EntryDownloadStatus(EntryType.BOOK, chapter.id, EntryDownloadState.NOT_DOWNLOADED)
+        interactions.download.cancelQueuedDownload(EntryType.BOOK, chapter.id).shouldBeNull()
+
+        interactions.download.delete(entry, listOf(chapter))
+        interactions.download.deleteEntryDownloads(entry)
+        interactions.download.renameEntry(entry, "Renamed")
+    }
+
+    @Test
     fun `empty plugin list fails when consumption interaction is used`() = runTest {
         val interactions = createEntryInteractions(emptyList())
 

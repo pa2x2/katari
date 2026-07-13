@@ -67,6 +67,8 @@ interface EntryDownloadInteraction {
     fun reorderSeries(entryType: EntryType, entryId: Long, moveToTop: Boolean)
     fun cancelQueuedDownloads(items: List<EntryDownloadQueueItem>)
 
+    fun supportsDownloads(entryType: EntryType): Boolean
+
     suspend fun queue(entry: Entry, chapters: List<EntryChapter>, autoStart: Boolean = true)
     suspend fun download(entry: Entry, chapters: List<EntryChapter>, startNow: Boolean = false)
     suspend fun downloadWithOptions(

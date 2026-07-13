@@ -14,6 +14,7 @@ dependencies {
     implementation(projects.entryInteractions.spi)
     implementation(projects.entryInteractions.manga)
     implementation(projects.entryInteractions.anime)
+    implementation(projects.entryInteractions.book)
     implementation(libs.androidx.core)
     implementation(libs.injekt)
     implementation(libs.bundles.coil)

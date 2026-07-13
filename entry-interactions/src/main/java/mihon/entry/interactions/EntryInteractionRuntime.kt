@@ -6,6 +6,9 @@ import mihon.domain.chapter.interactor.FilterEntryChaptersForDownload
 import mihon.entry.interactions.anime.AnimeEntryInteractionDependencies
 import mihon.entry.interactions.anime.addAnimeEntryInteractionRuntime
 import mihon.entry.interactions.anime.animeEntryInteractionPlugin
+import mihon.entry.interactions.book.BookEntryInteractionDependencies
+import mihon.entry.interactions.book.addBookEntryInteractionRuntime
+import mihon.entry.interactions.book.bookEntryInteractionPlugin
 import mihon.entry.interactions.manga.MangaEntryInteractionDependencies
 import mihon.entry.interactions.manga.addMangaEntryInteractionRuntime
 import mihon.entry.interactions.manga.mangaEntryInteractionPlugin
@@ -55,6 +58,7 @@ fun InjektRegistrar.addEntryInteractionRuntime(
 
     val mangaWarmup = addMangaEntryInteractionRuntime(app)
     val animeWarmup = addAnimeEntryInteractionRuntime(app)
+    addBookEntryInteractionRuntime(dependencies.profilePreferenceStore)
 
     addSingletonFactory<EntryMediaCacheMaintenance> {
         DefaultEntryMediaCacheMaintenance(
@@ -91,6 +95,14 @@ fun InjektRegistrar.addEntryInteractionRuntime(
                         sourceManager = get(),
                         entryInteractionPreferences = get<EntryInteractionPreferences>(),
                         historyRepository = get(),
+                    ),
+                ),
+                bookEntryInteractionPlugin(
+                    BookEntryInteractionDependencies(
+                        getEntryWithChapters = get(),
+                        entryChapterRepository = get(),
+                        entryProgressRepository = get(),
+                        sourceManager = get(),
                     ),
                 ),
             ),

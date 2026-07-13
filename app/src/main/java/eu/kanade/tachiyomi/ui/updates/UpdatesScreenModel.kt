@@ -199,6 +199,7 @@ class UpdatesScreenModel(
                         visibleCoverData = entry?.asEntryCover() ?: chapterUpdate.coverData,
                         downloadStateProvider = { downloadStatus.state },
                         downloadProgressProvider = { downloadStatus.progress },
+                        downloadSupported = entryDownloadInteraction.supportsDownloads(update.entryType),
                         selected = update.key in selectedKeys,
                     )
                 }
@@ -240,7 +241,7 @@ class UpdatesScreenModel(
     }
 
     fun downloadChapters(items: List<UpdatesItem>, action: ChapterDownloadAction) {
-        val chapterItems = items.filter { it.update is UpdateItem.EntryUpdate }
+        val chapterItems = items.filter { it.update is UpdateItem.EntryUpdate && it.downloadSupported }
         if (chapterItems.isEmpty()) return
         screenModelScope.launch {
             when (action) {
@@ -519,6 +520,7 @@ data class UpdatesItem(
     val visibleCoverData: EntryCover,
     val downloadStateProvider: () -> EntryDownloadState,
     val downloadProgressProvider: () -> Int,
+    val downloadSupported: Boolean = true,
     val selected: Boolean = false,
 )
 
