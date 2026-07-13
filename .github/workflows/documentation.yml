@@ -6,12 +6,18 @@ on:
       - main
     paths:
       - 'docs/**'
+      - 'entry-source-api/src/**'
+      - 'entry-source-api/build.gradle.kts'
+      - 'gradle/libs.versions.toml'
       - 'mkdocs.yml'
       - 'requirements-docs.txt'
       - '.github/workflows/documentation.yml'
   pull_request:
     paths:
       - 'docs/**'
+      - 'entry-source-api/src/**'
+      - 'entry-source-api/build.gradle.kts'
+      - 'gradle/libs.versions.toml'
       - 'mkdocs.yml'
       - 'requirements-docs.txt'
       - '.github/workflows/documentation.yml'
@@ -31,6 +37,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
 
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
@@ -41,6 +58,25 @@ jobs:
 
       - name: Install documentation dependencies
         run: python -m pip install --disable-pip-version-check -r requirements-docs.txt
+
+      - name: Resolve Entry SDK documentation version
+        shell: bash
+        run: |
+          set -euo pipefail
+          latest_sdk_tag="$(git for-each-ref --count=1 --sort=-version:refname --format='%(refname:short)' 'refs/tags/sdk-*')"
+          if [[ -n "$latest_sdk_tag" ]] && git diff --quiet "$latest_sdk_tag"..HEAD -- entry-source-api/src; then
+            echo "SDK_DOC_VERSION=$latest_sdk_tag" >> "$GITHUB_ENV"
+          else
+            echo "SDK_DOC_VERSION=development" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build Entry SDK API reference
+        run: ./gradlew --quiet :entry-source-api:dokkaGeneratePublicationHtml -PsourceApiVersion="$SDK_DOC_VERSION"
+
+      - name: Add Entry SDK API reference to documentation
+        run: |
+          mkdir -p docs/developers/sdk/api
+          cp -R entry-source-api/build/dokka/html/. docs/developers/sdk/api/
 
       - name: Build documentation
         run: mkdocs build --strict

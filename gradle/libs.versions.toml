@@ -36,6 +36,7 @@ composeWebview = "0.33.6"
 conscrypt = "2.6.0"
 directionalViewPager = "1.0.0"
 diskLruCache = "2.0.2"
+dokka = "2.2.0"
 firebase-bom = "34.15.0"
 firebase-crashlytics = "3.0.7"
 flexibleAdapter = "c8013533"
@@ -216,6 +217,7 @@ android-kmp-library = { id = "com.android.kotlin.multiplatform.library", version
 android-library = { id = "com.android.library", version.ref = "android-gradle" }
 android-test = { id = "com.android.test", version.ref = "android-gradle" }
 androidx-baselineProfile = { id = "androidx.baselineprofile", version.ref = "androidx-baselineProfile" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebase-crashlytics" }
 google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }
 kotlin-compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin-gradle" }
