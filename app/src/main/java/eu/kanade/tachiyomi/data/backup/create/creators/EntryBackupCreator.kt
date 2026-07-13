@@ -9,10 +9,13 @@ import eu.kanade.tachiyomi.data.backup.models.BackupPlaybackState
 import eu.kanade.tachiyomi.data.backup.models.backupTrackMapper
 import eu.kanade.tachiyomi.data.backup.models.toBackupChapter
 import eu.kanade.tachiyomi.data.backup.models.toBackupEntry
+import eu.kanade.tachiyomi.data.backup.models.toBackupEntryProgressState
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.EntryPlaybackInteraction
 import mihon.entry.interactions.EntryPlaybackQualityMode
 import mihon.entry.interactions.EntryPlaybackSnapshot
+import mihon.entry.interactions.EntryProgressInteraction
+import mihon.entry.interactions.EntryProgressSnapshot
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.category.model.Category
@@ -31,6 +34,7 @@ class EntryBackupCreator(
     private val entryRepository: EntryRepository = Injekt.get(),
     private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
     private val downloadPreferencesRepository: DownloadPreferencesRepository = Injekt.get(),
+    private val progressInteraction: EntryProgressInteraction = Injekt.get(),
     private val playbackInteraction: EntryPlaybackInteraction = Injekt.get(),
 ) {
 
@@ -59,6 +63,11 @@ class EntryBackupCreator(
         } else {
             EntryPlaybackSnapshot()
         }
+        val progressSnapshot = if (options.chapters) {
+            progressInteraction.snapshot(entry)
+        } else {
+            EntryProgressSnapshot()
+        }
 
         if (entry.type == EntryType.MANGA) {
             entryObject.excludedScanlators = handler.awaitList {
@@ -83,6 +92,7 @@ class EntryBackupCreator(
                     lastWatchedAt = state.lastWatchedAt,
                 )
             }
+            entryObject.progressStates = progressSnapshot.states.map { it.toBackupEntryProgressState() }
         }
 
         if (entry.type == EntryType.ANIME) {

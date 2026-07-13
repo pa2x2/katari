@@ -1,0 +1,111 @@
+import kotlin.Boolean;
+
+CREATE TABLE entry_progress_state(
+    _id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entry_id INTEGER NOT NULL,
+    chapter_id INTEGER,
+    content_key TEXT NOT NULL DEFAULT '',
+    resource_key TEXT NOT NULL,
+    resource_revision TEXT,
+    locator_kind TEXT NOT NULL,
+    position INTEGER,
+    extent INTEGER,
+    progression REAL,
+    total_progression REAL,
+    extensions TEXT NOT NULL DEFAULT '{}',
+    completed INTEGER AS Boolean NOT NULL DEFAULT 0,
+    locator_updated_at INTEGER NOT NULL DEFAULT 0,
+    completion_updated_at INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    FOREIGN KEY(entry_id, chapter_id) REFERENCES chapters(entry_id, _id),
+    UNIQUE(entry_id, content_key, resource_key),
+    CHECK(length(trim(resource_key)) > 0),
+    CHECK(length(trim(locator_kind)) > 0),
+    CHECK(position IS NULL OR position >= 0),
+    CHECK(extent IS NULL OR extent > 0),
+    CHECK(progression IS NULL OR progression BETWEEN 0.0 AND 1.0),
+    CHECK(total_progression IS NULL OR total_progression BETWEEN 0.0 AND 1.0),
+    CHECK(json_valid(extensions)),
+    CHECK(locator_updated_at >= 0),
+    CHECK(completion_updated_at >= 0)
+);
+
+CREATE INDEX idx_entry_progress_state_entry_id ON entry_progress_state(entry_id);
+CREATE INDEX idx_entry_progress_state_chapter_id ON entry_progress_state(chapter_id);
+CREATE INDEX idx_entry_progress_state_locator_updated_at ON entry_progress_state(locator_updated_at);
+
+CREATE TRIGGER detach_entry_progress_state_chapter
+BEFORE DELETE ON chapters
+FOR EACH ROW
+BEGIN
+    UPDATE entry_progress_state
+    SET chapter_id = NULL
+    WHERE chapter_id = old._id;
+END;
+
+getByKey:
+SELECT *
+FROM entry_progress_state
+WHERE entry_id = :entryId
+AND content_key = :contentKey
+AND resource_key = :resourceKey;
+
+getByEntryId:
+SELECT *
+FROM entry_progress_state
+WHERE entry_id = :entryId;
+
+getByChapterId:
+SELECT *
+FROM entry_progress_state
+WHERE chapter_id = :chapterId;
+
+deleteByProfile:
+DELETE FROM entry_progress_state
+WHERE entry_id IN (SELECT _id FROM entries WHERE profile_id = :profileId);
+
+upsert:
+INSERT INTO entry_progress_state(
+    entry_id,
+    chapter_id,
+    content_key,
+    resource_key,
+    resource_revision,
+    locator_kind,
+    position,
+    extent,
+    progression,
+    total_progression,
+    extensions,
+    completed,
+    locator_updated_at,
+    completion_updated_at
+)
+VALUES (
+    :entryId,
+    :chapterId,
+    :contentKey,
+    :resourceKey,
+    :resourceRevision,
+    :locatorKind,
+    :position,
+    :extent,
+    :progression,
+    :totalProgression,
+    :extensions,
+    :completed,
+    :locatorUpdatedAt,
+    :completionUpdatedAt
+)
+ON CONFLICT(entry_id, content_key, resource_key) DO UPDATE SET
+    chapter_id = coalesce(excluded.chapter_id, entry_progress_state.chapter_id),
+    resource_revision = excluded.resource_revision,
+    locator_kind = excluded.locator_kind,
+    position = excluded.position,
+    extent = excluded.extent,
+    progression = excluded.progression,
+    total_progression = excluded.total_progression,
+    extensions = excluded.extensions,
+    completed = excluded.completed,
+    locator_updated_at = excluded.locator_updated_at,
+    completion_updated_at = excluded.completion_updated_at;

@@ -25,6 +25,7 @@ CREATE INDEX idx_chapters_entry_id ON chapters(entry_id);
 CREATE INDEX idx_chapters_unread_by_entry ON chapters(entry_id, read) WHERE read = 0;
 CREATE INDEX idx_chapters_url ON chapters(url);
 CREATE UNIQUE INDEX idx_chapters_entry_url ON chapters(entry_id, url);
+CREATE UNIQUE INDEX idx_chapters_entry_id_id ON chapters(entry_id, _id);
 
 CREATE TRIGGER update_last_modified_at_chapters
 AFTER UPDATE ON chapters

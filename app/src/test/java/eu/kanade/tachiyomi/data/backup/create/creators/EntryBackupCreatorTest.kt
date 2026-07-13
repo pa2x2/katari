@@ -14,6 +14,9 @@ import mihon.entry.interactions.EntryPlaybackPreferencesSnapshot
 import mihon.entry.interactions.EntryPlaybackQualityMode
 import mihon.entry.interactions.EntryPlaybackSnapshot
 import mihon.entry.interactions.EntryPlaybackStateSnapshot
+import mihon.entry.interactions.EntryProgressInteraction
+import mihon.entry.interactions.EntryProgressSnapshot
+import mihon.entry.interactions.EntryProgressStateSnapshot
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -23,6 +26,7 @@ import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.entry.model.DownloadPreferences
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryProgressLocator
 import tachiyomi.domain.entry.model.VideoDownloadQualityMode
 import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -61,6 +65,11 @@ class EntryBackupCreatorTest {
         } else {
             emptyList()
         }
+        decoded.progressStates.map { it.resourceKey } shouldBe if (chaptersEnabled) {
+            listOf(chapter.url)
+        } else {
+            emptyList()
+        }
 
         if (type == EntryType.ANIME) {
             decoded.playbackPreferences?.dubKey shouldBe "playback-dub"
@@ -88,6 +97,9 @@ class EntryBackupCreatorTest {
         coVerify(exactly = if (type == EntryType.ANIME || chaptersEnabled) 1 else 0) {
             fixture.playbackInteraction.snapshot(entry)
         }
+        coVerify(exactly = if (chaptersEnabled) 1 else 0) {
+            fixture.progressInteraction.snapshot(entry)
+        }
     }
 
     private fun backupCases(): List<Arguments> = EntryType.entries.flatMap { type ->
@@ -100,6 +112,7 @@ class EntryBackupCreatorTest {
         private val entryRepository = mockk<EntryRepository>()
         val entryChapterRepository = mockk<EntryChapterRepository>()
         val downloadPreferencesRepository = mockk<DownloadPreferencesRepository>()
+        val progressInteraction = mockk<EntryProgressInteraction>()
         val playbackInteraction = mockk<EntryPlaybackInteraction>()
 
         val creator = EntryBackupCreator(
@@ -108,6 +121,7 @@ class EntryBackupCreatorTest {
             entryRepository = entryRepository,
             entryChapterRepository = entryChapterRepository,
             downloadPreferencesRepository = downloadPreferencesRepository,
+            progressInteraction = progressInteraction,
             playbackInteraction = playbackInteraction,
         )
 
@@ -147,6 +161,16 @@ class EntryBackupCreatorTest {
             } else {
                 EntryPlaybackSnapshot()
             }
+            coEvery { progressInteraction.snapshot(entry) } returns EntryProgressSnapshot(
+                states = listOf(
+                    EntryProgressStateSnapshot(
+                        resourceKey = chapter.url,
+                        sourceChildKey = chapter.url,
+                        locator = EntryProgressLocator(kind = "page", position = 4),
+                        locatorUpdatedAt = 10,
+                    ),
+                ),
+            )
             coEvery { handler.awaitList<Any>(false, any()) } returns emptyList()
         }
     }

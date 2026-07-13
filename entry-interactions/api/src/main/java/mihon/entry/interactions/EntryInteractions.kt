@@ -17,6 +17,7 @@ interface EntryInteractions {
     val updateEligibility: EntryUpdateEligibilityInteraction
     val preview: EntryPreviewInteraction
     val immersiveFeed: EntryImmersiveFeedInteraction
+    val progress: EntryProgressInteraction
     val playback: EntryPlaybackInteraction
     val childList: EntryChildListInteraction
     val childGroupFilter: EntryChildGroupFilterInteraction

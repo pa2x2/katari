@@ -4,16 +4,20 @@ import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupChapter
 import eu.kanade.tachiyomi.data.backup.models.BackupDownloadPreferences
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
+import eu.kanade.tachiyomi.data.backup.models.BackupEntryProgressState
 import eu.kanade.tachiyomi.data.backup.models.BackupHistory
 import eu.kanade.tachiyomi.data.backup.models.BackupPlaybackPreferences
 import eu.kanade.tachiyomi.data.backup.models.BackupPlaybackState
 import eu.kanade.tachiyomi.data.backup.models.BackupTracking
+import eu.kanade.tachiyomi.data.backup.models.toEntryProgressStateSnapshot
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.EntryPlaybackInteraction
 import mihon.entry.interactions.EntryPlaybackPreferencesSnapshot
 import mihon.entry.interactions.EntryPlaybackQualityMode
 import mihon.entry.interactions.EntryPlaybackSnapshot
 import mihon.entry.interactions.EntryPlaybackStateSnapshot
+import mihon.entry.interactions.EntryProgressInteraction
+import mihon.entry.interactions.EntryProgressSnapshot
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.category.interactor.GetCategories
@@ -47,6 +51,7 @@ class EntryRestorer(
     private val entryRepository: EntryRepository = Injekt.get(),
     private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
     private val downloadPreferencesRepository: DownloadPreferencesRepository = Injekt.get(),
+    private val progressInteraction: EntryProgressInteraction = Injekt.get(),
     private val playbackInteraction: EntryPlaybackInteraction = Injekt.get(),
     private val upsertHistory: UpsertHistory = Injekt.get(),
     private val historyRepository: HistoryRepository = Injekt.get(),
@@ -200,6 +205,7 @@ class EntryRestorer(
             restoreExcludedScanlators(entry, backupEntry.excludedScanlators)
         }
         restorePlayback(entry, backupEntry.playbackStates, backupEntry.playbackPreferences)
+        restoreProgress(entry, backupEntry.progressStates)
         if (entry.type == EntryType.ANIME) {
             restoreDownloadPreferences(entry, backupEntry.downloadPreferences)
         }
@@ -207,6 +213,15 @@ class EntryRestorer(
             entryChapterRepository,
         ).update(entry, now, currentFetchWindow)
         entryRepository.update(withInterval)
+    }
+
+    private suspend fun restoreProgress(entry: Entry, states: List<BackupEntryProgressState>) {
+        progressInteraction.restore(
+            entry,
+            EntryProgressSnapshot(
+                states = states.map { it.toEntryProgressStateSnapshot() },
+            ),
+        )
     }
 
     private suspend fun restoreCategories(

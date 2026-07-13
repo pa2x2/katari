@@ -15,6 +15,16 @@ research record differ, the research record wins.
 - Keep Readium private to `:entry-interactions:book`.
 - Device/AVD validation requires separate authorization and a prepared target.
 
+## Milestone status
+
+| Phase | Status |
+| --- | --- |
+| 1 — shared progress foundation | Ready for review; uncommitted |
+| 2 — anime one-shot cutover | Not started |
+| 3 — manga one-shot cutover | Not started |
+| 4 — BOOK SDK/runtime | Not started |
+| 5 — EPUB production integration | Not started |
+
 ## Phase 1 — shared progress foundation
 
 Reference: [Shared progress architecture](book-content-support.md#shared-progress-architecture).

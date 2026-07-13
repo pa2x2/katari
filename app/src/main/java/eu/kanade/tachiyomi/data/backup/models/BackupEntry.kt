@@ -7,8 +7,10 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.protobuf.ProtoNumber
 import mihon.core.common.extensions.EMPTY
 import mihon.core.common.extensions.JsonObjectEmptyBytes
+import mihon.entry.interactions.EntryProgressStateSnapshot
 import tachiyomi.data.MemoColumnAdapter
 import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.model.EntryProgressLocator
 import tachiyomi.domain.entry.model.EntryStatus
 
 @Serializable
@@ -48,6 +50,7 @@ class BackupEntry(
     @ProtoNumber(33) var lastUpdate: Long = 0,
     @ProtoNumber(34) var mergeTargetType: EntryType? = null,
     @ProtoNumber(35) var downloadPreferences: BackupDownloadPreferences? = null,
+    @ProtoNumber(36) var progressStates: List<BackupEntryProgressState> = emptyList(),
     @ProtoNumber(100) var type: EntryType = EntryType.MANGA,
 ) {
     fun toEntry(): Entry {
@@ -133,6 +136,23 @@ data class BackupPlaybackState(
 )
 
 @Serializable
+data class BackupEntryProgressState(
+    @ProtoNumber(1) var contentKey: String = "",
+    @ProtoNumber(2) var resourceKey: String,
+    @ProtoNumber(3) var sourceChildKey: String? = null,
+    @ProtoNumber(4) var resourceRevision: String? = null,
+    @ProtoNumber(5) var locatorKind: String,
+    @ProtoNumber(6) var position: Long? = null,
+    @ProtoNumber(7) var extent: Long? = null,
+    @ProtoNumber(8) var progression: Double? = null,
+    @ProtoNumber(9) var totalProgression: Double? = null,
+    @ProtoNumber(10) var extensions: ByteArray = JsonObjectEmptyBytes,
+    @ProtoNumber(11) var completed: Boolean = false,
+    @ProtoNumber(12) var locatorUpdatedAt: Long = 0,
+    @ProtoNumber(13) var completionUpdatedAt: Long = 0,
+)
+
+@Serializable
 data class BackupPlaybackPreferences(
     @ProtoNumber(1) var dubKey: String? = null,
     @ProtoNumber(2) var streamKey: String? = null,
@@ -202,5 +222,43 @@ fun tachiyomi.domain.entry.model.EntryChapter.toBackupChapter(): BackupChapter {
         lastModifiedAt = lastModifiedAt,
         version = version,
         memo = MemoColumnAdapter.encode(memo),
+    )
+}
+
+internal fun EntryProgressStateSnapshot.toBackupEntryProgressState(): BackupEntryProgressState {
+    return BackupEntryProgressState(
+        contentKey = contentKey,
+        resourceKey = resourceKey,
+        sourceChildKey = sourceChildKey,
+        resourceRevision = resourceRevision,
+        locatorKind = locator.kind,
+        position = locator.position,
+        extent = locator.extent,
+        progression = locator.progression,
+        totalProgression = locator.totalProgression,
+        extensions = MemoColumnAdapter.encode(locator.extensions),
+        completed = completed,
+        locatorUpdatedAt = locatorUpdatedAt,
+        completionUpdatedAt = completionUpdatedAt,
+    )
+}
+
+internal fun BackupEntryProgressState.toEntryProgressStateSnapshot(): EntryProgressStateSnapshot {
+    return EntryProgressStateSnapshot(
+        contentKey = contentKey,
+        resourceKey = resourceKey,
+        sourceChildKey = sourceChildKey,
+        resourceRevision = resourceRevision,
+        locator = EntryProgressLocator(
+            kind = locatorKind,
+            position = position,
+            extent = extent,
+            progression = progression,
+            totalProgression = totalProgression,
+            extensions = MemoColumnAdapter.decode(extensions),
+        ),
+        completed = completed,
+        locatorUpdatedAt = locatorUpdatedAt,
+        completionUpdatedAt = completionUpdatedAt,
     )
 }

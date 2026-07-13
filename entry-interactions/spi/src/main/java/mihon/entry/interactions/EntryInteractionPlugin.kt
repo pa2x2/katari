@@ -117,6 +117,17 @@ interface EntryUpdateEligibilityProcessor {
     fun evaluate(request: EntryUpdateEligibilityRequest): EntryUpdateEligibility
 }
 
+interface EntryProgressProcessor {
+    val type: EntryType
+    suspend fun snapshot(entry: Entry): EntryProgressSnapshot
+    suspend fun restore(entry: Entry, snapshot: EntryProgressSnapshot)
+    suspend fun copy(
+        sourceEntry: Entry,
+        targetEntry: Entry,
+        resourceMappings: List<EntryProgressResourceMapping>,
+    )
+}
+
 interface EntryPlaybackProcessor {
     val type: EntryType
     suspend fun snapshot(entry: Entry): EntryPlaybackSnapshot
@@ -171,6 +182,7 @@ interface EntryInteractionRegistry {
     fun registerCapabilityProcessor(processor: EntryCapabilityProcessor)
     fun registerConsumptionProcessor(processor: EntryConsumptionProcessor)
     fun registerUpdateEligibilityProcessor(processor: EntryUpdateEligibilityProcessor)
+    fun registerProgressProcessor(processor: EntryProgressProcessor)
     fun registerPlaybackProcessor(processor: EntryPlaybackProcessor)
     fun registerChildListProcessor(processor: EntryChildListProcessor)
     fun registerChildGroupFilterProcessor(processor: EntryChildGroupFilterProcessor)

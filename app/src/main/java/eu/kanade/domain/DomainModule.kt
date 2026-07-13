@@ -39,6 +39,7 @@ import tachiyomi.data.category.CategoryRepositoryImpl
 import tachiyomi.data.entry.DownloadPreferencesRepositoryImpl
 import tachiyomi.data.entry.EntryChapterRepositoryImpl
 import tachiyomi.data.entry.EntryCoverHashesRepositoryImpl
+import tachiyomi.data.entry.EntryProgressRepositoryImpl
 import tachiyomi.data.entry.EntryRepositoryImpl
 import tachiyomi.data.entry.EntrySyncRepositoryImpl
 import tachiyomi.data.entry.MergedEntryRepositoryImpl
@@ -81,6 +82,7 @@ import tachiyomi.domain.entry.interactor.UpdateMergedEntry
 import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryCoverHashesRepository
+import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.EntrySyncRepository
 import tachiyomi.domain.entry.repository.MergedEntryRepository
@@ -133,6 +135,7 @@ class DomainModule : InjektModule {
 
         addSingletonFactory<EntryRepository> { EntryRepositoryImpl(get(), get()) }
         addSingletonFactory<EntryChapterRepository> { EntryChapterRepositoryImpl(get(), get()) }
+        addSingletonFactory<EntryProgressRepository> { EntryProgressRepositoryImpl(get()) }
         addSingletonFactory<PlaybackStateRepository> { PlaybackStateRepositoryImpl(get()) }
         addSingletonFactory<PlaybackPreferencesRepository> { PlaybackPreferencesRepositoryImpl(get()) }
         addSingletonFactory<DownloadPreferencesRepository> { DownloadPreferencesRepositoryImpl(get()) }

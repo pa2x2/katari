@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryProgressLocator
 import tachiyomi.i18n.MR
 
 class EntryInteractionRegistryTest {
@@ -97,6 +98,16 @@ class EntryInteractionRegistryTest {
         interactions.playback.snapshot(manga) shouldBe EntryPlaybackSnapshot()
         interactions.playback.restore(manga, EntryPlaybackSnapshot())
         interactions.playback.copy(manga, manga.copy(id = 2L), emptyList())
+    }
+
+    @Test
+    fun `empty plugin list treats progress as empty no-op`() = runTest {
+        val interactions = createEntryInteractions(emptyList())
+        val manga = entry(EntryType.MANGA)
+
+        interactions.progress.snapshot(manga) shouldBe EntryProgressSnapshot()
+        interactions.progress.restore(manga, EntryProgressSnapshot())
+        interactions.progress.copy(manga, manga.copy(id = 2L), emptyList())
     }
 
     @Test
@@ -228,6 +239,20 @@ class EntryInteractionRegistryTest {
         }
 
         exception.message shouldContain "Duplicate playback processor registered for EntryType ANIME"
+    }
+
+    @Test
+    fun `duplicate progress processor registration fails`() {
+        val plugin = EntryInteractionPlugin { registry ->
+            registry.registerProgressProcessor(RecordingEntryProgressProcessor(EntryType.ANIME))
+            registry.registerProgressProcessor(RecordingEntryProgressProcessor(EntryType.ANIME))
+        }
+
+        val exception = assertThrows<IllegalStateException> {
+            createEntryInteractions(listOf(plugin))
+        }
+
+        exception.message shouldContain "Duplicate progress processor registered for EntryType ANIME"
     }
 
     @Test
@@ -562,6 +587,40 @@ class EntryInteractionRegistryTest {
         animeProcessor.snapshotEntryIds shouldBe listOf(70L)
         animeProcessor.restoredEntryIds shouldBe listOf(70L)
         animeProcessor.copyRequests shouldBe listOf(70L to 71L)
+        animeProcessor.copyMappings shouldBe listOf(mappings)
+    }
+
+    @Test
+    fun `progress dispatch selects processor by entry type`() = runTest {
+        val mangaProcessor = RecordingEntryProgressProcessor(EntryType.MANGA)
+        val animeProcessor = RecordingEntryProgressProcessor(EntryType.ANIME)
+        val interactions = createEntryInteractions(
+            listOf(
+                EntryInteractionPlugin { registry ->
+                    registry.registerProgressProcessor(mangaProcessor)
+                    registry.registerProgressProcessor(animeProcessor)
+                },
+            ),
+        )
+        val anime = entry(EntryType.ANIME, id = 72L)
+        val target = anime.copy(id = 73L)
+        val mappings = listOf(
+            EntryProgressResourceMapping(
+                sourceResourceKey = "/source",
+                targetResourceKey = "/target",
+                targetChapterId = 74L,
+            ),
+        )
+
+        val snapshot = interactions.progress.snapshot(anime)
+        interactions.progress.restore(anime, snapshot)
+        interactions.progress.copy(anime, target, mappings)
+
+        snapshot shouldBe animeProcessor.snapshot
+        mangaProcessor.snapshotEntryIds shouldBe emptyList()
+        animeProcessor.snapshotEntryIds shouldBe listOf(72L)
+        animeProcessor.restoredEntryIds shouldBe listOf(72L)
+        animeProcessor.copyRequests shouldBe listOf(72L to 73L)
         animeProcessor.copyMappings shouldBe listOf(mappings)
     }
 
@@ -1186,6 +1245,43 @@ class EntryInteractionRegistryTest {
         ) {
             copyRequests += sourceEntry.id to targetEntry.id
             copyMappings += chapterMappings
+        }
+    }
+
+    private class RecordingEntryProgressProcessor(
+        override val type: EntryType,
+    ) : EntryProgressProcessor {
+        val snapshot = EntryProgressSnapshot(
+            states = listOf(
+                EntryProgressStateSnapshot(
+                    resourceKey = "/resource",
+                    sourceChildKey = "/chapter",
+                    locator = EntryProgressLocator(kind = "time", position = 2L, extent = 3L),
+                    locatorUpdatedAt = 4L,
+                ),
+            ),
+        )
+        val snapshotEntryIds = mutableListOf<Long>()
+        val restoredEntryIds = mutableListOf<Long>()
+        val copyRequests = mutableListOf<Pair<Long, Long>>()
+        val copyMappings = mutableListOf<List<EntryProgressResourceMapping>>()
+
+        override suspend fun snapshot(entry: Entry): EntryProgressSnapshot {
+            snapshotEntryIds += entry.id
+            return snapshot
+        }
+
+        override suspend fun restore(entry: Entry, snapshot: EntryProgressSnapshot) {
+            restoredEntryIds += entry.id
+        }
+
+        override suspend fun copy(
+            sourceEntry: Entry,
+            targetEntry: Entry,
+            resourceMappings: List<EntryProgressResourceMapping>,
+        ) {
+            copyRequests += sourceEntry.id to targetEntry.id
+            copyMappings += resourceMappings
         }
     }
 
