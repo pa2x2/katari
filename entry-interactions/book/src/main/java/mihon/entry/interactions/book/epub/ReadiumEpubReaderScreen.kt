@@ -164,6 +164,7 @@ internal fun ReadiumEpubReaderScreen(
                             totalPages = state.totalPages,
                             onPageIndexChange = onPageIndexPreview,
                             onPageIndexChangeFinished = onPageIndexChange,
+                            showSinglePageLabel = true,
                             previousSectionDescription = stringResource(MR.strings.action_previous_section),
                             nextSectionDescription = stringResource(MR.strings.action_next_section),
                         )
@@ -512,6 +513,7 @@ private fun ReadiumLayoutSettings(settings: ReadiumEpubSettingsBinding) {
     if (layoutMode == ReadiumEpubSettingsProvider.LAYOUT_PAGINATED) {
         SettingChips(
             label = stringResource(MR.strings.pref_epub_column_count),
+            summary = stringResource(MR.strings.pref_epub_column_count_summary),
             values = listOf(
                 ReadiumEpubSettingsProvider.COLUMNS_AUTO to stringResource(MR.strings.pref_epub_columns_auto),
                 ReadiumEpubSettingsProvider.COLUMNS_ONE to stringResource(MR.strings.pref_epub_columns_one),
@@ -559,6 +561,7 @@ private fun ReadiumLayoutSettings(settings: ReadiumEpubSettingsBinding) {
     }
     CheckboxItem(
         label = stringResource(MR.strings.pref_epub_text_normalization),
+        subtitle = stringResource(MR.strings.pref_epub_text_normalization_summary),
         checked = textNormalization,
         onClick = { settings.textNormalization.setProfileValue(!textNormalization) },
     )
@@ -583,12 +586,25 @@ private fun ReadiumControlSettings(settings: ReadiumEpubSettingsBinding) {
 @Composable
 private fun SettingChips(
     label: String,
+    summary: String? = null,
     values: List<Pair<String, String>>,
     selected: String,
     onSelect: (String) -> Unit,
 ) {
     Column {
         HeadingItem(label)
+        summary?.let {
+            Text(
+                text = it,
+                modifier = Modifier.padding(
+                    start = SettingsItemsPaddings.Horizontal,
+                    end = SettingsItemsPaddings.Horizontal,
+                    bottom = SettingsItemsPaddings.Vertical,
+                ),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
         FlowRow(
             modifier = Modifier.padding(
                 start = SettingsItemsPaddings.Horizontal,

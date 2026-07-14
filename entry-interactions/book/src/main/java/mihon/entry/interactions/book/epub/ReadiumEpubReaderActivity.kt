@@ -42,7 +42,6 @@ import org.readium.r2.shared.publication.Locator
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import kotlin.math.roundToInt
 
 /** Processor-owned EPUB reader surface. Generic BOOK code only launches this entry point. */
 internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
@@ -58,7 +57,7 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
     private var surfaceState by mutableStateOf<ReaderSurfaceState>(ReaderSurfaceState.Loading)
     private var uiState by mutableStateOf(ReadiumEpubReaderUiState(bookTitle = ""))
     private var navigation by mutableStateOf<List<ReadiumNavigationRow>>(emptyList())
-    private val resolvedNavigationProgressions = mutableMapOf<String, Double>()
+    private val resolvedNavigationPositions = mutableMapOf<String, ReadiumNavigationPosition>()
     private var navigationResolutionJob: Job? = null
     private var navigationResolutionKey: String? = null
     private var resourceCurrentPage = 1
@@ -384,14 +383,14 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
         navigationResolutionKey = key
         navigationResolutionJob?.cancel()
         navigationResolutionJob = lifecycleScope.launch {
-            val progressions = host.resolveNavigationProgressions(
+            val positions = host.resolveNavigationProgressions(
                 navigator = fragment,
                 navigation = navigation,
                 resourceId = locator.resourceId,
                 paginated = paginated,
             )
             if (uiState.currentLocator?.resourceId != locator.resourceId || isPaginated() != paginated) return@launch
-            resolvedNavigationProgressions.putAll(progressions)
+            resolvedNavigationPositions.putAll(positions)
             recalculateSectionMetrics()
         }
     }
@@ -399,18 +398,34 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
     private fun recalculateSectionMetrics() {
         val locator = uiState.currentLocator ?: return
         val preferredIndex = pendingNavigationIndex ?: uiState.currentSectionIndex
-        val metrics = resolveSectionMetrics(
-            navigation = navigation,
-            locator = locator,
-            resolvedProgressions = resolvedNavigationProgressions,
-            preferredIndex = preferredIndex,
-        )
+        val paginatedMetrics = if (isPaginated()) {
+            resolvePaginatedSectionMetrics(
+                navigation = navigation,
+                locator = locator,
+                resolvedPositions = resolvedNavigationPositions,
+                currentPageIndex = resourceCurrentPage - 1,
+                totalPages = resourceTotalPages,
+                preferredIndex = preferredIndex,
+            )
+        } else {
+            null
+        }
+        val scrollingMetrics = if (paginatedMetrics == null) {
+            resolveSectionMetrics(
+                navigation = navigation,
+                locator = locator,
+                resolvedPositions = resolvedNavigationPositions,
+                preferredIndex = preferredIndex,
+            )
+        } else {
+            null
+        }
         val fallbackIndex = preferredIndex
             .takeIf { it in navigation.indices && navigation[it].item.target.resourceId == locator.resourceId }
             ?: navigation.indexOfFirst { it.item.target.resourceId == locator.resourceId }
-        val sectionIndex = metrics?.index ?: fallbackIndex
-        val sectionStart = metrics?.startProgression ?: 0.0
-        val sectionEnd = metrics?.endProgression ?: 1.0
+        val sectionIndex = paginatedMetrics?.index ?: scrollingMetrics?.index ?: fallbackIndex
+        val sectionStart = paginatedMetrics?.startProgression ?: scrollingMetrics?.startProgression ?: 0.0
+        val sectionEnd = paginatedMetrics?.endProgression ?: scrollingMetrics?.endProgression ?: 1.0
         sectionStartProgression = sectionStart
         sectionEndProgression = sectionEnd
 
@@ -420,10 +435,10 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
         } else {
             0.0
         }
-        val startPageIndex = (sectionStart * resourceTotalPages).roundToInt()
-            .coerceIn(0, resourceTotalPages - 1)
-        val endPageIndex = (sectionEnd * resourceTotalPages).roundToInt()
-            .coerceIn(startPageIndex + 1, resourceTotalPages)
+        val startPageIndex = paginatedMetrics?.startPageIndex
+            ?: (sectionStart * resourceTotalPages).toInt().coerceIn(0, resourceTotalPages - 1)
+        val endPageIndex = paginatedMetrics?.endPageIndex
+            ?: (sectionEnd * resourceTotalPages).toInt().coerceIn(startPageIndex + 1, resourceTotalPages)
         sectionStartPageIndex = startPageIndex
         val totalPages = (endPageIndex - startPageIndex).coerceAtLeast(1)
         val currentPage = (resourceCurrentPage - startPageIndex).coerceIn(1, totalPages)

@@ -299,10 +299,11 @@
     <string name="pref_epub_layout_mode">Reading layout</string>
     <string name="pref_epub_layout_paginated">Paginated</string>
     <string name="pref_epub_layout_scrolling">Continuous scrolling</string>
-    <string name="pref_epub_column_count">Columns</string>
+    <string name="pref_epub_column_count">Page spread</string>
+    <string name="pref_epub_column_count_summary">Controls single- or two-page display on wide and landscape screens. Portrait phones always use one page.</string>
     <string name="pref_epub_columns_auto">Automatic</string>
-    <string name="pref_epub_columns_one">One</string>
-    <string name="pref_epub_columns_two">Two</string>
+    <string name="pref_epub_columns_one">Single page</string>
+    <string name="pref_epub_columns_two">Two-page spread</string>
     <string name="pref_epub_page_margins">Page margins</string>
     <string name="pref_epub_text_layout">Text layout</string>
     <string name="pref_epub_publisher_styles">Use publisher styles</string>
@@ -315,7 +316,7 @@
     <string name="pref_epub_alignment_left">Left</string>
     <string name="pref_epub_alignment_right">Right</string>
     <string name="pref_epub_text_normalization">Normalize typography</string>
-    <string name="pref_epub_text_normalization_summary">Improve consistency and accessibility of the book’s text styles</string>
+    <string name="pref_epub_text_normalization_summary">Override the book’s fonts and text styling with a consistent, accessible layout</string>
     <string name="pref_epub_tap_navigation">Tap screen edges to turn pages</string>
     <string name="pref_epub_show_reading_progress">Show reading progress</string>
     <string name="pref_epub_controls">Controls</string>

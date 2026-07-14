@@ -65,6 +65,7 @@ fun ReaderPageNavigator(
     totalPages: Int,
     onPageIndexChange: (Int) -> Unit,
     onPageIndexChangeFinished: ((Int) -> Unit)? = null,
+    showSinglePageLabel: Boolean = false,
     previousSectionDescription: String,
     nextSectionDescription: String,
     modifier: Modifier = Modifier,
@@ -115,6 +116,7 @@ fun ReaderPageNavigator(
             previousSectionEnabled = previousSectionEnabled,
             currentLabel = safeCurrentPage.toString(),
             totalLabel = safeTotalPages.toString(),
+            showSinglePageLabel = showSinglePageLabel,
             previousSectionDescription = previousSectionDescription,
             nextSectionDescription = nextSectionDescription,
             interactionSource = interactionSource,
@@ -132,6 +134,7 @@ fun ReaderPageNavigator(
             previousSectionEnabled = previousSectionEnabled,
             currentLabel = safeCurrentPage.toString(),
             totalLabel = safeTotalPages.toString(),
+            showSinglePageLabel = showSinglePageLabel,
             previousSectionDescription = previousSectionDescription,
             nextSectionDescription = nextSectionDescription,
             interactionSource = interactionSource,
@@ -198,6 +201,7 @@ fun ReaderProgressNavigator(
         previousSectionEnabled = previousSectionEnabled,
         currentLabel = "$percentage%",
         totalLabel = "100%",
+        showSinglePageLabel = false,
         previousSectionDescription = previousSectionDescription,
         nextSectionDescription = nextSectionDescription,
         interactionSource = interactionSource,
@@ -218,6 +222,7 @@ private fun HorizontalReaderPageNavigator(
     previousSectionEnabled: Boolean,
     currentLabel: String,
     totalLabel: String,
+    showSinglePageLabel: Boolean,
     previousSectionDescription: String,
     nextSectionDescription: String,
     interactionSource: MutableInteractionSource,
@@ -266,6 +271,25 @@ private fun HorizontalReaderPageNavigator(
                         Text(totalLabel)
                     }
                 }
+            } else if (showSinglePageLabel) {
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(backgroundColor)
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(currentLabel)
+                    Slider(
+                        state = remember { SliderState(value = 1f) },
+                        enabled = false,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 8.dp),
+                    )
+                    Text(totalLabel)
+                }
             } else {
                 Spacer(Modifier.weight(1f))
             }
@@ -290,6 +314,7 @@ private fun VerticalReaderPageNavigator(
     previousSectionEnabled: Boolean,
     currentLabel: String,
     totalLabel: String,
+    showSinglePageLabel: Boolean,
     previousSectionDescription: String,
     nextSectionDescription: String,
     interactionSource: MutableInteractionSource,
@@ -331,6 +356,16 @@ private fun VerticalReaderPageNavigator(
                     interactionSource = interactionSource,
                 )
                 Text(totalLabel)
+            }
+        } else if (showSinglePageLabel) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(backgroundColor),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("$currentLabel / $totalLabel")
             }
         } else {
             Spacer(Modifier.weight(1f))

@@ -119,6 +119,7 @@ object SettingsReadiumEpubReaderScreen : SearchableSettings {
                                 stringResource(MR.strings.pref_epub_columns_two),
                         ),
                         title = stringResource(MR.strings.pref_epub_column_count),
+                        subtitle = stringResource(MR.strings.pref_epub_column_count_summary),
                         enabled = layoutModeValue == ReadiumEpubSettingsProvider.LAYOUT_PAGINATED,
                     ),
                     Preference.PreferenceItem.SliderPreference(

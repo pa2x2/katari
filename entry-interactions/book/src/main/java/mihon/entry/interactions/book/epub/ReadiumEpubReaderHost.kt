@@ -88,7 +88,7 @@ internal class ReadiumEpubReaderHost(
         navigation: List<ReadiumNavigationRow>,
         resourceId: String,
         paginated: Boolean,
-    ): Map<String, Double> {
+    ): Map<String, ReadiumNavigationPosition> {
         val targets = navigation
             .map(ReadiumNavigationRow::item)
             .map(BookNavigationItem::target)
@@ -111,17 +111,23 @@ internal class ReadiumEpubReaderHost(
                     if (!element) return null;
                     var rect = element.getBoundingClientRect();
                     var progression;
+                    var pageIndex = null;
                     if (horizontal) {
                         var width = Math.max(root.scrollWidth, document.documentElement.scrollWidth, 1);
                         var x = rect.left + (window.scrollX || root.scrollLeft || 0);
                         var rtl = document.body && document.body.dir.toLowerCase() === "rtl";
                         progression = (rtl ? -x : x) / width;
+                        var pageWidth = Math.max(Android.getViewportWidth() / window.devicePixelRatio, 1);
+                        pageIndex = Math.floor(Math.abs(x) / pageWidth + 0.0001);
                     } else {
                         var height = Math.max(root.scrollHeight, document.documentElement.scrollHeight, 1);
                         var y = rect.top + (window.scrollY || root.scrollTop || 0);
                         progression = y / height;
                     }
-                    return Math.max(0, Math.min(1, progression));
+                    return {
+                        progression: Math.max(0, Math.min(1, progression)),
+                        pageIndex: pageIndex
+                    };
                 }));
             })();
             """.trimIndent(),
@@ -134,7 +140,13 @@ internal class ReadiumEpubReaderHost(
         } ?: return emptyMap()
 
         return targets.mapIndexedNotNull { index, target ->
-            values.optDouble(index).takeIf(Double::isFinite)?.let { target.navigationKey() to it }
+            val value = values.optJSONObject(index) ?: return@mapIndexedNotNull null
+            val progression = value.optDouble("progression").takeIf(Double::isFinite)
+                ?: return@mapIndexedNotNull null
+            target.navigationKey() to ReadiumNavigationPosition(
+                progression = progression,
+                pageIndex = value.optInt("pageIndex").takeIf { value.has("pageIndex") && !value.isNull("pageIndex") },
+            )
         }.toMap()
     }
 
