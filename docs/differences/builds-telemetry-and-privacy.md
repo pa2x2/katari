@@ -29,4 +29,6 @@ Development, preview, and benchmark variants use separate application-ID suffixe
 
 Extensions and source websites make their own network requests and may have policies separate from Katari. Disabling Katari analytics does not prevent a website from observing requests sent to it. Backups can also contain sensitive source settings when private settings are selected.
 
-Katari does not host content. Review extension trust, avoid sharing logs containing tokens or signed media URLs, and store backups securely.
+!!! warning
+
+    Katari does not host content. Review extension trust, avoid sharing logs containing tokens or signed media URLs, and store backups securely.

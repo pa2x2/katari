@@ -32,7 +32,9 @@ override suspend fun getMedia(
 
 Use `HLS` for HLS manifests, `DASH` for DASH manifests, and `PROGRESSIVE` for directly playable files. Use `UNKNOWN` only when the URL or response must determine the type. Set `mimeType` when the provider supplies reliable information.
 
-Put playback headers in `VideoRequest`; player requests do not automatically inherit the source's OkHttp headers. Include only what the media host requires, commonly `Referer`, `Origin`, or authorization. Never use a stream label or key to carry secrets.
+!!! warning
+
+    Put playback headers in `VideoRequest`; player requests do not automatically inherit the source's OkHttp headers. Include only what the media host requires, commonly `Referer`, `Origin`, or authorization. Never use a stream label or key to carry secrets.
 
 ## Dubs and source qualities
 

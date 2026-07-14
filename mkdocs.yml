@@ -41,8 +41,14 @@ theme:
     - content.code.copy
     - navigation.footer
     - navigation.indexes
+    - navigation.instant
+    - navigation.instant.progress
     - navigation.path
+    - navigation.sections
+    - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.top
+    - navigation.tracking
     - toc.follow
     - search.highlight
     - search.suggest
@@ -69,21 +75,20 @@ extra_javascript:
 
 nav:
   - Home: README.md
-  - Relationship with Mihon: relationship-with-mihon.md
-  - Migrating to Katari: migrating-to-katari.md
-  - Katari features:
-      - Unified library: features/unified-library.md
+  - Get started:
+      - Migrating to Katari: migrating-to-katari.md
+      - Relationship with Mihon: relationship-with-mihon.md
+      - Backup and restore: differences/backup-and-restore.md
+      - Inherited Mihon features: inherited-features.md
+  - Features:
       - Content type support: features/content-type-reference.md
+      - Unified library: features/unified-library.md
       - Profiles: features/profiles.md
       - Merged entries: features/merged-entries.md
-      - Video playback: features/video-playback.md
       - Feeds and discovery: features/feeds-and-discovery.md
-  - Katari differences:
-      - Backup and restore: differences/backup-and-restore.md
+      - Video playback: features/video-playback.md
       - Extensions and compatibility: differences/extensions-and-compatibility.md
       - Builds, telemetry, and privacy: differences/builds-telemetry-and-privacy.md
-  - Inherited Mihon features:
-      - Curated links to Mihon documentation: inherited-features.md
   - Developers:
       - developers/README.md
       - Extension development:

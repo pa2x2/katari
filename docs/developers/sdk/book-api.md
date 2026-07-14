@@ -41,13 +41,17 @@ This prevents a format processor from depending on extension loading, source HTT
 - `BookLocator` and bounded text context for persistent progress;
 - structured availability, cache, and failure values.
 
-`book-api` deliberately contains no Android UI, network client, source callback, EPUB parser, DRM implementation, or reader engine. EPUB support and its reader live in the built-in EPUB processor, outside the public data contract.
+!!! note
+
+    `book-api` deliberately contains no Android UI, network client, source callback, EPUB parser, DRM implementation, or reader engine. EPUB support and its reader live in the built-in EPUB processor, outside the public data contract.
 
 ## Access and trust boundary
 
 Sources return data-only `BookResourceLocation` values. Katari validates them and owns network, URI, cache, range, and materialization access. A processor requests resources through the host session; it does not call the source or receive source credentials directly.
 
-This boundary keeps format code independent from source implementations and makes resource limits enforceable in one place. It does not bypass access controls. DRM processing is outside the current scope, and `protection` is selection metadata rather than permission to remove or circumvent protection.
+!!! warning
+
+    This boundary keeps format code independent from source implementations and makes resource limits enforceable in one place. It does not bypass access controls. DRM processing is outside the current scope, and `protection` is selection metadata rather than permission to remove or circumvent protection.
 
 ## Versioning
 

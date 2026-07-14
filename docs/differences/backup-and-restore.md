@@ -23,7 +23,9 @@ Global preferences and extension-store configuration are stored separately from 
 
 ## Sensitive data
 
-Private settings can include stored passwords, tokens, or other source credentials. Leave this option disabled unless it is required, and protect any backup that includes it. Keep copies outside the selected storage folder so device or storage failure does not remove both app data and backups.
+!!! warning
+
+    Private settings can include stored passwords, tokens, or other source credentials. Leave this option disabled unless it is required, and protect any backup that includes it. Keep copies outside the selected storage folder so device or storage failure does not remove both app data and backups.
 
 ## Restore behavior
 
@@ -37,4 +39,6 @@ Extensions and downloaded media are not stored in the backup. Restore reports mi
 
 Mihon can read its own shared backup data but does not understand Katari-only profile, additional entry-type, merged-entry, feed, or type-specific state. Do not rely on a round trip through Mihon to preserve Katari-specific state.
 
-Before a major migration, keep the original backup and verify representative data in every profile.
+!!! tip
+
+    Before a major migration, keep the original backup and verify representative data in every profile.

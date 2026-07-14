@@ -20,7 +20,9 @@ SEntry.create().apply {
 }
 ```
 
-Do not defer the type until `getContentDetails()` unless the listing genuinely cannot determine it. Katari uses type information when presenting and opening catalogue results.
+!!! warning
+
+    Do not defer the type until `getContentDetails()` unless the listing genuinely cannot determine it. Katari uses type information when presenting and opening catalogue results.
 
 ## Manga entries
 

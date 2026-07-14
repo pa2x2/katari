@@ -27,7 +27,9 @@ The extension `versionName` has three numeric components:
 
 For example, an extension targeting API family `<major>.<minor>` starts with `<major>.<minor>.1`; its next extension release is `<major>.<minor>.2` even when the SDK dependency is unchanged. Katari and the extension repository derive the compatibility family by removing the final component from `versionName`.
 
-Do not treat `versionName` as an independent SemVer for the extension. Read [SDK compatibility and versioning](../developers/sdk/versioning.md) before changing either of its first two components.
+!!! warning
+
+    Do not treat `versionName` as an independent SemVer for the extension. Read [SDK compatibility and versioning](../developers/sdk/versioning.md) before changing either of its first two components.
 
 ## Preserve Android identity
 

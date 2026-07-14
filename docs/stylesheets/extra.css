@@ -14,6 +14,11 @@
 }
 
 [data-md-color-scheme="default"] {
+  --katari-emphasis-fg: #4f378b;
+  --katari-inline-code-bg: #f0ebfa;
+  --katari-inline-code-border: #d8cbed;
+  --katari-inline-code-fg: #493379;
+  --katari-nav-active-bg: rgba(103, 80, 164, 0.09);
   --md-default-fg-color: #213547;
   --md-default-fg-color--light: #476582;
   --md-default-fg-color--lighter: #6f7f8f;
@@ -30,6 +35,11 @@
 }
 
 [data-md-color-scheme="slate"] {
+  --katari-emphasis-fg: #d9ceff;
+  --katari-inline-code-bg: #332b46;
+  --katari-inline-code-border: #5f4d7c;
+  --katari-inline-code-fg: #f0eaff;
+  --katari-nav-active-bg: rgba(196, 181, 244, 0.11);
   --md-hue: 240;
   --md-primary-fg-color: #1b1b1f;
   --md-primary-fg-color--light: #202127;
@@ -57,6 +67,21 @@
   box-shadow: 0 1px 0 var(--md-default-fg-color--lightest);
 }
 
+.md-tabs {
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+  box-shadow: none;
+}
+
+.md-tabs__link {
+  font-weight: 600;
+  opacity: 0.72;
+}
+
+.md-tabs__item--active .md-tabs__link,
+.md-tabs__link:is(:focus, :hover) {
+  opacity: 1;
+}
+
 .md-header__button.md-logo img,
 .md-header__button.md-logo svg {
   height: 2.15rem;
@@ -68,14 +93,31 @@
 }
 
 .md-content__inner {
-  margin-top: 1.2rem;
+  margin: 1.2rem auto 0;
+  max-width: 52rem;
   padding-top: 1rem;
+}
+
+.md-typeset {
+  font-size: 0.82rem;
+  line-height: 1.72;
+}
+
+.md-typeset p,
+.md-typeset ul,
+.md-typeset ol {
+  margin-bottom: 1.05em;
+  margin-top: 1.05em;
+}
+
+.md-typeset li + li {
+  margin-top: 0.3em;
 }
 
 .md-typeset h1 {
   color: var(--md-default-fg-color);
-  font-size: 1.6rem;
-  font-weight: 600;
+  font-size: 1.7rem;
+  font-weight: 650;
   letter-spacing: -0.02em;
   line-height: 1.25;
   margin-bottom: 1rem;
@@ -83,14 +125,36 @@
 
 .md-typeset h2 {
   border-top: 1px solid var(--md-default-fg-color--lightest);
-  font-weight: 600;
+  font-weight: 650;
   letter-spacing: -0.01em;
   margin-top: 2.5rem;
   padding-top: 1.5rem;
 }
 
 .md-typeset h3 {
+  font-weight: 650;
+  margin-top: 1.8rem;
+}
+
+.md-typeset h4 {
+  font-weight: 650;
+}
+
+.md-typeset strong {
+  color: var(--katari-emphasis-fg);
+  font-weight: 700;
+}
+
+.md-typeset :not(pre) > code {
+  background-color: var(--katari-inline-code-bg);
+  border: 1px solid var(--katari-inline-code-border);
+  border-radius: 0.22rem;
+  box-decoration-break: clone;
+  color: var(--katari-inline-code-fg);
+  font-size: 0.86em;
   font-weight: 600;
+  padding: 0.08em 0.3em;
+  -webkit-box-decoration-break: clone;
 }
 
 .md-typeset a:hover {
@@ -98,7 +162,16 @@
 }
 
 .md-nav__link--active {
+  background: var(--katari-nav-active-bg);
+  border-radius: 0.25rem;
+  color: var(--md-accent-fg-color);
   font-weight: 600;
+  margin-left: -0.35rem;
+  padding: 0.28rem 0.35rem;
+}
+
+.md-nav__link:is(:focus, :hover) {
+  color: var(--md-accent-fg-color);
 }
 
 .md-nav__title,
@@ -116,11 +189,42 @@
 }
 
 .md-typeset table:not([class]) th {
-  background-color: rgba(37, 59, 98, 0.12);
+  background-color: rgba(37, 59, 98, 0.1);
+  color: var(--md-default-fg-color);
+  font-weight: 650;
 }
 
 [data-md-color-scheme="slate"] .md-typeset table:not([class]) th {
-  background-color: rgba(127, 158, 172, 0.12);
+  background-color: rgba(196, 181, 244, 0.1);
+}
+
+.md-typeset table:not([class]) {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.35rem;
+}
+
+.md-typeset table:not([class]) tr:hover {
+  background-color: var(--katari-nav-active-bg);
+}
+
+.md-typeset .admonition,
+.md-typeset details {
+  background-color: var(--md-default-bg-color--light);
+  border-width: 0 0 0 0.2rem;
+  box-shadow: none;
+}
+
+.md-typeset .admonition-title,
+.md-typeset summary {
+  font-weight: 650;
+}
+
+.md-sidebar--secondary .md-nav__link--active {
+  background: transparent;
+  border-left: 2px solid var(--md-accent-fg-color);
+  border-radius: 0;
+  margin-left: -0.55rem;
+  padding-left: 0.45rem;
 }
 
 ::selection {
@@ -175,8 +279,8 @@
 
 .katari-doc-groups {
   display: grid;
-  gap: 2rem;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.75rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .md-typeset .katari-doc-groups h3 {
@@ -193,9 +297,19 @@
   margin-left: 0;
 }
 
+.katari-doc-groups > div > p {
+  color: var(--md-default-fg-color--light);
+}
+
+@media screen and (max-width: 59.984375em) {
+  .katari-doc-groups {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media screen and (max-width: 44.984375em) {
   .md-content__inner {
-    margin-top: 0;
+    margin: 0 0.8rem;
     padding-top: 1.2rem;
   }
 
