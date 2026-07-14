@@ -15,7 +15,11 @@ dependencies {
     api(projects.entryViewerSettingsApi)
 
     implementation(projects.core.common)
+    implementation(projects.presentationCore)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.materialIcons)
     implementation(libs.androidx.fragment)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.injekt)

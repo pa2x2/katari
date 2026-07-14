@@ -12,5 +12,8 @@ dependencies {
     api(projects.entryInteractions.api)
     api(libs.androidx.appCompat)
 
+    implementation(projects.presentationCore)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.compose.material3)
     implementation(libs.injekt)
 }

@@ -4,11 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.SystemClock
-import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.ProgressBar
-import android.widget.TextView
 import androidx.fragment.app.commitNow
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.withStarted
@@ -20,6 +17,8 @@ import mihon.entry.interactions.book.BookReaderSessionFactory
 import mihon.entry.interactions.book.OpenedBookReaderSession
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.displayName
+import mihon.entry.interactions.book.showBookReaderError
+import mihon.entry.interactions.book.showBookReaderLoading
 import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import org.readium.r2.navigator.epub.EpubNavigatorFragment
@@ -165,31 +164,15 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
     }
 
     private fun showLoading() {
-        root.removeAllViews()
-        root.addView(
-            ProgressBar(this),
-            FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                Gravity.CENTER,
-            ),
-        )
+        root.showBookReaderLoading(getString(R.string.book_reader_loading))
     }
 
     private fun showError(message: String) {
-        root.removeAllViews()
-        val spacing = (resources.displayMetrics.density * 24).toInt()
-        root.addView(
-            TextView(this).apply {
-                text = message
-                textSize = 16f
-                gravity = Gravity.CENTER
-                setPadding(spacing, spacing, spacing, spacing)
-            },
-            FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT,
-            ),
+        root.showBookReaderError(
+            title = getString(R.string.book_reader_unavailable_title),
+            message = message,
+            closeLabel = getString(R.string.book_reader_close),
+            onClose = ::finish,
         )
     }
 
