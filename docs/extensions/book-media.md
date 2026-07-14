@@ -29,9 +29,11 @@ class ExampleBookSource : EntryHttpSource(), SourceMetadata {
 }
 ```
 
-!!!note
+::: info
 
-    This metadata lets Katari describe the source before loading its catalogue; it does not replace `SEntry.type`. If the extension repository publishes source metadata, keep its `supportedEntryTypes` value aligned with the runtime source. See [publishing and maintenance](./publishing.md#publish-source-discovery-metadata).
+This metadata lets Katari describe the source before loading its catalogue; it does not replace `SEntry.type`. If the extension repository publishes source metadata, keep its `supportedEntryTypes` value aligned with the runtime source. See [publishing and maintenance](./publishing.md#publish-source-discovery-metadata).
+
+:::
 
 ## Model openable items
 

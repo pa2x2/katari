@@ -31,11 +31,11 @@ The source is not permanently classified by content type. Each `SEntry` declares
 ## Guides
 
 1. [Create your first extension](./getting-started.md)
-2. [Understand the Entry SDK](../developers/sdk/README.md)
+2. [Understand the Entry SDK](../developers/sdk/)
 3. [Make HTTP requests and parse responses](./http-and-parsing.md)
 4. Choose the [image](./image-media.md), [playback](./playback-media.md), or [book](./book-media.md) media cookbook.
 5. [Publish and maintain the extension](./publishing.md)
 
 If you already maintain a Mihon source, follow the [migration guide](./migrating-from-mihon.md). Before selecting an SDK release, read [SDK compatibility and versioning](../developers/sdk/versioning.md).
 
-The [SDK documentation](../developers/sdk/README.md) explains the public contracts and links to both generated API references. The Kotlin sources under [`entry-source-api`](https://github.com/katariapp/katari/tree/main/entry-source-api/src) and [`book-api`](https://github.com/katariapp/katari/tree/main/book-api/src) remain the source of truth for development snapshots.
+The [SDK documentation](../developers/sdk/) explains the public contracts and links to both generated API references. The Kotlin sources under [`entry-source-api`](https://github.com/katariapp/katari/tree/main/entry-source-api/src) and [`book-api`](https://github.com/katariapp/katari/tree/main/book-api/src) remain the source of truth for development snapshots.

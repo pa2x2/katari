@@ -2,9 +2,11 @@
 
 Katari retains many of Mihon's established workflows. Use the upstream guides below when Katari does not document a difference.
 
-!!! warning "Katari is an independent project"
+::: warning Katari is an independent project
 
-    These links lead to Mihon's website. Mihon's documentation is useful for inherited behavior, but Mihon's maintainers and support channels are not responsible for Katari. Report Katari problems to Katari.
+These links lead to Mihon's website. Mihon's documentation is useful for inherited behavior, but Mihon's maintainers and support channels are not responsible for Katari. Report Katari problems to Katari.
+
+:::
 
 Read [About project](./about-project.md) for terminology and support information.
 

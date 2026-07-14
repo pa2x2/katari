@@ -31,9 +31,11 @@ Status meanings:
 | Automatically download newly discovered child items |   ✓   |   ✓   |  —   |
 | Delete downloads after marking an item consumed     |   ✓   |   —   |  —   |
 
-!!! note
+::: info
 
-    Bookmark-based bulk downloads are available when the content type supports individual bookmarks.
+Bookmark-based bulk downloads are available when the content type supports individual bookmarks.
+
+:::
 
 ## Discovery and integrations
 

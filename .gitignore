@@ -9,9 +9,11 @@ gradle/tmp
 .idea/*
 !.idea/icon.svg
 /captures
-/site
-/.venv-docs
-/docs/developers/sdk/api/
+/node_modules/
+/site/
+/docs/.vitepress/cache/
+/docs/.vitepress/dist/
+/docs/public/developers/sdk/api/
 
 # Configuration files
 keystore.properties

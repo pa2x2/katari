@@ -69,6 +69,6 @@ BOOK adds another separation inside its media path: sources describe resources, 
 
 ## Reference and compatibility
 
-The [data model](./data-model.md) documents values and identity rules. The generated [Entry Source API reference](api/index.html) and [Book API reference](api/book/index.html) list the public Kotlin surfaces.
+The [data model](./data-model.md) documents values and identity rules. The generated [Entry Source API reference](api/index.html){target="_self"} and [Book API reference](api/book/index.html){target="_self"} list the public Kotlin surfaces.
 
 Before adopting another release, read [compatibility and versioning](./versioning.md) and the [SDK changelog](./changelog.md). Compiling against a new symbol also requires a Katari app release that supplies that symbol at runtime.

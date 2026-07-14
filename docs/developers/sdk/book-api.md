@@ -43,17 +43,21 @@ Katari currently registers book processors as built-in application components. `
 - `BookLocator` and bounded text context for persistent progress;
 - structured availability, cache, and failure values.
 
-!!! note
+::: info
 
-    `book-api` deliberately contains no Android UI, network client, source callback, EPUB parser, DRM implementation, or reader engine. EPUB support and its reader live in the built-in EPUB processor, outside the public data contract.
+`book-api` deliberately contains no Android UI, network client, source callback, EPUB parser, DRM implementation, or reader engine. EPUB support and its reader live in the built-in EPUB processor, outside the public data contract.
+
+:::
 
 ## Access and trust boundary
 
 Sources return data-only `BookResourceLocation` values. Katari validates them and owns network, URI, cache, range, and materialization access. A processor requests resources through the host session; it does not call the source or receive source credentials directly.
 
-!!! warning
+::: warning
 
-    This boundary keeps format code independent from source implementations and makes resource limits enforceable in one place. It does not bypass access controls. DRM processing is outside the current scope, and `protection` is selection metadata rather than permission to remove or circumvent protection.
+This boundary keeps format code independent from source implementations and makes resource limits enforceable in one place. It does not bypass access controls. DRM processing is outside the current scope, and `protection` is selection metadata rather than permission to remove or circumvent protection.
+
+:::
 
 ## Versioning
 
@@ -61,4 +65,4 @@ Sources return data-only `BookResourceLocation` values. Katari validates them an
 
 For local development, publish the complete SDK rather than publishing either artifact alone. See [Local SDK development](./local-development.md).
 
-The generated [Book API reference](api/book/index.html) is the source-level reference for processor-neutral book models.
+The generated [Book API reference](api/book/index.html){target="_self"} is the source-level reference for processor-neutral book models.

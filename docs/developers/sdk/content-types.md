@@ -20,13 +20,17 @@ SEntry.create().apply {
 }
 ```
 
-!!! warning
+::: warning
 
-    Do not defer the type until `getContentDetails()` unless the listing genuinely cannot determine it. Katari uses type information when presenting and opening catalogue results.
+Do not defer the type until `getContentDetails()` unless the listing genuinely cannot determine it. Katari uses type information when presenting and opening catalogue results.
 
-!!! note
+:::
 
-    A source can additionally implement `SourceMetadata` to advertise all entry types it may supply. Katari can then show those types on source discovery surfaces before a catalogue is loaded. This metadata is optional and descriptive; it never replaces the type on each `SEntry`.
+::: info
+
+A source can additionally implement `SourceMetadata` to advertise all entry types it may supply. Katari can then show those types on source discovery surfaces before a catalogue is loaded. This metadata is optional and descriptive; it never replaces the type on each `SEntry`.
+
+:::
 
 ## Manga entries
 

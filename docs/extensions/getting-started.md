@@ -164,7 +164,7 @@ internal class ExampleSource : EntryImageHttpSource(), SourceMetadata {
 
 `supportedEntryTypes` lets Katari describe the source before loading its catalogue. Catalogue entries must still set `type` as soon as it is known; do not wait for the details request if the listing already provides enough information.
 
-Continue with the [Entry SDK overview](../developers/sdk/README.md) and [data model](../developers/sdk/data-model.md) for concrete entry and media payloads.
+Continue with the [Entry SDK overview](../developers/sdk/) and [data model](../developers/sdk/data-model.md) for concrete entry and media payloads.
 
 ## Test against a local Katari checkout
 

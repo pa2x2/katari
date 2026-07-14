@@ -23,7 +23,7 @@ New extensions should use `entry-source-api`. Entry-native sources can:
 - Provide subtitles, static title preview images, filters, preferences, URL resolution, and orientation capabilities. Preview-image consumption is currently limited to anime entries.
 - Participate in immersive catalogue and feed browsing when supported
 
-Start with the [extension development overview](../extensions/README.md).
+Start with the [extension development overview](../extensions/).
 
 ## Compatibility families
 

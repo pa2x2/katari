@@ -61,12 +61,16 @@ dependencies {
 }
 ```
 
-!!! warning
+::: warning
 
-    Keep the dependency `compileOnly`. Packaging the SDK into the extension can load duplicate, incompatible classes instead of Katari's runtime classes.
+Keep the dependency `compileOnly`. Packaging the SDK into the extension can load duplicate, incompatible classes instead of Katari's runtime classes.
+
+:::
 
 Build the extension's debug APK, then test it against a Katari build containing the matching runtime change. Exercise the complete source lifecycle and the specific new capability or content-type behavior.
 
-!!! warning
+::: warning
 
-    Before publishing an extension, build without `-PuseMavenLocal`, confirm that the configured version is a stable `sdk-*` tag, and verify that the APK does not package SDK classes. The tagged SDK may expose `book-api` transitively; it must not be packaged either.
+Before publishing an extension, build without `-PuseMavenLocal`, confirm that the configured version is a stable `sdk-*` tag, and verify that the APK does not package SDK classes. The tagged SDK may expose `book-api` transitively; it must not be packaged either.
+
+:::

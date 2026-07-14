@@ -36,9 +36,11 @@ val request = GET(url, headers).newBuilder()
     .build()
 ```
 
-!!! warning
+::: warning
 
-    Avoid logging authentication headers, cookies, signed URLs, or response bodies containing user data.
+Avoid logging authentication headers, cookies, signed URLs, or response bodies containing user data.
+
+:::
 
 ## Parse HTML
 
@@ -105,9 +107,11 @@ val sort = filters.filterIsInstance<SortFilter>().first().state
 val tag = filters.filterIsInstance<TagFilter>().first().state.trim()
 ```
 
-!!! warning
+::: warning
 
-    Do not retain a previously returned `EntryFilterList` as request state. Encode query parameters with `HttpUrl.Builder` rather than concatenating user text into a URL.
+Do not retain a previously returned `EntryFilterList` as request state. Encode query parameters with `HttpUrl.Builder` rather than concatenating user text into a URL.
+
+:::
 
 ## Errors and changing providers
 

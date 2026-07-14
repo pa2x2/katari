@@ -25,17 +25,19 @@ The interface may use a more specific term when the current entry type is known.
 
 ## Support and issue reporting
 
-!!! warning
+::: warning
 
-    Do not ask Mihon's maintainers or support community to diagnose Katari-specific behavior. Report problems through [github issues](https://github.com/katariapp/katari/issues), especially when they involve:
+Do not ask Mihon's maintainers or support community to diagnose Katari-specific behavior. Report problems through [github issues](https://github.com/katariapp/katari/issues), especially when they involve:
 
-    - Profiles
-    - Type-specific media and playback
-    - Unified or merged entries
-    - Katari feeds and discovery behavior
-    - Katari backup data
-    - Entry-native extensions
-    - Katari builds, updates, or telemetry
+- Profiles
+- Type-specific media and playback
+- Unified or merged entries
+- Katari feeds and discovery behavior
+- Katari backup data
+- Entry-native extensions
+- Katari builds, updates, or telemetry
+
+:::
 
 When a problem appears in behavior inherited unchanged from Mihon, check the linked upstream documentation first. If it still occurs in Katari, report it to Katari with the app version, affected entry type, reproduction steps, and relevant logs. Katari's maintainers can determine whether the issue also exists upstream.
 

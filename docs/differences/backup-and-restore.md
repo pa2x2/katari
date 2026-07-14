@@ -2,9 +2,11 @@
 
 Katari builds on Mihon's backup workflow while adding profiles, typed entries, type-specific state, and merged-entry data.
 
-!!! info "Inherited behavior"
+::: info Inherited behavior
 
-    Follow Mihon's [backup guide](https://mihon.app/docs/guides/backups) for general creation, automatic-backup, storage, and transfer advice. The differences below determine what Katari can preserve.
+Follow Mihon's [backup guide](https://mihon.app/docs/guides/backups) for general creation, automatic-backup, storage, and transfer advice. The differences below determine what Katari can preserve.
+
+:::
 
 ## Backup contents
 
@@ -24,9 +26,11 @@ Global preferences and extension-store configuration are stored separately from 
 
 ## Sensitive data
 
-!!! warning
+::: warning
 
-    Private settings can include stored passwords, tokens, or other source credentials. Leave this option disabled unless it is required, and protect any backup that includes it. Keep copies outside the selected storage folder so device or storage failure does not remove both app data and backups.
+Private settings can include stored passwords, tokens, or other source credentials. Leave this option disabled unless it is required, and protect any backup that includes it. Keep copies outside the selected storage folder so device or storage failure does not remove both app data and backups.
+
+:::
 
 ## Restore behavior
 
@@ -42,6 +46,8 @@ Extensions and downloaded media are not stored in the backup. Restore reports mi
 
 Mihon can read its own shared backup data but does not understand Katari-only profile, additional entry-type, merged-entry, feed, or type-specific state. Do not rely on a round trip through Mihon to preserve Katari-specific state.
 
-!!! tip
+::: tip
 
-    Before a major migration, keep the original backup and verify representative data in every profile.
+Before a major migration, keep the original backup and verify representative data in every profile.
+
+:::
