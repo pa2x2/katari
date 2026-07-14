@@ -19,16 +19,18 @@ internal class ReadiumEpubSettingsBinding(
     private val binder: ViewerSettingBinder,
     private val entryId: Long,
 ) {
-    private val theme = binder.bind(provider.themeSetting)
-    private val fontFamily = binder.bind(provider.fontFamilySetting)
-    private val fontSize = binder.bind(provider.fontSizeSetting)
-    private val lineHeight = binder.bind(provider.lineHeightSetting)
-    private val pageMargins = binder.bind(provider.pageMarginsSetting)
-    private val publisherStyles = binder.bind(provider.publisherStylesSetting)
-    private val textAlignment = binder.bind(provider.textAlignmentSetting)
-    private val layoutMode = binder.bind(provider.layoutModeSetting, entryId)
-    private val columnCount = binder.bind(provider.columnCountSetting)
-    private val textNormalization = binder.bind(provider.textNormalizationSetting)
+    val theme = binder.bind(provider.themeSetting)
+    val fontFamily = binder.bind(provider.fontFamilySetting)
+    val fontSize = binder.bind(provider.fontSizeSetting)
+    val lineHeight = binder.bind(provider.lineHeightSetting)
+    val pageMargins = binder.bind(provider.pageMarginsSetting)
+    val publisherStyles = binder.bind(provider.publisherStylesSetting)
+    val textAlignment = binder.bind(provider.textAlignmentSetting)
+    val layoutMode = binder.bind(provider.layoutModeSetting, entryId)
+    val columnCount = binder.bind(provider.columnCountSetting)
+    val textNormalization = binder.bind(provider.textNormalizationSetting)
+    val tapNavigation = binder.bind(provider.tapNavigationSetting)
+    val showPageNumber = binder.bind(provider.showPageNumberSetting)
 
     private val appearance = combine(
         theme.state,

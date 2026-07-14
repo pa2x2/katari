@@ -40,6 +40,12 @@ object SettingsReadiumEpubReaderScreen : SearchableSettings {
         val textNormalization = remember(provider, binder) {
             binder.bind(provider.textNormalizationSetting).asProfilePreference()
         }
+        val tapNavigation = remember(provider, binder) {
+            binder.bind(provider.tapNavigationSetting).asProfilePreference()
+        }
+        val showPageNumber = remember(provider, binder) {
+            binder.bind(provider.showPageNumberSetting).asProfilePreference()
+        }
 
         val fontSizeValue by fontSize.collectAsState()
         val lineHeightValue by lineHeight.collectAsState()
@@ -165,6 +171,19 @@ object SettingsReadiumEpubReaderScreen : SearchableSettings {
                         preference = textNormalization,
                         title = stringResource(MR.strings.pref_epub_text_normalization),
                         subtitle = stringResource(MR.strings.pref_epub_text_normalization_summary),
+                    ),
+                ),
+            ),
+            Preference.PreferenceGroup(
+                title = stringResource(MR.strings.pref_epub_controls),
+                preferenceItems = listOf(
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = tapNavigation,
+                        title = stringResource(MR.strings.pref_epub_tap_navigation),
+                    ),
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = showPageNumber,
+                        title = stringResource(MR.strings.pref_show_page_number),
                     ),
                 ),
             ),

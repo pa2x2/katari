@@ -26,6 +26,8 @@ class ReadiumEpubSettingsProvider(
     private val layoutMode = preferenceStore.getString("book.epub.readium.layout_mode", LAYOUT_PAGINATED)
     private val columnCount = preferenceStore.getString("book.epub.readium.column_count", COLUMNS_AUTO)
     private val textNormalization = preferenceStore.getBoolean("book.epub.readium.text_normalization", false)
+    private val tapNavigation = preferenceStore.getBoolean("book.epub.readium.tap_navigation", false)
+    private val showPageNumber = preferenceStore.getBoolean("book.epub.readium.show_page_number", true)
 
     val themeSetting = stringSetting(THEME_KEY, theme, SUPPORTED_THEMES)
     val fontFamilySetting = stringSetting(FONT_FAMILY_KEY, fontFamily, SUPPORTED_FONT_FAMILIES)
@@ -44,6 +46,8 @@ class ReadiumEpubSettingsProvider(
     )
     val columnCountSetting = stringSetting(COLUMN_COUNT_KEY, columnCount, SUPPORTED_COLUMN_COUNTS)
     val textNormalizationSetting = booleanSetting(TEXT_NORMALIZATION_KEY, textNormalization)
+    val tapNavigationSetting = booleanSetting(TAP_NAVIGATION_KEY, tapNavigation)
+    val showPageNumberSetting = booleanSetting(SHOW_PAGE_NUMBER_KEY, showPageNumber)
 
     override val settings: List<ViewerSettingDefinition<*>> = listOf(
         themeSetting,
@@ -56,6 +60,8 @@ class ReadiumEpubSettingsProvider(
         layoutModeSetting,
         columnCountSetting,
         textNormalizationSetting,
+        tapNavigationSetting,
+        showPageNumberSetting,
     )
 
     private fun booleanSetting(key: String, preference: Preference<Boolean>) = ViewerSettingDefinition(
@@ -101,6 +107,8 @@ class ReadiumEpubSettingsProvider(
         const val LAYOUT_MODE_KEY = "layout_mode"
         const val COLUMN_COUNT_KEY = "column_count"
         const val TEXT_NORMALIZATION_KEY = "text_normalization"
+        const val TAP_NAVIGATION_KEY = "tap_navigation"
+        const val SHOW_PAGE_NUMBER_KEY = "show_page_number"
 
         const val THEME_LIGHT = "light"
         const val THEME_DARK = "dark"

@@ -15,8 +15,8 @@ class ReadiumEpubSettingsProviderTest {
     fun `provider has stable reader identity and unique settings`() {
         provider.id shouldBe "builtin.book.epub.readium"
         provider.category shouldBe ViewerSettingsCategory.READER
-        provider.settings shouldHaveSize 10
-        provider.settings.map { it.id.key }.toSet() shouldHaveSize 10
+        provider.settings shouldHaveSize 12
+        provider.settings.map { it.id.key }.toSet() shouldHaveSize 12
         provider.settings.all { it.id.providerId == provider.id } shouldBe true
     }
 
@@ -44,5 +44,7 @@ class ReadiumEpubSettingsProviderTest {
         provider.lineHeightSetting.validate(200) shouldBe true
         provider.pageMarginsSetting.validate(-1) shouldBe false
         provider.pageMarginsSetting.validate(400) shouldBe true
+        provider.tapNavigationSetting.processorDefault shouldBe false
+        provider.showPageNumberSetting.processorDefault shouldBe true
     }
 }

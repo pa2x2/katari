@@ -316,6 +316,11 @@
     <string name="pref_epub_alignment_right">Right</string>
     <string name="pref_epub_text_normalization">Normalize typography</string>
     <string name="pref_epub_text_normalization_summary">Improve consistency and accessibility of the book’s text styles</string>
+    <string name="pref_epub_tap_navigation">Tap screen edges to turn pages</string>
+    <string name="pref_epub_controls">Controls</string>
+    <string name="book_table_of_contents">Table of contents</string>
+    <string name="action_previous_section">Previous section</string>
+    <string name="action_next_section">Next section</string>
     <string name="pref_category_downloads">Downloads</string>
     <string name="pref_category_tracking">Tracking</string>
     <string name="pref_category_advanced">Advanced</string>
