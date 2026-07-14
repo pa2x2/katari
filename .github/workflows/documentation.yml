@@ -8,18 +8,24 @@ on:
       - 'docs/**'
       - 'entry-source-api/src/**'
       - 'entry-source-api/build.gradle.kts'
+      - 'book-api/src/**'
+      - 'book-api/build.gradle.kts'
       - 'gradle/libs.versions.toml'
       - 'mkdocs.yml'
       - 'requirements-docs.txt'
+      - 'scripts/serve-docs.sh'
       - '.github/workflows/documentation.yml'
   pull_request:
     paths:
       - 'docs/**'
       - 'entry-source-api/src/**'
       - 'entry-source-api/build.gradle.kts'
+      - 'book-api/src/**'
+      - 'book-api/build.gradle.kts'
       - 'gradle/libs.versions.toml'
       - 'mkdocs.yml'
       - 'requirements-docs.txt'
+      - 'scripts/serve-docs.sh'
       - '.github/workflows/documentation.yml'
   workflow_dispatch:
 
@@ -64,19 +70,25 @@ jobs:
         run: |
           set -euo pipefail
           latest_sdk_tag="$(git for-each-ref --count=1 --sort=-version:refname --format='%(refname:short)' 'refs/tags/sdk-*')"
-          if [[ -n "$latest_sdk_tag" ]] && git diff --quiet "$latest_sdk_tag"..HEAD -- entry-source-api/src; then
+          if [[ -n "$latest_sdk_tag" ]] && git diff --quiet "$latest_sdk_tag"..HEAD -- entry-source-api/src book-api/src; then
             echo "SDK_DOC_VERSION=$latest_sdk_tag" >> "$GITHUB_ENV"
           else
             echo "SDK_DOC_VERSION=development" >> "$GITHUB_ENV"
           fi
 
-      - name: Build Entry SDK API reference
-        run: ./gradlew --quiet :entry-source-api:dokkaGeneratePublicationHtml -PsourceApiVersion="$SDK_DOC_VERSION"
+      - name: Build SDK API references
+        run: |
+          ./gradlew --quiet \
+            :entry-source-api:dokkaGeneratePublicationHtml \
+            :book-api:dokkaGeneratePublicationHtml \
+            -PsourceApiVersion="$SDK_DOC_VERSION"
 
-      - name: Add Entry SDK API reference to documentation
+      - name: Add SDK API references to documentation
         run: |
           mkdir -p docs/developers/sdk/api
           cp -R entry-source-api/build/dokka/html/. docs/developers/sdk/api/
+          mkdir -p docs/developers/sdk/api/book
+          cp -R book-api/build/dokka/html/. docs/developers/sdk/api/book/
 
       - name: Build documentation
         run: mkdocs build --strict

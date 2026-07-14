@@ -14,7 +14,7 @@ EntrySourceFactory
         ├── catalogue pages
         ├── entry details
         ├── child items
-        └── resolved media
+        └── resolved image, playback, or book media
 ```
 
 Every source provides the same core operations:
@@ -47,7 +47,7 @@ Katari can invoke catalogue and media operations concurrently. A source must not
 ## Choose a source base
 
 - Extend `EntryImageHttpSource` for HTTP sources that resolve ordered image pages.
-- Extend `EntryHttpSource` for HTTP sources that resolve playback or another non-image payload.
+- Extend `EntryHttpSource` for HTTP sources that resolve playback, book, or another non-image payload.
 - Implement `UnifiedSource` directly when the provided HTTP client and URL behavior are not appropriate.
 - Implement `EntrySourceFactory` when one extension exposes multiple sources.
 
@@ -65,8 +65,10 @@ Each `SEntry` declares its own `EntryType`; the extension or source is not perma
 
 This separation allows a factory—and, where appropriate, a catalogue—to expose several supported content types. Read [content types](./content-types.md) before adding type-dependent source behavior.
 
+BOOK adds another separation inside its media path: sources describe resources, Katari owns access to those resources, and a format processor interprets them and supplies its reader. The shared data-only boundary lives in a separate artifact so processors do not depend on the extension source lifecycle. Read [Book API architecture](./book-api.md) before implementing book media.
+
 ## Reference and compatibility
 
-The [data model](./data-model.md) documents values and identity rules. The [generated API reference](api/index.html) lists every public class and member from the Kotlin source.
+The [data model](./data-model.md) documents values and identity rules. The generated [Entry Source API reference](api/index.html) and [Book API reference](api/book/index.html) list the public Kotlin surfaces.
 
 Before adopting another release, read [compatibility and versioning](./versioning.md) and the [SDK changelog](./changelog.md). Compiling against a new symbol also requires a Katari app release that supplies that symbol at runtime.

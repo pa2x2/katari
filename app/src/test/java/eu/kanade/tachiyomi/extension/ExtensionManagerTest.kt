@@ -25,6 +25,7 @@ class ExtensionManagerTest {
             "Legacy 1.6",
             "Entry 2.0",
             "Entry 2.0 patch",
+            "Entry 2.1",
         )
     }
 

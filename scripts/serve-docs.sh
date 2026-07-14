@@ -6,7 +6,8 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 venv="$repo_root/.venv-docs"
 requirements="$repo_root/requirements-docs.txt"
 installed_requirements="$venv/.requirements-docs.txt"
-sdk_api_output="$repo_root/entry-source-api/build/dokka/html"
+entry_api_output="$repo_root/entry-source-api/build/dokka/html"
+book_api_output="$repo_root/book-api/build/dokka/html"
 sdk_api_docs="$repo_root/docs/developers/sdk/api"
 sdk_doc_version="${SDK_DOC_VERSION:-development}"
 
@@ -31,14 +32,17 @@ if [[ ! -f "$installed_requirements" ]] || ! cmp --silent "$requirements" "$inst
     cp "$requirements" "$installed_requirements"
 fi
 
-echo "Generating Entry SDK API reference ($sdk_doc_version)..."
+echo "Generating Entry Source and Book API references ($sdk_doc_version)..."
 "$repo_root/gradlew" --quiet \
     :entry-source-api:dokkaGeneratePublicationHtml \
+    :book-api:dokkaGeneratePublicationHtml \
     -PsourceApiVersion="$sdk_doc_version"
 
 rm -rf "$sdk_api_docs"
 mkdir -p "$sdk_api_docs"
-cp -R "$sdk_api_output"/. "$sdk_api_docs"/
+cp -R "$entry_api_output"/. "$sdk_api_docs"/
+mkdir -p "$sdk_api_docs/book"
+cp -R "$book_api_output"/. "$sdk_api_docs/book"/
 
 has_address=false
 for argument in "$@"; do

@@ -93,16 +93,19 @@ nav:
           - Media cookbooks:
               - Image media: extensions/image-media.md
               - Playback media: extensions/playback-media.md
+              - Book media: extensions/book-media.md
           - Migrating from Mihon: extensions/migrating-from-mihon.md
           - Publishing and maintenance: extensions/publishing.md
       - Entry SDK:
           - developers/sdk/README.md
           - Data model: developers/sdk/data-model.md
           - Content types: developers/sdk/content-types.md
+          - Book API architecture: developers/sdk/book-api.md
           - Capabilities: developers/sdk/capabilities.md
           - Compatibility and versioning: developers/sdk/versioning.md
           - Local SDK development: developers/sdk/local-development.md
           - SDK changelog: developers/sdk/changelog.md
-          - API reference: developers/sdk/api/index.html
+          - Entry Source API reference: developers/sdk/api/index.html
+          - Book API reference: developers/sdk/api/book/index.html
 
 strict: true

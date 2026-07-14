@@ -4,22 +4,22 @@ Capabilities are focused interfaces or properties that opt a source into behavio
 
 ## Capability matrix
 
-| Contract | Intent |
-| --- | --- |
-| `EntryCatalogueSource` | Makes a source browsable and declares language, latest-update support, and immersive-feed support. |
-| `EntryImageSource` | Resolves and downloads ordered image pages. |
-| `SubtitleSource` | Resolves external subtitle tracks for a playback selection. |
-| `EntryPreviewSource` | Supplies ordered static preview images describing an entry independently of child media. |
-| `ConfigurableSource` | Adds an Android preference screen and source-scoped preferences. |
-| `ResolvableSource` | Classifies and resolves supported external entry or child URLs. |
-| `SourceHomePage` | Supplies a browser home page for the source. |
-| `WebViewSource` | Supplies a canonical entry details URL and WebView headers. |
-| `ChapterWebViewSource` | Adds a canonical URL for an openable child item. |
-| `EntryItemOrientationProvider` | Selects vertical or horizontal catalogue thumbnails. |
-| `EmptyChapterListSource` | Declares that a successful child-list response may legitimately be empty. |
-| `IncrementalChapterSource` | Receives currently stored child items while refreshing the list. |
-| `ChapterNumberRecognitionSource` | Requests host-side number recognition for unknown child numbers. |
-| `UnmeteredSource` | Excludes the source from Katari's metered-source update warning. |
+| Contract                         | Intent                                                                                             |
+| -------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `EntryCatalogueSource`           | Makes a source browsable and declares language, latest-update support, and immersive-feed support. |
+| `EntryImageSource`               | Resolves and downloads ordered image pages.                                                        |
+| `SubtitleSource`                 | Resolves external subtitle tracks for a playback selection.                                        |
+| `EntryPreviewSource`             | Supplies ordered static preview images describing an entry independently of child media.           |
+| `ConfigurableSource`             | Adds an Android preference screen and source-scoped preferences.                                   |
+| `ResolvableSource`               | Classifies and resolves supported external entry or child URLs.                                    |
+| `SourceHomePage`                 | Supplies a browser home page for the source.                                                       |
+| `WebViewSource`                  | Supplies a canonical entry details URL and WebView headers.                                        |
+| `ChapterWebViewSource`           | Adds a canonical URL for an openable child item.                                                   |
+| `EntryItemOrientationProvider`   | Selects vertical or horizontal catalogue thumbnails.                                               |
+| `EmptyChapterListSource`         | Declares that a successful child-list response may legitimately be empty.                          |
+| `IncrementalChapterSource`       | Receives currently stored child items while refreshing the list.                                   |
+| `ChapterNumberRecognitionSource` | Requests host-side number recognition for unknown child numbers.                                   |
+| `UnmeteredSource`                | Excludes the source from Katari's metered-source update warning.                                   |
 
 ## Catalogue presentation
 
@@ -61,6 +61,12 @@ Use `ChapterNumberRecognitionSource` when the provider does not supply reliable 
 `SubtitleSource.getSubtitles()` receives the same child and playback selection used for media resolution. Return stable keys where possible, accurate language tags when known, and request headers required by the subtitle host.
 
 The capability is separate from `PlaybackDescriptor.streams`; an empty subtitle list is a valid result.
+
+## Book resources and processors
+
+A book source describes resources with `BookResourceCatalog`, `BookSourceResource`, and closed `BookResourceLocation` values. Katari converts that source view into the processor-facing contracts from `book-api`. Processors never receive the `UnifiedSource`, its HTTP client, or source-defined executable behavior.
+
+This is intentionally not modeled as `EpubSource` or another format-specific capability. Format support belongs to independently selectable processors, each of which may supply a completely different reader. An unsupported format therefore produces a structured unavailable result rather than falling back to another media contract.
 
 ## URLs and WebView integration
 

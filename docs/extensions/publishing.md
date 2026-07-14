@@ -72,7 +72,7 @@ For every update:
 6. Open existing library entries and chapters before testing newly discovered ones.
 7. Exercise popular, latest, search, details, chapter, and media requests.
 8. Check pagination, filters, image headers, playback selections, and subtitles as applicable.
-9. Verify the APK does not package `entry-source-api`; it must remain `compileOnly`.
+9. Verify the APK does not package `entry-source-api` or its transitive `book-api`; the SDK must remain `compileOnly`.
 
 Test a clean installation as well as an upgrade. A clean install cannot reveal identity and signing regressions.
 

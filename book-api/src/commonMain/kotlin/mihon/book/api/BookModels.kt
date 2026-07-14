@@ -3,7 +3,13 @@ package mihon.book.api
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
-/** Processor-selection metadata for source-provided book content. */
+/**
+ * Processor-selection metadata for source-provided book content.
+ *
+ * @property format open identifier for the publication format.
+ * @property profile optional format profile used to refine processor selection.
+ * @property protection protection scheme identifier, or `none` for unprotected content.
+ */
 @Serializable
 data class BookContentDescriptor(
     val format: String,
@@ -17,7 +23,20 @@ data class BookContentDescriptor(
     }
 }
 
-/** Processor-facing metadata and access capabilities for one publication resource. */
+/**
+ * Processor-facing metadata and access capabilities for one publication resource.
+ *
+ * @property id stable publication-scoped resource identity.
+ * @property title optional user-visible resource title.
+ * @property order optional zero-based ordering hint.
+ * @property groupId optional stable resource-group identity.
+ * @property mediaType optional resource media type.
+ * @property size optional resource size in bytes.
+ * @property revision optional resource revision independent of its containing catalog.
+ * @property availability current source-side availability.
+ * @property cacheState current state in Katari-owned durable storage.
+ * @property capabilities access modes Katari can provide to a processor.
+ */
 @Serializable
 data class BookContentResource(
     val id: String,
@@ -41,7 +60,14 @@ data class BookContentResource(
     }
 }
 
-/** Processor-facing nested grouping hints for catalog resources. */
+/**
+ * Processor-facing nested grouping hints for catalog resources.
+ *
+ * @property id stable group identity.
+ * @property title optional user-visible group title.
+ * @property resourceIds resource identities directly contained by this group.
+ * @property children nested resource groups.
+ */
 @Serializable
 data class BookContentResourceGroup(
     val id: String,
@@ -56,7 +82,12 @@ data class BookContentResourceGroup(
     }
 }
 
-/** One cursor-paged segment of processor-facing resources. */
+/**
+ * One cursor-paged segment of processor-facing resources.
+ *
+ * @property resources resources in this page.
+ * @property nextCursor opaque cursor for the next page, or `null` when complete.
+ */
 @Serializable
 data class BookContentResourcePage(
     val resources: List<BookContentResource>,
@@ -108,7 +139,17 @@ enum class BookCatalogCoverage {
     ONGOING,
 }
 
-/** Processor-normalized publication metadata used by Katari and processor-owned readers. */
+/**
+ * Processor-normalized publication metadata used by Katari and processor-owned readers.
+ *
+ * @property id stable normalized publication identity.
+ * @property revision normalized publication revision.
+ * @property title optional publication title.
+ * @property languages publication language tags.
+ * @property readingDirection optional logical reading direction.
+ * @property readingOrder ordered readable resources.
+ * @property navigation recursive publication navigation tree.
+ */
 @Serializable
 data class BookPublication(
     val id: String,
@@ -129,7 +170,13 @@ data class BookPublication(
     }
 }
 
-/** A normalized readable publication resource. */
+/**
+ * A normalized readable publication resource.
+ *
+ * @property id stable publication-scoped resource identity.
+ * @property mediaType optional normalized resource media type.
+ * @property title optional user-visible resource title.
+ */
 @Serializable
 data class BookResource(
     val id: String,
@@ -142,7 +189,13 @@ data class BookResource(
     }
 }
 
-/** A recursive publication navigation item targeting a [BookLocator]. */
+/**
+ * A recursive publication navigation item targeting a [BookLocator].
+ *
+ * @property title optional user-visible navigation label.
+ * @property target location opened by this item.
+ * @property children nested navigation items.
+ */
 @Serializable
 data class BookNavigationItem(
     val title: String?,
@@ -157,7 +210,17 @@ enum class BookReadingDirection {
     RIGHT_TO_LEFT,
 }
 
-/** Processor-independent persisted reading location with namespaced precision extensions. */
+/**
+ * Processor-independent persisted reading location with namespaced precision extensions.
+ *
+ * @property resourceId publication resource containing this location.
+ * @property progression normalized progression within the resource.
+ * @property totalProgression normalized progression through the publication.
+ * @property logicalPosition optional one-based logical position such as a page number.
+ * @property fragments processor-defined stable location fragments.
+ * @property textContext bounded surrounding text used for revision reconciliation.
+ * @property extensions namespaced processor-specific precision data.
+ */
 @Serializable
 data class BookLocator(
     val resourceId: String,
@@ -182,7 +245,13 @@ data class BookLocator(
     }
 }
 
-/** Bounded text surrounding a locator, used for revision reconciliation. */
+/**
+ * Bounded text surrounding a locator, used for revision reconciliation.
+ *
+ * @property before text immediately before the selected location.
+ * @property highlight text at the selected location.
+ * @property after text immediately after the selected location.
+ */
 @Serializable
 data class BookTextContext(
     val before: String? = null,
@@ -195,12 +264,19 @@ data class BookTextContext(
         }
     }
 
+    /** Text-context safety limits. */
     companion object {
+        /** Maximum length of each text-context field. */
         const val MAX_LENGTH = 256
     }
 }
 
-/** Structured processor/content failure suitable for the generic BOOK host. */
+/**
+ * Structured processor/content failure suitable for the generic BOOK host.
+ *
+ * @property reason stable failure category.
+ * @property message actionable user-facing failure detail.
+ */
 @Serializable
 data class BookFailure(
     val reason: BookFailureReason,

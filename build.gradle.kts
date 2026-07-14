@@ -126,6 +126,16 @@ tasks.register("verifyLegacySourceAbi") {
     dependsOn(verifyLegacySourceAbi14, verifyLegacySourceAbi16, ":source-compat:testDebugUnitTest")
 }
 
+tasks.register("publishEntrySdkToMavenLocal") {
+    group = "publishing"
+    description = "Publishes every Entry SDK artifact with the same version to Maven Local"
+    dependsOn(
+        ":core:common:publishToMavenLocal",
+        ":book-api:publishToMavenLocal",
+        ":entry-source-api:publishToMavenLocal",
+    )
+}
+
 tasks {
     listOf("clean", "spotlessApply", "spotlessCheck").forEach { task ->
         named(task) {

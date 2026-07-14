@@ -66,6 +66,7 @@ internal object ExtensionLoader {
     )
     private val ENTRY_SOURCE_API_VERSION_FAMILIES = listOf(
         LibVersion.parse("2.0")!!,
+        LibVersion.parse("2.1")!!,
     )
 
     @Suppress("DEPRECATION")
