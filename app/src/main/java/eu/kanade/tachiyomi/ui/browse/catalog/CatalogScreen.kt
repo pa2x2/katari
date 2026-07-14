@@ -5,6 +5,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -14,6 +15,7 @@ import androidx.compose.material.icons.filled.ViewModule
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.NewReleases
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -34,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -76,6 +79,7 @@ import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
@@ -179,6 +183,8 @@ data class CatalogScreen(
                         onWebViewClick = onWebViewClick,
                         onSettingsClick = onSettingsClick,
                         onSearch = screenModel::search,
+                        onRefresh = catalogList::refresh,
+                        refreshEnabled = catalogList.loadState.refresh !is LoadState.Loading,
                     )
 
                     Row(
@@ -251,30 +257,38 @@ data class CatalogScreen(
                     else -> LoadingScreen(Modifier.padding(paddingValues))
                 }
             } else {
-                CatalogContent(
-                    catalogList = catalogList,
-                    columns = screenModel.getColumnsPreference(
-                        LocalConfiguration.current.orientation,
-                        screenModel.sourceItemOrientation,
-                    ),
-                    displayMode = screenModel.displayMode,
-                    sourceItemOrientation = screenModel.sourceItemOrientation,
-                    snackbarHostState = snackbarHostState,
-                    contentPadding = paddingValues,
-                    onItemClick = { item ->
-                        val entryId = (item as CatalogListItem.EntryItem).entry.id
-                        navigator.push(EntryScreen(entryId, fromSource = true))
-                    },
-                    onItemLongClick = { item ->
-                        scope.launchIO {
-                            if (screenModel.onItemLongClick(item)) {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                PullRefresh(
+                    refreshing = catalogList.itemCount > 0 && catalogList.loadState.refresh is LoadState.Loading,
+                    enabled = catalogList.loadState.refresh !is LoadState.Loading,
+                    onRefresh = catalogList::refresh,
+                    modifier = Modifier.fillMaxSize(),
+                    indicatorPadding = paddingValues,
+                ) {
+                    CatalogContent(
+                        catalogList = catalogList,
+                        columns = screenModel.getColumnsPreference(
+                            LocalConfiguration.current.orientation,
+                            screenModel.sourceItemOrientation,
+                        ),
+                        displayMode = screenModel.displayMode,
+                        sourceItemOrientation = screenModel.sourceItemOrientation,
+                        snackbarHostState = snackbarHostState,
+                        contentPadding = paddingValues,
+                        onItemClick = { item ->
+                            val entryId = (item as CatalogListItem.EntryItem).entry.id
+                            navigator.push(EntryScreen(entryId, fromSource = true))
+                        },
+                        onItemLongClick = { item ->
+                            scope.launchIO {
+                                if (screenModel.onItemLongClick(item)) {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                }
                             }
-                        }
-                    },
-                    onWebViewClick = onWebViewClick,
-                    onSettingsClick = onSettingsClick,
-                )
+                        },
+                        onWebViewClick = onWebViewClick,
+                        onSettingsClick = onSettingsClick,
+                    )
+                }
             }
         }
 
@@ -475,6 +489,8 @@ private fun CatalogToolbar(
     onWebViewClick: (() -> Unit)?,
     onSettingsClick: (() -> Unit)?,
     onSearch: (String) -> Unit,
+    onRefresh: () -> Unit,
+    refreshEnabled: Boolean,
 ) {
     var selectingDisplayMode by remember { mutableStateOf(false) }
 
@@ -488,6 +504,14 @@ private fun CatalogToolbar(
         actions = {
             AppBarActions(
                 actions = buildList {
+                    add(
+                        AppBar.Action(
+                            title = stringResource(MR.strings.action_refresh),
+                            icon = Icons.Outlined.Refresh,
+                            onClick = onRefresh,
+                            enabled = refreshEnabled,
+                        ),
+                    )
                     add(
                         AppBar.Action(
                             title = stringResource(MR.strings.action_display_mode),
