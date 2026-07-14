@@ -182,26 +182,23 @@ class BookEntryInteractionPluginTest {
             profile = "fixed-layout",
             protection = "none",
         )
-        val entryRepository = mockk<EntryRepository> {
-            coEvery { getEntryById(entry.id) } returns entry
-        }
-        val chapterRepository = mockk<EntryChapterRepository> {
-            coEvery { getChapterById(chapter.id) } returns chapter
-        }
-        val sourceManager = mockk<SourceManager> {
-            every { get(entry.source) } returns source
-        }
-        coEvery { source.getMedia(any(), any()) } returns EntryMedia.Book(descriptor)
         val coordinator = BookProcessorSelectionCoordinator(
             registry = BookProcessorRegistry(emptyList()),
             preferences = BookProcessorPreferences(InMemoryPreferenceStore()),
         )
-        val resolver = BookReaderHostResolver(
-            entryRepository = entryRepository,
-            entryChapterRepository = chapterRepository,
-            sourceManager = sourceManager,
-            selectionCoordinator = coordinator,
-        )
+        val sessionFactory = mockk<BookReaderSessionFactory>()
+        coEvery { sessionFactory.prepare(BookReaderRequest(entry.id, chapter.id)) } returns
+            BookReaderPrepareResult.Success(
+                PreparedBookReaderRequest(
+                    request = BookReaderRequest(entry.id, chapter.id),
+                    visibleEntry = entry,
+                    owner = entry,
+                    chapter = chapter,
+                    source = source,
+                    media = EntryMedia.Book(descriptor),
+                ),
+            )
+        val resolver = BookReaderHostResolver(sessionFactory, coordinator)
 
         val state = resolver.resolve(entry.id, chapter.id) as BookReaderHostState.Unavailable
 

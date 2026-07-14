@@ -5,6 +5,7 @@ import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.EntryHttpSource
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryType
+import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.CancellationException
 import mihon.book.api.BookFailure
 import mihon.book.api.BookFailureReason
@@ -38,35 +39,64 @@ internal class BookReaderSessionFactory(
         request: BookReaderRequest,
         processorId: String,
     ): BookReaderOpenResult {
-        val processor = processorRegistry.get(processorId)
-            ?: return failure(BookFailureReason.PROCESSOR_UNAVAILABLE, "The selected book reader is unavailable.")
+        return when (val prepared = prepare(request)) {
+            is BookReaderPrepareResult.Failure -> BookReaderOpenResult.Failure(prepared.failure)
+            is BookReaderPrepareResult.Success -> openPrepared(context, prepared.request, processorId)
+        }
+    }
+
+    suspend fun prepare(request: BookReaderRequest): BookReaderPrepareResult {
         val visibleEntry = entryRepository.getEntryById(request.entryId)
-            ?: return failure(BookFailureReason.CONTENT_UNAVAILABLE, "The book entry no longer exists.")
+            ?: return prepareFailure(BookFailureReason.CONTENT_UNAVAILABLE, "The book entry no longer exists.")
         if (visibleEntry.type != EntryType.BOOK) {
-            return failure(BookFailureReason.MALFORMED_CONTENT, "The selected entry is not a book.")
+            return prepareFailure(BookFailureReason.MALFORMED_CONTENT, "The selected entry is not a book.")
         }
         val chapter = entryChapterRepository.getChapterById(request.chapterId)
-            ?: return failure(BookFailureReason.CONTENT_UNAVAILABLE, "The selected book item no longer exists.")
+            ?: return prepareFailure(BookFailureReason.CONTENT_UNAVAILABLE, "The selected book item no longer exists.")
         val owner = entryRepository.getEntryById(chapter.entryId)
-            ?: return failure(BookFailureReason.CONTENT_UNAVAILABLE, "The book item owner no longer exists.")
+            ?: return prepareFailure(BookFailureReason.CONTENT_UNAVAILABLE, "The book item owner no longer exists.")
         if (owner.type != EntryType.BOOK) {
-            return failure(BookFailureReason.MALFORMED_CONTENT, "The selected item does not belong to a book.")
+            return prepareFailure(BookFailureReason.MALFORMED_CONTENT, "The selected item does not belong to a book.")
         }
         val source = sourceManager.get(owner.source)
-            ?: return failure(BookFailureReason.CONTENT_UNAVAILABLE, "The book source is not available.")
+            ?: return prepareFailure(BookFailureReason.CONTENT_UNAVAILABLE, "The book source is not available.")
         val media = try {
             source.getMedia(chapter.toSEntryChapter()) as? EntryMedia.Book
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
-            return failure(
+            return prepareFailure(
                 BookFailureReason.CONTENT_UNAVAILABLE,
                 error.message ?: "The source could not resolve this book item.",
             )
-        } ?: return failure(
+        } ?: return prepareFailure(
             BookFailureReason.MALFORMED_CONTENT,
             "The source returned a different content type for this book item.",
         )
+        return BookReaderPrepareResult.Success(
+            PreparedBookReaderRequest(
+                request = request,
+                visibleEntry = visibleEntry,
+                owner = owner,
+                chapter = chapter,
+                source = source,
+                media = media,
+            ),
+        )
+    }
+
+    suspend fun openPrepared(
+        context: Context,
+        prepared: PreparedBookReaderRequest,
+        processorId: String,
+    ): BookReaderOpenResult {
+        val processor = processorRegistry.get(processorId)
+            ?: return failure(BookFailureReason.PROCESSOR_UNAVAILABLE, "The selected book reader is unavailable.")
+        val visibleEntry = prepared.visibleEntry
+        val owner = prepared.owner
+        val chapter = prepared.chapter
+        val source = prepared.source
+        val media = prepared.media
         if (!processor.supports(media.descriptor)) {
             return failure(BookFailureReason.FORMAT_UNSUPPORTED, "The selected reader does not support this content.")
         }
@@ -147,6 +177,10 @@ internal class BookReaderSessionFactory(
         return BookReaderOpenResult.Failure(BookFailure(reason, message))
     }
 
+    private fun prepareFailure(reason: BookFailureReason, message: String): BookReaderPrepareResult.Failure {
+        return BookReaderPrepareResult.Failure(BookFailure(reason, message))
+    }
+
     private fun closeAfterFailure(
         contentSession: BookContentSession,
         publicationSession: BookPublicationSession? = null,
@@ -160,6 +194,20 @@ internal class BookReaderSessionFactory(
             cause?.addSuppressed(closeError)
         }
     }
+}
+
+internal data class PreparedBookReaderRequest(
+    val request: BookReaderRequest,
+    val visibleEntry: Entry,
+    val owner: Entry,
+    val chapter: EntryChapter,
+    val source: UnifiedSource,
+    val media: EntryMedia.Book,
+)
+
+internal sealed interface BookReaderPrepareResult {
+    data class Success(val request: PreparedBookReaderRequest) : BookReaderPrepareResult
+    data class Failure(val failure: BookFailure) : BookReaderPrepareResult
 }
 
 internal sealed interface BookReaderOpenResult {

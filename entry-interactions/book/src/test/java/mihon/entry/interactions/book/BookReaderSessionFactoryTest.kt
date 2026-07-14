@@ -102,10 +102,15 @@ class BookReaderSessionFactoryTest {
             now = { 100L },
         )
 
+        val prepared = assertIs<BookReaderPrepareResult.Success>(
+            factory.prepare(BookReaderRequest(entry.id, chapter.id)),
+        )
         val result = assertIs<BookReaderOpenResult.Success>(
-            factory.open(context, BookReaderRequest(entry.id, chapter.id), processor.id),
+            factory.openPrepared(context, prepared.request, processor.id),
         )
         val session = result.session
+
+        coVerify(exactly = 1) { source.getMedia(any(), any()) }
 
         assertEquals(initialLocator, session.initialLocator)
         val latestLocator = BookLocator("chapter-2.xhtml", progression = 0.5, totalProgression = 0.6)
@@ -219,7 +224,11 @@ private class SessionFactoryTestProcessor(
     override fun supports(descriptor: BookContentDescriptor): Boolean =
         descriptor.format == "application/epub+zip"
 
-    override fun createReaderIntent(context: Context, request: BookReaderRequest): Intent = Intent()
+    override fun createReaderIntent(
+        context: Context,
+        request: BookReaderRequest,
+        sessionToken: String,
+    ): Intent = Intent()
 
     override suspend fun open(content: BookContentSession): BookOpenResult {
         contentSession = content

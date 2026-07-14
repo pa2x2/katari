@@ -49,8 +49,12 @@ internal class ReadiumEpubProcessor(
             descriptor.protection == "none" &&
             (descriptor.profile == null || descriptor.profile == REFLOWABLE_PROFILE)
 
-    override fun createReaderIntent(context: Context, request: BookReaderRequest): Intent {
-        return ReadiumEpubReaderActivity.newIntent(context, request, id)
+    override fun createReaderIntent(
+        context: Context,
+        request: BookReaderRequest,
+        sessionToken: String,
+    ): Intent {
+        return ReadiumEpubReaderActivity.newIntent(context, request, id, sessionToken)
     }
 
     override suspend fun open(content: BookContentSession): BookOpenResult {

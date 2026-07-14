@@ -9,6 +9,7 @@ import android.os.SystemClock
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -18,6 +19,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.commitNow
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.withStarted
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mihon.book.api.BookNavigationItem
@@ -28,6 +30,8 @@ import mihon.entry.interactions.book.BookReaderLoadingScreen
 import mihon.entry.interactions.book.BookReaderOpenResult
 import mihon.entry.interactions.book.BookReaderRequest
 import mihon.entry.interactions.book.BookReaderSessionFactory
+import mihon.entry.interactions.book.BookReaderSessionRegistry
+import mihon.entry.interactions.book.BookReaderSessionViewModel
 import mihon.entry.interactions.book.OpenedBookReaderSession
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.displayName
@@ -45,6 +49,7 @@ import uy.kohesive.injekt.api.get
 
 /** Processor-owned EPUB reader surface. Generic BOOK code only launches this entry point. */
 internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
+    private val retainedSession by viewModels<BookReaderSessionViewModel>()
     private val containerId = FrameLayout.generateViewId()
     private lateinit var readerContainer: FrameLayout
     private lateinit var composeOverlay: ComposeView
@@ -132,17 +137,27 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
             chapterId = intent.getLongExtra(EXTRA_CHAPTER_ID, -1L),
         )
         val processorId = intent.getStringExtra(EXTRA_PROCESSOR_ID)
+        val sessionToken = intent.getStringExtra(EXTRA_SESSION_TOKEN)
         if (request.entryId < 0L || request.chapterId < 0L || processorId.isNullOrBlank()) {
             showError(getString(R.string.book_reader_invalid_request))
             return
         }
 
         lifecycleScope.launch {
-            val result = Injekt.get<BookReaderSessionFactory>().open(
-                context = this@ReadiumEpubReaderActivity,
-                request = request,
-                processorId = processorId,
-            )
+            val retained = retainedSession.session
+            val handedOff = if (retained == null && !sessionToken.isNullOrBlank()) {
+                Injekt.get<BookReaderSessionRegistry>().claim(sessionToken, request)
+            } else {
+                null
+            }
+            val result = when (val session = retained ?: handedOff) {
+                null -> Injekt.get<BookReaderSessionFactory>().open(
+                    context = this@ReadiumEpubReaderActivity,
+                    request = request,
+                    processorId = processorId,
+                )
+                else -> BookReaderOpenResult.Success(session)
+            }
             when (result) {
                 is BookReaderOpenResult.Failure -> lifecycle.withStarted {
                     showError(
@@ -154,7 +169,7 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
                     )
                 }
                 is BookReaderOpenResult.Success -> {
-                    var installed = false
+                    if (retainedSession.session == null) retainedSession.attach(result.session)
                     try {
                         val readerSettings = ReadiumEpubSettingsBinding(
                             provider = Injekt.get<ReadiumEpubSettingsProvider>(),
@@ -163,11 +178,17 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
                         )
                         val initialPreferences = readerSettings.initialPreferences()
                         lifecycle.withStarted {
-                            showReader(result.session, readerSettings, initialPreferences)
-                            installed = true
+                            if (!showReader(result.session, readerSettings, initialPreferences)) {
+                                retainedSession.release()
+                            }
                         }
-                    } finally {
-                        if (!installed) result.session.close()
+                    } catch (error: CancellationException) {
+                        throw error
+                    } catch (error: Exception) {
+                        retainedSession.release()
+                        lifecycle.withStarted {
+                            showError(error.message ?: getString(R.string.book_reader_incompatible_session))
+                        }
                     }
                 }
             }
@@ -188,9 +209,13 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
             ?: 0L
         readingStartedAt = null
         val currentLocation = navigator?.let { readerHost?.currentLocation(it) }
+        currentLocation?.let(retainedSession::updateLocation)
         if (session != null && (currentLocation != null || elapsed > 0L)) {
+            // The retained locator is the recreation handoff. Persisting the old Activity's final
+            // location on a separate IO coroutine could otherwise overwrite a newer location.
+            val locationToPersist = currentLocation.takeUnless { isChangingConfigurations }
             lifecycleScope.launchNonCancellable {
-                currentLocation?.let { session.saveLocation(it) }
+                locationToPersist?.let { session.saveLocation(it) }
                 session.recordHistory(elapsed)
             }
         }
@@ -210,7 +235,6 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
         inputListener?.let { listener -> navigator?.removeInputListener(listener) }
         inputListener = null
         super.onDestroy()
-        openedSession?.close()
         openedSession = null
         readerHost = null
         navigator = null
@@ -221,12 +245,11 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
         session: OpenedBookReaderSession,
         readerSettings: ReadiumEpubSettingsBinding,
         initialPreferences: EpubPreferences,
-    ) {
+    ): Boolean {
         val publicationSession = session.publicationSession as? ReadiumPublicationSession
             ?: run {
-                session.close()
                 showError(getString(R.string.book_reader_incompatible_session))
-                return
+                return false
             }
         val host = ReadiumEpubReaderHost(publicationSession)
         val paginationListener = object : EpubNavigatorFragment.PaginationListener {
@@ -246,7 +269,7 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
             }
         }
         val fragmentFactory = host.createFragmentFactory(
-            initialLocator = session.initialLocator,
+            initialLocator = retainedSession.currentLocator ?: session.initialLocator,
             initialPreferences = initialPreferences,
             paginationListener = paginationListener,
         )
@@ -283,6 +306,7 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
         inputListener = createInputListener(effectiveReadingDirection).also(fragment::addInputListener)
         readingStartedAt = SystemClock.elapsedRealtime()
         host.observeLocations(fragment, lifecycleScope) { locator ->
+            retainedSession.updateLocation(locator)
             session.saveLocation(locator)
             uiState = uiState.copy(
                 currentLocator = locator,
@@ -294,11 +318,14 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
         readerContainer.visibility = View.VISIBLE
         surfaceState = ReaderSurfaceState.Ready
         setMenuVisibility(false)
+        return true
     }
 
     private fun updateLocation(locator: Locator) {
+        val adapted = ReadiumLocatorAdapter.adapt(locator)
+        retainedSession.updateLocation(adapted)
         uiState = uiState.copy(
-            currentLocator = ReadiumLocatorAdapter.adapt(locator),
+            currentLocator = adapted,
         )
         recalculateSectionMetrics()
         resolveCurrentNavigation()
@@ -494,6 +521,7 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
         private const val EXTRA_ENTRY_ID = "entry_id"
         private const val EXTRA_CHAPTER_ID = "chapter_id"
         private const val EXTRA_PROCESSOR_ID = "processor_id"
+        private const val EXTRA_SESSION_TOKEN = "session_token"
         private const val TAP_PREVIOUS_END = 0.33f
         private const val TAP_NEXT_START = 0.67f
 
@@ -501,10 +529,12 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
             context: Context,
             request: BookReaderRequest,
             processorId: String,
+            sessionToken: String,
         ): Intent = Intent(context, ReadiumEpubReaderActivity::class.java).apply {
             putExtra(EXTRA_ENTRY_ID, request.entryId)
             putExtra(EXTRA_CHAPTER_ID, request.chapterId)
             putExtra(EXTRA_PROCESSOR_ID, processorId)
+            putExtra(EXTRA_SESSION_TOKEN, sessionToken)
         }
     }
 }

@@ -78,7 +78,11 @@ private class SelectionFakeProcessor(
 
     override fun supports(descriptor: BookContentDescriptor): Boolean = true
 
-    override fun createReaderIntent(context: Context, request: BookReaderRequest): Intent = Intent()
+    override fun createReaderIntent(
+        context: Context,
+        request: BookReaderRequest,
+        sessionToken: String,
+    ): Intent = Intent()
 
     override suspend fun open(content: BookContentSession): BookOpenResult = error("Not used")
 }

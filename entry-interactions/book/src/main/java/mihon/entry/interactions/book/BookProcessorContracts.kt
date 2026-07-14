@@ -72,8 +72,12 @@ internal interface BookProcessor {
 
     fun supports(descriptor: BookContentDescriptor): Boolean
 
-    /** Creates the processor-owned reader UI entry point for a resolved BOOK child. */
-    fun createReaderIntent(context: Context, request: BookReaderRequest): Intent
+    /** Creates the processor-owned reader UI entry point for a prepared BOOK session. */
+    fun createReaderIntent(
+        context: Context,
+        request: BookReaderRequest,
+        sessionToken: String,
+    ): Intent
 
     suspend fun open(content: BookContentSession): BookOpenResult
 }

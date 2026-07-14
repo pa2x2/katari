@@ -18,6 +18,7 @@ fun InjektRegistrar.addBookEntryInteractionRuntime(
     val materializationCache = BookMaterializationCache(app)
     val readiumSettingsProvider = ReadiumEpubSettingsProvider(profilePreferenceStore)
     addSingletonFactory<BookMaterializationStore> { materializationCache }
+    addSingletonFactory { BookReaderSessionRegistry() }
     addSingletonFactory { readiumSettingsProvider }
     addSingletonFactory { BookProcessorRegistry(processors = listOf(ReadiumEpubProcessor())) }
     addSingletonFactory { BookProcessorPreferences(profilePreferenceStore) }
@@ -29,9 +30,7 @@ fun InjektRegistrar.addBookEntryInteractionRuntime(
     }
     addSingletonFactory {
         BookReaderHostResolver(
-            entryRepository = get(),
-            entryChapterRepository = get(),
-            sourceManager = get(),
+            sessionFactory = get(),
             selectionCoordinator = get(),
         )
     }

@@ -76,7 +76,11 @@ private class FakeBookProcessor(
 ) : BookProcessor {
     override fun supports(descriptor: BookContentDescriptor): Boolean = descriptor.format == format
 
-    override fun createReaderIntent(context: Context, request: BookReaderRequest): Intent = Intent()
+    override fun createReaderIntent(
+        context: Context,
+        request: BookReaderRequest,
+        sessionToken: String,
+    ): Intent = Intent()
 
     override suspend fun open(content: BookContentSession): BookOpenResult = error("Not used")
 }

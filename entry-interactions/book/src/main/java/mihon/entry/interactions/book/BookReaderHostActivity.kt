@@ -31,6 +31,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mihon.book.api.BookFailure
 import mihon.entry.interactions.EntryInteractionActivity
@@ -43,6 +44,7 @@ import uy.kohesive.injekt.api.get
 /** Generic BOOK host for processor selection, launch, and structured unsupported-content failures. */
 internal class BookReaderHostActivity : EntryInteractionActivity() {
     private var hostState by mutableStateOf<BookReaderHostState?>(null)
+    private var launchJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,11 +90,51 @@ internal class BookReaderHostActivity : EntryInteractionActivity() {
 
     private fun handle(state: BookReaderHostState) {
         when (state) {
-            is BookReaderHostState.ReaderSelected -> {
-                startActivity(state.processor.createReaderIntent(this, state.request))
-                finish()
-            }
+            is BookReaderHostState.ReaderSelected -> launch(state)
             else -> hostState = state
+        }
+    }
+
+    private fun launch(state: BookReaderHostState.ReaderSelected) {
+        launchJob?.cancel()
+        hostState = null
+        launchJob = lifecycleScope.launch {
+            val result = Injekt.get<BookReaderSessionFactory>().openPrepared(
+                context = this@BookReaderHostActivity,
+                prepared = state.prepared,
+                processorId = state.processor.id,
+            )
+            when (result) {
+                is BookReaderOpenResult.Failure -> {
+                    hostState = BookReaderHostState.Unavailable(
+                        failure = result.failure,
+                        descriptor = state.descriptor,
+                    )
+                }
+                is BookReaderOpenResult.Success -> {
+                    val registry = Injekt.get<BookReaderSessionRegistry>()
+                    val token = registry.register(result.session)
+                    try {
+                        startActivity(
+                            state.processor.createReaderIntent(
+                                context = this@BookReaderHostActivity,
+                                request = state.prepared.request,
+                                sessionToken = token,
+                            ),
+                        )
+                        finish()
+                    } catch (error: Exception) {
+                        registry.discard(token)
+                        hostState = BookReaderHostState.Unavailable(
+                            failure = BookFailure(
+                                reason = mihon.book.api.BookFailureReason.PROCESSOR_UNAVAILABLE,
+                                message = error.message ?: "The selected book reader could not be started.",
+                            ),
+                            descriptor = state.descriptor,
+                        )
+                    }
+                }
+            }
         }
     }
 
