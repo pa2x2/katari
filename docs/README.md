@@ -31,6 +31,7 @@ Katari brings manga and anime into one library, with shared profiles, discovery,
 ### Features
 
 - [Unified library](features/unified-library.md)
+- [Content type support](features/content-type-reference.md)
 - [Profiles](features/profiles.md)
 - [Merged entries](features/merged-entries.md)
 - [Video playback](features/video-playback.md)
