@@ -86,6 +86,7 @@ nav:
       - Profiles: features/profiles.md
       - Merged entries: features/merged-entries.md
       - Feeds and discovery: features/feeds-and-discovery.md
+      - Book reading: features/book-reading.md
       - Video playback: features/video-playback.md
       - Extensions and compatibility: differences/extensions-and-compatibility.md
       - Builds, telemetry, and privacy: differences/builds-telemetry-and-privacy.md
