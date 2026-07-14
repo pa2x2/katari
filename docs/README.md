@@ -10,7 +10,7 @@ hide:
 
 <div markdown>
 
-Katari (語り - storytelling) brings manga and anime into one library, with shared profiles, discovery, updates, and history. It is an independent fork of Mihon.
+Katari (語り - storytelling) brings manga, anime, and books into one library, with shared profiles, discovery, updates, and history. It is an independent fork of Mihon.
 
 [Download Katari](https://github.com/katariapp/katari/releases/latest){ .katari-button .katari-button--primary }
 [Migrate from Mihon](migrating-to-katari.md){ .katari-button }
@@ -25,7 +25,7 @@ Katari (語り - storytelling) brings manga and anime into one library, with sha
 
 ### Get started
 
-- [Relationship with Mihon](relationship-with-mihon.md)
+- [About project](about-project.md)
 - [Migrate from Mihon](migrating-to-katari.md)
 - [Features inherited from Mihon](inherited-features.md)
 - [Backup and restore differences](differences/backup-and-restore.md)
@@ -40,6 +40,7 @@ Katari (語り - storytelling) brings manga and anime into one library, with sha
 - [Content type support](features/content-type-reference.md)
 - [Profiles](features/profiles.md)
 - [Merged entries](features/merged-entries.md)
+- [Book reading](features/book-reading.md)
 - [Video playback](features/video-playback.md)
 - [Feeds and discovery](features/feeds-and-discovery.md)
 

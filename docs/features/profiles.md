@@ -12,7 +12,7 @@ Each profile has its own:
 - Reader, player, appearance, and security preferences assigned to profiles
 - Tracking logins and entry tracking state
 - Startup-screen preference
-- Feeds, merged entries, and playback progress associated with its entries
+- Feeds, merged entries, per-entry viewer overrides, and reading or playback progress associated with its entries
 
 Settings marked with a **Profile-specific** chip apply only to the active profile.
 

@@ -1,4 +1,8 @@
-# Relationship with Mihon
+## The name
+
+“Katari” evokes the Japanese word _katari_ (語り), meaning storytelling or the telling of stories. The name reflects Katari's goal of bringing different kinds of stories into one library.
+
+## Relationship with Mihon
 
 Katari is an independent fork of [Mihon](https://mihon.app/). It retains much of Mihon's library, reader, download, tracking, source, and settings behavior while adding support for more kinds of entries and Katari-specific ways to organize and discover them.
 
@@ -6,22 +10,18 @@ Katari would not exist without Mihon and its contributors. Katari is not an offi
 
 For features inherited unchanged, see [documentation for inherited features](./inherited-features.md). When Katari behaves differently, follow the Katari guide.
 
-## The name
-
-“Katari” evokes the Japanese word *katari* (語り), meaning storytelling or the telling of stories. The name reflects Katari's goal of bringing different kinds of stories into one library.
-
 ## Terminology
 
 Mihon's documentation is written for manga and commonly uses terms such as **series** and **chapter**. Katari generalizes the underlying model:
 
-| Mihon documentation | Katari meaning                                                              |
-| ------------------- | --------------------------------------------------------------------------- |
-| Series or manga     | Entry                                                                        |
-| Chapter             | An openable unit within an entry                                             |
-| Read                | Consumed progress; the exact action depends on the entry type               |
-| Reader              | The image reader specifically, unless a Katari page also discusses playback |
+| Mihon documentation | Katari meaning                                                                                                    |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Series or manga     | Entry                                                                                                             |
+| Chapter             | An openable unit within an entry                                                                                  |
+| Read                | Consumed progress; the exact action depends on the entry type                                                     |
+| Reader              | A type-specific interface for readable content; Mihon's reader documentation describes Katari's image reader only |
 
-The interface may still use a more specific term when the current entry type is known. Do not assume that instructions about image pages or reader settings also apply to video playback.
+The interface may use a more specific term when the current entry type is known. Reader settings belong to their reader implementation, so instructions for the image reader do not automatically apply to a book reader or video player.
 
 ## Support and issue reporting
 

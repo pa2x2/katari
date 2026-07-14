@@ -24,6 +24,8 @@ Extension source
 
 This prevents a format processor from depending on extension loading, source HTTP classes, or a concrete reader. It also leaves room for reader extensions later: the data boundary does not require processors to remain built in.
 
+Katari currently registers book processors as built-in application components. `book-api` is a stable data boundary, not a public processor lifecycle, UI, or installation API, so third-party extensions cannot add book processors or readers yet.
+
 ## Artifact responsibilities
 
 `entry-source-api` owns source-facing contracts:

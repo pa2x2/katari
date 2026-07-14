@@ -76,8 +76,8 @@ extra_javascript:
 nav:
   - Home: README.md
   - Get started:
+      - About project: about-project.md
       - Migrating to Katari: migrating-to-katari.md
-      - Relationship with Mihon: relationship-with-mihon.md
       - Backup and restore: differences/backup-and-restore.md
       - Inherited Mihon features: inherited-features.md
   - Features:

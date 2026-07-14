@@ -4,7 +4,7 @@ This changelog covers the public Entry SDK contracts in `entry-source-api` and `
 
 ## `sdk-2.1.0`
 
-BOOK content and processor API release.
+BOOK source contracts and processor-neutral book data release.
 
 ### Added
 

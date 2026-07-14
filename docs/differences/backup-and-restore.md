@@ -13,8 +13,9 @@ The creation screen can include library entries, categories, chapters or episode
 A Katari profile-aware backup can preserve:
 
 - Every profile's name, stable identity, order, archived state, and authentication requirement
-- Profile categories, entries, progress, tracking, and history
+- Profile categories, entries, reading or playback progress, tracking, and history
 - Profile-specific app and source preferences
+- Per-entry reader and player setting overrides
 - Entry type information
 - Merged-entry relationships and playback-related Entry data
 - The profile that was active when the backup was made
@@ -32,6 +33,8 @@ Global preferences and extension-store configuration are stored separately from 
 When a Katari backup contains profiles, restore creates or updates them by stable profile identity, restores each profile's data in its own scope, then returns to the recorded active profile when possible. Existing data is merged according to the restore rules rather than replacing the entire database blindly.
 
 A legacy Mihon or fork backup without Katari profiles is restored into the currently active profile. Supported legacy records are converted into typed Entry records.
+
+Saved BOOK progress includes the processor-neutral reading location needed to resume a publication. Restoring that location still requires the corresponding source and a compatible reader for the publication format.
 
 Extensions and downloaded media are not stored in the backup. Restore reports missing sources and trackers; install the required extensions, sign in to trackers, and reindex existing downloads when necessary.
 

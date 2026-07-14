@@ -6,7 +6,7 @@ Katari retains many of Mihon's established workflows. Use the upstream guides be
 
     These links lead to Mihon's website. Mihon's documentation is useful for inherited behavior, but Mihon's maintainers and support channels are not responsible for Katari. Report Katari problems to Katari.
 
-Read [Relationship with Mihon](./relationship-with-mihon.md) for terminology and support information.
+Read [About project](./about-project.md) for terminology and support information.
 
 ## Shared guides
 
@@ -15,7 +15,7 @@ These areas are substantially inherited where the corresponding Katari feature u
 | Topic                | Mihon documentation                                              | Katari scope note                                                                                                      |
 | -------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | Reader configuration | [Reader settings](https://mihon.app/docs/guides/reader-settings) | Applies to Katari's image reader, not its video player.                                                                |
-| Categories           | [Categories](https://mihon.app/docs/guides/categories)           | Basic category management is inherited; see [Profiles](./features/profiles.md) for profile-specific behavior.           |
+| Categories           | [Categories](https://mihon.app/docs/guides/categories)           | Basic category management is inherited; see [Profiles](./features/profiles.md) for profile-specific behavior.          |
 | Tracking             | [Tracking](https://mihon.app/docs/guides/tracking)               | Shared tracker workflows apply unless Katari documents entry-type behavior separately.                                 |
 | Library questions    | [Library FAQ](https://mihon.app/docs/faq/library)                | Some wording is manga-specific; apply it to compatible Katari entries only.                                            |
 | Downloads            | [Downloads FAQ](https://mihon.app/docs/faq/downloads)            | Shared download behavior primarily covers image chapters.                                                              |
