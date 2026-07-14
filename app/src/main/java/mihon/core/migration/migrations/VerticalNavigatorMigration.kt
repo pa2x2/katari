@@ -2,7 +2,7 @@ package mihon.core.migration.migrations
 
 import mihon.core.migration.Migration
 import mihon.core.migration.MigrationContext
-import mihon.entry.interactions.reader.settings.ReaderPreferences
+import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import mihon.entry.interactions.reader.settings.ReadingMode
 import mihon.feature.profiles.core.ProfileDatabase
 import mihon.feature.profiles.core.ProfileStore
@@ -18,7 +18,7 @@ class VerticalNavigatorMigration : Migration {
 
         profileIds.forEach { profileId ->
             val store = profileStore.profileStore(profileId)
-            val readerPreferences = ReaderPreferences(store)
+            val readerPreferences = MangaReaderSettingsProvider(store)
             val oldVerticalNavigator = store.getBoolean("pref_webtoon_vertical_navigator", true)
             if (oldVerticalNavigator.get()) {
                 readerPreferences.verticalNavigator.set(setOf(ReadingMode.WEBTOON, ReadingMode.CONTINUOUS_VERTICAL))

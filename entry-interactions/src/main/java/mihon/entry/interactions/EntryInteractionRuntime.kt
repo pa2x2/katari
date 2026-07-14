@@ -2,6 +2,9 @@ package mihon.entry.interactions
 
 import android.app.Application
 import coil3.ComponentRegistry
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import mihon.domain.chapter.interactor.FilterEntryChaptersForDownload
 import mihon.entry.interactions.anime.AnimeEntryInteractionDependencies
 import mihon.entry.interactions.anime.addAnimeEntryInteractionRuntime
@@ -13,12 +16,17 @@ import mihon.entry.interactions.manga.MangaEntryInteractionDependencies
 import mihon.entry.interactions.manga.addMangaEntryInteractionRuntime
 import mihon.entry.interactions.manga.mangaEntryInteractionPlugin
 import mihon.entry.interactions.manga.reader.addMangaReaderImageComponents
+import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import mihon.entry.interactions.reader.settings.ReaderBasePreferences
-import mihon.entry.interactions.reader.settings.ReaderPreferences
 import mihon.entry.interactions.reader.settings.ReaderTrackPreferences
 import mihon.entry.interactions.settings.AnimePlayerPreferences
+import mihon.entry.interactions.settings.DefaultViewerSettingBinder
+import mihon.entry.interactions.settings.DefaultViewerSettingsInteraction
 import mihon.entry.interactions.settings.EntryInteractionPreferences
 import mihon.entry.interactions.settings.EntryMediaCachePreferences
+import mihon.entry.viewer.settings.ViewerSettingBinder
+import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
+import mihon.entry.viewer.settings.ViewerSettingsInteraction
 import tachiyomi.core.common.preference.PreferenceStore
 import uy.kohesive.injekt.api.InjektRegistrar
 import uy.kohesive.injekt.api.addSingletonFactory
@@ -49,12 +57,26 @@ fun InjektRegistrar.addEntryInteractionRuntime(
     addSingletonFactory<EntryReaderIncognitoState> { dependencies.readerIncognitoState }
     addSingletonFactory<EntryReaderTracking> { dependencies.readerTracking }
 
-    addSingletonFactory { ReaderPreferences(dependencies.profilePreferenceStore) }
+    addSingletonFactory { MangaReaderSettingsProvider(dependencies.profilePreferenceStore) }
     addSingletonFactory { ReaderBasePreferences(dependencies.basePreferenceStore) }
     addSingletonFactory { ReaderTrackPreferences(dependencies.privatePreferenceStore) }
     addSingletonFactory { EntryInteractionPreferences(dependencies.profilePreferenceStore) }
     addSingletonFactory { AnimePlayerPreferences(dependencies.profilePreferenceStore) }
     addSingletonFactory { EntryMediaCachePreferences(dependencies.basePreferenceStore) }
+    addSingletonFactory<ViewerSettingBinder> {
+        DefaultViewerSettingBinder(
+            overrideRepository = get<ViewerSettingOverrideRepository>(),
+            scope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+        )
+    }
+    addSingletonFactory<ViewerSettingsInteraction> {
+        DefaultViewerSettingsInteraction(
+            providers = listOf(
+                get<MangaReaderSettingsProvider>(),
+                get<AnimePlayerPreferences>(),
+            ),
+        )
+    }
 
     val mangaWarmup = addMangaEntryInteractionRuntime(app)
     val animeWarmup = addAnimeEntryInteractionRuntime(app)

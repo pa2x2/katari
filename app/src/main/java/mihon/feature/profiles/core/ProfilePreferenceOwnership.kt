@@ -6,7 +6,7 @@ import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import kotlinx.serialization.json.Json
 import mihon.core.common.CustomPreferences
-import mihon.entry.interactions.reader.settings.ReaderPreferences
+import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import mihon.entry.interactions.settings.AnimePlayerPreferences
 import mihon.entry.interactions.settings.EntryInteractionPreferences
 import tachiyomi.core.common.preference.Preference
@@ -37,7 +37,7 @@ object ProfilePreferenceOwnership {
         UpdatesPreferences(recorder)
         EntryInteractionPreferences(recorder)
         AnimePlayerPreferences(recorder)
-        ReaderPreferences(recorder)
+        MangaReaderSettingsProvider(recorder)
         UiPreferences(recorder)
         CustomPreferences(recorder)
         TrackPreferences(recorder).recordKeys(TrackerManager.TRACKER_IDS)

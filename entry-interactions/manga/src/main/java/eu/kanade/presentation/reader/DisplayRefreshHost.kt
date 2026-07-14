@@ -12,7 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.delay
-import mihon.entry.interactions.reader.settings.ReaderPreferences
+import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -22,7 +22,7 @@ import kotlin.time.Duration.Companion.milliseconds
 internal class DisplayRefreshHost {
 
     internal var currentDisplayRefresh by mutableStateOf(false)
-    private val readerPreferences = Injekt.get<ReaderPreferences>()
+    private val readerPreferences = Injekt.get<MangaReaderSettingsProvider>()
 
     internal val flashMillis = readerPreferences.flashDurationMillis
     internal val flashMode = readerPreferences.flashColor
@@ -65,13 +65,13 @@ internal fun DisplayRefreshHost(
         }
 
         val refreshDurationHalf = refreshDuration.milliseconds / 2
-        currentColor = if (flashMode == ReaderPreferences.FlashColor.BLACK) {
+        currentColor = if (flashMode == MangaReaderSettingsProvider.FlashColor.BLACK) {
             Color.Black
         } else {
             Color.White
         }
         delay(refreshDurationHalf)
-        if (flashMode == ReaderPreferences.FlashColor.WHITE_BLACK) {
+        if (flashMode == MangaReaderSettingsProvider.FlashColor.WHITE_BLACK) {
             currentColor = Color.Black
         }
         delay(refreshDurationHalf)

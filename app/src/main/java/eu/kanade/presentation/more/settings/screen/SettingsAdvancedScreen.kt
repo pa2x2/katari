@@ -57,11 +57,14 @@ import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.core.common.GlobalCustomPreferences
 import mihon.entry.interactions.EntryDownloadInteraction
+import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
+import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import okhttp3.Headers
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -315,7 +318,14 @@ object SettingsAdvancedScreen : SearchableSettings {
                     subtitle = stringResource(MR.strings.pref_reset_viewer_flags_summary),
                     onClick = {
                         scope.launchNonCancellable {
-                            val success = Injekt.get<EntryRepository>().resetViewerFlags()
+                            val success = runCatching {
+                                val profileId = Injekt.get<ActiveProfileProvider>().activeProfileId
+                                Injekt.get<ViewerSettingOverrideRepository>().deleteByProviderForProfile(
+                                    providerId = MangaReaderSettingsProvider.PROVIDER_ID,
+                                    profileId = profileId,
+                                )
+                                check(Injekt.get<EntryRepository>().resetViewerFlags())
+                            }.isSuccess
                             withUIContext {
                                 val message = if (success) {
                                     MR.strings.pref_reset_viewer_flags_success

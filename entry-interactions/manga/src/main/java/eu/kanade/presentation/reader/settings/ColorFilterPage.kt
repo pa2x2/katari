@@ -10,7 +10,7 @@ import androidx.core.graphics.alpha
 import androidx.core.graphics.blue
 import androidx.core.graphics.green
 import androidx.core.graphics.red
-import mihon.entry.interactions.reader.settings.ReaderPreferences.Companion.ColorFilterMode
+import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider.Companion.ColorFilterMode
 import mihon.entry.interactions.reader.settings.ReaderSettingsScreenModel
 import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.i18n.MR

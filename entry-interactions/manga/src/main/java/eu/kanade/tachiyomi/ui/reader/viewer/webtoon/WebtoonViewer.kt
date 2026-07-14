@@ -21,7 +21,7 @@ import eu.kanade.tachiyomi.ui.reader.viewer.ViewerNavigation.NavigationRegion
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import mihon.entry.interactions.manga.download.DownloadManager
-import mihon.entry.interactions.reader.settings.ReaderPreferences
+import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import tachiyomi.core.common.util.system.logcat
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -74,12 +74,12 @@ internal class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boo
     private var currentPage: Any? = null
 
     private val threshold: Int =
-        Injekt.get<ReaderPreferences>()
+        Injekt.get<MangaReaderSettingsProvider>()
             .readerHideThreshold
             .get()
             .threshold
 
-    private var autoScrollLevel = ReaderPreferences.AUTO_SCROLL_LEVEL_DEFAULT
+    private var autoScrollLevel = MangaReaderSettingsProvider.AUTO_SCROLL_LEVEL_DEFAULT
     private var autoScrollRemainderPx = 0.0
     private var lastAutoScrollFrameNanos = 0L
     private var autoScrollRunning = false
@@ -224,7 +224,7 @@ internal class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boo
     }
 
     override fun updateAutoScrollSpeed(speed: Int) {
-        autoScrollLevel = speed.coerceIn(ReaderPreferences.AUTO_SCROLL_SPEED_RANGE)
+        autoScrollLevel = speed.coerceIn(MangaReaderSettingsProvider.AUTO_SCROLL_SPEED_RANGE)
     }
 
     override fun stopAutoScroll() {

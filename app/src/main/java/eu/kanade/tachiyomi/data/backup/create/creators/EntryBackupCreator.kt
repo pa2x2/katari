@@ -9,11 +9,13 @@ import eu.kanade.tachiyomi.data.backup.models.backupTrackMapper
 import eu.kanade.tachiyomi.data.backup.models.toBackupChapter
 import eu.kanade.tachiyomi.data.backup.models.toBackupEntry
 import eu.kanade.tachiyomi.data.backup.models.toBackupEntryProgressState
+import eu.kanade.tachiyomi.data.backup.models.toBackupViewerSettingOverride
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.EntryPlaybackPreferencesInteraction
 import mihon.entry.interactions.EntryPlaybackQualityMode
 import mihon.entry.interactions.EntryProgressInteraction
 import mihon.entry.interactions.EntryProgressSnapshot
+import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.category.model.Category
@@ -34,6 +36,7 @@ class EntryBackupCreator(
     private val downloadPreferencesRepository: DownloadPreferencesRepository = Injekt.get(),
     private val progressInteraction: EntryProgressInteraction = Injekt.get(),
     private val playbackPreferencesInteraction: EntryPlaybackPreferencesInteraction = Injekt.get(),
+    private val viewerSettingOverrideRepository: ViewerSettingOverrideRepository = Injekt.get(),
 ) {
 
     suspend operator fun invoke(entries: List<Entry>, options: BackupOptions): List<BackupEntry> {
@@ -56,6 +59,8 @@ class EntryBackupCreator(
         allEntriesById: Map<Long, Entry>,
     ): BackupEntry {
         val entryObject = entry.toBackupEntry()
+        entryObject.viewerSettingOverrides = viewerSettingOverrideRepository.getByEntryId(entry.id)
+            .map { it.toBackupViewerSettingOverride() }
         val playbackPreferencesSnapshot = if (entry.type == EntryType.ANIME) {
             playbackPreferencesInteraction.snapshot(entry)
         } else {

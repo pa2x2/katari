@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import mihon.core.migration.MigrationContext
-import mihon.entry.interactions.reader.settings.ReaderPreferences
+import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import mihon.entry.interactions.reader.settings.ReadingMode
 import mihon.feature.profiles.core.Profile
 import mihon.feature.profiles.core.ProfileDatabase
@@ -44,11 +44,11 @@ class VerticalNavigatorMigrationTest {
 
         assertTrue(VerticalNavigatorMigration().invoke(context))
 
-        assertEquals(emptySet<ReadingMode>(), ReaderPreferences(first).verticalNavigator.get())
-        assertTrue(ReaderPreferences(first).verticalNavigatorOnLeft.get())
+        assertEquals(emptySet<ReadingMode>(), MangaReaderSettingsProvider(first).verticalNavigator.get())
+        assertTrue(MangaReaderSettingsProvider(first).verticalNavigatorOnLeft.get())
         assertEquals(
             setOf(ReadingMode.WEBTOON, ReadingMode.CONTINUOUS_VERTICAL),
-            ReaderPreferences(second).verticalNavigator.get(),
+            MangaReaderSettingsProvider(second).verticalNavigator.get(),
         )
         assertFalse(first.getBoolean(OLD_VERTICAL_NAVIGATOR, true).isSet())
         assertFalse(first.getBoolean(OLD_VERTICAL_NAVIGATOR_ON_LEFT, false).isSet())

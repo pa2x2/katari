@@ -7,9 +7,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalView
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.tachiyomi.util.system.hasDisplayCutout
+import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import mihon.entry.interactions.reader.settings.ReaderOrientation
-import mihon.entry.interactions.reader.settings.ReaderPreferences
 import mihon.entry.interactions.reader.settings.ReadingMode
+import mihon.entry.viewer.settings.ViewerSettingBinder
+import mihon.entry.viewer.settings.asProfilePreference
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
@@ -17,20 +19,28 @@ import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.text.NumberFormat
+import tachiyomi.core.common.preference.Preference as CorePreference
 
-object SettingsReaderScreen : SearchableSettings {
+object SettingsMangaReaderScreen : SearchableSettings {
 
     @ReadOnlyComposable
     @Composable
-    override fun getTitleRes() = MR.strings.pref_category_reader
+    override fun getTitleRes() = MR.strings.pref_manga_reader
 
     @Composable
     override fun getPreferences(): List<Preference> {
-        val readerPref = remember { Injekt.get<ReaderPreferences>() }
+        val readerPref = remember { Injekt.get<MangaReaderSettingsProvider>() }
+        val settingBinder = remember { Injekt.get<ViewerSettingBinder>() }
+        val defaultReadingMode = remember(readerPref, settingBinder) {
+            settingBinder.bind(readerPref.readingModeSetting).asProfilePreference()
+        }
+        val defaultOrientation = remember(readerPref, settingBinder) {
+            settingBinder.bind(readerPref.orientationSetting).asProfilePreference()
+        }
 
         return listOf(
             Preference.PreferenceItem.ListPreference(
-                preference = readerPref.defaultReadingMode,
+                preference = defaultReadingMode,
                 entries = ReadingMode.entries.drop(1)
                     .associate { it.flagValue to stringResource(it.stringRes) },
                 title = stringResource(MR.strings.pref_viewer_type),
@@ -58,7 +68,7 @@ object SettingsReaderScreen : SearchableSettings {
                 preference = readerPref.pageTransitions,
                 title = stringResource(MR.strings.pref_page_transitions),
             ),
-            getDisplayGroup(readerPreferences = readerPref),
+            getDisplayGroup(readerPreferences = readerPref, defaultOrientation = defaultOrientation),
             getEInkGroup(readerPreferences = readerPref),
             getReadingGroup(readerPreferences = readerPref),
             getPagedGroup(readerPreferences = readerPref),
@@ -70,13 +80,16 @@ object SettingsReaderScreen : SearchableSettings {
     }
 
     @Composable
-    private fun getDisplayGroup(readerPreferences: ReaderPreferences): Preference.PreferenceGroup {
+    private fun getDisplayGroup(
+        readerPreferences: MangaReaderSettingsProvider,
+        defaultOrientation: CorePreference<Int>,
+    ): Preference.PreferenceGroup {
         val fullscreen by readerPreferences.fullscreen.collectAsState()
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_category_display),
             preferenceItems = listOf(
                 Preference.PreferenceItem.ListPreference(
-                    preference = readerPreferences.defaultOrientationType,
+                    preference = defaultOrientation,
                     entries = ReaderOrientation.entries.drop(1)
                         .associate { it.flagValue to stringResource(it.stringRes) },
                     title = stringResource(MR.strings.pref_rotation_type),
@@ -113,7 +126,7 @@ object SettingsReaderScreen : SearchableSettings {
     }
 
     @Composable
-    private fun getEInkGroup(readerPreferences: ReaderPreferences): Preference.PreferenceGroup {
+    private fun getEInkGroup(readerPreferences: MangaReaderSettingsProvider): Preference.PreferenceGroup {
         val flashPageState by readerPreferences.flashOnPageChange.collectAsState()
 
         val flashMillisPref = readerPreferences.flashDurationMillis
@@ -133,14 +146,14 @@ object SettingsReaderScreen : SearchableSettings {
                     subtitle = stringResource(MR.strings.pref_flash_page_summ),
                 ),
                 Preference.PreferenceItem.SliderPreference(
-                    value = flashMillis / ReaderPreferences.MILLI_CONVERSION,
+                    value = flashMillis / MangaReaderSettingsProvider.MILLI_CONVERSION,
                     preference = flashMillisPref,
                     valueRange = 1..15,
                     title = stringResource(MR.strings.pref_flash_duration),
                     valueString = stringResource(MR.strings.pref_flash_duration_summary, flashMillis),
                     isProfileSpecific = false,
                     enabled = flashPageState,
-                    onValueChanged = { flashMillisPref.set(it * ReaderPreferences.MILLI_CONVERSION) },
+                    onValueChanged = { flashMillisPref.set(it * MangaReaderSettingsProvider.MILLI_CONVERSION) },
                 ),
                 Preference.PreferenceItem.SliderPreference(
                     value = flashInterval,
@@ -154,9 +167,11 @@ object SettingsReaderScreen : SearchableSettings {
                 Preference.PreferenceItem.ListPreference(
                     preference = flashColorPref,
                     entries = mapOf(
-                        ReaderPreferences.FlashColor.BLACK to stringResource(MR.strings.pref_flash_style_black),
-                        ReaderPreferences.FlashColor.WHITE to stringResource(MR.strings.pref_flash_style_white),
-                        ReaderPreferences.FlashColor.WHITE_BLACK
+                        MangaReaderSettingsProvider.FlashColor.BLACK to
+                            stringResource(MR.strings.pref_flash_style_black),
+                        MangaReaderSettingsProvider.FlashColor.WHITE to
+                            stringResource(MR.strings.pref_flash_style_white),
+                        MangaReaderSettingsProvider.FlashColor.WHITE_BLACK
                             to stringResource(MR.strings.pref_flash_style_white_black),
                     ),
                     title = stringResource(MR.strings.pref_flash_with),
@@ -167,7 +182,7 @@ object SettingsReaderScreen : SearchableSettings {
     }
 
     @Composable
-    private fun getReadingGroup(readerPreferences: ReaderPreferences): Preference.PreferenceGroup {
+    private fun getReadingGroup(readerPreferences: MangaReaderSettingsProvider): Preference.PreferenceGroup {
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_category_reading),
             preferenceItems = listOf(
@@ -192,7 +207,7 @@ object SettingsReaderScreen : SearchableSettings {
     }
 
     @Composable
-    private fun getPagedGroup(readerPreferences: ReaderPreferences): Preference.PreferenceGroup {
+    private fun getPagedGroup(readerPreferences: MangaReaderSettingsProvider): Preference.PreferenceGroup {
         val navModePref = readerPreferences.navigationModePager
         val imageScaleTypePref = readerPreferences.imageScaleType
         val dualPageSplitPref = readerPreferences.dualPageSplitPaged
@@ -208,7 +223,7 @@ object SettingsReaderScreen : SearchableSettings {
             preferenceItems = listOf(
                 Preference.PreferenceItem.ListPreference(
                     preference = navModePref,
-                    entries = ReaderPreferences.TapZones
+                    entries = MangaReaderSettingsProvider.TapZones
                         .mapIndexed { index, it -> index to stringResource(it) }
                         .toMap(),
                     title = stringResource(MR.strings.pref_viewer_nav),
@@ -216,10 +231,10 @@ object SettingsReaderScreen : SearchableSettings {
                 Preference.PreferenceItem.ListPreference(
                     preference = readerPreferences.pagerNavInverted,
                     entries = listOf(
-                        ReaderPreferences.TappingInvertMode.NONE,
-                        ReaderPreferences.TappingInvertMode.HORIZONTAL,
-                        ReaderPreferences.TappingInvertMode.VERTICAL,
-                        ReaderPreferences.TappingInvertMode.BOTH,
+                        MangaReaderSettingsProvider.TappingInvertMode.NONE,
+                        MangaReaderSettingsProvider.TappingInvertMode.HORIZONTAL,
+                        MangaReaderSettingsProvider.TappingInvertMode.VERTICAL,
+                        MangaReaderSettingsProvider.TappingInvertMode.BOTH,
                     )
                         .associateWith { stringResource(it.titleRes) },
                     title = stringResource(MR.strings.pref_read_with_tapping_inverted),
@@ -227,14 +242,14 @@ object SettingsReaderScreen : SearchableSettings {
                 ),
                 Preference.PreferenceItem.ListPreference(
                     preference = imageScaleTypePref,
-                    entries = ReaderPreferences.ImageScaleType
+                    entries = MangaReaderSettingsProvider.ImageScaleType
                         .mapIndexed { index, it -> index + 1 to stringResource(it) }
                         .toMap(),
                     title = stringResource(MR.strings.pref_image_scale_type),
                 ),
                 Preference.PreferenceItem.ListPreference(
                     preference = readerPreferences.zoomStart,
-                    entries = ReaderPreferences.ZoomStart
+                    entries = MangaReaderSettingsProvider.ZoomStart
                         .mapIndexed { index, it -> index + 1 to stringResource(it) }
                         .toMap(),
                     title = stringResource(MR.strings.pref_zoom_start),
@@ -285,7 +300,7 @@ object SettingsReaderScreen : SearchableSettings {
     }
 
     @Composable
-    private fun getWebtoonGroup(readerPreferences: ReaderPreferences): Preference.PreferenceGroup {
+    private fun getWebtoonGroup(readerPreferences: MangaReaderSettingsProvider): Preference.PreferenceGroup {
         val numberFormat = remember { NumberFormat.getPercentInstance() }
 
         val navModePref = readerPreferences.navigationModeWebtoon
@@ -303,7 +318,7 @@ object SettingsReaderScreen : SearchableSettings {
             preferenceItems = listOf(
                 Preference.PreferenceItem.ListPreference(
                     preference = navModePref,
-                    entries = ReaderPreferences.TapZones
+                    entries = MangaReaderSettingsProvider.TapZones
                         .mapIndexed { index, it -> index to stringResource(it) }
                         .toMap(),
                     title = stringResource(MR.strings.pref_viewer_nav),
@@ -311,10 +326,10 @@ object SettingsReaderScreen : SearchableSettings {
                 Preference.PreferenceItem.ListPreference(
                     preference = readerPreferences.webtoonNavInverted,
                     entries = listOf(
-                        ReaderPreferences.TappingInvertMode.NONE,
-                        ReaderPreferences.TappingInvertMode.HORIZONTAL,
-                        ReaderPreferences.TappingInvertMode.VERTICAL,
-                        ReaderPreferences.TappingInvertMode.BOTH,
+                        MangaReaderSettingsProvider.TappingInvertMode.NONE,
+                        MangaReaderSettingsProvider.TappingInvertMode.HORIZONTAL,
+                        MangaReaderSettingsProvider.TappingInvertMode.VERTICAL,
+                        MangaReaderSettingsProvider.TappingInvertMode.BOTH,
                     )
                         .associateWith { stringResource(it.titleRes) },
                     title = stringResource(MR.strings.pref_read_with_tapping_inverted),
@@ -323,7 +338,7 @@ object SettingsReaderScreen : SearchableSettings {
                 Preference.PreferenceItem.SliderPreference(
                     value = webtoonSidePadding,
                     preference = webtoonSidePaddingPref,
-                    valueRange = ReaderPreferences.let {
+                    valueRange = MangaReaderSettingsProvider.let {
                         it.WEBTOON_PADDING_MIN..it.WEBTOON_PADDING_MAX
                     },
                     title = stringResource(MR.strings.pref_webtoon_side_padding),
@@ -333,10 +348,13 @@ object SettingsReaderScreen : SearchableSettings {
                 Preference.PreferenceItem.ListPreference(
                     preference = readerPreferences.readerHideThreshold,
                     entries = mapOf(
-                        ReaderPreferences.ReaderHideThreshold.HIGHEST to stringResource(MR.strings.pref_highest),
-                        ReaderPreferences.ReaderHideThreshold.HIGH to stringResource(MR.strings.pref_high),
-                        ReaderPreferences.ReaderHideThreshold.LOW to stringResource(MR.strings.pref_low),
-                        ReaderPreferences.ReaderHideThreshold.LOWEST to stringResource(MR.strings.pref_lowest),
+                        MangaReaderSettingsProvider.ReaderHideThreshold.HIGHEST to
+                            stringResource(MR.strings.pref_highest),
+                        MangaReaderSettingsProvider.ReaderHideThreshold.HIGH to stringResource(MR.strings.pref_high),
+                        MangaReaderSettingsProvider.ReaderHideThreshold.LOW to stringResource(MR.strings.pref_low),
+                        MangaReaderSettingsProvider.ReaderHideThreshold.LOWEST to stringResource(
+                            MR.strings.pref_lowest,
+                        ),
                     ),
                     title = stringResource(MR.strings.pref_hide_threshold),
                 ),
@@ -384,7 +402,7 @@ object SettingsReaderScreen : SearchableSettings {
     }
 
     @Composable
-    private fun getNavigationGroup(readerPreferences: ReaderPreferences): Preference.PreferenceGroup {
+    private fun getNavigationGroup(readerPreferences: MangaReaderSettingsProvider): Preference.PreferenceGroup {
         val readWithVolumeKeysPref = readerPreferences.readWithVolumeKeys
         val readWithVolumeKeys by readWithVolumeKeysPref.collectAsState()
 
@@ -428,7 +446,7 @@ object SettingsReaderScreen : SearchableSettings {
     }
 
     @Composable
-    private fun getAutoScrollGroup(readerPreferences: ReaderPreferences): Preference.PreferenceGroup {
+    private fun getAutoScrollGroup(readerPreferences: MangaReaderSettingsProvider): Preference.PreferenceGroup {
         val autoScrollEnabled by readerPreferences.autoScrollEnabled.collectAsState()
         val autoScrollSpeed by readerPreferences.autoScrollSpeed.collectAsState()
 
@@ -443,9 +461,9 @@ object SettingsReaderScreen : SearchableSettings {
                 Preference.PreferenceItem.SliderPreference(
                     value = autoScrollSpeed,
                     preference = readerPreferences.autoScrollSpeed,
-                    valueRange = ReaderPreferences.AUTO_SCROLL_SPEED_RANGE,
+                    valueRange = MangaReaderSettingsProvider.AUTO_SCROLL_SPEED_RANGE,
                     title = stringResource(MR.strings.pref_auto_scroll_speed),
-                    valueString = stringResource(ReaderPreferences.AutoScrollLevelLabels[autoScrollSpeed]),
+                    valueString = stringResource(MangaReaderSettingsProvider.AutoScrollLevelLabels[autoScrollSpeed]),
                     enabled = autoScrollEnabled,
                     onValueChanged = { readerPreferences.autoScrollSpeed.set(it) },
                 ),
@@ -454,7 +472,7 @@ object SettingsReaderScreen : SearchableSettings {
     }
 
     @Composable
-    private fun getActionsGroup(readerPreferences: ReaderPreferences): Preference.PreferenceGroup {
+    private fun getActionsGroup(readerPreferences: MangaReaderSettingsProvider): Preference.PreferenceGroup {
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_reader_actions),
             preferenceItems = listOf(

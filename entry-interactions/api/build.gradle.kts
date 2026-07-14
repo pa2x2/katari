@@ -11,6 +11,7 @@ android {
 dependencies {
     api(projects.core.common)
     api(projects.domain)
+    api(projects.entryViewerSettingsApi)
     api(projects.entrySourceApi)
     api(projects.i18n)
     api(libs.kotlinx.coroutines.core)

@@ -15,6 +15,9 @@ import mihon.entry.interactions.EntryPlaybackQualityMode
 import mihon.entry.interactions.EntryProgressInteraction
 import mihon.entry.interactions.EntryProgressSnapshot
 import mihon.entry.interactions.EntryProgressStateSnapshot
+import mihon.entry.viewer.settings.ViewerSettingId
+import mihon.entry.viewer.settings.ViewerSettingOverride
+import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -65,6 +68,12 @@ class EntryBackupCreatorTest {
         } else {
             emptyList()
         }
+        decoded.viewerSettingOverrides.single().run {
+            providerId shouldBe "unknown.reader"
+            settingKey shouldBe "appearance"
+            encodedValue shouldBe "sepia"
+            updatedAt shouldBe 30L
+        }
 
         if (type == EntryType.ANIME) {
             decoded.playbackPreferences?.dubKey shouldBe "playback-dub"
@@ -109,6 +118,7 @@ class EntryBackupCreatorTest {
         val downloadPreferencesRepository = mockk<DownloadPreferencesRepository>()
         val progressInteraction = mockk<EntryProgressInteraction>()
         val playbackPreferencesInteraction = mockk<EntryPlaybackPreferencesInteraction>()
+        private val viewerSettingOverrideRepository = mockk<ViewerSettingOverrideRepository>()
 
         val creator = EntryBackupCreator(
             handler = handler,
@@ -118,6 +128,7 @@ class EntryBackupCreatorTest {
             downloadPreferencesRepository = downloadPreferencesRepository,
             progressInteraction = progressInteraction,
             playbackPreferencesInteraction = playbackPreferencesInteraction,
+            viewerSettingOverrideRepository = viewerSettingOverrideRepository,
         )
 
         init {
@@ -153,6 +164,14 @@ class EntryBackupCreatorTest {
                         locator = EntryProgressLocator(kind = "page", position = 4),
                         locatorUpdatedAt = 10,
                     ),
+                ),
+            )
+            coEvery { viewerSettingOverrideRepository.getByEntryId(entry.id) } returns listOf(
+                ViewerSettingOverride(
+                    entryId = entry.id,
+                    settingId = ViewerSettingId("unknown.reader", "appearance"),
+                    encodedValue = "sepia",
+                    updatedAt = 30,
                 ),
             )
             coEvery { handler.awaitList<Any>(false, any()) } returns emptyList()

@@ -35,8 +35,8 @@ import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import mihon.entry.interactions.reader.settings.ReaderBasePreferences
-import mihon.entry.interactions.reader.settings.ReaderPreferences
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.MR
@@ -214,7 +214,7 @@ fun View?.isVisibleOnScreen(): Boolean {
 
 fun Context.createReaderThemeContext(): Context {
     val preferences = Injekt.get<UiPreferences>()
-    val readerPreferences = Injekt.get<ReaderPreferences>()
+    val readerPreferences = Injekt.get<MangaReaderSettingsProvider>()
     val themeMode = preferences.themeMode.get()
     val isDarkBackground = when (readerPreferences.readerTheme.get()) {
         1, 2 -> true

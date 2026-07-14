@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.util.lang
 
 import android.graphics.RectF
-import mihon.entry.interactions.reader.settings.ReaderPreferences
+import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 
-fun RectF.invert(invertMode: ReaderPreferences.TappingInvertMode): RectF {
+fun RectF.invert(invertMode: MangaReaderSettingsProvider.TappingInvertMode): RectF {
     val horizontal = invertMode.shouldInvertHorizontal
     val vertical = invertMode.shouldInvertVertical
     return when {

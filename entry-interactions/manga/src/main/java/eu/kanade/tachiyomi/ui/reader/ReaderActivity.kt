@@ -82,9 +82,9 @@ import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.entry.interactions.manga.R
 import mihon.entry.interactions.manga.databinding.ReaderActivityBinding
+import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import mihon.entry.interactions.reader.settings.ReaderBasePreferences
 import mihon.entry.interactions.reader.settings.ReaderOrientation
-import mihon.entry.interactions.reader.settings.ReaderPreferences
 import mihon.entry.interactions.reader.settings.ReaderSettingsScreenModel
 import mihon.entry.interactions.reader.settings.ReadingMode
 import tachiyomi.core.common.i18n.stringResource
@@ -120,7 +120,7 @@ class ReaderActivity : AppCompatActivity() {
         }
     }
 
-    private val readerPreferences = Injekt.get<ReaderPreferences>()
+    private val readerPreferences = Injekt.get<MangaReaderSettingsProvider>()
     private val preferences = Injekt.get<ReaderBasePreferences>()
 
     lateinit var binding: ReaderActivityBinding
@@ -141,7 +141,7 @@ class ReaderActivity : AppCompatActivity() {
 
     private var loadingIndicator: ReaderProgressIndicator? = null
     private var isAutoScrollRunning by mutableStateOf(false)
-    private var autoScrollSpeed by mutableStateOf(ReaderPreferences.AUTO_SCROLL_LEVEL_DEFAULT)
+    private var autoScrollSpeed by mutableStateOf(MangaReaderSettingsProvider.AUTO_SCROLL_LEVEL_DEFAULT)
 
     var isScrollingThroughPages = false
         private set
@@ -451,7 +451,7 @@ class ReaderActivity : AppCompatActivity() {
         val colorOverlay by readerPreferences.colorFilterValue.collectAsState()
         val colorOverlayMode by readerPreferences.colorFilterMode.collectAsState()
         val colorOverlayBlendMode = remember(colorOverlayMode) {
-            ReaderPreferences.ColorFilterMode.getOrNull(colorOverlayMode)?.second
+            MangaReaderSettingsProvider.ColorFilterMode.getOrNull(colorOverlayMode)?.second
         }
 
         ReaderContentOverlay(
@@ -788,7 +788,7 @@ class ReaderActivity : AppCompatActivity() {
             return
         }
 
-        val newSpeed = (autoScrollSpeed + delta).coerceIn(ReaderPreferences.AUTO_SCROLL_SPEED_RANGE)
+        val newSpeed = (autoScrollSpeed + delta).coerceIn(MangaReaderSettingsProvider.AUTO_SCROLL_SPEED_RANGE)
         if (newSpeed == autoScrollSpeed) {
             return
         }

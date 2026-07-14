@@ -1,0 +1,47 @@
+CREATE TABLE viewer_setting_overrides(
+    entry_id INTEGER NOT NULL,
+    provider_id TEXT NOT NULL CHECK(length(provider_id) BETWEEN 1 AND 200),
+    setting_key TEXT NOT NULL CHECK(length(setting_key) BETWEEN 1 AND 200),
+    encoded_value TEXT NOT NULL CHECK(length(encoded_value) <= 16384),
+    updated_at INTEGER NOT NULL,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    PRIMARY KEY(entry_id, provider_id, setting_key)
+);
+
+INSERT INTO viewer_setting_overrides(
+    entry_id,
+    provider_id,
+    setting_key,
+    encoded_value,
+    updated_at
+)
+SELECT
+    _id,
+    'builtin.manga.reader',
+    'reading_mode',
+    CAST(viewer & 7 AS TEXT),
+    0
+FROM entries
+WHERE type = 'manga'
+AND (viewer & 7) != 0;
+
+INSERT INTO viewer_setting_overrides(
+    entry_id,
+    provider_id,
+    setting_key,
+    encoded_value,
+    updated_at
+)
+SELECT
+    _id,
+    'builtin.manga.reader',
+    'orientation',
+    CAST(viewer & 56 AS TEXT),
+    0
+FROM entries
+WHERE type = 'manga'
+AND (viewer & 56) != 0;
+
+UPDATE entries
+SET viewer = viewer & -64
+WHERE type = 'manga';

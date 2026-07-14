@@ -8,6 +8,7 @@ import kotlinx.serialization.protobuf.ProtoNumber
 import mihon.core.common.extensions.EMPTY
 import mihon.core.common.extensions.JsonObjectEmptyBytes
 import mihon.entry.interactions.EntryProgressStateSnapshot
+import mihon.entry.viewer.settings.ViewerSettingOverride
 import tachiyomi.data.MemoColumnAdapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryProgressLocator
@@ -51,6 +52,7 @@ class BackupEntry(
     @ProtoNumber(34) var mergeTargetType: EntryType? = null,
     @ProtoNumber(35) var downloadPreferences: BackupDownloadPreferences? = null,
     @ProtoNumber(36) var progressStates: List<BackupEntryProgressState> = emptyList(),
+    @ProtoNumber(37) var viewerSettingOverrides: List<BackupViewerSettingOverride> = emptyList(),
     @ProtoNumber(100) var type: EntryType = EntryType.MANGA,
 ) {
     fun toEntry(): Entry {
@@ -152,6 +154,14 @@ data class BackupEntryProgressState(
 )
 
 @Serializable
+data class BackupViewerSettingOverride(
+    @ProtoNumber(1) var providerId: String,
+    @ProtoNumber(2) var settingKey: String,
+    @ProtoNumber(3) var encodedValue: String,
+    @ProtoNumber(4) var updatedAt: Long = 0,
+)
+
+@Serializable
 data class BackupPlaybackPreferences(
     @ProtoNumber(1) var dubKey: String? = null,
     @ProtoNumber(2) var streamKey: String? = null,
@@ -238,6 +248,15 @@ internal fun EntryProgressStateSnapshot.toBackupEntryProgressState(): BackupEntr
         completed = completed,
         locatorUpdatedAt = locatorUpdatedAt,
         completionUpdatedAt = completionUpdatedAt,
+    )
+}
+
+internal fun ViewerSettingOverride.toBackupViewerSettingOverride(): BackupViewerSettingOverride {
+    return BackupViewerSettingOverride(
+        providerId = settingId.providerId,
+        settingKey = settingId.key,
+        encodedValue = encodedValue,
+        updatedAt = updatedAt,
     )
 }
 

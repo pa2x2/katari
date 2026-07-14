@@ -35,6 +35,7 @@ import mihon.domain.extension.repository.ExtensionStoreRepository
 import mihon.domain.migration.usecases.MigrateEntryUseCase
 import mihon.domain.upcoming.interactor.GetUpcomingEntries
 import mihon.entry.interactions.entryLibraryProgressCalculators
+import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import tachiyomi.data.category.CategoryRepositoryImpl
 import tachiyomi.data.entry.DownloadPreferencesRepositoryImpl
 import tachiyomi.data.entry.EntryChapterRepositoryImpl
@@ -44,6 +45,7 @@ import tachiyomi.data.entry.EntryRepositoryImpl
 import tachiyomi.data.entry.EntrySyncRepositoryImpl
 import tachiyomi.data.entry.MergedEntryRepositoryImpl
 import tachiyomi.data.entry.PlaybackPreferencesRepositoryImpl
+import tachiyomi.data.entry.ViewerSettingOverrideRepositoryImpl
 import tachiyomi.data.history.HistoryRepositoryImpl
 import tachiyomi.data.release.ReleaseServiceImpl
 import tachiyomi.data.source.CatalogSourceRepositoryImpl
@@ -135,6 +137,7 @@ class DomainModule : InjektModule {
         addSingletonFactory<EntryChapterRepository> { EntryChapterRepositoryImpl(get(), get()) }
         addSingletonFactory<EntryProgressRepository> { EntryProgressRepositoryImpl(get()) }
         addSingletonFactory<PlaybackPreferencesRepository> { PlaybackPreferencesRepositoryImpl(get()) }
+        addSingletonFactory<ViewerSettingOverrideRepository> { ViewerSettingOverrideRepositoryImpl(get()) }
         addSingletonFactory<DownloadPreferencesRepository> { DownloadPreferencesRepositoryImpl(get()) }
         addSingletonFactory<EntrySyncRepository> { EntrySyncRepositoryImpl(get(), get()) }
         addSingletonFactory<EntryCoverHashesRepository> { EntryCoverHashesRepositoryImpl(get(), get()) }
@@ -167,6 +170,7 @@ class DomainModule : InjektModule {
         addFactory {
             MigrateEntryUseCase(
                 get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(),
+                get(),
             )
         }
 

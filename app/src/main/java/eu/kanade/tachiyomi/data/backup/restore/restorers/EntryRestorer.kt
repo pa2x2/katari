@@ -17,6 +17,12 @@ import mihon.entry.interactions.EntryPlaybackQualityMode
 import mihon.entry.interactions.EntryProgressInteraction
 import mihon.entry.interactions.EntryProgressSnapshot
 import mihon.entry.interactions.EntryProgressStateSnapshot
+import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
+import mihon.entry.interactions.reader.settings.ReaderOrientation
+import mihon.entry.interactions.reader.settings.ReadingMode
+import mihon.entry.viewer.settings.ViewerSettingId
+import mihon.entry.viewer.settings.ViewerSettingOverride
+import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.category.interactor.GetCategories
@@ -44,6 +50,41 @@ import java.time.ZonedDateTime
 import java.util.Date
 import kotlin.math.max
 
+private const val LEGACY_MANGA_VIEWER_MASK = 0x3FL
+
+internal fun BackupEntry.toViewerSettingOverrides(entry: Entry): List<ViewerSettingOverride> {
+    val overrides = viewerSettingOverrides.mapNotNull { override ->
+        if (override.encodedValue.length > MAX_VIEWER_SETTING_VALUE_LENGTH) return@mapNotNull null
+        runCatching {
+            ViewerSettingOverride(
+                entryId = entry.id,
+                settingId = ViewerSettingId(override.providerId, override.settingKey),
+                encodedValue = override.encodedValue,
+                updatedAt = override.updatedAt,
+            )
+        }.getOrNull()
+    }.toMutableList()
+    if (entry.type != EntryType.MANGA) return overrides
+
+    val restoredIds = overrides.mapTo(mutableSetOf()) { it.settingId }
+    val readingMode = viewerFlags and ReadingMode.MASK.toLong()
+    val readingModeId =
+        ViewerSettingId(MangaReaderSettingsProvider.PROVIDER_ID, MangaReaderSettingsProvider.READING_MODE_KEY)
+    if (readingMode != ReadingMode.DEFAULT.flagValue.toLong() && readingModeId !in restoredIds) {
+        overrides += ViewerSettingOverride(entry.id, readingModeId, readingMode.toString(), updatedAt = 0)
+    }
+
+    val orientation = viewerFlags and ReaderOrientation.MASK.toLong()
+    val orientationId =
+        ViewerSettingId(MangaReaderSettingsProvider.PROVIDER_ID, MangaReaderSettingsProvider.ORIENTATION_KEY)
+    if (orientation != ReaderOrientation.DEFAULT.flagValue.toLong() && orientationId !in restoredIds) {
+        overrides += ViewerSettingOverride(entry.id, orientationId, orientation.toString(), updatedAt = 0)
+    }
+    return overrides
+}
+
+private const val MAX_VIEWER_SETTING_VALUE_LENGTH = 16_384
+
 class EntryRestorer(
     private val handler: DatabaseHandler = Injekt.get(),
     private val profileProvider: ActiveProfileProvider = Injekt.get(),
@@ -58,6 +99,7 @@ class EntryRestorer(
     private val getTracks: GetTracks = Injekt.get(),
     private val insertTrack: InsertTrack = Injekt.get(),
     private val updateMergedEntry: UpdateMergedEntry = Injekt.get(),
+    private val viewerSettingOverrideRepository: ViewerSettingOverrideRepository = Injekt.get(),
     fetchInterval: FetchInterval = Injekt.get(),
 ) {
 
@@ -205,20 +247,30 @@ class EntryRestorer(
             restoreExcludedScanlators(entry, backupEntry.excludedScanlators)
         }
         restorePlaybackPreferences(entry, backupEntry.playbackPreferences)
+        val normalizedEntry = restoreViewerSettingOverrides(entry, backupEntry)
         restoreProgress(
-            entry = entry,
+            entry = normalizedEntry,
             backupChapters = backupEntry.chapters,
             backupHistory = backupEntry.history,
             legacyPlaybackStates = backupEntry.playbackStates,
             states = backupEntry.progressStates,
         )
         if (entry.type == EntryType.ANIME) {
-            restoreDownloadPreferences(entry, backupEntry.downloadPreferences)
+            restoreDownloadPreferences(normalizedEntry, backupEntry.downloadPreferences)
         }
         val withInterval = FetchInterval(
             entryChapterRepository,
-        ).update(entry, now, currentFetchWindow)
+        ).update(normalizedEntry, now, currentFetchWindow)
         entryRepository.update(withInterval)
+    }
+
+    private suspend fun restoreViewerSettingOverrides(entry: Entry, backupEntry: BackupEntry): Entry {
+        backupEntry.toViewerSettingOverrides(entry).forEach { viewerSettingOverrideRepository.upsert(it) }
+        return if (entry.type == EntryType.MANGA) {
+            entry.copy(viewerFlags = entry.viewerFlags and LEGACY_MANGA_VIEWER_MASK.inv())
+        } else {
+            entry
+        }
     }
 
     private suspend fun restoreProgress(

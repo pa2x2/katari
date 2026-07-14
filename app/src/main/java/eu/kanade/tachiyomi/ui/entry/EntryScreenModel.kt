@@ -79,7 +79,7 @@ import mihon.entry.interactions.EntryPreviewHandle
 import mihon.entry.interactions.EntryPreviewInteraction
 import mihon.entry.interactions.EntryPreviewPage
 import mihon.entry.interactions.EntryPreviewPageStatus
-import mihon.entry.interactions.reader.settings.ReaderPreferences
+import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.TriState
@@ -129,7 +129,7 @@ class EntryScreenModel(
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
     private val duplicatePreferences: tachiyomi.domain.library.service.DuplicatePreferences = Injekt.get(),
     trackPreferences: TrackPreferences = Injekt.get(),
-    readerPreferences: ReaderPreferences = Injekt.get(),
+    readerPreferences: MangaReaderSettingsProvider = Injekt.get(),
     private val trackerManager: TrackerManager = Injekt.get(),
     private val trackChapter: TrackChapter = Injekt.get(),
     private val entryDownloadInteraction: EntryDownloadInteraction = Injekt.get(),

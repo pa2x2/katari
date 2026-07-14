@@ -8,7 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import eu.kanade.tachiyomi.ui.reader.hasDisplayCutout
-import mihon.entry.interactions.reader.settings.ReaderPreferences
+import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import mihon.entry.interactions.reader.settings.ReaderSettingsScreenModel
 import mihon.entry.interactions.reader.settings.ReadingMode
 import tachiyomi.i18n.MR
@@ -27,9 +27,9 @@ private val themes = listOf(
 )
 
 private val flashColors = listOf(
-    MR.strings.pref_flash_style_black to ReaderPreferences.FlashColor.BLACK,
-    MR.strings.pref_flash_style_white to ReaderPreferences.FlashColor.WHITE,
-    MR.strings.pref_flash_style_white_black to ReaderPreferences.FlashColor.WHITE_BLACK,
+    MR.strings.pref_flash_style_black to MangaReaderSettingsProvider.FlashColor.BLACK,
+    MR.strings.pref_flash_style_white to MangaReaderSettingsProvider.FlashColor.WHITE,
+    MR.strings.pref_flash_style_white_black to MangaReaderSettingsProvider.FlashColor.WHITE_BLACK,
 )
 
 @Composable
@@ -138,11 +138,11 @@ internal fun ColumnScope.GeneralPage(screenModel: ReaderSettingsScreenModel) {
     )
     if (flashPageState) {
         SliderItem(
-            value = flashMillis / ReaderPreferences.MILLI_CONVERSION,
+            value = flashMillis / MangaReaderSettingsProvider.MILLI_CONVERSION,
             valueRange = 1..15,
             label = stringResource(MR.strings.pref_flash_duration),
             valueString = stringResource(MR.strings.pref_flash_duration_summary, flashMillis),
-            onChange = { flashMillisPref.set(it * ReaderPreferences.MILLI_CONVERSION) },
+            onChange = { flashMillisPref.set(it * MangaReaderSettingsProvider.MILLI_CONVERSION) },
             pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
         )
         SliderItem(

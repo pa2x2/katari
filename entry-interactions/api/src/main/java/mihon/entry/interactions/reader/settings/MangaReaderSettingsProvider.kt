@@ -3,6 +3,12 @@ package mihon.entry.interactions.reader.settings
 import android.os.Build
 import androidx.compose.ui.graphics.BlendMode
 import dev.icerock.moko.resources.StringResource
+import mihon.entry.viewer.settings.ViewerSettingCodecs
+import mihon.entry.viewer.settings.ViewerSettingDefinition
+import mihon.entry.viewer.settings.ViewerSettingId
+import mihon.entry.viewer.settings.ViewerSettingScope
+import mihon.entry.viewer.settings.ViewerSettingsCategory
+import mihon.entry.viewer.settings.ViewerSettingsProvider
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.coerceIn
@@ -10,9 +16,13 @@ import tachiyomi.core.common.preference.getEnum
 import tachiyomi.core.common.preference.getEnumSet
 import tachiyomi.i18n.MR
 
-class ReaderPreferences(
+class MangaReaderSettingsProvider(
     preferenceStore: PreferenceStore,
-) {
+) : ViewerSettingsProvider {
+
+    override val id: String = PROVIDER_ID
+    override val category: ViewerSettingsCategory = ViewerSettingsCategory.READER
+    override val displayName: String = "Manga reader"
 
     // region General
 
@@ -61,6 +71,24 @@ class ReaderPreferences(
     val defaultOrientationType: Preference<Int> = preferenceStore.getInt(
         "pref_default_orientation_type_key",
         ReaderOrientation.FREE.flagValue,
+    )
+
+    val readingModeSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(PROVIDER_ID, READING_MODE_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = ReadingMode.RIGHT_TO_LEFT.flagValue,
+        profilePreference = defaultReadingMode,
+        codec = ViewerSettingCodecs.Int,
+        validate = { value -> ReadingMode.entries.any { it.flagValue == value } },
+    )
+
+    val orientationSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(PROVIDER_ID, ORIENTATION_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = ReaderOrientation.FREE.flagValue,
+        profilePreference = defaultOrientationType,
+        codec = ViewerSettingCodecs.Int,
+        validate = { value -> ReaderOrientation.entries.any { it.flagValue == value } },
     )
 
     val webtoonDoubleTapZoomEnabled: Preference<Boolean> = preferenceStore.getBoolean(
@@ -195,6 +223,115 @@ class ReaderPreferences(
         false,
     )
 
+    override val settings: List<ViewerSettingDefinition<*>> = listOf(
+        readingModeSetting,
+        orientationSetting,
+        booleanSetting("page_transitions", pageTransitions),
+        booleanSetting("flash_on_page_change", flashOnPageChange),
+        intSetting("flash_duration_millis", flashDurationMillis) { it >= 0 },
+        intSetting("flash_page_interval", flashPageInterval) { it > 0 },
+        profileOnly("flash_color", flashColor, enumCodec(FlashColor.entries)),
+        intSetting("double_tap_animation_millis", doubleTapAnimSpeed) { it >= 0 },
+        booleanSetting("show_page_number", showPageNumber),
+        profileOnly("vertical_navigator_modes", verticalNavigator, readingModeSetCodec()),
+        booleanSetting("vertical_navigator_on_left", verticalNavigatorOnLeft),
+        intSetting("vertical_navigator_height", verticalNavigatorHeight) { it in 0..100 },
+        booleanSetting("show_reading_mode", showReadingMode),
+        booleanSetting("fullscreen", fullscreen),
+        booleanSetting("draw_under_cutout", drawUnderCutout),
+        booleanSetting("keep_screen_on", keepScreenOn),
+        booleanSetting("webtoon_double_tap_zoom", webtoonDoubleTapZoomEnabled),
+        intSetting("image_scale_type", imageScaleType) { it in ImageScaleType.indices },
+        intSetting("zoom_start", zoomStart) { it in ZoomStart.indices },
+        intSetting("reader_theme", readerTheme),
+        booleanSetting("always_show_chapter_transition", alwaysShowChapterTransition),
+        booleanSetting("crop_borders", cropBorders),
+        booleanSetting("navigate_to_pan", navigateToPan),
+        booleanSetting("landscape_zoom", landscapeZoom),
+        booleanSetting("crop_borders_webtoon", cropBordersWebtoon),
+        intSetting("webtoon_side_padding", webtoonSidePadding) { it in WEBTOON_PADDING_MIN..WEBTOON_PADDING_MAX },
+        profileOnly("reader_hide_threshold", readerHideThreshold, enumCodec(ReaderHideThreshold.entries)),
+        booleanSetting("folder_per_manga", folderPerManga),
+        booleanSetting("skip_read", skipRead),
+        booleanSetting("skip_filtered", skipFiltered),
+        booleanSetting("skip_duplicate", skipDupe),
+        booleanSetting("webtoon_disable_zoom_out", webtoonDisableZoomOut),
+        booleanSetting("auto_scroll_enabled", autoScrollEnabled),
+        intSetting("auto_scroll_speed", autoScrollSpeed) { it in AUTO_SCROLL_SPEED_RANGE },
+        booleanSetting("dual_page_split_paged", dualPageSplitPaged),
+        booleanSetting("dual_page_invert_paged", dualPageInvertPaged),
+        booleanSetting("dual_page_split_webtoon", dualPageSplitWebtoon),
+        booleanSetting("dual_page_invert_webtoon", dualPageInvertWebtoon),
+        booleanSetting("dual_page_rotate_to_fit", dualPageRotateToFit),
+        booleanSetting("dual_page_rotate_to_fit_invert", dualPageRotateToFitInvert),
+        booleanSetting("dual_page_rotate_to_fit_webtoon", dualPageRotateToFitWebtoon),
+        booleanSetting("dual_page_rotate_to_fit_invert_webtoon", dualPageRotateToFitInvertWebtoon),
+        booleanSetting("custom_brightness", customBrightness),
+        intSetting("custom_brightness_value", customBrightnessValue),
+        booleanSetting("color_filter", colorFilter),
+        intSetting("color_filter_value", colorFilterValue),
+        intSetting("color_filter_mode", colorFilterMode) { it in ColorFilterMode.indices },
+        booleanSetting("grayscale", grayscale),
+        booleanSetting("inverted_colors", invertedColors),
+        booleanSetting("read_with_long_tap", readWithLongTap),
+        booleanSetting("read_with_volume_keys", readWithVolumeKeys),
+        booleanSetting("read_with_volume_keys_inverted", readWithVolumeKeysInverted),
+        intSetting("navigation_mode_pager", navigationModePager) { it in TapZones.indices },
+        intSetting("navigation_mode_webtoon", navigationModeWebtoon) { it in TapZones.indices },
+        profileOnly("pager_navigation_inverted", pagerNavInverted, enumCodec(TappingInvertMode.entries)),
+        profileOnly("webtoon_navigation_inverted", webtoonNavInverted, enumCodec(TappingInvertMode.entries)),
+        booleanSetting("show_navigation_overlay_on_start", showNavigationOverlayOnStart),
+    )
+
+    private fun booleanSetting(key: String, preference: Preference<Boolean>) = profileOnly(
+        key = key,
+        preference = preference,
+        codec = ViewerSettingCodecs.Boolean,
+    )
+
+    private fun intSetting(
+        key: String,
+        preference: Preference<Int>,
+        validate: (Int) -> Boolean = { true },
+    ) = profileOnly(
+        key = key,
+        preference = preference,
+        codec = ViewerSettingCodecs.Int,
+        validate = validate,
+    )
+
+    private fun <T> profileOnly(
+        key: String,
+        preference: Preference<T>,
+        codec: mihon.entry.viewer.settings.ViewerSettingCodec<T>,
+        validate: (T) -> Boolean = { true },
+    ) = ViewerSettingDefinition(
+        id = ViewerSettingId(PROVIDER_ID, key),
+        scope = ViewerSettingScope.PROFILE_ONLY,
+        processorDefault = preference.defaultValue(),
+        profilePreference = preference,
+        codec = codec,
+        validate = validate,
+    )
+
+    private fun <T : Enum<T>> enumCodec(values: List<T>) = ViewerSettingCodecs.codec<T>(
+        encode = Enum<T>::name,
+        decode = { encoded -> values.firstOrNull { it.name == encoded } },
+    )
+
+    private fun readingModeSetCodec() = ViewerSettingCodecs.codec<Set<ReadingMode>>(
+        encode = { values -> values.map(ReadingMode::name).sorted().joinToString(",") },
+        decode = { encoded ->
+            if (encoded.isEmpty()) {
+                emptySet()
+            } else {
+                encoded.split(',').map { name ->
+                    ReadingMode.entries.firstOrNull { it.name == name } ?: return@codec null
+                }.toSet()
+            }
+        },
+    )
+
     // endregion
 
     enum class FlashColor {
@@ -222,6 +359,9 @@ class ReaderPreferences(
     }
 
     companion object {
+        const val PROVIDER_ID = "builtin.manga.reader"
+        const val READING_MODE_KEY = "reading_mode"
+        const val ORIENTATION_KEY = "orientation"
         const val AUTO_SCROLL_LEVEL_MIN = 0
         const val AUTO_SCROLL_LEVEL_MAX = 6
         const val AUTO_SCROLL_LEVEL_DEFAULT = 3

@@ -28,6 +28,7 @@ kotlin {
 }
 
 dependencies {
+    implementation(projects.entryViewerSettingsApi)
     implementation(projects.entrySourceApi)
     implementation(projects.sourceApi)
     implementation(projects.sourceCompat)

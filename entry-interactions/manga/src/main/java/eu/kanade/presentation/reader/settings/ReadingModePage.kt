@@ -8,11 +8,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import eu.kanade.domain.reader.model.readerOrientation
-import eu.kanade.domain.reader.model.readingMode
 import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonViewer
+import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import mihon.entry.interactions.reader.settings.ReaderOrientation
-import mihon.entry.interactions.reader.settings.ReaderPreferences
 import mihon.entry.interactions.reader.settings.ReaderSettingsScreenModel
 import mihon.entry.interactions.reader.settings.ReadingMode
 import tachiyomi.i18n.MR
@@ -27,9 +25,7 @@ import java.text.NumberFormat
 @Composable
 internal fun ColumnScope.ReadingModePage(screenModel: ReaderSettingsScreenModel) {
     HeadingItem(MR.strings.pref_category_for_this_series)
-    val manga by screenModel.mangaFlow.collectAsState()
-
-    val readingMode = remember(manga) { ReadingMode.fromPreference(manga?.readingMode?.toInt()) }
+    val readingMode by screenModel.readingModeFlow.collectAsState()
     SettingsChipRow(MR.strings.pref_category_reading_mode) {
         ReadingMode.entries.map {
             FilterChip(
@@ -40,7 +36,7 @@ internal fun ColumnScope.ReadingModePage(screenModel: ReaderSettingsScreenModel)
         }
     }
 
-    val orientation = remember(manga) { ReaderOrientation.fromPreference(manga?.readerOrientation?.toInt()) }
+    val orientation by screenModel.orientationFlow.collectAsState()
     SettingsChipRow(MR.strings.rotation_type) {
         ReaderOrientation.entries.map {
             FilterChip(
@@ -74,7 +70,7 @@ private fun ColumnScope.PagerViewerSettings(screenModel: ReaderSettingsScreenMod
 
     val imageScaleType by screenModel.preferences.imageScaleType.collectAsState()
     SettingsChipRow(MR.strings.pref_image_scale_type) {
-        ReaderPreferences.ImageScaleType.mapIndexed { index, it ->
+        MangaReaderSettingsProvider.ImageScaleType.mapIndexed { index, it ->
             FilterChip(
                 selected = imageScaleType == index + 1,
                 onClick = { screenModel.preferences.imageScaleType.set(index + 1) },
@@ -85,7 +81,7 @@ private fun ColumnScope.PagerViewerSettings(screenModel: ReaderSettingsScreenMod
 
     val zoomStart by screenModel.preferences.zoomStart.collectAsState()
     SettingsChipRow(MR.strings.pref_zoom_start) {
-        ReaderPreferences.ZoomStart.mapIndexed { index, it ->
+        MangaReaderSettingsProvider.ZoomStart.mapIndexed { index, it ->
             FilterChip(
                 selected = zoomStart == index + 1,
                 onClick = { screenModel.preferences.zoomStart.set(index + 1) },
@@ -154,7 +150,7 @@ private fun ColumnScope.WebtoonViewerSettings(screenModel: ReaderSettingsScreenM
     val webtoonSidePadding by screenModel.preferences.webtoonSidePadding.collectAsState()
     SliderItem(
         value = webtoonSidePadding,
-        valueRange = ReaderPreferences.let { it.WEBTOON_PADDING_MIN..it.WEBTOON_PADDING_MAX },
+        valueRange = MangaReaderSettingsProvider.let { it.WEBTOON_PADDING_MIN..it.WEBTOON_PADDING_MAX },
         label = stringResource(MR.strings.pref_webtoon_side_padding),
         valueString = numberFormat.format(webtoonSidePadding / 100f),
         onChange = {
@@ -208,11 +204,11 @@ private fun ColumnScope.WebtoonViewerSettings(screenModel: ReaderSettingsScreenM
 private fun ColumnScope.TapZonesItems(
     selected: Int,
     onSelect: (Int) -> Unit,
-    invertMode: ReaderPreferences.TappingInvertMode,
-    onSelectInvertMode: (ReaderPreferences.TappingInvertMode) -> Unit,
+    invertMode: MangaReaderSettingsProvider.TappingInvertMode,
+    onSelectInvertMode: (MangaReaderSettingsProvider.TappingInvertMode) -> Unit,
 ) {
     SettingsChipRow(MR.strings.pref_viewer_nav) {
-        ReaderPreferences.TapZones.mapIndexed { index, it ->
+        MangaReaderSettingsProvider.TapZones.mapIndexed { index, it ->
             FilterChip(
                 selected = selected == index,
                 onClick = { onSelect(index) },
@@ -223,7 +219,7 @@ private fun ColumnScope.TapZonesItems(
 
     if (selected != 5) {
         SettingsChipRow(MR.strings.pref_read_with_tapping_inverted) {
-            ReaderPreferences.TappingInvertMode.entries.map {
+            MangaReaderSettingsProvider.TappingInvertMode.entries.map {
                 FilterChip(
                     selected = it == invertMode,
                     onClick = { onSelectInvertMode(it) },

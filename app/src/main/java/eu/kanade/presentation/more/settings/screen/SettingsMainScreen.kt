@@ -196,13 +196,13 @@ object SettingsMainScreen : Screen() {
             screen = SettingsLibraryScreen,
         ),
         Item(
-            titleRes = MR.strings.pref_category_reader,
+            titleRes = MR.strings.pref_category_readers,
             subtitleRes = MR.strings.pref_reader_summary,
             icon = Icons.AutoMirrored.Outlined.ChromeReaderMode,
             screen = SettingsReaderScreen,
         ),
         Item(
-            titleRes = MR.strings.pref_category_player,
+            titleRes = MR.strings.pref_category_players,
             subtitleRes = MR.strings.pref_player_summary,
             icon = Icons.Filled.PlayArrow,
             screen = SettingsPlayerScreen,
