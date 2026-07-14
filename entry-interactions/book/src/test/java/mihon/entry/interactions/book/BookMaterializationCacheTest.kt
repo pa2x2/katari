@@ -55,6 +55,28 @@ class BookMaterializationCacheTest {
     }
 
     @Test
+    fun `invalidated stable revision is materialized again`() = runTest {
+        val cache = cache()
+        val writes = AtomicInteger()
+        val stableKey = key("stable")
+        val first = cache.acquire(stableKey, metadata()) {
+            writes.incrementAndGet()
+            it.writeText("invalid")
+        }
+
+        first.invalidate()
+        first.close()
+        val second = cache.acquire(stableKey, metadata()) {
+            writes.incrementAndGet()
+            it.writeText("valid")
+        }
+
+        assertEquals(2, writes.get())
+        assertEquals("valid", second.file.readText())
+        second.close()
+    }
+
+    @Test
     fun `unversioned materialization is deleted with its final lease`() = runTest {
         val cache = cache()
         val lease = cache.acquire(null, metadata()) { it.writeText("temporary") }

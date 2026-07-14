@@ -53,10 +53,9 @@ internal class ReadiumEpubReaderHost(
         totalPages: Int,
     ): Boolean {
         if (totalPages <= 0 || pageIndex !in 0 until totalPages) return false
-        val locator = navigator.currentLocator.value
         val progression = pageIndex.toDouble() / totalPages.toDouble()
         return navigator.go(
-            locator.copy(locations = locator.locations.copy(progression = progression)),
+            navigator.currentLocator.value.progressionOnly(progression),
             animated = false,
         )
     }
@@ -65,11 +64,8 @@ internal class ReadiumEpubReaderHost(
         navigator: EpubNavigatorFragment,
         progression: Double,
     ): Boolean {
-        val locator = navigator.currentLocator.value
         return navigator.go(
-            locator.copy(
-                locations = locator.locations.copy(progression = progression.coerceIn(0.0, 1.0)),
-            ),
+            navigator.currentLocator.value.progressionOnly(progression),
             animated = false,
         )
     }
@@ -88,6 +84,8 @@ internal class ReadiumEpubReaderHost(
         navigation: List<ReadiumNavigationRow>,
         resourceId: String,
         paginated: Boolean,
+        totalPages: Int,
+        readingDirection: mihon.book.api.BookReadingDirection,
     ): Map<String, ReadiumNavigationPosition> {
         val targets = navigation
             .map(ReadiumNavigationRow::item)
@@ -98,12 +96,15 @@ internal class ReadiumEpubReaderHost(
 
         val fragments = targets.map { it.fragments.first() }
         val fragmentJson = JSONArray(fragments).toString()
+        val rtl = readingDirection == mihon.book.api.BookReadingDirection.RIGHT_TO_LEFT
         val result = navigator.evaluateJavascript(
             """
             (function() {
                 var ids = $fragmentJson;
                 var root = document.scrollingElement || document.documentElement;
                 var horizontal = $paginated;
+                var rtl = $rtl;
+                var totalPages = ${totalPages.coerceAtLeast(1)};
                 return JSON.stringify(ids.map(function(rawId) {
                     var id = rawId;
                     try { id = decodeURIComponent(rawId); } catch (_) {}
@@ -115,10 +116,11 @@ internal class ReadiumEpubReaderHost(
                     if (horizontal) {
                         var width = Math.max(root.scrollWidth, document.documentElement.scrollWidth, 1);
                         var x = rect.left + (window.scrollX || root.scrollLeft || 0);
-                        var rtl = document.body && document.body.dir.toLowerCase() === "rtl";
-                        progression = (rtl ? -x : x) / width;
                         var pageWidth = Math.max(Android.getViewportWidth() / window.devicePixelRatio, 1);
-                        pageIndex = Math.floor(Math.abs(x) / pageWidth + 0.0001);
+                        var physicalPageIndex = Math.floor(Math.abs(x) / pageWidth + 0.0001);
+                        pageIndex = rtl ? totalPages - physicalPageIndex - 1 : physicalPageIndex;
+                        pageIndex = Math.max(0, Math.min(totalPages - 1, pageIndex));
+                        progression = pageIndex / totalPages;
                     } else {
                         var height = Math.max(root.scrollHeight, document.documentElement.scrollHeight, 1);
                         var y = rect.top + (window.scrollY || root.scrollTop || 0);
@@ -152,6 +154,9 @@ internal class ReadiumEpubReaderHost(
 
     val isFixedLayout: Boolean
         get() = publicationSession.readiumPublication().metadata.layout == Layout.FIXED
+
+    fun readingDirection(navigator: EpubNavigatorFragment): mihon.book.api.BookReadingDirection =
+        navigator.settings.value.readingProgression.toBookReadingDirection()
 
     fun observeSettings(
         navigator: EpubNavigatorFragment,

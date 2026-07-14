@@ -79,6 +79,7 @@ internal class ReadiumEpubProcessor(
             return contentFailure("Materialized EPUB resource identity does not match the requested resource")
         }
         archiveValidator.validate(lease.file)?.let { failure ->
+            lease.invalidate()
             lease.close()
             return BookOpenResult.Failure(failure)
         }
@@ -152,6 +153,7 @@ internal class ReadiumEpubProcessor(
         reason: BookFailureReason,
         message: String,
     ): BookOpenResult.Failure {
+        if (reason == BookFailureReason.MALFORMED_CONTENT) lease.invalidate()
         lease.close()
         return BookOpenResult.Failure(BookFailure(reason, message))
     }

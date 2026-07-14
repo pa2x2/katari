@@ -2,6 +2,9 @@ package mihon.entry.interactions.book.epub
 
 import mihon.book.api.BookLocator
 import mihon.book.api.BookNavigationItem
+import mihon.book.api.BookReadingDirection
+import org.readium.r2.navigator.preferences.ReadingProgression
+import org.readium.r2.shared.publication.Locator
 
 internal data class ReadiumNavigationRow(
     val item: BookNavigationItem,
@@ -26,6 +29,32 @@ internal data class ReadiumNavigationPosition(
     val progression: Double,
     val pageIndex: Int?,
 )
+
+internal fun Locator.progressionOnly(progression: Double): Locator = Locator(
+    href = href.removeFragment(),
+    mediaType = mediaType,
+    title = title,
+    locations = Locator.Locations(progression = progression.coerceIn(0.0, 1.0)),
+)
+
+internal fun ReadingProgression.toBookReadingDirection(): BookReadingDirection = when (this) {
+    ReadingProgression.LTR -> BookReadingDirection.LEFT_TO_RIGHT
+    ReadingProgression.RTL -> BookReadingDirection.RIGHT_TO_LEFT
+}
+
+internal fun physicalPageIndexToLogical(
+    pageIndex: Int,
+    totalPages: Int,
+    readingDirection: BookReadingDirection,
+): Int {
+    val safeTotal = totalPages.coerceAtLeast(1)
+    val physical = pageIndex.coerceIn(0, safeTotal - 1)
+    return if (readingDirection == BookReadingDirection.RIGHT_TO_LEFT) {
+        safeTotal - physical - 1
+    } else {
+        physical
+    }
+}
 
 internal fun List<BookNavigationItem>.flattenNavigation(depth: Int = 0): List<ReadiumNavigationRow> =
     flatMap { item ->

@@ -117,6 +117,7 @@ class ReadiumEpubProcessorTest {
 
         assertEquals(BookFailureReason.MALFORMED_CONTENT, result.failure.reason)
         assertEquals(1, content.leaseCloseCount.get())
+        assertEquals(1, content.leaseInvalidationCount.get())
         assertFalse(content.closed)
     }
 
@@ -133,6 +134,7 @@ class ReadiumEpubProcessorTest {
 
         assertEquals(BookFailureReason.FORMAT_UNSUPPORTED, result.failure.reason)
         assertEquals(1, content.leaseCloseCount.get())
+        assertEquals(0, content.leaseInvalidationCount.get())
     }
 
     @Test
@@ -174,6 +176,7 @@ private class TestContentSession(
     )
     override val primaryResourceIds = listOf(resource.id)
     val leaseCloseCount = AtomicInteger()
+    val leaseInvalidationCount = AtomicInteger()
     var closed = false
         private set
 
@@ -196,6 +199,10 @@ private class TestContentSession(
                 override val metadata = resource
                 override val file = publicationFile
                 private var closed = false
+
+                override fun invalidate() {
+                    leaseInvalidationCount.incrementAndGet()
+                }
 
                 override fun close() {
                     if (!closed) leaseCloseCount.incrementAndGet()

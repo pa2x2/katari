@@ -129,6 +129,70 @@ class BookReaderSessionFactoryTest {
         assertTrue(checkNotNull(processor.contentSession).getResource("publication.epub").isFailure)
     }
 
+    @Test
+    fun `merged book history uses the child owner source for incognito`() = runTest {
+        val owner = entry()
+        val visible = entry().copy(id = 2L, source = 20L, url = "/merged")
+        val chapter = chapter()
+        val source = mockk<UnifiedSource> {
+            every { id } returns owner.source
+            coEvery { getMedia(any(), any()) } returns EntryMedia.Book(
+                descriptor = BookContentDescriptor("application/epub+zip"),
+                catalog = BookResourceCatalog(
+                    resources = listOf(
+                        BookSourceResource(
+                            id = "publication.epub",
+                            location = BookResourceLocation.InlineBytes(byteArrayOf(1)),
+                        ),
+                    ),
+                ),
+                initialResourceId = "publication.epub",
+            )
+        }
+        val progressRepository = mockk<EntryProgressRepository> {
+            coEvery { get(owner.id, any(), any()) } returns null
+        }
+        val historyRepository = mockk<HistoryRepository>(relaxed = true)
+        val incognitoState = mockk<mihon.entry.interactions.EntryReaderIncognitoState> {
+            every { isIncognito(owner.source) } returns true
+        }
+        val processor = SessionFactoryTestProcessor(TestPublicationSession())
+        val context = mockk<Context> {
+            every { applicationContext } returns this@mockk
+            every { contentResolver } returns mockk<ContentResolver>()
+            every { cacheDir } returns Files.createTempDirectory("book-reader-session-merged").toFile()
+        }
+        val factory = BookReaderSessionFactory(
+            entryRepository = mockk {
+                coEvery { getEntryById(visible.id) } returns visible
+                coEvery { getEntryById(owner.id) } returns owner
+            },
+            entryChapterRepository = mockk {
+                coEvery { getChapterById(chapter.id) } returns chapter
+            },
+            entryProgressRepository = progressRepository,
+            historyRepository = historyRepository,
+            sourceManager = mockk {
+                every { get(owner.source) } returns source
+            },
+            processorRegistry = BookProcessorRegistry(listOf(processor)),
+            networkHelper = mockk {
+                every { client } returns mockk<OkHttpClient>()
+            },
+            incognitoState = incognitoState,
+            materializationStore = mockk(relaxed = true),
+        )
+
+        val session = assertIs<BookReaderOpenResult.Success>(
+            factory.open(context, BookReaderRequest(visible.id, chapter.id), processor.id),
+        ).session
+        session.recordHistory(500L)
+
+        coVerify { incognitoState.isIncognito(owner.source) }
+        coVerify(exactly = 0) { historyRepository.upsertHistory(any()) }
+        session.close()
+    }
+
     private fun entry(): Entry = Entry.create().copy(
         id = 1L,
         source = 9L,

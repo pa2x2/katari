@@ -49,6 +49,7 @@ internal class BookMaterializationCache(
     private val stateLock = Any()
     private val activeLeaseCounts = mutableMapOf<File, Int>()
     private val activeWrites = mutableSetOf<File>()
+    private val invalidatedFiles = mutableSetOf<File>()
     private val keyLocks = mutableMapOf<String, ReferencedMutex>()
     private var initialized = false
 
@@ -135,6 +136,7 @@ internal class BookMaterializationCache(
             } catch (_: AtomicMoveNotSupportedException) {
                 Files.move(part.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING)
             }
+            synchronized(stateLock) { invalidatedFiles.remove(target) }
         } catch (error: Throwable) {
             part.delete()
             target.delete()
@@ -169,6 +171,7 @@ internal class BookMaterializationCache(
         return CachedMaterializedBookResource(
             metadata = metadata,
             file = file,
+            onInvalidate = { invalidate(file) },
             onClose = {
                 val released = synchronized(stateLock) {
                     val remaining = activeLeaseCounts.getOrDefault(file, 1) - 1
@@ -191,6 +194,11 @@ internal class BookMaterializationCache(
                 if (file.delete()) total -= length
             }
         }
+    }
+
+    private fun invalidate(file: File) = synchronized(stateLock) {
+        invalidatedFiles += file
+        if (file.delete()) invalidatedFiles.remove(file)
     }
 
     private fun ensureInitialized() = synchronized(stateLock) {
@@ -222,7 +230,9 @@ internal class BookMaterializationCache(
         }
     }
 
-    private fun File.isUsableCacheFile(): Boolean = isFile && length() in 1..maxResourceBytes
+    private fun File.isUsableCacheFile(): Boolean = synchronized(stateLock) {
+        this !in invalidatedFiles && isFile && length() in 1..maxResourceBytes
+    }
 
     private fun File.cacheFiles(): List<File> = listFiles().orEmpty()
         .filter { it.name.matches(CACHE_FILE_PATTERN) && it.isUsableCacheFile() }
@@ -244,9 +254,19 @@ private class ReferencedMutex(
 private class CachedMaterializedBookResource(
     override val metadata: BookContentResource,
     override val file: File,
+    private val onInvalidate: () -> Unit,
     private val onClose: () -> Unit,
 ) : MaterializedBookResource {
     private var closed = false
+    private var invalidated = false
+
+    override fun invalidate() {
+        synchronized(this) {
+            if (invalidated) return
+            invalidated = true
+        }
+        onInvalidate()
+    }
 
     override fun close() {
         synchronized(this) {

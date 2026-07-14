@@ -117,6 +117,7 @@ internal class BookReaderSessionFactory(
                     BookReaderOpenResult.Success(
                         OpenedBookReaderSession(
                             entry = visibleEntry,
+                            historySourceId = owner.source,
                             chapter = chapter,
                             progressIdentity = progressIdentity,
                             contentSession = contentSession,
@@ -168,6 +169,7 @@ internal sealed interface BookReaderOpenResult {
 
 internal class OpenedBookReaderSession(
     val entry: Entry,
+    private val historySourceId: Long,
     val chapter: EntryChapter,
     private val progressIdentity: BookProgressIdentity,
     contentSession: BookContentSession,
@@ -209,7 +211,7 @@ internal class OpenedBookReaderSession(
     }
 
     suspend fun recordHistory(sessionReadDuration: Long) {
-        if (sessionReadDuration <= 0L || incognitoState.isIncognito(entry.source)) return
+        if (sessionReadDuration <= 0L || incognitoState.isIncognito(historySourceId)) return
         historyRepository.upsertHistory(
             HistoryUpdate(
                 chapterId = chapter.id,

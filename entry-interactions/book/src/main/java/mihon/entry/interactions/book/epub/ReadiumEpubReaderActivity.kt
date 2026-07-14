@@ -66,6 +66,7 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
     private var sectionStartProgression = 0.0
     private var sectionEndProgression = 1.0
     private var pendingNavigationIndex: Int? = null
+    private var effectiveReadingDirection = BookReadingDirection.LEFT_TO_RIGHT
 
     private val windowInsetsController by lazy { WindowCompat.getInsetsController(window, window.decorView) }
 
@@ -230,8 +231,12 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
         val host = ReadiumEpubReaderHost(publicationSession)
         val paginationListener = object : EpubNavigatorFragment.PaginationListener {
             override fun onPageChanged(pageIndex: Int, totalPages: Int, locator: Locator) {
-                resourceCurrentPage = pageIndex + 1
                 resourceTotalPages = totalPages.coerceAtLeast(1)
+                resourceCurrentPage = physicalPageIndexToLogical(
+                    pageIndex = pageIndex,
+                    totalPages = resourceTotalPages,
+                    readingDirection = effectiveReadingDirection,
+                ) + 1
                 updateLocation(locator)
             }
 
@@ -253,6 +258,7 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
         supportFragmentManager.commitNow {
             replace(containerId, fragment)
         }
+        effectiveReadingDirection = host.readingDirection(fragment)
 
         val publication = publicationSession.publication
         title = publication.title ?: session.entry.displayTitle
@@ -271,10 +277,10 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
         uiState = ReadiumEpubReaderUiState(
             bookTitle = publication.title ?: session.entry.displayTitle,
             sectionCount = navigation.size,
-            readingDirection = publication.readingDirection,
+            readingDirection = effectiveReadingDirection,
             fixedLayout = host.isFixedLayout,
         )
-        inputListener = createInputListener(publication.readingDirection).also(fragment::addInputListener)
+        inputListener = createInputListener(effectiveReadingDirection).also(fragment::addInputListener)
         readingStartedAt = SystemClock.elapsedRealtime()
         host.observeLocations(fragment, lifecycleScope) { locator ->
             session.saveLocation(locator)
@@ -388,6 +394,8 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
                 navigation = navigation,
                 resourceId = locator.resourceId,
                 paginated = paginated,
+                totalPages = resourceTotalPages,
+                readingDirection = effectiveReadingDirection,
             )
             if (uiState.currentLocator?.resourceId != locator.resourceId || isPaginated() != paginated) return@launch
             resolvedNavigationPositions.putAll(positions)

@@ -58,6 +58,9 @@ internal interface OpenedBookResource : AutoCloseable {
 internal interface MaterializedBookResource : AutoCloseable {
     val metadata: BookContentResource
     val file: File
+
+    /** Marks materialized bytes as invalid so a later acquisition cannot reuse them. */
+    fun invalidate() = Unit
 }
 
 internal interface BookProcessor {

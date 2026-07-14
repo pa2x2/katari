@@ -351,6 +351,8 @@ private class SessionMaterializedBookResource(
         get() = delegate.file
     private var closed = false
 
+    override fun invalidate() = delegate.invalidate()
+
     override fun close() {
         synchronized(this) {
             if (closed) return
