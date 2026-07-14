@@ -70,6 +70,7 @@ nav:
   - Migrating to Katari: migrating-to-katari.md
   - Katari features:
       - Unified library: features/unified-library.md
+      - Content type support: features/content-type-reference.md
       - Profiles: features/profiles.md
       - Merged entries: features/merged-entries.md
       - Video playback: features/video-playback.md
