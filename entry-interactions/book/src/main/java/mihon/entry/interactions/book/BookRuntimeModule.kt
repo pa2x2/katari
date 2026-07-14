@@ -1,9 +1,10 @@
 package mihon.entry.interactions.book
 
 import android.app.Application
-import mihon.entry.interactions.EntryMediaCacheBucket
+import mihon.entry.interactions.EntryInteractionRuntimeContribution
 import mihon.entry.interactions.EntryReaderIncognitoState
 import mihon.entry.interactions.book.epub.ReadiumEpubProcessor
+import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
 import tachiyomi.core.common.preference.PreferenceStore
 import uy.kohesive.injekt.api.InjektRegistrar
 import uy.kohesive.injekt.api.addSingletonFactory
@@ -13,9 +14,11 @@ import uy.kohesive.injekt.api.get
 fun InjektRegistrar.addBookEntryInteractionRuntime(
     app: Application,
     profilePreferenceStore: PreferenceStore,
-): EntryMediaCacheBucket {
+): EntryInteractionRuntimeContribution {
     val materializationCache = BookMaterializationCache(app)
+    val readiumSettingsProvider = ReadiumEpubSettingsProvider(profilePreferenceStore)
     addSingletonFactory<BookMaterializationStore> { materializationCache }
+    addSingletonFactory { readiumSettingsProvider }
     addSingletonFactory { BookProcessorRegistry(processors = listOf(ReadiumEpubProcessor())) }
     addSingletonFactory { BookProcessorPreferences(profilePreferenceStore) }
     addSingletonFactory {
@@ -45,5 +48,8 @@ fun InjektRegistrar.addBookEntryInteractionRuntime(
             materializationStore = get(),
         )
     }
-    return materializationCache
+    return EntryInteractionRuntimeContribution(
+        mediaCacheBuckets = listOf(materializationCache),
+        viewerSettingsProviders = listOf(readiumSettingsProvider),
+    )
 }

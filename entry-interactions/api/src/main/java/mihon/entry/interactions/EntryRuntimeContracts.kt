@@ -2,6 +2,7 @@ package mihon.entry.interactions
 
 import android.content.Context
 import kotlinx.coroutines.flow.Flow
+import mihon.entry.viewer.settings.ViewerSettingsProvider
 import java.io.File
 
 interface EntryPageImageCache {
@@ -26,6 +27,11 @@ interface EntryMediaCacheMaintenance {
     fun bucket(key: String): EntryMediaCacheBucket?
     fun clear(key: String): Int
 }
+
+data class EntryInteractionRuntimeContribution(
+    val mediaCacheBuckets: List<EntryMediaCacheBucket> = emptyList(),
+    val viewerSettingsProviders: List<ViewerSettingsProvider> = emptyList(),
+)
 
 interface EntryReaderIncognitoState {
     fun isIncognito(sourceId: Long?): Boolean

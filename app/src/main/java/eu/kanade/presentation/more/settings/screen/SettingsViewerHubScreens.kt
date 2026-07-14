@@ -10,6 +10,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
 import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import mihon.entry.interactions.settings.AnimePlayerPreferences
+import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
 import mihon.entry.viewer.settings.ViewerSettingsCategory
 import mihon.entry.viewer.settings.ViewerSettingsInteraction
 import mihon.entry.viewer.settings.ViewerSettingsProvider
@@ -67,6 +68,7 @@ internal fun viewerProviderSettingsScreens(
 
 private fun viewerSettingsScreen(providerId: String): SearchableSettings? = when (providerId) {
     MangaReaderSettingsProvider.PROVIDER_ID -> SettingsMangaReaderScreen
+    ReadiumEpubSettingsProvider.PROVIDER_ID -> SettingsReadiumEpubReaderScreen
     AnimePlayerPreferences.PROVIDER_ID -> SettingsAnimePlayerScreen
     else -> null
 }

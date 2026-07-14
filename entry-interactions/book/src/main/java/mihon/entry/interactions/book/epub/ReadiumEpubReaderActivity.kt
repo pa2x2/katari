@@ -20,7 +20,10 @@ import mihon.entry.interactions.book.BookReaderSessionFactory
 import mihon.entry.interactions.book.OpenedBookReaderSession
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.displayName
+import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
+import mihon.entry.viewer.settings.ViewerSettingBinder
 import org.readium.r2.navigator.epub.EpubNavigatorFragment
+import org.readium.r2.navigator.epub.EpubPreferences
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -76,8 +79,14 @@ internal class ReadiumEpubReaderActivity : FragmentActivity() {
                 is BookReaderOpenResult.Success -> {
                     var installed = false
                     try {
+                        val settings = ReadiumEpubSettingsBinding(
+                            provider = Injekt.get<ReadiumEpubSettingsProvider>(),
+                            binder = Injekt.get<ViewerSettingBinder>(),
+                            entryId = result.session.entry.id,
+                        )
+                        val initialPreferences = settings.initialPreferences()
                         lifecycle.withStarted {
-                            showReader(result.session)
+                            showReader(result.session, settings, initialPreferences)
                             installed = true
                         }
                     } finally {
@@ -119,7 +128,11 @@ internal class ReadiumEpubReaderActivity : FragmentActivity() {
         navigator = null
     }
 
-    private fun showReader(session: OpenedBookReaderSession) {
+    private fun showReader(
+        session: OpenedBookReaderSession,
+        settings: ReadiumEpubSettingsBinding,
+        initialPreferences: EpubPreferences,
+    ) {
         val publicationSession = session.publicationSession as? ReadiumPublicationSession
             ?: run {
                 session.close()
@@ -129,7 +142,10 @@ internal class ReadiumEpubReaderActivity : FragmentActivity() {
         title = publicationSession.publication.title ?: session.entry.displayTitle
         root.removeAllViews()
         val host = ReadiumEpubReaderHost(publicationSession)
-        val fragmentFactory = host.createFragmentFactory(session.initialLocator)
+        val fragmentFactory = host.createFragmentFactory(
+            initialLocator = session.initialLocator,
+            initialPreferences = initialPreferences,
+        )
         supportFragmentManager.fragmentFactory = fragmentFactory
         val fragment = fragmentFactory.instantiate(
             classLoader,
@@ -145,6 +161,7 @@ internal class ReadiumEpubReaderActivity : FragmentActivity() {
         host.observeLocations(fragment, lifecycleScope) { locator ->
             session.saveLocation(locator)
         }
+        host.observeSettings(fragment, settings, lifecycleScope)
     }
 
     private fun showLoading() {

@@ -8,15 +8,20 @@ import kotlinx.coroutines.flow.onEach
 import mihon.book.api.BookLocator
 import org.readium.r2.navigator.epub.EpubNavigatorFactory
 import org.readium.r2.navigator.epub.EpubNavigatorFragment
+import org.readium.r2.navigator.epub.EpubPreferences
 
 /** Compile proof for a processor-owned reader surface; never crosses the generic BOOK boundary. */
 internal class ReadiumEpubReaderHost(
     private val publicationSession: ReadiumPublicationSession,
 ) {
-    fun createFragmentFactory(initialLocator: BookLocator?): FragmentFactory {
+    fun createFragmentFactory(
+        initialLocator: BookLocator?,
+        initialPreferences: EpubPreferences,
+    ): FragmentFactory {
         val publication = publicationSession.readiumPublication()
         return EpubNavigatorFactory(publication).createFragmentFactory(
             initialLocator = initialLocator?.let { ReadiumLocatorAdapter.restore(it, publication) },
+            initialPreferences = initialPreferences,
         )
     }
 
@@ -31,4 +36,12 @@ internal class ReadiumEpubReaderHost(
     fun currentLocation(navigator: EpubNavigatorFragment): BookLocator? {
         return navigator.currentLocator.value?.let(ReadiumLocatorAdapter::adapt)
     }
+
+    fun observeSettings(
+        navigator: EpubNavigatorFragment,
+        settings: ReadiumEpubSettingsBinding,
+        scope: CoroutineScope,
+    ): Job = settings.changes
+        .onEach(navigator::submitPreferences)
+        .launchIn(scope)
 }

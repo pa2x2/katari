@@ -12,6 +12,7 @@ dependencies {
     api(projects.bookApi)
     api(projects.domain)
     api(projects.entryInteractions.spi)
+    api(projects.entryViewerSettingsApi)
 
     implementation(projects.core.common)
     implementation(libs.androidx.activity.compose)

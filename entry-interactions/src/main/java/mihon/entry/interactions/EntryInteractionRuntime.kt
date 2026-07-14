@@ -69,23 +69,23 @@ fun InjektRegistrar.addEntryInteractionRuntime(
             scope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
         )
     }
+    val mangaWarmup = addMangaEntryInteractionRuntime(app)
+    val animeWarmup = addAnimeEntryInteractionRuntime(app)
+    val bookRuntime = addBookEntryInteractionRuntime(app, dependencies.profilePreferenceStore)
+
     addSingletonFactory<ViewerSettingsInteraction> {
         DefaultViewerSettingsInteraction(
             providers = listOf(
                 get<MangaReaderSettingsProvider>(),
                 get<AnimePlayerPreferences>(),
-            ),
+            ) + bookRuntime.viewerSettingsProviders,
         )
     }
-
-    val mangaWarmup = addMangaEntryInteractionRuntime(app)
-    val animeWarmup = addAnimeEntryInteractionRuntime(app)
-    val bookMaterializationCache = addBookEntryInteractionRuntime(app, dependencies.profilePreferenceStore)
 
     addSingletonFactory<EntryMediaCacheMaintenance> {
         DefaultEntryMediaCacheMaintenance(
             buckets = dependencies.mediaCacheBuckets +
-                bookMaterializationCache +
+                bookRuntime.mediaCacheBuckets +
                 LazyEntryMediaCacheBucket(
                     key = EntryMediaCacheBucketKeys.ANIME_PLAYBACK,
                     delegateProvider = { get<EntryPlayerCache>() },
