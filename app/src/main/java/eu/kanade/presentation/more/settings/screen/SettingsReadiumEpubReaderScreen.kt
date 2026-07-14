@@ -183,7 +183,7 @@ object SettingsReadiumEpubReaderScreen : SearchableSettings {
                     ),
                     Preference.PreferenceItem.SwitchPreference(
                         preference = showPageNumber,
-                        title = stringResource(MR.strings.pref_show_page_number),
+                        title = stringResource(MR.strings.pref_epub_show_reading_progress),
                     ),
                 ),
             ),

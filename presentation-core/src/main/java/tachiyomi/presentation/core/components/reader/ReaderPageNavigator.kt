@@ -64,6 +64,7 @@ fun ReaderPageNavigator(
     currentPage: Int,
     totalPages: Int,
     onPageIndexChange: (Int) -> Unit,
+    onPageIndexChangeFinished: ((Int) -> Unit)? = null,
     previousSectionDescription: String,
     nextSectionDescription: String,
     modifier: Modifier = Modifier,
@@ -78,11 +79,19 @@ fun ReaderPageNavigator(
             valueRange = 1f..safeTotalPages.toFloat(),
         )
     }
-    state.value = safeCurrentPage.toFloat()
-    state.onValueChange = { onPageIndexChange(it.roundToInt() - 1) }
 
     val interactionSource = remember { MutableInteractionSource() }
     val sliderDragged by interactionSource.collectIsDraggedAsState()
+    LaunchedEffect(safeCurrentPage, sliderDragged) {
+        if (!sliderDragged) state.value = safeCurrentPage.toFloat()
+    }
+    state.onValueChange = {
+        state.value = it
+        onPageIndexChange(it.roundToInt() - 1)
+    }
+    state.onValueChangeFinished = {
+        onPageIndexChangeFinished?.invoke(state.value.roundToInt() - 1)
+    }
     LaunchedEffect(safeCurrentPage) {
         if (sliderDragged) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
     }
@@ -104,8 +113,8 @@ fun ReaderPageNavigator(
             nextSectionEnabled = nextSectionEnabled,
             onPreviousSection = onPreviousSection,
             previousSectionEnabled = previousSectionEnabled,
-            currentPage = safeCurrentPage,
-            totalPages = safeTotalPages,
+            currentLabel = safeCurrentPage.toString(),
+            totalLabel = safeTotalPages.toString(),
             previousSectionDescription = previousSectionDescription,
             nextSectionDescription = nextSectionDescription,
             interactionSource = interactionSource,
@@ -121,8 +130,8 @@ fun ReaderPageNavigator(
             nextSectionEnabled = nextSectionEnabled,
             onPreviousSection = onPreviousSection,
             previousSectionEnabled = previousSectionEnabled,
-            currentPage = safeCurrentPage,
-            totalPages = safeTotalPages,
+            currentLabel = safeCurrentPage.toString(),
+            totalLabel = safeTotalPages.toString(),
             previousSectionDescription = previousSectionDescription,
             nextSectionDescription = nextSectionDescription,
             interactionSource = interactionSource,
@@ -135,6 +144,71 @@ fun ReaderPageNavigator(
 }
 
 @Composable
+fun ReaderProgressNavigator(
+    isRtl: Boolean,
+    onNextSection: () -> Unit,
+    nextSectionEnabled: Boolean,
+    onPreviousSection: () -> Unit,
+    previousSectionEnabled: Boolean,
+    currentProgress: Float,
+    onProgressChange: (Float) -> Unit,
+    onProgressChangeFinished: (Float) -> Unit,
+    previousSectionDescription: String,
+    nextSectionDescription: String,
+    modifier: Modifier = Modifier,
+) {
+    val safeProgress = currentProgress.coerceIn(0f, 1f)
+    val state = remember {
+        SliderState(
+            value = safeProgress,
+            valueRange = 0f..1f,
+        )
+    }
+    val interactionSource = remember { MutableInteractionSource() }
+    val sliderDragged by interactionSource.collectIsDraggedAsState()
+    LaunchedEffect(safeProgress, sliderDragged) {
+        if (!sliderDragged) state.value = safeProgress
+    }
+    state.onValueChange = {
+        state.value = it
+        onProgressChange(it)
+    }
+    state.onValueChangeFinished = { onProgressChangeFinished(state.value) }
+
+    val haptic = LocalHapticFeedback.current
+    LaunchedEffect(state.value) {
+        if (sliderDragged) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+    }
+    val mainAxisPadding = if (LocalConfiguration.current.smallestScreenWidthDp >= 720) 24.dp else 8.dp
+    val backgroundColor = MaterialTheme.colorScheme
+        .surfaceColorAtElevation(3.dp)
+        .copy(alpha = if (isSystemInDarkTheme()) 0.9f else 0.95f)
+    val buttonColor = IconButtonDefaults.filledIconButtonColors(
+        containerColor = backgroundColor,
+        disabledContainerColor = backgroundColor,
+    )
+    val percentage = (state.value * 100).roundToInt()
+
+    HorizontalReaderPageNavigator(
+        isRtl = isRtl,
+        state = state,
+        onNextSection = onNextSection,
+        nextSectionEnabled = nextSectionEnabled,
+        onPreviousSection = onPreviousSection,
+        previousSectionEnabled = previousSectionEnabled,
+        currentLabel = "$percentage%",
+        totalLabel = "100%",
+        previousSectionDescription = previousSectionDescription,
+        nextSectionDescription = nextSectionDescription,
+        interactionSource = interactionSource,
+        mainAxisPadding = mainAxisPadding,
+        backgroundColor = backgroundColor,
+        buttonColor = buttonColor,
+        modifier = modifier,
+    )
+}
+
+@Composable
 private fun HorizontalReaderPageNavigator(
     isRtl: Boolean,
     state: SliderState,
@@ -142,8 +216,8 @@ private fun HorizontalReaderPageNavigator(
     nextSectionEnabled: Boolean,
     onPreviousSection: () -> Unit,
     previousSectionEnabled: Boolean,
-    currentPage: Int,
-    totalPages: Int,
+    currentLabel: String,
+    totalLabel: String,
     previousSectionDescription: String,
     nextSectionDescription: String,
     interactionSource: MutableInteractionSource,
@@ -168,7 +242,7 @@ private fun HorizontalReaderPageNavigator(
                 colors = buttonColor,
             )
 
-            if (totalPages > 1) {
+            if (state.valueRange.endInclusive > state.valueRange.start) {
                 CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
                     Row(
                         modifier = Modifier
@@ -179,8 +253,8 @@ private fun HorizontalReaderPageNavigator(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Box(contentAlignment = Alignment.CenterEnd) {
-                            Text(currentPage.toString())
-                            Text(totalPages.toString(), color = Color.Transparent)
+                            Text(currentLabel)
+                            Text(totalLabel, color = Color.Transparent)
                         }
                         Slider(
                             state = state,
@@ -189,7 +263,7 @@ private fun HorizontalReaderPageNavigator(
                                 .padding(horizontal = 8.dp),
                             interactionSource = interactionSource,
                         )
-                        Text(totalPages.toString())
+                        Text(totalLabel)
                     }
                 }
             } else {
@@ -214,8 +288,8 @@ private fun VerticalReaderPageNavigator(
     nextSectionEnabled: Boolean,
     onPreviousSection: () -> Unit,
     previousSectionEnabled: Boolean,
-    currentPage: Int,
-    totalPages: Int,
+    currentLabel: String,
+    totalLabel: String,
     previousSectionDescription: String,
     nextSectionDescription: String,
     interactionSource: MutableInteractionSource,
@@ -239,7 +313,7 @@ private fun VerticalReaderPageNavigator(
             modifier = Modifier.rotate(90f),
         )
 
-        if (totalPages > 1) {
+        if (state.valueRange.endInclusive > state.valueRange.start) {
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -248,7 +322,7 @@ private fun VerticalReaderPageNavigator(
                     .padding(vertical = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text(currentPage.toString())
+                Text(currentLabel)
                 VerticalSlider(
                     state = state,
                     modifier = Modifier
@@ -256,7 +330,7 @@ private fun VerticalReaderPageNavigator(
                         .padding(vertical = 8.dp),
                     interactionSource = interactionSource,
                 )
-                Text(totalPages.toString())
+                Text(totalLabel)
             }
         } else {
             Spacer(Modifier.weight(1f))

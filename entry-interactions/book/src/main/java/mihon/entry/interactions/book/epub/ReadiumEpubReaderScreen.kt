@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -26,6 +25,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.ViewCarousel
 import androidx.compose.material.icons.outlined.ViewStream
@@ -69,11 +69,12 @@ import tachiyomi.presentation.core.components.HeadingItem
 import tachiyomi.presentation.core.components.SettingsItemsPaddings
 import tachiyomi.presentation.core.components.SliderItem
 import tachiyomi.presentation.core.components.material.TabText
-import tachiyomi.presentation.core.components.reader.OverlayListDrawer
 import tachiyomi.presentation.core.components.reader.ReaderChrome
 import tachiyomi.presentation.core.components.reader.ReaderPageIndicator
 import tachiyomi.presentation.core.components.reader.ReaderPageNavigator
 import tachiyomi.presentation.core.components.reader.ReaderPageNavigatorType
+import tachiyomi.presentation.core.components.reader.ReaderProgressIndicator
+import tachiyomi.presentation.core.components.reader.ReaderProgressNavigator
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.math.roundToInt
 
@@ -85,6 +86,7 @@ internal data class ReadiumEpubReaderUiState(
     val totalPages: Int = 1,
     val currentSectionIndex: Int = -1,
     val sectionCount: Int = 0,
+    val sectionProgress: Float = 0f,
     val readingDirection: BookReadingDirection? = null,
     val fixedLayout: Boolean = false,
     val menuVisible: Boolean = false,
@@ -95,13 +97,15 @@ internal data class ReadiumEpubReaderUiState(
 @Composable
 internal fun ReadiumEpubReaderScreen(
     state: ReadiumEpubReaderUiState,
-    navigation: List<BookNavigationItem>,
+    navigation: List<ReadiumNavigationRow>,
     settings: ReadiumEpubSettingsBinding,
     onClose: () -> Unit,
-    onMenuVisibilityChange: (Boolean) -> Unit,
     onTocVisibilityChange: (Boolean) -> Unit,
     onSettingsVisibilityChange: (Boolean) -> Unit,
+    onPageIndexPreview: (Int) -> Unit,
     onPageIndexChange: (Int) -> Unit,
+    onProgressPreview: (Float) -> Unit,
+    onProgressChange: (Float) -> Unit,
     onPreviousSection: () -> Unit,
     onNextSection: () -> Unit,
     onNavigationItemClick: (BookNavigationItem) -> Unit,
@@ -112,14 +116,22 @@ internal fun ReadiumEpubReaderScreen(
     val paginated = state.fixedLayout || layoutMode == ReadiumEpubSettingsProvider.LAYOUT_PAGINATED
 
     Box(modifier = Modifier.fillMaxSize()) {
-        if (!state.menuVisible && showPageNumber && paginated) {
-            ReaderPageIndicator(
-                currentPage = state.currentPage,
-                totalPages = state.totalPages,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .navigationBarsPadding(),
-            )
+        if (!state.menuVisible && showPageNumber) {
+            val indicatorModifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+            if (paginated) {
+                ReaderPageIndicator(
+                    currentPage = state.currentPage,
+                    totalPages = state.totalPages,
+                    modifier = indicatorModifier,
+                )
+            } else {
+                ReaderProgressIndicator(
+                    text = "${(state.sectionProgress * 100).roundToInt()}%",
+                    modifier = indicatorModifier,
+                )
+            }
         }
 
         val backgroundColor = MaterialTheme.colorScheme
@@ -150,7 +162,21 @@ internal fun ReadiumEpubReaderScreen(
                             previousSectionEnabled = state.currentSectionIndex > 0,
                             currentPage = state.currentPage,
                             totalPages = state.totalPages,
-                            onPageIndexChange = onPageIndexChange,
+                            onPageIndexChange = onPageIndexPreview,
+                            onPageIndexChangeFinished = onPageIndexChange,
+                            previousSectionDescription = stringResource(MR.strings.action_previous_section),
+                            nextSectionDescription = stringResource(MR.strings.action_next_section),
+                        )
+                    } else {
+                        ReaderProgressNavigator(
+                            isRtl = state.readingDirection == BookReadingDirection.RIGHT_TO_LEFT,
+                            onNextSection = onNextSection,
+                            nextSectionEnabled = state.currentSectionIndex in 0 until state.sectionCount - 1,
+                            onPreviousSection = onPreviousSection,
+                            previousSectionEnabled = state.currentSectionIndex > 0,
+                            currentProgress = state.sectionProgress,
+                            onProgressChange = onProgressPreview,
+                            onProgressChangeFinished = onProgressChange,
                             previousSectionDescription = stringResource(MR.strings.action_previous_section),
                             nextSectionDescription = stringResource(MR.strings.action_next_section),
                         )
@@ -174,11 +200,10 @@ internal fun ReadiumEpubReaderScreen(
             },
         )
 
-        ReadiumTableOfContentsDrawer(
+        ReadiumTableOfContentsSheet(
             visible = state.tocVisible,
             navigation = navigation,
-            currentLocator = state.currentLocator,
-            currentSectionTitle = state.sectionTitle,
+            selectedIndex = state.currentSectionIndex,
             onItemClick = onNavigationItemClick,
             onDismissRequest = { onTocVisibilityChange(false) },
         )
@@ -191,11 +216,10 @@ internal fun ReadiumEpubReaderScreen(
         )
     }
 
-    BackHandler(enabled = state.tocVisible || state.settingsVisible || state.menuVisible) {
+    BackHandler(enabled = state.tocVisible || state.settingsVisible) {
         when {
             state.tocVisible -> onTocVisibilityChange(false)
-            state.settingsVisible -> onSettingsVisibilityChange(false)
-            else -> onMenuVisibilityChange(false)
+            else -> onSettingsVisibilityChange(false)
         }
     }
 }
@@ -249,12 +273,6 @@ private fun ReadiumReaderBottomBar(
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(onClick = onOpenToc) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ViewList,
-                contentDescription = stringResource(MR.strings.book_table_of_contents),
-            )
-        }
         if (showLayoutToggle) {
             IconButton(onClick = onToggleLayout) {
                 Icon(
@@ -269,80 +287,110 @@ private fun ReadiumReaderBottomBar(
                 contentDescription = stringResource(MR.strings.action_settings),
             )
         }
+        IconButton(onClick = onOpenToc) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ViewList,
+                contentDescription = stringResource(MR.strings.book_table_of_contents),
+            )
+        }
     }
 }
 
-private data class TocRow(val item: BookNavigationItem, val depth: Int)
-
 @Composable
-private fun ReadiumTableOfContentsDrawer(
+private fun ReadiumTableOfContentsSheet(
     visible: Boolean,
-    navigation: List<BookNavigationItem>,
-    currentLocator: BookLocator?,
-    currentSectionTitle: String?,
+    navigation: List<ReadiumNavigationRow>,
+    selectedIndex: Int,
     onItemClick: (BookNavigationItem) -> Unit,
     onDismissRequest: () -> Unit,
 ) {
-    val rows = remember(navigation) { navigation.flattenNavigation() }
-    val selectedIndex = rows.indexOfFirst {
-        it.item.target.resourceId == currentLocator?.resourceId && it.item.title == currentSectionTitle
-    }.takeIf { it >= 0 } ?: rows.indexOfFirst {
-        it.item.target.resourceId == currentLocator?.resourceId
-    }
+    if (!visible) return
+
     val listState = rememberLazyListState()
     LaunchedEffect(visible, selectedIndex) {
         if (visible && selectedIndex >= 0) listState.scrollToItem(selectedIndex)
     }
 
-    OverlayListDrawer(
-        visible = visible,
-        title = stringResource(MR.strings.book_table_of_contents),
-        icon = Icons.AutoMirrored.Filled.ViewList,
-        closeDescription = stringResource(MR.strings.action_close),
+    Dialog(
         onDismissRequest = onDismissRequest,
-        drawerModifier = Modifier.statusBarsPadding().navigationBarsPadding(),
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = true),
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            state = listState,
-        ) {
-            itemsIndexed(rows) { index, row ->
-                val selected = index == selectedIndex
-                Text(
-                    text = row.item.title?.takeIf(String::isNotBlank) ?: row.item.target.resourceId,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            if (selected) {
-                                MaterialTheme.colorScheme.secondaryContainer
-                            } else {
-                                Color.Transparent
-                            },
+        BoxWithConstraints {
+            AdaptiveSheet(
+                isTabletUi = false,
+                enableImplicitDismiss = true,
+                onDismissRequest = onDismissRequest,
+                modifier = Modifier.heightIn(max = maxHeight * 0.85f),
+            ) {
+                Column {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 24.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ViewList,
+                            contentDescription = null,
                         )
-                        .clickable {
-                            onItemClick(row.item)
-                            onDismissRequest()
+                        Text(
+                            text = stringResource(MR.strings.book_table_of_contents),
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 16.dp),
+                            style = MaterialTheme.typography.titleLarge,
+                        )
+                        IconButton(onClick = onDismissRequest) {
+                            Icon(
+                                imageVector = Icons.Outlined.Close,
+                                contentDescription = stringResource(MR.strings.action_close),
+                            )
                         }
-                        .padding(
-                            start = 16.dp + (row.depth * 16).dp,
-                            top = 12.dp,
-                            end = 16.dp,
-                            bottom = 12.dp,
-                        ),
-                    color = if (selected) {
-                        MaterialTheme.colorScheme.onSecondaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
-                )
+                    }
+                    HorizontalDivider()
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f, fill = false),
+                        state = listState,
+                    ) {
+                        itemsIndexed(navigation) { index, row ->
+                            val selected = index == selectedIndex
+                            Text(
+                                text = row.item.title?.takeIf(String::isNotBlank)
+                                    ?: row.item.target.resourceId,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(
+                                        if (selected) {
+                                            MaterialTheme.colorScheme.secondaryContainer
+                                        } else {
+                                            Color.Transparent
+                                        },
+                                    )
+                                    .clickable {
+                                        onItemClick(row.item)
+                                        onDismissRequest()
+                                    }
+                                    .padding(
+                                        start = 16.dp + (row.depth * 16).dp,
+                                        top = 12.dp,
+                                        end = 16.dp,
+                                        bottom = 12.dp,
+                                    ),
+                                color = if (selected) {
+                                    MaterialTheme.colorScheme.onSecondaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface
+                                },
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                        }
+                    }
+                }
             }
         }
     }
-}
-
-private fun List<BookNavigationItem>.flattenNavigation(depth: Int = 0): List<TocRow> = flatMap { item ->
-    listOf(TocRow(item, depth)) + item.children.flattenNavigation(depth + 1)
 }
 
 @Composable
@@ -526,7 +574,7 @@ private fun ReadiumControlSettings(settings: ReadiumEpubSettingsBinding) {
         onClick = { settings.tapNavigation.setProfileValue(!tapNavigation) },
     )
     CheckboxItem(
-        label = stringResource(MR.strings.pref_show_page_number),
+        label = stringResource(MR.strings.pref_epub_show_reading_progress),
         checked = showPageNumber,
         onClick = { settings.showPageNumber.setProfileValue(!showPageNumber) },
     )

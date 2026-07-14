@@ -20,7 +20,19 @@ fun ReaderPageIndicator(
 ) {
     if (currentPage <= 0 || totalPages <= 0) return
 
-    val text = "$currentPage / $totalPages"
+    ReaderProgressIndicator(
+        text = "$currentPage / $totalPages",
+        modifier = modifier,
+    )
+}
+
+@Composable
+fun ReaderProgressIndicator(
+    text: String,
+    modifier: Modifier = Modifier,
+) {
+    if (text.isBlank()) return
+
     val style = TextStyle(
         color = Color(235, 235, 235),
         fontSize = MaterialTheme.typography.bodySmall.fontSize,
