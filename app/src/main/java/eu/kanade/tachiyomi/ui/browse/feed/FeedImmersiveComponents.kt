@@ -17,6 +17,7 @@ import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.DragHandle
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -82,6 +83,7 @@ internal fun FeedPickerSheet(
     onJumpToNewest: (() -> Unit)?,
     onAddFeed: () -> Unit,
     onManageFeeds: () -> Unit,
+    onLongPressActions: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
     AdaptiveSheet(onDismissRequest = onDismissRequest) {
@@ -163,6 +165,11 @@ internal fun FeedPickerSheet(
                 label = stringResource(MR.strings.browse_manage_feeds),
                 icon = Icons.Outlined.DragHandle,
                 onClick = onManageFeeds,
+            )
+            FeedSheetAction(
+                label = stringResource(MR.strings.pref_browse_long_press_action_open_settings),
+                icon = Icons.Outlined.Settings,
+                onClick = onLongPressActions,
             )
         }
     }

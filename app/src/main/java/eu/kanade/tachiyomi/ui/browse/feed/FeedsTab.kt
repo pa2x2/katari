@@ -28,7 +28,7 @@ import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DragHandle
 import androidx.compose.material.icons.outlined.Fullscreen
-import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
@@ -69,6 +69,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.icerock.moko.resources.StringResource
+import eu.kanade.domain.source.model.FeedItemRef
 import eu.kanade.domain.source.model.SourceFeed
 import eu.kanade.domain.source.model.SourceFeedContentMode
 import eu.kanade.domain.source.model.SourceFeedPreset
@@ -88,11 +89,13 @@ import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.components.RadioMenuItem
 import eu.kanade.presentation.components.TabContent
 import eu.kanade.presentation.entry.components.DuplicateEntryDialog
+import eu.kanade.presentation.more.settings.screen.BrowseLongPressActionsScreen
 import eu.kanade.presentation.util.animateItemFastScroll
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.SourceHomePage
 import eu.kanade.tachiyomi.source.sourceItemOrientation
 import eu.kanade.tachiyomi.source.toCatalogSource
+import eu.kanade.tachiyomi.ui.browse.catalog.BrowseLongPressOutcome
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreenModel
 import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveScreenModel
@@ -108,7 +111,7 @@ import mihon.feature.profiles.core.ProfileManager
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import tachiyomi.core.common.Constants
-import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.domain.source.model.Source
@@ -393,9 +396,20 @@ private fun Screen.FeedsTabContent(
                                 onLocalSourceHelpClick = { uriHandler.openUri(LocalSource.HELP_URL) },
                                 onItemClick = openItem,
                                 onItemLongClick = { item ->
-                                    scope.launchIO {
-                                        if (actionModel.onItemLongClick(item)) {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    scope.launch {
+                                        val outcome = withIOContext {
+                                            actionModel.onItemLongClick(
+                                                item = item,
+                                                supportsImmersive = supportsImmersiveFeed,
+                                            )
+                                        }
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        if (outcome == BrowseLongPressOutcome.StartImmersive) {
+                                            timelineModel.saveAnchor(
+                                                itemRef = FeedItemRef(item.id, item.entryType),
+                                                scrollOffset = 0,
+                                            )
+                                            onFeedViewModeChange(FeedViewMode.Immersive)
                                         }
                                     }
                                 },
@@ -440,6 +454,10 @@ private fun Screen.FeedsTabContent(
                             showFeedPicker = false
                             screenModel.showManageDialog()
                         },
+                        onLongPressActions = {
+                            showFeedPicker = false
+                            navigator.push(BrowseLongPressActionsScreen(activeFeed.sourceId))
+                        },
                         onDismissRequest = { showFeedPicker = false },
                     )
                 }
@@ -483,6 +501,10 @@ private fun Screen.FeedsTabContent(
                     onManageFeeds = {
                         showFeedPicker = false
                         screenModel.showManageDialog()
+                    },
+                    onLongPressActions = {
+                        showFeedPicker = false
+                        navigator.push(BrowseLongPressActionsScreen(activeFeed.sourceId))
                     },
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -647,6 +669,7 @@ private fun FeedNavigationBar(
     onFeedSelect: (String) -> Unit,
     onAddFeed: () -> Unit,
     onManageFeeds: () -> Unit,
+    onLongPressActions: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val selectedFeed = feeds.firstOrNull { it.id == selectedFeedId }
@@ -689,6 +712,7 @@ private fun FeedNavigationBar(
                     onFeedSelect = onFeedSelect,
                     onAddFeed = onAddFeed,
                     onManageFeeds = onManageFeeds,
+                    onLongPressActions = onLongPressActions,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -786,6 +810,7 @@ private fun FeedSelectorMenu(
     onFeedSelect: (String) -> Unit,
     onAddFeed: () -> Unit,
     onManageFeeds: () -> Unit,
+    onLongPressActions: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     ExposedDropdownMenuBox(
@@ -857,6 +882,11 @@ private fun FeedSelectorMenu(
                 text = { Text(text = stringResource(MR.strings.browse_manage_feeds)) },
                 onClick = onManageFeeds,
                 leadingIcon = { Icon(imageVector = Icons.Outlined.DragHandle, contentDescription = null) },
+            )
+            DropdownMenuItem(
+                text = { Text(text = stringResource(MR.strings.pref_browse_long_press_action_open_settings)) },
+                onClick = onLongPressActions,
+                leadingIcon = { Icon(imageVector = Icons.Outlined.Settings, contentDescription = null) },
             )
         }
     }

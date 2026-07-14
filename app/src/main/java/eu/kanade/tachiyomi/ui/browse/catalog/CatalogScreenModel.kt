@@ -51,6 +51,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mihon.core.common.CustomPreferences
+import mihon.core.common.browseLongPressActionPriorityForSource
+import mihon.core.common.sanitizeBrowseLongPressActionPriority
 import mihon.entry.interactions.EntryDownloadInteraction
 import mihon.entry.interactions.EntryPreviewInteraction
 import tachiyomi.core.common.i18n.stringResource
@@ -124,7 +126,16 @@ class CatalogScreenModel(
 
     var displayMode by sourcePreferences.sourceDisplayMode(sourceId).asState(screenModelScope)
     var feedsEnabled by customPreferences.enableFeeds.asState(screenModelScope)
-    val browseLongPressAction by customPreferences.browseLongPressAction.asState(screenModelScope)
+    private val defaultBrowseLongPressActionPriority by
+        customPreferences.browseLongPressActionPriority.asState(screenModelScope)
+    private val browseLongPressActionOverrides by
+        customPreferences.browseLongPressActionOverrides.asState(screenModelScope)
+    val browseLongPressActionPriority: List<CustomPreferences.BrowseLongPressAction>
+        get() = browseLongPressActionPriorityForSource(
+            sourceId = sourceId,
+            defaultPriority = defaultBrowseLongPressActionPriority,
+            overrides = browseLongPressActionOverrides,
+        )
 
     private val filterLoader = CatalogFilterLoader(sourceManager)
     private val presetHelper = CatalogPresetHelper(sourceId, sourceManager, browseFeedService)
@@ -395,20 +406,26 @@ class CatalogScreenModel(
         }
     }
 
-    suspend fun onItemLongClick(item: CatalogListItem): Boolean {
-        return when (browseLongPressAction) {
+    internal suspend fun onItemLongClick(
+        item: CatalogListItem,
+        supportsImmersive: Boolean,
+    ): BrowseLongPressOutcome {
+        return when (
+            resolveBrowseLongPressAction(
+                priority = browseLongPressActionPriority,
+                supportsImmersive = supportsImmersive,
+                previewEnabled = entryPreviewInteraction.config(item.entry).enabled,
+            )
+        ) {
             CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION -> {
                 showLibraryActionChooserOrHandle(item.entry)
-                true
+                BrowseLongPressOutcome.Handled
             }
             CustomPreferences.BrowseLongPressAction.PREVIEW -> {
-                if (entryPreviewInteraction.config(item.entry).enabled) {
-                    setDialog(Dialog.EntryPreview(item.entry.id))
-                } else {
-                    showLibraryActionChooserOrHandle(item.entry)
-                }
-                true
+                setDialog(Dialog.EntryPreview(item.entry.id))
+                BrowseLongPressOutcome.Handled
             }
+            CustomPreferences.BrowseLongPressAction.IMMERSIVE -> BrowseLongPressOutcome.StartImmersive
         }
     }
 
@@ -1115,6 +1132,25 @@ internal fun initialCatalogState(listingQuery: String?): CatalogScreenModel.Stat
     return CatalogScreenModel.State(
         listing = CatalogScreenModel.Listing.valueOf(listingQuery),
     )
+}
+
+internal enum class BrowseLongPressOutcome {
+    Handled,
+    StartImmersive,
+}
+
+internal fun resolveBrowseLongPressAction(
+    priority: Collection<CustomPreferences.BrowseLongPressAction>,
+    supportsImmersive: Boolean,
+    previewEnabled: Boolean,
+): CustomPreferences.BrowseLongPressAction {
+    return sanitizeBrowseLongPressActionPriority(priority).first { action ->
+        when (action) {
+            CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION -> true
+            CustomPreferences.BrowseLongPressAction.PREVIEW -> previewEnabled
+            CustomPreferences.BrowseLongPressAction.IMMERSIVE -> supportsImmersive
+        }
+    }
 }
 
 internal data class SavedPresetState(

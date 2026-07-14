@@ -1,7 +1,6 @@
 package eu.kanade.presentation.more.settings.screen
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -44,16 +43,8 @@ object SettingsBrowseScreen : SearchableSettings {
         val getExtensionStoreCountAsFlow = remember { Injekt.get<GetExtensionStoreCountAsFlow>() }
 
         val reposCount by getExtensionStoreCountAsFlow().collectFlowAsState(0)
-        val browseLongPressAction by customPreferences.browseLongPressAction.collectAsState()
         val mangaPreviewEnabled by entryInteractionPreferences.enableMangaPreview.collectAsState()
         val animePreviewEnabled by entryInteractionPreferences.enableAnimePreview.collectAsState()
-        val anyPreviewEnabled = mangaPreviewEnabled || animePreviewEnabled
-
-        LaunchedEffect(anyPreviewEnabled, browseLongPressAction) {
-            if (!anyPreviewEnabled && browseLongPressAction == CustomPreferences.BrowseLongPressAction.PREVIEW) {
-                customPreferences.browseLongPressAction.set(CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION)
-            }
-        }
 
         return listOf(
             Preference.PreferenceGroup(
@@ -90,7 +81,7 @@ object SettingsBrowseScreen : SearchableSettings {
             ),
             getBrowseBehaviorGroup(
                 customPreferences = customPreferences,
-                anyPreviewEnabled = anyPreviewEnabled,
+                onOpenLongPressActions = { navigator.push(BrowseLongPressActionsScreen()) },
             ),
             getPreviewGroup(
                 entryInteractionPreferences = entryInteractionPreferences,
@@ -116,8 +107,10 @@ object SettingsBrowseScreen : SearchableSettings {
     @Composable
     private fun getBrowseBehaviorGroup(
         customPreferences: CustomPreferences,
-        anyPreviewEnabled: Boolean,
+        onOpenLongPressActions: () -> Unit,
     ): Preference.PreferenceGroup {
+        val storedPriority by customPreferences.browseLongPressActionPriority.collectAsState()
+
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_behavior),
             preferenceItems = listOf(
@@ -126,15 +119,11 @@ object SettingsBrowseScreen : SearchableSettings {
                     title = stringResource(MR.strings.pref_enable_feeds),
                     subtitle = stringResource(MR.strings.pref_enable_feeds_summary),
                 ),
-                Preference.PreferenceItem.ListPreference(
-                    preference = customPreferences.browseLongPressAction,
-                    entries = CustomPreferences.BrowseLongPressAction.entries
-                        .associateWith { stringResource(it.titleRes) }
-                        .toImmutableMap(),
+                Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.pref_browse_long_press_action),
-                    entryEnabledProvider = {
-                        anyPreviewEnabled || it != CustomPreferences.BrowseLongPressAction.PREVIEW
-                    },
+                    subtitle = browseLongPressPrioritySummary(storedPriority),
+                    isProfileSpecific = true,
+                    onClick = onOpenLongPressActions,
                 ),
             ),
         )

@@ -28,6 +28,8 @@ Regular mode uses familiar catalogue grid or list layouts. Every feed preserves 
 
 When the source advertises immersive-feed support, switch from regular to immersive mode for a media-forward, full-screen discovery experience. You can enter immersive mode from either the source catalogue or one of that source's feeds; sources that do not opt in do not expose the control. In immersive mode you can move through items, add entries to the library, open their details or media, and return to regular browsing. Pull down from the first item to refresh the current catalogue or feed. The feed view also keeps its feed picker and chronological-feed actions available.
 
+Under **Settings → Browse → Behavior**, reorder the default long-press actions used by source catalogues and feeds, then add overrides for sources that should behave differently. You can also open a source's override directly from its catalogue menu or feed picker. Katari tries actions from top to bottom. **Start immersive view** opens immersive browsing at the pressed item when the source supports it; otherwise Katari continues to the next action. Preview is skipped in the same way when it is unavailable, while the library action is always available as a fallback. Defaults and source overrides belong to the active profile.
+
 Preview media comes from the source. Missing or failing previews do not necessarily mean the entry itself cannot be opened.
 
 ## Global search

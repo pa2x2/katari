@@ -16,10 +16,90 @@ import tachiyomi.core.common.preference.PreferenceStore
 class CustomPreferencesTest {
 
     @Test
-    fun `browse long press action defaults to library action`() {
+    fun `browse long press action priority defaults to library then preview then immersive`() {
         val preferences = CustomPreferences(TestPreferenceStore())
 
-        preferences.browseLongPressAction.get() shouldBe CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION
+        preferences.browseLongPressActionPriority.get() shouldBe listOf(
+            CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION,
+            CustomPreferences.BrowseLongPressAction.PREVIEW,
+            CustomPreferences.BrowseLongPressAction.IMMERSIVE,
+        )
+    }
+
+    @Test
+    fun `legacy browse long press choice becomes first priority and missing actions are appended`() {
+        "MANGA_PREVIEW".toBrowseLongPressActionPriority() shouldBe listOf(
+            CustomPreferences.BrowseLongPressAction.PREVIEW,
+            CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION,
+            CustomPreferences.BrowseLongPressAction.IMMERSIVE,
+        )
+    }
+
+    @Test
+    fun `browse long press action priority removes duplicates and round trips`() {
+        val priority = listOf(
+            CustomPreferences.BrowseLongPressAction.IMMERSIVE,
+            CustomPreferences.BrowseLongPressAction.PREVIEW,
+            CustomPreferences.BrowseLongPressAction.IMMERSIVE,
+        )
+
+        priority.toBrowseLongPressActionPriorityPreferenceValue().toBrowseLongPressActionPriority() shouldBe listOf(
+            CustomPreferences.BrowseLongPressAction.IMMERSIVE,
+            CustomPreferences.BrowseLongPressAction.PREVIEW,
+            CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION,
+        )
+    }
+
+    @Test
+    fun `browse long press source overrides round trip and ignore malformed values`() {
+        val overrides = mapOf(
+            20L to listOf(
+                CustomPreferences.BrowseLongPressAction.IMMERSIVE,
+                CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION,
+            ),
+            10L to listOf(
+                CustomPreferences.BrowseLongPressAction.PREVIEW,
+                CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION,
+            ),
+        )
+
+        overrides.toBrowseLongPressActionOverridesPreferenceValue().toBrowseLongPressActionOverrides() shouldBe
+            mapOf(
+                10L to listOf(
+                    CustomPreferences.BrowseLongPressAction.PREVIEW,
+                    CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION,
+                    CustomPreferences.BrowseLongPressAction.IMMERSIVE,
+                ),
+                20L to listOf(
+                    CustomPreferences.BrowseLongPressAction.IMMERSIVE,
+                    CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION,
+                    CustomPreferences.BrowseLongPressAction.PREVIEW,
+                ),
+            )
+        "invalid:IMMERSIVE;30:UNKNOWN;40:PREVIEW".toBrowseLongPressActionOverrides() shouldBe mapOf(
+            40L to listOf(
+                CustomPreferences.BrowseLongPressAction.PREVIEW,
+                CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION,
+                CustomPreferences.BrowseLongPressAction.IMMERSIVE,
+            ),
+        )
+    }
+
+    @Test
+    fun `source priority uses override and falls back after override is cleared`() {
+        val preferences = CustomPreferences(TestPreferenceStore())
+        val sourceId = 42L
+        val immersiveFirst = listOf(
+            CustomPreferences.BrowseLongPressAction.IMMERSIVE,
+            CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION,
+            CustomPreferences.BrowseLongPressAction.PREVIEW,
+        )
+
+        preferences.browseLongPressActionPriority(sourceId) shouldBe defaultBrowseLongPressActionPriority()
+        preferences.setBrowseLongPressActionOverride(sourceId, immersiveFirst)
+        preferences.browseLongPressActionPriority(sourceId) shouldBe immersiveFirst
+        preferences.clearBrowseLongPressActionOverride(sourceId)
+        preferences.browseLongPressActionPriority(sourceId) shouldBe defaultBrowseLongPressActionPriority()
     }
 
     @Test

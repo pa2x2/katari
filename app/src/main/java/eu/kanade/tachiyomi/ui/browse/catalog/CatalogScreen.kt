@@ -63,6 +63,7 @@ import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.components.RadioMenuItem
 import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.entry.components.DuplicateEntryDialog
+import eu.kanade.presentation.more.settings.screen.BrowseLongPressActionsScreen
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.extension.details.SourcePreferencesScreen
@@ -76,9 +77,10 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
 import mihon.feature.migration.dialog.MigrateEntryDialog
 import mihon.presentation.core.util.collectAsLazyPagingItems
-import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.i18n.MR
@@ -208,6 +210,9 @@ data class CatalogScreen(
                             navigateUp = navigateUp,
                             onWebViewClick = onWebViewClick,
                             onSettingsClick = onSettingsClick,
+                            onLongPressActionsClick = {
+                                navigator.push(BrowseLongPressActionsScreen(sourceId))
+                            },
                             onSearch = screenModel::search,
                             onEnterImmersive = if (supportsImmersive) {
                                 { immersiveMode = true }
@@ -308,9 +313,21 @@ data class CatalogScreen(
                                 navigator.push(EntryScreen(entryId, fromSource = true))
                             },
                             onItemLongClick = { item ->
-                                scope.launchIO {
-                                    if (screenModel.onItemLongClick(item)) {
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                scope.launch {
+                                    val outcome = withIOContext {
+                                        screenModel.onItemLongClick(
+                                            item = item,
+                                            supportsImmersive = supportsImmersive,
+                                        )
+                                    }
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    if (outcome == BrowseLongPressOutcome.StartImmersive) {
+                                        val selectedIndex = (0 until catalogList.itemCount).firstOrNull { index ->
+                                            val candidate = catalogList.peek(index)?.value
+                                            candidate?.id == item.id && candidate.entryType == item.entryType
+                                        }
+                                        selectedIndex?.let(immersivePositionState::updateItemIndex)
+                                        immersiveMode = true
                                     }
                                 }
                             },
@@ -519,6 +536,7 @@ private fun CatalogToolbar(
     navigateUp: () -> Unit,
     onWebViewClick: (() -> Unit)?,
     onSettingsClick: (() -> Unit)?,
+    onLongPressActionsClick: () -> Unit,
     onSearch: (String) -> Unit,
     onEnterImmersive: (() -> Unit)?,
 ) {
@@ -572,6 +590,12 @@ private fun CatalogToolbar(
                             ),
                         )
                     }
+                    add(
+                        AppBar.OverflowAction(
+                            title = stringResource(MR.strings.pref_browse_long_press_action_open_settings),
+                            onClick = onLongPressActionsClick,
+                        ),
+                    )
                 },
             )
 
