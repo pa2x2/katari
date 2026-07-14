@@ -72,6 +72,7 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
     private var sectionEndProgression = 1.0
     private var pendingNavigationIndex: Int? = null
     private var effectiveReadingDirection = BookReadingDirection.LEFT_TO_RIGHT
+    private lateinit var seekDispatcher: ThrottledLatestDispatcher<ReaderSeekTarget>
 
     private val windowInsetsController by lazy { WindowCompat.getInsetsController(window, window.decorView) }
 
@@ -81,6 +82,11 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         windowInsetsController.systemBarsBehavior =
             androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        seekDispatcher = ThrottledLatestDispatcher(
+            scope = lifecycleScope,
+            intervalMillis = SEEK_PREVIEW_INTERVAL_MILLIS,
+            dispatch = ::applySeekTarget,
+        )
 
         readerContainer = FrameLayout(this).apply {
             id = containerId
@@ -116,14 +122,10 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
                         onSettingsVisibilityChange = { visible ->
                             uiState = uiState.copy(settingsVisible = visible)
                         },
-                        onPageIndexPreview = { index ->
-                            uiState = uiState.copy(currentPage = index + 1)
-                        },
-                        onPageIndexChange = ::goToPageInSection,
-                        onProgressPreview = { progress ->
-                            uiState = uiState.copy(sectionProgress = progress)
-                        },
-                        onProgressChange = ::goToProgressInSection,
+                        onPageIndexPreview = ::previewPageInSection,
+                        onPageIndexChange = ::finishPageInSection,
+                        onProgressPreview = ::previewProgressInSection,
+                        onProgressChange = ::finishProgressInSection,
                         onPreviousSection = { goToAdjacentSection(-1) },
                         onNextSection = { goToAdjacentSection(1) },
                         onNavigationItemClick = ::goToNavigationItem,
@@ -230,6 +232,7 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
     }
 
     override fun onDestroy() {
+        seekDispatcher.cancel()
         navigationResolutionJob?.cancel()
         navigationResolutionJob = null
         inputListener?.let { listener -> navigator?.removeInputListener(listener) }
@@ -406,6 +409,32 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
         readerHost?.goToProgression(fragment, target)
     }
 
+    private fun previewPageInSection(pageIndex: Int) {
+        uiState = uiState.copy(currentPage = pageIndex + 1)
+        seekDispatcher.preview(ReaderSeekTarget.Page(pageIndex))
+    }
+
+    private fun finishPageInSection(pageIndex: Int) {
+        seekDispatcher.finish(ReaderSeekTarget.Page(pageIndex))
+    }
+
+    private fun previewProgressInSection(progress: Float) {
+        val safeProgress = progress.coerceIn(0f, 1f)
+        uiState = uiState.copy(sectionProgress = safeProgress)
+        seekDispatcher.preview(ReaderSeekTarget.Progress(safeProgress))
+    }
+
+    private fun finishProgressInSection(progress: Float) {
+        seekDispatcher.finish(ReaderSeekTarget.Progress(progress.coerceIn(0f, 1f)))
+    }
+
+    private fun applySeekTarget(target: ReaderSeekTarget) {
+        when (target) {
+            is ReaderSeekTarget.Page -> goToPageInSection(target.index)
+            is ReaderSeekTarget.Progress -> goToProgressInSection(target.value)
+        }
+    }
+
     private fun resolveCurrentNavigation() {
         val fragment = navigator ?: return
         val host = readerHost ?: return
@@ -517,6 +546,11 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
         data class Error(val message: String) : ReaderSurfaceState
     }
 
+    private sealed interface ReaderSeekTarget {
+        data class Page(val index: Int) : ReaderSeekTarget
+        data class Progress(val value: Float) : ReaderSeekTarget
+    }
+
     companion object {
         private const val EXTRA_ENTRY_ID = "entry_id"
         private const val EXTRA_CHAPTER_ID = "chapter_id"
@@ -524,6 +558,7 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
         private const val EXTRA_SESSION_TOKEN = "session_token"
         private const val TAP_PREVIOUS_END = 0.33f
         private const val TAP_NEXT_START = 0.67f
+        private const val SEEK_PREVIEW_INTERVAL_MILLIS = 75L
 
         fun newIntent(
             context: Context,
