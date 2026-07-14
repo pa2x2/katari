@@ -106,7 +106,7 @@ fun InjektRegistrar.addEntryInteractionRuntime(
     addSingletonFactory<EntryChildGroupFilterInteraction> { get<EntryInteractions>().childGroupFilter }
     addSingletonFactory<EntryLibraryFilterInteraction> { get<EntryInteractions>().libraryFilter }
     addSingletonFactory<EntryPreviewInteraction> { get<EntryInteractions>().preview }
-    addSingletonFactory<EntryImmersiveFeedInteraction> { get<EntryInteractions>().immersiveFeed }
+    addSingletonFactory<EntryImmersiveInteraction> { get<EntryInteractions>().immersive }
     addSingletonFactory<EntryInteractionRuntimeWarmup> {
         EntryInteractionRuntimeWarmup {
             mangaWarmup()

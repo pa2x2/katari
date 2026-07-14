@@ -121,27 +121,27 @@ class EntryInteractionRegistryTest {
     fun `empty plugin list reports immersive feed unsupported`() {
         val interactions = createEntryInteractions(emptyList())
 
-        interactions.immersiveFeed.isSupported(entry(EntryType.MANGA)) shouldBe false
+        interactions.immersive.isSupported(entry(EntryType.MANGA)) shouldBe false
     }
 
     @Test
     fun `immersive feed dispatches by entry type`() = runTest {
-        val processor = RecordingImmersiveFeedProcessor(EntryType.ANIME)
+        val processor = RecordingImmersiveProcessor(EntryType.ANIME)
         val interactions = createEntryInteractions(
             listOf(
-                EntryInteractionPlugin { it.registerImmersiveFeedProcessor(processor) },
+                EntryInteractionPlugin { it.registerImmersiveProcessor(processor) },
             ),
         )
         val anime = entry(EntryType.ANIME)
         val source = mockk<UnifiedSource>()
 
-        val handle = interactions.immersiveFeed.load(context, anime, chapter, source)
-        interactions.immersiveFeed.persistProgress(
+        val handle = interactions.immersive.load(context, anime, chapter, source)
+        interactions.immersive.persistProgress(
             handle,
-            EntryImmersiveFeedProgress.Playback(positionMs = 12L, durationMs = 34L),
+            EntryImmersiveProgress.Playback(positionMs = 12L, durationMs = 34L),
         )
 
-        interactions.immersiveFeed.preloadRadius(EntryType.ANIME) shouldBe 2
+        interactions.immersive.preloadRadius(EntryType.ANIME) shouldBe 2
         processor.loadedEntryIds shouldContainExactly listOf(anime.id)
         processor.persistedProgress shouldContainExactly listOf(12L to 34L)
     }
@@ -1189,9 +1189,9 @@ class EntryInteractionRegistryTest {
         }
     }
 
-    private class RecordingImmersiveFeedProcessor(
+    private class RecordingImmersiveProcessor(
         override val type: EntryType,
-    ) : EntryImmersiveFeedProcessor {
+    ) : EntryImmersiveProcessor {
         val loadedEntryIds = mutableListOf<Long>()
         val persistedProgress = mutableListOf<Pair<Long, Long>>()
 
@@ -1204,9 +1204,9 @@ class EntryInteractionRegistryTest {
             entry: Entry,
             chapter: EntryChapter,
             source: UnifiedSource,
-        ): EntryImmersiveFeedHandle {
+        ): EntryImmersiveHandle {
             loadedEntryIds += entry.id
-            return EntryImmersiveFeedHandle.Playback(
+            return EntryImmersiveHandle.Playback(
                 entryType = type,
                 chapterId = chapter.id,
                 stream = VideoStream(VideoRequest("https://example.invalid/video")),
@@ -1215,17 +1215,17 @@ class EntryInteractionRegistryTest {
             )
         }
 
-        override fun renderer(handle: EntryImmersiveFeedHandle): EntryImmersiveFeedRenderer = mockk(relaxed = true)
+        override fun renderer(handle: EntryImmersiveHandle): EntryImmersiveRenderer = mockk(relaxed = true)
 
         override suspend fun persistProgress(
-            handle: EntryImmersiveFeedHandle,
-            progress: EntryImmersiveFeedProgress,
+            handle: EntryImmersiveHandle,
+            progress: EntryImmersiveProgress,
         ) {
-            val playback = progress as EntryImmersiveFeedProgress.Playback
+            val playback = progress as EntryImmersiveProgress.Playback
             persistedProgress += playback.positionMs to playback.durationMs
         }
 
-        override fun release(handle: EntryImmersiveFeedHandle) = Unit
+        override fun release(handle: EntryImmersiveHandle) = Unit
     }
 
     private open class RecordingChildListProcessor(

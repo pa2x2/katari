@@ -71,17 +71,17 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.EntryImmersiveFeedHandle
-import mihon.entry.interactions.EntryImmersiveFeedProgress
-import mihon.entry.interactions.EntryImmersiveFeedRenderer
+import mihon.entry.interactions.EntryImmersiveHandle
+import mihon.entry.interactions.EntryImmersiveProgress
+import mihon.entry.interactions.EntryImmersiveRenderer
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-internal class AnimeImmersiveFeedRenderer(
-    private val handle: EntryImmersiveFeedHandle.Playback,
-) : EntryImmersiveFeedRenderer {
+internal class AnimeImmersiveRenderer(
+    private val handle: EntryImmersiveHandle.Playback,
+) : EntryImmersiveRenderer {
 
     @OptIn(UnstableApi::class)
     @Composable
@@ -92,7 +92,7 @@ internal class AnimeImmersiveFeedRenderer(
         controlsBottomInset: Dp,
         onToggleControls: () -> Unit,
         onZoomStateChange: (Boolean) -> Unit,
-        onProgress: (EntryImmersiveFeedProgress) -> Unit,
+        onProgress: (EntryImmersiveProgress) -> Unit,
     ) {
         val context = LocalContext.current
         val networkHelper = remember { Injekt.get<NetworkHelper>() }
@@ -200,7 +200,7 @@ internal class AnimeImmersiveFeedRenderer(
             while (isActive) {
                 delay(PROGRESS_SAVE_INTERVAL_MS)
                 val snapshot = player.capturePlaybackSnapshot()
-                onProgress(EntryImmersiveFeedProgress.Playback(snapshot.positionMs, snapshot.durationMs))
+                onProgress(EntryImmersiveProgress.Playback(snapshot.positionMs, snapshot.durationMs))
             }
         }
         DisposableEffect(player, handle.chapterId, active) {
@@ -208,7 +208,7 @@ internal class AnimeImmersiveFeedRenderer(
                 if (active) {
                     val snapshot = player.capturePlaybackSnapshot()
                     onProgress(
-                        EntryImmersiveFeedProgress.Playback(
+                        EntryImmersiveProgress.Playback(
                             positionMs = snapshot.positionMs,
                             durationMs = snapshot.durationMs,
                             resetSession = true,
@@ -307,7 +307,7 @@ internal class AnimeImmersiveFeedRenderer(
             }
 
             if (active && controlsVisible) {
-                AnimeImmersiveFeedTimeline(
+                AnimeImmersiveTimeline(
                     snapshot = playbackSnapshot,
                     onSeek = { positionMs ->
                         player.seekTo(positionMs)
@@ -423,7 +423,7 @@ internal fun shouldUnmuteAfterVolumeChange(
 ): Boolean = muted && currentVolume > previousVolume
 
 @Composable
-private fun AnimeImmersiveFeedTimeline(
+private fun AnimeImmersiveTimeline(
     snapshot: VideoPlayerPlaybackSnapshot,
     onSeek: (Long) -> Unit,
     modifier: Modifier = Modifier,

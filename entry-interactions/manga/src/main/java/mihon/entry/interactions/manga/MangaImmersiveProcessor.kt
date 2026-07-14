@@ -7,10 +7,10 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import mihon.entry.interactions.EntryImmersiveFeedHandle
-import mihon.entry.interactions.EntryImmersiveFeedProcessor
-import mihon.entry.interactions.EntryImmersiveFeedProgress
-import mihon.entry.interactions.EntryImmersiveFeedRenderer
+import mihon.entry.interactions.EntryImmersiveHandle
+import mihon.entry.interactions.EntryImmersiveProcessor
+import mihon.entry.interactions.EntryImmersiveProgress
+import mihon.entry.interactions.EntryImmersiveRenderer
 import mihon.entry.interactions.EntryReaderIncognitoState
 import mihon.entry.interactions.EntryReaderTracking
 import tachiyomi.domain.entry.adapter.toSEntryChapter
@@ -21,12 +21,12 @@ import tachiyomi.domain.history.model.HistoryUpdate
 import tachiyomi.domain.history.repository.HistoryRepository
 import java.util.Date
 
-internal class MangaImmersiveFeedProcessor(
+internal class MangaImmersiveProcessor(
     private val entryChapterRepository: EntryChapterRepository? = null,
     private val historyRepository: HistoryRepository? = null,
     private val readerIncognitoState: EntryReaderIncognitoState? = null,
     private val readerTracking: EntryReaderTracking? = null,
-) : EntryImmersiveFeedProcessor {
+) : EntryImmersiveProcessor {
     override val type: EntryType = EntryType.MANGA
     private val persistMutex = Mutex()
 
@@ -39,14 +39,14 @@ internal class MangaImmersiveFeedProcessor(
         entry: Entry,
         chapter: EntryChapter,
         source: UnifiedSource,
-    ): EntryImmersiveFeedHandle {
+    ): EntryImmersiveHandle {
         val imageSource = source as? EntryImageSource
             ?: error("Source ${source.name} does not support image pages")
         val media = source.getMedia(chapter.toSEntryChapter()) as? EntryMedia.ImagePages
             ?: error("Source ${source.name} did not return image pages")
         val pages = media.pages.mapIndexed { index, page ->
             val imageUrl = page.imageUrl ?: imageSource.getImageUrl(page)
-            MangaImmersiveFeedPage(
+            MangaImmersivePage(
                 index = index,
                 imageUrl = imageUrl,
                 headers = imageSource.imageRequest(page, imageUrl).headers,
@@ -55,10 +55,10 @@ internal class MangaImmersiveFeedProcessor(
         if (pages.isEmpty() || pages.all { it.imageUrl.isBlank() }) {
             error("No pages found")
         }
-        return EntryImmersiveFeedHandle.ImagePages(
+        return EntryImmersiveHandle.ImagePages(
             entryType = type,
             chapterId = chapter.id,
-            delegate = MangaImmersiveFeedMedia(
+            delegate = MangaImmersiveMedia(
                 pages = pages,
                 initialPageIndex = chapter.lastPageRead.toInt().coerceIn(0, pages.lastIndex),
                 entryId = entry.id,
@@ -69,21 +69,21 @@ internal class MangaImmersiveFeedProcessor(
         )
     }
 
-    override fun renderer(handle: EntryImmersiveFeedHandle): EntryImmersiveFeedRenderer {
-        val pages = handle as? EntryImmersiveFeedHandle.ImagePages
+    override fun renderer(handle: EntryImmersiveHandle): EntryImmersiveRenderer {
+        val pages = handle as? EntryImmersiveHandle.ImagePages
             ?: error("Manga immersive feed received non-image media")
-        val media = pages.delegate as? MangaImmersiveFeedMedia
+        val media = pages.delegate as? MangaImmersiveMedia
             ?: error("Manga immersive feed image media is unavailable")
-        return MangaImmersiveFeedRenderer(media)
+        return MangaImmersiveRenderer(media)
     }
 
     override suspend fun persistProgress(
-        handle: EntryImmersiveFeedHandle,
-        progress: EntryImmersiveFeedProgress,
+        handle: EntryImmersiveHandle,
+        progress: EntryImmersiveProgress,
     ) {
-        val pages = handle as? EntryImmersiveFeedHandle.ImagePages ?: return
-        val media = pages.delegate as? MangaImmersiveFeedMedia ?: return
-        val imageProgress = progress as? EntryImmersiveFeedProgress.ImagePage ?: return
+        val pages = handle as? EntryImmersiveHandle.ImagePages ?: return
+        val media = pages.delegate as? MangaImmersiveMedia ?: return
+        val imageProgress = progress as? EntryImmersiveProgress.ImagePage ?: return
         val repository = entryChapterRepository ?: return
         if (readerIncognitoState?.isIncognito(media.sourceId) == true) return
         if (imageProgress.pageCount <= 0) return
@@ -113,5 +113,5 @@ internal class MangaImmersiveFeedProcessor(
         }
     }
 
-    override fun release(handle: EntryImmersiveFeedHandle) = Unit
+    override fun release(handle: EntryImmersiveHandle) = Unit
 }

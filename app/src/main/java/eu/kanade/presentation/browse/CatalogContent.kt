@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -29,6 +30,7 @@ import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import eu.kanade.presentation.browse.components.BrowseSourceLoadingItem
 import eu.kanade.presentation.browse.components.CatalogBadges
+import eu.kanade.presentation.browse.immersive.EntryImmersivePositionState
 import eu.kanade.presentation.entry.components.toGridCoverType
 import eu.kanade.presentation.entry.components.toListCoverType
 import eu.kanade.presentation.library.components.CommonEntryItemDefaults
@@ -38,6 +40,7 @@ import eu.kanade.presentation.library.components.EntryListItem
 import eu.kanade.presentation.util.formattedMessage
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.i18n.MR
@@ -60,6 +63,7 @@ fun CatalogContent(
     onItemLongClick: (CatalogListItem) -> Unit,
     onWebViewClick: (() -> Unit)? = null,
     onSettingsClick: (() -> Unit)? = null,
+    positionState: EntryImmersivePositionState? = null,
 ) {
     val context = LocalContext.current
 
@@ -135,6 +139,7 @@ fun CatalogContent(
             sourceItemOrientation = sourceItemOrientation,
             onItemClick = onItemClick,
             onItemLongClick = onItemLongClick,
+            positionState = positionState,
         )
         LibraryDisplayMode.ComfortableList -> CatalogComfortableGrid(
             catalogList = catalogList,
@@ -143,6 +148,7 @@ fun CatalogContent(
             sourceItemOrientation = sourceItemOrientation,
             onItemClick = onItemClick,
             onItemLongClick = onItemLongClick,
+            positionState = positionState,
         )
         LibraryDisplayMode.List -> CatalogList(
             catalogList = catalogList,
@@ -150,6 +156,7 @@ fun CatalogContent(
             sourceItemOrientation = sourceItemOrientation,
             onItemClick = onItemClick,
             onItemLongClick = onItemLongClick,
+            positionState = positionState,
         )
         LibraryDisplayMode.CompactGrid, LibraryDisplayMode.CoverOnlyGrid -> CatalogCompactGrid(
             catalogList = catalogList,
@@ -158,6 +165,7 @@ fun CatalogContent(
             sourceItemOrientation = sourceItemOrientation,
             onItemClick = onItemClick,
             onItemLongClick = onItemLongClick,
+            positionState = positionState,
         )
     }
 }
@@ -169,15 +177,29 @@ private fun CatalogList(
     sourceItemOrientation: EntryItemOrientation,
     onItemClick: (CatalogListItem) -> Unit,
     onItemLongClick: (CatalogListItem) -> Unit,
+    positionState: EntryImmersivePositionState?,
 ) {
-    val listState = rememberLazyListState()
+    val prependItemCount = if (catalogList.loadState.prepend is LoadState.Loading) 1 else 0
+    val listState = rememberLazyListState(
+        initialFirstVisibleItemIndex = catalogLazyIndex(
+            catalogItemIndex = positionState?.itemIndex ?: 0,
+            prependItemCount = prependItemCount,
+            itemCount = catalogList.itemCount,
+        ),
+    )
+    TrackCatalogPosition(
+        positionState = positionState,
+        prependItemCount = prependItemCount,
+        itemCount = catalogList.itemCount,
+        firstVisibleItemIndex = { listState.firstVisibleItemIndex },
+    )
 
     LazyColumn(
         state = listState,
         contentPadding = contentPadding + PaddingValues(vertical = 8.dp),
     ) {
-        item {
-            if (catalogList.loadState.prepend is LoadState.Loading) {
+        if (prependItemCount > 0) {
+            item {
                 BrowseSourceLoadingItem()
             }
         }
@@ -219,8 +241,22 @@ private fun CatalogComfortableGrid(
     sourceItemOrientation: EntryItemOrientation,
     onItemClick: (CatalogListItem) -> Unit,
     onItemLongClick: (CatalogListItem) -> Unit,
+    positionState: EntryImmersivePositionState?,
 ) {
-    val gridState = rememberLazyGridState()
+    val prependItemCount = if (catalogList.loadState.prepend is LoadState.Loading) 1 else 0
+    val gridState = rememberLazyGridState(
+        initialFirstVisibleItemIndex = catalogLazyIndex(
+            catalogItemIndex = positionState?.itemIndex ?: 0,
+            prependItemCount = prependItemCount,
+            itemCount = catalogList.itemCount,
+        ),
+    )
+    TrackCatalogPosition(
+        positionState = positionState,
+        prependItemCount = prependItemCount,
+        itemCount = catalogList.itemCount,
+        firstVisibleItemIndex = { gridState.firstVisibleItemIndex },
+    )
 
     LazyVerticalGrid(
         columns = columns,
@@ -270,8 +306,22 @@ private fun CatalogCompactGrid(
     sourceItemOrientation: EntryItemOrientation,
     onItemClick: (CatalogListItem) -> Unit,
     onItemLongClick: (CatalogListItem) -> Unit,
+    positionState: EntryImmersivePositionState?,
 ) {
-    val gridState = rememberLazyGridState()
+    val prependItemCount = if (catalogList.loadState.prepend is LoadState.Loading) 1 else 0
+    val gridState = rememberLazyGridState(
+        initialFirstVisibleItemIndex = catalogLazyIndex(
+            catalogItemIndex = positionState?.itemIndex ?: 0,
+            prependItemCount = prependItemCount,
+            itemCount = catalogList.itemCount,
+        ),
+    )
+    TrackCatalogPosition(
+        positionState = positionState,
+        prependItemCount = prependItemCount,
+        itemCount = catalogList.itemCount,
+        firstVisibleItemIndex = { gridState.firstVisibleItemIndex },
+    )
 
     LazyVerticalGrid(
         columns = columns,
@@ -311,4 +361,43 @@ private fun CatalogCompactGrid(
             }
         }
     }
+}
+
+internal fun catalogLazyIndex(
+    catalogItemIndex: Int,
+    prependItemCount: Int,
+    itemCount: Int,
+): Int {
+    val boundedItemIndex = catalogItemIndex.coerceIn(0, (itemCount - 1).coerceAtLeast(0))
+    return boundedItemIndex + prependItemCount
+}
+
+@Composable
+private fun TrackCatalogPosition(
+    positionState: EntryImmersivePositionState?,
+    prependItemCount: Int,
+    itemCount: Int,
+    firstVisibleItemIndex: () -> Int,
+) {
+    if (positionState == null) return
+
+    LaunchedEffect(positionState, prependItemCount, itemCount) {
+        snapshotFlow {
+            catalogItemIndex(
+                lazyItemIndex = firstVisibleItemIndex(),
+                prependItemCount = prependItemCount,
+                itemCount = itemCount,
+            )
+        }
+            .distinctUntilChanged()
+            .collect(positionState::updateItemIndex)
+    }
+}
+
+internal fun catalogItemIndex(
+    lazyItemIndex: Int,
+    prependItemCount: Int,
+    itemCount: Int,
+): Int {
+    return (lazyItemIndex - prependItemCount).coerceIn(0, (itemCount - 1).coerceAtLeast(0))
 }

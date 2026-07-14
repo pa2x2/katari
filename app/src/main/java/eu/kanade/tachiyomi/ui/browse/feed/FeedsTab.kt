@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.ui.browse.feed
 
-import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -62,11 +61,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -99,6 +95,8 @@ import eu.kanade.tachiyomi.source.sourceItemOrientation
 import eu.kanade.tachiyomi.source.toCatalogSource
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreenModel
+import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveScreenModel
+import eu.kanade.tachiyomi.ui.browse.immersive.ImmersiveSystemBarsEffect
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
@@ -236,24 +234,7 @@ private fun Screen.FeedsTabContent(
     val scope = rememberCoroutineScope()
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
-    val view = LocalView.current
-
-    DisposableEffect(context, view, feedViewMode) {
-        val activity = context as? Activity
-        if (activity == null || feedViewMode != FeedViewMode.Immersive) {
-            onDispose {}
-        } else {
-            val controller = WindowInsetsControllerCompat(activity.window, view)
-            val previousBehavior = controller.systemBarsBehavior
-            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            controller.hide(WindowInsetsCompat.Type.systemBars())
-
-            onDispose {
-                controller.systemBarsBehavior = previousBehavior
-                controller.show(WindowInsetsCompat.Type.systemBars())
-            }
-        }
-    }
+    ImmersiveSystemBarsEffect(enabled = feedViewMode == FeedViewMode.Immersive)
 
     LaunchedEffect(activeFeed?.id, supportsImmersiveFeed) {
         if (!supportsImmersiveFeed && feedViewMode == FeedViewMode.Immersive) {
@@ -333,7 +314,7 @@ private fun Screen.FeedsTabContent(
                 val immersiveModel = rememberScreenModel(
                     tag = "feed-immersive-$activeProfileId-${activeFeed.id}",
                 ) {
-                    EntryImmersiveFeedScreenModel()
+                    EntryImmersiveScreenModel()
                 }
                 val catalogSource = catalogSourceManager.get(activeSource.id)?.toCatalogSource()
                 val sourceItemOrientation = catalogSource?.source?.sourceItemOrientation()

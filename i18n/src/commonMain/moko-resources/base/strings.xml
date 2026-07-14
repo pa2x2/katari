@@ -920,6 +920,8 @@
     <string name="latest">Latest</string>
     <string name="popular">Popular</string>
     <string name="browse">Browse</string>
+    <string name="browse_enter_immersive">Enter immersive mode</string>
+    <string name="browse_exit_immersive">Exit immersive mode</string>
     <string name="browse_feeds">Feeds</string>
     <string name="browse_feeds_empty">No feeds configured yet</string>
     <string name="browse_manage_feeds">Manage feeds</string>

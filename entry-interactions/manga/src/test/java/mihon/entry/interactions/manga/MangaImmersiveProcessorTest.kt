@@ -13,8 +13,8 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.EntryImmersiveFeedHandle
-import mihon.entry.interactions.EntryImmersiveFeedProgress
+import mihon.entry.interactions.EntryImmersiveHandle
+import mihon.entry.interactions.EntryImmersiveProgress
 import mihon.entry.interactions.EntryReaderIncognitoState
 import mihon.entry.interactions.EntryReaderTracking
 import okhttp3.Request
@@ -25,7 +25,7 @@ import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.history.model.HistoryUpdate
 import tachiyomi.domain.history.repository.HistoryRepository
 
-class MangaImmersiveFeedProcessorTest {
+class MangaImmersiveProcessorTest {
     @Test
     fun `loads direct image requests without reader preview cache`() = runTest {
         val page = EntryImagePage(index = 7, url = "/page")
@@ -40,13 +40,13 @@ class MangaImmersiveFeedProcessorTest {
                     .header("Referer", "https://example.invalid/")
                     .build()
         }
-        val handle = MangaImmersiveFeedProcessor().load(
+        val handle = MangaImmersiveProcessor().load(
             context = mockk<Context>(relaxed = true),
             entry = Entry.create().copy(id = 10L, type = EntryType.MANGA),
             chapter = EntryChapter.create().copy(id = 20L, entryId = 10L),
             source = source,
-        ) as EntryImmersiveFeedHandle.ImagePages
-        val media = handle.delegate as MangaImmersiveFeedMedia
+        ) as EntryImmersiveHandle.ImagePages
+        val media = handle.delegate as MangaImmersiveMedia
 
         media.pages shouldHaveSize 1
         media.pages.single().index shouldBe 0
@@ -65,7 +65,7 @@ class MangaImmersiveFeedProcessorTest {
         val history = mockk<HistoryRepository> {
             coEvery { upsertHistory(any()) } returns Unit
         }
-        val processor = MangaImmersiveFeedProcessor(
+        val processor = MangaImmersiveProcessor(
             entryChapterRepository = repository,
             historyRepository = history,
             readerIncognitoState = mockk {
@@ -76,7 +76,7 @@ class MangaImmersiveFeedProcessorTest {
 
         processor.persistProgress(
             handle,
-            EntryImmersiveFeedProgress.ImagePage(pageIndex = 2, pageCount = 5, sessionDurationMs = 400L),
+            EntryImmersiveProgress.ImagePage(pageIndex = 2, pageCount = 5, sessionDurationMs = 400L),
         )
 
         val updated = slot<EntryChapter>()
@@ -98,7 +98,7 @@ class MangaImmersiveFeedProcessorTest {
         val tracking = mockk<EntryReaderTracking> {
             coEvery { updateChapterRead(any(), any(), any()) } returns Unit
         }
-        val processor = MangaImmersiveFeedProcessor(
+        val processor = MangaImmersiveProcessor(
             entryChapterRepository = repository,
             readerIncognitoState = mockk {
                 every { isIncognito(1L) } returns false
@@ -108,7 +108,7 @@ class MangaImmersiveFeedProcessorTest {
 
         processor.persistProgress(
             imageHandle(chapterId = 20L, chapterNumber = 3.0),
-            EntryImmersiveFeedProgress.ImagePage(pageIndex = 4, pageCount = 5, sessionDurationMs = 0L),
+            EntryImmersiveProgress.ImagePage(pageIndex = 4, pageCount = 5, sessionDurationMs = 0L),
         )
 
         val updated = slot<EntryChapter>()
@@ -120,7 +120,7 @@ class MangaImmersiveFeedProcessorTest {
     @Test
     fun `incognito suppresses immersive reading progress`() = runTest {
         val repository = mockk<EntryChapterRepository>(relaxed = true)
-        val processor = MangaImmersiveFeedProcessor(
+        val processor = MangaImmersiveProcessor(
             entryChapterRepository = repository,
             readerIncognitoState = mockk<EntryReaderIncognitoState> {
                 every { isIncognito(1L) } returns true
@@ -129,7 +129,7 @@ class MangaImmersiveFeedProcessorTest {
 
         processor.persistProgress(
             imageHandle(chapterId = 20L),
-            EntryImmersiveFeedProgress.ImagePage(pageIndex = 1, pageCount = 5, sessionDurationMs = 100L),
+            EntryImmersiveProgress.ImagePage(pageIndex = 1, pageCount = 5, sessionDurationMs = 100L),
         )
 
         coVerify(exactly = 0) { repository.getChapterById(any()) }
@@ -139,13 +139,13 @@ class MangaImmersiveFeedProcessorTest {
     private fun imageHandle(
         chapterId: Long,
         chapterNumber: Double = 1.0,
-    ): EntryImmersiveFeedHandle.ImagePages {
-        return EntryImmersiveFeedHandle.ImagePages(
+    ): EntryImmersiveHandle.ImagePages {
+        return EntryImmersiveHandle.ImagePages(
             entryType = EntryType.MANGA,
             chapterId = chapterId,
-            delegate = MangaImmersiveFeedMedia(
+            delegate = MangaImmersiveMedia(
                 pages = listOf(
-                    MangaImmersiveFeedPage(
+                    MangaImmersivePage(
                         0,
                         "https://example.invalid/page.jpg",
                         okhttp3.Headers.Builder().build(),

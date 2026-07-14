@@ -80,8 +80,8 @@ internal fun animeEntryInteractionPlugin(
                 sourceManager = dependencies.sourceManager,
             ),
         )
-        registry.registerImmersiveFeedProcessor(
-            AnimeImmersiveFeedProcessor(
+        registry.registerImmersiveProcessor(
+            AnimeImmersiveProcessor(
                 playbackStateRepository = dependencies.playbackStateRepository,
                 historyRepository = dependencies.historyRepository,
                 resolveVideoStream = { Injekt.get() },

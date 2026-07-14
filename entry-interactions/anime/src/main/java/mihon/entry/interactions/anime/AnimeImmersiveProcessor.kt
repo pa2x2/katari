@@ -8,20 +8,20 @@ import eu.kanade.tachiyomi.ui.video.player.VideoPlaybackSession
 import eu.kanade.tachiyomi.ui.video.player.VideoStreamResolver
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import mihon.entry.interactions.EntryImmersiveFeedHandle
-import mihon.entry.interactions.EntryImmersiveFeedProcessor
-import mihon.entry.interactions.EntryImmersiveFeedProgress
-import mihon.entry.interactions.EntryImmersiveFeedRenderer
+import mihon.entry.interactions.EntryImmersiveHandle
+import mihon.entry.interactions.EntryImmersiveProcessor
+import mihon.entry.interactions.EntryImmersiveProgress
+import mihon.entry.interactions.EntryImmersiveRenderer
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.PlaybackStateRepository
 import tachiyomi.domain.history.repository.HistoryRepository
 
-internal class AnimeImmersiveFeedProcessor(
+internal class AnimeImmersiveProcessor(
     private val playbackStateRepository: PlaybackStateRepository,
     private val historyRepository: HistoryRepository?,
     private val resolveVideoStream: () -> VideoStreamResolver,
-) : EntryImmersiveFeedProcessor {
+) : EntryImmersiveProcessor {
     override val type: EntryType = EntryType.ANIME
     private val persistMutex = Mutex()
 
@@ -34,7 +34,7 @@ internal class AnimeImmersiveFeedProcessor(
         entry: Entry,
         chapter: EntryChapter,
         source: UnifiedSource,
-    ): EntryImmersiveFeedHandle {
+    ): EntryImmersiveHandle {
         return when (
             val result = resolveVideoStream()(
                 entryId = entry.id,
@@ -46,7 +46,7 @@ internal class AnimeImmersiveFeedProcessor(
                 val session = VideoPlaybackSession(entry.id, chapter.id).apply {
                     restore(0L)
                 }
-                EntryImmersiveFeedHandle.Playback(
+                EntryImmersiveHandle.Playback(
                     entryType = type,
                     chapterId = chapter.id,
                     stream = result.stream,
@@ -59,18 +59,18 @@ internal class AnimeImmersiveFeedProcessor(
         }
     }
 
-    override fun renderer(handle: EntryImmersiveFeedHandle): EntryImmersiveFeedRenderer {
-        val playback = handle as? EntryImmersiveFeedHandle.Playback
+    override fun renderer(handle: EntryImmersiveHandle): EntryImmersiveRenderer {
+        val playback = handle as? EntryImmersiveHandle.Playback
             ?: error("Anime immersive feed received non-playback media")
-        return AnimeImmersiveFeedRenderer(playback)
+        return AnimeImmersiveRenderer(playback)
     }
 
     override suspend fun persistProgress(
-        handle: EntryImmersiveFeedHandle,
-        progress: EntryImmersiveFeedProgress,
+        handle: EntryImmersiveHandle,
+        progress: EntryImmersiveProgress,
     ) {
-        val playback = handle as? EntryImmersiveFeedHandle.Playback ?: return
-        val playbackProgress = progress as? EntryImmersiveFeedProgress.Playback ?: return
+        val playback = handle as? EntryImmersiveHandle.Playback ?: return
+        val playbackProgress = progress as? EntryImmersiveProgress.Playback ?: return
         val session = playback.delegate as? VideoPlaybackSession ?: return
         persistMutex.withLock {
             val snapshot = session.snapshot(
@@ -83,7 +83,7 @@ internal class AnimeImmersiveFeedProcessor(
         }
     }
 
-    override fun release(handle: EntryImmersiveFeedHandle) = Unit
+    override fun release(handle: EntryImmersiveHandle) = Unit
 }
 
 private fun ResolveVideoStream.Reason.message(): String {

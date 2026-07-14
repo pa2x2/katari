@@ -11,7 +11,7 @@ import eu.kanade.tachiyomi.source.entry.VideoSubtitle
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
-interface EntryImmersiveFeedInteraction {
+interface EntryImmersiveInteraction {
     fun isSupported(entry: Entry): Boolean
 
     fun preloadRadius(entryType: EntryType): Int
@@ -21,16 +21,16 @@ interface EntryImmersiveFeedInteraction {
         entry: Entry,
         chapter: EntryChapter,
         source: UnifiedSource,
-    ): EntryImmersiveFeedHandle
+    ): EntryImmersiveHandle
 
-    fun renderer(handle: EntryImmersiveFeedHandle): EntryImmersiveFeedRenderer
+    fun renderer(handle: EntryImmersiveHandle): EntryImmersiveRenderer
 
-    suspend fun persistProgress(handle: EntryImmersiveFeedHandle, progress: EntryImmersiveFeedProgress)
+    suspend fun persistProgress(handle: EntryImmersiveHandle, progress: EntryImmersiveProgress)
 
-    fun release(handle: EntryImmersiveFeedHandle)
+    fun release(handle: EntryImmersiveHandle)
 }
 
-fun interface EntryImmersiveFeedRenderer {
+fun interface EntryImmersiveRenderer {
     @Composable
     fun Content(
         modifier: Modifier,
@@ -39,25 +39,25 @@ fun interface EntryImmersiveFeedRenderer {
         controlsBottomInset: Dp,
         onToggleControls: () -> Unit,
         onZoomStateChange: (Boolean) -> Unit,
-        onProgress: (EntryImmersiveFeedProgress) -> Unit,
+        onProgress: (EntryImmersiveProgress) -> Unit,
     )
 }
 
-sealed interface EntryImmersiveFeedProgress {
+sealed interface EntryImmersiveProgress {
     data class ImagePage(
         val pageIndex: Int,
         val pageCount: Int,
         val sessionDurationMs: Long,
-    ) : EntryImmersiveFeedProgress
+    ) : EntryImmersiveProgress
 
     data class Playback(
         val positionMs: Long,
         val durationMs: Long,
         val resetSession: Boolean = false,
-    ) : EntryImmersiveFeedProgress
+    ) : EntryImmersiveProgress
 }
 
-sealed interface EntryImmersiveFeedHandle {
+sealed interface EntryImmersiveHandle {
     val entryType: EntryType
     val chapterId: Long
 
@@ -65,7 +65,7 @@ sealed interface EntryImmersiveFeedHandle {
         override val entryType: EntryType,
         override val chapterId: Long,
         val delegate: Any,
-    ) : EntryImmersiveFeedHandle
+    ) : EntryImmersiveHandle
 
     data class Playback(
         override val entryType: EntryType,
@@ -74,5 +74,5 @@ sealed interface EntryImmersiveFeedHandle {
         val subtitles: List<VideoSubtitle>,
         val resumePositionMs: Long,
         val delegate: Any? = null,
-    ) : EntryImmersiveFeedHandle
+    ) : EntryImmersiveHandle
 }

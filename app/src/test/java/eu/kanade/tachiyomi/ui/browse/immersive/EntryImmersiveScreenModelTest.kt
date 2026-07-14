@@ -1,7 +1,6 @@
-package eu.kanade.tachiyomi.ui.browse.feed
+package eu.kanade.tachiyomi.ui.browse.immersive
 
 import android.content.Context
-import eu.kanade.domain.source.model.FeedItemRef
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.entry.VideoRequest
@@ -21,8 +20,8 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import mihon.entry.interactions.EntryChildListInteraction
-import mihon.entry.interactions.EntryImmersiveFeedHandle
-import mihon.entry.interactions.EntryImmersiveFeedInteraction
+import mihon.entry.interactions.EntryImmersiveHandle
+import mihon.entry.interactions.EntryImmersiveInteraction
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -33,7 +32,7 @@ import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.source.service.SourceManager
 import kotlin.time.Duration.Companion.seconds
 
-class EntryImmersiveFeedScreenModelTest {
+class EntryImmersiveScreenModelTest {
 
     @Test
     fun `retain evicts ready handles outside bounded window`() = runTest {
@@ -47,13 +46,15 @@ class EntryImmersiveFeedScreenModelTest {
             model.load(fixture.context, anime)
             eventually(ASYNC_TIMEOUT) { model.state.value.items.size shouldBe 2 }
 
-            model.retain(setOf(FeedItemRef(anime.id, anime.type)))
+            model.retain(setOf(EntryImmersiveItemKey(anime.id, anime.type)))
 
             eventually(ASYNC_TIMEOUT) {
-                model.state.value.items.keys shouldBe setOf(FeedItemRef(anime.id, anime.type))
+                model.state.value.items.keys shouldBe setOf(EntryImmersiveItemKey(anime.id, anime.type))
             }
             verify(exactly = 1) {
-                fixture.interaction.release(fixture.handles.getValue(FeedItemRef(1L, EntryType.MANGA)))
+                fixture.interaction.release(
+                    fixture.handles.getValue(EntryImmersiveItemKey(1L, EntryType.MANGA)),
+                )
             }
         } finally {
             model.onDispose()
@@ -72,8 +73,8 @@ class EntryImmersiveFeedScreenModelTest {
 
             eventually(ASYNC_TIMEOUT) {
                 fixture.model.state.value.items.keys.shouldContainExactlyInAnyOrder(
-                    FeedItemRef(7L, EntryType.MANGA),
-                    FeedItemRef(7L, EntryType.ANIME),
+                    EntryImmersiveItemKey(7L, EntryType.MANGA),
+                    EntryImmersiveItemKey(7L, EntryType.ANIME),
                 )
             }
         } finally {
@@ -90,20 +91,20 @@ class EntryImmersiveFeedScreenModelTest {
         val childList = mockk<EntryChildListInteraction>(relaxed = true) {
             every { sortedForReading(any(), any(), any()) } answers { secondArg<List<EntryChapter>>() }
         }
-        val handles = mutableMapOf<FeedItemRef, EntryImmersiveFeedHandle>()
-        val interaction = mockk<EntryImmersiveFeedInteraction>(relaxed = true) {
+        val handles = mutableMapOf<EntryImmersiveItemKey, EntryImmersiveHandle>()
+        val interaction = mockk<EntryImmersiveInteraction>(relaxed = true) {
             every { isSupported(any()) } returns true
             coEvery { load(any(), any(), any(), any()) } answers {
                 val loadedEntry = secondArg<Entry>()
-                val ref = FeedItemRef(loadedEntry.id, loadedEntry.type)
+                val ref = EntryImmersiveItemKey(loadedEntry.id, loadedEntry.type)
                 handles.getOrPut(ref) {
                     when (loadedEntry.type) {
-                        EntryType.MANGA -> EntryImmersiveFeedHandle.ImagePages(
+                        EntryType.MANGA -> EntryImmersiveHandle.ImagePages(
                             entryType = loadedEntry.type,
                             chapterId = chapter.id,
                             delegate = Unit,
                         )
-                        EntryType.ANIME -> EntryImmersiveFeedHandle.Playback(
+                        EntryType.ANIME -> EntryImmersiveHandle.Playback(
                             entryType = loadedEntry.type,
                             chapterId = chapter.id,
                             stream = VideoStream(VideoRequest("https://example.invalid/video")),
@@ -121,11 +122,11 @@ class EntryImmersiveFeedScreenModelTest {
             context = context,
             interaction = interaction,
             handles = handles,
-            model = EntryImmersiveFeedScreenModel(
+            model = EntryImmersiveScreenModel(
                 entryChapterRepository = repository,
                 syncEntryWithSource = mockk<SyncEntryWithSource>(relaxed = true),
                 childListInteraction = childList,
-                immersiveFeedInteraction = interaction,
+                immersiveInteraction = interaction,
                 sourceManager = sourceManager,
             ),
         )
@@ -137,16 +138,16 @@ class EntryImmersiveFeedScreenModelTest {
 
     private data class Fixture(
         val context: Context,
-        val interaction: EntryImmersiveFeedInteraction,
-        val handles: Map<FeedItemRef, EntryImmersiveFeedHandle>,
-        val model: EntryImmersiveFeedScreenModel,
+        val interaction: EntryImmersiveInteraction,
+        val handles: Map<EntryImmersiveItemKey, EntryImmersiveHandle>,
+        val model: EntryImmersiveScreenModel,
     )
 
     companion object {
         private val ASYNC_TIMEOUT = 5.seconds
 
         @OptIn(DelicateCoroutinesApi::class)
-        private val mainThread = newSingleThreadContext("EntryImmersiveFeedScreenModelTest")
+        private val mainThread = newSingleThreadContext("EntryImmersiveScreenModelTest")
 
         @JvmStatic
         @BeforeAll

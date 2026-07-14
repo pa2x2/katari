@@ -124,7 +124,7 @@ interface EntryPlaybackProcessor {
     suspend fun copy(sourceEntry: Entry, targetEntry: Entry, chapterMappings: List<EntryPlaybackChapterMapping>)
 }
 
-interface EntryImmersiveFeedProcessor : EntryImmersiveFeedInteraction {
+interface EntryImmersiveProcessor : EntryImmersiveInteraction {
     val type: EntryType
     override fun preloadRadius(entryType: EntryType): Int
 }
@@ -176,5 +176,5 @@ interface EntryInteractionRegistry {
     fun registerChildGroupFilterProcessor(processor: EntryChildGroupFilterProcessor)
     fun registerLibraryFilterProcessor(processor: EntryLibraryFilterProcessor)
     fun registerPreviewProcessor(processor: EntryPreviewProcessor)
-    fun registerImmersiveFeedProcessor(processor: EntryImmersiveFeedProcessor)
+    fun registerImmersiveProcessor(processor: EntryImmersiveProcessor)
 }

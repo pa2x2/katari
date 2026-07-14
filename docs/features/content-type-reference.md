@@ -40,7 +40,7 @@ Status meanings:
 | Capability | Manga | Anime |
 | --- | :---: | :---: |
 | Preview entries while browsing | ✓ | ◇ |
-| Use immersive feeds | ◇ | ◇ |
+| Use immersive browsing | ◇ | ◇ |
 | Import content through the bundled Local source | ✓ | — |
 | Use supported legacy Mihon extensions | ✓ | — |
 | Connect entries to tracking services | ✓ | — |
