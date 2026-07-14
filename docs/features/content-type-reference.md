@@ -45,4 +45,4 @@ Status meanings:
 | Use supported legacy Mihon extensions           |   ✓   |   —   |  —   |
 | Connect entries to tracking services            |   ✓   |   —   |  —   |
 
-Source-provided capabilities and available catalogue content can vary by extension. See [Unified library](unified-library.md), [Video playback](video-playback.md), and [Extensions and compatibility](../differences/extensions-and-compatibility.md) for details beyond this comparison.
+Source-provided capabilities and available catalogue content can vary by extension. See [Unified library](unified-library.md), [Book reading](book-reading.md), [Video playback](video-playback.md), and [Extensions and compatibility](../differences/extensions-and-compatibility.md) for details beyond this comparison.
