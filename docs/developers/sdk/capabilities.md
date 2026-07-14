@@ -7,6 +7,7 @@ Capabilities are focused interfaces or properties that opt a source into behavio
 | Contract | Intent |
 | --- | --- |
 | `EntryCatalogueSource` | Makes a source browsable and declares language, latest-update support, and immersive-feed support. |
+| `SourceMetadata` | Advertises optional descriptive information, currently the entry types a source may supply. |
 | `EntryImageSource` | Resolves and downloads ordered image pages. |
 | `SubtitleSource` | Resolves external subtitle tracks for a playback selection. |
 | `EntryPreviewSource` | Supplies ordered static preview images describing an entry independently of child media. |
@@ -28,6 +29,18 @@ Capabilities are focused interfaces or properties that opt a source into behavio
 `supportsImmersiveFeed` opts the source into Katari's immersive feed presentation. It does not change the catalogue response shape; entries must still carry supported types and satisfy their normal media contracts.
 
 `EntryItemOrientationProvider.itemOrientation` controls source thumbnails in browse, library, and feeds. It is presentation metadata, not content-type classification.
+
+## Source metadata
+
+Implement `SourceMetadata` when Katari can describe the source's catalogue before loading it:
+
+```kotlin
+class ExampleSource : EntryHttpSource(), SourceMetadata {
+    override val supportedEntryTypes = setOf(EntryType.MANGA, EntryType.ANIME)
+}
+```
+
+Include every entry type the source may return. Katari presents this information as a subtle source-level hint; it does not validate or restrict catalogue results. Each returned `SEntry.type` remains authoritative. Omitting the capability, or returning an empty set, means that the source's supported types are unknown.
 
 ## Child-list safety
 

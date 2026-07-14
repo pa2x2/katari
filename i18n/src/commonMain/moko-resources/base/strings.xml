@@ -410,6 +410,7 @@
     <string name="action_group_extension">Extension</string>
     <string name="entry_type_manga">Manga</string>
     <string name="entry_type_anime">Anime</string>
+    <string name="source_supplies_entry_type">Supplies %s</string>
     <string name="entry_type_generic">Entry</string>
 
       <!-- Extension section -->

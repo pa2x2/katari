@@ -23,9 +23,11 @@ data class NetworkLegacyExtension(
         val lang: String,
         val name: String,
         val baseUrl: String,
+        val supportedEntryTypes: List<String> = emptyList(),
     )
 
     fun toAvailableExtension(store: ExtensionStore, storeBaseUrl: String): Extension.Available {
+        val legacyEntryTypes = version.legacyMangaEntryTypes()
         return Extension.Available(
             name = name.substringAfter("Tachiyomi: "),
             pkgName = pkg,
@@ -43,6 +45,7 @@ data class NetworkLegacyExtension(
                         name = name,
                         lang = lang,
                         baseUrl = "",
+                        supportedEntryTypes = legacyEntryTypes,
                     ),
                 )
             } else {
@@ -52,6 +55,8 @@ data class NetworkLegacyExtension(
                         name = source.name,
                         lang = source.lang,
                         baseUrl = source.baseUrl,
+                        supportedEntryTypes = source.supportedEntryTypes.toSupportedEntryTypes()
+                            ?: legacyEntryTypes,
                     )
                 }
             },

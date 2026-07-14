@@ -2,9 +2,11 @@
 
 This changelog covers the public `entry-source-api` contract. It is separate from Katari app release notes and from individual extension revisions.
 
-## Unreleased
+## `sdk-2.0.1`
 
-No public SDK changes are currently recorded after `sdk-2.0.0`.
+### Added
+
+- Optional `SourceMetadata` capability for advertising the `EntryType` values a source may supply.
 
 ## `sdk-2.0.0`
 

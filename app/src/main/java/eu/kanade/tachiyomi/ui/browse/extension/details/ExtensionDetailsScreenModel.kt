@@ -28,6 +28,7 @@ import kotlinx.coroutines.launch
 import logcat.LogPriority
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.source.service.resolvedSupportedEntryTypes
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -99,6 +100,7 @@ class ExtensionDetailsScreenModel(
                                                 labelAsName = source.labelAsName,
                                                 enabled = source.enabled,
                                                 hasSettings = source.source is ConfigurableSource,
+                                                supportedEntryTypes = source.source.resolvedSupportedEntryTypes(),
                                             )
                                         }
                                         .toImmutableList(),

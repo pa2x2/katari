@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.extension.model
 
 import android.graphics.drawable.Drawable
+import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import mihon.domain.extension.model.ExtensionStore
 import tachiyomi.domain.source.model.StubSource
@@ -52,6 +53,7 @@ sealed class Extension {
             val lang: String,
             val name: String,
             val baseUrl: String,
+            val supportedEntryTypes: Set<EntryType>? = null,
         ) {
             fun toStubSource(): StubSource {
                 return StubSource(

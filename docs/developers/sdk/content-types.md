@@ -4,10 +4,10 @@ Content type belongs to each `SEntry`, not to an extension, factory, or source. 
 
 ## Current types
 
-| `EntryType` | Child-item meaning | Media contract | Katari renderer |
-| --- | --- | --- | --- |
-| `MANGA` | Chapter, volume, gallery, or another readable unit | `EntryMedia.ImagePages` | Reader |
-| `ANIME` | Episode, movie, special, or another playable unit | `EntryMedia.Playback` | Video player |
+| `EntryType` | Child-item meaning                                 | Media contract          | Katari renderer |
+| ----------- | -------------------------------------------------- | ----------------------- | --------------- |
+| `MANGA`     | Chapter, volume, gallery, or another readable unit | `EntryMedia.ImagePages` | Reader          |
+| `ANIME`     | Episode, movie, special, or another playable unit  | `EntryMedia.Playback`   | Video player    |
 
 Set the type in catalogue results whenever the provider already exposes enough information:
 
@@ -20,6 +20,10 @@ SEntry.create().apply {
 ```
 
 Do not defer the type until `getContentDetails()` unless the listing genuinely cannot determine it. Katari uses type information when presenting and opening catalogue results.
+
+!!! note
+
+    A source can additionally implement `SourceMetadata` to advertise all entry types it may supply. Katari can then show those types on source discovery surfaces before a catalogue is loaded. This metadata is optional and descriptive; it never replaces the type on each `SEntry`.
 
 ## Manga entries
 
