@@ -7,6 +7,9 @@ repo_url: https://github.com/katariapp/katari
 repo_name: katariapp/katari
 edit_uri: edit/main/docs/
 
+exclude_docs: |
+  **/AGENTS.md
+
 theme:
   name: material
   language: en

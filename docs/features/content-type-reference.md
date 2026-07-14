@@ -15,6 +15,7 @@ Status meanings:
 | Continue from saved progress | ✓ | ✓ |
 | Mark individual child items consumed or unconsumed | ✓ | ✓ |
 | Show partial progress for individual child items | ✓ | ✓ |
+| Apply smart library-update restrictions | ✓ | ✓ |
 | Merge versions from different sources | ✓ | ✓ |
 | Bookmark individual child items | ✓ | — |
 | Show gaps between missing child items | ✓ | — |
@@ -25,6 +26,7 @@ Status meanings:
 
 | Capability | Manga | Anime |
 | --- | :---: | :---: |
+| Download individual child items for offline use | ✓ | ✓ |
 | Bulk-download child items | ✓ | ✓ |
 | Automatically download newly discovered child items | ✓ | ✓ |
 | Delete downloads after marking an item consumed | ✓ | — |
@@ -40,6 +42,7 @@ Status meanings:
 | Preview entries while browsing | ✓ | ◇ |
 | Use immersive feeds | ◇ | ◇ |
 | Import content through the bundled Local source | ✓ | — |
+| Use supported legacy Mihon extensions | ✓ | — |
 | Connect entries to tracking services | ✓ | — |
 
 Source-provided capabilities and available catalogue content can vary by extension. See [Unified library](unified-library.md), [Video playback](video-playback.md), and [Extensions and compatibility](../differences/extensions-and-compatibility.md) for details beyond this comparison.
