@@ -364,7 +364,7 @@ internal fun ChapterUpdatesUiItem(
                     modifier = Modifier.padding(start = 4.dp),
                     downloadStateProvider = downloadStateProvider,
                     downloadProgressProvider = downloadProgressProvider,
-                    onClick = { onDownloadChapter?.invoke(it) },
+                    onClick = onDownloadChapter,
                 )
             }
         } else {

@@ -179,7 +179,7 @@ fun EntryChapterListItem(
                 modifier = Modifier.padding(start = 4.dp),
                 downloadStateProvider = downloadStateProvider,
                 downloadProgressProvider = downloadProgressProvider,
-                onClick = { onDownloadClick?.invoke(it) },
+                onClick = onDownloadClick,
             )
         }
     }
