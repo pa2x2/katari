@@ -123,6 +123,10 @@ class SyncEntryWithSource(
             .asSequence()
             .map { it.chapter.url }
             .toSet()
+        val currentSourceNames = sourceChapters
+            .asSequence()
+            .map(IndexedSourceChapter::resolvedName)
+            .toSet()
         val now = now()
         val representativeChapters = existingChapters
             .groupBy { it.sourceOrder }
@@ -176,10 +180,13 @@ class SyncEntryWithSource(
                 ?: matchChapter(sourceChapter) {
                     it.name == sourceChapter.resolvedName && it.chapterNumber == sourceChapter.chapterNumber
                 }
-                ?: matchChapter(sourceChapter) {
-                    sourceChapter.chapterNumber >= 0.0 && it.chapterNumber == sourceChapter.chapterNumber
-                }
                 ?: matchChapter(sourceChapter) { it.name == sourceChapter.resolvedName }
+                ?: matchChapter(sourceChapter) {
+                    sourceChapter.chapterNumber >= 0.0 &&
+                        it.chapterNumber == sourceChapter.chapterNumber &&
+                        it.url !in currentSourceUrls &&
+                        it.name !in currentSourceNames
+                }
                 ?: matchChapter(sourceChapter) {
                     sourceChapter.chapterNumber < 0.0 && sourceChapter.resolvedName == sourceChapter.chapter.url &&
                         it.sourceOrder == sourceChapter.sourceOrder

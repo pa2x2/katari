@@ -25,6 +25,7 @@ import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.SourceHomePage
+import eu.kanade.tachiyomi.source.entry.SourceMetadata
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.entry.WebViewSource
 import eu.kanade.tachiyomi.source.model.MangasPage
@@ -55,10 +56,15 @@ import eu.kanade.tachiyomi.source.ConfigurableSource as LegacyConfigurableSource
  */
 open class LegacyMangaSourceAdapter(
     val source: Source,
-) : UnifiedSource, EntryItemOrientationProvider, IncrementalChapterSource, ChapterNumberRecognitionSource {
+) : UnifiedSource,
+    SourceMetadata,
+    EntryItemOrientationProvider,
+    IncrementalChapterSource,
+    ChapterNumberRecognitionSource {
 
     override val id: Long get() = source.id
     override val name: String get() = source.name
+    override val supportedEntryTypes: Set<EntryType> = setOf(EntryType.MANGA)
     override val itemOrientation: EntryItemOrientation
         get() = source.sourceItemOrientation().toEntryItemOrientation()
 

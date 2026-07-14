@@ -1,11 +1,14 @@
 package tachiyomi.domain.source.model
 
+import eu.kanade.tachiyomi.source.entry.EntryType
+
 data class Source(
     val id: Long,
     val lang: String,
     val name: String,
     val supportsLatest: Boolean,
     val supportsImmersiveFeed: Boolean = false,
+    val supportedEntryTypes: Set<EntryType>? = null,
     val isStub: Boolean,
     val pin: Pins = Pins.unpinned,
     val isUsedLast: Boolean = false,

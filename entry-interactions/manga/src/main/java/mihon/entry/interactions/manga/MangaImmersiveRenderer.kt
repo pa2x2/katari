@@ -44,14 +44,14 @@ import coil3.size.Size
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
-import mihon.entry.interactions.EntryImmersiveFeedProgress
-import mihon.entry.interactions.EntryImmersiveFeedRenderer
+import mihon.entry.interactions.EntryImmersiveProgress
+import mihon.entry.interactions.EntryImmersiveRenderer
 import okhttp3.Headers
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
-internal data class MangaImmersiveFeedMedia(
-    val pages: List<MangaImmersiveFeedPage>,
+internal data class MangaImmersiveMedia(
+    val pages: List<MangaImmersivePage>,
     val initialPageIndex: Int,
     val entryId: Long,
     val sourceId: Long,
@@ -59,15 +59,15 @@ internal data class MangaImmersiveFeedMedia(
     val context: android.content.Context,
 )
 
-internal data class MangaImmersiveFeedPage(
+internal data class MangaImmersivePage(
     val index: Int,
     val imageUrl: String,
     val headers: Headers,
 )
 
-internal class MangaImmersiveFeedRenderer(
-    private val media: MangaImmersiveFeedMedia,
-) : EntryImmersiveFeedRenderer {
+internal class MangaImmersiveRenderer(
+    private val media: MangaImmersiveMedia,
+) : EntryImmersiveRenderer {
 
     @Composable
     override fun Content(
@@ -77,7 +77,7 @@ internal class MangaImmersiveFeedRenderer(
         controlsBottomInset: Dp,
         onToggleControls: () -> Unit,
         onZoomStateChange: (Boolean) -> Unit,
-        onProgress: (EntryImmersiveFeedProgress) -> Unit,
+        onProgress: (EntryImmersiveProgress) -> Unit,
     ) {
         val pages = media.pages
         val pagerState = rememberPagerState(initialPage = media.initialPageIndex) { pages.size }
@@ -97,7 +97,7 @@ internal class MangaImmersiveFeedRenderer(
                 .collect { pageIndex ->
                     val now = SystemClock.elapsedRealtime()
                     latestProgress(
-                        EntryImmersiveFeedProgress.ImagePage(
+                        EntryImmersiveProgress.ImagePage(
                             pageIndex = pageIndex,
                             pageCount = pages.size,
                             sessionDurationMs = (now - lastProgressAt).coerceAtLeast(0L),
@@ -118,7 +118,7 @@ internal class MangaImmersiveFeedRenderer(
                 userScrollEnabled = active && !isZoomed,
                 beyondViewportPageCount = if (active) 1 else 0,
             ) { pageIndex ->
-                MangaImmersiveFeedImage(
+                MangaImmersiveImage(
                     page = pages[pageIndex],
                     onImageReady = { loadedPageIndexes = loadedPageIndexes + pageIndex },
                     onToggleControls = { if (active) onToggleControls() },
@@ -150,7 +150,7 @@ internal class MangaImmersiveFeedRenderer(
                 if (active) {
                     val now = SystemClock.elapsedRealtime()
                     latestProgress(
-                        EntryImmersiveFeedProgress.ImagePage(
+                        EntryImmersiveProgress.ImagePage(
                             pageIndex = pagerState.settledPage,
                             pageCount = pages.size,
                             sessionDurationMs = (now - lastProgressAt).coerceAtLeast(0L),
@@ -165,8 +165,8 @@ internal class MangaImmersiveFeedRenderer(
 }
 
 @Composable
-private fun MangaImmersiveFeedImage(
-    page: MangaImmersiveFeedPage,
+private fun MangaImmersiveImage(
+    page: MangaImmersivePage,
     onImageReady: () -> Unit,
     onToggleControls: () -> Unit,
     onZoomStateChange: (Boolean) -> Unit,

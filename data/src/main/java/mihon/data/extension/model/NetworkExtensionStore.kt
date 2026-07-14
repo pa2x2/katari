@@ -56,6 +56,7 @@ data class NetworkExtensionStore(
         @ProtoNumber(5) val mirrorUrls: List<String> = emptyList(),
         // @ProtoNumber(6) val contentWarning: ContentWarning = ContentWarning.SAFE,
         @ProtoNumber(7) val message: String? = null,
+        @ProtoNumber(8) val supportedEntryTypes: List<String> = emptyList(),
     )
 
     @Suppress("Unused")
@@ -96,6 +97,7 @@ data class NetworkExtensionStore(
 fun ExtensionList.toAvailableExtensions(store: ExtensionStore): List<DomainExtension.Available> {
     return extensions.map { extension ->
         val lang = extension.sources.map { it.language }.toSet()
+        val legacyEntryTypes = extension.extensionLib.legacyMangaEntryTypes()
         DomainExtension.Available(
             name = extension.name,
             pkgName = extension.packageName,
@@ -112,6 +114,8 @@ fun ExtensionList.toAvailableExtensions(store: ExtensionStore): List<DomainExten
                     name = source.name,
                     lang = source.language,
                     baseUrl = source.homeUrl,
+                    supportedEntryTypes = source.supportedEntryTypes.toSupportedEntryTypes()
+                        ?: legacyEntryTypes,
                 )
             },
             store = store,

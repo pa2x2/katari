@@ -55,7 +55,7 @@ Katari can invoke catalogue and media operations concurrently. A source must not
 
 ## Core and optional contracts
 
-`UnifiedSource` is the required lifecycle contract. `EntryCatalogueSource` adds language and catalogue presentation metadata. Focused capability interfaces opt a source into additional behavior such as image loading, subtitles, previews, preferences, URI resolution, or incremental child refreshes.
+`UnifiedSource` is the required lifecycle contract. `EntryCatalogueSource` adds language and catalogue presentation metadata. Focused capability interfaces opt a source into additional behavior or descriptive metadata such as supported entry types, image loading, subtitles, previews, preferences, URI resolution, or incremental child refreshes.
 
 Prefer capability checks over concrete-class checks. This allows Katari to add behavior without creating another parallel source hierarchy. See [capabilities](./capabilities.md) for the full matrix.
 

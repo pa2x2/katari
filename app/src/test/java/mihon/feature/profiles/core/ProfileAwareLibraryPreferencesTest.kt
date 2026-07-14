@@ -390,37 +390,75 @@ class ProfileAwareLibraryPreferencesTest {
     @Test
     fun `browse long press action stays isolated per profile`() {
         val fixture = createFixture()
+        val previewFirst = listOf(
+            CustomPreferences.BrowseLongPressAction.PREVIEW,
+            CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION,
+            CustomPreferences.BrowseLongPressAction.IMMERSIVE,
+        )
 
-        fixture.customPreferences.browseLongPressAction.set(CustomPreferences.BrowseLongPressAction.PREVIEW)
+        fixture.customPreferences.browseLongPressActionPriority.set(previewFirst)
         fixture.activeProfileId.value = 2L
-        fixture.customPreferences.browseLongPressAction.get() shouldBe
-            CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION
+        fixture.customPreferences.browseLongPressActionPriority.get() shouldBe
+            mihon.core.common.defaultBrowseLongPressActionPriority()
 
-        fixture.customPreferences.browseLongPressAction.set(CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION)
+        fixture.customPreferences.browseLongPressActionPriority.set(
+            mihon.core.common.defaultBrowseLongPressActionPriority(),
+        )
         fixture.activeProfileId.value = 1L
-        fixture.customPreferences.browseLongPressAction.get() shouldBe CustomPreferences.BrowseLongPressAction.PREVIEW
+        fixture.customPreferences.browseLongPressActionPriority.get() shouldBe previewFirst
+    }
+
+    @Test
+    fun `browse long press source overrides stay isolated per profile`() {
+        val fixture = createFixture()
+        val sourceId = 42L
+        val immersiveFirst = listOf(
+            CustomPreferences.BrowseLongPressAction.IMMERSIVE,
+            CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION,
+            CustomPreferences.BrowseLongPressAction.PREVIEW,
+        )
+
+        fixture.customPreferences.setBrowseLongPressActionOverride(sourceId, immersiveFirst)
+        fixture.activeProfileId.value = 2L
+        fixture.customPreferences.browseLongPressActionOverrides.get() shouldBe emptyMap()
+
+        fixture.customPreferences.setBrowseLongPressActionOverride(
+            sourceId,
+            listOf(
+                CustomPreferences.BrowseLongPressAction.PREVIEW,
+                CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION,
+                CustomPreferences.BrowseLongPressAction.IMMERSIVE,
+            ),
+        )
+        fixture.activeProfileId.value = 1L
+        fixture.customPreferences.browseLongPressActionOverrides.get() shouldBe mapOf(sourceId to immersiveFirst)
     }
 
     @Test
     fun `browse long press action flow follows active profile`() = runTest {
         val fixture = createFixture()
-        fixture.customPreferences.browseLongPressAction.set(CustomPreferences.BrowseLongPressAction.PREVIEW)
+        val previewFirst = listOf(
+            CustomPreferences.BrowseLongPressAction.PREVIEW,
+            CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION,
+            CustomPreferences.BrowseLongPressAction.IMMERSIVE,
+        )
+        fixture.customPreferences.browseLongPressActionPriority.set(previewFirst)
 
-        val values = mutableListOf<CustomPreferences.BrowseLongPressAction>()
+        val values = mutableListOf<List<CustomPreferences.BrowseLongPressAction>>()
         val job = launch {
-            fixture.customPreferences.browseLongPressAction.changes().take(4).toList(values)
+            fixture.customPreferences.browseLongPressActionPriority.changes().take(4).toList(values)
         }
 
         advanceUntilIdle()
-        values.last() shouldBe CustomPreferences.BrowseLongPressAction.PREVIEW
+        values.last() shouldBe previewFirst
 
         fixture.activeProfileId.value = 2L
         advanceUntilIdle()
-        values.last() shouldBe CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION
+        values.last() shouldBe mihon.core.common.defaultBrowseLongPressActionPriority()
 
-        fixture.customPreferences.browseLongPressAction.set(CustomPreferences.BrowseLongPressAction.PREVIEW)
+        fixture.customPreferences.browseLongPressActionPriority.set(previewFirst)
         advanceUntilIdle()
-        values.last() shouldBe CustomPreferences.BrowseLongPressAction.PREVIEW
+        values.last() shouldBe previewFirst
 
         job.cancel()
     }

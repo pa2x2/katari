@@ -82,8 +82,8 @@ internal fun mangaEntryInteractionPlugin(
             entryInteractionPreferences = dependencies.entryInteractionPreferences,
         )
         registry.registerPreviewProcessor(previewInteraction)
-        registry.registerImmersiveFeedProcessor(
-            MangaImmersiveFeedProcessor(
+        registry.registerImmersiveProcessor(
+            MangaImmersiveProcessor(
                 entryChapterRepository = dependencies.entryChapterRepository,
                 entryProgressRepository = dependencies.entryProgressRepository,
                 historyRepository = runCatching { Injekt.get<HistoryRepository>() }.getOrNull(),

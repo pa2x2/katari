@@ -45,6 +45,8 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.browse.components.BaseBrowseItem
 import eu.kanade.presentation.browse.components.ExtensionIcon
+import eu.kanade.presentation.browse.components.SourceEntryTypeIndicators
+import eu.kanade.presentation.browse.components.supportedEntryTypesForDisplay
 import eu.kanade.presentation.components.DotSeparatorNoSpaceText
 import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
@@ -426,7 +428,9 @@ private fun ExtensionItemActions(
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
+        SourceEntryTypeIndicators(extension.supportedEntryTypesForDisplay())
         when {
             !isIdle -> {
                 IconButton(onClick = { onClickItemCancel(extension) }) {

@@ -21,6 +21,18 @@ SEntry.create().apply {
 
 `SEntry.url` remains the stable source identity. Do not use a download URL, signed URL, or selected rendition as the entry identity.
 
+Advertise BOOK as source metadata when the source is known to provide it:
+
+```kotlin
+class ExampleBookSource : EntryHttpSource(), SourceMetadata {
+    override val supportedEntryTypes = setOf(EntryType.BOOK)
+}
+```
+
+!!!note
+
+    This metadata lets Katari describe the source before loading its catalogue; it does not replace `SEntry.type`. If the extension repository publishes source metadata, keep its `supportedEntryTypes` value aligned with the runtime source. See [publishing and maintenance](./publishing.md#publish-source-discovery-metadata).
+
 ## Model openable items
 
 `SEntryChapter` is the historical SDK name for every openable child item. For a single-file EPUB, return one child representing the publication:

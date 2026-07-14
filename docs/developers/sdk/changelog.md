@@ -21,6 +21,12 @@ BOOK content and processor API release.
 
 See [Book API architecture](./book-api.md) for the artifact boundary.
 
+## `sdk-2.0.1`
+
+### Added
+
+- Optional `SourceMetadata` capability for advertising the `EntryType` values a source may supply.
+
 ## `sdk-2.0.0`
 
 Initial public Entry SDK release.

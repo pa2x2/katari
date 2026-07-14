@@ -4,18 +4,18 @@ Katari continues to load selected legacy Mihon extension API families for compat
 
 ## Contract mapping
 
-| Mihon `source-api` | Katari `entry-source-api` |
-| --- | --- |
-| `Source` | `UnifiedSource` |
-| `CatalogueSource` | `EntryCatalogueSource` |
-| `HttpSource` | `EntryHttpSource` or `EntryImageHttpSource` |
-| `SourceFactory` | `EntrySourceFactory` |
-| `SManga` | `SEntry` |
-| `SChapter` | `SEntryChapter` |
-| `MangasPage` | `EntryPageResult<SEntry>` |
-| `FilterList` / `Filter` | `EntryFilterList` / `EntryFilter` |
-| `Page` | `EntryImagePage` inside `EntryMedia.ImagePages` |
-| RxJava return values | Kotlin suspending functions |
+| Mihon `source-api`      | Katari `entry-source-api`                       |
+| ----------------------- | ----------------------------------------------- |
+| `Source`                | `UnifiedSource`                                 |
+| `CatalogueSource`       | `EntryCatalogueSource`                          |
+| `HttpSource`            | `EntryHttpSource` or `EntryImageHttpSource`     |
+| `SourceFactory`         | `EntrySourceFactory`                            |
+| `SManga`                | `SEntry`                                        |
+| `SChapter`              | `SEntryChapter`                                 |
+| `MangasPage`            | `EntryPageResult<SEntry>`                       |
+| `FilterList` / `Filter` | `EntryFilterList` / `EntryFilter`               |
+| `Page`                  | `EntryImagePage` inside `EntryMedia.ImagePages` |
+| RxJava return values    | Kotlin suspending functions                     |
 
 !!! warning
 
@@ -88,4 +88,6 @@ class ExampleFactory : EntrySourceFactory {
 }
 ```
 
-There is no extension-level content-type declaration. Katari derives catalogue language from the returned sources and behavior from their entries and capabilities.
+!!! note
+
+    There is no required extension-level content-type declaration. Katari derives behavior from entries and source capabilities. Repositories may optionally publish per-source `supportedEntryTypes` discovery metadata; legacy Mihon API families are inferred as Manga by the compatibility layer.

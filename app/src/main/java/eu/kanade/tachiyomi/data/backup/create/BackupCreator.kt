@@ -3,7 +3,6 @@ package eu.kanade.tachiyomi.data.backup.create
 import android.content.Context
 import android.net.Uri
 import com.hippo.unifile.UniFile
-import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.data.backup.BackupFileValidator
 import eu.kanade.tachiyomi.data.backup.create.creators.CategoriesBackupCreator
 import eu.kanade.tachiyomi.data.backup.create.creators.EntryBackupCreator
@@ -231,11 +230,12 @@ class BackupCreator(
 
     companion object {
         private const val MAX_AUTO_BACKUPS: Int = 4
-        private val FILENAME_REGEX = """${BuildConfig.APPLICATION_ID}_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}.tachibk""".toRegex()
+        private const val FILENAME_PREFIX = "katari"
+        private val FILENAME_REGEX = """${FILENAME_PREFIX}_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}\.tachibk""".toRegex()
 
         fun getFilename(): String {
             val date = SimpleDateFormat("yyyy-MM-dd_HH-mm", Locale.ENGLISH).format(Date())
-            return "${BuildConfig.APPLICATION_ID}_$date.tachibk"
+            return "${FILENAME_PREFIX}_$date.tachibk"
         }
     }
 }

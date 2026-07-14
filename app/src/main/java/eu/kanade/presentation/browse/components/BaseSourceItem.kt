@@ -33,7 +33,10 @@ fun BaseSourceItem(
         onClickItem = onClickItem,
         onLongClickItem = onLongClickItem,
         icon = { icon.invoke(this, source) },
-        action = { action.invoke(this, source) },
+        action = {
+            SourceEntryTypeIndicators(source.supportedEntryTypes)
+            action.invoke(this, source)
+        },
         content = { content.invoke(this, source, sourceLangString) },
     )
 }

@@ -15,6 +15,22 @@ Choose values that can remain stable:
 
 The APK manifest must declare the `tachiyomi.extension` feature, its source or factory class, and its adult-content classification. The supported Entry API family comes from the first two components of Android `versionName`. See [getting started](./getting-started.md#declare-the-extension).
 
+## Publish source discovery metadata
+
+An extension repository may advertise the entry types supplied by each source. Add the optional `supportedEntryTypes` array to the source's repository metadata:
+
+```json
+{
+  "id": 500000123,
+  "lang": "en",
+  "name": "Example",
+  "baseUrl": "https://example.com",
+  "supportedEntryTypes": ["MANGA", "ANIME", "BOOK"]
+}
+```
+
+Katari uses this only to describe the source on the Extensions tab before installation. The installed source should also implement `SourceMetadata` with the same values so the information remains available from the runtime source contract. Unknown values are ignored for forward compatibility, and omitting or emptying the array means that the source's types are not advertised.
+
 ## Version the APK
 
 Increase Android `versionCode` for every published update. Katari and Android use it to decide which package is newer; a lower version code cannot replace a higher installed version.

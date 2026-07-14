@@ -21,7 +21,7 @@ New extensions should use `entry-source-api`. Entry-native sources can:
 - Return entries of different supported types from the same catalogue
 - Resolve image pages or playback streams
 - Provide subtitles, static title preview images, filters, preferences, URL resolution, and orientation capabilities. Preview-image consumption is currently limited to anime entries.
-- Participate in immersive feeds when supported
+- Participate in immersive catalogue and feed browsing when supported
 
 Start with the [extension development overview](../extensions/README.md).
 

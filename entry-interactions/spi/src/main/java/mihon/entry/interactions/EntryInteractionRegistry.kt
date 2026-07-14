@@ -33,7 +33,7 @@ private class DefaultEntryInteractionRegistry : EntryInteractionRegistry {
     private val childGroupFilterProcessors = mutableMapOf<EntryType, EntryChildGroupFilterProcessor>()
     private val libraryFilterProcessors = mutableMapOf<EntryType, EntryLibraryFilterProcessor>()
     private val previewProcessors = mutableMapOf<EntryType, EntryPreviewInteraction>()
-    private val immersiveFeedProcessors = mutableMapOf<EntryType, EntryImmersiveFeedProcessor>()
+    private val immersiveProcessors = mutableMapOf<EntryType, EntryImmersiveProcessor>()
 
     override fun registerOpenProcessor(processor: EntryOpenProcessor) {
         registerProcessor("open", processor.type, processor, openProcessors)
@@ -83,8 +83,8 @@ private class DefaultEntryInteractionRegistry : EntryInteractionRegistry {
         registerProcessor("preview", processor.type, processor, previewProcessors)
     }
 
-    override fun registerImmersiveFeedProcessor(processor: EntryImmersiveFeedProcessor) {
-        registerProcessor("immersive feed", processor.type, processor, immersiveFeedProcessors)
+    override fun registerImmersiveProcessor(processor: EntryImmersiveProcessor) {
+        registerProcessor("immersive feed", processor.type, processor, immersiveProcessors)
     }
 
     fun createEntryInteractions(): EntryInteractions {
@@ -101,7 +101,7 @@ private class DefaultEntryInteractionRegistry : EntryInteractionRegistry {
             childGroupFilterProcessors = childGroupFilterProcessors.toMap(),
             libraryFilterProcessors = libraryFilterProcessors.toMap(),
             previewProcessors = previewProcessors.toMap(),
-            immersiveFeedProcessors = immersiveFeedProcessors.toMap(),
+            immersiveProcessors = immersiveProcessors.toMap(),
         )
     }
 
@@ -132,7 +132,7 @@ private class DefaultEntryInteractions(
     childGroupFilterProcessors: Map<EntryType, EntryChildGroupFilterProcessor>,
     libraryFilterProcessors: Map<EntryType, EntryLibraryFilterProcessor>,
     previewProcessors: Map<EntryType, EntryPreviewInteraction>,
-    immersiveFeedProcessors: Map<EntryType, EntryImmersiveFeedProcessor>,
+    immersiveProcessors: Map<EntryType, EntryImmersiveProcessor>,
 ) : EntryInteractions {
     override val open: EntryOpenInteraction = RegistryEntryOpenInteraction(openProcessors)
     override val continueEntry: EntryContinueInteraction = RegistryEntryContinueInteraction(continueProcessors)
@@ -151,8 +151,8 @@ private class DefaultEntryInteractions(
     override val libraryFilter: EntryLibraryFilterInteraction =
         RegistryEntryLibraryFilterInteraction(libraryFilterProcessors)
     override val preview: EntryPreviewInteraction = RegistryEntryPreviewInteraction(previewProcessors)
-    override val immersiveFeed: EntryImmersiveFeedInteraction =
-        RegistryEntryImmersiveFeedInteraction(immersiveFeedProcessors)
+    override val immersive: EntryImmersiveInteraction =
+        RegistryEntryImmersiveInteraction(immersiveProcessors)
 }
 
 private class RegistryEntryOpenInteraction(
@@ -210,9 +210,9 @@ private class RegistryEntryPreviewInteraction(
     }
 }
 
-private class RegistryEntryImmersiveFeedInteraction(
-    private val processors: Map<EntryType, EntryImmersiveFeedProcessor>,
-) : EntryImmersiveFeedInteraction {
+private class RegistryEntryImmersiveInteraction(
+    private val processors: Map<EntryType, EntryImmersiveProcessor>,
+) : EntryImmersiveInteraction {
     override fun isSupported(entry: Entry): Boolean {
         val processor = processors[entry.type] ?: return false
         processor.requireMatchingEntryType("immersive feed", entry, processors.keys)
@@ -228,25 +228,25 @@ private class RegistryEntryImmersiveFeedInteraction(
         entry: Entry,
         chapter: EntryChapter,
         source: UnifiedSource,
-    ): EntryImmersiveFeedHandle {
+    ): EntryImmersiveHandle {
         val processor = processors.requireProcessor("immersive feed", entry.type)
         processor.requireMatchingEntryType("immersive feed", entry, processors.keys)
         return processor.load(context, entry, chapter, source)
     }
 
-    override fun renderer(handle: EntryImmersiveFeedHandle): EntryImmersiveFeedRenderer {
+    override fun renderer(handle: EntryImmersiveHandle): EntryImmersiveRenderer {
         return processors.requireProcessor("immersive feed", handle.entryType).renderer(handle)
     }
 
     override suspend fun persistProgress(
-        handle: EntryImmersiveFeedHandle,
-        progress: EntryImmersiveFeedProgress,
+        handle: EntryImmersiveHandle,
+        progress: EntryImmersiveProgress,
     ) {
         processors.requireProcessor("immersive feed", handle.entryType)
             .persistProgress(handle, progress)
     }
 
-    override fun release(handle: EntryImmersiveFeedHandle) {
+    override fun release(handle: EntryImmersiveHandle) {
         processors[handle.entryType]?.release(handle)
     }
 }
@@ -781,7 +781,7 @@ private fun EntryProgressProcessor.requireMatchingEntryType(
     }
 }
 
-private fun EntryImmersiveFeedProcessor.requireMatchingEntryType(
+private fun EntryImmersiveProcessor.requireMatchingEntryType(
     category: String,
     entry: Entry,
     registeredTypes: Set<EntryType>,

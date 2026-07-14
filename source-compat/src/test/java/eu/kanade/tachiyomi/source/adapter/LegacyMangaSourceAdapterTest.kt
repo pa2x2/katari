@@ -9,6 +9,7 @@ import eu.kanade.tachiyomi.source.entry.IncrementalChapterSource
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
+import eu.kanade.tachiyomi.source.entry.supportedEntryTypes
 import eu.kanade.tachiyomi.source.model.FilterList
 import eu.kanade.tachiyomi.source.model.MangasPage
 import eu.kanade.tachiyomi.source.model.Page
@@ -49,6 +50,7 @@ class LegacyMangaSourceAdapterTest {
     fun `legacy Rx source is adapted through upstream compatibility bridges`() = runTest {
         val source = LegacyRxCatalogueSource()
         val adapted = source.asUnifiedSource()
+        adapted.supportedEntryTypes() shouldBe setOf(EntryType.MANGA)
 
         val catalogEntry = adapted.getPopularContent(1).items.single()
         catalogEntry.type shouldBe EntryType.MANGA

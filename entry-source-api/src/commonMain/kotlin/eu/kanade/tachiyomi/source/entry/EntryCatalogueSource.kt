@@ -18,11 +18,10 @@ interface EntryCatalogueSource : UnifiedSource {
     val supportsLatest: Boolean
 
     /**
-     * Whether the source opts in to the immersive feed view.
+     * Whether the source opts in to immersive catalogue and feed browsing.
      *
-     * Sources that return `true` advertise that their content can be consumed
-     * inline through the feed's immersive view. Defaults to `false`; sources
-     * must explicitly opt in.
+     * Sources that return `true` advertise that their content can be consumed inline through
+     * immersive browsing. Defaults to `false`; sources must explicitly opt in.
      */
     val supportsImmersiveFeed: Boolean
         get() = false

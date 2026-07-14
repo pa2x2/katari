@@ -109,6 +109,47 @@ class SyncEntryWithSourceTest {
     }
 
     @Test
+    fun `backfilled chapter does not steal state when source urls also change`() = runTest {
+        val existing = listOf(
+            chapter(id = 1L, url = "/old-episode-1", name = "Episode 1", chapterNumber = 1.0, sourceOrder = 0L),
+            chapter(
+                id = 3L,
+                url = "/old-episode-3",
+                name = "Episode 3",
+                chapterNumber = 2.0,
+                sourceOrder = 1L,
+                read = true,
+            ),
+        )
+        val source = TestSource(
+            chapters = listOf(
+                sourceChapter(url = "/episode-1", name = "Episode 1", chapterNumber = 1.0),
+                sourceChapter(url = "/episode-2", name = "Episode 2", chapterNumber = 2.0),
+                sourceChapter(url = "/episode-3", name = "Episode 3", chapterNumber = 3.0),
+            ),
+        )
+        val repository = chapterRepository(existing)
+        val updates = slot<List<EntryChapter>>()
+        val inserts = slot<List<EntryChapter>>()
+        coEvery { repository.updateAll(capture(updates)) } returns true
+        coEvery { repository.insertOrUpdate(capture(inserts)) } answers {
+            inserts.captured.mapIndexed { index, chapter -> chapter.copy(id = 10L + index) }
+        }
+
+        sync(source, repository = repository)(entry(), fetchDetails = false)
+
+        updates.captured.single { it.id == 3L }.run {
+            url shouldBe "/episode-3"
+            chapterNumber shouldBe 3.0
+            read shouldBe true
+        }
+        inserts.captured.single().run {
+            url shouldBe "/episode-2"
+            read shouldBe false
+        }
+    }
+
+    @Test
     fun `manual metadata refresh invalidates same url cover but respects title preference`() = runTest {
         val entry = entry().copy(
             favorite = true,
@@ -242,13 +283,19 @@ class SyncEntryWithSourceTest {
     private fun chapter(
         id: Long,
         url: String = "/chapter",
+        name: String = "Chapter 1",
+        chapterNumber: Double = 1.0,
+        sourceOrder: Long = 0L,
+        read: Boolean = false,
         memo: kotlinx.serialization.json.JsonObject = buildJsonObject {},
     ): EntryChapter = EntryChapter.create().copy(
         id = id,
         entryId = 1L,
         url = url,
-        name = "Chapter 1",
-        chapterNumber = 1.0,
+        name = name,
+        chapterNumber = chapterNumber,
+        sourceOrder = sourceOrder,
+        read = read,
         memo = memo,
     )
 

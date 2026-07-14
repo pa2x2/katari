@@ -175,36 +175,6 @@ fun CatalogFeedBrowseContent(
             }
     }
 
-    LaunchedEffect(displayMode, state.newItemsAvailableCount, state.pendingRefresh) {
-        if (state.newItemsAvailableCount == 0) return@LaunchedEffect
-        if (state.pendingRefresh != null) return@LaunchedEffect
-
-        val viewportFlow = when (displayMode) {
-            LibraryDisplayMode.List -> snapshotFlow {
-                FeedViewport(
-                    canScrollBackward = listState.canScrollBackward,
-                    totalItemsCount = listState.layoutInfo.totalItemsCount,
-                )
-            }
-            else -> snapshotFlow {
-                FeedViewport(
-                    canScrollBackward = gridState.canScrollBackward,
-                    totalItemsCount = gridState.layoutInfo.totalItemsCount,
-                )
-            }
-        }
-        viewportFlow
-            .distinctUntilChanged()
-            .collectLatest { viewport ->
-                if (
-                    viewport.totalItemsCount >= state.itemRefs.size &&
-                    !viewport.canScrollBackward
-                ) {
-                    screenModel.consumeNewItemsIndicator()
-                }
-            }
-    }
-
     LaunchedEffect(displayMode, state.isRefreshing, state.isAppending, state.nextPageKey, state.itemRefs.size) {
         val lastVisibleFlow = when (displayMode) {
             LibraryDisplayMode.List -> snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1 }
@@ -344,30 +314,75 @@ fun CatalogFeedBrowseContent(
             )
         }
 
-        val canScrollBackward = when (displayMode) {
-            LibraryDisplayMode.List -> listState.canScrollBackward
-            else -> gridState.canScrollBackward
-        }
-        if (shouldShowNewItemsChip(state, canScrollBackward)) {
-            NewItemsChip(
-                count = state.newItemsAvailableCount,
-                countIsLowerBound = state.newItemsCountIsLowerBound,
-                isBridging = state.isBridgingRefresh,
-                onClick = {
-                    screenModel.showNewItems()
-                    scope.launch {
-                        when (displayMode) {
-                            LibraryDisplayMode.List -> listState.animateScrollToItem(0)
-                            else -> gridState.animateScrollToItem(0)
-                        }
+        FeedNewItemsIndicator(
+            state = state,
+            screenModel = screenModel,
+            viewportKey = displayMode,
+            viewport = {
+                when (displayMode) {
+                    LibraryDisplayMode.List -> FeedViewport(
+                        canScrollBackward = listState.canScrollBackward,
+                        isScrollInProgress = listState.isScrollInProgress,
+                        lastScrolledBackward = listState.lastScrolledBackward,
+                        totalItemsCount = listState.layoutInfo.totalItemsCount,
+                    )
+                    else -> FeedViewport(
+                        canScrollBackward = gridState.canScrollBackward,
+                        isScrollInProgress = gridState.isScrollInProgress,
+                        lastScrolledBackward = gridState.lastScrolledBackward,
+                        totalItemsCount = gridState.layoutInfo.totalItemsCount,
+                    )
+                }
+            },
+            onScrollToNewest = {
+                scope.launch {
+                    when (displayMode) {
+                        LibraryDisplayMode.List -> listState.animateScrollToItem(0)
+                        else -> gridState.animateScrollToItem(0)
                     }
-                },
-                modifier = Modifier
-                    .padding(top = 16.dp)
-                    .align(androidx.compose.ui.Alignment.TopCenter),
-            )
-        }
+                }
+            },
+            modifier = Modifier
+                .padding(top = 16.dp)
+                .align(androidx.compose.ui.Alignment.TopCenter),
+        )
     }
+}
+
+@Composable
+internal fun FeedNewItemsIndicator(
+    state: FeedScreenModel.State,
+    screenModel: FeedScreenModel<*>,
+    viewportKey: Any?,
+    viewport: () -> FeedViewport,
+    onScrollToNewest: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LaunchedEffect(viewportKey, state.newItemsAvailableCount, state.pendingRefresh, state.itemRefs.size) {
+        if (state.newItemsAvailableCount == 0) return@LaunchedEffect
+        if (state.pendingRefresh != null) return@LaunchedEffect
+
+        snapshotFlow(viewport)
+            .distinctUntilChanged()
+            .collectLatest { currentViewport ->
+                if (shouldConsumeNewItemsIndicator(currentViewport, state.itemRefs.size)) {
+                    screenModel.consumeNewItemsIndicator()
+                }
+            }
+    }
+
+    if (!shouldShowNewItemsChip(state, viewport().canScrollBackward)) return
+
+    NewItemsChip(
+        count = state.newItemsAvailableCount,
+        countIsLowerBound = state.newItemsCountIsLowerBound,
+        isBridging = state.isBridgingRefresh,
+        onClick = {
+            screenModel.showNewItems()
+            onScrollToNewest()
+        },
+        modifier = modifier,
+    )
 }
 
 internal fun shouldShowNewItemsChip(
@@ -379,10 +394,22 @@ internal fun shouldShowNewItemsChip(
         (state.pendingRefresh != null || canScrollBackward)
 }
 
-private data class FeedViewport(
+internal data class FeedViewport(
     val canScrollBackward: Boolean,
+    val isScrollInProgress: Boolean,
+    val lastScrolledBackward: Boolean,
     val totalItemsCount: Int,
 )
+
+internal fun shouldConsumeNewItemsIndicator(
+    viewport: FeedViewport,
+    itemCount: Int,
+): Boolean {
+    if (viewport.totalItemsCount < itemCount) return false
+
+    return !viewport.canScrollBackward ||
+        (viewport.isScrollInProgress && viewport.lastScrolledBackward)
+}
 
 @Composable
 internal fun NewItemsChip(

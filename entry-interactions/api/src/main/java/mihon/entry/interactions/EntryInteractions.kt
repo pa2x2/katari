@@ -16,7 +16,7 @@ interface EntryInteractions {
     val consumption: EntryConsumptionInteraction
     val updateEligibility: EntryUpdateEligibilityInteraction
     val preview: EntryPreviewInteraction
-    val immersiveFeed: EntryImmersiveFeedInteraction
+    val immersive: EntryImmersiveInteraction
     val progress: EntryProgressInteraction
     val playbackPreferences: EntryPlaybackPreferencesInteraction
     val childList: EntryChildListInteraction

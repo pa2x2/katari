@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.browse.extension.details
 
 import androidx.compose.runtime.Immutable
 import eu.kanade.tachiyomi.extension.model.Extension
+import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -14,6 +15,7 @@ data class ExtensionDetailsSourceUiModel(
     val labelAsName: Boolean,
     val enabled: Boolean,
     val hasSettings: Boolean,
+    val supportedEntryTypes: Set<EntryType>?,
 )
 
 @Immutable

@@ -3,7 +3,7 @@ package mihon.entry.interactions.anime
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
-class AnimeImmersiveFeedRendererTest {
+class AnimeImmersiveRendererTest {
 
     @Test
     fun `volume increase unmutes muted immersive video`() {

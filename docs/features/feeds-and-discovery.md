@@ -24,9 +24,11 @@ Feed configuration and scroll state are profile-specific.
 
 Regular mode uses familiar catalogue grid or list layouts. Every feed preserves its timeline and position. When a chronological feed refreshes, it checks the newest source page first, then fills any gap from the saved timeline in the background. The saved timeline remains available while a loading boundary at its top prevents partially loaded pages from appearing out of chronological order. Once the gap is connected, all newer results are prepended without moving the visible item and you can scroll through them continuously. The new-items chip shows progress and remains an immediate shortcut to the newest result. If the source cannot bridge the gap within a bounded number of pages, the chip still offers a user-controlled switch to the newest results, which then load older pages normally as you continue browsing. Pagination depends on the source and preset; a feed cannot produce more results after its source reports the end.
 
-## Immersive feeds
+## Immersive browsing
 
-When the source advertises immersive-feed support, switch from regular to immersive mode for a media-forward, full-screen discovery experience. The control is disabled for sources that do not support it. In immersive mode you can open the feed picker, move through items, add entries to the library, and return to regular browsing.
+When the source advertises immersive-feed support, switch from regular to immersive mode for a media-forward, full-screen discovery experience. You can enter immersive mode from either the source catalogue or one of that source's feeds; sources that do not opt in do not expose the control. In immersive mode you can move through items, add entries to the library, open their details or media, and return to regular browsing. Pull down from the first item to refresh the current catalogue or feed. The feed view also keeps its feed picker and chronological-feed actions available.
+
+Under **Settings → Browse → Behavior**, reorder the default long-press actions used by source catalogues and feeds, then add overrides for sources that should behave differently. You can also open a source's override directly from its catalogue menu or feed picker. Katari tries actions from top to bottom. **Start immersive view** opens immersive browsing at the pressed item when the source supports it; otherwise Katari continues to the next action. Preview is skipped in the same way when it is unavailable, while the library action is always available as a fallback. Defaults and source overrides belong to the active profile.
 
 Preview media comes from the source. Missing or failing previews do not necessarily mean the entry itself cannot be opened.
 

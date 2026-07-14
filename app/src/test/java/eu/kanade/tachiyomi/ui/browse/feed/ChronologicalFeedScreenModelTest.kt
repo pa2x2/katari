@@ -59,6 +59,42 @@ class ChronologicalFeedScreenModelTest {
     }
 
     @Test
+    fun `loaded new items indicator is consumed when scrolling toward the top`() {
+        shouldConsumeNewItemsIndicator(
+            viewport = FeedViewport(
+                canScrollBackward = true,
+                isScrollInProgress = true,
+                lastScrolledBackward = true,
+                totalItemsCount = 20,
+            ),
+            itemCount = 20,
+        ) shouldBe true
+
+        shouldConsumeNewItemsIndicator(
+            viewport = FeedViewport(
+                canScrollBackward = true,
+                isScrollInProgress = false,
+                lastScrolledBackward = true,
+                totalItemsCount = 20,
+            ),
+            itemCount = 20,
+        ) shouldBe false
+    }
+
+    @Test
+    fun `new items indicator waits for the refreshed layout`() {
+        shouldConsumeNewItemsIndicator(
+            viewport = FeedViewport(
+                canScrollBackward = true,
+                isScrollInProgress = true,
+                lastScrolledBackward = true,
+                totalItemsCount = 19,
+            ),
+            itemCount = 20,
+        ) shouldBe false
+    }
+
+    @Test
     fun `init cleans saved favorites while preserving surviving anchor`() = feedTest {
         val preferences = SourcePreferences(TestPreferenceStore(), testJson)
         preferences.hideInLibraryItems.set(true)

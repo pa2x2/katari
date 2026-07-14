@@ -20,7 +20,7 @@ EntrySourceFactory
     └── one or more UnifiedSource instances
 ```
 
-The source is not permanently classified by content type. Each `SEntry` declares its `EntryType`, and `getMedia()` returns the payload Katari should open. One factory can expose several sources, and a source may return different entry types in the same catalogue.
+The source is not permanently classified by content type. Each `SEntry` declares its `EntryType`, and `getMedia()` returns the payload Katari should open. One factory can expose several sources, and a source may return different entry types in the same catalogue. A source can optionally implement `SourceMetadata` to advertise those types before its catalogue is loaded, but each returned entry remains authoritative.
 
 ## Choose a starting point
 

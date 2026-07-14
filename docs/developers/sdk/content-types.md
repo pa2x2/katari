@@ -24,6 +24,10 @@ SEntry.create().apply {
 
     Do not defer the type until `getContentDetails()` unless the listing genuinely cannot determine it. Katari uses type information when presenting and opening catalogue results.
 
+!!! note
+
+    A source can additionally implement `SourceMetadata` to advertise all entry types it may supply. Katari can then show those types on source discovery surfaces before a catalogue is loaded. This metadata is optional and descriptive; it never replaces the type on each `SEntry`.
+
 ## Manga entries
 
 For `MANGA`, child items are readable units and `getMedia()` returns ordered image descriptors. Implement `EntryImageSource`, normally by extending `EntryImageHttpSource`, so Katari can resolve and download image bytes on demand.

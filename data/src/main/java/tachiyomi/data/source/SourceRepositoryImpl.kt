@@ -16,6 +16,7 @@ import tachiyomi.domain.source.model.SourceWithCount
 import tachiyomi.domain.source.model.UnifiedStubSource
 import tachiyomi.domain.source.repository.SourceRepository
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.source.service.resolvedSupportedEntryTypes
 import tachiyomi.domain.source.model.Source as DomainSource
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -98,6 +99,7 @@ class SourceRepositoryImpl(
             ?: "",
         name = source.name,
         supportsLatest = false,
+        supportedEntryTypes = source.resolvedSupportedEntryTypes(),
         isStub = false,
     )
 }

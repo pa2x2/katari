@@ -125,12 +125,14 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
+import eu.kanade.tachiyomi.source.entry.SourceMetadata
 
-internal class ExampleSource : EntryImageHttpSource() {
+internal class ExampleSource : EntryImageHttpSource(), SourceMetadata {
     override val name = "Example"
     override val lang = "en"
     override val baseUrl = "https://example.com"
     override val supportsLatest = true
+    override val supportedEntryTypes = setOf(EntryType.MANGA)
 
     override suspend fun getPopularContent(page: Int): EntryPageResult<SEntry> =
         error("Request and parse the popular catalogue")
@@ -160,7 +162,7 @@ internal class ExampleSource : EntryImageHttpSource() {
 }
 ```
 
-Catalogue entries should set `type` as soon as it is known; do not wait for the details request if the listing already provides enough information.
+`supportedEntryTypes` lets Katari describe the source before loading its catalogue. Catalogue entries must still set `type` as soon as it is known; do not wait for the details request if the listing already provides enough information.
 
 Continue with the [Entry SDK overview](../developers/sdk/README.md) and [data model](../developers/sdk/data-model.md) for concrete entry and media payloads.
 
