@@ -183,12 +183,16 @@ fun CatalogFeedBrowseContent(
             LibraryDisplayMode.List -> snapshotFlow {
                 FeedViewport(
                     canScrollBackward = listState.canScrollBackward,
+                    isScrollInProgress = listState.isScrollInProgress,
+                    lastScrolledBackward = listState.lastScrolledBackward,
                     totalItemsCount = listState.layoutInfo.totalItemsCount,
                 )
             }
             else -> snapshotFlow {
                 FeedViewport(
                     canScrollBackward = gridState.canScrollBackward,
+                    isScrollInProgress = gridState.isScrollInProgress,
+                    lastScrolledBackward = gridState.lastScrolledBackward,
                     totalItemsCount = gridState.layoutInfo.totalItemsCount,
                 )
             }
@@ -196,10 +200,7 @@ fun CatalogFeedBrowseContent(
         viewportFlow
             .distinctUntilChanged()
             .collectLatest { viewport ->
-                if (
-                    viewport.totalItemsCount >= state.itemRefs.size &&
-                    !viewport.canScrollBackward
-                ) {
+                if (shouldConsumeNewItemsIndicator(viewport, state.itemRefs.size)) {
                     screenModel.consumeNewItemsIndicator()
                 }
             }
@@ -379,10 +380,22 @@ internal fun shouldShowNewItemsChip(
         (state.pendingRefresh != null || canScrollBackward)
 }
 
-private data class FeedViewport(
+internal data class FeedViewport(
     val canScrollBackward: Boolean,
+    val isScrollInProgress: Boolean,
+    val lastScrolledBackward: Boolean,
     val totalItemsCount: Int,
 )
+
+internal fun shouldConsumeNewItemsIndicator(
+    viewport: FeedViewport,
+    itemCount: Int,
+): Boolean {
+    if (viewport.totalItemsCount < itemCount) return false
+
+    return !viewport.canScrollBackward ||
+        (viewport.isScrollInProgress && viewport.lastScrolledBackward)
+}
 
 @Composable
 internal fun NewItemsChip(
