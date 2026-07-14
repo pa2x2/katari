@@ -29,6 +29,11 @@ jobs:
 
           build_log_url="$JITPACK_BASE_URL/$TAG/build.log"
           artifact_urls=(
+            "$JITPACK_BASE_URL/book-api/$TAG/book-api-$TAG.pom"
+            "$JITPACK_BASE_URL/book-api/$TAG/book-api-$TAG.module"
+            "$JITPACK_BASE_URL/book-api/$TAG/book-api-$TAG.jar"
+            "$JITPACK_BASE_URL/book-api-android/$TAG/book-api-android-$TAG.module"
+            "$JITPACK_BASE_URL/book-api-android/$TAG/book-api-android-$TAG.aar"
             "$JITPACK_BASE_URL/entry-source-api/$TAG/entry-source-api-$TAG.pom"
             "$JITPACK_BASE_URL/entry-source-api/$TAG/entry-source-api-$TAG.module"
             "$JITPACK_BASE_URL/entry-source-api/$TAG/entry-source-api-$TAG.jar"
