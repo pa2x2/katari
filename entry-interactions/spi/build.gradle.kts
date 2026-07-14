@@ -10,4 +10,7 @@ android {
 
 dependencies {
     api(projects.entryInteractions.api)
+    api(libs.androidx.appCompat)
+
+    implementation(libs.injekt)
 }

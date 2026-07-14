@@ -33,6 +33,7 @@ import uy.kohesive.injekt.api.addSingletonFactory
 import uy.kohesive.injekt.api.get
 
 data class EntryInteractionRuntimeDependencies(
+    val activityTheme: EntryInteractionActivityTheme,
     val notificationActions: EntryDownloadNotificationActions,
     val pageImageCache: EntryPageImageCache,
     val mangaChildGroupFilterDataSource: EntryChildGroupFilterDataSource,
@@ -52,6 +53,7 @@ fun InjektRegistrar.addEntryInteractionRuntime(
     app: Application,
     dependencies: EntryInteractionRuntimeDependencies,
 ) {
+    addSingletonFactory<EntryInteractionActivityTheme> { dependencies.activityTheme }
     addSingletonFactory<EntryDownloadNotificationActions> { dependencies.notificationActions }
     addSingletonFactory<EntryPageImageCache> { dependencies.pageImageCache }
     addSingletonFactory<EntryReaderIncognitoState> { dependencies.readerIncognitoState }

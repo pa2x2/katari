@@ -10,17 +10,17 @@ import android.widget.Button
 import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import mihon.book.api.BookFailure
+import mihon.entry.interactions.EntryInteractionActivity
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 /** Generic BOOK host for processor selection, launch, and structured unsupported-content failures. */
-internal class BookReaderHostActivity : ComponentActivity() {
+internal class BookReaderHostActivity : EntryInteractionActivity() {
     private lateinit var messageView: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {

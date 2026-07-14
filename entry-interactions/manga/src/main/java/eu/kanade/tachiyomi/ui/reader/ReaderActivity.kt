@@ -21,7 +21,6 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -80,6 +79,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.entry.interactions.EntryInteractionActivity
 import mihon.entry.interactions.manga.R
 import mihon.entry.interactions.manga.databinding.ReaderActivityBinding
 import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
@@ -101,7 +101,7 @@ import uy.kohesive.injekt.api.get
 import java.io.ByteArrayOutputStream
 import kotlin.time.Duration.Companion.seconds
 
-class ReaderActivity : AppCompatActivity() {
+class ReaderActivity : EntryInteractionActivity() {
 
     private var initialPageIndex: Int? = null
 

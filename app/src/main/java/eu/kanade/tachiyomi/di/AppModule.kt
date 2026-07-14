@@ -27,10 +27,12 @@ import eu.kanade.tachiyomi.network.JavaScriptEngine
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.AndroidSourceManager
 import eu.kanade.tachiyomi.source.entry.EntryPreferenceProvider
+import eu.kanade.tachiyomi.ui.base.delegate.ThemingDelegateImpl
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import mihon.entry.interactions.EntryChildGroupFilterDataSource
+import mihon.entry.interactions.EntryInteractionActivityTheme
 import mihon.entry.interactions.EntryInteractionRuntimeDependencies
 import mihon.entry.interactions.EntryInteractionRuntimeWarmup
 import mihon.entry.interactions.addEntryInteractionRuntime
@@ -151,6 +153,7 @@ class AppModule(val app: Application) : InjektModule {
         addEntryInteractionRuntime(
             app = app,
             dependencies = EntryInteractionRuntimeDependencies(
+                activityTheme = EntryInteractionActivityTheme(ThemingDelegateImpl()::applyAppTheme),
                 notificationActions = AppEntryDownloadNotificationActions(),
                 pageImageCache = mangaPageImageCache,
                 mangaChildGroupFilterDataSource = object : EntryChildGroupFilterDataSource {

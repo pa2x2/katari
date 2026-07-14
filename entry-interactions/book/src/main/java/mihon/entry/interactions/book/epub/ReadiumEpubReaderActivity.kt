@@ -9,11 +9,11 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ProgressBar
 import android.widget.TextView
-import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.commitNow
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.withStarted
 import kotlinx.coroutines.launch
+import mihon.entry.interactions.EntryInteractionActivity
 import mihon.entry.interactions.book.BookReaderOpenResult
 import mihon.entry.interactions.book.BookReaderRequest
 import mihon.entry.interactions.book.BookReaderSessionFactory
@@ -29,7 +29,7 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 /** Processor-owned EPUB reader surface. Generic BOOK code only launches this entry point. */
-internal class ReadiumEpubReaderActivity : FragmentActivity() {
+internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
     private val containerId = FrameLayout.generateViewId()
     private lateinit var root: FrameLayout
     private var openedSession: OpenedBookReaderSession? = null
