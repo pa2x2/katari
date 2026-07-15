@@ -99,7 +99,7 @@ fun EntryScreen(
     onAddToMergeClicked: (() -> Unit)?,
     onWebViewClicked: (() -> Unit)?,
     onWebViewLongClicked: (() -> Unit)?,
-    onTrackingClicked: () -> Unit,
+    onTrackingClicked: (() -> Unit)?,
     onDuplicatesClicked: (() -> Unit)?,
 
     // For tags menu
@@ -265,7 +265,7 @@ private fun EntryScreenSmallImpl(
     onAddToMergeClicked: (() -> Unit)?,
     onWebViewClicked: (() -> Unit)?,
     onWebViewLongClicked: (() -> Unit)?,
-    onTrackingClicked: () -> Unit,
+    onTrackingClicked: (() -> Unit)?,
     onDuplicatesClicked: (() -> Unit)?,
 
     // For tags menu
@@ -549,7 +549,7 @@ fun EntryScreenLargeImpl(
     onAddToMergeClicked: (() -> Unit)?,
     onWebViewClicked: (() -> Unit)?,
     onWebViewLongClicked: (() -> Unit)?,
-    onTrackingClicked: () -> Unit,
+    onTrackingClicked: (() -> Unit)?,
     onDuplicatesClicked: (() -> Unit)?,
 
     // For tags menu

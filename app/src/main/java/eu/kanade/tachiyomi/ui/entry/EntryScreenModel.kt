@@ -1150,6 +1150,11 @@ class EntryScreenModel(
         return successState?.entry?.let(entryCapabilityInteraction::supportsMigration) == true
     }
 
+    fun supportsTracking(): Boolean {
+        val entryType = successState?.entry?.type ?: return false
+        return trackerManager.trackers.any { entryType in it.supportedEntryTypes }
+    }
+
     private fun cancelDownload(chapterId: Long) {
         val chapterItem = successState?.chapters.orEmpty().firstOrNull { it.id == chapterId } ?: return
         val updatedStatus = entryDownloadInteraction.cancelQueuedDownload(chapterItem.entry.type, chapterId) ?: return

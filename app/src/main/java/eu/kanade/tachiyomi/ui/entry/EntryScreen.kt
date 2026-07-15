@@ -199,7 +199,7 @@ class EntryScreen(
                 } else {
                     screenModel.showTrackDialog()
                 }
-            },
+            }.takeIf { screenModel.supportsTracking() },
             onDuplicatesClicked = screenModel::showDuplicateDialog.takeIf {
                 successState.isFromSource &&
                     successState.entry.initialized &&
