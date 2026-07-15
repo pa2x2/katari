@@ -89,6 +89,10 @@ jobs:
     name: Documentation checks
     if: needs.changes.outputs.docs == 'true'
     needs: changes
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     uses: ./.github/workflows/documentation.yml
 
   gate:
