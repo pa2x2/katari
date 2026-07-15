@@ -72,15 +72,39 @@ SELECT
     date_upload, date_fetch, source_order, last_modified_at, version, is_syncing, memo
 FROM chapters;
 
+CREATE TABLE entry_progress_state_chapter_links(
+    progress_id INTEGER PRIMARY KEY,
+    chapter_id INTEGER NOT NULL
+);
+
+INSERT INTO entry_progress_state_chapter_links(progress_id, chapter_id)
+SELECT _id, chapter_id
+FROM entry_progress_state
+WHERE chapter_id IS NOT NULL;
+
+UPDATE entry_progress_state
+SET chapter_id = NULL
+WHERE chapter_id IS NOT NULL;
+
 DROP TRIGGER IF EXISTS detach_entry_progress_state_chapter;
 DROP TABLE chapters;
 ALTER TABLE chapters_new RENAME TO chapters;
+CREATE UNIQUE INDEX idx_chapters_entry_id_id ON chapters(entry_id, _id);
+
+UPDATE entry_progress_state
+SET chapter_id = (
+    SELECT chapter_id
+    FROM entry_progress_state_chapter_links
+    WHERE progress_id = entry_progress_state._id
+)
+WHERE _id IN (SELECT progress_id FROM entry_progress_state_chapter_links);
+
+DROP TABLE entry_progress_state_chapter_links;
 
 CREATE INDEX idx_chapters_entry_id ON chapters(entry_id);
 CREATE INDEX idx_chapters_unread_by_entry ON chapters(entry_id, read) WHERE read = 0;
 CREATE INDEX idx_chapters_url ON chapters(url);
 CREATE UNIQUE INDEX idx_chapters_entry_url ON chapters(entry_id, url);
-CREATE UNIQUE INDEX idx_chapters_entry_id_id ON chapters(entry_id, _id);
 
 CREATE TRIGGER update_last_modified_at_chapters
 AFTER UPDATE ON chapters

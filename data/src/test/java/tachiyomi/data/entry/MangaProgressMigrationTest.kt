@@ -16,6 +16,7 @@ class MangaProgressMigrationTest {
     fun `migration 35 backfills manga page progress and removes chapter page state`() = runTest {
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         try {
+            driver.executeSql("PRAGMA foreign_keys = ON")
             createVersion35Schema(driver)
             seedVersion35Data(driver)
 
@@ -102,10 +103,12 @@ class MangaProgressMigrationTest {
                 last_modified_at INTEGER NOT NULL DEFAULT 0,
                 version INTEGER NOT NULL DEFAULT 0,
                 is_syncing INTEGER NOT NULL DEFAULT 0,
-                memo BLOB NOT NULL DEFAULT '{}'
+                memo BLOB NOT NULL DEFAULT '{}',
+                FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
             )
             """,
         )
+        driver.executeSql("CREATE UNIQUE INDEX idx_chapters_entry_id_id ON chapters(entry_id, _id)")
         driver.executeSql(
             """
             CREATE TABLE history(
@@ -135,8 +138,22 @@ class MangaProgressMigrationTest {
                 completed INTEGER NOT NULL DEFAULT 0,
                 locator_updated_at INTEGER NOT NULL DEFAULT 0,
                 completion_updated_at INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+                FOREIGN KEY(entry_id, chapter_id) REFERENCES chapters(entry_id, _id),
                 UNIQUE(entry_id, content_key, resource_key)
             )
+            """,
+        )
+        driver.executeSql(
+            """
+            CREATE TRIGGER detach_entry_progress_state_chapter
+            BEFORE DELETE ON chapters
+            FOR EACH ROW
+            BEGIN
+                UPDATE entry_progress_state
+                SET chapter_id = NULL
+                WHERE chapter_id = old._id;
+            END
             """,
         )
         driver.executeSql(
