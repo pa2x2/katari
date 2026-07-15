@@ -113,35 +113,54 @@
 
 .katari-home-content {
   margin: 0 auto;
-  max-width: 1056px;
+  max-width: 1120px;
 }
 
 .katari-home-hero {
-  align-items: center;
+  align-items: start;
   display: grid;
-  gap: 28px;
-  grid-template-columns: 80px minmax(0, 1fr);
+  gap: 44px;
+  grid-template-columns: 136px minmax(0, 1fr);
 }
 
 .katari-home-hero > img {
-  border-radius: 18px;
-  height: 80px;
-  width: 80px;
+  border-radius: 28px;
+  height: 136px;
+  width: 136px;
+}
+
+.katari-home-hero h1 {
+  font-size: clamp(46px, 5vw, 60px);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+  margin: -4px 0 0;
 }
 
 .katari-home-hero p {
-  color: var(--vp-c-text-2);
-  font-size: 18px;
-  line-height: 1.65;
   margin: 0;
   max-width: 720px;
+}
+
+.katari-home-hero .katari-home-lead {
+  color: var(--vp-c-text-1);
+  font-size: 26px;
+  line-height: 1.5;
+  margin-top: 10px;
+}
+
+.katari-home-hero .katari-home-summary {
+  color: var(--vp-c-text-2);
+  font-size: 17px;
+  line-height: 1.6;
+  margin-top: 4px;
 }
 
 .katari-home-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 20px;
+  margin-top: 24px;
 }
 
 .katari-button {
@@ -173,31 +192,45 @@
 
 .katari-doc-groups {
   display: grid;
-  gap: 28px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
   margin-top: 64px;
 }
 
-.katari-doc-groups h2 {
+.katari-doc-groups > div {
+  border-top: 1px solid var(--vp-c-divider);
+  display: grid;
+  gap: 32px;
+  grid-template-columns: 180px minmax(0, 1fr);
+  padding: 24px 0;
+}
+
+.katari-doc-groups > div:last-child {
   border-bottom: 1px solid var(--vp-c-divider);
-  font-size: 18px;
+}
+
+.katari-doc-groups h2 {
+  font-size: 20px;
   font-weight: 650;
-  margin: 0 0 14px;
-  padding-bottom: 8px;
+  margin: 0;
 }
 
 .katari-doc-groups ul {
+  display: grid;
+  gap: 10px 32px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
 .katari-doc-groups li + li {
-  margin-top: 8px;
+  margin-top: 0;
 }
 
 .katari-doc-groups a {
   color: var(--vp-c-text-2);
+  font-size: 18px;
+  line-height: 1.5;
 }
 
 .katari-doc-groups a:hover {
@@ -206,7 +239,7 @@
 
 @media (min-width: 960px) {
   .katari-home .VPContent {
-    padding-top: calc(var(--vp-nav-height) + 48px);
+    padding-top: calc(var(--vp-nav-height) + clamp(72px, 8vh, 104px));
   }
 }
 
@@ -216,15 +249,28 @@
   }
 
   .katari-home-hero,
+  .katari-doc-groups > div,
+  .katari-doc-groups ul,
   .katari-doc-groups {
     grid-template-columns: 1fr;
   }
 
   .katari-home-hero {
-    gap: 18px;
+    gap: 24px;
+  }
+
+  .katari-home-hero > img {
+    border-radius: 24px;
+    height: 112px;
+    width: 112px;
   }
 
   .katari-doc-groups {
-    margin-top: 44px;
+    margin-top: 56px;
+  }
+
+  .katari-doc-groups > div {
+    gap: 16px;
+    padding: 28px 0;
   }
 }
