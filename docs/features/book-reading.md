@@ -21,15 +21,20 @@ When no compatible reader is available, Katari shows an unsupported-content scre
 
 ## Reader settings
 
-Each book processor can provide its own reader and settings. Every setting declares whether it is a profile default or can also be overridden for an individual entry. Katari resolves an effective value in one place using this order:
+Open **More → Settings → Reader** to configure the profile defaults for each installed reader. Each book processor can provide its own reader and settings, and Katari resolves every effective value in this order:
 
 1. Entry override, when the setting supports one
 2. Active-profile value
 3. Processor default
 
-Changing profiles therefore changes reader defaults without affecting other profiles. An entry override remains attached to that entry and takes precedence until it is cleared.
+Changing profiles therefore changes reader defaults without affecting other profiles. The layout mode is currently the only book-reader setting that can also be overridden for an individual entry. Changing it from the reader's appearance controls stores an override for that entry; the remaining settings are profile defaults.
 
-The prose reader supports paginated and continuous-scrolling layouts. Paginated reading is the default and can optionally use screen-edge taps for page turns. Both layouts share the immersive reader chrome, chapter picker, appearance controls, and previous/next chapter transition used by the other built-in readers.
+| Reader | Layouts | Profile settings |
+| ------ | ------- | ---------------- |
+| Readium EPUB reader | Paginated or continuous scrolling | Color theme, font family and size, page margins, column count, publisher styles, line height, text alignment and normalization, tap navigation, and page-number display |
+| Prose chapter reader | Paginated or continuous scrolling | Color theme, font family and size, page margins, line height, paragraph spacing, text alignment, tap navigation, and progress display |
+
+Paginated reading is the default. The readers expose appearance and layout controls while reading, and paginated mode can use screen-edge taps for page turns. The EPUB reader navigates the publication's table of contents. The prose reader uses Katari's stored chapter list for its chapter picker and previous/next transitions while keeping only the current chapter and its immediate neighbors prepared.
 
 ## Reading progress
 

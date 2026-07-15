@@ -64,7 +64,7 @@ The Entry SDK is a `compileOnly` dependency. Katari supplies `entry-source-api` 
 
 The SDK changelog identifies the public contracts added by each SDK version. Runtime support and artifact publication are coordinated so an extension declaring a supported family can rely on Katari supplying that family.
 
-`sdk-2.1.0` introduces BOOK and the coordinated `book-api` artifact. Katari accepts both the `2.0` and `2.1` Entry SDK families.
+`sdk-2.1.0`, first supplied by Katari `1.2.0`, introduces BOOK and the coordinated `book-api` artifact. Katari accepts both the `2.0` and `2.1` Entry SDK families.
 
 A patch must not add a new required public symbol. When an extension relies on corrected runtime behavior from a patch, state the minimum Katari app version in the extension release notes or repository metadata.
 

@@ -14,6 +14,7 @@ BOOK source contracts and processor-neutral book data release.
 
 ### Compatibility
 
+- First supplied by Katari `1.2.0`.
 - New loader family: `2.1`.
 - Katari continues to accept Entry SDK family `2.0`; existing compiled extensions do not need to move to `2.1`.
 - Extensions using BOOK APIs must declare family `2.1` in the first two components of Android `versionName`.
