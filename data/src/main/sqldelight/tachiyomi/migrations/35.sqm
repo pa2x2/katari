@@ -204,6 +204,8 @@ SELECT
             AND (
                 entry_progress_state.completed != 0
                 OR coalesce(entry_progress_state.position, 0) > 0
+                OR coalesce(entry_progress_state.progression, 0) > 0
+                OR coalesce(entry_progress_state.total_progression, 0) > 0
             )
         ) THEN 1
         ELSE 0
