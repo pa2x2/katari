@@ -109,7 +109,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
             ?.let { (SystemClock.elapsedRealtime() - it).coerceAtLeast(0L) }
             ?: 0L
         readingStartedAt = null
-        persist(elapsed)
+        persist(elapsed, persistLocation = !isChangingConfigurations)
         super.onStop()
     }
 
@@ -238,9 +238,16 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
         }
     }
 
-    private fun persist(elapsed: Long, forceCompleted: Boolean = false, after: (() -> Unit)? = null) {
+    private fun persist(
+        elapsed: Long,
+        persistLocation: Boolean = true,
+        forceCompleted: Boolean = false,
+        after: (() -> Unit)? = null,
+    ) {
         val session = openedSession ?: return after?.invoke() ?: Unit
-        val locator = latestLocator
+        // The retained locator hands progress to the recreated Activity. Letting this Activity
+        // persist its final location asynchronously could overwrite newer progress from that one.
+        val locator = latestLocator.takeIf { persistLocation }
         if (locator == null && elapsed <= 0L) return after?.invoke() ?: Unit
         val completed =
             forceCompleted || (pageLoaded && locator?.progression?.let { it >= COMPLETION_THRESHOLD } == true)
