@@ -40,7 +40,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import mihon.book.api.BookLocator
 import mihon.entry.interactions.EntryInteractionActivity
-import mihon.entry.interactions.book.BookChapterNavigation
 import mihon.entry.interactions.book.BookChapterNavigationResolver
 import mihon.entry.interactions.book.BookReaderErrorScreen
 import mihon.entry.interactions.book.BookReaderHostActivity
@@ -54,6 +53,7 @@ import mihon.entry.interactions.book.OpenedBookReaderSession
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.displayName
 import mihon.entry.interactions.setEntryInteractionContent
+import mihon.entry.interactions.viewer.EntryChildWindow
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.domain.entry.model.EntryChapter
 import uy.kohesive.injekt.Injekt
@@ -68,7 +68,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
     private var proseSession: HtmlProseChapterSession? = null
     private var webView: WebView? = null
     private var latestLocator: BookLocator? = null
-    private var navigation = BookChapterNavigation()
+    private var navigation: EntryChildWindow<EntryChapter>? = null
     private var readingStartedAt: Long? = null
     private var pageLoaded = false
     private var stopPersistenceSuppressed = false
@@ -92,8 +92,8 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
                         onWebView = { webView = it },
                         onLocation = ::updateLocation,
                         onClose = ::finish,
-                        onPrevious = navigation.previous?.let { chapter -> { openAdjacent(chapter, false) } },
-                        onNext = navigation.next?.let { chapter -> { openAdjacent(chapter, true) } },
+                        onPrevious = navigation?.previous?.let { chapter -> { openAdjacent(chapter, false) } },
+                        onNext = navigation?.next?.let { chapter -> { openAdjacent(chapter, true) } },
                     )
                 }
             }

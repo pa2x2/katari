@@ -22,8 +22,9 @@ class BookChapterNavigationResolverTest {
 
         val result = BookChapterNavigationResolver(getEntryWithChapters).resolve(entry, chapters[1])
 
-        assertEquals(1L, result.previous?.id)
-        assertEquals(3L, result.next?.id)
+        assertEquals(1L, result?.previous?.id)
+        assertEquals(2L, result?.current?.id)
+        assertEquals(3L, result?.next?.id)
     }
 
     @Test
@@ -35,8 +36,7 @@ class BookChapterNavigationResolverTest {
 
         val result = BookChapterNavigationResolver(getEntryWithChapters).resolve(entry, chapter(9L, 9.0))
 
-        assertNull(result.previous)
-        assertNull(result.next)
+        assertNull(result)
     }
 
     private fun chapter(id: Long, number: Double): EntryChapter = EntryChapter.create().copy(
