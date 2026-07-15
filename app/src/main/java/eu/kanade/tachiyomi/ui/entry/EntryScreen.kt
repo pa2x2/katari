@@ -175,7 +175,9 @@ class EntryScreen(
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
             },
             onAddToMergeClicked = screenModel::showMergeTargetPicker.takeIf {
-                !successState.isPartOfMerge && (successState.isFromSource || successState.entry.favorite)
+                screenModel.supportsMerge() &&
+                    !successState.isPartOfMerge &&
+                    (successState.isFromSource || successState.entry.favorite)
             },
             onWebViewClicked = {
                 openEntryInWebView(
@@ -229,7 +231,7 @@ class EntryScreen(
             }.takeIf { successState.showMergeNotice },
             onMigrateClicked = {
                 navigator.push(MigrationConfigScreen(successState.entry.id))
-            }.takeIf { successState.entry.favorite },
+            }.takeIf { successState.entry.favorite && screenModel.supportsMigration() },
             onEditNotesClicked = {
                 navigator.push(eu.kanade.tachiyomi.ui.entry.notes.EntryNotesScreen(entry = successState.entry))
             },

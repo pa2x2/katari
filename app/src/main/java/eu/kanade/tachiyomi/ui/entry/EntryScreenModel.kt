@@ -1142,6 +1142,14 @@ class EntryScreenModel(
         return successState?.entry?.let(entryCapabilityInteraction::supportsBulkDownload) == true
     }
 
+    fun supportsMerge(): Boolean {
+        return successState?.entry?.let(entryCapabilityInteraction::supportsMerge) == true
+    }
+
+    fun supportsMigration(): Boolean {
+        return successState?.entry?.let(entryCapabilityInteraction::supportsMigration) == true
+    }
+
     private fun cancelDownload(chapterId: Long) {
         val chapterItem = successState?.chapters.orEmpty().firstOrNull { it.id == chapterId } ?: return
         val updatedStatus = entryDownloadInteraction.cancelQueuedDownload(chapterItem.entry.type, chapterId) ?: return
@@ -1643,6 +1651,7 @@ class EntryScreenModel(
 
     fun showMergeTargetPicker() {
         val state = successState ?: return
+        if (!entryCapabilityInteraction.supportsMerge(state.entry)) return
         screenModelScope.launchIO {
             val excludedIds = state.mergeGroupMemberIds.toSet()
             val libraryEntries = entryRepository.getLibraryEntries()

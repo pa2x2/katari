@@ -8,6 +8,7 @@ import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CancellationException
 import mihon.domain.migration.models.MigrationFlag
+import mihon.entry.interactions.EntryCapabilityInteraction
 import mihon.entry.interactions.EntryDownloadInteraction
 import mihon.entry.interactions.EntryPlaybackPreferencesInteraction
 import mihon.entry.interactions.EntryProgressInteraction
@@ -35,6 +36,7 @@ class MigrateEntryUseCase(
     private val sourceManager: SourceManager,
     private val entryRepository: EntryRepository,
     private val entryChapterRepository: EntryChapterRepository,
+    private val capabilityInteraction: EntryCapabilityInteraction,
     private val progressInteraction: EntryProgressInteraction,
     private val playbackPreferencesInteraction: EntryPlaybackPreferencesInteraction,
     private val downloadInteraction: EntryDownloadInteraction,
@@ -52,6 +54,9 @@ class MigrateEntryUseCase(
 
     suspend operator fun invoke(current: Entry, target: Entry, replace: Boolean) {
         if (current.type != target.type) return
+        if (!capabilityInteraction.supportsMigration(current) || !capabilityInteraction.supportsMigration(target)) {
+            return
+        }
 
         val targetSource = sourceManager.get(target.source)?.let {
             EntryTrackingSource.from(it, sourceManager.getDisplayInfo(target.source))

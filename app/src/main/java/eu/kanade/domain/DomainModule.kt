@@ -170,7 +170,7 @@ class DomainModule : InjektModule {
         addFactory {
             MigrateEntryUseCase(
                 get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(),
-                get(),
+                get(), get(),
             )
         }
 
