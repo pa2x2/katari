@@ -1,13 +1,17 @@
 package mihon.entry.interactions.book.prose
 
+import android.content.Context
 import android.graphics.Typeface
 import android.text.Layout
+import android.text.Selection
 import android.text.Spannable
 import android.text.SpannableString
+import android.text.Spanned
 import android.text.TextPaint
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.text.style.URLSpan
+import android.view.MotionEvent
 import android.view.View
 import android.widget.TextView
 import androidx.activity.compose.BackHandler
@@ -709,7 +713,7 @@ private fun ProseText(
     AndroidView(
         modifier = modifier,
         factory = { context ->
-            TextView(context).apply {
+            ProseTextView(context).apply {
                 includeFontPadding = false
                 setTextIsSelectable(false)
                 setBackgroundColor(android.graphics.Color.TRANSPARENT)
@@ -731,6 +735,31 @@ private fun ProseText(
             }
         },
     )
+}
+
+internal class ProseTextView(context: Context) : TextView(context) {
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (event.actionMasked == MotionEvent.ACTION_DOWN || event.actionMasked == MotionEvent.ACTION_UP) {
+            val buffer = text as? Spanned
+            if (buffer?.clickableSpanAt(this, event) == null) {
+                (buffer as? Spannable)?.let(Selection::removeSelection)
+                return false
+            }
+        }
+        return super.onTouchEvent(event)
+    }
+}
+
+private fun Spanned.clickableSpanAt(widget: TextView, event: MotionEvent): ClickableSpan? {
+    val layout = widget.layout ?: return null
+    val x = event.x - widget.totalPaddingLeft + widget.scrollX
+    val y = event.y - widget.totalPaddingTop + widget.scrollY
+    if (y < 0 || y > layout.height) return null
+
+    val line = layout.getLineForVertical(y.toInt())
+    if (x < layout.getLineLeft(line) || x > layout.getLineRight(line)) return null
+    val offset = layout.getOffsetForHorizontal(line, x)
+    return getSpans(offset, offset, ClickableSpan::class.java).firstOrNull()
 }
 
 internal fun CharSequence.withAnchorClicks(onAnchorClick: (String) -> Unit): CharSequence {

@@ -1,10 +1,15 @@
 package mihon.entry.interactions.book.prose
 
 import android.text.Layout
+import android.text.SpannableString
 import android.text.Spanned
 import android.text.TextPaint
 import android.text.style.ClickableSpan
+import android.view.MotionEvent
 import android.view.View
+import android.view.View.MeasureSpec
+import android.view.ViewGroup
+import android.widget.TextView
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -47,6 +52,46 @@ class HtmlProseDocumentTest {
     }
 
     @Test
+    fun `ordinary prose taps remain available to the reader chrome`() {
+        val view = laidOutTextView(
+            SpannableString("Link then plain prose").apply {
+                setSpan(testClickableSpan(), 0, 4, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            },
+        )
+        val plainTextX = view.layout.getPrimaryHorizontal(10)
+        val textY = (view.layout.getLineTop(0) + view.layout.getLineBottom(0)) / 2f
+        val event = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, plainTextX, textY, 0)
+
+        val handled = view.dispatchTouchEvent(event)
+
+        event.recycle()
+        assertEquals(false, handled)
+    }
+
+    @Test
+    fun `prose links remain clickable`() {
+        var clicked = false
+        val view = laidOutTextView(
+            SpannableString("Link then plain prose").apply {
+                setSpan(testClickableSpan { clicked = true }, 0, 4, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            },
+        )
+        val linkX = view.layout.getPrimaryHorizontal(2)
+        val textY = (view.layout.getLineTop(0) + view.layout.getLineBottom(0)) / 2f
+        val down = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, linkX, textY, 0)
+        val up = MotionEvent.obtain(0, 1, MotionEvent.ACTION_UP, linkX, textY, 0)
+
+        val downHandled = view.dispatchTouchEvent(down)
+        val upHandled = view.dispatchTouchEvent(up)
+
+        down.recycle()
+        up.recycle()
+        assertTrue(downHandled)
+        assertTrue(upHandled)
+        assertTrue(clicked)
+    }
+
+    @Test
     fun `pagination fills multiple lines before advancing`() {
         val chapter = HtmlProseLoadedChapter(
             chapter = EntryChapter.create().copy(id = 1L, name = "Chapter 1"),
@@ -84,5 +129,26 @@ class HtmlProseDocumentTest {
         assertEquals(0, pageIndexForAnchor(pages, 4))
         assertEquals(1, pageIndexForAnchor(pages, 5))
         assertEquals(1, pageIndexForAnchor(pages, 11))
+    }
+
+    private fun laidOutTextView(text: SpannableString): TextView {
+        return ProseTextView(RuntimeEnvironment.getApplication()).apply {
+            layoutParams = ViewGroup.LayoutParams(600, 100)
+            movementMethod = android.text.method.LinkMovementMethod.getInstance()
+            setText(text, TextView.BufferType.SPANNABLE)
+            includeFontPadding = false
+            setPadding(0, 0, 0, 0)
+            measure(
+                MeasureSpec.makeMeasureSpec(600, MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(100, MeasureSpec.EXACTLY),
+            )
+            layout(0, 0, measuredWidth, measuredHeight)
+        }
+    }
+
+    private fun testClickableSpan(onClick: () -> Unit = {}): ClickableSpan {
+        return object : ClickableSpan() {
+            override fun onClick(widget: View) = onClick()
+        }
     }
 }
