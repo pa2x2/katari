@@ -1,39 +1,15 @@
 package mihon.entry.interactions.book.prose
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
-import android.net.Uri
 import android.os.Bundle
 import android.os.SystemClock
-import android.view.View
-import android.webkit.WebResourceRequest
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.withStarted
 import kotlinx.coroutines.CancellationException
@@ -53,52 +29,72 @@ import mihon.entry.interactions.book.OpenedBookReaderSession
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.displayName
 import mihon.entry.interactions.setEntryInteractionContent
+import mihon.entry.interactions.settings.HtmlProseSettingsProvider
 import mihon.entry.interactions.viewer.EntryChildWindow
+import mihon.entry.viewer.settings.ViewerSettingBinder
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.domain.entry.model.EntryChapter
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import kotlin.math.roundToInt
 
-/** Processor-owned reader surface for one normalized HTML prose chapter. */
+/** Processor-owned reader surface for independently loaded HTML prose chapters. */
 internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
     private val retainedSession by viewModels<BookReaderSessionViewModel>()
     private var surfaceState by mutableStateOf<ProseReaderSurfaceState>(ProseReaderSurfaceState.Loading)
+    private var uiState by mutableStateOf<HtmlProseReaderUiState?>(null)
+    private var settings: HtmlProseSettingsBinding? = null
     private var openedSession: OpenedBookReaderSession? = null
     private var proseSession: HtmlProseChapterSession? = null
-    private var webView: WebView? = null
+    private var webView: ProseWebView? = null
     private var latestLocator: BookLocator? = null
     private var navigation: EntryChildWindow<EntryChapter>? = null
     private var readingStartedAt: Long? = null
     private var pageLoaded = false
     private var stopPersistenceSuppressed = false
 
+    private val windowInsetsController by lazy { WindowCompat.getInsetsController(window, window.decorView) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(null)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        windowInsetsController.systemBarsBehavior =
+            androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         setEntryInteractionContent {
             when (val state = surfaceState) {
                 ProseReaderSurfaceState.Loading -> BookReaderLoadingScreen(
-                    contentDescription = stringResource(R.string.book_reader_loading),
+                    contentDescription = getString(R.string.book_reader_loading),
                 )
                 is ProseReaderSurfaceState.Error -> BookReaderErrorScreen(
-                    title = stringResource(R.string.book_reader_unavailable_title),
+                    title = getString(R.string.book_reader_unavailable_title),
                     message = state.message,
-                    closeLabel = stringResource(R.string.book_reader_close),
+                    closeLabel = getString(R.string.book_reader_close),
                     onClose = ::finish,
                 )
-                is ProseReaderSurfaceState.Ready -> key(state.resourceId) {
-                    HtmlProseChapterReaderScreen(
-                        state = state,
-                        onWebView = { webView = it },
-                        onLocation = ::updateLocation,
-                        onClose = ::finish,
-                        onPrevious = navigation?.previous?.let { chapter -> { openAdjacent(chapter, false) } },
-                        onNext = navigation?.next?.let { chapter -> { openAdjacent(chapter, true) } },
-                    )
+                ProseReaderSurfaceState.Ready -> {
+                    val readerState = uiState
+                    val readerSettings = settings
+                    if (readerState != null && readerSettings != null) {
+                        HtmlProseReaderScreen(
+                            state = readerState,
+                            settings = readerSettings,
+                            onWebView = { webView = it },
+                            onLocation = ::updateLocation,
+                            onTap = ::onReaderTap,
+                            onClose = ::finish,
+                            onPreviousChapter = navigation?.previous?.let { chapter ->
+                                { openAdjacent(chapter, completeCurrent = false) }
+                            },
+                            onNextChapter = navigation?.next?.let { chapter ->
+                                { openAdjacent(chapter, completeCurrent = true) }
+                            },
+                            onSettingsVisibilityChange = { visible ->
+                                uiState = uiState?.copy(settingsVisible = visible)
+                            },
+                        )
+                    }
                 }
             }
         }
-
         lifecycleScope.launch { open() }
     }
 
@@ -114,23 +110,22 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
             ?.let { (SystemClock.elapsedRealtime() - it).coerceAtLeast(0L) }
             ?: 0L
         readingStartedAt = null
-        if (!stopPersistenceSuppressed) {
-            persist(elapsed)
-        }
+        if (!stopPersistenceSuppressed) persist(elapsed)
         super.onStop()
     }
 
-    override fun onDestroy() {
-        webView?.apply {
-            stopLoading()
-            loadUrl("about:blank")
-            clearHistory()
-            removeAllViews()
-            destroy()
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus && surfaceState == ProseReaderSurfaceState.Ready) {
+            setMenuVisibility(uiState?.menuVisible == true)
         }
+    }
+
+    override fun onDestroy() {
         webView = null
         openedSession = null
         proseSession = null
+        settings = null
         super.onDestroy()
     }
 
@@ -164,46 +159,83 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
                     result.failure.message,
                 ),
             )
-            is BookReaderOpenResult.Success -> {
-                if (retainedSession.session == null) retainedSession.attach(result.session)
-                val content = result.session.publicationSession as? HtmlProseChapterSession
-                if (content == null) {
-                    retainedSession.release()
-                    showError(getString(R.string.prose_reader_incompatible_session))
-                    return
-                }
-                try {
-                    navigation = Injekt.get<BookChapterNavigationResolver>()
-                        .resolve(result.session.entry, result.session.chapter)
-                    val locator = retainedSession.currentLocator
-                        ?.takeIf(content::validate)
-                        ?: BookLocator(content.resourceId, progression = 0.0)
-                    openedSession = result.session
-                    proseSession = content
-                    latestLocator = locator
-                    surfaceState = ProseReaderSurfaceState.Ready(
-                        title = result.session.chapter.name,
-                        resourceId = content.resourceId,
-                        bodyHtml = content.bodyHtml,
-                        initialProgression = locator.progression ?: 0.0,
-                    )
-                    readingStartedAt = SystemClock.elapsedRealtime()
-                } catch (error: CancellationException) {
-                    throw error
-                } catch (error: Exception) {
-                    retainedSession.release()
-                    showError(error.message ?: getString(R.string.prose_reader_incompatible_session))
-                }
-            }
+            is BookReaderOpenResult.Success -> showSession(result.session)
         }
     }
 
-    private fun updateLocation(progression: Double) {
+    private suspend fun showSession(session: OpenedBookReaderSession) {
+        if (retainedSession.session == null) retainedSession.attach(session)
+        val content = session.publicationSession as? HtmlProseChapterSession
+        if (content == null) {
+            retainedSession.release()
+            showError(getString(R.string.prose_reader_incompatible_session))
+            return
+        }
+        try {
+            navigation = Injekt.get<BookChapterNavigationResolver>().resolve(session.entry, session.chapter)
+            settings = HtmlProseSettingsBinding(
+                provider = Injekt.get<HtmlProseSettingsProvider>(),
+                binder = Injekt.get<ViewerSettingBinder>(),
+                entryId = session.entry.id,
+            )
+            val locator = retainedSession.currentLocator
+                ?.takeIf(content::validate)
+                ?: BookLocator(content.resourceId, progression = 0.0)
+            openedSession = session
+            proseSession = content
+            latestLocator = locator
+            uiState = HtmlProseReaderUiState(
+                entryTitle = session.entry.displayTitle,
+                chapterTitle = session.chapter.name,
+                resourceId = content.resourceId,
+                bodyHtml = content.bodyHtml,
+                progression = (locator.progression ?: 0.0).toFloat(),
+            )
+            readingStartedAt = SystemClock.elapsedRealtime()
+            surfaceState = ProseReaderSurfaceState.Ready
+            setMenuVisibility(false)
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            retainedSession.release()
+            showError(error.message ?: getString(R.string.prose_reader_incompatible_session))
+        }
+    }
+
+    private fun onReaderTap(horizontalFraction: Float) {
+        val readerSettings = settings ?: return
+        val paginated = readerSettings.layoutMode.state.value.effectiveValue ==
+            HtmlProseSettingsProvider.LAYOUT_PAGINATED
+        val tapNavigation = readerSettings.tapNavigation.resolveProfile().effectiveValue
+        if (!paginated || !tapNavigation || horizontalFraction in TAP_PREVIOUS_END..TAP_NEXT_START) {
+            setMenuVisibility(uiState?.menuVisible != true)
+            return
+        }
+        val moved = webView?.movePage(if (horizontalFraction > TAP_NEXT_START) 1 else -1) == true
+        if (moved) setMenuVisibility(false)
+    }
+
+    private fun updateLocation(progression: Float, currentPage: Int, totalPages: Int) {
         val resourceId = proseSession?.resourceId ?: return
         pageLoaded = true
-        val locator = BookLocator(resourceId = resourceId, progression = progression.coerceIn(0.0, 1.0))
+        val safeProgression = progression.coerceIn(0f, 1f)
+        val locator = BookLocator(resourceId = resourceId, progression = safeProgression.toDouble())
         latestLocator = locator
         retainedSession.updateLocation(locator)
+        uiState = uiState?.copy(
+            progression = safeProgression,
+            currentPage = currentPage,
+            totalPages = totalPages,
+        )
+    }
+
+    private fun setMenuVisibility(visible: Boolean) {
+        uiState = uiState?.copy(menuVisible = visible)
+        if (visible) {
+            windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
+        } else {
+            windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+        }
     }
 
     private fun persist(elapsed: Long, forceCompleted: Boolean = false, after: (() -> Unit)? = null) {
@@ -235,6 +267,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
 
     private suspend fun showError(message: String) {
         lifecycle.withStarted {
+            windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
             surfaceState = ProseReaderSurfaceState.Error(message)
         }
     }
@@ -245,6 +278,8 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
         private const val EXTRA_PROCESSOR_ID = "processor_id"
         private const val EXTRA_SESSION_TOKEN = "session_token"
         private const val COMPLETION_THRESHOLD = 0.995
+        private const val TAP_PREVIOUS_END = 0.33f
+        private const val TAP_NEXT_START = 0.66f
 
         fun newIntent(
             context: Context,
@@ -262,147 +297,6 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
 
 private sealed interface ProseReaderSurfaceState {
     data object Loading : ProseReaderSurfaceState
+    data object Ready : ProseReaderSurfaceState
     data class Error(val message: String) : ProseReaderSurfaceState
-    data class Ready(
-        val title: String,
-        val resourceId: String,
-        val bodyHtml: String,
-        val initialProgression: Double,
-    ) : ProseReaderSurfaceState
 }
-
-@Composable
-private fun HtmlProseChapterReaderScreen(
-    state: ProseReaderSurfaceState.Ready,
-    onWebView: (WebView) -> Unit,
-    onLocation: (Double) -> Unit,
-    onClose: () -> Unit,
-    onPrevious: (() -> Unit)?,
-    onNext: (() -> Unit)?,
-) {
-    val colors = MaterialTheme.colorScheme
-    val html = buildReaderDocument(
-        bodyHtml = state.bodyHtml,
-        background = colors.background.toArgb(),
-        foreground = colors.onBackground.toArgb(),
-        link = colors.primary.toArgb(),
-    )
-    Surface(modifier = Modifier.fillMaxSize(), color = colors.background) {
-        Column {
-            TopAppBar(
-                title = { Text(state.title, maxLines = 1) },
-                navigationIcon = {
-                    IconButton(onClick = onClose) {
-                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.book_reader_close))
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { onPrevious?.invoke() }, enabled = onPrevious != null) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.prose_reader_previous_chapter),
-                        )
-                    }
-                    IconButton(onClick = { onNext?.invoke() }, enabled = onNext != null) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = stringResource(R.string.prose_reader_next_chapter),
-                        )
-                    }
-                },
-            )
-            Row(modifier = Modifier.weight(1f)) {
-                AndroidView(
-                    modifier = Modifier.fillMaxSize(),
-                    factory = { context ->
-                        createSecureWebView(
-                            context = context,
-                            html = html,
-                            initialProgression = state.initialProgression,
-                            onLocation = onLocation,
-                        ).also(onWebView)
-                    },
-                )
-            }
-        }
-    }
-}
-
-@SuppressLint("SetJavaScriptEnabled")
-internal fun createSecureWebView(
-    context: Context,
-    html: String,
-    initialProgression: Double,
-    onLocation: (Double) -> Unit,
-): WebView = WebView(context).apply {
-    setBackgroundColor(Color.TRANSPARENT)
-    settings.apply {
-        javaScriptEnabled = false
-        domStorageEnabled = false
-        databaseEnabled = false
-        allowFileAccess = false
-        allowContentAccess = false
-        blockNetworkLoads = true
-        loadsImagesAutomatically = false
-        setSupportZoom(false)
-        builtInZoomControls = false
-        displayZoomControls = false
-    }
-    webViewClient = object : WebViewClient() {
-        override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean =
-            !request.url.isReaderAnchor()
-
-        @Deprecated("Deprecated in Android")
-        override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean =
-            !Uri.parse(url).isReaderAnchor()
-
-        override fun onPageFinished(view: WebView, url: String) {
-            view.post {
-                val range = view.scrollRange()
-                view.scrollTo(0, (range * initialProgression.coerceIn(0.0, 1.0)).roundToInt())
-                onLocation(view.progression())
-            }
-        }
-    }
-    setOnScrollChangeListener { view: View, _, _, _, _ ->
-        onLocation((view as WebView).progression())
-    }
-    loadDataWithBaseURL(READER_BASE_URL, html, HTML_MEDIA_TYPE, "utf-8", null)
-}
-
-private fun WebView.progression(): Double {
-    val range = scrollRange()
-    return if (range <= 0) 1.0 else scrollY.toDouble().div(range).coerceIn(0.0, 1.0)
-}
-
-private fun WebView.scrollRange(): Int =
-    ((contentHeight * scale).roundToInt() - height).coerceAtLeast(0)
-
-private fun Uri.isReaderAnchor(): Boolean =
-    scheme == "https" && host == READER_HOST && fragment != null
-
-private fun buildReaderDocument(bodyHtml: String, background: Int, foreground: Int, link: Int): String = """
-    <!doctype html>
-    <html>
-    <head>
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <style>
-        :root { color-scheme: light dark; }
-        html { background: ${background.cssColor()}; color: ${foreground.cssColor()}; }
-        body { max-width: 46rem; margin: 0 auto; padding: 1.25rem 1.25rem 4rem; font: 1.08rem/1.72 sans-serif; }
-        h1, h2, h3, h4, h5, h6 { line-height: 1.25; }
-        a { color: ${link.cssColor()}; }
-        blockquote { margin-inline: 0; padding-inline-start: 1rem; border-inline-start: 0.2rem solid currentColor; opacity: 0.85; }
-        pre, code { white-space: pre-wrap; overflow-wrap: anywhere; }
-        table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; }
-        th, td { padding: 0.35rem 0.5rem; border: 1px solid currentColor; }
-      </style>
-    </head>
-    <body>$bodyHtml</body>
-    </html>
-""".trimIndent()
-
-private fun Int.cssColor(): String = "#%06X".format(this and 0xFFFFFF)
-
-private const val READER_HOST = "katari.invalid"
-private const val READER_BASE_URL = "https://$READER_HOST/"

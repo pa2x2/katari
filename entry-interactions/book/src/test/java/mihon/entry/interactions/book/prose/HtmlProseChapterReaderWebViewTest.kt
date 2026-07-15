@@ -11,11 +11,13 @@ import kotlin.test.assertTrue
 class HtmlProseChapterReaderWebViewTest {
     @Test
     fun `reader web view disables active and external content capabilities`() {
-        val webView = createSecureWebView(
+        val webView = createProseWebView(
             context = RuntimeEnvironment.getApplication(),
-            html = "<html><body><p>Chapter</p></body></html>",
-            initialProgression = 0.0,
-            onLocation = {},
+            document = "<html><body><p>Chapter</p></body></html>",
+            paginated = true,
+            initialProgression = 0f,
+            onLocation = { _, _, _ -> },
+            onTap = {},
         )
 
         assertFalse(webView.settings.javaScriptEnabled)
