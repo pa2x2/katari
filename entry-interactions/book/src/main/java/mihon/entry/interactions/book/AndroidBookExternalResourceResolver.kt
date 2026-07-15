@@ -22,6 +22,7 @@ internal class AndroidBookExternalResourceResolver(
     private val appReferenceResolver: BookAppReferenceResolver? = null,
 ) : BookExternalResourceResolver {
     private val contentResolver = context.applicationContext.contentResolver
+    override val canResolveAppReferences: Boolean = appReferenceResolver != null
 
     override suspend fun open(
         location: BookResourceLocation,

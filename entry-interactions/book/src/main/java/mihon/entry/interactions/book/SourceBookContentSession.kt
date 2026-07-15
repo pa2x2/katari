@@ -39,7 +39,10 @@ internal class SourceBookContentSession(
     private val activeLeases = LinkedHashSet<AutoCloseable>()
     private var closed = false
 
-    private val resources = buildResourceRecords(media)
+    private val resources = buildResourceRecords(
+        media = media,
+        canResolveAppReferences = externalResolver.canResolveAppReferences,
+    )
     private val resourcesById = resources.associateBy(ResourceRecord::id)
 
     override val descriptor = media.descriptor
@@ -181,7 +184,15 @@ internal class SourceBookContentSession(
         visitedSourceChildren: MutableSet<String>,
         depth: Int,
     ): BookResourceLocation {
-        if (location !is BookResourceLocation.SourceChild) return location
+        if (location !is BookResourceLocation.SourceChild) {
+            if (location is BookResourceLocation.AppReference && !externalResolver.canResolveAppReferences) {
+                throw BookResourceUnavailableException(
+                    resourceId = resourceId,
+                    availability = BookResourceAvailability.UNSUPPORTED_APP_ACCESS,
+                )
+            }
+            return location
+        }
         require(depth < MAX_SOURCE_CHILD_DEPTH) { "BOOK source-child resolution exceeded its depth limit" }
         require(location.resourceId == resourceId) {
             "BOOK source-child resource ${location.resourceId} does not match $resourceId"
@@ -305,6 +316,10 @@ internal class SourceBookContentSession(
  * exactly the requested [range] when one is supplied.
  */
 internal interface BookExternalResourceResolver {
+    /** Whether app-owned opaque references can be opened by this resolver. */
+    val canResolveAppReferences: Boolean
+        get() = false
+
     /** Opens a remote request, local content URI, or app-owned reference. */
     suspend fun open(location: BookResourceLocation, range: BookByteRange?): ExternalBookResource
 }
@@ -372,7 +387,10 @@ private data class ResourceRecord(
     val location: BookResourceLocation?,
 )
 
-private fun buildResourceRecords(media: EntryMedia.Book): List<ResourceRecord> {
+private fun buildResourceRecords(
+    media: EntryMedia.Book,
+    canResolveAppReferences: Boolean,
+): List<ResourceRecord> {
     val byId = LinkedHashMap<String, BookSourceResource>()
     media.catalog.resources
         .withIndex()
@@ -400,8 +418,13 @@ private fun buildResourceRecords(media: EntryMedia.Book): List<ResourceRecord> {
 
     return byId.values.map { resource ->
         val location = resource.location
-        val accessible = resource.availability == BookResourceAvailability.UNKNOWN ||
-            resource.availability == BookResourceAvailability.AVAILABLE
+        val availability = when {
+            location is BookResourceLocation.AppReference &&
+                !canResolveAppReferences &&
+                resource.availability.isAccessible() -> BookResourceAvailability.UNSUPPORTED_APP_ACCESS
+            else -> resource.availability
+        }
+        val accessible = availability.isAccessible()
         ResourceRecord(
             id = resource.id,
             metadata = BookContentResource(
@@ -412,7 +435,7 @@ private fun buildResourceRecords(media: EntryMedia.Book): List<ResourceRecord> {
                 mediaType = resource.mediaType ?: location.mediaType(),
                 size = resource.size ?: location.inlineSize(),
                 revision = resource.revision,
-                availability = resource.availability,
+                availability = availability,
                 cacheState = if (location is BookResourceLocation.InlineBytes ||
                     location is BookResourceLocation.InlineText
                 ) {
@@ -435,16 +458,17 @@ private fun buildResourceRecords(media: EntryMedia.Book): List<ResourceRecord> {
     }
 }
 
+private fun BookResourceAvailability.isAccessible(): Boolean =
+    this == BookResourceAvailability.UNKNOWN || this == BookResourceAvailability.AVAILABLE
+
 private fun BookSourceResource.requireAccessible() {
-    if (availability != BookResourceAvailability.UNKNOWN && availability != BookResourceAvailability.AVAILABLE) {
+    if (!availability.isAccessible()) {
         throw BookResourceUnavailableException(id, availability)
     }
 }
 
 private fun ResourceRecord.requireAccessible() {
-    if (metadata.availability != BookResourceAvailability.UNKNOWN &&
-        metadata.availability != BookResourceAvailability.AVAILABLE
-    ) {
+    if (!metadata.availability.isAccessible()) {
         throw BookResourceUnavailableException(id, metadata.availability)
     }
 }

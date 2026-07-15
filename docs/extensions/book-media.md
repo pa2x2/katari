@@ -207,7 +207,7 @@ Resolve short-lived URLs and credentials in `getMedia()`. Do not put secrets in 
 
 Set `size` when the provider gives a trustworthy content length. Katari uses resource metadata to enforce materialization limits before opening large content. Do not issue a full download merely to calculate the size.
 
-Other closed location variants support bounded inline content, Katari-owned content URIs, app references, and indirection through another stable source child. Use them only when they match the real ownership and retrieval model; a processor never receives the source object or executable source callbacks.
+Other closed location variants support bounded inline content, Katari-owned content URIs, and indirection through another stable source child. `AppReference` is reserved for identifiers issued by a future Katari-owned retrieval flow; current builds report it as `UNSUPPORTED_APP_ACCESS`, so extensions must not construct one. A processor never receives the source object or executable source callbacks.
 
 ## Describe unavailable content truthfully
 

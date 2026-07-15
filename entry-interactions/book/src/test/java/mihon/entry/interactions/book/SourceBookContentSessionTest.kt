@@ -261,6 +261,32 @@ class SourceBookContentSessionTest {
     }
 
     @Test
+    fun `app references without an app resolver report unsupported access`() = runTest {
+        val resolver = FakeExternalResolver(emptyMap(), canResolveAppReferences = false)
+        val session = session(
+            media = bookMedia(
+                resources = listOf(
+                    resource(
+                        id = "app",
+                        location = BookResourceLocation.AppReference("download:42"),
+                    ),
+                ),
+            ),
+            resolver = resolver,
+        )
+
+        val metadata = session.getResource("app").getOrThrow()
+        val failure = assertIs<BookResourceUnavailableException>(
+            session.openResource("app").exceptionOrNull(),
+        )
+
+        assertEquals(BookResourceAvailability.UNSUPPORTED_APP_ACCESS, metadata.availability)
+        assertTrue(metadata.capabilities.isEmpty())
+        assertEquals(BookResourceAvailability.UNSUPPORTED_APP_ACCESS, failure.availability)
+        assertTrue(resolver.requests.isEmpty())
+    }
+
+    @Test
     fun `versioned materializations are cached across leases and remain clearable`() = runTest {
         val directory = Files.createTempDirectory("katari-book-session-test").toFile()
         val cache = BookMaterializationCache(application(), directory)
@@ -440,6 +466,7 @@ class SourceBookContentSessionTest {
 
 private class FakeExternalResolver(
     private val content: Map<String, ByteArray>,
+    override val canResolveAppReferences: Boolean = true,
 ) : BookExternalResourceResolver {
     val requests = mutableListOf<Pair<BookResourceLocation, BookByteRange?>>()
     val closeCount = AtomicInteger()

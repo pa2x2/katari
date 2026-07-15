@@ -113,6 +113,7 @@ class AndroidBookExternalResourceResolverTest {
             appReferenceResolver = appResolver,
         )
 
+        assertEquals(true, resolver.canResolveAppReferences)
         resolver.open(BookResourceLocation.AppReference("download:42"), BookByteRange(0, 3)).use { opened ->
             assertEquals("app", opened.stream.bufferedReader().readText())
         }
@@ -122,6 +123,7 @@ class AndroidBookExternalResourceResolverTest {
     fun `unregistered app reference and internal locations fail explicitly`() = runBlocking {
         val resolver = AndroidBookExternalResourceResolver(context(), OkHttpClient())
 
+        assertEquals(false, resolver.canResolveAppReferences)
         assertFailsWith<IllegalStateException> {
             resolver.open(BookResourceLocation.AppReference("missing"), null)
         }

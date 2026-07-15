@@ -138,7 +138,7 @@ return EntryMedia.Book(
 )
 ```
 
-Resource IDs are publication-scoped persistence keys. Do not derive them from expiring URLs. Revisions describe content changes and allow Katari to reconcile caches and progress. Keep large content out of inline locations; use a remote request, source child, local URI, or app reference instead.
+Resource IDs are publication-scoped persistence keys. Do not derive them from expiring URLs. Revisions describe content changes and allow Katari to reconcile caches and progress. Keep large content out of inline locations; use a remote request, source child, or local URI instead. `AppReference` is reserved for Katari-issued identifiers, and current builds do not expose an issuance path to extensions.
 
 `BookContentDescriptor` and the processor-normalized publication/locator models come from the transitive `book-api` artifact. Source-side catalogues and locations remain in `entry-source-api`. See [Book API architecture](./book-api.md) for why the boundary is split.
 
