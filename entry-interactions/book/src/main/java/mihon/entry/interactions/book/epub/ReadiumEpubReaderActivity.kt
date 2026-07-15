@@ -22,8 +22,10 @@ import androidx.lifecycle.withStarted
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import mihon.book.api.BookLocator
 import mihon.book.api.BookNavigationItem
 import mihon.book.api.BookReadingDirection
+import mihon.book.api.BookResource
 import mihon.entry.interactions.EntryInteractionActivity
 import mihon.entry.interactions.book.BookReaderErrorScreen
 import mihon.entry.interactions.book.BookReaderLoadingScreen
@@ -217,7 +219,15 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
             // location on a separate IO coroutine could otherwise overwrite a newer location.
             val locationToPersist = currentLocation.takeUnless { isChangingConfigurations }
             lifecycleScope.launchNonCancellable {
-                locationToPersist?.let { session.saveLocation(it) }
+                locationToPersist?.let { locator ->
+                    session.saveLocation(
+                        locator,
+                        completed = isEpubPublicationComplete(
+                            locator,
+                            session.publicationSession.publication.readingOrder,
+                        ),
+                    )
+                }
                 session.recordHistory(elapsed)
             }
         }
@@ -310,7 +320,10 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
         readingStartedAt = SystemClock.elapsedRealtime()
         host.observeLocations(fragment, lifecycleScope) { locator ->
             retainedSession.updateLocation(locator)
-            session.saveLocation(locator)
+            session.saveLocation(
+                locator,
+                completed = isEpubPublicationComplete(locator, publication.readingOrder),
+            )
             uiState = uiState.copy(
                 currentLocator = locator,
             )
@@ -573,3 +586,12 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
         }
     }
 }
+
+internal fun isEpubPublicationComplete(locator: BookLocator, readingOrder: List<BookResource>): Boolean {
+    locator.totalProgression?.let { return it >= EPUB_COMPLETION_THRESHOLD }
+    val lastResource = readingOrder.lastOrNull() ?: return false
+    return locator.resourceId == lastResource.id &&
+        locator.progression?.let { it >= EPUB_COMPLETION_THRESHOLD } == true
+}
+
+private const val EPUB_COMPLETION_THRESHOLD = 0.995
