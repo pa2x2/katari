@@ -176,6 +176,7 @@ internal fun HtmlProseReaderScreen(
                     if (paginated) {
                         PaginatedProseViewer(
                             state = state,
+                            initialProgression = position.progression,
                             palette = palette,
                             fontFamily = fontFamily,
                             fontSizePercent = fontSize,
@@ -353,6 +354,7 @@ internal fun HtmlProseReaderScreen(
 @Composable
 private fun PaginatedProseViewer(
     state: HtmlProseReaderUiState,
+    initialProgression: Float,
     palette: ProsePalette,
     fontFamily: String,
     fontSizePercent: Int,
@@ -417,10 +419,7 @@ private fun PaginatedProseViewer(
             buildPaginatedItems(state.window, pages)
         }
         if (items.isEmpty()) return@BoxWithConstraints
-        val initialPage = items.indexOfFirst { item ->
-            item is ProsePagerItem.Page && item.page.chapter.id == state.currentChapterId &&
-                item.page.progression >= (state.loadedChapters[state.currentChapterId]?.initialProgression ?: 0f)
-        }.coerceAtLeast(0)
+        val initialPage = initialPaginatedItemIndex(items, state.currentChapterId, initialProgression)
         val pagerState = rememberPagerState(initialPage = initialPage) { items.size }
         val scope = rememberCoroutineScope()
         LaunchedEffect(pagerState, items, state.currentChapterId) {
@@ -1050,6 +1049,18 @@ internal fun buildPaginatedItems(
         pages[next.id]?.takeIf(List<*>::isNotEmpty)?.mapTo(this) { ProsePagerItem.Page(it) }
             ?: add(ProsePagerItem.Loading(next))
     }
+}
+
+internal fun initialPaginatedItemIndex(
+    items: List<ProsePagerItem>,
+    chapterId: Long,
+    progression: Float,
+): Int {
+    return items.indexOfFirst { item ->
+        item is ProsePagerItem.Page &&
+            item.page.chapter.id == chapterId &&
+            item.page.progression >= progression.coerceIn(0f, 1f)
+    }.coerceAtLeast(0)
 }
 
 internal fun buildScrollingItems(

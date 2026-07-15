@@ -62,9 +62,26 @@ class HtmlProseViewerItemsTest {
         assertEquals(1200, scrollOffsetForProgression(itemSize = 2000, viewportSize = 800, progression = 2f))
     }
 
+    @Test
+    fun `paginated mode starts from the live reader progression`() {
+        val previous = chapter(1L)
+        val current = chapter(2L)
+        val items = listOf(
+            ProsePagerItem.Page(page(previous)),
+            ProsePagerItem.Page(page(current, index = 0, total = 5)),
+            ProsePagerItem.Page(page(current, index = 1, total = 5)),
+            ProsePagerItem.Page(page(current, index = 2, total = 5)),
+            ProsePagerItem.Page(page(current, index = 3, total = 5)),
+            ProsePagerItem.Page(page(current, index = 4, total = 5)),
+        )
+
+        assertEquals(4, initialPaginatedItemIndex(items, current.id, progression = 0.6f))
+    }
+
     private fun chapter(id: Long) = EntryChapter.create().copy(id = id, entryId = 9L, name = "Chapter $id")
 
     private fun loaded(chapter: EntryChapter) = HtmlProseLoadedChapter(chapter, "chapter-${chapter.id}", "Text", 0f)
 
-    private fun page(chapter: EntryChapter) = HtmlProsePage(chapter, 0, 1, "Text")
+    private fun page(chapter: EntryChapter, index: Int = 0, total: Int = 1) =
+        HtmlProsePage(chapter, index, total, "Text")
 }
