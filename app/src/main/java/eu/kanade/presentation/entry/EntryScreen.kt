@@ -63,6 +63,7 @@ import eu.kanade.presentation.entry.components.EntryInfoBox
 import eu.kanade.presentation.entry.components.EntryToolbar
 import eu.kanade.presentation.entry.components.ExpandableEntryDescription
 import eu.kanade.presentation.util.formatChapterNumber
+import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.entry.EntryChapterList
 import eu.kanade.tachiyomi.ui.entry.EntryScreenModel
 import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
@@ -503,8 +504,11 @@ private fun EntryScreenSmallImpl(
                         key = EntryScreenItem.CHAPTER_HEADER,
                         contentType = EntryScreenItem.CHAPTER_HEADER,
                     ) {
-                        val missingChapterCount = remember(chapters) {
-                            chapters.map { it.chapter.chapterNumber }.missingChaptersCount()
+                        val missingChapterCount = remember(chapters, state.entry.type) {
+                            missingChildCount(
+                                entryType = state.entry.type,
+                                childNumbers = chapters.map { it.chapter.chapterNumber },
+                            )
                         }
                         EntryChapterHeader(
                             enabled = !isAnySelected,
@@ -776,8 +780,11 @@ fun EntryScreenLargeImpl(
                                 key = EntryScreenItem.CHAPTER_HEADER,
                                 contentType = EntryScreenItem.CHAPTER_HEADER,
                             ) {
-                                val missingChapterCount = remember(chapters) {
-                                    chapters.map { it.chapter.chapterNumber }.missingChaptersCount()
+                                val missingChapterCount = remember(chapters, state.entry.type) {
+                                    missingChildCount(
+                                        entryType = state.entry.type,
+                                        childNumbers = chapters.map { it.chapter.chapterNumber },
+                                    )
                                 }
                                 EntryChapterHeader(
                                     enabled = !isAnySelected,
@@ -808,6 +815,10 @@ fun EntryScreenLargeImpl(
             )
         }
     }
+}
+
+internal fun missingChildCount(entryType: EntryType, childNumbers: List<Double>): Int {
+    return if (entryType == EntryType.MANGA) childNumbers.missingChaptersCount() else 0
 }
 
 @Composable

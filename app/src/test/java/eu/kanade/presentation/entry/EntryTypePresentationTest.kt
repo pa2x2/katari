@@ -14,6 +14,15 @@ import tachiyomi.i18n.MR
 class EntryTypePresentationTest {
 
     @Test
+    fun `missing child gaps are reported only for manga`() {
+        val childNumbers = listOf(1.0, 3.0)
+
+        missingChildCount(EntryType.MANGA, childNumbers) shouldBe 1
+        missingChildCount(EntryType.ANIME, childNumbers) shouldBe 0
+        missingChildCount(EntryType.BOOK, childNumbers) shouldBe 0
+    }
+
+    @Test
     fun `manga presentation uses existing manga labels and icons`() {
         val presentation = EntryType.MANGA.entryTypePresentation()
 
