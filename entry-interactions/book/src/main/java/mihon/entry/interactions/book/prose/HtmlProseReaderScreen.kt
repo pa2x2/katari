@@ -76,6 +76,7 @@ import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.book.BookReaderNavigationRow
@@ -146,7 +147,8 @@ internal fun HtmlProseReaderScreen(
     val paginated = layoutMode == HtmlProseSettingsProvider.LAYOUT_PAGINATED
     val palette = prosePalette(theme, isSystemInDarkTheme())
     var position by remember(state.currentChapterId) {
-        mutableStateOf(ProseViewerPosition(state.currentChapterId, 0f, 1, 1))
+        val progression = state.loadedChapters[state.currentChapterId]?.initialProgression ?: 0f
+        mutableStateOf(ProseViewerPosition(state.currentChapterId, progression, 1, 1))
     }
     var viewerActions by remember { mutableStateOf(ProseViewerActions()) }
 
@@ -184,6 +186,7 @@ internal fun HtmlProseReaderScreen(
                     } else {
                         ScrollingProseViewer(
                             state = state,
+                            initialProgression = position.progression,
                             palette = palette,
                             fontFamily = fontFamily,
                             fontSizePercent = fontSize,
@@ -505,6 +508,7 @@ private fun PaginatedProseViewer(
 @Composable
 private fun ScrollingProseViewer(
     state: HtmlProseReaderUiState,
+    initialProgression: Float,
     palette: ProsePalette,
     fontFamily: String,
     fontSizePercent: Int,
@@ -522,7 +526,25 @@ private fun ScrollingProseViewer(
         it is ProseScrollItem.Chapter && it.content.chapter.id == state.currentChapterId
     }.coerceAtLeast(0)
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
+    var initialPositionRestored by remember(listState, state.currentChapterId) { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    LaunchedEffect(listState, items, state.currentChapterId, initialProgression) {
+        if (initialPositionRestored) return@LaunchedEffect
+        val chapterIndex = items.indexOfFirst {
+            it is ProseScrollItem.Chapter && it.content.chapter.id == state.currentChapterId
+        }
+        if (chapterIndex < 0) return@LaunchedEffect
+        if (initialProgression > 0f) {
+            val info = snapshotFlow {
+                listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == chapterIndex }
+            }.filter { it != null }.first() ?: return@LaunchedEffect
+            listState.scrollToItem(
+                chapterIndex,
+                scrollOffsetForProgression(info.size, listState.layoutInfo.viewportSize.height, initialProgression),
+            )
+        }
+        initialPositionRestored = true
+    }
     LaunchedEffect(listState, items, state.currentChapterId) {
         val currentIndex = items.indexOfFirst {
             it is ProseScrollItem.Chapter && it.content.chapter.id == state.currentChapterId
@@ -598,7 +620,8 @@ private fun ScrollingProseViewer(
             }
         }
     }
-    LaunchedEffect(listState, items) {
+    LaunchedEffect(listState, items, initialPositionRestored) {
+        if (!initialPositionRestored) return@LaunchedEffect
         snapshotFlow { listState.layoutInfo }
             .map { info ->
                 val center = (info.viewportStartOffset + info.viewportEndOffset) / 2
@@ -620,6 +643,11 @@ private fun ScrollingProseViewer(
                 if (item.content.chapter.id != state.currentChapterId) onChapterEntered(item.content.chapter)
             }
     }
+}
+
+internal fun scrollOffsetForProgression(itemSize: Int, viewportSize: Int, progression: Float): Int {
+    val scrollable = (itemSize - viewportSize).coerceAtLeast(0)
+    return (scrollable * progression.coerceIn(0f, 1f)).roundToInt()
 }
 
 @Composable

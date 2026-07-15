@@ -55,6 +55,13 @@ class HtmlProseViewerItemsTest {
         assertIs<ProseScrollItem.Chapter>(items[4])
     }
 
+    @Test
+    fun `scrolling progression maps to the scrollable part of the chapter`() {
+        assertEquals(600, scrollOffsetForProgression(itemSize = 2000, viewportSize = 800, progression = 0.5f))
+        assertEquals(0, scrollOffsetForProgression(itemSize = 600, viewportSize = 800, progression = 0.5f))
+        assertEquals(1200, scrollOffsetForProgression(itemSize = 2000, viewportSize = 800, progression = 2f))
+    }
+
     private fun chapter(id: Long) = EntryChapter.create().copy(id = id, entryId = 9L, name = "Chapter $id")
 
     private fun loaded(chapter: EntryChapter) = HtmlProseLoadedChapter(chapter, "chapter-${chapter.id}", "Text", 0f)
