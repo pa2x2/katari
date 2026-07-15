@@ -1,8 +1,8 @@
 # Book media cookbook
 
-Use `EntryHttpSource` for catalogue entries that open as books. A book source discovers publications and describes how Katari can retrieve their resources. It does not parse EPUB files or implement a reader; Katari selects a compatible book processor, and that processor supplies the reader UI.
+Use `EntryHttpSource` for catalogue entries that open as books. A book source lists independently openable children and describes how Katari can retrieve the selected child's resources. It does not implement a reader; Katari selects a compatible book processor, and that processor supplies the reader UI.
 
-EPUB is the currently supported built-in format. The source-facing contracts remain format-neutral so other book formats and readers can be added without changing `UnifiedSource`.
+Katari includes separate built-in processors for reflowable EPUB publications and normalized HTML prose chapters. The source-facing contracts remain format-neutral so other book formats and readers can be added without changing `UnifiedSource`.
 
 ## Return book entries
 
@@ -55,7 +55,7 @@ override suspend fun getChapterList(entry: SEntry): List<SEntryChapter> {
 }
 ```
 
-Use one child per independently openable publication or volume. Do not project an EPUB's internal spine or table of contents into `getChapterList()`; the EPUB processor discovers and navigates that structure after opening the archive.
+Use one child per independently openable source item. Do not project an EPUB's internal spine or table of contents into `getChapterList()`; the EPUB processor discovers and navigates that structure after opening the archive. For a serialized web novel, return one child per provider chapter because those chapters are independently fetched, tracked, and opened.
 
 The child URL is persistent identity for consumption and history. Keep expiring acquisition URLs and authorization tokens out of it. Resolve current resource access inside `getMedia()`.
 
@@ -109,6 +109,72 @@ override suspend fun getMedia(
 
 Use the exact media type as the descriptor format. `epub`, `epub3`, and reader implementation names are not compatible substitutes. Omit `profile` when the provider does not state a narrower profile; the processor validates the EPUB layout while opening it. Set `profile = "reflowable"` only when the source can identify that profile authoritatively. `protection` defaults to `none`, so return this descriptor only for content known to be unprotected. Do not label fixed-layout or protected content as `reflowable` or `none` merely to select the built-in processor.
 
+## Return a serialized prose chapter
+
+The built-in prose processor recognizes `text/html` with the `prose-chapter` profile. This profile represents one passive, independently openable prose document. It does not represent an entire novel, an arbitrary website, or an EPUB-like spine.
+
+Return one `SEntryChapter` per provider chapter:
+
+```kotlin
+override suspend fun getChapterList(entry: SEntry): List<SEntryChapter> {
+    return fetchProviderChapters(entry).mapIndexed { index, item ->
+        SEntryChapter.create().apply {
+            url = "/novels/${entry.url}/chapters/${item.stableId}"
+            name = item.title
+            chapterNumber = (index + 1).toDouble()
+            dateUpload = item.publishedAt
+        }
+    }
+}
+```
+
+Resolve only the selected chapter in `getMedia()`:
+
+```kotlin
+private const val PROSE_FORMAT = "text/html"
+private const val PROSE_PROFILE = "prose-chapter"
+
+override suspend fun getMedia(
+    chapter: SEntryChapter,
+    selection: PlaybackSelection,
+): EntryMedia {
+    val resolved = fetchNormalizedChapter(chapter.url)
+    val location = BookResourceLocation.InlineText(
+        text = resolved.bodyHtml,
+        mediaType = PROSE_FORMAT,
+    )
+    val resource = BookSourceResource(
+        id = resolved.stableId,
+        title = chapter.name,
+        order = 0,
+        mediaType = PROSE_FORMAT,
+        revision = resolved.revision,
+        availability = BookResourceAvailability.AVAILABLE,
+        location = location,
+    )
+
+    return EntryMedia.Book(
+        descriptor = BookContentDescriptor(
+            format = PROSE_FORMAT,
+            profile = PROSE_PROFILE,
+            protection = "none",
+        ),
+        catalog = BookResourceCatalog(
+            resources = listOf(resource),
+            coverage = BookCatalogCoverage.PARTIAL,
+        ),
+        initialResourceId = resource.id,
+        initialResourceLocation = location,
+    )
+}
+```
+
+The result contains one resource even when the entry has thousands of chapters. Katari already stores the sibling `SEntryChapter` records and uses them for previous/next navigation. The prose processor renders only the selected resource and tracks progression against that chapter.
+
+`fetchNormalizedChapter()` must return the prose body rather than the provider's complete website shell. Preserve meaningful structure such as headings, paragraphs, emphasis, quotations, lists, tables, and same-document anchors. The built-in processor applies its own sanitization and disables active or remote web content, but extensions should still avoid returning scripts, forms, embedded media, styles, or navigation chrome.
+
+If the selected chapter is locked, removed, or otherwise inaccessible, return the same one-resource shape with the accurate `BookResourceAvailability` and no readable location. Do not return a preview while marking the resource `AVAILABLE`.
+
 ## Keep identity separate from access
 
 Book progress depends on stable publication and resource identity:
@@ -131,7 +197,7 @@ Revisions allow Katari to distinguish updated content from a changed access URL:
 
 Use authoritative provider values such as a content revision, ETag, or `Last-Modified` value. Leave a revision `null` when the provider supplies no stable value; do not generate one from the current time. A signed URL refresh is not a content revision.
 
-Use `BookCatalogCoverage.COMPLETE` when the result describes the complete known publication, `ONGOING` when new resources are expected, and `PARTIAL` when the source intentionally returns only part of the catalog. Use `UNKNOWN` only when no stronger statement is possible.
+Use `BookCatalogCoverage.COMPLETE` when the result describes the complete known publication, `ONGOING` when new resources are expected, and `PARTIAL` when the source intentionally returns only part of the catalog. A standalone prose chapter normally uses `PARTIAL` because sibling chapters remain source children rather than resources in the selected media result. Use `UNKNOWN` only when no stronger statement is possible.
 
 ## Provide resource access safely
 
@@ -153,6 +219,7 @@ The descriptor must describe the actual content even when Katari has no compatib
 
 - Keep resource IDs unique within a publication and catalog sizes within the SDK limit.
 - Return exactly one primary EPUB archive for the built-in EPUB processor.
+- Return exactly one primary HTML resource for the built-in prose chapter processor.
 - Prefer HTTPS and resolve redirects or expiring acquisitions at open time.
 - Keep `getMedia()` safe for concurrent calls; do not store a mutable current entry or child.
 - Preserve coroutine cancellation when fetching metadata.
@@ -161,4 +228,4 @@ The descriptor must describe the actual content even when Katari has no compatib
 
 See [Book API architecture](../developers/sdk/book-api.md) for the source/processor boundary and [content types](../developers/sdk/content-types.md#book-entries) for the generic BOOK contract.
 
-The `src/en/gutenberg` module in [`katari-extensions`](https://github.com/katariapp/katari-extensions) is a complete EPUB source reference using OPDS discovery and remote acquisition resources.
+The `src/en/gutenberg` and `src/en/novelarrow` modules in [`katari-extensions`](https://github.com/katariapp/katari-extensions) are complete references for remote EPUB and serialized prose sources respectively.

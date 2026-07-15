@@ -8,11 +8,14 @@ Katari selects a reader from the publication format reported by the source. Form
 | ------ | --------------- | ------- |
 | Reflowable EPUB 2 | Readium EPUB reader | Supported |
 | Reflowable EPUB 3 | Readium EPUB reader | Supported |
+| Serialized HTML prose chapter | Prose chapter reader | Supported |
 | Fixed-layout EPUB | — | Not supported |
 | DRM-protected EPUB | — | Not supported |
 | PDF and other document formats | — | Not supported |
 
 EPUB publications must be supplied as `application/epub+zip`. If a source does not declare a layout, Katari inspects the publication while opening it and accepts it only when it is reflowable.
+
+Serialized prose sources expose each provider chapter as a separate entry child. Opening a chapter resolves only that chapter's normalized HTML; previous and next navigation opens adjacent stored chapters rather than combining the novel into an EPUB-style publication.
 
 When no compatible reader is available, Katari shows an unsupported-content screen instead of trying to open the publication in another media viewer. Support for additional book formats may be added through new readers in the future.
 
@@ -28,4 +31,4 @@ Changing profiles therefore changes reader defaults without affecting other prof
 
 ## Reading progress
 
-Book processors report progress as a format-neutral reading location rather than requiring every format to use pages or chapters. Katari stores that location for the active profile, entry, openable child, and publication resource. A compatible processor can use it to continue from the saved position even when its reader uses a different navigation model.
+Book processors report progress as a format-neutral reading location rather than requiring every format to use pages or chapters. Katari stores that location for the active profile, entry, openable child, and publication resource. EPUB progress may target a resource inside an archive, while serialized prose progress belongs to one independently openable source chapter.

@@ -2,14 +2,14 @@
 
 BOOK has two public boundaries that change for different reasons:
 
-- `entry-source-api` defines how an extension discovers entries, lists source children, and describes where Katari can retrieve publication resources.
+- `entry-source-api` defines how an extension discovers entries, lists independently openable source children, and describes where Katari can retrieve the selected child's resources.
 - `book-api` defines the processor-neutral data exchanged after Katari has taken ownership of resource access: processor selection, normalized publication structure, reading locations, and structured failures.
 
 An extension depends only on `entry-source-api`. That artifact exposes `book-api` transitively at the same SDK version.
 
 ## Why it is separate
 
-A book format is not just another source capability. EPUB, a web novel, a fixed-layout publication, and a future format may need different parsing engines, resource behavior, navigation models, and reader UI. Those implementations should be replaceable without changing `UnifiedSource` or teaching every source about every reader.
+A book format is not just another source capability. EPUB, a serialized prose chapter, a fixed-layout publication, and a future format may need different parsing engines, resource behavior, navigation models, and reader UI. Those implementations should be replaceable without changing `UnifiedSource` or teaching every source about every reader.
 
 Keeping the stable book contract separate provides three boundaries:
 
@@ -23,6 +23,8 @@ Extension source
 ```
 
 This prevents a format processor from depending on extension loading, source HTTP classes, or a concrete reader. It also leaves room for reader extensions later: the data boundary does not require processors to remain built in.
+
+Source-child boundaries remain authoritative. An EPUB source may expose one child whose archive contains an internal reading order; a serialized prose source exposes every remote chapter as its own child and returns only the selected chapter to the prose processor. Format processors do not redefine those source entities.
 
 Katari currently registers book processors as built-in application components. `book-api` is a stable data boundary, not a public processor lifecycle, UI, or installation API, so third-party extensions cannot add book processors or readers yet.
 
@@ -45,7 +47,7 @@ Katari currently registers book processors as built-in application components. `
 
 ::: info
 
-`book-api` deliberately contains no Android UI, network client, source callback, EPUB parser, DRM implementation, or reader engine. EPUB support and its reader live in the built-in EPUB processor, outside the public data contract.
+`book-api` deliberately contains no Android UI, network client, source callback, EPUB parser, HTML renderer, DRM implementation, or reader engine. EPUB and prose support live in separate built-in processors outside the public data contract.
 
 :::
 

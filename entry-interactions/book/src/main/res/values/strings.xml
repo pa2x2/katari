@@ -10,4 +10,7 @@
     <string name="book_reader_close">Close</string>
     <string name="book_reader_invalid_request">The selected book item is invalid.</string>
     <string name="book_reader_incompatible_session">The EPUB reader could not open this publication session.</string>
+    <string name="prose_reader_incompatible_session">The prose reader could not open this chapter.</string>
+    <string name="prose_reader_previous_chapter">Previous chapter</string>
+    <string name="prose_reader_next_chapter">Next chapter</string>
 </resources>

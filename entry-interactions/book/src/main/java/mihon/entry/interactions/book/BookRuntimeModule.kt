@@ -4,6 +4,7 @@ import android.app.Application
 import mihon.entry.interactions.EntryInteractionRuntimeContribution
 import mihon.entry.interactions.EntryReaderIncognitoState
 import mihon.entry.interactions.book.epub.ReadiumEpubProcessor
+import mihon.entry.interactions.book.prose.HtmlProseChapterProcessor
 import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
 import tachiyomi.core.common.preference.PreferenceStore
 import uy.kohesive.injekt.api.InjektRegistrar
@@ -19,8 +20,16 @@ fun InjektRegistrar.addBookEntryInteractionRuntime(
     val readiumSettingsProvider = ReadiumEpubSettingsProvider(profilePreferenceStore)
     addSingletonFactory<BookMaterializationStore> { materializationCache }
     addSingletonFactory { BookReaderSessionRegistry() }
+    addSingletonFactory { BookChapterNavigationResolver(get()) }
     addSingletonFactory { readiumSettingsProvider }
-    addSingletonFactory { BookProcessorRegistry(processors = listOf(ReadiumEpubProcessor())) }
+    addSingletonFactory {
+        BookProcessorRegistry(
+            processors = listOf(
+                ReadiumEpubProcessor(),
+                HtmlProseChapterProcessor(),
+            ),
+        )
+    }
     addSingletonFactory { BookProcessorPreferences(profilePreferenceStore) }
     addSingletonFactory {
         BookProcessorSelectionCoordinator(

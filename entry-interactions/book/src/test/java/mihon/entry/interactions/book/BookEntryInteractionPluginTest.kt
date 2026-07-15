@@ -131,7 +131,7 @@ class BookEntryInteractionPluginTest {
             identityResolver = identityResolver(
                 chapter = chapter,
                 media = EntryMedia.Book(
-                    descriptor = BookContentDescriptor("text/html", profile = "web-novel"),
+                    descriptor = BookContentDescriptor("text/html", profile = "prose-chapter"),
                     publicationKeyOverride = "volume-1",
                     initialResourceId = "chapter-1",
                 ),

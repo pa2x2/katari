@@ -11,11 +11,11 @@ import kotlin.test.assertIs
 class BookProcessorRegistryTest {
     private val epub = FakeBookProcessor("epub", "EPUB reader", "application/epub+zip")
     private val alternateEpub = FakeBookProcessor("alternate-epub", "Alternate EPUB reader", "application/epub+zip")
-    private val webNovel = FakeBookProcessor("web-novel", "Web novel reader", "text/html")
+    private val proseChapter = FakeBookProcessor("prose-chapter", "Prose chapter reader", "text/html")
 
     @Test
     fun `sole compatible processor is selected automatically`() {
-        val registry = BookProcessorRegistry(listOf(epub, webNovel))
+        val registry = BookProcessorRegistry(listOf(epub, proseChapter))
 
         val selection = assertIs<BookProcessorSelection.Selected>(
             registry.select(BookContentDescriptor(format = "application/epub+zip")),
@@ -40,12 +40,12 @@ class BookProcessorRegistryTest {
 
     @Test
     fun `invalid remembered processor falls back to chooser`() {
-        val registry = BookProcessorRegistry(listOf(epub, alternateEpub, webNovel))
+        val registry = BookProcessorRegistry(listOf(epub, alternateEpub, proseChapter))
 
         val selection = assertIs<BookProcessorSelection.ChoiceRequired>(
             registry.select(
                 descriptor = BookContentDescriptor(format = "application/epub+zip"),
-                rememberedProcessorId = webNovel.id,
+                rememberedProcessorId = proseChapter.id,
             ),
         )
 

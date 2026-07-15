@@ -47,8 +47,8 @@ class BookReaderSessionFactoryTest {
             contentKey = "volume-1",
             resourceKey = "publication.epub",
             locator = BookProgressLocatorCodec.encode(initialLocator),
-            completed = true,
-            completionUpdatedAt = 50L,
+            completed = false,
+            completionUpdatedAt = 0L,
         )
         val updatedProgress = slot<EntryProgressState>()
         val progressRepository = mockk<EntryProgressRepository> {
@@ -114,10 +114,10 @@ class BookReaderSessionFactoryTest {
 
         assertEquals(initialLocator, session.initialLocator)
         val latestLocator = BookLocator("chapter-2.xhtml", progression = 0.5, totalProgression = 0.6)
-        session.saveLocation(latestLocator)
+        session.saveLocation(latestLocator, completed = true)
         assertEquals(latestLocator, BookProgressLocatorCodec.decode(updatedProgress.captured.locator))
         assertTrue(updatedProgress.captured.completed)
-        assertEquals(50L, updatedProgress.captured.completionUpdatedAt)
+        assertEquals(100L, updatedProgress.captured.completionUpdatedAt)
         assertEquals(100L, updatedProgress.captured.locatorUpdatedAt)
 
         session.recordHistory(500L)

@@ -233,19 +233,22 @@ internal class OpenedBookReaderSession(
         own(publicationSession)
     }
 
-    suspend fun saveLocation(locator: BookLocator) {
+    suspend fun saveLocation(locator: BookLocator, completed: Boolean = false) {
         val timestamp = now()
         val current = entryProgressRepository.get(
             chapter.entryId,
             progressIdentity.contentKey,
             progressIdentity.resourceKey,
         )
+        val completedNow = completed && current?.completed != true
         entryProgressRepository.mergeAndSyncChild(
             current?.copy(
                 chapterId = chapter.id,
                 resourceRevision = progressIdentity.resourceRevision,
                 locator = BookProgressLocatorCodec.encode(locator, current.locator.extensions),
                 locatorUpdatedAt = timestamp,
+                completed = current.completed || completed,
+                completionUpdatedAt = if (completedNow) timestamp else current.completionUpdatedAt,
             ) ?: EntryProgressState(
                 entryId = chapter.entryId,
                 chapterId = chapter.id,
@@ -254,6 +257,8 @@ internal class OpenedBookReaderSession(
                 resourceRevision = progressIdentity.resourceRevision,
                 locator = BookProgressLocatorCodec.encode(locator),
                 locatorUpdatedAt = timestamp,
+                completed = completed,
+                completionUpdatedAt = if (completed) timestamp else 0L,
             ),
         )
     }

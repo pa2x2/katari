@@ -23,6 +23,7 @@ dependencies {
     implementation(libs.androidx.fragment)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.injekt)
+    implementation(libs.jsoup)
 
     implementation(libs.readium.navigator)
     implementation(libs.readium.shared)
