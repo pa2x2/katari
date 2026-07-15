@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.outlined.Book
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -195,7 +196,7 @@ fun EntryType.partialProgressLabel(position: Long): String? {
 private val MangaEntryTypePresentation = EntryTypePresentation(
     displayNameLabel = MR.strings.entry_type_manga,
     badgeIcon = Icons.AutoMirrored.Outlined.MenuBook,
-    smallIcon = R.drawable.ic_book_24dp,
+    smallIcon = R.drawable.ic_menu_book_24dp,
     coverOverlayIcon = null,
     markAsConsumedLabel = MR.strings.action_mark_as_read,
     markAsUnconsumedLabel = MR.strings.action_mark_as_unread,
@@ -266,9 +267,9 @@ private val AnimeEntryTypePresentation = EntryTypePresentation(
 
 private val BookEntryTypePresentation = EntryTypePresentation(
     displayNameLabel = MR.strings.entry_type_book,
-    badgeIcon = Icons.AutoMirrored.Outlined.MenuBook,
+    badgeIcon = Icons.Outlined.Book,
     smallIcon = R.drawable.ic_book_24dp,
-    coverOverlayIcon = Icons.AutoMirrored.Outlined.MenuBook,
+    coverOverlayIcon = Icons.Outlined.Book,
     markAsConsumedLabel = MR.strings.action_mark_as_consumed,
     markAsUnconsumedLabel = MR.strings.action_mark_as_unconsumed,
     markPreviousAsConsumedLabel = MR.strings.action_mark_previous_as_consumed,
@@ -297,7 +298,7 @@ private val BookEntryTypePresentation = EntryTypePresentation(
     intervalExpectedUpdateLabel = MR.strings.item_interval_expected_update,
     intervalExpectedUpdateNullLabel = MR.strings.item_interval_expected_update_null,
     immersiveOpenLabel = MR.strings.action_open,
-    immersiveOpenIcon = Icons.AutoMirrored.Outlined.MenuBook,
+    immersiveOpenIcon = Icons.Outlined.Book,
 )
 
 private val GenericEntryTypePresentation = EntryTypePresentation(

@@ -3,6 +3,7 @@ package eu.kanade.presentation.entry
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.outlined.Book
 import androidx.compose.material.icons.outlined.Info
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.source.entry.EntryType
@@ -28,7 +29,7 @@ class EntryTypePresentationTest {
 
         presentation.displayNameLabel shouldBe MR.strings.entry_type_manga
         presentation.badgeIcon shouldBe Icons.AutoMirrored.Outlined.MenuBook
-        presentation.smallIcon shouldBe R.drawable.ic_book_24dp
+        presentation.smallIcon shouldBe R.drawable.ic_menu_book_24dp
         presentation.coverOverlayIcon shouldBe null
         presentation.markAsConsumedLabel shouldBe MR.strings.action_mark_as_read
         presentation.markAsUnconsumedLabel shouldBe MR.strings.action_mark_as_unread
@@ -99,10 +100,14 @@ class EntryTypePresentationTest {
         val presentation = EntryType.BOOK.entryTypePresentation()
 
         presentation.displayNameLabel shouldBe MR.strings.entry_type_book
-        presentation.badgeIcon shouldBe Icons.AutoMirrored.Outlined.MenuBook
+        presentation.badgeIcon shouldBe Icons.Outlined.Book
         presentation.smallIcon shouldBe R.drawable.ic_book_24dp
         presentation.coverOverlayIcon shouldNotBe null
         presentation.downloadBookmarkedSupported shouldBe false
+
+        val mangaPresentation = EntryType.MANGA.entryTypePresentation()
+        presentation.badgeIcon shouldNotBe mangaPresentation.badgeIcon
+        presentation.smallIcon shouldNotBe mangaPresentation.smallIcon
     }
 
     @Test
