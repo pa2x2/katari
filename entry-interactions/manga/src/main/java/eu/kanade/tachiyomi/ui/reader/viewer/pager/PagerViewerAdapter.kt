@@ -3,13 +3,13 @@ package eu.kanade.tachiyomi.ui.reader.viewer.pager
 import android.view.View
 import android.view.ViewGroup
 import eu.kanade.tachiyomi.ui.reader.createReaderThemeContext
-import eu.kanade.tachiyomi.ui.reader.model.ChapterTransition
 import eu.kanade.tachiyomi.ui.reader.model.InsertPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
 import eu.kanade.tachiyomi.ui.reader.viewer.calculateChapterGap
 import eu.kanade.tachiyomi.widget.ViewPagerAdapter
+import mihon.entry.interactions.viewer.EntryChildTransition
 import tachiyomi.core.common.util.system.logcat
 
 /**
@@ -28,7 +28,7 @@ internal class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAd
      */
     private var preprocessed: MutableMap<Int, InsertPage> = mutableMapOf()
 
-    var nextTransition: ChapterTransition.Next? = null
+    var nextTransition: EntryChildTransition.Next<ReaderChapter>? = null
         private set
 
     var currentChapter: ReaderChapter? = null
@@ -48,21 +48,21 @@ internal class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAd
         val newItems = mutableListOf<Any>()
 
         // Forces chapter transition if there is missing chapters
-        val prevHasMissingChapters = calculateChapterGap(chapters.currChapter, chapters.prevChapter) > 0
-        val nextHasMissingChapters = calculateChapterGap(chapters.nextChapter, chapters.currChapter) > 0
+        val prevHasMissingChapters = calculateChapterGap(chapters.current, chapters.previous) > 0
+        val nextHasMissingChapters = calculateChapterGap(chapters.next, chapters.current) > 0
 
         // Add previous chapter pages and transition
-        chapters.prevChapter?.pages?.let(newItems::addAll)
+        chapters.previous?.pages?.let(newItems::addAll)
 
         // Skip transition page if the chapter is loaded & current page is not a transition page
-        if (prevHasMissingChapters || forceTransition || chapters.prevChapter?.state !is ReaderChapter.State.Loaded) {
-            newItems.add(ChapterTransition.Prev(chapters.currChapter, chapters.prevChapter))
+        if (prevHasMissingChapters || forceTransition || chapters.previous?.state !is ReaderChapter.State.Loaded) {
+            newItems.add(chapters.previousTransition())
         }
 
         var insertPageLastPage: InsertPage? = null
 
         // Add current chapter.
-        val currPages = chapters.currChapter.pages
+        val currPages = chapters.current.pages
         if (currPages != null) {
             val pages = currPages.toMutableList()
 
@@ -80,21 +80,21 @@ internal class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAd
             newItems.addAll(pages)
         }
 
-        currentChapter = chapters.currChapter
+        currentChapter = chapters.current
 
         // Add next chapter transition and pages.
-        nextTransition = ChapterTransition.Next(chapters.currChapter, chapters.nextChapter)
+        nextTransition = chapters.nextTransition()
             .also {
                 if (
                     nextHasMissingChapters ||
                     forceTransition ||
-                    chapters.nextChapter?.state !is ReaderChapter.State.Loaded
+                    chapters.next?.state !is ReaderChapter.State.Loaded
                 ) {
                     newItems.add(it)
                 }
             }
 
-        chapters.nextChapter?.pages?.let(newItems::addAll)
+        chapters.next?.pages?.let(newItems::addAll)
 
         // Resets double-page splits, else insert pages get misplaced
         items.filterIsInstance<InsertPage>().also { items.removeAll(it) }
@@ -126,7 +126,11 @@ internal class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAd
     override fun createView(container: ViewGroup, position: Int): View {
         return when (val item = items[position]) {
             is ReaderPage -> PagerPageHolder(readerThemedContext, viewer, item)
-            is ChapterTransition -> PagerTransitionHolder(readerThemedContext, viewer, item)
+            is EntryChildTransition<*> -> PagerTransitionHolder(
+                readerThemedContext,
+                viewer,
+                item as EntryChildTransition<ReaderChapter>,
+            )
             else -> throw NotImplementedError("Holder for ${item.javaClass} not implemented")
         }
     }

@@ -515,9 +515,9 @@ class ReaderActivity : EntryInteractionActivity() {
             },
             verticalNavigatorHeight = verticalNavigatorHeight / 100f,
             onNextChapter = ::loadNextChapter,
-            enabledNext = state.viewerChapters?.nextChapter != null,
+            enabledNext = state.viewerChapters?.next != null,
             onPreviousChapter = ::loadPreviousChapter,
-            enabledPrevious = state.viewerChapters?.prevChapter != null,
+            enabledPrevious = state.viewerChapters?.previous != null,
             currentPage = state.currentPage,
             totalPages = state.totalPages,
             onPageIndexChange = {

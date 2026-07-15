@@ -17,9 +17,11 @@ import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
 import eu.kanade.tachiyomi.ui.reader.model.filterDownloaded
+import eu.kanade.tachiyomi.ui.reader.model.ref
 import eu.kanade.tachiyomi.ui.reader.model.removeDuplicates
 import eu.kanade.tachiyomi.ui.reader.model.toEntryChapter
 import eu.kanade.tachiyomi.ui.reader.model.toReaderChapter
+import eu.kanade.tachiyomi.ui.reader.model.unref
 import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
 import eu.kanade.tachiyomi.util.lang.byteSize
 import eu.kanade.tachiyomi.util.storage.DiskUtil
@@ -259,7 +261,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
 
     init {
         // To save state
-        state.map { it.viewerChapters?.currChapter }
+        state.map { it.viewerChapters?.current }
             .distinctUntilChanged()
             .filterNotNull()
             .onEach { currentChapter ->
@@ -361,10 +363,10 @@ internal class ReaderViewModel @JvmOverloads constructor(
                 newChapters.ref()
                 it.viewerChapters?.unref()
 
-                chapterToDownload = cancelQueuedDownloads(newChapters.currChapter)
+                chapterToDownload = cancelQueuedDownloads(newChapters.current)
                 it.copy(
                     viewerChapters = newChapters,
-                    bookmarked = newChapters.currChapter.chapter.bookmark,
+                    bookmarked = newChapters.current.chapter.bookmark,
                 )
             }
         }
@@ -504,7 +506,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
 
         // Only download ahead if current + next chapter is already downloaded too to avoid jank
         if (getCurrentChapter()?.pageLoader !is DownloadPageLoader) return
-        val nextReaderChapter = state.value.viewerChapters?.nextChapter ?: return
+        val nextReaderChapter = state.value.viewerChapters?.next ?: return
         val nextChapter = nextReaderChapter.chapter
         val nextChapterManga = nextReaderChapter.manga ?: manga
 
@@ -676,7 +678,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
      * Called from the activity to load and set the next chapter as active.
      */
     suspend fun loadNextChapter() {
-        val nextChapter = state.value.viewerChapters?.nextChapter ?: return
+        val nextChapter = state.value.viewerChapters?.next ?: return
         loadAdjacent(nextChapter)
     }
 
@@ -684,7 +686,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
      * Called from the activity to load and set the previous chapter as active.
      */
     suspend fun loadPreviousChapter() {
-        val prevChapter = state.value.viewerChapters?.prevChapter ?: return
+        val prevChapter = state.value.viewerChapters?.previous ?: return
         loadAdjacent(prevChapter)
     }
 
@@ -764,7 +766,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
             val currChapters = state.value.viewerChapters
             if (currChapters != null) {
                 // Save current page
-                val currChapter = currChapters.currChapter
+                val currChapter = currChapters.current
                 currChapter.requestedPage = chapterPageIndex.coerceAtLeast(0)
 
                 mutableState.update {
@@ -802,7 +804,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
             val currChapters = state.value.viewerChapters
             if (currChapters != null) {
                 // Save current page
-                val currChapter = currChapters.currChapter
+                val currChapter = currChapters.current
                 currChapter.requestedPage = chapterPageIndex.coerceAtLeast(0)
 
                 mutableState.update {
@@ -1133,7 +1135,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
         @IntRange(from = -100, to = 100) val brightnessOverlayValue: Int = 0,
     ) {
         val currentChapter: ReaderChapter?
-            get() = viewerChapters?.currChapter
+            get() = viewerChapters?.current
 
         val totalPages: Int
             get() = currentChapter?.pages?.size ?: -1

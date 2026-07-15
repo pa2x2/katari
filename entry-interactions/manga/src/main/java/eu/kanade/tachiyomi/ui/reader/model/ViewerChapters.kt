@@ -1,20 +1,17 @@
 package eu.kanade.tachiyomi.ui.reader.model
 
-internal data class ViewerChapters(
-    val currChapter: ReaderChapter,
-    val prevChapter: ReaderChapter?,
-    val nextChapter: ReaderChapter?,
-) {
+import mihon.entry.interactions.viewer.EntryChildWindow
 
-    fun ref() {
-        currChapter.ref()
-        prevChapter?.ref()
-        nextChapter?.ref()
-    }
+internal typealias ViewerChapters = EntryChildWindow<ReaderChapter>
 
-    fun unref() {
-        currChapter.unref()
-        prevChapter?.unref()
-        nextChapter?.unref()
-    }
+internal fun ViewerChapters.ref() {
+    current.ref()
+    previous?.ref()
+    next?.ref()
+}
+
+internal fun ViewerChapters.unref() {
+    current.unref()
+    previous?.unref()
+    next?.unref()
 }

@@ -9,7 +9,6 @@ import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.view.isNotEmpty
 import androidx.core.view.isVisible
 import com.google.android.material.progressindicator.CircularProgressIndicator
-import eu.kanade.tachiyomi.ui.reader.model.ChapterTransition
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderTransitionView
 import eu.kanade.tachiyomi.util.system.dpToPx
@@ -17,6 +16,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import mihon.entry.interactions.viewer.EntryChildTransition
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
 
@@ -63,7 +63,7 @@ internal class WebtoonTransitionHolder(
     /**
      * Binds the given [transition] with this view holder, subscribing to its state.
      */
-    fun bind(transition: ChapterTransition) {
+    fun bind(transition: EntryChildTransition<ReaderChapter>) {
         transitionView.bind(transition, viewer.downloadManager)
 
         transition.to?.let { observeStatus(it, transition) }
@@ -80,7 +80,7 @@ internal class WebtoonTransitionHolder(
      * Observes the status of the page list of the next/previous chapter. Whenever there's a new
      * state, the pages container is cleaned up before setting the new state.
      */
-    private fun observeStatus(chapter: ReaderChapter, transition: ChapterTransition) {
+    private fun observeStatus(chapter: ReaderChapter, transition: EntryChildTransition<ReaderChapter>) {
         stateJob?.cancel()
         stateJob = scope.launch {
             chapter.stateFlow
@@ -117,7 +117,7 @@ internal class WebtoonTransitionHolder(
     /**
      * Sets the error state on the pages container.
      */
-    private fun setError(error: Throwable, transition: ChapterTransition) {
+    private fun setError(error: Throwable, transition: EntryChildTransition<ReaderChapter>) {
         val textView = AppCompatTextView(context).apply {
             wrapContent()
             text = context.stringResource(MR.strings.transition_pages_error, error.message ?: "")

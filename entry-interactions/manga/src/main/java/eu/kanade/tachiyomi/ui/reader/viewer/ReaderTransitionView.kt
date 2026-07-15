@@ -8,9 +8,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.AbstractComposeView
 import eu.kanade.presentation.reader.ChapterTransition
-import eu.kanade.tachiyomi.ui.reader.model.ChapterTransition
+import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import mihon.entry.interactions.EntryInteractionTheme
 import mihon.entry.interactions.manga.download.DownloadManager
+import mihon.entry.interactions.viewer.EntryChildTransition
 
 internal class ReaderTransitionView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
     AbstractComposeView(context, attrs) {
@@ -21,7 +22,7 @@ internal class ReaderTransitionView @JvmOverloads constructor(context: Context, 
         layoutParams = LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
     }
 
-    internal fun bind(transition: ChapterTransition, downloadManager: DownloadManager) {
+    internal fun bind(transition: EntryChildTransition<ReaderChapter>, downloadManager: DownloadManager) {
         val toChapter = transition.to
         val toManga = toChapter?.manga
 
@@ -59,7 +60,7 @@ internal class ReaderTransitionView @JvmOverloads constructor(context: Context, 
     }
 
     private data class Data(
-        val transition: ChapterTransition,
+        val transition: EntryChildTransition<ReaderChapter>,
         val currChapterDownloaded: Boolean,
         val goingToChapterDownloaded: Boolean,
     )
