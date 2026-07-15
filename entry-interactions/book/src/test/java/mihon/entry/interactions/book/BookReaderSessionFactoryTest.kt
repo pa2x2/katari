@@ -191,9 +191,12 @@ class BookReaderSessionFactoryTest {
         val session = assertIs<BookReaderOpenResult.Success>(
             factory.open(context, BookReaderRequest(visible.id, chapter.id), processor.id),
         ).session
+        session.saveLocation(BookLocator("chapter-1.xhtml", progression = 0.5))
         session.recordHistory(500L)
 
         coVerify { incognitoState.isIncognito(owner.source) }
+        coVerify(exactly = 1) { progressRepository.get(owner.id, any(), any()) }
+        coVerify(exactly = 0) { progressRepository.mergeAndSyncChild(any()) }
         coVerify(exactly = 0) { historyRepository.upsertHistory(any()) }
         session.close()
     }

@@ -234,6 +234,7 @@ internal class OpenedBookReaderSession(
     }
 
     suspend fun saveLocation(locator: BookLocator, completed: Boolean = false) {
+        if (incognitoState.isIncognito(historySourceId)) return
         val timestamp = now()
         val current = entryProgressRepository.get(
             chapter.entryId,
