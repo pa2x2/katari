@@ -18,6 +18,7 @@ class HtmlProseChapterReaderWebViewTest {
             initialProgression = 0f,
             onLocation = { _, _, _ -> },
             onTap = {},
+            onBoundary = {},
         )
 
         assertFalse(webView.settings.javaScriptEnabled)

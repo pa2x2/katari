@@ -10,6 +10,8 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,18 +23,27 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.FormatListNumbered
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.ViewCarousel
 import androidx.compose.material.icons.outlined.ViewStream
+import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -53,6 +64,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -62,8 +74,16 @@ import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.settings.HtmlProseSettingsProvider
+import mihon.entry.interactions.viewer.EntryChildDirection
+import mihon.entry.interactions.viewer.EntryChildTransition
 import mihon.entry.viewer.settings.ResolvedViewerSetting
+import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.service.calculateChapterGap
+import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.reader.ReaderChrome
+import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransition
+import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransitionItem
+import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransitionUiModel
 import tachiyomi.presentation.core.components.reader.ReaderPageIndicator
 import tachiyomi.presentation.core.components.reader.ReaderPageNavigator
 import tachiyomi.presentation.core.components.reader.ReaderPageNavigatorType
@@ -73,10 +93,12 @@ import java.util.Locale
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 import android.graphics.Color as AndroidColor
+import tachiyomi.presentation.core.i18n.stringResource as i18nStringResource
 
 internal data class HtmlProseReaderUiState(
     val entryTitle: String,
     val chapterTitle: String,
+    val currentChapterId: Long,
     val resourceId: String,
     val bodyHtml: String,
     val progression: Float,
@@ -84,6 +106,11 @@ internal data class HtmlProseReaderUiState(
     val totalPages: Int = 1,
     val menuVisible: Boolean = false,
     val settingsVisible: Boolean = false,
+    val chapters: List<EntryChapter> = emptyList(),
+    val chapterListVisible: Boolean = false,
+    val transition: EntryChildTransition<EntryChapter>? = null,
+    val transitionLoading: Boolean = false,
+    val transitionError: String? = null,
 )
 
 @Composable
@@ -93,9 +120,14 @@ internal fun HtmlProseReaderScreen(
     onWebView: (ProseWebView) -> Unit,
     onLocation: (progression: Float, currentPage: Int, totalPages: Int) -> Unit,
     onTap: (horizontalFraction: Float) -> Unit,
+    onBoundary: (EntryChildDirection) -> Unit,
     onClose: () -> Unit,
     onPreviousChapter: (() -> Unit)?,
     onNextChapter: (() -> Unit)?,
+    onTransitionBack: () -> Unit,
+    onTransitionContinue: () -> Unit,
+    onChapterListVisibilityChange: (Boolean) -> Unit,
+    onChapterSelected: (EntryChapter) -> Unit,
     onSettingsVisibilityChange: (Boolean) -> Unit,
 ) {
     val theme by settings.theme.state.collectEffectiveValue()
@@ -148,6 +180,7 @@ internal fun HtmlProseReaderScreen(
                             initialProgression = state.progression,
                             onLocation = onLocation,
                             onTap = onTap,
+                            onBoundary = onBoundary,
                         ).also {
                             currentWebView = it
                             onWebView(it)
@@ -164,7 +197,51 @@ internal fun HtmlProseReaderScreen(
                 )
             }
 
-            if (!state.menuVisible && showProgress) {
+            state.transition?.let { transition ->
+                HtmlProseChapterTransition(
+                    transition = transition,
+                    loading = state.transitionLoading,
+                    error = state.transitionError,
+                    palette = palette,
+                    paginated = paginated,
+                    onBack = onTransitionBack,
+                    onContinue = onTransitionContinue,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+            if (state.transition == null && (state.transitionLoading || state.transitionError != null)) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = palette.background.copy(alpha = 0.96f),
+                    contentColor = palette.foreground,
+                ) {
+                    Column(
+                        modifier = Modifier.padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        if (state.transitionLoading) {
+                            CircularProgressIndicator()
+                        } else {
+                            Text(
+                                text = state.transitionError.orEmpty(),
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                            TextButton(onClick = onTransitionBack) {
+                                Text(stringResource(R.string.book_reader_close))
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (
+                state.transition == null &&
+                !state.transitionLoading &&
+                state.transitionError == null &&
+                !state.menuVisible &&
+                showProgress
+            ) {
                 val indicatorModifier = Modifier
                     .align(Alignment.BottomCenter)
                     .navigationBarsPadding()
@@ -201,6 +278,14 @@ internal fun HtmlProseReaderScreen(
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
                                     contentDescription = stringResource(R.string.book_reader_close),
+                                )
+                            }
+                        },
+                        actions = {
+                            IconButton(onClick = { onChapterListVisibilityChange(true) }) {
+                                Icon(
+                                    imageVector = Icons.Outlined.FormatListNumbered,
+                                    contentDescription = stringResource(R.string.prose_reader_chapters),
                                 )
                             }
                         },
@@ -288,7 +373,162 @@ internal fun HtmlProseReaderScreen(
             onDismissRequest = { onSettingsVisibilityChange(false) },
         )
     }
+    if (state.chapterListVisible) {
+        HtmlProseChapterList(
+            chapters = state.chapters,
+            currentChapterId = state.currentChapterId,
+            onDismissRequest = { onChapterListVisibilityChange(false) },
+            onChapterSelected = onChapterSelected,
+        )
+    }
 }
+
+@Composable
+private fun HtmlProseChapterTransition(
+    transition: EntryChildTransition<EntryChapter>,
+    loading: Boolean,
+    error: String?,
+    palette: ProsePalette,
+    paginated: Boolean,
+    onBack: () -> Unit,
+    onContinue: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val currentItem = transition.from.toTransitionItem()
+    val destinationItem = transition.to?.toTransitionItem()
+    val model = when (transition.direction) {
+        EntryChildDirection.PREVIOUS -> ReaderEntryChildTransitionUiModel(
+            topLabel = i18nStringResource(MR.strings.transition_previous),
+            topChild = destinationItem,
+            bottomLabel = i18nStringResource(MR.strings.transition_current),
+            bottomChild = currentItem,
+            fallbackLabel = i18nStringResource(MR.strings.transition_no_previous),
+            missingChildCount = calculateChapterGap(
+                transition.from.chapterNumber,
+                transition.to?.chapterNumber ?: -1.0,
+            ),
+        )
+        EntryChildDirection.NEXT -> ReaderEntryChildTransitionUiModel(
+            topLabel = i18nStringResource(MR.strings.transition_finished),
+            topChild = currentItem,
+            bottomLabel = i18nStringResource(MR.strings.transition_next),
+            bottomChild = destinationItem,
+            fallbackLabel = i18nStringResource(MR.strings.transition_no_next),
+            missingChildCount = calculateChapterGap(
+                transition.to?.chapterNumber ?: -1.0,
+                transition.from.chapterNumber,
+            ),
+        )
+    }
+    Surface(modifier = modifier, color = palette.background, contentColor = palette.foreground) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(horizontal = 28.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+            ) {
+                ReaderEntryChildTransition(model)
+                when {
+                    loading -> CircularProgressIndicator()
+                    error != null -> Text(error, color = MaterialTheme.colorScheme.error)
+                    transition.to != null -> Button(onClick = onContinue) {
+                        Text(stringResource(R.string.prose_reader_continue_chapter))
+                    }
+                }
+                Text(
+                    text = stringResource(R.string.prose_reader_transition_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(transition, paginated) {
+                        var distance = 0f
+                        detectDragGestures(
+                            onDragStart = { distance = 0f },
+                            onDragEnd = {
+                                if (kotlin.math.abs(distance) >= TRANSITION_SWIPE_DISTANCE_PX) {
+                                    val gestureDirection = if (distance < 0f) {
+                                        EntryChildDirection.NEXT
+                                    } else {
+                                        EntryChildDirection.PREVIOUS
+                                    }
+                                    if (gestureDirection == transition.direction) onContinue() else onBack()
+                                }
+                            },
+                        ) { change, dragAmount ->
+                            distance += if (paginated) dragAmount.x else dragAmount.y
+                            change.consume()
+                        }
+                    },
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxSize()
+                        .clickable {
+                            if (transition.direction == EntryChildDirection.PREVIOUS) onContinue() else onBack()
+                        },
+                )
+                Box(modifier = Modifier.weight(1f).fillMaxSize())
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxSize()
+                        .clickable {
+                            if (transition.direction == EntryChildDirection.NEXT) onContinue() else onBack()
+                        },
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun HtmlProseChapterList(
+    chapters: List<EntryChapter>,
+    currentChapterId: Long,
+    onDismissRequest: () -> Unit,
+    onChapterSelected: (EntryChapter) -> Unit,
+) {
+    ModalBottomSheet(onDismissRequest = onDismissRequest) {
+        Text(
+            text = stringResource(R.string.prose_reader_chapters),
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+            style = MaterialTheme.typography.titleLarge,
+        )
+        LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 600.dp)) {
+            items(chapters, key = EntryChapter::id) { chapter ->
+                ListItem(
+                    headlineContent = { Text(chapter.name, maxLines = 2, overflow = TextOverflow.Ellipsis) },
+                    supportingContent = chapter.scanlator?.let { scanlator ->
+                        { Text(scanlator, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                    },
+                    trailingContent = if (chapter.id == currentChapterId) {
+                        {
+                            Icon(
+                                imageVector = Icons.Outlined.Check,
+                                contentDescription = stringResource(R.string.prose_reader_current_chapter),
+                            )
+                        }
+                    } else {
+                        null
+                    },
+                    modifier = Modifier.clickable { onChapterSelected(chapter) },
+                )
+            }
+        }
+    }
+}
+
+private fun EntryChapter.toTransitionItem() = ReaderEntryChildTransitionItem(
+    name = name,
+    subtitle = scanlator,
+)
 
 @Composable
 private fun HtmlProseSettingsDialog(
@@ -599,6 +839,15 @@ internal class ProseWebView(context: Context) : WebView(context) {
         }
     }
 
+    fun isAtBoundary(direction: EntryChildDirection): Boolean = when (direction) {
+        EntryChildDirection.PREVIOUS -> if (paginated) currentPageIndex() == 0 else scrollY <= 0
+        EntryChildDirection.NEXT -> if (paginated) {
+            currentPageIndex() >= totalPages() - 1
+        } else {
+            scrollY >= verticalScrollRange()
+        }
+    }
+
     fun dispatchMetrics() {
         if (width <= 0 || height <= 0) return
         val total = if (paginated) totalPages() else 1
@@ -630,6 +879,7 @@ internal fun createProseWebView(
     initialProgression: Float,
     onLocation: (Float, Int, Int) -> Unit,
     onTap: (Float) -> Unit,
+    onBoundary: (EntryChildDirection) -> Unit,
 ): ProseWebView = ProseWebView(context).apply {
     this.paginated = paginated
     onMetricsChanged = onLocation
@@ -680,8 +930,18 @@ internal fun createProseWebView(
                 velocityX: Float,
                 velocityY: Float,
             ): Boolean {
-                if (!paginated || e1 == null || kotlin.math.abs(velocityX) <= kotlin.math.abs(velocityY)) return false
-                return movePage(if (e2.x < e1.x) 1 else -1)
+                if (e1 == null) return false
+                if (paginated) {
+                    if (kotlin.math.abs(velocityX) <= kotlin.math.abs(velocityY)) return false
+                    val direction = if (e2.x < e1.x) EntryChildDirection.NEXT else EntryChildDirection.PREVIOUS
+                    if (!movePage(if (direction == EntryChildDirection.NEXT) 1 else -1)) onBoundary(direction)
+                    return true
+                }
+                if (kotlin.math.abs(velocityY) <= kotlin.math.abs(velocityX)) return false
+                val direction = if (e2.y < e1.y) EntryChildDirection.NEXT else EntryChildDirection.PREVIOUS
+                val atBoundary = isAtBoundary(direction)
+                if (atBoundary) onBoundary(direction)
+                return atBoundary
             }
         },
     )
@@ -703,3 +963,4 @@ private fun <T> kotlinx.coroutines.flow.StateFlow<ResolvedViewerSetting<T>>.coll
 
 private const val READER_HOST = "katari.invalid"
 private const val READER_BASE_URL = "https://$READER_HOST/"
+private const val TRANSITION_SWIPE_DISTANCE_PX = 72f

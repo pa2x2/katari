@@ -11,8 +11,11 @@ internal class BookChapterNavigationResolver(
     private val getEntryWithChapters: GetEntryWithChapters,
 ) {
     suspend fun resolve(entry: Entry, current: EntryChapter): EntryChildWindow<EntryChapter>? {
+        return resolveAll(entry).entryChildWindow(current.id, EntryChapter::id)
+    }
+
+    suspend fun resolveAll(entry: Entry): List<EntryChapter> {
         entry.requireBook()
-        val chapters = getEntryWithChapters.awaitChapters(entry.id).sortedForReading(entry)
-        return chapters.entryChildWindow(current.id, EntryChapter::id)
+        return getEntryWithChapters.awaitChapters(entry.id).sortedForReading(entry)
     }
 }

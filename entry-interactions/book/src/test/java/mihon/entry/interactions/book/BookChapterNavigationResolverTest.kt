@@ -39,6 +39,19 @@ class BookChapterNavigationResolverTest {
         assertNull(result)
     }
 
+    @Test
+    fun `exposes the same reading order for chapter selection`() = runTest {
+        val entry = Entry.create().copy(id = 1L, type = EntryType.BOOK)
+        val chapters = listOf(chapter(3L, 3.0), chapter(1L, 1.0), chapter(2L, 2.0))
+        val getEntryWithChapters = mockk<GetEntryWithChapters> {
+            coEvery { awaitChapters(entry.id) } returns chapters
+        }
+
+        val result = BookChapterNavigationResolver(getEntryWithChapters).resolveAll(entry)
+
+        assertEquals(listOf(1L, 2L, 3L), result.map(EntryChapter::id))
+    }
+
     private fun chapter(id: Long, number: Double): EntryChapter = EntryChapter.create().copy(
         id = id,
         entryId = 1L,
