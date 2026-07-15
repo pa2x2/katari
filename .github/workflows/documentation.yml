@@ -1,23 +1,10 @@
 name: Documentation
 
 on:
+  workflow_call:
   push:
     branches:
       - main
-    paths:
-      - 'docs/**'
-      - 'entry-source-api/src/**'
-      - 'entry-source-api/build.gradle.kts'
-      - 'book-api/src/**'
-      - 'book-api/build.gradle.kts'
-      - 'gradle/libs.versions.toml'
-      - '.nvmrc'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - 'scripts/serve-docs.sh'
-      - 'scripts/generate-docs-redirects.mjs'
-      - '.github/workflows/documentation.yml'
-  pull_request:
     paths:
       - 'docs/**'
       - 'entry-source-api/src/**'
