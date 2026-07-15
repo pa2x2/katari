@@ -9,13 +9,16 @@ android {
 
 dependencies {
     api(projects.entryInteractions.api)
+    api(projects.entryViewerSettingsApi)
 
     implementation(projects.core.common)
     implementation(projects.entryInteractions.spi)
     implementation(projects.entryInteractions.manga)
     implementation(projects.entryInteractions.anime)
+    implementation(projects.entryInteractions.book)
     implementation(libs.androidx.core)
     implementation(libs.injekt)
+    implementation(libs.kotlinx.coroutines.core)
     implementation(libs.bundles.coil)
 
     testImplementation(libs.bundles.test)

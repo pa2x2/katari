@@ -16,7 +16,7 @@ internal class ReaderSettingsScreenModel(
     readerState: StateFlow<ReaderViewModel.State>,
     val onChangeReadingMode: (ReadingMode) -> Unit,
     val onChangeOrientation: (ReaderOrientation) -> Unit,
-    val preferences: ReaderPreferences = Injekt.get(),
+    val preferences: MangaReaderSettingsProvider = Injekt.get(),
 ) {
 
     private val ioCoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -26,8 +26,13 @@ internal class ReaderSettingsScreenModel(
         .distinctUntilChanged()
         .stateIn(ioCoroutineScope, SharingStarted.Lazily, null)
 
-    val mangaFlow = readerState
-        .map { it.manga }
+    val readingModeFlow = readerState
+        .map { ReadingMode.fromPreference(it.readingModeOverride) }
         .distinctUntilChanged()
-        .stateIn(ioCoroutineScope, SharingStarted.Lazily, null)
+        .stateIn(ioCoroutineScope, SharingStarted.Lazily, ReadingMode.DEFAULT)
+
+    val orientationFlow = readerState
+        .map { ReaderOrientation.fromPreference(it.orientationOverride) }
+        .distinctUntilChanged()
+        .stateIn(ioCoroutineScope, SharingStarted.Lazily, ReaderOrientation.DEFAULT)
 }

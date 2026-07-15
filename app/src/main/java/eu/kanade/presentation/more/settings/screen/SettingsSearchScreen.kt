@@ -51,11 +51,15 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.UpIcon
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.util.Screen
+import mihon.entry.viewer.settings.ViewerSettingsInteraction
+import mihon.entry.viewer.settings.ViewerSettingsProvider
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.util.runOnEnterKeyPressed
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
 
 class SettingsSearchScreen : Screen() {
@@ -165,8 +169,11 @@ private fun SearchResult(
 
     val isLtr = LocalLayoutDirection.current == LayoutDirection.Ltr
 
-    val index = getIndex()
-    val result by produceState<List<SearchResultItem>?>(initialValue = null, searchKey) {
+    val viewerSettingsInteraction = remember { Injekt.get<ViewerSettingsInteraction>() }
+    val viewerSettingsProviders by viewerSettingsInteraction.providers.collectAsState()
+    val providerIds = viewerSettingsProviders.map { it.id }
+    val index = getIndex(viewerSettingsProviders)
+    val result by produceState<List<SearchResultItem>?>(initialValue = null, searchKey, providerIds) {
         value = index.asSequence()
             .flatMap { settingsData ->
                 settingsData.contents.asSequence()
@@ -263,7 +270,11 @@ private fun SearchResult(
 
 @Composable
 @NonRestartableComposable
-private fun getIndex() = settingScreens
+private fun getIndex(viewerSettingsProviders: Collection<ViewerSettingsProvider>) = settingScreens
+    .plus(
+        viewerProviderSettingsScreens(viewerSettingsProviders),
+    )
+    .distinct()
     .filter { isSettingsScreenVisible(it) }
     .map { screen ->
         SettingsData(

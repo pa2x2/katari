@@ -2,9 +2,11 @@
 
 Katari builds on Mihon's backup workflow while adding profiles, typed entries, type-specific state, and merged-entry data.
 
-!!! info "Inherited behavior"
+::: info Inherited behavior
 
-    Follow Mihon's [backup guide](https://mihon.app/docs/guides/backups) for general creation, automatic-backup, storage, and transfer advice. The differences below determine what Katari can preserve.
+Follow Mihon's [backup guide](https://mihon.app/docs/guides/backups) for general creation, automatic-backup, storage, and transfer advice. The differences below determine what Katari can preserve.
+
+:::
 
 ## Backup contents
 
@@ -13,8 +15,9 @@ The creation screen can include library entries, categories, chapters or episode
 A Katari profile-aware backup can preserve:
 
 - Every profile's name, stable identity, order, archived state, and authentication requirement
-- Profile categories, entries, progress, tracking, and history
+- Profile categories, entries, reading or playback progress, tracking, and history
 - Profile-specific app and source preferences
+- Per-entry reader and player setting overrides
 - Entry type information
 - Merged-entry relationships and playback-related Entry data
 - The profile that was active when the backup was made
@@ -23,7 +26,11 @@ Global preferences and extension-store configuration are stored separately from 
 
 ## Sensitive data
 
+::: warning
+
 Private settings can include stored passwords, tokens, or other source credentials. Leave this option disabled unless it is required, and protect any backup that includes it. Keep copies outside the selected storage folder so device or storage failure does not remove both app data and backups.
+
+:::
 
 ## Restore behavior
 
@@ -31,10 +38,16 @@ When a Katari backup contains profiles, restore creates or updates them by stabl
 
 A legacy Mihon or fork backup without Katari profiles is restored into the currently active profile. Supported legacy records are converted into typed Entry records.
 
+Saved BOOK progress includes the processor-neutral reading location needed to resume a publication. Restoring that location still requires the corresponding source and a compatible reader for the publication format.
+
 Extensions and downloaded media are not stored in the backup. Restore reports missing sources and trackers; install the required extensions, sign in to trackers, and reindex existing downloads when necessary.
 
 ## Compatibility limits
 
 Mihon can read its own shared backup data but does not understand Katari-only profile, additional entry-type, merged-entry, feed, or type-specific state. Do not rely on a round trip through Mihon to preserve Katari-specific state.
 
+::: tip
+
 Before a major migration, keep the original backup and verify representative data in every profile.
+
+:::

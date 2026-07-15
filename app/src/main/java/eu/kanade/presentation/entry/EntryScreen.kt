@@ -63,6 +63,7 @@ import eu.kanade.presentation.entry.components.EntryInfoBox
 import eu.kanade.presentation.entry.components.EntryToolbar
 import eu.kanade.presentation.entry.components.ExpandableEntryDescription
 import eu.kanade.presentation.util.formatChapterNumber
+import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.entry.EntryChapterList
 import eu.kanade.tachiyomi.ui.entry.EntryScreenModel
 import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
@@ -99,7 +100,7 @@ fun EntryScreen(
     onAddToMergeClicked: (() -> Unit)?,
     onWebViewClicked: (() -> Unit)?,
     onWebViewLongClicked: (() -> Unit)?,
-    onTrackingClicked: () -> Unit,
+    onTrackingClicked: (() -> Unit)?,
     onDuplicatesClicked: (() -> Unit)?,
 
     // For tags menu
@@ -125,7 +126,7 @@ fun EntryScreen(
     onEditNotesClicked: () -> Unit,
 
     // For bottom action menu
-    onMultiBookmarkClicked: (List<EntryChapter>, bookmarked: Boolean) -> Unit,
+    onMultiBookmarkClicked: ((List<EntryChapter>, bookmarked: Boolean) -> Unit)?,
     onMultiMarkAsReadClicked: (List<EntryChapter>, markAsRead: Boolean) -> Unit,
     onMarkPreviousAsReadClicked: (EntryChapter) -> Unit,
     onMultiDeleteClicked: (List<EntryChapter>) -> Unit,
@@ -265,7 +266,7 @@ private fun EntryScreenSmallImpl(
     onAddToMergeClicked: (() -> Unit)?,
     onWebViewClicked: (() -> Unit)?,
     onWebViewLongClicked: (() -> Unit)?,
-    onTrackingClicked: () -> Unit,
+    onTrackingClicked: (() -> Unit)?,
     onDuplicatesClicked: (() -> Unit)?,
 
     // For tags menu
@@ -292,7 +293,7 @@ private fun EntryScreenSmallImpl(
     onEditNotesClicked: () -> Unit,
 
     // For bottom action menu
-    onMultiBookmarkClicked: (List<EntryChapter>, bookmarked: Boolean) -> Unit,
+    onMultiBookmarkClicked: ((List<EntryChapter>, bookmarked: Boolean) -> Unit)?,
     onMultiMarkAsReadClicked: (List<EntryChapter>, markAsRead: Boolean) -> Unit,
     onMarkPreviousAsReadClicked: (EntryChapter) -> Unit,
     onMultiDeleteClicked: (List<EntryChapter>) -> Unit,
@@ -373,6 +374,7 @@ private fun EntryScreenSmallImpl(
             }
             SharedEntryBottomActionMenu(
                 selected = selectedChapters,
+                childProgressLabels = state.childProgressLabels,
                 onMultiBookmarkClicked = onMultiBookmarkClicked,
                 onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
                 onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked,
@@ -502,8 +504,11 @@ private fun EntryScreenSmallImpl(
                         key = EntryScreenItem.CHAPTER_HEADER,
                         contentType = EntryScreenItem.CHAPTER_HEADER,
                     ) {
-                        val missingChapterCount = remember(chapters) {
-                            chapters.map { it.chapter.chapterNumber }.missingChaptersCount()
+                        val missingChapterCount = remember(chapters, state.entry.type) {
+                            missingChildCount(
+                                entryType = state.entry.type,
+                                childNumbers = chapters.map { it.chapter.chapterNumber },
+                            )
                         }
                         EntryChapterHeader(
                             enabled = !isAnySelected,
@@ -548,7 +553,7 @@ fun EntryScreenLargeImpl(
     onAddToMergeClicked: (() -> Unit)?,
     onWebViewClicked: (() -> Unit)?,
     onWebViewLongClicked: (() -> Unit)?,
-    onTrackingClicked: () -> Unit,
+    onTrackingClicked: (() -> Unit)?,
     onDuplicatesClicked: (() -> Unit)?,
 
     // For tags menu
@@ -575,7 +580,7 @@ fun EntryScreenLargeImpl(
     onEditNotesClicked: () -> Unit,
 
     // For bottom action menu
-    onMultiBookmarkClicked: (List<EntryChapter>, bookmarked: Boolean) -> Unit,
+    onMultiBookmarkClicked: ((List<EntryChapter>, bookmarked: Boolean) -> Unit)?,
     onMultiMarkAsReadClicked: (List<EntryChapter>, markAsRead: Boolean) -> Unit,
     onMarkPreviousAsReadClicked: (EntryChapter) -> Unit,
     onMultiDeleteClicked: (List<EntryChapter>) -> Unit,
@@ -653,6 +658,7 @@ fun EntryScreenLargeImpl(
                 }
                 SharedEntryBottomActionMenu(
                     selected = selectedChapters,
+                    childProgressLabels = state.childProgressLabels,
                     onMultiBookmarkClicked = onMultiBookmarkClicked,
                     onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
                     onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked,
@@ -774,8 +780,11 @@ fun EntryScreenLargeImpl(
                                 key = EntryScreenItem.CHAPTER_HEADER,
                                 contentType = EntryScreenItem.CHAPTER_HEADER,
                             ) {
-                                val missingChapterCount = remember(chapters) {
-                                    chapters.map { it.chapter.chapterNumber }.missingChaptersCount()
+                                val missingChapterCount = remember(chapters, state.entry.type) {
+                                    missingChildCount(
+                                        entryType = state.entry.type,
+                                        childNumbers = chapters.map { it.chapter.chapterNumber },
+                                    )
                                 }
                                 EntryChapterHeader(
                                     enabled = !isAnySelected,
@@ -806,6 +815,10 @@ fun EntryScreenLargeImpl(
             )
         }
     }
+}
+
+internal fun missingChildCount(entryType: EntryType, childNumbers: List<Double>): Int {
+    return if (entryType == EntryType.MANGA) childNumbers.missingChaptersCount() else 0
 }
 
 @Composable
@@ -850,7 +863,8 @@ private fun MergeNotice(
 @Composable
 private fun SharedEntryBottomActionMenu(
     selected: List<EntryChapterList.Item>,
-    onMultiBookmarkClicked: (List<EntryChapter>, bookmarked: Boolean) -> Unit,
+    childProgressLabels: Map<Long, EntryChildProgressLabel>,
+    onMultiBookmarkClicked: ((List<EntryChapter>, bookmarked: Boolean) -> Unit)?,
     onMultiMarkAsReadClicked: (List<EntryChapter>, markAsRead: Boolean) -> Unit,
     onMarkPreviousAsReadClicked: (EntryChapter) -> Unit,
     onDownloadChapter: ((List<EntryChapterList.Item>, ChapterDownloadAction) -> Unit)?,
@@ -861,12 +875,12 @@ private fun SharedEntryBottomActionMenu(
     EntryBottomActionMenu(
         visible = selected.isNotEmpty(),
         modifier = modifier.fillMaxWidth(fillFraction),
-        onBookmarkClicked = {
-            onMultiBookmarkClicked.invoke(selected.fastMap { it.chapter }, true)
-        }.takeIf { selected.fastAny { !it.chapter.bookmark } },
-        onRemoveBookmarkClicked = {
-            onMultiBookmarkClicked.invoke(selected.fastMap { it.chapter }, false)
-        }.takeIf { selected.fastAll { it.chapter.bookmark } },
+        onBookmarkClicked = onMultiBookmarkClicked?.let { callback ->
+            { callback(selected.fastMap { it.chapter }, true) }
+        }?.takeIf { selected.fastAny { !it.chapter.bookmark } },
+        onRemoveBookmarkClicked = onMultiBookmarkClicked?.let { callback ->
+            { callback(selected.fastMap { it.chapter }, false) }
+        }?.takeIf { selected.fastAll { it.chapter.bookmark } },
         bookmarkLabel = selected.map { it.entry.type }.selectionEntryTypePresentation().bookmarkChildLabel,
         removeBookmarkLabel = selected.map { it.entry.type }.selectionEntryTypePresentation().removeBookmarkChildLabel,
         onMarkAsReadClicked = {
@@ -874,7 +888,7 @@ private fun SharedEntryBottomActionMenu(
         }.takeIf { selected.fastAny { !it.chapter.read } },
         onMarkAsUnreadClicked = {
             onMultiMarkAsReadClicked(selected.fastMap { it.chapter }, false)
-        }.takeIf { selected.fastAny { it.chapter.read || it.chapter.lastPageRead > 0L } },
+        }.takeIf { selected.fastAny { it.chapter.read || it.chapter.id in childProgressLabels } },
         markAsReadLabel = selected.map { it.entry.type }.entrySelectionActionLabels().markAsReadLabel,
         markAsUnreadLabel = selected.map { it.entry.type }.entrySelectionActionLabels().markAsUnreadLabel,
         markPreviousAsReadLabel = selected.map { it.entry.type }
@@ -953,7 +967,7 @@ private fun LazyListScope.sharedChapterItems(
                     read = item.chapter.read,
                     bookmark = item.chapter.bookmark,
                     selected = item.selected,
-                    downloadIndicatorEnabled = !isAnyChapterSelected && entry.source != LocalSource.ID,
+                    downloadIndicatorEnabled = !isAnyChapterSelected && onDownloadChapter != null,
                     downloadStateProvider = { item.downloadState },
                     downloadProgressProvider = { item.downloadProgress },
                     unconsumedIndicatorLabel = item.entry.type.entryTypePresentation().unconsumedIndicatorLabel,

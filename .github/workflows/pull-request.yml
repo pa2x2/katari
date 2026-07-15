@@ -1,0 +1,115 @@
+name: Pull request checks
+
+on:
+  pull_request:
+
+concurrency:
+  group: pull-request-checks-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    name: Determine required checks
+    runs-on: ubuntu-24.04
+    outputs:
+      app: ${{ steps.filter.outputs.app }}
+      docs: ${{ steps.filter.outputs.docs }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Filter changed paths
+        id: filter
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+
+          app=false
+          docs=false
+
+          while IFS= read -r path; do
+            case "$path" in
+              docs/* | \
+                entry-source-api/src/* | \
+                entry-source-api/build.gradle.kts | \
+                book-api/src/* | \
+                book-api/build.gradle.kts | \
+                gradle/libs.versions.toml | \
+                .nvmrc | \
+                package.json | \
+                pnpm-lock.yaml | \
+                scripts/serve-docs.sh | \
+                scripts/generate-docs-redirects.mjs | \
+                .github/workflows/documentation.yml)
+                docs=true
+                ;;
+            esac
+
+            case "$path" in
+              i18n/src/commonMain/moko-resources/base/strings.xml | \
+                i18n/src/commonMain/moko-resources/base/plurals.xml)
+                app=true
+                ;;
+              *.md | \
+                docs/* | \
+                .nvmrc | \
+                package.json | \
+                pnpm-lock.yaml | \
+                scripts/serve-docs.sh | \
+                scripts/generate-docs-redirects.mjs | \
+                .github/workflows/documentation.yml | \
+                i18n/src/commonMain/moko-resources/*/strings.xml | \
+                i18n/src/commonMain/moko-resources/*/plurals.xml)
+                ;;
+              *)
+                app=true
+                ;;
+            esac
+          done < <(git diff --name-only "$BASE_SHA...$HEAD_SHA")
+
+          echo "app=$app" >> "$GITHUB_OUTPUT"
+          echo "docs=$docs" >> "$GITHUB_OUTPUT"
+
+  app:
+    name: App checks
+    if: needs.changes.outputs.app == 'true'
+    needs: changes
+    uses: ./.github/workflows/build.yml
+
+  docs:
+    name: Documentation checks
+    if: needs.changes.outputs.docs == 'true'
+    needs: changes
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/documentation.yml
+
+  gate:
+    name: PR checks
+    if: always()
+    needs: [changes, app, docs]
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Verify required checks
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          APP_RESULT: ${{ needs.app.result }}
+          DOCS_RESULT: ${{ needs.docs.result }}
+        run: |
+          set -euo pipefail
+
+          [[ "$CHANGES_RESULT" == success ]]
+          [[ "$APP_RESULT" == success || "$APP_RESULT" == skipped ]]
+          [[ "$DOCS_RESULT" == success || "$DOCS_RESULT" == skipped ]]

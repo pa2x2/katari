@@ -79,7 +79,7 @@ import mihon.entry.interactions.EntryPreviewHandle
 import mihon.entry.interactions.EntryPreviewInteraction
 import mihon.entry.interactions.EntryPreviewPage
 import mihon.entry.interactions.EntryPreviewPageStatus
-import mihon.entry.interactions.reader.settings.ReaderPreferences
+import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.TriState
@@ -129,7 +129,7 @@ class EntryScreenModel(
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
     private val duplicatePreferences: tachiyomi.domain.library.service.DuplicatePreferences = Injekt.get(),
     trackPreferences: TrackPreferences = Injekt.get(),
-    readerPreferences: ReaderPreferences = Injekt.get(),
+    readerPreferences: MangaReaderSettingsProvider = Injekt.get(),
     private val trackerManager: TrackerManager = Injekt.get(),
     private val trackChapter: TrackChapter = Injekt.get(),
     private val entryDownloadInteraction: EntryDownloadInteraction = Injekt.get(),
@@ -1142,6 +1142,19 @@ class EntryScreenModel(
         return successState?.entry?.let(entryCapabilityInteraction::supportsBulkDownload) == true
     }
 
+    fun supportsMerge(): Boolean {
+        return successState?.entry?.let(entryCapabilityInteraction::supportsMerge) == true
+    }
+
+    fun supportsMigration(): Boolean {
+        return successState?.entry?.let(entryCapabilityInteraction::supportsMigration) == true
+    }
+
+    fun supportsTracking(): Boolean {
+        val entryType = successState?.entry?.type ?: return false
+        return trackerManager.trackers.any { entryType in it.supportedEntryTypes }
+    }
+
     private fun cancelDownload(chapterId: Long) {
         val chapterItem = successState?.chapters.orEmpty().firstOrNull { it.id == chapterId } ?: return
         val updatedStatus = entryDownloadInteraction.cancelQueuedDownload(chapterItem.entry.type, chapterId) ?: return
@@ -1643,6 +1656,7 @@ class EntryScreenModel(
 
     fun showMergeTargetPicker() {
         val state = successState ?: return
+        if (!entryCapabilityInteraction.supportsMerge(state.entry)) return
         screenModelScope.launchIO {
             val excludedIds = state.mergeGroupMemberIds.toSet()
             val libraryEntries = entryRepository.getLibraryEntries()

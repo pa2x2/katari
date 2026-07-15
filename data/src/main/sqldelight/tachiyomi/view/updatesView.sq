@@ -10,7 +10,29 @@ SELECT
     chapters.url AS chapterUrl,
     chapters.read,
     chapters.bookmark,
-    chapters.last_page_read,
+    CASE
+        WHEN chapters.read != 0 OR EXISTS (
+            SELECT 1
+            FROM entry_progress_state
+            WHERE entry_progress_state.entry_id = chapters.entry_id
+            AND entry_progress_state.chapter_id = chapters._id
+            AND (
+                entry_progress_state.completed != 0
+                OR coalesce(entry_progress_state.position, 0) > 0
+                OR coalesce(entry_progress_state.progression, 0) > 0
+                OR coalesce(entry_progress_state.total_progression, 0) > 0
+            )
+        ) THEN 1
+        ELSE 0
+    END AS started,
+    coalesce((
+        SELECT max(entry_progress_state.position)
+        FROM entry_progress_state
+        WHERE entry_progress_state.entry_id = chapters.entry_id
+        AND entry_progress_state.chapter_id = chapters._id
+        AND entry_progress_state.locator_kind = 'page'
+        AND entry_progress_state.completed = 0
+    ), 0) AS progressPosition,
     entries.source,
     entries.favorite,
     entries.thumbnail_url AS thumbnailUrl,
@@ -40,59 +62,7 @@ FROM updatesView
 WHERE profile_id = :profileId
 AND dateUpload > :after
 AND (:read IS NULL OR read = :read)
-AND (
-    :started IS NULL
-    OR (
-        :started = 1
-        AND (
-            (
-                entryType = 'manga'
-                AND last_page_read > 0
-                AND read = 0
-            )
-            OR (
-                entryType = 'anime'
-                AND (
-                    read = 1
-                    OR EXISTS (
-                        SELECT 1
-                        FROM playback_state
-                        WHERE playback_state.entry_id = updatesView.entryId
-                        AND playback_state.chapter_id = updatesView.chapterId
-                        AND (
-                            playback_state.completed = 1
-                            OR playback_state.position_ms > 0
-                        )
-                    )
-                )
-            )
-        )
-    )
-    OR (
-        :started = 0
-        AND (
-            (
-                entryType = 'manga'
-                AND last_page_read = 0
-                AND read = 0
-            )
-            OR (
-                entryType = 'anime'
-                AND read = 0
-                AND NOT EXISTS (
-                    SELECT 1
-                    FROM playback_state
-                    WHERE playback_state.entry_id = updatesView.entryId
-                    AND playback_state.chapter_id = updatesView.chapterId
-                    AND (
-                        playback_state.completed != 0
-                        OR playback_state.position_ms != 0
-                    )
-                )
-            )
-        )
-    )
-)
+AND (:started IS NULL OR started = :started)
 AND (:bookmarked IS NULL OR bookmark = :bookmarked)
 AND (
     (excludedScanlator IS NULL OR :hideExcludedScanlators = 0)

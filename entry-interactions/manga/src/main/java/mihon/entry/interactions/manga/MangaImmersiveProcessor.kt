@@ -17,15 +17,18 @@ import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
+import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.history.model.HistoryUpdate
 import tachiyomi.domain.history.repository.HistoryRepository
 import java.util.Date
 
 internal class MangaImmersiveProcessor(
     private val entryChapterRepository: EntryChapterRepository? = null,
+    private val entryProgressRepository: EntryProgressRepository? = null,
     private val historyRepository: HistoryRepository? = null,
     private val readerIncognitoState: EntryReaderIncognitoState? = null,
     private val readerTracking: EntryReaderTracking? = null,
+    private val now: () -> Long = System::currentTimeMillis,
 ) : EntryImmersiveProcessor {
     override val type: EntryType = EntryType.MANGA
     private val persistMutex = Mutex()
@@ -55,12 +58,13 @@ internal class MangaImmersiveProcessor(
         if (pages.isEmpty() || pages.all { it.imageUrl.isBlank() }) {
             error("No pages found")
         }
+        val progress = entryProgressRepository?.get(chapter.entryId, "", chapter.url)
         return EntryImmersiveHandle.ImagePages(
             entryType = type,
             chapterId = chapter.id,
             delegate = MangaImmersiveMedia(
                 pages = pages,
-                initialPageIndex = chapter.lastPageRead.toInt().coerceIn(0, pages.lastIndex),
+                initialPageIndex = progress?.pageIndex?.toInt()?.coerceIn(0, pages.lastIndex) ?: 0,
                 entryId = entry.id,
                 sourceId = entry.source,
                 chapterNumber = chapter.chapterNumber,
@@ -85,17 +89,26 @@ internal class MangaImmersiveProcessor(
         val media = pages.delegate as? MangaImmersiveMedia ?: return
         val imageProgress = progress as? EntryImmersiveProgress.ImagePage ?: return
         val repository = entryChapterRepository ?: return
+        val progressRepository = entryProgressRepository ?: return
         if (readerIncognitoState?.isIncognito(media.sourceId) == true) return
         if (imageProgress.pageCount <= 0) return
 
         persistMutex.withLock {
             val chapter = repository.getChapterById(handle.chapterId) ?: return@withLock
             val pageIndex = imageProgress.pageIndex.coerceIn(0, imageProgress.pageCount - 1)
-            val completedNow = !chapter.read && pageIndex == imageProgress.pageCount - 1
-            repository.update(
-                chapter.copy(
-                    read = chapter.read || completedNow,
-                    lastPageRead = pageIndex.toLong(),
+            val current = progressRepository.get(chapter.entryId, "", chapter.url)
+            val completedNow = current?.completed != true && pageIndex == imageProgress.pageCount - 1
+            val timestamp = now()
+            progressRepository.mergeAndSyncChild(
+                mangaProgressState(
+                    entryId = chapter.entryId,
+                    chapterId = chapter.id,
+                    resourceKey = chapter.url,
+                    pageIndex = pageIndex.toLong(),
+                    pageCount = imageProgress.pageCount.toLong(),
+                    completed = current?.completed == true || completedNow,
+                    locatorUpdatedAt = timestamp,
+                    completionUpdatedAt = if (completedNow) timestamp else current?.completionUpdatedAt ?: 0L,
                 ),
             )
             if (imageProgress.sessionDurationMs > 0L) {

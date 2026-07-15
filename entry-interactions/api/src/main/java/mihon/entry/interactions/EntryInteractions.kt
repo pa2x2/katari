@@ -17,7 +17,8 @@ interface EntryInteractions {
     val updateEligibility: EntryUpdateEligibilityInteraction
     val preview: EntryPreviewInteraction
     val immersive: EntryImmersiveInteraction
-    val playback: EntryPlaybackInteraction
+    val progress: EntryProgressInteraction
+    val playbackPreferences: EntryPlaybackPreferencesInteraction
     val childList: EntryChildListInteraction
     val childGroupFilter: EntryChildGroupFilterInteraction
     val libraryFilter: EntryLibraryFilterInteraction
@@ -65,6 +66,8 @@ interface EntryDownloadInteraction {
     fun reorderQueue(items: List<EntryDownloadQueueItem>)
     fun reorderSeries(entryType: EntryType, entryId: Long, moveToTop: Boolean)
     fun cancelQueuedDownloads(items: List<EntryDownloadQueueItem>)
+
+    fun supportsDownloads(entryType: EntryType): Boolean
 
     suspend fun queue(entry: Entry, chapters: List<EntryChapter>, autoStart: Boolean = true)
     suspend fun download(entry: Entry, chapters: List<EntryChapter>, startNow: Boolean = false)
@@ -175,11 +178,11 @@ data class EntryConsumptionStatus(
     val hasPartialProgress: Boolean,
 )
 
-fun EntryChapter.consumptionStatus(): EntryConsumptionStatus {
+fun EntryChapter.consumptionStatus(hasPartialProgress: Boolean = false): EntryConsumptionStatus {
     return EntryConsumptionStatus(
         consumed = read,
         bookmarked = bookmark,
-        hasPartialProgress = lastPageRead > 0,
+        hasPartialProgress = hasPartialProgress,
     )
 }
 

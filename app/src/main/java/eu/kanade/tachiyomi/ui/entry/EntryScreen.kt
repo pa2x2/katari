@@ -62,6 +62,8 @@ import eu.kanade.tachiyomi.util.system.toShareIntent
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.entry.interactions.EntryConsumptionInteraction
+import mihon.entry.interactions.EntryDownloadInteraction
 import mihon.entry.interactions.EntryOpenInteraction
 import mihon.entry.interactions.EntryOpenOptions
 import mihon.entry.interactions.EntryPreviewSize
@@ -73,6 +75,7 @@ import tachiyomi.domain.entry.adapter.toSEntry
 import tachiyomi.domain.entry.model.DuplicateEntryCandidate
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.screens.LoadingScreen
 import uy.kohesive.injekt.Injekt
@@ -101,6 +104,8 @@ class EntryScreen(
         val scope = rememberCoroutineScope()
         val lifecycleOwner = LocalLifecycleOwner.current
         val entryOpenInteraction = remember { Injekt.get<EntryOpenInteraction>() }
+        val entryDownloadInteraction = remember { Injekt.get<EntryDownloadInteraction>() }
+        val entryConsumptionInteraction = remember { Injekt.get<EntryConsumptionInteraction>() }
         val screenModel = rememberScreenModel {
             EntryScreenModel(
                 context = context,
@@ -124,6 +129,8 @@ class EntryScreen(
         }
 
         val successState = state as EntryScreenModel.State.Success
+        val downloadsSupported = entryDownloadInteraction.supportsDownloads(successState.entry.type)
+        val bookmarksSupported = entryConsumptionInteraction.supportsBookmark(successState.entry.type)
         val previewConfig by screenModel.previewConfig.collectAsStateWithLifecycle()
         val previewState by screenModel.previewState.collectAsStateWithLifecycle()
         val webViewSource = remember(successState.source) { successState.source as? WebViewSource }
@@ -145,21 +152,32 @@ class EntryScreen(
             snackbarHostState = screenModel.snackbarHostState,
             nextUpdate = successState.entry.expectedNextUpdate,
             isTabletUi = isTabletUi(),
-            chapterSwipeStartAction = screenModel.chapterSwipeStartAction,
-            chapterSwipeEndAction = screenModel.chapterSwipeEndAction,
+            chapterSwipeStartAction = screenModel.chapterSwipeStartAction.availableFor(
+                downloadsSupported = downloadsSupported,
+                bookmarksSupported = bookmarksSupported,
+            ),
+            chapterSwipeEndAction = screenModel.chapterSwipeEndAction.availableFor(
+                downloadsSupported = downloadsSupported,
+                bookmarksSupported = bookmarksSupported,
+            ),
             navigateUp = navigator::pop,
             onChapterClicked = { chapter ->
                 scope.launch {
                     openChapter(context, entryOpenInteraction, successState.entry, chapter)
                 }
             },
-            onDownloadChapter = screenModel::runChapterDownloadActions.takeIf { !successState.source.isLocalOrStub() },
+            onDownloadChapter = screenModel::runChapterDownloadActions.takeIf {
+                !successState.source.isLocalOrStub() &&
+                    downloadsSupported
+            },
             onAddToLibraryClicked = {
                 screenModel.toggleFavorite()
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
             },
             onAddToMergeClicked = screenModel::showMergeTargetPicker.takeIf {
-                !successState.isPartOfMerge && (successState.isFromSource || successState.entry.favorite)
+                screenModel.supportsMerge() &&
+                    !successState.isPartOfMerge &&
+                    (successState.isFromSource || successState.entry.favorite)
             },
             onWebViewClicked = {
                 openEntryInWebView(
@@ -181,7 +199,7 @@ class EntryScreen(
                 } else {
                     screenModel.showTrackDialog()
                 }
-            },
+            }.takeIf { screenModel.supportsTracking() },
             onDuplicatesClicked = screenModel::showDuplicateDialog.takeIf {
                 successState.isFromSource &&
                     successState.entry.initialized &&
@@ -213,11 +231,11 @@ class EntryScreen(
             }.takeIf { successState.showMergeNotice },
             onMigrateClicked = {
                 navigator.push(MigrationConfigScreen(successState.entry.id))
-            }.takeIf { successState.entry.favorite },
+            }.takeIf { successState.entry.favorite && screenModel.supportsMigration() },
             onEditNotesClicked = {
                 navigator.push(eu.kanade.tachiyomi.ui.entry.notes.EntryNotesScreen(entry = successState.entry))
             },
-            onMultiBookmarkClicked = screenModel::bookmarkChapters,
+            onMultiBookmarkClicked = screenModel::bookmarkChapters.takeIf { bookmarksSupported },
             onMultiMarkAsReadClicked = screenModel::markChaptersRead,
             onMarkPreviousAsReadClicked = screenModel::markPreviousChapterRead,
             onMultiDeleteClicked = screenModel::showDeleteChapterDialog,
@@ -547,4 +565,15 @@ class EntryScreen(
         val url = getEntryUrl(entry_, source_) ?: return
         context.copyToClipboard(url, url)
     }
+}
+
+private fun LibraryPreferences.ChapterSwipeAction.availableFor(
+    downloadsSupported: Boolean,
+    bookmarksSupported: Boolean,
+): LibraryPreferences.ChapterSwipeAction {
+    return when (this) {
+        LibraryPreferences.ChapterSwipeAction.Download -> takeIf { downloadsSupported }
+        LibraryPreferences.ChapterSwipeAction.ToggleBookmark -> takeIf { bookmarksSupported }
+        else -> this
+    } ?: LibraryPreferences.ChapterSwipeAction.Disabled
 }

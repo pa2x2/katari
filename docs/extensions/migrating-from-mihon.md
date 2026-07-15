@@ -17,7 +17,11 @@ Katari continues to load selected legacy Mihon extension API families for compat
 | `Page`                  | `EntryImagePage` inside `EntryMedia.ImagePages` |
 | RxJava return values    | Kotlin suspending functions                     |
 
+::: warning
+
 Do not keep `source-api` as a second dependency merely to reuse its models. Convert the implementation fully or isolate temporary conversion outside the published Entry extension.
+
+:::
 
 ## Recommended migration order
 
@@ -63,7 +67,11 @@ entry.type = EntryType.ANIME
 return EntryMedia.Playback(descriptor)
 ```
 
+::: warning
+
 Do not select behavior from the extension package, factory, or catalogue name. Set the type on the entry and return the media that the chapter actually resolves.
+
+:::
 
 ## Preserve identity
 
@@ -84,6 +92,8 @@ class ExampleFactory : EntrySourceFactory {
 }
 ```
 
-!!! note
+::: info
 
-    There is no required extension-level content-type declaration. Katari derives behavior from entries and source capabilities. Repositories may optionally publish per-source `supportedEntryTypes` discovery metadata; legacy Mihon API families are inferred as Manga by the compatibility layer.
+There is no required extension-level content-type declaration. Katari derives behavior from entries and source capabilities. Repositories may optionally publish per-source `supportedEntryTypes` discovery metadata; legacy Mihon API families are inferred as Manga by the compatibility layer.
+
+:::

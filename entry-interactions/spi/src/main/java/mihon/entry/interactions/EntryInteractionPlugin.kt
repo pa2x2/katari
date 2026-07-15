@@ -117,11 +117,22 @@ interface EntryUpdateEligibilityProcessor {
     fun evaluate(request: EntryUpdateEligibilityRequest): EntryUpdateEligibility
 }
 
-interface EntryPlaybackProcessor {
+interface EntryProgressProcessor {
     val type: EntryType
-    suspend fun snapshot(entry: Entry): EntryPlaybackSnapshot
-    suspend fun restore(entry: Entry, snapshot: EntryPlaybackSnapshot)
-    suspend fun copy(sourceEntry: Entry, targetEntry: Entry, chapterMappings: List<EntryPlaybackChapterMapping>)
+    suspend fun snapshot(entry: Entry): EntryProgressSnapshot
+    suspend fun restore(entry: Entry, snapshot: EntryProgressSnapshot)
+    suspend fun copy(
+        sourceEntry: Entry,
+        targetEntry: Entry,
+        resourceMappings: List<EntryProgressResourceMapping>,
+    )
+}
+
+interface EntryPlaybackPreferencesProcessor {
+    val type: EntryType
+    suspend fun snapshot(entry: Entry): EntryPlaybackPreferencesSnapshot?
+    suspend fun restore(entry: Entry, snapshot: EntryPlaybackPreferencesSnapshot)
+    suspend fun copy(sourceEntry: Entry, targetEntry: Entry)
 }
 
 interface EntryImmersiveProcessor : EntryImmersiveInteraction {
@@ -171,7 +182,8 @@ interface EntryInteractionRegistry {
     fun registerCapabilityProcessor(processor: EntryCapabilityProcessor)
     fun registerConsumptionProcessor(processor: EntryConsumptionProcessor)
     fun registerUpdateEligibilityProcessor(processor: EntryUpdateEligibilityProcessor)
-    fun registerPlaybackProcessor(processor: EntryPlaybackProcessor)
+    fun registerProgressProcessor(processor: EntryProgressProcessor)
+    fun registerPlaybackPreferencesProcessor(processor: EntryPlaybackPreferencesProcessor)
     fun registerChildListProcessor(processor: EntryChildListProcessor)
     fun registerChildGroupFilterProcessor(processor: EntryChildGroupFilterProcessor)
     fun registerLibraryFilterProcessor(processor: EntryLibraryFilterProcessor)

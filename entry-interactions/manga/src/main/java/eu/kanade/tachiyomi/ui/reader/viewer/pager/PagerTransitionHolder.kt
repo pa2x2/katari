@@ -10,7 +10,6 @@ import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.LinearLayout
 import androidx.appcompat.widget.AppCompatTextView
 import com.google.android.material.progressindicator.CircularProgressIndicator
-import eu.kanade.tachiyomi.ui.reader.model.ChapterTransition
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderButton
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderTransitionView
@@ -20,6 +19,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import mihon.entry.interactions.viewer.EntryChildTransition
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
 
@@ -30,7 +30,7 @@ import tachiyomi.i18n.MR
 internal class PagerTransitionHolder(
     readerThemedContext: Context,
     val viewer: PagerViewer,
-    val transition: ChapterTransition,
+    val transition: EntryChildTransition<ReaderChapter>,
 ) : LinearLayout(readerThemedContext), ViewPagerAdapter.PositionableView {
 
     private val scope = MainScope()

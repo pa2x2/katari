@@ -13,4 +13,5 @@ android-library = { id = "mihon.plugins.android.library" }
 android-test = { id = "mihon.plugins.android.test" }
 compose = { id = "mihon.plugins.compose.android" }
 kotlin-multiplatform = { id = "mihon.plugins.kotlin.multiplatform" }
+readium-navigator = { id = "mihon.plugins.readium.navigator" }
 spotless = { id = "mihon.plugins.spotless" }

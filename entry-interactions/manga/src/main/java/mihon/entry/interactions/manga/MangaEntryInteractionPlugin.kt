@@ -11,6 +11,7 @@ import mihon.entry.interactions.settings.EntryInteractionPreferences
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.EntryChapterRepository
+import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.history.repository.HistoryRepository
 import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
@@ -23,6 +24,7 @@ fun mangaEntryInteractionPlugin(
         MangaEntryInteractionRuntimeDependencies(
             getEntryWithChapters = dependencies.getEntryWithChapters,
             entryChapterRepository = dependencies.entryChapterRepository,
+            entryProgressRepository = dependencies.entryProgressRepository,
             filterEntryChaptersForDownload = dependencies.filterEntryChaptersForDownload,
             childGroupFilterDataSource = dependencies.childGroupFilterDataSource,
             downloadPreferences = dependencies.downloadPreferences,
@@ -41,10 +43,11 @@ internal fun mangaEntryInteractionPlugin(
         val openProcessor = MangaOpenProcessor()
         registry.registerOpenProcessor(openProcessor)
         registry.registerCapabilityProcessor(MangaCapabilityProcessor())
-        registry.registerChildListProcessor(MangaChildListProcessor())
+        registry.registerChildListProcessor(MangaChildListProcessor(dependencies.entryProgressRepository))
         registry.registerContinueProcessor(
             MangaContinueProcessor(
                 getEntryWithChapters = dependencies.getEntryWithChapters,
+                entryProgressRepository = dependencies.entryProgressRepository,
                 openProcessor = openProcessor,
             ),
         )
@@ -56,12 +59,19 @@ internal fun mangaEntryInteractionPlugin(
         registry.registerConsumptionProcessor(
             MangaConsumptionProcessor(
                 entryChapterRepository = dependencies.entryChapterRepository,
+                entryProgressRepository = dependencies.entryProgressRepository,
                 downloadPreferences = dependencies.downloadPreferences,
                 downloadManager = dependencies.downloadManager,
                 sourceManager = dependencies.sourceManager,
             ),
         )
         registry.registerUpdateEligibilityProcessor(MangaUpdateEligibilityProcessor())
+        registry.registerProgressProcessor(
+            MangaProgressProcessor(
+                entryProgressRepository = dependencies.entryProgressRepository,
+                entryChapterRepository = dependencies.entryChapterRepository,
+            ),
+        )
         registry.registerChildGroupFilterProcessor(
             MangaChildGroupFilterProcessor(
                 dataSource = dependencies.childGroupFilterDataSource,
@@ -75,6 +85,7 @@ internal fun mangaEntryInteractionPlugin(
         registry.registerImmersiveProcessor(
             MangaImmersiveProcessor(
                 entryChapterRepository = dependencies.entryChapterRepository,
+                entryProgressRepository = dependencies.entryProgressRepository,
                 historyRepository = runCatching { Injekt.get<HistoryRepository>() }.getOrNull(),
                 readerIncognitoState = runCatching { Injekt.get<EntryReaderIncognitoState>() }.getOrNull(),
                 readerTracking = runCatching { Injekt.get<EntryReaderTracking>() }.getOrNull(),
@@ -86,6 +97,7 @@ internal fun mangaEntryInteractionPlugin(
 data class MangaEntryInteractionDependencies(
     val getEntryWithChapters: GetEntryWithChapters,
     val entryChapterRepository: EntryChapterRepository,
+    val entryProgressRepository: EntryProgressRepository,
     val filterEntryChaptersForDownload: FilterEntryChaptersForDownload,
     val childGroupFilterDataSource: EntryChildGroupFilterDataSource,
     val downloadPreferences: DownloadPreferences,
@@ -96,6 +108,7 @@ data class MangaEntryInteractionDependencies(
 internal data class MangaEntryInteractionRuntimeDependencies(
     val getEntryWithChapters: GetEntryWithChapters,
     val entryChapterRepository: EntryChapterRepository,
+    val entryProgressRepository: EntryProgressRepository,
     val filterEntryChaptersForDownload: FilterEntryChaptersForDownload,
     val childGroupFilterDataSource: EntryChildGroupFilterDataSource,
     val downloadPreferences: DownloadPreferences,

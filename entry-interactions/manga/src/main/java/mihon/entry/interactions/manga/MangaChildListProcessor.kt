@@ -2,6 +2,7 @@ package mihon.entry.interactions.manga
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import mihon.entry.interactions.EntryChildListProcessor
 import mihon.entry.interactions.EntryChildListRequest
@@ -10,13 +11,16 @@ import mihon.entry.interactions.EntryChildProgressLabel
 import mihon.entry.interactions.EntryChildProgressRequest
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.service.calculateChapterGap
 import tachiyomi.domain.entry.service.sortedForMergedDisplay
 import tachiyomi.domain.entry.service.sortedForReading
 import tachiyomi.i18n.MR
 import kotlin.math.floor
 
-internal class MangaChildListProcessor : EntryChildListProcessor {
+internal class MangaChildListProcessor(
+    private val entryProgressRepository: EntryProgressRepository,
+) : EntryChildListProcessor {
     override val type: EntryType = EntryType.MANGA
 
     override fun sortedForReading(
@@ -62,16 +66,27 @@ internal class MangaChildListProcessor : EntryChildListProcessor {
     }
 
     override fun progressLabels(request: EntryChildProgressRequest): Flow<Map<Long, EntryChildProgressLabel>> {
-        return flowOf(
-            request.chapters
-                .filter { chapter -> !chapter.read && chapter.lastPageRead > 0L }
-                .associate { chapter ->
-                    chapter.id to EntryChildProgressLabel(
-                        resource = MR.strings.chapter_progress,
-                        args = listOf(chapter.lastPageRead + 1),
-                    )
-                },
-        )
+        val stateFlows = request.memberIds
+            .distinct()
+            .map(entryProgressRepository::getByEntryIdAsFlow)
+        if (stateFlows.isEmpty()) return flowOf(emptyMap())
+
+        return combine(stateFlows) { statesByMember ->
+            val progressByChapterId = statesByMember.flatMap { it }.associateBy { it.chapterId }
+            request.chapters.mapNotNull { chapter ->
+                if (chapter.read) return@mapNotNull null
+                val progress = progressByChapterId[chapter.id] ?: return@mapNotNull null
+                if (progress.completed || progress.locator.kind != MANGA_PROGRESS_LOCATOR_KIND ||
+                    progress.pageIndex <= 0L
+                ) {
+                    return@mapNotNull null
+                }
+                chapter.id to EntryChildProgressLabel(
+                    resource = MR.strings.chapter_progress,
+                    args = listOf(progress.pageIndex + 1),
+                )
+            }.toMap()
+        }
     }
 
     private fun List<EntryChapter>.withMissingChapterCounts(

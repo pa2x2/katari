@@ -8,9 +8,10 @@ class SourceMetadataTest {
 
     @Test
     fun `source metadata advertises supported entry types`() {
-        val source = TestSource(setOf(EntryType.MANGA, EntryType.ANIME))
+        val supportedTypes = setOf(EntryType.MANGA, EntryType.ANIME, EntryType.BOOK)
+        val source = TestSource(supportedTypes)
 
-        assertEquals(setOf(EntryType.MANGA, EntryType.ANIME), source.supportedEntryTypes())
+        assertEquals(supportedTypes, source.supportedEntryTypes())
     }
 
     @Test

@@ -70,10 +70,11 @@ interface UnifiedSource {
      * Resolve media for a chapter.
      *
      * For manga this returns [EntryMedia.ImagePages]. For anime this returns
-     * [EntryMedia.Playback] containing available streams.
+     * [EntryMedia.Playback] containing available streams. For books this returns
+     * [EntryMedia.Book] describing readable resources and their access locations.
      *
      * @param chapter the chapter to resolve media for.
-     * @param selection the preferred playback selection (ignored for manga).
+     * @param selection the preferred playback selection (ignored for manga and books).
      * @return the media payload for the chapter.
      */
     suspend fun getMedia(

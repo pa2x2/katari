@@ -1,7 +1,9 @@
 package mihon.entry.interactions
 
+import android.app.Activity
 import android.content.Context
 import kotlinx.coroutines.flow.Flow
+import mihon.entry.viewer.settings.ViewerSettingsProvider
 import java.io.File
 
 interface EntryPageImageCache {
@@ -12,6 +14,7 @@ interface EntryPageImageCache {
 object EntryMediaCacheBucketKeys {
     const val MANGA_PAGE_IMAGE: String = "manga_page_image"
     const val ANIME_PLAYBACK: String = "anime_playback"
+    const val BOOK_MATERIALIZED: String = "book_materialized"
 }
 
 interface EntryMediaCacheBucket {
@@ -25,6 +28,16 @@ interface EntryMediaCacheMaintenance {
     fun bucket(key: String): EntryMediaCacheBucket?
     fun clear(key: String): Int
 }
+
+fun interface EntryInteractionActivityTheme {
+    /** Applies the host application's current theme before the activity creates any UI. */
+    fun apply(activity: Activity)
+}
+
+data class EntryInteractionRuntimeContribution(
+    val mediaCacheBuckets: List<EntryMediaCacheBucket> = emptyList(),
+    val viewerSettingsProviders: List<ViewerSettingsProvider> = emptyList(),
+)
 
 interface EntryReaderIncognitoState {
     fun isIncognito(sourceId: Long?): Boolean

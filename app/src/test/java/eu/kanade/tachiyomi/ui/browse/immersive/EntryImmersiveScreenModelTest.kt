@@ -111,6 +111,7 @@ class EntryImmersiveScreenModelTest {
                             subtitles = emptyList(),
                             resumePositionMs = 0L,
                         )
+                        EntryType.BOOK -> error("BOOK immersive feeds are not supported by this fixture")
                     }
                 }
             }

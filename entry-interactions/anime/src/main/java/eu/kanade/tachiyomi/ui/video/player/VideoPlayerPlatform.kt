@@ -6,17 +6,12 @@ import android.net.NetworkCapabilities
 import android.os.Build
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.annotation.ColorInt
 import androidx.annotation.IntRange
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.BlendMode
@@ -24,11 +19,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.core.content.getSystemService
 import androidx.lifecycle.lifecycleScope
-import eu.kanade.presentation.theme.TachiyomiTheme
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import mihon.entry.interactions.setEntryInteractionContent
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import uy.kohesive.injekt.Injekt
@@ -69,16 +64,7 @@ internal fun AppCompatActivity.registerAnimePlayerSecureScreen() {
 internal inline fun ComponentActivity.setPlayerComposeContent(
     crossinline content: @Composable () -> Unit,
 ) {
-    setContent {
-        TachiyomiTheme {
-            CompositionLocalProvider(
-                LocalTextStyle provides MaterialTheme.typography.bodySmall,
-                LocalContentColor provides MaterialTheme.colorScheme.onBackground,
-            ) {
-                content()
-            }
-        }
-    }
+    setEntryInteractionContent { content() }
 }
 
 internal fun Context.isOnline(): Boolean {

@@ -10,10 +10,11 @@ class SourceEntryTypeIndicatorsTest {
 
     @Test
     fun `available extension aggregates repository source metadata`() {
+        val supportedTypes = setOf(EntryType.ANIME, EntryType.MANGA, EntryType.BOOK)
         availableExtension(
             pkgName = "example.extension",
-            sourceEntryTypes = setOf(EntryType.ANIME, EntryType.MANGA),
-        ).supportedEntryTypesForDisplay() shouldBe setOf(EntryType.ANIME, EntryType.MANGA)
+            sourceEntryTypes = supportedTypes,
+        ).supportedEntryTypesForDisplay() shouldBe supportedTypes
     }
 
     private fun availableExtension(

@@ -19,21 +19,23 @@ dependencyResolutionManagement {
 Add the Entry SDK as a compile-only dependency in the extension module:
 
 ```kotlin
-val katariSdkTag = "<latest sdk-* tag>"
+val katariSdkTag = "sdk-2.1.0"
 
 dependencies {
     compileOnly("com.github.katariapp.katari:entry-source-api:$katariSdkTag")
 }
 ```
 
-Replace the placeholder with the latest `sdk-*` tag from [Katari releases](https://github.com/katariapp/katari/tags).
+`sdk-2.1.0` is the current stable Entry SDK. Check [Katari tags](https://github.com/katariapp/katari/tags) and the [SDK changelog](../developers/sdk/changelog.md) before adopting a later release.
 
 `compileOnly` is intentional. Katari supplies the API and its runtime dependencies when it loads the extension; packaging another copy in the APK can cause incompatible classes to be loaded.
+
+Book sources use `BookContentDescriptor` and related models from the transitive `book-api` artifact. Do not add a separately versioned `book-api` dependency; both public artifacts are published together under the selected SDK tag.
 
 The current SDK requires Android API 26 or newer. A typical extension module uses the following Android configuration:
 
 ```kotlin
-val entryApiFamily = "<API major>.<API minor>"
+val entryApiFamily = "2.1"
 
 android {
     namespace = "eu.kanade.tachiyomi.extension.all.example"
@@ -87,6 +89,8 @@ The class name is resolved relative to the extension's application ID when it be
 
 Set `entryApiFamily` to the major and minor family declared by the selected SDK release. Katari reads that family from the first two components of `versionName`; the final component is the extension revision. Increase the final component for extension releases and keep `versionCode` monotonically increasing.
 
+SDK `2.1` is the first family containing BOOK. An extension that imports BOOK symbols must use a `2.1.x` extension `versionName` and requires a Katari release that supplies that family. It must not advertise `2.0.x` compatibility merely because the rest of its source lifecycle is unchanged.
+
 ## Create a factory
 
 The manifest points to a public class with a no-argument constructor. That class may implement `UnifiedSource` directly or implement `EntrySourceFactory`. A factory can return one source or several:
@@ -121,12 +125,14 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
+import eu.kanade.tachiyomi.source.entry.SourceMetadata
 
-internal class ExampleSource : EntryImageHttpSource() {
+internal class ExampleSource : EntryImageHttpSource(), SourceMetadata {
     override val name = "Example"
     override val lang = "en"
     override val baseUrl = "https://example.com"
     override val supportsLatest = true
+    override val supportedEntryTypes = setOf(EntryType.MANGA)
 
     override suspend fun getPopularContent(page: Int): EntryPageResult<SEntry> =
         error("Request and parse the popular catalogue")
@@ -156,9 +162,9 @@ internal class ExampleSource : EntryImageHttpSource() {
 }
 ```
 
-Catalogue entries should set `type` as soon as it is known; do not wait for the details request if the listing already provides enough information.
+`supportedEntryTypes` lets Katari describe the source before loading its catalogue. Catalogue entries must still set `type` as soon as it is known; do not wait for the details request if the listing already provides enough information.
 
-Continue with the [Entry SDK overview](../developers/sdk/README.md) and [data model](../developers/sdk/data-model.md) for concrete entry and media payloads.
+Continue with the [Entry SDK overview](../developers/sdk/) and [data model](../developers/sdk/data-model.md) for concrete entry and media payloads.
 
 ## Test against a local Katari checkout
 

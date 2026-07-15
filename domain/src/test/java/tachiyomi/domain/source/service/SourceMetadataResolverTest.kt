@@ -23,7 +23,7 @@ class SourceMetadataResolverTest {
 
     @Test
     fun `source metadata is returned`() {
-        MetadataSource().resolvedSupportedEntryTypes() shouldBe setOf(EntryType.MANGA)
+        MetadataSource().resolvedSupportedEntryTypes() shouldBe setOf(EntryType.MANGA, EntryType.BOOK)
     }
 }
 
@@ -42,5 +42,5 @@ private open class TestSource : UnifiedSource {
 }
 
 private class MetadataSource : TestSource(), SourceMetadata {
-    override val supportedEntryTypes = setOf(EntryType.MANGA)
+    override val supportedEntryTypes = setOf(EntryType.MANGA, EntryType.BOOK)
 }

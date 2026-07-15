@@ -25,7 +25,7 @@ An extension repository may advertise the entry types supplied by each source. A
   "lang": "en",
   "name": "Example",
   "baseUrl": "https://example.com",
-  "supportedEntryTypes": ["MANGA", "ANIME"]
+  "supportedEntryTypes": ["MANGA", "ANIME", "BOOK"]
 }
 ```
 
@@ -43,7 +43,11 @@ The extension `versionName` has three numeric components:
 
 For example, an extension targeting API family `<major>.<minor>` starts with `<major>.<minor>.1`; its next extension release is `<major>.<minor>.2` even when the SDK dependency is unchanged. Katari and the extension repository derive the compatibility family by removing the final component from `versionName`.
 
+::: warning
+
 Do not treat `versionName` as an independent SemVer for the extension. Read [SDK compatibility and versioning](../developers/sdk/versioning.md) before changing either of its first two components.
+
+:::
 
 ## Preserve Android identity
 
@@ -88,7 +92,7 @@ For every update:
 6. Open existing library entries and chapters before testing newly discovered ones.
 7. Exercise popular, latest, search, details, chapter, and media requests.
 8. Check pagination, filters, image headers, playback selections, and subtitles as applicable.
-9. Verify the APK does not package `entry-source-api`; it must remain `compileOnly`.
+9. Verify the APK does not package `entry-source-api` or its transitive `book-api`; the SDK must remain `compileOnly`.
 
 Test a clean installation as well as an upgrade. A clean install cannot reveal identity and signing regressions.
 

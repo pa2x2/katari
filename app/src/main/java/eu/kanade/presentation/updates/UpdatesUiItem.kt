@@ -261,7 +261,7 @@ internal fun UnifiedUpdatesUiItem(
                 modifier = Modifier.weight(weight = 1f, fill = false),
             )
 
-            val readProgress = update.update.lastPageRead
+            val readProgress = update.update.progressPosition
                 .takeIf { !update.update.read }
                 ?.let { update.entryType.partialProgressLabel(it) }
             if (readProgress != null) {
@@ -274,7 +274,7 @@ internal fun UnifiedUpdatesUiItem(
                 )
             }
         },
-        trailing = if (update is UpdateItem.EntryUpdate && !selectionMode) {
+        trailing = if (update is UpdateItem.EntryUpdate && !selectionMode && item.downloadSupported) {
             {
                 EntryChapterDownloadIndicator(
                     enabled = true,
@@ -364,7 +364,7 @@ internal fun ChapterUpdatesUiItem(
                     modifier = Modifier.padding(start = 4.dp),
                     downloadStateProvider = downloadStateProvider,
                     downloadProgressProvider = downloadProgressProvider,
-                    onClick = { onDownloadChapter?.invoke(it) },
+                    onClick = onDownloadChapter,
                 )
             }
         } else {

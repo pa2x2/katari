@@ -2,9 +2,11 @@
 
 Katari can restore a Mihon backup and reuse a Mihon storage folder. Migration copies supported data; it does not modify or remove the Mihon installation.
 
-!!! info "Inherited foundation"
+::: info Inherited foundation
 
-    Mihon's [backup guide](https://mihon.app/docs/guides/backups) explains how backups work generally. This page covers the Katari migration path and the differences that matter when moving from Mihon.
+Mihon's [backup guide](https://mihon.app/docs/guides/backups) explains how backups work generally. This page covers the Katari migration path and the differences that matter when moving from Mihon.
+
+:::
 
 ## Before you begin
 

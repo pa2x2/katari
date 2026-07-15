@@ -5,14 +5,17 @@ import eu.kanade.tachiyomi.data.backup.models.BackupDownloadPreferences
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.models.BackupHistory
 import eu.kanade.tachiyomi.data.backup.models.BackupPlaybackPreferences
-import eu.kanade.tachiyomi.data.backup.models.BackupPlaybackState
 import eu.kanade.tachiyomi.data.backup.models.backupTrackMapper
 import eu.kanade.tachiyomi.data.backup.models.toBackupChapter
 import eu.kanade.tachiyomi.data.backup.models.toBackupEntry
+import eu.kanade.tachiyomi.data.backup.models.toBackupEntryProgressState
+import eu.kanade.tachiyomi.data.backup.models.toBackupViewerSettingOverride
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.EntryPlaybackInteraction
+import mihon.entry.interactions.EntryPlaybackPreferencesInteraction
 import mihon.entry.interactions.EntryPlaybackQualityMode
-import mihon.entry.interactions.EntryPlaybackSnapshot
+import mihon.entry.interactions.EntryProgressInteraction
+import mihon.entry.interactions.EntryProgressSnapshot
+import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.category.model.Category
@@ -31,7 +34,9 @@ class EntryBackupCreator(
     private val entryRepository: EntryRepository = Injekt.get(),
     private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
     private val downloadPreferencesRepository: DownloadPreferencesRepository = Injekt.get(),
-    private val playbackInteraction: EntryPlaybackInteraction = Injekt.get(),
+    private val progressInteraction: EntryProgressInteraction = Injekt.get(),
+    private val playbackPreferencesInteraction: EntryPlaybackPreferencesInteraction = Injekt.get(),
+    private val viewerSettingOverrideRepository: ViewerSettingOverrideRepository = Injekt.get(),
 ) {
 
     suspend operator fun invoke(entries: List<Entry>, options: BackupOptions): List<BackupEntry> {
@@ -54,10 +59,17 @@ class EntryBackupCreator(
         allEntriesById: Map<Long, Entry>,
     ): BackupEntry {
         val entryObject = entry.toBackupEntry()
-        val playbackSnapshot = if (entry.type == EntryType.ANIME || options.chapters) {
-            playbackInteraction.snapshot(entry)
+        entryObject.viewerSettingOverrides = viewerSettingOverrideRepository.getByEntryId(entry.id)
+            .map { it.toBackupViewerSettingOverride() }
+        val playbackPreferencesSnapshot = if (entry.type == EntryType.ANIME) {
+            playbackPreferencesInteraction.snapshot(entry)
         } else {
-            EntryPlaybackSnapshot()
+            null
+        }
+        val progressSnapshot = if (options.chapters) {
+            progressInteraction.snapshot(entry)
+        } else {
+            EntryProgressSnapshot()
         }
 
         if (entry.type == EntryType.MANGA) {
@@ -72,17 +84,7 @@ class EntryBackupCreator(
                 entryObject.chapters = chapters.map { it.toBackupChapter() }
             }
 
-            val playbackStatesByChapterId = playbackSnapshot.states.associateBy { it.chapterId }
-            entryObject.playbackStates = chapters.mapNotNull { chapter ->
-                val state = playbackStatesByChapterId[chapter.id] ?: return@mapNotNull null
-                BackupPlaybackState(
-                    url = chapter.url,
-                    positionMs = state.positionMs,
-                    durationMs = state.durationMs,
-                    completed = state.completed,
-                    lastWatchedAt = state.lastWatchedAt,
-                )
-            }
+            entryObject.progressStates = progressSnapshot.states.map { it.toBackupEntryProgressState() }
         }
 
         if (entry.type == EntryType.ANIME) {
@@ -99,7 +101,7 @@ class EntryBackupCreator(
                 }
             }
 
-            val preferences = playbackSnapshot.preferences
+            val preferences = playbackPreferencesSnapshot
             if (preferences != null) {
                 entryObject.playbackPreferences = BackupPlaybackPreferences(
                     dubKey = preferences.dubKey,

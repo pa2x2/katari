@@ -77,6 +77,7 @@ fun EntryType?.entryTypePresentation(): EntryTypePresentation {
     return when (this) {
         EntryType.MANGA -> MangaEntryTypePresentation
         EntryType.ANIME -> AnimeEntryTypePresentation
+        EntryType.BOOK -> BookEntryTypePresentation
         else -> GenericEntryTypePresentation
     }
 }
@@ -170,16 +171,24 @@ fun EntryType.historySubtitle(
                 consumedAt?.toTimestampString() ?: ""
             }
         }
+        EntryType.BOOK -> buildString {
+            append(childName)
+            consumedAt?.toTimestampString()?.takeIf(String::isNotBlank)?.let {
+                append(" • ")
+                append(it)
+            }
+        }
     }
 }
 
 @Composable
-fun EntryType.partialProgressLabel(lastPageRead: Long): String? {
-    if (lastPageRead <= 0L) return null
+fun EntryType.partialProgressLabel(position: Long): String? {
+    if (position <= 0L) return null
 
     return when (this) {
-        EntryType.MANGA -> stringResource(MR.strings.chapter_progress, lastPageRead + 1)
+        EntryType.MANGA -> stringResource(MR.strings.chapter_progress, position + 1)
         EntryType.ANIME -> stringResource(MR.strings.label_started)
+        EntryType.BOOK -> stringResource(MR.strings.label_started)
     }
 }
 
@@ -253,6 +262,42 @@ private val AnimeEntryTypePresentation = EntryTypePresentation(
     intervalExpectedUpdateNullLabel = MR.strings.anime_interval_expected_update_null,
     immersiveOpenLabel = MR.strings.browse_anime_feed_open_in_player,
     immersiveOpenIcon = Icons.Filled.PlayArrow,
+)
+
+private val BookEntryTypePresentation = EntryTypePresentation(
+    displayNameLabel = MR.strings.entry_type_book,
+    badgeIcon = Icons.AutoMirrored.Outlined.MenuBook,
+    smallIcon = R.drawable.ic_book_24dp,
+    coverOverlayIcon = Icons.AutoMirrored.Outlined.MenuBook,
+    markAsConsumedLabel = MR.strings.action_mark_as_consumed,
+    markAsUnconsumedLabel = MR.strings.action_mark_as_unconsumed,
+    markPreviousAsConsumedLabel = MR.strings.action_mark_previous_as_consumed,
+    unconsumedIndicatorLabel = MR.strings.action_filter_unconsumed,
+    bookmarkChildLabel = MR.strings.action_bookmark_item,
+    removeBookmarkChildLabel = MR.strings.action_remove_bookmark_item,
+    filterUnconsumedLabel = MR.strings.action_filter_unconsumed,
+    childListTitle = MR.strings.items,
+    childCountPlural = MR.plurals.entry_num_items,
+    missingChildCountPlural = MR.plurals.missing_items,
+    childCountReasonLabel = MR.strings.possible_duplicates_reason_item_count,
+    childNumberDisplayLabel = MR.strings.display_mode_item,
+    childNumberSettingLabel = MR.strings.show_item_number,
+    deleteChildrenConfirmationLabel = MR.strings.confirm_delete_items,
+    noChildrenFoundLabel = MR.strings.no_items_error,
+    noNextChildLabel = MR.strings.no_next_item,
+    settingsTitle = MR.strings.item_settings,
+    setSettingsAsDefaultLabel = MR.strings.set_item_settings_as_default,
+    confirmSetSettingsAsDefaultLabel = MR.strings.confirm_set_item_settings,
+    alsoSetSettingsForLibraryLabel = MR.strings.also_set_item_settings_for_library,
+    settingsUpdatedLabel = MR.strings.item_settings_updated,
+    downloadAmountPlural = MR.plurals.download_amount_items,
+    downloadUnconsumedLabel = MR.strings.download_unconsumed,
+    downloadBookmarkedSupported = false,
+    downloadNumberSortLabel = MR.strings.action_order_by_item_number,
+    intervalExpectedUpdateLabel = MR.strings.item_interval_expected_update,
+    intervalExpectedUpdateNullLabel = MR.strings.item_interval_expected_update_null,
+    immersiveOpenLabel = MR.strings.action_open,
+    immersiveOpenIcon = Icons.AutoMirrored.Outlined.MenuBook,
 )
 
 private val GenericEntryTypePresentation = EntryTypePresentation(

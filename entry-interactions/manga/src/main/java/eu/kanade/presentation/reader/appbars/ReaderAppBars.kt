@@ -5,9 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -18,6 +16,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
@@ -38,6 +37,7 @@ import eu.kanade.presentation.reader.components.ChapterNavigatorType
 import mihon.entry.interactions.reader.settings.ReaderOrientation
 import mihon.entry.interactions.reader.settings.ReadingMode
 import tachiyomi.presentation.core.components.material.padding
+import tachiyomi.presentation.core.components.reader.ReaderChrome
 
 private val readerBarsSlideAnimationSpec = tween<IntOffset>(200)
 private val readerBarsFadeAnimationSpec = tween<Float>(150)
@@ -81,12 +81,9 @@ internal fun ReaderAppBars(
         .surfaceColorAtElevation(3.dp)
         .copy(alpha = if (isSystemInDarkTheme()) 0.9f else 0.95f)
 
-    Column(modifier = Modifier.fillMaxHeight()) {
-        AnimatedVisibility(
-            visible = visible,
-            enter = slideInVertically(readerBarsSlideAnimationSpec) { -it } + fadeIn(readerBarsFadeAnimationSpec),
-            exit = slideOutVertically(readerBarsSlideAnimationSpec) { -it } + fadeOut(readerBarsFadeAnimationSpec),
-        ) {
+    ReaderChrome(
+        visible = visible,
+        topBar = {
             ReaderTopBar(
                 modifier = Modifier
                     .background(backgroundColor)
@@ -100,53 +97,49 @@ internal fun ReaderAppBars(
                 onOpenInBrowser = onOpenInBrowser,
                 onShare = onShare,
             )
-        }
-
-        if (!chapterNavigatorType.isHorizontal()) {
-            val sliderOnLeft = chapterNavigatorType == ChapterNavigatorType.VERTICAL_LEFT
-            CompositionLocalProvider(
-                LocalLayoutDirection provides if (sliderOnLeft) LayoutDirection.Ltr else LayoutDirection.Rtl,
-            ) {
-                Row(modifier = Modifier.weight(1f)) {
-                    AnimatedVisibility(
-                        visible = visible,
-                        enter = slideInHorizontally(readerBarsSlideAnimationSpec) { if (sliderOnLeft) -it else it } +
-                            fadeIn(readerBarsFadeAnimationSpec),
-                        exit = slideOutHorizontally(readerBarsSlideAnimationSpec) { if (sliderOnLeft) -it else it } +
-                            fadeOut(readerBarsFadeAnimationSpec),
-                    ) {
-                        Row {
-                            Spacer(modifier = Modifier.width(MaterialTheme.padding.small))
-                            Box(
-                                modifier = Modifier.fillMaxHeight(),
-                                contentAlignment = Alignment.BottomCenter,
-                            ) {
-                                ChapterNavigator(
-                                    modifier = Modifier.fillMaxHeight(verticalNavigatorHeight),
-                                    type = chapterNavigatorType,
-                                    onNextChapter = onNextChapter,
-                                    enabledNext = enabledNext,
-                                    onPreviousChapter = onPreviousChapter,
-                                    enabledPrevious = enabledPrevious,
-                                    currentPage = currentPage,
-                                    totalPages = totalPages,
-                                    onPageIndexChange = onPageIndexChange,
-                                )
+        },
+        middleContent = {
+            if (!chapterNavigatorType.isHorizontal()) {
+                val sliderOnLeft = chapterNavigatorType == ChapterNavigatorType.VERTICAL_LEFT
+                CompositionLocalProvider(
+                    LocalLayoutDirection provides if (sliderOnLeft) LayoutDirection.Ltr else LayoutDirection.Rtl,
+                ) {
+                    Row(modifier = Modifier.fillMaxSize()) {
+                        AnimatedVisibility(
+                            visible = visible,
+                            enter = slideInHorizontally(readerBarsSlideAnimationSpec) {
+                                if (sliderOnLeft) -it else it
+                            } + fadeIn(readerBarsFadeAnimationSpec),
+                            exit = slideOutHorizontally(readerBarsSlideAnimationSpec) {
+                                if (sliderOnLeft) -it else it
+                            } + fadeOut(readerBarsFadeAnimationSpec),
+                        ) {
+                            Row {
+                                Spacer(modifier = Modifier.width(MaterialTheme.padding.small))
+                                Box(
+                                    modifier = Modifier.fillMaxHeight(),
+                                    contentAlignment = Alignment.BottomCenter,
+                                ) {
+                                    ChapterNavigator(
+                                        modifier = Modifier.fillMaxHeight(verticalNavigatorHeight),
+                                        type = chapterNavigatorType,
+                                        onNextChapter = onNextChapter,
+                                        enabledNext = enabledNext,
+                                        onPreviousChapter = onPreviousChapter,
+                                        enabledPrevious = enabledPrevious,
+                                        currentPage = currentPage,
+                                        totalPages = totalPages,
+                                        onPageIndexChange = onPageIndexChange,
+                                    )
+                                }
                             }
                         }
+                        Spacer(modifier = Modifier.weight(1f))
                     }
-                    Spacer(modifier = Modifier.weight(1f))
                 }
             }
-        } else {
-            Spacer(Modifier.weight(1f))
-        }
-
-        AnimatedVisibility(
-            visible = visible,
-            enter = slideInVertically(readerBarsSlideAnimationSpec) { it } + fadeIn(readerBarsFadeAnimationSpec),
-            exit = slideOutVertically(readerBarsSlideAnimationSpec) { it } + fadeOut(readerBarsFadeAnimationSpec),
-        ) {
+        },
+        bottomBar = {
             Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small)) {
                 if (chapterNavigatorType.isHorizontal()) {
                     ChapterNavigator(
@@ -178,6 +171,6 @@ internal fun ReaderAppBars(
                     onClickSettings = onClickSettings,
                 )
             }
-        }
-    }
+        },
+    )
 }

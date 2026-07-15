@@ -10,39 +10,41 @@ Status meanings:
 
 ## Entry interactions
 
-| Capability | Manga | Anime |
-| --- | :---: | :---: |
-| Continue from saved progress | ✓ | ✓ |
-| Mark individual child items consumed or unconsumed | ✓ | ✓ |
-| Show partial progress for individual child items | ✓ | ✓ |
-| Apply smart library-update restrictions | ✓ | ✓ |
-| Merge versions from different sources | ✓ | ✓ |
-| Bookmark individual child items | ✓ | — |
-| Show gaps between missing child items | ✓ | — |
-| Filter child items by release group | ✓ | — |
-| Migrate an entry to another source | ✓ | — |
+| Capability                                         | Manga | Anime | Book |
+| -------------------------------------------------- | :---: | :---: | :--: |
+| Continue from saved progress                       |   ✓   |   ✓   |  ✓   |
+| Mark individual child items consumed or unconsumed |   ✓   |   ✓   |  ✓   |
+| Show partial progress for individual child items   |   ✓   |   ✓   |  ✓   |
+| Apply smart library-update restrictions            |   ✓   |   ✓   |  ✓   |
+| Merge versions from different sources              |   ✓   |   ✓   |  —   |
+| Bookmark individual child items                    |   ✓   |   —   |  —   |
+| Show gaps between missing child items              |   ✓   |   —   |  —   |
+| Filter child items by release group                |   ✓   |   —   |  —   |
+| Migrate an entry to another source                 |   ✓   |   —   |  —   |
 
 ## Downloads
 
-| Capability | Manga | Anime |
-| --- | :---: | :---: |
-| Download individual child items for offline use | ✓ | ✓ |
-| Bulk-download child items | ✓ | ✓ |
-| Automatically download newly discovered child items | ✓ | ✓ |
-| Delete downloads after marking an item consumed | ✓ | — |
+| Capability                                          | Manga | Anime | Book |
+| --------------------------------------------------- | :---: | :---: | :--: |
+| Download individual child items for offline use     |   ✓   |   ✓   |  —   |
+| Bulk-download child items                           |   ✓   |   ✓   |  —   |
+| Automatically download newly discovered child items |   ✓   |   ✓   |  —   |
+| Delete downloads after marking an item consumed     |   ✓   |   —   |  —   |
 
-!!! note
+::: info
 
-    Bookmark-based bulk downloads are available when the content type supports individual bookmarks.
+Bookmark-based bulk downloads are available when the content type supports individual bookmarks.
+
+:::
 
 ## Discovery and integrations
 
-| Capability | Manga | Anime |
-| --- | :---: | :---: |
-| Preview entries while browsing | ✓ | ◇ |
-| Use immersive browsing | ◇ | ◇ |
-| Import content through the bundled Local source | ✓ | — |
-| Use supported legacy Mihon extensions | ✓ | — |
-| Connect entries to tracking services | ✓ | — |
+| Capability                                      | Manga | Anime | Book |
+| ----------------------------------------------- | :---: | :---: | :--: |
+| Preview entries while browsing                  |   ✓   |   ◇   |  —   |
+| Use immersive browsing                          |   ◇   |   ◇   |  —   |
+| Import content through the bundled Local source |   ✓   |   —   |  —   |
+| Use supported legacy Mihon extensions           |   ✓   |   —   |  —   |
+| Connect entries to tracking services            |   ✓   |   —   |  —   |
 
-Source-provided capabilities and available catalogue content can vary by extension. See [Unified library](unified-library.md), [Video playback](video-playback.md), and [Extensions and compatibility](../differences/extensions-and-compatibility.md) for details beyond this comparison.
+Source-provided capabilities and available catalogue content can vary by extension. See [Unified library](unified-library.md), [Book reading](book-reading.md), [Video playback](video-playback.md), and [Extensions and compatibility](../differences/extensions-and-compatibility.md) for details beyond this comparison.

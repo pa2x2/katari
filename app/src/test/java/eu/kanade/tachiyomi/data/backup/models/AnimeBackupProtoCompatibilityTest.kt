@@ -113,6 +113,37 @@ class AnimeBackupProtoCompatibilityTest {
         decoded.downloadPreferences?.updatedAt shouldBe 123
     }
 
+    @Test
+    fun `entry backup bytes preserve generic progress extensions`() {
+        val extensions = """{"reader.example.precise":"opaque"}""".encodeToByteArray()
+        val bytes = ProtoBuf.encodeToByteArray(
+            serializer = BackupEntry.serializer(),
+            BackupEntry(
+                source = 1,
+                url = "/entry",
+                progressStates = listOf(
+                    BackupEntryProgressState(
+                        resourceKey = "/chapter",
+                        sourceChildKey = "/chapter",
+                        locatorKind = "reader.example",
+                        progression = 0.5,
+                        extensions = extensions,
+                        locatorUpdatedAt = 10,
+                    ),
+                ),
+            ),
+        )
+
+        val state = ProtoBuf.decodeFromByteArray(BackupEntry.serializer(), bytes).progressStates.single()
+
+        state.resourceKey shouldBe "/chapter"
+        state.sourceChildKey shouldBe "/chapter"
+        state.locatorKind shouldBe "reader.example"
+        state.progression shouldBe 0.5
+        state.extensions.contentEquals(extensions) shouldBe true
+        state.locatorUpdatedAt shouldBe 10
+    }
+
     @Serializable
     private data class LegacyBackup(
         @ProtoNumber(1) val backupManga: List<LegacyBackupManga> = emptyList(),

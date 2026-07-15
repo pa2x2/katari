@@ -8,8 +8,8 @@ import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
+import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
-import tachiyomi.domain.entry.repository.PlaybackStateRepository
 import tachiyomi.domain.history.repository.HistoryRepository
 import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
@@ -22,7 +22,7 @@ fun animeEntryInteractionPlugin(
         AnimeEntryInteractionRuntimeDependencies(
             entryChapterRepository = dependencies.entryChapterRepository,
             getEntryWithChapters = dependencies.getEntryWithChapters,
-            playbackStateRepository = dependencies.playbackStateRepository,
+            entryProgressRepository = dependencies.entryProgressRepository,
             playbackPreferencesRepository = dependencies.playbackPreferencesRepository,
             animeDownloadManager = Injekt.get(),
             animeDownloadCache = Injekt.get(),
@@ -44,13 +44,13 @@ internal fun animeEntryInteractionPlugin(
         registry.registerCapabilityProcessor(AnimeCapabilityProcessor())
         registry.registerChildListProcessor(
             AnimeChildListProcessor(
-                playbackStateRepository = dependencies.playbackStateRepository,
+                entryProgressRepository = dependencies.entryProgressRepository,
             ),
         )
         registry.registerContinueProcessor(
             AnimeContinueProcessor(
                 getEntryWithChapters = dependencies.getEntryWithChapters,
-                playbackStateRepository = dependencies.playbackStateRepository,
+                entryProgressRepository = dependencies.entryProgressRepository,
                 openProcessor = openProcessor,
             ),
         )
@@ -61,14 +61,18 @@ internal fun animeEntryInteractionPlugin(
         )
         registry.registerConsumptionProcessor(
             AnimeConsumptionProcessor(
-                entryChapterRepository = dependencies.entryChapterRepository,
-                playbackStateRepository = dependencies.playbackStateRepository,
+                entryProgressRepository = dependencies.entryProgressRepository,
             ),
         )
         registry.registerUpdateEligibilityProcessor(AnimeUpdateEligibilityProcessor())
-        registry.registerPlaybackProcessor(
-            AnimePlaybackProcessor(
-                playbackStateRepository = dependencies.playbackStateRepository,
+        registry.registerProgressProcessor(
+            AnimeProgressProcessor(
+                entryProgressRepository = dependencies.entryProgressRepository,
+                entryChapterRepository = dependencies.entryChapterRepository,
+            ),
+        )
+        registry.registerPlaybackPreferencesProcessor(
+            AnimePlaybackPreferencesProcessor(
                 playbackPreferencesRepository = dependencies.playbackPreferencesRepository,
             ),
         )
@@ -82,7 +86,7 @@ internal fun animeEntryInteractionPlugin(
         )
         registry.registerImmersiveProcessor(
             AnimeImmersiveProcessor(
-                playbackStateRepository = dependencies.playbackStateRepository,
+                entryProgressRepository = dependencies.entryProgressRepository,
                 historyRepository = dependencies.historyRepository,
                 resolveVideoStream = { Injekt.get() },
             ),
@@ -93,7 +97,7 @@ internal fun animeEntryInteractionPlugin(
 data class AnimeEntryInteractionDependencies(
     val entryChapterRepository: EntryChapterRepository,
     val getEntryWithChapters: GetEntryWithChapters,
-    val playbackStateRepository: PlaybackStateRepository,
+    val entryProgressRepository: EntryProgressRepository,
     val playbackPreferencesRepository: PlaybackPreferencesRepository,
     val downloadPreferences: DownloadPreferences,
     val downloadPreferencesRepository: DownloadPreferencesRepository,
@@ -105,7 +109,7 @@ data class AnimeEntryInteractionDependencies(
 internal data class AnimeEntryInteractionRuntimeDependencies(
     val entryChapterRepository: EntryChapterRepository,
     val getEntryWithChapters: GetEntryWithChapters,
-    val playbackStateRepository: PlaybackStateRepository,
+    val entryProgressRepository: EntryProgressRepository,
     val playbackPreferencesRepository: PlaybackPreferencesRepository,
     val animeDownloadManager: AnimeDownloadManager,
     val animeDownloadCache: AnimeDownloadCache,

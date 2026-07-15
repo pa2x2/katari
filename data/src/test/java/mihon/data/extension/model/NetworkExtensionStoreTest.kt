@@ -11,10 +11,11 @@ class NetworkExtensionStoreTest {
     fun `repository source metadata maps known entry types and ignores unknown values`() {
         val available = extensionList(
             extensionLib = "2.0.0",
-            supportedEntryTypes = listOf("MANGA", "FUTURE_TYPE", "anime"),
+            supportedEntryTypes = listOf("MANGA", "FUTURE_TYPE", "anime", "book"),
         ).toAvailableExtensions(store).single()
 
-        available.sources.single().supportedEntryTypes shouldBe setOf(EntryType.MANGA, EntryType.ANIME)
+        available.sources.single().supportedEntryTypes shouldBe
+            setOf(EntryType.MANGA, EntryType.ANIME, EntryType.BOOK)
     }
 
     @Test

@@ -51,12 +51,6 @@ internal class ChapterLoader(
                     throw Exception(context.stringResource(MR.strings.page_list_empty_error))
                 }
 
-                // If the chapter is partially read, set the starting page to the last the user read
-                // otherwise use the requested page.
-                if (!chapter.chapter.read) {
-                    chapter.requestedPage = chapter.chapter.last_page_read
-                }
-
                 chapter.state = ReaderChapter.State.Loaded(pages)
             } catch (e: Throwable) {
                 chapter.state = ReaderChapter.State.Error(e)

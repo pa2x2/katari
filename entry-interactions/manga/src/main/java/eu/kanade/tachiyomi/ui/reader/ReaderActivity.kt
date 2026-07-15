@@ -21,7 +21,6 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -54,7 +53,6 @@ import eu.kanade.presentation.reader.DisplayRefreshHost
 import eu.kanade.presentation.reader.OrientationSelectDialog
 import eu.kanade.presentation.reader.ReaderContentOverlay
 import eu.kanade.presentation.reader.ReaderPageActionsDialog
-import eu.kanade.presentation.reader.ReaderPageIndicator
 import eu.kanade.presentation.reader.ReadingModeSelectDialog
 import eu.kanade.presentation.reader.appbars.ReaderAppBars
 import eu.kanade.presentation.reader.components.ChapterNavigatorType
@@ -80,11 +78,12 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.entry.interactions.EntryInteractionActivity
 import mihon.entry.interactions.manga.R
 import mihon.entry.interactions.manga.databinding.ReaderActivityBinding
+import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import mihon.entry.interactions.reader.settings.ReaderBasePreferences
 import mihon.entry.interactions.reader.settings.ReaderOrientation
-import mihon.entry.interactions.reader.settings.ReaderPreferences
 import mihon.entry.interactions.reader.settings.ReaderSettingsScreenModel
 import mihon.entry.interactions.reader.settings.ReadingMode
 import tachiyomi.core.common.i18n.stringResource
@@ -95,13 +94,14 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.components.reader.ReaderPageIndicator
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.ByteArrayOutputStream
 import kotlin.time.Duration.Companion.seconds
 
-class ReaderActivity : AppCompatActivity() {
+class ReaderActivity : EntryInteractionActivity() {
 
     private var initialPageIndex: Int? = null
 
@@ -120,7 +120,7 @@ class ReaderActivity : AppCompatActivity() {
         }
     }
 
-    private val readerPreferences = Injekt.get<ReaderPreferences>()
+    private val readerPreferences = Injekt.get<MangaReaderSettingsProvider>()
     private val preferences = Injekt.get<ReaderBasePreferences>()
 
     lateinit var binding: ReaderActivityBinding
@@ -141,7 +141,7 @@ class ReaderActivity : AppCompatActivity() {
 
     private var loadingIndicator: ReaderProgressIndicator? = null
     private var isAutoScrollRunning by mutableStateOf(false)
-    private var autoScrollSpeed by mutableStateOf(ReaderPreferences.AUTO_SCROLL_LEVEL_DEFAULT)
+    private var autoScrollSpeed by mutableStateOf(MangaReaderSettingsProvider.AUTO_SCROLL_LEVEL_DEFAULT)
 
     var isScrollingThroughPages = false
         private set
@@ -451,7 +451,7 @@ class ReaderActivity : AppCompatActivity() {
         val colorOverlay by readerPreferences.colorFilterValue.collectAsState()
         val colorOverlayMode by readerPreferences.colorFilterMode.collectAsState()
         val colorOverlayBlendMode = remember(colorOverlayMode) {
-            ReaderPreferences.ColorFilterMode.getOrNull(colorOverlayMode)?.second
+            MangaReaderSettingsProvider.ColorFilterMode.getOrNull(colorOverlayMode)?.second
         }
 
         ReaderContentOverlay(
@@ -515,9 +515,9 @@ class ReaderActivity : AppCompatActivity() {
             },
             verticalNavigatorHeight = verticalNavigatorHeight / 100f,
             onNextChapter = ::loadNextChapter,
-            enabledNext = state.viewerChapters?.nextChapter != null,
+            enabledNext = state.viewerChapters?.next != null,
             onPreviousChapter = ::loadPreviousChapter,
-            enabledPrevious = state.viewerChapters?.prevChapter != null,
+            enabledPrevious = state.viewerChapters?.previous != null,
             currentPage = state.currentPage,
             totalPages = state.totalPages,
             onPageIndexChange = {
@@ -788,7 +788,7 @@ class ReaderActivity : AppCompatActivity() {
             return
         }
 
-        val newSpeed = (autoScrollSpeed + delta).coerceIn(ReaderPreferences.AUTO_SCROLL_SPEED_RANGE)
+        val newSpeed = (autoScrollSpeed + delta).coerceIn(MangaReaderSettingsProvider.AUTO_SCROLL_SPEED_RANGE)
         if (newSpeed == autoScrollSpeed) {
             return
         }

@@ -20,7 +20,7 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.base.delegate.ThemingDelegate
 import eu.kanade.tachiyomi.util.lang.truncateCenter
 import logcat.LogPriority
-import mihon.entry.interactions.reader.settings.ReaderPreferences
+import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import rikka.sui.Sui
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
@@ -106,7 +106,7 @@ fun Context.createFileInCacheDir(name: String): File {
  */
 fun Context.createReaderThemeContext(): Context {
     val preferences = Injekt.get<UiPreferences>()
-    val readerPreferences = Injekt.get<ReaderPreferences>()
+    val readerPreferences = Injekt.get<MangaReaderSettingsProvider>()
     val themeMode = preferences.themeMode.get()
     val isDarkBackground = when (readerPreferences.readerTheme.get()) {
         1, 2 -> true // Black, Gray

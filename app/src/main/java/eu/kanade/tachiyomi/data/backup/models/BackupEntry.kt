@@ -7,8 +7,11 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.protobuf.ProtoNumber
 import mihon.core.common.extensions.EMPTY
 import mihon.core.common.extensions.JsonObjectEmptyBytes
+import mihon.entry.interactions.EntryProgressStateSnapshot
+import mihon.entry.viewer.settings.ViewerSettingOverride
 import tachiyomi.data.MemoColumnAdapter
 import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.model.EntryProgressLocator
 import tachiyomi.domain.entry.model.EntryStatus
 
 @Serializable
@@ -48,6 +51,8 @@ class BackupEntry(
     @ProtoNumber(33) var lastUpdate: Long = 0,
     @ProtoNumber(34) var mergeTargetType: EntryType? = null,
     @ProtoNumber(35) var downloadPreferences: BackupDownloadPreferences? = null,
+    @ProtoNumber(36) var progressStates: List<BackupEntryProgressState> = emptyList(),
+    @ProtoNumber(37) var viewerSettingOverrides: List<BackupViewerSettingOverride> = emptyList(),
     @ProtoNumber(100) var type: EntryType = EntryType.MANGA,
 ) {
     fun toEntry(): Entry {
@@ -105,7 +110,6 @@ class BackupChapter(
             scanlator = scanlator,
             read = read,
             bookmark = bookmark,
-            lastPageRead = lastPageRead,
             dateFetch = dateFetch,
             dateUpload = dateUpload,
             sourceOrder = sourceOrder,
@@ -130,6 +134,31 @@ data class BackupPlaybackState(
     @ProtoNumber(3) var durationMs: Long,
     @ProtoNumber(4) var completed: Boolean,
     @ProtoNumber(5) var lastWatchedAt: Long,
+)
+
+@Serializable
+data class BackupEntryProgressState(
+    @ProtoNumber(1) var contentKey: String = "",
+    @ProtoNumber(2) var resourceKey: String,
+    @ProtoNumber(3) var sourceChildKey: String? = null,
+    @ProtoNumber(4) var resourceRevision: String? = null,
+    @ProtoNumber(5) var locatorKind: String,
+    @ProtoNumber(6) var position: Long? = null,
+    @ProtoNumber(7) var extent: Long? = null,
+    @ProtoNumber(8) var progression: Double? = null,
+    @ProtoNumber(9) var totalProgression: Double? = null,
+    @ProtoNumber(10) var extensions: ByteArray = JsonObjectEmptyBytes,
+    @ProtoNumber(11) var completed: Boolean = false,
+    @ProtoNumber(12) var locatorUpdatedAt: Long = 0,
+    @ProtoNumber(13) var completionUpdatedAt: Long = 0,
+)
+
+@Serializable
+data class BackupViewerSettingOverride(
+    @ProtoNumber(1) var providerId: String,
+    @ProtoNumber(2) var settingKey: String,
+    @ProtoNumber(3) var encodedValue: String,
+    @ProtoNumber(4) var updatedAt: Long = 0,
 )
 
 @Serializable
@@ -195,12 +224,58 @@ fun tachiyomi.domain.entry.model.EntryChapter.toBackupChapter(): BackupChapter {
         scanlator = scanlator,
         read = read,
         bookmark = bookmark,
-        lastPageRead = lastPageRead,
         dateFetch = dateFetch,
         dateUpload = dateUpload,
         sourceOrder = sourceOrder,
         lastModifiedAt = lastModifiedAt,
         version = version,
         memo = MemoColumnAdapter.encode(memo),
+    )
+}
+
+internal fun EntryProgressStateSnapshot.toBackupEntryProgressState(): BackupEntryProgressState {
+    return BackupEntryProgressState(
+        contentKey = contentKey,
+        resourceKey = resourceKey,
+        sourceChildKey = sourceChildKey,
+        resourceRevision = resourceRevision,
+        locatorKind = locator.kind,
+        position = locator.position,
+        extent = locator.extent,
+        progression = locator.progression,
+        totalProgression = locator.totalProgression,
+        extensions = MemoColumnAdapter.encode(locator.extensions),
+        completed = completed,
+        locatorUpdatedAt = locatorUpdatedAt,
+        completionUpdatedAt = completionUpdatedAt,
+    )
+}
+
+internal fun ViewerSettingOverride.toBackupViewerSettingOverride(): BackupViewerSettingOverride {
+    return BackupViewerSettingOverride(
+        providerId = settingId.providerId,
+        settingKey = settingId.key,
+        encodedValue = encodedValue,
+        updatedAt = updatedAt,
+    )
+}
+
+internal fun BackupEntryProgressState.toEntryProgressStateSnapshot(): EntryProgressStateSnapshot {
+    return EntryProgressStateSnapshot(
+        contentKey = contentKey,
+        resourceKey = resourceKey,
+        sourceChildKey = sourceChildKey,
+        resourceRevision = resourceRevision,
+        locator = EntryProgressLocator(
+            kind = locatorKind,
+            position = position,
+            extent = extent,
+            progression = progression,
+            totalProgression = totalProgression,
+            extensions = MemoColumnAdapter.decode(extensions),
+        ),
+        completed = completed,
+        locatorUpdatedAt = locatorUpdatedAt,
+        completionUpdatedAt = completionUpdatedAt,
     )
 }

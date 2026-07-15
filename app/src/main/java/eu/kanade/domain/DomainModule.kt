@@ -35,15 +35,17 @@ import mihon.domain.extension.repository.ExtensionStoreRepository
 import mihon.domain.migration.usecases.MigrateEntryUseCase
 import mihon.domain.upcoming.interactor.GetUpcomingEntries
 import mihon.entry.interactions.entryLibraryProgressCalculators
+import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import tachiyomi.data.category.CategoryRepositoryImpl
 import tachiyomi.data.entry.DownloadPreferencesRepositoryImpl
 import tachiyomi.data.entry.EntryChapterRepositoryImpl
 import tachiyomi.data.entry.EntryCoverHashesRepositoryImpl
+import tachiyomi.data.entry.EntryProgressRepositoryImpl
 import tachiyomi.data.entry.EntryRepositoryImpl
 import tachiyomi.data.entry.EntrySyncRepositoryImpl
 import tachiyomi.data.entry.MergedEntryRepositoryImpl
 import tachiyomi.data.entry.PlaybackPreferencesRepositoryImpl
-import tachiyomi.data.entry.PlaybackStateRepositoryImpl
+import tachiyomi.data.entry.ViewerSettingOverrideRepositoryImpl
 import tachiyomi.data.history.HistoryRepositoryImpl
 import tachiyomi.data.release.ReleaseServiceImpl
 import tachiyomi.data.source.CatalogSourceRepositoryImpl
@@ -81,11 +83,11 @@ import tachiyomi.domain.entry.interactor.UpdateMergedEntry
 import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryCoverHashesRepository
+import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.EntrySyncRepository
 import tachiyomi.domain.entry.repository.MergedEntryRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
-import tachiyomi.domain.entry.repository.PlaybackStateRepository
 import tachiyomi.domain.entry.service.EntryLibraryProgressResolver
 import tachiyomi.domain.entry.service.FetchInterval
 import tachiyomi.domain.history.interactor.GetHistory
@@ -133,8 +135,9 @@ class DomainModule : InjektModule {
 
         addSingletonFactory<EntryRepository> { EntryRepositoryImpl(get(), get()) }
         addSingletonFactory<EntryChapterRepository> { EntryChapterRepositoryImpl(get(), get()) }
-        addSingletonFactory<PlaybackStateRepository> { PlaybackStateRepositoryImpl(get()) }
+        addSingletonFactory<EntryProgressRepository> { EntryProgressRepositoryImpl(get()) }
         addSingletonFactory<PlaybackPreferencesRepository> { PlaybackPreferencesRepositoryImpl(get()) }
+        addSingletonFactory<ViewerSettingOverrideRepository> { ViewerSettingOverrideRepositoryImpl(get()) }
         addSingletonFactory<DownloadPreferencesRepository> { DownloadPreferencesRepositoryImpl(get()) }
         addSingletonFactory<EntrySyncRepository> { EntrySyncRepositoryImpl(get(), get()) }
         addSingletonFactory<EntryCoverHashesRepository> { EntryCoverHashesRepositoryImpl(get(), get()) }
@@ -148,7 +151,7 @@ class DomainModule : InjektModule {
         addFactory { NetworkToLocalEntry(get()) }
         addFactory { EntryLibraryProgressResolver(entryLibraryProgressCalculators(get())) }
         addFactory { GetLibraryEntries(get(), get(), get(), get(), get(), get(), get()) }
-        addFactory { SyncEntryWithSource(get(), get(), get(), get(), get(), get()) }
+        addFactory { SyncEntryWithSource(get(), get(), get(), get(), get(), get(), get()) }
         addFactory { GetDuplicateLibraryEntries(get(), get(), get(), get(), get()) }
         addFactory { GetMergedEntry(get()) }
         addFactory { UpdateMergedEntry(get(), get()) }
@@ -166,7 +169,8 @@ class DomainModule : InjektModule {
         addFactory { GetEnhancedDuplicateLibraryEntries(get(), get(), get(), get()) }
         addFactory {
             MigrateEntryUseCase(
-                get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(),
+                get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(),
+                get(), get(),
             )
         }
 

@@ -4,19 +4,22 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import mihon.entry.interactions.reader.settings.ReaderPreferences
+import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import tachiyomi.core.common.preference.Preference
 
 /**
  * Common configuration for all viewers.
  */
-internal abstract class ViewerConfig(readerPreferences: ReaderPreferences, private val scope: CoroutineScope) {
+internal abstract class ViewerConfig(
+    readerPreferences: MangaReaderSettingsProvider,
+    private val scope: CoroutineScope,
+) {
 
     var imagePropertyChangedListener: (() -> Unit)? = null
 
     var navigationModeChangedListener: (() -> Unit)? = null
 
-    var tappingInverted = ReaderPreferences.TappingInvertMode.NONE
+    var tappingInverted = MangaReaderSettingsProvider.TappingInvertMode.NONE
     var longTapEnabled = true
     var usePageTransitions = false
     var doubleTapAnimDuration = 500

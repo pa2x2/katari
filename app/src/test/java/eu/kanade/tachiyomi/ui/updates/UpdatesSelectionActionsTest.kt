@@ -73,8 +73,8 @@ class UpdatesSelectionActionsTest {
     fun `mark consumed actions use entry interaction capability`() {
         val unreadAnime = listOf(updateItem(16, EntryType.ANIME, read = false))
         val readAnime = listOf(updateItem(17, EntryType.ANIME, read = true))
-        val partialAnime = listOf(updateItem(18, EntryType.ANIME, read = false, lastPageRead = 4))
-        val partialManga = listOf(updateItem(19, EntryType.MANGA, read = false, lastPageRead = 4))
+        val partialAnime = listOf(updateItem(18, EntryType.ANIME, read = false, started = true))
+        val partialManga = listOf(updateItem(19, EntryType.MANGA, read = false, started = true))
 
         unreadAnime.hasConsumedAction(consumed = true, canSetConsumed = ::canSetConsumed) shouldBe true
         readAnime.hasConsumedAction(consumed = true, canSetConsumed = ::canSetConsumed) shouldBe false
@@ -111,7 +111,7 @@ class UpdatesSelectionActionsTest {
         entryType: EntryType,
         read: Boolean = false,
         bookmark: Boolean = false,
-        lastPageRead: Long = 0,
+        started: Boolean = read,
     ): UpdatesItem {
         val update = UpdatesWithRelations(
             entryId = chapterId * 10,
@@ -123,7 +123,8 @@ class UpdatesSelectionActionsTest {
             chapterUrl = "/chapter/$chapterId",
             read = read,
             bookmark = bookmark,
-            lastPageRead = lastPageRead,
+            started = started,
+            progressPosition = 0,
             sourceId = 1,
             dateFetch = 0,
             coverData = EntryCover(

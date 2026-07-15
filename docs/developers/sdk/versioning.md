@@ -6,12 +6,12 @@ Katari versions the Entry SDK with Semantic Versioning. The SDK artifact version
 
 An extension release can involve four values:
 
-| Value | Example | Meaning |
-| --- | --- | --- |
-| Katari app version | `1.4.0` | App release supplying the SDK runtime implementation |
-| SDK artifact | `sdk-2.1.3` | Exact `entry-source-api` artifact used for compilation |
-| Extension `versionName` | `2.1.8` | Required API family `2.1`, extension revision `8` |
-| Extension `versionCode` | `42` | Android's monotonically increasing update number |
+| Value                   | Example     | Meaning                                                                          |
+| ----------------------- | ----------- | -------------------------------------------------------------------------------- |
+| Katari app version      | `1.4.0`     | App release supplying the SDK runtime implementation                             |
+| SDK artifact set        | `sdk-2.1.3` | Exact coordinated `entry-source-api` and `book-api` version used for compilation |
+| Extension `versionName` | `2.1.8`     | Required API family `2.1`, extension revision `8`                                |
+| Extension `versionCode` | `42`        | Android's monotonically increasing update number                                 |
 
 The extension `versionName` is not the SDK SemVer. In this example, `2.1.8` does not mean the extension compiled against SDK `2.1.8`.
 
@@ -27,15 +27,16 @@ The Git tag and JitPack version use the `sdk-` prefix, such as `sdk-2.1.0`; the 
 
 Examples:
 
-| Change | Release level |
-| --- | --- |
-| Correct an internal parser helper bug without changing its contract | Patch |
-| Add a new optional capability interface | Minor |
-| Add a safely defaulted public member after ABI verification | Minor |
-| Add a required abstract method to `UnifiedSource` | Major |
-| Remove, rename, or move a public class | Major |
-| Deprecate a public API while retaining it | Minor |
-| Remove a previously deprecated public API | Major |
+| Change                                                              | Release level |
+| ------------------------------------------------------------------- | ------------- |
+| Correct an internal parser helper bug without changing its contract | Patch         |
+| Add a new optional capability interface                             | Minor         |
+| Add a new supported `EntryType` and media payload                   | Minor         |
+| Add a safely defaulted public member after ABI verification         | Minor         |
+| Add a required abstract method to `UnifiedSource`                   | Major         |
+| Remove, rename, or move a public class                              | Major         |
+| Deprecate a public API while retaining it                           | Minor         |
+| Remove a previously deprecated public API                           | Major         |
 
 A hotfix is a patch release, not a fourth numeric component.
 
@@ -51,20 +52,19 @@ SDK 2.0.1  ├── loader family 2.0
 SDK 2.0.2 ─┘
 ```
 
-A minor SDK release creates another declared family. A Katari runtime supplying SDK 2.1 should continue accepting extensions from family 2.0 because the minor release is backward-compatible, while older Katari releases reject extensions requiring 2.1 APIs.
+A minor SDK release creates another declared family. The Katari runtime supplying SDK 2.1 continues accepting extensions from family 2.0 because the minor release is backward-compatible, while older Katari releases reject extensions requiring 2.1 APIs.
 
 An extension should declare the oldest family whose public API it actually requires, not automatically copy the newest SDK used by its build.
 
+Adding a supported content type can add values to public enums and implementations to sealed media contracts. This is binary-compatible for already compiled extensions but can make an exhaustive Kotlin `when` fail when the extension is recompiled. Extension code that handles types or media generically must include an `else` branch that reports or ignores an unsupported future value rather than assuming the current list is permanently closed.
+
 ## Runtime availability
 
-`entry-source-api` is a `compileOnly` dependency. Katari supplies its implementation when loading the extension, so a successful extension build does not prove that an older app contains every referenced symbol.
+The Entry SDK is a `compileOnly` dependency. Katari supplies `entry-source-api` and its transitive `book-api` contracts when loading the extension, so a successful extension build does not prove that an older app contains every referenced symbol.
 
-The SDK changelog identifies the first Katari release supplying each SDK version. For example, a future release record could say:
+The SDK changelog identifies the public contracts added by each SDK version. Runtime support and artifact publication are coordinated so an extension declaring a supported family can rely on Katari supplying that family.
 
-```text
-SDK 2.1.0 → first supplied by Katari 1.4.0
-SDK 2.1.1 → first supplied by Katari 1.4.1
-```
+`sdk-2.1.0`, first supplied by Katari `1.2.0`, introduces BOOK and the coordinated `book-api` artifact. Katari accepts both the `2.0` and `2.1` Entry SDK families.
 
 A patch must not add a new required public symbol. When an extension relies on corrected runtime behavior from a patch, state the minimum Katari app version in the extension release notes or repository metadata.
 
@@ -82,8 +82,8 @@ The extension loader family remains a stable numeric `major.minor`; do not put p
 
 ## Documentation versions
 
-Human-written guides are organized by compatibility family because patch releases should not change public usage. The generated API reference and SDK changelog identify exact releases.
+The documentation site publishes one set of human-written guides and generated API references for the current stable SDK. These pages advance when another stable SDK becomes current; the site does not retain separate guide or API-reference archives for older families or patch releases.
 
-While only one public SDK family exists, the developer navigation points directly to the current stable guides. When another family is published, older family guides and exact generated references remain available and immutable, while `latest` advances only to a stable release.
+Use the SDK changelog to identify when a public contract was introduced or changed. For an older exact release, use the corresponding `sdk-*` tag as the source-level reference.
 
-See the [SDK changelog](./changelog.md) before adopting a new artifact and [local SDK development](./local-development.md) when testing an unreleased change.
+See the [SDK changelog](./changelog.md) before adopting a new artifact and [local SDK development](./local-development.md) when testing coordinated local changes.

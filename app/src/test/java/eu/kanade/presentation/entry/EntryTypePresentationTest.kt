@@ -14,6 +14,15 @@ import tachiyomi.i18n.MR
 class EntryTypePresentationTest {
 
     @Test
+    fun `missing child gaps are reported only for manga`() {
+        val childNumbers = listOf(1.0, 3.0)
+
+        missingChildCount(EntryType.MANGA, childNumbers) shouldBe 1
+        missingChildCount(EntryType.ANIME, childNumbers) shouldBe 0
+        missingChildCount(EntryType.BOOK, childNumbers) shouldBe 0
+    }
+
+    @Test
     fun `manga presentation uses existing manga labels and icons`() {
         val presentation = EntryType.MANGA.entryTypePresentation()
 
@@ -83,6 +92,17 @@ class EntryTypePresentationTest {
         presentation.downloadNumberSortLabel shouldBe MR.strings.action_order_by_episode_number
         presentation.intervalExpectedUpdateLabel shouldBe MR.strings.anime_interval_expected_update
         presentation.intervalExpectedUpdateNullLabel shouldBe MR.strings.anime_interval_expected_update_null
+    }
+
+    @Test
+    fun `book presentation is explicit rather than generic fallback`() {
+        val presentation = EntryType.BOOK.entryTypePresentation()
+
+        presentation.displayNameLabel shouldBe MR.strings.entry_type_book
+        presentation.badgeIcon shouldBe Icons.AutoMirrored.Outlined.MenuBook
+        presentation.smallIcon shouldBe R.drawable.ic_book_24dp
+        presentation.coverOverlayIcon shouldNotBe null
+        presentation.downloadBookmarkedSupported shouldBe false
     }
 
     @Test

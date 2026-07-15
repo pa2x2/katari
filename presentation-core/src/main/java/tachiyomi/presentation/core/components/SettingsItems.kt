@@ -146,8 +146,24 @@ fun CheckboxItem(label: String, pref: Preference<Boolean>) {
 
 @Composable
 fun CheckboxItem(label: String, checked: Boolean, onClick: () -> Unit) {
+    CheckboxItem(
+        label = label,
+        subtitle = null,
+        checked = checked,
+        onClick = onClick,
+    )
+}
+
+@Composable
+fun CheckboxItem(
+    label: String,
+    subtitle: String?,
+    checked: Boolean,
+    onClick: () -> Unit,
+) {
     BaseSettingsItem(
         label = label,
+        subtitle = subtitle,
         widget = {
             Checkbox(
                 checked = checked,
@@ -434,6 +450,7 @@ fun SettingsIconGrid(labelRes: StringResource, content: LazyGridScope.() -> Unit
 @Composable
 private fun BaseSettingsItem(
     label: String,
+    subtitle: String? = null,
     widget: @Composable RowScope.() -> Unit,
     onClick: () -> Unit,
 ) {
@@ -449,9 +466,23 @@ private fun BaseSettingsItem(
         horizontalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         widget(this)
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-        )
+        if (subtitle == null) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        } else {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Text(
+                    text = subtitle,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        }
     }
 }

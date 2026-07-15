@@ -21,9 +21,11 @@ fun EntryChapterDownloadIndicator(
     enabled: Boolean,
     downloadStateProvider: () -> EntryDownloadState,
     downloadProgressProvider: () -> Int,
-    onClick: (ChapterDownloadAction) -> Unit,
+    onClick: ((ChapterDownloadAction) -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
+    if (onClick == null) return
+
     DownloadIndicator(
         enabled = enabled,
         modifier = modifier,

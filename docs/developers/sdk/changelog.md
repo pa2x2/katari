@@ -1,6 +1,26 @@
 # Entry SDK changelog
 
-This changelog covers the public `entry-source-api` contract. It is separate from Katari app release notes and from individual extension revisions.
+This changelog covers the public Entry SDK contracts in `entry-source-api` and `book-api`. It is separate from Katari app release notes and from individual extension revisions.
+
+## `sdk-2.1.0`
+
+BOOK source contracts and processor-neutral book data release.
+
+### Added
+
+- `EntryType.BOOK` and `EntryMedia.Book` for source-provided readable publications.
+- The coordinated `book-api` artifact containing processor-neutral format descriptors, resource access metadata, normalized publication models, persistent locators, and structured failures.
+- Source-side book resource catalogues, grouping hints, and closed data-only locations for remote requests, existing source children, bounded inline content, local content URIs, and app-owned references.
+
+### Compatibility
+
+- First supplied by Katari `1.2.0`.
+- New loader family: `2.1`.
+- Katari continues to accept Entry SDK family `2.0`; existing compiled extensions do not need to move to `2.1`.
+- Extensions using BOOK APIs must declare family `2.1` in the first two components of Android `versionName`.
+- `book-api` and `entry-source-api` are versioned and published together under the same `sdk-*` tag.
+
+See [Book API architecture](./book-api.md) for the artifact boundary.
 
 ## `sdk-2.0.1`
 

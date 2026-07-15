@@ -309,6 +309,7 @@ object SettingsDataScreen : SearchableSettings {
                     val title = when (bucket.key) {
                         EntryMediaCacheBucketKeys.MANGA_PAGE_IMAGE -> MR.strings.pref_clear_chapter_cache
                         EntryMediaCacheBucketKeys.ANIME_PLAYBACK -> MR.strings.pref_clear_anime_playback_cache
+                        EntryMediaCacheBucketKeys.BOOK_MATERIALIZED -> MR.strings.pref_clear_book_cache
                         else -> null
                     } ?: return@forEach
 

@@ -43,7 +43,7 @@ Use `memo` sparingly. Provider-specific values placed there become persisted com
 
 ## Child items
 
-`SEntryChapter` is the historical API name for an openable unit. Depending on the entry type it may represent a chapter, episode, movie, gallery, or another user-facing unit:
+`SEntryChapter` is the historical API name for an openable unit. Depending on the entry type it may represent a chapter, episode, movie, publication, volume, gallery, or another user-facing unit:
 
 ```kotlin
 val child = SEntryChapter.create().apply {
@@ -101,9 +101,45 @@ Do not retain an older filter list as request state. The argument contains the u
 
 - `EntryMedia.ImagePages` contains ordered `EntryImagePage` descriptors for the reader.
 - `EntryMedia.Playback` contains a `PlaybackDescriptor` for the player.
+- `EntryMedia.Book` contains a processor-selection descriptor and source resource catalogue for a book reader.
 
 Image page indices must be unique and ordered from zero. A page can carry a direct `imageUrl`, or an intermediate `url` that `EntryImageSource.getImageUrl()` resolves lazily.
 
 A playback descriptor reports the streams and the selection actually resolved. Streams and subtitles carry their own `VideoRequest` headers because player requests do not automatically inherit the source's catalogue headers.
 
-Use the [image media](../../extensions/image-media.md) and [playback media](../../extensions/playback-media.md) cookbooks for complete implementations.
+### Book media
+
+Book media keeps stable publication/resource identity separate from current access locations:
+
+```kotlin
+return EntryMedia.Book(
+    descriptor = BookContentDescriptor(
+        format = "application/epub+zip",
+    ),
+    publicationRevision = publication.revision,
+    catalog = BookResourceCatalog(
+        resources = listOf(
+            BookSourceResource(
+                id = "epub",
+                title = "EPUB",
+                mediaType = "application/epub+zip",
+                size = publication.epubSize,
+                revision = publication.epubRevision,
+                availability = BookResourceAvailability.AVAILABLE,
+                location = BookResourceLocation.RemoteRequest(
+                    url = publication.epubUrl,
+                    headers = headers.toMap(),
+                ),
+            ),
+        ),
+        coverage = BookCatalogCoverage.COMPLETE,
+    ),
+    initialResourceId = "epub",
+)
+```
+
+Resource IDs are publication-scoped persistence keys. Do not derive them from expiring URLs. Revisions describe content changes and allow Katari to reconcile caches and progress. Keep large content out of inline locations; use a remote request, source child, or local URI instead. `AppReference` is reserved for Katari-issued identifiers, and current builds do not expose an issuance path to extensions.
+
+`BookContentDescriptor` and the processor-normalized publication/locator models come from the transitive `book-api` artifact. Source-side catalogues and locations remain in `entry-source-api`. See [Book API architecture](./book-api.md) for why the boundary is split.
+
+Use the [image media](../../extensions/image-media.md), [playback media](../../extensions/playback-media.md), and [book media](../../extensions/book-media.md) cookbooks for complete implementations.

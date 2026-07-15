@@ -103,9 +103,10 @@ FROM entries
 WHERE profile_id = :profileId
 AND favorite = 0
 AND _id IN (
-    SELECT DISTINCT entry_id
-    FROM chapters
-    WHERE read = 1 OR last_page_read != 0
+    SELECT DISTINCT C.entry_id
+    FROM chapters C
+    LEFT JOIN entry_progress_state EPS ON EPS.chapter_id = C._id AND EPS.entry_id = C.entry_id
+    WHERE C.read = 1 OR EPS.completed != 0 OR coalesce(EPS.position, 0) > 0
 );
 
 getAllEntries:
@@ -182,9 +183,10 @@ AND source IN :sourceIds
 AND (
     :keepReadEntries = 0
     OR _id NOT IN (
-        SELECT DISTINCT entry_id
-        FROM chapters
-        WHERE read = 1 OR last_page_read != 0
+        SELECT DISTINCT C.entry_id
+        FROM chapters C
+        LEFT JOIN entry_progress_state EPS ON EPS.chapter_id = C._id AND EPS.entry_id = C.entry_id
+        WHERE C.read = 1 OR EPS.completed != 0 OR coalesce(EPS.position, 0) > 0
     )
 );
 

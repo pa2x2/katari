@@ -32,6 +32,7 @@ class ExtensionLoaderTest {
     fun `entry extensions retain the custom loader`() {
         ExtensionLoader.shouldUseDelegateLastClassLoader("2.0", Build.VERSION_CODES.VANILLA_ICE_CREAM) shouldBe false
         ExtensionLoader.shouldUseDelegateLastClassLoader("2.0.1", Build.VERSION_CODES.VANILLA_ICE_CREAM) shouldBe false
+        ExtensionLoader.shouldUseDelegateLastClassLoader("2.1.0", Build.VERSION_CODES.VANILLA_ICE_CREAM) shouldBe false
     }
 
     @Test

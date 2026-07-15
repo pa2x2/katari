@@ -93,11 +93,11 @@ import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.entry.interactions.anime.R
 import mihon.entry.interactions.settings.AnimePlayerPreferences
+import mihon.entry.viewer.settings.ViewerSettingBinder
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import kotlin.math.abs
@@ -165,6 +165,13 @@ class VideoPlayerActivity : AppCompatActivity() {
     private val networkHelper: NetworkHelper by lazy { Injekt.get() }
     private val mediaCache: VideoPlayerMediaCache by lazy { Injekt.get() }
     private val animePlayerPreferences: AnimePlayerPreferences by lazy { Injekt.get() }
+    private val viewerSettingBinder: ViewerSettingBinder by lazy { Injekt.get() }
+    private val pictureInPictureSetting by lazy {
+        viewerSettingBinder.bind(animePlayerPreferences.pictureInPictureSetting)
+    }
+    private val seekPreviewSetting by lazy {
+        viewerSettingBinder.bind(animePlayerPreferences.seekPreviewSetting)
+    }
     private val audioManager: AudioManager by lazy {
         getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }
@@ -231,7 +238,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         supportsPictureInPicture = packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
-        pictureInPictureEnabled = animePlayerPreferences.enableAnimePictureInPicture.get()
+        pictureInPictureEnabled = pictureInPictureSetting.resolveProfile().effectiveValue
         isInPictureInPictureModeState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             isInPictureInPictureMode
         } else {
@@ -278,7 +285,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        pictureInPictureEnabled = animePlayerPreferences.enableAnimePictureInPicture.get()
+        pictureInPictureEnabled = pictureInPictureSetting.resolveProfile().effectiveValue
         pendingPictureInPictureOnPause = false
         syncPlaybackBrightnessState()
         syncPlaybackVolumeState(player)
@@ -317,7 +324,8 @@ class VideoPlayerActivity : AppCompatActivity() {
                         }
                     }
                 }
-                val seekPreviewEnabled by animePlayerPreferences.enableAnimeSeekPreview.collectAsState()
+                val resolvedSeekPreview by seekPreviewSetting.state.collectAsState()
+                val seekPreviewEnabled = resolvedSeekPreview.effectiveValue
 
                 val subtitlePayloadKey = remember(current.playback.subtitles) {
                     current.playback.subtitles.joinToString(separator = "||") { subtitleChoiceKey(it) }

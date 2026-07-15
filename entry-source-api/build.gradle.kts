@@ -55,6 +55,7 @@ kotlin {
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     dependencies {
         api(projects.core.common)
+        api(projects.bookApi)
 
         api(libs.kotlinx.serialization.json)
         api(libs.kotlinx.serialization.jsonOkio)

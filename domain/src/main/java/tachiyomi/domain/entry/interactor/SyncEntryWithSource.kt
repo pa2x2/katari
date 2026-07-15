@@ -12,6 +12,7 @@ import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
+import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.service.ChapterRecognition
 import tachiyomi.domain.entry.service.EntryMetadataUpdateHooks
@@ -27,6 +28,7 @@ import kotlin.math.abs
 class SyncEntryWithSource(
     private val entryRepository: EntryRepository,
     private val entryChapterRepository: EntryChapterRepository,
+    private val entryProgressRepository: EntryProgressRepository,
     private val sourceManager: SourceManager,
     private val libraryPreferences: LibraryPreferences,
     private val fetchInterval: FetchInterval,
@@ -126,21 +128,36 @@ class SyncEntryWithSource(
             .map(IndexedSourceChapter::resolvedName)
             .toSet()
         val now = now()
-        val representativeChapters = existingChapters
-            .groupBy { it.sourceOrder }
-            .values
-            .map { chapters ->
-                chapters.maxWithOrNull(
-                    compareBy<EntryChapter>(
-                        { stateRank(it) },
-                        { if (it.url in currentSourceUrls) 1 else 0 },
-                        EntryChapter::lastModifiedAt,
-                        EntryChapter::id,
-                    ),
-                )!!
-            }
+        val existingChapterGroups = existingChapters.groupBy { it.sourceOrder }.values
+        val progressRankByChapterId = if (existingChapterGroups.any { it.size > 1 }) {
+            entryProgressRepository.getByEntryId(entry.id)
+                .mapNotNull { progress ->
+                    val chapterId = progress.chapterId ?: return@mapNotNull null
+                    val rank = when {
+                        progress.completed -> 2
+                        !progress.locator.isEmpty -> 1
+                        else -> 0
+                    }
+                    chapterId to rank
+                }
+                .groupingBy(Pair<Long, Int>::first)
+                .fold(0) { rank, progress -> maxOf(rank, progress.second) }
+        } else {
+            emptyMap()
+        }
+        val representativeChapters = existingChapterGroups.map { chapters ->
+            chapters.maxWithOrNull(
+                compareBy<EntryChapter>(
+                    { stateRank(it, progressRankByChapterId[it.id] ?: 0) },
+                    { if (it.url in currentSourceUrls) 1 else 0 },
+                    EntryChapter::lastModifiedAt,
+                    EntryChapter::id,
+                ),
+            )!!
+        }
         val chaptersToInsert = mutableListOf<EntryChapter>()
         val chaptersToUpdate = mutableListOf<EntryChapter>()
+        val progressResourcesToRekey = mutableListOf<ProgressResourceRekey>()
         val matchedChapterIds = mutableSetOf<Long>()
         val remainingChapters = representativeChapters.toMutableList()
         var maxSeenUploadDate = 0L
@@ -214,6 +231,14 @@ class SyncEntryWithSource(
                 )
             if (updatedChapter != existingChapter) {
                 chaptersToUpdate += updatedChapter
+                if (updatedChapter.url != existingChapter.url) {
+                    progressResourcesToRekey += ProgressResourceRekey(
+                        entryId = existingChapter.entryId,
+                        chapterId = existingChapter.id,
+                        oldResourceKey = existingChapter.url,
+                        newResourceKey = updatedChapter.url,
+                    )
+                }
             }
         }
 
@@ -226,7 +251,19 @@ class SyncEntryWithSource(
         }
 
         if (chaptersToUpdate.isNotEmpty()) {
-            entryChapterRepository.updateAll(chaptersToUpdate)
+            if (!entryChapterRepository.updateAll(chaptersToUpdate)) {
+                error("Failed to update chapters for entry ${entry.id}")
+            }
+            progressResourcesToRekey.forEach { rekey ->
+                entryProgressRepository.rekey(
+                    entryId = rekey.entryId,
+                    chapterId = rekey.chapterId,
+                    oldContentKey = "",
+                    oldResourceKey = rekey.oldResourceKey,
+                    newContentKey = "",
+                    newResourceKey = rekey.newResourceKey,
+                )
+            }
         }
 
         val insertedChapters =
@@ -275,12 +312,8 @@ class SyncEntryWithSource(
         )
     }
 
-    private fun stateRank(chapter: EntryChapter): Int {
-        return when {
-            chapter.read -> 2
-            chapter.lastPageRead > 0 -> 1
-            else -> 0
-        }
+    private fun stateRank(chapter: EntryChapter, progressRank: Int): Int {
+        return maxOf(if (chapter.read) 2 else 0, progressRank)
     }
 
     private data class IndexedSourceChapter(
@@ -288,6 +321,13 @@ class SyncEntryWithSource(
         val sourceOrder: Long,
         val resolvedName: String,
         val chapterNumber: Double,
+    )
+
+    private data class ProgressResourceRekey(
+        val entryId: Long,
+        val chapterId: Long,
+        val oldResourceKey: String,
+        val newResourceKey: String,
     )
 
     data class SyncResult(

@@ -11,4 +11,5 @@ import kotlinx.serialization.Serializable
 enum class EntryType {
     MANGA,
     ANIME,
+    BOOK,
 }

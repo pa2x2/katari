@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="book_reader_host_title">Book reader</string>
+    <string name="book_reader_loading">Checking book reader compatibility…</string>
+    <string name="book_reader_unavailable_title">Book reader unavailable</string>
+    <string name="book_reader_unavailable_message">%1$s\n\n%2$s</string>
+    <string name="book_reader_choose_title">Choose a book reader</string>
+    <string name="book_reader_remember_choice">Remember for this kind of book content</string>
+    <string name="book_reader_confirm">Continue</string>
+    <string name="book_reader_close">Close</string>
+    <string name="book_reader_invalid_request">The selected book item is invalid.</string>
+    <string name="book_reader_incompatible_session">The EPUB reader could not open this publication session.</string>
+    <string name="prose_reader_incompatible_session">The prose reader could not open this chapter.</string>
+    <string name="prose_reader_previous_chapter">Previous chapter</string>
+    <string name="prose_reader_next_chapter">Next chapter</string>
+    <string name="prose_reader_settings">Reader settings</string>
+    <string name="prose_reader_layout">Reading layout</string>
+    <string name="prose_reader_layout_paginated">Paginated</string>
+    <string name="prose_reader_layout_scrolling">Continuous scrolling</string>
+    <string name="prose_reader_theme">Color theme</string>
+    <string name="prose_reader_theme_system">System</string>
+    <string name="prose_reader_theme_light">Light</string>
+    <string name="prose_reader_theme_dark">Dark</string>
+    <string name="prose_reader_theme_sepia">Sepia</string>
+    <string name="prose_reader_theme_black">Black</string>
+    <string name="prose_reader_font">Font family</string>
+    <string name="prose_reader_font_serif">Serif</string>
+    <string name="prose_reader_font_sans_serif">Sans serif</string>
+    <string name="prose_reader_font_monospace">Monospace</string>
+    <string name="prose_reader_font_size">Font size</string>
+    <string name="prose_reader_line_height">Line height</string>
+    <string name="prose_reader_page_margins">Page margins</string>
+    <string name="prose_reader_paragraph_spacing">Paragraph spacing</string>
+    <string name="prose_reader_text_alignment">Text alignment</string>
+    <string name="prose_reader_alignment_start">Reading direction</string>
+    <string name="prose_reader_alignment_justify">Justified</string>
+    <string name="prose_reader_alignment_left">Left</string>
+    <string name="prose_reader_alignment_right">Right</string>
+    <string name="prose_reader_tap_navigation">Tap screen edges to turn pages</string>
+    <string name="prose_reader_show_progress">Show reading progress</string>
+    <string name="prose_reader_continue_chapter">Continue to chapter</string>
+    <string name="prose_reader_transition_hint">Swipe or tap the outer edges to move across the chapter boundary.</string>
+</resources>

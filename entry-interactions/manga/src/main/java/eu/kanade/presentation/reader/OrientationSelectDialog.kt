@@ -13,7 +13,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import dev.icerock.moko.resources.StringResource
-import eu.kanade.domain.reader.model.readerOrientation
 import eu.kanade.presentation.reader.components.AdaptiveSheet
 import eu.kanade.presentation.reader.components.ModeSelectionDialog
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
@@ -32,8 +31,7 @@ internal fun OrientationSelectDialog(
     screenModel: ReaderSettingsScreenModel,
     onChange: (StringResource) -> Unit,
 ) {
-    val manga by screenModel.mangaFlow.collectAsState()
-    val orientation = remember(manga) { ReaderOrientation.fromPreference(manga?.readerOrientation?.toInt()) }
+    val orientation by screenModel.orientationFlow.collectAsState()
 
     AdaptiveSheet(onDismissRequest = onDismissRequest) {
         DialogContent(

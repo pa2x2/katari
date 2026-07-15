@@ -1,0 +1,54 @@
+package tachiyomi.presentation.core.components.reader
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+
+@Composable
+fun ReaderPageIndicator(
+    currentPage: Int,
+    totalPages: Int,
+    modifier: Modifier = Modifier,
+) {
+    if (currentPage <= 0 || totalPages <= 0) return
+
+    ReaderProgressIndicator(
+        text = "$currentPage / $totalPages",
+        modifier = modifier,
+    )
+}
+
+@Composable
+fun ReaderProgressIndicator(
+    text: String,
+    modifier: Modifier = Modifier,
+) {
+    if (text.isBlank()) return
+
+    val style = TextStyle(
+        color = Color(235, 235, 235),
+        fontSize = MaterialTheme.typography.bodySmall.fontSize,
+        fontWeight = FontWeight.Bold,
+        letterSpacing = 1.sp,
+    )
+    val strokeStyle = style.copy(
+        color = Color(45, 45, 45),
+        drawStyle = Stroke(width = 4f),
+    )
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier,
+    ) {
+        Text(text = text, style = strokeStyle)
+        Text(text = text, style = style)
+    }
+}

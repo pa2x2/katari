@@ -2,26 +2,38 @@ package mihon.entry.interactions
 
 import android.app.Application
 import coil3.ComponentRegistry
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import mihon.domain.chapter.interactor.FilterEntryChaptersForDownload
 import mihon.entry.interactions.anime.AnimeEntryInteractionDependencies
 import mihon.entry.interactions.anime.addAnimeEntryInteractionRuntime
 import mihon.entry.interactions.anime.animeEntryInteractionPlugin
+import mihon.entry.interactions.book.BookEntryInteractionDependencies
+import mihon.entry.interactions.book.addBookEntryInteractionRuntime
+import mihon.entry.interactions.book.bookEntryInteractionPlugin
 import mihon.entry.interactions.manga.MangaEntryInteractionDependencies
 import mihon.entry.interactions.manga.addMangaEntryInteractionRuntime
 import mihon.entry.interactions.manga.mangaEntryInteractionPlugin
 import mihon.entry.interactions.manga.reader.addMangaReaderImageComponents
+import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import mihon.entry.interactions.reader.settings.ReaderBasePreferences
-import mihon.entry.interactions.reader.settings.ReaderPreferences
 import mihon.entry.interactions.reader.settings.ReaderTrackPreferences
 import mihon.entry.interactions.settings.AnimePlayerPreferences
+import mihon.entry.interactions.settings.DefaultViewerSettingBinder
+import mihon.entry.interactions.settings.DefaultViewerSettingsInteraction
 import mihon.entry.interactions.settings.EntryInteractionPreferences
 import mihon.entry.interactions.settings.EntryMediaCachePreferences
+import mihon.entry.viewer.settings.ViewerSettingBinder
+import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
+import mihon.entry.viewer.settings.ViewerSettingsInteraction
 import tachiyomi.core.common.preference.PreferenceStore
 import uy.kohesive.injekt.api.InjektRegistrar
 import uy.kohesive.injekt.api.addSingletonFactory
 import uy.kohesive.injekt.api.get
 
 data class EntryInteractionRuntimeDependencies(
+    val activityTheme: EntryInteractionActivityTheme,
     val notificationActions: EntryDownloadNotificationActions,
     val pageImageCache: EntryPageImageCache,
     val mangaChildGroupFilterDataSource: EntryChildGroupFilterDataSource,
@@ -41,27 +53,45 @@ fun InjektRegistrar.addEntryInteractionRuntime(
     app: Application,
     dependencies: EntryInteractionRuntimeDependencies,
 ) {
+    addSingletonFactory<EntryInteractionActivityTheme> { dependencies.activityTheme }
     addSingletonFactory<EntryDownloadNotificationActions> { dependencies.notificationActions }
     addSingletonFactory<EntryPageImageCache> { dependencies.pageImageCache }
     addSingletonFactory<EntryReaderIncognitoState> { dependencies.readerIncognitoState }
     addSingletonFactory<EntryReaderTracking> { dependencies.readerTracking }
 
-    addSingletonFactory { ReaderPreferences(dependencies.profilePreferenceStore) }
+    addSingletonFactory { MangaReaderSettingsProvider(dependencies.profilePreferenceStore) }
     addSingletonFactory { ReaderBasePreferences(dependencies.basePreferenceStore) }
     addSingletonFactory { ReaderTrackPreferences(dependencies.privatePreferenceStore) }
     addSingletonFactory { EntryInteractionPreferences(dependencies.profilePreferenceStore) }
     addSingletonFactory { AnimePlayerPreferences(dependencies.profilePreferenceStore) }
     addSingletonFactory { EntryMediaCachePreferences(dependencies.basePreferenceStore) }
-
+    addSingletonFactory<ViewerSettingBinder> {
+        DefaultViewerSettingBinder(
+            overrideRepository = get<ViewerSettingOverrideRepository>(),
+            scope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+        )
+    }
     val mangaWarmup = addMangaEntryInteractionRuntime(app)
     val animeWarmup = addAnimeEntryInteractionRuntime(app)
+    val bookRuntime = addBookEntryInteractionRuntime(app, dependencies.profilePreferenceStore)
+
+    addSingletonFactory<ViewerSettingsInteraction> {
+        DefaultViewerSettingsInteraction(
+            providers = listOf(
+                get<MangaReaderSettingsProvider>(),
+                get<AnimePlayerPreferences>(),
+            ) + bookRuntime.viewerSettingsProviders,
+        )
+    }
 
     addSingletonFactory<EntryMediaCacheMaintenance> {
         DefaultEntryMediaCacheMaintenance(
-            buckets = dependencies.mediaCacheBuckets + LazyEntryMediaCacheBucket(
-                key = EntryMediaCacheBucketKeys.ANIME_PLAYBACK,
-                delegateProvider = { get<EntryPlayerCache>() },
-            ),
+            buckets = dependencies.mediaCacheBuckets +
+                bookRuntime.mediaCacheBuckets +
+                LazyEntryMediaCacheBucket(
+                    key = EntryMediaCacheBucketKeys.ANIME_PLAYBACK,
+                    delegateProvider = { get<EntryPlayerCache>() },
+                ),
         )
     }
 
@@ -72,6 +102,7 @@ fun InjektRegistrar.addEntryInteractionRuntime(
                     MangaEntryInteractionDependencies(
                         getEntryWithChapters = get(),
                         entryChapterRepository = get(),
+                        entryProgressRepository = get(),
                         filterEntryChaptersForDownload = FilterEntryChaptersForDownload(get(), get(), get()),
                         childGroupFilterDataSource = dependencies.mangaChildGroupFilterDataSource,
                         downloadPreferences = get(),
@@ -83,13 +114,20 @@ fun InjektRegistrar.addEntryInteractionRuntime(
                     AnimeEntryInteractionDependencies(
                         entryChapterRepository = get(),
                         getEntryWithChapters = get(),
-                        playbackStateRepository = get(),
+                        entryProgressRepository = get(),
                         playbackPreferencesRepository = get(),
                         downloadPreferences = get(),
                         downloadPreferencesRepository = get(),
                         sourceManager = get(),
                         entryInteractionPreferences = get<EntryInteractionPreferences>(),
                         historyRepository = get(),
+                    ),
+                ),
+                bookEntryInteractionPlugin(
+                    BookEntryInteractionDependencies(
+                        getEntryWithChapters = get(),
+                        entryChapterRepository = get(),
+                        entryProgressRepository = get(),
                     ),
                 ),
             ),
@@ -101,7 +139,8 @@ fun InjektRegistrar.addEntryInteractionRuntime(
     addSingletonFactory<EntryCapabilityInteraction> { get<EntryInteractions>().capability }
     addSingletonFactory<EntryConsumptionInteraction> { get<EntryInteractions>().consumption }
     addSingletonFactory<EntryUpdateEligibilityInteraction> { get<EntryInteractions>().updateEligibility }
-    addSingletonFactory<EntryPlaybackInteraction> { get<EntryInteractions>().playback }
+    addSingletonFactory<EntryProgressInteraction> { get<EntryInteractions>().progress }
+    addSingletonFactory<EntryPlaybackPreferencesInteraction> { get<EntryInteractions>().playbackPreferences }
     addSingletonFactory<EntryChildListInteraction> { get<EntryInteractions>().childList }
     addSingletonFactory<EntryChildGroupFilterInteraction> { get<EntryInteractions>().childGroupFilter }
     addSingletonFactory<EntryLibraryFilterInteraction> { get<EntryInteractions>().libraryFilter }

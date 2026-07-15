@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryProgressLocator
 import tachiyomi.i18n.MR
 
 class EntryInteractionRegistryTest {
@@ -63,6 +64,39 @@ class EntryInteractionRegistryTest {
     }
 
     @Test
+    fun `missing download processor exposes unsupported capability with neutral query results`() = runTest {
+        val interactions = createEntryInteractions(emptyList())
+        val entry = entry(EntryType.BOOK)
+
+        interactions.download.supportsDownloads(EntryType.BOOK) shouldBe false
+        interactions.download.supportsDownloadOptions(entry) shouldBe false
+        interactions.download.supportsBulkDownload(entry) shouldBe false
+        interactions.download.resolveDownloadOptions(context, entry, chapter).shouldBeNull()
+        interactions.download.resolveBulkDownloadCandidates(
+            entry = entry,
+            action = EntryBulkDownloadAction.unread,
+        ) shouldBe EntryBulkDownloadCandidateResult.Unsupported
+        interactions.download.filterAutoDownloadCandidates(entry, listOf(chapter)) shouldBe emptyList()
+        interactions.download.hasDownloads(entry) shouldBe false
+        interactions.download.getDownloadCount(entry) shouldBe 0
+        interactions.download.isDownloaded(entry, chapter) shouldBe false
+        interactions.download.getStatus(
+            entryType = EntryType.BOOK,
+            chapterId = chapter.id,
+            chapterName = chapter.name,
+            chapterScanlator = chapter.scanlator,
+            chapterUrl = chapter.url,
+            entryTitle = entry.title,
+            sourceId = entry.source,
+        ) shouldBe EntryDownloadStatus(EntryType.BOOK, chapter.id, EntryDownloadState.NOT_DOWNLOADED)
+        interactions.download.cancelQueuedDownload(EntryType.BOOK, chapter.id).shouldBeNull()
+
+        interactions.download.delete(entry, listOf(chapter))
+        interactions.download.deleteEntryDownloads(entry)
+        interactions.download.renameEntry(entry, "Renamed")
+    }
+
+    @Test
     fun `empty plugin list fails when consumption interaction is used`() = runTest {
         val interactions = createEntryInteractions(emptyList())
 
@@ -90,13 +124,24 @@ class EntryInteractionRegistryTest {
     }
 
     @Test
-    fun `empty plugin list treats playback as empty no-op`() = runTest {
+    fun `empty plugin list treats playback preferences as empty no-op`() = runTest {
+        val interactions = createEntryInteractions(emptyList())
+        val manga = entry(EntryType.MANGA)
+        val preferences = EntryPlaybackPreferencesSnapshot()
+
+        interactions.playbackPreferences.snapshot(manga) shouldBe null
+        interactions.playbackPreferences.restore(manga, preferences)
+        interactions.playbackPreferences.copy(manga, manga.copy(id = 2L))
+    }
+
+    @Test
+    fun `empty plugin list treats progress as empty no-op`() = runTest {
         val interactions = createEntryInteractions(emptyList())
         val manga = entry(EntryType.MANGA)
 
-        interactions.playback.snapshot(manga) shouldBe EntryPlaybackSnapshot()
-        interactions.playback.restore(manga, EntryPlaybackSnapshot())
-        interactions.playback.copy(manga, manga.copy(id = 2L), emptyList())
+        interactions.progress.snapshot(manga) shouldBe EntryProgressSnapshot()
+        interactions.progress.restore(manga, EntryProgressSnapshot())
+        interactions.progress.copy(manga, manga.copy(id = 2L), emptyList())
     }
 
     @Test
@@ -217,17 +262,31 @@ class EntryInteractionRegistryTest {
     }
 
     @Test
-    fun `duplicate playback processor registration fails`() {
+    fun `duplicate playback preferences processor registration fails`() {
         val plugin = EntryInteractionPlugin { registry ->
-            registry.registerPlaybackProcessor(RecordingPlaybackProcessor(EntryType.ANIME))
-            registry.registerPlaybackProcessor(RecordingPlaybackProcessor(EntryType.ANIME))
+            registry.registerPlaybackPreferencesProcessor(RecordingPlaybackPreferencesProcessor(EntryType.ANIME))
+            registry.registerPlaybackPreferencesProcessor(RecordingPlaybackPreferencesProcessor(EntryType.ANIME))
         }
 
         val exception = assertThrows<IllegalStateException> {
             createEntryInteractions(listOf(plugin))
         }
 
-        exception.message shouldContain "Duplicate playback processor registered for EntryType ANIME"
+        exception.message shouldContain "Duplicate playback preferences processor registered for EntryType ANIME"
+    }
+
+    @Test
+    fun `duplicate progress processor registration fails`() {
+        val plugin = EntryInteractionPlugin { registry ->
+            registry.registerProgressProcessor(RecordingEntryProgressProcessor(EntryType.ANIME))
+            registry.registerProgressProcessor(RecordingEntryProgressProcessor(EntryType.ANIME))
+        }
+
+        val exception = assertThrows<IllegalStateException> {
+            createEntryInteractions(listOf(plugin))
+        }
+
+        exception.message shouldContain "Duplicate progress processor registered for EntryType ANIME"
     }
 
     @Test
@@ -538,30 +597,62 @@ class EntryInteractionRegistryTest {
     }
 
     @Test
-    fun `playback dispatch selects processor by entry type`() = runTest {
-        val mangaProcessor = RecordingPlaybackProcessor(EntryType.MANGA)
-        val animeProcessor = RecordingPlaybackProcessor(EntryType.ANIME)
+    fun `playback preferences dispatch selects processor by entry type`() = runTest {
+        val mangaProcessor = RecordingPlaybackPreferencesProcessor(EntryType.MANGA)
+        val animeProcessor = RecordingPlaybackPreferencesProcessor(EntryType.ANIME)
         val interactions = createEntryInteractions(
             listOf(
                 EntryInteractionPlugin { registry ->
-                    registry.registerPlaybackProcessor(mangaProcessor)
-                    registry.registerPlaybackProcessor(animeProcessor)
+                    registry.registerPlaybackPreferencesProcessor(mangaProcessor)
+                    registry.registerPlaybackPreferencesProcessor(animeProcessor)
                 },
             ),
         )
         val anime = entry(EntryType.ANIME, id = 70L)
         val target = anime.copy(id = 71L)
-        val mappings = listOf(EntryPlaybackChapterMapping(sourceChapterId = 1L, targetChapterId = 2L))
 
-        val snapshot = interactions.playback.snapshot(anime)
-        interactions.playback.restore(anime, snapshot)
-        interactions.playback.copy(anime, target, mappings)
+        val snapshot = interactions.playbackPreferences.snapshot(anime)!!
+        interactions.playbackPreferences.restore(anime, snapshot)
+        interactions.playbackPreferences.copy(anime, target)
 
         snapshot shouldBe animeProcessor.snapshot
         mangaProcessor.snapshotEntryIds shouldBe emptyList()
         animeProcessor.snapshotEntryIds shouldBe listOf(70L)
         animeProcessor.restoredEntryIds shouldBe listOf(70L)
         animeProcessor.copyRequests shouldBe listOf(70L to 71L)
+    }
+
+    @Test
+    fun `progress dispatch selects processor by entry type`() = runTest {
+        val mangaProcessor = RecordingEntryProgressProcessor(EntryType.MANGA)
+        val animeProcessor = RecordingEntryProgressProcessor(EntryType.ANIME)
+        val interactions = createEntryInteractions(
+            listOf(
+                EntryInteractionPlugin { registry ->
+                    registry.registerProgressProcessor(mangaProcessor)
+                    registry.registerProgressProcessor(animeProcessor)
+                },
+            ),
+        )
+        val anime = entry(EntryType.ANIME, id = 72L)
+        val target = anime.copy(id = 73L)
+        val mappings = listOf(
+            EntryProgressResourceMapping(
+                sourceResourceKey = "/source",
+                targetResourceKey = "/target",
+                targetChapterId = 74L,
+            ),
+        )
+
+        val snapshot = interactions.progress.snapshot(anime)
+        interactions.progress.restore(anime, snapshot)
+        interactions.progress.copy(anime, target, mappings)
+
+        snapshot shouldBe animeProcessor.snapshot
+        mangaProcessor.snapshotEntryIds shouldBe emptyList()
+        animeProcessor.snapshotEntryIds shouldBe listOf(72L)
+        animeProcessor.restoredEntryIds shouldBe listOf(72L)
+        animeProcessor.copyRequests shouldBe listOf(72L to 73L)
         animeProcessor.copyMappings shouldBe listOf(mappings)
     }
 
@@ -1145,47 +1236,67 @@ class EntryInteractionRegistryTest {
         }
     }
 
-    private class RecordingPlaybackProcessor(
+    private class RecordingPlaybackPreferencesProcessor(
         override val type: EntryType,
-    ) : EntryPlaybackProcessor {
-        val snapshot = EntryPlaybackSnapshot(
+    ) : EntryPlaybackPreferencesProcessor {
+        val snapshot = EntryPlaybackPreferencesSnapshot(
+            streamKey = "stream",
+            playerQualityMode = EntryPlaybackQualityMode.SPECIFIC_HEIGHT,
+            playerQualityHeight = 1080,
+            updatedAt = 5L,
+        )
+        val snapshotEntryIds = mutableListOf<Long>()
+        val restoredEntryIds = mutableListOf<Long>()
+        val copyRequests = mutableListOf<Pair<Long, Long>>()
+
+        override suspend fun snapshot(entry: Entry): EntryPlaybackPreferencesSnapshot {
+            snapshotEntryIds += entry.id
+            return snapshot
+        }
+
+        override suspend fun restore(entry: Entry, snapshot: EntryPlaybackPreferencesSnapshot) {
+            restoredEntryIds += entry.id
+        }
+
+        override suspend fun copy(sourceEntry: Entry, targetEntry: Entry) {
+            copyRequests += sourceEntry.id to targetEntry.id
+        }
+    }
+
+    private class RecordingEntryProgressProcessor(
+        override val type: EntryType,
+    ) : EntryProgressProcessor {
+        val snapshot = EntryProgressSnapshot(
             states = listOf(
-                EntryPlaybackStateSnapshot(
-                    chapterId = 1L,
-                    positionMs = 2L,
-                    durationMs = 3L,
-                    completed = false,
-                    lastWatchedAt = 4L,
+                EntryProgressStateSnapshot(
+                    resourceKey = "/resource",
+                    sourceChildKey = "/chapter",
+                    locator = EntryProgressLocator(kind = "time", position = 2L, extent = 3L),
+                    locatorUpdatedAt = 4L,
                 ),
-            ),
-            preferences = EntryPlaybackPreferencesSnapshot(
-                streamKey = "stream",
-                playerQualityMode = EntryPlaybackQualityMode.SPECIFIC_HEIGHT,
-                playerQualityHeight = 1080,
-                updatedAt = 5L,
             ),
         )
         val snapshotEntryIds = mutableListOf<Long>()
         val restoredEntryIds = mutableListOf<Long>()
         val copyRequests = mutableListOf<Pair<Long, Long>>()
-        val copyMappings = mutableListOf<List<EntryPlaybackChapterMapping>>()
+        val copyMappings = mutableListOf<List<EntryProgressResourceMapping>>()
 
-        override suspend fun snapshot(entry: Entry): EntryPlaybackSnapshot {
+        override suspend fun snapshot(entry: Entry): EntryProgressSnapshot {
             snapshotEntryIds += entry.id
             return snapshot
         }
 
-        override suspend fun restore(entry: Entry, snapshot: EntryPlaybackSnapshot) {
+        override suspend fun restore(entry: Entry, snapshot: EntryProgressSnapshot) {
             restoredEntryIds += entry.id
         }
 
         override suspend fun copy(
             sourceEntry: Entry,
             targetEntry: Entry,
-            chapterMappings: List<EntryPlaybackChapterMapping>,
+            resourceMappings: List<EntryProgressResourceMapping>,
         ) {
             copyRequests += sourceEntry.id to targetEntry.id
-            copyMappings += chapterMappings
+            copyMappings += resourceMappings
         }
     }
 

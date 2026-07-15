@@ -113,6 +113,7 @@ data object UpdatesTab : Tab {
                     }.takeIf {
                         selected.any {
                             it.update is UpdateItem.EntryUpdate &&
+                                it.downloadSupported &&
                                 it.downloadStateProvider() != EntryDownloadState.DOWNLOADED
                         }
                     },

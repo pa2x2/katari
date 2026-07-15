@@ -1,0 +1,95 @@
+DROP VIEW IF EXISTS updatesView;
+
+INSERT INTO entry_progress_state(
+    entry_id,
+    chapter_id,
+    content_key,
+    resource_key,
+    locator_kind,
+    position,
+    extent,
+    progression,
+    completed,
+    locator_updated_at,
+    completion_updated_at
+)
+SELECT
+    C.entry_id,
+    C._id,
+    '',
+    CASE
+        WHEN length(trim(C.url)) > 0 THEN C.url
+        ELSE 'legacy-chapter:' || C._id
+    END,
+    'time',
+    CASE
+        WHEN PS._id IS NULL THEN NULL
+        ELSE max(PS.position_ms, 0)
+    END,
+    CASE
+        WHEN PS.duration_ms > 0 THEN PS.duration_ms
+        ELSE NULL
+    END,
+    CASE
+        WHEN PS.duration_ms > 0 THEN min(max(PS.position_ms * 1.0 / PS.duration_ms, 0.0), 1.0)
+        ELSE NULL
+    END,
+    CASE
+        WHEN C.read != 0 OR coalesce(PS.completed, 0) != 0 THEN 1
+        ELSE 0
+    END,
+    max(coalesce(PS.last_watched_at, 0), 0),
+    max(coalesce(PS.last_watched_at, 0), coalesce(H.last_read, 0), 0)
+FROM chapters C
+JOIN entries ENT ON ENT._id = C.entry_id
+LEFT JOIN playback_state PS ON PS.entry_id = C.entry_id AND PS.chapter_id = C._id
+LEFT JOIN history H ON H.entry_id = C.entry_id AND H.chapter_id = C._id
+WHERE ENT.type = 'anime'
+AND (
+    C.read != 0
+    OR coalesce(PS.completed, 0) != 0
+    OR coalesce(PS.position_ms, 0) > 0
+)
+ON CONFLICT(entry_id, content_key, resource_key) DO NOTHING;
+
+UPDATE chapters
+SET read = 1
+WHERE _id IN (
+    SELECT EPS.chapter_id
+    FROM entry_progress_state EPS
+    JOIN entries ENT ON ENT._id = EPS.entry_id
+    WHERE ENT.type = 'anime'
+    AND EPS.chapter_id IS NOT NULL
+    AND EPS.completed != 0
+);
+
+DROP TABLE playback_state;
+
+CREATE VIEW updatesView AS
+SELECT
+    entries.profile_id,
+    entries._id AS entryId,
+    entries.type AS entryType,
+    entries.title AS entryTitle,
+    chapters._id AS chapterId,
+    chapters.name AS chapterName,
+    chapters.scanlator,
+    chapters.url AS chapterUrl,
+    chapters.read,
+    chapters.bookmark,
+    chapters.last_page_read,
+    entries.source,
+    entries.favorite,
+    entries.thumbnail_url AS thumbnailUrl,
+    entries.cover_last_modified AS coverLastModified,
+    chapters.date_upload AS dateUpload,
+    chapters.date_fetch AS datefetch,
+    excluded_scanlators.scanlator AS excludedScanlator
+FROM entries JOIN chapters
+ON entries._id = chapters.entry_id
+LEFT JOIN excluded_scanlators
+ON entries._id = excluded_scanlators.entry_id
+AND chapters.scanlator = excluded_scanlators.scanlator
+WHERE favorite = 1
+AND date_fetch > date_added
+ORDER BY date_fetch DESC;

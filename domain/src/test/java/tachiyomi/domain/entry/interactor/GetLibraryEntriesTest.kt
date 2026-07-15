@@ -163,6 +163,12 @@ class GetLibraryEntriesTest {
                 hasStarted = false,
                 continueMode = ProgressState.ContinueMode.TARGET_AVAILABLE,
             )
+            EntryType.BOOK -> ProgressState(
+                totalCount = totalCount,
+                consumedCount = 0L,
+                hasStarted = false,
+                continueMode = ProgressState.ContinueMode.TARGET_AVAILABLE,
+            )
         }
     }
 }
