@@ -29,7 +29,6 @@ import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.displayName
 import mihon.entry.interactions.setEntryInteractionContent
 import mihon.entry.interactions.settings.HtmlProseSettingsProvider
-import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildWindow
 import mihon.entry.interactions.viewer.entryChildWindow
 import mihon.entry.viewer.settings.ViewerSettingBinder
@@ -45,8 +44,6 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
     private var uiState by mutableStateOf<HtmlProseReaderUiState?>(null)
     private var settings: HtmlProseSettingsBinding? = null
     private var openedSession: OpenedBookReaderSession? = null
-    private var proseSession: HtmlProseChapterSession? = null
-    private var webView: ProseWebView? = null
     private var latestLocator: BookLocator? = null
     private var navigation: EntryChildWindow<EntryChapter>? = null
     private var chapters: List<EntryChapter> = emptyList()
@@ -81,19 +78,10 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
                         HtmlProseReaderScreen(
                             state = readerState,
                             settings = readerSettings,
-                            onWebView = { webView = it },
                             onLocation = ::updateLocation,
-                            onTap = ::onReaderTap,
-                            onBoundary = ::showTransition,
+                            onChapterEntered = ::enterChapter,
                             onClose = ::finish,
-                            onPreviousChapter = navigation?.previous?.let {
-                                { showTransition(EntryChildDirection.PREVIOUS) }
-                            },
-                            onNextChapter = navigation?.next?.let {
-                                { showTransition(EntryChildDirection.NEXT) }
-                            },
-                            onTransitionBack = ::leaveTransition,
-                            onTransitionContinue = ::continueTransition,
+                            onMenuVisibilityChange = ::setMenuVisibility,
                             onChapterListVisibilityChange = { visible ->
                                 uiState = uiState?.copy(chapterListVisible = visible)
                             },
@@ -133,12 +121,10 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
     }
 
     override fun onDestroy() {
-        webView = null
         preloadJobs.values.forEach(Job::cancel)
         preloadJobs.clear()
         chapterSwitchJob?.cancel()
         openedSession = null
-        proseSession = null
         settings = null
         super.onDestroy()
     }
@@ -178,7 +164,11 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
         }
     }
 
-    private suspend fun showSession(session: OpenedBookReaderSession, attach: Boolean = false) {
+    private suspend fun showSession(
+        session: OpenedBookReaderSession,
+        attach: Boolean = false,
+        resetViewer: Boolean = false,
+    ) {
         if (attach) retainedSession.attachInitial(session)
         val content = session.publicationSession as? HtmlProseChapterSession
         if (content == null) {
@@ -191,6 +181,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
                 chapters = Injekt.get<BookChapterNavigationResolver>().resolveAll(session.entry)
             }
             navigation = chapters.entryChildWindow(session.chapter.id, EntryChapter::id)
+            val window = navigation ?: error("The selected prose chapter is missing from the reading order")
             settings = settings ?: HtmlProseSettingsBinding(
                 provider = Injekt.get<HtmlProseSettingsProvider>(),
                 binder = Injekt.get<ViewerSettingBinder>(),
@@ -200,17 +191,21 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
                 ?.takeIf(content::validate)
                 ?: BookLocator(content.resourceId, progression = 0.0)
             openedSession = session
-            proseSession = content
             latestLocator = locator
             pageLoaded = false
-            uiState = HtmlProseReaderUiState(
-                entryTitle = session.entry.displayTitle,
-                chapterTitle = session.chapter.name,
-                currentChapterId = session.chapter.id,
+            val loadedChapter = HtmlProseLoadedChapter(
+                chapter = session.chapter,
                 resourceId = content.resourceId,
                 bodyHtml = content.bodyHtml,
-                progression = (locator.progression ?: 0.0).toFloat(),
+                initialProgression = (locator.progression ?: 0.0).toFloat(),
+            )
+            uiState = HtmlProseReaderUiState(
+                entryTitle = session.entry.displayTitle,
+                currentChapterId = session.chapter.id,
                 chapters = chapters,
+                window = window,
+                loadedChapters = uiState?.loadedChapters.orEmpty() + (session.chapter.id to loadedChapter),
+                viewerResetKey = (uiState?.viewerResetKey ?: 0L) + if (resetViewer) 1L else 0L,
             )
             readingStartedAt = SystemClock.elapsedRealtime()
             surfaceState = ProseReaderSurfaceState.Ready
@@ -224,40 +219,14 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
         }
     }
 
-    private fun onReaderTap(horizontalFraction: Float) {
-        val readerSettings = settings ?: return
-        val paginated = readerSettings.layoutMode.state.value.effectiveValue ==
-            HtmlProseSettingsProvider.LAYOUT_PAGINATED
-        val tapNavigation = readerSettings.tapNavigation.resolveProfile().effectiveValue
-        if (!paginated || !tapNavigation || horizontalFraction in TAP_PREVIOUS_END..TAP_NEXT_START) {
-            setMenuVisibility(uiState?.menuVisible != true)
-            return
-        }
-        val direction = if (horizontalFraction > TAP_NEXT_START) {
-            EntryChildDirection.NEXT
-        } else {
-            EntryChildDirection.PREVIOUS
-        }
-        val moved = webView?.movePage(if (direction == EntryChildDirection.NEXT) 1 else -1) == true
-        if (moved) {
-            setMenuVisibility(false)
-        } else {
-            showTransition(direction)
-        }
-    }
-
-    private fun updateLocation(progression: Float, currentPage: Int, totalPages: Int) {
-        val resourceId = proseSession?.resourceId ?: return
+    private fun updateLocation(chapterId: Long, progression: Float) {
+        if (chapterId != openedSession?.chapter?.id) return
+        val resourceId = uiState?.loadedChapters?.get(chapterId)?.resourceId ?: return
         pageLoaded = true
         val safeProgression = progression.coerceIn(0f, 1f)
         val locator = BookLocator(resourceId = resourceId, progression = safeProgression.toDouble())
         latestLocator = locator
         retainedSession.updateLocation(locator)
-        uiState = uiState?.copy(
-            progression = safeProgression,
-            currentPage = currentPage,
-            totalPages = totalPages,
-        )
     }
 
     private fun setMenuVisibility(visible: Boolean) {
@@ -282,24 +251,15 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
         }
     }
 
-    private fun showTransition(direction: EntryChildDirection) {
-        val transition = navigation?.transition(direction) ?: return
-        setMenuVisibility(false)
-        uiState = uiState?.copy(
-            transition = transition,
-            transitionLoading = false,
-            transitionError = null,
+    private fun enterChapter(chapter: EntryChapter) {
+        if (chapter.id == openedSession?.chapter?.id) return
+        val currentIndex = chapters.indexOfFirst { it.id == openedSession?.chapter?.id }
+        val destinationIndex = chapters.indexOfFirst { it.id == chapter.id }
+        launchChapterSwitch(
+            chapter = chapter,
+            completeCurrent = destinationIndex > currentIndex,
+            resetViewer = false,
         )
-    }
-
-    private fun leaveTransition() {
-        uiState = uiState?.copy(transition = null, transitionLoading = false, transitionError = null)
-    }
-
-    private fun continueTransition() {
-        val transition = uiState?.transition ?: return
-        val destination = transition.to ?: return
-        launchChapterSwitch(destination, completeCurrent = transition.direction == EntryChildDirection.NEXT)
     }
 
     private fun selectChapter(chapter: EntryChapter) {
@@ -308,30 +268,42 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
             return
         }
         uiState = uiState?.copy(chapterListVisible = false)
-        launchChapterSwitch(chapter, completeCurrent = false)
+        launchChapterSwitch(
+            chapter = chapter,
+            completeCurrent = false,
+            resetViewer = true,
+        )
     }
 
-    private fun launchChapterSwitch(chapter: EntryChapter, completeCurrent: Boolean) {
+    private fun launchChapterSwitch(
+        chapter: EntryChapter,
+        completeCurrent: Boolean,
+        resetViewer: Boolean,
+    ) {
         if (chapterSwitchJob?.isActive == true) return
-        uiState = uiState?.copy(transitionLoading = true, transitionError = null)
+        uiState = uiState?.copy(loadingChapterId = chapter.id, loadError = null)
         chapterSwitchJob = lifecycleScope.launch {
             try {
-                switchChapter(chapter, completeCurrent)
+                switchChapter(chapter, completeCurrent, resetViewer)
             } finally {
                 chapterSwitchJob = null
             }
         }
     }
 
-    private suspend fun switchChapter(chapter: EntryChapter, completeCurrent: Boolean) {
+    private suspend fun switchChapter(
+        chapter: EntryChapter,
+        completeCurrent: Boolean,
+        resetViewer: Boolean,
+    ) {
         val id = chapter.id
         preloadJobs[id]?.join()
         val cached = retainedSession.cached(id)
         val destination = cached ?: when (val result = openChapter(chapter)) {
             is BookReaderOpenResult.Failure -> {
                 uiState = uiState?.copy(
-                    transitionLoading = false,
-                    transitionError = result.failure.message,
+                    loadingChapterId = null,
+                    loadError = result.failure.message,
                 )
                 return
             }
@@ -345,7 +317,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
         }
         persistBeforeSwitch(completeCurrent)
         retainedSession.switchTo(id) ?: return
-        showSession(destination)
+        showSession(destination, resetViewer = resetViewer)
     }
 
     private suspend fun persistBeforeSwitch(completed: Boolean) {
@@ -361,8 +333,18 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
     private fun preloadAdjacent() {
         val adjacent = listOfNotNull(navigation?.previous, navigation?.next)
         retainedSession.retain(adjacent.mapTo(mutableSetOf()) { it.id })
+        val retainedIds = adjacent.mapTo(mutableSetOf()) { it.id }.apply {
+            openedSession?.chapter?.id?.let(::add)
+        }
+        uiState = uiState?.copy(
+            loadedChapters = uiState?.loadedChapters.orEmpty().filterKeys(retainedIds::contains),
+        )
         adjacent.forEach { chapter ->
-            if (retainedSession.cached(chapter.id) != null || preloadJobs[chapter.id]?.isActive == true) return@forEach
+            retainedSession.cached(chapter.id)?.let { cached ->
+                addLoadedChapter(cached)
+                return@forEach
+            }
+            if (preloadJobs[chapter.id]?.isActive == true) return@forEach
             preloadJobs[chapter.id] = lifecycleScope.launch {
                 try {
                     val result = openChapter(chapter)
@@ -370,13 +352,34 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
                         val stillAdjacent = listOfNotNull(navigation?.previous, navigation?.next).any {
                             it.id == chapter.id
                         }
-                        if (!stillAdjacent || !retainedSession.cache(result.session)) result.session.close()
+                        if (!stillAdjacent || !retainedSession.cache(result.session)) {
+                            result.session.close()
+                        } else {
+                            addLoadedChapter(result.session)
+                        }
                     }
                 } finally {
                     preloadJobs.remove(chapter.id)
                 }
             }
         }
+    }
+
+    private fun addLoadedChapter(session: OpenedBookReaderSession) {
+        val content = session.publicationSession as? HtmlProseChapterSession ?: return
+        val locator = retainedSession.locator(session.chapter.id)
+            ?.takeIf(content::validate)
+            ?: BookLocator(content.resourceId, progression = 0.0)
+        val loaded = HtmlProseLoadedChapter(
+            chapter = session.chapter,
+            resourceId = content.resourceId,
+            bodyHtml = content.bodyHtml,
+            initialProgression = (locator.progression ?: 0.0).toFloat(),
+        )
+        uiState = uiState?.copy(
+            loadedChapters = uiState?.loadedChapters.orEmpty() + (session.chapter.id to loaded),
+            loadingChapterId = null,
+        )
     }
 
     private suspend fun openChapter(chapter: EntryChapter): BookReaderOpenResult {
@@ -414,8 +417,6 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
         private const val EXTRA_PROCESSOR_ID = "processor_id"
         private const val EXTRA_SESSION_TOKEN = "session_token"
         private const val COMPLETION_THRESHOLD = 0.995
-        private const val TAP_PREVIOUS_END = 0.33f
-        private const val TAP_NEXT_START = 0.66f
 
         fun newIntent(
             context: Context,

@@ -76,6 +76,15 @@ class HtmlProseChapterProcessorTest {
     }
 
     @Test
+    fun `rejects a chapter with no readable prose after sanitizing`() = runTest {
+        val content = TestProseContentSession(html = "<script>onlyActiveContent()</script>")
+
+        val result = assertIs<BookOpenResult.Failure>(processor.open(content))
+
+        assertEquals(BookFailureReason.MALFORMED_CONTENT, result.failure.reason)
+    }
+
+    @Test
     fun `does not open purchase required chapter content`() = runTest {
         val content = TestProseContentSession(
             html = "<p>Preview must not be rendered as the chapter.</p>",

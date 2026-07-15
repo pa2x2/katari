@@ -27,7 +27,7 @@ class HtmlProseSettingsProviderTest {
         provider.settings
             .filterNot { it.id.key == HtmlProseSettingsProvider.LAYOUT_MODE_KEY }
             .all { it.scope == ViewerSettingScope.PROFILE_ONLY } shouldBe true
-        provider.tapNavigationSetting.processorDefault shouldBe true
+        provider.tapNavigationSetting.processorDefault shouldBe false
         provider.showProgressSetting.processorDefault shouldBe true
     }
 

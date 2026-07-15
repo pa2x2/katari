@@ -68,6 +68,9 @@ internal class HtmlProseChapterProcessor : BookProcessor {
                 opened.stream.readBounded(MAX_HTML_RESOURCE_BYTES)
             }
             val bodyHtml = sanitize(bytes)
+            if (Jsoup.parseBodyFragment(bodyHtml).text().isBlank()) {
+                return failure(BookFailureReason.MALFORMED_CONTENT, "The prose chapter contains no readable text")
+            }
             BookOpenResult.Success(
                 HtmlProseChapterSession(
                     publicationId = content.publicationId,

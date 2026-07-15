@@ -2,7 +2,6 @@ package mihon.entry.interactions.book.epub
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,9 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -25,7 +21,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.ViewCarousel
 import androidx.compose.material.icons.outlined.ViewStream
@@ -41,7 +36,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -60,6 +54,8 @@ import kotlinx.coroutines.launch
 import mihon.book.api.BookLocator
 import mihon.book.api.BookNavigationItem
 import mihon.book.api.BookReadingDirection
+import mihon.entry.interactions.book.BookReaderNavigationRow
+import mihon.entry.interactions.book.BookReaderNavigationSheet
 import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
 import mihon.entry.viewer.settings.ResolvedViewerSetting
 import tachiyomi.i18n.MR
@@ -201,9 +197,15 @@ internal fun ReadiumEpubReaderScreen(
             },
         )
 
-        ReadiumTableOfContentsSheet(
+        BookReaderNavigationSheet(
             visible = state.tocVisible,
-            navigation = navigation,
+            rows = navigation.map { row ->
+                BookReaderNavigationRow(
+                    item = row.item,
+                    title = row.item.title?.takeIf(String::isNotBlank) ?: row.item.target.resourceId,
+                    depth = row.depth,
+                )
+            },
             selectedIndex = state.currentSectionIndex,
             onItemClick = onNavigationItemClick,
             onDismissRequest = { onTocVisibilityChange(false) },
@@ -293,103 +295,6 @@ private fun ReadiumReaderBottomBar(
                 imageVector = Icons.AutoMirrored.Filled.ViewList,
                 contentDescription = stringResource(MR.strings.book_table_of_contents),
             )
-        }
-    }
-}
-
-@Composable
-private fun ReadiumTableOfContentsSheet(
-    visible: Boolean,
-    navigation: List<ReadiumNavigationRow>,
-    selectedIndex: Int,
-    onItemClick: (BookNavigationItem) -> Unit,
-    onDismissRequest: () -> Unit,
-) {
-    if (!visible) return
-
-    val listState = rememberLazyListState()
-    LaunchedEffect(visible, selectedIndex) {
-        if (visible && selectedIndex >= 0) listState.scrollToItem(selectedIndex)
-    }
-
-    Dialog(
-        onDismissRequest = onDismissRequest,
-        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = true),
-    ) {
-        BoxWithConstraints {
-            AdaptiveSheet(
-                isTabletUi = false,
-                enableImplicitDismiss = true,
-                onDismissRequest = onDismissRequest,
-                modifier = Modifier.heightIn(max = maxHeight * 0.85f),
-            ) {
-                Column {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 24.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ViewList,
-                            contentDescription = null,
-                        )
-                        Text(
-                            text = stringResource(MR.strings.book_table_of_contents),
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(horizontal = 16.dp),
-                            style = MaterialTheme.typography.titleLarge,
-                        )
-                        IconButton(onClick = onDismissRequest) {
-                            Icon(
-                                imageVector = Icons.Outlined.Close,
-                                contentDescription = stringResource(MR.strings.action_close),
-                            )
-                        }
-                    }
-                    HorizontalDivider()
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f, fill = false),
-                        state = listState,
-                    ) {
-                        itemsIndexed(navigation) { index, row ->
-                            val selected = index == selectedIndex
-                            Text(
-                                text = row.item.title?.takeIf(String::isNotBlank)
-                                    ?: row.item.target.resourceId,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(
-                                        if (selected) {
-                                            MaterialTheme.colorScheme.secondaryContainer
-                                        } else {
-                                            Color.Transparent
-                                        },
-                                    )
-                                    .clickable {
-                                        onItemClick(row.item)
-                                        onDismissRequest()
-                                    }
-                                    .padding(
-                                        start = 16.dp + (row.depth * 16).dp,
-                                        top = 12.dp,
-                                        end = 16.dp,
-                                        bottom = 12.dp,
-                                    ),
-                                color = if (selected) {
-                                    MaterialTheme.colorScheme.onSecondaryContainer
-                                } else {
-                                    MaterialTheme.colorScheme.onSurface
-                                },
-                                style = MaterialTheme.typography.bodyMedium,
-                            )
-                        }
-                    }
-                }
-            }
         }
     }
 }

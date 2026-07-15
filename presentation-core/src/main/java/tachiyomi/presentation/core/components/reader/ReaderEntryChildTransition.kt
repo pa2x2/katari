@@ -1,5 +1,6 @@
 package tachiyomi.presentation.core.components.reader
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,11 +17,13 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -56,40 +59,55 @@ data class ReaderEntryChildTransitionUiModel(
 fun ReaderEntryChildTransition(
     model: ReaderEntryChildTransitionUiModel,
     modifier: Modifier = Modifier,
+    contentColor: Color = MaterialTheme.colorScheme.onSurface,
+    accentColor: Color = MaterialTheme.colorScheme.primary,
+    warningColor: Color = MaterialTheme.colorScheme.error,
+    outlineColor: Color = MaterialTheme.colorScheme.outlineVariant,
 ) {
-    ProvideTextStyle(MaterialTheme.typography.bodyMedium) {
-        Column(
-            modifier = modifier
-                .widthIn(max = 460.dp)
-                .fillMaxWidth(),
-        ) {
-            model.topChild?.let { child ->
-                TransitionChild(
-                    header = model.topLabel,
-                    child = child,
-                )
-                Spacer(Modifier.height(VerticalSpacerSize))
-            } ?: NoChildNotification(
-                text = model.fallbackLabel,
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-            )
-
-            model.bottomChild?.let { child ->
-                if (model.missingChildCount > 0) {
-                    ChildGapWarning(
-                        gapCount = model.missingChildCount,
-                        modifier = Modifier.align(Alignment.CenterHorizontally),
+    CompositionLocalProvider(LocalContentColor provides contentColor) {
+        ProvideTextStyle(MaterialTheme.typography.bodyMedium) {
+            Column(
+                modifier = modifier
+                    .widthIn(max = 460.dp)
+                    .fillMaxWidth(),
+            ) {
+                model.topChild?.let { child ->
+                    TransitionChild(
+                        header = model.topLabel,
+                        child = child,
                     )
-                }
-                Spacer(Modifier.height(VerticalSpacerSize))
-                TransitionChild(
-                    header = model.bottomLabel,
-                    child = child,
+                    Spacer(Modifier.height(VerticalSpacerSize))
+                } ?: NoChildNotification(
+                    text = model.fallbackLabel,
+                    contentColor = contentColor,
+                    accentColor = accentColor,
+                    outlineColor = outlineColor,
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
                 )
-            } ?: NoChildNotification(
-                text = model.fallbackLabel,
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-            )
+
+                model.bottomChild?.let { child ->
+                    if (model.missingChildCount > 0) {
+                        ChildGapWarning(
+                            gapCount = model.missingChildCount,
+                            contentColor = contentColor,
+                            warningColor = warningColor,
+                            outlineColor = outlineColor,
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                        )
+                    }
+                    Spacer(Modifier.height(VerticalSpacerSize))
+                    TransitionChild(
+                        header = model.bottomLabel,
+                        child = child,
+                    )
+                } ?: NoChildNotification(
+                    text = model.fallbackLabel,
+                    contentColor = contentColor,
+                    accentColor = accentColor,
+                    outlineColor = outlineColor,
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                )
+            }
         }
     }
 }
@@ -97,14 +115,18 @@ fun ReaderEntryChildTransition(
 @Composable
 private fun NoChildNotification(
     text: String,
+    contentColor: Color,
+    accentColor: Color,
+    outlineColor: Color,
     modifier: Modifier = Modifier,
 ) {
     OutlinedCard(
         modifier = modifier,
         colors = CardDefaults.outlinedCardColors(
             containerColor = Color.Transparent,
-            contentColor = MaterialTheme.colorScheme.onSurface,
+            contentColor = contentColor,
         ),
+        border = BorderStroke(1.dp, outlineColor),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -113,7 +135,7 @@ private fun NoChildNotification(
         ) {
             Icon(
                 imageVector = Icons.Outlined.Info,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = accentColor,
                 contentDescription = null,
             )
             Text(text = text, style = MaterialTheme.typography.bodyMedium)
@@ -124,14 +146,18 @@ private fun NoChildNotification(
 @Composable
 private fun ChildGapWarning(
     gapCount: Int,
+    contentColor: Color,
+    warningColor: Color,
+    outlineColor: Color,
     modifier: Modifier = Modifier,
 ) {
     OutlinedCard(
         modifier = modifier,
         colors = CardDefaults.outlinedCardColors(
             containerColor = Color.Transparent,
-            contentColor = MaterialTheme.colorScheme.onSurface,
+            contentColor = contentColor,
         ),
+        border = BorderStroke(1.dp, outlineColor),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -140,7 +166,7 @@ private fun ChildGapWarning(
         ) {
             Icon(
                 imageVector = Icons.Outlined.Warning,
-                tint = MaterialTheme.colorScheme.error,
+                tint = warningColor,
                 contentDescription = null,
             )
             Text(

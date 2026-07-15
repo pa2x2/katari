@@ -24,7 +24,7 @@ class HtmlProseSettingsProvider(
     private val paragraphSpacing = preferenceStore.getInt("book.prose.html.paragraph_spacing_percent", 100)
     private val textAlignment = preferenceStore.getString("book.prose.html.text_alignment", ALIGN_START)
     private val layoutMode = preferenceStore.getString("book.prose.html.layout_mode", LAYOUT_PAGINATED)
-    private val tapNavigation = preferenceStore.getBoolean("book.prose.html.tap_navigation", true)
+    private val tapNavigation = preferenceStore.getBoolean("book.prose.html.tap_navigation", false)
     private val showProgress = preferenceStore.getBoolean("book.prose.html.show_progress", true)
 
     val themeSetting = stringSetting(THEME_KEY, theme, SUPPORTED_THEMES)

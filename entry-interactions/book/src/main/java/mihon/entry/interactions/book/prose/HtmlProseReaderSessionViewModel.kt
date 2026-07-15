@@ -33,6 +33,8 @@ internal class HtmlProseReaderSessionViewModel : ViewModel() {
 
     fun cached(chapterId: Long): OpenedBookReaderSession? = sessions[chapterId]
 
+    fun locator(chapterId: Long): BookLocator? = locations[chapterId] ?: sessions[chapterId]?.initialLocator
+
     fun switchTo(chapterId: Long): OpenedBookReaderSession? {
         val destination = sessions[chapterId] ?: return null
         currentSession = destination
