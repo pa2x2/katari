@@ -15,7 +15,7 @@ Katari selects a reader from the publication format reported by the source. Form
 
 EPUB publications must be supplied as `application/epub+zip`. If a source does not declare a layout, Katari inspects the publication while opening it and accepts it only when it is reflowable.
 
-Serialized prose sources expose each provider chapter as a separate entry child. Opening a chapter resolves only that chapter's normalized HTML; previous and next navigation opens adjacent stored chapters rather than combining the novel into an EPUB-style publication.
+Serialized prose sources expose each provider chapter as a separate entry child. Opening a chapter resolves only that chapter's normalized HTML; previous and next navigation opens adjacent stored chapters rather than combining the novel into an EPUB-style publication. The reader preloads only the immediate neighbors. Its chapter picker uses the already stored chapter metadata and resolves a chapter body only after selection.
 
 When no compatible reader is available, Katari shows an unsupported-content screen instead of trying to open the publication in another media viewer. Support for additional book formats may be added through new readers in the future.
 
@@ -28,6 +28,8 @@ Each book processor can provide its own reader and settings. Every setting decla
 3. Processor default
 
 Changing profiles therefore changes reader defaults without affecting other profiles. An entry override remains attached to that entry and takes precedence until it is cleared.
+
+The prose reader supports paginated and continuous-scrolling layouts. Paginated reading is the default and can optionally use screen-edge taps for page turns. Both layouts share the immersive reader chrome, chapter picker, appearance controls, and previous/next chapter transition used by the other built-in readers.
 
 ## Reading progress
 
