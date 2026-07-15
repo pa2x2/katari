@@ -4,17 +4,12 @@ import mihon.entry.interactions.EntryInteractionPlugin
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
-import tachiyomi.domain.source.service.SourceManager
 
 fun bookEntryInteractionPlugin(
     dependencies: BookEntryInteractionDependencies,
 ): EntryInteractionPlugin {
     return EntryInteractionPlugin { registry ->
         val openProcessor = BookOpenProcessor()
-        val identityResolver = BookProgressIdentityResolver(
-            getEntryWithChapters = dependencies.getEntryWithChapters,
-            sourceManager = dependencies.sourceManager,
-        )
         registry.registerOpenProcessor(openProcessor)
         registry.registerCapabilityProcessor(BookCapabilityProcessor())
         registry.registerChildListProcessor(BookChildListProcessor(dependencies.entryProgressRepository))
@@ -28,7 +23,7 @@ fun bookEntryInteractionPlugin(
         registry.registerConsumptionProcessor(
             BookConsumptionProcessor(
                 entryProgressRepository = dependencies.entryProgressRepository,
-                identityResolver = identityResolver,
+                entryChapterRepository = dependencies.entryChapterRepository,
             ),
         )
         registry.registerUpdateEligibilityProcessor(BookUpdateEligibilityProcessor())
@@ -46,5 +41,4 @@ data class BookEntryInteractionDependencies(
     val getEntryWithChapters: GetEntryWithChapters,
     val entryChapterRepository: EntryChapterRepository,
     val entryProgressRepository: EntryProgressRepository,
-    val sourceManager: SourceManager,
 )

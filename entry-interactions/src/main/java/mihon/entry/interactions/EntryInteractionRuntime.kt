@@ -128,7 +128,6 @@ fun InjektRegistrar.addEntryInteractionRuntime(
                         getEntryWithChapters = get(),
                         entryChapterRepository = get(),
                         entryProgressRepository = get(),
-                        sourceManager = get(),
                     ),
                 ),
             ),

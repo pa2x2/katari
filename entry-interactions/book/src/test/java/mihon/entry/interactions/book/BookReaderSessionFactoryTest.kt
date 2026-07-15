@@ -135,6 +135,37 @@ class BookReaderSessionFactoryTest {
     }
 
     @Test
+    fun `saving progress preserves a manually consumed child without resolving media`() = runTest {
+        val chapter = chapter().copy(read = true)
+        val captured = slot<EntryProgressState>()
+        val progressRepository = mockk<EntryProgressRepository> {
+            coEvery { get(chapter.entryId, "", "publication.epub") } returns null
+            coEvery { mergeAndSyncChild(capture(captured)) } answers { captured.captured }
+        }
+        val session = OpenedBookReaderSession(
+            entry = entry(),
+            historySourceId = entry().source,
+            chapter = chapter,
+            progressIdentity = BookProgressIdentity("", "publication.epub", null),
+            contentSession = mockk(relaxed = true),
+            publicationSession = TestPublicationSession(),
+            initialLocator = null,
+            entryProgressRepository = progressRepository,
+            historyRepository = mockk(relaxed = true),
+            incognitoState = mockk {
+                every { isIncognito(entry().source) } returns false
+            },
+            now = { 100L },
+        )
+
+        session.saveLocation(BookLocator("chapter-1.xhtml", progression = 0.1))
+
+        assertTrue(captured.captured.completed)
+        assertEquals(100L, captured.captured.completionUpdatedAt)
+        session.close()
+    }
+
+    @Test
     fun `merged book history uses the child owner source for incognito`() = runTest {
         val owner = entry()
         val visible = entry().copy(id = 2L, source = 20L, url = "/merged")

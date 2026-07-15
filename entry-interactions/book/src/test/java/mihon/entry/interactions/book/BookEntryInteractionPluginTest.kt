@@ -1,12 +1,10 @@
 package mihon.entry.interactions.book
 
-import eu.kanade.tachiyomi.source.entry.BookResourceCatalog
-import eu.kanade.tachiyomi.source.entry.BookSourceResource
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import io.mockk.coEvery
-import io.mockk.every
+import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
@@ -24,7 +22,6 @@ import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
-import tachiyomi.domain.source.service.SourceManager
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -65,7 +62,6 @@ class BookEntryInteractionPluginTest {
                         getEntryWithChapters = getEntryWithChapters,
                         entryChapterRepository = mockk(),
                         entryProgressRepository = progressRepository,
-                        sourceManager = mockk(),
                     ),
                 ),
             ),
@@ -87,40 +83,26 @@ class BookEntryInteractionPluginTest {
     }
 
     @Test
-    fun `mark consumed persists source publication and resource identity`() = runTest {
+    fun `mark consumed updates the child without resolving source media`() = runTest {
         val chapter = chapter()
-        val progressRepository = mockk<EntryProgressRepository>()
-        val captured = slot<EntryProgressState>()
-        coEvery { progressRepository.get(1L, "volume-1", "epub") } returns null
-        coEvery { progressRepository.mergeAndSyncChild(capture(captured)) } answers { captured.captured }
+        val progressRepository = mockk<EntryProgressRepository> {
+            coEvery { getByEntryId(chapter.entryId) } returns emptyList()
+        }
+        val captured = slot<List<EntryChapter>>()
+        val chapterRepository = mockk<EntryChapterRepository> {
+            coEvery { updateAll(capture(captured)) } returns true
+        }
 
         val processor = BookConsumptionProcessor(
             entryProgressRepository = progressRepository,
-            identityResolver = identityResolver(
-                chapter = chapter,
-                media = EntryMedia.Book(
-                    descriptor = BookContentDescriptor("application/epub+zip"),
-                    publicationKeyOverride = "volume-1",
-                    publicationRevision = "publication-2",
-                    catalog = BookResourceCatalog(
-                        resources = listOf(BookSourceResource(id = "epub", revision = "resource-3")),
-                    ),
-                    initialResourceId = "epub",
-                ),
-            ),
+            entryChapterRepository = chapterRepository,
             now = { 100L },
         )
 
         processor.setConsumed(entry(), listOf(chapter), consumed = true)
 
-        assertEquals(1L, captured.captured.entryId)
-        assertEquals(chapter.id, captured.captured.chapterId)
-        assertEquals("volume-1", captured.captured.contentKey)
-        assertEquals("epub", captured.captured.resourceKey)
-        assertEquals("resource-3", captured.captured.resourceRevision)
-        assertEquals(BOOK_PROGRESS_LOCATOR_KIND, captured.captured.locator.kind)
-        assertTrue(captured.captured.completed)
-        assertEquals(100L, captured.captured.completionUpdatedAt)
+        assertTrue(captured.captured.single().read)
+        coVerify(exactly = 0) { progressRepository.mergeAndSyncChild(any()) }
     }
 
     @Test
@@ -143,18 +125,15 @@ class BookEntryInteractionPluginTest {
         )
         val progressRepository = mockk<EntryProgressRepository>()
         val captured = slot<EntryProgressState>()
-        coEvery { progressRepository.get(1L, "volume-1", "chapter-1") } returns current
+        coEvery { progressRepository.getByEntryId(chapter.entryId) } returns listOf(current)
         coEvery { progressRepository.mergeAndSyncChild(capture(captured)) } answers { captured.captured }
+        val updatedChapters = slot<List<EntryChapter>>()
+        val chapterRepository = mockk<EntryChapterRepository> {
+            coEvery { updateAll(capture(updatedChapters)) } returns true
+        }
         val processor = BookConsumptionProcessor(
             entryProgressRepository = progressRepository,
-            identityResolver = identityResolver(
-                chapter = chapter,
-                media = EntryMedia.Book(
-                    descriptor = BookContentDescriptor("text/html", profile = "prose-chapter"),
-                    publicationKeyOverride = "volume-1",
-                    initialResourceId = "chapter-1",
-                ),
-            ),
+            entryChapterRepository = chapterRepository,
             now = { 100L },
         )
 
@@ -164,6 +143,7 @@ class BookEntryInteractionPluginTest {
         assertEquals(locator, captured.captured.locator)
         assertEquals(50L, captured.captured.locatorUpdatedAt)
         assertEquals(100L, captured.captured.completionUpdatedAt)
+        assertFalse(updatedChapters.captured.single().read)
     }
 
     @Test
@@ -225,22 +205,6 @@ class BookEntryInteractionPluginTest {
         assertEquals(descriptor, state.descriptor)
         assertTrue(state.failure.message.contains(descriptor.format))
         assertTrue(state.failure.message.contains("fixed-layout"))
-    }
-
-    private fun identityResolver(
-        chapter: EntryChapter,
-        media: EntryMedia.Book,
-    ): BookProgressIdentityResolver {
-        val owner = entry()
-        val source = mockk<UnifiedSource>()
-        val getEntryWithChapters = mockk<GetEntryWithChapters> {
-            coEvery { awaitEntry(chapter.entryId) } returns owner
-        }
-        val sourceManager = mockk<SourceManager> {
-            every { get(owner.source) } returns source
-        }
-        coEvery { source.getMedia(any(), any()) } returns media
-        return BookProgressIdentityResolver(getEntryWithChapters, sourceManager)
     }
 
     private fun entry(): Entry = Entry.create().copy(
