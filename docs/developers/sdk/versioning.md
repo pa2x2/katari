@@ -82,8 +82,8 @@ The extension loader family remains a stable numeric `major.minor`; do not put p
 
 ## Documentation versions
 
-Human-written guides are organized by compatibility family because patch releases should not change public usage. The generated API reference and SDK changelog identify exact releases.
+The documentation site publishes one set of human-written guides and generated API references for the current stable SDK. These pages advance when another stable SDK becomes current; the site does not retain separate guide or API-reference archives for older families or patch releases.
 
-The developer navigation points to the current stable guides. Older family guides and exact generated references remain available and immutable when compatibility-specific documentation is required, while `latest` advances only to a stable release.
+Use the SDK changelog to identify when a public contract was introduced or changed. For an older exact release, use the corresponding `sdk-*` tag as the source-level reference.
 
 See the [SDK changelog](./changelog.md) before adopting a new artifact and [local SDK development](./local-development.md) when testing coordinated local changes.
