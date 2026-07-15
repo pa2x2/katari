@@ -8,6 +8,7 @@ import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryProgressRepository
+import tachiyomi.domain.entry.service.sortedForReading
 
 internal class BookContinueProcessor(
     private val getEntryWithChapters: GetEntryWithChapters,
@@ -18,7 +19,7 @@ internal class BookContinueProcessor(
 
     override suspend fun findNext(entry: Entry): EntryChapter? {
         entry.requireBook()
-        val chapters = getEntryWithChapters.awaitChapters(entry.id)
+        val chapters = getEntryWithChapters.awaitChapters(entry.id).sortedForReading(entry)
         val chapterById = chapters.associateBy(EntryChapter::id)
         return chapters
             .map(EntryChapter::entryId)

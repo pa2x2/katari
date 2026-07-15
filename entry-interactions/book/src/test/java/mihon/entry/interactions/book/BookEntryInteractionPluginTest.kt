@@ -31,6 +31,25 @@ import kotlin.test.assertTrue
 
 class BookEntryInteractionPluginTest {
     @Test
+    fun `continue starts at first unread chapter in reading order`() = runTest {
+        val first = chapter(id = 11L, chapterNumber = 1.0)
+        val latest = chapter(id = 12L, chapterNumber = 2.0)
+        val getEntryWithChapters = mockk<GetEntryWithChapters> {
+            coEvery { awaitChapters(1L, any()) } returns listOf(latest, first)
+        }
+        val progressRepository = mockk<EntryProgressRepository> {
+            coEvery { getByEntryId(1L) } returns emptyList()
+        }
+        val processor = BookContinueProcessor(
+            getEntryWithChapters = getEntryWithChapters,
+            entryProgressRepository = progressRepository,
+            openProcessor = mockk(),
+        )
+
+        assertEquals(first, processor.findNext(entry()))
+    }
+
+    @Test
     fun `plugin registers generic book interactions without download support`() = runTest {
         val chapter = chapter()
         val getEntryWithChapters = mockk<GetEntryWithChapters> {
@@ -233,14 +252,16 @@ class BookEntryInteractionPluginTest {
     )
 
     private fun chapter(
+        id: Long = 10L,
         read: Boolean = false,
         url: String = "/chapter/1",
+        chapterNumber: Double = 1.0,
     ): EntryChapter = EntryChapter.create().copy(
-        id = 10L,
+        id = id,
         entryId = 1L,
         url = url,
         name = "Chapter 1",
         read = read,
-        chapterNumber = 1.0,
+        chapterNumber = chapterNumber,
     )
 }
