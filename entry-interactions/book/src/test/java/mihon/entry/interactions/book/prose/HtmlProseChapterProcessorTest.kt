@@ -45,6 +45,7 @@ class HtmlProseChapterProcessorTest {
                 <script>steal()</script>
                 <a href="https://example.com">external</a>
                 <a href="#note">note</a>
+                <aside id="note">Footnote</aside>
                 <img src="https://example.com/tracker.png">
             """.trimIndent(),
         )
@@ -55,6 +56,7 @@ class HtmlProseChapterProcessorTest {
         assertEquals(listOf("chapter-7"), session.publication.readingOrder.map { it.id })
         assertTrue(session.bodyHtml.contains("<em>reader</em>"))
         assertTrue(session.bodyHtml.contains("href=\"#note\""))
+        assertTrue(session.bodyHtml.contains("<aside id=\"note\">Footnote</aside>"))
         assertFalse(session.bodyHtml.contains("onclick"))
         assertFalse(session.bodyHtml.contains("<script"))
         assertFalse(session.bodyHtml.contains("https://example.com"))

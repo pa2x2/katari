@@ -6,6 +6,7 @@ import android.text.Spanned
 import android.text.StaticLayout
 import android.text.TextPaint
 import androidx.core.text.HtmlCompat
+import org.jsoup.Jsoup
 import tachiyomi.domain.entry.model.EntryChapter
 
 internal data class HtmlProseLoadedChapter(
@@ -20,14 +21,31 @@ internal data class HtmlProsePage(
     val index: Int,
     val total: Int,
     val text: CharSequence,
+    val sourceStart: Int = 0,
+    val sourceEndExclusive: Int = sourceStart + text.length,
 ) {
     val progression: Float
         get() = if (total <= 1) 1f else index.toFloat() / (total - 1)
 }
 
-internal fun parseProseHtml(bodyHtml: String, paragraphSpacingPercent: Int = 100): Spanned {
+internal data class ParsedProseDocument(
+    val text: Spanned,
+    val anchors: Map<String, Int>,
+)
+
+internal fun parseProseHtml(bodyHtml: String, paragraphSpacingPercent: Int = 100): ParsedProseDocument {
+    val document = Jsoup.parseBodyFragment(bodyHtml)
+    val anchorMarkers = buildList {
+        document.select("[id], a[name]").forEach { element ->
+            val ids = listOf(element.id(), element.attr("name")).filter(String::isNotBlank).distinct()
+            if (ids.isEmpty()) return@forEach
+            val marker = "$ANCHOR_MARKER_START${size.toString(36)}$ANCHOR_MARKER_END"
+            element.prependText(marker)
+            add(marker to ids)
+        }
+    }
     val parsed = SpannableStringBuilder(
-        HtmlCompat.fromHtml(bodyHtml, HtmlCompat.FROM_HTML_MODE_LEGACY),
+        HtmlCompat.fromHtml(document.body().html(), HtmlCompat.FROM_HTML_MODE_LEGACY),
     )
     val replacement = "\n".repeat(1 + (paragraphSpacingPercent.coerceIn(0, 200) / 100))
     var index = parsed.length - 1
@@ -41,7 +59,15 @@ internal fun parseProseHtml(bodyHtml: String, paragraphSpacingPercent: Int = 100
             index--
         }
     }
-    return parsed
+    val anchors = buildMap {
+        anchorMarkers.forEach { (marker, ids) ->
+            val markerIndex = parsed.indexOf(marker)
+            if (markerIndex < 0) return@forEach
+            ids.forEach { id -> putIfAbsent(id, markerIndex) }
+            parsed.delete(markerIndex, markerIndex + marker.length)
+        }
+    }
+    return ParsedProseDocument(parsed, anchors)
 }
 
 internal fun paginateProse(
@@ -81,6 +107,21 @@ internal fun paginateProse(
             index = index,
             total = ranges.size,
             text = text.subSequence(range.first, range.last + 1),
+            sourceStart = range.first,
+            sourceEndExclusive = range.last + 1,
         )
     }
 }
+
+internal fun pageIndexForAnchor(pages: List<HtmlProsePage>, anchorOffset: Int): Int? {
+    return pages.indexOfFirst { page ->
+        anchorOffset >= page.sourceStart &&
+            (
+                anchorOffset < page.sourceEndExclusive ||
+                    (page.index == pages.lastIndex && anchorOffset == page.sourceEndExclusive)
+                )
+    }.takeIf { it >= 0 }
+}
+
+private const val ANCHOR_MARKER_START = '\uE000'
+private const val ANCHOR_MARKER_END = '\uE001'

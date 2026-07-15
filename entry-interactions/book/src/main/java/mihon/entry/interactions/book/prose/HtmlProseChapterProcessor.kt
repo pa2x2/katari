@@ -179,10 +179,10 @@ private const val XHTML_MEDIA_TYPE = "application/xhtml+xml"
 
 private val PROSE_SAFELIST = Safelist.none()
     .addTags(
-        "a", "b", "blockquote", "br", "caption", "cite", "code", "col", "colgroup", "dd", "div", "dl",
-        "dt", "em", "figcaption", "figure", "h1", "h2", "h3", "h4", "h5", "h6", "hr", "i", "li", "ol",
-        "p", "pre", "q", "s", "small", "span", "strike", "strong", "sub", "sup", "table", "tbody", "td",
-        "tfoot", "th", "thead", "tr", "u", "ul",
+        "a", "article", "aside", "b", "blockquote", "br", "caption", "cite", "code", "col", "colgroup", "dd",
+        "div", "dl", "dt", "em", "figcaption", "figure", "h1", "h2", "h3", "h4", "h5", "h6", "hr", "i",
+        "li", "ol", "p", "pre", "q", "s", "section", "small", "span", "strike", "strong", "sub", "sup",
+        "table", "tbody", "td", "tfoot", "th", "thead", "tr", "u", "ul",
     )
     .addAttributes(":all", "id", "lang", "dir")
     .addAttributes("a", "href", "name", "title")

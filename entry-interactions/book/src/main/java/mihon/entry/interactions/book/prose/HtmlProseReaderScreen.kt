@@ -2,7 +2,13 @@ package mihon.entry.interactions.book.prose
 
 import android.graphics.Typeface
 import android.text.Layout
+import android.text.Spannable
+import android.text.SpannableString
 import android.text.TextPaint
+import android.text.method.LinkMovementMethod
+import android.text.style.ClickableSpan
+import android.text.style.URLSpan
+import android.view.View
 import android.widget.TextView
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -371,8 +377,13 @@ private fun PaginatedProseViewer(
             }
         }
         val alignment = textAlignment.toLayoutAlignment()
+        val documents = remember(state.loadedChapters, paragraphSpacingPercent) {
+            state.loadedChapters.mapValues { (_, chapter) ->
+                parseProseHtml(chapter.bodyHtml, paragraphSpacingPercent)
+            }
+        }
         val pages = remember(
-            state.loadedChapters,
+            documents,
             widthPx,
             heightPx,
             paint.textSize,
@@ -384,7 +395,7 @@ private fun PaginatedProseViewer(
             state.loadedChapters.mapValues { (_, chapter) ->
                 paginateProse(
                     chapter = chapter,
-                    text = parseProseHtml(chapter.bodyHtml, paragraphSpacingPercent),
+                    text = checkNotNull(documents[chapter.chapter.id]).text,
                     paint = paint,
                     availableWidthPx = widthPx,
                     availableHeightPx = heightPx,
@@ -475,6 +486,20 @@ private fun PaginatedProseViewer(
                     fontSizePercent = fontSizePercent,
                     lineHeightPercent = lineHeightPercent,
                     textAlignment = textAlignment,
+                    onAnchorClick = { anchorId, _ ->
+                        val anchorOffset = documents[item.page.chapter.id]?.anchors?.get(anchorId)
+                            ?: return@ProseText
+                        val targetPage = pageIndexForAnchor(
+                            pages = pages[item.page.chapter.id].orEmpty(),
+                            anchorOffset = anchorOffset,
+                        ) ?: return@ProseText
+                        val targetIndex = items.indexOfFirst { target ->
+                            target is ProsePagerItem.Page &&
+                                target.page.chapter.id == item.page.chapter.id &&
+                                target.page.index == targetPage
+                        }
+                        if (targetIndex >= 0) scope.launch { pagerState.animateScrollToPage(targetIndex) }
+                    },
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = horizontalMargin, vertical = verticalMargin),
@@ -528,6 +553,7 @@ private fun ScrollingProseViewer(
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
     var initialPositionRestored by remember(listState, state.currentChapterId) { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val verticalPaddingPx = with(LocalDensity.current) { (16.dp * pageMarginsPercent / 100).roundToPx() }
     LaunchedEffect(listState, items, state.currentChapterId, initialProgression) {
         if (initialPositionRestored) return@LaunchedEffect
         val chapterIndex = items.indexOfFirst {
@@ -575,25 +601,44 @@ private fun ScrollingProseViewer(
     ) {
         items(items, key = ProseScrollItem::key) { item ->
             when (item) {
-                is ProseScrollItem.Chapter -> ProseText(
-                    text = parseProseHtml(item.content.bodyHtml, paragraphSpacingPercent),
-                    palette = palette,
-                    fontFamily = fontFamily,
-                    fontSizePercent = fontSizePercent,
-                    lineHeightPercent = lineHeightPercent,
-                    textAlignment = textAlignment,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(
-                            interactionSource = null,
-                            indication = null,
-                            onClick = onMenuToggle,
-                        )
-                        .padding(
-                            horizontal = 20.dp * pageMarginsPercent / 100,
-                            vertical = 16.dp * pageMarginsPercent / 100,
-                        ),
-                )
+                is ProseScrollItem.Chapter -> {
+                    val document = remember(item.content.bodyHtml, paragraphSpacingPercent) {
+                        parseProseHtml(item.content.bodyHtml, paragraphSpacingPercent)
+                    }
+                    ProseText(
+                        text = document.text,
+                        palette = palette,
+                        fontFamily = fontFamily,
+                        fontSizePercent = fontSizePercent,
+                        lineHeightPercent = lineHeightPercent,
+                        textAlignment = textAlignment,
+                        onAnchorClick = { anchorId, view ->
+                            val anchorOffset = document.anchors[anchorId] ?: return@ProseText
+                            val layout = view.layout ?: return@ProseText
+                            val line = layout.getLineForOffset(anchorOffset.coerceIn(0, view.text.length))
+                            val itemIndex = items.indexOf(item)
+                            if (itemIndex >= 0) {
+                                scope.launch {
+                                    listState.animateScrollToItem(
+                                        itemIndex,
+                                        verticalPaddingPx + layout.getLineTop(line),
+                                    )
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(
+                                interactionSource = null,
+                                indication = null,
+                                onClick = onMenuToggle,
+                            )
+                            .padding(
+                                horizontal = 20.dp * pageMarginsPercent / 100,
+                                vertical = 16.dp * pageMarginsPercent / 100,
+                            ),
+                    )
+                }
                 is ProseScrollItem.Transition -> ProseTransition(
                     transition = item.transition,
                     palette = palette,
@@ -658,6 +703,7 @@ private fun ProseText(
     fontSizePercent: Int,
     lineHeightPercent: Int,
     textAlignment: String,
+    onAnchorClick: (String, TextView) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     AndroidView(
@@ -667,10 +713,12 @@ private fun ProseText(
                 includeFontPadding = false
                 setTextIsSelectable(false)
                 setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                movementMethod = LinkMovementMethod.getInstance()
+                highlightColor = android.graphics.Color.TRANSPARENT
             }
         },
         update = { view ->
-            view.text = text
+            view.text = text.withAnchorClicks { anchorId -> onAnchorClick(anchorId, view) }
             view.setTextColor(palette.foreground.toArgbValue())
             view.textSize = 16f * fontSizePercent / 100f
             view.typeface = proseTypeface(fontFamily)
@@ -683,6 +731,27 @@ private fun ProseText(
             }
         },
     )
+}
+
+internal fun CharSequence.withAnchorClicks(onAnchorClick: (String) -> Unit): CharSequence {
+    val spannable = SpannableString(this)
+    spannable.getSpans(0, spannable.length, URLSpan::class.java).forEach { span ->
+        val anchorId = span.url.removePrefix("#").takeIf { span.url.startsWith("#") && it.isNotBlank() }
+            ?: return@forEach
+        val start = spannable.getSpanStart(span)
+        val end = spannable.getSpanEnd(span)
+        val flags = spannable.getSpanFlags(span)
+        spannable.removeSpan(span)
+        spannable.setSpan(
+            object : ClickableSpan() {
+                override fun onClick(widget: View) = onAnchorClick(anchorId)
+            },
+            start,
+            end,
+            flags.takeIf { it != 0 } ?: Spannable.SPAN_EXCLUSIVE_EXCLUSIVE,
+        )
+    }
+    return spannable
 }
 
 @Composable
