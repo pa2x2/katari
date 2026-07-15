@@ -227,5 +227,3 @@ The descriptor must describe the actual content even when Katari has no compatib
 - Test the extension against the matching Katari runtime with [local SDK development](../developers/sdk/local-development.md).
 
 See [Book API architecture](../developers/sdk/book-api.md) for the source/processor boundary and [content types](../developers/sdk/content-types.md#book-entries) for the generic BOOK contract.
-
-The `src/en/gutenberg` and `src/en/novelarrow` modules in [`katari-extensions`](https://github.com/katariapp/katari-extensions) are complete references for remote EPUB and serialized prose sources respectively.
