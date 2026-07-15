@@ -128,19 +128,33 @@ class SyncEntryWithSource(
             .map(IndexedSourceChapter::resolvedName)
             .toSet()
         val now = now()
-        val representativeChapters = existingChapters
-            .groupBy { it.sourceOrder }
-            .values
-            .map { chapters ->
-                chapters.maxWithOrNull(
-                    compareBy<EntryChapter>(
-                        { stateRank(it) },
-                        { if (it.url in currentSourceUrls) 1 else 0 },
-                        EntryChapter::lastModifiedAt,
-                        EntryChapter::id,
-                    ),
-                )!!
-            }
+        val existingChapterGroups = existingChapters.groupBy { it.sourceOrder }.values
+        val progressRankByChapterId = if (existingChapterGroups.any { it.size > 1 }) {
+            entryProgressRepository.getByEntryId(entry.id)
+                .mapNotNull { progress ->
+                    val chapterId = progress.chapterId ?: return@mapNotNull null
+                    val rank = when {
+                        progress.completed -> 2
+                        !progress.locator.isEmpty -> 1
+                        else -> 0
+                    }
+                    chapterId to rank
+                }
+                .groupingBy(Pair<Long, Int>::first)
+                .fold(0) { rank, progress -> maxOf(rank, progress.second) }
+        } else {
+            emptyMap()
+        }
+        val representativeChapters = existingChapterGroups.map { chapters ->
+            chapters.maxWithOrNull(
+                compareBy<EntryChapter>(
+                    { stateRank(it, progressRankByChapterId[it.id] ?: 0) },
+                    { if (it.url in currentSourceUrls) 1 else 0 },
+                    EntryChapter::lastModifiedAt,
+                    EntryChapter::id,
+                ),
+            )!!
+        }
         val chaptersToInsert = mutableListOf<EntryChapter>()
         val chaptersToUpdate = mutableListOf<EntryChapter>()
         val progressResourcesToRekey = mutableListOf<ProgressResourceRekey>()
@@ -298,8 +312,8 @@ class SyncEntryWithSource(
         )
     }
 
-    private fun stateRank(chapter: EntryChapter): Int {
-        return if (chapter.read) 1 else 0
+    private fun stateRank(chapter: EntryChapter, progressRank: Int): Int {
+        return maxOf(if (chapter.read) 2 else 0, progressRank)
     }
 
     private data class IndexedSourceChapter(

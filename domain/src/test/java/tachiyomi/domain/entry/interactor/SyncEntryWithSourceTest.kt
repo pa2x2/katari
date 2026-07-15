@@ -25,6 +25,8 @@ import tachiyomi.core.common.preference.InMemoryPreferenceStore
 import tachiyomi.domain.chapter.model.NoChaptersException
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryProgressLocator
+import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
@@ -104,6 +106,47 @@ class SyncEntryWithSourceTest {
                 oldResourceKey = "/old",
                 newContentKey = "",
                 newResourceKey = "/new",
+            )
+        }
+    }
+
+    @Test
+    fun `partial progress wins over an unstarted duplicate with the current url`() = runTest {
+        val existing = listOf(
+            chapter(id = 1L, url = "/old", sourceOrder = 0L),
+            chapter(id = 2L, url = "/current", sourceOrder = 0L),
+        )
+        val source = TestSource(chapters = listOf(sourceChapter(url = "/current")))
+        val repository = chapterRepository(existing)
+        val removed = slot<List<Long>>()
+        coEvery { repository.removeChaptersWithIds(capture(removed)) } returns Unit
+        val progressRepository = mockk<EntryProgressRepository>(relaxed = true) {
+            coEvery { getByEntryId(1L) } returns listOf(
+                EntryProgressState(
+                    entryId = 1L,
+                    chapterId = 1L,
+                    resourceKey = "/old",
+                    locator = EntryProgressLocator(kind = "page", position = 4L, extent = 20L),
+                    locatorUpdatedAt = 100L,
+                ),
+            )
+        }
+
+        sync(
+            source = source,
+            repository = repository,
+            progressRepository = progressRepository,
+        )(entry(), fetchDetails = false)
+
+        removed.captured shouldBe listOf(2L)
+        coVerify(exactly = 1) {
+            progressRepository.rekey(
+                entryId = 1L,
+                chapterId = 1L,
+                oldContentKey = "",
+                oldResourceKey = "/old",
+                newContentKey = "",
+                newResourceKey = "/current",
             )
         }
     }
