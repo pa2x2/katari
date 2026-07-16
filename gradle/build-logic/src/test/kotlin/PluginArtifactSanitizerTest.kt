@@ -22,6 +22,7 @@ class PluginArtifactSanitizerTest {
         val entries = unzip(output.toByteArray())
         assertFalse(STALE_XMLUTIL_SERVICE in entries)
         assertEquals("xmlutil", entries["nl/adaptivity/xmlutil/XML.class"])
+        assertEquals(FIXED_ENTRY_TIME, entryTime(output.toByteArray(), "nl/adaptivity/xmlutil/XML.class"))
     }
 
     @Test
@@ -49,7 +50,11 @@ class PluginArtifactSanitizerTest {
         return ByteArrayOutputStream().also { output ->
             ZipOutputStream(output).use { zip ->
                 entries.forEach { (name, content) ->
-                    zip.putNextEntry(ZipEntry(name))
+                    zip.putNextEntry(
+                        ZipEntry(name).apply {
+                            time = FIXED_ENTRY_TIME
+                        },
+                    )
                     zip.write(content.toByteArray())
                     zip.closeEntry()
                 }
@@ -66,5 +71,17 @@ class PluginArtifactSanitizerTest {
                 }
             }
         }
+    }
+
+    private fun entryTime(archive: ByteArray, name: String): Long? {
+        return ZipInputStream(ByteArrayInputStream(archive)).use { zip ->
+            generateSequence(zip::getNextEntry)
+                .firstOrNull { it.name == name }
+                ?.time
+        }
+    }
+
+    private companion object {
+        const val FIXED_ENTRY_TIME = 946_684_800_000L
     }
 }

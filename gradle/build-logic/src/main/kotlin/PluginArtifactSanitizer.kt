@@ -60,6 +60,7 @@ internal fun removeZipEntry(
                             comment = entry.comment
                             extra = entry.extra
                             method = entry.method
+                            time = entry.time.takeIf { it >= 0L } ?: 0L
                             if (entry.method == ZipEntry.STORED) {
                                 size = entry.size
                                 compressedSize = entry.compressedSize
