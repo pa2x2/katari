@@ -9,6 +9,20 @@ this file covers the features and behavior that distinguish Katari.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-07-16
+
+### Added
+
+- Added content-type filters to source and extension browsing, including an option to
+  show items whose content type is not specified. (by Pa2)
+
+### Fixed
+
+- Restored memo data when importing Mihon backups and preserved display names from older
+  Katari backups. (by Pa2)
+- Prevented the initial library synchronization from showing newly added entries as
+  updates. (by Pa2)
+
 ## [1.2.0] - 2026-07-16
 
 ### Added
@@ -113,7 +127,8 @@ Based on [Mihon v0.20.1](https://github.com/mihonapp/mihon/releases/tag/v0.20.1)
 - Rebranded the application as Katari with its own package identity, visual
   identity, release pipeline, and documentation.
 
-[Unreleased]: https://github.com/katariapp/katari/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/katariapp/katari/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/katariapp/katari/releases/tag/v1.2.1
 [1.2.0]: https://github.com/katariapp/katari/releases/tag/v1.2.0
 [1.1.0]: https://github.com/katariapp/katari/releases/tag/v1.1.0
 [1.0.2]: https://github.com/katariapp/katari/releases/tag/v1.0.2

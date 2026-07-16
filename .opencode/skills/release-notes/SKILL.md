@@ -1,6 +1,6 @@
 ---
 name: release-notes
-description: Generate user-facing Katari release notes for a specified semantic version, update CHANGELOG.md from the previous Katari release tag, and update the matching GitHub draft release after explicit confirmation. Use when asked to run or implement the release-notes command, prepare a Katari release changelog, or populate a draft GitHub release.
+description: Generate user-facing Katari release notes for a specified local semantic-version tag by comparing it with its previous local Katari release tag. Return the changelog as the response without editing files or GitHub releases. Use when asked to run or implement the release-notes command or prepare a Katari release changelog.
 ---
 
 # Katari release notes
@@ -12,20 +12,18 @@ Katari's changelog focused on behavior that differs from Mihon.
 
 1. Require exactly one stable semantic version. Normalize `1.1.0` to `v1.1.0`; reject
    prereleases, ranges, branches, and arbitrary commits.
-2. Read `AGENTS.md`. Verify the repository root, worktree state, `origin` URL, and GitHub
-   authentication. Derive the GitHub `owner/repo` from `origin` and use it explicitly for
-   every subsequent `gh` command; never rely on `gh`'s default repository selection.
-   Preserve unrelated worktree changes.
-3. Fetch tags from `origin` without pushing or changing branches. Run:
+2. Read `AGENTS.md`. Verify the repository root and worktree state. Preserve unrelated
+   worktree changes.
+3. Use local tags only. Do not fetch, push, change branches, require GitHub authentication,
+   or inspect a GitHub release. Run:
 
    ```bash
    python3 .opencode/skills/release-notes/scripts/inspect_release.py <version>
    ```
 
-   Record the target tag, target SHA, previous Katari release tag, comparison range,
-   configured app version, and GitHub release state. Stop if the target tag does not
-   exist, is not descended from the previous tag, does not match the app version, or the
-   GitHub release is missing or is not a draft.
+   Record the target tag, target SHA, previous local Katari release tag, comparison range,
+   and configured app version. Stop if the target tag does not exist locally, is not
+   descended from the previous local tag, or does not match the app version.
 4. Inspect `git log`, `git diff --stat`, and the full diff for the reported range. Use
    `CHANGELOG.md`, pull-request references, tests, and commit messages as leads. Trace
    representative runtime and presentation paths before claiming user-visible behavior.
@@ -33,13 +31,20 @@ Katari's changelog focused on behavior that differs from Mihon.
    Combine related commits into one outcome and discard duplicate, superseded, reverted,
    or implementation-only work. A large commit range may legitimately produce only a few
    bullets.
-6. For every candidate, identify all GitHub users who materially contributed to that
-   outcome. Resolve GitHub logins from associated pull-request authors and commit authors
-   using the explicit `owner/repo`; inspect co-author trailers when present. Do not infer a
-   login from a display name or email, and do not credit merge, dependency, or automation
-   bots. When several commits or pull requests are combined into one outcome, preserve the
-   union of their contributors. If a contributor's GitHub login cannot be verified, use
-   their commit author name without an `@` rather than inventing a mention.
+   Classify each outcome by its final behavior rather than the commit subject. Omit
+   follow-up fixes that merely complete, correct, or safeguard the expected behavior of a
+   feature introduced in the same release range; they are not separate release-note
+   outcomes. If such a change creates a materially distinct user-facing outcome, combine
+   it with that feature under `Added`, `Changed`, or `Improved`, never under `Fixed`.
+   Reserve `Fixed` for independently user-visible bugs or regressions outside a new
+   feature's expected behavior.
+6. For every candidate, identify all contributors who materially contributed to that
+   outcome. Inspect commit authors and co-author trailers; use a verified GitHub login from
+   associated pull requests only when it is available without requiring GitHub access. Do
+   not infer a login from a display name or email, and do not credit merge, dependency, or
+   automation bots. When several commits or pull requests are combined into one outcome,
+   preserve the union of their contributors. If a contributor's GitHub login cannot be
+   verified, use their commit author name without an `@` rather than inventing a mention.
 7. Keep a candidate only when the verified final behavior gives users something useful to
    know: a feature they can use, a meaningful behavior or workflow change, a user-facing
    fix, a compatibility change that requires action, or a removal they may notice. If a
@@ -60,7 +65,7 @@ Katari's changelog focused on behavior that differs from Mihon.
    Include an otherwise omitted item only when its concrete impact is material to users or
    extension developers. Describe that impact, never the maintenance work itself.
 
-## Update CHANGELOG.md
+## Return the changelog
 
 1. Write a Keep a Changelog section named `[X.Y.Z]` with the current date. Use only the
    applicable headings `Added`, `Changed`, `Improved`, `Removed`, `Fixed`, and `Other`.
@@ -72,54 +77,14 @@ Katari's changelog focused on behavior that differs from Mihon.
    the form `(by @user)` or `(by @user1, @user2)`, using the verified contributor set for
    that outcome. Use the verified commit author name in the same form when no GitHub login
    is available.
-3. Insert the new section above the newest released version. If an `Unreleased` section
-   exists, move only entries verified for this release and leave the heading in place.
-4. Update link definitions so `[Unreleased]` compares `vX.Y.Z...HEAD` and `[X.Y.Z]` links
-   to the matching Katari release. Preserve prior definitions.
-5. Apply the changelog edit without asking for confirmation. Run formatting-neutral checks
-   such as `git diff --check` and inspect the resulting diff. Do not stage or commit it.
-
-## Prepare the GitHub draft
-
-1. Create a shorter release body from the same verified facts. Prefer sections such as
-   `What's new`, `Improvements`, and `Fixes`, omitting empty sections. Keep wording useful
-   to regular users and avoid duplicating every changelog detail. Select only the highlights
-   most likely to affect use of the app; do not pad the body to represent every commit or
-   every changelog bullet. Retain the contributor credit from each selected changelog
-   outcome so every release-body bullet ends with its contributor mention or names.
-2. End with this download guidance, using the normalized tag:
-
-   ```markdown
-   > [!TIP]
-   >
-   > If you are unsure which version to download, use `katari-vX.Y.Z.apk`.
-   ```
-
-3. Show the complete proposed body and summarize the local `CHANGELOG.md` change. Ask the
-   user for explicit confirmation to update the GitHub draft. Updating the changelog does
-   not imply this confirmation.
-4. Do not call `gh release edit` in the same turn that asks for confirmation. Continue only
-   after a later user message clearly approves the displayed body.
-5. Immediately before updating, re-read the release with:
-
-   ```bash
-   gh release view <tag> --repo <origin-owner/repo> \
-     --json tagName,name,isDraft,isPrerelease,body,url
-   ```
-
-   Stop if it is missing, no longer a draft, or its tag differs. If its body changed since
-   the preview, show the change and ask again instead of overwriting it.
-6. Write the approved body through a temporary file and run `gh release edit <tag>
-   --repo <origin-owner/repo> --notes-file <file>`. Always remove the temporary file.
-   Never change draft/prerelease state, title, tag, target, or assets.
-7. Read the release back with the same explicit `--repo <origin-owner/repo>`, verify the
-   body, and report its URL plus the uncommitted changelog path. Never publish, commit,
-   stage, tag, or push.
+3. Return the complete section in a Markdown code block in the response. Include no
+   summaries, release-body variants, download guidance, or GitHub-release actions unless
+   the user separately asks for them.
+4. Do not modify `CHANGELOG.md`, link definitions, or any other repository file. Do not
+   stage, commit, tag, push, create, publish, or edit a GitHub release.
 
 ## Safety rules
 
-- Treat `/release-notes <version>` as authorization to edit only `CHANGELOG.md`; require
-  separate confirmation for the external GitHub write.
-- Do not overwrite unrelated changelog edits. If the intended insertion overlaps existing
-  user changes and cannot be preserved confidently, stop and explain the conflict.
+- Treat `/release-notes <version>` as read-only. Do not edit `CHANGELOG.md` or any other
+  repository file.
 - Never infer a release from `HEAD`; resolve both endpoints as exact `vX.Y.Z` tags.
