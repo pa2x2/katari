@@ -39,8 +39,8 @@ internal class ReadiumEpubReaderHost(
         .onEach { onLocation(ReadiumLocatorAdapter.adapt(it)) }
         .launchIn(scope)
 
-    fun currentLocation(navigator: EpubNavigatorFragment): BookLocator? {
-        return navigator.currentLocator.value?.let(ReadiumLocatorAdapter::adapt)
+    fun currentLocation(navigator: EpubNavigatorFragment): BookLocator {
+        return ReadiumLocatorAdapter.adapt(navigator.currentLocator.value)
     }
 
     fun goForward(navigator: EpubNavigatorFragment): Boolean = navigator.goForward(animated = true)
