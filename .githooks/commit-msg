@@ -1,0 +1,30 @@
+#!/bin/sh
+
+commit_message_file=$1
+subject=$(sed -n '1{s/\r$//;p;}' "$commit_message_file")
+
+case "$subject" in
+    "Merge "* | "Revert "* | "fixup! "* | "squash! "*)
+        exit 0
+        ;;
+esac
+
+if printf '%s\n' "$subject" | grep -Eq '^\((feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)\): [^[:space:]].*$'; then
+    exit 0
+fi
+
+cat >&2 <<EOF
+Invalid commit subject: $subject
+
+Commit subjects must use: (type): summary
+
+Allowed types:
+  feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert
+
+Examples:
+  (feat): add profile export
+  (fix): preserve prose reader position
+  (docs): explain SDK versioning
+EOF
+
+exit 1

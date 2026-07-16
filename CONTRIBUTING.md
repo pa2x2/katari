@@ -2,6 +2,44 @@
 
 The public [developer documentation](https://katariapp.github.io/katari/developers/) explains how extension authors use the Entry SDK. This guide covers repository-specific work on the SDK and its documentation.
 
+## Commit messages
+
+Commit subjects must use the following format:
+
+```text
+(type): summary
+```
+
+Activate the repository's commit-message hook once in each clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Use one of these types:
+
+- `feat`: add or extend functionality.
+- `fix`: correct faulty behavior.
+- `docs`: change documentation only.
+- `style`: change formatting without affecting behavior.
+- `refactor`: restructure code without changing behavior.
+- `perf`: improve performance.
+- `test`: add or update tests.
+- `build`: change the build system or dependencies.
+- `ci`: change continuous-integration configuration.
+- `chore`: perform maintenance not covered by another type.
+- `revert`: revert an earlier change.
+
+For example:
+
+```text
+(feat): add profile export
+(fix): preserve prose reader position
+(docs): explain SDK versioning
+```
+
+Git-generated subjects beginning with `Merge `, `Revert `, `fixup! `, or `squash! ` are exempt from this format. Commit-message bodies are unrestricted.
+
 ## Preview the documentation
 
 From the repository root, run:
