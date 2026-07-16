@@ -2,6 +2,7 @@ plugins {
     alias(mihonx.plugins.android.library)
     alias(mihonx.plugins.compose)
     alias(mihonx.plugins.spotless)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -23,8 +24,10 @@ dependencies {
     implementation(libs.androidx.compose.materialIcons)
     implementation(libs.androidx.fragment)
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.bundles.serialization)
     implementation(libs.injekt)
     implementation(libs.jsoup)
+    implementation(libs.unifile)
 
     implementation(libs.readium.navigator)
     implementation(libs.readium.shared)
