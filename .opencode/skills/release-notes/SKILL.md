@@ -33,12 +33,19 @@ Katari's changelog focused on behavior that differs from Mihon.
    Combine related commits into one outcome and discard duplicate, superseded, reverted,
    or implementation-only work. A large commit range may legitimately produce only a few
    bullets.
-6. Keep a candidate only when the verified final behavior gives users something useful to
+6. For every candidate, identify all GitHub users who materially contributed to that
+   outcome. Resolve GitHub logins from associated pull-request authors and commit authors
+   using the explicit `owner/repo`; inspect co-author trailers when present. Do not infer a
+   login from a display name or email, and do not credit merge, dependency, or automation
+   bots. When several commits or pull requests are combined into one outcome, preserve the
+   union of their contributors. If a contributor's GitHub login cannot be verified, use
+   their commit author name without an `@` rather than inventing a mention.
+7. Keep a candidate only when the verified final behavior gives users something useful to
    know: a feature they can use, a meaningful behavior or workflow change, a user-facing
    fix, a compatibility change that requires action, or a removal they may notice. If a
    regular user would not benefit from knowing it when deciding to update or using the new
    version, omit it.
-7. Omit by default:
+8. Omit by default:
 
    - documentation, comments, translations, formatting, lint, and typo-only changes;
    - test additions, test fixes, fixtures, snapshots, and test infrastructure;
@@ -61,7 +68,10 @@ Katari's changelog focused on behavior that differs from Mihon.
    developer changes only when they alter Katari's public SDK or compatibility contract.
    Do not create one bullet per commit or pull request, include commit hashes or PR numbers,
    or add a catch-all list of minor/internal changes. Prefer fewer, broader bullets that each
-   communicate one distinct and useful outcome.
+   communicate one distinct and useful outcome. End every bullet with contributor credit in
+   the form `(by @user)` or `(by @user1, @user2)`, using the verified contributor set for
+   that outcome. Use the verified commit author name in the same form when no GitHub login
+   is available.
 3. Insert the new section above the newest released version. If an `Unreleased` section
    exists, move only entries verified for this release and leave the heading in place.
 4. Update link definitions so `[Unreleased]` compares `vX.Y.Z...HEAD` and `[X.Y.Z]` links
@@ -75,7 +85,8 @@ Katari's changelog focused on behavior that differs from Mihon.
    `What's new`, `Improvements`, and `Fixes`, omitting empty sections. Keep wording useful
    to regular users and avoid duplicating every changelog detail. Select only the highlights
    most likely to affect use of the app; do not pad the body to represent every commit or
-   every changelog bullet.
+   every changelog bullet. Retain the contributor credit from each selected changelog
+   outcome so every release-body bullet ends with its contributor mention or names.
 2. End with this download guidance, using the normalized tag:
 
    ```markdown
