@@ -7,7 +7,7 @@ plugins {
 }
 
 val legacy14FixtureJar = layout.buildDirectory.file("legacy-fixtures/legacy14-fixture.jar")
-val decodeLegacy14Fixture by tasks.registering {
+val decodeLegacy14Fixture = tasks.register("decodeLegacy14Fixture") {
     val encodedFixture = layout.projectDirectory.file("fixtures/upstream14/legacy14-fixture.jar.b64")
     inputs.file(encodedFixture)
     outputs.file(legacy14FixtureJar)

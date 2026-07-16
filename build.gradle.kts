@@ -12,7 +12,7 @@ buildscript {
     }
 }
 
-val legacySourceAbiVerifier by configurations.creating {
+val legacySourceAbiVerifier = configurations.create("legacySourceAbiVerifier") {
     attributes {
         attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
         attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
