@@ -8,12 +8,12 @@ An extension release can involve four values:
 
 | Value                   | Example     | Meaning                                                                          |
 | ----------------------- | ----------- | -------------------------------------------------------------------------------- |
-| Katari app version      | `1.4.0`     | App release supplying the SDK runtime implementation                             |
-| SDK artifact set        | `sdk-2.1.3` | Exact coordinated `entry-source-api` and `book-api` version used for compilation |
-| Extension `versionName` | `2.1.8`     | Required API family `2.1`, extension revision `8`                                |
+| Katari app version      | `1.2.2`     | App release supplying the SDK runtime implementation                             |
+| SDK artifact set        | `sdk-2.2.0` | Exact coordinated `entry-source-api` and `book-api` version used for compilation |
+| Extension `versionName` | `2.2.8`     | Required API family `2.2`, extension revision `8`                                |
 | Extension `versionCode` | `42`        | Android's monotonically increasing update number                                 |
 
-The extension `versionName` is not the SDK SemVer. In this example, `2.1.8` does not mean the extension compiled against SDK `2.1.8`.
+The extension `versionName` is not the SDK SemVer. In this example, `2.2.8` does not mean the extension compiled against SDK `2.2.8`.
 
 ## Semantic version rules
 
@@ -23,7 +23,7 @@ SDK releases use `MAJOR.MINOR.PATCH`:
 - Increment **MINOR** for backward-compatible public functionality, including new optional capabilities and deprecations.
 - Increment **MAJOR** for incompatible public API or behavioral contract changes.
 
-The Git tag and JitPack version use the `sdk-` prefix, such as `sdk-2.1.0`; the semantic version is `2.1.0`.
+The Git tag and JitPack version use the `sdk-` prefix, such as `sdk-2.2.0`; the semantic version is `2.2.0`.
 
 Examples:
 
@@ -52,7 +52,7 @@ SDK 2.0.1  ├── loader family 2.0
 SDK 2.0.2 ─┘
 ```
 
-A minor SDK release creates another declared family. The Katari runtime supplying SDK 2.1 continues accepting extensions from family 2.0 because the minor release is backward-compatible, while older Katari releases reject extensions requiring 2.1 APIs.
+A minor SDK release creates another declared family. The Katari runtime supplying SDK 2.2 continues accepting extensions from families 2.0 and 2.1 because the minor releases are backward-compatible, while older Katari releases reject extensions requiring 2.2 APIs.
 
 An extension should declare the oldest family whose public API it actually requires, not automatically copy the newest SDK used by its build.
 
@@ -64,7 +64,9 @@ The Entry SDK is a `compileOnly` dependency. Katari supplies `entry-source-api` 
 
 The SDK changelog identifies the public contracts added by each SDK version. Runtime support and artifact publication are coordinated so an extension declaring a supported family can rely on Katari supplying that family.
 
-`sdk-2.1.0`, first supplied by Katari `1.2.0`, introduces BOOK and the coordinated `book-api` artifact. Katari accepts both the `2.0` and `2.1` Entry SDK families.
+`sdk-2.2.0`, first supplied by Katari `1.2.2`, introduces `RelatedEntriesSource`. Katari accepts the `2.0`, `2.1`, and `2.2` Entry SDK families.
+
+`sdk-2.1.0`, first supplied by Katari `1.2.0`, introduced BOOK and the coordinated `book-api` artifact.
 
 A patch must not add a new required public symbol. When an extension relies on corrected runtime behavior from a patch, state the minimum Katari app version in the extension release notes or repository metadata.
 

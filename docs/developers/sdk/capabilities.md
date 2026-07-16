@@ -8,6 +8,7 @@ Capabilities are focused interfaces or properties that opt a source into behavio
 | --- | --- |
 | `EntryCatalogueSource` | Makes a source browsable and declares language, latest-update support, and immersive-browsing support. |
 | `SourceMetadata` | Advertises optional descriptive information, currently the entry types a source may supply. |
+| `RelatedEntriesSource` | Supplies source-defined entries related to a selected entry. |
 | `EntryImageSource` | Resolves and downloads ordered image pages. |
 | `SubtitleSource` | Resolves external subtitle tracks for a playback selection. |
 | `EntryPreviewSource` | Supplies ordered static preview images describing an entry independently of child media. |
@@ -43,6 +44,24 @@ class ExampleSource : EntryHttpSource(), SourceMetadata {
 ```
 
 Include every entry type the source may return. Katari presents this information as a subtle source-level hint; it does not validate or restrict catalogue results. Each returned `SEntry.type` remains authoritative. Omitting the capability, or returning an empty set, means that the source's supported types are unknown.
+
+## Related entries
+
+Implement `RelatedEntriesSource` when the provider exposes entries related to a selected entry:
+
+```kotlin
+class ExampleSource : EntryHttpSource(), RelatedEntriesSource {
+    override suspend fun getRelatedEntries(entry: SEntry): List<SEntry> {
+        return fetchRelatedEntries(entry.url)
+    }
+}
+```
+
+The capability itself is the support signal; there is no separate `supportsRelatedEntries` flag.
+
+Return entries from the same source in the provider's display order, with stable URLs suitable for the normal entry-details flow. Each returned `SEntry.type` is authoritative, and a result may contain mixed entry types. An empty list means that the source has no related entries for the selected entry.
+
+Related entries are provider-defined discovery results. Katari does not synthesize them through title search when the capability is absent or a request returns no results.
 
 ## Child-list safety
 
