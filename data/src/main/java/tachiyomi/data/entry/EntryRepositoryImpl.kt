@@ -307,10 +307,6 @@ class EntryRepositoryImpl(
         }
     }
 
-    override suspend fun setFavorite(id: Long, favorite: Boolean): Boolean {
-        return updateField(id) { copy(favorite = favorite) }
-    }
-
     override suspend fun setViewerFlags(id: Long, viewerFlags: Long): Boolean {
         return updateField(id) { copy(viewerFlags = viewerFlags) }
     }

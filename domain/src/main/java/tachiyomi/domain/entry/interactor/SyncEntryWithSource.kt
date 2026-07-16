@@ -93,6 +93,10 @@ class SyncEntryWithSource(
         }
 
         val existingChapters = entryChapterRepository.getChaptersByEntryIdAwait(entry.id)
+        val isInitialLibraryChapterSync = entry.favorite &&
+            entry.dateAdded > 0L &&
+            entry.fetchInterval == 0 &&
+            existingChapters.isEmpty()
         val sourceEntry = updatedEntry.toSEntry()
         val rawSourceChapters = if (source is IncrementalChapterSource) {
             source.getChapterList(sourceEntry, existingChapters.map(EntryChapter::toSEntryChapter))
@@ -277,7 +281,10 @@ class SyncEntryWithSource(
         val hasChapterChanges =
             insertedChapters.isNotEmpty() || chaptersToUpdate.isNotEmpty() || chaptersToRemove.isNotEmpty()
         var entryAfterChapterSync = if (hasChapterChanges) {
-            updatedEntry.copy(lastUpdate = now())
+            updatedEntry.copy(
+                lastUpdate = now(),
+                dateAdded = if (isInitialLibraryChapterSync) now else updatedEntry.dateAdded,
+            )
         } else {
             updatedEntry
         }

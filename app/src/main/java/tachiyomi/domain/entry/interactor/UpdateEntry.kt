@@ -42,17 +42,6 @@ class UpdateEntry(
         return entryRepository.update(entry.copy(coverLastModified = Instant.now().toEpochMilli()))
     }
 
-    suspend fun awaitUpdateFavorite(entryId: Long, favorite: Boolean): Boolean {
-        val entry = entryRepository.getEntryById(entryId) ?: return false
-        val dateAdded = when (favorite) {
-            true -> Instant.now().toEpochMilli()
-            false -> 0
-        }
-        return entryRepository.update(
-            entry.copy(favorite = favorite, dateAdded = dateAdded),
-        )
-    }
-
     suspend fun awaitUpdateDisplayName(entryId: Long, displayName: String?): Boolean {
         return entryRepository.updateDisplayName(entryId, displayName)
     }

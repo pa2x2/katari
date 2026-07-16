@@ -76,8 +76,6 @@ interface EntryRepository {
 
     suspend fun updateFromSource(entry: Entry): Boolean
 
-    suspend fun setFavorite(id: Long, favorite: Boolean): Boolean
-
     suspend fun setViewerFlags(id: Long, viewerFlags: Long): Boolean
 
     suspend fun setChapterFlags(id: Long, flags: Long): Boolean

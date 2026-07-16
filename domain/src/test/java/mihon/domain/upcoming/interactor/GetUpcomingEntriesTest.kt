@@ -68,7 +68,6 @@ class GetUpcomingEntriesTest {
         override suspend fun insertOrUpdate(entry: Entry): Entry = entry
         override suspend fun update(entry: Entry): Boolean = true
         override suspend fun updateFromSource(entry: Entry): Boolean = true
-        override suspend fun setFavorite(id: Long, favorite: Boolean): Boolean = true
         override suspend fun setViewerFlags(id: Long, viewerFlags: Long): Boolean = true
         override suspend fun setChapterFlags(id: Long, flags: Long): Boolean = true
         override suspend fun setUpdateStrategy(id: Long, strategy: EntryUpdateStrategy): Boolean = true

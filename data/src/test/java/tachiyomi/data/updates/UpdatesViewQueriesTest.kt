@@ -20,6 +20,19 @@ import tachiyomi.view.UpdatesViewQueries
 class UpdatesViewQueriesTest {
 
     @Test
+    fun `initial chapters fetched at or before library addition are excluded from updates`() = runTest {
+        withSeededDatabase { database ->
+            database.updatesViewQueries.getRecentUpdates(
+                profileId = 1,
+                after = -1,
+                limit = 100,
+            ).awaitAsList()
+                .filter { it.entryId == 4L }
+                .map { it.chapterName } shouldContainExactlyInAnyOrder listOf("Post-library update")
+        }
+    }
+
+    @Test
     fun `started filter uses progress locators across entry types`() = runTest {
         withSeededDatabase { database ->
             database.updatesViewQueries.filteredChapterNames(started = true) shouldContainExactlyInAnyOrder listOf(
@@ -76,7 +89,8 @@ class UpdatesViewQueriesTest {
                 VALUES
                     (1, 1, 1, '/manga', 'Manga', 1, 0, 'manga'),
                     (2, 1, 2, '/anime', 'Anime', 1, 0, 'anime'),
-                    (3, 1, 3, '/book', 'Book', 1, 0, 'book')
+                    (3, 1, 3, '/book', 'Book', 1, 0, 'book'),
+                    (4, 1, 4, '/new-library-entry', 'New library entry', 1, 20, 'manga')
             """.trimIndent(),
             parameters = 0,
         )
@@ -97,7 +111,10 @@ class UpdatesViewQueriesTest {
                     (25, 2, '/anime/partial-unknown', 'Anime partial unknown duration', 0, 10, 10),
                     (31, 3, '/book/untouched', 'Book untouched', 0, 10, 10),
                     (32, 3, '/book/partial-resource', 'Book partial resource', 0, 10, 10),
-                    (33, 3, '/book/partial-total', 'Book partial total', 0, 10, 10)
+                    (33, 3, '/book/partial-total', 'Book partial total', 0, 10, 10),
+                    (41, 4, '/initial', 'Initial chapter', 0, 0, 10),
+                    (42, 4, '/update', 'Post-library update', 0, 0, 30),
+                    (43, 4, '/initial-at-add', 'Initial chapter at add', 0, 0, 20)
             """.trimIndent(),
             parameters = 0,
         )

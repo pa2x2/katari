@@ -301,6 +301,61 @@ class SyncEntryWithSourceTest {
         result.hasChanges shouldBe true
     }
 
+    @Test
+    fun `first chapter sync after library addition establishes updates baseline`() = runTest {
+        val chapterRepository = chapterRepository(emptyList())
+        val insertedChapters = slot<List<EntryChapter>>()
+        coEvery { chapterRepository.insertOrUpdate(capture(insertedChapters)) } answers {
+            insertedChapters.captured.map { it.copy(id = 10L) }
+        }
+        coEvery { chapterRepository.getChaptersByEntryIdAwait(1L, true) } answers {
+            insertedChapters.captured.map { it.copy(id = 10L) }
+        }
+        val entryRepository = mockEntryRepository()
+        val updatedEntries = mutableListOf<Entry>()
+        coEvery { entryRepository.update(capture(updatedEntries)) } returns true
+
+        sync(
+            source = TestSource(chapters = listOf(sourceChapter())),
+            repository = chapterRepository,
+            entryRepository = entryRepository,
+            now = { 1000L },
+        )(
+            entry().copy(favorite = true, dateAdded = 900L),
+            fetchDetails = false,
+        )
+
+        insertedChapters.captured.single().dateFetch shouldBe 1000L
+        updatedEntries.last().dateAdded shouldBe 1000L
+    }
+
+    @Test
+    fun `first chapter after an earlier empty sync remains an update`() = runTest {
+        val chapterRepository = chapterRepository(emptyList())
+        val insertedChapters = slot<List<EntryChapter>>()
+        coEvery { chapterRepository.insertOrUpdate(capture(insertedChapters)) } answers {
+            insertedChapters.captured.map { it.copy(id = 10L) }
+        }
+        coEvery { chapterRepository.getChaptersByEntryIdAwait(1L, true) } answers {
+            insertedChapters.captured.map { it.copy(id = 10L) }
+        }
+        val entryRepository = mockEntryRepository()
+        val updatedEntries = mutableListOf<Entry>()
+        coEvery { entryRepository.update(capture(updatedEntries)) } returns true
+
+        sync(
+            source = TestSource(chapters = listOf(sourceChapter())),
+            repository = chapterRepository,
+            entryRepository = entryRepository,
+            now = { 1000L },
+        )(
+            entry().copy(favorite = true, dateAdded = 900L, fetchInterval = 7),
+            fetchDetails = false,
+        )
+
+        updatedEntries.last().dateAdded shouldBe 900L
+    }
+
     private fun sync(
         source: UnifiedSource,
         repository: EntryChapterRepository = chapterRepository(emptyList()),
