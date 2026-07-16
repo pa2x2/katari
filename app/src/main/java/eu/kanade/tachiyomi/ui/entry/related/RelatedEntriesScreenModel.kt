@@ -1,12 +1,16 @@
 package eu.kanade.tachiyomi.ui.entry.related
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.produceState
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import tachiyomi.domain.entry.interactor.GetEntry
@@ -23,6 +27,15 @@ class RelatedEntriesScreenModel(
 
     private var loadJob: Job? = null
     private var loadGeneration = 0L
+
+    @Composable
+    fun getEntryState(initialEntry: Entry): androidx.compose.runtime.State<Entry> {
+        return produceState(initialValue = initialEntry) {
+            getEntry.subscribe(initialEntry.url, initialEntry.source, initialEntry.type)
+                .filterNotNull()
+                .collectLatest { entry -> value = entry }
+        }
+    }
 
     fun load() {
         if (state.value is State.Loading || state.value is State.Success) return
