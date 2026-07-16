@@ -32,6 +32,7 @@
 -keep class eu.kanade.tachiyomi.source.** { *; }
 -keep class eu.kanade.tachiyomi.source.entry.** { *; }
 -keep class eu.kanade.tachiyomi.network.** { *; }
+-keep class mihon.book.api.** { *; }
 -keep class eu.kanade.tachiyomi.util.JsoupExtensionsKt { *; }
 -keep class eu.kanade.tachiyomi.util.RxExtensionKt { *; }
 -keep class tachiyomi.core.common.util.lang.RxCoroutineBridgeKt { *; }

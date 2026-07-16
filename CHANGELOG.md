@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2] - 2026-07-16
+
+### Fixed
+
+- Fixed a release-build crash when opening books from compatible Entry Source extensions.
+  (by @pa2x2)
+
 ## [1.2.1] - 2026-07-16
 
 ### Added
@@ -118,7 +125,8 @@ Based on [Mihon v0.20.1](https://github.com/mihonapp/mihon/releases/tag/v0.20.1)
 - Rebranded the application as Katari with its own package identity, visual
   identity, release pipeline, and documentation.
 
-[Unreleased]: https://github.com/katariapp/katari/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/katariapp/katari/compare/v1.2.2...HEAD
+[1.2.2]: https://github.com/katariapp/katari/releases/tag/v1.2.2
 [1.2.1]: https://github.com/katariapp/katari/releases/tag/v1.2.1
 [1.2.0]: https://github.com/katariapp/katari/releases/tag/v1.2.0
 [1.1.0]: https://github.com/katariapp/katari/releases/tag/v1.1.0

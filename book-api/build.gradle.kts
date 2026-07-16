@@ -40,6 +40,12 @@ kotlin {
     @Suppress("UnstableApiUsage")
     android {
         namespace = "mihon.book.api"
+        optimization {
+            consumerKeepRules.apply {
+                publish = true
+                file("consumer-proguard.pro")
+            }
+        }
 
         // TODO(antsy): Remove when https://youtrack.jetbrains.com/issue/KT-83319 is resolved
         withHostTest { }

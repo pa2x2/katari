@@ -145,6 +145,88 @@ tasks.register("verifyLegacySourceAbi") {
     )
 }
 
+val releaseR8MappingDirectory = layout.projectDirectory.dir("app/build/outputs/mapping/release")
+
+tasks.register("verifyExtensionRuntimeAbi") {
+    group = "verification"
+    description = "Checks that R8 preserves the runtime ABI used by external extensions"
+
+    dependsOn(":app:minifyReleaseWithR8")
+
+    val configurationFile = releaseR8MappingDirectory.file("configuration.txt")
+    val mappingFile = releaseR8MappingDirectory.file("mapping.txt")
+    val usageFile = releaseR8MappingDirectory.file("usage.txt")
+    inputs.files(configurationFile, mappingFile, usageFile)
+
+    doLast {
+        val requiredKeepRules = listOf(
+            "-keep class eu.kanade.tachiyomi.source.** { *; }",
+            "-keep class eu.kanade.tachiyomi.network.** { *; }",
+            "-keep class mihon.book.api.** { *; }",
+        )
+        val configuration = configurationFile.asFile.readText()
+        val missingKeepRules = requiredKeepRules.filterNot(configuration::contains)
+        check(missingKeepRules.isEmpty()) {
+            "Release R8 configuration is missing extension runtime ABI keep rules:\n" +
+                missingKeepRules.joinToString("\n")
+        }
+
+        val runtimeAbiPackagePrefixes = listOf(
+            "eu.kanade.tachiyomi.source",
+            "eu.kanade.tachiyomi.network",
+            "mihon.book.api",
+        )
+        val removedRuntimeAbi = mutableListOf<String>()
+        var runtimeApiClass: String? = null
+        usageFile.asFile.forEachLine { line ->
+            if (line.isNotBlank() && !line.first().isWhitespace()) {
+                val className = line.removeSuffix(":")
+                runtimeApiClass = className.takeIf {
+                    runtimeAbiPackagePrefixes.any { prefix ->
+                        className == prefix || className.startsWith("$prefix.") || className.startsWith("$prefix\$")
+                    }
+                }
+            } else if (
+                runtimeApiClass != null &&
+                (line.trimStart().startsWith("public ") || line.trimStart().startsWith("protected "))
+            ) {
+                removedRuntimeAbi += "$runtimeApiClass:\n$line"
+            }
+        }
+        check(removedRuntimeAbi.isEmpty()) {
+            "R8 removed public or protected members from the external extension runtime ABI:\n" +
+                removedRuntimeAbi.joinToString("\n")
+        }
+
+        val requiredRuntimeMembers = mapOf(
+            "mihon.book.api.BookContentDescriptor" to listOf(
+                "void <init>(java.lang.String,java.lang.String,java.lang.String,int," +
+                    "kotlin.jvm.internal.DefaultConstructorMarker)",
+            ),
+        )
+        val mappingLines = mappingFile.asFile.readLines()
+        val missingRuntimeMembers = requiredRuntimeMembers.flatMap { (className, requiredMembers) ->
+            val classStart = mappingLines.indexOfFirst { it.startsWith("$className -> ") }
+            val classEnd = if (classStart >= 0) {
+                (classStart + 1..<mappingLines.size).firstOrNull { index ->
+                    val line = mappingLines[index]
+                    line.isNotBlank() && !line.first().isWhitespace() && line.contains(" -> ") && line.endsWith(":")
+                } ?: mappingLines.size
+            } else {
+                classStart
+            }
+            val classMapping = if (classStart >= 0) mappingLines.subList(classStart, classEnd) else emptyList()
+            requiredMembers.filterNot { requiredMember ->
+                classMapping.any { it.contains(requiredMember) }
+            }.map { "$className#$it" }
+        }
+        check(missingRuntimeMembers.isEmpty()) {
+            "Release APK is missing members required by existing extensions:\n" +
+                missingRuntimeMembers.joinToString("\n")
+        }
+    }
+}
+
 tasks.register("publishEntrySdkToMavenLocal") {
     group = "publishing"
     description = "Publishes every Entry SDK artifact with the same version to Maven Local"
