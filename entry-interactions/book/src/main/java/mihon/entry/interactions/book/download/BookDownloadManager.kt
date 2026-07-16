@@ -109,8 +109,7 @@ internal class BookDownloadManager(
         cache.ensureInitialized()
         val queued = chapters
             .filterNot { cache.isDownloaded(BookDownloadPackageKey(entry.source, entry.url, it.url)) }
-            .sortedByDescending(EntryChapter::sourceOrder)
-            .map { BookDownload(entry, it).apply { status = BookDownload.State.QUEUE } }
+            .toQueuedBookDownloads(entry)
         synchronized(queueMutationLock) {
             val chapterIds = chapters.mapTo(mutableSetOf(), EntryChapter::id)
             _queueState.update { current -> current.filterNot { it.chapter.id in chapterIds } + queued }
@@ -216,7 +215,7 @@ internal class BookDownloadManager(
     }
 
     fun invalidateCache() {
-        scope.launch { cache.refresh() }
+        scope.launch { cache.refresh(reportInitialization = true) }
     }
 
     fun renameSource(oldSource: UnifiedSource, newSource: UnifiedSource) {
@@ -265,4 +264,8 @@ internal fun mergeRestoredBookDownloads(
 ): List<BookDownload> {
     val currentIds = current.mapTo(mutableSetOf()) { it.chapter.id }
     return restored.filterNot { it.chapter.id in currentIds } + current
+}
+
+internal fun List<EntryChapter>.toQueuedBookDownloads(entry: Entry): List<BookDownload> = map { chapter ->
+    BookDownload(entry, chapter).apply { status = BookDownload.State.QUEUE }
 }

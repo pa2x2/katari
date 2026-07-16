@@ -36,17 +36,17 @@ internal class BookDownloadCache(
     suspend fun ensureInitialized() {
         if (initialized) return
         refreshMutex.withLock {
-            if (!initialized) refreshLocked()
+            if (!initialized) refreshLocked(reportInitialization = true)
         }
     }
 
-    suspend fun refresh(): BookDownloadCacheRefresh = refreshMutex.withLock {
-        refreshLocked()
+    suspend fun refresh(reportInitialization: Boolean = false): BookDownloadCacheRefresh = refreshMutex.withLock {
+        refreshLocked(reportInitialization)
     }
 
-    private suspend fun refreshLocked(): BookDownloadCacheRefresh =
+    private suspend fun refreshLocked(reportInitialization: Boolean): BookDownloadCacheRefresh =
         withContext(Dispatchers.IO) {
-            _isInitializing.value = true
+            if (reportInitialization) _isInitializing.value = true
             try {
                 val cleaned = provider.cleanupTemporaryPackages()
                 val scan = provider.scanPackages()
@@ -67,7 +67,7 @@ internal class BookDownloadCache(
                     cleanedTemporaryPackageCount = cleaned,
                 )
             } finally {
-                _isInitializing.value = false
+                if (reportInitialization) _isInitializing.value = false
             }
         }
 

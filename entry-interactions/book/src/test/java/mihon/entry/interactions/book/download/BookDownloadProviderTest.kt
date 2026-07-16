@@ -3,6 +3,8 @@ package mihon.entry.interactions.book.download
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.util.lang.Hash
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import mihon.book.api.BookCatalogCoverage
 import mihon.book.api.BookContentDescriptor
@@ -21,6 +23,25 @@ import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class BookDownloadProviderTest {
+    @Test
+    fun `routine cache refresh does not report download initialization`() = runTest {
+        val observedInitialization = mutableListOf<Boolean>()
+        lateinit var cache: BookDownloadCache
+        val provider = mockk<BookDownloadProvider> {
+            every { cleanupTemporaryPackages() } returns 0
+            every { scanPackages() } answers {
+                observedInitialization += cache.isInitializing.value
+                BookDownloadPackageScan(emptyList(), 0)
+            }
+        }
+        cache = BookDownloadCache(provider)
+
+        cache.refresh()
+        cache.refresh(reportInitialization = true)
+
+        assertEquals(listOf(false, true), observedInitialization)
+    }
+
     @Test
     fun `completed package is verified and indexed`() = runTest {
         val fixture = fixture()
