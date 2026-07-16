@@ -1,5 +1,9 @@
 package mihon.entry.interactions.book.epub
 
+import android.app.Application
+import com.hippo.unifile.UniFile
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonPrimitive
 import mihon.book.api.BookCatalogCoverage
@@ -15,9 +19,14 @@ import mihon.book.api.BookResourceCapability
 import mihon.book.api.BookTextContext
 import mihon.entry.interactions.book.BookByteRange
 import mihon.entry.interactions.book.BookContentSession
+import mihon.entry.interactions.book.BookMaterializationCache
 import mihon.entry.interactions.book.BookOpenResult
 import mihon.entry.interactions.book.MaterializedBookResource
 import mihon.entry.interactions.book.OpenedBookResource
+import mihon.entry.interactions.book.download.BookDownloadManifest
+import mihon.entry.interactions.book.download.BookDownloadedResource
+import mihon.entry.interactions.book.download.DownloadedBookContentSession
+import mihon.entry.interactions.book.download.VerifiedBookDownloadPackage
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -67,6 +76,56 @@ class ReadiumEpubProcessorTest {
         session.close()
         session.close()
         assertEquals(1, content.leaseCloseCount.get())
+    }
+
+    @Test
+    fun `opens an authored EPUB from a durable downloaded content session`() = runBlocking {
+        val fixture = EpubFixture.write(temporaryDirectory().resolve("downloaded.epub"), version = 2)
+        val downloadedFile = mockk<UniFile> {
+            every { openInputStream() } answers { fixture.inputStream() }
+        }
+        val manifest = BookDownloadManifest(
+            sourceId = 9L,
+            entryId = 1L,
+            entryTitle = "Downloaded EPUB",
+            entryUrl = "/book",
+            childId = 10L,
+            childTitle = "EPUB",
+            childUrl = "/book.epub",
+            descriptor = BookContentDescriptor("application/epub+zip"),
+            publicationId = "book:downloaded",
+            publicationRevision = "v1",
+            catalogCoverage = BookCatalogCoverage.COMPLETE,
+            primaryResourceIds = listOf("publication.epub"),
+            resources = listOf(
+                BookDownloadedResource(
+                    id = "publication.epub",
+                    mediaType = "application/epub+zip",
+                    revision = "v1",
+                    fileName = "publication.epub",
+                    storedSize = fixture.length(),
+                    sha256 = "0".repeat(64),
+                ),
+            ),
+            createdAt = 1L,
+        )
+        val downloaded = VerifiedBookDownloadPackage(
+            directory = mockk(relaxed = true),
+            manifest = manifest,
+            resources = mapOf("publication.epub" to downloadedFile),
+        )
+        val materializationCache = BookMaterializationCache(
+            application = mockk<Application>(relaxed = true),
+            directory = temporaryDirectory().resolve("materialized").toFile(),
+        )
+        val content = DownloadedBookContentSession(downloaded, materializationCache)
+
+        val result = assertIs<BookOpenResult.Success>(ReadiumEpubProcessor().open(content))
+
+        assertEquals("book:downloaded", result.session.publication.id)
+        assertEquals(2, result.session.publication.readingOrder.size)
+        result.session.close()
+        content.close()
     }
 
     @Test

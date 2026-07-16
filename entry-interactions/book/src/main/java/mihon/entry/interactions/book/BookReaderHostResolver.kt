@@ -14,23 +14,23 @@ internal class BookReaderHostResolver(
             is BookReaderPrepareResult.Failure -> return BookReaderHostState.Unavailable(result.failure)
             is BookReaderPrepareResult.Success -> result.request
         }
-        val media = prepared.media
+        val descriptor = prepared.content.descriptor
 
-        return when (val selection = selectionCoordinator.resolve(media.descriptor)) {
+        return when (val selection = selectionCoordinator.resolve(descriptor)) {
             BookProcessorSelection.Unsupported -> BookReaderHostState.Unavailable(
                 failure = BookFailure(
                     reason = BookFailureReason.PROCESSOR_UNAVAILABLE,
-                    message = media.descriptor.unsupportedMessage(),
+                    message = descriptor.unsupportedMessage(),
                 ),
-                descriptor = media.descriptor,
+                descriptor = descriptor,
             )
             is BookProcessorSelection.ChoiceRequired -> BookReaderHostState.ChoiceRequired(
-                descriptor = media.descriptor,
+                descriptor = descriptor,
                 choices = selection.processors.map { BookProcessorChoice(it.id, it.displayName) },
                 prepared = prepared,
             )
             is BookProcessorSelection.Selected -> BookReaderHostState.ReaderSelected(
-                descriptor = media.descriptor,
+                descriptor = descriptor,
                 processor = selection.processor,
                 prepared = prepared,
             )

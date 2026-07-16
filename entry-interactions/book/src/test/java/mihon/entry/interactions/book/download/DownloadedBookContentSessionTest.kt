@@ -12,6 +12,9 @@ import mihon.book.api.BookResourceCacheState
 import mihon.book.api.BookResourceCapability
 import mihon.entry.interactions.book.BookByteRange
 import mihon.entry.interactions.book.BookMaterializationCache
+import mihon.entry.interactions.book.BookOpenResult
+import mihon.entry.interactions.book.prose.HtmlProseChapterProcessor
+import mihon.entry.interactions.book.prose.HtmlProseChapterSession
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -21,10 +24,28 @@ import java.nio.file.Files
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class DownloadedBookContentSessionTest {
+    @Test
+    fun `built in prose processor opens a downloaded chapter`() = runTest {
+        val packageFixture = downloadedPackage("<h1>Downloaded</h1><p>Readable prose.</p>")
+        val cache = BookMaterializationCache(
+            application = mockk<Application>(relaxed = true),
+            directory = Files.createTempDirectory("katari-book-downloaded-prose").toFile(),
+        )
+        val content = DownloadedBookContentSession(packageFixture, cache)
+
+        val result = assertIs<BookOpenResult.Success>(HtmlProseChapterProcessor().open(content))
+        val session = assertIs<HtmlProseChapterSession>(result.session)
+
+        assertTrue(session.bodyHtml.contains("Readable prose"))
+        session.close()
+        content.close()
+    }
+
     @Test
     fun `verified package exposes processor metadata streams and durable materialization`() = runTest {
         val packageFixture = downloadedPackage("downloaded chapter")

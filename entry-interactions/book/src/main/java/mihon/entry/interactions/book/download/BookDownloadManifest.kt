@@ -35,6 +35,9 @@ internal data class BookDownloadManifest(
     val catalogCoverage: BookCatalogCoverage = BookCatalogCoverage.UNKNOWN,
     val resourceHierarchy: List<BookContentResourceGroup> = emptyList(),
     val primaryResourceIds: List<String>,
+    val progressContentKey: String = "",
+    val progressResourceId: String? = null,
+    val progressResourceRevision: String? = null,
     val resources: List<BookDownloadedResource>,
     val createdAt: Long,
 ) {
@@ -64,6 +67,12 @@ internal data class BookDownloadManifest(
         }
         require(primaryResourceIds.all(resources.map(BookDownloadedResource::id).toSet()::contains)) {
             "primary resources must be present in the downloaded package"
+        }
+        require(progressResourceId == null || progressResourceId in resources.map(BookDownloadedResource::id)) {
+            "progress resource must be present in the downloaded package"
+        }
+        require(progressResourceRevision == null || progressResourceRevision.isNotBlank()) {
+            "progress resource revision must not be blank"
         }
         require(createdAt >= 0L) { "creation time must not be negative" }
     }

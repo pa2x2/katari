@@ -16,6 +16,9 @@ internal class BookDownloadCache(
     private val provider: BookDownloadProvider,
 ) {
     private val refreshMutex = Mutex()
+
+    @Volatile
+    private var initialized = false
     private val _packages = MutableStateFlow<Map<BookDownloadPackageKey, VerifiedBookDownloadPackage>>(emptyMap())
     val packages: StateFlow<Map<BookDownloadPackageKey, VerifiedBookDownloadPackage>> = _packages.asStateFlow()
     val changes: Flow<Unit> = _packages.drop(1).map { Unit }
@@ -23,7 +26,18 @@ internal class BookDownloadCache(
     private val _isInitializing = MutableStateFlow(false)
     val isInitializing: StateFlow<Boolean> = _isInitializing.asStateFlow()
 
+    suspend fun ensureInitialized() {
+        if (initialized) return
+        refreshMutex.withLock {
+            if (!initialized) refreshLocked()
+        }
+    }
+
     suspend fun refresh(): BookDownloadCacheRefresh = refreshMutex.withLock {
+        refreshLocked()
+    }
+
+    private suspend fun refreshLocked(): BookDownloadCacheRefresh =
         withContext(Dispatchers.IO) {
             _isInitializing.value = true
             try {
@@ -38,6 +52,7 @@ internal class BookDownloadCache(
                         )
                     }
                 _packages.value = selected
+                initialized = true
                 BookDownloadCacheRefresh(
                     packageCount = selected.size,
                     invalidPackageCount = scan.invalidPackageCount,
@@ -48,7 +63,6 @@ internal class BookDownloadCache(
                 _isInitializing.value = false
             }
         }
-    }
 
     fun get(packageKey: BookDownloadPackageKey): VerifiedBookDownloadPackage? = _packages.value[packageKey]
 

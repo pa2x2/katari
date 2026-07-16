@@ -193,8 +193,7 @@ class BookEntryInteractionPluginTest {
                     visibleEntry = entry,
                     owner = entry,
                     chapter = chapter,
-                    source = source,
-                    media = EntryMedia.Book(descriptor),
+                    content = PreparedBookContent.Source(source, EntryMedia.Book(descriptor)),
                 ),
             )
         val resolver = BookReaderHostResolver(sessionFactory, coordinator)

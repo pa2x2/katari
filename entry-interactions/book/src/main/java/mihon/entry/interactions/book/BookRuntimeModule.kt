@@ -3,11 +3,14 @@ package mihon.entry.interactions.book
 import android.app.Application
 import mihon.entry.interactions.EntryInteractionRuntimeContribution
 import mihon.entry.interactions.EntryReaderIncognitoState
+import mihon.entry.interactions.book.download.BookDownloadCache
+import mihon.entry.interactions.book.download.BookDownloadProvider
 import mihon.entry.interactions.book.epub.ReadiumEpubProcessor
 import mihon.entry.interactions.book.prose.HtmlProseChapterProcessor
 import mihon.entry.interactions.settings.HtmlProseSettingsProvider
 import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
 import tachiyomi.core.common.preference.PreferenceStore
+import tachiyomi.domain.storage.service.StorageManager
 import uy.kohesive.injekt.api.InjektRegistrar
 import uy.kohesive.injekt.api.addSingletonFactory
 import uy.kohesive.injekt.api.get
@@ -21,6 +24,8 @@ fun InjektRegistrar.addBookEntryInteractionRuntime(
     val readiumSettingsProvider = ReadiumEpubSettingsProvider(profilePreferenceStore)
     val proseSettingsProvider = HtmlProseSettingsProvider(profilePreferenceStore)
     addSingletonFactory<BookMaterializationStore> { materializationCache }
+    addSingletonFactory { BookDownloadProvider(get<StorageManager>()) }
+    addSingletonFactory { BookDownloadCache(get()) }
     addSingletonFactory { BookReaderSessionRegistry() }
     addSingletonFactory { BookChapterNavigationResolver(get()) }
     addSingletonFactory { readiumSettingsProvider }
@@ -57,6 +62,7 @@ fun InjektRegistrar.addBookEntryInteractionRuntime(
             networkHelper = get(),
             incognitoState = get<EntryReaderIncognitoState>(),
             materializationStore = get(),
+            downloadCache = get(),
         )
     }
     return EntryInteractionRuntimeContribution(
