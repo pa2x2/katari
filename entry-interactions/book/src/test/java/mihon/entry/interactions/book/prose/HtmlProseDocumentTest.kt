@@ -3,6 +3,7 @@ package mihon.entry.interactions.book.prose
 import android.text.Layout
 import android.text.SpannableString
 import android.text.Spanned
+import android.text.StaticLayout
 import android.text.TextPaint
 import android.text.style.ClickableSpan
 import android.view.MotionEvent
@@ -116,6 +117,39 @@ class HtmlProseDocumentTest {
         assertTrue(pages.size > 1)
         assertTrue(pages.first().text.lines().size > 1)
         assertEquals(pages.size, pages.last().total)
+    }
+
+    @Test
+    fun `pagination only includes lines that fully fit on the page`() {
+        val chapter = HtmlProseLoadedChapter(
+            chapter = EntryChapter.create().copy(id = 1L, name = "Chapter 1"),
+            resourceId = "chapter-1",
+            bodyHtml = List(30) { "<p>Line $it with enough prose to wrap across the page width.</p>" }
+                .joinToString(""),
+            initialProgression = 0f,
+        )
+        val document = parseProseHtml(chapter.bodyHtml)
+        val paint = TextPaint(TextPaint.ANTI_ALIAS_FLAG).apply { textSize = 20f }
+        val availableWidth = 320
+        val availableHeight = 97
+        val pages = paginateProse(
+            chapter = chapter,
+            text = document.text,
+            paint = paint,
+            availableWidthPx = availableWidth,
+            availableHeightPx = availableHeight,
+            alignment = Layout.Alignment.ALIGN_NORMAL,
+            lineSpacingMultiplier = 1.5f,
+        )
+
+        assertTrue(pages.size > 1)
+        pages.forEach { page ->
+            val layout = StaticLayout.Builder.obtain(page.text, 0, page.text.length, paint, availableWidth)
+                .setIncludePad(false)
+                .setLineSpacing(0f, 1.5f)
+                .build()
+            assertTrue(layout.height <= availableHeight, "Page ${page.index + 1} is ${layout.height}px tall")
+        }
     }
 
     @Test

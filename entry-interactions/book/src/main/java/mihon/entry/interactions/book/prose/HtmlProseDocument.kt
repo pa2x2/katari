@@ -93,8 +93,11 @@ internal fun paginateProse(
         var firstLine = 0
         while (firstLine < layout.lineCount) {
             val pageBottom = layout.getLineTop(firstLine) + availableHeightPx
-            val lastLine = layout.getLineForVertical(pageBottom - 1)
+            var lastLine = layout.getLineForVertical(pageBottom - 1)
                 .coerceIn(firstLine, layout.lineCount - 1)
+            while (lastLine > firstLine && layout.getLineBottom(lastLine) > pageBottom) {
+                lastLine--
+            }
             val start = layout.getLineStart(firstLine)
             val end = layout.getLineEnd(lastLine).coerceIn(start, text.length)
             if (end > start) add(start until end)
