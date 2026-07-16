@@ -7,6 +7,7 @@ import androidx.core.app.NotificationManagerCompat.IMPORTANCE_HIGH
 import androidx.core.app.NotificationManagerCompat.IMPORTANCE_LOW
 import eu.kanade.tachiyomi.util.system.buildNotificationChannel
 import eu.kanade.tachiyomi.util.system.buildNotificationChannelGroup
+import mihon.entry.interactions.EntryDownloadNotifications
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
 
@@ -37,12 +38,6 @@ object Notifications {
      * Notification channel and ids used by the downloader.
      */
     private const val GROUP_DOWNLOADER = "group_downloader"
-    const val CHANNEL_DOWNLOADER_PROGRESS = "downloader_progress_channel"
-    const val ID_DOWNLOAD_CHAPTER_PROGRESS = -201
-    const val ID_DOWNLOAD_ANIME_PROGRESS = -203
-    const val CHANNEL_DOWNLOADER_ERROR = "downloader_error_channel"
-    const val ID_DOWNLOAD_CHAPTER_ERROR = -202
-    const val ID_DOWNLOAD_ANIME_ERROR = -204
 
     /**
      * Notification channel and ids used by the library updater.
@@ -146,12 +141,12 @@ object Notifications {
                 buildNotificationChannel(CHANNEL_NEW_EPISODES, IMPORTANCE_DEFAULT) {
                     setName(context.stringResource(MR.strings.channel_new_episodes))
                 },
-                buildNotificationChannel(CHANNEL_DOWNLOADER_PROGRESS, IMPORTANCE_LOW) {
+                buildNotificationChannel(EntryDownloadNotifications.CHANNEL_PROGRESS, IMPORTANCE_LOW) {
                     setName(context.stringResource(MR.strings.channel_progress))
                     setGroup(GROUP_DOWNLOADER)
                     setShowBadge(false)
                 },
-                buildNotificationChannel(CHANNEL_DOWNLOADER_ERROR, IMPORTANCE_LOW) {
+                buildNotificationChannel(EntryDownloadNotifications.CHANNEL_ERROR, IMPORTANCE_LOW) {
                     setName(context.stringResource(MR.strings.channel_errors))
                     setGroup(GROUP_DOWNLOADER)
                     setShowBadge(false)

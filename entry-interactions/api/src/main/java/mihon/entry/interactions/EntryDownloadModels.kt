@@ -1,5 +1,6 @@
 package mihon.entry.interactions
 
+import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.source.entry.EntryType
 
 enum class EntryDownloadState(val value: Int) {
@@ -26,6 +27,7 @@ data class EntryDownloadQueueGroup(
 
 data class EntryDownloadQueueItem(
     val entryType: EntryType,
+    val state: EntryDownloadState,
     val entryId: Long,
     val childId: Long,
     val title: String,
@@ -36,3 +38,28 @@ data class EntryDownloadQueueItem(
     val progressMax: Int,
     val progressText: String,
 )
+
+sealed interface EntryDownloadMessage {
+    data class Text(val value: String) : EntryDownloadMessage
+
+    data class Resource(
+        val resource: StringResource,
+        val args: List<Any> = emptyList(),
+    ) : EntryDownloadMessage
+}
+
+sealed interface EntryDownloadEvent {
+    data class Error(
+        val entryType: EntryType,
+        val entryId: Long?,
+        val title: String?,
+        val subtitle: String?,
+        val message: EntryDownloadMessage,
+    ) : EntryDownloadEvent
+
+    data class Warning(
+        val message: EntryDownloadMessage,
+        val timeoutMillis: Long? = null,
+        val helpUrl: String? = null,
+    ) : EntryDownloadEvent
+}

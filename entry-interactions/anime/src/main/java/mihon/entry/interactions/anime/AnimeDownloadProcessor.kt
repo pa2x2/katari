@@ -49,6 +49,7 @@ internal class AnimeDownloadProcessor(
     override val queueState: Flow<List<EntryDownloadQueueGroup>> = animeDownloadManager.queueState
         .map { downloads -> downloads.toAnimeEntryDownloadQueueGroups(dependencies.sourceManager) }
         .map { groups -> groups.map { it.requireAnime() } }
+    override val events = animeDownloadManager.events
 
     override fun updates(): Flow<EntryDownloadStatus> {
         return merge(

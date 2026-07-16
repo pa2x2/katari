@@ -32,6 +32,7 @@ internal fun MangaDownload.toEntryDownloadStatus(): EntryDownloadStatus {
 internal fun MangaDownload.toEntryDownloadQueueItem(): EntryDownloadQueueItem {
     return EntryDownloadQueueItem(
         entryType = EntryType.MANGA,
+        state = status.toEntryDownloadState(),
         entryId = entry.id,
         childId = chapter.id,
         title = entry.title,

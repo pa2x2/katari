@@ -1,15 +1,17 @@
 package mihon.entry.interactions.anime.download
 import android.content.Context
+import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flatMapLatest
@@ -18,8 +20,11 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mihon.entry.interactions.EntryDownloadEvent
+import mihon.entry.interactions.EntryDownloadMessage
 import mihon.entry.interactions.anime.download.model.AnimeDownload
 import mihon.entry.interactions.anime.download.model.AnimeDownloadFailure
+import mihon.entry.interactions.anime.toEntryDownloadMessage
 import tachiyomi.domain.entry.model.DownloadPreferences
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -34,7 +39,6 @@ internal class AnimeDownloadManager(
     private val downloader: AnimeDownloader = Injekt.get(),
     private val sourceManager: SourceManager = Injekt.get(),
     private val store: AnimeDownloadStore = AnimeDownloadStore(context),
-    private val notifier: AnimeDownloadNotifier = AnimeDownloadNotifier(context),
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -44,6 +48,9 @@ internal class AnimeDownloadManager(
 
     private val _isRunning = MutableStateFlow(false)
     val isRunning = _isRunning.asStateFlow()
+
+    private val _events = MutableSharedFlow<EntryDownloadEvent>(replay = 16, extraBufferCapacity = 16)
+    val events = _events.asSharedFlow()
 
     private var processorJob: Job? = null
     private val queueMutationLock = Any()
@@ -59,15 +66,6 @@ internal class AnimeDownloadManager(
             } else {
                 synchronized(queueMutationLock) {
                     rewriteStoredQueue()
-                }
-            }
-        }
-        scope.launch {
-            progressFlow().collectLatest { download ->
-                if (download.status == AnimeDownload.State.DOWNLOADING ||
-                    download.status == AnimeDownload.State.RESOLVING
-                ) {
-                    notifier.onProgressChange(download)
                 }
             }
         }
@@ -94,14 +92,12 @@ internal class AnimeDownloadManager(
         processorJob = null
         if (queueState.value.isEmpty()) {
             _isRunning.value = false
-            notifier.onComplete()
             return
         }
         queueState.value
             .filter { it.status == AnimeDownload.State.RESOLVING || it.status == AnimeDownload.State.DOWNLOADING }
             .forEach { it.status = AnimeDownload.State.QUEUE }
         _isRunning.value = false
-        notifier.onPaused()
     }
 
     fun clearQueue() {
@@ -112,7 +108,6 @@ internal class AnimeDownloadManager(
             _isRunning.value = false
             store.clear()
         }
-        notifier.onComplete()
     }
 
     fun queueEpisodes(
@@ -171,7 +166,6 @@ internal class AnimeDownloadManager(
 
         if (queueState.value.isEmpty()) {
             _isRunning.value = false
-            notifier.onComplete()
         } else if (wasRunning && removesActiveDownload) {
             queueState.value
                 .filter { it.status == AnimeDownload.State.RESOLVING || it.status == AnimeDownload.State.DOWNLOADING }
@@ -267,7 +261,6 @@ internal class AnimeDownloadManager(
                 val next = queueState.value.firstOrNull { it.status == AnimeDownload.State.QUEUE } ?: break
                 try {
                     activeDownload = ActiveDownload(next.episode.id, processorToken)
-                    notifier.onProgressChange(next)
                     val failure = downloader.download(next)
                     if (failure == null) {
                         synchronized(queueMutationLock) {
@@ -278,7 +271,7 @@ internal class AnimeDownloadManager(
                         next.progress = 0
                         next.failure = failure
                         next.status = AnimeDownload.State.ERROR
-                        notifier.onError(next)
+                        reportError(next)
                     }
                 } catch (e: Throwable) {
                     if (e is CancellationException) throw e
@@ -288,7 +281,7 @@ internal class AnimeDownloadManager(
                         message = e.message,
                     )
                     next.status = AnimeDownload.State.ERROR
-                    notifier.onError(next)
+                    reportError(next)
                 } finally {
                     if (activeDownload?.processorToken === processorToken) {
                         activeDownload = null
@@ -297,8 +290,20 @@ internal class AnimeDownloadManager(
             }
             _isRunning.value = false
             processorJob = null
-            notifier.onComplete()
         }
+    }
+
+    private fun reportError(download: AnimeDownload) {
+        _events.tryEmit(
+            EntryDownloadEvent.Error(
+                entryType = EntryType.ANIME,
+                entryId = download.anime.id,
+                title = download.anime.title,
+                subtitle = download.episode.name,
+                message = download.failure?.toEntryDownloadMessage()
+                    ?: EntryDownloadMessage.Resource(tachiyomi.i18n.MR.strings.download_notifier_unknown_error),
+            ),
+        )
     }
 
     companion object {

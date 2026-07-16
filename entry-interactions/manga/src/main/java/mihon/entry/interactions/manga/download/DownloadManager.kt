@@ -60,6 +60,8 @@ internal class DownloadManager(
 
     val queueState
         get() = downloader.queueState
+    val events
+        get() = downloader.events
 
     // For use by DownloadService only
     fun downloaderStart() = downloader.start()

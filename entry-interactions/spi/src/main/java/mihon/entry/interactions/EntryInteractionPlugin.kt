@@ -27,6 +27,7 @@ interface EntryDownloadProcessor {
     val isInitializing: Flow<Boolean>
     val isRunning: Flow<Boolean>
     val queueState: Flow<List<EntryDownloadQueueGroup>>
+    val events: Flow<EntryDownloadEvent>
 
     fun updates(): Flow<EntryDownloadStatus>
     fun queueStatusUpdates(): Flow<EntryDownloadQueueItem>

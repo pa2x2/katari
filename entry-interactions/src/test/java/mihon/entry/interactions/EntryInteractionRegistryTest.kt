@@ -802,6 +802,25 @@ class EntryInteractionRegistryTest {
     }
 
     @Test
+    fun `download pause state is owned by the registry`() = runTest {
+        val interactions = createEntryInteractions(
+            listOf(
+                EntryInteractionPlugin { registry ->
+                    registry.registerDownloadProcessor(RecordingDownloadProcessor(EntryType.MANGA))
+                },
+            ),
+        )
+
+        interactions.download.isPaused.first() shouldBe false
+
+        interactions.download.pauseDownloads()
+        interactions.download.isPaused.first() shouldBe true
+
+        interactions.download.startDownloads()
+        interactions.download.isPaused.first() shouldBe false
+    }
+
+    @Test
     fun `source rename delegates to all download processors`() {
         val mangaProcessor = RecordingDownloadProcessor(EntryType.MANGA)
         val animeProcessor = RecordingDownloadProcessor(EntryType.ANIME)
@@ -1002,6 +1021,7 @@ class EntryInteractionRegistryTest {
     private fun queueItem(type: EntryType, childId: Long): EntryDownloadQueueItem {
         return EntryDownloadQueueItem(
             entryType = type,
+            state = EntryDownloadState.QUEUE,
             entryId = 1L,
             childId = childId,
             title = "Title",
@@ -1093,6 +1113,7 @@ class EntryInteractionRegistryTest {
         open override val type: EntryType,
         private val bulkDownloadSupported: Boolean = true,
     ) : EntryDownloadProcessor {
+        override val events: Flow<EntryDownloadEvent> = emptyFlow()
         override val changes: Flow<Unit> = emptyFlow()
         override val isInitializing: Flow<Boolean> = flowOf(false)
         override val isRunning: Flow<Boolean> = flowOf(false)

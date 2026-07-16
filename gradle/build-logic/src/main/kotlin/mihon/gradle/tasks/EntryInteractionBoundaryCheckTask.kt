@@ -884,7 +884,7 @@ private data class TypeModule(
     }
 }
 
-private val INFRASTRUCTURE_MODULES = setOf("api", "spi")
+private val INFRASTRUCTURE_MODULES = setOf("api", "spi", "download-notification")
 
 private fun KotlinImport.startsWith(packagePrefix: String): Boolean {
     return importedFqName == packagePrefix ||

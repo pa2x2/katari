@@ -28,12 +28,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.selects.select
 import logcat.LogPriority
-import mihon.entry.interactions.EntryDownloadNotifications
-import mihon.entry.interactions.entryDownloadNotificationBuilder
-import tachiyomi.core.common.i18n.stringResource
+import mihon.entry.interactions.EntryDownloadForegroundNotificationProvider
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.download.service.DownloadPreferences
-import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -43,18 +40,12 @@ internal class BookDownloadJob(context: Context, workerParams: WorkerParameters)
 ) {
     private val manager: BookDownloadManager = Injekt.get()
     private val downloadPreferences: DownloadPreferences = Injekt.get()
+    private val notificationProvider: EntryDownloadForegroundNotificationProvider = Injekt.get()
 
     override suspend fun getForegroundInfo(): ForegroundInfo {
-        val notification = applicationContext.entryDownloadNotificationBuilder(
-            EntryDownloadNotifications.CHANNEL_PROGRESS,
-        ) {
-            setContentTitle(applicationContext.stringResource(MR.strings.download_notifier_downloader_title))
-            setSmallIcon(android.R.drawable.stat_sys_download)
-            setOngoing(true)
-        }.build()
         return ForegroundInfo(
-            EntryDownloadNotifications.ID_BOOK_PROGRESS,
-            notification,
+            notificationProvider.notificationId,
+            notificationProvider.notification(),
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
             } else {

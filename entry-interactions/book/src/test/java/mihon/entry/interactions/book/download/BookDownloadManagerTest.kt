@@ -4,7 +4,6 @@ import android.content.Context
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
@@ -16,6 +15,7 @@ import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertSame
 
 class BookDownloadManagerTest {
@@ -50,26 +50,7 @@ class BookDownloadManagerTest {
     }
 
     @Test
-    fun `pausing an empty queue does not publish a paused notification`() {
-        val fixture = managerFixture()
-
-        fixture.manager.pauseDownloads()
-
-        verify(exactly = 0) { fixture.notifier.onPaused() }
-        verify(exactly = 1) { fixture.notifier.onComplete() }
-    }
-
-    @Test
-    fun `resuming clears a paused notification even when the queue is empty`() {
-        val fixture = managerFixture()
-
-        fixture.manager.startDownloads()
-
-        verify(exactly = 1) { fixture.notifier.onResumed() }
-    }
-
-    @Test
-    fun `worker cancellation preserves the paused notification for a queued book`() = runTest {
+    fun `worker cancellation preserves a queued book`() = runTest {
         val downloadStarted = CompletableDeferred<Unit>()
         val downloader = mockk<BookDownloader> {
             coEvery { download(any()) } coAnswers {
@@ -92,8 +73,8 @@ class BookDownloadManagerTest {
         fixture.manager.pauseDownloads()
         worker.cancelAndJoin()
 
-        verify(exactly = 1) { fixture.notifier.onPaused() }
-        verify(exactly = 0) { fixture.notifier.onComplete() }
+        assertEquals(BookDownload.State.QUEUE, fixture.manager.queueState.value.single().status)
+        assertFalse(fixture.manager.isRunning.value)
     }
 
     private fun download(chapterId: Long): BookDownload = mockk {
@@ -123,7 +104,6 @@ class BookDownloadManagerTest {
         val store = mockk<BookDownloadStore>(relaxed = true) {
             coEvery { restore() } returns emptyList()
         }
-        val notifier = mockk<BookDownloadNotifier>(relaxed = true)
         return ManagerFixture(
             manager = BookDownloadManager(
                 context = context,
@@ -132,15 +112,12 @@ class BookDownloadManagerTest {
                 downloader = downloader,
                 sourceManager = mockk(relaxed = true),
                 store = store,
-                notifier = notifier,
                 workController = mockk(relaxed = true),
             ),
-            notifier = notifier,
         )
     }
 
     private data class ManagerFixture(
         val manager: BookDownloadManager,
-        val notifier: BookDownloadNotifier,
     )
 }
