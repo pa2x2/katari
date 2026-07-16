@@ -51,6 +51,10 @@ samWithReceiver {
 
 gradlePlugin {
     plugins {
+        register("artifact-sanitizer") {
+            id = mihonx.plugins.artifact.sanitizer.get().pluginId
+            implementationClass = "PluginArtifactSanitizer"
+        }
         register("android-application") {
             id = mihonx.plugins.android.application.get().pluginId
             implementationClass = "PluginAndroidApplication"
