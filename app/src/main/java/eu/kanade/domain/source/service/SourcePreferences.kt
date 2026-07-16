@@ -55,6 +55,12 @@ class SourcePreferences(
         LocaleHelper.getDefaultEnabledLanguages(),
     )
 
+    // Keep the original key so selections made before the filter was shared with Sources survive.
+    val browseContentTypeFilter: Preference<Set<String>> = preferenceStore.getStringSet(
+        Preference.appStateKey("extension_content_type_filter"),
+        emptySet(),
+    )
+
     val disabledSources: Preference<Set<String>> = preferenceStore.getStringSet(HIDDEN_SOURCES_KEY, emptySet())
 
     val incognitoExtensions: Preference<Set<String>> = preferenceStore.getStringSet("incognito_extensions", emptySet())

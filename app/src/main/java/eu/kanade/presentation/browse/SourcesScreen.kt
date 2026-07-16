@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.domain.source.interactor.SourceListListing
 import eu.kanade.domain.source.interactor.SourceListState
 import eu.kanade.presentation.browse.components.BaseSourceItem
+import eu.kanade.presentation.browse.components.ContentTypeFilterSummary
+import eu.kanade.tachiyomi.ui.browse.ContentTypeFilter
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import tachiyomi.domain.source.model.Pin
 import tachiyomi.domain.source.model.Source
@@ -41,6 +43,7 @@ import tachiyomi.source.local.isLocal
 @Composable
 fun SourcesScreen(
     state: SourceListState,
+    contentTypeFilter: ContentTypeFilter,
     contentPadding: PaddingValues,
     onClickItem: (Source, SourceListListing) -> Unit,
     onClickPin: (Source) -> Unit,
@@ -50,13 +53,23 @@ fun SourcesScreen(
     when {
         state.isLoading -> LoadingScreen(Modifier.padding(contentPadding))
         state.isEmpty -> EmptyScreen(
-            stringRes = MR.strings.source_empty_screen,
+            stringRes = if (contentTypeFilter.isActive) {
+                MR.strings.no_results_found
+            } else {
+                MR.strings.source_empty_screen
+            },
             modifier = Modifier.padding(contentPadding),
         )
         else -> {
             ScrollbarLazyColumn(
                 contentPadding = contentPadding + topSmallPaddingValues,
             ) {
+                if (contentTypeFilter.isActive) {
+                    item(key = "source-content-type-filter-summary") {
+                        ContentTypeFilterSummary(filter = contentTypeFilter)
+                    }
+                }
+
                 items(
                     items = state.items,
                     contentType = {

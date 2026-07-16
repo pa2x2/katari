@@ -1,6 +1,8 @@
 package eu.kanade.tachiyomi.ui.browse.extension
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -9,10 +11,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import eu.kanade.presentation.browse.ExtensionFilterSheet
 import eu.kanade.presentation.browse.ExtensionScreen
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.TabContent
@@ -33,15 +37,18 @@ fun extensionsTab(
 
     val state by extensionsScreenModel.state.collectAsState()
     var privateExtensionToUninstall by remember { mutableStateOf<Extension?>(null) }
+    var showFilters by rememberSaveable { mutableStateOf(false) }
 
     return TabContent(
         titleRes = MR.strings.label_extensions,
         badgeNumber = state.updates.takeIf { it > 0 },
         searchEnabled = true,
         actions = listOf(
-            AppBar.OverflowAction(
+            AppBar.Action(
                 title = stringResource(MR.strings.action_filter),
-                onClick = { navigator.push(ExtensionFilterScreen()) },
+                icon = Icons.Outlined.FilterList,
+                badgeCount = state.filter.activeFilterCount.takeIf { it > 0 },
+                onClick = { showFilters = true },
             ),
             AppBar.OverflowAction(
                 title = stringResource(MR.strings.extensionStores),
@@ -95,6 +102,18 @@ fun extensionsTab(
                 },
                 onRefresh = extensionsScreenModel::findAvailableExtensions,
             )
+
+            if (showFilters) {
+                ExtensionFilterSheet(
+                    state = state.filter,
+                    onDismissRequest = { showFilters = false },
+                    onReset = extensionsScreenModel::resetFilters,
+                    onShowAllContentTypes = extensionsScreenModel::showAllContentTypes,
+                    onToggleContentType = extensionsScreenModel::toggleContentType,
+                    onToggleUnspecifiedContentType = extensionsScreenModel::toggleUnspecifiedContentType,
+                    onToggleLanguage = extensionsScreenModel::toggleLanguage,
+                )
+            }
 
             privateExtensionToUninstall?.let { extension ->
                 ExtensionUninstallConfirmation(

@@ -15,6 +15,8 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -220,11 +222,27 @@ fun AppBarActions(
                 onClick = it.onClick,
                 enabled = it.enabled,
             ) {
-                Icon(
-                    imageVector = it.icon,
-                    tint = it.iconTint ?: LocalContentColor.current,
-                    contentDescription = it.title,
-                )
+                if (it.badgeCount != null && it.badgeCount > 0) {
+                    BadgedBox(
+                        badge = {
+                            Badge {
+                                Text(it.badgeCount.toString())
+                            }
+                        },
+                    ) {
+                        Icon(
+                            imageVector = it.icon,
+                            tint = it.iconTint ?: LocalContentColor.current,
+                            contentDescription = it.title,
+                        )
+                    }
+                } else {
+                    Icon(
+                        imageVector = it.icon,
+                        tint = it.iconTint ?: LocalContentColor.current,
+                        contentDescription = it.title,
+                    )
+                }
             }
         }
     }
@@ -435,6 +453,7 @@ sealed interface AppBar {
         val iconTint: Color? = null,
         val onClick: () -> Unit,
         val enabled: Boolean = true,
+        val badgeCount: Int? = null,
     ) : AppBarAction
 
     data class OverflowAction(

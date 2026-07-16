@@ -4,14 +4,20 @@ import android.app.Application
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.domain.base.BasePreferences
+import eu.kanade.domain.extension.interactor.GetExtensionLanguages
 import eu.kanade.domain.extension.interactor.GetExtensionsByType
+import eu.kanade.domain.source.interactor.ToggleLanguage
+import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
+import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.SourceHomePage
+import eu.kanade.tachiyomi.ui.browse.BrowseContentTypeFilterController
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
@@ -22,7 +28,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import logcat.LogPriority
+import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -32,6 +41,11 @@ class ExtensionsScreenModel(
     basePreferences: BasePreferences = Injekt.get(),
     private val extensionManager: ExtensionManager = Injekt.get(),
     private val getExtensions: GetExtensionsByType = Injekt.get(),
+    private val preferences: SourcePreferences = Injekt.get(),
+    private val getExtensionLanguages: GetExtensionLanguages = Injekt.get(),
+    private val toggleLanguage: ToggleLanguage = Injekt.get(),
+    private val contentTypeFilterController: BrowseContentTypeFilterController =
+        BrowseContentTypeFilterController(preferences),
 ) : StateScreenModel<ExtensionListState>(ExtensionListState()) {
 
     init {
@@ -48,9 +62,14 @@ class ExtensionsScreenModel(
                     .distinctUntilChanged()
                     .debounce(0.25.seconds)
                     .map { searchQueryPredicate(it ?: "") },
+                contentTypeFilterController.changes(),
                 extensionManager.installSteps(),
                 getExtensions.subscribe(),
-            ) { predicate, downloads, (_updates, _installed, _available, _untrusted) ->
+            ) { searchPredicate, contentTypeFilter, downloads, extensions ->
+                val (_updates, _installed, _available, _untrusted) = extensions
+                val predicate: (Extension) -> Boolean = {
+                    searchPredicate(it) && contentTypeFilter.matches(it)
+                }
                 buildMap {
                     val updates = _updates.filter(predicate).map(extensionMapper(downloads))
                     if (updates.isNotEmpty()) {
@@ -83,6 +102,24 @@ class ExtensionsScreenModel(
                             items = items,
                         )
                     }
+                }
+        }
+
+        screenModelScope.launchIO {
+            combine(
+                getExtensionLanguages.subscribe(),
+                preferences.enabledLanguages.changes(),
+                contentTypeFilterController.changes(),
+            ) { languages, enabledLanguages, contentTypes ->
+                ExtensionFilterState(
+                    languages = languages,
+                    enabledLanguages = enabledLanguages,
+                    contentTypes = contentTypes,
+                )
+            }
+                .catch { throwable -> logcat(LogPriority.ERROR, throwable) }
+                .collectLatest { filter ->
+                    mutableState.update { it.copy(filter = filter) }
                 }
         }
 
@@ -139,6 +176,29 @@ class ExtensionsScreenModel(
     fun search(query: String?) {
         mutableState.update {
             it.copy(searchQuery = query)
+        }
+    }
+
+    fun toggleContentType(entryType: EntryType) {
+        contentTypeFilterController.toggle(entryType)
+    }
+
+    fun toggleUnspecifiedContentType() {
+        contentTypeFilterController.toggleUnspecified()
+    }
+
+    fun showAllContentTypes() {
+        contentTypeFilterController.showAll()
+    }
+
+    fun toggleLanguage(language: String) {
+        toggleLanguage.await(language)
+    }
+
+    fun resetFilters() {
+        showAllContentTypes()
+        preferences.enabledLanguages.getAndSet { enabledLanguages ->
+            enabledLanguages + state.value.filter.languages
         }
     }
 

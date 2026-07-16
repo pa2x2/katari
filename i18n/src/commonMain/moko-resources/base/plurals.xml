@@ -20,6 +20,11 @@
         <item quantity="other">%d categories</item>
     </plurals>
 
+    <plurals name="extension_filter_languages_count">
+        <item quantity="one">%d language</item>
+        <item quantity="other">%d languages</item>
+    </plurals>
+
     <plurals name="next_unread_chapters">
         <item quantity="one">Next unseen item</item>
         <item quantity="other">Next %d unseen items</item>

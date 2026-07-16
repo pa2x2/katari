@@ -44,9 +44,9 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.browse.components.BaseBrowseItem
+import eu.kanade.presentation.browse.components.ContentTypeFilterSummary
 import eu.kanade.presentation.browse.components.ExtensionIcon
 import eu.kanade.presentation.browse.components.SourceEntryTypeIndicators
-import eu.kanade.presentation.browse.components.supportedEntryTypesForDisplay
 import eu.kanade.presentation.components.DotSeparatorNoSpaceText
 import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
@@ -56,6 +56,7 @@ import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionListState
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionUiModel
+import eu.kanade.tachiyomi.ui.browse.extension.supportedEntryTypesForDisplay
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import eu.kanade.tachiyomi.util.system.launchRequestPackageInstallsPermission
 import tachiyomi.i18n.MR
@@ -63,6 +64,7 @@ import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.material.topSmallPaddingValues
+import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.EmptyScreenAction
@@ -97,7 +99,7 @@ fun ExtensionScreen(
         when {
             state.isLoading -> LoadingScreen(Modifier.padding(contentPadding))
             state.isEmpty -> {
-                val msg = if (!searchQuery.isNullOrEmpty()) {
+                val msg = if (!searchQuery.isNullOrEmpty() || state.filter.activeFilterCount > 0) {
                     MR.strings.no_results_found
                 } else {
                     MR.strings.empty_screen
@@ -154,6 +156,12 @@ private fun ExtensionContent(
     FastScrollLazyColumn(
         contentPadding = contentPadding + topSmallPaddingValues,
     ) {
+        if (state.filter.activeFilterCount > 0) {
+            item(key = "extension-filter-summary") {
+                ExtensionFilterSummary(state)
+            }
+        }
+
         if (!installGranted && state.installer?.requiresSystemPermission == true) {
             item(key = "extension-permissions-warning") {
                 WarningBanner(
@@ -266,6 +274,22 @@ private fun ExtensionContent(
             onDismissRequest = {
                 trustState = null
             },
+        )
+    }
+}
+
+@Composable
+private fun ExtensionFilterSummary(state: ExtensionListState) {
+    ContentTypeFilterSummary(filter = state.filter.contentTypes) {
+        Text(
+            text = pluralStringResource(
+                MR.plurals.extension_filter_languages_count,
+                count = state.visibleLanguageCount,
+                state.visibleLanguageCount,
+            ),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(vertical = MaterialTheme.padding.extraSmall),
         )
     }
 }

@@ -7,12 +7,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.source.interactor.SourceListListing
 import eu.kanade.presentation.browse.SourceOptionsDialog
+import eu.kanade.presentation.browse.SourcesFilterSheet
 import eu.kanade.presentation.browse.SourcesScreen
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.TabContent
@@ -29,6 +33,7 @@ fun Screen.sourcesTab(): TabContent {
     val navigator = LocalNavigator.currentOrThrow
     val screenModel = rememberScreenModel { SourcesScreenModel() }
     val state by screenModel.state.collectAsState()
+    var showFilters by rememberSaveable { mutableStateOf(false) }
 
     return TabContent(
         titleRes = MR.strings.label_sources,
@@ -41,12 +46,14 @@ fun Screen.sourcesTab(): TabContent {
             AppBar.Action(
                 title = stringResource(MR.strings.action_filter),
                 icon = Icons.Outlined.FilterList,
-                onClick = { navigator.push(SourcesFilterScreen()) },
+                badgeCount = 1.takeIf { state.contentTypeFilter.isActive },
+                onClick = { showFilters = true },
             ),
         ),
         content = { contentPadding, snackbarHostState ->
             SourcesScreen(
                 state = state.listState,
+                contentTypeFilter = state.contentTypeFilter,
                 contentPadding = contentPadding,
                 onClickItem = { source, listing ->
                     navigator.push(CatalogScreen(source.id, listingQuery(listing)))
@@ -54,6 +61,18 @@ fun Screen.sourcesTab(): TabContent {
                 onClickPin = screenModel::togglePin,
                 onLongClickItem = screenModel::showSourceDialog,
             )
+
+            if (showFilters) {
+                SourcesFilterSheet(
+                    state = state.filter,
+                    onDismissRequest = { showFilters = false },
+                    onClickLanguage = screenModel::toggleLanguage,
+                    onClickSource = screenModel::toggleSource,
+                    onShowAllContentTypes = screenModel::showAllContentTypes,
+                    onToggleContentType = screenModel::toggleContentType,
+                    onToggleUnspecifiedContentType = screenModel::toggleUnspecifiedContentType,
+                )
+            }
 
             state.dialog?.let { dialog ->
                 val source = dialog.source
