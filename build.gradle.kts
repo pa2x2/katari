@@ -151,7 +151,9 @@ tasks.register("verifyExtensionRuntimeAbi") {
     group = "verification"
     description = "Checks that R8 preserves the runtime ABI used by external extensions"
 
-    dependsOn(":app:minifyReleaseWithR8")
+    // The final mapping is post-processed by the Compose mapping task after R8 finishes.
+    // Depend on the assembled artifact so clean builds cannot race that post-processing.
+    dependsOn(":app:assembleRelease")
 
     val configurationFile = releaseR8MappingDirectory.file("configuration.txt")
     val mappingFile = releaseR8MappingDirectory.file("mapping.txt")
