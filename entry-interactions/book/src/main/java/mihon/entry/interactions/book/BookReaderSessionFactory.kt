@@ -12,6 +12,7 @@ import mihon.book.api.BookFailure
 import mihon.book.api.BookFailureReason
 import mihon.book.api.BookLocator
 import mihon.entry.interactions.book.download.BookDownloadCache
+import mihon.entry.interactions.book.download.BookDownloadCleanup
 import mihon.entry.interactions.book.download.BookDownloadPackageKey
 import mihon.entry.interactions.book.download.DownloadedBookContentSession
 import mihon.entry.interactions.book.download.VerifiedBookDownloadPackage
@@ -38,6 +39,7 @@ internal class BookReaderSessionFactory(
     private val incognitoState: mihon.entry.interactions.EntryReaderIncognitoState,
     private val materializationStore: BookMaterializationStore,
     private val downloadCache: BookDownloadCache,
+    private val downloadCleanup: BookDownloadCleanup? = null,
     private val now: () -> Long = System::currentTimeMillis,
 ) {
     suspend fun open(
@@ -152,6 +154,7 @@ internal class BookReaderSessionFactory(
                             entryProgressRepository = entryProgressRepository,
                             historyRepository = historyRepository,
                             incognitoState = incognitoState,
+                            downloadCleanup = downloadCleanup,
                             now = now,
                         ),
                     )
@@ -294,6 +297,7 @@ internal class OpenedBookReaderSession(
     private val entryProgressRepository: EntryProgressRepository,
     private val historyRepository: HistoryRepository,
     private val incognitoState: mihon.entry.interactions.EntryReaderIncognitoState,
+    private val downloadCleanup: BookDownloadCleanup? = null,
     private val now: () -> Long,
 ) : AutoCloseable {
     private val closeStack = BookSessionCloseStack().apply {
@@ -331,6 +335,9 @@ internal class OpenedBookReaderSession(
                 completionUpdatedAt = if (shouldBeCompleted) timestamp else 0L,
             ),
         )
+        if (completed && current?.completed != true) {
+            downloadCleanup?.afterReaderCompleted(entry, chapter)
+        }
     }
 
     suspend fun recordHistory(sessionReadDuration: Long) {

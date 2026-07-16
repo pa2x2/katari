@@ -11,6 +11,7 @@ import kotlinx.coroutines.test.runTest
 import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookFailureReason
 import mihon.entry.interactions.EntryConsumptionStatus
+import mihon.entry.interactions.book.download.BookDownloadCleanup
 import mihon.entry.interactions.createEntryInteractions
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
@@ -103,6 +104,28 @@ class BookEntryInteractionPluginTest {
 
         assertTrue(captured.captured.single().read)
         coVerify(exactly = 0) { progressRepository.mergeAndSyncChild(any()) }
+    }
+
+    @Test
+    fun `mark consumed deletes its download when preference is enabled`() = runTest {
+        val entry = entry()
+        val chapter = chapter()
+        val progressRepository = mockk<EntryProgressRepository> {
+            coEvery { getByEntryId(chapter.entryId) } returns emptyList()
+        }
+        val chapterRepository = mockk<EntryChapterRepository> {
+            coEvery { updateAll(any()) } returns true
+        }
+        val downloadCleanup = mockk<BookDownloadCleanup>(relaxed = true)
+        val processor = BookConsumptionProcessor(
+            entryProgressRepository = progressRepository,
+            entryChapterRepository = chapterRepository,
+            downloadCleanup = downloadCleanup,
+        )
+
+        processor.setConsumed(entry, listOf(chapter), consumed = true)
+
+        coVerify(exactly = 1) { downloadCleanup.afterMarkedConsumed(entry, listOf(chapter)) }
     }
 
     @Test

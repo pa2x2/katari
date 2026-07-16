@@ -20,6 +20,7 @@ import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookLocator
 import mihon.book.api.BookPublication
 import mihon.entry.interactions.book.download.BookDownloadCache
+import mihon.entry.interactions.book.download.BookDownloadCleanup
 import okhttp3.OkHttpClient
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
@@ -75,6 +76,7 @@ class BookReaderSessionFactoryTest {
         )
         val publicationSession = TestPublicationSession()
         val processor = SessionFactoryTestProcessor(publicationSession)
+        val downloadCleanup = mockk<BookDownloadCleanup>(relaxed = true)
         val context = mockk<Context> {
             every { applicationContext } returns this@mockk
             every { contentResolver } returns mockk<ContentResolver>()
@@ -101,6 +103,7 @@ class BookReaderSessionFactoryTest {
             },
             materializationStore = mockk(relaxed = true),
             downloadCache = failingDownloadCache(),
+            downloadCleanup = downloadCleanup,
             now = { 100L },
         )
 
@@ -121,6 +124,7 @@ class BookReaderSessionFactoryTest {
         assertTrue(updatedProgress.captured.completed)
         assertEquals(100L, updatedProgress.captured.completionUpdatedAt)
         assertEquals(100L, updatedProgress.captured.locatorUpdatedAt)
+        coVerify(exactly = 1) { downloadCleanup.afterReaderCompleted(entry, chapter) }
 
         session.recordHistory(500L)
         coVerify {

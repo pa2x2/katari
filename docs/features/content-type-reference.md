@@ -29,7 +29,7 @@ Status meanings:
 | Download individual child items for offline use     |   ✓   |   ✓   |  ✓   |
 | Bulk-download child items                           |   ✓   |   ✓   |  ✓   |
 | Automatically download newly discovered child items |   ✓   |   ✓   |  ✓   |
-| Delete downloads after marking an item consumed     |   ✓   |   —   |  —   |
+| Delete downloads after marking an item consumed     |   ✓   |   —   |  ✓   |
 
 ::: info
 
