@@ -184,7 +184,7 @@ internal class BookMaterializationCache(
         )
     }
 
-    private fun prune() = synchronized(stateLock) {
+    private fun prune(): Unit = synchronized(stateLock) {
         val files = directory.cacheFiles().sortedBy(File::lastModified)
         var total = files.sumOf(File::length)
         files.forEach { file ->
@@ -201,7 +201,7 @@ internal class BookMaterializationCache(
         if (file.delete()) invalidatedFiles.remove(file)
     }
 
-    private fun ensureInitialized() = synchronized(stateLock) {
+    private fun ensureInitialized(): Unit = synchronized(stateLock) {
         if (initialized) return
         ensureDirectory()
         directory.listFiles().orEmpty()
