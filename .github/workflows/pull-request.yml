@@ -38,7 +38,8 @@ jobs:
 
           while IFS= read -r path; do
             case "$path" in
-              docs/* | \
+              CHANGELOG.md | \
+                docs/* | \
                 entry-source-api/src/* | \
                 entry-source-api/build.gradle.kts | \
                 book-api/src/* | \

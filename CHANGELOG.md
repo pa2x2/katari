@@ -9,6 +9,31 @@ this file covers the features and behavior that distinguish Katari.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-07-16
+
+### Added
+
+- Added `BOOK` entries from compatible Entry Source extensions. (by @pa2x2)
+- Added built-in readers for unprotected reflowable EPUBs and serialized HTML prose (by @pa2x2)
+
+### Changed
+
+- Grouped reader and player settings by viewer, with profile-specific book reader
+  defaults, per-book layout overrides, and backup coverage for positions and overrides. (by @pa2x2)
+
+### Improved
+
+- Hid download, bookmark, tracking, merge, and migration controls, along with
+  missing-number warnings, when unsupported by an entry type.
+  (by @pa2x2)
+
+### Other
+
+- Updated Entry SDK to 2.1.0 with `BOOK` content and resource contracts for extension
+  developers. (by @pa2x2)
+- Added compatibility with manga extensions built for Keiyoushi extension API 1.6.
+  (by @pa2x2)
+
 ## [1.1.0] - 2026-07-14
 
 ### Added
@@ -88,7 +113,8 @@ Based on [Mihon v0.20.1](https://github.com/mihonapp/mihon/releases/tag/v0.20.1)
 - Rebranded the application as Katari with its own package identity, visual
   identity, release pipeline, and documentation.
 
-[Unreleased]: https://github.com/katariapp/katari/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/katariapp/katari/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/katariapp/katari/releases/tag/v1.2.0
 [1.1.0]: https://github.com/katariapp/katari/releases/tag/v1.1.0
 [1.0.2]: https://github.com/katariapp/katari/releases/tag/v1.0.2
 [1.0.1]: https://github.com/katariapp/katari/releases/tag/v1.0.1

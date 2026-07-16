@@ -6,6 +6,7 @@ on:
     branches:
       - main
     paths:
+      - 'CHANGELOG.md'
       - 'docs/**'
       - 'entry-source-api/src/**'
       - 'entry-source-api/build.gradle.kts'
