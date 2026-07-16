@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.source.online
 
 import eu.kanade.tachiyomi.network.GET
+import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.asObservableSuccess
 import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.network.newCachelessCallWithProgress
@@ -10,15 +11,78 @@ import eu.kanade.tachiyomi.source.model.MangasPage
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.source.model.SManga
+import okhttp3.Headers
+import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import rx.Observable
 import tachiyomi.core.common.util.lang.awaitSingle
+import uy.kohesive.injekt.injectLazy
+import java.net.URI
+import java.net.URISyntaxException
+import java.security.MessageDigest
 
 /**
  * A simple implementation for sources from a website.
  */
-abstract class HttpSource : BaseHttpSource(), CatalogueSource {
+abstract class HttpSource : CatalogueSource {
+
+    /**
+     * Network service.
+     */
+    protected val network: NetworkHelper by injectLazy()
+
+    /**
+     * Base url of the website without the trailing slash, like: http://mysite.com
+     */
+    abstract val baseUrl: String
+
+    /**
+     * Returns the base (home) URL of the website as a string.
+     */
+    open fun getHomeUrl(): String = baseUrl
+
+    /**
+     * Version id used to generate the source id.
+     */
+    open val versionId: Int = 1
+
+    /**
+     * ID of the source, derived from its stable name, language, and version.
+     */
+    override val id: Long by lazy { generateId(name, lang, versionId) }
+
+    /**
+     * Headers used for requests.
+     *
+     * Keep the lazy delegate declared on HttpSource. Keiyoushi's extensions-lib 1.6 base source
+     * replaces this delegate reflectively so headers can be rebuilt after subclass initialization.
+     */
+    val headers: Headers by lazy { headersBuilder().build() }
+
+    /**
+     * Default network client for doing requests.
+     */
+    open val client: OkHttpClient get() = network.client
+
+    /**
+     * Generates a stable source ID.
+     */
+    @Suppress("MemberVisibilityCanBePrivate")
+    protected fun generateId(name: String, lang: String, versionId: Int): Long {
+        val key = "${name.lowercase()}/$lang/$versionId"
+        val bytes = MessageDigest.getInstance("MD5").digest(key.toByteArray())
+        return (0..7).map { bytes[it].toLong() and 0xff shl 8 * (7 - it) }.reduce(Long::or) and Long.MAX_VALUE
+    }
+
+    /**
+     * Headers builder for requests. Implementations can override this method for custom headers.
+     */
+    protected open fun headersBuilder(): Headers.Builder = Headers.Builder().apply {
+        add("User-Agent", network.defaultUserAgentProvider())
+    }
+
+    override fun toString(): String = "$name (${lang.uppercase()})"
 
     /**
      * Returns an observable containing a page with a list of manga. Normally it's not needed to
@@ -181,6 +245,30 @@ abstract class HttpSource : BaseHttpSource(), CatalogueSource {
             "Source developers should make their own implementation according to their needs.",
     )
     protected open fun mangaDetailsParse(response: Response): SManga = throw UnsupportedOperationException()
+
+    /**
+     * Whether this source provides related manga directly.
+     *
+     * Retained for compatibility with Keiyoushi's extensions-lib 1.6 surface.
+     */
+    override val supportsRelatedMangas: Boolean
+        get() = true
+
+    /**
+     * Returns related manga. Keiyoushi's shared source base overrides this suspend API directly.
+     */
+    override suspend fun fetchRelatedMangaList(manga: SManga): List<SManga> =
+        throw UnsupportedOperationException("Unsupported!")
+
+    /**
+     * Compatibility request hook used by Keiyoushi-derived sources.
+     */
+    protected open fun relatedMangaListRequest(manga: SManga): Request = throw UnsupportedOperationException()
+
+    /**
+     * Compatibility parser hook used by Keiyoushi-derived sources.
+     */
+    protected open fun relatedMangaListParse(response: Response): List<SManga> = throw UnsupportedOperationException()
 
     /**
      * Returns an observable with the updated chapter list for a manga. Normally it's not needed to
@@ -353,6 +441,22 @@ abstract class HttpSource : BaseHttpSource(), CatalogueSource {
     @Suppress("Unused")
     fun SManga.setUrlWithoutDomain(url: String) {
         this.url = getUrlWithoutDomain(url)
+    }
+
+    private fun getUrlWithoutDomain(orig: String): String {
+        return try {
+            val uri = URI(orig.replace(" ", "%20"))
+            var out = uri.path
+            if (uri.query != null) {
+                out += "?" + uri.query
+            }
+            if (uri.fragment != null) {
+                out += "#" + uri.fragment
+            }
+            out
+        } catch (_: URISyntaxException) {
+            orig
+        }
     }
 
     /**

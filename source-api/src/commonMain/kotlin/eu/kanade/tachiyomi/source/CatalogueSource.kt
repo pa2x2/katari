@@ -28,6 +28,32 @@ interface CatalogueSource : Source {
     val supportsImmersiveFeed: Boolean
         get() = false
 
+    /**
+     * Whether the source can provide related manga directly.
+     *
+     * Retained for compatibility with Keiyoushi's extensions-lib 1.6 surface.
+     */
+    val supportsRelatedMangas: Boolean
+        get() = false
+
+    /**
+     * Whether a compatible host should avoid falling back to title search for related manga.
+     */
+    val disableRelatedMangasBySearch: Boolean
+        get() = false
+
+    /**
+     * Whether a compatible host should hide related manga entirely.
+     */
+    val disableRelatedMangas: Boolean
+        get() = false
+
+    /**
+     * Returns manga related to [manga] when [supportsRelatedMangas] is enabled.
+     */
+    suspend fun fetchRelatedMangaList(manga: SManga): List<SManga> =
+        throw UnsupportedOperationException("Unsupported!")
+
     @Suppress("DEPRECATION")
     override suspend fun getPopularManga(page: Int): MangasPage = fetchPopularManga(page).awaitSingle()
 

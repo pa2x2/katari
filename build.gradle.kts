@@ -56,11 +56,12 @@ val currentLegacySourceApiJar = layout.projectDirectory.file(
 fun registerLegacySourceAbiCheck(
     taskName: String,
     baselineName: String,
+    baselineLabel: String,
     expectedSha256: String,
     additionalExcludes: List<String> = emptyList(),
 ) = tasks.register<JavaExec>(taskName) {
     group = "verification"
-    description = "Checks the current source-api against the original upstream Mihon $baselineName ABI"
+    description = "Checks the current source-api against the $baselineLabel ABI"
 
     dependsOn(":source-api:assemble")
     classpath = legacySourceAbiVerifier
@@ -107,11 +108,13 @@ fun registerLegacySourceAbiCheck(
 val verifyLegacySourceAbi14 = registerLegacySourceAbiCheck(
     taskName = "verifyLegacySourceAbi14",
     baselineName = "upstream-mihon-source-api-1.4",
+    baselineLabel = "original upstream Mihon 1.4",
     expectedSha256 = "fcb9fd3b0f246a88e248d5582a9ec88910502a2597586ac36698294344f8634f",
 )
 val verifyLegacySourceAbi16 = registerLegacySourceAbiCheck(
     taskName = "verifyLegacySourceAbi16",
     baselineName = "upstream-mihon-source-api-1.6",
+    baselineLabel = "original upstream Mihon 1.6",
     expectedSha256 = "2204a07ed2e89bcee8fac8808269808a00d629880bd8c5b720ad75c7c7901d90",
     additionalExcludes = listOf(
         // The 1.4 baseline already requires this exact descriptor as a default method. Making the
@@ -119,11 +122,27 @@ val verifyLegacySourceAbi16 = registerLegacySourceAbiCheck(
         "eu.kanade.tachiyomi.source.Source#getPageList(eu.kanade.tachiyomi.source.model.SChapter,kotlin.coroutines.Continuation)",
     ),
 )
+val verifyKeiyoushiSourceAbi16 = registerLegacySourceAbiCheck(
+    taskName = "verifyKeiyoushiSourceAbi16",
+    baselineName = "keiyoushi-extensions-lib-1.6-6e0c96cea8",
+    baselineLabel = "Keiyoushi extensions-lib 1.6 (6e0c96cea8)",
+    expectedSha256 = "b77f2f2d01ca03a5362eb6477c272f0392ebf5725b62a17ac657b7e1ad9791a2",
+    additionalExcludes = listOf(
+        // The runtime keeps this method default to preserve original upstream 1.4 linkage. An
+        // extension compiled against Keiyoushi's abstract declaration remains binary-compatible.
+        "eu.kanade.tachiyomi.source.Source#getPageList(eu.kanade.tachiyomi.source.model.SChapter,kotlin.coroutines.Continuation)",
+    ),
+)
 
 tasks.register("verifyLegacySourceAbi") {
     group = "verification"
-    description = "Checks runtime ABI compatibility with original upstream Mihon manga extensions"
-    dependsOn(verifyLegacySourceAbi14, verifyLegacySourceAbi16, ":source-compat:testDebugUnitTest")
+    description = "Checks runtime ABI compatibility with supported Mihon and Keiyoushi manga extensions"
+    dependsOn(
+        verifyLegacySourceAbi14,
+        verifyLegacySourceAbi16,
+        verifyKeiyoushiSourceAbi16,
+        ":source-compat:testDebugUnitTest",
+    )
 }
 
 tasks.register("publishEntrySdkToMavenLocal") {

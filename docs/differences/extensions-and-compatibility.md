@@ -1,10 +1,10 @@
 # Extensions and compatibility
 
-Katari can load selected Mihon extension API families for compatibility, but new Katari extensions use the Entry API.
+Katari can load selected Mihon and Keiyoushi extension API families for compatibility, but new Katari extensions use the Entry API.
 
-## Legacy Mihon extensions
+## Legacy Mihon and Keiyoushi extensions
 
-Installed extensions declaring supported Mihon library families can continue to provide manga sources. Compatibility is intentionally limited to the legacy API families Katari verifies; an APK using unsupported fork-specific APIs may install but fail to load.
+Installed extensions declaring supported Mihon or Keiyoushi library families can continue to provide manga sources. Katari verifies the original Mihon 1.4 and 1.6 surfaces plus the supported Keiyoushi 1.6 compatibility additions. An APK using other fork-specific APIs may install but fail to load.
 
 Legacy sources are adapted into Katari's unified source model and produce the entry type represented by their legacy contract. They do not gain additional media behavior automatically.
 
