@@ -34,9 +34,8 @@ internal class AnimeDownloadManager(
     private val downloader: AnimeDownloader = Injekt.get(),
     private val sourceManager: SourceManager = Injekt.get(),
     private val store: AnimeDownloadStore = AnimeDownloadStore(context),
+    private val notifier: AnimeDownloadNotifier = AnimeDownloadNotifier(context),
 ) {
-
-    private val notifier = AnimeDownloadNotifier(context)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val _queueState = MutableStateFlow<List<AnimeDownload>>(emptyList())
@@ -93,6 +92,11 @@ internal class AnimeDownloadManager(
     fun pauseDownloads() {
         processorJob?.cancel()
         processorJob = null
+        if (queueState.value.isEmpty()) {
+            _isRunning.value = false
+            notifier.onComplete()
+            return
+        }
         queueState.value
             .filter { it.status == AnimeDownload.State.RESOLVING || it.status == AnimeDownload.State.DOWNLOADING }
             .forEach { it.status = AnimeDownload.State.QUEUE }
