@@ -13,6 +13,7 @@ dependencies {
 
     implementation(projects.core.common)
     implementation(projects.entryInteractions.spi)
+    implementation(projects.entryInteractions.downloadNotification)
     implementation(projects.entryInteractions.manga)
     implementation(projects.entryInteractions.anime)
     implementation(projects.entryInteractions.book)

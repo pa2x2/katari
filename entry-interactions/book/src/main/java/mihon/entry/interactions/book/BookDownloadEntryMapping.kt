@@ -1,12 +1,15 @@
 package mihon.entry.interactions.book
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.EntryDownloadMessage
 import mihon.entry.interactions.EntryDownloadQueueGroup
 import mihon.entry.interactions.EntryDownloadQueueItem
 import mihon.entry.interactions.EntryDownloadState
 import mihon.entry.interactions.EntryDownloadStatus
 import mihon.entry.interactions.book.download.model.BookDownload
+import mihon.entry.interactions.book.download.model.BookDownloadFailure
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.i18n.MR
 
 internal fun List<BookDownload>.toBookEntryDownloadQueueGroups(
     sourceManager: SourceManager,
@@ -29,6 +32,7 @@ internal fun BookDownload.toEntryDownloadStatus(): EntryDownloadStatus = EntryDo
 
 internal fun BookDownload.toEntryDownloadQueueItem(): EntryDownloadQueueItem = EntryDownloadQueueItem(
     entryType = EntryType.BOOK,
+    state = status.toEntryDownloadState(),
     entryId = entry.id,
     childId = chapter.id,
     title = entry.title,
@@ -55,4 +59,19 @@ internal fun BookDownload.State.toEntryDownloadState(): EntryDownloadState = whe
     -> EntryDownloadState.DOWNLOADING
     BookDownload.State.DOWNLOADED -> EntryDownloadState.DOWNLOADED
     BookDownload.State.ERROR -> EntryDownloadState.ERROR
+}
+
+internal fun BookDownloadFailure.toEntryDownloadMessage(): EntryDownloadMessage {
+    message?.takeIf(String::isNotBlank)?.let { return EntryDownloadMessage.Text(it) }
+    val resource = when (reason) {
+        BookDownloadFailure.Reason.SOURCE_NOT_FOUND -> MR.strings.download_notifier_source_not_available
+        BookDownloadFailure.Reason.CONTENT_UNAVAILABLE -> MR.strings.download_notifier_book_content_unavailable
+        BookDownloadFailure.Reason.UNSUPPORTED_FORMAT -> MR.strings.download_notifier_book_unsupported_format
+        BookDownloadFailure.Reason.AMBIGUOUS_RESOURCE -> MR.strings.download_notifier_book_ambiguous_resource
+        BookDownloadFailure.Reason.STORAGE -> MR.strings.download_notifier_book_storage_error
+        BookDownloadFailure.Reason.INTEGRITY -> MR.strings.download_notifier_book_integrity_error
+        BookDownloadFailure.Reason.NETWORK -> MR.strings.download_notifier_book_network_error
+        BookDownloadFailure.Reason.UNKNOWN -> MR.strings.download_notifier_unknown_error
+    }
+    return EntryDownloadMessage.Resource(resource)
 }

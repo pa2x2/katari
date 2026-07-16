@@ -34,6 +34,7 @@ internal class MangaDownloadProcessor(
     override val queueState: Flow<List<EntryDownloadQueueGroup>> = downloadManager.queueState
         .map { downloads -> downloads.toMangaEntryDownloadQueueGroups() }
         .map { groups -> groups.map { it.requireManga() } }
+    override val events = downloadManager.events
 
     override fun updates(): Flow<EntryDownloadStatus> {
         return merge(

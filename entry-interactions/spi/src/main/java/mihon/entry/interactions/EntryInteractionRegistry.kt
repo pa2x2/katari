@@ -4,6 +4,8 @@ import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emptyFlow
@@ -274,9 +276,12 @@ private class RegistryEntryContinueInteraction(
 private class RegistryEntryDownloadInteraction(
     private val processors: Map<EntryType, EntryDownloadProcessor>,
 ) : EntryDownloadInteraction {
+    private val paused = MutableStateFlow(false)
+
     override val changes: Flow<Unit> = processors.values.map { it.changes }.merged()
     override val isInitializing: Flow<Boolean> = processors.values.map { it.isInitializing }.combinedAny()
     override val isRunning: Flow<Boolean> = processors.values.map { it.isRunning }.combinedAny()
+    override val isPaused: Flow<Boolean> = paused.asStateFlow()
     override val queueState: Flow<List<EntryDownloadQueueGroup>> = processors.values
         .map { it.queueState }
         .combinedFlatten()
@@ -293,16 +298,23 @@ private class RegistryEntryDownloadInteraction(
         return processors.values.map { it.queueProgressUpdates() }.merged()
     }
 
+    override fun events(): Flow<EntryDownloadEvent> {
+        return processors.values.map { it.events }.merged()
+    }
+
     override fun startDownloads() {
+        paused.value = false
         processors.values.forEach { it.startDownloads() }
     }
 
     override fun pauseDownloads() {
         processors.values.forEach { it.pauseDownloads() }
+        paused.value = true
     }
 
     override fun clearQueue() {
         processors.values.forEach { it.clearQueue() }
+        paused.value = false
     }
 
     override fun invalidateCaches() {
@@ -345,12 +357,14 @@ private class RegistryEntryDownloadInteraction(
         val processor = processors.requireProcessor("download", entry.type)
         processor.requireMatchingEntryType("download", entry, processors.keys)
         processor.queue(entry, chapters, autoStart)
+        if (autoStart) paused.value = false
     }
 
     override suspend fun download(entry: Entry, chapters: List<EntryChapter>, startNow: Boolean) {
         val processor = processors.requireProcessor("download", entry.type)
         processor.requireMatchingEntryType("download", entry, processors.keys)
         processor.download(entry, chapters, startNow)
+        paused.value = false
     }
 
     override suspend fun downloadWithOptions(
@@ -362,6 +376,7 @@ private class RegistryEntryDownloadInteraction(
         val processor = processors.requireProcessor("download", entry.type)
         processor.requireMatchingEntryType("download", entry, processors.keys)
         processor.downloadWithOptions(entry, chapters, selection, startNow)
+        paused.value = false
     }
 
     override fun supportsDownloadOptions(entry: Entry): Boolean {

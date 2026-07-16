@@ -6,6 +6,7 @@ import eu.kanade.tachiyomi.network.HttpException
 import eu.kanade.tachiyomi.source.entry.EntryImagePage
 import eu.kanade.tachiyomi.source.entry.EntryImageSource
 import eu.kanade.tachiyomi.source.entry.EntryMedia
+import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.entry.UnmeteredSource
 import eu.kanade.tachiyomi.source.model.Page
@@ -19,8 +20,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -37,7 +40,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import logcat.LogPriority
 import mihon.core.archive.ZipWriter
-import mihon.entry.interactions.EntryDownloadNotificationActions
+import mihon.entry.interactions.EntryDownloadEvent
+import mihon.entry.interactions.EntryDownloadMessage
 import mihon.entry.interactions.EntryPageImageCache
 import mihon.entry.interactions.manga.download.model.DownloadState
 import mihon.entry.interactions.manga.download.model.MangaDownload
@@ -80,7 +84,6 @@ internal class Downloader(
     private val cache: DownloadCache,
     private val sourceManager: SourceManager = Injekt.get(),
     private val pageImageCache: EntryPageImageCache = Injekt.get(),
-    private val notificationActions: EntryDownloadNotificationActions = Injekt.get(),
     private val downloadPreferences: DownloadPreferences = Injekt.get(),
     private val xml: XML = Injekt.get(),
     private val getCategories: GetCategories = Injekt.get(),
@@ -97,11 +100,8 @@ internal class Downloader(
      */
     private val _queueState = MutableStateFlow<List<MangaDownload>>(emptyList())
     val queueState = _queueState.asStateFlow()
-
-    /**
-     * Notifier for the downloader state and progress.
-     */
-    private val notifier by lazy { DownloadNotifier(context) }
+    private val _events = MutableSharedFlow<EntryDownloadEvent>(replay = 16, extraBufferCapacity = 16)
+    val events = _events.asSharedFlow()
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var downloaderJob: Job? = null
@@ -156,14 +156,8 @@ internal class Downloader(
             .forEach { it.status = DownloadState.ERROR }
 
         if (reason != null) {
-            notifier.onWarning(reason)
+            reportWarning(EntryDownloadMessage.Text(reason))
             return
-        }
-
-        if (isPaused && queueState.value.isNotEmpty()) {
-            notifier.onPaused()
-        } else {
-            notifier.onComplete()
         }
 
         isPaused = false
@@ -189,7 +183,6 @@ internal class Downloader(
         cancelDownloaderJob()
 
         internalClearQueue()
-        notifier.dismissProgress()
     }
 
     /**
@@ -258,7 +251,7 @@ internal class Downloader(
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
             logcat(LogPriority.ERROR, e)
-            notifier.onError(e.message)
+            reportError(e.message)
             stop()
         }
     }
@@ -309,13 +302,15 @@ internal class Downloader(
                     queuedDownloads > DOWNLOADS_QUEUED_WARNING_THRESHOLD ||
                     maxDownloadsFromSource > CHAPTERS_PER_SOURCE_QUEUE_WARNING_THRESHOLD
                 ) {
-                    notifier.onWarning(
-                        context.stringResource(
-                            MR.strings.download_queue_size_warning,
-                            context.stringResource(MR.strings.app_name),
+                    reportWarning(
+                        message = EntryDownloadMessage.Text(
+                            context.stringResource(
+                                MR.strings.download_queue_size_warning,
+                                context.stringResource(MR.strings.app_name),
+                            ),
                         ),
-                        WARNING_NOTIF_TIMEOUT_MS,
-                        notificationActions.openUrl(context, HELP_WARNING_URL),
+                        timeoutMillis = WARNING_NOTIF_TIMEOUT_MS,
+                        helpUrl = HELP_WARNING_URL,
                     )
                 }
                 DownloadJob.start(context)
@@ -331,18 +326,16 @@ internal class Downloader(
     private suspend fun downloadChapter(download: MangaDownload) {
         val mangaDir = provider.getEntryDir(download.entry.title, download.source).getOrElse { e ->
             download.status = DownloadState.ERROR
-            notifier.onError(e.message, download.chapter.name, download.entry.title, download.entry.id)
+            reportError(e.message, download)
             return
         }
 
         val availSpace = DiskUtil.getAvailableStorageSpace(mangaDir)
         if (availSpace != -1L && availSpace < MIN_DISK_SPACE) {
             download.status = DownloadState.ERROR
-            notifier.onError(
+            reportError(
                 context.stringResource(MR.strings.download_insufficient_space),
-                download.chapter.name,
-                download.entry.title,
-                download.entry.id,
+                download,
             )
             return
         }
@@ -386,10 +379,7 @@ internal class Downloader(
                 }
                     .flowOn(Dispatchers.IO)
             }
-                .collect {
-                    // Do when page is downloaded.
-                    notifier.onProgressChange(download)
-                }
+                .collect { }
 
             // Do after download completes
 
@@ -421,7 +411,7 @@ internal class Downloader(
             // If the page list threw, it will resume here
             logcat(LogPriority.ERROR, error)
             download.status = DownloadState.ERROR
-            notifier.onError(error.message, download.chapter.name, download.entry.title, download.entry.id)
+            reportError(error.message, download)
         }
     }
 
@@ -468,8 +458,29 @@ internal class Downloader(
             // Mark this page as error and allow to download the remaining
             page.progress = 0
             page.status = Page.State.Error(e)
-            notifier.onError(e.message, download.chapter.name, download.entry.title, download.entry.id)
+            reportError(e.message, download)
         }
+    }
+
+    private fun reportError(message: String?, download: MangaDownload? = null) {
+        _events.tryEmit(
+            EntryDownloadEvent.Error(
+                entryType = EntryType.MANGA,
+                entryId = download?.entry?.id,
+                title = download?.entry?.title,
+                subtitle = download?.chapter?.name,
+                message = message?.takeIf(String::isNotBlank)?.let(EntryDownloadMessage::Text)
+                    ?: EntryDownloadMessage.Resource(MR.strings.download_notifier_unknown_error),
+            ),
+        )
+    }
+
+    private fun reportWarning(
+        message: EntryDownloadMessage,
+        timeoutMillis: Long? = null,
+        helpUrl: String? = null,
+    ) {
+        _events.tryEmit(EntryDownloadEvent.Warning(message, timeoutMillis, helpUrl))
     }
 
     /**

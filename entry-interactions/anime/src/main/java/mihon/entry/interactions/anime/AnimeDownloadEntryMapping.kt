@@ -1,12 +1,15 @@
 package mihon.entry.interactions.anime
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.EntryDownloadMessage
 import mihon.entry.interactions.EntryDownloadQueueGroup
 import mihon.entry.interactions.EntryDownloadQueueItem
 import mihon.entry.interactions.EntryDownloadState
 import mihon.entry.interactions.EntryDownloadStatus
 import mihon.entry.interactions.anime.download.model.AnimeDownload
+import mihon.entry.interactions.anime.download.model.AnimeDownloadFailure
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.i18n.MR
 
 internal fun List<AnimeDownload>.toAnimeEntryDownloadQueueGroups(
     sourceManager: SourceManager,
@@ -34,6 +37,7 @@ internal fun AnimeDownload.toEntryDownloadStatus(): EntryDownloadStatus {
 internal fun AnimeDownload.toEntryDownloadQueueItem(): EntryDownloadQueueItem {
     return EntryDownloadQueueItem(
         entryType = EntryType.ANIME,
+        state = status.toEntryDownloadState(),
         entryId = anime.id,
         childId = episode.id,
         title = anime.title,
@@ -63,4 +67,23 @@ internal fun AnimeDownload.State.toEntryDownloadState(): EntryDownloadState {
         AnimeDownload.State.DOWNLOADED -> EntryDownloadState.DOWNLOADED
         AnimeDownload.State.ERROR -> EntryDownloadState.ERROR
     }
+}
+
+internal fun AnimeDownloadFailure.toEntryDownloadMessage(): EntryDownloadMessage {
+    message?.takeIf(String::isNotBlank)?.let { return EntryDownloadMessage.Text(it) }
+    val resource = when (reason) {
+        AnimeDownloadFailure.Reason.SOURCE_NOT_FOUND -> MR.strings.download_notifier_source_not_available
+        AnimeDownloadFailure.Reason.EPISODE_NOT_FOUND -> MR.strings.download_notifier_episode_not_found
+        AnimeDownloadFailure.Reason.PREFERENCES_NOT_SUPPORTED -> MR.strings.download_notifier_preferences_not_supported
+        AnimeDownloadFailure.Reason.DUB_NOT_AVAILABLE -> MR.strings.download_notifier_dub_not_available
+        AnimeDownloadFailure.Reason.STREAM_NOT_AVAILABLE -> MR.strings.download_notifier_stream_not_available
+        AnimeDownloadFailure.Reason.SUBTITLE_NOT_AVAILABLE -> MR.strings.download_notifier_subtitle_not_available
+        AnimeDownloadFailure.Reason.QUALITY_NOT_AVAILABLE -> MR.strings.download_notifier_quality_not_available
+        AnimeDownloadFailure.Reason.STREAM_EXPIRED -> MR.strings.download_notifier_stream_expired
+        AnimeDownloadFailure.Reason.UNSUPPORTED_STREAM -> MR.strings.download_notifier_unsupported_stream
+        AnimeDownloadFailure.Reason.INSUFFICIENT_STORAGE -> MR.strings.download_notifier_insufficient_storage
+        AnimeDownloadFailure.Reason.NETWORK -> MR.strings.download_notifier_stream_network_error
+        AnimeDownloadFailure.Reason.UNKNOWN -> MR.strings.download_notifier_unknown_error
+    }
+    return EntryDownloadMessage.Resource(resource)
 }

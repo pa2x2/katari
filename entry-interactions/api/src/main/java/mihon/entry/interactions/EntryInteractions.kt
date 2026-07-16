@@ -51,11 +51,13 @@ interface EntryDownloadInteraction {
     val changes: Flow<Unit>
     val isInitializing: Flow<Boolean>
     val isRunning: Flow<Boolean>
+    val isPaused: Flow<Boolean>
     val queueState: Flow<List<EntryDownloadQueueGroup>>
 
     fun updates(): Flow<EntryDownloadStatus>
     fun queueStatusUpdates(): Flow<EntryDownloadQueueItem>
     fun queueProgressUpdates(): Flow<EntryDownloadQueueItem>
+    fun events(): Flow<EntryDownloadEvent>
 
     fun startDownloads()
     fun pauseDownloads()

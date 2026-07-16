@@ -148,10 +148,20 @@ fun InjektRegistrar.addEntryInteractionRuntime(
     addSingletonFactory<EntryLibraryFilterInteraction> { get<EntryInteractions>().libraryFilter }
     addSingletonFactory<EntryPreviewInteraction> { get<EntryInteractions>().preview }
     addSingletonFactory<EntryImmersiveInteraction> { get<EntryInteractions>().immersive }
+    addSingletonFactory {
+        EntryDownloadNotificationManager(
+            context = app,
+            downloads = get<EntryDownloadInteraction>(),
+            actions = dependencies.notificationActions,
+            getMergedEntry = get(),
+        )
+    }
+    addSingletonFactory<EntryDownloadForegroundNotificationProvider> { get<EntryDownloadNotificationManager>() }
     addSingletonFactory<EntryInteractionRuntimeWarmup> {
         EntryInteractionRuntimeWarmup {
             mangaWarmup()
             animeWarmup()
+            get<EntryDownloadNotificationManager>().start()
         }
     }
 }

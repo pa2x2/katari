@@ -50,6 +50,7 @@ internal class BookDownloadProcessor(
     override val queueState: Flow<List<EntryDownloadQueueGroup>> = manager.queueState.map {
         it.toBookEntryDownloadQueueGroups(dependencies.sourceManager)
     }
+    override val events = manager.events
 
     override fun updates(): Flow<EntryDownloadStatus> = merge(
         manager.statusFlow().map(BookDownload::toEntryDownloadStatus),

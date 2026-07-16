@@ -1,6 +1,7 @@
 package mihon.entry.interactions.book.download
 
 import android.content.Context
+import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -8,8 +9,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.emitAll
@@ -20,8 +23,11 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
+import mihon.entry.interactions.EntryDownloadEvent
+import mihon.entry.interactions.EntryDownloadMessage
 import mihon.entry.interactions.book.download.model.BookDownload
 import mihon.entry.interactions.book.download.model.BookDownloadFailure
+import mihon.entry.interactions.book.toEntryDownloadMessage
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.source.service.SourceManager
@@ -35,7 +41,6 @@ internal class BookDownloadManager(
     private val downloader: BookDownloader = Injekt.get(),
     private val sourceManager: SourceManager = Injekt.get(),
     private val store: BookDownloadStore = BookDownloadStore(context),
-    private val notifier: BookDownloadNotifier = BookDownloadNotifier(context.applicationContext),
     private val workController: BookDownloadWorkController = DefaultBookDownloadWorkController,
 ) {
     private val appContext = context.applicationContext
@@ -48,6 +53,8 @@ internal class BookDownloadManager(
     val cacheChanges = cache.changes
     private val _isRunning = MutableStateFlow(false)
     val isRunning = _isRunning.asStateFlow()
+    private val _events = MutableSharedFlow<EntryDownloadEvent>(replay = 16, extraBufferCapacity = 16)
+    val events = _events.asSharedFlow()
 
     @Volatile
     private var activeChapterId: Long? = null
@@ -64,20 +71,9 @@ internal class BookDownloadManager(
                 initialized.complete(Unit)
             }
         }
-        scope.launch {
-            progressFlow().collect { download ->
-                if (
-                    download.status == BookDownload.State.RESOLVING ||
-                    download.status == BookDownload.State.DOWNLOADING
-                ) {
-                    notifier.onProgressChange(download)
-                }
-            }
-        }
     }
 
     fun startDownloads() {
-        notifier.onResumed()
         if (queueState.value.isEmpty()) return
         pauseRequested = false
         queueState.value.forEach { download ->
@@ -110,12 +106,9 @@ internal class BookDownloadManager(
         }
         workController.stop(appContext)
         synchronized(queueMutationLock) {
-            if (hasQueuedDownloads && _queueState.value.isNotEmpty()) {
-                notifier.onPaused()
-            } else {
+            if (!hasQueuedDownloads || _queueState.value.isEmpty()) {
                 pauseRequested = false
                 _isRunning.value = false
-                notifier.onComplete()
             }
         }
     }
@@ -128,7 +121,6 @@ internal class BookDownloadManager(
         }
         pauseRequested = false
         _isRunning.value = false
-        notifier.onComplete()
     }
 
     suspend fun queueBooks(entry: Entry, chapters: List<EntryChapter>, autoStart: Boolean = true) {
@@ -162,7 +154,6 @@ internal class BookDownloadManager(
         }
         if (queueState.value.isEmpty()) {
             _isRunning.value = false
-            notifier.onComplete()
         } else if (wasRunning && removesActiveDownload) {
             _isRunning.value = false
             startDownloads()
@@ -184,7 +175,6 @@ internal class BookDownloadManager(
             while (true) {
                 val next = queueState.value.firstOrNull { it.status == BookDownload.State.QUEUE } ?: break
                 activeChapterId = next.chapter.id
-                notifier.onProgressChange(next)
                 try {
                     val failure = downloader.download(next)
                     if (failure == null) {
@@ -197,7 +187,7 @@ internal class BookDownloadManager(
                         next.failure = failure
                         next.status = BookDownload.State.ERROR
                         rewriteStoredQueue()
-                        notifier.onError(next)
+                        reportError(next)
                     }
                 } catch (error: CancellationException) {
                     next.status = BookDownload.State.QUEUE
@@ -208,16 +198,28 @@ internal class BookDownloadManager(
                     next.failure = BookDownloadFailure(BookDownloadFailure.Reason.UNKNOWN, error.message)
                     next.status = BookDownload.State.ERROR
                     rewriteStoredQueue()
-                    notifier.onError(next)
+                    reportError(next)
                 } finally {
                     activeChapterId = null
                 }
             }
         } finally {
             _isRunning.value = false
-            if (!pauseRequested || queueState.value.isEmpty()) notifier.onComplete()
             processorMutex.unlock()
         }
+    }
+
+    private fun reportError(download: BookDownload) {
+        _events.tryEmit(
+            EntryDownloadEvent.Error(
+                entryType = EntryType.BOOK,
+                entryId = download.entry.id,
+                title = download.entry.title,
+                subtitle = download.chapter.name,
+                message = download.failure?.toEntryDownloadMessage()
+                    ?: EntryDownloadMessage.Resource(tachiyomi.i18n.MR.strings.download_notifier_unknown_error),
+            ),
+        )
     }
 
     suspend fun delete(entry: Entry, chapters: List<EntryChapter>) {
