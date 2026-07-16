@@ -348,6 +348,12 @@ dependencies {
 
 androidComponents {
     onVariants { variant ->
+        if (Config.includeTelemetry) {
+            variant.sources.manifests.addStaticManifestFile(
+                projectDir.resolve("src/telemetry/AndroidManifest.xml").absolutePath,
+            )
+        }
+
         val resSource = variant.sources.res ?: return@onVariants
 
         val variantName = variant.name.replaceFirstChar { it.uppercase() }
