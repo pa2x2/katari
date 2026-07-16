@@ -18,7 +18,7 @@ import tachiyomi.i18n.MR
 import uy.kohesive.injekt.injectLazy
 import java.security.SecureRandom
 import java.util.Base64
-import tachiyomi.domain.track.model.Track as DomainTrack
+import tachiyomi.domain.track.model.EntryTrack as DomainTrack
 
 class MangaBaka(
     id: Long,

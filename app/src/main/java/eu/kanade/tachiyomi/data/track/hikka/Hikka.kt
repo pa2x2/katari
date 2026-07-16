@@ -16,7 +16,7 @@ import kotlinx.serialization.json.Json
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.injectLazy
-import tachiyomi.domain.track.model.Track as DomainTrack
+import tachiyomi.domain.track.model.EntryTrack as DomainTrack
 
 class Hikka(
     id: Long,

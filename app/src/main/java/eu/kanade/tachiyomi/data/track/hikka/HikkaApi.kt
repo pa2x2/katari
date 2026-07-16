@@ -28,7 +28,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import tachiyomi.core.common.util.lang.withIOContext
 import uy.kohesive.injekt.injectLazy
-import tachiyomi.domain.track.model.Track as DomainTrack
+import tachiyomi.domain.track.model.EntryTrack as DomainTrack
 
 class HikkaApi(
     private val trackId: Long,

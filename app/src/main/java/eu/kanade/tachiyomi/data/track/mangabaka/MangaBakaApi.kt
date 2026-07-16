@@ -37,7 +37,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.util.Locale
 import kotlin.time.Instant
-import tachiyomi.domain.track.model.Track as DomainTrack
+import tachiyomi.domain.track.model.EntryTrack as DomainTrack
 
 class MangaBakaApi(
     private val trackId: Long,
