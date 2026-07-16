@@ -6,7 +6,9 @@ import eu.kanade.tachiyomi.ui.reader.createReaderThemeContext
 import eu.kanade.tachiyomi.ui.reader.model.InsertPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
+import eu.kanade.tachiyomi.ui.reader.model.ReaderViewerItem
 import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
+import eu.kanade.tachiyomi.ui.reader.model.addPages
 import eu.kanade.tachiyomi.ui.reader.viewer.calculateChapterGap
 import eu.kanade.tachiyomi.widget.ViewPagerAdapter
 import mihon.entry.interactions.viewer.EntryChildTransition
@@ -20,7 +22,7 @@ internal class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAd
     /**
      * List of currently set items.
      */
-    var items: MutableList<Any> = mutableListOf()
+    var items: MutableList<ReaderViewerItem> = mutableListOf()
         private set
 
     /**
@@ -45,18 +47,18 @@ internal class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAd
      * has R2L direction.
      */
     fun setChapters(chapters: ViewerChapters, forceTransition: Boolean) {
-        val newItems = mutableListOf<Any>()
+        val newItems = mutableListOf<ReaderViewerItem>()
 
         // Forces chapter transition if there is missing chapters
         val prevHasMissingChapters = calculateChapterGap(chapters.current, chapters.previous) > 0
         val nextHasMissingChapters = calculateChapterGap(chapters.next, chapters.current) > 0
 
         // Add previous chapter pages and transition
-        chapters.previous?.pages?.let(newItems::addAll)
+        newItems.addPages(chapters.previous?.pages)
 
         // Skip transition page if the chapter is loaded & current page is not a transition page
         if (prevHasMissingChapters || forceTransition || chapters.previous?.state !is ReaderChapter.State.Loaded) {
-            newItems.add(chapters.previousTransition())
+            newItems.add(ReaderViewerItem.Transition(chapters.previousTransition()))
         }
 
         var insertPageLastPage: InsertPage? = null
@@ -77,7 +79,7 @@ internal class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAd
                     preprocessed[key]?.let { pages.add(key + 1, it) }
                 }
 
-            newItems.addAll(pages)
+            newItems.addPages(pages)
         }
 
         currentChapter = chapters.current
@@ -90,14 +92,14 @@ internal class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAd
                     forceTransition ||
                     chapters.next?.state !is ReaderChapter.State.Loaded
                 ) {
-                    newItems.add(it)
+                    newItems.add(ReaderViewerItem.Transition(it))
                 }
             }
 
-        chapters.next?.pages?.let(newItems::addAll)
+        newItems.addPages(chapters.next?.pages)
 
         // Resets double-page splits, else insert pages get misplaced
-        items.filterIsInstance<InsertPage>().also { items.removeAll(it) }
+        items.removeAll { item -> item is ReaderViewerItem.Page && item.page is InsertPage }
 
         if (viewer is R2LPagerViewer) {
             newItems.reverse()
@@ -125,13 +127,12 @@ internal class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAd
      */
     override fun createView(container: ViewGroup, position: Int): View {
         return when (val item = items[position]) {
-            is ReaderPage -> PagerPageHolder(readerThemedContext, viewer, item)
-            is EntryChildTransition<*> -> PagerTransitionHolder(
+            is ReaderViewerItem.Page -> PagerPageHolder(readerThemedContext, viewer, item.page)
+            is ReaderViewerItem.Transition -> PagerTransitionHolder(
                 readerThemedContext,
                 viewer,
-                item as EntryChildTransition<ReaderChapter>,
+                item.transition,
             )
-            else -> throw NotImplementedError("Holder for ${item.javaClass} not implemented")
         }
     }
 
@@ -140,7 +141,12 @@ internal class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAd
      */
     override fun getItemPosition(view: Any): Int {
         if (view is PositionableView) {
-            val position = items.indexOf(view.item)
+            val item = when (view) {
+                is PagerPageHolder -> ReaderViewerItem.Page(view.page)
+                is PagerTransitionHolder -> ReaderViewerItem.Transition(view.transition)
+                else -> null
+            }
+            val position = item?.let(items::indexOf) ?: -1
             if (position != -1) {
                 return position
             } else {
@@ -150,10 +156,8 @@ internal class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAd
         return POSITION_NONE
     }
 
-    fun onPageSplit(currentPage: Any?, newPage: InsertPage) {
-        if (currentPage !is ReaderPage) return
-
-        val currentIndex = items.indexOf(currentPage)
+    fun onPageSplit(currentPage: ReaderPage, newPage: InsertPage) {
+        val currentIndex = items.indexOf(ReaderViewerItem.Page(currentPage))
 
         // Put aside preprocessed pages for next chapter so they don't get removed when changing chapter
         if (currentPage.chapter.chapter.id != currentChapter?.chapter?.id) {
@@ -169,23 +173,26 @@ internal class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAd
         }
 
         // It will enter a endless cycle of insert pages
-        if (viewer is R2LPagerViewer && placeAtIndex - 1 >= 0 && items[placeAtIndex - 1] is InsertPage) {
+        if (
+            viewer is R2LPagerViewer &&
+            placeAtIndex - 1 >= 0 &&
+            (items[placeAtIndex - 1] as? ReaderViewerItem.Page)?.page is InsertPage
+        ) {
             return
         }
 
         // Same here it will enter a endless cycle of insert pages
-        if (items[placeAtIndex] is InsertPage) {
+        if ((items[placeAtIndex] as? ReaderViewerItem.Page)?.page is InsertPage) {
             return
         }
 
-        items.add(placeAtIndex, newPage)
+        items.add(placeAtIndex, ReaderViewerItem.Page(newPage))
 
         notifyDataSetChanged()
     }
 
     fun cleanupPageSplit() {
-        val insertPages = items.filterIsInstance<InsertPage>()
-        items.removeAll(insertPages)
+        items.removeAll { item -> item is ReaderViewerItem.Page && item.page is InsertPage }
         notifyDataSetChanged()
     }
 
