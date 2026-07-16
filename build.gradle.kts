@@ -62,6 +62,7 @@ fun registerLegacySourceAbiCheck(
 ) = tasks.register<JavaExec>(taskName) {
     group = "verification"
     description = "Checks the current source-api against the $baselineLabel ABI"
+    notCompatibleWithConfigurationCache("Prepares and verifies the legacy ABI baseline in a build-script task action")
 
     dependsOn(":source-api:assemble")
     classpath = legacySourceAbiVerifier

@@ -123,6 +123,7 @@ fun EntryScreen(
     onManageMergeClicked: (() -> Unit)?,
     onOpenMergedEntryClicked: (() -> Unit)?,
     onMigrateClicked: (() -> Unit)?,
+    onRelatedEntriesClicked: (() -> Unit)?,
     onEditNotesClicked: () -> Unit,
 
     // For bottom action menu
@@ -184,6 +185,7 @@ fun EntryScreen(
             onManageMergeClicked = onManageMergeClicked,
             onOpenMergedEntryClicked = onOpenMergedEntryClicked,
             onMigrateClicked = onMigrateClicked,
+            onRelatedEntriesClicked = onRelatedEntriesClicked,
             onEditNotesClicked = onEditNotesClicked,
             onMultiBookmarkClicked = onMultiBookmarkClicked,
             onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
@@ -232,6 +234,7 @@ fun EntryScreen(
             onManageMergeClicked = onManageMergeClicked,
             onOpenMergedEntryClicked = onOpenMergedEntryClicked,
             onMigrateClicked = onMigrateClicked,
+            onRelatedEntriesClicked = onRelatedEntriesClicked,
             onEditNotesClicked = onEditNotesClicked,
             onMultiBookmarkClicked = onMultiBookmarkClicked,
             onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
@@ -290,6 +293,7 @@ private fun EntryScreenSmallImpl(
     onManageMergeClicked: (() -> Unit)?,
     onOpenMergedEntryClicked: (() -> Unit)?,
     onMigrateClicked: (() -> Unit)?,
+    onRelatedEntriesClicked: (() -> Unit)?,
     onEditNotesClicked: () -> Unit,
 
     // For bottom action menu
@@ -358,6 +362,7 @@ private fun EntryScreenSmallImpl(
                 onClickManageMerge = onManageMergeClicked,
                 onClickRefresh = onRefresh,
                 onClickMigrate = onMigrateClicked,
+                onClickRelatedEntries = onRelatedEntriesClicked,
                 onClickEditNotes = onEditNotesClicked,
                 entryType = state.entry.type,
                 actionModeCounter = selectedChapterCount,
@@ -577,6 +582,7 @@ fun EntryScreenLargeImpl(
     onManageMergeClicked: (() -> Unit)?,
     onOpenMergedEntryClicked: (() -> Unit)?,
     onMigrateClicked: (() -> Unit)?,
+    onRelatedEntriesClicked: (() -> Unit)?,
     onEditNotesClicked: () -> Unit,
 
     // For bottom action menu
@@ -638,6 +644,7 @@ fun EntryScreenLargeImpl(
                 onClickManageMerge = onManageMergeClicked,
                 onClickRefresh = onRefresh,
                 onClickMigrate = onMigrateClicked,
+                onClickRelatedEntries = onRelatedEntriesClicked,
                 onClickEditNotes = onEditNotesClicked,
                 entryType = state.entry.type,
                 onCancelActionMode = { onAllChapterSelected(false) },

@@ -40,6 +40,7 @@ fun EntryToolbar(
     onClickManageMerge: (() -> Unit)?,
     onClickRefresh: () -> Unit,
     onClickMigrate: (() -> Unit)?,
+    onClickRelatedEntries: (() -> Unit)?,
     onClickEditNotes: () -> Unit,
     entryType: EntryType? = null,
 
@@ -151,6 +152,14 @@ fun EntryToolbar(
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.action_migrate),
                                 onClick = onClickMigrate,
+                            ),
+                        )
+                    }
+                    if (onClickRelatedEntries != null) {
+                        add(
+                            AppBar.OverflowAction(
+                                title = stringResource(MR.strings.related_entries),
+                                onClick = onClickRelatedEntries,
                             ),
                         )
                     }

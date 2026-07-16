@@ -64,10 +64,7 @@ internal object ExtensionLoader {
         libVersionRange("1.4", "1.4"),
         libVersionRange("1.6", "1.6"),
     )
-    private val ENTRY_SOURCE_API_VERSION_FAMILIES = listOf(
-        LibVersion.parse("2.0")!!,
-        LibVersion.parse("2.1")!!,
-    )
+    private val ENTRY_SOURCE_API_VERSION_FAMILY_RANGE = libVersionRange("2.0", "2.2")
 
     @Suppress("DEPRECATION")
     private val PACKAGE_FLAGS = PackageManager.GET_CONFIGURATIONS or
@@ -407,9 +404,7 @@ internal object ExtensionLoader {
 
     private fun isLibVersionCompatible(libVersion: LibVersion): Boolean {
         return supportedLibVersionRanges().any { libVersion in it } ||
-            supportedEntrySourceApiFamilies().any { family ->
-                libVersion.major == family.major && libVersion.minor == family.minor
-            }
+            libVersion.withoutPatch() in supportedEntrySourceApiFamilyRange()
     }
 
     fun compareLibVersions(firstVersionName: String, secondVersionName: String): Int? {
@@ -427,8 +422,8 @@ internal object ExtensionLoader {
         return UPSTREAM_SOURCE_API_VERSION_RANGES
     }
 
-    private fun supportedEntrySourceApiFamilies(): List<LibVersion> {
-        return ENTRY_SOURCE_API_VERSION_FAMILIES
+    private fun supportedEntrySourceApiFamilyRange(): ClosedRange<LibVersion> {
+        return ENTRY_SOURCE_API_VERSION_FAMILY_RANGE
     }
 
     private fun supportedLibVersionRangesString(): String {
@@ -439,9 +434,8 @@ internal object ExtensionLoader {
                 "${range.start} to ${range.endInclusive}"
             }
         }
-        val families = supportedEntrySourceApiFamilies().map { family ->
-            "${family.major}.${family.minor}.*"
-        }
+        val familyRange = supportedEntrySourceApiFamilyRange()
+        val families = "${familyRange.start}.* to ${familyRange.endInclusive}.*"
         return (ranges + families).joinToString()
     }
 
@@ -521,6 +515,8 @@ internal object ExtensionLoader {
                 "$major.$minor.$patch"
             }
         }
+
+        fun withoutPatch(): LibVersion = copy(patch = 0)
 
         fun toDouble(): Double {
             return "$major.$minor".toDouble()

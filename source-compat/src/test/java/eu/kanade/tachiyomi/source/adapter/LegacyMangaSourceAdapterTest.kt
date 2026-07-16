@@ -7,6 +7,7 @@ import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.IncrementalChapterSource
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
+import eu.kanade.tachiyomi.source.entry.RelatedEntriesSource
 import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.supportedEntryTypes
@@ -16,6 +17,7 @@ import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.model.SMangaUpdate
+import eu.kanade.tachiyomi.source.online.HttpSource
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
@@ -79,6 +81,51 @@ class LegacyMangaSourceAdapterTest {
         }
 
         (runCatching { adapted.getContentDetails(anime) }.exceptionOrNull() is IllegalArgumentException) shouldBe true
+    }
+
+    @Test
+    fun `inherited related manga default does not expose related entries capability`() {
+        val adapted = InheritedRelatedHttpSource().asUnifiedSource()
+
+        (adapted is RelatedEntriesSource) shouldBe false
+    }
+
+    @Test
+    fun `direct related manga implementation exposes related entries capability`() = runTest {
+        val source = DirectRelatedHttpSource()
+        val adapted = source.asUnifiedSource() as RelatedEntriesSource
+        val entry = SEntry.create().apply {
+            url = "/manga"
+            title = "Legacy manga"
+            type = EntryType.MANGA
+        }
+
+        val related = adapted.getRelatedEntries(entry).single()
+
+        source.receivedManga?.url shouldBe "/manga"
+        source.receivedManga?.title shouldBe "Legacy manga"
+        related.url shouldBe "/related"
+        related.title shouldBe "Related manga"
+        related.type shouldBe EntryType.MANGA
+    }
+
+    @Test
+    fun `disabled direct related manga implementation does not expose capability`() {
+        val adapted = DisabledRelatedHttpSource().asUnifiedSource()
+
+        (adapted is RelatedEntriesSource) shouldBe false
+    }
+
+    @Test
+    fun `legacy related entries bridge rejects non manga entry types`() = runTest {
+        val adapted = DirectRelatedHttpSource().asUnifiedSource() as RelatedEntriesSource
+        val book = SEntry.create().apply {
+            url = "/book"
+            title = "Book"
+            type = EntryType.BOOK
+        }
+
+        (runCatching { adapted.getRelatedEntries(book) }.exceptionOrNull() is IllegalArgumentException) shouldBe true
     }
 
     @Test
@@ -174,4 +221,29 @@ private class CapturingLegacySource : LegacyRxCatalogueSource() {
         receivedChapters = chapters
         return super.getMangaUpdate(manga, chapters, fetchDetails, fetchChapters)
     }
+}
+
+private open class InheritedRelatedHttpSource : HttpSource() {
+    override val name = "Related source"
+    override val lang = "en"
+    override val baseUrl = "https://example.invalid"
+    override val supportsLatest = false
+}
+
+private open class DirectRelatedHttpSource : InheritedRelatedHttpSource() {
+    var receivedManga: SManga? = null
+
+    override suspend fun fetchRelatedMangaList(manga: SManga): List<SManga> {
+        receivedManga = manga
+        return listOf(
+            SManga.create().apply {
+                url = "/related"
+                title = "Related manga"
+            },
+        )
+    }
+}
+
+private class DisabledRelatedHttpSource : DirectRelatedHttpSource() {
+    override val disableRelatedMangas = true
 }

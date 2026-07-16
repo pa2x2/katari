@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -47,12 +48,17 @@ import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
+import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
+import eu.kanade.tachiyomi.source.entry.RelatedEntriesSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.entry.WebViewSource
 import eu.kanade.tachiyomi.source.isLocalOrStub
+import eu.kanade.tachiyomi.source.sourceItemOrientation
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
+import eu.kanade.tachiyomi.ui.entry.related.RelatedEntriesDialog
+import eu.kanade.tachiyomi.ui.entry.related.RelatedEntriesScreenModel
 import eu.kanade.tachiyomi.ui.entry.track.TrackInfoDialogHomeScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
@@ -115,6 +121,9 @@ class EntryScreen(
                 bypassMerge = bypassMerge ?: false,
             )
         }
+        val relatedEntriesScreenModel = rememberScreenModel(tag = "related-entries-$entryId") {
+            RelatedEntriesScreenModel(entryId)
+        }
 
         val state by screenModel.state.collectAsStateWithLifecycle()
 
@@ -134,6 +143,11 @@ class EntryScreen(
         val previewConfig by screenModel.previewConfig.collectAsStateWithLifecycle()
         val previewState by screenModel.previewState.collectAsStateWithLifecycle()
         val webViewSource = remember(successState.source) { successState.source as? WebViewSource }
+        val relatedEntriesSource = remember(successState.source) { successState.source as? RelatedEntriesSource }
+        val relatedEntriesOrientation = remember(successState.source) {
+            successState.source?.sourceItemOrientation() ?: EntryItemOrientation.VERTICAL
+        }
+        var showRelatedEntriesDialog by rememberSaveable(successState.entry.id) { mutableStateOf(false) }
 
         LaunchedEffect(successState.entry, webViewSource) {
             if (webViewSource != null) {
@@ -232,6 +246,9 @@ class EntryScreen(
             onMigrateClicked = {
                 navigator.push(MigrationConfigScreen(successState.entry.id))
             }.takeIf { successState.entry.favorite && screenModel.supportsMigration() },
+            onRelatedEntriesClicked = {
+                showRelatedEntriesDialog = true
+            }.takeIf { relatedEntriesSource != null },
             onEditNotesClicked = {
                 navigator.push(eu.kanade.tachiyomi.ui.entry.notes.EntryNotesScreen(entry = successState.entry))
             },
@@ -268,6 +285,18 @@ class EntryScreen(
                 }
             },
         )
+
+        if (showRelatedEntriesDialog) {
+            RelatedEntriesDialog(
+                screenModel = relatedEntriesScreenModel,
+                sourceItemOrientation = relatedEntriesOrientation,
+                onDismissRequest = { showRelatedEntriesDialog = false },
+                onEntryClick = { relatedEntry ->
+                    showRelatedEntriesDialog = false
+                    navigator.push(EntryScreen(relatedEntry.id, fromSource = true))
+                },
+            )
+        }
 
         var showScanlatorsDialog by remember { mutableStateOf(false) }
 

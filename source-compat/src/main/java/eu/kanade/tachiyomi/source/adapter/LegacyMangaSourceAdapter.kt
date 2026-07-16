@@ -22,6 +22,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import eu.kanade.tachiyomi.source.entry.IncrementalChapterSource
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
+import eu.kanade.tachiyomi.source.entry.RelatedEntriesSource
 import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.SourceHomePage
@@ -45,6 +46,7 @@ import okhttp3.Headers
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
+import kotlin.coroutines.Continuation
 import eu.kanade.tachiyomi.source.ConfigurableSource as LegacyConfigurableSource
 
 /**
@@ -152,6 +154,27 @@ open class LegacyMangaCatalogueSourceAdapter(
         }
 }
 
+private interface LegacyRelatedEntriesBridge : RelatedEntriesSource {
+
+    val legacyRelatedSource: CatalogueSource
+
+    override suspend fun getRelatedEntries(entry: SEntry): List<SEntry> {
+        require(entry.type == EntryType.MANGA) {
+            "Legacy manga source only supports manga entries"
+        }
+        return legacyRelatedSource.fetchRelatedMangaList(entry.toSManga()).map {
+            it.toSEntry(fallback = null)
+        }
+    }
+}
+
+private class LegacyMangaRelatedCatalogueSourceAdapter(
+    source: CatalogueSource,
+) : LegacyMangaCatalogueSourceAdapter(source), LegacyRelatedEntriesBridge {
+
+    override val legacyRelatedSource: CatalogueSource get() = source as CatalogueSource
+}
+
 /**
  * Wraps a legacy manga [HttpSource] and exposes Entry-era browser capabilities.
  */
@@ -184,6 +207,13 @@ open class LegacyMangaWebViewCatalogueSourceAdapter(
 
     override suspend fun getImage(page: EntryImagePage, progress: ProgressListener?): Response =
         httpSource.getImage(page.toLegacyPage(progress))
+}
+
+private class LegacyMangaRelatedWebViewCatalogueSourceAdapter(
+    source: HttpSource,
+) : LegacyMangaWebViewCatalogueSourceAdapter(source), LegacyRelatedEntriesBridge {
+
+    override val legacyRelatedSource: CatalogueSource get() = source as CatalogueSource
 }
 
 /**
@@ -223,10 +253,17 @@ open class LegacyMangaConfigurableCatalogueSourceAdapter(
     }
 }
 
+private class LegacyMangaRelatedConfigurableCatalogueSourceAdapter(
+    source: CatalogueSource,
+) : LegacyMangaConfigurableCatalogueSourceAdapter(source), LegacyRelatedEntriesBridge {
+
+    override val legacyRelatedSource: CatalogueSource get() = source as CatalogueSource
+}
+
 /**
  * Wraps a legacy manga [HttpSource] that also has source preferences.
  */
-class LegacyMangaWebViewConfigurableCatalogueSourceAdapter(
+open class LegacyMangaWebViewConfigurableCatalogueSourceAdapter(
     source: HttpSource,
 ) : LegacyMangaConfigurableCatalogueSourceAdapter(source), EntryImageSource, ChapterWebViewSource, SourceHomePage {
 
@@ -257,6 +294,13 @@ class LegacyMangaWebViewConfigurableCatalogueSourceAdapter(
         httpSource.getImage(page.toLegacyPage(progress))
 }
 
+private class LegacyMangaRelatedWebViewConfigurableCatalogueSourceAdapter(
+    source: HttpSource,
+) : LegacyMangaWebViewConfigurableCatalogueSourceAdapter(source), LegacyRelatedEntriesBridge {
+
+    override val legacyRelatedSource: CatalogueSource get() = source as CatalogueSource
+}
+
 /**
  * Adapts a legacy manga [Source] to the unified source contract.
  *
@@ -264,6 +308,14 @@ class LegacyMangaWebViewConfigurableCatalogueSourceAdapter(
  * [ConfigurableSource] when the legacy source supports those capabilities.
  */
 fun Source.asUnifiedSource(): UnifiedSource = when {
+    this is HttpSource && this is LegacyConfigurableSource && hasDirectRelatedMangaSupport() ->
+        LegacyMangaRelatedWebViewConfigurableCatalogueSourceAdapter(this)
+    this is HttpSource && hasDirectRelatedMangaSupport() ->
+        LegacyMangaRelatedWebViewCatalogueSourceAdapter(this)
+    this is CatalogueSource && this is LegacyConfigurableSource && hasDirectRelatedMangaSupport() ->
+        LegacyMangaRelatedConfigurableCatalogueSourceAdapter(this)
+    this is CatalogueSource && hasDirectRelatedMangaSupport() ->
+        LegacyMangaRelatedCatalogueSourceAdapter(this)
     this is HttpSource && this is LegacyConfigurableSource ->
         LegacyMangaWebViewConfigurableCatalogueSourceAdapter(this)
     this is HttpSource -> LegacyMangaWebViewCatalogueSourceAdapter(this)
@@ -272,6 +324,21 @@ fun Source.asUnifiedSource(): UnifiedSource = when {
     this is CatalogueSource -> LegacyMangaCatalogueSourceAdapter(this)
     this is LegacyConfigurableSource -> LegacyMangaConfigurableSourceAdapter(this)
     else -> LegacyMangaSourceAdapter(this)
+}
+
+private fun CatalogueSource.hasDirectRelatedMangaSupport(): Boolean {
+    if (disableRelatedMangas || !supportsRelatedMangas) return false
+
+    return generateSequence(javaClass as Class<*>?) { it.superclass }
+        .takeWhile { it != HttpSource::class.java && it != Any::class.java }
+        .any { type ->
+            type.declaredMethods.any { method ->
+                method.name == "fetchRelatedMangaList" &&
+                    method.parameterTypes.size == 2 &&
+                    method.parameterTypes[0] == SManga::class.java &&
+                    method.parameterTypes[1] == Continuation::class.java
+            }
+        }
 }
 
 private fun MangasPage.toEntryPageResult(): EntryPageResult<SEntry> =

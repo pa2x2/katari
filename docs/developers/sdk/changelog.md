@@ -2,6 +2,23 @@
 
 This changelog covers the public Entry SDK contracts in `entry-source-api` and `book-api`. It is separate from Katari app release notes and from individual extension revisions.
 
+## `sdk-2.2.0`
+
+Source-defined related-entry discovery release.
+
+### Added
+
+- Optional `RelatedEntriesSource` capability for loading entries related to a selected entry.
+- Related results use normal `SEntry` values and may contain mixed entry types.
+
+### Compatibility
+
+- First supplied by Katari `1.3.0`.
+- New loader family: `2.2`.
+- Katari continues to accept Entry SDK families `2.0` and `2.1`; existing compiled extensions do not need to move to `2.2`.
+- Extensions implementing `RelatedEntriesSource` must declare family `2.2` in the first two components of Android `versionName`.
+- Compatible Keiyoushi sources with a concrete direct-related implementation are bridged to the capability. Katari does not substitute title search for missing related-entry support.
+
 ## `sdk-2.1.0`
 
 BOOK source contracts and processor-neutral book data release.
