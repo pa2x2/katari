@@ -4,6 +4,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
+import mihon.core.common.extensions.JsonObjectEmptyBytes
 import tachiyomi.data.MemoColumnAdapter
 import tachiyomi.domain.entry.model.EntryStatus
 
@@ -34,11 +35,12 @@ class LegacyBackupManga(
     @ProtoNumber(109) var version: Long = 0,
     @ProtoNumber(110) var notes: String = "",
     @ProtoNumber(111) var initialized: Boolean = false,
-    @ProtoNumber(112) var displayName: String? = null,
+    // Mihon uses this field for memo bytes, while older Katari backups used it for displayName.
+    @ProtoNumber(112) var displayNameOrMemo: ByteArray? = null,
     @ProtoNumber(113) var mergeTargetSource: Long? = null,
     @ProtoNumber(114) var mergeTargetUrl: String? = null,
     @ProtoNumber(115) var mergePosition: Int? = null,
-    @ProtoNumber(116) var memo: ByteArray = mihon.core.common.extensions.JsonObjectEmptyBytes,
+    @ProtoNumber(116) var legacyMemo: ByteArray? = null,
 )
 
 @Serializable
@@ -103,6 +105,7 @@ data class LegacyBackupAnimeEpisode(
 )
 
 internal fun LegacyBackupManga.toBackupEntry(): BackupEntry {
+    val (displayName, memo) = resolveDisplayNameAndMemo()
     return BackupEntry(
         source = source,
         url = url,
@@ -136,6 +139,26 @@ internal fun LegacyBackupManga.toBackupEntry(): BackupEntry {
         mergePosition = mergePosition,
         type = EntryType.MANGA,
     )
+}
+
+private fun LegacyBackupManga.resolveDisplayNameAndMemo(): Pair<String?, ByteArray> {
+    val hasLegacyKatariFields = legacyMemo != null ||
+        mergeTargetSource != null ||
+        mergeTargetUrl != null ||
+        mergePosition != null
+
+    if (hasLegacyKatariFields) {
+        return displayNameOrMemo?.decodeToString() to (legacyMemo ?: JsonObjectEmptyBytes)
+    }
+
+    val mihonMemo = displayNameOrMemo?.takeIf {
+        runCatching { MemoColumnAdapter.decode(it) }.isSuccess
+    }
+    return if (mihonMemo != null) {
+        null to mihonMemo
+    } else {
+        displayNameOrMemo?.decodeToString() to JsonObjectEmptyBytes
+    }
 }
 
 internal fun LegacyBackupChapter.toBackupChapter(): BackupChapter {
