@@ -1,5 +1,6 @@
 package mihon.entry.interactions.book
 
+import mihon.domain.chapter.interactor.FilterEntryChaptersForDownload
 import mihon.entry.interactions.EntryInteractionPlugin
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -29,6 +30,12 @@ fun bookEntryInteractionPlugin(
                         manager = Injekt.get(),
                         cache = Injekt.get(),
                         sourceManager = Injekt.get(),
+                        entryRepository = Injekt.get(),
+                        getEntryWithChapters = dependencies.getEntryWithChapters,
+                        filterEntryChaptersForDownload = checkNotNull(dependencies.filterEntryChaptersForDownload) {
+                            "BOOK downloads require the automatic-download filter"
+                        },
+                        mergedEntryRepository = Injekt.get(),
                     ),
                 ),
             )
@@ -54,5 +61,6 @@ data class BookEntryInteractionDependencies(
     val getEntryWithChapters: GetEntryWithChapters,
     val entryChapterRepository: EntryChapterRepository,
     val entryProgressRepository: EntryProgressRepository,
+    val filterEntryChaptersForDownload: FilterEntryChaptersForDownload? = null,
     val downloadsEnabled: Boolean = false,
 )

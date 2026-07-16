@@ -11,6 +11,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryMerge
 import java.nio.file.Files
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -135,6 +136,26 @@ class BookDownloadProviderTest {
             },
         )
     }
+
+    @Test
+    fun `merged download count includes packages owned by every member`() = runTest {
+        val fixture = fixture()
+        val member = fixture.entry.copy(id = 2L, url = "/book/member", title = "Member Book")
+        val memberChild = fixture.child.copy(id = 21L, entryId = member.id, url = "/member/chapter/1")
+        fixture.complete(content = "target")
+        fixture.complete(content = "member", entry = member, child = memberChild)
+        val cache = BookDownloadCache(fixture.provider)
+        cache.refresh()
+        cache.updateMergedEntries(
+            listOf(
+                EntryMerge(targetId = fixture.entry.id, entryId = fixture.entry.id, position = 0L),
+                EntryMerge(targetId = fixture.entry.id, entryId = member.id, position = 1L),
+            ),
+        )
+
+        assertEquals(2, cache.getDownloadCount(fixture.entry))
+        assertEquals(2, cache.getDownloadCount(member))
+    }
 }
 
 private data class BookDownloadFixture(
@@ -147,6 +168,7 @@ private data class BookDownloadFixture(
 
     fun complete(
         content: String,
+        entry: Entry = this.entry,
         child: EntryChapter = this.child,
     ): VerifiedBookDownloadPackage {
         val staging = provider.beginPackage("Fixture Source", entry, child).getOrThrow()
@@ -159,6 +181,7 @@ private data class BookDownloadFixture(
                 storedSize = bytes.size.toLong(),
                 sha256 = Hash.sha256(bytes),
                 fileName = fileName,
+                entry = entry,
                 child = child,
             ),
         ).getOrThrow()
@@ -169,6 +192,7 @@ private data class BookDownloadFixture(
         storedSize: Long,
         sha256: String,
         fileName: String = "chapter.html",
+        entry: Entry = this.entry,
         child: EntryChapter = this.child,
     ) = BookDownloadManifest(
         version = version,

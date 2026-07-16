@@ -203,11 +203,14 @@ internal class BookDownloadManager(
         cache.refresh()
     }
 
-    suspend fun deleteEntryDownloads(entry: Entry) {
-        removeFromQueue(queueState.value.filter { it.entry.id == entry.id }.map { it.chapter.id })
+    suspend fun deleteEntryDownloads(entry: Entry, memberEntryIds: Set<Long> = setOf(entry.id)) {
+        removeFromQueue(queueState.value.filter { it.entry.id in memberEntryIds }.map { it.chapter.id })
         cache.ensureInitialized()
         cache.packages.value.values
-            .filter { it.manifest.sourceId == entry.source && it.manifest.entryUrl == entry.url }
+            .filter {
+                (it.manifest.sourceId == entry.source && it.manifest.entryUrl == entry.url) ||
+                    it.manifest.entryId in memberEntryIds
+            }
             .forEach { it.directory.delete() }
         cache.refresh()
     }
@@ -244,8 +247,7 @@ internal class BookDownloadManager(
 
     private fun mergeRestoredQueue(restored: List<BookDownload>) {
         synchronized(queueMutationLock) {
-            val currentIds = _queueState.value.mapTo(mutableSetOf()) { it.chapter.id }
-            _queueState.value = restored.filterNot { it.chapter.id in currentIds } + _queueState.value
+            _queueState.value = mergeRestoredBookDownloads(restored, _queueState.value)
             rewriteStoredQueueLocked()
         }
     }
@@ -255,4 +257,12 @@ internal class BookDownloadManager(
     private fun rewriteStoredQueueLocked() {
         store.replace(_queueState.value)
     }
+}
+
+internal fun mergeRestoredBookDownloads(
+    restored: List<BookDownload>,
+    current: List<BookDownload>,
+): List<BookDownload> {
+    val currentIds = current.mapTo(mutableSetOf()) { it.chapter.id }
+    return restored.filterNot { it.chapter.id in currentIds } + current
 }
