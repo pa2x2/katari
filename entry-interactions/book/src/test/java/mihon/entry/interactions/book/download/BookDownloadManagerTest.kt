@@ -60,6 +60,15 @@ class BookDownloadManagerTest {
     }
 
     @Test
+    fun `resuming clears a paused notification even when the queue is empty`() {
+        val fixture = managerFixture()
+
+        fixture.manager.startDownloads()
+
+        verify(exactly = 1) { fixture.notifier.onResumed() }
+    }
+
+    @Test
     fun `worker cancellation preserves the paused notification for a queued book`() = runTest {
         val downloadStarted = CompletableDeferred<Unit>()
         val downloader = mockk<BookDownloader> {

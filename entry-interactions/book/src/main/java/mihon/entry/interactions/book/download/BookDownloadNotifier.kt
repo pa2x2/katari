@@ -32,7 +32,10 @@ internal class BookDownloadNotifier(private val context: Context) {
     }
 
     fun onProgressChange(download: BookDownload) {
+        onResumed()
         with(progressNotificationBuilder) {
+            setSmallIcon(android.R.drawable.stat_sys_download)
+            setOngoing(true)
             setContentIntent(notificationActions.openDownloadManager(context))
             clearActions()
             addAction(
@@ -71,12 +74,17 @@ internal class BookDownloadNotifier(private val context: Context) {
                 context.stringResource(MR.strings.action_cancel_all),
                 notificationActions.clearDownloads(context),
             )
-            show(EntryDownloadNotifications.ID_BOOK_PROGRESS)
+            show(EntryDownloadNotifications.ID_BOOK_PAUSED)
         }
+    }
+
+    fun onResumed() {
+        context.cancelEntryDownloadNotification(EntryDownloadNotifications.ID_BOOK_PAUSED)
     }
 
     fun onComplete() {
         context.cancelEntryDownloadNotification(EntryDownloadNotifications.ID_BOOK_PROGRESS)
+        context.cancelEntryDownloadNotification(EntryDownloadNotifications.ID_BOOK_PAUSED)
     }
 
     fun onError(download: BookDownload) {

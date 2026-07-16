@@ -28,6 +28,7 @@ object EntryDownloadNotifications {
     const val ID_ANIME_ERROR = -204
     const val ID_BOOK_PROGRESS = -205
     const val ID_BOOK_ERROR = -206
+    const val ID_BOOK_PAUSED = -207
 }
 
 fun Context.entryDownloadNotificationBuilder(

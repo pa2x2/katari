@@ -77,6 +77,7 @@ internal class BookDownloadManager(
     }
 
     fun startDownloads() {
+        notifier.onResumed()
         if (queueState.value.isEmpty()) return
         pauseRequested = false
         queueState.value.forEach { download ->
