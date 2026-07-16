@@ -1,4 +1,7 @@
-@file:OptIn(org.readium.r2.shared.ExperimentalReadiumApi::class)
+@file:OptIn(
+    kotlinx.coroutines.ExperimentalCoroutinesApi::class,
+    org.readium.r2.shared.ExperimentalReadiumApi::class,
+)
 
 package mihon.entry.interactions.book.epub
 

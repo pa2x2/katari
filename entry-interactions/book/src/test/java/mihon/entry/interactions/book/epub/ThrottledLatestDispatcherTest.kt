@@ -1,11 +1,13 @@
 package mihon.entry.interactions.book.epub
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class ThrottledLatestDispatcherTest {
     @Test
     fun `preview dispatches immediately then keeps only latest pending value`() = runTest {
