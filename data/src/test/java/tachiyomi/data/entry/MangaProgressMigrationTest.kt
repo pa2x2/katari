@@ -60,6 +60,7 @@ class MangaProgressMigrationTest {
                 MigratedProgress(11, "/partial", "page", 4, false, 500, 500),
                 MigratedProgress(12, "/completed", "page", null, true, 0, 0),
                 MigratedProgress(14, "/generic-wins", "page", 2, false, 900, 900),
+                MigratedProgress(15, "legacy-chapter:15", "page", null, true, 0, 0),
                 MigratedProgress(21, "/anime", "time", 1_000, false, 800, 800),
             )
             driver.scalarLong("SELECT read FROM chapters WHERE _id = 14") shouldBe 0L
@@ -186,6 +187,7 @@ class MangaProgressMigrationTest {
                 (12, 1, '/completed', 'Completed', 1, 0, 0, 2, 1),
                 (13, 1, '/untouched', 'Untouched', 0, 0, 0, 3, 1),
                 (14, 1, '/generic-wins', 'Generic wins', 1, 0, 8, 4, 1),
+                (15, 1, '', 'Blank URL', 1, 0, 0, 5, 1),
                 (21, 2, '/anime', 'Anime', 0, 0, 0, 1, 1)
             """,
         )

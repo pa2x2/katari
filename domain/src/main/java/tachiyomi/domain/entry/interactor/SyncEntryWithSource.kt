@@ -11,6 +11,7 @@ import tachiyomi.domain.entry.adapter.toSEntry
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.progressResourceKey
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
@@ -235,8 +236,8 @@ class SyncEntryWithSource(
                     progressResourcesToRekey += ProgressResourceRekey(
                         entryId = existingChapter.entryId,
                         chapterId = existingChapter.id,
-                        oldResourceKey = existingChapter.url,
-                        newResourceKey = updatedChapter.url,
+                        oldResourceKey = existingChapter.progressResourceKey,
+                        newResourceKey = updatedChapter.progressResourceKey,
                     )
                 }
             }

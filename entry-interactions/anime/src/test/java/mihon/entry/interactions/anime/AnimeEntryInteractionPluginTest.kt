@@ -781,6 +781,17 @@ class AnimeEntryInteractionPluginTest {
     }
 
     @Test
+    fun `anime consumption uses legacy progress key for blank chapter url`() = runTest {
+        val target = chapter(id = 7L, url = "")
+        val progressRepository = FakeEntryProgressRepository(emptyList())
+        val processor = AnimeConsumptionProcessor(progressRepository)
+
+        processor.setConsumed(entry(EntryType.ANIME), listOf(target), consumed = true)
+
+        progressRepository.upsertedStates.single().resourceKey shouldBe "legacy-chapter:7"
+    }
+
+    @Test
     fun `anime download model maps to entry status queue item and group`() {
         val download = AnimeDownload(
             anime = entry(EntryType.ANIME, id = 7L, title = "Entry", sourceId = 2L),
@@ -975,6 +986,7 @@ class AnimeEntryInteractionPluginTest {
     private fun chapter(
         id: Long = 1L,
         entryId: Long = 1L,
+        url: String = "/episode/$id",
         name: String = "Episode",
         read: Boolean = false,
         sourceOrder: Long = 0L,
@@ -984,7 +996,7 @@ class AnimeEntryInteractionPluginTest {
         return EntryChapter.create().copy(
             id = id,
             entryId = entryId,
-            url = "/episode/$id",
+            url = url,
             name = name,
             read = read,
             sourceOrder = sourceOrder,

@@ -9,6 +9,7 @@ import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressLocator
+import tachiyomi.domain.entry.model.progressResourceKey
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.source.service.SourceManager
@@ -33,7 +34,7 @@ internal class MangaConsumptionProcessor(
     override suspend fun setConsumed(entry: Entry, chapters: List<EntryChapter>, consumed: Boolean) {
         entry.requireManga()
         val chaptersToUpdate = chapters.filter { chapter ->
-            val progress = entryProgressRepository.get(chapter.entryId, "", chapter.url)
+            val progress = entryProgressRepository.get(chapter.entryId, "", chapter.progressResourceKey)
             canSetConsumed(
                 chapter.consumptionStatus(hasPartialProgress = progress?.pageIndex?.let { it > 0L } == true),
                 consumed,
@@ -42,7 +43,7 @@ internal class MangaConsumptionProcessor(
         if (chaptersToUpdate.isEmpty()) return
 
         chaptersToUpdate.forEach { chapter ->
-            val current = entryProgressRepository.get(chapter.entryId, "", chapter.url)
+            val current = entryProgressRepository.get(chapter.entryId, "", chapter.progressResourceKey)
             val updated = if (consumed) {
                 current?.copy(
                     chapterId = chapter.id,
@@ -50,7 +51,7 @@ internal class MangaConsumptionProcessor(
                 ) ?: mangaProgressState(
                     entryId = chapter.entryId,
                     chapterId = chapter.id,
-                    resourceKey = chapter.url,
+                    resourceKey = chapter.progressResourceKey,
                     pageIndex = null,
                     pageCount = null,
                     completed = true,
@@ -62,7 +63,7 @@ internal class MangaConsumptionProcessor(
                     current ?: mangaProgressState(
                         entryId = chapter.entryId,
                         chapterId = chapter.id,
-                        resourceKey = chapter.url,
+                        resourceKey = chapter.progressResourceKey,
                         pageIndex = null,
                         pageCount = null,
                         completed = false,

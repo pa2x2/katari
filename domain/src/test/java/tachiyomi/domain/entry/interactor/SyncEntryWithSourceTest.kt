@@ -111,6 +111,31 @@ class SyncEntryWithSourceTest {
     }
 
     @Test
+    fun `blank chapter url rekeys progress from legacy fallback`() = runTest {
+        val existing = chapter(id = 1L, url = "")
+        val source = TestSource(chapters = listOf(sourceChapter(url = "/new")))
+        val repository = chapterRepository(listOf(existing))
+        val progressRepository = mockk<EntryProgressRepository>(relaxed = true)
+
+        sync(
+            source = source,
+            repository = repository,
+            progressRepository = progressRepository,
+        )(entry(), fetchDetails = false)
+
+        coVerify(exactly = 1) {
+            progressRepository.rekey(
+                entryId = 1L,
+                chapterId = 1L,
+                oldContentKey = "",
+                oldResourceKey = "legacy-chapter:1",
+                newContentKey = "",
+                newResourceKey = "/new",
+            )
+        }
+    }
+
+    @Test
     fun `partial progress wins over an unstarted duplicate with the current url`() = runTest {
         val existing = listOf(
             chapter(id = 1L, url = "/old", sourceOrder = 0L),

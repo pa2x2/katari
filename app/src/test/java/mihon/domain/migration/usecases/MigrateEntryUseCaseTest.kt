@@ -14,6 +14,7 @@ import mihon.entry.interactions.EntryCapabilityInteraction
 import mihon.entry.interactions.EntryDownloadInteraction
 import mihon.entry.interactions.EntryPlaybackPreferencesInteraction
 import mihon.entry.interactions.EntryProgressInteraction
+import mihon.entry.interactions.EntryProgressResourceMapping
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import org.junit.jupiter.api.Named
 import org.junit.jupiter.api.Test
@@ -27,6 +28,7 @@ import tachiyomi.domain.entry.interactor.GetMergedEntry
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
 import tachiyomi.domain.entry.interactor.UpdateMergedEntry
 import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.source.service.SourceManager
@@ -93,6 +95,35 @@ class MigrateEntryUseCaseTest {
         }
     }
 
+    @Test
+    fun `chapter migration maps blank urls through legacy progress keys`() = runTest {
+        val fixture = Fixture(setOf(MigrationFlag.CHAPTER))
+        val current = entry(id = 1L, type = EntryType.MANGA)
+        val target = entry(id = 2L, type = EntryType.MANGA)
+        coEvery { fixture.entryChapterRepository.getChaptersByEntryIdAwait(current.id) } returns listOf(
+            chapter(id = 10L, entryId = current.id, url = ""),
+        )
+        coEvery { fixture.entryChapterRepository.getChaptersByEntryIdAwait(target.id) } returns listOf(
+            chapter(id = 20L, entryId = target.id, url = ""),
+        )
+
+        fixture.useCase(current, target, replace = false)
+
+        coVerify(exactly = 1) {
+            fixture.progressInteraction.copy(
+                current,
+                target,
+                listOf(
+                    EntryProgressResourceMapping(
+                        sourceResourceKey = "legacy-chapter:10",
+                        targetResourceKey = "legacy-chapter:20",
+                        targetChapterId = 20L,
+                    ),
+                ),
+            )
+        }
+    }
+
     private fun migrationCases(): List<Arguments> = listOf(EntryType.MANGA, EntryType.ANIME).flatMap { type ->
         listOf(false, true).map { replace ->
             Arguments.of(Named.of(type.name.lowercase(), type), replace)
@@ -105,15 +136,23 @@ class MigrateEntryUseCaseTest {
         source = id,
     )
 
+    private fun chapter(id: Long, entryId: Long, url: String): EntryChapter = EntryChapter.create().copy(
+        id = id,
+        entryId = entryId,
+        url = url,
+        name = "Chapter",
+        chapterNumber = 1.0,
+    )
+
     private class Fixture(flags: Set<MigrationFlag>) {
         private val sourcePreferences = mockk<SourcePreferences>()
         private val migrationFlags = mockk<Preference<Set<MigrationFlag>>>()
         private val trackerManager = mockk<TrackerManager>()
         private val sourceManager = mockk<SourceManager>()
         val entryRepository = mockk<EntryRepository>(relaxed = true)
-        private val entryChapterRepository = mockk<EntryChapterRepository>(relaxed = true)
+        val entryChapterRepository = mockk<EntryChapterRepository>(relaxed = true)
         private val capabilityInteraction = mockk<EntryCapabilityInteraction>()
-        private val progressInteraction = mockk<EntryProgressInteraction>(relaxed = true)
+        val progressInteraction = mockk<EntryProgressInteraction>(relaxed = true)
         private val playbackPreferencesInteraction = mockk<EntryPlaybackPreferencesInteraction>(relaxed = true)
         val viewerSettingOverrideRepository = mockk<ViewerSettingOverrideRepository>(relaxed = true)
         val downloadInteraction = mockk<EntryDownloadInteraction>(relaxed = true)

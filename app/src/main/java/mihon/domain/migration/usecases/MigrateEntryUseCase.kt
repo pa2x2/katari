@@ -20,6 +20,7 @@ import tachiyomi.domain.entry.interactor.SyncEntryWithSource
 import tachiyomi.domain.entry.interactor.UpdateMergedEntry
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.progressResourceKey
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.source.service.SourceManager
@@ -159,8 +160,8 @@ class MigrateEntryUseCase(
                 bookmark = previousChapter.bookmark
                 dateFetch = previousChapter.dateFetch
                 progressResourceMappings += EntryProgressResourceMapping(
-                    sourceResourceKey = previousChapter.url,
-                    targetResourceKey = targetChapter.url,
+                    sourceResourceKey = previousChapter.progressResourceKey,
+                    targetResourceKey = targetChapter.progressResourceKey,
                     targetChapterId = targetChapter.id,
                 )
             }

@@ -14,6 +14,7 @@ import mihon.entry.interactions.EntryImmersiveProgress
 import mihon.entry.interactions.EntryImmersiveRenderer
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.progressResourceKey
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.history.repository.HistoryRepository
 
@@ -43,8 +44,8 @@ internal class AnimeImmersiveProcessor(
             )
         ) {
             is ResolveVideoStream.Result.Success -> {
-                val progress = entryProgressRepository.get(entry.id, "", chapter.url)
-                val session = VideoPlaybackSession(entry.id, chapter.id, chapter.url).apply {
+                val progress = entryProgressRepository.get(entry.id, "", chapter.progressResourceKey)
+                val session = VideoPlaybackSession(entry.id, chapter.id, chapter.progressResourceKey).apply {
                     restore(progress)
                 }
                 EntryImmersiveHandle.Playback(

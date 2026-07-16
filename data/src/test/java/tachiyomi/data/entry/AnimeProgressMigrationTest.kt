@@ -19,7 +19,7 @@ class AnimeProgressMigrationTest {
             createVersion34Schema(driver)
             seedVersion34Data(driver)
             driver.scalarLong("SELECT count(*) FROM playback_state") shouldBe 4L
-            driver.scalarLong("SELECT count(*) FROM chapters WHERE entry_id = 1") shouldBe 5L
+            driver.scalarLong("SELECT count(*) FROM chapters WHERE entry_id = 1") shouldBe 6L
 
             Database.Schema.awaitMigrate(driver, oldVersion = 34, newVersion = 35)
 
@@ -63,6 +63,7 @@ class AnimeProgressMigrationTest {
                 MigratedProgress(12, "/playback-complete", 100_000, 100_000, 1.0, true, 600, 600),
                 MigratedProgress(13, "/child-complete", null, null, null, true, 0, 700),
                 MigratedProgress(14, "/invalid", 0, null, null, true, 0, 0),
+                MigratedProgress(16, "legacy-chapter:16", null, null, null, true, 0, 0),
             )
             driver.scalarLong("SELECT read FROM chapters WHERE _id = 12") shouldBe 1L
             driver.scalarLong("SELECT count(*) FROM entry_progress_state WHERE chapter_id IN (15, 21)") shouldBe 0L
@@ -180,6 +181,7 @@ class AnimeProgressMigrationTest {
                 (13, 1, '/child-complete', 'Child complete', 1, 0, 0, 0, 1),
                 (14, 1, '/invalid', 'Invalid', 0, 0, 0, 0, 1),
                 (15, 1, '/untouched', 'Untouched', 0, 0, 0, 0, 1),
+                (16, 1, '', 'Blank URL', 1, 0, 0, 0, 1),
                 (21, 2, '/manga', 'Manga', 1, 0, 3, 0, 1)
             """,
         )

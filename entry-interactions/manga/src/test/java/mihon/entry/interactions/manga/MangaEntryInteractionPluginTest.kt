@@ -415,6 +415,18 @@ class MangaEntryInteractionPluginTest {
     }
 
     @Test
+    fun `manga consumption uses legacy progress key for blank chapter url`() = runTest {
+        val target = chapter(id = 7L, url = "")
+        val repository = FakeEntryChapterRepository(listOf(target))
+        val progressRepository = FakeEntryProgressRepository(emptyList())
+        val processor = mangaConsumptionProcessor(repository, progressRepository = progressRepository)
+
+        processor.setConsumed(entry(EntryType.MANGA), listOf(target), consumed = true)
+
+        progressRepository.upsertedStates.single().resourceKey shouldBe "legacy-chapter:7"
+    }
+
+    @Test
     fun `manga consumption marks unread and resets progress without changing recency`() = runTest {
         val repository = FakeEntryChapterRepository(
             listOf(
@@ -663,6 +675,7 @@ class MangaEntryInteractionPluginTest {
     private fun chapter(
         id: Long = 1L,
         entryId: Long = 1L,
+        url: String = "/chapter/$id",
         name: String = "Chapter",
         read: Boolean = false,
         bookmark: Boolean = false,
@@ -673,7 +686,7 @@ class MangaEntryInteractionPluginTest {
         return EntryChapter.create().copy(
             id = id,
             entryId = entryId,
-            url = "/chapter/$id",
+            url = url,
             name = name,
             read = read,
             bookmark = bookmark,

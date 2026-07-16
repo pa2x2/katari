@@ -15,4 +15,14 @@ class EntryChapterTest {
 
         copied.memo shouldBe memo
     }
+
+    @Test
+    fun `progress resource key falls back to persisted chapter id for blank urls`() {
+        EntryChapter.create().copy(id = 42L, url = "  ").progressResourceKey shouldBe "legacy-chapter:42"
+    }
+
+    @Test
+    fun `progress resource key preserves nonblank chapter url`() {
+        EntryChapter.create().copy(id = 42L, url = "/chapter/42").progressResourceKey shouldBe "/chapter/42"
+    }
 }

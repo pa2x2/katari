@@ -6,6 +6,7 @@ import mihon.entry.interactions.consumptionStatus
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressLocator
+import tachiyomi.domain.entry.model.progressResourceKey
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 
 internal class AnimeConsumptionProcessor(
@@ -20,7 +21,7 @@ internal class AnimeConsumptionProcessor(
         if (chaptersToUpdate.isEmpty()) return
 
         chaptersToUpdate.forEach { chapter ->
-            val current = entryProgressRepository.get(chapter.entryId, "", chapter.url)
+            val current = entryProgressRepository.get(chapter.entryId, "", chapter.progressResourceKey)
             val updated = if (consumed) {
                 current?.copy(
                     chapterId = chapter.id,
@@ -28,7 +29,7 @@ internal class AnimeConsumptionProcessor(
                 ) ?: animeProgressState(
                     entryId = chapter.entryId,
                     chapterId = chapter.id,
-                    resourceKey = chapter.url,
+                    resourceKey = chapter.progressResourceKey,
                     positionMs = 0L,
                     durationMs = 0L,
                     completed = true,
@@ -40,7 +41,7 @@ internal class AnimeConsumptionProcessor(
                     current ?: animeProgressState(
                         entryId = chapter.entryId,
                         chapterId = chapter.id,
-                        resourceKey = chapter.url,
+                        resourceKey = chapter.progressResourceKey,
                         positionMs = 0L,
                         durationMs = 0L,
                         completed = false,

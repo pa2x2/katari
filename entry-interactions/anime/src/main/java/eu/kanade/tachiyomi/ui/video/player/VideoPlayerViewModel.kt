@@ -32,6 +32,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.model.PlaybackPreferences
 import tachiyomi.domain.entry.model.PlayerQualityMode
+import tachiyomi.domain.entry.model.progressResourceKey
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
@@ -563,7 +564,7 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
         playbackRevision: Long,
     ): State.Ready {
         val resumePositionMs = preservePositionMs
-            ?: entryProgressRepository.get(result.ownerEntry.id, "", result.chapter.url)?.positionMs
+            ?: entryProgressRepository.get(result.ownerEntry.id, "", result.chapter.progressResourceKey)?.positionMs
             ?: 0L
         val childWindow = resolveEpisodeNavigation(
             visibleEntryId = result.visibleEntry.id,
@@ -585,7 +586,7 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
             visibleEntryId = result.visibleEntry.id,
             ownerEntryId = result.ownerEntry.id,
             chapterId = result.chapter.id,
-            chapterResourceKey = result.chapter.url,
+            chapterResourceKey = result.chapter.progressResourceKey,
             childWindow = childWindow,
             entry = episodeDrawerData.entry,
             allChapters = episodeDrawerData.chapters,

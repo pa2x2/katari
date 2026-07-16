@@ -54,3 +54,6 @@ data class EntryChapter(
         )
     }
 }
+
+val EntryChapter.progressResourceKey: String
+    get() = url.ifBlank { "legacy-chapter:$id" }

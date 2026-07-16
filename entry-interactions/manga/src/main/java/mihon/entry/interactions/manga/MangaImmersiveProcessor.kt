@@ -16,6 +16,7 @@ import mihon.entry.interactions.EntryReaderTracking
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.progressResourceKey
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.history.model.HistoryUpdate
@@ -58,7 +59,7 @@ internal class MangaImmersiveProcessor(
         if (pages.isEmpty() || pages.all { it.imageUrl.isBlank() }) {
             error("No pages found")
         }
-        val progress = entryProgressRepository?.get(chapter.entryId, "", chapter.url)
+        val progress = entryProgressRepository?.get(chapter.entryId, "", chapter.progressResourceKey)
         return EntryImmersiveHandle.ImagePages(
             entryType = type,
             chapterId = chapter.id,
@@ -96,14 +97,14 @@ internal class MangaImmersiveProcessor(
         persistMutex.withLock {
             val chapter = repository.getChapterById(handle.chapterId) ?: return@withLock
             val pageIndex = imageProgress.pageIndex.coerceIn(0, imageProgress.pageCount - 1)
-            val current = progressRepository.get(chapter.entryId, "", chapter.url)
+            val current = progressRepository.get(chapter.entryId, "", chapter.progressResourceKey)
             val completedNow = current?.completed != true && pageIndex == imageProgress.pageCount - 1
             val timestamp = now()
             progressRepository.mergeAndSyncChild(
                 mangaProgressState(
                     entryId = chapter.entryId,
                     chapterId = chapter.id,
-                    resourceKey = chapter.url,
+                    resourceKey = chapter.progressResourceKey,
                     pageIndex = pageIndex.toLong(),
                     pageCount = imageProgress.pageCount.toLong(),
                     completed = current?.completed == true || completedNow,

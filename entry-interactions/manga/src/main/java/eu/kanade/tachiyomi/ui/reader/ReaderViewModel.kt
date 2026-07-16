@@ -67,6 +67,7 @@ import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.GetMergedEntry
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.progressResourceKey
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
@@ -597,14 +598,14 @@ internal class ReaderViewModel @JvmOverloads constructor(
 
             val entryChapter = readerChapter.chapter.toDomainChapter()?.toEntryChapter()
                 ?: return
-            val current = entryProgressRepository.get(entryChapter.entryId, "", entryChapter.url)
+            val current = entryProgressRepository.get(entryChapter.entryId, "", entryChapter.progressResourceKey)
             val timestamp = System.currentTimeMillis()
             val completedNow = readerChapter.chapter.read && current?.completed != true
             entryProgressRepository.mergeAndSyncChild(
                 mangaProgressState(
                     entryId = entryChapter.entryId,
                     chapterId = entryChapter.id,
-                    resourceKey = entryChapter.url,
+                    resourceKey = entryChapter.progressResourceKey,
                     pageIndex = pageIndex.toLong(),
                     pageCount = readerChapter.pages?.size?.toLong(),
                     completed = current?.completed == true || readerChapter.chapter.read,
@@ -638,12 +639,12 @@ internal class ReaderViewModel @JvmOverloads constructor(
             }
         val timestamp = System.currentTimeMillis()
         duplicateUnreadChapters.forEach { chapter ->
-            val current = entryProgressRepository.get(chapter.entryId, "", chapter.url)
+            val current = entryProgressRepository.get(chapter.entryId, "", chapter.progressResourceKey)
             entryProgressRepository.mergeAndSyncChild(
                 mangaProgressState(
                     entryId = chapter.entryId,
                     chapterId = chapter.id,
-                    resourceKey = chapter.url,
+                    resourceKey = chapter.progressResourceKey,
                     pageIndex = current?.pageIndex,
                     pageCount = current?.locator?.extent,
                     completed = true,
