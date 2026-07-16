@@ -714,7 +714,7 @@ class AnimeEntryInteractionPluginTest {
     }
 
     @Test
-    fun `anime consumption marks unwatched and resets playback progress`() = runTest {
+    fun `anime consumption marks unwatched and resets progress without changing recency`() = runTest {
         val chapterRepository = FakeEntryChapterRepository(
             listOf(
                 chapter(id = 1L, read = true),
@@ -723,13 +723,12 @@ class AnimeEntryInteractionPluginTest {
         )
         val playbackRepository = FakeEntryProgressRepository(
             listOf(
-                playbackState(chapterId = 1L, positionMs = 20_000L, completed = true),
-                playbackState(chapterId = 2L, positionMs = 10_000L, completed = true),
+                playbackState(chapterId = 1L, positionMs = 20_000L, completed = true, lastWatchedAt = 40L),
+                playbackState(chapterId = 2L, positionMs = 10_000L, completed = true, lastWatchedAt = 50L),
             ),
         )
         val processor = AnimeConsumptionProcessor(
             entryProgressRepository = playbackRepository,
-            now = { 100L },
         )
 
         processor.setConsumed(
@@ -742,15 +741,15 @@ class AnimeEntryInteractionPluginTest {
         )
 
         playbackRepository.upsertedStates.shouldContainExactly(
-            playbackState(chapterId = 1L, positionMs = 0L, durationMs = 0L, completed = false, lastWatchedAt = 100L)
+            playbackState(chapterId = 1L, positionMs = 0L, durationMs = 0L, completed = false, lastWatchedAt = 40L)
                 .copy(locator = EntryProgressLocator(kind = "time")),
-            playbackState(chapterId = 2L, positionMs = 0L, durationMs = 0L, completed = false, lastWatchedAt = 100L)
+            playbackState(chapterId = 2L, positionMs = 0L, durationMs = 0L, completed = false, lastWatchedAt = 50L)
                 .copy(locator = EntryProgressLocator(kind = "time")),
         )
     }
 
     @Test
-    fun `anime consumption marks watched and completes playback state`() = runTest {
+    fun `anime consumption marks watched without changing recency`() = runTest {
         val chapterRepository = FakeEntryChapterRepository(
             listOf(
                 chapter(id = 1L, read = false),
@@ -759,13 +758,12 @@ class AnimeEntryInteractionPluginTest {
         )
         val playbackRepository = FakeEntryProgressRepository(
             listOf(
-                playbackState(chapterId = 1L, positionMs = 20_000L, completed = false),
+                playbackState(chapterId = 1L, positionMs = 20_000L, completed = false, lastWatchedAt = 70L),
                 playbackState(chapterId = 2L, positionMs = 10_000L, completed = false),
             ),
         )
         val processor = AnimeConsumptionProcessor(
             entryProgressRepository = playbackRepository,
-            now = { 100L },
         )
 
         processor.setConsumed(
@@ -778,8 +776,7 @@ class AnimeEntryInteractionPluginTest {
         )
 
         playbackRepository.upsertedStates.shouldContainExactly(
-            playbackState(chapterId = 1L, positionMs = 20_000L, completed = true)
-                .copy(completionUpdatedAt = 100L),
+            playbackState(chapterId = 1L, positionMs = 20_000L, completed = true, lastWatchedAt = 70L),
         )
     }
 

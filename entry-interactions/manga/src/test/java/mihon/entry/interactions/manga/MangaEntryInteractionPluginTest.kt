@@ -391,7 +391,7 @@ class MangaEntryInteractionPluginTest {
     }
 
     @Test
-    fun `manga consumption marks read`() = runTest {
+    fun `manga consumption marks read without changing recency`() = runTest {
         val repository = FakeEntryChapterRepository(
             listOf(
                 chapter(id = 1L, read = false),
@@ -410,12 +410,12 @@ class MangaEntryInteractionPluginTest {
             consumed = true,
         )
 
-        progressRepository.upsertedStates.map { it.chapterId to it.completed }
-            .shouldContainExactly(1L to true)
+        progressRepository.upsertedStates.map { Triple(it.chapterId, it.completed, it.lastReadAt) }
+            .shouldContainExactly(Triple(1L, true, 0L))
     }
 
     @Test
-    fun `manga consumption marks unread and resets progress`() = runTest {
+    fun `manga consumption marks unread and resets progress without changing recency`() = runTest {
         val repository = FakeEntryChapterRepository(
             listOf(
                 chapter(id = 1L, read = true),
@@ -439,10 +439,12 @@ class MangaEntryInteractionPluginTest {
             consumed = false,
         )
 
-        progressRepository.upsertedStates.map { Triple(it.chapterId, it.pageIndex, it.completed) }
+        progressRepository.upsertedStates.map {
+            listOf(it.chapterId, it.pageIndex, it.completed, it.locatorUpdatedAt, it.completionUpdatedAt)
+        }
             .shouldContainExactly(
-                Triple(1L, 0L, false),
-                Triple(2L, 0L, false),
+                listOf(1L, 0L, false, 1L, 1L),
+                listOf(2L, 0L, false, 1L, 1L),
             )
     }
 

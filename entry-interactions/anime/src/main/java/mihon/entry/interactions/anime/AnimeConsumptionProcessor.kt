@@ -10,7 +10,6 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 
 internal class AnimeConsumptionProcessor(
     private val entryProgressRepository: EntryProgressRepository,
-    private val now: () -> Long = System::currentTimeMillis,
 ) : EntryConsumptionProcessor {
     override val type: EntryType = EntryType.ANIME
     override val supportsBookmark: Boolean = false
@@ -20,14 +19,12 @@ internal class AnimeConsumptionProcessor(
         val chaptersToUpdate = chapters.filter { canSetConsumed(it.consumptionStatus(), consumed) }
         if (chaptersToUpdate.isEmpty()) return
 
-        val timestamp = now()
         chaptersToUpdate.forEach { chapter ->
             val current = entryProgressRepository.get(chapter.entryId, "", chapter.url)
             val updated = if (consumed) {
                 current?.copy(
                     chapterId = chapter.id,
                     completed = true,
-                    completionUpdatedAt = timestamp,
                 ) ?: animeProgressState(
                     entryId = chapter.entryId,
                     chapterId = chapter.id,
@@ -36,7 +33,7 @@ internal class AnimeConsumptionProcessor(
                     durationMs = 0L,
                     completed = true,
                     locatorUpdatedAt = 0L,
-                    completionUpdatedAt = timestamp,
+                    completionUpdatedAt = 0L,
                 )
             } else {
                 (
@@ -47,18 +44,16 @@ internal class AnimeConsumptionProcessor(
                         positionMs = 0L,
                         durationMs = 0L,
                         completed = false,
-                        locatorUpdatedAt = timestamp,
-                        completionUpdatedAt = timestamp,
+                        locatorUpdatedAt = 0L,
+                        completionUpdatedAt = 0L,
                     )
                     ).copy(
                     chapterId = chapter.id,
                     locator = EntryProgressLocator(kind = ANIME_PROGRESS_LOCATOR_KIND),
                     completed = false,
-                    locatorUpdatedAt = timestamp,
-                    completionUpdatedAt = timestamp,
                 )
             }
-            entryProgressRepository.mergeAndSyncChild(updated)
+            entryProgressRepository.upsertAndSyncChild(updated)
         }
     }
 

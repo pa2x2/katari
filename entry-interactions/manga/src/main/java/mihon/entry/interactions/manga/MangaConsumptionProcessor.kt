@@ -19,7 +19,6 @@ internal class MangaConsumptionProcessor(
     private val downloadPreferences: DownloadPreferences,
     private val downloadManager: DownloadManager,
     private val sourceManager: SourceManager,
-    private val now: () -> Long = System::currentTimeMillis,
 ) : EntryConsumptionProcessor {
     override val type: EntryType = EntryType.MANGA
     override val supportsBookmark: Boolean = true
@@ -42,14 +41,12 @@ internal class MangaConsumptionProcessor(
         }
         if (chaptersToUpdate.isEmpty()) return
 
-        val timestamp = now()
         chaptersToUpdate.forEach { chapter ->
             val current = entryProgressRepository.get(chapter.entryId, "", chapter.url)
             val updated = if (consumed) {
                 current?.copy(
                     chapterId = chapter.id,
                     completed = true,
-                    completionUpdatedAt = timestamp,
                 ) ?: mangaProgressState(
                     entryId = chapter.entryId,
                     chapterId = chapter.id,
@@ -58,7 +55,7 @@ internal class MangaConsumptionProcessor(
                     pageCount = null,
                     completed = true,
                     locatorUpdatedAt = 0L,
-                    completionUpdatedAt = timestamp,
+                    completionUpdatedAt = 0L,
                 )
             } else {
                 (
@@ -69,18 +66,16 @@ internal class MangaConsumptionProcessor(
                         pageIndex = null,
                         pageCount = null,
                         completed = false,
-                        locatorUpdatedAt = timestamp,
-                        completionUpdatedAt = timestamp,
+                        locatorUpdatedAt = 0L,
+                        completionUpdatedAt = 0L,
                     )
                     ).copy(
                     chapterId = chapter.id,
                     locator = EntryProgressLocator(kind = MANGA_PROGRESS_LOCATOR_KIND),
                     completed = false,
-                    locatorUpdatedAt = timestamp,
-                    completionUpdatedAt = timestamp,
                 )
             }
-            entryProgressRepository.mergeAndSyncChild(updated)
+            entryProgressRepository.upsertAndSyncChild(updated)
         }
 
         if (consumed && downloadPreferences.removeAfterMarkedAsRead.get()) {
