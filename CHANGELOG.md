@@ -14,14 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added content-type filters to source and extension browsing, including an option to
-  show items whose content type is not specified. (by Pa2)
+  show items whose content type is not specified. (by @pa2x2)
 
 ### Fixed
 
 - Restored memo data when importing Mihon backups and preserved display names from older
-  Katari backups. (by Pa2)
+  Katari backups. (by @pa2x2)
 - Prevented the initial library synchronization from showing newly added entries as
-  updates. (by Pa2)
+  updates. (by @pa2x2)
 
 ## [1.2.0] - 2026-07-16
 
