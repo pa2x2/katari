@@ -43,15 +43,30 @@ class RelatedEntriesScreenModel(
     }
 
     fun retry() {
-        load(force = true)
+        load(force = true, retainSuccess = false)
     }
 
-    private fun load(force: Boolean) {
+    fun refresh() {
+        val currentState = state.value as? State.Success ?: return
+        if (currentState.isRefreshing) return
+        load(force = true, retainSuccess = true)
+    }
+
+    private fun load(
+        force: Boolean,
+        retainSuccess: Boolean = false,
+    ) {
         if (!force && loadJob?.isActive == true) return
 
         loadJob?.cancel()
         val generation = ++loadGeneration
-        mutableState.update { State.Loading }
+        mutableState.update { currentState ->
+            if (retainSuccess && currentState is State.Success) {
+                currentState.copy(isRefreshing = true)
+            } else {
+                State.Loading
+            }
+        }
         loadJob = screenModelScope.launch {
             try {
                 val entry = getEntry.await(entryId)
@@ -62,6 +77,7 @@ class RelatedEntriesScreenModel(
                         State.Success(
                             entry = entry,
                             relatedEntries = relatedEntries.toImmutableList(),
+                            isRefreshing = false,
                         )
                     }
                 }
@@ -89,6 +105,7 @@ class RelatedEntriesScreenModel(
         data class Success(
             val entry: Entry,
             val relatedEntries: ImmutableList<Entry>,
+            val isRefreshing: Boolean = false,
         ) : State
 
         data class Error(val throwable: Throwable) : State

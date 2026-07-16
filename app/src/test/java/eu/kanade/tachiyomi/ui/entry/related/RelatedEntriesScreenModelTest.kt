@@ -7,6 +7,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -92,6 +93,50 @@ class RelatedEntriesScreenModelTest {
                 state.relatedEntries shouldContainExactly listOf(related)
             }
             coVerify(exactly = 2) { getRelatedEntries.await(origin) }
+        } finally {
+            model.onDispose()
+        }
+    }
+
+    @Test
+    fun `refresh retains loaded entries until replacement arrives`() = runTest {
+        val origin = entry(ENTRY_ID, "/origin", EntryType.MANGA)
+        val initial = entry(2L, "/initial", EntryType.MANGA)
+        val replacement = entry(3L, "/replacement", EntryType.ANIME)
+        val refreshResult = CompletableDeferred<List<Entry>>()
+        var requestCount = 0
+        val getEntry = mockk<GetEntry> {
+            coEvery { await(ENTRY_ID) } returns origin
+        }
+        val getRelatedEntries = mockk<GetRelatedEntries> {
+            coEvery { await(origin) } coAnswers {
+                requestCount++
+                if (requestCount == 1) listOf(initial) else refreshResult.await()
+            }
+        }
+        val model = RelatedEntriesScreenModel(ENTRY_ID, getEntry, getRelatedEntries)
+
+        try {
+            model.load()
+            eventually(ASYNC_TIMEOUT) {
+                val state = model.state.value as RelatedEntriesScreenModel.State.Success
+                state.relatedEntries shouldContainExactly listOf(initial)
+                state.isRefreshing shouldBe false
+            }
+
+            model.refresh()
+            eventually(ASYNC_TIMEOUT) {
+                val state = model.state.value as RelatedEntriesScreenModel.State.Success
+                state.relatedEntries shouldContainExactly listOf(initial)
+                state.isRefreshing shouldBe true
+            }
+
+            refreshResult.complete(listOf(replacement))
+            eventually(ASYNC_TIMEOUT) {
+                val state = model.state.value as RelatedEntriesScreenModel.State.Success
+                state.relatedEntries shouldContainExactly listOf(replacement)
+                state.isRefreshing shouldBe false
+            }
         } finally {
             model.onDispose()
         }

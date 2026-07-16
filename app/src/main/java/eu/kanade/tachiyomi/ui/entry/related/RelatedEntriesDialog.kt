@@ -42,6 +42,7 @@ import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryCover
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.EmptyScreenAction
@@ -130,12 +131,19 @@ fun RelatedEntriesDialog(
                                     ),
                                 )
                             } else {
-                                RelatedEntriesContent(
-                                    entries = currentState.relatedEntries,
-                                    sourceItemOrientation = sourceItemOrientation,
-                                    entryState = screenModel::getEntryState,
-                                    onEntryClick = onEntryClick,
-                                )
+                                PullRefresh(
+                                    refreshing = currentState.isRefreshing,
+                                    enabled = !currentState.isRefreshing,
+                                    onRefresh = screenModel::refresh,
+                                    modifier = Modifier.fillMaxSize(),
+                                ) {
+                                    RelatedEntriesContent(
+                                        entries = currentState.relatedEntries,
+                                        sourceItemOrientation = sourceItemOrientation,
+                                        entryState = screenModel::getEntryState,
+                                        onEntryClick = onEntryClick,
+                                    )
+                                }
                             }
                         }
                     }
@@ -178,7 +186,7 @@ private fun RelatedEntriesContent(
                 coverBadgeEnd = {
                     CatalogBadges(isFavorite = entry.favorite, entryType = entry.type)
                 },
-                onLongClick = { onEntryClick(entry) },
+                onLongClick = null,
                 onClick = { onEntryClick(entry) },
             )
         }

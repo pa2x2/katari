@@ -211,7 +211,7 @@ fun EntryComfortableGridItem(
     coverData: EntryCoverModel,
     title: String,
     onClick: () -> Unit,
-    onLongClick: () -> Unit,
+    onLongClick: (() -> Unit)?,
     isSelected: Boolean = false,
     titleMaxLines: Int = 2,
     coverType: EntryCover = EntryCover.Book,
@@ -347,7 +347,7 @@ private fun GridItemTitle(
 private fun GridItemSelectable(
     isSelected: Boolean,
     onClick: () -> Unit,
-    onLongClick: () -> Unit,
+    onLongClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
