@@ -93,7 +93,7 @@ class MigrateEntryUseCaseTest {
         }
     }
 
-    private fun migrationCases(): List<Arguments> = listOf(EntryType.MANGA).flatMap { type ->
+    private fun migrationCases(): List<Arguments> = listOf(EntryType.MANGA, EntryType.ANIME).flatMap { type ->
         listOf(false, true).map { replace ->
             Arguments.of(Named.of(type.name.lowercase(), type), replace)
         }
@@ -147,7 +147,7 @@ class MigrateEntryUseCaseTest {
 
         init {
             every { capabilityInteraction.supportsMigration(any()) } answers {
-                firstArg<Entry>().type == EntryType.MANGA
+                firstArg<Entry>().type in setOf(EntryType.MANGA, EntryType.ANIME)
             }
             every { sourcePreferences.migrationFlags } returns migrationFlags
             every { migrationFlags.get() } returns flags
