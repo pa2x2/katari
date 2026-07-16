@@ -1,0 +1,83 @@
+package eu.kanade.tachiyomi.ui.entry.related
+
+import androidx.compose.runtime.Immutable
+import cafe.adriel.voyager.core.model.StateScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import tachiyomi.domain.entry.interactor.GetEntry
+import tachiyomi.domain.entry.interactor.GetRelatedEntries
+import tachiyomi.domain.entry.model.Entry
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
+
+class RelatedEntriesScreenModel(
+    private val entryId: Long,
+    private val getEntry: GetEntry = Injekt.get(),
+    private val getRelatedEntries: GetRelatedEntries = Injekt.get(),
+) : StateScreenModel<RelatedEntriesScreenModel.State>(State.Idle) {
+
+    private var loadJob: Job? = null
+    private var loadGeneration = 0L
+
+    fun load() {
+        if (state.value is State.Loading || state.value is State.Success) return
+        load(force = false)
+    }
+
+    fun retry() {
+        load(force = true)
+    }
+
+    private fun load(force: Boolean) {
+        if (!force && loadJob?.isActive == true) return
+
+        loadJob?.cancel()
+        val generation = ++loadGeneration
+        mutableState.update { State.Loading }
+        loadJob = screenModelScope.launch {
+            try {
+                val entry = getEntry.await(entryId)
+                    ?: error("Entry $entryId was not found")
+                val relatedEntries = getRelatedEntries.await(entry)
+                if (generation == loadGeneration) {
+                    mutableState.update {
+                        State.Success(
+                            entry = entry,
+                            relatedEntries = relatedEntries.toImmutableList(),
+                        )
+                    }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                if (generation == loadGeneration) {
+                    mutableState.update { State.Error(e) }
+                }
+            }
+        }
+    }
+
+    override fun onDispose() {
+        loadGeneration++
+        loadJob?.cancel()
+        super.onDispose()
+    }
+
+    @Immutable
+    sealed interface State {
+        data object Idle : State
+        data object Loading : State
+
+        data class Success(
+            val entry: Entry,
+            val relatedEntries: ImmutableList<Entry>,
+        ) : State
+
+        data class Error(val throwable: Throwable) : State
+    }
+}
