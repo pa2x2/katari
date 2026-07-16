@@ -12,6 +12,7 @@ import eu.kanade.tachiyomi.network.AndroidCookieJar
 import eu.kanade.tachiyomi.util.system.isOutdated
 import eu.kanade.tachiyomi.util.system.toast
 import okhttp3.Cookie
+import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Interceptor
 import okhttp3.Request
@@ -20,6 +21,7 @@ import org.jsoup.Jsoup
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
 import java.io.IOException
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 
 class CloudflareInterceptor(
@@ -29,6 +31,7 @@ class CloudflareInterceptor(
 ) : WebViewInterceptor(context, defaultUserAgentProvider) {
 
     private val executor = ContextCompat.getMainExecutor(context)
+    private val challengeCoordinator = CloudflareChallengeCoordinator()
 
     override fun shouldIntercept(response: Response): Boolean {
         // Check if Cloudflare anti-bot is on
@@ -51,14 +54,25 @@ class CloudflareInterceptor(
         request: Request,
         response: Response,
     ): Response {
-        try {
-            response.close()
-            cookieManager.remove(request.url, COOKIE_NAMES, 0)
-            val oldCookie = cookieManager.get(request.url)
-                .firstOrNull { it.name == "cf_clearance" }
-            resolveWithWebView(request, oldCookie)
+        val challengedClearance = response.request.cloudflareClearanceValue()
+        response.close()
 
-            return chain.proceed(request)
+        return try {
+            challengeCoordinator.withLock(request.url) {
+                val currentClearance = cookieManager.get(request.url)
+                    .firstOrNull { it.name == "cf_clearance" }
+
+                // Another request may have solved the same Cloudflare zone while this one waited.
+                // Retry with that clearance instead of deleting it and opening another WebView.
+                if (shouldReuseCloudflareClearance(challengedClearance, currentClearance)) {
+                    return@withLock chain.proceed(request)
+                }
+
+                cookieManager.remove(request.url, COOKIE_NAMES, 0)
+                resolveWithWebView(request, currentClearance)
+
+                chain.proceed(request)
+            }
         }
         // Because OkHttp's enqueue only handles IOExceptions, wrap the exception so that
         // we don't crash the entire app
@@ -156,3 +170,47 @@ private val SERVER_CHECK = arrayOf("cloudflare-nginx", "cloudflare")
 private val COOKIE_NAMES = listOf("cf_clearance")
 
 private class CloudflareBypassException : Exception()
+
+internal class CloudflareChallengeCoordinator(
+    private val zoneFor: (HttpUrl) -> String = { it.topPrivateDomain() ?: it.host },
+) {
+    private val locks = ConcurrentHashMap<String, LockEntry>()
+
+    fun <T> withLock(url: HttpUrl, block: () -> T): T {
+        val zone = zoneFor(url)
+        val entry = locks.compute(zone) { _, current ->
+            (current ?: LockEntry()).also { it.users++ }
+        }!!
+
+        return try {
+            synchronized(entry.monitor) {
+                block()
+            }
+        } finally {
+            locks.computeIfPresent(zone) { _, current ->
+                check(current === entry)
+                current.users--
+                current.takeIf { it.users > 0 }
+            }
+        }
+    }
+
+    private class LockEntry(
+        val monitor: Any = Any(),
+        var users: Int = 0,
+    )
+}
+
+internal fun Request.cloudflareClearanceValue(): String? = headers.values("Cookie")
+    .asSequence()
+    .flatMap { it.splitToSequence(';') }
+    .map(String::trim)
+    .firstOrNull { it.substringBefore('=').trim() == "cf_clearance" }
+    ?.substringAfter('=', "")
+    ?.trim()
+    ?.ifBlank { null }
+
+internal fun shouldReuseCloudflareClearance(
+    challengedClearance: String?,
+    currentClearance: Cookie?,
+): Boolean = currentClearance != null && currentClearance.value != challengedClearance
