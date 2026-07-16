@@ -118,35 +118,37 @@ private open class LegacyRxCatalogueSource : CatalogueSource {
 
     override fun getFilterList(): FilterList = FilterList()
 
-    @Suppress("DEPRECATION")
+    @Deprecated("Legacy Rx compatibility API")
     override fun fetchPopularManga(
         page: Int,
-    ): Observable<MangasPage> = Observable.just(MangasPage(listOf(manga()), false))
+    ): Observable<MangasPage> = popularMangaPage()
 
-    @Suppress("DEPRECATION")
-    override fun fetchLatestUpdates(page: Int): Observable<MangasPage> = fetchPopularManga(page)
+    @Deprecated("Legacy Rx compatibility API")
+    override fun fetchLatestUpdates(page: Int): Observable<MangasPage> = popularMangaPage()
 
-    @Suppress("DEPRECATION")
+    @Deprecated("Legacy Rx compatibility API")
     override fun fetchSearchManga(
         page: Int,
         query: String,
         filters: FilterList,
-    ): Observable<MangasPage> = fetchPopularManga(page)
+    ): Observable<MangasPage> = popularMangaPage()
 
-    @Suppress("DEPRECATION")
+    @Deprecated("Legacy Rx compatibility API")
     override fun fetchMangaDetails(manga: SManga): Observable<SManga> = Observable.just(
         manga().apply {
             title = "Legacy manga details"
         },
     )
 
-    @Suppress("DEPRECATION")
+    @Deprecated("Legacy Rx compatibility API")
     override fun fetchChapterList(manga: SManga): Observable<List<SChapter>> = Observable.just(listOf(chapter()))
 
-    @Suppress("DEPRECATION")
+    @Deprecated("Legacy Rx compatibility API")
     override fun fetchPageList(chapter: SChapter): Observable<List<Page>> = Observable.just(
         listOf(Page(index = 0, imageUrl = "https://example.invalid/page.jpg")),
     )
+
+    private fun popularMangaPage(): Observable<MangasPage> = Observable.just(MangasPage(listOf(manga()), false))
 
     private fun manga(): SManga = SManga.create().apply {
         url = "/manga"
