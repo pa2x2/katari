@@ -1,7 +1,16 @@
 package mihon.entry.interactions.book.download
 
+import android.content.Context
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.book.download.model.BookDownload
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
@@ -40,6 +49,44 @@ class BookDownloadManagerTest {
         assertSame(currentReplacement, merged[1])
     }
 
+    @Test
+    fun `pausing an empty queue does not publish a paused notification`() {
+        val fixture = managerFixture()
+
+        fixture.manager.pauseDownloads()
+
+        verify(exactly = 0) { fixture.notifier.onPaused() }
+        verify(exactly = 1) { fixture.notifier.onComplete() }
+    }
+
+    @Test
+    fun `worker cancellation preserves the paused notification for a queued book`() = runTest {
+        val downloadStarted = CompletableDeferred<Unit>()
+        val downloader = mockk<BookDownloader> {
+            coEvery { download(any()) } coAnswers {
+                downloadStarted.complete(Unit)
+                awaitCancellation()
+            }
+        }
+        val fixture = managerFixture(downloader)
+        val entry = Entry.create().copy(
+            id = 1L,
+            source = 42L,
+            url = "/book",
+            title = "Book",
+        )
+        val chapter = chapter(id = 11L, sourceOrder = 1L)
+        fixture.manager.queueBooks(entry, listOf(chapter), autoStart = false)
+        val worker = launch { fixture.manager.runDownloads() }
+        downloadStarted.await()
+
+        fixture.manager.pauseDownloads()
+        worker.cancelAndJoin()
+
+        verify(exactly = 1) { fixture.notifier.onPaused() }
+        verify(exactly = 0) { fixture.notifier.onComplete() }
+    }
+
     private fun download(chapterId: Long): BookDownload = mockk {
         every { chapter.id } returns chapterId
     }
@@ -50,5 +97,41 @@ class BookDownloadManagerTest {
         sourceOrder = sourceOrder,
         url = "/chapter/$id",
         name = "Chapter $id",
+    )
+
+    private fun managerFixture(
+        downloader: BookDownloader = mockk(relaxed = true),
+    ): ManagerFixture {
+        val appContext = mockk<Context>(relaxed = true)
+        val context = mockk<Context> {
+            every { applicationContext } returns appContext
+        }
+        val cache = mockk<BookDownloadCache> {
+            coEvery { ensureInitialized() } returns Unit
+            every { isDownloaded(any()) } returns false
+            every { changes } returns emptyFlow()
+        }
+        val store = mockk<BookDownloadStore>(relaxed = true) {
+            coEvery { restore() } returns emptyList()
+        }
+        val notifier = mockk<BookDownloadNotifier>(relaxed = true)
+        return ManagerFixture(
+            manager = BookDownloadManager(
+                context = context,
+                cache = cache,
+                provider = mockk(relaxed = true),
+                downloader = downloader,
+                sourceManager = mockk(relaxed = true),
+                store = store,
+                notifier = notifier,
+                workController = mockk(relaxed = true),
+            ),
+            notifier = notifier,
+        )
+    }
+
+    private data class ManagerFixture(
+        val manager: BookDownloadManager,
+        val notifier: BookDownloadNotifier,
     )
 }

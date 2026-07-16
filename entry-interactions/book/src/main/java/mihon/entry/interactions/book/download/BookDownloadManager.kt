@@ -35,9 +35,10 @@ internal class BookDownloadManager(
     private val downloader: BookDownloader = Injekt.get(),
     private val sourceManager: SourceManager = Injekt.get(),
     private val store: BookDownloadStore = BookDownloadStore(context),
+    private val notifier: BookDownloadNotifier = BookDownloadNotifier(context.applicationContext),
+    private val workController: BookDownloadWorkController = DefaultBookDownloadWorkController,
 ) {
     private val appContext = context.applicationContext
-    private val notifier = BookDownloadNotifier(appContext)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val queueMutationLock = Any()
     private val processorMutex = Mutex()
@@ -50,6 +51,9 @@ internal class BookDownloadManager(
 
     @Volatile
     private var activeChapterId: Long? = null
+
+    @Volatile
+    private var pauseRequested = false
 
     init {
         scope.launch {
@@ -74,6 +78,7 @@ internal class BookDownloadManager(
 
     fun startDownloads() {
         if (queueState.value.isEmpty()) return
+        pauseRequested = false
         queueState.value.forEach { download ->
             if (download.status != BookDownload.State.RESOLVING && download.status != BookDownload.State.DOWNLOADING) {
                 download.failure = null
@@ -81,25 +86,46 @@ internal class BookDownloadManager(
             }
         }
         rewriteStoredQueue()
-        if (!_isRunning.value) BookDownloadJob.start(appContext)
+        if (!_isRunning.value) workController.start(appContext)
     }
 
     fun pauseDownloads() {
-        BookDownloadJob.stop(appContext)
-        queueState.value
-            .filter { it.status == BookDownload.State.RESOLVING || it.status == BookDownload.State.DOWNLOADING }
-            .forEach { it.status = BookDownload.State.QUEUE }
-        _isRunning.value = false
-        rewriteStoredQueue()
-        notifier.onPaused()
+        val hasQueuedDownloads = synchronized(queueMutationLock) {
+            if (_queueState.value.isEmpty()) {
+                pauseRequested = false
+                false
+            } else {
+                pauseRequested = true
+                _queueState.value
+                    .filter {
+                        it.status == BookDownload.State.RESOLVING ||
+                            it.status == BookDownload.State.DOWNLOADING
+                    }
+                    .forEach { it.status = BookDownload.State.QUEUE }
+                _isRunning.value = false
+                rewriteStoredQueueLocked()
+                true
+            }
+        }
+        workController.stop(appContext)
+        synchronized(queueMutationLock) {
+            if (hasQueuedDownloads && _queueState.value.isNotEmpty()) {
+                notifier.onPaused()
+            } else {
+                pauseRequested = false
+                _isRunning.value = false
+                notifier.onComplete()
+            }
+        }
     }
 
     fun clearQueue() {
-        BookDownloadJob.stop(appContext)
+        workController.stop(appContext)
         synchronized(queueMutationLock) {
             _queueState.value = emptyList()
             store.clear()
         }
+        pauseRequested = false
         _isRunning.value = false
         notifier.onComplete()
     }
@@ -128,7 +154,7 @@ internal class BookDownloadManager(
         if (chapterIds.isEmpty()) return
         val wasRunning = _isRunning.value
         val removesActiveDownload = activeChapterId in chapterIds
-        if (removesActiveDownload) BookDownloadJob.stop(appContext)
+        if (removesActiveDownload) workController.stop(appContext)
         synchronized(queueMutationLock) {
             _queueState.update { current -> current.filterNot { it.chapter.id in chapterIds } }
             rewriteStoredQueueLocked()
@@ -188,7 +214,7 @@ internal class BookDownloadManager(
             }
         } finally {
             _isRunning.value = false
-            notifier.onComplete()
+            if (!pauseRequested || queueState.value.isEmpty()) notifier.onComplete()
             processorMutex.unlock()
         }
     }

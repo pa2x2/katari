@@ -130,6 +130,17 @@ internal class BookDownloadJob(context: Context, workerParams: WorkerParameters)
     }
 }
 
+internal interface BookDownloadWorkController {
+    fun start(context: Context)
+    fun stop(context: Context)
+}
+
+internal object DefaultBookDownloadWorkController : BookDownloadWorkController {
+    override fun start(context: Context) = BookDownloadJob.start(context)
+
+    override fun stop(context: Context) = BookDownloadJob.stop(context)
+}
+
 internal fun isBookDownloadNetworkAllowed(isOnline: Boolean, isWifi: Boolean, requireWifi: Boolean): Boolean =
     isOnline && (!requireWifi || isWifi)
 
