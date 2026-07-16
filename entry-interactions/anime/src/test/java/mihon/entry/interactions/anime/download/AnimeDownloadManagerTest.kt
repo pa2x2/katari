@@ -1,9 +1,13 @@
 package mihon.entry.interactions.anime.download
 
+import android.content.Context
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
+import kotlinx.coroutines.flow.MutableSharedFlow
 import mihon.entry.interactions.anime.download.model.AnimeDownload
 import org.junit.jupiter.api.Test
 
@@ -38,6 +42,29 @@ class AnimeDownloadManagerTest {
         )
 
         merged shouldContainExactly listOf(restoredFirst, newlyQueuedReplacement, newlyQueuedThird)
+    }
+
+    @Test
+    fun `pausing an empty anime queue dismisses its progress notification`() {
+        val notifier = mockk<AnimeDownloadNotifier>(relaxed = true)
+        val manager = AnimeDownloadManager(
+            context = mockk<Context>(relaxed = true),
+            cache = mockk {
+                every { changes } returns MutableSharedFlow()
+            },
+            provider = mockk(relaxed = true),
+            downloader = mockk(relaxed = true),
+            sourceManager = mockk(relaxed = true),
+            store = mockk(relaxed = true) {
+                coEvery { restore() } returns emptyList()
+            },
+            notifier = notifier,
+        )
+
+        manager.pauseDownloads()
+
+        verify(exactly = 0) { notifier.onPaused() }
+        verify(exactly = 1) { notifier.onComplete() }
     }
 
     private fun download(episodeId: Long): AnimeDownload = mockk {

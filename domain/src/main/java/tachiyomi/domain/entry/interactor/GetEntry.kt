@@ -1,6 +1,7 @@
 package tachiyomi.domain.entry.interactor
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
@@ -14,6 +15,8 @@ class GetEntry(
     suspend fun await(id: Long): Entry? {
         return try {
             entryRepository.getEntryById(id)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e)
             null

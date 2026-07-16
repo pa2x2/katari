@@ -19,6 +19,8 @@ import kotlinx.coroutines.test.runTest
 import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookLocator
 import mihon.book.api.BookPublication
+import mihon.entry.interactions.book.download.BookDownloadCache
+import mihon.entry.interactions.book.download.BookDownloadCleanup
 import okhttp3.OkHttpClient
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
@@ -74,6 +76,7 @@ class BookReaderSessionFactoryTest {
         )
         val publicationSession = TestPublicationSession()
         val processor = SessionFactoryTestProcessor(publicationSession)
+        val downloadCleanup = mockk<BookDownloadCleanup>(relaxed = true)
         val context = mockk<Context> {
             every { applicationContext } returns this@mockk
             every { contentResolver } returns mockk<ContentResolver>()
@@ -99,6 +102,8 @@ class BookReaderSessionFactoryTest {
                 every { isIncognito(entry.source) } returns false
             },
             materializationStore = mockk(relaxed = true),
+            downloadCache = failingDownloadCache(),
+            downloadCleanup = downloadCleanup,
             now = { 100L },
         )
 
@@ -119,6 +124,7 @@ class BookReaderSessionFactoryTest {
         assertTrue(updatedProgress.captured.completed)
         assertEquals(100L, updatedProgress.captured.completionUpdatedAt)
         assertEquals(100L, updatedProgress.captured.locatorUpdatedAt)
+        coVerify(exactly = 1) { downloadCleanup.afterReaderCompleted(entry, chapter) }
 
         session.recordHistory(500L)
         coVerify {
@@ -217,6 +223,7 @@ class BookReaderSessionFactoryTest {
             },
             incognitoState = incognitoState,
             materializationStore = mockk(relaxed = true),
+            downloadCache = emptyDownloadCache(),
         )
 
         val session = assertIs<BookReaderOpenResult.Success>(
@@ -246,6 +253,17 @@ class BookReaderSessionFactoryTest {
         url = "/publication.epub",
         name = "EPUB",
     )
+
+    private fun emptyDownloadCache(): BookDownloadCache {
+        val cache = mockk<BookDownloadCache>()
+        coEvery { cache.ensureInitialized() } returns Unit
+        every { cache.get(any()) } returns null
+        return cache
+    }
+
+    private fun failingDownloadCache(): BookDownloadCache = mockk {
+        coEvery { ensureInitialized() } throws java.io.IOException("storage unavailable")
+    }
 }
 
 private class SessionFactoryTestProcessor(

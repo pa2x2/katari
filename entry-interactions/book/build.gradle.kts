@@ -2,6 +2,7 @@ plugins {
     alias(mihonx.plugins.android.library)
     alias(mihonx.plugins.compose)
     alias(mihonx.plugins.spotless)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -15,6 +16,7 @@ dependencies {
     api(projects.entryViewerSettingsApi)
 
     implementation(projects.core.common)
+    implementation(projects.i18n)
     implementation(projects.presentationCore)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core)
@@ -22,9 +24,12 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.materialIcons)
     implementation(libs.androidx.fragment)
+    implementation(libs.androidx.work)
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.bundles.serialization)
     implementation(libs.injekt)
     implementation(libs.jsoup)
+    implementation(libs.unifile)
 
     implementation(libs.readium.navigator)
     implementation(libs.readium.shared)

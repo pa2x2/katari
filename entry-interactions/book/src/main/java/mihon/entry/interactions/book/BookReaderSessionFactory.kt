@@ -7,9 +7,15 @@ import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.CancellationException
+import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookFailure
 import mihon.book.api.BookFailureReason
 import mihon.book.api.BookLocator
+import mihon.entry.interactions.book.download.BookDownloadCache
+import mihon.entry.interactions.book.download.BookDownloadCleanup
+import mihon.entry.interactions.book.download.BookDownloadPackageKey
+import mihon.entry.interactions.book.download.DownloadedBookContentSession
+import mihon.entry.interactions.book.download.VerifiedBookDownloadPackage
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -32,6 +38,8 @@ internal class BookReaderSessionFactory(
     private val networkHelper: NetworkHelper,
     private val incognitoState: mihon.entry.interactions.EntryReaderIncognitoState,
     private val materializationStore: BookMaterializationStore,
+    private val downloadCache: BookDownloadCache,
+    private val downloadCleanup: BookDownloadCleanup? = null,
     private val now: () -> Long = System::currentTimeMillis,
 ) {
     suspend fun open(
@@ -58,6 +66,9 @@ internal class BookReaderSessionFactory(
         if (owner.type != EntryType.BOOK) {
             return prepareFailure(BookFailureReason.MALFORMED_CONTENT, "The selected item does not belong to a book.")
         }
+        resolveDownloadedContent(owner, chapter)?.let { downloaded ->
+            return preparedSuccess(request, visibleEntry, owner, chapter, downloaded)
+        }
         val source = sourceManager.get(owner.source)
             ?: return prepareFailure(BookFailureReason.CONTENT_UNAVAILABLE, "The book source is not available.")
         val media = try {
@@ -73,15 +84,12 @@ internal class BookReaderSessionFactory(
             BookFailureReason.MALFORMED_CONTENT,
             "The source returned a different content type for this book item.",
         )
-        return BookReaderPrepareResult.Success(
-            PreparedBookReaderRequest(
-                request = request,
-                visibleEntry = visibleEntry,
-                owner = owner,
-                chapter = chapter,
-                source = source,
-                media = media,
-            ),
+        return preparedSuccess(
+            request = request,
+            visibleEntry = visibleEntry,
+            owner = owner,
+            chapter = chapter,
+            content = PreparedBookContent.Source(source, media),
         )
     }
 
@@ -95,27 +103,17 @@ internal class BookReaderSessionFactory(
         val visibleEntry = prepared.visibleEntry
         val owner = prepared.owner
         val chapter = prepared.chapter
-        val source = prepared.source
-        val media = prepared.media
-        if (!processor.supports(media.descriptor)) {
+        val content = prepared.content
+        if (!processor.supports(content.descriptor)) {
             return failure(BookFailureReason.FORMAT_UNSUPPORTED, "The selected reader does not support this content.")
         }
 
         val progressIdentity = try {
-            media.progressIdentity(chapter.id)
+            content.progressIdentity(chapter.id)
         } catch (error: IllegalStateException) {
             return failure(BookFailureReason.MALFORMED_CONTENT, error.message ?: "The book resource is ambiguous.")
         }
-        val contentSession = SourceBookContentSession(
-            source = source,
-            entry = owner,
-            media = media,
-            externalResolver = AndroidBookExternalResourceResolver(
-                context = context.applicationContext,
-                httpClient = (source as? EntryHttpSource)?.client ?: networkHelper.client,
-            ),
-            materializationStore = materializationStore,
-        )
+        val contentSession = content.createSession(context, owner)
         val opened = try {
             processor.open(contentSession)
         } catch (error: CancellationException) {
@@ -156,6 +154,7 @@ internal class BookReaderSessionFactory(
                             entryProgressRepository = entryProgressRepository,
                             historyRepository = historyRepository,
                             incognitoState = incognitoState,
+                            downloadCleanup = downloadCleanup,
                             now = now,
                         ),
                     )
@@ -181,6 +180,55 @@ internal class BookReaderSessionFactory(
         return BookReaderPrepareResult.Failure(BookFailure(reason, message))
     }
 
+    private suspend fun resolveDownloadedContent(
+        owner: Entry,
+        chapter: EntryChapter,
+    ): PreparedBookContent.Downloaded? {
+        val packageKey = try {
+            BookDownloadPackageKey(owner.source, owner.url, chapter.url)
+        } catch (_: IllegalArgumentException) {
+            return null
+        }
+        return try {
+            downloadCache.ensureInitialized()
+            downloadCache.get(packageKey)?.let(PreparedBookContent::Downloaded)
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun preparedSuccess(
+        request: BookReaderRequest,
+        visibleEntry: Entry,
+        owner: Entry,
+        chapter: EntryChapter,
+        content: PreparedBookContent,
+    ): BookReaderPrepareResult.Success = BookReaderPrepareResult.Success(
+        PreparedBookReaderRequest(
+            request = request,
+            visibleEntry = visibleEntry,
+            owner = owner,
+            chapter = chapter,
+            content = content,
+        ),
+    )
+
+    private fun PreparedBookContent.createSession(context: Context, owner: Entry): BookContentSession = when (this) {
+        is PreparedBookContent.Downloaded -> DownloadedBookContentSession(download, materializationStore)
+        is PreparedBookContent.Source -> SourceBookContentSession(
+            source = source,
+            entry = owner,
+            media = media,
+            externalResolver = AndroidBookExternalResourceResolver(
+                context = context.applicationContext,
+                httpClient = (source as? EntryHttpSource)?.client ?: networkHelper.client,
+            ),
+            materializationStore = materializationStore,
+        )
+    }
+
     private fun closeAfterFailure(
         contentSession: BookContentSession,
         publicationSession: BookPublicationSession? = null,
@@ -201,9 +249,32 @@ internal data class PreparedBookReaderRequest(
     val visibleEntry: Entry,
     val owner: Entry,
     val chapter: EntryChapter,
-    val source: UnifiedSource,
-    val media: EntryMedia.Book,
+    val content: PreparedBookContent,
 )
+
+internal sealed interface PreparedBookContent {
+    val descriptor: BookContentDescriptor
+
+    fun progressIdentity(chapterId: Long): BookProgressIdentity
+
+    data class Source(
+        val source: UnifiedSource,
+        val media: EntryMedia.Book,
+    ) : PreparedBookContent {
+        override val descriptor: BookContentDescriptor = media.descriptor
+
+        override fun progressIdentity(chapterId: Long): BookProgressIdentity = media.progressIdentity(chapterId)
+    }
+
+    data class Downloaded(
+        val download: VerifiedBookDownloadPackage,
+    ) : PreparedBookContent {
+        override val descriptor: BookContentDescriptor = download.manifest.descriptor
+
+        override fun progressIdentity(chapterId: Long): BookProgressIdentity =
+            download.manifest.progressIdentity(chapterId)
+    }
+}
 
 internal sealed interface BookReaderPrepareResult {
     data class Success(val request: PreparedBookReaderRequest) : BookReaderPrepareResult
@@ -226,6 +297,7 @@ internal class OpenedBookReaderSession(
     private val entryProgressRepository: EntryProgressRepository,
     private val historyRepository: HistoryRepository,
     private val incognitoState: mihon.entry.interactions.EntryReaderIncognitoState,
+    private val downloadCleanup: BookDownloadCleanup? = null,
     private val now: () -> Long,
 ) : AutoCloseable {
     private val closeStack = BookSessionCloseStack().apply {
@@ -263,6 +335,9 @@ internal class OpenedBookReaderSession(
                 completionUpdatedAt = if (shouldBeCompleted) timestamp else 0L,
             ),
         )
+        if (completed && current?.completed != true) {
+            downloadCleanup?.afterReaderCompleted(entry, chapter)
+        }
     }
 
     suspend fun recordHistory(sessionReadDuration: Long) {

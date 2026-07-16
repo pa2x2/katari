@@ -187,6 +187,8 @@ Book progress depends on stable publication and resource identity:
 
 For a media result with one catalog resource, Katari can infer the primary resource. Setting `initialResourceId` explicitly is clearer and is required when the catalog contains more than one candidate. `initialResourceLocation` supplies the location resolved for the selected child; keep the matching location in the catalog resource so later resource lookup remains self-contained.
 
+The same primary-resource contract is used for offline downloads. Katari resolves `getMedia()` again, validates the selected resource with a compatible processor, and stores a verified package under the child's stable identity. A remote EPUB can therefore use a fresh signed URL on every resolution while retaining the same entry URL, child URL, publication identity, and resource ID. If a selected child does not identify one accessible streamable or materializable primary resource, Katari leaves it in an error state instead of publishing a partial download.
+
 ## Report revisions and catalog coverage
 
 Revisions allow Katari to distinguish updated content from a changed access URL:
