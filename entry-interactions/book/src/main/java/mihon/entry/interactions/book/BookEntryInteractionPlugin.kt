@@ -4,6 +4,8 @@ import mihon.entry.interactions.EntryInteractionPlugin
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 
 fun bookEntryInteractionPlugin(
     dependencies: BookEntryInteractionDependencies,
@@ -20,6 +22,17 @@ fun bookEntryInteractionPlugin(
                 openProcessor = openProcessor,
             ),
         )
+        if (dependencies.downloadsEnabled) {
+            registry.registerDownloadProcessor(
+                BookDownloadProcessor(
+                    BookDownloadProcessorDependencies(
+                        manager = Injekt.get(),
+                        cache = Injekt.get(),
+                        sourceManager = Injekt.get(),
+                    ),
+                ),
+            )
+        }
         registry.registerConsumptionProcessor(
             BookConsumptionProcessor(
                 entryProgressRepository = dependencies.entryProgressRepository,
@@ -41,4 +54,5 @@ data class BookEntryInteractionDependencies(
     val getEntryWithChapters: GetEntryWithChapters,
     val entryChapterRepository: EntryChapterRepository,
     val entryProgressRepository: EntryProgressRepository,
+    val downloadsEnabled: Boolean = false,
 )

@@ -143,6 +143,39 @@ internal class BookDownloadProvider(
         return deleted
     }
 
+    fun renameSource(oldName: String, newName: String): Boolean {
+        val root = downloadsDirectory() ?: return false
+        val oldDirectory = root.findFile(sourceDirectoryName(oldName)) ?: return false
+        val newDirectoryName = sourceDirectoryName(newName)
+        if (oldDirectory.name == newDirectoryName) return true
+        if (oldDirectory.name?.equals(newDirectoryName, ignoreCase = true) == true) {
+            val originalName = checkNotNull(oldDirectory.name)
+            if (!oldDirectory.renameTo(newDirectoryName + STAGING_SUFFIX)) return false
+            if (oldDirectory.renameTo(newDirectoryName)) return true
+            oldDirectory.renameTo(originalName)
+            return false
+        }
+        if (root.findFile(newDirectoryName) != null) return false
+        return oldDirectory.renameTo(newDirectoryName)
+    }
+
+    fun renameEntry(sourceName: String, entry: Entry, newTitle: String): Boolean {
+        val root = downloadsDirectory() ?: return false
+        val sourceDirectory = root.findFile(sourceDirectoryName(sourceName)) ?: return false
+        val oldDirectory = sourceDirectory.findFile(entryDirectoryName(entry)) ?: return false
+        val newDirectoryName = stableDirectoryName(newTitle, entry.url, "Book")
+        if (oldDirectory.name == newDirectoryName) return true
+        if (oldDirectory.name?.equals(newDirectoryName, ignoreCase = true) == true) {
+            val originalName = checkNotNull(oldDirectory.name)
+            if (!oldDirectory.renameTo(newDirectoryName + STAGING_SUFFIX)) return false
+            if (oldDirectory.renameTo(newDirectoryName)) return true
+            oldDirectory.renameTo(originalName)
+            return false
+        }
+        if (sourceDirectory.findFile(newDirectoryName) != null) return false
+        return oldDirectory.renameTo(newDirectoryName)
+    }
+
     internal fun readVerifiedPackage(directory: UniFile): VerifiedBookDownloadPackage? = runCatching {
         val manifestFile = directory.findFile(MANIFEST_FILE_NAME) ?: return null
         val manifestLength = manifestFile.length()

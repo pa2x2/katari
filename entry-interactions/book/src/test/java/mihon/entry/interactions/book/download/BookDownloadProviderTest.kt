@@ -117,6 +117,24 @@ class BookDownloadProviderTest {
             completed.resources.getValue("chapter").openInputStream().reader().use { it.readText() },
         )
     }
+
+    @Test
+    fun `source and entry directory renames keep packages discoverable`() {
+        val fixture = fixture()
+        fixture.complete(content = "offline")
+
+        assertTrue(fixture.provider.renameSource("Fixture Source", "Renamed Source"))
+        assertTrue(fixture.provider.renameEntry("Renamed Source", fixture.entry, "Renamed Book"))
+
+        val completed = fixture.provider.scanPackages().packages.single()
+        assertEquals(fixture.packageKey, completed.manifest.packageKey)
+        assertEquals(
+            "offline",
+            completed.resources.getValue("chapter").openInputStream().reader().use {
+                it.readText()
+            },
+        )
+    }
 }
 
 private data class BookDownloadFixture(

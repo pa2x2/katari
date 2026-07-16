@@ -4,7 +4,10 @@ import android.app.Application
 import mihon.entry.interactions.EntryInteractionRuntimeContribution
 import mihon.entry.interactions.EntryReaderIncognitoState
 import mihon.entry.interactions.book.download.BookDownloadCache
+import mihon.entry.interactions.book.download.BookDownloadManager
 import mihon.entry.interactions.book.download.BookDownloadProvider
+import mihon.entry.interactions.book.download.BookDownloadStore
+import mihon.entry.interactions.book.download.BookDownloader
 import mihon.entry.interactions.book.epub.ReadiumEpubProcessor
 import mihon.entry.interactions.book.prose.HtmlProseChapterProcessor
 import mihon.entry.interactions.settings.HtmlProseSettingsProvider
@@ -26,6 +29,7 @@ fun InjektRegistrar.addBookEntryInteractionRuntime(
     addSingletonFactory<BookMaterializationStore> { materializationCache }
     addSingletonFactory { BookDownloadProvider(get<StorageManager>()) }
     addSingletonFactory { BookDownloadCache(get()) }
+    addSingletonFactory { BookDownloadStore(app) }
     addSingletonFactory { BookReaderSessionRegistry() }
     addSingletonFactory { BookChapterNavigationResolver(get()) }
     addSingletonFactory { readiumSettingsProvider }
@@ -36,6 +40,27 @@ fun InjektRegistrar.addBookEntryInteractionRuntime(
                 ReadiumEpubProcessor(),
                 HtmlProseChapterProcessor(),
             ),
+        )
+    }
+    addSingletonFactory {
+        BookDownloader(
+            application = app,
+            provider = get(),
+            cache = get(),
+            sourceManager = get(),
+            networkHelper = get(),
+            materializationStore = get(),
+            processorRegistry = get(),
+        )
+    }
+    addSingletonFactory {
+        BookDownloadManager(
+            context = app,
+            cache = get(),
+            provider = get(),
+            downloader = get(),
+            sourceManager = get(),
+            store = get(),
         )
     }
     addSingletonFactory { BookProcessorPreferences(profilePreferenceStore) }

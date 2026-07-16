@@ -66,6 +66,14 @@ internal class BookDownloadCache(
 
     fun get(packageKey: BookDownloadPackageKey): VerifiedBookDownloadPackage? = _packages.value[packageKey]
 
+    fun find(sourceId: Long, childUrl: String, entryTitle: String): VerifiedBookDownloadPackage? {
+        val candidates = _packages.value.values.filter {
+            it.manifest.sourceId == sourceId && it.manifest.childUrl == childUrl
+        }
+        return candidates.singleOrNull()
+            ?: candidates.firstOrNull { it.manifest.entryTitle == entryTitle }
+    }
+
     fun isDownloaded(packageKey: BookDownloadPackageKey): Boolean = packageKey in _packages.value
 
     fun getDownloadCount(sourceId: Long, entryUrl: String): Int =
