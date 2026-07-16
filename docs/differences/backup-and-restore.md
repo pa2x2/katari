@@ -38,9 +38,9 @@ When a Katari backup contains profiles, restore creates or updates them by stabl
 
 A legacy Mihon or fork backup without Katari profiles is restored into the currently active profile. Supported legacy records are converted into typed Entry records.
 
-Saved BOOK progress includes the processor-neutral reading location needed to resume a publication. Restoring that location still requires the corresponding source and a compatible reader for the publication format.
+Saved BOOK progress includes the processor-neutral reading location needed to resume a publication. Restoring that location requires a compatible reader plus either the corresponding source or an intact BOOK download that has been reindexed.
 
-Extensions and downloaded media are not stored in the backup. Restore reports missing sources and trackers; install the required extensions, sign in to trackers, and reindex existing downloads when necessary.
+Extensions and downloaded media are not stored in the backup. Restore reports missing sources and trackers; install the required extensions, sign in to trackers, and reindex existing downloads when necessary. Reindexing can recover intact BOOK packages from the selected downloads location, but the backup itself cannot recreate their media bytes.
 
 ## Compatibility limits
 

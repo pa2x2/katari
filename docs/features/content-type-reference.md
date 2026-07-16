@@ -26,9 +26,9 @@ Status meanings:
 
 | Capability                                          | Manga | Anime | Book |
 | --------------------------------------------------- | :---: | :---: | :--: |
-| Download individual child items for offline use     |   ✓   |   ✓   |  —   |
-| Bulk-download child items                           |   ✓   |   ✓   |  —   |
-| Automatically download newly discovered child items |   ✓   |   ✓   |  —   |
+| Download individual child items for offline use     |   ✓   |   ✓   |  ✓   |
+| Bulk-download child items                           |   ✓   |   ✓   |  ✓   |
+| Automatically download newly discovered child items |   ✓   |   ✓   |  ✓   |
 | Delete downloads after marking an item consumed     |   ✓   |   —   |  —   |
 
 ::: info

@@ -36,6 +36,16 @@ Changing profiles therefore changes reader defaults without affecting other prof
 
 Paginated reading is the default. The readers expose appearance and layout controls while reading, and paginated mode can use screen-edge taps for page turns. The EPUB reader navigates the publication's table of contents. The prose reader uses Katari's stored chapter list for its chapter picker and previous/next transitions while keeping only the current chapter and its immediate neighbors prepared.
 
+## Offline downloads
+
+Download chapters for offline reading from the book's entry screen:
+
+- Use the download button beside a chapter to download it individually.
+- Choose **Next N** or **Unread** from the download menu to download multiple chapters.
+- Manage queued and saved chapters from the Downloads screen.
+
+Downloaded chapters open without a network connection. Automatic downloads follow your existing download settings.
+
 ## Reading progress
 
 Book processors report progress as a format-neutral reading location rather than requiring every format to use pages or chapters. Katari stores that location for the active profile, entry, openable child, and publication resource. EPUB progress may target a resource inside an archive, while serialized prose progress belongs to one independently openable source chapter.
