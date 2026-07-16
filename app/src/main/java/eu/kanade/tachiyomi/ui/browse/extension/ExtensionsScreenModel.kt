@@ -204,9 +204,7 @@ class ExtensionsScreenModel(
 
     fun updateAllExtensions() {
         screenModelScope.launchIO {
-            state.value.items.values.flatten()
-                .map { it.extension }
-                .filterIsInstance<Extension.Installed>()
+            extensionManager.installedExtensionsFlow.value
                 .filter { it.hasUpdate }
                 .forEach(::updateExtension)
         }
