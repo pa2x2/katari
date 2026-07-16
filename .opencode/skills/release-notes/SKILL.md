@@ -27,6 +27,9 @@ Katari's changelog focused on behavior that differs from Mihon.
 4. Inspect `git log`, `git diff --stat`, and the full diff for the reported range. Use
    `CHANGELOG.md`, pull-request references, tests, and commit messages as leads. Trace
    representative runtime and presentation paths before claiming user-visible behavior.
+   When local history identifies an associated pull request, record its number and URL for
+   the corresponding outcome. Do not guess an association or require network access to find
+   one.
 5. Build a shortlist of release-note candidates by user-visible outcome, not by commit.
    Combine related commits into one outcome and discard duplicate, superseded, reverted,
    or implementation-only work. A large commit range may legitimately produce only a few
@@ -71,12 +74,15 @@ Katari's changelog focused on behavior that differs from Mihon.
    applicable headings `Added`, `Changed`, `Improved`, `Removed`, `Fixed`, and `Other`.
 2. Describe user-visible outcomes in concise past-tense-neutral bullets. Mention extension
    developer changes only when they alter Katari's public SDK or compatibility contract.
-   Do not create one bullet per commit or pull request, include commit hashes or PR numbers,
-   or add a catch-all list of minor/internal changes. Prefer fewer, broader bullets that each
+   Do not create one bullet per commit or pull request, include commit hashes, or add a
+   catch-all list of minor/internal changes. Prefer fewer, broader bullets that each
    communicate one distinct and useful outcome. End every bullet with contributor credit in
    the form `(by @user)` or `(by @user1, @user2)`, using the verified contributor set for
    that outcome. Use the verified commit author name in the same form when no GitHub login
-   is available.
+   is available. If an associated pull request was verified from local history, append its
+   Markdown link after the contributor credit, in the form `([#123](https://github.com/OWNER/REPO/pull/123))`.
+   Append every associated PR link when one outcome combines multiple pull requests. Omit
+   the link when no associated pull request is present or its URL cannot be verified.
 3. Return the complete section in a Markdown code block in the response. Include no
    summaries, release-body variants, download guidance, or GitHub-release actions unless
    the user separately asks for them.
