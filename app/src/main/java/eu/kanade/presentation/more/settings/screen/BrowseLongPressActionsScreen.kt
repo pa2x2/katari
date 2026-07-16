@@ -193,25 +193,25 @@ private fun LongPressActionsOverview(
                 val source = sourceById[overriddenSourceId]
                 val displayInfo = sourceManager.getDisplayInfo(overriddenSourceId)
                 ListItem(
-                    headlineContent = { Text(source?.name ?: displayInfo.name) },
+                    modifier = Modifier.clickable { onOpenOverride(overriddenSourceId) },
                     supportingContent = {
                         Text(browseLongPressPrioritySummary(overrides.getValue(overriddenSourceId)))
                     },
                     trailingContent = {
                         Icon(Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = null)
                     },
-                    modifier = Modifier.clickable { onOpenOverride(overriddenSourceId) },
-                )
+                ) {
+                    Text(source?.name ?: displayInfo.name)
+                }
             }
         }
         item {
             ListItem(
-                headlineContent = {
-                    Text(stringResource(MR.strings.pref_browse_long_press_action_add_source_override))
-                },
-                leadingContent = { Icon(Icons.Outlined.Add, contentDescription = null) },
                 modifier = Modifier.clickable { showSourcePicker = true },
-            )
+                leadingContent = { Icon(Icons.Outlined.Add, contentDescription = null) },
+            ) {
+                Text(stringResource(MR.strings.pref_browse_long_press_action_add_source_override))
+            }
         }
     }
 
@@ -330,7 +330,6 @@ private fun LongPressActionRow(
     dragModifier: Modifier = Modifier,
 ) {
     ListItem(
-        headlineContent = { Text(stringResource(action.titleRes)) },
         supportingContent = { Text(supportingText) },
         trailingContent = {
             if (showDragHandle) {
@@ -342,7 +341,9 @@ private fun LongPressActionRow(
                 )
             }
         },
-    )
+    ) {
+        Text(stringResource(action.titleRes))
+    }
 }
 
 @Composable
