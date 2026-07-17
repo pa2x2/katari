@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.network.interceptor
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Looper
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
@@ -33,20 +34,12 @@ class CloudflareInterceptor(
     private val executor = ContextCompat.getMainExecutor(context)
     private val challengeCoordinator = CloudflareChallengeCoordinator()
 
-    override fun shouldIntercept(response: Response): Boolean {
-        // Check if Cloudflare anti-bot is on
-        return if (response.code in ERROR_CODES && response.header("Server") in SERVER_CHECK) {
-            val document = Jsoup.parse(
-                response.peekBody(Long.MAX_VALUE).string(),
-                response.request.url.toString(),
-            )
+    override fun prepareRequest(request: Request): Request {
+        return request.withCloudflareRequestSnapshot()
+    }
 
-            // solve with webview only on captcha, not on geo block
-            document.getElementById("challenge-error-title") != null ||
-                document.getElementById("challenge-error-text") != null
-        } else {
-            false
-        }
+    override fun shouldIntercept(response: Response): Boolean {
+        return response.isCloudflareChallenge()
     }
 
     override fun intercept(
@@ -54,30 +47,48 @@ class CloudflareInterceptor(
         request: Request,
         response: Response,
     ): Response {
-        val challengedClearance = response.request.cloudflareClearanceValue()
+        var challengeRequest = response.request
+        var sentRequest = challengeRequest.cloudflareSentRequest()
         response.close()
 
         return try {
-            challengeCoordinator.withLock(request.url) {
-                val currentClearance = cookieManager.get(request.url)
-                    .firstOrNull { it.name == "cf_clearance" }
+            repeat(MAX_CHALLENGE_SOLVE_ATTEMPTS) {
+                val challengedClearance = sentRequest
+                    ?.takeIf { it.url == challengeRequest.url }
+                    ?.clearance
+                challengeCoordinator.solve(challengeRequest.url, challengedClearance) {
+                    val clearanceBeforeSolve = cookieManager.cloudflareClearance(challengeRequest.url)
 
-                // Another request may have solved the same Cloudflare zone while this one waited.
-                // Retry with that clearance instead of deleting it and opening another WebView.
-                if (shouldReuseCloudflareClearance(challengedClearance, currentClearance)) {
-                    return@withLock chain.proceed(request)
+                    // Another request may have solved this challenge generation before this
+                    // request entered the coordinator. Validate that clearance before opening
+                    // another WebView.
+                    if (!shouldReuseCloudflareClearance(sentRequest, challengeRequest.url, clearanceBeforeSolve)) {
+                        cookieManager.remove(challengeRequest.url, COOKIE_NAMES, 0)
+                        resolveWithWebView(challengeRequest, clearanceBeforeSolve)
+                    }
                 }
 
-                cookieManager.remove(request.url, COOKIE_NAMES, 0)
-                resolveWithWebView(request, currentClearance)
+                val retryResponse = chain.proceed(request.withCloudflareRequestSnapshot())
+                if (!shouldIntercept(retryResponse)) {
+                    return retryResponse
+                }
 
-                chain.proceed(request)
+                challengeRequest = retryResponse.request
+                sentRequest = challengeRequest.cloudflareSentRequest()
+                retryResponse.close()
             }
+
+            throw CloudflareBypassException()
         }
         // Because OkHttp's enqueue only handles IOExceptions, wrap the exception so that
         // we don't crash the entire app
         catch (e: CloudflareBypassException) {
             throw IOException(context.stringResource(MR.strings.information_cloudflare_bypass_failure), e)
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+            throw IOException(e)
+        } catch (e: IOException) {
+            throw e
         } catch (e: Exception) {
             throw IOException(e)
         }
@@ -85,15 +96,17 @@ class CloudflareInterceptor(
 
     @SuppressLint("SetJavaScriptEnabled")
     private fun resolveWithWebView(originalRequest: Request, oldCookie: Cookie?) {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            throw CloudflareBypassException()
+        }
+
         // We need to lock this thread until the WebView finds the challenge solution url, because
         // OkHttp doesn't support asynchronous interceptors.
         val latch = CountDownLatch(1)
 
         var webview: WebView? = null
 
-        var challengeFound = false
         var cloudflareBypassed = false
-        var isWebViewOutdated = false
 
         val origRequestUrl = originalRequest.url.toString()
         val headers = parseHeaders(originalRequest.headers)
@@ -113,11 +126,6 @@ class CloudflareInterceptor(
                         cloudflareBypassed = true
                         latch.countDown()
                     }
-
-                    if (url == origRequestUrl && !challengeFound) {
-                        // The first request didn't return the challenge, abort.
-                        latch.countDown()
-                    }
                 }
 
                 override fun onReceivedHttpError(
@@ -126,10 +134,14 @@ class CloudflareInterceptor(
                     errorResponse: WebResourceResponse?,
                 ) {
                     if (request?.isForMainFrame == true) {
-                        if (errorResponse?.statusCode in ERROR_CODES) {
-                            // Found the Cloudflare challenge page.
-                            challengeFound = true
-                        } else {
+                        val isChallengeResponse = errorResponse?.statusCode in ERROR_CODES ||
+                            errorResponse?.responseHeaders
+                                ?.entries
+                                ?.any { (name, value) ->
+                                    name.equals("cf-mitigated", ignoreCase = true) &&
+                                        value.equals("challenge", ignoreCase = true)
+                                } == true
+                        if (!isChallengeResponse) {
                             // Unlock thread, the challenge wasn't found.
                             latch.countDown()
                         }
@@ -140,11 +152,16 @@ class CloudflareInterceptor(
             webview.loadUrl(origRequestUrl, headers)
         }
 
-        latch.awaitFor30Seconds()
+        try {
+            latch.awaitFor30Seconds()
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+            throw e
+        }
 
         executor.execute {
-            if (!cloudflareBypassed) {
-                isWebViewOutdated = webview?.isOutdated() == true
+            if (!cloudflareBypassed && webview?.isOutdated() == true) {
+                context.toast(MR.strings.information_webview_outdated, Toast.LENGTH_LONG)
             }
 
             webview?.run {
@@ -155,39 +172,94 @@ class CloudflareInterceptor(
 
         // Throw exception if we failed to bypass Cloudflare
         if (!cloudflareBypassed) {
-            // Prompt user to update WebView if it seems too outdated
-            if (isWebViewOutdated) {
-                context.toast(MR.strings.information_webview_outdated, Toast.LENGTH_LONG)
-            }
-
             throw CloudflareBypassException()
         }
     }
 }
 
 private val ERROR_CODES = listOf(403, 503)
-private val SERVER_CHECK = arrayOf("cloudflare-nginx", "cloudflare")
+private const val MAX_LEGACY_CHALLENGE_BODY_BYTES = 64L * 1024
+private const val MAX_CHALLENGE_SOLVE_ATTEMPTS = 2
+private val SERVER_CHECK = setOf("cloudflare-nginx", "cloudflare")
 private val COOKIE_NAMES = listOf("cf_clearance")
 
 private class CloudflareBypassException : Exception()
 
+internal class CloudflareRequestSnapshotInterceptor : Interceptor {
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val request = chain.request()
+        request.tag(CloudflareRequestState::class.java)?.sentRequest = CloudflareSentRequest(
+            url = request.url,
+            clearance = request.cloudflareClearanceValue(),
+        )
+        return chain.proceed(request)
+    }
+}
+
+internal class CloudflareRequestState {
+    @Volatile
+    var sentRequest: CloudflareSentRequest? = null
+}
+
+internal data class CloudflareSentRequest(
+    val url: HttpUrl,
+    val clearance: String?,
+)
+
+internal fun Request.withCloudflareRequestSnapshot(): Request = newBuilder()
+    .tag(CloudflareRequestState::class.java, CloudflareRequestState())
+    .build()
+
+internal fun Request.cloudflareSentRequest(): CloudflareSentRequest? =
+    tag(CloudflareRequestState::class.java)?.sentRequest
+
+internal fun Response.isCloudflareChallenge(): Boolean {
+    if (header("cf-mitigated").equals("challenge", ignoreCase = true)) {
+        return true
+    }
+
+    val isLegacyCloudflareResponse = code in ERROR_CODES &&
+        SERVER_CHECK.any { server -> header("Server").equals(server, ignoreCase = true) }
+    if (!isLegacyCloudflareResponse) {
+        return false
+    }
+
+    val document = Jsoup.parse(
+        peekBody(MAX_LEGACY_CHALLENGE_BODY_BYTES).string(),
+        request.url.toString(),
+    )
+
+    return document.getElementById("challenge-error-title") != null ||
+        document.getElementById("challenge-error-text") != null
+}
+
 internal class CloudflareChallengeCoordinator(
     private val zoneFor: (HttpUrl) -> String = { it.topPrivateDomain() ?: it.host },
 ) {
-    private val locks = ConcurrentHashMap<String, LockEntry>()
+    private val locks = ConcurrentHashMap<ChallengeKey, LockEntry>()
 
-    fun <T> withLock(url: HttpUrl, block: () -> T): T {
-        val zone = zoneFor(url)
-        val entry = locks.compute(zone) { _, current ->
+    fun solve(url: HttpUrl, challengedClearance: String? = null, block: () -> Unit) {
+        val challenge = ChallengeKey(zoneFor(url), challengedClearance)
+        val entry = locks.compute(challenge) { _, current ->
             (current ?: LockEntry()).also { it.users++ }
         }!!
 
-        return try {
+        try {
             synchronized(entry.monitor) {
-                block()
+                if (!entry.completed) {
+                    try {
+                        block()
+                        entry.completed = true
+                    } catch (e: Exception) {
+                        entry.failure = e
+                        entry.completed = true
+                    }
+                }
+
+                entry.failure?.let { throw it }
             }
         } finally {
-            locks.computeIfPresent(zone) { _, current ->
+            locks.computeIfPresent(challenge) { _, current ->
                 check(current === entry)
                 current.users--
                 current.takeIf { it.users > 0 }
@@ -198,7 +270,18 @@ internal class CloudflareChallengeCoordinator(
     private class LockEntry(
         val monitor: Any = Any(),
         var users: Int = 0,
+        var completed: Boolean = false,
+        var failure: Exception? = null,
     )
+
+    private data class ChallengeKey(
+        val zone: String,
+        val challengedClearance: String?,
+    )
+}
+
+private fun AndroidCookieJar.cloudflareClearance(url: HttpUrl): Cookie? {
+    return get(url).firstOrNull { it.name == "cf_clearance" }
 }
 
 internal fun Request.cloudflareClearanceValue(): String? = headers.values("Cookie")
@@ -211,6 +294,9 @@ internal fun Request.cloudflareClearanceValue(): String? = headers.values("Cooki
     ?.ifBlank { null }
 
 internal fun shouldReuseCloudflareClearance(
-    challengedClearance: String?,
+    sentRequest: CloudflareSentRequest?,
+    challengeUrl: HttpUrl,
     currentClearance: Cookie?,
-): Boolean = currentClearance != null && currentClearance.value != challengedClearance
+): Boolean = sentRequest?.url == challengeUrl &&
+    currentClearance != null &&
+    currentClearance.value != sentRequest.clearance

@@ -61,6 +61,7 @@ dependencies {
     implementation(libs.quickJs)
 
     testImplementation(libs.bundles.test)
+    testImplementation(libs.okhttp.mockwebserver3)
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 
