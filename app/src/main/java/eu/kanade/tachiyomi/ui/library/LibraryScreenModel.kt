@@ -661,13 +661,14 @@ class LibraryScreenModel(
      * Queues the amount specified of unread chapters from the list of selected entries.
      */
     fun performDownloadAction(action: DownloadAction) {
-        downloadBulkDownloadCandidates(action)
+        val entryIds = selectedActionEntryIds(state.value.selectedLibraryItems)
+        downloadBulkDownloadCandidates(action, entryIds)
         clearSelection()
     }
 
-    private fun downloadBulkDownloadCandidates(action: DownloadAction) {
+    private fun downloadBulkDownloadCandidates(action: DownloadAction, entryIds: List<Long>) {
         screenModelScope.launchNonCancellable {
-            val entries = getSelectedActionEntries()
+            val entries = getActionEntries(entryIds)
             entries.forEach { entry ->
                 when (
                     val result = entryDownloadInteraction.resolveBulkDownloadCandidates(
@@ -698,8 +699,9 @@ class LibraryScreenModel(
      * Marks selected entries' chapters/episodes read/watch status.
      */
     fun markReadSelection(read: Boolean) {
+        val entryIds = selectedActionEntryIds(state.value.selectedLibraryItems)
         screenModelScope.launchNonCancellable {
-            val entries = getSelectedActionEntries()
+            val entries = getActionEntries(entryIds)
             entries.forEach { entry ->
                 val chapters = entryChapterRepository.getChaptersByEntryIdAwait(entry.id)
                 if (chapters.isNotEmpty()) {
@@ -1083,10 +1085,11 @@ class LibraryScreenModel(
     }
 
     private suspend fun getSelectedActionEntries(): List<Entry> {
-        return state.value.selectedLibraryItems
-            .flatMap { it.memberEntryIds }
-            .map(LibraryItemKey::id)
-            .distinct()
+        return getActionEntries(selectedActionEntryIds(state.value.selectedLibraryItems))
+    }
+
+    private suspend fun getActionEntries(entryIds: List<Long>): List<Entry> {
+        return entryIds
             .mapNotNull { getEntry.await(it) }
             .distinctBy { it.id }
     }
@@ -1412,6 +1415,13 @@ internal fun buildMergeDialog(selection: List<LibraryItem>): LibraryScreenModel.
         targetId = existingMerge?.entry?.id ?: entries.first().id,
         targetLocked = false,
     )
+}
+
+internal fun selectedActionEntryIds(selection: List<LibraryItem>): List<Long> {
+    return selection
+        .flatMap(LibraryItem::memberEntryIds)
+        .map(LibraryItemKey::id)
+        .distinct()
 }
 
 private fun LibraryItem.toMergeEntries(isFromExistingMerge: Boolean): List<LibraryScreenModel.MergeEntry> {

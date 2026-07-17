@@ -1,0 +1,97 @@
+package eu.kanade.tachiyomi.ui.library
+
+import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
+import eu.kanade.tachiyomi.source.entry.EntryType
+import io.kotest.matchers.shouldBe
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.library.model.LibraryItem
+import tachiyomi.domain.library.model.LibraryItemKey
+import tachiyomi.domain.library.model.ProgressState
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.io.path.readText
+
+class LibrarySelectionActionTest {
+
+    @Test
+    fun `selection actions preserve distinct merged member ids`() {
+        selectedActionEntryIds(
+            listOf(
+                libraryItem(id = 1L, memberIds = listOf(1L, 2L)),
+                libraryItem(id = 2L),
+                libraryItem(id = 3L),
+            ),
+        ) shouldBe listOf(1L, 2L, 3L)
+    }
+
+    @Test
+    fun `selection is captured before asynchronous actions clear it`() {
+        val source = repositoryRoot()
+            .resolve("app/src/main/java/eu/kanade/tachiyomi/ui/library/LibraryScreenModel.kt")
+            .readText()
+
+        assertTrue(
+            source.contains(
+                """
+                fun performDownloadAction(action: DownloadAction) {
+                        val entryIds = selectedActionEntryIds(state.value.selectedLibraryItems)
+                        downloadBulkDownloadCandidates(action, entryIds)
+                        clearSelection()
+                    }
+                """.trimIndent(),
+            ),
+        )
+        assertTrue(
+            source.contains(
+                """
+                fun markReadSelection(read: Boolean) {
+                        val entryIds = selectedActionEntryIds(state.value.selectedLibraryItems)
+                        screenModelScope.launchNonCancellable {
+                            val entries = getActionEntries(entryIds)
+                """.trimIndent(),
+            ),
+        )
+    }
+
+    private fun repositoryRoot(): Path {
+        return generateSequence(Path.of("").toAbsolutePath()) { it.parent }
+            .first { Files.exists(it.resolve("settings.gradle.kts")) }
+    }
+}
+
+private fun libraryItem(id: Long, memberIds: List<Long> = listOf(id)): LibraryItem {
+    val entry = Entry.create().copy(
+        id = id,
+        source = 1L,
+        favorite = true,
+        title = "Entry $id",
+        type = EntryType.ANIME,
+    )
+    return LibraryItem(
+        entry = entry,
+        categories = listOf(0L),
+        sourceName = "Source",
+        sourceLanguage = "en",
+        sourceItemOrientation = EntryItemOrientation.VERTICAL,
+        displaySourceId = 1L,
+        sourceIds = setOf(1L),
+        isLocal = false,
+        isMerged = memberIds.size > 1,
+        memberEntryIds = memberIds.map { LibraryItemKey(EntryType.ANIME, it) },
+        memberEntries = listOf(entry),
+        progress = ProgressState(
+            totalCount = 0L,
+            consumedCount = 0L,
+            inProgressItemId = null,
+            inProgressFraction = null,
+            hasStarted = false,
+            continueMode = ProgressState.ContinueMode.TARGET_AVAILABLE,
+        ),
+        latestUpload = 0L,
+        lastRead = 0L,
+        continueEntryId = null,
+        downloadCount = 0,
+    )
+}
