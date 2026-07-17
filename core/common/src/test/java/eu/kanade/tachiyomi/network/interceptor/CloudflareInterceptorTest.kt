@@ -153,12 +153,17 @@ class CloudflareInterceptorTest {
 
     @Test
     fun `same zone callers share one solve`() {
-        val coordinator = CloudflareChallengeCoordinator(zoneFor = { "example.com" })
         val executor = Executors.newFixedThreadPool(2)
         val solveStarted = CountDownLatch(1)
         val releaseSolve = CountDownLatch(1)
-        val secondStarted = CountDownLatch(1)
+        val secondRegistered = CountDownLatch(1)
         val solveCount = AtomicInteger()
+        val coordinator = CloudflareChallengeCoordinator(
+            zoneFor = { "example.com" },
+            onRegistered = { url ->
+                if (url.host == "b.example.com") secondRegistered.countDown()
+            },
+        )
 
         try {
             val first = executor.submit {
@@ -171,13 +176,11 @@ class CloudflareInterceptorTest {
             assertTrue(solveStarted.await(5, TimeUnit.SECONDS))
 
             val second = executor.submit {
-                secondStarted.countDown()
                 coordinator.solve("https://b.example.com".toHttpUrl()) {
                     solveCount.incrementAndGet()
                 }
             }
-            assertTrue(secondStarted.await(5, TimeUnit.SECONDS))
-            Thread.sleep(100)
+            assertTrue(secondRegistered.await(5, TimeUnit.SECONDS))
             releaseSolve.countDown()
 
             first.get(5, TimeUnit.SECONDS)
@@ -191,13 +194,18 @@ class CloudflareInterceptorTest {
 
     @Test
     fun `same zone callers share solve failure and a later call can retry`() {
-        val coordinator = CloudflareChallengeCoordinator(zoneFor = { "example.com" })
         val executor = Executors.newFixedThreadPool(2)
         val solveStarted = CountDownLatch(1)
         val releaseSolve = CountDownLatch(1)
-        val secondStarted = CountDownLatch(1)
+        val secondRegistered = CountDownLatch(1)
         val failure = IllegalStateException("solve failed")
         val solveCount = AtomicInteger()
+        val coordinator = CloudflareChallengeCoordinator(
+            zoneFor = { "example.com" },
+            onRegistered = { url ->
+                if (url.host == "b.example.com") secondRegistered.countDown()
+            },
+        )
 
         try {
             val first = executor.submit {
@@ -211,13 +219,11 @@ class CloudflareInterceptorTest {
             assertTrue(solveStarted.await(5, TimeUnit.SECONDS))
 
             val second = executor.submit {
-                secondStarted.countDown()
                 coordinator.solve("https://b.example.com".toHttpUrl()) {
                     solveCount.incrementAndGet()
                 }
             }
-            assertTrue(secondStarted.await(5, TimeUnit.SECONDS))
-            Thread.sleep(100)
+            assertTrue(secondRegistered.await(5, TimeUnit.SECONDS))
             releaseSolve.countDown()
 
             val firstFailure = assertThrows(ExecutionException::class.java) {
@@ -274,32 +280,46 @@ class CloudflareInterceptorTest {
     }
 
     @Test
-    fun `different clearance generations solve independently`() {
-        val coordinator = CloudflareChallengeCoordinator(zoneFor = { "example.com" })
+    fun `interrupted solve lets a registered waiter take over`() {
         val executor = Executors.newFixedThreadPool(2)
         val firstStarted = CountDownLatch(1)
         val releaseFirst = CountDownLatch(1)
-        val secondFinished = CountDownLatch(1)
+        val secondRegistered = CountDownLatch(1)
+        val solveCount = AtomicInteger()
+        val coordinator = CloudflareChallengeCoordinator(
+            zoneFor = { "example.com" },
+            onRegistered = { url ->
+                if (url.host == "b.example.com") secondRegistered.countDown()
+            },
+        )
 
         try {
             val first = executor.submit {
-                coordinator.solve("https://example.com".toHttpUrl(), challengedClearance = "old") {
+                coordinator.solve("https://a.example.com".toHttpUrl()) {
+                    solveCount.incrementAndGet()
                     firstStarted.countDown()
                     assertTrue(releaseFirst.await(5, TimeUnit.SECONDS))
+                    throw InterruptedException("solve interrupted")
                 }
             }
             assertTrue(firstStarted.await(5, TimeUnit.SECONDS))
 
             val second = executor.submit {
-                coordinator.solve("https://example.com".toHttpUrl(), challengedClearance = "new") {
-                    secondFinished.countDown()
+                coordinator.solve("https://b.example.com".toHttpUrl()) {
+                    assertFalse(Thread.currentThread().isInterrupted)
+                    solveCount.incrementAndGet()
                 }
             }
 
-            assertTrue(secondFinished.await(5, TimeUnit.SECONDS))
-            second.get(5, TimeUnit.SECONDS)
+            assertTrue(secondRegistered.await(5, TimeUnit.SECONDS))
             releaseFirst.countDown()
-            first.get(5, TimeUnit.SECONDS)
+
+            val firstFailure = assertThrows(ExecutionException::class.java) {
+                first.get(5, TimeUnit.SECONDS)
+            }
+            assertTrue(firstFailure.cause is InterruptedException)
+            second.get(5, TimeUnit.SECONDS)
+            assertEquals(2, solveCount.get())
         } finally {
             releaseFirst.countDown()
             executor.shutdownNow()

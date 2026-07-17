@@ -53,10 +53,7 @@ class CloudflareInterceptor(
 
         return try {
             repeat(MAX_CHALLENGE_SOLVE_ATTEMPTS) {
-                val challengedClearance = sentRequest
-                    ?.takeIf { it.url == challengeRequest.url }
-                    ?.clearance
-                challengeCoordinator.solve(challengeRequest.url, challengedClearance) {
+                challengeCoordinator.solve(challengeRequest.url) {
                     val clearanceBeforeSolve = cookieManager.cloudflareClearance(challengeRequest.url)
 
                     // Another request may have solved this challenge generation before this
@@ -152,21 +149,20 @@ class CloudflareInterceptor(
             webview.loadUrl(origRequestUrl, headers)
         }
 
+        var waitCompleted = false
         try {
             latch.awaitFor30Seconds()
-        } catch (e: InterruptedException) {
-            Thread.currentThread().interrupt()
-            throw e
-        }
+            waitCompleted = true
+        } finally {
+            executor.execute {
+                if (waitCompleted && !cloudflareBypassed && webview?.isOutdated() == true) {
+                    context.toast(MR.strings.information_webview_outdated, Toast.LENGTH_LONG)
+                }
 
-        executor.execute {
-            if (!cloudflareBypassed && webview?.isOutdated() == true) {
-                context.toast(MR.strings.information_webview_outdated, Toast.LENGTH_LONG)
-            }
-
-            webview?.run {
-                stopLoading()
-                destroy()
+                webview?.run {
+                    stopLoading()
+                    destroy()
+                }
             }
         }
 
@@ -235,21 +231,25 @@ internal fun Response.isCloudflareChallenge(): Boolean {
 
 internal class CloudflareChallengeCoordinator(
     private val zoneFor: (HttpUrl) -> String = { it.topPrivateDomain() ?: it.host },
+    private val onRegistered: (HttpUrl) -> Unit = {},
 ) {
-    private val locks = ConcurrentHashMap<ChallengeKey, LockEntry>()
+    private val locks = ConcurrentHashMap<String, LockEntry>()
 
-    fun solve(url: HttpUrl, challengedClearance: String? = null, block: () -> Unit) {
-        val challenge = ChallengeKey(zoneFor(url), challengedClearance)
-        val entry = locks.compute(challenge) { _, current ->
+    fun solve(url: HttpUrl, block: () -> Unit) {
+        val zone = zoneFor(url)
+        val entry = locks.compute(zone) { _, current ->
             (current ?: LockEntry()).also { it.users++ }
         }!!
 
         try {
+            onRegistered(url)
             synchronized(entry.monitor) {
                 if (!entry.completed) {
                     try {
                         block()
                         entry.completed = true
+                    } catch (e: InterruptedException) {
+                        throw e
                     } catch (e: Exception) {
                         entry.failure = e
                         entry.completed = true
@@ -259,7 +259,7 @@ internal class CloudflareChallengeCoordinator(
                 entry.failure?.let { throw it }
             }
         } finally {
-            locks.computeIfPresent(challenge) { _, current ->
+            locks.computeIfPresent(zone) { _, current ->
                 check(current === entry)
                 current.users--
                 current.takeIf { it.users > 0 }
@@ -272,11 +272,6 @@ internal class CloudflareChallengeCoordinator(
         var users: Int = 0,
         var completed: Boolean = false,
         var failure: Exception? = null,
-    )
-
-    private data class ChallengeKey(
-        val zone: String,
-        val challengedClearance: String?,
     )
 }
 
