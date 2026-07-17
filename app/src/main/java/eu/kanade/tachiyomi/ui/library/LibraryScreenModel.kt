@@ -654,7 +654,7 @@ class LibraryScreenModel(
     }
 
     private suspend fun getCategoriesForItem(item: LibraryItem): List<Category> {
-        return getCategories.await(item.entry.id)
+        return categoriesForLibraryItem(item, getCategories::await)
     }
 
     /**
@@ -754,15 +754,13 @@ class LibraryScreenModel(
      */
     fun setEntryCategories(items: List<LibraryItem>, addCategories: List<Long>, removeCategories: List<Long>) {
         screenModelScope.launchNonCancellable {
-            items.forEach { item ->
-                val categoryIds = getCategories.await(item.entry.id)
-                    .map { it.id }
-                    .subtract(removeCategories.toSet())
-                    .plus(addCategories)
-                    .toList()
-
-                setEntryCategories.await(item.entry.id, categoryIds)
-            }
+            updateLibraryItemCategories(
+                items = items,
+                addCategories = addCategories,
+                removeCategories = removeCategories,
+                getCategoryIds = { entryId -> getCategories.await(entryId).map(Category::id) },
+                setCategoryIds = setEntryCategories::await,
+            )
         }
     }
 
@@ -1421,6 +1419,34 @@ internal fun selectedActionEntryIds(selection: List<LibraryItem>): List<Long> {
         .flatMap(LibraryItem::memberEntryIds)
         .map(LibraryItemKey::id)
         .distinct()
+}
+
+internal suspend fun categoriesForLibraryItem(
+    item: LibraryItem,
+    getCategories: suspend (Long) -> List<Category>,
+): List<Category> {
+    return item.memberEntryIds
+        .map(LibraryItemKey::id)
+        .distinct()
+        .flatMap { getCategories(it) }
+        .distinctBy(Category::id)
+}
+
+internal suspend fun updateLibraryItemCategories(
+    items: List<LibraryItem>,
+    addCategories: List<Long>,
+    removeCategories: List<Long>,
+    getCategoryIds: suspend (Long) -> List<Long>,
+    setCategoryIds: suspend (Long, List<Long>) -> Unit,
+) {
+    val removed = removeCategories.toSet()
+    selectedActionEntryIds(items).forEach { entryId ->
+        val categoryIds = getCategoryIds(entryId)
+            .subtract(removed)
+            .plus(addCategories)
+            .toList()
+        setCategoryIds(entryId, categoryIds)
+    }
 }
 
 private fun LibraryItem.toMergeEntries(isFromExistingMerge: Boolean): List<LibraryScreenModel.MergeEntry> {
