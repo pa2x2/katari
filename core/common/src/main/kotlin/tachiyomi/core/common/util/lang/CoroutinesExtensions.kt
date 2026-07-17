@@ -49,8 +49,13 @@ fun CoroutineScope.launchUI(block: suspend CoroutineScope.() -> Unit): Job =
 fun CoroutineScope.launchIO(block: suspend CoroutineScope.() -> Unit): Job =
     launch(Dispatchers.IO, block = block)
 
+/**
+ * Enters the non-cancellable IO context before returning so immediate owner cancellation cannot skip [block].
+ */
 fun CoroutineScope.launchNonCancellable(block: suspend CoroutineScope.() -> Unit): Job =
-    launchIO { withContext(NonCancellable, block) }
+    launch(start = CoroutineStart.UNDISPATCHED) {
+        withContext(NonCancellable + Dispatchers.IO, block)
+    }
 
 suspend fun <T> withUIContext(block: suspend CoroutineScope.() -> T) = withContext(
     Dispatchers.Main,

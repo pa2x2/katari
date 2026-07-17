@@ -323,8 +323,9 @@ private data class TrackStatusSelectorScreen(
         }
 
         fun setStatus() {
+            val selection = state.value.selection
             screenModelScope.launchNonCancellable {
-                tracker.setRemoteStatus(track.toDbTrack(), state.value.selection)
+                tracker.setRemoteStatus(track.toDbTrack(), selection)
             }
         }
 
@@ -384,8 +385,9 @@ private data class TrackChapterSelectorScreen(
         }
 
         fun setChapter() {
+            val selection = state.value.selection
             screenModelScope.launchNonCancellable {
-                tracker.setRemoteLastChapterRead(track.toDbTrack(), state.value.selection)
+                tracker.setRemoteLastChapterRead(track.toDbTrack(), selection)
             }
         }
 
@@ -438,8 +440,9 @@ private data class TrackScoreSelectorScreen(
         }
 
         fun setScore() {
+            val selection = state.value.selection
             screenModelScope.launchNonCancellable {
-                tracker.setRemoteScore(track.toDbTrack(), state.value.selection)
+                tracker.setRemoteScore(track.toDbTrack(), selection)
             }
         }
 
