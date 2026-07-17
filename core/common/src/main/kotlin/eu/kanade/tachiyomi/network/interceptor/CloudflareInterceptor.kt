@@ -244,19 +244,7 @@ internal class CloudflareChallengeCoordinator(
         try {
             onRegistered(url)
             synchronized(entry.monitor) {
-                if (!entry.completed) {
-                    try {
-                        block()
-                        entry.completed = true
-                    } catch (e: InterruptedException) {
-                        throw e
-                    } catch (e: Exception) {
-                        entry.failure = e
-                        entry.completed = true
-                    }
-                }
-
-                entry.failure?.let { throw it }
+                block()
             }
         } finally {
             locks.computeIfPresent(zone) { _, current ->
@@ -270,8 +258,6 @@ internal class CloudflareChallengeCoordinator(
     private class LockEntry(
         val monitor: Any = Any(),
         var users: Int = 0,
-        var completed: Boolean = false,
-        var failure: Exception? = null,
     )
 }
 

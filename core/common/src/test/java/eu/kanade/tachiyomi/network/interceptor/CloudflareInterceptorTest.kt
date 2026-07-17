@@ -152,11 +152,12 @@ class CloudflareInterceptorTest {
     }
 
     @Test
-    fun `same zone callers share one solve`() {
+    fun `same zone callers solve serially`() {
         val executor = Executors.newFixedThreadPool(2)
         val solveStarted = CountDownLatch(1)
         val releaseSolve = CountDownLatch(1)
         val secondRegistered = CountDownLatch(1)
+        val secondSolveStarted = CountDownLatch(1)
         val solveCount = AtomicInteger()
         val coordinator = CloudflareChallengeCoordinator(
             zoneFor = { "example.com" },
@@ -178,14 +179,16 @@ class CloudflareInterceptorTest {
             val second = executor.submit {
                 coordinator.solve("https://b.example.com".toHttpUrl()) {
                     solveCount.incrementAndGet()
+                    secondSolveStarted.countDown()
                 }
             }
             assertTrue(secondRegistered.await(5, TimeUnit.SECONDS))
+            assertFalse(secondSolveStarted.await(100, TimeUnit.MILLISECONDS))
             releaseSolve.countDown()
 
             first.get(5, TimeUnit.SECONDS)
             second.get(5, TimeUnit.SECONDS)
-            assertEquals(1, solveCount.get())
+            assertEquals(2, solveCount.get())
         } finally {
             releaseSolve.countDown()
             executor.shutdownNow()
@@ -193,7 +196,7 @@ class CloudflareInterceptorTest {
     }
 
     @Test
-    fun `same zone callers share solve failure and a later call can retry`() {
+    fun `same zone waiter can solve after the first caller fails`() {
         val executor = Executors.newFixedThreadPool(2)
         val solveStarted = CountDownLatch(1)
         val releaseSolve = CountDownLatch(1)
@@ -229,16 +232,8 @@ class CloudflareInterceptorTest {
             val firstFailure = assertThrows(ExecutionException::class.java) {
                 first.get(5, TimeUnit.SECONDS)
             }
-            val secondFailure = assertThrows(ExecutionException::class.java) {
-                second.get(5, TimeUnit.SECONDS)
-            }
             assertEquals(failure, firstFailure.cause)
-            assertEquals(failure, secondFailure.cause)
-            assertEquals(1, solveCount.get())
-
-            coordinator.solve("https://c.example.com".toHttpUrl()) {
-                solveCount.incrementAndGet()
-            }
+            second.get(5, TimeUnit.SECONDS)
             assertEquals(2, solveCount.get())
         } finally {
             releaseSolve.countDown()
