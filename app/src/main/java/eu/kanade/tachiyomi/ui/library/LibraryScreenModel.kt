@@ -872,12 +872,11 @@ class LibraryScreenModel(
     }
 
     fun openChangeCategoryDialog() {
+        val state = state.value
+        val items = state.selection.mapNotNull { state.libraryData.favoritesById[it] }
+        // Hide the default category because it has a different behavior than the ones from db.
+        val categories = state.libraryData.categories.filter { it.id != 0L }
         screenModelScope.launchIO {
-            val items = state.value.selection.mapNotNull { state.value.libraryData.favoritesById[it] }
-
-            // Hide the default category because it has a different behavior than the ones from db.
-            val categories = state.value.libraryData.categories.filter { it.id != 0L }
-
             // Get indexes of the common categories to preselect.
             val common = getCommonCategories(items)
             // Get indexes of the mix categories to preselect.
@@ -896,10 +895,12 @@ class LibraryScreenModel(
     }
 
     fun openDeleteEntriesDialog() {
+        val selectedItems = state.value.selectedLibraryItems
+        val entryIds = selectedActionEntryIds(selectedItems)
+        val containsMergedEntries = selectedItems.any(LibraryItem::isMerged)
         screenModelScope.launchIO {
-            val entries = getSelectedActionEntries()
+            val entries = getActionEntries(entryIds)
             val containsLocalEntries = entries.any { it.source == LocalSource.ID }
-            val containsMergedEntries = state.value.selectedLibraryItems.any { it.isMerged }
             mutableState.update {
                 it.copy(
                     dialog = Dialog.DeleteEntries(
@@ -935,13 +936,18 @@ class LibraryScreenModel(
 
     fun prepareMoveToProfile(profile: Profile, destinationCategoryId: Long?) {
         if (moveInProgress) return
+        val sourceProfileId = profileStore.currentProfileId
+        val selectedIds = state.value.selectedLibraryItems.map { it.entry.id }.distinct()
+        if (selectedIds.isEmpty()) return
         moveInProgress = true
         screenModelScope.launchNonCancellable {
             try {
-                val selectedIds = state.value.selectedLibraryItems.map { it.entry.id }
+                require(profileStore.currentProfileId == sourceProfileId) {
+                    "Active profile changed before the move"
+                }
                 val preview = entryProfileMoveService.preview(
                     EntryProfileMoveRequest(
-                        sourceProfileId = profileStore.currentProfileId,
+                        sourceProfileId = sourceProfileId,
                         destinationProfileId = profile.id,
                         destinationCategoryId = destinationCategoryId,
                         selectedVisibleEntryIds = selectedIds,
@@ -1017,12 +1023,9 @@ class LibraryScreenModel(
     }
 
     fun openMergeDialog() {
+        val selectedItems = state.value.selectedLibraryItems
+        if (!entryCapabilityInteraction.canMergeSelection(selectedItems.toEntryMergeCapabilityItems())) return
         screenModelScope.launchIO {
-            val selectedItems = state.value.selectedLibraryItems
-            if (!entryCapabilityInteraction.canMergeSelection(selectedItems.toEntryMergeCapabilityItems())) {
-                return@launchIO
-            }
-
             val dialog = buildMergeDialog(selectedItems) ?: return@launchIO
             mutableState.update {
                 it.copy(
@@ -1082,10 +1085,6 @@ class LibraryScreenModel(
 
     fun closeDialog() {
         mutableState.update { it.copy(dialog = null) }
-    }
-
-    private suspend fun getSelectedActionEntries(): List<Entry> {
-        return getActionEntries(selectedActionEntryIds(state.value.selectedLibraryItems))
     }
 
     private suspend fun getActionEntries(entryIds: List<Long>): List<Entry> {

@@ -55,6 +55,43 @@ class LibrarySelectionActionTest {
         )
     }
 
+    @Test
+    fun `dialog and move actions capture selection before dispatch`() {
+        val source = repositoryRoot()
+            .resolve("app/src/main/java/eu/kanade/tachiyomi/ui/library/LibraryScreenModel.kt")
+            .readText()
+
+        listOf(
+            """
+            fun openChangeCategoryDialog() {
+                    val state = state.value
+                    val items = state.selection.mapNotNull { state.libraryData.favoritesById[it] }
+                    // Hide the default category because it has a different behavior than the ones from db.
+                    val categories = state.libraryData.categories.filter { it.id != 0L }
+                    screenModelScope.launchIO {
+            """.trimIndent(),
+            """
+            fun openDeleteEntriesDialog() {
+                    val selectedItems = state.value.selectedLibraryItems
+                    val entryIds = selectedActionEntryIds(selectedItems)
+                    val containsMergedEntries = selectedItems.any(LibraryItem::isMerged)
+                    screenModelScope.launchIO {
+            """.trimIndent(),
+            """
+            fun prepareMoveToProfile(profile: Profile, destinationCategoryId: Long?) {
+                    if (moveInProgress) return
+                    val sourceProfileId = profileStore.currentProfileId
+                    val selectedIds = state.value.selectedLibraryItems.map { it.entry.id }.distinct()
+            """.trimIndent(),
+            """
+            fun openMergeDialog() {
+                    val selectedItems = state.value.selectedLibraryItems
+                    if (!entryCapabilityInteraction.canMergeSelection(selectedItems.toEntryMergeCapabilityItems())) return
+                    screenModelScope.launchIO {
+            """.trimIndent(),
+        ).forEach { expected -> assertTrue(source.contains(expected)) }
+    }
+
     private fun repositoryRoot(): Path {
         return generateSequence(Path.of("").toAbsolutePath()) { it.parent }
             .first { Files.exists(it.resolve("settings.gradle.kts")) }
