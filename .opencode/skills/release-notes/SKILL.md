@@ -28,8 +28,9 @@ Katari's changelog focused on behavior that differs from Mihon.
    `CHANGELOG.md`, pull-request references, tests, and commit messages as leads. Trace
    representative runtime and presentation paths before claiming user-visible behavior.
    When local history identifies an associated pull request, record its number and URL for
-   the corresponding outcome. Do not guess an association or require network access to find
-   one.
+   the corresponding outcome. Read the public pull-request metadata to verify the PR author's
+   GitHub login; this is read-only and must not change the pull request or release. Do not
+   guess a PR association or contributor login.
 5. Build a shortlist of release-note candidates by user-visible outcome, not by commit.
    Combine related commits into one outcome and discard duplicate, superseded, reverted,
    or implementation-only work. A large commit range may legitimately produce only a few
@@ -41,13 +42,13 @@ Katari's changelog focused on behavior that differs from Mihon.
    it with that feature under `Added`, `Changed`, or `Improved`, never under `Fixed`.
    Reserve `Fixed` for independently user-visible bugs or regressions outside a new
    feature's expected behavior.
-6. For every candidate, identify all contributors who materially contributed to that
-   outcome. Inspect commit authors and co-author trailers; use a verified GitHub login from
-   associated pull requests only when it is available without requiring GitHub access. Do
-   not infer a login from a display name or email, and do not credit merge, dependency, or
-   automation bots. When several commits or pull requests are combined into one outcome,
-   preserve the union of their contributors. If a contributor's GitHub login cannot be
-   verified, use their commit author name without an `@` rather than inventing a mention.
+6. Add contributor credit only for outcomes associated with pull requests. Use each PR
+   author's GitHub login from the verified PR metadata; do not infer a login from a commit
+   author name, email, or branch name. When one outcome combines several pull requests,
+   preserve the union of their PR authors. Do not credit merge, dependency, or automation
+   bots. If an associated PR's author login cannot be verified, stop and ask the user rather
+   than inventing a mention. Outcomes without an associated PR receive no contributor
+   credit, even when their commit authors are known.
 7. Keep a candidate only when the verified final behavior gives users something useful to
    know: a feature they can use, a meaningful behavior or workflow change, a user-facing
    fix, a compatibility change that requires action, or a removal they may notice. If a
@@ -76,13 +77,13 @@ Katari's changelog focused on behavior that differs from Mihon.
    developer changes only when they alter Katari's public SDK or compatibility contract.
    Do not create one bullet per commit or pull request, include commit hashes, or add a
    catch-all list of minor/internal changes. Prefer fewer, broader bullets that each
-   communicate one distinct and useful outcome. End every bullet with contributor credit in
-   the form `(by @user)` or `(by @user1, @user2)`, using the verified contributor set for
-   that outcome. Use the verified commit author name in the same form when no GitHub login
-   is available. If an associated pull request was verified from local history, append its
-   Markdown link after the contributor credit, in the form `([#123](https://github.com/OWNER/REPO/pull/123))`.
-   Append every associated PR link when one outcome combines multiple pull requests. Omit
-   the link when no associated pull request is present or its URL cannot be verified.
+   communicate one distinct and useful outcome. For an outcome with an associated pull
+   request, end its bullet with the verified PR-author credit in the form `(by @user)` or
+   `(by @user1, @user2)`, immediately followed in the same paragraph by the PR Markdown link
+   in the form `([#123](https://github.com/OWNER/REPO/pull/123))`. Never place a pull-request
+   link on a standalone continuation line. Append every associated PR link when one outcome
+   combines multiple pull requests. For an outcome without an associated PR, omit both the
+   contributor credit and PR link; never use a commit-author display name as a substitute.
 3. Update `CHANGELOG.md` in the worktree. Insert the complete release section in descending
    version order without changing existing release text. Update `[Unreleased]` to compare
    the target tag with `HEAD`, and add or update the target version's release link using the

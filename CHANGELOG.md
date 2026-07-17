@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.3.0] - 2026-07-17
+
+### Added
+
+- Added source-provided related entries to entry screens for compatible Entry Source and
+  Keiyoushi manga extensions.
+  (by @pa2x2) ([#2](https://github.com/katariapp/katari/pull/2))
+- Added individual, bulk, and automatic BOOK downloads with Downloads-screen management,
+  offline reading, and post-read cleanup preferences.
+  (by @pa2x2) ([#3](https://github.com/katariapp/katari/pull/3))
+
+### Removed
+
+- Removed unused advertising ID, AdServices attribution, and Play install-referrer
+  permissions from telemetry-enabled builds.
+
+### Fixed
+
+- Prevented the final line of paginated web-novel pages from extending beyond the page.
+- Preserved selected library entries while bulk and profile actions were dispatched, and
+  applied category state and changes to every merged member.
+  (by @pa2x2) ([#5](https://github.com/katariapp/katari/pull/5))
+- Kept long anime download-option lists scrollable while leaving the dialog actions
+  accessible.
+
+### Other
+
+- Updated Entry SDK to 2.2.0 with the optional `RelatedEntriesSource` capability (by @pa2x2) ([#2](https://github.com/katariapp/katari/pull/2))
+
 ## [1.2.2] - 2026-07-16
 
 ### Fixed
@@ -125,7 +154,8 @@ Based on [Mihon v0.20.1](https://github.com/mihonapp/mihon/releases/tag/v0.20.1)
 - Rebranded the application as Katari with its own package identity, visual
   identity, release pipeline, and documentation.
 
-[Unreleased]: https://github.com/katariapp/katari/compare/v1.2.2...HEAD
+[Unreleased]: https://github.com/katariapp/katari/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/katariapp/katari/releases/tag/v1.3.0
 [1.2.2]: https://github.com/katariapp/katari/releases/tag/v1.2.2
 [1.2.1]: https://github.com/katariapp/katari/releases/tag/v1.2.1
 [1.2.0]: https://github.com/katariapp/katari/releases/tag/v1.2.0
