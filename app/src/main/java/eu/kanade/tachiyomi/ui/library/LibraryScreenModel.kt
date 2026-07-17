@@ -654,20 +654,21 @@ class LibraryScreenModel(
     }
 
     private suspend fun getCategoriesForItem(item: LibraryItem): List<Category> {
-        return getCategories.await(item.entry.id)
+        return categoriesForLibraryItem(item, getCategories::await)
     }
 
     /**
      * Queues the amount specified of unread chapters from the list of selected entries.
      */
     fun performDownloadAction(action: DownloadAction) {
-        downloadBulkDownloadCandidates(action)
+        val entryIds = selectedActionEntryIds(state.value.selectedLibraryItems)
+        downloadBulkDownloadCandidates(action, entryIds)
         clearSelection()
     }
 
-    private fun downloadBulkDownloadCandidates(action: DownloadAction) {
+    private fun downloadBulkDownloadCandidates(action: DownloadAction, entryIds: List<Long>) {
         screenModelScope.launchNonCancellable {
-            val entries = getSelectedActionEntries()
+            val entries = getActionEntries(entryIds)
             entries.forEach { entry ->
                 when (
                     val result = entryDownloadInteraction.resolveBulkDownloadCandidates(
@@ -698,8 +699,9 @@ class LibraryScreenModel(
      * Marks selected entries' chapters/episodes read/watch status.
      */
     fun markReadSelection(read: Boolean) {
+        val entryIds = selectedActionEntryIds(state.value.selectedLibraryItems)
         screenModelScope.launchNonCancellable {
-            val entries = getSelectedActionEntries()
+            val entries = getActionEntries(entryIds)
             entries.forEach { entry ->
                 val chapters = entryChapterRepository.getChaptersByEntryIdAwait(entry.id)
                 if (chapters.isNotEmpty()) {
@@ -752,15 +754,13 @@ class LibraryScreenModel(
      */
     fun setEntryCategories(items: List<LibraryItem>, addCategories: List<Long>, removeCategories: List<Long>) {
         screenModelScope.launchNonCancellable {
-            items.forEach { item ->
-                val categoryIds = getCategories.await(item.entry.id)
-                    .map { it.id }
-                    .subtract(removeCategories.toSet())
-                    .plus(addCategories)
-                    .toList()
-
-                setEntryCategories.await(item.entry.id, categoryIds)
-            }
+            updateLibraryItemCategories(
+                items = items,
+                addCategories = addCategories,
+                removeCategories = removeCategories,
+                getCategoryIds = { entryId -> getCategories.await(entryId).map(Category::id) },
+                setCategoryIds = setEntryCategories::await,
+            )
         }
     }
 
@@ -870,12 +870,11 @@ class LibraryScreenModel(
     }
 
     fun openChangeCategoryDialog() {
+        val state = state.value
+        val items = state.selection.mapNotNull { state.libraryData.favoritesById[it] }
+        // Hide the default category because it has a different behavior than the ones from db.
+        val categories = state.libraryData.categories.filter { it.id != 0L }
         screenModelScope.launchIO {
-            val items = state.value.selection.mapNotNull { state.value.libraryData.favoritesById[it] }
-
-            // Hide the default category because it has a different behavior than the ones from db.
-            val categories = state.value.libraryData.categories.filter { it.id != 0L }
-
             // Get indexes of the common categories to preselect.
             val common = getCommonCategories(items)
             // Get indexes of the mix categories to preselect.
@@ -894,10 +893,12 @@ class LibraryScreenModel(
     }
 
     fun openDeleteEntriesDialog() {
+        val selectedItems = state.value.selectedLibraryItems
+        val entryIds = selectedActionEntryIds(selectedItems)
+        val containsMergedEntries = selectedItems.any(LibraryItem::isMerged)
         screenModelScope.launchIO {
-            val entries = getSelectedActionEntries()
+            val entries = getActionEntries(entryIds)
             val containsLocalEntries = entries.any { it.source == LocalSource.ID }
-            val containsMergedEntries = state.value.selectedLibraryItems.any { it.isMerged }
             mutableState.update {
                 it.copy(
                     dialog = Dialog.DeleteEntries(
@@ -933,13 +934,18 @@ class LibraryScreenModel(
 
     fun prepareMoveToProfile(profile: Profile, destinationCategoryId: Long?) {
         if (moveInProgress) return
+        val sourceProfileId = profileStore.currentProfileId
+        val selectedIds = state.value.selectedLibraryItems.map { it.entry.id }.distinct()
+        if (selectedIds.isEmpty()) return
         moveInProgress = true
         screenModelScope.launchNonCancellable {
             try {
-                val selectedIds = state.value.selectedLibraryItems.map { it.entry.id }
+                require(profileStore.currentProfileId == sourceProfileId) {
+                    "Active profile changed before the move"
+                }
                 val preview = entryProfileMoveService.preview(
                     EntryProfileMoveRequest(
-                        sourceProfileId = profileStore.currentProfileId,
+                        sourceProfileId = sourceProfileId,
                         destinationProfileId = profile.id,
                         destinationCategoryId = destinationCategoryId,
                         selectedVisibleEntryIds = selectedIds,
@@ -1015,12 +1021,9 @@ class LibraryScreenModel(
     }
 
     fun openMergeDialog() {
+        val selectedItems = state.value.selectedLibraryItems
+        if (!entryCapabilityInteraction.canMergeSelection(selectedItems.toEntryMergeCapabilityItems())) return
         screenModelScope.launchIO {
-            val selectedItems = state.value.selectedLibraryItems
-            if (!entryCapabilityInteraction.canMergeSelection(selectedItems.toEntryMergeCapabilityItems())) {
-                return@launchIO
-            }
-
             val dialog = buildMergeDialog(selectedItems) ?: return@launchIO
             mutableState.update {
                 it.copy(
@@ -1082,11 +1085,8 @@ class LibraryScreenModel(
         mutableState.update { it.copy(dialog = null) }
     }
 
-    private suspend fun getSelectedActionEntries(): List<Entry> {
-        return state.value.selectedLibraryItems
-            .flatMap { it.memberEntryIds }
-            .map(LibraryItemKey::id)
-            .distinct()
+    private suspend fun getActionEntries(entryIds: List<Long>): List<Entry> {
+        return entryIds
             .mapNotNull { getEntry.await(it) }
             .distinctBy { it.id }
     }
@@ -1412,6 +1412,41 @@ internal fun buildMergeDialog(selection: List<LibraryItem>): LibraryScreenModel.
         targetId = existingMerge?.entry?.id ?: entries.first().id,
         targetLocked = false,
     )
+}
+
+internal fun selectedActionEntryIds(selection: List<LibraryItem>): List<Long> {
+    return selection
+        .flatMap(LibraryItem::memberEntryIds)
+        .map(LibraryItemKey::id)
+        .distinct()
+}
+
+internal suspend fun categoriesForLibraryItem(
+    item: LibraryItem,
+    getCategories: suspend (Long) -> List<Category>,
+): List<Category> {
+    return item.memberEntryIds
+        .map(LibraryItemKey::id)
+        .distinct()
+        .flatMap { getCategories(it) }
+        .distinctBy(Category::id)
+}
+
+internal suspend fun updateLibraryItemCategories(
+    items: List<LibraryItem>,
+    addCategories: List<Long>,
+    removeCategories: List<Long>,
+    getCategoryIds: suspend (Long) -> List<Long>,
+    setCategoryIds: suspend (Long, List<Long>) -> Unit,
+) {
+    val removed = removeCategories.toSet()
+    selectedActionEntryIds(items).forEach { entryId ->
+        val categoryIds = getCategoryIds(entryId)
+            .subtract(removed)
+            .plus(addCategories)
+            .toList()
+        setCategoryIds(entryId, categoryIds)
+    }
 }
 
 private fun LibraryItem.toMergeEntries(isFromExistingMerge: Boolean): List<LibraryScreenModel.MergeEntry> {
