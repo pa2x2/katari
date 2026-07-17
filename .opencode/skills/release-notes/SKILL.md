@@ -1,6 +1,6 @@
 ---
 name: release-notes
-description: Generate user-facing Katari release notes for a specified local semantic-version tag by comparing it with its previous local Katari release tag. Return the changelog as the response without editing files or GitHub releases. Use when asked to run or implement the release-notes command or prepare a Katari release changelog.
+description: Generate user-facing Katari release notes for a specified local semantic-version tag by comparing it with its previous local Katari release tag, then update CHANGELOG.md. Use when asked to run or implement the release-notes command or prepare a Katari release changelog.
 ---
 
 # Katari release notes
@@ -68,7 +68,7 @@ Katari's changelog focused on behavior that differs from Mihon.
    Include an otherwise omitted item only when its concrete impact is material to users or
    extension developers. Describe that impact, never the maintenance work itself.
 
-## Return the changelog
+## Update the changelog
 
 1. Write a Keep a Changelog section named `[X.Y.Z]` with the current date. Use only the
    applicable headings `Added`, `Changed`, `Improved`, `Removed`, `Fixed`, and `Other`.
@@ -83,14 +83,18 @@ Katari's changelog focused on behavior that differs from Mihon.
    Markdown link after the contributor credit, in the form `([#123](https://github.com/OWNER/REPO/pull/123))`.
    Append every associated PR link when one outcome combines multiple pull requests. Omit
    the link when no associated pull request is present or its URL cannot be verified.
-3. Return the complete section in a Markdown code block in the response. Include no
-   summaries, release-body variants, download guidance, or GitHub-release actions unless
-   the user separately asks for them.
-4. Do not modify `CHANGELOG.md`, link definitions, or any other repository file. Do not
-   stage, commit, tag, push, create, publish, or edit a GitHub release.
+3. Update `CHANGELOG.md` in the worktree. Insert the complete release section in descending
+   version order without changing existing release text. Update `[Unreleased]` to compare
+   the target tag with `HEAD`, and add or update the target version's release link using the
+   repository URL established by the existing link definitions. Preserve unrelated
+   worktree changes and do not modify any other repository file.
+4. Return the complete section in a Markdown code block in the response. When invoked by a
+   command that requests a GitHub release body, show that exact proposed body and require
+   explicit user confirmation before editing the GitHub release. Do not stage or commit
+   changes, create or push tags, or create or publish a GitHub release.
 
 ## Safety rules
 
-- Treat `/release-notes <version>` as read-only. Do not edit `CHANGELOG.md` or any other
-  repository file.
+- Treat `/release-notes <version>` as a worktree-only changelog update. Do not modify files
+  other than `CHANGELOG.md`.
 - Never infer a release from `HEAD`; resolve both endpoints as exact `vX.Y.Z` tags.
