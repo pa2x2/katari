@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -44,34 +46,41 @@ fun EntryDownloadSettingsDialog(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(stringResource(MR.strings.action_download), style = MaterialTheme.typography.titleLarge)
-            Text(
-                text = stringResource(MR.strings.download_apply_to_selected, selectedCount),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            if (selectedCount >= 5) {
+            Column(
+                modifier = Modifier
+                    .weight(1f, fill = false)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(stringResource(MR.strings.action_download), style = MaterialTheme.typography.titleLarge)
                 Text(
-                    text = stringResource(MR.strings.download_storage_warning),
+                    text = stringResource(MR.strings.download_apply_to_selected, selectedCount),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-            }
-
-            if (options == null) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    CircularProgressIndicator()
-                }
-            } else {
-                options.groups.forEach { group ->
-                    DownloadChoiceGroup(
-                        group = group,
-                        selectedKey = selections[group.key],
-                        onSelected = { selected -> selections = selections + (group.key to selected) },
+                if (selectedCount >= 5) {
+                    Text(
+                        text = stringResource(MR.strings.download_storage_warning),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
                     )
+                }
+
+                if (options == null) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    options.groups.forEach { group ->
+                        DownloadChoiceGroup(
+                            group = group,
+                            selectedKey = selections[group.key],
+                            onSelected = { selected -> selections = selections + (group.key to selected) },
+                        )
+                    }
                 }
             }
 
