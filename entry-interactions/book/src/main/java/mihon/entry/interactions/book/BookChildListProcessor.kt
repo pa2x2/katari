@@ -61,7 +61,7 @@ internal class BookChildListProcessor(
             request.chapters.mapNotNull { chapter ->
                 if (chapter.read) return@mapNotNull null
                 val progress = progressByChapterId[chapter.id] ?: return@mapNotNull null
-                if (progress.completed || progress.locator.isEmpty) return@mapNotNull null
+                if (!progress.hasPartialBookProgress) return@mapNotNull null
                 chapter.id to EntryChildProgressLabel(MR.strings.label_started)
             }.toMap()
         }

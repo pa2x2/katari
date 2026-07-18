@@ -76,11 +76,7 @@ internal class MangaChildListProcessor(
             request.chapters.mapNotNull { chapter ->
                 if (chapter.read) return@mapNotNull null
                 val progress = progressByChapterId[chapter.id] ?: return@mapNotNull null
-                if (progress.completed || progress.locator.kind != MANGA_PROGRESS_LOCATOR_KIND ||
-                    progress.pageIndex <= 0L
-                ) {
-                    return@mapNotNull null
-                }
+                if (!progress.hasPartialMangaProgress) return@mapNotNull null
                 chapter.id to EntryChildProgressLabel(
                     resource = MR.strings.chapter_progress,
                     args = listOf(progress.pageIndex + 1),

@@ -75,12 +75,14 @@ class UpdatesSelectionActionsTest {
         val readAnime = listOf(updateItem(17, EntryType.ANIME, read = true))
         val partialAnime = listOf(updateItem(18, EntryType.ANIME, read = false, started = true))
         val partialManga = listOf(updateItem(19, EntryType.MANGA, read = false, started = true))
+        val partialBook = listOf(updateItem(20, EntryType.BOOK, read = false, started = true))
 
         unreadAnime.hasConsumedAction(consumed = true, canSetConsumed = ::canSetConsumed) shouldBe true
         readAnime.hasConsumedAction(consumed = true, canSetConsumed = ::canSetConsumed) shouldBe false
         readAnime.hasConsumedAction(consumed = false, canSetConsumed = ::canSetConsumed) shouldBe true
-        partialAnime.hasConsumedAction(consumed = false, canSetConsumed = ::canSetConsumed) shouldBe false
+        partialAnime.hasConsumedAction(consumed = false, canSetConsumed = ::canSetConsumed) shouldBe true
         partialManga.hasConsumedAction(consumed = false, canSetConsumed = ::canSetConsumed) shouldBe true
+        partialBook.hasConsumedAction(consumed = false, canSetConsumed = ::canSetConsumed) shouldBe true
     }
 
     private fun supportsBookmark(entryType: EntryType): Boolean {
@@ -96,13 +98,13 @@ class UpdatesSelectionActionsTest {
     }
 
     private fun canSetConsumed(
-        entryType: EntryType,
+        @Suppress("UNUSED_PARAMETER") entryType: EntryType,
         status: EntryConsumptionStatus,
         consumed: Boolean,
     ): Boolean {
         return when (consumed) {
             true -> !status.consumed
-            false -> status.consumed || (entryType == EntryType.MANGA && status.hasPartialProgress)
+            false -> status.consumed || status.hasPartialProgress
         }
     }
 

@@ -749,6 +749,29 @@ class AnimeEntryInteractionPluginTest {
     }
 
     @Test
+    fun `anime consumption resets partial progress while already unwatched`() = runTest {
+        val playbackRepository = FakeEntryProgressRepository(
+            listOf(
+                playbackState(chapterId = 1L, positionMs = 20_000L, completed = false, lastWatchedAt = 40L),
+            ),
+        )
+        val processor = AnimeConsumptionProcessor(
+            entryProgressRepository = playbackRepository,
+        )
+
+        processor.setConsumed(
+            entry = entry(EntryType.ANIME),
+            chapters = listOf(chapter(id = 1L, read = false)),
+            consumed = false,
+        )
+
+        playbackRepository.upsertedStates.shouldContainExactly(
+            playbackState(chapterId = 1L, positionMs = 0L, durationMs = 0L, completed = false, lastWatchedAt = 40L)
+                .copy(locator = EntryProgressLocator(kind = "time")),
+        )
+    }
+
+    @Test
     fun `anime consumption marks watched without changing recency`() = runTest {
         val chapterRepository = FakeEntryChapterRepository(
             listOf(

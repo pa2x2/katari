@@ -82,7 +82,7 @@ internal class AnimeChildListProcessor(
                 if (episode.read) return@mapNotNull null
 
                 val playbackState = playbackStateByChapterId[episode.id] ?: return@mapNotNull null
-                if (playbackState.completed || playbackState.positionMs <= 0L) return@mapNotNull null
+                if (!playbackState.hasPartialAnimeProgress) return@mapNotNull null
 
                 val position = formatPlaybackTimestamp(playbackState.positionMs)
                 val label = if (playbackState.durationMs > 0L) {

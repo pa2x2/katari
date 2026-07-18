@@ -12,6 +12,9 @@ internal val EntryProgressState.pageIndex: Long
 internal val EntryProgressState.pageCount: Long
     get() = locator.takeIf { it.kind == MANGA_PROGRESS_LOCATOR_KIND }?.extent ?: 0L
 
+internal val EntryProgressState.hasPartialMangaProgress: Boolean
+    get() = !completed && pageIndex > 0L
+
 internal val EntryProgressState.lastReadAt: Long
     get() = maxOf(locatorUpdatedAt, completionUpdatedAt)
 

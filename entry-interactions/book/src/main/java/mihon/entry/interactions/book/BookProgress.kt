@@ -2,8 +2,12 @@ package mihon.entry.interactions.book
 
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import mihon.entry.interactions.book.download.BookDownloadManifest
+import tachiyomi.domain.entry.model.EntryProgressState
 
 internal const val BOOK_PROGRESS_LOCATOR_KIND = "book"
+
+internal val EntryProgressState.hasPartialBookProgress: Boolean
+    get() = !completed && locator.kind == BOOK_PROGRESS_LOCATOR_KIND && !locator.isEmpty
 
 internal data class BookProgressIdentity(
     val contentKey: String,

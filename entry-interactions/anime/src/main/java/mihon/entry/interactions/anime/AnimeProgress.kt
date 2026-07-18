@@ -12,6 +12,9 @@ internal val EntryProgressState.positionMs: Long
 internal val EntryProgressState.durationMs: Long
     get() = locator.takeIf { it.kind == ANIME_PROGRESS_LOCATOR_KIND }?.extent ?: 0L
 
+internal val EntryProgressState.hasPartialAnimeProgress: Boolean
+    get() = !completed && positionMs > 0L
+
 internal val EntryProgressState.lastWatchedAt: Long
     get() = maxOf(locatorUpdatedAt, completionUpdatedAt)
 
