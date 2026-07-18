@@ -63,6 +63,49 @@ class HtmlProseViewerItemsTest {
     }
 
     @Test
+    fun `scrolling location snapshots live chapter progress`() {
+        val chapter = loaded(chapter(2L))
+        val items = listOf(ProseScrollItem.Chapter(chapter))
+
+        val first = scrollingProseLocation(
+            items = items,
+            visibleItems = listOf(ProseVisibleItemLayout(index = 0, offset = -400, size = 2400)),
+            viewportStartOffset = 0,
+            viewportEndOffset = 800,
+        )
+        val second = scrollingProseLocation(
+            items = items,
+            visibleItems = listOf(ProseVisibleItemLayout(index = 0, offset = -800, size = 2400)),
+            viewportStartOffset = 0,
+            viewportEndOffset = 800,
+        )
+
+        assertEquals(0.25f, first?.progression)
+        assertEquals(0.5f, second?.progression)
+    }
+
+    @Test
+    fun `scrolling location does not attribute a transition to an adjacent chapter`() {
+        val chapter = loaded(chapter(2L))
+        val items = listOf(
+            ProseScrollItem.Chapter(chapter),
+            ProseScrollItem.Transition(EntryChildWindow(chapter.chapter, null, chapter(3L)).nextTransition()),
+        )
+
+        val location = scrollingProseLocation(
+            items = items,
+            visibleItems = listOf(
+                ProseVisibleItemLayout(index = 0, offset = -1400, size = 2000),
+                ProseVisibleItemLayout(index = 1, offset = 600, size = 800),
+            ),
+            viewportStartOffset = 0,
+            viewportEndOffset = 800,
+        )
+
+        assertEquals(null, location)
+    }
+
+    @Test
     fun `paginated mode starts from the live reader progression`() {
         val previous = chapter(1L)
         val current = chapter(2L)

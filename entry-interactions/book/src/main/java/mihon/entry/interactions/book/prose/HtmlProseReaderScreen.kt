@@ -672,23 +672,23 @@ private fun ScrollingProseViewer(
         if (!initialPositionRestored) return@LaunchedEffect
         snapshotFlow { listState.layoutInfo }
             .map { info ->
-                val center = (info.viewportStartOffset + info.viewportEndOffset) / 2
-                info.visibleItemsInfo.minByOrNull { kotlin.math.abs((it.offset + it.size / 2) - center) }
+                // LazyListItemInfo offsets are mutable and the instances are reused between scroll frames.
+                // Snapshot their values before distinctUntilChanged so live offset changes are not suppressed.
+                scrollingProseLocation(
+                    items = items,
+                    visibleItems = info.visibleItemsInfo.map {
+                        ProseVisibleItemLayout(index = it.index, offset = it.offset, size = it.size)
+                    },
+                    viewportStartOffset = info.viewportStartOffset,
+                    viewportEndOffset = info.viewportEndOffset,
+                )
             }
-            .map { visible -> visible?.let { items.getOrNull(it.index) to it } }
-            .filter { it?.first is ProseScrollItem.Chapter }
-            .distinctUntilChanged { old, new ->
-                old?.first?.key == new?.first?.key &&
-                    old?.second?.offset == new?.second?.offset
-            }
-            .collect { pair ->
-                val item = pair?.first as? ProseScrollItem.Chapter ?: return@collect
-                val info = pair.second
-                val viewport = listState.layoutInfo.viewportSize.height.coerceAtLeast(1)
-                val scrollable = (info.size - viewport).coerceAtLeast(1)
-                val progression = (-info.offset).toFloat().div(scrollable).coerceIn(0f, 1f)
-                onPosition(ProseViewerPosition(item.content.chapter.id, progression, 1, 1))
-                if (item.content.chapter.id != state.currentChapterId) onChapterEntered(item.content.chapter)
+            .filter { it != null }
+            .distinctUntilChanged()
+            .collect { location ->
+                location ?: return@collect
+                onPosition(ProseViewerPosition(location.chapter.id, location.progression, 1, 1))
+                if (location.chapter.id != state.currentChapterId) onChapterEntered(location.chapter)
             }
     }
 }
@@ -696,6 +696,34 @@ private fun ScrollingProseViewer(
 internal fun scrollOffsetForProgression(itemSize: Int, viewportSize: Int, progression: Float): Int {
     val scrollable = (itemSize - viewportSize).coerceAtLeast(0)
     return (scrollable * progression.coerceIn(0f, 1f)).roundToInt()
+}
+
+internal data class ProseVisibleItemLayout(
+    val index: Int,
+    val offset: Int,
+    val size: Int,
+)
+
+internal data class ProseScrollLocation(
+    val chapter: EntryChapter,
+    val progression: Float,
+)
+
+internal fun scrollingProseLocation(
+    items: List<ProseScrollItem>,
+    visibleItems: List<ProseVisibleItemLayout>,
+    viewportStartOffset: Int,
+    viewportEndOffset: Int,
+): ProseScrollLocation? {
+    val center = (viewportStartOffset + viewportEndOffset) / 2
+    val layout = visibleItems
+        .minByOrNull { kotlin.math.abs((it.offset + it.size / 2) - center) }
+        ?: return null
+    val chapter = items.getOrNull(layout.index) as? ProseScrollItem.Chapter ?: return null
+    val viewportSize = (viewportEndOffset - viewportStartOffset).coerceAtLeast(1)
+    val scrollable = (layout.size - viewportSize).coerceAtLeast(1)
+    val progression = (viewportStartOffset - layout.offset).toFloat().div(scrollable).coerceIn(0f, 1f)
+    return ProseScrollLocation(chapter.content.chapter, progression)
 }
 
 @Composable
