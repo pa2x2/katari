@@ -3,14 +3,18 @@ package mihon.entry.interactions.book.download
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.util.lang.Hash
+import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.spyk
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import mihon.book.api.BookCatalogCoverage
 import mihon.book.api.BookContentDescriptor
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryMerge
@@ -19,17 +23,110 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class BookDownloadProviderTest {
     @Test
+    fun `persisted index restores without scanning and verifies lazily`() = runTest {
+        val fixture = fixture()
+        val completed = fixture.complete(content = "offline chapter")
+        val store = BookDownloadIndexStore(
+            context = RuntimeEnvironment.getApplication(),
+            cacheFile = fixture.root.resolve("book-index"),
+        )
+        BookDownloadCache(fixture.provider, store).refresh()
+        val restoredProvider = spyk(fixture.provider)
+        val restoredCache = BookDownloadCache(restoredProvider, store)
+
+        restoredCache.ensureInitialized()
+
+        verify(exactly = 0) { restoredProvider.scanPackages() }
+        verify(exactly = 0) { restoredProvider.rebuildPackages() }
+        verify(exactly = 0) { restoredProvider.readVerifiedPackage(any()) }
+        assertEquals(1, restoredCache.getTotalDownloadCount())
+
+        val verified = restoredCache.getVerified(fixture.packageKey)
+
+        assertEquals(completed.manifest, verified?.manifest)
+        verify(exactly = 1) { restoredProvider.readVerifiedPackage(any()) }
+    }
+
+    @Test
+    fun `failed lazy verification evicts and persists the stale package`() = runTest {
+        val fixture = fixture()
+        val completed = fixture.complete(content = "offline chapter")
+        val store = BookDownloadIndexStore(
+            context = RuntimeEnvironment.getApplication(),
+            cacheFile = fixture.root.resolve("book-index"),
+        )
+        BookDownloadCache(fixture.provider, store).refresh()
+        completed.resources.getValue("chapter").openOutputStream().use {
+            it.write("tampered chapter".encodeToByteArray())
+        }
+        val restoredCache = BookDownloadCache(fixture.provider, store)
+        restoredCache.ensureInitialized()
+        assertEquals(1, restoredCache.getTotalDownloadCount())
+
+        assertNull(restoredCache.getVerified(fixture.packageKey))
+
+        assertEquals(0, restoredCache.getTotalDownloadCount())
+        val nextCache = BookDownloadCache(spyk(fixture.provider), store)
+        nextCache.ensureInitialized()
+        assertEquals(0, nextCache.getTotalDownloadCount())
+    }
+
+    @Test
+    fun `corrupt persisted index falls back to one full rebuild`() = runTest {
+        val fixture = fixture()
+        fixture.complete(content = "offline chapter")
+        val indexFile = fixture.root.resolve("book-index").apply { writeText("not protobuf") }
+        val provider = spyk(fixture.provider)
+        val cache = BookDownloadCache(
+            provider = provider,
+            indexStore = BookDownloadIndexStore(RuntimeEnvironment.getApplication(), indexFile),
+        )
+
+        cache.ensureInitialized()
+
+        verify(exactly = 1) { provider.rebuildPackages() }
+        assertEquals(1, cache.getTotalDownloadCount())
+    }
+
+    @Test
+    fun `incremental inserts never rescan accumulated packages`() = runTest {
+        val fixture = fixture()
+        val completed = fixture.complete(content = "offline chapter")
+        val provider = spyk(fixture.provider)
+        val cache = BookDownloadCache(provider)
+        cache.ensureInitialized()
+        clearMocks(provider, answers = false)
+
+        repeat(300) { index ->
+            cache.upsert(
+                completed.copy(
+                    manifest = completed.manifest.copy(
+                        childId = 1_000L + index,
+                        childTitle = "Chapter $index",
+                        childUrl = "/bulk/chapter/$index",
+                        createdAt = 1_000L + index,
+                    ),
+                ),
+            )
+        }
+
+        verify(exactly = 0) { provider.scanPackages() }
+        verify(exactly = 0) { provider.rebuildPackages() }
+        assertEquals(301, cache.getTotalDownloadCount())
+    }
+
+    @Test
     fun `routine cache refresh does not report download initialization`() = runTest {
         val observedInitialization = mutableListOf<Boolean>()
         lateinit var cache: BookDownloadCache
         val provider = mockk<BookDownloadProvider> {
-            every { cleanupTemporaryPackages() } returns 0
-            every { scanPackages() } answers {
+            every { rebuildPackages() } answers {
                 observedInitialization += cache.isInitializing.value
                 BookDownloadPackageScan(emptyList(), 0)
             }
@@ -87,10 +184,9 @@ class BookDownloadProviderTest {
         val originalName = assertNotNull(completed.directory.name)
         assertTrue(completed.directory.renameTo(originalName + BookDownloadProvider.BACKUP_SUFFIX))
 
-        val recovered = fixture.provider.cleanupTemporaryPackages()
-        val scan = fixture.provider.scanPackages()
+        val scan = fixture.provider.rebuildPackages()
 
-        assertEquals(1, recovered)
+        assertEquals(1, scan.cleanedTemporaryPackageCount)
         assertEquals(1, scan.packages.size)
         assertEquals(
             "original",

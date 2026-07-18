@@ -225,22 +225,28 @@ internal class BookDownloadManager(
     suspend fun delete(entry: Entry, chapters: List<EntryChapter>) {
         removeFromQueue(chapters.map(EntryChapter::id))
         cache.ensureInitialized()
-        chapters.forEach { chapter ->
-            cache.get(BookDownloadPackageKey(entry.source, entry.url, chapter.url))?.directory?.delete()
+        val deletedKeys = chapters.mapNotNull { chapter ->
+            val packageKey = BookDownloadPackageKey(entry.source, entry.url, chapter.url)
+            val directory = cache.get(packageKey)?.directory ?: return@mapNotNull null
+            packageKey.takeIf { directory.delete() || !directory.exists() }
         }
-        cache.refresh()
+        cache.remove(deletedKeys)
     }
 
     suspend fun deleteEntryDownloads(entry: Entry, memberEntryIds: Set<Long> = setOf(entry.id)) {
         removeFromQueue(queueState.value.filter { it.entry.id in memberEntryIds }.map { it.chapter.id })
         cache.ensureInitialized()
-        cache.packages.value.values
+        val deletedKeys = cache.packages.value.values
             .filter {
                 (it.manifest.sourceId == entry.source && it.manifest.entryUrl == entry.url) ||
                     it.manifest.entryId in memberEntryIds
             }
-            .forEach { it.directory.delete() }
-        cache.refresh()
+            .mapNotNull { download ->
+                download.manifest.packageKey.takeIf {
+                    download.directory.delete() || !download.directory.exists()
+                }
+            }
+        cache.remove(deletedKeys)
     }
 
     fun invalidateCache() {
@@ -249,16 +255,32 @@ internal class BookDownloadManager(
 
     fun renameSource(oldSource: UnifiedSource, newSource: UnifiedSource) {
         scope.launch {
-            provider.renameSource(oldSource.name, newSource.name)
-            cache.refresh()
+            cache.ensureInitialized()
+            val affectedKeys = cache.packages.value.values
+                .filter { it.manifest.sourceId == oldSource.id }
+                .map { it.manifest.packageKey }
+            if (provider.renameSource(oldSource.name, newSource.name)) {
+                cache.replace(affectedKeys, provider.scanSourcePackages(newSource.name).packages)
+            }
         }
     }
 
     suspend fun renameEntry(entry: Entry, newTitle: String) {
         removeFromQueue(queueState.value.filter { it.entry.id == entry.id }.map { it.chapter.id })
+        cache.ensureInitialized()
         val sourceName = sourceManager.get(entry.source)?.name ?: return
-        provider.renameEntry(sourceName, entry, newTitle)
-        cache.refresh()
+        val affectedKeys = cache.packages.value.values
+            .filter {
+                (it.manifest.sourceId == entry.source && it.manifest.entryUrl == entry.url) ||
+                    it.manifest.entryId == entry.id
+            }
+            .map { it.manifest.packageKey }
+        if (provider.renameEntry(sourceName, entry, newTitle)) {
+            cache.replace(
+                affectedKeys,
+                provider.scanEntryPackages(sourceName, entry.copy(title = newTitle)).packages,
+            )
+        }
     }
 
     fun statusFlow(): Flow<BookDownload> = queueState.flatMapLatest { downloads ->

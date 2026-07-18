@@ -256,13 +256,12 @@ class BookReaderSessionFactoryTest {
 
     private fun emptyDownloadCache(): BookDownloadCache {
         val cache = mockk<BookDownloadCache>()
-        coEvery { cache.ensureInitialized() } returns Unit
-        every { cache.get(any()) } returns null
+        coEvery { cache.getVerified(any()) } returns null
         return cache
     }
 
     private fun failingDownloadCache(): BookDownloadCache = mockk {
-        coEvery { ensureInitialized() } throws java.io.IOException("storage unavailable")
+        coEvery { getVerified(any()) } throws java.io.IOException("storage unavailable")
     }
 }
 

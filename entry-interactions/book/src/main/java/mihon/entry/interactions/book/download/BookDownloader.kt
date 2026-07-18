@@ -125,9 +125,10 @@ internal class BookDownloader(
                         ),
                         createdAt = now(),
                     )
-                    provider.completePackage(staging, manifest).getOrElse { error ->
+                    val published = provider.completePackage(staging, manifest).getOrElse { error ->
                         throw BookPackageIntegrityException(error.message, error)
                     }
+                    cache.upsert(published)
                 } catch (error: CancellationException) {
                     staging.directory.delete()
                     throw error
@@ -143,7 +144,6 @@ internal class BookDownloader(
                     )
                 }
             }
-            cache.refresh()
             download.progress = 100
             download.status = BookDownload.State.DOWNLOADED
             return null

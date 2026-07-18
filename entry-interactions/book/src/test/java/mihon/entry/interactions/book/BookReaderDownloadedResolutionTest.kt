@@ -48,10 +48,8 @@ class BookReaderDownloadedResolutionTest {
         val bytes = "<h1>Offline chapter</h1>".encodeToByteArray()
         val downloaded = downloadedPackage(owner, chapter, bytes)
         val packageKey = BookDownloadPackageKey(owner.source, owner.url, chapter.url)
-        val downloadCache = mockk<BookDownloadCache> {
-            coEvery { ensureInitialized() } returns Unit
-        }
-        every { downloadCache.get(packageKey) } returns downloaded
+        val downloadCache = mockk<BookDownloadCache>()
+        coEvery { downloadCache.getVerified(packageKey) } returns downloaded
         val sourceManager = mockk<SourceManager>()
         val progressRepository = mockk<EntryProgressRepository> {
             coEvery { get(owner.id, "volume-1", "chapter") } returns null

@@ -23,6 +23,8 @@ internal class BookDownloadProvider(
         json = json,
     )
 
+    fun downloadsRootUri(): String? = downloadsDirectory()?.uri?.toString()
+
     fun beginPackage(
         sourceName: String,
         entry: Entry,
@@ -88,59 +90,90 @@ internal class BookDownloadProvider(
 
     fun scanPackages(): BookDownloadPackageScan {
         val root = downloadsDirectory() ?: return BookDownloadPackageScan(emptyList(), 0)
-        var invalidPackages = 0
-        val packages = buildList {
-            root.listFiles().orEmpty()
-                .filter { it.isDirectory && it.name?.endsWith(SOURCE_DIRECTORY_SUFFIX) == true }
-                .forEach { sourceDirectory ->
-                    sourceDirectory.listFiles().orEmpty()
-                        .filter(UniFile::isDirectory)
-                        .forEach { entryDirectory ->
-                            entryDirectory.listFiles().orEmpty()
-                                .filter { childDirectory ->
-                                    childDirectory.isDirectory &&
-                                        childDirectory.name?.endsWith(STAGING_SUFFIX) != true &&
-                                        childDirectory.name?.endsWith(BACKUP_SUFFIX) != true
-                                }
-                                .forEach { childDirectory ->
-                                    val manifestFile = childDirectory.findFile(MANIFEST_FILE_NAME)
-                                    if (manifestFile == null) return@forEach
-                                    val verified = readVerifiedPackage(childDirectory)
-                                    if (verified == null) invalidPackages++ else add(verified)
-                                }
-                        }
-                }
-        }
-        return BookDownloadPackageScan(packages, invalidPackages)
+        val sourceDirectories = root.listFiles().orEmpty()
+            .filter { it.isDirectory && it.name?.endsWith(SOURCE_DIRECTORY_SUFFIX) == true }
+        return scanSourceDirectories(sourceDirectories)
     }
 
-    fun cleanupTemporaryPackages(): Int {
-        val root = downloadsDirectory() ?: return 0
-        var deleted = 0
-        root.listFiles().orEmpty()
+    fun rebuildPackages(): BookDownloadPackageScan {
+        val root = downloadsDirectory() ?: return BookDownloadPackageScan(emptyList(), 0)
+        val sourceDirectories = root.listFiles().orEmpty()
             .filter { it.isDirectory && it.name?.endsWith(SOURCE_DIRECTORY_SUFFIX) == true }
-            .forEach { sourceDirectory ->
-                sourceDirectory.listFiles().orEmpty()
-                    .filter(UniFile::isDirectory)
-                    .forEach { entryDirectory ->
-                        entryDirectory.listFiles().orEmpty()
-                            .filter { it.isDirectory && it.name?.endsWith(STAGING_SUFFIX) == true }
-                            .forEach { if (it.delete()) deleted++ }
-                        entryDirectory.listFiles().orEmpty()
-                            .filter { it.isDirectory && it.name?.endsWith(BACKUP_SUFFIX) == true }
-                            .forEach { backup ->
-                                val backupName = checkNotNull(backup.name)
-                                val finalName = backupName.removeSuffix(BACKUP_SUFFIX)
-                                val recovered = if (entryDirectory.findFile(finalName) == null) {
-                                    backup.renameTo(finalName)
-                                } else {
-                                    backup.delete()
-                                }
-                                if (recovered) deleted++
-                            }
+        val entryDirectories = sourceDirectories.flatMap { sourceDirectory ->
+            sourceDirectory.listFiles().orEmpty().filter(UniFile::isDirectory)
+        }
+        return scanEntryDirectories(entryDirectories, cleanupTemporaryPackages = true)
+    }
+
+    fun scanSourcePackages(sourceName: String): BookDownloadPackageScan {
+        val root = downloadsDirectory() ?: return BookDownloadPackageScan(emptyList(), 0)
+        val sourceDirectory = root.findFile(sourceDirectoryName(sourceName))
+            ?.takeIf(UniFile::isDirectory)
+            ?: return BookDownloadPackageScan(emptyList(), 0)
+        return scanSourceDirectories(listOf(sourceDirectory))
+    }
+
+    fun scanEntryPackages(sourceName: String, entry: Entry): BookDownloadPackageScan {
+        val root = downloadsDirectory() ?: return BookDownloadPackageScan(emptyList(), 0)
+        val sourceDirectory = root.findFile(sourceDirectoryName(sourceName))
+            ?.takeIf(UniFile::isDirectory)
+            ?: return BookDownloadPackageScan(emptyList(), 0)
+        val entryDirectory = sourceDirectory.findFile(entryDirectoryName(entry))
+            ?.takeIf(UniFile::isDirectory)
+            ?: return BookDownloadPackageScan(emptyList(), 0)
+        return scanEntryDirectories(listOf(entryDirectory))
+    }
+
+    private fun scanSourceDirectories(sourceDirectories: Collection<UniFile>): BookDownloadPackageScan {
+        val entryDirectories = sourceDirectories.flatMap { sourceDirectory ->
+            sourceDirectory.listFiles().orEmpty().filter(UniFile::isDirectory)
+        }
+        return scanEntryDirectories(entryDirectories)
+    }
+
+    private fun scanEntryDirectories(
+        entryDirectories: Collection<UniFile>,
+        cleanupTemporaryPackages: Boolean = false,
+    ): BookDownloadPackageScan {
+        var invalidPackages = 0
+        var cleanedTemporaryPackages = 0
+        val packages = buildList {
+            entryDirectories.forEach { entryDirectory ->
+                val childDirectories = entryDirectory.listFiles().orEmpty().filter(UniFile::isDirectory)
+                val completeDirectories = childDirectories
+                    .filterTo(mutableListOf()) { childDirectory ->
+                        childDirectory.name?.endsWith(STAGING_SUFFIX) != true &&
+                            childDirectory.name?.endsWith(BACKUP_SUFFIX) != true
                     }
+
+                if (cleanupTemporaryPackages) {
+                    childDirectories
+                        .filter { it.name?.endsWith(STAGING_SUFFIX) == true }
+                        .forEach { if (it.delete()) cleanedTemporaryPackages++ }
+                    val completeNames = completeDirectories.mapNotNullTo(mutableSetOf(), UniFile::getName)
+                    childDirectories
+                        .filter { it.name?.endsWith(BACKUP_SUFFIX) == true }
+                        .forEach { backup ->
+                            val finalName = checkNotNull(backup.name).removeSuffix(BACKUP_SUFFIX)
+                            if (finalName in completeNames) {
+                                if (backup.delete()) cleanedTemporaryPackages++
+                            } else if (backup.renameTo(finalName)) {
+                                cleanedTemporaryPackages++
+                                completeNames += finalName
+                                completeDirectories += backup
+                            }
+                        }
+                }
+
+                completeDirectories.forEach { childDirectory ->
+                    val manifestFile = childDirectory.findFile(MANIFEST_FILE_NAME)
+                    if (manifestFile == null) return@forEach
+                    val verified = readVerifiedPackage(childDirectory)
+                    if (verified == null) invalidPackages++ else add(verified)
+                }
             }
-        return deleted
+        }
+        return BookDownloadPackageScan(packages, invalidPackages, cleanedTemporaryPackages)
     }
 
     fun renameSource(oldName: String, newName: String): Boolean {
@@ -233,6 +266,7 @@ internal data class BookDownloadStagingPackage(
     val finalDirectoryName: String,
 )
 
+/** Package handles verified by the provider, or pending one-time verification after index restoration. */
 internal data class VerifiedBookDownloadPackage(
     val directory: UniFile,
     val manifest: BookDownloadManifest,
@@ -242,6 +276,7 @@ internal data class VerifiedBookDownloadPackage(
 internal data class BookDownloadPackageScan(
     val packages: List<VerifiedBookDownloadPackage>,
     val invalidPackageCount: Int,
+    val cleanedTemporaryPackageCount: Int = 0,
 )
 
 private fun resourceFileSuffix(mediaType: String?): String = when (mediaType) {
