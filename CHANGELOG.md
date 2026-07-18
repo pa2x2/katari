@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.1] - 2026-07-18
+
+### Improved
+
+- Avoided repeated full storage scans when initializing and managing BOOK downloads.
+
+### Fixed
+
+- Kept reading progress current while scrolling through continuous prose.
+- Reset partial reading or watching progress consistently when marking manga chapters,
+  anime episodes, or book chapters as unread.
+
 ## [1.3.0] - 2026-07-17
 
 ### Added
@@ -154,7 +166,8 @@ Based on [Mihon v0.20.1](https://github.com/mihonapp/mihon/releases/tag/v0.20.1)
 - Rebranded the application as Katari with its own package identity, visual
   identity, release pipeline, and documentation.
 
-[Unreleased]: https://github.com/katariapp/katari/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/katariapp/katari/compare/v1.3.1...HEAD
+[1.3.1]: https://github.com/katariapp/katari/releases/tag/v1.3.1
 [1.3.0]: https://github.com/katariapp/katari/releases/tag/v1.3.0
 [1.2.2]: https://github.com/katariapp/katari/releases/tag/v1.2.2
 [1.2.1]: https://github.com/katariapp/katari/releases/tag/v1.2.1
