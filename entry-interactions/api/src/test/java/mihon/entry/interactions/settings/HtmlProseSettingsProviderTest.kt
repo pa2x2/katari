@@ -29,7 +29,7 @@ class HtmlProseSettingsProviderTest {
             .all { it.scope == ViewerSettingScope.PROFILE_ONLY } shouldBe true
         provider.tapNavigationSetting.processorDefault shouldBe false
         provider.showProgressSetting.processorDefault shouldBe true
-        provider.drawUnderCutoutSetting.processorDefault shouldBe true
+        provider.drawUnderCutoutSetting.processorDefault shouldBe false
     }
 
     @Test

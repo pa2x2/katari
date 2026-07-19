@@ -26,7 +26,7 @@ class HtmlProseSettingsProvider(
     private val layoutMode = preferenceStore.getString("book.prose.html.layout_mode", LAYOUT_PAGINATED)
     private val tapNavigation = preferenceStore.getBoolean("book.prose.html.tap_navigation", false)
     private val showProgress = preferenceStore.getBoolean("book.prose.html.show_progress", true)
-    private val drawUnderCutout = preferenceStore.getBoolean("book.prose.html.draw_under_cutout", true)
+    private val drawUnderCutout = preferenceStore.getBoolean("book.prose.html.draw_under_cutout", false)
 
     val themeSetting = stringSetting(THEME_KEY, theme, SUPPORTED_THEMES)
     val fontFamilySetting = stringSetting(FONT_FAMILY_KEY, fontFamily, SUPPORTED_FONT_FAMILIES)
