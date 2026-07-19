@@ -18,4 +18,5 @@ internal class HtmlProseSettingsBinding(
     val layoutMode = binder.bind(provider.layoutModeSetting, entryId)
     val tapNavigation = binder.bind(provider.tapNavigationSetting)
     val showProgress = binder.bind(provider.showProgressSetting)
+    val drawUnderCutout = binder.bind(provider.drawUnderCutoutSetting)
 }

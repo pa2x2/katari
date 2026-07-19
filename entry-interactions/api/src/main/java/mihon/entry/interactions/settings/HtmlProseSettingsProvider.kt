@@ -26,6 +26,7 @@ class HtmlProseSettingsProvider(
     private val layoutMode = preferenceStore.getString("book.prose.html.layout_mode", LAYOUT_PAGINATED)
     private val tapNavigation = preferenceStore.getBoolean("book.prose.html.tap_navigation", false)
     private val showProgress = preferenceStore.getBoolean("book.prose.html.show_progress", true)
+    private val drawUnderCutout = preferenceStore.getBoolean("book.prose.html.draw_under_cutout", true)
 
     val themeSetting = stringSetting(THEME_KEY, theme, SUPPORTED_THEMES)
     val fontFamilySetting = stringSetting(FONT_FAMILY_KEY, fontFamily, SUPPORTED_FONT_FAMILIES)
@@ -44,6 +45,7 @@ class HtmlProseSettingsProvider(
     )
     val tapNavigationSetting = booleanSetting(TAP_NAVIGATION_KEY, tapNavigation)
     val showProgressSetting = booleanSetting(SHOW_PROGRESS_KEY, showProgress)
+    val drawUnderCutoutSetting = booleanSetting(DRAW_UNDER_CUTOUT_KEY, drawUnderCutout)
 
     override val settings: List<ViewerSettingDefinition<*>> = listOf(
         themeSetting,
@@ -56,6 +58,7 @@ class HtmlProseSettingsProvider(
         layoutModeSetting,
         tapNavigationSetting,
         showProgressSetting,
+        drawUnderCutoutSetting,
     )
 
     private fun booleanSetting(key: String, preference: Preference<Boolean>) = ViewerSettingDefinition(
@@ -101,6 +104,7 @@ class HtmlProseSettingsProvider(
         const val LAYOUT_MODE_KEY = "layout_mode"
         const val TAP_NAVIGATION_KEY = "tap_navigation"
         const val SHOW_PROGRESS_KEY = "show_progress"
+        const val DRAW_UNDER_CUTOUT_KEY = "draw_under_cutout"
 
         const val THEME_SYSTEM = "system"
         const val THEME_LIGHT = "light"

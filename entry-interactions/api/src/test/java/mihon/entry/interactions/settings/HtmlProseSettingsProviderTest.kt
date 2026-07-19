@@ -14,8 +14,8 @@ class HtmlProseSettingsProviderTest {
     fun `provider exposes stable validated prose settings`() {
         provider.id shouldBe "builtin.book.prose.html"
         provider.category shouldBe ViewerSettingsCategory.READER
-        provider.settings shouldHaveSize 10
-        provider.settings.map { it.id.key }.toSet() shouldHaveSize 10
+        provider.settings shouldHaveSize 11
+        provider.settings.map { it.id.key }.toSet() shouldHaveSize 11
         provider.settings.all { it.id.providerId == provider.id } shouldBe true
         provider.settings.all { it.profilePreference.key().startsWith("book.prose.html.") } shouldBe true
     }
@@ -29,6 +29,7 @@ class HtmlProseSettingsProviderTest {
             .all { it.scope == ViewerSettingScope.PROFILE_ONLY } shouldBe true
         provider.tapNavigationSetting.processorDefault shouldBe false
         provider.showProgressSetting.processorDefault shouldBe true
+        provider.drawUnderCutoutSetting.processorDefault shouldBe true
     }
 
     @Test

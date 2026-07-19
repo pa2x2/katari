@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.SystemClock
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,6 +57,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
     private val windowInsetsController by lazy { WindowCompat.getInsetsController(window, window.decorView) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(null)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         windowInsetsController.systemBarsBehavior =

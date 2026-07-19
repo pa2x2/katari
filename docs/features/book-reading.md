@@ -32,7 +32,7 @@ Changing profiles therefore changes reader defaults without affecting other prof
 | Reader | Layouts | Profile settings |
 | ------ | ------- | ---------------- |
 | Readium EPUB reader | Paginated or continuous scrolling | Color theme, font family and size, page margins, column count, publisher styles, line height, text alignment and normalization, tap navigation, and page-number display |
-| Prose chapter reader | Paginated or continuous scrolling | Color theme, font family and size, page margins, line height, paragraph spacing, text alignment, tap navigation, and progress display |
+| Prose chapter reader | Paginated or continuous scrolling | Color theme, font family and size, page margins, line height, paragraph spacing, text alignment, cutout-area content, tap navigation, and progress display |
 
 Paginated reading is the default. The readers expose appearance and layout controls while reading, and paginated mode can use screen-edge taps for page turns. The EPUB reader navigates the publication's table of contents. The prose reader uses Katari's stored chapter list for its chapter picker and previous/next transitions while keeping only the current chapter and its immediate neighbors prepared.
 
