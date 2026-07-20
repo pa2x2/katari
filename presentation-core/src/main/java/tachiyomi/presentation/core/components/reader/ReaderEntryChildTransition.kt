@@ -4,9 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.InlineTextContent
@@ -16,6 +14,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -69,20 +69,22 @@ fun ReaderEntryChildTransition(
             Column(
                 modifier = modifier
                     .widthIn(max = 460.dp)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 model.topChild?.let { child ->
                     TransitionChild(
                         header = model.topLabel,
                         child = child,
+                        prominent = false,
                     )
-                    Spacer(Modifier.height(VerticalSpacerSize))
                 } ?: NoChildNotification(
                     text = model.fallbackLabel,
                     contentColor = contentColor,
                     accentColor = accentColor,
                     outlineColor = outlineColor,
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
                 )
 
                 model.bottomChild?.let { child ->
@@ -92,20 +94,23 @@ fun ReaderEntryChildTransition(
                             contentColor = contentColor,
                             warningColor = warningColor,
                             outlineColor = outlineColor,
-                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                        )
+                    } else {
+                        HorizontalDivider(
+                            modifier = Modifier.fillMaxWidth(0.32f),
+                            color = outlineColor,
                         )
                     }
-                    Spacer(Modifier.height(VerticalSpacerSize))
                     TransitionChild(
                         header = model.bottomLabel,
                         child = child,
+                        prominent = true,
                     )
                 } ?: NoChildNotification(
                     text = model.fallbackLabel,
                     contentColor = contentColor,
                     accentColor = accentColor,
                     outlineColor = outlineColor,
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
                 )
             }
         }
@@ -181,12 +186,14 @@ private fun ChildGapWarning(
 private fun TransitionChild(
     header: String,
     child: ReaderEntryChildTransitionItem,
+    prominent: Boolean,
 ) {
-    Column {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = header,
-            modifier = Modifier.padding(bottom = 4.dp),
-            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.secondaryItemAlpha().padding(bottom = 2.dp),
+            style = MaterialTheme.typography.labelLarge,
+            textAlign = TextAlign.Center,
         )
         Text(
             text = buildAnnotatedString {
@@ -196,15 +203,16 @@ private fun TransitionChild(
                 }
                 append(child.name)
             },
-            fontSize = 20.sp,
+            fontSize = if (prominent) 22.sp else 18.sp,
             maxLines = 5,
             overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.titleLarge,
+            style = if (prominent) MaterialTheme.typography.titleLarge else MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
             inlineContent = mapOf(
                 AVAILABLE_OFFLINE_ICON_ID to InlineTextContent(
                     Placeholder(
-                        width = 22.sp,
-                        height = 22.sp,
+                        width = if (prominent) 24.sp else 20.sp,
+                        height = if (prominent) 24.sp else 20.sp,
                         placeholderVerticalAlign = PlaceholderVerticalAlign.Center,
                     ),
                 ) {
@@ -224,10 +232,10 @@ private fun TransitionChild(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Center,
             )
         }
     }
 }
 
-private val VerticalSpacerSize = 24.dp
 private const val AVAILABLE_OFFLINE_ICON_ID = "available_offline"

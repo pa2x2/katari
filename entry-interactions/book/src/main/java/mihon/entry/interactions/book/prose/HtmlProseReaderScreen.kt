@@ -517,7 +517,9 @@ private fun PaginatedProseViewer(
                 is ProsePagerItem.Transition -> ProseTransition(
                     transition = item.transition,
                     palette = palette,
-                    modifier = Modifier.padding(28.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(28.dp),
                 )
                 is ProsePagerItem.Loading -> ProseLoading(
                     chapterName = item.chapter.name,
@@ -653,7 +655,7 @@ private fun ScrollingProseViewer(
                     transition = item.transition,
                     palette = palette,
                     modifier = Modifier
-                        .fillParentMaxHeight()
+                        .fillMaxWidth()
                         .clickable(
                             interactionSource = null,
                             indication = null,
