@@ -114,6 +114,7 @@ internal object EntryMigrationFeatureContributor : FeatureGraphContributor {
                         behaviorProjections = listOf(EntryMigrationChildStateOptionBehavior),
                         behavioralContracts = listOf(EntryMigrationBehaviorContract.CHILD_STATE_OPTION),
                     ),
+                    entryMigrationCategoriesOptionIntegration(migration),
                 ) +
                     entryMigrationPreparationContextIntegrations(owner, migration) +
                     entryMigrationOptionContextIntegrations(owner, migration) +

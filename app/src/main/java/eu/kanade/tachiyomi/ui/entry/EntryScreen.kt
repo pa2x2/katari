@@ -80,6 +80,7 @@ import mihon.entry.interactions.EntryRelatedEntriesFeature
 import mihon.entry.interactions.EntryWebViewFeature
 import mihon.entry.interactions.EntryWebViewResolution
 import mihon.feature.migration.config.MigrationConfigScreen
+import mihon.feature.migration.dialog.MigrateEntryDialog
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.DuplicateEntryCandidate
@@ -421,8 +422,13 @@ class EntryScreen(
                 )
             }
             is EntryScreenModel.Dialog.Migrate -> {
-                screenModel.migrationSubject()?.let { navigator.push(MigrationConfigScreen(it)) }
-                screenModel.dismissDialog()
+                MigrateEntryDialog(
+                    current = dialog.current,
+                    target = dialog.target,
+                    // Initiated from the context of [dialog.target] so we show [dialog.current].
+                    onClickTitle = { navigator.push(EntryScreen(dialog.current.id)) },
+                    onDismissRequest = onDismissRequest,
+                )
             }
             is EntryScreenModel.Dialog.SelectMergeTarget -> {
                 MergeTargetPickerDialog(

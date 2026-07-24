@@ -22,6 +22,7 @@ import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import eu.kanade.domain.source.service.SourcePreferences
+import eu.kanade.presentation.entry.entryTypePresentation
 import kotlinx.coroutines.flow.update
 import mihon.entry.interactions.EntryMigrationExecuteIntent
 import mihon.entry.interactions.EntryMigrationExecutionResult
@@ -82,7 +83,15 @@ internal fun Screen.MigrateEntryDialog(
             ) {
                 state.availableOptions.fastForEach { option ->
                     LabeledCheckbox(
-                        label = stringResource(option.toMigrationFlag().getLabel()),
+                        label = stringResource(
+                            when (option) {
+                                EntryMigrationOption.CHILD_STATE ->
+                                    current.type
+                                        .entryTypePresentation()
+                                        .childListTitle
+                                else -> option.toMigrationFlag().getLabel()
+                            },
+                        ),
                         checked = option in state.selectedOptions,
                         onCheckedChange = { screenModel.toggleSelection(option) },
                     )
@@ -139,7 +148,7 @@ internal fun Screen.MigrateEntryDialog(
     )
 }
 
-private class MigrateEntryDialogScreenModel(
+internal class MigrateEntryDialogScreenModel(
     private val sourcePreference: SourcePreferences = Injekt.get(),
     private val migration: EntryMigrationFeature = Injekt.get(),
 ) : StateScreenModel<MigrateEntryDialogScreenModel.State>(State()) {
@@ -160,6 +169,7 @@ private class MigrateEntryDialogScreenModel(
                         availableOptions = result.availableOptions.toList(),
                         selectedOptions = selectedOptions,
                         preservedDefaults = defaults - result.availableOptions,
+                        isLoading = false,
                     )
                 }
             }

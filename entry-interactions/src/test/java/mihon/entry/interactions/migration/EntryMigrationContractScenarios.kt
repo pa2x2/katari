@@ -43,6 +43,12 @@ internal fun migrationContracts() = buildList {
         ),
     )
     add(
+        EntryMigrationContract(
+            ENTRY_MIGRATION_CATEGORIES_OPTION_INTEGRATION_ID,
+            EntryMigrationBehaviorContract.CATEGORIES_OPTION,
+        ),
+    )
+    add(
         EntryMigrationContract(ENTRY_MIGRATION_PAIR_CONTEXT_INTEGRATION, EntryMigrationBehaviorContract.PAIR_CONTEXT) {
             migrationSourceEvidence() + listOf(
                 contextEvidence(ENTRY_MIGRATION_TARGET_PERSISTED_CONTEXT, true),

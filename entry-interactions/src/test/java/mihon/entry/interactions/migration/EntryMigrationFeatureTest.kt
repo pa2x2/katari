@@ -96,6 +96,27 @@ class EntryMigrationFeatureTest {
     }
 
     @Test
+    fun `uncategorized source can transfer its empty category set`() = runTest {
+        val host = RecordingMigrationHost(source, target)
+        val feature = feature(host)
+
+        val preparation = feature.prepare(EntryMigrationPrepareIntent(source, target))
+            .shouldBeInstanceOf<EntryMigrationPreparationResult.Ready>()
+
+        preparation.availableOptions.shouldContainExactly(EntryMigrationOption.CATEGORIES)
+
+        feature.execute(
+            EntryMigrationExecuteIntent(
+                preparation.reference,
+                EntryMigrationMode.COPY,
+                setOf(EntryMigrationOption.CATEGORIES),
+            ),
+        ).shouldBeInstanceOf<EntryMigrationExecutionResult.Applied>()
+
+        host.transitions.single().targetCategoryIds shouldBe emptyList()
+    }
+
+    @Test
     fun `pair context preserves profile type and identity rejections`() = runTest {
         val feature = feature(RecordingMigrationHost(source, target))
 
@@ -127,7 +148,10 @@ class EntryMigrationFeatureTest {
         val result = feature.prepare(EntryMigrationPrepareIntent(source, target))
             .shouldBeInstanceOf<EntryMigrationPreparationResult.Ready>()
 
-        result.availableOptions.shouldContainExactly(EntryMigrationOption.REMOVE_SOURCE_DOWNLOADS)
+        result.availableOptions.shouldContainExactlyInAnyOrder(
+            EntryMigrationOption.CATEGORIES,
+            EntryMigrationOption.REMOVE_SOURCE_DOWNLOADS,
+        )
     }
 
     @Test
@@ -178,6 +202,27 @@ class EntryMigrationFeatureTest {
             dateFetch = 90,
         )
         merge.intents.single() shouldBe EntryMergeMigrationReplacementIntent(preparedSource, target)
+    }
+
+    @Test
+    fun `copy keeps the source in library and gives the target a new library date`() = runTest {
+        val preparedSource = source.copy(chapterFlags = 42)
+        val host = RecordingMigrationHost(preparedSource, target)
+        val feature = feature(host)
+        val preparation = feature.prepare(EntryMigrationPrepareIntent(preparedSource, target))
+            .shouldBeInstanceOf<EntryMigrationPreparationResult.Ready>()
+
+        feature.execute(
+            EntryMigrationExecuteIntent(preparation.reference, EntryMigrationMode.COPY, emptySet()),
+        ).shouldBeInstanceOf<EntryMigrationExecutionResult.Applied>()
+
+        val transition = host.transitions.single()
+        transition.sourceUpdate shouldBe null
+        transition.targetUpdate shouldBe target.copy(
+            favorite = true,
+            chapterFlags = 42,
+            dateAdded = 999,
+        )
     }
 
     @Test

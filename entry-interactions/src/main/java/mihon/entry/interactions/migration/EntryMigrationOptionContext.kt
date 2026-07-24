@@ -20,6 +20,13 @@ internal object EntryMigrationChildStateOptionBehavior : FeatureBehaviorProjecti
     override val id = FeatureArtifactId("entry.migration.child-state-option-availability")
 }
 
+internal val ENTRY_MIGRATION_CATEGORIES_OPTION_INTEGRATION_ID =
+    FeatureIntegrationId("entry.migration.categories-option-context")
+
+internal object EntryMigrationCategoriesOptionBehavior : FeatureBehaviorProjection {
+    override val id = FeatureArtifactId("entry.migration.categories-option-availability")
+}
+
 internal enum class EntryMigrationContextualOption(
     val integration: FeatureIntegrationId,
     val behaviorProjection: FeatureArtifactId,
@@ -27,16 +34,6 @@ internal enum class EntryMigrationContextualOption(
     val blockerId: FeatureArtifactId,
     val contract: EntryMigrationBehaviorContract,
 ) {
-    CATEGORIES(
-        integration = FeatureIntegrationId("entry.migration.categories-option-context"),
-        behaviorProjection = FeatureArtifactId("entry.migration.categories-option-availability"),
-        input = contextInputDefinition(
-            ContextInputId("entry.migration.has-categories"),
-            ContributionOwner("entry-category-state"),
-        ),
-        blockerId = FeatureArtifactId("entry.migration.no-categories"),
-        contract = EntryMigrationBehaviorContract.CATEGORIES_OPTION,
-    ),
     NOTES(
         integration = FeatureIntegrationId("entry.migration.notes-option-context"),
         behaviorProjection = FeatureArtifactId("entry.migration.notes-option-availability"),
@@ -58,6 +55,15 @@ internal enum class EntryMigrationContextualOption(
         contract = EntryMigrationBehaviorContract.CUSTOM_COVER_OPTION,
     ),
 }
+
+internal fun entryMigrationCategoriesOptionIntegration(
+    migration: CapabilityExpression,
+) = FeatureIntegration(
+    id = ENTRY_MIGRATION_CATEGORIES_OPTION_INTEGRATION_ID,
+    prerequisites = migration,
+    behaviorProjections = listOf(EntryMigrationCategoriesOptionBehavior),
+    behavioralContracts = listOf(EntryMigrationBehaviorContract.CATEGORIES_OPTION),
+)
 
 private data class EntryMigrationOptionDefinition(
     val blocker: FeatureContextBlocker,

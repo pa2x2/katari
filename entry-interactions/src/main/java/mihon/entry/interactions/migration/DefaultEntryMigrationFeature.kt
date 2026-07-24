@@ -169,15 +169,9 @@ internal class DefaultEntryMigrationFeature(
         }
         requirePairContext(inspection.source, inspection.target)
         validatePair(inspection.source, inspection.target)?.let { return preparationRejected(it) }
-        val hasCategories = inspection.sourceCategoryIds.isNotEmpty()
         val hasNotes = inspection.source.notes.isNotBlank()
         val hasCustomCover = inspection.sourceHasCustomCover
         val contributedOptions = optionDiscovery.discover(inspection.source)
-        evaluation.requireMigrationOptionContext(
-            inspection.source.type,
-            EntryMigrationContextualOption.CATEGORIES,
-            hasCategories,
-        )
         evaluation.requireMigrationOptionContext(
             inspection.source.type,
             EntryMigrationContextualOption.NOTES,
@@ -192,7 +186,7 @@ internal class DefaultEntryMigrationFeature(
             if (inspection.source.type in childStateOptionTypes) {
                 add(EntryMigrationOption.CHILD_STATE)
             }
-            if (hasCategories) add(EntryMigrationOption.CATEGORIES)
+            add(EntryMigrationOption.CATEGORIES)
             if (hasNotes) add(EntryMigrationOption.NOTES)
             if (hasCustomCover) add(EntryMigrationOption.CUSTOM_COVER)
             addAll(contributedOptions)
