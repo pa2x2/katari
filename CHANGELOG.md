@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.4.0] - 2026-07-24
+
+### Added
+
+- Added Reset controls to reader and player settings that clear active-profile values and
+  current-entry overrides without affecting progress, bookmarks, or downloads.
+- Added merging for `BOOK` entries, including grouped library, update, history, and progress
+  handling. (by @pa2x2) ([#6](https://github.com/katariapp/katari/pull/6))
+
+### Removed
+
+- Removed the prose reader's paragraph-spacing setting; prose now uses standard paragraph
+  spacing.
+
+### Fixed
+
+- Applied manga reader layout and orientation changes immediately.
+- Kept the app unlocked after successfully authenticating to switch to a protected profile.
+
 ## [1.3.2] - 2026-07-20
 
 ### Added
@@ -176,7 +195,8 @@ Based on [Mihon v0.20.1](https://github.com/mihonapp/mihon/releases/tag/v0.20.1)
 - Rebranded the application as Katari with its own package identity, visual
   identity, release pipeline, and documentation.
 
-[Unreleased]: https://github.com/katariapp/katari/compare/v1.3.2...HEAD
+[Unreleased]: https://github.com/katariapp/katari/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/katariapp/katari/releases/tag/v1.4.0
 [1.3.2]: https://github.com/katariapp/katari/releases/tag/v1.3.2
 [1.3.1]: https://github.com/katariapp/katari/releases/tag/v1.3.1
 [1.3.0]: https://github.com/katariapp/katari/releases/tag/v1.3.0
