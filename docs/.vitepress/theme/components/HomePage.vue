@@ -23,6 +23,7 @@ import { withBase } from 'vitepress'
         <ul>
           <li><a :href="withBase('/about-project')">About project</a></li>
           <li><a :href="withBase('/migrating-to-katari')">Migrate from Mihon</a></li>
+          <li><a :href="withBase('/troubleshooting')">Troubleshooting</a></li>
           <li><a :href="withBase('/inherited-features')">Features inherited from Mihon</a></li>
           <li><a :href="withBase('/differences/backup-and-restore')">Backup and restore differences</a></li>
         </ul>

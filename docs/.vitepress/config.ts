@@ -31,6 +31,7 @@ const sidebar: DefaultTheme.SidebarItem[] = [
     items: [
       { text: 'About project', link: '/about-project' },
       { text: 'Migrating to Katari', link: '/migrating-to-katari' },
+      { text: 'Troubleshooting', link: '/troubleshooting' },
       { text: 'Backup and restore', link: '/differences/backup-and-restore' },
       { text: 'Inherited Mihon features', link: '/inherited-features' },
     ],
@@ -200,7 +201,7 @@ export default defineConfig({
           { text: 'Changelogs', link: '/changelogs' },
         ],
       },
-      { text: 'Get started', link: '/about-project', activeMatch: '^/(about-project|migrating-to-katari|inherited-features|differences/backup-and-restore)' },
+      { text: 'Get started', link: '/about-project', activeMatch: '^/(about-project|migrating-to-katari|troubleshooting|inherited-features|differences/backup-and-restore)' },
       { text: 'Features', link: '/features/content-type-reference', activeMatch: '^/(features|differences/(extensions-and-compatibility|builds-telemetry-and-privacy))/' },
       { text: 'Developers', link: '/developers/', activeMatch: '^/(developers|extensions)/' },
     ],
