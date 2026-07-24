@@ -19,6 +19,18 @@ import tachiyomi.data.UpdateStrategyColumnAdapter
 
 class MergePersistenceQueriesTest {
     @Test
+    fun `deleting a member dissolves a merge group that would become a singleton`() = runTest {
+        withDatabase { database ->
+            database.merged_entriesQueries.insert(2, 10, 10, 0)
+            database.merged_entriesQueries.insert(2, 10, 11, 1)
+
+            database.entriesQueries.deleteById(2, 11)
+
+            database.merged_entriesQueries.getAll(2).awaitAsList() shouldBe emptyList()
+        }
+    }
+
+    @Test
     fun `clearing profile entries cascades membership and durable consequences`() = runTest {
         withDatabase { database ->
             database.merged_entriesQueries.insert(2, 10, 10, 0)

@@ -14,6 +14,21 @@ CREATE TABLE merged_entries(
 CREATE INDEX idx_merged_entries_target ON merged_entries(profile_id, target_entry_id);
 CREATE INDEX idx_merged_entries_entry ON merged_entries(profile_id, entry_id);
 
+CREATE TRIGGER dissolve_single_member_merge_group
+AFTER DELETE ON merged_entries
+FOR EACH ROW
+WHEN (
+    SELECT count(*)
+    FROM merged_entries
+    WHERE profile_id = old.profile_id
+    AND target_entry_id = old.target_entry_id
+) = 1
+BEGIN
+    DELETE FROM merged_entries
+    WHERE profile_id = old.profile_id
+    AND target_entry_id = old.target_entry_id;
+END;
+
 getAll:
 SELECT target_entry_id, entry_id, position
 FROM merged_entries

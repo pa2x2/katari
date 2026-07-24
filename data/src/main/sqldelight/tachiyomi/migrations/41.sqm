@@ -1,0 +1,22 @@
+DELETE FROM merged_entries
+WHERE (profile_id, target_entry_id) IN (
+    SELECT profile_id, target_entry_id
+    FROM merged_entries
+    GROUP BY profile_id, target_entry_id
+    HAVING count(*) < 2
+);
+
+CREATE TRIGGER dissolve_single_member_merge_group
+AFTER DELETE ON merged_entries
+FOR EACH ROW
+WHEN (
+    SELECT count(*)
+    FROM merged_entries
+    WHERE profile_id = old.profile_id
+    AND target_entry_id = old.target_entry_id
+) = 1
+BEGIN
+    DELETE FROM merged_entries
+    WHERE profile_id = old.profile_id
+    AND target_entry_id = old.target_entry_id;
+END;
