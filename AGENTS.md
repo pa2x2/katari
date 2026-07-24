@@ -28,6 +28,7 @@
 - CI runs `spotlessCheck` -> `verifyEntryFeatureArchitecture` -> `verifyLegacySourceAbi` -> `testFossUnitTest` -> `verifySqlDelightMigration` -> `assembleRelease -Pinclude-telemetry -Penable-updater`.
 - App unit tests run on the `foss` buildType (`testBuildType = "foss"`); focused example: `./gradlew :app:testFossUnitTest --tests '...'`.
 - FOSS compilation can be verified with `:app:compileFossKotlin`; telemetry-enabled release compilation uses `:app:compileReleaseKotlin -Pinclude-telemetry`.
+- Do not infer the installable variant for emulator/device validation from the `foss` unit-test buildType. Before installing, identify the package that is actually running and use the matching Gradle variant: `installDebug` installs `app.katari.dev`, while `installFoss` installs the separate `app.katari.foss` application. After installation, verify that the intended package was launched and that its process changed or restarted; installing a different application ID does not update the app under test.
 - After touching `data/src/main/sqldelight`, run `./gradlew verifySqlDelightMigration`.
 - Briefly verify if applied changes require docs update. If there's no docs coverage - ask user if docs should be updated
 
