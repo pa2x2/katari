@@ -471,14 +471,6 @@ private fun ContinueReadingButton(
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
-        if (progress != null) {
-            CircularProgressIndicator(
-                progress = { progress },
-                modifier = Modifier.size(size),
-                strokeWidth = 2.dp,
-                trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-            )
-        }
         FilledIconButton(
             onClick = onClick,
             shape = MaterialTheme.shapes.small,
@@ -492,6 +484,14 @@ private fun ContinueReadingButton(
                 imageVector = Icons.Filled.PlayArrow,
                 contentDescription = stringResource(contentDescription),
                 modifier = Modifier.size(iconSize),
+            )
+        }
+        if (progress != null) {
+            CircularProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.size(size),
+                strokeWidth = 2.dp,
+                trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
             )
         }
     }
