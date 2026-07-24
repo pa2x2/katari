@@ -28,11 +28,14 @@ import mihon.entry.interactions.EntryLibraryDuplicatePolicy
 import mihon.entry.interactions.EntryLibraryMembershipFeature
 import mihon.entry.interactions.EntryMergeNavigationFeature
 import mihon.entry.interactions.EntryMergeSubject
+import mihon.feature.profiles.core.ProfileScopedStateEvent
+import mihon.feature.profiles.core.observeProfileScopedState
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.mapAsCheckboxState
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.model.DuplicateEntryCandidate
@@ -54,6 +57,7 @@ class HistoryScreenModel(
     private val getHistory: GetHistory = Injekt.get(),
     private val removeHistory: RemoveHistory = Injekt.get(),
     private val sourceManager: SourceManager = Injekt.get(),
+    private val activeProfileProvider: ActiveProfileProvider = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
 ) : StateScreenModel<HistoryScreenModel.State>(State()) {
 
@@ -62,19 +66,29 @@ class HistoryScreenModel(
 
     init {
         screenModelScope.launch {
-            state.map { it.searchQuery }
-                .distinctUntilChanged()
-                .flatMapLatest { query ->
-                    getHistory.subscribe(query ?: "")
-                        .distinctUntilChanged()
-                        .catch { error ->
-                            logcat(LogPriority.ERROR, error)
-                            _events.send(Event.InternalError)
-                        }
-                        .map { history -> history.toHistoryUiModels() }
-                        .flowOn(Dispatchers.IO)
+            observeProfileScopedState(activeProfileProvider.activeProfileIdFlow) { profileId ->
+                state.map { it.searchQuery }
+                    .distinctUntilChanged()
+                    .flatMapLatest { query ->
+                        getHistory.subscribe(query ?: "", profileId)
+                            .distinctUntilChanged()
+                            .catch { error ->
+                                logcat(LogPriority.ERROR, error)
+                                _events.send(Event.InternalError)
+                            }
+                            .map { history -> history.toHistoryUiModels() }
+                            .flowOn(Dispatchers.IO)
+                    }
+            }.collect { event ->
+                when (event) {
+                    is ProfileScopedStateEvent.Reset -> {
+                        mutableState.update { it.copy(list = null, dialog = null) }
+                    }
+                    is ProfileScopedStateEvent.Value -> {
+                        mutableState.update { it.copy(list = event.value) }
+                    }
                 }
-                .collect { newList -> mutableState.update { it.copy(list = newList) } }
+            }
         }
     }
 

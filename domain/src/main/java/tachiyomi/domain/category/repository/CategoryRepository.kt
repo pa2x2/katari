@@ -12,11 +12,15 @@ interface CategoryRepository {
 
     fun getAllAsFlow(): Flow<List<Category>>
 
+    fun getAllAsFlow(profileId: Long): Flow<List<Category>>
+
     suspend fun getCategoriesByEntryId(entryId: Long): List<Category>
 
     fun getCategoriesByEntryIdAsFlow(entryId: Long): Flow<List<Category>>
 
     suspend fun getCategoryIdsByEntryIds(entryIds: List<Long>): Map<Long, List<Long>>
+
+    suspend fun getCategoryIdsByEntryIds(profileId: Long, entryIds: List<Long>): Map<Long, List<Long>>
 
     suspend fun insert(category: Category)
 

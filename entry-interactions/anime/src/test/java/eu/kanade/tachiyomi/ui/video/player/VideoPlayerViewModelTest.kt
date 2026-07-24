@@ -510,6 +510,8 @@ class VideoPlayerViewModelTest {
 
         override fun getHistory(query: String): Flow<List<HistoryWithRelations>> = emptyFlow()
 
+        override fun getHistory(query: String, profileId: Long): Flow<List<HistoryWithRelations>> = emptyFlow()
+
         override suspend fun getLastHistory(): HistoryWithRelations? = null
 
         override suspend fun getTotalReadDuration(): Long = 0L

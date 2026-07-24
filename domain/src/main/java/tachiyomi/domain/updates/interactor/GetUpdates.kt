@@ -40,6 +40,29 @@ class GetUpdates(
         )
     }
 
+    fun subscribe(
+        profileId: Long,
+        instant: Instant,
+        unread: Boolean?,
+        started: Boolean?,
+        bookmarked: Boolean?,
+        hideExcludedScanlators: Boolean,
+    ): Flow<List<UpdatesWithRelations>> {
+        return combine(
+            repository.subscribeAll(
+                profileId = profileId,
+                after = instant.toEpochMilli(),
+                limit = 500,
+                unread = unread,
+                started = started,
+                bookmarked = bookmarked,
+                hideExcludedScanlators = hideExcludedScanlators,
+            ),
+            hiddenSourceIds.subscribe(profileId),
+            ::filterHiddenSources,
+        )
+    }
+
     fun subscribe(read: Boolean, after: Long): Flow<List<UpdatesWithRelations>> {
         return combine(
             repository.subscribeWithRead(read, after, limit = 500),

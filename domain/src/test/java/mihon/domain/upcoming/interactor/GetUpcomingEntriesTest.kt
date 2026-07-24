@@ -61,6 +61,7 @@ class GetUpcomingEntriesTest {
         ): List<Entry> = emptyList()
         override suspend fun getLibraryEntries(): List<Entry> = emptyList()
         override fun getLibraryEntriesAsFlow(): Flow<List<Entry>> = flowOf(emptyList())
+        override fun getLibraryEntriesAsFlow(profileId: Long): Flow<List<Entry>> = flowOf(emptyList())
         override fun getFavoritesBySourceId(sourceId: Long): Flow<List<Entry>> = flowOf(emptyList())
         override suspend fun getUpcomingEntries(statuses: Set<Int>, types: Set<EntryType>): Flow<List<Entry>> {
             upcomingTypes = types

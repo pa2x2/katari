@@ -16,5 +16,22 @@ interface UpdatesRepository {
         hideExcludedScanlators: Boolean,
     ): Flow<List<UpdatesWithRelations>>
 
+    fun subscribeAll(
+        profileId: Long,
+        after: Long,
+        limit: Long,
+        unread: Boolean?,
+        started: Boolean?,
+        bookmarked: Boolean?,
+        hideExcludedScanlators: Boolean,
+    ): Flow<List<UpdatesWithRelations>>
+
     fun subscribeWithRead(read: Boolean, after: Long, limit: Long): Flow<List<UpdatesWithRelations>>
+
+    fun subscribeWithRead(
+        profileId: Long,
+        read: Boolean,
+        after: Long,
+        limit: Long,
+    ): Flow<List<UpdatesWithRelations>>
 }

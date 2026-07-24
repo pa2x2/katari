@@ -60,7 +60,11 @@ interface EntryRepository {
 
     fun getLibraryEntriesAsFlow(): Flow<List<Entry>>
 
+    fun getLibraryEntriesAsFlow(profileId: Long): Flow<List<Entry>>
+
     suspend fun getLibraryLastRead(): Map<Long, Long> = emptyMap()
+
+    suspend fun getLibraryLastRead(profileId: Long): Map<Long, Long> = emptyMap()
 
     fun getFavoritesBySourceId(sourceId: Long): Flow<List<Entry>>
 

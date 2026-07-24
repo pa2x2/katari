@@ -12,6 +12,10 @@ class GetCategories(
         return categoryRepository.getAllAsFlow()
     }
 
+    fun subscribeForProfile(profileId: Long): Flow<List<Category>> {
+        return categoryRepository.getAllAsFlow(profileId)
+    }
+
     fun subscribe(entryId: Long): Flow<List<Category>> {
         return categoryRepository.getCategoriesByEntryIdAsFlow(entryId)
     }

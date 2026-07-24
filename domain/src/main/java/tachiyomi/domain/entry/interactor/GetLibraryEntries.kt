@@ -44,22 +44,40 @@ class GetLibraryEntries(
         if (favorites.isEmpty()) return emptyList()
         val profileId = favorites.first().profileId
         return buildItems(
+            profileId = profileId,
             favorites = favorites,
             groups = libraryGrouping.resolveLibraryGrouping(profileId, favorites).groups,
-            hiddenSources = hiddenSourceIds.get(),
+            hiddenSources = hiddenSourceIds.get(profileId),
         )
     }
 
     fun subscribe(): Flow<List<LibraryItem>> {
-        return entryRepository.getLibraryEntriesAsFlow()
+        return observeEntries(entryRepository.getLibraryEntriesAsFlow())
+    }
+
+    fun subscribe(profileId: Long): Flow<List<LibraryItem>> {
+        return observeEntries(
+            entries = entryRepository.getLibraryEntriesAsFlow(profileId),
+            expectedProfileId = profileId,
+        )
+    }
+
+    private fun observeEntries(
+        entries: Flow<List<Entry>>,
+        expectedProfileId: Long? = null,
+    ): Flow<List<LibraryItem>> {
+        return entries
             .flatMapLatest { favorites ->
                 if (favorites.isEmpty()) return@flatMapLatest flowOf(emptyList())
                 val profileId = favorites.first().profileId
+                check(expectedProfileId == null || profileId == expectedProfileId) {
+                    "Library entries belong to profile $profileId instead of $expectedProfileId"
+                }
                 combine(
                     libraryGrouping.observeLibraryGrouping(profileId, flowOf(favorites)),
-                    hiddenSourceIds.subscribe(),
+                    hiddenSourceIds.subscribe(profileId),
                 ) { grouping, hiddenSources ->
-                    buildItems(favorites, grouping.groups, hiddenSources)
+                    buildItems(profileId, favorites, grouping.groups, hiddenSources)
                 }
             }
             .retry {
@@ -76,6 +94,7 @@ class GetLibraryEntries(
     }
 
     private suspend fun buildItems(
+        profileId: Long,
         favorites: List<Entry>,
         groups: List<EntryLibraryGroupResolution>,
         hiddenSources: Set<Long>,
@@ -84,8 +103,8 @@ class GetLibraryEntries(
 
         val entryIds = favorites.map { it.id }
         val chapters = entryChapterRepository.getChaptersByEntryIds(entryIds).first()
-        val categoryIdsByEntryId = categoryRepository.getCategoryIdsByEntryIds(entryIds)
-        val lastReadByEntryId = entryRepository.getLibraryLastRead()
+        val categoryIdsByEntryId = categoryRepository.getCategoryIdsByEntryIds(profileId, entryIds)
+        val lastReadByEntryId = entryRepository.getLibraryLastRead(profileId)
 
         val itemsById = favorites.associate { entry ->
             val entryChapters = chapters.filter { it.entryId == entry.id }

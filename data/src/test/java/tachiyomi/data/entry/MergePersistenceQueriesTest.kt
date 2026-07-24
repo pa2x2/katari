@@ -35,7 +35,16 @@ class MergePersistenceQueriesTest {
         withDatabase { database ->
             database.merged_entriesQueries.insert(2, 10, 10, 0)
             database.merged_entriesQueries.insert(2, 10, 11, 1)
-            database.merge_consequencesQueries.insert("event", "operation", 2, 10, "cleanup", "", 1)
+            database.merge_consequencesQueries.insert(
+                consequenceId = "event",
+                operationId = "operation",
+                profileId = 2,
+                entryId = 10,
+                participantId = "cleanup",
+                schemaVersion = 1,
+                payload = "",
+                createdAt = 1,
+            )
 
             database.entriesQueries.deleteByProfile(2)
 
@@ -47,7 +56,16 @@ class MergePersistenceQueriesTest {
     @Test
     fun `failed consequences remain visible and can be made immediately retryable`() = runTest {
         withDatabase { database ->
-            database.merge_consequencesQueries.insert("event", "operation", 2, 10, "cleanup", "", 1)
+            database.merge_consequencesQueries.insert(
+                consequenceId = "event",
+                operationId = "operation",
+                profileId = 2,
+                entryId = 10,
+                participantId = "cleanup",
+                schemaVersion = 1,
+                payload = "",
+                createdAt = 1,
+            )
             database.merge_consequencesQueries.recordFailure(10_000, "disk unavailable", "event")
 
             database.merge_consequencesQueries.consequenceStatus().awaitAsOne().run {

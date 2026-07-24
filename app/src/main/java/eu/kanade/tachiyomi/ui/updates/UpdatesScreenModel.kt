@@ -25,9 +25,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -47,10 +45,13 @@ import mihon.entry.interactions.EntryDownloadState
 import mihon.entry.interactions.EntryDownloadStatus
 import mihon.entry.interactions.EntryMergeNavigationFeature
 import mihon.entry.interactions.EntryMergeSubject
+import mihon.feature.profiles.core.ProfileScopedStateEvent
+import mihon.feature.profiles.core.observeProfileScopedState
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -80,6 +81,7 @@ class UpdatesScreenModel(
     private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
     private val updatesPreferences: UpdatesPreferences = Injekt.get(),
+    private val activeProfileProvider: ActiveProfileProvider = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
 ) : StateScreenModel<UpdatesScreenModel.State>(State()) {
 
@@ -96,43 +98,62 @@ class UpdatesScreenModel(
             // Set date limit for recent chapters/episodes
             val limit = ZonedDateTime.now().minusMonths(3).toInstant()
 
-            combine(
-                // needed for SQL filters (unread, started, bookmarked, etc)
-                getUpdatesItemPreferenceFlow()
-                    .distinctUntilChanged()
-                    .flatMapLatest {
-                        getUpdates.subscribe(
-                            limit,
-                            unread = it.filterUnread.toBooleanOrNull(),
-                            started = it.filterStarted.toBooleanOrNull(),
-                            bookmarked = it.filterBookmarked.toBooleanOrNull(),
-                            hideExcludedScanlators = it.filterExcludedScanlators,
-                        ).distinctUntilChanged()
+            observeProfileScopedState(activeProfileProvider.activeProfileIdFlow) { profileId ->
+                combine(
+                    // needed for SQL filters (unread, started, bookmarked, etc)
+                    getUpdatesItemPreferenceFlow()
+                        .distinctUntilChanged()
+                        .flatMapLatest {
+                            getUpdates.subscribe(
+                                profileId = profileId,
+                                instant = limit,
+                                unread = it.filterUnread.toBooleanOrNull(),
+                                started = it.filterStarted.toBooleanOrNull(),
+                                bookmarked = it.filterBookmarked.toBooleanOrNull(),
+                                hideExcludedScanlators = it.filterExcludedScanlators,
+                            ).distinctUntilChanged()
+                        },
+                    downloadRuntime.changes,
+                    // needed for Kotlin filters (downloaded)
+                    getUpdatesItemPreferenceFlow().distinctUntilChanged { old, new ->
+                        old.filterDownloaded == new.filterDownloaded
                     },
-                downloadRuntime.changes,
-                // needed for Kotlin filters (downloaded)
-                getUpdatesItemPreferenceFlow().distinctUntilChanged { old, new ->
-                    old.filterDownloaded == new.filterDownloaded
-                },
-            ) { updates, _, itemPreferences ->
-                Triple(updates, itemPreferences, Unit)
-            }
-                .collectLatest { (updates, itemPreferences, _) ->
-                    val updateItems = updates
-                        .toUpdateItems()
-                        .applyFilters(itemPreferences)
-                        .collapseByVisibleEntry(
-                            actualEntryId = { it.update.entryId },
-                            visibleEntryId = { it.visibleEntryId },
-                        )
-                        .toPersistentList()
-                    mutableState.update {
-                        it.copy(
-                            isLoading = false,
-                            items = updateItems,
-                        )
+                ) { updates, _, itemPreferences ->
+                    UpdatesData(updates, itemPreferences)
+                }
+            }.collectLatest { event ->
+                when (event) {
+                    is ProfileScopedStateEvent.Reset -> {
+                        selectedKeys.clear()
+                        selectionState.reset()
+                        mutableState.update {
+                            it.copy(
+                                isLoading = true,
+                                items = emptyList(),
+                                hasActiveFilters = false,
+                                dialog = null,
+                            )
+                        }
+                    }
+                    is ProfileScopedStateEvent.Value -> {
+                        val updateItems = event.value.updates
+                            .toUpdateItems()
+                            .applyFilters(event.value.itemPreferences)
+                            .collapseByVisibleEntry(
+                                actualEntryId = { it.update.entryId },
+                                visibleEntryId = { it.visibleEntryId },
+                            )
+                            .toPersistentList()
+                        mutableState.update {
+                            it.copy(
+                                isLoading = false,
+                                items = updateItems,
+                                hasActiveFilters = event.value.itemPreferences.hasActiveFilters,
+                            )
+                        }
                     }
                 }
+            }
         }
 
         screenModelScope.launchIO {
@@ -140,24 +161,6 @@ class UpdatesScreenModel(
                 .catch { logcat(LogPriority.ERROR, it) }
                 .collect(this@UpdatesScreenModel::updateDownloadState)
         }
-
-        getUpdatesItemPreferenceFlow()
-            .map { prefs ->
-                listOf(
-                    prefs.filterUnread,
-                    prefs.filterDownloaded,
-                    prefs.filterStarted,
-                    prefs.filterBookmarked,
-                )
-                    .any { it != TriState.DISABLED }
-            }
-            .distinctUntilChanged()
-            .onEach {
-                mutableState.update { state ->
-                    state.copy(hasActiveFilters = it)
-                }
-            }
-            .launchIn(screenModelScope)
     }
 
     private fun List<UpdatesItem>.applyFilters(
@@ -508,6 +511,15 @@ class UpdatesScreenModel(
         val filterStarted: TriState,
         val filterBookmarked: TriState,
         val filterExcludedScanlators: Boolean,
+    ) {
+        val hasActiveFilters: Boolean
+            get() = listOf(filterUnread, filterDownloaded, filterStarted, filterBookmarked)
+                .any { it != TriState.DISABLED }
+    }
+
+    private data class UpdatesData(
+        val updates: List<UpdatesWithRelations>,
+        val itemPreferences: ItemPreferences,
     )
 
     @Immutable

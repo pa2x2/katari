@@ -40,18 +40,30 @@ class UpdatesRepositoryImpl(
         hideExcludedScanlators: Boolean,
     ): Flow<List<UpdatesWithRelations>> {
         return profileProvider.activeProfileIdFlow.flatMapLatest { profileId ->
-            databaseHandler.subscribeToList {
-                updatesViewQueries.getRecentUpdatesWithFilters(
-                    profileId = profileId,
-                    after = after,
-                    limit = limit,
-                    read = unread?.let { !it },
-                    started = started?.toLong(),
-                    bookmarked = bookmarked,
-                    hideExcludedScanlators = hideExcludedScanlators.toLong(),
-                    mapper = UpdatesMapper::mapUpdatesWithRelations,
-                )
-            }
+            subscribeAll(profileId, after, limit, unread, started, bookmarked, hideExcludedScanlators)
+        }
+    }
+
+    override fun subscribeAll(
+        profileId: Long,
+        after: Long,
+        limit: Long,
+        unread: Boolean?,
+        started: Boolean?,
+        bookmarked: Boolean?,
+        hideExcludedScanlators: Boolean,
+    ): Flow<List<UpdatesWithRelations>> {
+        return databaseHandler.subscribeToList {
+            updatesViewQueries.getRecentUpdatesWithFilters(
+                profileId = profileId,
+                after = after,
+                limit = limit,
+                read = unread?.let { !it },
+                started = started?.toLong(),
+                bookmarked = bookmarked,
+                hideExcludedScanlators = hideExcludedScanlators.toLong(),
+                mapper = UpdatesMapper::mapUpdatesWithRelations,
+            )
         }
     }
 
@@ -61,15 +73,24 @@ class UpdatesRepositoryImpl(
         limit: Long,
     ): Flow<List<UpdatesWithRelations>> {
         return profileProvider.activeProfileIdFlow.flatMapLatest { profileId ->
-            databaseHandler.subscribeToList {
-                updatesViewQueries.getUpdatesByReadStatus(
-                    profileId = profileId,
-                    read = read,
-                    after = after,
-                    limit = limit,
-                    mapper = UpdatesMapper::mapUpdatesWithRelations,
-                )
-            }
+            subscribeWithRead(profileId, read, after, limit)
+        }
+    }
+
+    override fun subscribeWithRead(
+        profileId: Long,
+        read: Boolean,
+        after: Long,
+        limit: Long,
+    ): Flow<List<UpdatesWithRelations>> {
+        return databaseHandler.subscribeToList {
+            updatesViewQueries.getUpdatesByReadStatus(
+                profileId = profileId,
+                read = read,
+                after = after,
+                limit = limit,
+                mapper = UpdatesMapper::mapUpdatesWithRelations,
+            )
         }
     }
 }

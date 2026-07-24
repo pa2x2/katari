@@ -7,6 +7,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -65,11 +66,11 @@ class GetLibraryEntriesTest {
         val anime = entry(id = 2L, source = 20L, type = EntryType.ANIME)
 
         coEvery { entryRepository.getLibraryEntries() } returns listOf(manga, anime)
-        coEvery { entryRepository.getLibraryLastRead() } returns emptyMap()
+        coEvery { entryRepository.getLibraryLastRead(manga.profileId) } returns emptyMap()
         stubStandaloneGrouping(listOf(manga, anime))
-        every { hiddenSourceIds.get() } returns setOf(10L, 20L)
+        every { hiddenSourceIds.get(manga.profileId) } returns setOf(10L, 20L)
         every { entryChapterRepository.getChaptersByEntryIds(listOf(1L, 2L)) } returns flowOf(emptyList())
-        coEvery { categoryRepository.getCategoryIdsByEntryIds(listOf(1L, 2L)) } returns mapOf(
+        coEvery { categoryRepository.getCategoryIdsByEntryIds(manga.profileId, listOf(1L, 2L)) } returns mapOf(
             1L to listOf(1L),
             2L to listOf(1L),
         )
@@ -87,11 +88,15 @@ class GetLibraryEntriesTest {
         val anime = entry(id = 2L, source = 20L, type = EntryType.ANIME)
 
         coEvery { entryRepository.getLibraryEntries() } returns listOf(manga, anime)
-        coEvery { entryRepository.getLibraryLastRead() } returns mapOf(1L to 100L, 2L to 200L)
+        coEvery {
+            entryRepository.getLibraryLastRead(manga.profileId)
+        } returns mapOf(1L to 100L, 2L to 200L)
         stubStandaloneGrouping(listOf(manga, anime))
-        every { hiddenSourceIds.get() } returns emptySet()
+        every { hiddenSourceIds.get(manga.profileId) } returns emptySet()
         every { entryChapterRepository.getChaptersByEntryIds(listOf(1L, 2L)) } returns flowOf(emptyList())
-        coEvery { categoryRepository.getCategoryIdsByEntryIds(listOf(1L, 2L)) } returns emptyMap()
+        coEvery {
+            categoryRepository.getCategoryIdsByEntryIds(manga.profileId, listOf(1L, 2L))
+        } returns emptyMap()
         every { sourceManager.getOrStub(10L) } returns source(10L)
         every { sourceManager.getOrStub(20L) } returns source(20L)
         every { sourceManager.getDisplayInfo(10L) } returns sourceDisplayInfo(10L)
@@ -110,11 +115,13 @@ class GetLibraryEntriesTest {
         val book = entry(id = 3L, source = 30L, type = EntryType.BOOK)
         unavailableSummaryEntryIds += book.id
         coEvery { entryRepository.getLibraryEntries() } returns listOf(book)
-        coEvery { entryRepository.getLibraryLastRead() } returns emptyMap()
+        coEvery { entryRepository.getLibraryLastRead(book.profileId) } returns emptyMap()
         stubStandaloneGrouping(listOf(book))
-        every { hiddenSourceIds.get() } returns emptySet()
+        every { hiddenSourceIds.get(book.profileId) } returns emptySet()
         every { entryChapterRepository.getChaptersByEntryIds(listOf(book.id)) } returns flowOf(emptyList())
-        coEvery { categoryRepository.getCategoryIdsByEntryIds(listOf(book.id)) } returns emptyMap()
+        coEvery {
+            categoryRepository.getCategoryIdsByEntryIds(book.profileId, listOf(book.id))
+        } returns emptyMap()
         every { sourceManager.getOrStub(book.source) } returns source(book.source)
         every { sourceManager.getDisplayInfo(book.source) } returns sourceDisplayInfo(book.source)
 
@@ -131,15 +138,15 @@ class GetLibraryEntriesTest {
         val member = entry(id = 2L, source = 20L, type = EntryType.MANGA)
         val favorites = listOf(target, member)
         coEvery { entryRepository.getLibraryEntries() } returns favorites
-        coEvery { entryRepository.getLibraryLastRead() } returns emptyMap()
+        coEvery { entryRepository.getLibraryLastRead(target.profileId) } returns emptyMap()
         coEvery { libraryGrouping.resolveLibraryGrouping(target.profileId, favorites) } returns
             EntryLibraryGroupingResolution(
                 profileId = target.profileId,
                 groups = listOf(EntryLibraryGroupResolution(target, listOf(target, member))),
             )
-        every { hiddenSourceIds.get() } returns emptySet()
+        every { hiddenSourceIds.get(target.profileId) } returns emptySet()
         every { entryChapterRepository.getChaptersByEntryIds(listOf(1L, 2L)) } returns flowOf(emptyList())
-        coEvery { categoryRepository.getCategoryIdsByEntryIds(listOf(1L, 2L)) } returns mapOf(
+        coEvery { categoryRepository.getCategoryIdsByEntryIds(target.profileId, listOf(1L, 2L)) } returns mapOf(
             target.id to listOf(10L),
             member.id to listOf(20L),
         )
@@ -156,7 +163,37 @@ class GetLibraryEntriesTest {
         item.categories shouldBe listOf(10L, 20L)
     }
 
-    private fun entry(id: Long, source: Long, type: EntryType): Entry {
+    @Test
+    fun `subscription resolves all profile owned data for requested profile`() = runTest {
+        val profileId = 2L
+        val entry = entry(id = 1L, source = 10L, type = EntryType.MANGA, profileId = profileId)
+        every { entryRepository.getLibraryEntriesAsFlow(profileId) } returns flowOf(listOf(entry))
+        every {
+            libraryGrouping.observeLibraryGrouping(profileId, any())
+        } returns flowOf(
+            EntryLibraryGroupingResolution(
+                profileId = profileId,
+                groups = listOf(EntryLibraryGroupResolution(entry, listOf(entry))),
+            ),
+        )
+        every { hiddenSourceIds.subscribe(profileId) } returns flowOf(emptySet())
+        every { entryChapterRepository.getChaptersByEntryIds(listOf(entry.id)) } returns flowOf(emptyList())
+        coEvery {
+            categoryRepository.getCategoryIdsByEntryIds(profileId, listOf(entry.id))
+        } returns emptyMap()
+        coEvery { entryRepository.getLibraryLastRead(profileId) } returns emptyMap()
+        every { sourceManager.getOrStub(entry.source) } returns source(entry.source)
+        every { sourceManager.getDisplayInfo(entry.source) } returns sourceDisplayInfo(entry.source)
+
+        interactor.subscribe(profileId).first().single().entry shouldBe entry
+    }
+
+    private fun entry(
+        id: Long,
+        source: Long,
+        type: EntryType,
+        profileId: Long = 0L,
+    ): Entry {
         return Entry.create().copy(
             id = id,
             source = source,
@@ -164,6 +201,7 @@ class GetLibraryEntriesTest {
             initialized = true,
             title = "Entry $id",
             type = type,
+            profileId = profileId,
         )
     }
 

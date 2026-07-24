@@ -24,6 +24,14 @@ class GetHistory(
         )
     }
 
+    fun subscribe(query: String, profileId: Long): Flow<List<HistoryWithRelations>> {
+        return combine(
+            repository.getHistory(query, profileId),
+            hiddenSourceIds.subscribe(profileId),
+            ::filterHiddenSources,
+        )
+    }
+
     private fun filterHiddenSources(
         history: List<HistoryWithRelations>,
         hiddenSources: Set<Long>,

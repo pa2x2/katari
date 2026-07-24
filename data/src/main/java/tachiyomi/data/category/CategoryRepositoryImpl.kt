@@ -30,8 +30,12 @@ class CategoryRepositoryImpl(
 
     override fun getAllAsFlow(): Flow<List<Category>> {
         return profileProvider.activeProfileIdFlow.flatMapLatest { profileId ->
-            handler.subscribeToList { categoriesQueries.getCategories(profileId, ::mapCategory) }
+            getAllAsFlow(profileId)
         }
+    }
+
+    override fun getAllAsFlow(profileId: Long): Flow<List<Category>> {
+        return handler.subscribeToList { categoriesQueries.getCategories(profileId, ::mapCategory) }
     }
 
     override suspend fun getCategoriesByEntryId(entryId: Long): List<Category> {
@@ -57,10 +61,17 @@ class CategoryRepositoryImpl(
     }
 
     override suspend fun getCategoryIdsByEntryIds(entryIds: List<Long>): Map<Long, List<Long>> {
+        return getCategoryIdsByEntryIds(profileProvider.activeProfileId, entryIds)
+    }
+
+    override suspend fun getCategoryIdsByEntryIds(
+        profileId: Long,
+        entryIds: List<Long>,
+    ): Map<Long, List<Long>> {
         if (entryIds.isEmpty()) return emptyMap()
 
         return handler.await {
-            categoriesQueries.getEntryCategoryMappings(profileProvider.activeProfileId, entryIds)
+            categoriesQueries.getEntryCategoryMappings(profileId, entryIds)
                 .awaitAsList()
                 .groupBy(
                     keySelector = { it.entry_id },

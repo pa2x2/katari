@@ -25,12 +25,13 @@ class EntryMigrationPersistenceQueriesTest {
         withDatabase { database, _ ->
             database.entry_migration_operationsQueries.insert("operation", "replace:notes", 2, 10, 11, "REPLACE", 1)
             database.entry_migration_consequencesQueries.insert(
-                "consequence",
-                "operation",
-                2,
-                "progress",
-                "payload",
-                1,
+                consequenceId = "consequence",
+                operationId = "operation",
+                profileId = 2,
+                participantId = "progress",
+                schemaVersion = 1,
+                payload = "payload",
+                createdAt = 1,
             )
 
             database.entry_migration_consequencesQueries.countByOperation("operation").awaitAsOne() shouldBe 1
@@ -50,12 +51,13 @@ class EntryMigrationPersistenceQueriesTest {
                     entry_migration_operationsQueries.insert("operation", "replace", 2, 10, 11, "REPLACE", 1)
                     handler.await(inTransaction = true) {
                         entry_migration_consequencesQueries.insert(
-                            "participant",
-                            "operation",
-                            2,
-                            "merge-participant-proof",
-                            "",
-                            1,
+                            consequenceId = "participant",
+                            operationId = "operation",
+                            profileId = 2,
+                            participantId = "merge-participant-proof",
+                            schemaVersion = 1,
+                            payload = "",
+                            createdAt = 1,
                         )
                     }
                     error("abort outer transaction")
@@ -72,12 +74,13 @@ class EntryMigrationPersistenceQueriesTest {
         withDatabase { database, _ ->
             database.entry_migration_operationsQueries.insert("operation", "copy", 2, 10, 11, "COPY", 1)
             database.entry_migration_consequencesQueries.insert(
-                "consequence",
-                "operation",
-                2,
-                "progress",
-                "payload",
-                1,
+                consequenceId = "consequence",
+                operationId = "operation",
+                profileId = 2,
+                participantId = "progress",
+                schemaVersion = 1,
+                payload = "payload",
+                createdAt = 1,
             )
 
             database.entry_migration_consequencesQueries.pending(0, 10).awaitAsList().size shouldBe 1

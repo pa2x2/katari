@@ -175,13 +175,23 @@ class EntryRepositoryImpl(
 
     override fun getLibraryEntriesAsFlow(): Flow<List<Entry>> {
         return profileProvider.activeProfileIdFlow.flatMapLatest { profileId ->
-            handler.subscribeToList { libraryViewQueries.library(profileId, EntryMapper::mapLibraryEntry) }
+            getLibraryEntriesAsFlow(profileId)
+        }
+    }
+
+    override fun getLibraryEntriesAsFlow(profileId: Long): Flow<List<Entry>> {
+        return handler.subscribeToList {
+            libraryViewQueries.library(profileId, EntryMapper::mapLibraryEntry)
         }
     }
 
     override suspend fun getLibraryLastRead(): Map<Long, Long> {
+        return getLibraryLastRead(profileProvider.activeProfileId)
+    }
+
+    override suspend fun getLibraryLastRead(profileId: Long): Map<Long, Long> {
         return handler.awaitList {
-            libraryViewQueries.libraryLastRead(profileProvider.activeProfileId) { entryId, lastRead ->
+            libraryViewQueries.libraryLastRead(profileId) { entryId, lastRead ->
                 entryId to lastRead
             }
         }.toMap()

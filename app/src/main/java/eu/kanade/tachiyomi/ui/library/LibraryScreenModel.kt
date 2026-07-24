@@ -24,8 +24,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.dropWhile
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
@@ -74,6 +73,8 @@ import mihon.feature.profiles.core.Profile
 import mihon.feature.profiles.core.ProfileAwareStore
 import mihon.feature.profiles.core.ProfileDatabase
 import mihon.feature.profiles.core.ProfileManager
+import mihon.feature.profiles.core.ProfileScopedStateEvent
+import mihon.feature.profiles.core.observeProfileScopedState
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.TriState
@@ -145,68 +146,74 @@ class LibraryScreenModel(
             }
             .onEach { available -> mutableState.update { it.copy(mergeSelectionAvailable = available) } }
             .launchIn(screenModelScope)
-        profileStore.currentProfileIdFlow
-            .drop(1)
-            .onEach {
-                mutableState.update { state ->
-                    state.copy(
-                        activePageIndex = libraryPreferences.lastUsedCategory.get(),
-                        selection = emptySet(),
-                        dialog = null,
-                    )
-                }
-                lastSelectionPageId = null
-            }
-            .launchIn(screenModelScope)
         screenModelScope.launchIO {
-            combine(
-                state.map { it.searchQuery }.distinctUntilChanged().debounce(0.25.seconds),
-                getCategories.subscribe(),
-                getLibraryItemsFlow(),
-                combine(trackingFeature.observeCollection(), getTrackingFiltersFlow(), ::Pair),
-                getLibraryItemPreferencesFlow(),
-            ) { searchQuery, categories, favorites, (tracking, trackingFilters), itemPreferences ->
-                val showSystemCategory = favorites.any { it.categories.contains(0L) }
-                val categoryNamesById = categories.associate { it.id to it.name }
-                val filterResult = favorites.applyFilters(tracking.entries, trackingFilters, itemPreferences)
-                val filteredFavorites = filterResult.items
-                    .let {
-                        if (searchQuery ==
-                            null
-                        ) {
-                            it
-                        } else {
-                            it.filter { item -> item.matches(searchQuery, sourceManager, categoryNamesById) }
+            observeProfileScopedState(profileStore.currentProfileIdFlow) { profileId ->
+                combine(
+                    state.map { it.searchQuery }.distinctUntilChanged().debounce(0.25.seconds),
+                    getCategories.subscribeForProfile(profileId),
+                    getLibraryItemsFlow(profileId),
+                    combine(trackingFeature.observeCollection(), getTrackingFiltersFlow(), ::Pair),
+                    getLibraryItemPreferencesFlow(),
+                ) { searchQuery, categories, favorites, (tracking, trackingFilters), itemPreferences ->
+                    val showSystemCategory = favorites.any { it.categories.contains(0L) }
+                    val categoryNamesById = categories.associate { it.id to it.name }
+                    val filterResult = favorites.applyFilters(tracking.entries, trackingFilters, itemPreferences)
+                    val filteredFavorites = filterResult.items
+                        .let {
+                            if (searchQuery ==
+                                null
+                            ) {
+                                it
+                            } else {
+                                it.filter { item -> item.matches(searchQuery, sourceManager, categoryNamesById) }
+                            }
+                        }
+
+                    LibraryData(
+                        isInitialized = true,
+                        showSystemCategory = showSystemCategory,
+                        categories = categories,
+                        favorites = filteredFavorites,
+                        trackingEntries = tracking.entries,
+                        trackingScoreSupportedEntryTypes = tracking.scoreSupportedEntryTypes,
+                        hasActiveFilters = filterResult.hasActiveFilters,
+                        filterAvailability = filterResult.availability,
+                    )
+                }.distinctUntilChanged()
+            }.collectLatest { event ->
+                when (event) {
+                    is ProfileScopedStateEvent.Reset -> {
+                        mutableState.update { state ->
+                            state.copy(
+                                isLoading = true,
+                                selection = emptySet(),
+                                mergeSelectionAvailable = false,
+                                hasActiveFilters = false,
+                                dialog = null,
+                                libraryData = LibraryData(),
+                                activePageIndex = libraryPreferences.lastUsedCategory.get(),
+                                groupedFavorites = emptyList(),
+                            )
+                        }
+                        lastSelectionPageId = null
+                    }
+                    is ProfileScopedStateEvent.Value -> {
+                        mutableState.update { state ->
+                            state.copy(
+                                libraryData = event.value,
+                                hasActiveFilters = event.value.hasActiveFilters,
+                            )
                         }
                     }
-
-                LibraryData(
-                    isInitialized = true,
-                    showSystemCategory = showSystemCategory,
-                    categories = categories,
-                    favorites = filteredFavorites,
-                    trackingEntries = tracking.entries,
-                    trackingScoreSupportedEntryTypes = tracking.scoreSupportedEntryTypes,
-                    hasActiveFilters = filterResult.hasActiveFilters,
-                    filterAvailability = filterResult.availability,
-                )
-            }
-                .distinctUntilChanged()
-                .collectLatest { libraryData ->
-                    mutableState.update { state ->
-                        state.copy(
-                            libraryData = libraryData,
-                            hasActiveFilters = libraryData.hasActiveFilters,
-                        )
-                    }
                 }
+            }
         }
 
         screenModelScope.launchIO {
             observeGroupedLibraryPages(
                 libraryData = state
-                    .dropWhile { !it.libraryData.isInitialized }
                     .map { it.libraryData }
+                    .filter { it.isInitialized }
                     .distinctUntilChanged(),
                 groupType = libraryPreferences.groupType.changes(),
                 sortingMode = libraryPreferences.sortingMode.changes(),
@@ -547,9 +554,9 @@ class LibraryScreenModel(
         }
     }
 
-    private fun getLibraryItemsFlow(): Flow<List<LibraryItem>> {
+    private fun getLibraryItemsFlow(profileId: Long): Flow<List<LibraryItem>> {
         return combine(
-            getLibraryEntries.subscribe(),
+            getLibraryEntries.subscribe(profileId),
             downloadRuntime.changes,
         ) { items, _ ->
             items.enrichEntryItems()

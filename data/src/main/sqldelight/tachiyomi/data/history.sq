@@ -57,7 +57,8 @@ WHERE _id IN (
 );
 
 removeAllHistory:
-DELETE FROM history;
+DELETE FROM history
+WHERE entry_id IN (SELECT _id FROM entries WHERE profile_id = :profileId);
 
 removeResettedHistory:
 DELETE FROM history
@@ -76,7 +77,8 @@ VALUES (:entryId, :chapterId, :readAt, :time_read);
 
 getReadDuration:
 SELECT coalesce(sum(time_read), 0)
-FROM history;
+FROM history
+WHERE entry_id IN (SELECT _id FROM entries WHERE profile_id = :profileId);
 
 deleteByProfile:
 DELETE FROM history

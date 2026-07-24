@@ -21,9 +21,13 @@ class HistoryRepositoryImpl(
 
     override fun getHistory(query: String): Flow<List<HistoryWithRelations>> {
         return profileProvider.activeProfileIdFlow.flatMapLatest { profileId ->
-            handler.subscribeToList {
-                historyViewQueries.history(profileId, query, HistoryMapper::mapHistoryWithRelations)
-            }
+            getHistory(query, profileId)
+        }
+    }
+
+    override fun getHistory(query: String, profileId: Long): Flow<List<HistoryWithRelations>> {
+        return handler.subscribeToList {
+            historyViewQueries.history(profileId, query, HistoryMapper::mapHistoryWithRelations)
         }
     }
 
@@ -34,7 +38,7 @@ class HistoryRepositoryImpl(
     }
 
     override suspend fun getTotalReadDuration(): Long {
-        return handler.awaitOne { historyQueries.getReadDuration() }
+        return handler.awaitOne { historyQueries.getReadDuration(profileProvider.activeProfileId) }
     }
 
     override suspend fun getHistoryByEntryId(entryId: Long): List<History> {
@@ -61,7 +65,7 @@ class HistoryRepositoryImpl(
 
     override suspend fun deleteAllHistory(): Boolean {
         return try {
-            handler.await { historyQueries.removeAllHistory() }
+            handler.await { historyQueries.removeAllHistory(profileProvider.activeProfileId) }
             true
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, throwable = e)

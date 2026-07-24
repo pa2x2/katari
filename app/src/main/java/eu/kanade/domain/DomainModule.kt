@@ -165,7 +165,7 @@ class DomainModule : InjektModule {
         addSingletonFactory<UpdatesRepository> { UpdatesRepositoryImpl(get(), get()) }
         addFactory { GetUpdates(get(), get()) }
 
-        addSingletonFactory<HiddenSourceIds> { ProfileHiddenSourceIds(get()) }
+        addSingletonFactory<HiddenSourceIds> { ProfileHiddenSourceIds(get(), get()) }
         addSingletonFactory<SourceRepository> { SourceRepositoryImpl(get(), get(), get(), get()) }
         addSingletonFactory<StubSourceRepository> { StubSourceRepositoryImpl(get()) }
         addFactory { GetEnabledSources(get(), get()) }

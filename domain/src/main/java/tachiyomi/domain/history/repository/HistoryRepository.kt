@@ -9,6 +9,8 @@ interface HistoryRepository {
 
     fun getHistory(query: String): Flow<List<HistoryWithRelations>>
 
+    fun getHistory(query: String, profileId: Long): Flow<List<HistoryWithRelations>>
+
     suspend fun getLastHistory(): HistoryWithRelations?
 
     suspend fun getTotalReadDuration(): Long
