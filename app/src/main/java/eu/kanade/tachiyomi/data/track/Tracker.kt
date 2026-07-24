@@ -11,6 +11,16 @@ import tachiyomi.domain.track.model.EntryTrack
 
 interface Tracker : TrackerCapabilities {
 
+    val accountLogin: TrackerLogin
+        get() = if (this is EnhancedTracker) {
+            TrackerLogin.Passive
+        } else {
+            TrackerLogin.Credentials(TrackerCredentialIdentity.USERNAME)
+        }
+
+    val accountOrder: Int
+        get() = id.toInt()
+
     val id: Long
 
     val name: String

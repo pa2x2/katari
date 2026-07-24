@@ -9,7 +9,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.PermissionChecker
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
-import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.EntryDownloadEntryIdentity
 import mihon.entry.interactions.EntryDownloadNotificationActions
 import mihon.entry.interactions.EntryDownloadNotifications
 import tachiyomi.core.common.i18n.stringResource
@@ -18,21 +18,19 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 data class EntryDownloadProgressNotification(
-    val entryType: EntryType,
+    val destination: EntryDownloadEntryIdentity,
     val title: String,
     val text: String?,
     val maximum: Int,
     val current: Int,
     val indeterminate: Boolean = false,
     val hiddenTitle: String? = null,
-    val entryId: Long? = null,
 )
 
 data class EntryDownloadErrorNotification(
-    val entryType: EntryType,
+    val destination: EntryDownloadEntryIdentity?,
     val title: String,
     val message: String,
-    val entryId: Long? = null,
 )
 
 data class EntryDownloadNotificationLabels(
@@ -60,8 +58,6 @@ interface EntryDownloadNotificationPresenter {
         reason: String,
         timeout: Long? = null,
         contentIntent: PendingIntent? = null,
-        entryType: EntryType? = null,
-        entryId: Long? = null,
     )
 }
 
@@ -95,7 +91,7 @@ class AndroidEntryDownloadNotifier(
                 content.current.coerceIn(0, content.maximum),
                 content.indeterminate,
             )
-            addActiveActions(content.entryType, content.entryId)
+            addActiveActions(content.destination)
         }.show(EntryDownloadNotifications.ID_PROGRESS)
     }
 
@@ -134,7 +130,7 @@ class AndroidEntryDownloadNotifier(
             setSmallIcon(android.R.drawable.stat_sys_warning)
             setAutoCancel(true)
             setContentIntent(actions.openDownloadManager(context))
-            content.entryId?.let { addOpenEntryAction(content.entryType, it) }
+            content.destination?.let { addOpenEntryAction(it) }
         }.show(EntryDownloadNotifications.ID_ERROR)
     }
 
@@ -142,8 +138,6 @@ class AndroidEntryDownloadNotifier(
         reason: String,
         timeout: Long?,
         contentIntent: PendingIntent?,
-        entryType: EntryType?,
-        entryId: Long?,
     ) {
         notificationBuilder(EntryDownloadNotifications.CHANNEL_ERROR) {
             setContentTitle(labels.downloader)
@@ -151,12 +145,11 @@ class AndroidEntryDownloadNotifier(
             setSmallIcon(android.R.drawable.stat_sys_warning)
             setAutoCancel(true)
             setContentIntent(contentIntent ?: actions.openDownloadManager(context))
-            if (entryType != null && entryId != null) addOpenEntryAction(entryType, entryId)
             timeout?.let(::setTimeoutAfter)
         }.show(EntryDownloadNotifications.ID_ERROR)
     }
 
-    private fun NotificationCompat.Builder.addActiveActions(entryType: EntryType, entryId: Long?) {
+    private fun NotificationCompat.Builder.addActiveActions(destination: EntryDownloadEntryIdentity) {
         addAction(
             android.R.drawable.ic_media_pause,
             labels.pause,
@@ -167,14 +160,18 @@ class AndroidEntryDownloadNotifier(
             labels.cancelAll,
             actions.clearDownloads(context),
         )
-        entryId?.let { addOpenEntryAction(entryType, it) }
+        addOpenEntryAction(destination)
     }
 
-    private fun NotificationCompat.Builder.addOpenEntryAction(entryType: EntryType, entryId: Long) {
+    private fun NotificationCompat.Builder.addOpenEntryAction(destination: EntryDownloadEntryIdentity) {
         addAction(
             android.R.drawable.ic_menu_view,
             labels.showEntry,
-            actions.openEntry(context, entryType, entryId),
+            actions.openEntry(
+                context,
+                destination.profileId,
+                destination.entryId,
+            ),
         )
     }
 

@@ -4,12 +4,14 @@ import android.content.Context
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import mihon.entry.interactions.EntryDownloadWorkController
 import mihon.entry.interactions.book.download.model.BookDownload
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
@@ -77,6 +79,34 @@ class BookDownloadManagerTest {
         assertFalse(fixture.manager.isRunning.value)
     }
 
+    @Test
+    fun `cancelling an active book continues pending work without stopping shared execution`() = runTest {
+        val downloadStarted = CompletableDeferred<Unit>()
+        val downloader = mockk<BookDownloader> {
+            coEvery { download(match { it.chapter.id == 11L }) } coAnswers {
+                downloadStarted.complete(Unit)
+                awaitCancellation()
+            }
+            coEvery { download(match { it.chapter.id == 12L }) } returns null
+        }
+        val workController = mockk<EntryDownloadWorkController>(relaxed = true)
+        val fixture = managerFixture(downloader, workController)
+        val entry = Entry.create().copy(id = 1L, source = 42L, url = "/book", title = "Book")
+        fixture.manager.queueBooks(
+            entry,
+            listOf(chapter(id = 11L, sourceOrder = 1L), chapter(id = 12L, sourceOrder = 2L)),
+            autoStart = false,
+        )
+        val runtime = launch { fixture.manager.runDownloads() }
+        downloadStarted.await()
+
+        fixture.manager.removeFromQueue(listOf(11L))
+        runtime.join()
+
+        assertEquals(emptyList(), fixture.manager.queueState.value)
+        verify(exactly = 0) { workController.stop() }
+    }
+
     private fun download(chapterId: Long): BookDownload = mockk {
         every { chapter.id } returns chapterId
     }
@@ -91,6 +121,7 @@ class BookDownloadManagerTest {
 
     private fun managerFixture(
         downloader: BookDownloader = mockk(relaxed = true),
+        workController: EntryDownloadWorkController = mockk(relaxed = true),
     ): ManagerFixture {
         val appContext = mockk<Context>(relaxed = true)
         val context = mockk<Context> {
@@ -112,7 +143,7 @@ class BookDownloadManagerTest {
                 downloader = downloader,
                 sourceManager = mockk(relaxed = true),
                 store = store,
-                workController = mockk(relaxed = true),
+                workController = workController,
             ),
         )
     }

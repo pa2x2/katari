@@ -138,7 +138,7 @@ data class CatalogScreen(
         var presetPendingDeletion by rememberSaveable { mutableStateOf<String?>(null) }
         var immersiveMode by rememberSaveable(sourceId) { mutableStateOf(false) }
         val immersivePositionState = rememberEntryImmersivePositionState(resetKey = state.listing)
-        val supportsImmersive = catalogSource.source.supportsImmersiveFeed
+        val immersiveAvailable = screenModel.isImmersiveSourceAvailable
         val immersiveModel = rememberScreenModel(tag = "catalog-immersive-$sourceId") {
             EntryImmersiveScreenModel()
         }
@@ -146,8 +146,8 @@ data class CatalogScreen(
         ImmersiveSystemBarsEffect(enabled = immersiveMode)
         BackHandler(enabled = immersiveMode) { immersiveMode = false }
 
-        LaunchedEffect(supportsImmersive) {
-            if (!supportsImmersive) immersiveMode = false
+        LaunchedEffect(immersiveAvailable) {
+            if (!immersiveAvailable) immersiveMode = false
         }
 
         val onWebViewClick = screenModel.homeUrl?.let { url ->
@@ -214,7 +214,7 @@ data class CatalogScreen(
                                 navigator.push(BrowseLongPressActionsScreen(sourceId))
                             },
                             onSearch = screenModel::search,
-                            onEnterImmersive = if (supportsImmersive) {
+                            onEnterImmersive = if (immersiveAvailable) {
                                 { immersiveMode = true }
                             } else {
                                 null
@@ -315,10 +315,7 @@ data class CatalogScreen(
                             onItemLongClick = { item ->
                                 scope.launch {
                                     val outcome = withIOContext {
-                                        screenModel.onItemLongClick(
-                                            item = item,
-                                            supportsImmersive = supportsImmersive,
-                                        )
+                                        screenModel.onItemLongClick(item)
                                     }
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     if (outcome == BrowseLongPressOutcome.StartImmersive) {
@@ -469,10 +466,7 @@ data class CatalogScreen(
                     onDismissRequest = onDismissRequest,
                     onEditCategories = { navigator.push(CategoryScreen()) },
                     onConfirm = { include, _ ->
-                        screenModel.changeFavorite(
-                            CatalogListItem.EntryItem(dialog.entry, screenModel.sourceItemOrientation),
-                        )
-                        screenModel.moveEntryToCategories(dialog.entry, include)
+                        screenModel.addFavorite(dialog.entry, include)
                     },
                 )
             }

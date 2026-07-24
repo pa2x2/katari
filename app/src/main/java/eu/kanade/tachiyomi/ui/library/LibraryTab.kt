@@ -29,6 +29,7 @@ import cafe.adriel.voyager.navigator.tab.TabOptions
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
 import eu.kanade.presentation.components.AppSnackbarHost
+import eu.kanade.presentation.entry.DownloadAction
 import eu.kanade.presentation.entry.components.LibraryBottomActionMenu
 import eu.kanade.presentation.entry.components.MergeEditorDialog
 import eu.kanade.presentation.entry.components.MergeEditorEntry
@@ -57,7 +58,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.EntryContinueInteraction
+import mihon.entry.interactions.EntryContinueFeature
 import mihon.feature.migration.config.MigrationConfigScreen
 import mihon.feature.profiles.core.ProfileManager
 import tachiyomi.core.common.i18n.stringResource
@@ -100,7 +101,7 @@ data object LibraryTab : Tab {
         val profileManager = remember { Injekt.get<ProfileManager>() }
         val activeProfile by profileManager.activeProfile.collectFlowAsState()
         val visibleProfiles by profileManager.visibleProfiles.collectFlowAsState()
-        val entryContinueInteraction = remember { Injekt.get<EntryContinueInteraction>() }
+        val entryContinueFeature = remember { Injekt.get<EntryContinueFeature>() }
 
         val screenModel = rememberScreenModel { LibraryScreenModel(context.applicationContext) }
         val settingsScreenModel =
@@ -189,18 +190,23 @@ data object LibraryTab : Tab {
                 val actionLabels = state.selectedEntryTypes.entrySelectionActionLabels()
                 LibraryBottomActionMenu(
                     visible = state.selectionMode,
-                    onMergeClicked = screenModel::openMergeDialog.takeIf { screenModel.canMergeSelection() },
+                    onMergeClicked = screenModel::openMergeDialog.takeIf { screenModel.isMergeSelectionAvailable() },
                     onChangeCategoryClicked = screenModel::openChangeCategoryDialog,
-                    onMarkAsReadClicked = { screenModel.markReadSelection(true) },
-                    onMarkAsUnreadClicked = { screenModel.markReadSelection(false) },
+                    onMarkAsReadClicked = { screenModel.markReadSelection(true) }
+                        .takeIf { screenModel.canSetConsumedSelection() },
+                    onMarkAsUnreadClicked = { screenModel.markReadSelection(false) }
+                        .takeIf { screenModel.canSetConsumedSelection() },
                     markAsReadLabel = actionLabels.markAsReadLabel,
                     markAsUnreadLabel = actionLabels.markAsUnreadLabel,
                     downloadPresentation = state.selectedEntryTypes.selectionEntryTypePresentation(),
+                    bookmarkedDownloadsSupported = screenModel.canDownloadSelection(
+                        DownloadAction.BOOKMARKED_CHAPTERS,
+                    ),
                     onDownloadClicked = screenModel::performDownloadAction
                         .takeIf { screenModel.canDownloadSelection() },
                     onDeleteClicked = screenModel::openDeleteEntriesDialog,
                     onMigrateClicked = {
-                        val selection = screenModel.selectedMigrationEntryIds()
+                        val selection = screenModel.selectedMigrationSubjects()
                         screenModel.clearSelection()
                         navigator.push(MigrationConfigScreen(selection))
                     }.takeIf { screenModel.canMigrateSelection() },
@@ -243,10 +249,13 @@ data object LibraryTab : Tab {
                         },
                         onContinueReadingClicked = { item: LibraryItem ->
                             scope.launchIO {
-                                entryContinueInteraction.continueEntry(context, item.entry)
+                                entryContinueFeature.continueEntry(context, item.entry)
                             }
                             Unit
                         }.takeIf { state.showContinueButton },
+                        isContinueReadingAvailable = { item ->
+                            entryContinueFeature.isApplicable(item.entry.type)
+                        },
                         onToggleSelection = screenModel::toggleSelection,
                         onToggleRangeSelection = { page, item ->
                             screenModel.toggleRangeSelection(page, item)
@@ -274,6 +283,7 @@ data object LibraryTab : Tab {
                     onDismissRequest = onDismissRequest,
                     screenModel = settingsScreenModel,
                     category = state.activeSortCategory,
+                    filterAvailability = state.libraryData.filterAvailability,
                 )
             }
             is LibraryScreenModel.Dialog.ChangeCategory -> {

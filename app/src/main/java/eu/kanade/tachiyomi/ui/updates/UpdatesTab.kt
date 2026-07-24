@@ -35,7 +35,7 @@ import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.updates.UpdatesScreenModel.Event
 import kotlinx.coroutines.flow.collectLatest
 import mihon.entry.interactions.EntryDownloadState
-import mihon.entry.interactions.EntryOpenInteraction
+import mihon.entry.interactions.EntryOpenFeature
 import mihon.feature.upcoming.UpcomingScreen
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
@@ -70,7 +70,7 @@ data object UpdatesTab : Tab {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
         val scope = androidx.compose.runtime.rememberCoroutineScope()
-        val entryOpenInteraction = remember { Injekt.get<EntryOpenInteraction>() }
+        val entryOpenFeature = remember { Injekt.get<EntryOpenFeature>() }
         val screenModel = rememberScreenModel { UpdatesScreenModel() }
         val settingsScreenModel = rememberScreenModel { UpdatesSettingsScreenModel() }
         val state by screenModel.state.collectAsState()
@@ -111,16 +111,16 @@ data object UpdatesTab : Tab {
                     onDownloadClicked = {
                         screenModel.downloadChapters(state.selected, ChapterDownloadAction.START)
                     }.takeIf {
-                        selected.any {
+                        screenModel.canUseDownloadActions(selected) && selected.any {
                             it.update is UpdateItem.EntryUpdate &&
-                                it.downloadSupported &&
+                                it.downloadAvailable &&
                                 it.downloadStateProvider() != EntryDownloadState.DOWNLOADED
                         }
                     },
                     onDeleteClicked = {
                         screenModel.showConfirmDeleteChapters(state.selected)
                     }.takeIf {
-                        selected.any {
+                        screenModel.canUseDownloadActions(selected) && selected.any {
                             it.update is UpdateItem.EntryUpdate &&
                                 it.downloadStateProvider() == EntryDownloadState.DOWNLOADED
                         }
@@ -143,6 +143,7 @@ data object UpdatesTab : Tab {
                 onClickCover = { item ->
                     navigator.push(EntryScreen(item.visibleEntryId))
                 },
+                isOpenApplicable = { item -> entryOpenFeature.isApplicable(item.update.entryType) },
                 onClickUpdate = { item ->
                     scope.launchIO {
                         val entry = Injekt.get<EntryRepository>().getEntryById(item.visibleEntryId)
@@ -152,7 +153,7 @@ data object UpdatesTab : Tab {
                         }
                         val chapter = Injekt.get<EntryChapterRepository>().getChapterById(chapterId)
                             ?: return@launchIO
-                        entryOpenInteraction.open(context, entry, chapter)
+                        entryOpenFeature.open(context, entry, chapter)
                     }
                 },
                 onDownloadChapter = screenModel::downloadChapters,

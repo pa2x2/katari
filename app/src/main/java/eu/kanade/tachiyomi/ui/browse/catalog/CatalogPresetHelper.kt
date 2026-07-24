@@ -6,19 +6,22 @@ import eu.kanade.domain.source.model.SourceFeedPreset
 import eu.kanade.domain.source.model.latestFeedPreset
 import eu.kanade.domain.source.model.popularFeedPreset
 import eu.kanade.domain.source.service.BrowseFeedService
-import tachiyomi.domain.source.service.SourceManager
+import mihon.entry.interactions.EntryCatalogueFeature
+import mihon.entry.interactions.EntryCatalogueSourceResolution
 
 /**
  * Helpers for feed presets in the unified catalog screen.
  */
 class CatalogPresetHelper(
     private val sourceId: Long,
-    private val sourceManager: SourceManager,
     private val browseFeedService: BrowseFeedService,
+    private val catalogueFeature: EntryCatalogueFeature,
 ) {
 
     val supportsLatest: Boolean
-        get() = sourceManager.getCatalogueSource(sourceId)?.supportsLatest ?: false
+        get() = (catalogueFeature.source(sourceId) as? EntryCatalogueSourceResolution.Available)
+            ?.source
+            ?.supportsLatest == true
 
     fun feedPresets(): List<SourceFeedPreset> {
         val custom = browseFeedService.stateSnapshot().presets

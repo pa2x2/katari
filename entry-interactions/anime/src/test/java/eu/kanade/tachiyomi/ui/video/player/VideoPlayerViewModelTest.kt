@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.video.player
 
 import androidx.lifecycle.SavedStateHandle
+import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.PlaybackDescriptor
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.VideoRequest
@@ -8,6 +9,7 @@ import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.source.entry.VideoStreamType
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -18,6 +20,10 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import mihon.entry.interactions.EntryMediaSessionEvent
+import mihon.entry.interactions.EntryMediaSessionEventSink
+import mihon.entry.interactions.EntryMediaSessionResult
+import mihon.entry.interactions.anime.AnimeMediaSessionProcessor
 import mihon.entry.interactions.anime.animeProgressState
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -95,11 +101,16 @@ class VideoPlayerViewModelTest {
     fun `persist playback writes playback state and history delta`() = runTest(dispatcher) {
         val playbackRepository = FakeEntryProgressRepository(existingState = null)
         val historyRepository = FakeHistoryRepository()
+        val events = mutableListOf<EntryMediaSessionEvent>()
         val viewModel = createViewModel(
             entryChapterRepository = FakeEntryChapterRepository(emptyList()),
             playbackRepository = playbackRepository,
             historyRepository = historyRepository,
             resolver = RecordingVideoStreamResolver(),
+            mediaSession = EntryMediaSessionEventSink {
+                events += it
+                EntryMediaSessionResult.Handled
+            },
         )
 
         viewModel.init(entryId = 1L, chapterId = 2L)
@@ -108,12 +119,43 @@ class VideoPlayerViewModelTest {
         viewModel.persistPlayback(positionMs = 15_000L, durationMs = 100_000L)
         advanceUntilIdle()
 
-        playbackRepository.upserts.single().chapterId shouldBe 2L
-        playbackRepository.upserts.single().locator.position shouldBe 15_000L
-        playbackRepository.upserts.single().locator.extent shouldBe 100_000L
-        playbackRepository.upserts.single().completed shouldBe false
-        historyRepository.upserts.single().chapterId shouldBe 2L
-        historyRepository.upserts.single().sessionReadDuration shouldBe 15_000L
+        playbackRepository.upserts shouldBe emptyList()
+        historyRepository.upserts shouldBe emptyList()
+        val event = events.single() as EntryMediaSessionEvent.Progressed
+        event.progress.chapterId shouldBe 2L
+        event.progress.locator.position shouldBe 15_000L
+        event.progress.locator.extent shouldBe 100_000L
+        event.progress.completed shouldBe false
+        event.activity?.durationMillis shouldBe 15_000L
+    }
+
+    @Test
+    fun `persist playback reports completion to shared media session`() = runTest(dispatcher) {
+        val mediaSession = mockk<EntryMediaSessionEventSink>(relaxed = true)
+        coEvery { mediaSession.onEvent(any()) } returns EntryMediaSessionResult.Handled
+        val viewModel = createViewModel(
+            entryChapterRepository = FakeEntryChapterRepository(emptyList()),
+            playbackRepository = FakeEntryProgressRepository(existingState = null),
+            historyRepository = FakeHistoryRepository(),
+            resolver = RecordingVideoStreamResolver(),
+            mediaSession = mediaSession,
+        )
+        viewModel.init(entryId = 1L, chapterId = 2L)
+        advanceUntilIdle()
+
+        viewModel.persistPlayback(positionMs = 95_000L, durationMs = 100_000L)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) {
+            mediaSession.onEvent(
+                match {
+                    it is EntryMediaSessionEvent.Progressed &&
+                        it.visibleEntry == videoEntry(1L) &&
+                        it.child == chapter(id = 2L, entryId = 1L, sourceOrder = 2L) &&
+                        it.progress.completed
+                },
+            )
+        }
     }
 
     @Test
@@ -152,13 +194,7 @@ class VideoPlayerViewModelTest {
         val historyRepository = FakeHistoryRepository()
         val resolver = RecordingVideoStreamResolver()
         val getEntryWithChapters = mockk<GetEntryWithChapters>()
-        coEvery { getEntryWithChapters.awaitEntry(100L) } returns Entry.create().copy(
-            id = 100L,
-            title = "Merged",
-            url = "/entry/100",
-            chapterFlags = Entry.CHAPTER_SORT_DESC or Entry.CHAPTER_SORTING_NUMBER,
-        )
-        coEvery { getEntryWithChapters.awaitChapters(id = 100L, bypassMerge = false) } returns listOf(
+        coEvery { getEntryWithChapters.awaitChapters(any(), false, any()) } returns listOf(
             chapter(id = 10L, entryId = 1L, sourceOrder = 1L, chapterNumber = 1.0),
             chapter(id = 30L, entryId = 1L, sourceOrder = 2L, chapterNumber = 2.0),
             chapter(id = 20L, entryId = 2L, sourceOrder = 1L, chapterNumber = 1.0),
@@ -196,13 +232,7 @@ class VideoPlayerViewModelTest {
         val historyRepository = FakeHistoryRepository()
         val resolver = RecordingVideoStreamResolver()
         val getEntryWithChapters = mockk<GetEntryWithChapters>()
-        coEvery { getEntryWithChapters.awaitEntry(1L) } returns Entry.create().copy(
-            id = 1L,
-            title = "Owner",
-            url = "/entry/1",
-            chapterFlags = Entry.CHAPTER_SORT_ASC or Entry.CHAPTER_SORTING_SOURCE,
-        )
-        coEvery { getEntryWithChapters.awaitChapters(id = 1L, bypassMerge = true) } returns listOf(
+        coEvery { getEntryWithChapters.awaitChapters(any(), true, any()) } returns listOf(
             chapter(id = 10L, entryId = 1L, sourceOrder = 2L),
             chapter(id = 30L, entryId = 1L, sourceOrder = 1L),
         )
@@ -239,6 +269,9 @@ class VideoPlayerViewModelTest {
         historyRepository: HistoryRepository,
         resolver: VideoStreamResolver,
         getEntryWithChapters: GetEntryWithChapters? = null,
+        mediaSession: EntryMediaSessionEventSink = EntryMediaSessionEventSink {
+            EntryMediaSessionResult.Handled
+        },
     ): VideoPlayerViewModel {
         return VideoPlayerViewModel(
             savedState = SavedStateHandle(),
@@ -247,7 +280,7 @@ class VideoPlayerViewModelTest {
             entryChapterRepository = entryChapterRepository,
             getEntryWithChapters = getEntryWithChapters,
             entryProgressRepository = playbackRepository,
-            historyRepository = historyRepository,
+            mediaSession = AnimeMediaSessionProcessor(mediaSession),
             resolveDispatcher = dispatcher,
             persistenceDispatcher = dispatcher,
         )
@@ -272,10 +305,15 @@ class VideoPlayerViewModelTest {
     private fun videoEntry(id: Long): Entry {
         return Entry.create().copy(
             id = id,
+            type = EntryType.ANIME,
             source = 99L,
             title = "Entry $id",
             initialized = true,
             url = "/entry/$id",
+            chapterFlags = when (id) {
+                100L -> Entry.CHAPTER_SORT_DESC or Entry.CHAPTER_SORTING_NUMBER
+                else -> Entry.CHAPTER_SORT_ASC or Entry.CHAPTER_SORTING_SOURCE
+            },
         )
     }
 

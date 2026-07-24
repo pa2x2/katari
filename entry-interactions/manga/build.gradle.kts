@@ -57,7 +57,6 @@ dependencies {
     implementation(libs.bundles.androidx.lifecycle)
     implementation(libs.androidx.recyclerView)
     implementation(libs.androidx.viewPager)
-    implementation(libs.androidx.work)
     implementation(libs.bundles.coil)
     implementation(libs.bundles.serialization)
     implementation(libs.diskLruCache)

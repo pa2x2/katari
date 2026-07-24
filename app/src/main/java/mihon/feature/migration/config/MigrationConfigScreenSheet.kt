@@ -34,7 +34,9 @@ import eu.kanade.core.util.fastFilterNot
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.components.AdaptiveSheet
 import mihon.domain.migration.models.MigrationFlag
-import mihon.feature.common.utils.getLabel
+import mihon.entry.interactions.EntryMigrationOption
+import mihon.feature.migration.options.getLabel
+import mihon.feature.migration.options.toEntryMigrationOptions
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.core.common.preference.toggle
@@ -50,7 +52,7 @@ import tachiyomi.presentation.core.util.collectAsState
 fun MigrationConfigScreenSheet(
     preferences: SourcePreferences,
     onDismissRequest: () -> Unit,
-    onStartMigration: (extraSearchQuery: String?) -> Unit,
+    onStartMigration: (extraSearchQuery: String?, selectedOptions: Set<EntryMigrationOption>) -> Unit,
 ) {
     var extraSearchQuery by rememberSaveable { mutableStateOf("") }
     val migrationFlags by preferences.migrationFlags.collectAsState()
@@ -164,7 +166,7 @@ fun MigrationConfigScreenSheet(
             Button(
                 onClick = {
                     val cleanedExtraSearchQuery = extraSearchQuery.trim().ifBlank { null }
-                    onStartMigration(cleanedExtraSearchQuery)
+                    onStartMigration(cleanedExtraSearchQuery, migrationFlags.toEntryMigrationOptions())
                 },
                 modifier = Modifier
                     .fillMaxWidth()

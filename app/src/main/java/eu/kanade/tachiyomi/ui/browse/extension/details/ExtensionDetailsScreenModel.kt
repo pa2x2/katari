@@ -10,9 +10,6 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.network.NetworkHelper
-import eu.kanade.tachiyomi.source.entry.ConfigurableSource
-import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
-import eu.kanade.tachiyomi.source.entry.SourceHomePage
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -26,9 +23,14 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.entry.interactions.EntryCatalogueFeature
+import mihon.entry.interactions.EntryCatalogueSourceResolution
+import mihon.entry.interactions.EntrySourceHomeFeature
+import mihon.entry.interactions.EntrySourceHomeResolution
+import mihon.entry.interactions.EntrySourceSettingsFeature
+import mihon.entry.interactions.EntrySourceSettingsResolution
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.source.service.resolvedSupportedEntryTypes
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -41,6 +43,9 @@ class ExtensionDetailsScreenModel(
     private val toggleSource: ToggleSource = Injekt.get(),
     private val toggleIncognito: ToggleIncognito = Injekt.get(),
     private val preferences: SourcePreferences = Injekt.get(),
+    private val catalogueFeature: EntryCatalogueFeature = Injekt.get(),
+    private val sourceHomeFeature: EntrySourceHomeFeature = Injekt.get(),
+    private val sourceSettingsFeature: EntrySourceSettingsFeature = Injekt.get(),
 ) : StateScreenModel<ExtensionDetailsState>(ExtensionDetailsState()) {
 
     private val _events: Channel<ExtensionDetailsEvent> = Channel()
@@ -72,10 +77,13 @@ class ExtensionDetailsScreenModel(
                                 compareBy(
                                     { !it.enabled },
                                     { item ->
-                                        val catalogueSource = item.source as? EntryCatalogueSource
+                                        val source = (
+                                            catalogueFeature.source(item.source.id) as?
+                                                EntryCatalogueSourceResolution.Available
+                                            )?.source
                                         item.source.name.takeIf { item.labelAsName }
                                             ?: LocaleHelper.getSourceDisplayName(
-                                                catalogueSource?.lang.orEmpty(),
+                                                source?.language.orEmpty(),
                                                 context,
                                             ).lowercase()
                                     },
@@ -91,16 +99,20 @@ class ExtensionDetailsScreenModel(
                                 it.copyWithSources(
                                     sources
                                         .map { source ->
-                                            val catalogueSource = source.source as? EntryCatalogueSource
+                                            val catalogueSource = (
+                                                catalogueFeature.source(source.source.id) as?
+                                                    EntryCatalogueSourceResolution.Available
+                                                )?.source
                                             ExtensionDetailsSourceUiModel(
                                                 id = source.source.id,
                                                 name = source.source.name,
                                                 title = source.source.name,
-                                                lang = catalogueSource?.lang.orEmpty(),
+                                                lang = catalogueSource?.language.orEmpty(),
                                                 labelAsName = source.labelAsName,
                                                 enabled = source.enabled,
-                                                hasSettings = source.source is ConfigurableSource,
-                                                supportedEntryTypes = source.source.resolvedSupportedEntryTypes(),
+                                                hasSettings = sourceSettingsFeature.resolve(source.source.id) is
+                                                    EntrySourceSettingsResolution.Available,
+                                                supportedEntryTypes = catalogueSource?.supportedEntryTypes,
                                             )
                                         }
                                         .toImmutableList(),
@@ -125,8 +137,9 @@ class ExtensionDetailsScreenModel(
         val extension = state.value.extension ?: return
 
         val urls = extension.sources
-            .mapNotNull { (it as? SourceHomePage)?.getHomeUrl() }
-            .filter { it.isNotEmpty() }
+            .mapNotNull { source ->
+                (sourceHomeFeature.resolve(source.id) as? EntrySourceHomeResolution.Available)?.url
+            }
             .distinct()
 
         val cleared = urls.sumOf {

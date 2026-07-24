@@ -65,6 +65,10 @@ Each `SEntry` declares its own `EntryType`; the extension or source is not perma
 
 This separation allows a factory—and, where appropriate, a catalogue—to expose several supported content types. Read [content types](./content-types.md) before adding type-dependent source behavior.
 
+Katari runtime contributors who add optional reader or player configuration should also read
+[contributing viewer settings](./viewer-settings.md). Viewer Settings support comes from the type provider and its exact
+app screen projection; it is not a source capability or a content-type support matrix.
+
 BOOK adds another separation inside its media path: sources describe resources, Katari owns access to those resources, and a format processor interprets them and supplies its reader. The shared data-only boundary lives in a separate artifact so processors do not depend on the extension source lifecycle. Read [Book API architecture](./book-api.md) before implementing book media.
 
 ## Reference and compatibility

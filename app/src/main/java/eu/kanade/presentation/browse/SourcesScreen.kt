@@ -140,7 +140,7 @@ private fun SourceItem(
         },
         onLongClickItem = { onLongClickItem(source) },
         action = {
-            if (itemClicksEnabled && source.supportsLatest) {
+            if (itemClicksEnabled && source.catalogue?.supportsLatest == true) {
                 TextButton(onClick = { onClickItem(source, SourceListListing.Latest) }) {
                     Text(
                         text = stringResource(MR.strings.latest),

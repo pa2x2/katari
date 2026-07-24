@@ -13,6 +13,7 @@ import mihon.domain.migration.models.MigrationFlag
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
+import tachiyomi.core.common.preference.ProfilePreferenceKeyPattern
 import tachiyomi.core.common.preference.getEnum
 import tachiyomi.core.common.preference.getLongArray
 import tachiyomi.domain.library.model.LibraryDisplayMode
@@ -32,6 +33,20 @@ class SourcePreferences(
         const val LAST_USED_SOURCE_KEY = "last_source"
         const val MANGA_LAST_USED_SOURCE_KEY = "last_catalogue_source"
         const val ANIME_LAST_USED_SOURCE_KEY = "last_anime_catalogue_source"
+
+        val SOURCE_DISPLAY_MODE_KEY_FAMILY = ProfilePreferenceKeyPattern.Prefix("pref_display_mode_catalogue_")
+        val FEED_TIMELINE_KEY_FAMILY = ProfilePreferenceKeyPattern.Prefix(
+            Preference.appStateKey("source_feed_timeline_"),
+        )
+        val FEED_ANCHOR_KEY_FAMILY = ProfilePreferenceKeyPattern.Prefix(
+            Preference.appStateKey("source_feed_anchor_"),
+        )
+
+        val profileKeyPatterns = setOf(
+            SOURCE_DISPLAY_MODE_KEY_FAMILY,
+            FEED_TIMELINE_KEY_FAMILY,
+            FEED_ANCHOR_KEY_FAMILY,
+        )
     }
 
     val sourceDisplayMode: Preference<LibraryDisplayMode> = preferenceStore.getObjectFromString(
@@ -43,7 +58,7 @@ class SourcePreferences(
 
     fun sourceDisplayMode(sourceId: Long): Preference<LibraryDisplayMode> {
         return preferenceStore.getObjectFromString(
-            "pref_display_mode_catalogue_$sourceId",
+            SOURCE_DISPLAY_MODE_KEY_FAMILY.key(sourceId),
             sourceDisplayMode.get(),
             LibraryDisplayMode.Serializer::serialize,
             LibraryDisplayMode.Serializer::deserialize,
@@ -140,7 +155,7 @@ class SourcePreferences(
 
     fun feedTimeline(feedId: String): Preference<SourceFeedTimeline> {
         return preferenceStore.getObjectFromString(
-            key = Preference.appStateKey("source_feed_timeline_$feedId"),
+            key = FEED_TIMELINE_KEY_FAMILY.key(feedId),
             defaultValue = SourceFeedTimeline(),
             serializer = { json.encodeToString(it) },
             deserializer = { json.decodeFromString<SourceFeedTimeline>(it) },
@@ -149,7 +164,7 @@ class SourcePreferences(
 
     fun feedAnchor(feedId: String): Preference<SourceFeedAnchor> {
         return preferenceStore.getObjectFromString(
-            key = Preference.appStateKey("source_feed_anchor_$feedId"),
+            key = FEED_ANCHOR_KEY_FAMILY.key(feedId),
             defaultValue = SourceFeedAnchor(),
             serializer = { json.encodeToString(it) },
             deserializer = { json.decodeFromString<SourceFeedAnchor>(it) },

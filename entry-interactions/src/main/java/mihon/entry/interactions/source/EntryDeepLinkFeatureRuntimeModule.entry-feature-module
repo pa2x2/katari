@@ -1,0 +1,2 @@
+id=entry.deep-link
+module=mihon.entry.interactions.EntryDeepLinkFeatureRuntimeModule

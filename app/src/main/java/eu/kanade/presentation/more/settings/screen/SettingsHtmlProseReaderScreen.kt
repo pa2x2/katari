@@ -14,7 +14,9 @@ import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-object SettingsHtmlProseReaderScreen : SearchableSettings {
+object SettingsHtmlProseReaderScreen : AppEntryViewerSettingsScreenProjection {
+
+    override val surfaceId: String = HtmlProseSettingsProvider.PROVIDER_ID
 
     @ReadOnlyComposable
     @Composable

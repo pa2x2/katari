@@ -5,32 +5,32 @@ import androidx.core.net.toUri
 import cafe.adriel.voyager.core.model.StateScreenModel
 import eu.kanade.presentation.more.stats.StatsScreenState
 import eu.kanade.tachiyomi.network.NetworkHelper
-import eu.kanade.tachiyomi.source.entry.WebViewSource
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toShareIntent
 import eu.kanade.tachiyomi.util.system.toast
 import logcat.LogPriority
+import mihon.entry.interactions.EntryWebViewFeature
+import mihon.entry.interactions.EntryWebViewHeadersResolution
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 class WebViewScreenModel(
     val sourceId: Long?,
-    private val sourceManager: SourceManager = Injekt.get(),
+    private val webViewFeature: EntryWebViewFeature = Injekt.get(),
     private val network: NetworkHelper = Injekt.get(),
 ) : StateScreenModel<StatsScreenState>(StatsScreenState.Loading) {
 
     var headers = emptyMap<String, String>()
 
     init {
-        sourceId?.let { sourceManager.get(it) as? WebViewSource }?.let { source ->
-            try {
-                headers = source.getWebViewHeaders()
-            } catch (e: Exception) {
-                logcat(LogPriority.ERROR, e) { "Failed to build headers" }
+        when (val resolution = sourceId?.let(webViewFeature::resolveHeaders)) {
+            is EntryWebViewHeadersResolution.Available -> headers = resolution.headers
+            is EntryWebViewHeadersResolution.Failed -> {
+                logcat(LogPriority.ERROR, resolution.cause) { "Failed to build headers" }
             }
+            else -> Unit
         }
     }
 

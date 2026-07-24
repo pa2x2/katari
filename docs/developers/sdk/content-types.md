@@ -76,6 +76,10 @@ override suspend fun getMedia(
 
 The child item does not currently carry `EntryType` itself. Its association with the parent entry and its stable source identity must therefore remain unambiguous.
 
+Library-update notifications require no source opt-in. Katari groups actual updates by each returned entry's authoritative
+type and derives notification actions from the runtime interactions available for that type. Source metadata does not
+authorize those actions. A source only supplies the normal updated child list and stable entry/child identity.
+
 ## Support for additional content types
 
 An extension can only use `EntryType` values supplied by the SDK and supported by the Katari runtime. It cannot introduce another value independently.

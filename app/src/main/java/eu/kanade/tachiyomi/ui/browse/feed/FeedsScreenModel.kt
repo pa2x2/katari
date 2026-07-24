@@ -164,7 +164,7 @@ class FeedsScreenModel(
     fun presetsFor(source: Source): List<SourceFeedPreset> {
         val builtin = buildList {
             add(popularFeedPreset(source.id, "Popular"))
-            if (source.supportsLatest) {
+            if (source.catalogue?.supportsLatest == true) {
                 add(latestFeedPreset(source.id, "Latest"))
             }
         }
@@ -184,7 +184,7 @@ class FeedsScreenModel(
             BUILTIN_POPULAR_PRESET_ID -> popularFeedPreset(source.id, "Popular")
             BUILTIN_LATEST_PRESET_ID ->
                 source
-                    .takeIf(Source::supportsLatest)
+                    .takeIf { it.catalogue?.supportsLatest == true }
                     ?.let { latestFeedPreset(it.id, "Latest") }
 
             else -> state.value.presets.firstOrNull {
@@ -254,7 +254,7 @@ class FeedsScreenModel(
             val source = sources.firstOrNull { it.id == feed.sourceId } ?: return false
             return when (feed.presetId) {
                 BUILTIN_POPULAR_PRESET_ID -> true
-                BUILTIN_LATEST_PRESET_ID -> source.supportsLatest
+                BUILTIN_LATEST_PRESET_ID -> source.catalogue?.supportsLatest == true
                 else -> presets.any { it.id == feed.presetId && it.sourceId == source.id }
             }
         }

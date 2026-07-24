@@ -71,12 +71,6 @@ object DownloadQueueScreen : Screen() {
         val downloadCount by remember {
             derivedStateOf { downloadList.sumOf { it.subItems.size } }
         }
-        val numberSortLabel = downloadList.firstOrNull()
-            ?.model
-            ?.contentType
-            ?.numberSortLabel
-            ?: MR.strings.action_order_by_chapter_number
-
         val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
         var fabExpanded by remember { mutableStateOf(true) }
         val nestedScrollConnection = remember {
@@ -159,7 +153,7 @@ object DownloadQueueScreen : Screen() {
                                     },
                                 )
                                 NestedMenuItem(
-                                    text = { Text(text = stringResource(numberSortLabel)) },
+                                    text = { Text(text = stringResource(MR.strings.action_order_by_item_number)) },
                                     children = { closeMenu ->
                                         DropdownMenuItem(
                                             text = { Text(text = stringResource(MR.strings.action_asc)) },

@@ -58,9 +58,8 @@ import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.entry.interactions.EntryMediaCacheBucketKeys
-import mihon.entry.interactions.EntryMediaCacheMaintenance
-import mihon.entry.interactions.settings.EntryMediaCachePreferences
+import mihon.entry.interactions.EntryMediaCacheClearResult
+import mihon.entry.interactions.EntryMediaCacheFeature
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.storage.displayablePath
 import tachiyomi.core.common.util.lang.launchNonCancellable
@@ -280,12 +279,10 @@ object SettingsDataScreen : SearchableSettings {
     private fun getDataGroup(): Preference.PreferenceGroup {
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
-        val mediaCachePreferences = remember { Injekt.get<EntryMediaCachePreferences>() }
-
-        val mediaCacheMaintenance = remember { Injekt.get<EntryMediaCacheMaintenance>() }
+        val mediaCacheFeature = remember { Injekt.get<EntryMediaCacheFeature>() }
         var cacheSizeSema by remember { mutableIntStateOf(0) }
-        val mediaCacheBuckets = remember(cacheSizeSema) {
-            mediaCacheMaintenance.buckets()
+        val mediaCacheSettings = remember(cacheSizeSema) {
+            mediaCacheFeature.settings()
         }
 
         return Preference.PreferenceGroup(
@@ -305,50 +302,44 @@ object SettingsDataScreen : SearchableSettings {
                     },
                 )
 
-                mediaCacheBuckets.forEach { bucket ->
-                    val title = when (bucket.key) {
-                        EntryMediaCacheBucketKeys.MANGA_PAGE_IMAGE -> MR.strings.pref_clear_chapter_cache
-                        EntryMediaCacheBucketKeys.ANIME_PLAYBACK -> MR.strings.pref_clear_anime_playback_cache
-                        EntryMediaCacheBucketKeys.BOOK_MATERIALIZED -> MR.strings.pref_clear_book_cache
-                        else -> null
-                    } ?: return@forEach
-
+                mediaCacheSettings.forEach { setting ->
                     add(
                         Preference.PreferenceItem.TextPreference(
-                            title = stringResource(title),
-                            subtitle = stringResource(MR.strings.used_cache, bucket.readableSize),
+                            title = stringResource(setting.clearLabel),
+                            subtitle = stringResource(MR.strings.used_cache, setting.readableSize),
                             onClick = {
                                 scope.launchNonCancellable {
-                                    try {
-                                        val deletedFiles = mediaCacheMaintenance.clear(bucket.key)
-                                        withUIContext {
-                                            context.toast(
-                                                context.stringResource(MR.strings.cache_deleted, deletedFiles),
-                                            )
-                                            cacheSizeSema++
+                                    when (val result = mediaCacheFeature.clear(setting.id)) {
+                                        is EntryMediaCacheClearResult.Cleared -> {
+                                            withUIContext {
+                                                context.toast(
+                                                    context.stringResource(
+                                                        MR.strings.cache_deleted,
+                                                        result.deletedFiles,
+                                                    ),
+                                                )
+                                                cacheSizeSema++
+                                            }
                                         }
-                                    } catch (e: Throwable) {
-                                        logcat(LogPriority.ERROR, e)
-                                        withUIContext { context.toast(MR.strings.cache_delete_error) }
+                                        is EntryMediaCacheClearResult.Failed -> {
+                                            logcat(LogPriority.ERROR, result.error)
+                                            withUIContext { context.toast(MR.strings.cache_delete_error) }
+                                        }
+                                        is EntryMediaCacheClearResult.Inapplicable -> {
+                                            withUIContext { context.toast(MR.strings.cache_delete_error) }
+                                        }
                                     }
                                 }
                             },
                         ),
                     )
+                    add(
+                        Preference.PreferenceItem.SwitchPreference(
+                            preference = setting.autoClearOnLaunch,
+                            title = stringResource(setting.autoClearLabel),
+                        ),
+                    )
                 }
-
-                add(
-                    Preference.PreferenceItem.SwitchPreference(
-                        preference = mediaCachePreferences.autoClearEntryPageImageCache,
-                        title = stringResource(MR.strings.pref_auto_clear_chapter_cache),
-                    ),
-                )
-                add(
-                    Preference.PreferenceItem.SwitchPreference(
-                        preference = mediaCachePreferences.autoClearAnimePlaybackCache,
-                        title = stringResource(MR.strings.pref_auto_clear_anime_playback_cache),
-                    ),
-                )
             },
         )
     }

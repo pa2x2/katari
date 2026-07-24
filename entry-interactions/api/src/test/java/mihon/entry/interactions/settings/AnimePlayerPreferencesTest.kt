@@ -21,12 +21,4 @@ class AnimePlayerPreferencesTest {
         preferences.enableAnimePictureInPicture.get() shouldBe false
         preferences.enableAnimeSeekPreview.get() shouldBe false
     }
-
-    @Test
-    fun `anime player preference keys are profile owned`() {
-        AnimePlayerPreferences.profileKeys shouldBe setOf(
-            "enable_anime_picture_in_picture",
-            "enable_anime_seek_preview",
-        )
-    }
 }

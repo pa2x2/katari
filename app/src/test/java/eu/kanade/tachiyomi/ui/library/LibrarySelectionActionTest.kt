@@ -4,16 +4,12 @@ import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.service.EntryLibraryProgressResolution
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
-import tachiyomi.domain.library.model.ProgressState
-import java.nio.file.Files
-import java.nio.file.Path
-import kotlin.io.path.readText
 
 class LibrarySelectionActionTest {
 
@@ -70,78 +66,25 @@ class LibrarySelectionActionTest {
     }
 
     @Test
-    fun `selection is captured before asynchronous actions clear it`() {
-        val source = repositoryRoot()
-            .resolve("app/src/main/java/eu/kanade/tachiyomi/ui/library/LibraryScreenModel.kt")
-            .readText()
-
-        assertTrue(
-            source.contains(
-                """
-                fun performDownloadAction(action: DownloadAction) {
-                        val entryIds = selectedActionEntryIds(state.value.selectedLibraryItems)
-                        downloadBulkDownloadCandidates(action, entryIds)
-                        clearSelection()
-                    }
-                """.trimIndent(),
+    fun `merged download execution keeps the source set used by availability`() {
+        val member = Entry.create().copy(id = 2L, source = 20L, type = EntryType.ANIME)
+        val selected = listOf(
+            libraryItem(
+                id = 1L,
+                memberIds = listOf(1L, member.id),
+                sourceIds = setOf(10L, member.source),
             ),
         )
-        assertTrue(
-            source.contains(
-                """
-                fun markReadSelection(read: Boolean) {
-                        val entryIds = selectedActionEntryIds(state.value.selectedLibraryItems)
-                        screenModelScope.launchNonCancellable {
-                            val entries = getActionEntries(entryIds)
-                """.trimIndent(),
-            ),
-        )
-    }
 
-    @Test
-    fun `dialog and move actions capture selection before dispatch`() {
-        val source = repositoryRoot()
-            .resolve("app/src/main/java/eu/kanade/tachiyomi/ui/library/LibraryScreenModel.kt")
-            .readText()
-
-        listOf(
-            """
-            fun openChangeCategoryDialog() {
-                    val state = state.value
-                    val items = state.selection.mapNotNull { state.libraryData.favoritesById[it] }
-                    // Hide the default category because it has a different behavior than the ones from db.
-                    val categories = state.libraryData.categories.filter { it.id != 0L }
-                    screenModelScope.launchIO {
-            """.trimIndent(),
-            """
-            fun openDeleteEntriesDialog() {
-                    val selectedItems = state.value.selectedLibraryItems
-                    val entryIds = selectedActionEntryIds(selectedItems)
-                    val containsMergedEntries = selectedItems.any(LibraryItem::isMerged)
-                    screenModelScope.launchIO {
-            """.trimIndent(),
-            """
-            fun prepareMoveToProfile(profile: Profile, destinationCategoryId: Long?) {
-                    if (moveInProgress) return
-                    val sourceProfileId = profileStore.currentProfileId
-                    val selectedIds = state.value.selectedLibraryItems.map { it.entry.id }.distinct()
-            """.trimIndent(),
-            """
-            fun openMergeDialog() {
-                    val selectedItems = state.value.selectedLibraryItems
-                    if (!entryCapabilityInteraction.canMergeSelection(selectedItems.toEntryMergeCapabilityItems())) return
-                    screenModelScope.launchIO {
-            """.trimIndent(),
-        ).forEach { expected -> assertTrue(source.contains(expected)) }
-    }
-
-    private fun repositoryRoot(): Path {
-        return generateSequence(Path.of("").toAbsolutePath()) { it.parent }
-            .first { Files.exists(it.resolve("settings.gradle.kts")) }
+        selected.downloadSourceIdsFor(member) shouldBe setOf(10L, 20L)
     }
 }
 
-private fun libraryItem(id: Long, memberIds: List<Long> = listOf(id)): LibraryItem {
+private fun libraryItem(
+    id: Long,
+    memberIds: List<Long> = listOf(id),
+    sourceIds: Set<Long> = setOf(1L),
+): LibraryItem {
     val entry = Entry.create().copy(
         id = id,
         source = 1L,
@@ -156,22 +99,13 @@ private fun libraryItem(id: Long, memberIds: List<Long> = listOf(id)): LibraryIt
         sourceLanguage = "en",
         sourceItemOrientation = EntryItemOrientation.VERTICAL,
         displaySourceId = 1L,
-        sourceIds = setOf(1L),
+        sourceIds = sourceIds,
         isLocal = false,
         isMerged = memberIds.size > 1,
         memberEntryIds = memberIds.map { LibraryItemKey(EntryType.ANIME, it) },
         memberEntries = listOf(entry),
-        progress = ProgressState(
-            totalCount = 0L,
-            consumedCount = 0L,
-            inProgressItemId = null,
-            inProgressFraction = null,
-            hasStarted = false,
-            continueMode = ProgressState.ContinueMode.TARGET_AVAILABLE,
-        ),
+        progressSummary = EntryLibraryProgressResolution.Inapplicable(EntryType.ANIME),
         latestUpload = 0L,
-        lastRead = 0L,
-        continueEntryId = null,
         downloadCount = 0,
     )
 }

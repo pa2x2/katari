@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.ui.history
 
-import android.content.Context
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
@@ -33,11 +32,10 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.EntryContinueInteraction
-import mihon.entry.interactions.EntryOpenInteraction
+import mihon.entry.interactions.EntryContinueFeature
+import mihon.entry.interactions.EntryContinueResult
 import mihon.feature.migration.dialog.MigrateEntryDialog
 import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.history.model.HistoryItem
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
@@ -71,8 +69,7 @@ data object HistoryTab : Tab {
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
-        val entryContinueInteraction = remember { Injekt.get<EntryContinueInteraction>() }
-        val entryOpenInteraction = remember { Injekt.get<EntryOpenInteraction>() }
+        val entryContinueFeature = remember { Injekt.get<EntryContinueFeature>() }
         val screenModel = rememberScreenModel { HistoryScreenModel() }
         val state by screenModel.state.collectAsState()
 
@@ -85,10 +82,11 @@ data object HistoryTab : Tab {
                     navigator.push(EntryScreen(screenModel.getVisibleEntryId(item.historyItem.entryId)))
                 }
             },
+            canResume = { item -> entryContinueFeature.isApplicable(item.historyItem.entryType) },
             onClickResume = { item ->
                 scope.launch {
                     val entry = screenModel.getEntryById(item.historyItem.entryId) ?: return@launch
-                    entryContinueInteraction.continueEntry(context, entry)
+                    entryContinueFeature.continueEntry(context, entry)
                 }
             },
             onClickDelete = { history -> screenModel.setDialog(HistoryScreenModel.Dialog.Delete(history)) },
@@ -162,8 +160,6 @@ data object HistoryTab : Tab {
                         snackbarHostState.showSnackbar(context.stringResource(MR.strings.internal_error))
                     HistoryScreenModel.Event.HistoryCleared ->
                         snackbarHostState.showSnackbar(context.stringResource(MR.strings.clear_history_completed))
-                    is HistoryScreenModel.Event.OpenChapter ->
-                        openChapter(context, screenModel, entryOpenInteraction, e.chapter)
                 }
             }
         }
@@ -184,31 +180,18 @@ data object HistoryTab : Tab {
                     return@collectLatest
                 }
 
-                val chapter = entryContinueInteraction.continueEntry(context, entry)
-                if (chapter == null) {
-                    snackbarHostState.showSnackbar(
-                        context.stringResource(entry.type.entryTypePresentation().noNextChildLabel),
-                    )
+                when (entryContinueFeature.continueEntry(context, entry)) {
+                    EntryContinueResult.Inapplicable -> {
+                        snackbarHostState.showSnackbar(context.stringResource(MR.strings.no_next_item))
+                    }
+                    EntryContinueResult.NoNext -> {
+                        snackbarHostState.showSnackbar(
+                            context.stringResource(entry.type.entryTypePresentation().noNextChildLabel),
+                        )
+                    }
+                    is EntryContinueResult.Opened -> Unit
                 }
             }
-        }
-    }
-
-    private suspend fun openChapter(
-        context: Context,
-        screenModel: HistoryScreenModel,
-        entryOpenInteraction: EntryOpenInteraction,
-        chapter: EntryChapter?,
-    ) {
-        if (chapter != null) {
-            val entry = screenModel.getEntryById(chapter.entryId)
-            if (entry != null) {
-                entryOpenInteraction.open(context, entry, chapter)
-            } else {
-                snackbarHostState.showSnackbar(context.stringResource(MR.strings.internal_error))
-            }
-        } else {
-            snackbarHostState.showSnackbar(context.stringResource(MR.strings.no_next_item))
         }
     }
 }

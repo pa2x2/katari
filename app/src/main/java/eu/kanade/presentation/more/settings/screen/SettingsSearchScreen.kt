@@ -29,7 +29,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.NonRestartableComposable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -51,8 +50,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.UpIcon
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.util.Screen
-import mihon.entry.viewer.settings.ViewerSettingsInteraction
-import mihon.entry.viewer.settings.ViewerSettingsProvider
+import mihon.entry.interactions.EntryViewerSettingsFeature
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
@@ -169,11 +167,10 @@ private fun SearchResult(
 
     val isLtr = LocalLayoutDirection.current == LayoutDirection.Ltr
 
-    val viewerSettingsInteraction = remember { Injekt.get<ViewerSettingsInteraction>() }
-    val viewerSettingsProviders by viewerSettingsInteraction.providers.collectAsState()
-    val providerIds = viewerSettingsProviders.map { it.id }
-    val index = getIndex(viewerSettingsProviders)
-    val result by produceState<List<SearchResultItem>?>(initialValue = null, searchKey, providerIds) {
+    val viewerSettingsFeature = remember { Injekt.get<EntryViewerSettingsFeature>() }
+    val destinationIds = viewerSettingsFeature.destinations.map { it.surfaceId }
+    val index = getIndex(viewerSettingsFeature)
+    val result by produceState<List<SearchResultItem>?>(initialValue = null, searchKey, destinationIds) {
         value = index.asSequence()
             .flatMap { settingsData ->
                 settingsData.contents.asSequence()
@@ -270,9 +267,9 @@ private fun SearchResult(
 
 @Composable
 @NonRestartableComposable
-private fun getIndex(viewerSettingsProviders: Collection<ViewerSettingsProvider>) = settingScreens
+private fun getIndex(viewerSettingsFeature: EntryViewerSettingsFeature) = settingScreens
     .plus(
-        viewerProviderSettingsScreens(viewerSettingsProviders),
+        viewerProviderSettingsScreens(viewerSettingsFeature),
     )
     .distinct()
     .filter { isSettingsScreenVisible(it) }

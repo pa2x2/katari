@@ -10,14 +10,12 @@ import eu.kanade.presentation.browse.components.GlobalSearchItemCardRow
 import eu.kanade.presentation.browse.components.GlobalSearchLoadingResultItem
 import eu.kanade.presentation.browse.components.GlobalSearchResultItem
 import eu.kanade.presentation.browse.components.GlobalSearchToolbar
-import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
-import eu.kanade.tachiyomi.source.entry.UnifiedSource
-import eu.kanade.tachiyomi.source.sourceItemOrientation
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchItem
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchItemResult
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreenModel
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SourceFilter
 import eu.kanade.tachiyomi.util.system.LocaleHelper
+import mihon.entry.interactions.EntryCatalogueSourceInfo
 import tachiyomi.presentation.core.components.material.Scaffold
 
 @Composable
@@ -29,7 +27,7 @@ fun GlobalSearchScreen(
     onChangeSearchFilter: (SourceFilter) -> Unit,
     onToggleResults: () -> Unit,
     getItem: @Composable (GlobalSearchItem) -> State<GlobalSearchItem>,
-    onClickSource: (UnifiedSource) -> Unit,
+    onClickSource: (EntryCatalogueSourceInfo) -> Unit,
     onClickItem: (GlobalSearchItem) -> Unit,
     onLongClickItem: (GlobalSearchItem) -> Unit,
 ) {
@@ -64,10 +62,10 @@ fun GlobalSearchScreen(
 
 @Composable
 internal fun GlobalSearchContent(
-    items: Map<UnifiedSource, GlobalSearchItemResult>,
+    items: Map<EntryCatalogueSourceInfo, GlobalSearchItemResult>,
     contentPadding: PaddingValues,
     getItem: @Composable (GlobalSearchItem) -> State<GlobalSearchItem>,
-    onClickSource: (UnifiedSource) -> Unit,
+    onClickSource: (EntryCatalogueSourceInfo) -> Unit,
     onClickItem: (GlobalSearchItem) -> Unit,
     onLongClickItem: (GlobalSearchItem) -> Unit,
     fromSourceId: Long? = null,
@@ -77,13 +75,11 @@ internal fun GlobalSearchContent(
     ) {
         items.forEach { (source, result) ->
             item(key = source.id) {
-                val lang = (source as? EntryCatalogueSource)?.lang.orEmpty()
-                val orientation = source.sourceItemOrientation()
                 GlobalSearchResultItem(
                     title = fromSourceId?.let {
                         "▶ ${source.name}".takeIf { source.id == fromSourceId }
                     } ?: source.name,
-                    subtitle = LocaleHelper.getLocalizedDisplayName(lang),
+                    subtitle = LocaleHelper.getLocalizedDisplayName(source.language),
                     onClick = { onClickSource(source) },
                     modifier = Modifier.animateItem(),
                 ) {
@@ -95,7 +91,7 @@ internal fun GlobalSearchContent(
                             GlobalSearchItemCardRow(
                                 titles = result.result,
                                 getItem = getItem,
-                                sourceItemOrientation = orientation,
+                                sourceItemOrientation = source.itemOrientation,
                                 onClick = onClickItem,
                                 onLongClick = onLongClickItem,
                             )

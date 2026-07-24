@@ -43,6 +43,32 @@ class BookDownloadStoreTest {
         assertEquals(listOf(BookDownload.State.QUEUE, BookDownload.State.QUEUE), restored.map { it.status })
     }
 
+    @Test
+    fun `restores legacy rows and rejects changed source identity`() = runTest {
+        val entry = Entry.create().copy(
+            id = 1L,
+            profileId = 7L,
+            source = 42L,
+            type = EntryType.BOOK,
+        )
+        val chapter = chapter(11L, entry.id)
+        val backend = MemoryBookDownloadStoreBackend().apply {
+            data["legacy"] = """{"profileId":7,"entryId":1,"chapterId":11,"order":0}"""
+            data["wrong-source"] =
+                """{"profileId":7,"entryId":1,"chapterId":11,"sourceId":99,"order":1}"""
+        }
+        val entryRepository = mockk<EntryRepository> {
+            coEvery { getAllEntriesByProfile(entry.profileId) } returns listOf(entry)
+        }
+        val chapterRepository = mockk<EntryChapterRepository> {
+            coEvery { getChapterById(chapter.id) } returns chapter
+        }
+
+        val restored = BookDownloadStore(backend, Json, entryRepository, chapterRepository).restore()
+
+        assertEquals(listOf(chapter.id), restored.map { it.chapter.id })
+    }
+
     private fun chapter(id: Long, entryId: Long) = EntryChapter.create().copy(
         id = id,
         entryId = entryId,
@@ -52,13 +78,13 @@ class BookDownloadStoreTest {
 }
 
 private class MemoryBookDownloadStoreBackend : BookDownloadStoreBackend {
-    private val values = linkedMapOf<String, String>()
-    override fun values(): Map<String, *> = values.toMap()
+    val data = linkedMapOf<String, String>()
+    override fun values(): Map<String, *> = data.toMap()
     override fun putAll(values: Map<String, String>) {
-        this.values.putAll(values)
+        data.putAll(values)
     }
 
     override fun clear() {
-        values.clear()
+        data.clear()
     }
 }

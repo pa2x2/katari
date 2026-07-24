@@ -22,6 +22,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import mihon.entry.interactions.EntryMediaSessionActivity
+import mihon.entry.interactions.EntryMediaSessionEvent
+import mihon.entry.interactions.anime.AnimeMediaSessionProcessor
 import mihon.entry.interactions.anime.positionMs
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildWindow
@@ -38,7 +41,6 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 import tachiyomi.domain.entry.service.sortedForReading
-import tachiyomi.domain.history.repository.HistoryRepository
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -54,7 +56,7 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
     }.getOrNull(),
     private val entryRepository: EntryRepository? = runCatching { Injekt.get<EntryRepository>() }.getOrNull(),
     private val entryProgressRepository: EntryProgressRepository = Injekt.get(),
-    private val historyRepository: HistoryRepository = Injekt.get(),
+    private val mediaSession: AnimeMediaSessionProcessor = Injekt.get(),
     private val resolveDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val persistenceDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val now: () -> Long = { System.currentTimeMillis() },
@@ -327,10 +329,24 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
         viewModelScope.launch(persistenceDispatcher) {
             withContext(NonCancellable) {
                 persistMutex.withLock {
-                    entryProgressRepository.mergeAndSyncChild(snapshot.progressState)
-                    snapshot.historyUpdate?.let { historyUpdate ->
-                        historyRepository.upsertHistory(historyUpdate)
-                    }
+                    mediaSession.onEvent(
+                        EntryMediaSessionEvent.Progressed(
+                            visibleEntry = current.entry,
+                            child = current.childWindow.current,
+                            progress = snapshot.progressState,
+                            fraction = if (safeDurationMs > 0L) {
+                                safePositionMs.toDouble() / safeDurationMs
+                            } else {
+                                0.0
+                            },
+                            activity = snapshot.historyUpdate?.let { history ->
+                                EntryMediaSessionActivity(
+                                    recordedAtEpochMillis = history.readAt.time,
+                                    durationMillis = history.sessionReadDuration,
+                                )
+                            },
+                        ),
+                    )
                 }
             }
         }
@@ -491,15 +507,15 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
     }
 
     private suspend fun resolveEpisodeNavigation(
-        visibleEntryId: Long,
+        visibleEntry: Entry,
+        ownerEntry: Entry,
         episodeId: Long,
     ): EntryChildWindow<EntryChapter>? {
-        val mergedChapterId = if (bypassMerge) this@VideoPlayerViewModel.ownerEntryId else visibleEntryId
+        val effectiveEntry = if (bypassMerge) ownerEntry else visibleEntry
         val sortedEpisodes = getEntryWithChapters?.let { getEntryWithChapters ->
-            val entry = getEntryWithChapters.awaitEntry(mergedChapterId)
-            val episodes = getEntryWithChapters.awaitChapters(id = mergedChapterId, bypassMerge = bypassMerge)
-            episodes.sortedForReading(entry)
-        } ?: entryChapterRepository.getChaptersByEntryIdAwait(mergedChapterId)
+            val episodes = getEntryWithChapters.awaitChapters(effectiveEntry, bypassMerge = bypassMerge)
+            episodes.sortedForReading(effectiveEntry)
+        } ?: entryChapterRepository.getChaptersByEntryIdAwait(effectiveEntry.id)
             .sortedBy(EntryChapter::sourceOrder)
 
         return sortedEpisodes.entryChildWindow(episodeId, EntryChapter::id)
@@ -509,10 +525,10 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
         entry: Entry,
         ownerEntry: Entry,
     ): EpisodeDrawerData {
-        val effectiveEntryId = if (bypassMerge) this@VideoPlayerViewModel.ownerEntryId else entry.id
-        val episodes = getEntryWithChapters?.awaitChapters(id = effectiveEntryId, bypassMerge = bypassMerge)
+        val effectiveEntry = if (bypassMerge) ownerEntry else entry
+        val episodes = getEntryWithChapters?.awaitChapters(effectiveEntry, bypassMerge = bypassMerge)
             ?: entryChapterRepository.getChaptersByEntryIdAwait(
-                effectiveEntryId,
+                effectiveEntry.id,
             )
         val memberIds = episodes.map(EntryChapter::entryId).distinct()
         val fallbackTitles = buildMap {
@@ -567,7 +583,8 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
             ?: entryProgressRepository.get(result.ownerEntry.id, "", result.chapter.progressResourceKey)?.positionMs
             ?: 0L
         val childWindow = resolveEpisodeNavigation(
-            visibleEntryId = result.visibleEntry.id,
+            visibleEntry = result.visibleEntry,
+            ownerEntry = result.ownerEntry,
             episodeId = result.chapter.id,
         ) ?: EntryChildWindow(current = result.chapter)
         val episodeDrawerData = resolveEpisodeDrawerData(

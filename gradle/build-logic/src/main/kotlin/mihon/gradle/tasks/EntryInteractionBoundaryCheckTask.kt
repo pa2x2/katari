@@ -17,7 +17,32 @@ abstract class EntryInteractionBoundaryCheckTask : DefaultTask() {
         val root = repositoryRoot.get().asFile
         val typeModules = TypeModule.discover(root)
         val sourceIndex = KotlinSourceIndex.create(root, sourceFiles(root, typeModules))
-        val findings = EntryInteractionBoundaryRules(root, sourceIndex, typeModules).check()
+        val findings = EntryInteractionBoundaryRules(root, sourceIndex, typeModules).check().toMutableList()
+        findings += checkEntryContractValidationBoundaries(contractValidationSources(root)).map { finding ->
+            Finding(
+                relativePath = finding.relativePath,
+                lineNumber = finding.lineNumber,
+                reason = finding.reason,
+            )
+        }
+        findings += checkEntryFeatureRuntimeModuleBoundaries(featureRuntimeModuleSources(root)).map { finding ->
+            Finding(
+                relativePath = finding.relativePath,
+                lineNumber = finding.lineNumber,
+                reason = finding.reason,
+            )
+        }
+        findings += checkEntryViewerSettingsProjectionBoundaries(
+            sourceIndex.files.map { source ->
+                EntryViewerSettingsProjectionBoundarySource(source.relativePath, source.content)
+            },
+        ).map { finding ->
+            Finding(
+                relativePath = finding.relativePath,
+                lineNumber = finding.lineNumber,
+                reason = finding.reason,
+            )
+        }
 
         if (findings.isNotEmpty()) {
             val maxFindings = 80
@@ -53,6 +78,42 @@ abstract class EntryInteractionBoundaryCheckTask : DefaultTask() {
             }
     }
 
+    private fun contractValidationSources(root: File): List<EntryContractValidationBoundarySource> {
+        val entryInteractions = root.resolve("entry-interactions")
+        if (!entryInteractions.isDirectory) return emptyList()
+        val kotlinSources = entryInteractions.walkTopDown()
+            .filter { it.isFile && it.extension == "kt" }
+            .filter { it.invariantSeparatorsPath.contains("/src/test/") }
+            .filterNot { it.invariantSeparatorsPath.contains("/build/") }
+            .map { file ->
+                EntryContractValidationBoundarySource(
+                    relativePath = file.relativeTo(root).invariantSeparatorsPath,
+                    content = file.readText(),
+                )
+            }
+            .toList()
+        val serviceRegistry = root.resolve(FEATURE_VALIDATION_CONTRIBUTOR_SERVICE)
+        return kotlinSources + EntryContractValidationBoundarySource(
+            relativePath = FEATURE_VALIDATION_CONTRIBUTOR_SERVICE,
+            content = serviceRegistry.takeIf(File::isFile)?.readText().orEmpty(),
+        )
+    }
+
+    private fun featureRuntimeModuleSources(root: File): List<EntryFeatureRuntimeModuleBoundarySource> {
+        val entryInteractions = root.resolve("entry-interactions")
+        if (!entryInteractions.isDirectory) return emptyList()
+        return entryInteractions.walkTopDown()
+            .filter { it.isFile && it.extension == "kt" }
+            .filterNot { it.invariantSeparatorsPath.contains("/build/") }
+            .map { file ->
+                EntryFeatureRuntimeModuleBoundarySource(
+                    relativePath = file.relativeTo(root).invariantSeparatorsPath,
+                    content = file.readText(),
+                )
+            }
+            .toList()
+    }
+
     companion object {
         private val SOURCE_ROOTS = listOf(
             "app/src/main/java",
@@ -62,6 +123,8 @@ abstract class EntryInteractionBoundaryCheckTask : DefaultTask() {
             "presentation-widget/src/main/java",
             "source-local/src/main/java",
             "source-compat/src/main/java",
+            "source-api/src/commonMain/kotlin",
+            "entry-source-api/src/commonMain/kotlin",
             "entry-interactions/src/main/java",
             "entry-interactions/api/src/main/java",
             "entry-interactions/spi/src/main/java",
@@ -75,21 +138,38 @@ private class EntryInteractionBoundaryRules(
     private val typeModules: List<TypeModule>,
 ) {
     private val processorInterfaceNames = sourceIndex.files
-        .firstOrNull {
-            it.relativePath == "entry-interactions/spi/src/main/java/mihon/entry/interactions/EntryInteractionPlugin.kt"
-        }
-        ?.topLevelDeclarations
-        ?.filter { it.kind == KotlinDeclarationKind.INTERFACE }
-        ?.map { it.name }
-        ?.filter { it.startsWith("Entry") && it.endsWith("Processor") }
-        ?.toSet()
-        .orEmpty()
+        .asSequence()
+        .filter { it.relativePath.startsWith("entry-interactions/spi/src/main/") }
+        .flatMap { it.topLevelDeclarations.asSequence() }
+        .filter { it.kind == KotlinDeclarationKind.INTERFACE }
+        .map { it.name }
+        .filter { it.startsWith("Entry") && it.endsWith("Processor") }
+        .toSet()
 
-    private val internalApiNames = processorInterfaceNames + setOf(
-        "EntryInteractionPlugin",
-        "EntryInteractionRegistry",
-        "createEntryInteractions",
-    )
+    private val internalApiNames = buildSet {
+        val spiFiles = sourceIndex.files.filter { it.relativePath.startsWith("entry-interactions/spi/src/main/") }
+        addAll(
+            spiFiles
+                .flatMap(KotlinSourceFile::topLevelDeclarations)
+                .filter { it.isPublic && it.kind != KotlinDeclarationKind.FUNCTION }
+                .map(KotlinDeclaration::name),
+        )
+        addAll(spiFiles.asSequence().flatMap(KotlinSourceFile::publicTopLevelPropertyNames))
+    }
+    private val trackingHostApiNames = sourceIndex.files
+        .asSequence()
+        .filter { file ->
+            file.relativePath.startsWith(
+                "entry-interactions/api/src/main/java/mihon/entry/interactions/tracking/host/",
+            )
+        }
+        .flatMap { file ->
+            file.topLevelDeclarations
+                .filter(KotlinDeclaration::isPublic)
+                .map(KotlinDeclaration::name)
+                .plus(file.publicTopLevelPropertyNames())
+        }
+        .toSet()
     private val processorImplementations = sourceIndex.files
         .asSequence()
         .filter { it.owningTypeModule() != null }
@@ -184,31 +264,204 @@ private class EntryInteractionBoundaryRules(
         .distinctBy { it.qualifiedName }
         .toList()
 
+    private val typeRuntimeModuleBridgeNames = sourceIndex.files
+        .asSequence()
+        .filter { it.owningTypeModule() != null }
+        .flatMap { it.topLevelDeclarations.asSequence() }
+        .filter { declaration ->
+            declaration.kind == KotlinDeclarationKind.FUNCTION &&
+                declaration.isPublic &&
+                declaration.returnTypeName == "EntryTypeRuntimeModule"
+        }
+        .map(KotlinDeclaration::qualifiedName)
+        .toSet()
+
     fun check(): List<Finding> {
         val findings = mutableListOf<Finding>()
 
         checkAppGradleDependencies(findings)
+        checkPublicApiGradleDependencies(findings)
+        checkRootGradleDependencies(findings)
         checkTypeModuleGradleDependencies(findings)
 
         sourceIndex.files.forEach { file ->
             checkForbiddenImports(file, findings)
             checkRootCompositionTypeModuleImports(file, findings)
-            checkForbiddenAppReferences(file, findings)
+            checkAppLocalInteractionDeclaration(file, findings)
             checkLegacyInteractionApis(file, findings)
             checkInternalApiReferences(file, findings)
+            checkLibraryProgressDomainPortReferences(file, findings)
+            checkCatalogueFeatureBypass(file, findings)
+            checkLegacySourceCompatibilityBoundary(file, findings)
+            checkSourceActionFeatureBypass(file, findings)
+            checkDownloadActionPolicyBypass(file, findings)
+            checkSourceRefreshFeatureBypass(file, findings)
+            checkSourceRefreshMechanicsBypass(file, findings)
+            checkMeteredSourcePolicyBypass(file, findings)
+            checkTrackingHostBoundary(file, findings)
+            checkRawTrackerBoundary(file, findings)
+            checkTrackingFeatureModelBoundary(file, findings)
+            checkChildWebViewFeatureBypass(file, findings)
             checkProcessorImplementationReferences(file, findings)
             checkRuntimeEntryPointReferences(file, findings)
             checkRuntimeInternalReferences(file, findings)
             checkDownloadRuntimeReferences(file, findings)
             checkSourceMediaResolutionReferences(file, findings)
             checkMediaCacheMaintenanceReferences(file, findings)
+            checkMediaSessionConsequenceBypass(file, findings)
+            checkBookmarkMutationBypass(file, findings)
+            checkProfileDeletionBypass(file, findings)
+            checkProfilePreferenceOwnerBypass(file, findings)
             checkExhaustiveEntryTypeMappings(file, findings)
             checkSuspiciousTypeBranches(file, findings)
         }
 
         checkTypeModulePublicApis(findings)
+        checkApplicationApiDispatchContracts(findings)
+        findings += checkEntryMergeBoundaries(sourceIndex.files.map(KotlinSourceFile::toEntryMergeBoundarySource))
+            .map { finding ->
+                Finding(
+                    relativePath = finding.relativePath,
+                    lineNumber = finding.lineNumber,
+                    reason = finding.reason,
+                )
+            }
+        findings +=
+            checkEntryMigrationBoundaries(sourceIndex.files.map(KotlinSourceFile::toEntryMigrationBoundarySource))
+                .map { finding ->
+                    Finding(
+                        relativePath = finding.relativePath,
+                        lineNumber = finding.lineNumber,
+                        reason = finding.reason,
+                    )
+                }
 
         return findings
+    }
+
+    private fun checkAppLocalInteractionDeclaration(
+        file: KotlinSourceFile,
+        findings: MutableList<Finding>,
+    ) {
+        if (file.isTestPath() || !file.isApplicationLayer()) return
+
+        file.topLevelDeclarations
+            .filter { declaration ->
+                declaration.name.startsWith("Entry") && declaration.name.endsWith("Interaction")
+            }
+            .forEach { declaration ->
+                findings += Finding(
+                    relativePath = file.relativePath,
+                    lineNumber = declaration.lineNumber,
+                    reason = "application Entry behavior must expose a Feature boundary; app-local Interaction " +
+                        "declarations recreate a parallel application API: ${declaration.name}",
+                )
+            }
+    }
+
+    private fun checkApplicationApiDispatchContracts(findings: MutableList<Finding>) {
+        sourceIndex.files
+            .filter { it.relativePath.startsWith("entry-interactions/api/src/main/") }
+            .forEach { file ->
+                file.topLevelDeclarations
+                    .filter { declaration ->
+                        declaration.isPublic &&
+                            declaration.kind == KotlinDeclarationKind.INTERFACE &&
+                            (declaration.name == "EntryInteractions" || declaration.name.endsWith("Interaction"))
+                    }
+                    .forEach { declaration ->
+                        findings += Finding(
+                            relativePath = file.relativePath,
+                            lineNumber = declaration.lineNumber,
+                            reason = "raw Entry interaction dispatch must live in provider SPI, not " +
+                                "application-facing API: ${declaration.name}",
+                        )
+                    }
+            }
+    }
+
+    private fun checkProfilePreferenceOwnerBypass(file: KotlinSourceFile, findings: MutableList<Finding>) {
+        if (file.isTestPath()) return
+        val lines = file.content.lines()
+        lines.forEachIndexed { index, line ->
+            if (!ACTIVE_PROFILE_STORE_ACCESS.containsMatchIn(line)) return@forEachIndexed
+
+            val currentCodeLine = line.substringBefore("//").trim()
+            val previousCodeLine = lines.take(index)
+                .map { it.substringBefore("//").trim() }
+                .lastOrNull { it.isNotBlank() }
+            val bindsOwnerInstaller = currentCodeLine.contains("ProfilePreferenceOwnerInstaller(") ||
+                (
+                    previousCodeLine?.contains("ProfilePreferenceOwnerInstaller(") == true &&
+                        previousCodeLine.endsWith("{")
+                    )
+            if (bindsOwnerInstaller) return@forEachIndexed
+
+            findings += Finding(
+                relativePath = file.relativePath,
+                lineNumber = index + 1,
+                reason = "active profile/private preference stores may only bind ProfilePreferenceOwnerInstaller; " +
+                    "runtime preference owners must be created from an installed handle",
+            )
+        }
+    }
+
+    private fun checkMediaSessionConsequenceBypass(file: KotlinSourceFile, findings: MutableList<Finding>) {
+        if (file.isTestPath() || file.owningTypeModule() == null) return
+        if (!file.content.contains("MediaSessionProcessor")) return
+        if (file.relativePath.endsWith("MediaSessionProcessor.kt")) return
+
+        MEDIA_SESSION_DIRECT_CONSEQUENCE_OPERATIONS.forEach { operation ->
+            file.findReference(operation)?.let { reference ->
+                findings += Finding(
+                    relativePath = file.relativePath,
+                    lineNumber = reference.lineNumber,
+                    reason = "media runtimes must emit EntryMediaSessionEvent facts; $operation belongs to an " +
+                        "independently contributed Feature consequence",
+                )
+            }
+        }
+    }
+
+    private fun checkBookmarkMutationBypass(file: KotlinSourceFile, findings: MutableList<Finding>) {
+        if (file.isTestPath() || file.owningTypeModule() == null) return
+        val ownsBookmarkProvider = file.topLevelDeclarations.any { declaration ->
+            "EntryBookmarkProcessor" in declaration.superTypeNames
+        }
+        if (ownsBookmarkProvider) return
+        if (!DIRECT_BOOKMARK_PERSISTENCE.containsMatchIn(file.content)) return
+
+        findings += Finding(
+            relativePath = file.relativePath,
+            lineNumber = file.lineNumberOf("bookmark"),
+            reason = "type runtimes must mutate bookmarks through EntryBookmarkFeature; direct bookmark persistence " +
+                "bypasses contributed behavior",
+        )
+    }
+
+    private fun checkProfileDeletionBypass(file: KotlinSourceFile, findings: MutableList<Finding>) {
+        if (file.isTestPath() || !file.relativePath.startsWith(PROFILE_FEATURE_ROOT)) return
+
+        file.findReference("deleteByProfile")?.let { reference ->
+            findings += Finding(
+                relativePath = file.relativePath,
+                lineNumber = reference.lineNumber,
+                reason = "profile deletion must use relational ownership and EntryDestructiveRemovalFeature; " +
+                    "a hand-maintained deleteByProfile list is a parallel cleanup authority",
+            )
+        }
+
+        if (!file.relativePath.endsWith("/core/ProfileManager.kt")) return
+        if (!file.content.contains("permanentlyDeleteProfile")) return
+        val usesDestructiveRemoval = file.findReference("EntryDestructiveRemovalFeature") != null &&
+            DESTRUCTIVE_REMOVAL_INVOCATION.containsMatchIn(file.content)
+        if (!usesDestructiveRemoval) {
+            findings += Finding(
+                relativePath = file.relativePath,
+                lineNumber = file.lineNumberOf("permanentlyDeleteProfile"),
+                reason = "permanent profile deletion must route its Entries through EntryDestructiveRemovalFeature",
+            )
+        }
     }
 
     private fun checkAppGradleDependencies(findings: MutableList<Finding>) {
@@ -219,6 +472,7 @@ private class EntryInteractionBoundaryRules(
             .map { "projects.entryInteractions.${it.gradleAccessor}" }
             .plus("projects.entryInteractions.api")
             .plus("projects.entryInteractions.spi")
+            .plus("projects.featureGraph")
 
         file.readLines().forEachIndexed { index, line ->
             forbiddenDependencies.forEach { dependency ->
@@ -226,10 +480,25 @@ private class EntryInteractionBoundaryRules(
                     findings += Finding(
                         relativePath = "app/build.gradle.kts",
                         lineNumber = index + 1,
-                        reason = "app must depend only on projects.entryInteractions for Entry interactions: " +
+                        reason = "app must consume Entry features through projects.entryInteractions, not: " +
                             dependency,
                     )
                 }
+            }
+        }
+    }
+
+    private fun checkPublicApiGradleDependencies(findings: MutableList<Finding>) {
+        val file = root.resolve("entry-interactions/api/build.gradle.kts")
+        if (!file.isFile) return
+
+        file.readLines().forEachIndexed { index, line ->
+            if (line.contains("api(projects.featureGraph)")) {
+                findings += Finding(
+                    relativePath = "entry-interactions/api/build.gradle.kts",
+                    lineNumber = index + 1,
+                    reason = "application-facing Entry feature API must not export the internal feature graph",
+                )
             }
         }
     }
@@ -248,6 +517,21 @@ private class EntryInteractionBoundaryRules(
                         reason = "type interaction modules must depend on projects.entryInteractions.spi, not root",
                     )
                 }
+            }
+        }
+    }
+
+    private fun checkRootGradleDependencies(findings: MutableList<Finding>) {
+        val file = root.resolve("entry-interactions/build.gradle.kts")
+        if (!file.isFile) return
+
+        file.readLines().forEachIndexed { index, line ->
+            if (line.contains("api(projects.entryInteractions.spi)")) {
+                findings += Finding(
+                    relativePath = "entry-interactions/build.gradle.kts",
+                    lineNumber = index + 1,
+                    reason = "root Entry interactions must not export the provider SPI to application consumers",
+                )
             }
         }
     }
@@ -285,26 +569,14 @@ private class EntryInteractionBoundaryRules(
             val importedFqName = import.importedFqName ?: return@forEach
             val module = typeModules.firstOrNull { importedFqName.startsWith("${it.packagePrefix}.") }
                 ?: return@forEach
-            if (importedFqName in ROOT_TYPE_MODULE_IMPORT_ALLOWLIST) return@forEach
+            if (importedFqName in typeRuntimeModuleBridgeNames) return@forEach
 
             findings += Finding(
                 relativePath = file.relativePath,
                 lineNumber = import.lineNumber,
-                reason = "root Entry interaction composition may import only public ${module.name} installer/plugin " +
-                    "bridges, not type-module implementation symbols: $importedFqName",
-            )
-        }
-    }
-
-    private fun checkForbiddenAppReferences(file: KotlinSourceFile, findings: MutableList<Finding>) {
-        if (!file.relativePath.startsWith("app/src/main/")) return
-
-        file.findReference("FilterEntryChaptersForDownload")?.let { reference ->
-            findings += Finding(
-                relativePath = file.relativePath,
-                lineNumber = reference.lineNumber,
-                reason = "app must route auto-download filtering through EntryDownloadInteraction, not " +
-                    "FilterEntryChaptersForDownload",
+                reason =
+                "root Entry interaction composition may import only the public ${module.name} runtime-module " +
+                    "bridge, not type-module implementation symbols: $importedFqName",
             )
         }
     }
@@ -332,6 +604,310 @@ private class EntryInteractionBoundaryRules(
                     reason = "$name is root/type-module Entry interaction internals",
                 )
             }
+        }
+    }
+
+    private fun checkLibraryProgressDomainPortReferences(file: KotlinSourceFile, findings: MutableList<Finding>) {
+        if (file.isTestPath()) return
+        val allowedPaths = setOf(
+            "domain/src/main/java/tachiyomi/domain/entry/service/EntryLibraryProgressResolution.kt",
+            "domain/src/main/java/tachiyomi/domain/entry/interactor/GetLibraryEntries.kt",
+            "entry-interactions/api/src/main/java/mihon/entry/interactions/library/EntryLibraryProgressFeature.kt",
+            "entry-interactions/src/main/java/mihon/entry/interactions/library/EntryLibraryRuntimeModules.kt",
+        )
+        if (file.relativePath in allowedPaths) return
+
+        file.findReference("EntryLibraryProgressResolutionPort")?.let { reference ->
+            findings += Finding(
+                relativePath = file.relativePath,
+                lineNumber = reference.lineNumber,
+                reason = "Library Progress domain port is reserved for Domain assembly and Feature composition; " +
+                    "application consumers must use EntryLibraryProgressFeature",
+            )
+        }
+    }
+
+    private fun checkCatalogueFeatureBypass(file: KotlinSourceFile, findings: MutableList<Finding>) {
+        if (file.isTestPath()) return
+        val isApplicationLayer = file.relativePath.startsWith("app/src/main/") ||
+            file.relativePath.startsWith("data/src/main/") ||
+            file.relativePath.startsWith("domain/src/main/") ||
+            file.relativePath.startsWith("presentation-core/src/main/") ||
+            file.relativePath.startsWith("presentation-widget/src/main/")
+
+        if (isApplicationLayer) {
+            if (file.relativePath !in SOURCE_DESCRIPTION_PORT_FILES) {
+                file.findReference("EntrySourceDescriptionResolutionPort")?.let { reference ->
+                    findings += Finding(
+                        relativePath = file.relativePath,
+                        lineNumber = reference.lineNumber,
+                        reason = "application consumers must use EntryCatalogueFeature, not its Domain assembly port",
+                    )
+                }
+            }
+
+            if (file.relativePath !in SOURCE_DESCRIPTION_COMPOSITION_FILES) {
+                file.imports
+                    .filter { it.importedFqName in RAW_SOURCE_DESCRIPTION_IMPORTS }
+                    .forEach { import ->
+                        findings += Finding(
+                            relativePath = file.relativePath,
+                            lineNumber = import.lineNumber,
+                            reason =
+                            "application source availability and description must use EntryCatalogueFeature, " +
+                                "not raw source contract ${import.importedFqName}",
+                        )
+                    }
+            }
+        }
+
+        val isCatalogueConsumerLayer = isApplicationLayer ||
+            (file.relativePath.startsWith("entry-interactions/") && "/src/main/" in file.relativePath)
+        if (!isCatalogueConsumerLayer) return
+
+        if (file.relativePath !in CATALOGUE_PROVIDER_ASSEMBLY_FILES) {
+            RAW_CATALOGUE_OPERATION_NAMES.forEach { operation ->
+                file.findReference(operation)?.let { reference ->
+                    findings += Finding(
+                        relativePath = file.relativePath,
+                        lineNumber = reference.lineNumber,
+                        reason = "catalogue provider execution must use EntryCatalogueFeature, " +
+                            "not raw $operation dispatch",
+                    )
+                }
+            }
+        }
+    }
+
+    private fun checkLegacySourceCompatibilityBoundary(file: KotlinSourceFile, findings: MutableList<Finding>) {
+        if (file.isTestPath() || file.relativePath.startsWith("source-compat/src/main/")) return
+
+        file.imports
+            .filter { it.importedFqName == LEGACY_MANGA_SOURCE_ADAPTER }
+            .forEach { import ->
+                findings += Finding(
+                    relativePath = file.relativePath,
+                    lineNumber = import.lineNumber,
+                    reason = "legacy Manga adapter identity is confined to source-compat; consumers must use " +
+                        "current source contracts or a compatibility operation",
+                )
+            }
+
+        file.imports
+            .filter { it.importedFqName == LEGACY_UNMETERED_SOURCE }
+            .forEach { import ->
+                findings += Finding(
+                    relativePath = file.relativePath,
+                    lineNumber = import.lineNumber,
+                    reason = "legacy UnmeteredSource is source-compat input, not a current runtime policy contract",
+                )
+            }
+    }
+
+    private fun checkSourceActionFeatureBypass(file: KotlinSourceFile, findings: MutableList<Finding>) {
+        if (file.isTestPath()) return
+        val isApplicationLayer = file.relativePath.startsWith("app/src/main/") ||
+            file.relativePath.startsWith("data/src/main/") ||
+            file.relativePath.startsWith("domain/src/main/") ||
+            file.relativePath.startsWith("presentation-core/src/main/") ||
+            file.relativePath.startsWith("presentation-widget/src/main/")
+        if (!isApplicationLayer) return
+
+        RAW_SOURCE_ACTION_IMPORTS.forEach { (simpleName, qualifiedName) ->
+            file.findReference(simpleName)?.let { reference ->
+                findings += Finding(
+                    relativePath = file.relativePath,
+                    lineNumber = reference.lineNumber,
+                    reason = "application source actions must use their Entry Feature boundary, not raw source " +
+                        "contract $qualifiedName",
+                )
+            }
+        }
+        file.content.lines().forEachIndexed { index, line ->
+            if (!RAW_IMMERSIVE_SOURCE_OPT_IN_ACCESS.containsMatchIn(line.substringBefore("//"))) return@forEachIndexed
+            findings += Finding(
+                relativePath = file.relativePath,
+                lineNumber = index + 1,
+                reason = "Immersive source opt-in must be interpreted by EntryImmersiveFeature",
+            )
+        }
+    }
+
+    private fun checkDownloadActionPolicyBypass(file: KotlinSourceFile, findings: MutableList<Finding>) {
+        if (file.isTestPath()) return
+        val isApplicationLayer = file.relativePath.startsWith("app/src/main/") ||
+            file.relativePath.startsWith("data/src/main/") ||
+            file.relativePath.startsWith("domain/src/main/") ||
+            file.relativePath.startsWith("presentation-core/src/main/") ||
+            file.relativePath.startsWith("presentation-widget/src/main/")
+        if (!isApplicationLayer) return
+
+        listOf("EntryDownloadActionTarget", "EntryDownloadSourceAccess").forEach { policyType ->
+            file.findReference(policyType)?.let { reference ->
+                findings += Finding(
+                    relativePath = file.relativePath,
+                    lineNumber = reference.lineNumber,
+                    reason = "Download applicability evidence is owned by EntryDownloadActionFeature, " +
+                        "not application policy type $policyType",
+                )
+            }
+        }
+
+        if (file.findReference("EntryDownloadActionFeature") == null) return
+        listOf("MangaReaderSettingsProvider", "skipFiltered", "isLocalOrStub").forEach { policyInput ->
+            file.findReference(policyInput)?.let { reference ->
+                findings += Finding(
+                    relativePath = file.relativePath,
+                    lineNumber = reference.lineNumber,
+                    reason = "Download consumers must pass factual requests to EntryDownloadActionFeature; " +
+                        "$policyInput must not select generic Download behavior",
+                )
+            }
+        }
+    }
+
+    private fun checkSourceRefreshFeatureBypass(file: KotlinSourceFile, findings: MutableList<Finding>) {
+        if (file.isTestPath()) return
+        val allowedPaths = setOf(
+            "domain/src/main/java/tachiyomi/domain/entry/interactor/SyncEntryWithSource.kt",
+            "app/src/main/java/eu/kanade/domain/DomainModule.kt",
+            "entry-interactions/src/main/java/mihon/entry/interactions/source/EntrySourceRefreshFeature.kt",
+        )
+        if (file.relativePath in allowedPaths) return
+
+        file.findReference("SyncEntryWithSource")?.let { reference ->
+            findings += Finding(
+                relativePath = file.relativePath,
+                lineNumber = reference.lineNumber,
+                reason = "Entry refresh consumers must use EntrySourceRefreshFeature, " +
+                    "not raw SyncEntryWithSource mechanics",
+            )
+        }
+    }
+
+    private fun checkSourceRefreshMechanicsBypass(file: KotlinSourceFile, findings: MutableList<Finding>) {
+        if (file.isTestPath()) return
+        val ownsSourceContract = file.relativePath.startsWith("entry-source-api/src/") ||
+            file.relativePath.startsWith("source-api/src/") ||
+            file.relativePath.startsWith("source-compat/src/") ||
+            file.relativePath.startsWith("source-local/src/") ||
+            file.relativePath == "domain/src/main/java/tachiyomi/domain/entry/interactor/SyncEntryWithSource.kt"
+        if (ownsSourceContract) return
+
+        SOURCE_REFRESH_MECHANICS_CONTRACTS.forEach { contract ->
+            file.findReference(contract)?.let { reference ->
+                findings += Finding(
+                    relativePath = file.relativePath,
+                    lineNumber = reference.lineNumber,
+                    reason = "$contract interpretation belongs to SyncEntryWithSource source-refresh mechanics",
+                )
+            }
+        }
+    }
+
+    private fun checkMeteredSourcePolicyBypass(file: KotlinSourceFile, findings: MutableList<Finding>) {
+        if (file.isTestPath()) return
+        val isGenericConsumer = file.relativePath.startsWith("app/src/main/") ||
+            file.relativePath.startsWith("data/src/main/") ||
+            file.relativePath.startsWith("domain/src/main/") ||
+            file.relativePath.startsWith("presentation-core/src/main/") ||
+            file.relativePath.startsWith("presentation-widget/src/main/")
+        if (!isGenericConsumer) return
+
+        file.findReference("UnmeteredSource")?.let { reference ->
+            findings += Finding(
+                relativePath = file.relativePath,
+                lineNumber = reference.lineNumber,
+                reason = "application Library queue warning policy must use " +
+                    "EntryLibraryUpdateNotificationFeature, not raw UnmeteredSource context",
+            )
+        }
+    }
+
+    private fun checkTrackingHostBoundary(file: KotlinSourceFile, findings: MutableList<Finding>) {
+        if (file.isTestPath()) return
+        val ownsTrackingHost = file.relativePath.startsWith(
+            "entry-interactions/api/src/main/java/mihon/entry/interactions/tracking/host/",
+        ) || file.relativePath.startsWith(
+            "entry-interactions/src/main/java/mihon/entry/interactions/tracking/",
+        ) || file.relativePath.startsWith(
+            "app/src/main/java/mihon/entry/interactions/host/tracking/",
+        ) || file.relativePath ==
+            "entry-interactions/src/main/java/mihon/entry/interactions/runtime/EntryInteractionRuntime.kt" ||
+            file.relativePath == "app/src/main/java/eu/kanade/tachiyomi/di/AppModule.kt"
+        if (ownsTrackingHost) return
+
+        trackingHostApiNames.forEach { name ->
+            file.findReference(name)?.let { reference ->
+                findings += Finding(
+                    relativePath = file.relativePath,
+                    lineNumber = reference.lineNumber,
+                    reason = "$name is root Tracking Feature composition infrastructure, not an application API",
+                )
+            }
+        }
+    }
+
+    private fun checkRawTrackerBoundary(file: KotlinSourceFile, findings: MutableList<Finding>) {
+        if (file.isTestPath() || file.ownsRawTrackerContracts()) return
+
+        file.imports
+            .filter { it.startsWith(RAW_TRACKER_PACKAGE) }
+            .forEach { import ->
+                findings += Finding(
+                    relativePath = file.relativePath,
+                    lineNumber = import.lineNumber,
+                    reason = "application consumers must use EntryTrackingFeature, not raw tracker contracts",
+                )
+            }
+
+        file.content.lineSequence().forEachIndexed { index, line ->
+            val code = line.trim()
+            if (code.startsWith("import ") || code.startsWith("package ")) return@forEachIndexed
+            if ("$RAW_TRACKER_PACKAGE." !in code) return@forEachIndexed
+            findings += Finding(
+                relativePath = file.relativePath,
+                lineNumber = index + 1,
+                reason = "application consumers must use EntryTrackingFeature, " +
+                    "not fully qualified raw tracker contracts",
+            )
+        }
+    }
+
+    private fun checkTrackingFeatureModelBoundary(file: KotlinSourceFile, findings: MutableList<Finding>) {
+        val isPublicTrackingApi = file.relativePath.startsWith(
+            "entry-interactions/api/src/main/java/mihon/entry/interactions/tracking/",
+        ) && !file.relativePath.startsWith(
+            "entry-interactions/api/src/main/java/mihon/entry/interactions/tracking/host/",
+        )
+        if (!isPublicTrackingApi) return
+
+        file.imports
+            .firstOrNull { it.importedFqName == DOMAIN_TRACKING_RECORD }
+            ?.let { import ->
+                findings += Finding(
+                    relativePath = file.relativePath,
+                    lineNumber = import.lineNumber,
+                    reason = "EntryTrackingFeature must expose EntryTrackingRecord, not persisted EntryTrack",
+                )
+            }
+    }
+
+    private fun checkChildWebViewFeatureBypass(file: KotlinSourceFile, findings: MutableList<Finding>) {
+        if (file.isTestPath()) return
+        val ownsContract = file.relativePath.startsWith("source-compat/src/main/") ||
+            file.relativePath.startsWith("source-local/src/main/") ||
+            file.relativePath.startsWith("entry-source-api/src/") ||
+            file.relativePath ==
+            "entry-interactions/src/main/java/mihon/entry/interactions/source/EntryWebViewFeature.kt"
+        if (ownsContract) return
+
+        file.findReference("ChapterWebViewSource")?.let { reference ->
+            findings += Finding(
+                relativePath = file.relativePath,
+                lineNumber = reference.lineNumber,
+                reason = "canonical child WebView actions must use EntryWebViewFeature, not raw ChapterWebViewSource",
+            )
         }
     }
 
@@ -424,13 +1000,13 @@ private class EntryInteractionBoundaryRules(
     private fun checkMediaCacheMaintenanceReferences(file: KotlinSourceFile, findings: MutableList<Finding>) {
         if (!file.isMediaCacheMaintenanceGuardedPath()) return
 
-        MEDIA_CACHE_IMPLEMENTATION_TYPES.forEach { typeName ->
+        MEDIA_CACHE_MAINTENANCE_FORBIDDEN_TYPES.forEach { typeName ->
             file.findReference(typeName)?.let { reference ->
                 findings += Finding(
                     relativePath = file.relativePath,
                     lineNumber = reference.lineNumber,
-                    reason = "settings/UI cache maintenance must use EntryMediaCacheMaintenance and " +
-                        "EntryMediaCacheBucket keys, not concrete cache implementation: $typeName",
+                    reason = "settings/UI cache maintenance must use EntryMediaCacheFeature, not a raw cache " +
+                        "implementation or host port: $typeName",
                 )
             }
         }
@@ -446,7 +1022,7 @@ private class EntryInteractionBoundaryRules(
         findings += Finding(
             relativePath = file.relativePath,
             lineNumber = minOf(mangaLine, animeLine),
-            reason = "generic EntryType MANGA/ANIME mapping must use EntryTypePresentation or an approved " +
+            reason = "generic EntryType MANGA/ANIME mapping must use EntryTypePresentationFeature or an approved " +
                 "compatibility/storage boundary",
         )
     }
@@ -500,7 +1076,6 @@ private class EntryInteractionBoundaryRules(
                         if (file.isPublicTypeModuleApiPath()) return@forEach
                         if (declaration.isDependencyContainer()) return@forEach
                         if (declaration.isPluginFactory()) return@forEach
-                        if (declaration.isLibraryProgressCalculatorFactory()) return@forEach
                         if (declaration.isRuntimeBridgeFunction(file)) return@forEach
 
                         findings += Finding(
@@ -524,11 +1099,6 @@ private class EntryInteractionBoundaryRules(
     private fun KotlinDeclaration.isPluginFactory(): Boolean {
         return kind == KotlinDeclarationKind.FUNCTION &&
             returnTypeName == "EntryInteractionPlugin"
-    }
-
-    private fun KotlinDeclaration.isLibraryProgressCalculatorFactory(): Boolean {
-        return kind == KotlinDeclarationKind.FUNCTION &&
-            returnTypeName == "EntryLibraryProgressCalculator"
     }
 
     private fun KotlinDeclaration.isRuntimeBridgeFunction(file: KotlinSourceFile): Boolean {
@@ -571,14 +1141,18 @@ private class EntryInteractionBoundaryRules(
     }
 
     private fun KotlinSourceFile.isRootCompositionPath(): Boolean {
-        return relativePath == "entry-interactions/src/main/java/mihon/entry/interactions/EntryInteractionRuntime.kt"
+        return relativePath ==
+            "entry-interactions/src/main/java/mihon/entry/interactions/runtime/EntryInteractionRuntime.kt"
+    }
+
+    private fun KotlinSourceFile.isApplicationLayer(): Boolean {
+        return APPLICATION_LAYER_ROOTS.any { root -> relativePath.startsWith(root) }
     }
 
     private fun KotlinSourceFile.isSourceMediaResolutionGuardedPath(): Boolean {
         if (isRootOrTypeModuleOrTestPath()) return false
         if (!SOURCE_MEDIA_RESOLUTION_GUARDED_ROOTS.any { relativePath.startsWith(it) }) return false
-        if (relativePath in SOURCE_MEDIA_RESOLUTION_ALLOWED_FILES) return false
-        return SOURCE_MEDIA_RESOLUTION_ALLOWED_PREFIXES.none { relativePath.startsWith(it) }
+        return relativePath !in SOURCE_MEDIA_RESOLUTION_ALLOWED_FILES
     }
 
     private fun KotlinSourceFile.isMediaCacheMaintenanceGuardedPath(): Boolean {
@@ -587,18 +1161,7 @@ private class EntryInteractionBoundaryRules(
     }
 
     private fun KotlinSourceFile.isExhaustiveEntryTypeMappingAllowedPath(): Boolean {
-        return relativePath.startsWith("entry-interactions/") ||
-            isTestPath() ||
-            relativePath == "app/src/main/java/eu/kanade/presentation/entry/EntryTypePresentation.kt" ||
-            relativePath == "app/src/main/java/eu/kanade/tachiyomi/di/AppModule.kt" ||
-            relativePath.startsWith("app/src/main/java/eu/kanade/tachiyomi/data/backup/") ||
-            relativePath.startsWith("app/src/main/java/eu/kanade/tachiyomi/data/track/") ||
-            relativePath.startsWith("app/src/main/java/eu/kanade/tachiyomi/source/") ||
-            relativePath.startsWith("app/src/main/java/eu/kanade/domain/source/") ||
-            relativePath.startsWith("app/src/main/java/mihon/core/migration/") ||
-            relativePath.startsWith("app/src/main/java/mihon/feature/migration/") ||
-            relativePath.startsWith("source-local/") ||
-            relativePath.startsWith("source-compat/")
+        return isTestPath() || relativePath in EXHAUSTIVE_ENTRY_TYPE_MAPPING_ALLOWED_FILES
     }
 
     private fun KotlinSourceFile.isStrictImportCheckedPath(): Boolean {
@@ -606,15 +1169,17 @@ private class EntryInteractionBoundaryRules(
         return STRICT_IMPORT_CHECKED_ROOTS.any { relativePath.startsWith(it) }
     }
 
+    private fun KotlinSourceFile.ownsRawTrackerContracts(): Boolean {
+        return packageName == RAW_TRACKER_PACKAGE ||
+            packageName.startsWith("$RAW_TRACKER_PACKAGE.") ||
+            packageName == DOMAIN_TRACKER_PACKAGE ||
+            packageName.startsWith("$DOMAIN_TRACKER_PACKAGE.") ||
+            relativePath.startsWith("app/src/main/java/mihon/entry/interactions/host/tracking/") ||
+            relativePath == "app/src/main/java/eu/kanade/tachiyomi/di/AppModule.kt"
+    }
+
     private fun KotlinSourceFile.isTypeBranchAllowedPath(): Boolean {
-        return relativePath.startsWith("entry-interactions/") ||
-            isTestPath() ||
-            relativePath == "app/src/main/java/eu/kanade/tachiyomi/di/AppModule.kt" ||
-            relativePath.startsWith("app/src/main/java/eu/kanade/presentation/") ||
-            relativePath.startsWith("app/src/main/java/eu/kanade/tachiyomi/data/backup/") ||
-            relativePath.startsWith("app/src/main/java/eu/kanade/tachiyomi/source/") ||
-            relativePath.startsWith("app/src/main/java/mihon/core/migration/") ||
-            relativePath.startsWith("app/src/main/java/mihon/feature/migration/")
+        return isRootOrTypeModuleOrTestPath()
     }
 
     private fun KotlinSourceFile.isPublicTypeModuleApiPath(): Boolean {
@@ -631,6 +1196,10 @@ private class EntryInteractionBoundaryRules(
     }
 
     companion object {
+        private const val RAW_TRACKER_PACKAGE = "eu.kanade.tachiyomi.data.track"
+        private const val DOMAIN_TRACKER_PACKAGE = "eu.kanade.domain.track"
+        private const val DOMAIN_TRACKING_RECORD = "tachiyomi.domain.track.model.EntryTrack"
+
         private val STRICT_IMPORT_CHECKED_ROOTS = listOf(
             "app/src/main/",
             "data/src/main/",
@@ -641,6 +1210,14 @@ private class EntryInteractionBoundaryRules(
             "source-compat/src/main/",
         )
 
+        private val APPLICATION_LAYER_ROOTS = listOf(
+            "app/src/main/",
+            "data/src/main/",
+            "domain/src/main/",
+            "presentation-core/src/main/",
+            "presentation-widget/src/main/",
+        )
+
         private val LEGACY_INTERACTION_APIS = listOf(
             "openEntryHandlerFor",
             "continueEntryHandlerFor",
@@ -649,6 +1226,68 @@ private class EntryInteractionBoundaryRules(
         )
 
         private const val LEGACY_MANGA_PAGE_FQ_NAME = "eu.kanade.tachiyomi.source.model.Page"
+        private const val LEGACY_MANGA_SOURCE_ADAPTER =
+            "eu.kanade.tachiyomi.source.adapter.LegacyMangaSourceAdapter"
+        private const val LEGACY_UNMETERED_SOURCE = "eu.kanade.tachiyomi.source.UnmeteredSource"
+
+        private val SOURCE_DESCRIPTION_COMPOSITION_FILES = setOf(
+            "app/src/main/java/eu/kanade/tachiyomi/extension/util/ExtensionLoader.kt",
+            "app/src/main/java/eu/kanade/tachiyomi/source/AndroidSourceManager.kt",
+        )
+
+        private val SOURCE_DESCRIPTION_PORT_FILES = setOf(
+            "data/src/main/java/tachiyomi/data/source/SourceRepositoryImpl.kt",
+            "domain/src/main/java/tachiyomi/domain/entry/interactor/GetLibraryEntries.kt",
+            "domain/src/main/java/tachiyomi/domain/source/service/EntrySourceDescriptionResolutionPort.kt",
+        )
+
+        private val RAW_SOURCE_DESCRIPTION_IMPORTS = setOf(
+            "eu.kanade.tachiyomi.source.entry.EntryCatalogueSource",
+            "eu.kanade.tachiyomi.source.entry.EntryItemOrientationProvider",
+            "eu.kanade.tachiyomi.source.entry.SourceMetadata",
+            "eu.kanade.tachiyomi.source.entry.entryItemOrientation",
+            "eu.kanade.tachiyomi.source.entry.supportedEntryTypes",
+            "eu.kanade.tachiyomi.source.sourceItemOrientation",
+        )
+
+        private val CATALOGUE_PROVIDER_ASSEMBLY_FILES = setOf(
+            "domain/src/main/java/tachiyomi/domain/source/model/StubSource.kt",
+            "domain/src/main/java/tachiyomi/domain/source/model/UnifiedStubSource.kt",
+            "entry-interactions/src/main/java/mihon/entry/interactions/catalogue/host/" +
+                "SourceManagerEntryCatalogueProviderHost.kt",
+        )
+
+        private val RAW_CATALOGUE_OPERATION_NAMES = setOf(
+            "getPopularContent",
+            "getLatestUpdates",
+            "getSearchContent",
+            "getFilterList",
+            "getCatalogueSource",
+            "getCatalogueSources",
+            "resolveFilterList",
+            "defaultBackgroundFilterList",
+            "hasAsyncFilters",
+            "toCatalogSource",
+        )
+
+        private val RAW_SOURCE_ACTION_IMPORTS = mapOf(
+            "ConfigurableSource" to "eu.kanade.tachiyomi.source.entry.ConfigurableSource",
+            "SourceHomePage" to "eu.kanade.tachiyomi.source.entry.SourceHomePage",
+            "WebViewSource" to "eu.kanade.tachiyomi.source.entry.WebViewSource",
+            "ResolvableSource" to "eu.kanade.tachiyomi.source.entry.ResolvableSource",
+            "EntryPreviewSource" to "eu.kanade.tachiyomi.source.entry.EntryPreviewSource",
+            "RelatedEntriesSource" to "eu.kanade.tachiyomi.source.entry.RelatedEntriesSource",
+            "EntryImageSource" to "eu.kanade.tachiyomi.source.entry.EntryImageSource",
+            "SubtitleSource" to "eu.kanade.tachiyomi.source.entry.SubtitleSource",
+        )
+
+        private val SOURCE_REFRESH_MECHANICS_CONTRACTS = listOf(
+            "EmptyChapterListSource",
+            "IncrementalChapterSource",
+            "ChapterNumberRecognitionSource",
+        )
+
+        private val RAW_IMMERSIVE_SOURCE_OPT_IN_ACCESS = Regex("""\.\s*supportsImmersiveFeed\b""")
 
         private val RUNTIME_MEDIA_RESOLUTION_INTERNAL_NAME_PATTERNS = listOf(
             Regex("""Resolver$"""),
@@ -667,16 +1306,19 @@ private class EntryInteractionBoundaryRules(
             "presentation-widget/src/main/java/",
         )
 
-        private val SOURCE_MEDIA_RESOLUTION_ALLOWED_PREFIXES = listOf(
-            "app/src/main/java/eu/kanade/tachiyomi/source/",
-            "domain/src/main/java/tachiyomi/domain/source/",
-        )
-
         private val SOURCE_MEDIA_RESOLUTION_ALLOWED_FILES = setOf(
             "app/src/main/java/eu/kanade/tachiyomi/data/cache/MangaPageCache.kt",
+            "domain/src/main/java/tachiyomi/domain/source/model/StubSource.kt",
         )
 
-        private val MEDIA_CACHE_IMPLEMENTATION_TYPES = setOf(
+        private val EXHAUSTIVE_ENTRY_TYPE_MAPPING_ALLOWED_FILES = setOf(
+            "entry-interactions/src/main/java/mihon/entry/interactions/library/" +
+                "EntryLibraryUpdateNotificationRouting.kt",
+        )
+
+        private val MEDIA_CACHE_MAINTENANCE_FORBIDDEN_TYPES = setOf(
+            "EntryPageImageCache",
+            "EntryPlayerCache",
             "MangaPageCache",
             "AppMangaPageImageCache",
             "ReaderPageCache",
@@ -690,26 +1332,33 @@ private class EntryInteractionBoundaryRules(
             "presentation-widget/src/main/java/",
         )
 
+        private val MEDIA_SESSION_DIRECT_CONSEQUENCE_OPERATIONS = setOf(
+            "mergeAndSyncChild",
+            "upsertHistory",
+            "EntryDownloadLifecycleEventSink",
+            "EntryDownloadLifecycleFeature",
+            "EntryTrackingFeature",
+            "EntryMediaSessionIncognitoState",
+        )
+
+        private const val PROFILE_FEATURE_ROOT = "app/src/main/java/mihon/feature/profiles/"
+
+        private val DIRECT_BOOKMARK_PERSISTENCE = Regex(
+            """(?s)\bupdateAll\s*\(.*?\.copy\s*\(\s*bookmark\s*=""",
+        )
+
+        private val DESTRUCTIVE_REMOVAL_INVOCATION = Regex(
+            """\bdestructiveRemoval\s*\.\s*remove\s*\(""",
+        )
+
         private val TYPE_BRANCH_PATTERNS = listOf(
             Regex("""\bEntryType\.[A-Z_]+\b"""),
             Regex("""\bentry\.type\b"""),
             Regex("""\bentryType\b"""),
         )
 
-        private val ROOT_TYPE_MODULE_IMPORT_ALLOWLIST = setOf(
-            "mihon.entry.interactions.anime.AnimeEntryInteractionDependencies",
-            "mihon.entry.interactions.anime.addAnimeEntryInteractionRuntime",
-            "mihon.entry.interactions.anime.animeEntryInteractionPlugin",
-            "mihon.entry.interactions.anime.animeEntryLibraryProgressCalculator",
-            "mihon.entry.interactions.book.BookEntryInteractionDependencies",
-            "mihon.entry.interactions.book.addBookEntryInteractionRuntime",
-            "mihon.entry.interactions.book.bookEntryInteractionPlugin",
-            "mihon.entry.interactions.book.bookEntryLibraryProgressCalculator",
-            "mihon.entry.interactions.manga.MangaEntryInteractionDependencies",
-            "mihon.entry.interactions.manga.addMangaEntryInteractionRuntime",
-            "mihon.entry.interactions.manga.mangaEntryInteractionPlugin",
-            "mihon.entry.interactions.manga.mangaEntryLibraryProgressCalculator",
-            "mihon.entry.interactions.manga.reader.addMangaReaderImageComponents",
+        private val ACTIVE_PROFILE_STORE_ACCESS = Regex(
+            """\.(?:profileStore|privateStore|appStateStore)\(\s*\)""",
         )
 
         private val PUBLIC_TYPE_MODULE_ANDROID_COMPONENT_FILES = setOf(
@@ -717,7 +1366,6 @@ private class EntryInteractionBoundaryRules(
             "entry-interactions/manga/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderActivity.kt",
             "entry-interactions/manga/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderNavigationOverlayView.kt",
             "entry-interactions/manga/src/main/java/eu/kanade/tachiyomi/ui/reader/viewer/ReaderButton.kt",
-            "entry-interactions/manga/src/main/java/mihon/entry/interactions/manga/download/DownloadJob.kt",
         )
     }
 }
@@ -756,7 +1404,16 @@ private data class KotlinSourceFile(
             ?.plus(1)
     }
 
+    fun publicTopLevelPropertyNames(): Sequence<String> {
+        return content.lineSequence().mapNotNull { line ->
+            PUBLIC_TOP_LEVEL_PROPERTY.matchEntire(line)?.groupValues?.get(1)
+        }
+    }
+
     companion object {
+        private val PUBLIC_TOP_LEVEL_PROPERTY =
+            Regex("""(?:(?:public|const|lateinit)\s+)*(?:val|var)\s+([A-Za-z_][A-Za-z0-9_]*).*$""")
+
         fun from(relativePath: String, content: String): KotlinSourceFile {
             val lineStarts = content.lineStarts()
             val tokens = content.kotlinTokens(lineStarts)
@@ -773,6 +1430,50 @@ private data class KotlinSourceFile(
             )
         }
     }
+}
+
+private fun KotlinSourceFile.toEntryMergeBoundarySource(): EntryMergeBoundarySource {
+    val referenceLines = buildMap {
+        imports.forEach { import ->
+            val name = import.importedFqName?.substringAfterLast(".") ?: return@forEach
+            putIfAbsent(name, import.lineNumber)
+        }
+        references.forEach { reference -> putIfAbsent(reference.name, reference.lineNumber) }
+    }
+    return EntryMergeBoundarySource(
+        relativePath = relativePath,
+        content = content,
+        declarations = topLevelDeclarations.map { declaration ->
+            EntryMergeBoundaryDeclaration(
+                name = declaration.name,
+                isPublic = declaration.isPublic,
+                lineNumber = declaration.lineNumber,
+            )
+        },
+        references = referenceLines,
+    )
+}
+
+private fun KotlinSourceFile.toEntryMigrationBoundarySource(): EntryMigrationBoundarySource {
+    val referenceLines = buildMap {
+        imports.forEach { import ->
+            val name = import.importedFqName?.substringAfterLast(".") ?: return@forEach
+            putIfAbsent(name, import.lineNumber)
+        }
+        references.forEach { reference -> putIfAbsent(reference.name, reference.lineNumber) }
+    }
+    return EntryMigrationBoundarySource(
+        relativePath = relativePath,
+        content = content,
+        declarations = topLevelDeclarations.map { declaration ->
+            EntryMigrationBoundaryDeclaration(
+                name = declaration.name,
+                isPublic = declaration.isPublic,
+                lineNumber = declaration.lineNumber,
+            )
+        },
+        references = referenceLines,
+    )
 }
 
 private data class KotlinImport(
@@ -884,7 +1585,7 @@ private data class TypeModule(
     }
 }
 
-private val INFRASTRUCTURE_MODULES = setOf("api", "spi", "download-notification")
+private val INFRASTRUCTURE_MODULES = setOf("api", "spi", "documentation", "download-notification")
 
 private fun KotlinImport.startsWith(packagePrefix: String): Boolean {
     return importedFqName == packagePrefix ||

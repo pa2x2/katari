@@ -17,7 +17,6 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.domain.entry.model.EntryMerge
 import java.nio.file.Files
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -255,7 +254,7 @@ class BookDownloadProviderTest {
     }
 
     @Test
-    fun `merged download count includes packages owned by every member`() = runTest {
+    fun `download count stays scoped to one concrete owner`() = runTest {
         val fixture = fixture()
         val member = fixture.entry.copy(id = 2L, url = "/book/member", title = "Member Book")
         val memberChild = fixture.child.copy(id = 21L, entryId = member.id, url = "/member/chapter/1")
@@ -263,15 +262,9 @@ class BookDownloadProviderTest {
         fixture.complete(content = "member", entry = member, child = memberChild)
         val cache = BookDownloadCache(fixture.provider)
         cache.refresh()
-        cache.updateMergedEntries(
-            listOf(
-                EntryMerge(targetId = fixture.entry.id, entryId = fixture.entry.id, position = 0L),
-                EntryMerge(targetId = fixture.entry.id, entryId = member.id, position = 1L),
-            ),
-        )
 
-        assertEquals(2, cache.getDownloadCount(fixture.entry))
-        assertEquals(2, cache.getDownloadCount(member))
+        assertEquals(1, cache.getDownloadCount(fixture.entry))
+        assertEquals(1, cache.getDownloadCount(member))
     }
 }
 

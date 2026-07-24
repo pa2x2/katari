@@ -1,0 +1,35 @@
+CREATE TABLE entry_migration_operations(
+    operation_id TEXT NOT NULL PRIMARY KEY,
+    intent_fingerprint TEXT NOT NULL,
+    profile_id INTEGER NOT NULL,
+    source_entry_id INTEGER NOT NULL,
+    target_entry_id INTEGER NOT NULL,
+    mode TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY(profile_id) REFERENCES profiles(_id) ON DELETE CASCADE
+);
+
+getById:
+SELECT operation_id, intent_fingerprint, profile_id, source_entry_id, target_entry_id, mode
+FROM entry_migration_operations
+WHERE operation_id = :operationId;
+
+insert:
+INSERT INTO entry_migration_operations(
+    operation_id,
+    intent_fingerprint,
+    profile_id,
+    source_entry_id,
+    target_entry_id,
+    mode,
+    created_at
+)
+VALUES (
+    :operationId,
+    :intentFingerprint,
+    :profileId,
+    :sourceEntryId,
+    :targetEntryId,
+    :mode,
+    :createdAt
+);

@@ -5,6 +5,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -12,17 +13,21 @@ import eu.kanade.presentation.browse.MigrateSearchScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchScreenModel
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
+import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.launch
+import mihon.entry.interactions.EntryMigrationSubject
 import mihon.feature.migration.dialog.MigrateEntryDialog
 import mihon.feature.migration.list.MigrationListScreen
+import tachiyomi.i18n.MR
 
-class MigrateSearchScreen(private val entryId: Long) : Screen() {
+class MigrateSearchScreen(private val subject: EntryMigrationSubject) : Screen() {
 
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val context = LocalContext.current
         val scope = rememberCoroutineScope()
-        val screenModel = rememberScreenModel { MigrateSearchScreenModel(entryId = entryId) }
+        val screenModel = rememberScreenModel { MigrateSearchScreenModel(subject = subject) }
         val state by screenModel.state.collectAsState()
 
         MigrateSearchScreen(
@@ -35,16 +40,22 @@ class MigrateSearchScreen(private val entryId: Long) : Screen() {
             onChangeSearchFilter = screenModel::setSourceFilter,
             onToggleResults = screenModel::toggleFilterResults,
             onClickSource = { navigator.push(MigrateSourceSearchScreen(state.from!!, it.id, state.searchQuery)) },
-            onClickItem = {
-                val migrateListScreen = navigator.items
-                    .filterIsInstance<MigrationListScreen>()
-                    .lastOrNull()
+            onClickItem = { target ->
+                scope.launch {
+                    if (!screenModel.acceptsTarget(target)) {
+                        context.toast(MR.strings.internal_error)
+                        return@launch
+                    }
+                    val migrateListScreen = navigator.items
+                        .filterIsInstance<MigrationListScreen>()
+                        .lastOrNull()
 
-                if (migrateListScreen == null) {
-                    screenModel.setMigrateDialog(entryId, it)
-                } else {
-                    migrateListScreen.addMatchOverride(current = entryId, target = it.id)
-                    navigator.popUntil { screen -> screen is MigrationListScreen }
+                    if (migrateListScreen == null) {
+                        screenModel.setMigrateDialog(subject.entryId, target)
+                    } else {
+                        migrateListScreen.addMatchOverride(current = subject.entryId, target = target.id)
+                        navigator.popUntil { screen -> screen is MigrationListScreen }
+                    }
                 }
             },
             onLongClickItem = {

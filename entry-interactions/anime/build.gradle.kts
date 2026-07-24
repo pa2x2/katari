@@ -54,6 +54,9 @@ dependencies {
 
     testImplementation(projects.entryInteractions)
     testImplementation(libs.bundles.test)
+    testImplementation(libs.junit4)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.robolectric)
     testRuntimeOnly(libs.junit.platform.launcher)
+    testRuntimeOnly(libs.junit.vintage)
 }

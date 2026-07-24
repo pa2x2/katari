@@ -6,11 +6,24 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
-import mihon.entry.interactions.EntryChildListInteraction
+import mihon.entry.interactions.EntryChildGroupFilterFeature
+import mihon.entry.interactions.EntryChildGroupFilterMutationResult
+import mihon.entry.interactions.EntryChildGroupFilterObservationResult
+import mihon.entry.interactions.EntryChildGroupFilterRestoreResult
+import mihon.entry.interactions.EntryChildGroupFilterResult
+import mihon.entry.interactions.EntryChildGroupFilterScope
+import mihon.entry.interactions.EntryChildGroupFilterSnapshotResult
+import mihon.entry.interactions.EntryChildGroupFilterStateResult
+import mihon.entry.interactions.EntryChildListDisplay
+import mihon.entry.interactions.EntryChildListFeature
 import mihon.entry.interactions.EntryChildListRequest
+import mihon.entry.interactions.EntryChildListResult
 import mihon.entry.interactions.EntryChildListRow
+import mihon.entry.interactions.EntryChildOrderResult
 import mihon.entry.interactions.EntryChildProgressLabel
 import mihon.entry.interactions.EntryChildProgressRequest
+import mihon.entry.interactions.EntryChildProgressResult
+import mihon.entry.interactions.EntryFirstChildResult
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -78,10 +91,9 @@ class EntryScreenModelStateTest {
             mergeGroupMemberIds = mergeGroupMemberIds,
             isFromSource = false,
             chapters = emptyList(),
-            childListInteraction = NoOpEntryChildListInteraction,
-            childGroupFilterSupported = false,
-            availableScanlators = emptySet(),
-            excludedScanlators = emptySet(),
+            childListFeature = TestEntryChildListFeature,
+            childGroupFilterFeature = TestEntryChildGroupFilterFeature,
+            childGroupFilterState = EntryChildGroupFilterStateResult.Inapplicable(entry.type),
         )
     }
 
@@ -95,29 +107,72 @@ class EntryScreenModelStateTest {
         )
     }
 
-    private object NoOpEntryChildListInteraction : EntryChildListInteraction {
-        override fun sortedForReading(
+    private object TestEntryChildListFeature : EntryChildListFeature {
+        override fun isApplicable(type: eu.kanade.tachiyomi.source.entry.EntryType): Boolean = true
+
+        override fun readingOrder(
             entry: Entry,
             chapters: List<EntryChapter>,
             memberIds: List<Long>,
-        ): List<EntryChapter> {
-            return chapters
-        }
+        ): EntryChildOrderResult = EntryChildOrderResult.Available(chapters)
 
-        override fun sortedForDisplay(
+        override fun firstReadingChild(
             entry: Entry,
             chapters: List<EntryChapter>,
             memberIds: List<Long>,
-        ): List<EntryChapter> {
-            return chapters
+        ): EntryFirstChildResult = EntryFirstChildResult.Available(chapters.firstOrNull())
+
+        override fun displayOrder(
+            entry: Entry,
+            chapters: List<EntryChapter>,
+            memberIds: List<Long>,
+        ): EntryChildOrderResult = EntryChildOrderResult.Available(chapters)
+
+        override fun displayList(request: EntryChildListRequest): EntryChildListResult {
+            return EntryChildListResult.Available(
+                EntryChildListDisplay(
+                    rows = request.chapters.map(EntryChildListRow::Child),
+                    aggregateMissingCount = 0,
+                ),
+            )
         }
 
-        override fun buildDisplayList(request: EntryChildListRequest): List<EntryChildListRow> {
-            return request.chapters.map(EntryChildListRow::Child)
+        override fun progressLabels(request: EntryChildProgressRequest): EntryChildProgressResult {
+            val labels: Flow<Map<Long, EntryChildProgressLabel>> = flowOf(emptyMap())
+            return EntryChildProgressResult.Available(labels)
+        }
+    }
+
+    private object TestEntryChildGroupFilterFeature : EntryChildGroupFilterFeature {
+        override fun isApplicable(type: eu.kanade.tachiyomi.source.entry.EntryType): Boolean = false
+
+        override suspend fun state(scope: EntryChildGroupFilterScope): EntryChildGroupFilterStateResult {
+            return EntryChildGroupFilterStateResult.Inapplicable(scope.entry.type)
         }
 
-        override fun progressLabels(request: EntryChildProgressRequest): Flow<Map<Long, EntryChildProgressLabel>> {
-            return flowOf(emptyMap())
+        override fun observe(scope: EntryChildGroupFilterScope): EntryChildGroupFilterObservationResult {
+            return EntryChildGroupFilterObservationResult.Inapplicable(scope.entry.type)
         }
+
+        override fun filter(
+            entry: Entry,
+            chapters: List<EntryChapter>,
+            excludedGroups: Set<String>,
+        ): EntryChildGroupFilterResult = EntryChildGroupFilterResult.Inapplicable(entry.type)
+
+        override suspend fun setExcludedGroups(
+            scope: EntryChildGroupFilterScope,
+            excludedGroups: Set<String>,
+        ): EntryChildGroupFilterMutationResult = EntryChildGroupFilterMutationResult.Inapplicable(scope.entry.type)
+
+        override suspend fun snapshot(
+            profileId: Long,
+            entry: Entry,
+        ): EntryChildGroupFilterSnapshotResult = EntryChildGroupFilterSnapshotResult.Inapplicable(entry.type)
+
+        override suspend fun restore(
+            entry: Entry,
+            excludedGroups: Set<String>,
+        ): EntryChildGroupFilterRestoreResult = EntryChildGroupFilterRestoreResult.Inapplicable(entry.type)
     }
 }

@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -19,7 +18,6 @@ import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
-import tachiyomi.domain.entry.model.EntryMerge
 
 /** Persisted index of durable BOOK packages. The filesystem remains the source of truth. */
 internal class BookDownloadCache(
@@ -35,11 +33,7 @@ internal class BookDownloadCache(
     private val _packages = MutableStateFlow<Map<BookDownloadPackageKey, VerifiedBookDownloadPackage>>(emptyMap())
     val packages: StateFlow<Map<BookDownloadPackageKey, VerifiedBookDownloadPackage>> = _packages.asStateFlow()
     private val verifiedPackageKeys = mutableSetOf<BookDownloadPackageKey>()
-    private val mergedMemberIdsState = MutableStateFlow<Map<Long, Set<Long>>>(emptyMap())
-    val changes: Flow<Unit> = merge(
-        _packages.drop(1).map { Unit },
-        mergedMemberIdsState.drop(1).map { Unit },
-    )
+    val changes: Flow<Unit> = _packages.drop(1).map {}
 
     private val _isInitializing = MutableStateFlow(false)
     val isInitializing: StateFlow<Boolean> = _isInitializing.asStateFlow()
@@ -166,24 +160,10 @@ internal class BookDownloadCache(
         _packages.value.keys.count { it.sourceId == sourceId && it.entryUrl == entryUrl }
 
     fun getDownloadCount(entry: Entry): Int {
-        val memberIds = memberEntryIds(entry.id)
         return _packages.value.values.count { download ->
             val manifest = download.manifest
-            (manifest.sourceId == entry.source && manifest.entryUrl == entry.url) || manifest.entryId in memberIds
+            (manifest.sourceId == entry.source && manifest.entryUrl == entry.url) || manifest.entryId == entry.id
         }
-    }
-
-    fun memberEntryIds(entryId: Long): Set<Long> = mergedMemberIdsState.value[entryId] ?: setOf(entryId)
-
-    fun updateMergedEntries(merges: List<EntryMerge>) {
-        mergedMemberIdsState.value = merges
-            .groupBy(EntryMerge::targetId)
-            .values
-            .flatMap { group ->
-                val memberIds = group.mapTo(linkedSetOf(), EntryMerge::entryId)
-                memberIds.map { it to memberIds }
-            }
-            .toMap()
     }
 
     fun getTotalDownloadCount(): Int = _packages.value.size

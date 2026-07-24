@@ -4,19 +4,19 @@ sealed interface StatsData {
 
     data class Overview(
         val libraryEntryCount: Int,
-        val completedEntryCount: Int,
+        val completedEntryCount: Int?,
         val totalReadDuration: Long,
     ) : StatsData
 
     data class Titles(
         val globalUpdateItemCount: Int,
-        val startedEntryCount: Int,
+        val startedEntryCount: Int?,
         val localEntryCount: Int,
     ) : StatsData
 
     data class Chapters(
-        val totalChapterCount: Int,
-        val readChapterCount: Int,
+        val totalChapterCount: Int?,
+        val readChapterCount: Int?,
         val downloadCount: Int,
     ) : StatsData
 

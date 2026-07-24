@@ -184,7 +184,7 @@
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
         <activity
-            android:name=".ui.setting.track.TrackLoginActivity"
+            android:name=".data.track.oauth.TrackLoginActivity"
             android:exported="true"
             android:label="@string/track_activity_name">
             <intent-filter>

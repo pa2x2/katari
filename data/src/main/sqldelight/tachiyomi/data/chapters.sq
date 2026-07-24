@@ -70,6 +70,12 @@ SELECT *
 FROM chapters
 WHERE entry_id IN :entryIds;
 
+getCountsByEntryIds:
+SELECT entry_id, count(*) AS child_count
+FROM chapters
+WHERE entry_id IN :entryIds
+GROUP BY entry_id;
+
 getScanlatorsByEntryId:
 SELECT scanlator
 FROM chapters

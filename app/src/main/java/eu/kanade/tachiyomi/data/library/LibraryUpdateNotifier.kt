@@ -14,14 +14,11 @@ import coil3.imageLoader
 import coil3.request.ImageRequest
 import coil3.request.transformations
 import coil3.transform.CircleCropTransformation
-import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.notification.NotificationHandler
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
-import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.source.entry.UnmeteredSource
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.util.lang.chop
 import eu.kanade.tachiyomi.util.system.cancelNotification
@@ -30,17 +27,23 @@ import eu.kanade.tachiyomi.util.system.notificationBuilder
 import eu.kanade.tachiyomi.util.system.notify
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import mihon.entry.interactions.EntryDownloadInteraction
+import mihon.entry.interactions.EntryLibraryUpdateNotificationAction
+import mihon.entry.interactions.EntryLibraryUpdateNotificationDestination
+import mihon.entry.interactions.EntryLibraryUpdateNotificationFeature
+import mihon.entry.interactions.EntryLibraryUpdateNotificationGroup
+import mihon.entry.interactions.EntryLibraryUpdateNotificationInput
+import mihon.entry.interactions.EntryLibraryUpdateNotificationItem
+import mihon.entry.interactions.EntryLibraryUpdateNotificationRoute
+import mihon.entry.interactions.EntryLibraryUpdateNotificationText
+import mihon.entry.interactions.EntryLibraryUpdateQueueWarning
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.i18n.pluralStringResource
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchUI
-import tachiyomi.domain.entry.interactor.GetEntry
-import tachiyomi.domain.entry.interactor.GetMergedEntry
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.model.LibraryItem
-import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -50,10 +53,7 @@ import java.text.NumberFormat
 class LibraryUpdateNotifier(
     private val context: Context,
     private val securityPreferences: SecurityPreferences = Injekt.get(),
-    private val sourceManager: SourceManager = Injekt.get(),
-    private val getMergedEntry: GetMergedEntry = Injekt.get(),
-    private val getEntry: GetEntry = Injekt.get(),
-    private val entryDownloadInteraction: EntryDownloadInteraction = Injekt.get(),
+    private val notificationFeature: EntryLibraryUpdateNotificationFeature = Injekt.get(),
 ) {
 
     private val percentFormatter = NumberFormat.getPercentInstance().apply {
@@ -122,12 +122,10 @@ class LibraryUpdateNotifier(
      * Warn when excessively checking any single source.
      */
     fun showQueueSizeWarningNotificationIfNeeded(entriesToUpdate: List<LibraryItem>) {
-        val maxUpdatesFromSource = entriesToUpdate
-            .groupBy { it.entry.source }
-            .filterKeys { sourceManager.get(it) !is UnmeteredSource }
-            .maxOfOrNull { it.value.size } ?: 0
-
-        if (maxUpdatesFromSource <= MANGA_PER_SOURCE_QUEUE_WARNING_THRESHOLD) {
+        if (
+            notificationFeature.queueWarning(entriesToUpdate.map(LibraryItem::entry)) ==
+            EntryLibraryUpdateQueueWarning.NotRequired
+        ) {
             return
         }
 
@@ -174,38 +172,42 @@ class LibraryUpdateNotifier(
      * @param updates a list of entries with new updates.
      */
     fun showUpdateNotifications(updates: List<Pair<Entry, Array<EntryChapter>>>) {
-        val childUpdates = runBlocking {
-            updates.map { (entry, children) ->
-                NotificationEntryUpdate(
-                    originEntry = entry,
-                    visibleEntry = getVisibleEntry(entry),
-                    children = children,
-                )
+        val projection = runBlocking {
+            notificationFeature.project(
+                updates.map { (entry, children) ->
+                    EntryLibraryUpdateNotificationInput(
+                        entry = entry,
+                        children = children.toList(),
+                    )
+                },
+            )
+        }
+        projection.omissions.forEach { omission ->
+            logcat {
+                "Library-update notifications omitted ${omission.updateCount} ${omission.type} updates: " +
+                    omission.reason
             }
         }
-
-        childUpdates.groupBy { it.type }
-            .forEach { (type, typeUpdates) ->
-                showUpdateNotifications(type, typeUpdates)
-            }
+        projection.groups.forEach(::showUpdateNotifications)
     }
 
     @OptIn(DelicateCoroutinesApi::class)
     private fun showUpdateNotifications(
-        type: EntryUpdateNotificationType,
-        childUpdates: List<NotificationEntryUpdate>,
+        group: EntryLibraryUpdateNotificationGroup,
     ) {
+        val route = group.route
+        val childUpdates = group.updates
         // Parent group notification
         context.notify(
-            type.summaryNotificationId,
-            type.channel,
+            route.summaryNotificationId,
+            route.channelId,
         ) {
-            setContentTitle(type.summaryTitle(context))
+            setContentTitle(context.stringResource(group.summaryTitle))
             if (childUpdates.size == 1 && !securityPreferences.hideNotificationContent.get()) {
                 setContentText(childUpdates.first().originEntry.displayTitle.chop(NOTIF_TITLE_MAX_LEN))
             } else {
                 setContentText(
-                    type.summaryText(context, childUpdates.size),
+                    context.pluralStringResource(group.summaryText, childUpdates.size, childUpdates.size),
                 )
 
                 if (!securityPreferences.hideNotificationContent.get()) {
@@ -222,7 +224,7 @@ class LibraryUpdateNotifier(
             setSmallIcon(R.drawable.ic_katari)
             setLargeIcon(notificationBitmap)
 
-            setGroup(type.group)
+            setGroup(route.groupKey)
             setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
             setGroupSummary(true)
             priority = NotificationCompat.PRIORITY_HIGH
@@ -240,6 +242,7 @@ class LibraryUpdateNotifier(
                             update.originEntry.id.hashCode(),
                             createNewEntryNotification(
                                 update = update,
+                                route = route,
                             ),
                         )
                     },
@@ -249,13 +252,14 @@ class LibraryUpdateNotifier(
     }
 
     private suspend fun createNewEntryNotification(
-        update: NotificationEntryUpdate,
+        update: EntryLibraryUpdateNotificationItem,
+        route: EntryLibraryUpdateNotificationRoute,
     ): Notification {
         val icon = getEntryIcon(update.originEntry)
-        return context.notificationBuilder(update.type.channel) {
+        return context.notificationBuilder(route.channelId) {
             setContentTitle(update.originEntry.displayTitle)
 
-            val description = update.childDescription(context)
+            val description = context.render(update.description)
             setContentText(description)
             setStyle(NotificationCompat.BigTextStyle().bigText(description))
 
@@ -265,31 +269,32 @@ class LibraryUpdateNotifier(
                 setLargeIcon(icon)
             }
 
-            setGroup(update.type.group)
+            setGroup(route.groupKey)
             setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
             priority = NotificationCompat.PRIORITY_HIGH
 
-            setContentIntent(update.openChildIntent(context))
+            setContentIntent(update.destinationIntent(context, route.summaryNotificationId))
             setAutoCancel(true)
 
-            addAction(
-                R.drawable.ic_done_24dp,
-                update.type.markConsumedLabel(context),
-                update.markConsumedIntent(context),
-            )
-            addAction(
-                R.drawable.ic_book_24dp,
-                update.type.viewEntryLabel(context),
-                update.viewEntryIntent(context),
-            )
-            if (
-                entryDownloadInteraction.supportsBulkDownload(update.originEntry) &&
-                update.children.size <= CHAPTERS_PER_SOURCE_QUEUE_WARNING_THRESHOLD
-            ) {
+            if (EntryLibraryUpdateNotificationAction.MARK_CONSUMED in update.actions) {
+                addAction(
+                    R.drawable.ic_done_24dp,
+                    context.stringResource(update.markConsumedLabel),
+                    update.markConsumedIntent(context, route.summaryNotificationId),
+                )
+            }
+            if (EntryLibraryUpdateNotificationAction.VIEW_ENTRY in update.actions) {
+                addAction(
+                    R.drawable.ic_book_24dp,
+                    context.stringResource(update.viewChildrenLabel),
+                    update.viewEntryIntent(context, route.summaryNotificationId),
+                )
+            }
+            if (EntryLibraryUpdateNotificationAction.DOWNLOAD in update.actions) {
                 addAction(
                     android.R.drawable.stat_sys_download_done,
                     context.stringResource(MR.strings.action_download),
-                    update.downloadChildrenIntent(context),
+                    update.downloadChildrenIntent(context, route.summaryNotificationId),
                 )
             }
         }.build()
@@ -310,131 +315,6 @@ class LibraryUpdateNotifier(
             .build()
         val drawable = context.imageLoader.execute(request).image?.asDrawable(context.resources)
         return drawable?.getBitmapOrNull()
-    }
-
-    private suspend fun getVisibleEntry(entry: Entry): Entry {
-        val visibleEntryId = getMergedEntry.awaitVisibleTargetId(entry.id)
-        return getEntry.await(visibleEntryId) ?: entry
-    }
-
-    private data class NotificationEntryUpdate(
-        val originEntry: Entry,
-        val visibleEntry: Entry,
-        val children: Array<EntryChapter>,
-    ) {
-        val type: EntryUpdateNotificationType = EntryUpdateNotificationType.from(originEntry)
-
-        fun childDescription(context: Context): String {
-            return type.childDescriptionProvider(context, children)
-        }
-
-        fun openChildIntent(context: Context): PendingIntent {
-            return NotificationReceiver.openChildPendingActivity(context, visibleEntry, originEntry, children.first())
-        }
-
-        fun markConsumedIntent(context: Context): PendingIntent {
-            return NotificationReceiver.markConsumedPendingBroadcast(
-                context,
-                originEntry,
-                children,
-                type.summaryNotificationId,
-            )
-        }
-
-        fun viewEntryIntent(context: Context): PendingIntent {
-            return NotificationReceiver.openEntryPendingActivity(
-                context,
-                visibleEntry.id,
-                type.summaryNotificationId,
-            )
-        }
-
-        fun downloadChildrenIntent(context: Context): PendingIntent {
-            return NotificationReceiver.downloadChildrenPendingBroadcast(
-                context,
-                originEntry,
-                children,
-                type.summaryNotificationId,
-            )
-        }
-    }
-
-    private enum class EntryUpdateNotificationType(
-        private val entryType: EntryType,
-        val summaryNotificationId: Int,
-        val channel: String,
-        val group: String,
-        private val summaryTitleProvider: (Context) -> String,
-        private val summaryTextProvider: (Context, Int) -> String,
-        val childDescriptionProvider: (Context, Array<EntryChapter>) -> String,
-        private val markConsumedLabelProvider: (Context) -> String,
-        private val viewEntryLabelProvider: (Context) -> String,
-    ) {
-        MANGA(
-            entryType = EntryType.MANGA,
-            summaryNotificationId = Notifications.ID_NEW_CHAPTERS,
-            channel = Notifications.CHANNEL_NEW_CHAPTERS,
-            group = Notifications.GROUP_NEW_CHAPTERS,
-            summaryTitleProvider = { context ->
-                context.stringResource(MR.strings.notification_new_chapters)
-            },
-            summaryTextProvider = { context, count ->
-                context.pluralStringResource(MR.plurals.notification_new_chapters_summary, count, count)
-            },
-            childDescriptionProvider = { context, children ->
-                context.getNewChaptersDescription(children)
-            },
-            markConsumedLabelProvider = { context ->
-                context.stringResource(MR.strings.action_mark_as_read)
-            },
-            viewEntryLabelProvider = { context ->
-                context.stringResource(MR.strings.action_view_chapters)
-            },
-        ),
-        ANIME(
-            entryType = EntryType.ANIME,
-            summaryNotificationId = Notifications.ID_NEW_EPISODES,
-            channel = Notifications.CHANNEL_NEW_EPISODES,
-            group = Notifications.GROUP_NEW_EPISODES,
-            summaryTitleProvider = { context ->
-                context.stringResource(MR.strings.notification_new_episodes)
-            },
-            summaryTextProvider = { context, count ->
-                context.pluralStringResource(MR.plurals.notification_new_episodes_summary, count, count)
-            },
-            childDescriptionProvider = { context, children ->
-                context.getNewEpisodesDescription(children)
-            },
-            markConsumedLabelProvider = { context ->
-                context.stringResource(MR.strings.action_mark_as_watched)
-            },
-            viewEntryLabelProvider = { context ->
-                context.stringResource(MR.strings.action_view_episodes)
-            },
-        ),
-        ;
-
-        fun summaryTitle(context: Context): String {
-            return summaryTitleProvider.invoke(context)
-        }
-
-        fun summaryText(context: Context, count: Int): String {
-            return summaryTextProvider.invoke(context, count)
-        }
-
-        fun markConsumedLabel(context: Context): String {
-            return markConsumedLabelProvider.invoke(context)
-        }
-
-        fun viewEntryLabel(context: Context): String {
-            return viewEntryLabelProvider.invoke(context)
-        }
-
-        companion object {
-            fun from(entry: Entry): EntryUpdateNotificationType {
-                return entries.firstOrNull { it.entryType == entry.type } ?: MANGA
-            }
-        }
     }
 
     /**
@@ -459,116 +339,63 @@ class LibraryUpdateNotifier(
     }
 }
 
-private fun Context.getNewChaptersDescription(chapters: Array<EntryChapter>): String {
-    val displayableChapterNumbers = chapters
-        .filter { it.isRecognizedNumber }
-        .sortedBy { it.chapterNumber }
-        .map { formatChapterNumber(it.chapterNumber) }
-        .toSet()
-
-    return when (displayableChapterNumbers.size) {
-        0 -> {
-            pluralStringResource(
-                MR.plurals.notification_chapters_generic,
-                chapters.size,
-                chapters.size,
-            )
-        }
-        1 -> {
-            val remaining = chapters.size - displayableChapterNumbers.size
-            if (remaining == 0) {
-                stringResource(
-                    MR.strings.notification_chapters_single,
-                    displayableChapterNumbers.first(),
-                )
-            } else {
-                stringResource(
-                    MR.strings.notification_chapters_single_and_more,
-                    displayableChapterNumbers.first(),
-                    remaining,
-                )
-            }
-        }
-        else -> {
-            val shouldTruncate = displayableChapterNumbers.size > NOTIF_MAX_CHAPTERS
-            if (shouldTruncate) {
-                val remaining = displayableChapterNumbers.size - NOTIF_MAX_CHAPTERS
-                val joinedChapterNumbers = displayableChapterNumbers
-                    .take(NOTIF_MAX_CHAPTERS)
-                    .joinToString(", ")
-                pluralStringResource(
-                    MR.plurals.notification_chapters_multiple_and_more,
-                    remaining,
-                    joinedChapterNumbers,
-                    remaining,
-                )
-            } else {
-                stringResource(
-                    MR.strings.notification_chapters_multiple,
-                    displayableChapterNumbers.joinToString(", "),
-                )
-            }
-        }
-    }
+private fun Context.render(text: EntryLibraryUpdateNotificationText): String = when (text) {
+    is EntryLibraryUpdateNotificationText.StringText -> stringResource(
+        text.resource,
+        *text.arguments.toTypedArray(),
+    )
+    is EntryLibraryUpdateNotificationText.PluralText -> pluralStringResource(
+        text.resource,
+        text.quantity,
+        *text.arguments.toTypedArray(),
+    )
 }
 
-private fun Context.getNewEpisodesDescription(chapters: Array<EntryChapter>): String {
-    val displayableEpisodeNumbers = chapters
-        .mapNotNull { chapter ->
-            chapter.chapterNumber.takeIf { number -> number >= 0.0 }?.let(::formatChapterNumber)
-        }
-        .toSet()
-
-    return when (displayableEpisodeNumbers.size) {
-        0 -> {
-            pluralStringResource(
-                MR.plurals.notification_episodes_generic,
-                chapters.size,
-                chapters.size,
-            )
-        }
-        1 -> {
-            val remaining = chapters.size - displayableEpisodeNumbers.size
-            if (remaining == 0) {
-                stringResource(
-                    MR.strings.notification_episodes_single,
-                    displayableEpisodeNumbers.first(),
-                )
-            } else {
-                stringResource(
-                    MR.strings.notification_episodes_single_and_more,
-                    displayableEpisodeNumbers.first(),
-                    remaining,
-                )
-            }
-        }
-        else -> {
-            val shouldTruncate = displayableEpisodeNumbers.size > NOTIF_MAX_EPISODES
-            if (shouldTruncate) {
-                val remaining = displayableEpisodeNumbers.size - NOTIF_MAX_EPISODES
-                val joinedEpisodeNumbers = displayableEpisodeNumbers
-                    .take(NOTIF_MAX_EPISODES)
-                    .joinToString(", ")
-                pluralStringResource(
-                    MR.plurals.notification_episodes_multiple_and_more,
-                    remaining,
-                    joinedEpisodeNumbers,
-                    remaining,
-                )
-            } else {
-                stringResource(
-                    MR.strings.notification_episodes_multiple,
-                    displayableEpisodeNumbers.joinToString(", "),
-                )
-            }
-        }
-    }
+private fun EntryLibraryUpdateNotificationItem.destinationIntent(
+    context: Context,
+    summaryNotificationId: Int,
+): PendingIntent = when (destination) {
+    EntryLibraryUpdateNotificationDestination.OPEN_CHILD -> checkNotNull(
+        NotificationReceiver.openChildPendingActivity(context, visibleEntry, originEntry, children.first()),
+    ) { "Library-update notifications selected a child destination that Open could not render" }
+    EntryLibraryUpdateNotificationDestination.ENTRY_DETAILS -> NotificationReceiver.openEntryPendingActivity(
+        context,
+        visibleEntry.profileId,
+        visibleEntry.id,
+        summaryNotificationId,
+    )
 }
 
-private const val NOTIF_MAX_CHAPTERS = 5
-private const val NOTIF_MAX_EPISODES = 5
+private fun EntryLibraryUpdateNotificationItem.markConsumedIntent(
+    context: Context,
+    summaryNotificationId: Int,
+): PendingIntent = NotificationReceiver.markConsumedPendingBroadcast(
+    context,
+    originEntry,
+    children.toTypedArray(),
+    summaryNotificationId,
+)
+
+private fun EntryLibraryUpdateNotificationItem.viewEntryIntent(
+    context: Context,
+    summaryNotificationId: Int,
+): PendingIntent = NotificationReceiver.openEntryPendingActivity(
+    context,
+    visibleEntry.profileId,
+    visibleEntry.id,
+    summaryNotificationId,
+)
+
+private fun EntryLibraryUpdateNotificationItem.downloadChildrenIntent(
+    context: Context,
+    summaryNotificationId: Int,
+): PendingIntent = NotificationReceiver.downloadChildrenPendingBroadcast(
+    context,
+    originEntry,
+    children.toTypedArray(),
+    summaryNotificationId,
+)
+
 private const val NOTIF_TITLE_MAX_LEN = 45
 private const val NOTIF_ICON_SIZE = 192
-private const val MANGA_PER_SOURCE_QUEUE_WARNING_THRESHOLD = 60
 private const val WARNING_NOTIF_TIMEOUT_MS = 30_000L
-private const val CHAPTERS_PER_SOURCE_QUEUE_WARNING_THRESHOLD = 15

@@ -177,14 +177,12 @@ internal fun PreferenceItem(
                     },
                 )
             }
-            is Preference.PreferenceItem.TrackerPreference -> {
-                val isLoggedIn by item.tracker.let { tracker ->
-                    tracker.isLoggedInFlow.collectAsState(tracker.isLoggedIn)
-                }
+            is Preference.PreferenceItem.TrackingAccountPreference -> {
                 TrackingPreferenceWidget(
-                    tracker = item.tracker,
-                    isLoggedIn = isLoggedIn,
-                    onClick = { if (isLoggedIn) item.logout() else item.login() },
+                    service = item.account.service,
+                    isLoggedIn = item.account.isLoggedIn,
+                    displayUsername = item.account.displayUsername,
+                    onClick = { if (item.account.isLoggedIn) item.logout() else item.login() },
                 )
             }
             is Preference.PreferenceItem.InfoPreference -> {

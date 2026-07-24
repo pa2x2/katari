@@ -9,13 +9,17 @@ import eu.kanade.domain.source.service.SourcePreferences
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
+import mihon.entry.interactions.EntryMigrationAvailability
+import mihon.entry.interactions.EntryMigrationFeature
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.source.model.Source
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -24,6 +28,8 @@ class MigrateSourceScreenModel(
     preferences: SourcePreferences = Injekt.get(),
     private val getSourcesWithFavoriteCount: GetSourcesWithFavoriteCount = Injekt.get(),
     private val setMigrateSorting: SetMigrateSorting = Injekt.get(),
+    private val entryRepository: EntryRepository = Injekt.get(),
+    private val migration: EntryMigrationFeature = Injekt.get(),
 ) : StateScreenModel<MigrateSourceScreenModel.State>(State()) {
 
     private val _channel = Channel<Event>(Int.MAX_VALUE)
@@ -31,7 +37,19 @@ class MigrateSourceScreenModel(
 
     init {
         screenModelScope.launchIO {
-            getSourcesWithFavoriteCount.subscribe()
+            combine(
+                getSourcesWithFavoriteCount.subscribe(),
+                entryRepository.getLibraryEntriesAsFlow(),
+            ) { sources, entries ->
+                val migratableCounts = entries
+                    .asSequence()
+                    .filter { migration.availability(it) is EntryMigrationAvailability.Available }
+                    .groupingBy { it.source }
+                    .eachCount()
+                sources.mapNotNull { (source, _) ->
+                    migratableCounts[source.id]?.let { source to it.toLong() }
+                }.let(getSourcesWithFavoriteCount::sort)
+            }
                 .catch {
                     logcat(LogPriority.ERROR, it)
                     _channel.send(Event.FailedFetchingSourcesWithCount)

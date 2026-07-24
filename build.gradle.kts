@@ -240,6 +240,29 @@ tasks.register("publishEntrySdkToMavenLocal") {
     )
 }
 
+val verifyEntryFeatureDocumentation = tasks.register("verifyEntryFeatureDocumentation") {
+    group = "verification"
+    description = "Verifies checked-in Entry Feature documentation against the production graph"
+    dependsOn(
+        ":app:verifyContentTypeReference",
+        ":app:verifySourceSdkConsumerCoverage",
+    )
+}
+
+tasks.register("verifyEntryFeatureArchitecture") {
+    group = "verification"
+    description = "Verifies Entry Feature boundaries, contracts, reporting, and documentation"
+    dependsOn(
+        "checkEntryInteractionBoundaries",
+        ":feature-graph:testDebugUnitTest",
+        ":feature-validation:testDebugUnitTest",
+        ":entry-interactions:documentation:testDebugUnitTest",
+        ":entry-interactions:testDebugUnitTest",
+        ":entry-interactions:generateEntryFeatureReport",
+        verifyEntryFeatureDocumentation,
+    )
+}
+
 tasks {
     listOf("clean", "spotlessApply", "spotlessCheck").forEach { task ->
         named(task) {

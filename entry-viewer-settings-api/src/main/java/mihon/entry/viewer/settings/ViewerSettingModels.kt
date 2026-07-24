@@ -90,18 +90,7 @@ interface ViewerSettingsProvider {
         get() = null
     val origin: String?
         get() = null
-    val isAvailable: Boolean
-        get() = true
-    val unavailableReason: String?
-        get() = null
     val settings: List<ViewerSettingDefinition<*>>
-}
-
-interface ViewerSettingsInteraction {
-    val providers: StateFlow<List<ViewerSettingsProvider>>
-    fun provider(id: String): ViewerSettingsProvider?
-    fun register(provider: ViewerSettingsProvider)
-    fun unregister(providerId: String)
 }
 
 data class ViewerSettingOverride(
@@ -117,7 +106,5 @@ interface ViewerSettingOverrideRepository {
     suspend fun getByEntryId(entryId: Long): List<ViewerSettingOverride>
     suspend fun upsert(override: ViewerSettingOverride)
     suspend fun delete(entryId: Long, settingId: ViewerSettingId)
-    suspend fun replaceForEntry(entryId: Long, overrides: List<ViewerSettingOverride>)
-    suspend fun copy(sourceEntryId: Long, targetEntryId: Long)
     suspend fun deleteByProviderForProfile(providerId: String, profileId: Long)
 }

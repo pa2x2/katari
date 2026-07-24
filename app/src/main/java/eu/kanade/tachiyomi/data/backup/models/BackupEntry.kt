@@ -53,6 +53,7 @@ class BackupEntry(
     @ProtoNumber(35) var downloadPreferences: BackupDownloadPreferences? = null,
     @ProtoNumber(36) var progressStates: List<BackupEntryProgressState> = emptyList(),
     @ProtoNumber(37) var viewerSettingOverrides: List<BackupViewerSettingOverride> = emptyList(),
+    @ProtoNumber(38) var featureStates: List<BackupEntryFeatureState> = emptyList(),
     @ProtoNumber(100) var type: EntryType = EntryType.MANGA,
 ) {
     fun toEntry(): Entry {
@@ -84,6 +85,13 @@ class BackupEntry(
         )
     }
 }
+
+@Serializable
+data class BackupEntryFeatureState(
+    @ProtoNumber(1) var participantId: String,
+    @ProtoNumber(2) var schemaVersion: Int,
+    @ProtoNumber(3) var payload: ByteArray,
+)
 
 @Serializable
 class BackupChapter(

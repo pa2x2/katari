@@ -11,8 +11,6 @@ class GlobalLibraryPreferences(
         emptySet(),
     )
 
-    val autoClearMangaPageCache: Preference<Boolean> = preferenceStore.getBoolean("auto_clear_chapter_cache", false)
-
     val disallowNonAsciiFilenames: Preference<Boolean> = preferenceStore.getBoolean(
         "disallow_non_ascii_filenames",
         false,

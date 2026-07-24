@@ -1,12 +1,9 @@
 package eu.kanade.domain
 
-import eu.kanade.domain.chapter.interactor.GetAvailableScanlators
 import eu.kanade.domain.extension.interactor.GetExtensionLanguages
 import eu.kanade.domain.extension.interactor.GetExtensionSources
 import eu.kanade.domain.extension.interactor.GetExtensionsByType
 import eu.kanade.domain.extension.interactor.TrustExtension
-import eu.kanade.domain.scanlator.interactor.GetExcludedScanlators
-import eu.kanade.domain.scanlator.interactor.SetExcludedScanlators
 import eu.kanade.domain.source.interactor.GetEnabledCatalogSources
 import eu.kanade.domain.source.interactor.GetEnabledSources
 import eu.kanade.domain.source.interactor.GetIncognitoState
@@ -32,9 +29,7 @@ import mihon.domain.extension.interactor.GetExtensionStores
 import mihon.domain.extension.interactor.RemoveExtensionStore
 import mihon.domain.extension.interactor.UpdateExtensionStores
 import mihon.domain.extension.repository.ExtensionStoreRepository
-import mihon.domain.migration.usecases.MigrateEntryUseCase
 import mihon.domain.upcoming.interactor.GetUpcomingEntries
-import mihon.entry.interactions.entryLibraryProgressCalculators
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import tachiyomi.data.category.CategoryRepositoryImpl
 import tachiyomi.data.entry.DownloadPreferencesRepositoryImpl
@@ -43,12 +38,10 @@ import tachiyomi.data.entry.EntryCoverHashesRepositoryImpl
 import tachiyomi.data.entry.EntryProgressRepositoryImpl
 import tachiyomi.data.entry.EntryRepositoryImpl
 import tachiyomi.data.entry.EntrySyncRepositoryImpl
-import tachiyomi.data.entry.MergedEntryRepositoryImpl
 import tachiyomi.data.entry.PlaybackPreferencesRepositoryImpl
 import tachiyomi.data.entry.ViewerSettingOverrideRepositoryImpl
 import tachiyomi.data.history.HistoryRepositoryImpl
 import tachiyomi.data.release.ReleaseServiceImpl
-import tachiyomi.data.source.CatalogSourceRepositoryImpl
 import tachiyomi.data.source.SourceRepositoryImpl
 import tachiyomi.data.source.StubSourceRepositoryImpl
 import tachiyomi.data.track.TrackRepositoryImpl
@@ -63,33 +56,24 @@ import tachiyomi.domain.category.interactor.SetDisplayMode
 import tachiyomi.domain.category.interactor.SetSortModeForCategory
 import tachiyomi.domain.category.interactor.UpdateCategory
 import tachiyomi.domain.category.repository.CategoryRepository
-import tachiyomi.domain.entry.interactor.EnhanceDuplicateLibraryEntries
-import tachiyomi.domain.entry.interactor.GetDuplicateLibraryEntries
-import tachiyomi.domain.entry.interactor.GetEnhancedDuplicateLibraryEntries
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.GetEntryById
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.interactor.GetLibraryEntries
-import tachiyomi.domain.entry.interactor.GetMergedEntry
 import tachiyomi.domain.entry.interactor.GetNextUnreadChapter
-import tachiyomi.domain.entry.interactor.GetRelatedEntries
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.entry.interactor.SetEntryCategories
 import tachiyomi.domain.entry.interactor.SetEntryChapterFlags
-import tachiyomi.domain.entry.interactor.SetEntryFavorite
 import tachiyomi.domain.entry.interactor.SetEntryViewerFlags
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
 import tachiyomi.domain.entry.interactor.UpdateEntry
-import tachiyomi.domain.entry.interactor.UpdateMergedEntry
 import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryCoverHashesRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.EntrySyncRepository
-import tachiyomi.domain.entry.repository.MergedEntryRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
-import tachiyomi.domain.entry.service.EntryLibraryProgressResolver
 import tachiyomi.domain.entry.service.FetchInterval
 import tachiyomi.domain.history.interactor.GetHistory
 import tachiyomi.domain.history.interactor.GetNextChapters
@@ -99,9 +83,7 @@ import tachiyomi.domain.history.interactor.UpsertHistory
 import tachiyomi.domain.history.repository.HistoryRepository
 import tachiyomi.domain.release.interactor.GetApplicationRelease
 import tachiyomi.domain.release.service.ReleaseService
-import tachiyomi.domain.source.interactor.GetRemoteCatalog
 import tachiyomi.domain.source.interactor.GetSourcesWithNonLibraryEntries
-import tachiyomi.domain.source.repository.CatalogSourceRepository
 import tachiyomi.domain.source.repository.SourceRepository
 import tachiyomi.domain.source.repository.StubSourceRepository
 import tachiyomi.domain.source.service.HiddenSourceIds
@@ -132,8 +114,6 @@ class DomainModule : InjektModule {
         addFactory { UpdateCategory(get()) }
         addFactory { DeleteCategory(get(), get(), get()) }
 
-        addSingletonFactory<MergedEntryRepository> { MergedEntryRepositoryImpl(get(), get()) }
-
         addSingletonFactory<EntryRepository> { EntryRepositoryImpl(get(), get()) }
         addSingletonFactory<EntryChapterRepository> { EntryChapterRepositoryImpl(get(), get()) }
         addSingletonFactory<EntryProgressRepository> { EntryProgressRepositoryImpl(get()) }
@@ -146,50 +126,32 @@ class DomainModule : InjektModule {
         addFactory { GetEntry(get()) }
         addFactory { GetEntryById(get()) }
         addFactory { GetNextUnreadChapter(get()) }
-        addFactory { SetEntryFavorite(get()) }
         addFactory { SetEntryCategories(get()) }
         addFactory { SetEntryChapterFlags(get()) }
         addFactory { NetworkToLocalEntry(get()) }
-        addFactory { GetRelatedEntries(get(), get()) }
-        addFactory { EntryLibraryProgressResolver(entryLibraryProgressCalculators(get())) }
-        addFactory { GetLibraryEntries(get(), get(), get(), get(), get(), get(), get()) }
+        addFactory { GetLibraryEntries(get(), get(), get(), get(), get(), get(), get(), get()) }
         addFactory { SyncEntryWithSource(get(), get(), get(), get(), get(), get(), get()) }
-        addFactory { GetDuplicateLibraryEntries(get(), get(), get(), get(), get()) }
-        addFactory { GetMergedEntry(get()) }
-        addFactory { UpdateMergedEntry(get(), get()) }
 
-        addFactory { GetEntryWithChapters(get(), get(), get()) }
+        addFactory { GetEntryWithChapters(get(), get()) }
 
         addFactory { GetNextChapters(get(), get(), get(), get()) }
         addFactory { GetUpcomingEntries(get()) }
         addFactory { FetchInterval(get()) }
         addFactory { SetEntryViewerFlags(get()) }
         addFactory { UpdateEntry(get(), get()) }
-        addFactory { GetExcludedScanlators(get(), get()) }
-        addFactory { SetExcludedScanlators(get(), get()) }
-        addFactory { EnhanceDuplicateLibraryEntries(get(), get()) }
-        addFactory { GetEnhancedDuplicateLibraryEntries(get(), get(), get(), get()) }
-        addFactory {
-            MigrateEntryUseCase(
-                get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(),
-                get(), get(),
-            )
-        }
-
         addSingletonFactory<ReleaseService> { ReleaseServiceImpl(get(), get()) }
         addFactory { GetApplicationRelease(get(), get()) }
 
         addSingletonFactory<TrackRepository> { TrackRepositoryImpl(get(), get()) }
         addFactory { TrackChapter(get(), get(), get(), get()) }
-        addFactory { AddTracks(get(), get(), get(), get()) }
-        addFactory { RefreshTracks(get(), get(), get(), get()) }
+        addFactory { AddTracks(get(), get()) }
+        addFactory { RefreshTracks(get(), get(), get()) }
         addFactory { DeleteTrack(get()) }
         addFactory { GetTracksPerEntry(get()) }
         addFactory { GetTracks(get()) }
         addFactory { InsertTrack(get()) }
         addFactory { SyncChapterProgressWithTrack(get(), get(), get(), get()) }
 
-        addFactory { GetAvailableScanlators(get()) }
         addSingletonFactory<HistoryRepository> { HistoryRepositoryImpl(get(), get()) }
         addFactory { GetHistory(get(), get()) }
         addFactory { UpsertHistory(get()) }
@@ -204,15 +166,13 @@ class DomainModule : InjektModule {
         addFactory { GetUpdates(get(), get()) }
 
         addSingletonFactory<HiddenSourceIds> { ProfileHiddenSourceIds(get()) }
-        addSingletonFactory<SourceRepository> { SourceRepositoryImpl(get(), get(), get()) }
-        addSingletonFactory<CatalogSourceRepository> { CatalogSourceRepositoryImpl(get()) }
+        addSingletonFactory<SourceRepository> { SourceRepositoryImpl(get(), get(), get(), get()) }
         addSingletonFactory<StubSourceRepository> { StubSourceRepositoryImpl(get()) }
         addFactory { GetEnabledSources(get(), get()) }
         addFactory { GetEnabledCatalogSources(get(), get(), get()) }
         addSingletonFactory { BrowseFeedService(get(), get()) }
         addFactory { GetLanguagesWithSources(get(), get()) }
         addFactory { GetLanguagesWithCatalogSources(get(), get()) }
-        addFactory { GetRemoteCatalog(get()) }
         addFactory { GetSourcesWithFavoriteCount(get(), get()) }
         addFactory { GetSourcesWithNonLibraryEntries(get(), get()) }
         addFactory { SetMigrateSorting(get()) }

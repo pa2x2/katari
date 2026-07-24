@@ -53,18 +53,26 @@ class TrackRepositoryImpl(
     }
 
     override suspend fun insert(track: EntryTrack) {
-        insertValues(track)
+        insertValues(profileProvider.activeProfileId, track)
+    }
+
+    override suspend fun insert(profileId: Long, track: EntryTrack) {
+        insertValues(profileId, track)
     }
 
     override suspend fun insertAll(tracks: List<EntryTrack>) {
-        insertValues(*tracks.toTypedArray())
+        insertValues(profileProvider.activeProfileId, *tracks.toTypedArray())
     }
 
-    private suspend fun insertValues(vararg tracks: EntryTrack) {
+    override suspend fun insertAll(profileId: Long, tracks: List<EntryTrack>) {
+        insertValues(profileId, *tracks.toTypedArray())
+    }
+
+    private suspend fun insertValues(profileId: Long, vararg tracks: EntryTrack) {
         handler.await(inTransaction = true) {
             tracks.forEach { track ->
                 entry_syncQueries.insert(
-                    profileId = profileProvider.activeProfileId,
+                    profileId = profileId,
                     entryId = track.entryId,
                     syncId = track.trackerId,
                     remoteId = track.remoteId,

@@ -2,9 +2,11 @@ package eu.kanade.tachiyomi.ui.library
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import eu.kanade.tachiyomi.data.track.TrackerManager
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import mihon.entry.interactions.EntryTrackingAccount
+import mihon.entry.interactions.EntryTrackingFeature
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.preference.getAndSet
@@ -24,14 +26,19 @@ class LibrarySettingsScreenModel(
     val libraryPreferences: LibraryPreferences = Injekt.get(),
     private val setDisplayMode: SetDisplayMode = Injekt.get(),
     private val setSortModeForCategory: SetSortModeForCategory = Injekt.get(),
-    trackerManager: TrackerManager = Injekt.get(),
+    trackingFeature: EntryTrackingFeature = Injekt.get(),
 ) : ScreenModel {
 
-    val trackersFlow = trackerManager.loggedInTrackersFlow()
+    val trackingServicesFlow = trackingFeature.observeAccounts()
+        .map { snapshot ->
+            snapshot.accounts.filter(EntryTrackingAccount::isLoggedIn).map(EntryTrackingAccount::service)
+        }
         .stateIn(
             scope = screenModelScope,
             started = SharingStarted.WhileSubscribed(5.seconds.inWholeMilliseconds),
-            initialValue = trackerManager.loggedInTrackers(),
+            initialValue = trackingFeature.currentAccounts().accounts
+                .filter(EntryTrackingAccount::isLoggedIn)
+                .map(EntryTrackingAccount::service),
         )
 
     fun toggleFilter(preference: (LibraryPreferences) -> Preference<TriState>) {

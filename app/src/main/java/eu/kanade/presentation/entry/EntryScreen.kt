@@ -63,7 +63,6 @@ import eu.kanade.presentation.entry.components.EntryInfoBox
 import eu.kanade.presentation.entry.components.EntryToolbar
 import eu.kanade.presentation.entry.components.ExpandableEntryDescription
 import eu.kanade.presentation.util.formatChapterNumber
-import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.entry.EntryChapterList
 import eu.kanade.tachiyomi.ui.entry.EntryScreenModel
 import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
@@ -72,7 +71,6 @@ import mihon.entry.interactions.EntryChildProgressLabel
 import mihon.entry.interactions.EntryDownloadState
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.domain.entry.service.missingChaptersCount
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.ListGroupHeader
@@ -94,7 +92,7 @@ fun EntryScreen(
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
     navigateUp: () -> Unit,
-    onChapterClicked: (EntryChapter) -> Unit,
+    onChapterClicked: ((EntryChapter) -> Unit)?,
     onDownloadChapter: ((List<EntryChapterList.Item>, ChapterDownloadAction) -> Unit)?,
     onAddToLibraryClicked: () -> Unit,
     onAddToMergeClicked: (() -> Unit)?,
@@ -108,7 +106,7 @@ fun EntryScreen(
 
     onFilterButtonClicked: () -> Unit,
     onRefresh: () -> Unit,
-    onContinueReading: () -> Unit,
+    onContinueReading: (() -> Unit)?,
     onSearch: (query: String, global: Boolean) -> Unit,
 
     // For cover dialog
@@ -117,6 +115,7 @@ fun EntryScreen(
     // For top action menu
     onShareClicked: (() -> Unit)?,
     onDownloadActionClicked: ((DownloadAction) -> Unit)?,
+    bookmarkedDownloadsSupported: Boolean,
     onEditCategoryClicked: (() -> Unit)?,
     onEditFetchIntervalClicked: (() -> Unit)?,
     onEditDisplayNameClicked: (() -> Unit)?,
@@ -128,8 +127,8 @@ fun EntryScreen(
 
     // For bottom action menu
     onMultiBookmarkClicked: ((List<EntryChapter>, bookmarked: Boolean) -> Unit)?,
-    onMultiMarkAsReadClicked: (List<EntryChapter>, markAsRead: Boolean) -> Unit,
-    onMarkPreviousAsReadClicked: (EntryChapter) -> Unit,
+    onMultiMarkAsReadClicked: ((List<EntryChapter>, markAsRead: Boolean) -> Unit)?,
+    onMarkPreviousAsReadClicked: ((EntryChapter) -> Unit)?,
     onMultiDeleteClicked: (List<EntryChapter>) -> Unit,
 
     // For chapter swipe
@@ -145,7 +144,7 @@ fun EntryScreen(
     onPreviewExpandedChange: (Boolean) -> Unit,
     onPreviewRetry: () -> Unit,
     onPreviewPageLoad: (Int) -> Unit,
-    onPreviewPageClick: (Long, Int) -> Unit,
+    onPreviewPageClick: ((Long, Int) -> Unit)?,
 ) {
     val context = LocalContext.current
     val onCopyTagToClipboard: (tag: String) -> Unit = {
@@ -179,6 +178,7 @@ fun EntryScreen(
             onCoverClicked = onCoverClicked,
             onShareClicked = onShareClicked,
             onDownloadActionClicked = onDownloadActionClicked,
+            bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
             onEditCategoryClicked = onEditCategoryClicked,
             onEditIntervalClicked = onEditFetchIntervalClicked,
             onEditDisplayNameClicked = onEditDisplayNameClicked,
@@ -228,6 +228,7 @@ fun EntryScreen(
             onCoverClicked = onCoverClicked,
             onShareClicked = onShareClicked,
             onDownloadActionClicked = onDownloadActionClicked,
+            bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
             onEditCategoryClicked = onEditCategoryClicked,
             onEditIntervalClicked = onEditFetchIntervalClicked,
             onEditDisplayNameClicked = onEditDisplayNameClicked,
@@ -263,7 +264,7 @@ private fun EntryScreenSmallImpl(
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
     navigateUp: () -> Unit,
-    onChapterClicked: (EntryChapter) -> Unit,
+    onChapterClicked: ((EntryChapter) -> Unit)?,
     onDownloadChapter: ((List<EntryChapterList.Item>, ChapterDownloadAction) -> Unit)?,
     onAddToLibraryClicked: () -> Unit,
     onAddToMergeClicked: (() -> Unit)?,
@@ -278,7 +279,7 @@ private fun EntryScreenSmallImpl(
 
     onFilterClicked: () -> Unit,
     onRefresh: () -> Unit,
-    onContinueReading: () -> Unit,
+    onContinueReading: (() -> Unit)?,
     onSearch: (query: String, global: Boolean) -> Unit,
 
     // For cover dialog
@@ -287,6 +288,7 @@ private fun EntryScreenSmallImpl(
     // For top action menu
     onShareClicked: (() -> Unit)?,
     onDownloadActionClicked: ((DownloadAction) -> Unit)?,
+    bookmarkedDownloadsSupported: Boolean,
     onEditCategoryClicked: (() -> Unit)?,
     onEditIntervalClicked: (() -> Unit)?,
     onEditDisplayNameClicked: (() -> Unit)?,
@@ -298,8 +300,8 @@ private fun EntryScreenSmallImpl(
 
     // For bottom action menu
     onMultiBookmarkClicked: ((List<EntryChapter>, bookmarked: Boolean) -> Unit)?,
-    onMultiMarkAsReadClicked: (List<EntryChapter>, markAsRead: Boolean) -> Unit,
-    onMarkPreviousAsReadClicked: (EntryChapter) -> Unit,
+    onMultiMarkAsReadClicked: ((List<EntryChapter>, markAsRead: Boolean) -> Unit)?,
+    onMarkPreviousAsReadClicked: ((EntryChapter) -> Unit)?,
     onMultiDeleteClicked: (List<EntryChapter>) -> Unit,
 
     // For chapter swipe
@@ -315,7 +317,7 @@ private fun EntryScreenSmallImpl(
     onPreviewExpandedChange: (Boolean) -> Unit,
     onPreviewRetry: () -> Unit,
     onPreviewPageLoad: (Int) -> Unit,
-    onPreviewPageClick: (Long, Int) -> Unit,
+    onPreviewPageClick: ((Long, Int) -> Unit)?,
 ) {
     val chapterListState = rememberLazyListState()
 
@@ -357,6 +359,7 @@ private fun EntryScreenSmallImpl(
                 onClickFilter = onFilterClicked,
                 onClickShare = onShareClicked,
                 onClickDownload = onDownloadActionClicked,
+                bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
                 onClickEditCategory = onEditCategoryClicked,
                 onClickEditDisplayName = onEditDisplayNameClicked,
                 onClickManageMerge = onManageMergeClicked,
@@ -390,26 +393,28 @@ private fun EntryScreenSmallImpl(
         },
         snackbarHost = { AppSnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
-            val isFABVisible = remember(chapters) {
-                chapters.fastAny { !it.chapter.read } && !isAnySelected
+            onContinueReading?.let { continueAction ->
+                val isFABVisible = remember(chapters) {
+                    chapters.fastAny { !it.chapter.read } && !isAnySelected
+                }
+                SmallExtendedFloatingActionButton(
+                    text = {
+                        val isReading = remember(state.chapters) {
+                            state.chapters.fastAny { it.chapter.read }
+                        }
+                        Text(
+                            text = stringResource(if (isReading) MR.strings.action_resume else MR.strings.action_start),
+                        )
+                    },
+                    icon = { Icon(imageVector = Icons.Filled.PlayArrow, contentDescription = null) },
+                    onClick = continueAction,
+                    expanded = chapterListState.shouldExpandFAB(),
+                    modifier = Modifier.animateFloatingActionButton(
+                        visible = isFABVisible,
+                        alignment = Alignment.BottomEnd,
+                    ),
+                )
             }
-            SmallExtendedFloatingActionButton(
-                text = {
-                    val isReading = remember(state.chapters) {
-                        state.chapters.fastAny { it.chapter.read }
-                    }
-                    Text(
-                        text = stringResource(if (isReading) MR.strings.action_resume else MR.strings.action_start),
-                    )
-                },
-                icon = { Icon(imageVector = Icons.Filled.PlayArrow, contentDescription = null) },
-                onClick = onContinueReading,
-                expanded = chapterListState.shouldExpandFAB(),
-                modifier = Modifier.animateFloatingActionButton(
-                    visible = isFABVisible,
-                    alignment = Alignment.BottomEnd,
-                ),
-            )
         },
     ) { contentPadding ->
         val topPadding = contentPadding.calculateTopPadding()
@@ -505,39 +510,35 @@ private fun EntryScreenSmallImpl(
                         )
                     }
 
-                    item(
-                        key = EntryScreenItem.CHAPTER_HEADER,
-                        contentType = EntryScreenItem.CHAPTER_HEADER,
-                    ) {
-                        val missingChapterCount = remember(chapters, state.entry.type) {
-                            missingChildCount(
+                    if (state.childListApplicable) {
+                        item(
+                            key = EntryScreenItem.CHAPTER_HEADER,
+                            contentType = EntryScreenItem.CHAPTER_HEADER,
+                        ) {
+                            EntryChapterHeader(
+                                enabled = !isAnySelected,
                                 entryType = state.entry.type,
-                                childNumbers = chapters.map { it.chapter.chapterNumber },
+                                chapterCount = chapters.size,
+                                missingChapterCount = state.missingChildCount,
+                                onClick = onFilterClicked,
                             )
                         }
-                        EntryChapterHeader(
-                            enabled = !isAnySelected,
-                            entryType = state.entry.type,
-                            chapterCount = chapters.size,
-                            missingChapterCount = missingChapterCount,
-                            onClick = onFilterClicked,
+
+                        sharedChapterItems(
+                            entry = state.entry,
+                            mergedMemberIds = state.memberIds,
+                            memberTitleById = state.memberTitleById,
+                            chapters = listItem,
+                            childProgressLabels = state.childProgressLabels,
+                            isAnyChapterSelected = chapters.fastAny { it.selected },
+                            chapterSwipeStartAction = chapterSwipeStartAction,
+                            chapterSwipeEndAction = chapterSwipeEndAction,
+                            onChapterClicked = onChapterClicked,
+                            onDownloadChapter = onDownloadChapter,
+                            onChapterSelected = onChapterSelected,
+                            onChapterSwipe = onChapterSwipe,
                         )
                     }
-
-                    sharedChapterItems(
-                        entry = state.entry,
-                        mergedMemberIds = state.memberIds,
-                        memberTitleById = state.memberTitleById,
-                        chapters = listItem,
-                        childProgressLabels = state.childProgressLabels,
-                        isAnyChapterSelected = chapters.fastAny { it.selected },
-                        chapterSwipeStartAction = chapterSwipeStartAction,
-                        chapterSwipeEndAction = chapterSwipeEndAction,
-                        onChapterClicked = onChapterClicked,
-                        onDownloadChapter = onDownloadChapter,
-                        onChapterSelected = onChapterSelected,
-                        onChapterSwipe = onChapterSwipe,
-                    )
                 }
             }
         }
@@ -552,7 +553,7 @@ fun EntryScreenLargeImpl(
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
     navigateUp: () -> Unit,
-    onChapterClicked: (EntryChapter) -> Unit,
+    onChapterClicked: ((EntryChapter) -> Unit)?,
     onDownloadChapter: ((List<EntryChapterList.Item>, ChapterDownloadAction) -> Unit)?,
     onAddToLibraryClicked: () -> Unit,
     onAddToMergeClicked: (() -> Unit)?,
@@ -567,7 +568,7 @@ fun EntryScreenLargeImpl(
 
     onFilterButtonClicked: () -> Unit,
     onRefresh: () -> Unit,
-    onContinueReading: () -> Unit,
+    onContinueReading: (() -> Unit)?,
     onSearch: (query: String, global: Boolean) -> Unit,
 
     // For cover dialog
@@ -576,6 +577,7 @@ fun EntryScreenLargeImpl(
     // For top action menu
     onShareClicked: (() -> Unit)?,
     onDownloadActionClicked: ((DownloadAction) -> Unit)?,
+    bookmarkedDownloadsSupported: Boolean,
     onEditCategoryClicked: (() -> Unit)?,
     onEditIntervalClicked: (() -> Unit)?,
     onEditDisplayNameClicked: (() -> Unit)?,
@@ -587,8 +589,8 @@ fun EntryScreenLargeImpl(
 
     // For bottom action menu
     onMultiBookmarkClicked: ((List<EntryChapter>, bookmarked: Boolean) -> Unit)?,
-    onMultiMarkAsReadClicked: (List<EntryChapter>, markAsRead: Boolean) -> Unit,
-    onMarkPreviousAsReadClicked: (EntryChapter) -> Unit,
+    onMultiMarkAsReadClicked: ((List<EntryChapter>, markAsRead: Boolean) -> Unit)?,
+    onMarkPreviousAsReadClicked: ((EntryChapter) -> Unit)?,
     onMultiDeleteClicked: (List<EntryChapter>) -> Unit,
 
     // For swipe actions
@@ -604,7 +606,7 @@ fun EntryScreenLargeImpl(
     onPreviewExpandedChange: (Boolean) -> Unit,
     onPreviewRetry: () -> Unit,
     onPreviewPageLoad: (Int) -> Unit,
-    onPreviewPageClick: (Long, Int) -> Unit,
+    onPreviewPageClick: ((Long, Int) -> Unit)?,
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
@@ -639,6 +641,7 @@ fun EntryScreenLargeImpl(
                 onClickFilter = onFilterButtonClicked,
                 onClickShare = onShareClicked,
                 onClickDownload = onDownloadActionClicked,
+                bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
                 onClickEditCategory = onEditCategoryClicked,
                 onClickEditDisplayName = onEditDisplayNameClicked,
                 onClickManageMerge = onManageMergeClicked,
@@ -677,28 +680,30 @@ fun EntryScreenLargeImpl(
         },
         snackbarHost = { AppSnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
-            val isFABVisible = remember(chapters) {
-                chapters.fastAny { !it.chapter.read } && !isAnySelected
+            onContinueReading?.let { continueAction ->
+                val isFABVisible = remember(chapters) {
+                    chapters.fastAny { !it.chapter.read } && !isAnySelected
+                }
+                SmallExtendedFloatingActionButton(
+                    text = {
+                        val isReading = remember(state.chapters) {
+                            state.chapters.fastAny { it.chapter.read }
+                        }
+                        Text(
+                            text = stringResource(
+                                if (isReading) MR.strings.action_resume else MR.strings.action_start,
+                            ),
+                        )
+                    },
+                    icon = { Icon(imageVector = Icons.Filled.PlayArrow, contentDescription = null) },
+                    onClick = continueAction,
+                    expanded = chapterListState.shouldExpandFAB(),
+                    modifier = Modifier.animateFloatingActionButton(
+                        visible = isFABVisible,
+                        alignment = Alignment.BottomEnd,
+                    ),
+                )
             }
-            SmallExtendedFloatingActionButton(
-                text = {
-                    val isReading = remember(state.chapters) {
-                        state.chapters.fastAny { it.chapter.read }
-                    }
-                    Text(
-                        text = stringResource(
-                            if (isReading) MR.strings.action_resume else MR.strings.action_start,
-                        ),
-                    )
-                },
-                icon = { Icon(imageVector = Icons.Filled.PlayArrow, contentDescription = null) },
-                onClick = onContinueReading,
-                expanded = chapterListState.shouldExpandFAB(),
-                modifier = Modifier.animateFloatingActionButton(
-                    visible = isFABVisible,
-                    alignment = Alignment.BottomEnd,
-                ),
-            )
         },
     ) { contentPadding ->
         PullRefresh(
@@ -783,49 +788,41 @@ fun EntryScreenLargeImpl(
                                 bottom = contentPadding.calculateBottomPadding(),
                             ),
                         ) {
-                            item(
-                                key = EntryScreenItem.CHAPTER_HEADER,
-                                contentType = EntryScreenItem.CHAPTER_HEADER,
-                            ) {
-                                val missingChapterCount = remember(chapters, state.entry.type) {
-                                    missingChildCount(
+                            if (state.childListApplicable) {
+                                item(
+                                    key = EntryScreenItem.CHAPTER_HEADER,
+                                    contentType = EntryScreenItem.CHAPTER_HEADER,
+                                ) {
+                                    EntryChapterHeader(
+                                        enabled = !isAnySelected,
                                         entryType = state.entry.type,
-                                        childNumbers = chapters.map { it.chapter.chapterNumber },
+                                        chapterCount = chapters.size,
+                                        missingChapterCount = state.missingChildCount,
+                                        onClick = onFilterButtonClicked,
                                     )
                                 }
-                                EntryChapterHeader(
-                                    enabled = !isAnySelected,
-                                    entryType = state.entry.type,
-                                    chapterCount = chapters.size,
-                                    missingChapterCount = missingChapterCount,
-                                    onClick = onFilterButtonClicked,
+
+                                sharedChapterItems(
+                                    entry = state.entry,
+                                    mergedMemberIds = state.memberIds,
+                                    memberTitleById = state.memberTitleById,
+                                    chapters = listItem,
+                                    childProgressLabels = state.childProgressLabels,
+                                    isAnyChapterSelected = chapters.fastAny { it.selected },
+                                    chapterSwipeStartAction = chapterSwipeStartAction,
+                                    chapterSwipeEndAction = chapterSwipeEndAction,
+                                    onChapterClicked = onChapterClicked,
+                                    onDownloadChapter = onDownloadChapter,
+                                    onChapterSelected = onChapterSelected,
+                                    onChapterSwipe = onChapterSwipe,
                                 )
                             }
-
-                            sharedChapterItems(
-                                entry = state.entry,
-                                mergedMemberIds = state.memberIds,
-                                memberTitleById = state.memberTitleById,
-                                chapters = listItem,
-                                childProgressLabels = state.childProgressLabels,
-                                isAnyChapterSelected = chapters.fastAny { it.selected },
-                                chapterSwipeStartAction = chapterSwipeStartAction,
-                                chapterSwipeEndAction = chapterSwipeEndAction,
-                                onChapterClicked = onChapterClicked,
-                                onDownloadChapter = onDownloadChapter,
-                                onChapterSelected = onChapterSelected,
-                                onChapterSwipe = onChapterSwipe,
-                            )
                         }
                     }
                 },
             )
         }
     }
-}
-
-internal fun missingChildCount(entryType: EntryType, childNumbers: List<Double>): Int {
-    return if (entryType == EntryType.MANGA) childNumbers.missingChaptersCount() else 0
 }
 
 @Composable
@@ -872,8 +869,8 @@ private fun SharedEntryBottomActionMenu(
     selected: List<EntryChapterList.Item>,
     childProgressLabels: Map<Long, EntryChildProgressLabel>,
     onMultiBookmarkClicked: ((List<EntryChapter>, bookmarked: Boolean) -> Unit)?,
-    onMultiMarkAsReadClicked: (List<EntryChapter>, markAsRead: Boolean) -> Unit,
-    onMarkPreviousAsReadClicked: (EntryChapter) -> Unit,
+    onMultiMarkAsReadClicked: ((List<EntryChapter>, markAsRead: Boolean) -> Unit)?,
+    onMarkPreviousAsReadClicked: ((EntryChapter) -> Unit)?,
     onDownloadChapter: ((List<EntryChapterList.Item>, ChapterDownloadAction) -> Unit)?,
     onMultiDeleteClicked: (List<EntryChapter>) -> Unit,
     fillFraction: Float,
@@ -890,21 +887,21 @@ private fun SharedEntryBottomActionMenu(
         }?.takeIf { selected.fastAll { it.chapter.bookmark } },
         bookmarkLabel = selected.map { it.entry.type }.selectionEntryTypePresentation().bookmarkChildLabel,
         removeBookmarkLabel = selected.map { it.entry.type }.selectionEntryTypePresentation().removeBookmarkChildLabel,
-        onMarkAsReadClicked = {
-            onMultiMarkAsReadClicked(selected.fastMap { it.chapter }, true)
-        }.takeIf { selected.fastAny { !it.chapter.read } },
-        onMarkAsUnreadClicked = {
-            onMultiMarkAsReadClicked(selected.fastMap { it.chapter }, false)
-        }.takeIf { selected.fastAny { it.chapter.read || it.chapter.id in childProgressLabels } },
+        onMarkAsReadClicked = onMultiMarkAsReadClicked?.let { callback ->
+            { callback(selected.fastMap { it.chapter }, true) }
+        }?.takeIf { selected.fastAny { !it.chapter.read } },
+        onMarkAsUnreadClicked = onMultiMarkAsReadClicked?.let { callback ->
+            { callback(selected.fastMap { it.chapter }, false) }
+        }?.takeIf { selected.fastAny { it.chapter.read || it.chapter.id in childProgressLabels } },
         markAsReadLabel = selected.map { it.entry.type }.entrySelectionActionLabels().markAsReadLabel,
         markAsUnreadLabel = selected.map { it.entry.type }.entrySelectionActionLabels().markAsUnreadLabel,
         markPreviousAsReadLabel = selected.map { it.entry.type }
             .selectionEntryTypePresentation()
             .markPreviousAsConsumedLabel,
         downloadPresentation = selected.map { it.entry.type }.selectionEntryTypePresentation(),
-        onMarkPreviousAsReadClicked = {
-            onMarkPreviousAsReadClicked(selected[0].chapter)
-        }.takeIf { selected.size == 1 },
+        onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked?.let { callback ->
+            { callback(selected[0].chapter) }
+        }?.takeIf { selected.size == 1 },
         onDownloadClicked = {
             onDownloadChapter!!(selected.toList(), ChapterDownloadAction.START)
         }.takeIf {
@@ -927,7 +924,7 @@ private fun LazyListScope.sharedChapterItems(
     isAnyChapterSelected: Boolean,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
-    onChapterClicked: (EntryChapter) -> Unit,
+    onChapterClicked: ((EntryChapter) -> Unit)?,
     onDownloadChapter: ((List<EntryChapterList.Item>, ChapterDownloadAction) -> Unit)?,
     onChapterSelected: (EntryChapterList.Item, Boolean, Boolean) -> Unit,
     onChapterSwipe: (EntryChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
@@ -1010,11 +1007,11 @@ private fun onChapterItemClick(
     chapterItem: EntryChapterList.Item,
     isAnyChapterSelected: Boolean,
     onToggleSelection: (Boolean) -> Unit,
-    onChapterClicked: (EntryChapter) -> Unit,
+    onChapterClicked: ((EntryChapter) -> Unit)?,
 ) {
     when {
         chapterItem.selected -> onToggleSelection(false)
         isAnyChapterSelected -> onToggleSelection(true)
-        else -> onChapterClicked(chapterItem.chapter)
+        else -> onChapterClicked?.invoke(chapterItem.chapter)
     }
 }

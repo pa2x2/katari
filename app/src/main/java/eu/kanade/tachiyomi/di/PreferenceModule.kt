@@ -22,6 +22,9 @@ import mihon.feature.profiles.core.ProfileStoreImpl
 import mihon.feature.profiles.core.ProfilesPreferences
 import tachiyomi.core.common.preference.AndroidPreferenceStore
 import tachiyomi.core.common.preference.PreferenceStore
+import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
+import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
+import tachiyomi.core.common.preference.ProfilePreferenceOwnerRegistry
 import tachiyomi.core.common.storage.AndroidStorageFolderProvider
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.backup.service.BackupPreferences
@@ -33,6 +36,7 @@ import tachiyomi.domain.storage.service.StoragePreferences
 import tachiyomi.domain.updates.service.UpdatesPreferences
 import uy.kohesive.injekt.api.InjektModule
 import uy.kohesive.injekt.api.InjektRegistrar
+import uy.kohesive.injekt.api.addSingleton
 import uy.kohesive.injekt.api.addSingletonFactory
 import uy.kohesive.injekt.api.get
 
@@ -47,37 +51,66 @@ class PreferenceModule(val app: Application) : InjektModule {
         addSingletonFactory<ProfileStore> { get<ProfileStoreImpl>() }
         addSingletonFactory<ProfileAwareStore> { get<ProfileStoreImpl>() }
         addSingletonFactory<ActiveProfileProvider> { get<ProfileStoreImpl>() }
+        val profilePreferenceOwners = ProfilePreferenceOwnerRegistry()
+        addSingleton(profilePreferenceOwners)
+        val profilePreferenceOwnerInstaller = ProfilePreferenceOwnerInstaller(profilePreferenceOwners) {
+            get<ProfileStore>().profileStore()
+        }
+        val privatePreferenceOwnerInstaller = ProfilePreferenceOwnerInstaller(profilePreferenceOwners) {
+            get<ProfileStore>().privateStore()
+        }
+
+        val sourcePreferencesOwner = profilePreferenceOwnerInstaller.register(
+            id = ProfilePreferenceOwnerId("app.source"),
+            keyPatterns = SourcePreferences.profileKeyPatterns,
+        ) { store -> SourcePreferences(store, get()) }
+        val securityPreferencesOwner = profilePreferenceOwnerInstaller.register(
+            ProfilePreferenceOwnerId("app.security"),
+            factory = ::SecurityPreferences,
+        )
+        val libraryPreferencesOwner = profilePreferenceOwnerInstaller.register(
+            id = ProfilePreferenceOwnerId("app.library"),
+            keyPatterns = LibraryPreferences.profileKeyPatterns,
+            factory = ::LibraryPreferences,
+        )
+        val duplicatePreferencesOwner = profilePreferenceOwnerInstaller.register(
+            ProfilePreferenceOwnerId("app.duplicate-detection"),
+            factory = ::DuplicatePreferences,
+        )
+        val updatesPreferencesOwner = profilePreferenceOwnerInstaller.register(
+            ProfilePreferenceOwnerId("app.updates"),
+            factory = ::UpdatesPreferences,
+        )
+        val trackPreferencesOwner = privatePreferenceOwnerInstaller.register(
+            id = ProfilePreferenceOwnerId("app.tracking"),
+            keyPatterns = TrackPreferences.profileKeyPatterns,
+            factory = ::TrackPreferences,
+        )
+        val uiPreferencesOwner = profilePreferenceOwnerInstaller.register(
+            ProfilePreferenceOwnerId("app.ui"),
+        ) { store -> UiPreferences(store, DeviceUtil.isDynamicColorAvailable) }
+        val customPreferencesOwner = profilePreferenceOwnerInstaller.register(
+            ProfilePreferenceOwnerId("app.custom"),
+            factory = ::CustomPreferences,
+        )
         addSingletonFactory {
             NetworkPreferences(
                 preferenceStore = get<ProfileStore>().basePreferenceStore(),
                 verboseLoggingDefault = isDebugBuildType,
             )
         }
-        addSingletonFactory {
-            SourcePreferences(
-                preferenceStore = get<ProfileStore>().profileStore(),
-                json = get(),
-            )
-        }
+        addSingletonFactory { sourcePreferencesOwner.create() }
         addSingletonFactory { ProfileSourcePreferences(get(), get()) }
         addSingletonFactory { GlobalSourcePreferences(get<ProfileStore>().basePreferenceStore()) }
-        addSingletonFactory {
-            SecurityPreferences(get<ProfileStore>().profileStore())
-        }
+        addSingletonFactory { securityPreferencesOwner.create() }
         addSingletonFactory {
             PrivacyPreferences(get<ProfileStore>().basePreferenceStore())
         }
-        addSingletonFactory {
-            LibraryPreferences(get<ProfileStore>().profileStore())
-        }
+        addSingletonFactory { libraryPreferencesOwner.create() }
         addSingletonFactory { GlobalLibraryPreferences(get<ProfileStore>().basePreferenceStore()) }
-        addSingletonFactory { DuplicatePreferences(get<ProfileStore>().profileStore()) }
-        addSingletonFactory {
-            UpdatesPreferences(get<ProfileStore>().profileStore())
-        }
-        addSingletonFactory {
-            TrackPreferences(get<ProfileStore>().privateStore())
-        }
+        addSingletonFactory { duplicatePreferencesOwner.create() }
+        addSingletonFactory { updatesPreferencesOwner.create() }
+        addSingletonFactory { trackPreferencesOwner.create() }
         addSingletonFactory { GlobalTrackPreferences(get<ProfileStore>().basePreferenceStore()) }
         addSingletonFactory {
             DownloadPreferences(get<ProfileStore>().basePreferenceStore())
@@ -91,18 +124,11 @@ class PreferenceModule(val app: Application) : InjektModule {
                 preferenceStore = get(),
             )
         }
-        addSingletonFactory {
-            UiPreferences(
-                preferenceStore = get<ProfileStore>().profileStore(),
-                dynamicColorAvailable = DeviceUtil.isDynamicColorAvailable,
-            )
-        }
+        addSingletonFactory { uiPreferencesOwner.create() }
         addSingletonFactory {
             BasePreferences(app, get<ProfileStore>().basePreferenceStore())
         }
-        addSingletonFactory {
-            CustomPreferences(get<ProfileStore>().profileStore())
-        }
+        addSingletonFactory { customPreferencesOwner.create() }
         addSingletonFactory { GlobalCustomPreferences(get<ProfileStore>().basePreferenceStore()) }
     }
 }

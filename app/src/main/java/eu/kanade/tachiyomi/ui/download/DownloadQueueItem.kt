@@ -46,13 +46,13 @@ class DownloadQueueItem(
         if (other is DownloadQueueItem) {
             val model = model()
             val otherModel = other.model()
-            return model.id == otherModel.id && model.contentType == otherModel.contentType
+            return model.id == otherModel.id && model.entryType == otherModel.entryType
         }
         return false
     }
 
     override fun hashCode(): Int {
         val model = model()
-        return 31 * model.id.hashCode() + model.contentType.hashCode()
+        return 31 * model.id.hashCode() + model.entryType.hashCode()
     }
 }

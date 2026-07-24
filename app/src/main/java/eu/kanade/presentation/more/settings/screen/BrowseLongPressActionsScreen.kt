@@ -39,6 +39,8 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.util.Screen
 import mihon.core.common.CustomPreferences
 import mihon.core.common.sanitizeBrowseLongPressActionPriority
+import mihon.entry.interactions.EntryImmersiveFeature
+import mihon.entry.interactions.EntryImmersiveSourceAvailability
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import tachiyomi.domain.source.model.Source
@@ -70,7 +72,7 @@ data class BrowseLongPressActionsScreen(
         val allSources by sourceRepository.getSources().collectFlowAsState(initial = emptyList())
         val catalogueSources = remember(allSources) {
             allSources
-                .filter { sourceManager.getCatalogueSource(it.id) != null }
+                .filter { it.catalogue != null }
                 .distinctBy(Source::id)
                 .sortedBy { it.visualName.lowercase() }
         }
@@ -107,7 +109,6 @@ data class BrowseLongPressActionsScreen(
             } else {
                 SourceLongPressActions(
                     sourceId = sourceId,
-                    source = selectedSource,
                     defaultPriority = defaultPriority,
                     overridePriority = overrides[sourceId],
                     sourceManager = sourceManager,
@@ -230,7 +231,6 @@ private fun LongPressActionsOverview(
 @Composable
 private fun SourceLongPressActions(
     sourceId: Long,
-    source: Source?,
     defaultPriority: List<CustomPreferences.BrowseLongPressAction>,
     overridePriority: List<CustomPreferences.BrowseLongPressAction>?,
     sourceManager: SourceManager,
@@ -250,8 +250,9 @@ private fun SourceLongPressActions(
         priority.add(toIndex, priority.removeAt(fromIndex))
         onPriorityChange(priority.toList())
     }
-    val supportsImmersive = source?.supportsImmersiveFeed
-        ?: (sourceManager.getCatalogueSource(sourceId)?.supportsImmersiveFeed == true)
+    val immersiveFeature = remember { Injekt.get<EntryImmersiveFeature>() }
+    val immersiveAvailable = immersiveFeature.sourceAvailability(sourceManager.get(sourceId)) is
+        EntryImmersiveSourceAvailability.Available
 
     ScrollbarLazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -283,7 +284,7 @@ private fun SourceLongPressActions(
                 ReorderableItem(reorderableState, actionKey(action)) {
                     LongPressActionRow(
                         action = action,
-                        supportingText = sourceActionSupportingText(action, supportsImmersive),
+                        supportingText = sourceActionSupportingText(action, immersiveAvailable),
                         showDragHandle = true,
                         dragModifier = Modifier.draggableHandle(),
                     )
@@ -291,7 +292,7 @@ private fun SourceLongPressActions(
             } else {
                 LongPressActionRow(
                     action = action,
-                    supportingText = sourceActionSupportingText(action, supportsImmersive),
+                    supportingText = sourceActionSupportingText(action, immersiveAvailable),
                 )
             }
         }
@@ -361,7 +362,7 @@ private fun defaultActionSupportingText(action: CustomPreferences.BrowseLongPres
 @Composable
 private fun sourceActionSupportingText(
     action: CustomPreferences.BrowseLongPressAction,
-    supportsImmersive: Boolean,
+    immersiveAvailable: Boolean,
 ): String {
     return when (action) {
         CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION ->
@@ -369,7 +370,7 @@ private fun sourceActionSupportingText(
         CustomPreferences.BrowseLongPressAction.PREVIEW ->
             stringResource(MR.strings.pref_browse_long_press_action_preview_available)
         CustomPreferences.BrowseLongPressAction.IMMERSIVE -> stringResource(
-            if (supportsImmersive) {
+            if (immersiveAvailable) {
                 MR.strings.pref_browse_long_press_action_immersive_supported
             } else {
                 MR.strings.pref_browse_long_press_action_immersive_unsupported

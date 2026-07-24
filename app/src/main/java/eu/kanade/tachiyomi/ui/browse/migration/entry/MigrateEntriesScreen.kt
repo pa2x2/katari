@@ -83,9 +83,11 @@ data class MigrateEntriesScreen(
                         Icon(imageVector = Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = null)
                     },
                     onClick = {
-                        val selection = state.selection
-                        screenModel.clearSelection()
-                        navigator.push(MigrationConfigScreen(selection))
+                        val selection = screenModel.migrationSelection()
+                        if (selection.isNotEmpty()) {
+                            screenModel.clearSelection()
+                            navigator.push(MigrationConfigScreen(selection))
+                        }
                     },
                     expanded = lazyListState.shouldExpandFAB(),
                     modifier = Modifier.animateFloatingActionButton(

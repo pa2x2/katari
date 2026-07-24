@@ -123,6 +123,7 @@
     <string name="action_edit_cover">Edit cover</string>
     <string name="action_view_chapters">View chapters</string>
     <string name="action_view_episodes">View episodes</string>
+    <string name="action_view_items">View items</string>
     <string name="episodes">Episodes</string>
     <string name="action_play">Play</string>
     <string name="action_pause">Pause</string>
@@ -330,6 +331,7 @@
     <string name="action_previous_section">Previous section</string>
     <string name="action_next_section">Next section</string>
     <string name="pref_category_downloads">Downloads</string>
+    <string name="pref_category_download_behavior">Download behavior</string>
     <string name="pref_category_tracking">Tracking</string>
     <string name="pref_category_advanced">Advanced</string>
     <string name="pref_category_about">About</string>
@@ -739,6 +741,7 @@
     <string name="cache_delete_error">Error occurred while clearing</string>
     <string name="pref_auto_clear_chapter_cache">Clear page cache on app launch</string>
     <string name="pref_auto_clear_anime_playback_cache">Clear playback cache on app launch</string>
+    <string name="pref_auto_clear_book_cache">Clear book cache on app launch</string>
     <string name="export">Export</string>
     <string name="library_list">Library List</string>
     <string name="library_exported">Library Exported</string>
@@ -759,6 +762,9 @@
     <string name="cookies_cleared">Cookies cleared</string>
     <string name="pref_invalidate_download_cache">Reindex downloads</string>
     <string name="pref_invalidate_download_cache_summary">Force app to recheck downloads</string>
+    <string name="pref_retry_merge_maintenance">Merge maintenance</string>
+    <string name="pref_retry_merge_maintenance_idle">No pending maintenance</string>
+    <string name="pref_retry_merge_maintenance_summary">%1$d pending, %2$d failed. Tap to retry.</string>
     <string name="download_cache_invalidated">Recreating download index</string>
     <string name="pref_clear_database">Clear database</string>
     <string name="pref_clear_database_summary">Delete history for entries that are not saved in your library</string>
@@ -1341,18 +1347,28 @@
     <string name="download_queue_error">Couldn\'t download items. You can try again in the downloads section</string>
     <string name="download_insufficient_space">Couldn\'t download items due to low storage space</string>
     <string name="download_queue_size_warning">Warning: large bulk downloads may lead to sources becoming slower and/or blocking %s. Tap to learn more.</string>
+    <string name="download_state_queued">Queued</string>
+    <string name="download_state_resolving">Preparing…</string>
+    <string name="download_state_downloading">Downloading…</string>
+    <string name="download_state_finalizing">Finalizing…</string>
+    <string name="download_progress_percent">%1$d%%</string>
+    <string name="download_progress_units">%1$d/%2$d</string>
 
     <!-- Library update service notifications -->
     <string name="notification_updating_progress">Updating library… (%s)</string>
     <string name="notification_size_warning">Large updates harm sources and may lead to slower updates and also increased battery usage. Tap to learn more.</string>
     <string name="notification_new_chapters">New chapters found</string>
     <string name="notification_new_episodes">New episodes found</string>
+    <string name="notification_new_items">New items found</string>
     <string name="notification_chapters_single">Chapter %1$s</string>
     <string name="notification_chapters_single_and_more">Chapter %1$s and %2$d more</string>
     <string name="notification_chapters_multiple">Chapters %1$s</string>
     <string name="notification_episodes_single">Episode %1$s</string>
     <string name="notification_episodes_single_and_more">Episode %1$s and %2$d more</string>
     <string name="notification_episodes_multiple">Episodes %1$s</string>
+    <string name="notification_items_single">Item %1$s</string>
+    <string name="notification_items_single_and_more">Item %1$s and %2$d more</string>
+    <string name="notification_items_multiple">Items %1$s</string>
     <string name="learn_more">Tap to learn more</string>
     <string name="notification_cover_update_failed">Failed to update cover</string>
     <string name="notification_first_add_to_library">Please add the entry to your library before doing this</string>
@@ -1422,6 +1438,7 @@
     <string name="download_notifier_stream_expired">Stream URL expired</string>
     <string name="download_notifier_unsupported_stream">Source only provides an unsupported stream format</string>
     <string name="download_notifier_insufficient_storage">Insufficient storage space</string>
+    <string name="download_notifier_storage_error">Unable to store the download</string>
     <string name="download_notifier_stream_network_error">Network error while resolving download stream</string>
     <string name="download_notifier_book_content_unavailable">Book content is not available</string>
     <string name="download_notifier_book_unsupported_format">No installed reader supports this book format</string>
@@ -1440,6 +1457,7 @@
     <string name="channel_errors">Errors</string>
     <string name="channel_new_chapters">Chapter updates</string>
     <string name="channel_new_episodes">Episode updates</string>
+    <string name="channel_new_items">Item updates</string>
     <string name="channel_app_updates">App updates</string>
     <string name="channel_ext_updates">Extension updates</string>
 

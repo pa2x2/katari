@@ -237,6 +237,7 @@ class ResolveVideoStreamTest {
             every {
                 findEpisodeDir(episode.name, episode.url, "Visible", ownerSource)
             } returns episodeDir
+            every { readValidManifest(episodeDir) } returns manifest
         }
         val sourceManager = sourceManager(
             initialized = false,
@@ -281,6 +282,7 @@ class ResolveVideoStreamTest {
         every { episodeDir.listFiles() } returns arrayOf(videoFile)
         val provider = mockk<AnimeDownloadProvider> {
             every { findEpisodeDir(episode.name, episode.url, "Entry 1", source) } returns episodeDir
+            every { readValidManifest(episodeDir) } returns null
         }
         val resolver = resolver(
             visibleEntry = entry(ENTRY_ID),
@@ -313,7 +315,6 @@ class ResolveVideoStreamTest {
             animeDownloadProvider = mockk {
                 every { findEpisodeDir(any(), any(), any(), any()) } returns null
             },
-            json = Json,
             context = mockk<Application>(relaxed = true),
             isOnline = { true },
         )
@@ -334,7 +335,6 @@ class ResolveVideoStreamTest {
             playbackPreferencesRepository = playbackPreferencesRepository(playbackPreferences),
             videoSourceManager = sourceManager,
             animeDownloadProvider = provider,
-            json = Json,
             context = mockk<Application>(relaxed = true),
             isOnline = { isOnline },
         )

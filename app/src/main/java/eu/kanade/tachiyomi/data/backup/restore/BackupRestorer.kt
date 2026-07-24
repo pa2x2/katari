@@ -22,7 +22,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.entry.interactions.EntryDownloadInteraction
+import mihon.entry.interactions.EntryDownloadMaintenanceFeature
 import mihon.feature.profiles.core.ProfileConstants
 import mihon.feature.profiles.core.ProfileDatabase
 import mihon.feature.profiles.core.ProfileManager
@@ -59,7 +59,7 @@ class BackupRestorer(
     private val profileManager: ProfileManager = Injekt.get(),
     private val profileStore: ProfileStore = Injekt.get(),
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
-    private val entryDownloadInteraction: EntryDownloadInteraction = Injekt.get(),
+    private val downloadMaintenance: EntryDownloadMaintenanceFeature = Injekt.get(),
 ) {
 
     private var restoreAmount = 0
@@ -79,7 +79,7 @@ class BackupRestorer(
         // Invalidate download cache to ensure UI reflects any restored downloads
         if (options.libraryEntries) {
             try {
-                entryDownloadInteraction.invalidateCaches()
+                downloadMaintenance.invalidateCaches()
             } catch (e: Exception) {
                 logcat(LogPriority.ERROR, e) { "Failed to invalidate download cache after restore" }
             }
@@ -147,7 +147,12 @@ class BackupRestorer(
                 restoreSourcePreferences(backup.backupSourcePreferences)
             }
             if (options.libraryEntries) {
-                restoreEntries(entries, if (options.categories) backup.backupCategories else emptyList())
+                val destinationProfileId = profileManager.activeProfileId
+                restoreEntries(
+                    destinationProfileId,
+                    entries,
+                    if (options.categories) backup.backupCategories else emptyList(),
+                )
             }
             if (options.extensionStores) {
                 restoreExtensionStores(backup.backupExtensionStores)
@@ -229,9 +234,8 @@ class BackupRestorer(
             }
 
             if (options.libraryEntries) {
-                // EntryRestorer resolves profile-scoped data through the active profile,
-                // so finish this bundle before switching to the next profile.
                 restoreEntries(
+                    profile.id,
                     profileBackup.allEntries(),
                     if (options.categories) profileBackup.categories else emptyList(),
                 ).join()
@@ -331,6 +335,7 @@ class BackupRestorer(
     }
 
     private fun CoroutineScope.restoreEntries(
+        destinationProfileId: Long,
         backupEntries: List<BackupEntry>,
         backupCategories: List<BackupCategory>,
     ) = launch {
@@ -357,7 +362,9 @@ class BackupRestorer(
                 notifier.showRestoreProgress(chunk.last().title, restoreProgress.load(), restoreAmount, isSync)
             }
 
-        entryRestorer.restorePendingMerges()
+        entryRestorer.finalizeFeatureRestore(destinationProfileId).issues.forEach { issue ->
+            errors.add(Date() to issue.description)
+        }
     }
 
     private fun CoroutineScope.restoreAppPreferences(

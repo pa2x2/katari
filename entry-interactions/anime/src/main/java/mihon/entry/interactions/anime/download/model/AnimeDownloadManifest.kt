@@ -15,6 +15,13 @@ internal data class AnimeDownloadManifest(
     val selection: PlaybackSelection,
     val video: DownloadedVideo,
     val subtitles: List<DownloadedSubtitle>,
+    val artifacts: List<DownloadedArtifact> = emptyList(),
+)
+
+@Serializable
+internal data class DownloadedArtifact(
+    val fileName: String,
+    val storedSize: Long,
 )
 
 @Serializable

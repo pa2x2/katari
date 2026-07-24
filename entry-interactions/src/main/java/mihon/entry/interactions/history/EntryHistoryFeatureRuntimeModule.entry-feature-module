@@ -1,0 +1,2 @@
+id=entry.history
+module=mihon.entry.interactions.EntryHistoryFeatureRuntimeModule

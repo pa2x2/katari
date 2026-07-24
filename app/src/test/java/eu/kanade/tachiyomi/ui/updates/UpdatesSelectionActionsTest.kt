@@ -2,6 +2,9 @@ package eu.kanade.tachiyomi.ui.updates
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.shouldBe
+import io.mockk.every
+import io.mockk.mockk
+import mihon.entry.interactions.EntryConsumptionFeature
 import mihon.entry.interactions.EntryConsumptionStatus
 import mihon.entry.interactions.EntryDownloadState
 import org.junit.jupiter.api.Test
@@ -12,64 +15,6 @@ import tachiyomi.domain.updates.model.UpdatesWithRelations
 class UpdatesSelectionActionsTest {
 
     @Test
-    fun `bookmark action is only available for manga selection`() {
-        val mangaOnly = listOf(updateItem(6, EntryType.MANGA, bookmark = false))
-        val animeOnly = listOf(updateItem(7, EntryType.ANIME, bookmark = false))
-        val mixed = listOf(
-            updateItem(8, EntryType.MANGA, bookmark = false),
-            updateItem(9, EntryType.ANIME, bookmark = false),
-        )
-
-        mangaOnly.hasBookmarkAction(
-            bookmark = true,
-            supportsBookmark = ::supportsBookmark,
-            canSetBookmarked = ::canSetBookmarked,
-        ) shouldBe true
-        animeOnly.hasBookmarkAction(
-            bookmark = true,
-            supportsBookmark = ::supportsBookmark,
-            canSetBookmarked = ::canSetBookmarked,
-        ) shouldBe false
-        mixed.hasBookmarkAction(
-            bookmark = true,
-            supportsBookmark = ::supportsBookmark,
-            canSetBookmarked = ::canSetBookmarked,
-        ) shouldBe false
-    }
-
-    @Test
-    fun `remove bookmark action is only available for fully bookmarked manga selection`() {
-        val bookmarkedManga = listOf(
-            updateItem(10, EntryType.MANGA, bookmark = true),
-            updateItem(11, EntryType.MANGA, bookmark = true),
-        )
-        val partiallyBookmarkedManga = listOf(
-            updateItem(12, EntryType.MANGA, bookmark = true),
-            updateItem(13, EntryType.MANGA, bookmark = false),
-        )
-        val mixed = listOf(
-            updateItem(14, EntryType.MANGA, bookmark = true),
-            updateItem(15, EntryType.ANIME, bookmark = true),
-        )
-
-        bookmarkedManga.hasBookmarkAction(
-            bookmark = false,
-            supportsBookmark = ::supportsBookmark,
-            canSetBookmarked = ::canSetBookmarked,
-        ) shouldBe true
-        partiallyBookmarkedManga.hasBookmarkAction(
-            bookmark = false,
-            supportsBookmark = ::supportsBookmark,
-            canSetBookmarked = ::canSetBookmarked,
-        ) shouldBe false
-        mixed.hasBookmarkAction(
-            bookmark = false,
-            supportsBookmark = ::supportsBookmark,
-            canSetBookmarked = ::canSetBookmarked,
-        ) shouldBe false
-    }
-
-    @Test
     fun `mark consumed actions use entry interaction capability`() {
         val unreadAnime = listOf(updateItem(16, EntryType.ANIME, read = false))
         val readAnime = listOf(updateItem(17, EntryType.ANIME, read = true))
@@ -77,35 +22,19 @@ class UpdatesSelectionActionsTest {
         val partialManga = listOf(updateItem(19, EntryType.MANGA, read = false, started = true))
         val partialBook = listOf(updateItem(20, EntryType.BOOK, read = false, started = true))
 
-        unreadAnime.hasConsumedAction(consumed = true, canSetConsumed = ::canSetConsumed) shouldBe true
-        readAnime.hasConsumedAction(consumed = true, canSetConsumed = ::canSetConsumed) shouldBe false
-        readAnime.hasConsumedAction(consumed = false, canSetConsumed = ::canSetConsumed) shouldBe true
-        partialAnime.hasConsumedAction(consumed = false, canSetConsumed = ::canSetConsumed) shouldBe true
-        partialManga.hasConsumedAction(consumed = false, canSetConsumed = ::canSetConsumed) shouldBe true
-        partialBook.hasConsumedAction(consumed = false, canSetConsumed = ::canSetConsumed) shouldBe true
-    }
-
-    private fun supportsBookmark(entryType: EntryType): Boolean {
-        return entryType == EntryType.MANGA
-    }
-
-    private fun canSetBookmarked(
-        entryType: EntryType,
-        status: EntryConsumptionStatus,
-        bookmarked: Boolean,
-    ): Boolean {
-        return supportsBookmark(entryType) && status.bookmarked != bookmarked
-    }
-
-    private fun canSetConsumed(
-        @Suppress("UNUSED_PARAMETER") entryType: EntryType,
-        status: EntryConsumptionStatus,
-        consumed: Boolean,
-    ): Boolean {
-        return when (consumed) {
-            true -> !status.consumed
-            false -> status.consumed || status.hasPartialProgress
+        val feature = mockk<EntryConsumptionFeature> {
+            every { canSetConsumed(any(), EntryConsumptionStatus(false, false), true) } returns true
+            every { canSetConsumed(any(), EntryConsumptionStatus(true, false), true) } returns false
+            every { canSetConsumed(any(), EntryConsumptionStatus(true, false), false) } returns true
+            every { canSetConsumed(any(), EntryConsumptionStatus(false, true), false) } returns true
         }
+
+        unreadAnime.hasConsumedAction(consumed = true, canSetConsumed = feature::canSetConsumed) shouldBe true
+        readAnime.hasConsumedAction(consumed = true, canSetConsumed = feature::canSetConsumed) shouldBe false
+        readAnime.hasConsumedAction(consumed = false, canSetConsumed = feature::canSetConsumed) shouldBe true
+        partialAnime.hasConsumedAction(consumed = false, canSetConsumed = feature::canSetConsumed) shouldBe true
+        partialManga.hasConsumedAction(consumed = false, canSetConsumed = feature::canSetConsumed) shouldBe true
+        partialBook.hasConsumedAction(consumed = false, canSetConsumed = feature::canSetConsumed) shouldBe true
     }
 
     private fun updateItem(

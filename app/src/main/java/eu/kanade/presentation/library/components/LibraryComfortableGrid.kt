@@ -24,6 +24,7 @@ internal fun LibraryComfortableGrid(
     onClick: (LibraryItem) -> Unit,
     onLongClick: (LibraryItem) -> Unit,
     onClickContinueReading: ((LibraryItem) -> Unit)?,
+    isContinueReadingAvailable: (LibraryItem) -> Boolean,
     searchQuery: String?,
     onGlobalSearchClicked: () -> Unit,
     displaySettings: LibraryDisplaySettings,
@@ -65,7 +66,7 @@ internal fun LibraryComfortableGrid(
                         DownloadsBadge(count = libraryItem.downloadCount)
                     }
                     if (displaySettings.unreadBadge) {
-                        UnreadBadge(count = libraryItem.unconsumedCount)
+                        libraryItem.unconsumedCount?.let { UnreadBadge(count = it) }
                     }
                 },
                 coverBadgeEnd = {
@@ -82,7 +83,11 @@ internal fun LibraryComfortableGrid(
                 onLongClick = { onLongClick(libraryItem) },
                 onClick = { onClick(libraryItem) },
                 continueReadingProgress = libraryItem.progressFraction.takeIf { libraryItem.hasInProgress },
-                onClickContinueReading = if (onClickContinueReading != null && libraryItem.canContinue) {
+                onClickContinueReading = if (
+                    onClickContinueReading != null &&
+                    isContinueReadingAvailable(libraryItem) &&
+                    (!libraryItem.hasProgressSummary || libraryItem.canContinue)
+                ) {
                     { onClickContinueReading(libraryItem) }
                 } else {
                     null

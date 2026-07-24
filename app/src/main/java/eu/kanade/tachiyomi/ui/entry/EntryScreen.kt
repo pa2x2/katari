@@ -47,13 +47,7 @@ import eu.kanade.presentation.library.DeleteLibraryEntriesDialog
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
-import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
-import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
-import eu.kanade.tachiyomi.source.entry.RelatedEntriesSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
-import eu.kanade.tachiyomi.source.entry.WebViewSource
-import eu.kanade.tachiyomi.source.isLocalOrStub
-import eu.kanade.tachiyomi.source.sourceItemOrientation
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
@@ -68,16 +62,26 @@ import eu.kanade.tachiyomi.util.system.toShareIntent
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.entry.interactions.EntryConsumptionInteraction
-import mihon.entry.interactions.EntryDownloadInteraction
-import mihon.entry.interactions.EntryOpenInteraction
+import mihon.entry.interactions.EntryBookmarkFeature
+import mihon.entry.interactions.EntryBulkDownloadAction
+import mihon.entry.interactions.EntryCatalogueFeature
+import mihon.entry.interactions.EntryChildGroupFilterStateResult
+import mihon.entry.interactions.EntryConsumptionFeature
+import mihon.entry.interactions.EntryDownloadActionAvailability
+import mihon.entry.interactions.EntryDownloadActionFeature
+import mihon.entry.interactions.EntryDownloadActionRequest
+import mihon.entry.interactions.EntryOpenFeature
 import mihon.entry.interactions.EntryOpenOptions
+import mihon.entry.interactions.EntryPreviewOpenTargetResult
 import mihon.entry.interactions.EntryPreviewSize
+import mihon.entry.interactions.EntryRelatedEntriesAvailability
+import mihon.entry.interactions.EntryRelatedEntriesContext
+import mihon.entry.interactions.EntryRelatedEntriesFeature
+import mihon.entry.interactions.EntryWebViewFeature
+import mihon.entry.interactions.EntryWebViewResolution
 import mihon.feature.migration.config.MigrationConfigScreen
 import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.entry.adapter.toSEntry
 import tachiyomi.domain.entry.model.DuplicateEntryCandidate
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -109,9 +113,12 @@ class EntryScreen(
         val haptic = LocalHapticFeedback.current
         val scope = rememberCoroutineScope()
         val lifecycleOwner = LocalLifecycleOwner.current
-        val entryOpenInteraction = remember { Injekt.get<EntryOpenInteraction>() }
-        val entryDownloadInteraction = remember { Injekt.get<EntryDownloadInteraction>() }
-        val entryConsumptionInteraction = remember { Injekt.get<EntryConsumptionInteraction>() }
+        val entryOpenFeature = remember { Injekt.get<EntryOpenFeature>() }
+        val entryConsumptionFeature = remember { Injekt.get<EntryConsumptionFeature>() }
+        val entryDownloadActionFeature = remember { Injekt.get<EntryDownloadActionFeature>() }
+        val entryBookmarkFeature = remember { Injekt.get<EntryBookmarkFeature>() }
+        val entryRelatedEntriesFeature = remember { Injekt.get<EntryRelatedEntriesFeature>() }
+        val entryWebViewFeature = remember { Injekt.get<EntryWebViewFeature>() }
         val screenModel = rememberScreenModel {
             EntryScreenModel(
                 context = context,
@@ -122,7 +129,7 @@ class EntryScreen(
             )
         }
         val relatedEntriesScreenModel = rememberScreenModel(tag = "related-entries-$entryId") {
-            RelatedEntriesScreenModel(entryId)
+            RelatedEntriesScreenModel(entryId, entryRelatedEntriesFeature)
         }
 
         val state by screenModel.state.collectAsStateWithLifecycle()
@@ -138,26 +145,43 @@ class EntryScreen(
         }
 
         val successState = state as EntryScreenModel.State.Success
-        val downloadsSupported = entryDownloadInteraction.supportsDownloads(successState.entry.type)
-        val bookmarksSupported = entryConsumptionInteraction.supportsBookmark(successState.entry.type)
+        val downloadRequest = EntryDownloadActionRequest(
+            type = successState.entry.type,
+            sourceIds = successState.chapters.mapTo(mutableSetOf(successState.entry.source)) { it.entry.source },
+        )
+        val downloadsAvailable = entryDownloadActionFeature.individualAvailability(downloadRequest) ==
+            EntryDownloadActionAvailability.Available
+        val bulkDownloadsAvailable = entryDownloadActionFeature.bulkAvailability(
+            requests = listOf(downloadRequest),
+            action = EntryBulkDownloadAction.unread,
+        ) == EntryDownloadActionAvailability.Available
+        val bookmarksSupported = entryBookmarkFeature.isApplicable(successState.entry.type)
+        val bookmarkedDownloadsSupported = entryDownloadActionFeature.bulkAvailability(
+            requests = listOf(downloadRequest),
+            action = EntryBulkDownloadAction.bookmarked,
+        ) == EntryDownloadActionAvailability.Available
         val previewConfig by screenModel.previewConfig.collectAsStateWithLifecycle()
         val previewState by screenModel.previewState.collectAsStateWithLifecycle()
-        val webViewSource = remember(successState.source) { successState.source as? WebViewSource }
-        val relatedEntriesSource = remember(successState.source) { successState.source as? RelatedEntriesSource }
-        val relatedEntriesOrientation = remember(successState.source) {
-            successState.source?.sourceItemOrientation() ?: EntryItemOrientation.VERTICAL
+        val webView = remember(successState.entry) {
+            entryWebViewFeature.resolveEntry(successState.entry)
+        }
+        val availableWebView = webView as? EntryWebViewResolution.Available
+        val relatedEntriesAvailability = remember(successState.entry, successState.source) {
+            entryRelatedEntriesFeature.availability(
+                EntryRelatedEntriesContext(
+                    entry = successState.entry,
+                    source = successState.source,
+                ),
+            )
         }
         var showRelatedEntriesDialog by rememberSaveable(successState.entry.id) { mutableStateOf(false) }
+        val openApplicable = entryOpenFeature.isApplicable(successState.entry.type)
+        val consumptionApplicable = entryConsumptionFeature.isApplicable(successState.entry.type)
 
-        LaunchedEffect(successState.entry, webViewSource) {
-            if (webViewSource != null) {
-                try {
-                    withIOContext {
-                        assistUrl = getEntryUrl(successState.entry, webViewSource)
-                    }
-                } catch (e: Exception) {
-                    logcat(LogPriority.ERROR, e) { "Failed to get entry URL" }
-                }
+        LaunchedEffect(webView) {
+            assistUrl = availableWebView?.url
+            if (webView is EntryWebViewResolution.Failed) {
+                logcat(LogPriority.ERROR, webView.cause) { "Failed to get entry URL" }
             }
         }
 
@@ -167,46 +191,37 @@ class EntryScreen(
             nextUpdate = successState.entry.expectedNextUpdate,
             isTabletUi = isTabletUi(),
             chapterSwipeStartAction = screenModel.chapterSwipeStartAction.availableFor(
-                downloadsSupported = downloadsSupported,
+                downloadsSupported = downloadsAvailable,
                 bookmarksSupported = bookmarksSupported,
+                consumptionSupported = consumptionApplicable,
             ),
             chapterSwipeEndAction = screenModel.chapterSwipeEndAction.availableFor(
-                downloadsSupported = downloadsSupported,
+                downloadsSupported = downloadsAvailable,
                 bookmarksSupported = bookmarksSupported,
+                consumptionSupported = consumptionApplicable,
             ),
             navigateUp = navigator::pop,
-            onChapterClicked = { chapter ->
+            onChapterClicked = { chapter: EntryChapter ->
                 scope.launch {
-                    openChapter(context, entryOpenInteraction, successState.entry, chapter)
+                    openChapter(context, entryOpenFeature, successState.entry, chapter)
                 }
-            },
-            onDownloadChapter = screenModel::runChapterDownloadActions.takeIf {
-                !successState.source.isLocalOrStub() &&
-                    downloadsSupported
-            },
+                Unit
+            }.takeIf { openApplicable },
+            onDownloadChapter = screenModel::runChapterDownloadActions.takeIf { downloadsAvailable },
             onAddToLibraryClicked = {
                 screenModel.toggleFavorite()
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
             },
             onAddToMergeClicked = screenModel::showMergeTargetPicker.takeIf {
-                screenModel.supportsMerge() &&
-                    !successState.isPartOfMerge &&
+                !successState.isPartOfMerge &&
                     (successState.isFromSource || successState.entry.favorite)
             },
             onWebViewClicked = {
-                openEntryInWebView(
-                    navigator,
-                    successState.entry,
-                    screenModel.source,
-                )
-            }.takeIf { webViewSource != null },
+                openEntryInWebView(navigator, successState.entry, checkNotNull(availableWebView))
+            }.takeIf { availableWebView != null },
             onWebViewLongClicked = {
-                copyEntryUrl(
-                    context,
-                    successState.entry,
-                    screenModel.source,
-                )
-            }.takeIf { webViewSource != null },
+                copyEntryUrl(context, checkNotNull(availableWebView))
+            }.takeIf { availableWebView != null },
             onTrackingClicked = {
                 if (!successState.hasLoggedInTrackers) {
                     navigator.push(SettingsScreen(SettingsScreen.Destination.Tracking))
@@ -226,14 +241,16 @@ class EntryScreen(
                 scope.launch {
                     continueReading(context, screenModel, successState.entry)
                 }
-            },
+                Unit
+            }.takeIf { screenModel.isContinueApplicable(successState.entry) },
             onSearch = { query, global -> scope.launch { performSearch(navigator, query, global) } },
             onCoverClicked = screenModel::showCoverDialog,
-            onShareClicked = { shareEntry(context, successState.entry, screenModel.source) }.takeIf {
-                webViewSource != null
+            onShareClicked = { shareEntry(context, checkNotNull(availableWebView)) }.takeIf {
+                availableWebView != null
             },
             onDownloadActionClicked = screenModel::runDownloadAction
-                .takeIf { !successState.source.isLocalOrStub() && screenModel.supportsBulkDownload() },
+                .takeIf { bulkDownloadsAvailable },
+            bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
             onEditCategoryClicked = screenModel::showChangeCategoryDialog.takeIf { successState.entry.favorite },
             onEditFetchIntervalClicked = screenModel::showSetFetchIntervalDialog.takeIf {
                 successState.entry.favorite
@@ -244,17 +261,18 @@ class EntryScreen(
                 navigator.push(EntryScreen(successState.mergeTargetId))
             }.takeIf { successState.showMergeNotice },
             onMigrateClicked = {
-                navigator.push(MigrationConfigScreen(successState.entry.id))
-            }.takeIf { successState.entry.favorite && screenModel.supportsMigration() },
+                screenModel.migrationSubject()?.let { navigator.push(MigrationConfigScreen(it)) }
+                Unit
+            }.takeIf { screenModel.migrationAvailable() },
             onRelatedEntriesClicked = {
                 showRelatedEntriesDialog = true
-            }.takeIf { relatedEntriesSource != null },
+            }.takeIf { relatedEntriesAvailability is EntryRelatedEntriesAvailability.Available },
             onEditNotesClicked = {
                 navigator.push(eu.kanade.tachiyomi.ui.entry.notes.EntryNotesScreen(entry = successState.entry))
             },
             onMultiBookmarkClicked = screenModel::bookmarkChapters.takeIf { bookmarksSupported },
-            onMultiMarkAsReadClicked = screenModel::markChaptersRead,
-            onMarkPreviousAsReadClicked = screenModel::markPreviousChapterRead,
+            onMultiMarkAsReadClicked = screenModel::markChaptersRead.takeIf { consumptionApplicable },
+            onMarkPreviousAsReadClicked = screenModel::markPreviousChapterRead.takeIf { consumptionApplicable },
             onMultiDeleteClicked = screenModel::showDeleteChapterDialog,
             onChapterSwipe = screenModel::chapterSwipe,
             onChapterSelected = screenModel::toggleSelection,
@@ -271,25 +289,29 @@ class EntryScreen(
             onPreviewExpandedChange = screenModel::setPreviewExpanded,
             onPreviewRetry = screenModel::retryPreview,
             onPreviewPageLoad = screenModel::loadPreviewPage,
-            onPreviewPageClick = { chapterId, pageIndex ->
-                scope.launch {
-                    openChapter(
-                        context,
-                        entryOpenInteraction,
-                        successState.entry,
-                        successState.chapters.first {
-                            it.chapter.id == chapterId
-                        }.chapter,
-                        pageIndex,
-                    )
+            onPreviewPageClick = (
+                { _: Long, pageIndex: Int ->
+                    val target = screenModel.previewOpenTarget(pageIndex)
+                    if (target is EntryPreviewOpenTargetResult.Available) {
+                        scope.launch {
+                            openChapter(
+                                context,
+                                entryOpenFeature,
+                                successState.entry,
+                                successState.chapters.first {
+                                    it.chapter.id == target.childId
+                                }.chapter,
+                                target.pageIndex,
+                            )
+                        }
+                    }
                 }
-            },
+                ).takeIf { screenModel.isPreviewOpenApplicable(successState.entry.type) },
         )
 
         if (showRelatedEntriesDialog) {
             RelatedEntriesDialog(
                 screenModel = relatedEntriesScreenModel,
-                sourceItemOrientation = relatedEntriesOrientation,
                 onDismissRequest = { showRelatedEntriesDialog = false },
                 onEntryClick = { relatedEntry ->
                     showRelatedEntriesDialog = false
@@ -335,7 +357,7 @@ class EntryScreen(
                 DuplicateEntryDialog(
                     duplicates = dialog.duplicates,
                     onDismissRequest = onDismissRequest,
-                    onConfirm = { screenModel.toggleFavorite(onRemoved = {}, checkDuplicate = false) },
+                    onConfirm = { screenModel.toggleFavorite(onRemoved = { _ -> }, checkDuplicate = false) },
                     onOpenEntry = { navigator.push(EntryScreen(it.id)) },
                     onMigrate = { screenModel.showMigrateDialog(it) },
                 )
@@ -399,9 +421,7 @@ class EntryScreen(
                 )
             }
             is EntryScreenModel.Dialog.Migrate -> {
-                // TODO(Phase 7.5): Add a type-aware migrate dialog for unified entries.
-                // For now navigate to the migration config screen for the current entry.
-                navigator.push(MigrationConfigScreen(dialog.current.id))
+                screenModel.migrationSubject()?.let { navigator.push(MigrationConfigScreen(it)) }
                 screenModel.dismissDialog()
             }
             is EntryScreenModel.Dialog.SelectMergeTarget -> {
@@ -428,15 +448,12 @@ class EntryScreen(
                 scanlatorFilterActive = successState.scanlatorFilterActive,
                 onScanlatorFilterClicked = {
                     showScanlatorsDialog = true
-                }.takeIf { successState.childGroupFilterSupported },
+                }.takeIf { successState.childGroupFilterApplicable },
             )
             EntryScreenModel.Dialog.TrackSheet -> {
                 NavigatorAdaptiveSheet(
                     screen = TrackInfoDialogHomeScreen(
-                        entryId = successState.entry.id,
-                        entryTitle = successState.entry.displayTitle,
-                        sourceId = successState.entry.source,
-                        entryType = successState.entry.type,
+                        entry = successState.entry,
                     ),
                     enableSwipeDismiss = { it.lastItem is TrackInfoDialogHomeScreen },
                     onDismissRequest = onDismissRequest,
@@ -480,10 +497,13 @@ class EntryScreen(
             }
         }
 
-        if (showScanlatorsDialog && successState.childGroupFilterSupported) {
+        val childGroupFilterState = (
+            successState.childGroupFilterState as? EntryChildGroupFilterStateResult.Available
+            )?.state
+        if (showScanlatorsDialog && childGroupFilterState != null) {
             ScanlatorFilterDialog(
-                availableScanlators = successState.availableScanlators,
-                excludedScanlators = successState.excludedScanlators,
+                availableScanlators = childGroupFilterState.availableGroups,
+                excludedScanlators = childGroupFilterState.excludedGroups,
                 onDismissRequest = { showScanlatorsDialog = false },
                 onConfirm = screenModel::setExcludedScanlators,
             )
@@ -496,12 +516,12 @@ class EntryScreen(
 
     private suspend fun openChapter(
         context: Context,
-        entryOpenInteraction: EntryOpenInteraction,
+        entryOpenFeature: EntryOpenFeature,
         entry: Entry,
         chapter: EntryChapter,
         pageIndex: Int? = null,
     ) {
-        entryOpenInteraction.open(
+        entryOpenFeature.open(
             context = context,
             entry = entry,
             chapter = chapter,
@@ -509,37 +529,25 @@ class EntryScreen(
         )
     }
 
-    private fun getEntryUrl(entry_: Entry?, source_: UnifiedSource?): String? {
-        val entry = entry_ ?: return null
-        val source = source_ as? WebViewSource ?: return null
-
-        return try {
-            source.getContentUrl(entry.toSEntry())
-        } catch (e: Exception) {
-            null
-        }
+    private fun openEntryInWebView(
+        navigator: Navigator,
+        entry: Entry,
+        webView: EntryWebViewResolution.Available,
+    ) {
+        navigator.push(
+            WebViewScreen(
+                url = webView.url,
+                initialTitle = entry.title,
+                sourceId = webView.sourceId,
+                headers = webView.headers,
+            ),
+        )
     }
 
-    private fun openEntryInWebView(navigator: Navigator, entry_: Entry?, source_: UnifiedSource?) {
-        val source = source_ as? WebViewSource ?: return
-        getEntryUrl(entry_, source_)?.let { url ->
-            navigator.push(
-                WebViewScreen(
-                    url = url,
-                    initialTitle = entry_?.title,
-                    sourceId = source.id,
-                    headers = source.getWebViewHeaders(),
-                ),
-            )
-        }
-    }
-
-    private fun shareEntry(context: Context, entry_: Entry?, source_: UnifiedSource?) {
+    private fun shareEntry(context: Context, webView: EntryWebViewResolution.Available) {
         try {
-            getEntryUrl(entry_, source_)?.let { url ->
-                val intent = url.toUri().toShareIntent(context, type = "text/plain")
-                context.startActivity(intent)
-            }
+            val intent = webView.url.toUri().toShareIntent(context, type = "text/plain")
+            context.startActivity(intent)
         } catch (e: Exception) {
             context.toast(e.message)
         }
@@ -579,7 +587,10 @@ class EntryScreen(
         }
 
         val previousController = navigator.items[navigator.size - 2]
-        if (previousController is CatalogScreen && source is EntryCatalogueSource) {
+        val hasCatalogue = source?.let {
+            Injekt.get<EntryCatalogueFeature>().description(it.id).catalogue != null
+        } == true
+        if (previousController is CatalogScreen && hasCatalogue) {
             navigator.pop()
             previousController.searchGenre(genreName)
         } else {
@@ -590,19 +601,20 @@ class EntryScreen(
     /**
      * Copy Entry URL to Clipboard
      */
-    private fun copyEntryUrl(context: Context, entry_: Entry?, source_: UnifiedSource?) {
-        val url = getEntryUrl(entry_, source_) ?: return
-        context.copyToClipboard(url, url)
+    private fun copyEntryUrl(context: Context, webView: EntryWebViewResolution.Available) {
+        context.copyToClipboard(webView.url, webView.url)
     }
 }
 
 private fun LibraryPreferences.ChapterSwipeAction.availableFor(
     downloadsSupported: Boolean,
     bookmarksSupported: Boolean,
+    consumptionSupported: Boolean,
 ): LibraryPreferences.ChapterSwipeAction {
     return when (this) {
         LibraryPreferences.ChapterSwipeAction.Download -> takeIf { downloadsSupported }
         LibraryPreferences.ChapterSwipeAction.ToggleBookmark -> takeIf { bookmarksSupported }
+        LibraryPreferences.ChapterSwipeAction.ToggleRead -> takeIf { consumptionSupported }
         else -> this
     } ?: LibraryPreferences.ChapterSwipeAction.Disabled
 }

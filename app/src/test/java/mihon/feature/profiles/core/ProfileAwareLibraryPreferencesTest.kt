@@ -16,7 +16,13 @@ import mihon.core.common.defaultHomeScreenTabOrder
 import mihon.core.common.defaultHomeScreenTabs
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.AndroidPreferenceStore
+import tachiyomi.core.common.preference.InMemoryPreferenceStore
 import tachiyomi.core.common.preference.Preference
+import tachiyomi.core.common.preference.PreferenceStore
+import tachiyomi.core.common.preference.ProfilePreferenceKeyPattern
+import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
+import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
+import tachiyomi.core.common.preference.ProfilePreferenceOwnerRegistry
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.library.model.LibraryDisplayMode
@@ -634,6 +640,63 @@ class ProfileAwareLibraryPreferencesTest {
         sharedPreferences.contains("extended_duplicate_detection_title_exclusion_patterns") shouldBe false
     }
 
+    @Test
+    fun `installed static and dynamic owners drive migration and cleanup without a recorder list`() {
+        val sharedPreferences = FakeSharedPreferences().apply {
+            edit()
+                .putBoolean("future_feature_enabled", true)
+                .putString("future_feature_item_42", "remembered")
+                .putInt(Preference.appStateKey("future_feature_cursor"), 7)
+                .putString(Preference.privateKey("future_feature_token_9"), "secret")
+                .commit()
+        }
+        val registry = ProfilePreferenceOwnerRegistry()
+        val installer = ProfilePreferenceOwnerInstaller(registry) { InMemoryPreferenceStore() }
+        installer.register(
+            ProfilePreferenceOwnerId("test.future-feature"),
+            factory = ::FutureFeaturePreferences,
+        )
+        installer.register(
+            id = ProfilePreferenceOwnerId("test.future-feature-items"),
+            keyPatterns = setOf(
+                ProfilePreferenceKeyPattern.Prefix("future_feature_item_"),
+                ProfilePreferenceKeyPattern.Prefix(Preference.privateKey("future_feature_token_")),
+            ),
+            factory = ::FutureFeatureItemPreferences,
+        )
+
+        val ownership = ProfilePreferenceOwnership(registry).derive(sharedPreferences.all.keys)
+        val migration = ProfilePreferenceMigration(sharedPreferences)
+        migration.migrateLegacyPreferenceKeys(
+            profileId = 3L,
+            profileKeys = ownership.profile,
+            appStateKeys = ownership.appState,
+            privateKeys = ownership.private,
+        )
+        migration.cleanupLegacyPreferenceKeys(
+            profileId = 3L,
+            profileKeys = ownership.profile,
+            appStateKeys = ownership.appState,
+            privateKeys = ownership.private,
+        )
+
+        sharedPreferences.getBoolean(namespaced("future_feature_enabled", 3L), false) shouldBe true
+        sharedPreferences.getString(namespaced("future_feature_item_42", 3L), null) shouldBe "remembered"
+        sharedPreferences.getInt(namespaced(Preference.appStateKey("future_feature_cursor"), 3L), 0) shouldBe 7
+        sharedPreferences.getString(
+            namespaced(Preference.privateKey("future_feature_token_9"), 3L),
+            null,
+        ) shouldBe "secret"
+        sharedPreferences.contains("future_feature_enabled") shouldBe false
+        sharedPreferences.contains("future_feature_item_42") shouldBe false
+        sharedPreferences.contains(Preference.appStateKey("future_feature_cursor")) shouldBe false
+        sharedPreferences.contains(Preference.privateKey("future_feature_token_9")) shouldBe false
+    }
+
+    private fun namespaced(key: String, profileId: Long): String {
+        return ProfileAwarePreferenceStore.Namespace.namespacedKey(key, profileId)
+    }
+
     private fun createFixture(): Fixture {
         val activeProfileId = MutableStateFlow(1L)
         val backing = AndroidPreferenceStore(
@@ -786,4 +849,15 @@ class ProfileAwareLibraryPreferencesTest {
             }
         }
     }
+}
+
+private class FutureFeaturePreferences(preferenceStore: PreferenceStore) {
+    val enabled = preferenceStore.getBoolean("future_feature_enabled")
+    val cursor = preferenceStore.getInt(Preference.appStateKey("future_feature_cursor"))
+}
+
+private class FutureFeatureItemPreferences(private val preferenceStore: PreferenceStore) {
+    fun item(id: Long) = preferenceStore.getString("future_feature_item_$id")
+
+    fun token(id: Long) = preferenceStore.getString(Preference.privateKey("future_feature_token_$id"))
 }

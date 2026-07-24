@@ -118,9 +118,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import logcat.LogPriority
 import mihon.core.migration.Migrator
-import mihon.entry.interactions.EntryDownloadInteraction
-import mihon.entry.interactions.EntryMediaCacheMaintenance
-import mihon.entry.interactions.settings.EntryMediaCachePreferences
+import mihon.entry.interactions.EntryDownloadRuntimeFeature
+import mihon.entry.interactions.EntryDownloadRuntimeState
+import mihon.entry.interactions.EntryMediaCacheClearResult
+import mihon.entry.interactions.EntryMediaCacheFeature
+import mihon.entry.interactions.EntryMergeNavigationFeature
 import mihon.feature.profiles.core.Profile
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.core.ProfilesPreferences
@@ -147,15 +149,15 @@ import kotlin.time.times
 class MainActivity : BaseActivity() {
 
     private val libraryPreferences: LibraryPreferences by injectLazy()
-    private val mediaCachePreferences: EntryMediaCachePreferences by injectLazy()
     private val preferences: BasePreferences by injectLazy()
     private val uiPreferences: UiPreferences by injectLazy()
     private val securityPreferences: SecurityPreferences by injectLazy()
     private val profileManager: ProfileManager by injectLazy()
     private val profilesPreferences: ProfilesPreferences by injectLazy()
 
-    private val entryDownloadInteraction: EntryDownloadInteraction by injectLazy()
-    private val mediaCacheMaintenance: EntryMediaCacheMaintenance by injectLazy()
+    private val downloadRuntime: EntryDownloadRuntimeFeature by injectLazy()
+    private val mediaCacheFeature: EntryMediaCacheFeature by injectLazy()
+    private val entryMergeNavigationFeature: EntryMergeNavigationFeature by injectLazy()
     private val extensionManager: ExtensionManager by injectLazy()
 
     private val getIncognitoState: GetIncognitoState by injectLazy()
@@ -213,7 +215,10 @@ class MainActivity : BaseActivity() {
 
             var incognito by remember { mutableStateOf(getIncognitoState.await(null)) }
             val downloadOnly by libraryPreferences.downloadedOnly.collectAsState()
-            val indexing by entryDownloadInteraction.isInitializing.collectAsState(initial = false)
+            val downloadRuntimeState by downloadRuntime.state.collectAsState(
+                initial = EntryDownloadRuntimeState(),
+            )
+            val indexing = downloadRuntimeState.isInitializing
             val visibleProfiles by profileManager.visibleProfiles.collectAsState()
             val activeProfile by profileManager.activeProfile.collectAsState()
             val activeProfileId = activeProfile?.id ?: profileManager.activeProfileId
@@ -697,6 +702,11 @@ class MainActivity : BaseActivity() {
     }
 
     private suspend fun handleIntentAction(intent: Intent, navigator: Navigator): Boolean {
+        when (routeIntentToProfile(intent)) {
+            IntentProfileRouting.READY -> Unit
+            IntentProfileRouting.SWITCHED -> return true
+            IntentProfileRouting.REJECTED -> return false
+        }
         val notificationId = intent.getIntExtra("notificationId", -1)
         if (notificationId > -1) {
             NotificationReceiver.dismissNotification(
@@ -705,6 +715,7 @@ class MainActivity : BaseActivity() {
                 intent.getIntExtra("groupId", 0),
             )
         }
+        if (NotificationReceiver.dispatchProfileNotificationIntent(this, intent)) return true
 
         val tabToOpen = when (intent.action) {
             Constants.SHORTCUT_LIBRARY,
@@ -716,10 +727,6 @@ class MainActivity : BaseActivity() {
             Constants.SHORTCUT_EXTENSIONS,
             Constants.SHORTCUT_DOWNLOADS,
             -> {
-                if (intent.action == Constants.SHORTCUT_EXTENSIONS) {
-                    // Profile-type routing removed in Phase 4; extensions open in the active profile.
-                }
-
                 val tab = resolveShortcutTab(
                     action = intent.action,
                     entryIdToOpen = intent.extras
@@ -791,8 +798,37 @@ class MainActivity : BaseActivity() {
         return true
     }
 
+    private suspend fun routeIntentToProfile(intent: Intent): IntentProfileRouting {
+        val explicitProfileId = intent.getLongExtra(Constants.PROFILE_EXTRA, -1L)
+        val profileId = if (explicitProfileId > -1L) {
+            explicitProfileId
+        } else {
+            val legacyNotificationEntryId = intent.extras
+                ?.takeIf { intent.getIntExtra("notificationId", -1) > -1 && it.containsKey(Constants.ENTRY_EXTRA) }
+                ?.getLong(Constants.ENTRY_EXTRA)
+                ?: return IntentProfileRouting.READY
+            entryMergeNavigationFeature.resolveLegacyNotification(legacyNotificationEntryId)
+                ?.requestedSubject
+                ?.profileId
+                ?: return IntentProfileRouting.REJECTED
+        }
+        if (profileId == profileManager.activeProfileId) {
+            return IntentProfileRouting.READY
+        }
+        val profile = profileManager.visibleProfiles.value.firstOrNull { it.id == profileId }
+            ?: return IntentProfileRouting.REJECTED
+        if (profileManager.profileRequiresUnlock(profileId)) {
+            if (!authenticateProfile(profile)) return IntentProfileRouting.REJECTED
+            SecureActivityDelegate.unlock()
+        }
+        profileManager.storePendingIntent(intent)
+        profileManager.setActiveProfile(profileId)
+        return IntentProfileRouting.SWITCHED
+    }
+
     private suspend fun completeStartup(isLaunch: Boolean, navigator: Navigator) {
         if (startupCompleted) {
+            profileManager.consumePendingIntent()?.let { handleIntentAction(it, navigator) }
             ready = true
             return
         }
@@ -807,12 +843,11 @@ class MainActivity : BaseActivity() {
             // Reset Incognito Mode on relaunch
             preferences.incognitoMode.set(false)
 
-            enabledMediaCacheBucketsForLaunchClear(
-                autoClearEntryPageImageCache = mediaCachePreferences.autoClearEntryPageImageCache.get(),
-                autoClearAnimePlaybackCache = mediaCachePreferences.autoClearAnimePlaybackCache.get(),
-            ).forEach { bucketKey ->
-                lifecycleScope.launchIO {
-                    mediaCacheMaintenance.clear(bucketKey)
+            lifecycleScope.launchIO {
+                mediaCacheFeature.clearEnabledOnLaunch().forEach { result ->
+                    if (result is EntryMediaCacheClearResult.Failed) {
+                        logcat(LogPriority.ERROR, result.error)
+                    }
                 }
             }
 
@@ -957,6 +992,12 @@ internal enum class ProfileStartupGateState {
     Picker,
     Authenticating,
     Ready,
+}
+
+private enum class IntentProfileRouting {
+    READY,
+    SWITCHED,
+    REJECTED,
 }
 
 @Composable

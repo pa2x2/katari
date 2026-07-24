@@ -9,16 +9,16 @@ import eu.kanade.tachiyomi.data.backup.models.LongPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringSetPreferenceValue
 import eu.kanade.tachiyomi.source.sourcePreferences
+import mihon.entry.interactions.EntrySourceSettingsFeature
 import mihon.feature.profiles.core.ProfileAwarePreferenceStore
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
-import tachiyomi.domain.source.repository.SourceRepository
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 class PreferenceBackupCreator(
-    private val sourceRepository: SourceRepository = Injekt.get(),
+    private val sourceSettingsFeature: EntrySourceSettingsFeature = Injekt.get(),
     private val preferenceStore: PreferenceStore = Injekt.get(),
     private val profileStore: ProfileStore = Injekt.get(),
 ) {
@@ -29,7 +29,7 @@ class PreferenceBackupCreator(
     }
 
     fun createSource(includePrivatePreferences: Boolean): List<BackupSourcePreferences> {
-        return sourceRepository.getConfigurableSourceIds()
+        return sourceSettingsFeature.supportedSourceIds()
             .map { sourceId ->
                 val sourceKey = profileStore.sourcePreferenceKey(sourceId)
                 BackupSourcePreferences(
@@ -50,7 +50,7 @@ class PreferenceBackupCreator(
     }
 
     fun createSource(profileId: Long, includePrivatePreferences: Boolean): List<BackupSourcePreferences> {
-        return sourceRepository.getConfigurableSourceIds()
+        return sourceSettingsFeature.supportedSourceIds()
             .map { sourceId ->
                 val sourceKey = profileStore.sourcePreferenceKey(sourceId, profileId)
                 BackupSourcePreferences(

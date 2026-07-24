@@ -4,7 +4,6 @@ import androidx.annotation.FloatRange
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.domain.source.service.SourcePreferences
-import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -19,35 +18,47 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import logcat.LogPriority
-import mihon.domain.migration.usecases.MigrateEntryUseCase
+import mihon.entry.interactions.EntryCatalogueFeature
+import mihon.entry.interactions.EntryCatalogueSourceInfo
+import mihon.entry.interactions.EntryMigrationExecuteIntent
+import mihon.entry.interactions.EntryMigrationExecutionResult
+import mihon.entry.interactions.EntryMigrationFeature
+import mihon.entry.interactions.EntryMigrationMode
+import mihon.entry.interactions.EntryMigrationOption
+import mihon.entry.interactions.EntryMigrationPreparationResult
+import mihon.entry.interactions.EntryMigrationPrepareIntent
+import mihon.entry.interactions.EntryMigrationSelectionResult
+import mihon.entry.interactions.EntryMigrationSubject
+import mihon.entry.interactions.EntryMigrationTargetRefreshIntent
+import mihon.entry.interactions.EntryMigrationTargetRefreshResult
 import mihon.feature.migration.list.models.MigratingEntry
 import mihon.feature.migration.list.models.MigratingEntry.SearchResult
 import mihon.feature.migration.list.search.SmartSourceSearchEngine
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
-import tachiyomi.domain.entry.interactor.SyncEntryWithSource
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryChapterRepository
+import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 class MigrationListScreenModel(
-    entryIds: Collection<Long>,
+    subjects: Collection<EntryMigrationSubject>,
     extraSearchQuery: String?,
+    private val selectedOptions: Set<EntryMigrationOption>,
     private val preferences: SourcePreferences = Injekt.get(),
     private val sourceManager: SourceManager = Injekt.get(),
-    private val getEntry: GetEntry = Injekt.get(),
     private val networkToLocalEntry: NetworkToLocalEntry = Injekt.get(),
-    private val syncEntryWithSource: SyncEntryWithSource = Injekt.get(),
     private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
-    private val migrateEntry: MigrateEntryUseCase = Injekt.get(),
+    private val entryRepository: EntryRepository = Injekt.get(),
+    private val migration: EntryMigrationFeature = Injekt.get(),
+    private val catalogueFeature: EntryCatalogueFeature = Injekt.get(),
 ) : StateScreenModel<MigrationListScreenModel.State>(State()) {
 
-    private val smartSearchEngine = SmartSourceSearchEngine(extraSearchQuery)
+    private val smartSearchEngine = SmartSourceSearchEngine(extraSearchQuery, catalogueFeature)
 
     val items
         inline get() = state.value.items
@@ -58,16 +69,21 @@ class MigrationListScreenModel(
     private val navigateBackChannel = Channel<Unit>()
     val navigateBackEvent = navigateBackChannel.receiveAsFlow()
 
+    private val migrationFailureChannel = Channel<Unit>(Channel.BUFFERED)
+    val migrationFailureEvent = migrationFailureChannel.receiveAsFlow()
+
     private var migrateJob: Job? = null
 
     init {
         screenModelScope.launchIO {
-            val entries = entryIds
-                .map {
+            val entries = subjects
+                .map { subject ->
                     async {
-                        val entry = getEntry.await(it) ?: return@async null
-                        val chapterInfo = getChapterInfo(it)
+                        val entry =
+                            entryRepository.getEntryById(subject.entryId, subject.profileId) ?: return@async null
+                        val chapterInfo = getChapterInfo(subject.entryId)
                         MigratingEntry(
+                            subject = subject,
                             entry = entry,
                             chapterCount = chapterInfo.chapterCount,
                             latestChapter = chapterInfo.latestChapter,
@@ -78,8 +94,16 @@ class MigrationListScreenModel(
                 }
                 .awaitAll()
                 .filterNotNull()
-            mutableState.update { it.copy(items = entries) }
-            runMigrations(entries)
+            when (migration.prepareSelection(entries.map(MigratingEntry::entry))) {
+                is EntryMigrationSelectionResult.Ready -> {
+                    mutableState.update { it.copy(items = entries) }
+                    runMigrations(entries)
+                }
+                is EntryMigrationSelectionResult.Rejected -> {
+                    migrationFailureChannel.send(Unit)
+                    navigateBack()
+                }
+            }
         }
     }
 
@@ -107,8 +131,8 @@ class MigrationListScreenModel(
         val prioritizeByChapters = preferences.migrationPrioritizeByChapters.get()
         val deepSearchMode = preferences.migrationDeepSearchMode.get()
 
-        val sources = preferences.migrationSources.get()
-            .mapNotNull { sourceManager.getCatalogueSource(it) }
+        val sourcesById = catalogueFeature.sources().associateBy { it.id }
+        val sources = preferences.migrationSources.get().mapNotNull(sourcesById::get)
 
         for (entry in entries) {
             if (!currentCoroutineContext().isActive) break
@@ -146,10 +170,13 @@ class MigrationListScreenModel(
 
             if (result != null && result.first.thumbnailUrl == null) {
                 try {
-                    syncEntryWithSource(
-                        entry = result.first,
-                        fetchDetails = true,
-                        fetchChapters = false,
+                    migration.refreshTarget(
+                        EntryMigrationTargetRefreshIntent(
+                            source = entry.entry,
+                            target = result.first,
+                            fetchDetails = true,
+                            fetchChildren = false,
+                        ),
                     )
                 } catch (e: CancellationException) {
                     throw e
@@ -157,7 +184,9 @@ class MigrationListScreenModel(
                 }
             }
 
-            val resultEntry = result?.first?.id?.let { getEntry.await(it) } ?: result?.first
+            val resultEntry = result?.first?.id?.let {
+                entryRepository.getEntryById(it, entry.entry.profileId)
+            } ?: result?.first
             entry.searchResult.value = resultEntry?.toSuccessSearchResult() ?: SearchResult.NotFound
 
             if (result == null && hideUnmatched) {
@@ -176,7 +205,7 @@ class MigrationListScreenModel(
 
     private suspend fun searchSource(
         entry: Entry,
-        source: EntryCatalogueSource,
+        source: EntryCatalogueSourceInfo,
         deepSearchMode: Boolean,
     ): Pair<Entry, ChapterInfo>? {
         return try {
@@ -189,15 +218,25 @@ class MigrationListScreenModel(
             if (searchResult == null || (searchResult.url == entry.url && source.id == entry.source)) return null
 
             val localEntry = networkToLocalEntry(searchResult)
-            try {
-                syncEntryWithSource(
-                    entry = localEntry,
-                    fetchDetails = false,
-                    fetchChapters = true,
+            when (
+                val refresh = migration.refreshTarget(
+                    EntryMigrationTargetRefreshIntent(
+                        source = entry,
+                        target = localEntry,
+                        fetchDetails = false,
+                        fetchChildren = true,
+                    ),
                 )
-            } catch (e: Exception) {
-                logcat(LogPriority.ERROR, e)
+            ) {
+                is EntryMigrationTargetRefreshResult.OperationalFailure -> logcat(LogPriority.ERROR, refresh.error)
+                EntryMigrationTargetRefreshResult.Refreshed,
+                is EntryMigrationTargetRefreshResult.Rejected,
+                EntryMigrationTargetRefreshResult.SourceUnavailable,
+                EntryMigrationTargetRefreshResult.NoChildren,
+                -> Unit
             }
+            val preparation = migration.prepare(EntryMigrationPrepareIntent(entry, localEntry))
+            if (preparation !is EntryMigrationPreparationResult.Ready) return null
             localEntry to getChapterInfo(localEntry.id)
         } catch (e: CancellationException) {
             throw e
@@ -226,14 +265,20 @@ class MigrationListScreenModel(
         migratingEntry.searchResult.value = SearchResult.Searching
         screenModelScope.launchIO {
             val result = migratingEntry.migrationScope.async {
-                val entry = getEntry.await(target) ?: return@async null
+                val entry = entryRepository.getEntryById(target, migratingEntry.entry.profileId) ?: return@async null
                 try {
-                    syncEntryWithSource(
-                        entry = entry,
-                        fetchDetails = false,
-                        fetchChapters = true,
+                    val refresh = migration.refreshTarget(
+                        EntryMigrationTargetRefreshIntent(
+                            source = migratingEntry.entry,
+                            target = entry,
+                            fetchDetails = false,
+                            fetchChildren = true,
+                        ),
                     )
-                    getEntry.await(target) ?: entry
+                    if (refresh != EntryMigrationTargetRefreshResult.Refreshed) return@async null
+                    entryRepository.getEntryById(target, migratingEntry.entry.profileId) ?: entry
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (_: Exception) {
                     null
                 }
@@ -243,6 +288,13 @@ class MigrationListScreenModel(
             if (result == null) {
                 migratingEntry.searchResult.value = SearchResult.NotFound
                 withUIContext { onMissingChapters() }
+                return@launchIO
+            }
+
+            val preparation = migration.prepare(EntryMigrationPrepareIntent(migratingEntry.entry, result))
+            if (preparation !is EntryMigrationPreparationResult.Ready) {
+                migratingEntry.searchResult.value = SearchResult.NotFound
+                migrationFailureChannel.send(Unit)
                 return@launchIO
             }
 
@@ -263,6 +315,7 @@ class MigrationListScreenModel(
         migrateJob = screenModelScope.launchIO {
             mutableState.update { it.copy(dialog = Dialog.Progress(0f)) }
             val items = items
+            var failed = false
             try {
                 items.forEachIndexed { index, entry ->
                     try {
@@ -275,18 +328,23 @@ class MigrationListScreenModel(
                             }
                         }
                         if (target != null) {
-                            migrateEntry(current = entry.entry, target = target, replace = replace)
+                            failed = !executeMigration(entry.entry, target, replace, selectedOptions) || failed
                         }
                     } catch (e: Exception) {
                         if (e is CancellationException) throw e
+                        failed = true
                         logcat(LogPriority.WARN, throwable = e)
                     }
                     mutableState.update {
-                        it.copy(dialog = Dialog.Progress((index.toFloat() / items.size).coerceAtMost(1f)))
+                        it.copy(dialog = Dialog.Progress(((index + 1).toFloat() / items.size).coerceAtMost(1f)))
                     }
                 }
 
-                navigateBack()
+                if (failed) {
+                    migrationFailureChannel.send(Unit)
+                } else {
+                    navigateBack()
+                }
             } finally {
                 mutableState.update { it.copy(dialog = null) }
                 migrateJob = null
@@ -307,10 +365,30 @@ class MigrationListScreenModel(
         screenModelScope.launchIO {
             val entry = items.find { it.entry.id == entryId } ?: return@launchIO
             val target = (entry.searchResult.value as? SearchResult.Success)?.entry ?: return@launchIO
-            migrateEntry(current = entry.entry, target = target, replace = replace)
-
-            removeEntry(entryId)
+            if (executeMigration(entry.entry, target, replace, selectedOptions)) {
+                removeEntry(entryId)
+            } else {
+                migrationFailureChannel.send(Unit)
+            }
         }
+    }
+
+    private suspend fun executeMigration(
+        source: Entry,
+        target: Entry,
+        replace: Boolean,
+        selectedOptions: Set<EntryMigrationOption>,
+    ): Boolean {
+        val preparation = migration.prepare(EntryMigrationPrepareIntent(source, target))
+        if (preparation !is EntryMigrationPreparationResult.Ready) return false
+        val result = migration.execute(
+            EntryMigrationExecuteIntent(
+                reference = preparation.reference,
+                mode = if (replace) EntryMigrationMode.REPLACE else EntryMigrationMode.COPY,
+                selectedOptions = selectedOptions.intersect(preparation.availableOptions),
+            ),
+        )
+        return result is EntryMigrationExecutionResult.Applied
     }
 
     fun removeEntry(entryId: Long) {

@@ -20,7 +20,6 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import eu.kanade.tachiyomi.source.visualName
 import eu.kanade.tachiyomi.util.storage.getUriCompat
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
@@ -36,11 +35,13 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import logcat.LogPriority
-import mihon.entry.interactions.EntryDownloadInteraction
+import mihon.entry.interactions.EntryLibraryUpdateRefreshFeature
+import mihon.entry.interactions.EntryLibraryUpdateRefreshRequest
+import mihon.entry.interactions.EntryLibraryUpdateRefreshResult
+import mihon.entry.interactions.EntryMergeMetadataRefreshFeature
 import mihon.entry.interactions.EntryUpdateEligibility
-import mihon.entry.interactions.EntryUpdateEligibilityInteraction
+import mihon.entry.interactions.EntryUpdateEligibilityFeature
 import mihon.entry.interactions.EntryUpdateEligibilityRequest
-import mihon.entry.interactions.EntryUpdateRestriction
 import mihon.entry.interactions.EntryUpdateSkipReason
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.getAndSet
@@ -48,7 +49,6 @@ import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entry.interactor.GetLibraryEntries
-import tachiyomi.domain.entry.interactor.SyncEntryWithSource
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryRepository
@@ -58,11 +58,6 @@ import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_CHARGING
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_NETWORK_NOT_METERED
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_ONLY_ON_WIFI
-import tachiyomi.domain.library.service.LibraryPreferences.Companion.ENTRY_HAS_UNCONSUMED
-import tachiyomi.domain.library.service.LibraryPreferences.Companion.ENTRY_NON_COMPLETED
-import tachiyomi.domain.library.service.LibraryPreferences.Companion.ENTRY_NON_STARTED
-import tachiyomi.domain.library.service.LibraryPreferences.Companion.ENTRY_OUTSIDE_RELEASE_PERIOD
-import tachiyomi.domain.source.model.SourceNotInstalledException
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
@@ -72,7 +67,6 @@ import java.time.Instant
 import java.time.ZonedDateTime
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
-import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.concurrent.atomics.incrementAndFetch
@@ -83,12 +77,12 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
     private val sourceManager: SourceManager = Injekt.get()
     private val libraryPreferences: LibraryPreferences = Injekt.get()
-    private val entryDownloadInteraction: EntryDownloadInteraction = Injekt.get()
-    private val entryUpdateEligibility: EntryUpdateEligibilityInteraction = Injekt.get()
+    private val entryUpdateEligibility: EntryUpdateEligibilityFeature = Injekt.get()
     private val getLibraryEntries: GetLibraryEntries = Injekt.get()
     private val entryRepository: EntryRepository = Injekt.get()
     private val fetchInterval: FetchInterval = Injekt.get()
-    private val syncEntryWithSource: SyncEntryWithSource = Injekt.get()
+    private val entryLibraryUpdateRefreshFeature: EntryLibraryUpdateRefreshFeature = Injekt.get()
+    private val mergeMetadataRefreshFeature: EntryMergeMetadataRefreshFeature = Injekt.get()
 
     private val notifier = LibraryUpdateNotifier(context)
 
@@ -190,39 +184,27 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
             }
         }
 
-        val restrictions = libraryPreferences.autoUpdateEntryRestrictions.get()
-            .toEntryUpdateRestrictions()
         val skippedUpdates = mutableListOf<Pair<Entry, String?>>()
         currentFetchWindow = fetchInterval.getWindow(ZonedDateTime.now())
         val fetchWindowUpperBound = currentFetchWindow.second
 
         val eligibleLibraryEntries = listToUpdate
             .filter {
-                when {
-                    it.entry.updateStrategy == EntryUpdateStrategy.ONLY_FETCH_ONCE && it.totalCount > 0L -> {
-                        skippedUpdates.add(
-                            it.entry to context.stringResource(MR.strings.skipped_reason_not_always_update),
-                        )
+                when (
+                    val eligibility = entryUpdateEligibility.evaluate(
+                        EntryUpdateEligibilityRequest(
+                            entry = it.entry,
+                            totalCount = it.totalCount,
+                            unconsumedCount = it.unconsumedCount,
+                            hasStarted = it.hasStarted,
+                            fetchWindowUpperBound = fetchWindowUpperBound,
+                        ),
+                    )
+                ) {
+                    EntryUpdateEligibility.Eligible -> true
+                    is EntryUpdateEligibility.Skipped -> {
+                        skippedUpdates.add(it.entry to eligibility.reason.toSkippedReasonString(context))
                         false
-                    }
-
-                    else -> when (
-                        val eligibility = entryUpdateEligibility.evaluate(
-                            EntryUpdateEligibilityRequest(
-                                entry = it.entry,
-                                totalCount = it.totalCount,
-                                unconsumedCount = it.unconsumedCount,
-                                hasStarted = it.hasStarted,
-                                restrictions = restrictions,
-                                fetchWindowUpperBound = fetchWindowUpperBound,
-                            ),
-                        )
-                    ) {
-                        EntryUpdateEligibility.Eligible -> true
-                        is EntryUpdateEligibility.Skipped -> {
-                            skippedUpdates.add(it.entry to eligibility.reason.toSkippedReasonString(context))
-                            false
-                        }
                     }
                 }
             }
@@ -249,36 +231,15 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
     private suspend fun List<LibraryItem>.expandToMemberEntries(): List<Entry> {
         return flatMap { libraryItem ->
-            libraryItem.memberEntryIds.mapNotNull { memberKey ->
-                if (memberKey.id == libraryItem.entry.id) {
-                    libraryItem.entry
-                } else {
-                    entryRepository.getEntryById(memberKey.id)
-                }
-            }
+            mergeMetadataRefreshFeature.resolveOwners(libraryItem.entry).orderedOwners
         }
             .distinctBy(Entry::id)
     }
 
-    private fun Set<String>.toEntryUpdateRestrictions(): Set<EntryUpdateRestriction> {
-        return buildSet {
-            if (ENTRY_NON_COMPLETED in this@toEntryUpdateRestrictions) {
-                add(EntryUpdateRestriction.NON_COMPLETED)
-            }
-            if (ENTRY_HAS_UNCONSUMED in this@toEntryUpdateRestrictions) {
-                add(EntryUpdateRestriction.HAS_UNCONSUMED)
-            }
-            if (ENTRY_NON_STARTED in this@toEntryUpdateRestrictions) {
-                add(EntryUpdateRestriction.NON_STARTED)
-            }
-            if (ENTRY_OUTSIDE_RELEASE_PERIOD in this@toEntryUpdateRestrictions) {
-                add(EntryUpdateRestriction.OUTSIDE_RELEASE_PERIOD)
-            }
-        }
-    }
-
     private fun EntryUpdateSkipReason.toSkippedReasonString(context: Context): String {
         return when (this) {
+            EntryUpdateSkipReason.NOT_ALWAYS_UPDATE ->
+                context.stringResource(MR.strings.skipped_reason_not_always_update)
             EntryUpdateSkipReason.COMPLETED -> context.stringResource(MR.strings.skipped_reason_completed)
             EntryUpdateSkipReason.NOT_CAUGHT_UP -> context.stringResource(MR.strings.skipped_reason_not_caught_up)
             EntryUpdateSkipReason.NOT_STARTED -> context.stringResource(MR.strings.skipped_reason_not_started)
@@ -290,7 +251,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
     /**
      * Method that updates entries in [entriesToUpdate]. It's called in a background thread, so it's safe
      * to do heavy operations or network calls here.
-     * For each entry it calls [syncEntryWithSource] and updates the notification showing the current
+     * For each entry it calls [entryLibraryUpdateRefreshFeature] and updates the notification showing the current
      * progress.
      *
      * @return an observable delivering the progress of each update.
@@ -301,7 +262,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         val currentlyUpdatingEntries = CopyOnWriteArrayList<Entry>()
         val newUpdates = CopyOnWriteArrayList<Pair<Entry, Array<EntryChapter>>>()
         val failedUpdates = CopyOnWriteArrayList<Pair<Entry, String?>>()
-        val hasDownloads = AtomicBoolean(false)
+        val refreshSession = entryLibraryUpdateRefreshFeature.newSession()
 
         logcat(LogPriority.INFO) { "Processing ${entriesToUpdate.size} queued library entries" }
 
@@ -325,51 +286,54 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                                     entry,
                                 ) {
                                     try {
-                                        val result = syncEntryWithSource(
-                                            entry,
-                                            fetchDetails = libraryPreferences.autoUpdateMetadata.get(),
-                                            fetchWindow = currentFetchWindow,
-                                        )
-                                        val newChapters = result.insertedChapters
-                                            .sortedByDescending { it.sourceOrder }
+                                        when (
+                                            val result = refreshSession.refresh(
+                                                EntryLibraryUpdateRefreshRequest(
+                                                    entry = entry,
+                                                    fetchMetadata = libraryPreferences.autoUpdateMetadata.get(),
+                                                    fetchWindowLowerBound = currentFetchWindow.first,
+                                                    fetchWindowUpperBound = currentFetchWindow.second,
+                                                ),
+                                            )
+                                        ) {
+                                            is EntryLibraryUpdateRefreshResult.Updated -> {
+                                                val newChapters = result.newChildren
+                                                if (newChapters.isNotEmpty()) {
+                                                    libraryPreferences.newUpdatesCount.getAndSet {
+                                                        it + newChapters.size
+                                                    }
 
-                                        if (newChapters.isNotEmpty()) {
-                                            val chaptersToDownload =
-                                                entryDownloadInteraction.filterAutoDownloadCandidates(
-                                                    entry,
-                                                    newChapters,
-                                                )
-
-                                            if (chaptersToDownload.isNotEmpty()) {
-                                                downloadEntryChapters(queuedEntry, chaptersToDownload)
-                                                hasDownloads.store(true)
+                                                    // Keep the queued entry that contains the new EntryChapters
+                                                    newUpdates.add(queuedEntry to newChapters.toTypedArray())
+                                                    logcat(LogPriority.INFO) {
+                                                        "Library update found ${newChapters.size} new chapter(s) " +
+                                                            "for ${queuedEntry.title}"
+                                                    }
+                                                }
                                             }
-
-                                            libraryPreferences.newUpdatesCount.getAndSet { it + newChapters.size }
-
-                                            // Keep the queued entry that contains the new EntryChapters
-                                            newUpdates.add(queuedEntry to newChapters.toTypedArray())
-                                            logcat(LogPriority.INFO) {
-                                                "Library update found ${newChapters.size} new chapter(s) for ${queuedEntry.title}"
+                                            EntryLibraryUpdateRefreshResult.SourceUnavailable -> {
+                                                recordFailedUpdate(
+                                                    failedUpdates = failedUpdates,
+                                                    entry = queuedEntry,
+                                                    errorMessage = context.stringResource(
+                                                        MR.strings.loader_not_implemented_error,
+                                                    ),
+                                                )
+                                            }
+                                            EntryLibraryUpdateRefreshResult.NoChildren -> {
+                                                recordFailedUpdate(failedUpdates, queuedEntry, errorMessage = null)
+                                            }
+                                            is EntryLibraryUpdateRefreshResult.OperationalFailure -> {
+                                                recordFailedUpdate(
+                                                    failedUpdates,
+                                                    queuedEntry,
+                                                    result.error.message,
+                                                    result.error,
+                                                )
                                             }
                                         }
                                     } catch (e: Throwable) {
-                                        val errorMessage = when (e) {
-                                            // failedUpdates will already have the source, don't need to copy it into the message
-                                            is SourceNotInstalledException -> context.stringResource(
-                                                MR.strings.loader_not_implemented_error,
-                                            )
-
-                                            else -> e.message
-                                        }
-                                        failedUpdates.add(queuedEntry to errorMessage)
-                                        val sourceName = sourceManager.getDisplayInfo(queuedEntry.source).visualName()
-                                        logcat(LogPriority.ERROR, e) {
-                                            buildString {
-                                                append("Library update failed for ${queuedEntry.title} ($sourceName)")
-                                                errorMessage?.let { append(": $it") }
-                                            }
-                                        }
+                                        recordFailedUpdate(failedUpdates, queuedEntry, e.message, e)
                                     }
                                 }
                             }
@@ -383,10 +347,8 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
         if (newUpdates.isNotEmpty()) {
             notifier.showUpdateNotifications(newUpdates)
-            if (hasDownloads.load()) {
-                entryDownloadInteraction.startDownloads()
-            }
         }
+        refreshSession.complete()
 
         logcat(LogPriority.INFO) {
             "Library update finished with ${newUpdates.size} updated entr${if (newUpdates.size == 1) "y" else "ies"} and ${failedUpdates.size} failure${if (failedUpdates.size == 1) "" else "s"}"
@@ -401,10 +363,23 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         }
     }
 
-    private suspend fun downloadEntryChapters(queuedEntry: Entry, chapters: List<EntryChapter>) {
-        // We don't want to start downloading while the library is updating, because websites
-        // may don't like it and they could ban the user.
-        entryDownloadInteraction.queue(queuedEntry, chapters, autoStart = false)
+    private fun recordFailedUpdate(
+        failedUpdates: CopyOnWriteArrayList<Pair<Entry, String?>>,
+        entry: Entry,
+        errorMessage: String?,
+        error: Throwable? = null,
+    ) {
+        failedUpdates.add(entry to errorMessage)
+        val sourceName = sourceManager.getDisplayInfo(entry.source).visualName()
+        val message = buildString {
+            append("Library update failed for ${entry.title} ($sourceName)")
+            errorMessage?.let { append(": $it") }
+        }
+        if (error == null) {
+            logcat(LogPriority.ERROR) { message }
+        } else {
+            logcat(LogPriority.ERROR, error) { message }
+        }
     }
 
     private suspend fun withUpdateNotification(

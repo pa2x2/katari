@@ -15,6 +15,8 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.source.interactor.SourceListListing
+import eu.kanade.domain.source.model.CATALOGUE_LATEST_QUERY
+import eu.kanade.domain.source.model.CATALOGUE_POPULAR_QUERY
 import eu.kanade.presentation.browse.SourceOptionsDialog
 import eu.kanade.presentation.browse.SourcesFilterSheet
 import eu.kanade.presentation.browse.SourcesScreen
@@ -24,7 +26,6 @@ import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import tachiyomi.domain.source.interactor.GetRemoteCatalog
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -106,7 +107,7 @@ fun Screen.sourcesTab(): TabContent {
 
 private fun listingQuery(listing: SourceListListing): String? {
     return when (listing) {
-        SourceListListing.Popular -> GetRemoteCatalog.QUERY_POPULAR
-        SourceListListing.Latest -> GetRemoteCatalog.QUERY_LATEST
+        SourceListListing.Popular -> CATALOGUE_POPULAR_QUERY
+        SourceListListing.Latest -> CATALOGUE_LATEST_QUERY
     }
 }

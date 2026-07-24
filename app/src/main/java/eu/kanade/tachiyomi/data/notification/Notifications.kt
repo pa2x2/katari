@@ -8,6 +8,7 @@ import androidx.core.app.NotificationManagerCompat.IMPORTANCE_LOW
 import eu.kanade.tachiyomi.util.system.buildNotificationChannel
 import eu.kanade.tachiyomi.util.system.buildNotificationChannelGroup
 import mihon.entry.interactions.EntryDownloadNotifications
+import mihon.entry.interactions.EntryLibraryUpdateNotificationRoute
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
 
@@ -28,26 +29,14 @@ object Notifications {
     private const val GROUP_LIBRARY = "group_library"
     const val CHANNEL_LIBRARY_PROGRESS = "library_progress_channel"
     const val ID_LIBRARY_PROGRESS = -101
-    const val ID_ANIME_LIBRARY_PROGRESS = -104
     const val ID_LIBRARY_SIZE_WARNING = -103
     const val CHANNEL_LIBRARY_ERROR = "library_errors_channel"
     const val ID_LIBRARY_ERROR = -102
-    const val ID_ANIME_LIBRARY_ERROR = -105
 
     /**
      * Notification channel and ids used by the downloader.
      */
     private const val GROUP_DOWNLOADER = "group_downloader"
-
-    /**
-     * Notification channel and ids used by the library updater.
-     */
-    const val CHANNEL_NEW_CHAPTERS = "new_chapters_channel"
-    const val ID_NEW_CHAPTERS = -301
-    const val GROUP_NEW_CHAPTERS = "eu.kanade.tachiyomi.NEW_CHAPTERS"
-    const val CHANNEL_NEW_EPISODES = "new_episodes_channel"
-    const val ID_NEW_EPISODES = -302
-    const val GROUP_NEW_EPISODES = "eu.kanade.tachiyomi.NEW_EPISODES"
 
     /**
      * Notification channel and ids used by the backup/restore system.
@@ -97,7 +86,10 @@ object Notifications {
      *
      * @param context The application context.
      */
-    fun createChannels(context: Context) {
+    fun createChannels(
+        context: Context,
+        libraryUpdateRoutes: List<EntryLibraryUpdateNotificationRoute>,
+    ) {
         val notificationManager = NotificationManagerCompat.from(context)
 
         // Delete old notification channels
@@ -135,12 +127,6 @@ object Notifications {
                     setGroup(GROUP_LIBRARY)
                     setShowBadge(false)
                 },
-                buildNotificationChannel(CHANNEL_NEW_CHAPTERS, IMPORTANCE_DEFAULT) {
-                    setName(context.stringResource(MR.strings.channel_new_chapters))
-                },
-                buildNotificationChannel(CHANNEL_NEW_EPISODES, IMPORTANCE_DEFAULT) {
-                    setName(context.stringResource(MR.strings.channel_new_episodes))
-                },
                 buildNotificationChannel(EntryDownloadNotifications.CHANNEL_PROGRESS, IMPORTANCE_LOW) {
                     setName(context.stringResource(MR.strings.channel_progress))
                     setGroup(GROUP_DOWNLOADER)
@@ -173,7 +159,11 @@ object Notifications {
                     setGroup(GROUP_APK_UPDATES)
                     setName(context.stringResource(MR.strings.channel_ext_updates))
                 },
-            ),
+            ) + libraryUpdateRoutes.map { route ->
+                buildNotificationChannel(route.channelId, IMPORTANCE_DEFAULT) {
+                    setName(context.stringResource(route.channelLabel))
+                }
+            },
         )
     }
 }

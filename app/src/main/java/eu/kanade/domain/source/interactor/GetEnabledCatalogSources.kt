@@ -34,6 +34,7 @@ class GetEnabledCatalogSources(
             repository.getSources(),
         ) { pinnedSourceIds, enabledLanguages, disabledSources, lastUsedSource, sources ->
             sources
+                .filter { it.catalogue != null }
                 .filter { it.lang in enabledLanguages || it.isLocal() }
                 .filterNot { it.id.toString() in disabledSources }
                 .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })

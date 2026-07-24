@@ -33,7 +33,7 @@ class DownloadQueueHolder(private val view: View, val adapter: DownloadQueueAdap
     }
 
     fun notifyProgressText() {
-        binding.downloadProgressText.text = item.model().progressText
+        binding.downloadProgressText.text = item.model().progressText(view.context)
     }
 
     override fun onItemReleased(position: Int) {
@@ -54,7 +54,7 @@ class DownloadQueueHolder(private val view: View, val adapter: DownloadQueueAdap
         binding.mangaFullTitle.text = model.title
         binding.downloadProgress.max = model.progressMax
         binding.downloadProgress.progress = model.progress
-        binding.downloadProgressText.text = model.progressText
+        binding.downloadProgressText.text = model.progressText(view.context)
     }
 
     private fun showPopupMenu(view: View) {

@@ -1,11 +1,16 @@
 package mihon.entry.interactions.anime.download
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
+import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,11 +25,15 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mihon.entry.interactions.EntryDownloadEntryIdentity
 import mihon.entry.interactions.EntryDownloadEvent
 import mihon.entry.interactions.EntryDownloadMessage
+import mihon.entry.interactions.EntryDownloadQueuePolicy
+import mihon.entry.interactions.EntryDownloadWorkController
 import mihon.entry.interactions.anime.download.model.AnimeDownload
 import mihon.entry.interactions.anime.download.model.AnimeDownloadFailure
 import mihon.entry.interactions.anime.toEntryDownloadMessage
+import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.entry.model.DownloadPreferences
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -39,6 +48,7 @@ internal class AnimeDownloadManager(
     private val downloader: AnimeDownloader = Injekt.get(),
     private val sourceManager: SourceManager = Injekt.get(),
     private val store: AnimeDownloadStore = AnimeDownloadStore(context),
+    private val workController: EntryDownloadWorkController = Injekt.get(),
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -53,20 +63,26 @@ internal class AnimeDownloadManager(
     val events = _events.asSharedFlow()
 
     private var processorJob: Job? = null
+    private var activeDownloadJob: Job? = null
     private val queueMutationLock = Any()
+    private val initialized = CompletableDeferred<Unit>()
 
     @Volatile
     private var activeDownload: ActiveDownload? = null
 
     init {
         scope.launch {
-            val downloads = store.restore()
-            if (downloads.isNotEmpty()) {
-                mergeRestoredQueue(downloads)
-            } else {
-                synchronized(queueMutationLock) {
-                    rewriteStoredQueue()
+            try {
+                val downloads = store.restore()
+                if (downloads.isNotEmpty()) {
+                    mergeRestoredQueue(downloads)
+                } else {
+                    synchronized(queueMutationLock) {
+                        rewriteStoredQueue()
+                    }
                 }
+            } finally {
+                initialized.complete(Unit)
             }
         }
     }
@@ -83,11 +99,26 @@ internal class AnimeDownloadManager(
                 download.failure = null
             }
         }
-        _isRunning.value = true
-        launchProcessorIfNeeded()
+        if (!_isRunning.value) workController.start()
+    }
+
+    fun startDownloadsNow(episodeIds: Collection<Long>) {
+        reorderQueue(
+            EntryDownloadQueuePolicy.promote(
+                queue = queueState.value,
+                keys = episodeIds,
+                keyOf = { it.episode.id },
+                isActive = {
+                    it.status == AnimeDownload.State.RESOLVING ||
+                        it.status == AnimeDownload.State.DOWNLOADING
+                },
+            ),
+        )
+        startDownloads()
     }
 
     fun pauseDownloads() {
+        workController.stop()
         processorJob?.cancel()
         processorJob = null
         if (queueState.value.isEmpty()) {
@@ -101,6 +132,7 @@ internal class AnimeDownloadManager(
     }
 
     fun clearQueue() {
+        workController.stop()
         synchronized(queueMutationLock) {
             _queueState.value = emptyList()
             processorJob?.cancel()
@@ -152,39 +184,72 @@ internal class AnimeDownloadManager(
         val toRemove = queueState.value.filter { it.episode.id in episodeIds }
         if (toRemove.isEmpty()) return
 
-        val wasRunning = _isRunning.value
         val removesActiveDownload = isActiveEpisodeBeingRemoved(activeDownload?.episodeId, episodeIds)
-        if (wasRunning && removesActiveDownload) {
-            processorJob?.cancel()
-            processorJob = null
-        }
-
         synchronized(queueMutationLock) {
             _queueState.update { current -> current.filterNot { it.episode.id in episodeIds } }
             store.removeAll(toRemove)
         }
+        if (removesActiveDownload) activeDownloadJob?.cancel()
 
         if (queueState.value.isEmpty()) {
             _isRunning.value = false
-        } else if (wasRunning && removesActiveDownload) {
-            queueState.value
-                .filter { it.status == AnimeDownload.State.RESOLVING || it.status == AnimeDownload.State.DOWNLOADING }
-                .forEach { it.status = AnimeDownload.State.QUEUE }
-            launchProcessorIfNeeded()
         }
     }
 
     fun reorderQueue(downloads: List<AnimeDownload>) {
-        updateQueue(downloads)
+        updateQueue(
+            EntryDownloadQueuePolicy.reorderPending(
+                queue = queueState.value,
+                requested = downloads,
+                keyOf = { it.episode.id },
+                isActive = {
+                    it.status == AnimeDownload.State.RESOLVING ||
+                        it.status == AnimeDownload.State.DOWNLOADING
+                },
+            ),
+        )
     }
 
     suspend fun deleteEpisodes(anime: Entry, episodes: List<EntryChapter>) {
-        if (episodes.isEmpty()) return
-        removeFromQueue(episodes.map(EntryChapter::id))
-        val source = sourceManager.get(anime.source) ?: return
-        val (_, episodeDirs) = provider.findEpisodeDirs(episodes, anime, source)
-        episodeDirs.forEach { it.delete() }
-        cache.removeEpisodes(episodes, anime)
+        withIOContext {
+            if (episodes.isEmpty()) return@withIOContext
+            removeFromQueue(episodes.map(EntryChapter::id))
+            sourceManager.get(anime.source)?.let { source ->
+                val (_, episodeDirs) = provider.findEpisodeDirs(episodes, anime, source)
+                episodeDirs.forEach { it.delete() }
+            }
+            cache.removeEpisodes(episodes, anime)
+        }
+    }
+
+    suspend fun deleteAnime(anime: Entry): Boolean {
+        return withIOContext {
+            val queuedEpisodeIds = queueState.value
+                .filter { it.anime.id == anime.id }
+                .map { it.episode.id }
+            removeFromQueue(queuedEpisodeIds)
+            val source = sourceManager.get(anime.source)
+            val animeDirectory = source?.let { provider.findAnimeDir(anime.title, it) }
+            val removed = animeDirectory == null || animeDirectory.delete() || !animeDirectory.exists()
+            if (!removed) return@withIOContext false
+            cache.removeAnime(anime)
+            true
+        }
+    }
+
+    fun renameSource(oldSource: UnifiedSource, newSource: UnifiedSource) {
+        if (provider.renameSource(oldSource, newSource)) cache.invalidateCache()
+    }
+
+    suspend fun renameAnime(anime: Entry, newTitle: String) {
+        withIOContext {
+            val source = sourceManager.get(anime.source) ?: return@withIOContext
+            val queuedEpisodeIds = queueState.value
+                .filter { it.anime.id == anime.id }
+                .map { it.episode.id }
+            removeFromQueue(queuedEpisodeIds)
+            if (provider.renameEntry(source, anime, newTitle)) cache.invalidateCache()
+        }
     }
 
     fun isEpisodeDownloaded(
@@ -253,15 +318,36 @@ internal class AnimeDownloadManager(
         store.addAll(_queueState.value)
     }
 
-    private fun launchProcessorIfNeeded() {
-        if (processorJob?.isActive == true) return
+    suspend fun runDownloadsUntilIdle() {
+        initialized.await()
+        if (queueState.value.isEmpty()) return
+        queueState.value.forEach { download ->
+            if (
+                download.status != AnimeDownload.State.DOWNLOADED &&
+                download.status != AnimeDownload.State.RESOLVING &&
+                download.status != AnimeDownload.State.DOWNLOADING
+            ) {
+                download.status = AnimeDownload.State.QUEUE
+                download.failure = null
+            }
+        }
         val processorToken = Any()
-        processorJob = scope.launch {
+        processorJob = currentCoroutineContext()[Job]
+        _isRunning.value = true
+        try {
             while (_isRunning.value) {
                 val next = queueState.value.firstOrNull { it.status == AnimeDownload.State.QUEUE } ?: break
                 try {
                     activeDownload = ActiveDownload(next.episode.id, processorToken)
-                    val failure = downloader.download(next)
+                    val failure = coroutineScope {
+                        val job = async { downloader.download(next) }
+                        activeDownloadJob = job
+                        try {
+                            job.await()
+                        } finally {
+                            if (activeDownloadJob === job) activeDownloadJob = null
+                        }
+                    }
                     if (failure == null) {
                         synchronized(queueMutationLock) {
                             _queueState.update { current -> current.filterNot { it.episode.id == next.episode.id } }
@@ -273,8 +359,14 @@ internal class AnimeDownloadManager(
                         next.status = AnimeDownload.State.ERROR
                         reportError(next)
                     }
+                } catch (e: CancellationException) {
+                    if (queueState.value.any { it.episode.id == next.episode.id }) {
+                        next.status = AnimeDownload.State.QUEUE
+                        rewriteStoredQueue()
+                        throw e
+                    }
+                    continue
                 } catch (e: Throwable) {
-                    if (e is CancellationException) throw e
                     next.progress = 0
                     next.failure = AnimeDownloadFailure(
                         reason = AnimeDownloadFailure.Reason.UNKNOWN,
@@ -288,8 +380,10 @@ internal class AnimeDownloadManager(
                     }
                 }
             }
+        } finally {
             _isRunning.value = false
-            processorJob = null
+            if (activeDownload?.processorToken === processorToken) activeDownload = null
+            if (processorJob === currentCoroutineContext()[Job]) processorJob = null
         }
     }
 
@@ -297,7 +391,7 @@ internal class AnimeDownloadManager(
         _events.tryEmit(
             EntryDownloadEvent.Error(
                 entryType = EntryType.ANIME,
-                entryId = download.anime.id,
+                entryIdentity = EntryDownloadEntryIdentity.from(download.anime),
                 title = download.anime.title,
                 subtitle = download.episode.name,
                 message = download.failure?.toEntryDownloadMessage()

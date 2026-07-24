@@ -252,6 +252,7 @@ fun LibraryBottomActionMenu(
     markAsReadLabel: StringResource = MR.strings.action_mark_as_read,
     markAsUnreadLabel: StringResource = MR.strings.action_mark_as_unread,
     downloadPresentation: EntryTypePresentation = null.entryTypePresentation(),
+    bookmarkedDownloadsSupported: Boolean,
     modifier: Modifier = Modifier,
 ) {
     AnimatedVisibility(
@@ -335,6 +336,7 @@ fun LibraryBottomActionMenu(
                             expanded = downloadExpanded,
                             onDismissRequest = { downloadExpanded = false },
                             onDownloadClicked = onDownloadClicked,
+                            bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
                             presentation = downloadPresentation,
                             offset = BottomBarMenuDpOffset,
                         )

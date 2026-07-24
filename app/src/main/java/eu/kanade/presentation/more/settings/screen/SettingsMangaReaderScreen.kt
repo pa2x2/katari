@@ -21,7 +21,9 @@ import uy.kohesive.injekt.api.get
 import java.text.NumberFormat
 import tachiyomi.core.common.preference.Preference as CorePreference
 
-object SettingsMangaReaderScreen : SearchableSettings {
+object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection {
+
+    override val surfaceId: String = MangaReaderSettingsProvider.PROVIDER_ID
 
     @ReadOnlyComposable
     @Composable

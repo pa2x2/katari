@@ -7,6 +7,8 @@ Katari can load selected Mihon and Keiyoushi extension API families for compatib
 Installed extensions declaring supported Mihon or Keiyoushi library families can continue to provide manga sources. Katari verifies the original Mihon 1.4 and 1.6 surfaces plus the supported Keiyoushi 1.6 compatibility additions. An APK using other fork-specific APIs may install but fail to load.
 
 Legacy sources are adapted into Katari's unified source model and produce the entry type represented by their legacy contract. They do not gain additional media behavior automatically.
+Legacy catalogue, preferences, WebView, image, home-page, related-entry, and unmetered-traffic contracts are translated
+only when the installed source actually implements their legacy counterparts.
 
 Katari treats extension signatures as trust identities. A first installation may require trust confirmation. Updates must retain the package name and signing certificate.
 

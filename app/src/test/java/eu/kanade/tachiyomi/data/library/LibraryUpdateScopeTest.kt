@@ -5,9 +5,9 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.service.EntryLibraryProgressResolution
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
-import tachiyomi.domain.library.model.ProgressState
 
 class LibraryUpdateScopeTest {
 
@@ -62,14 +62,8 @@ private fun libraryItem(
         isMerged = false,
         memberEntryIds = listOf(LibraryItemKey(type, entry.id)),
         memberEntries = listOf(entry),
-        progress = ProgressState(
-            totalCount = 0L,
-            consumedCount = 0L,
-            hasStarted = false,
-        ),
+        progressSummary = EntryLibraryProgressResolution.Inapplicable(type),
         latestUpload = 0L,
-        lastRead = 0L,
-        continueEntryId = null,
         downloadCount = 0,
     )
 }

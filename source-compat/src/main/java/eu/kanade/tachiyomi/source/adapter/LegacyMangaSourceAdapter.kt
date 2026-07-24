@@ -48,6 +48,9 @@ import okhttp3.Request
 import okhttp3.Response
 import kotlin.coroutines.Continuation
 import eu.kanade.tachiyomi.source.ConfigurableSource as LegacyConfigurableSource
+import eu.kanade.tachiyomi.source.UnmeteredSource as LegacyUnmeteredSource
+
+val LEGACY_MANGA_SOURCE_SUPPORTED_ENTRY_TYPES: Set<EntryType> = setOf(EntryType.MANGA)
 
 /**
  * Wraps a legacy manga [Source] as a [UnifiedSource].
@@ -66,7 +69,7 @@ open class LegacyMangaSourceAdapter(
 
     override val id: Long get() = source.id
     override val name: String get() = source.name
-    override val supportedEntryTypes: Set<EntryType> = setOf(EntryType.MANGA)
+    override val supportedEntryTypes: Set<EntryType> = LEGACY_MANGA_SOURCE_SUPPORTED_ENTRY_TYPES
     override val itemOrientation: EntryItemOrientation
         get() = source.sourceItemOrientation().toEntryItemOrientation()
 
@@ -168,7 +171,7 @@ private interface LegacyRelatedEntriesBridge : RelatedEntriesSource {
     }
 }
 
-private class LegacyMangaRelatedCatalogueSourceAdapter(
+internal open class LegacyMangaRelatedCatalogueSourceAdapter(
     source: CatalogueSource,
 ) : LegacyMangaCatalogueSourceAdapter(source), LegacyRelatedEntriesBridge {
 
@@ -209,7 +212,7 @@ open class LegacyMangaWebViewCatalogueSourceAdapter(
         httpSource.getImage(page.toLegacyPage(progress))
 }
 
-private class LegacyMangaRelatedWebViewCatalogueSourceAdapter(
+internal open class LegacyMangaRelatedWebViewCatalogueSourceAdapter(
     source: HttpSource,
 ) : LegacyMangaWebViewCatalogueSourceAdapter(source), LegacyRelatedEntriesBridge {
 
@@ -253,7 +256,7 @@ open class LegacyMangaConfigurableCatalogueSourceAdapter(
     }
 }
 
-private class LegacyMangaRelatedConfigurableCatalogueSourceAdapter(
+internal open class LegacyMangaRelatedConfigurableCatalogueSourceAdapter(
     source: CatalogueSource,
 ) : LegacyMangaConfigurableCatalogueSourceAdapter(source), LegacyRelatedEntriesBridge {
 
@@ -294,7 +297,7 @@ open class LegacyMangaWebViewConfigurableCatalogueSourceAdapter(
         httpSource.getImage(page.toLegacyPage(progress))
 }
 
-private class LegacyMangaRelatedWebViewConfigurableCatalogueSourceAdapter(
+internal open class LegacyMangaRelatedWebViewConfigurableCatalogueSourceAdapter(
     source: HttpSource,
 ) : LegacyMangaWebViewConfigurableCatalogueSourceAdapter(source), LegacyRelatedEntriesBridge {
 
@@ -307,23 +310,66 @@ private class LegacyMangaRelatedWebViewConfigurableCatalogueSourceAdapter(
  * The returned instance implements [EntryCatalogueSource] and/or
  * [ConfigurableSource] when the legacy source supports those capabilities.
  */
-fun Source.asUnifiedSource(): UnifiedSource = when {
-    this is HttpSource && this is LegacyConfigurableSource && hasDirectRelatedMangaSupport() ->
-        LegacyMangaRelatedWebViewConfigurableCatalogueSourceAdapter(this)
-    this is HttpSource && hasDirectRelatedMangaSupport() ->
-        LegacyMangaRelatedWebViewCatalogueSourceAdapter(this)
-    this is CatalogueSource && this is LegacyConfigurableSource && hasDirectRelatedMangaSupport() ->
-        LegacyMangaRelatedConfigurableCatalogueSourceAdapter(this)
-    this is CatalogueSource && hasDirectRelatedMangaSupport() ->
-        LegacyMangaRelatedCatalogueSourceAdapter(this)
-    this is HttpSource && this is LegacyConfigurableSource ->
-        LegacyMangaWebViewConfigurableCatalogueSourceAdapter(this)
-    this is HttpSource -> LegacyMangaWebViewCatalogueSourceAdapter(this)
-    this is CatalogueSource && this is LegacyConfigurableSource ->
-        LegacyMangaConfigurableCatalogueSourceAdapter(this)
-    this is CatalogueSource -> LegacyMangaCatalogueSourceAdapter(this)
-    this is LegacyConfigurableSource -> LegacyMangaConfigurableSourceAdapter(this)
-    else -> LegacyMangaSourceAdapter(this)
+fun Source.asUnifiedSource(): UnifiedSource {
+    val unmetered = this is LegacyUnmeteredSource
+    return when {
+        this is HttpSource && this is LegacyConfigurableSource && hasDirectRelatedMangaSupport() ->
+            if (unmetered) {
+                LegacyMangaUnmeteredRelatedWebViewConfigurableCatalogueSourceAdapter(this)
+            } else {
+                LegacyMangaRelatedWebViewConfigurableCatalogueSourceAdapter(this)
+            }
+        this is HttpSource && hasDirectRelatedMangaSupport() ->
+            if (unmetered) {
+                LegacyMangaUnmeteredRelatedWebViewCatalogueSourceAdapter(this)
+            } else {
+                LegacyMangaRelatedWebViewCatalogueSourceAdapter(this)
+            }
+        this is CatalogueSource && this is LegacyConfigurableSource && hasDirectRelatedMangaSupport() ->
+            if (unmetered) {
+                LegacyMangaUnmeteredRelatedConfigurableCatalogueSourceAdapter(this)
+            } else {
+                LegacyMangaRelatedConfigurableCatalogueSourceAdapter(this)
+            }
+        this is CatalogueSource && hasDirectRelatedMangaSupport() ->
+            if (unmetered) {
+                LegacyMangaUnmeteredRelatedCatalogueSourceAdapter(this)
+            } else {
+                LegacyMangaRelatedCatalogueSourceAdapter(this)
+            }
+        this is HttpSource && this is LegacyConfigurableSource ->
+            if (unmetered) {
+                LegacyMangaUnmeteredWebViewConfigurableCatalogueSourceAdapter(this)
+            } else {
+                LegacyMangaWebViewConfigurableCatalogueSourceAdapter(this)
+            }
+        this is HttpSource ->
+            if (unmetered) {
+                LegacyMangaUnmeteredWebViewCatalogueSourceAdapter(this)
+            } else {
+                LegacyMangaWebViewCatalogueSourceAdapter(this)
+            }
+        this is CatalogueSource && this is LegacyConfigurableSource ->
+            if (unmetered) {
+                LegacyMangaUnmeteredConfigurableCatalogueSourceAdapter(this)
+            } else {
+                LegacyMangaConfigurableCatalogueSourceAdapter(this)
+            }
+        this is CatalogueSource ->
+            if (unmetered) {
+                LegacyMangaUnmeteredCatalogueSourceAdapter(this)
+            } else {
+                LegacyMangaCatalogueSourceAdapter(this)
+            }
+        this is LegacyConfigurableSource ->
+            if (unmetered) {
+                LegacyMangaUnmeteredConfigurableSourceAdapter(this)
+            } else {
+                LegacyMangaConfigurableSourceAdapter(this)
+            }
+        unmetered -> LegacyMangaUnmeteredSourceAdapter(this)
+        else -> LegacyMangaSourceAdapter(this)
+    }
 }
 
 private fun CatalogueSource.hasDirectRelatedMangaSupport(): Boolean {

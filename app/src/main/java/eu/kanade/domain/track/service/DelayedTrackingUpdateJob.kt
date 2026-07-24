@@ -8,12 +8,13 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkerParameters
-import eu.kanade.domain.track.interactor.TrackChapter
 import eu.kanade.domain.track.store.DelayedTrackingStore
 import eu.kanade.tachiyomi.util.system.workManager
 import logcat.LogPriority
+import mihon.entry.interactions.EntryTrackingFeature
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.track.interactor.GetTracks
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -28,7 +29,8 @@ class DelayedTrackingUpdateJob(private val context: Context, workerParams: Worke
         }
 
         val getTracks = Injekt.get<GetTracks>()
-        val trackChapter = Injekt.get<TrackChapter>()
+        val getEntry = Injekt.get<GetEntry>()
+        val trackingFeature = Injekt.get<EntryTrackingFeature>()
 
         val delayedTrackingStore = Injekt.get<DelayedTrackingStore>()
 
@@ -45,7 +47,8 @@ class DelayedTrackingUpdateJob(private val context: Context, workerParams: Worke
                     logcat(LogPriority.DEBUG) {
                         "Updating delayed track item: ${track.entryId}, progress: ${track.progress}"
                     }
-                    trackChapter.await(context, track.entryId, track.progress, setupJobOnFailure = false)
+                    val entry = getEntry.await(track.entryId) ?: return@forEach
+                    trackingFeature.synchronizeProgress(entry, track.progress, scheduleRetry = false)
                 }
         }
 

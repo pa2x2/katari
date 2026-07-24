@@ -1,0 +1,2 @@
+id=entry.related-entries
+module=mihon.entry.interactions.EntryRelatedEntriesFeatureRuntimeModule

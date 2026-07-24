@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.data.track
 
+import eu.kanade.tachiyomi.source.adapter.legacySourceClassName
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
-import eu.kanade.tachiyomi.source.toLegacySourceForCompatibility
 import tachiyomi.domain.source.model.SourceDisplayInfo
 
 data class EntryTrackingSource(
@@ -16,7 +16,7 @@ data class EntryTrackingSource(
                 sourceId = source.id,
                 name = displayInfo.name,
                 lang = displayInfo.lang,
-                legacyClassName = source.toLegacySourceForCompatibility()?.let { it::class.qualifiedName },
+                legacyClassName = source.legacySourceClassName(),
             )
     }
 }

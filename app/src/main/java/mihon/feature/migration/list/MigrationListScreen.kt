@@ -17,12 +17,18 @@ import eu.kanade.tachiyomi.ui.browse.migration.search.MigrateSearchScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.launch
+import mihon.entry.interactions.EntryMigrationOption
+import mihon.entry.interactions.EntryMigrationSubject
 import mihon.feature.migration.list.components.MigrationEntryDialog
 import mihon.feature.migration.list.components.MigrationExitDialog
 import mihon.feature.migration.list.components.MigrationProgressDialog
 import tachiyomi.i18n.MR
 
-class MigrationListScreen(private val entryIds: Collection<Long>, private val extraSearchQuery: String?) : Screen() {
+class MigrationListScreen(
+    private val subjects: Collection<EntryMigrationSubject>,
+    private val extraSearchQuery: String?,
+    private val selectedOptions: Set<EntryMigrationOption>,
+) : Screen() {
 
     private var matchOverride: Pair<Long, Long>? = null
 
@@ -33,7 +39,9 @@ class MigrationListScreen(private val entryIds: Collection<Long>, private val ex
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val screenModel = rememberScreenModel { MigrationListScreenModel(entryIds, extraSearchQuery) }
+        val screenModel = rememberScreenModel {
+            MigrationListScreenModel(subjects, extraSearchQuery, selectedOptions)
+        }
         val state by screenModel.state.collectAsState()
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
@@ -55,6 +63,11 @@ class MigrationListScreen(private val entryIds: Collection<Long>, private val ex
                 navigator.pop()
             }
         }
+        LaunchedEffect(screenModel) {
+            screenModel.migrationFailureEvent.collect {
+                context.toast(MR.strings.internal_error)
+            }
+        }
         MigrationListScreenContent(
             items = state.items,
             migrationComplete = state.migrationComplete,
@@ -63,7 +76,7 @@ class MigrationListScreen(private val entryIds: Collection<Long>, private val ex
                 navigator.push(EntryScreen(it.id, fromSource = true))
             },
             onSearchManually = { migrationItem ->
-                navigator push MigrateSearchScreen(migrationItem.entry.id)
+                navigator push MigrateSearchScreen(migrationItem.subject)
             },
             onSkip = { screenModel.removeEntry(it) },
             onMigrate = { screenModel.migrateNow(entryId = it, replace = true) },

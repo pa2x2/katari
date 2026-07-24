@@ -1,6 +1,5 @@
 package eu.kanade.presentation.more.settings.screen
 
-import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,6 +22,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,22 +42,18 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import dev.icerock.moko.resources.StringResource
 import eu.kanade.domain.track.model.AutoTrackState
 import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.presentation.more.settings.Preference
-import eu.kanade.tachiyomi.data.track.EnhancedTracker
-import eu.kanade.tachiyomi.data.track.Tracker
-import eu.kanade.tachiyomi.data.track.TrackerManager
-import eu.kanade.tachiyomi.data.track.anilist.AnilistApi
-import eu.kanade.tachiyomi.data.track.bangumi.BangumiApi
-import eu.kanade.tachiyomi.data.track.myanimelist.MyAnimeListApi
-import eu.kanade.tachiyomi.data.track.shikimori.ShikimoriApi
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toast
+import mihon.entry.interactions.EntryTrackingAccount
+import mihon.entry.interactions.EntryTrackingAccountOperationResult
+import mihon.entry.interactions.EntryTrackingCredentialIdentity
+import mihon.entry.interactions.EntryTrackingFeature
+import mihon.entry.interactions.EntryTrackingLoginMethod
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withUIContext
-import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
@@ -85,41 +81,67 @@ object SettingsTrackingScreen : SearchableSettings {
     override fun getPreferences(): List<Preference> {
         val context = LocalContext.current
         val trackPreferences = remember { Injekt.get<TrackPreferences>() }
-        val trackerManager = remember { Injekt.get<TrackerManager>() }
-        val sourceManager = remember { Injekt.get<SourceManager>() }
+        val trackingFeature = remember { Injekt.get<EntryTrackingFeature>() }
+        val scope = rememberCoroutineScope()
+        val accountSnapshot by trackingFeature.observeAccounts().collectAsState(trackingFeature.currentAccounts())
 
         var dialog by remember { mutableStateOf<Any?>(null) }
         dialog?.run {
             when (this) {
                 is LoginDialog -> {
                     TrackingLoginDialog(
-                        tracker = tracker,
-                        uNameStringRes = uNameStringRes,
+                        account = account,
+                        storedUsername = storedUsername,
+                        storedPassword = storedPassword,
+                        trackingFeature = trackingFeature,
                         onDismissRequest = { dialog = null },
                     )
                 }
                 is LogoutDialog -> {
                     TrackingLogoutDialog(
-                        tracker = tracker,
+                        account = account,
+                        trackingFeature = trackingFeature,
                         onDismissRequest = { dialog = null },
                     )
                 }
             }
         }
 
-        val enhancedTrackers = trackerManager.trackers
-            .filter { it is EnhancedTracker }
-            .partition { service ->
-                val acceptedSources = (service as EnhancedTracker).getAcceptedSources()
-                sourceManager.getAll().any { it::class.qualifiedName in acceptedSources }
-            }
+        val accounts = accountSnapshot.accounts
+        val regularAccounts = accounts.filter { it.loginMethod !is EntryTrackingLoginMethod.Passive }
+        val enhancedAccounts = accounts.filter { it.loginMethod is EntryTrackingLoginMethod.Passive }
+        val availableEnhancedAccounts = enhancedAccounts.filter(EntryTrackingAccount::isAvailable)
         var enhancedTrackerInfo = stringResource(MR.strings.enhanced_tracking_info)
-        if (enhancedTrackers.second.isNotEmpty()) {
+        val unavailableEnhancedAccounts = enhancedAccounts.filterNot(EntryTrackingAccount::isAvailable)
+        if (unavailableEnhancedAccounts.isNotEmpty()) {
             val missingSourcesInfo = stringResource(
                 MR.strings.enhanced_services_not_installed,
-                enhancedTrackers.second.joinToString { it.name },
+                unavailableEnhancedAccounts.joinToString { it.service.name },
             )
             enhancedTrackerInfo += "\n\n$missingSourcesInfo"
+        }
+
+        fun beginLogin(account: EntryTrackingAccount) {
+            when (account.loginMethod) {
+                is EntryTrackingLoginMethod.Credentials -> {
+                    val credentials = trackingFeature.storedCredentials(account.service.id) ?: return
+                    dialog = LoginDialog(account, credentials.username, credentials.password)
+                }
+                EntryTrackingLoginMethod.External,
+                EntryTrackingLoginMethod.Passive,
+                -> scope.launchIO {
+                    when (val result = trackingFeature.beginLogin(account.service.id)) {
+                        is EntryTrackingAccountOperationResult.ExternalAuthorization -> {
+                            withUIContext { context.openInBrowser(result.uri, forceDefaultBrowser = true) }
+                        }
+                        EntryTrackingAccountOperationResult.Completed -> Unit
+                        is EntryTrackingAccountOperationResult.Failed -> {
+                            withUIContext { context.toast(result.cause.message.toString()) }
+                        }
+                        is EntryTrackingAccountOperationResult.Unavailable -> Unit
+                    }
+                }
+            }
         }
 
         return listOf(
@@ -135,70 +157,27 @@ object SettingsTrackingScreen : SearchableSettings {
             ),
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.services),
-                preferenceItems = listOf(
-                    Preference.PreferenceItem.TrackerPreference(
-                        tracker = trackerManager.mangaBaka,
+                preferenceItems = regularAccounts.map { account ->
+                    Preference.PreferenceItem.TrackingAccountPreference(
+                        account = account,
                         isProfileSpecific = true,
-                        login = {
-                            context.openInBrowser(trackerManager.mangaBaka.authUrl(), forceDefaultBrowser = true)
-                        },
-                        logout = { dialog = LogoutDialog(trackerManager.mangaBaka) },
-                    ),
-                    Preference.PreferenceItem.TrackerPreference(
-                        tracker = trackerManager.myAnimeList,
-                        isProfileSpecific = true,
-                        login = { context.openInBrowser(MyAnimeListApi.authUrl(), forceDefaultBrowser = true) },
-                        logout = { dialog = LogoutDialog(trackerManager.myAnimeList) },
-                    ),
-                    Preference.PreferenceItem.TrackerPreference(
-                        tracker = trackerManager.aniList,
-                        isProfileSpecific = true,
-                        login = { context.openInBrowser(AnilistApi.authUrl(), forceDefaultBrowser = true) },
-                        logout = { dialog = LogoutDialog(trackerManager.aniList) },
-                    ),
-                    Preference.PreferenceItem.TrackerPreference(
-                        tracker = trackerManager.kitsu,
-                        isProfileSpecific = true,
-                        login = { dialog = LoginDialog(trackerManager.kitsu, MR.strings.email) },
-                        logout = { dialog = LogoutDialog(trackerManager.kitsu) },
-                    ),
-                    Preference.PreferenceItem.TrackerPreference(
-                        tracker = trackerManager.mangaUpdates,
-                        isProfileSpecific = true,
-                        login = { dialog = LoginDialog(trackerManager.mangaUpdates, MR.strings.username) },
-                        logout = { dialog = LogoutDialog(trackerManager.mangaUpdates) },
-                    ),
-                    Preference.PreferenceItem.TrackerPreference(
-                        tracker = trackerManager.shikimori,
-                        isProfileSpecific = true,
-                        login = { context.openInBrowser(ShikimoriApi.authUrl(), forceDefaultBrowser = true) },
-                        logout = { dialog = LogoutDialog(trackerManager.shikimori) },
-                    ),
-                    Preference.PreferenceItem.TrackerPreference(
-                        tracker = trackerManager.bangumi,
-                        isProfileSpecific = true,
-                        login = { context.openInBrowser(BangumiApi.authUrl(), forceDefaultBrowser = true) },
-                        logout = { dialog = LogoutDialog(trackerManager.bangumi) },
-                    ),
-                    Preference.PreferenceItem.TrackerPreference(
-                        tracker = trackerManager.hikka,
-                        isProfileSpecific = true,
-                        login = { context.openInBrowser(trackerManager.hikka.authUrl(), forceDefaultBrowser = true) },
-                        logout = { dialog = LogoutDialog(trackerManager.hikka) },
-                    ),
-                    Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.tracking_info)),
-                ),
+                        login = { beginLogin(account) },
+                        logout = { dialog = LogoutDialog(account) },
+                    )
+                } + Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.tracking_info)),
             ),
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.enhanced_services),
                 preferenceItems = (
-                    enhancedTrackers.first
-                        .map { service ->
-                            Preference.PreferenceItem.TrackerPreference(
-                                tracker = service,
+                    availableEnhancedAccounts
+                        .map { account ->
+                            Preference.PreferenceItem.TrackingAccountPreference(
+                                account = account,
                                 isProfileSpecific = true,
-                                login = { (service as EnhancedTracker).loginNoop() },
-                                logout = service::logout,
+                                login = { beginLogin(account) },
+                                logout = {
+                                    scope.launchIO { trackingFeature.logout(account.service.id) }
+                                },
                             )
                         } + listOf(Preference.PreferenceItem.InfoPreference(enhancedTrackerInfo))
                     ),
@@ -208,15 +187,17 @@ object SettingsTrackingScreen : SearchableSettings {
 
     @Composable
     private fun TrackingLoginDialog(
-        tracker: Tracker,
-        uNameStringRes: StringResource,
+        account: EntryTrackingAccount,
+        storedUsername: String,
+        storedPassword: String,
+        trackingFeature: EntryTrackingFeature,
         onDismissRequest: () -> Unit,
     ) {
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
 
-        var username by remember { mutableStateOf(TextFieldValue(tracker.getUsername())) }
-        var password by remember { mutableStateOf(TextFieldValue(tracker.getPassword())) }
+        var username by remember { mutableStateOf(TextFieldValue(storedUsername)) }
+        var password by remember { mutableStateOf(TextFieldValue(storedPassword)) }
         var processing by remember { mutableStateOf(false) }
         var inputError by remember { mutableStateOf(false) }
 
@@ -225,7 +206,7 @@ object SettingsTrackingScreen : SearchableSettings {
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = stringResource(MR.strings.login_title, tracker.name),
+                        text = stringResource(MR.strings.login_title, account.service.name),
                         modifier = Modifier.weight(1f),
                     )
                     IconButton(onClick = onDismissRequest) {
@@ -244,7 +225,15 @@ object SettingsTrackingScreen : SearchableSettings {
                             .semantics { contentType = ContentType.Username + ContentType.EmailAddress },
                         value = username,
                         onValueChange = { username = it },
-                        label = { Text(text = stringResource(uNameStringRes)) },
+                        label = {
+                            val label = when (
+                                (account.loginMethod as EntryTrackingLoginMethod.Credentials).identity
+                            ) {
+                                EntryTrackingCredentialIdentity.USERNAME -> MR.strings.username
+                                EntryTrackingCredentialIdentity.EMAIL -> MR.strings.email
+                            }
+                            Text(text = stringResource(label))
+                        },
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                         singleLine = true,
                         isError = inputError && !processing,
@@ -291,14 +280,24 @@ object SettingsTrackingScreen : SearchableSettings {
                     onClick = {
                         scope.launchIO {
                             processing = true
-                            val result = checkLogin(
-                                context = context,
-                                tracker = tracker,
+                            val result = trackingFeature.loginWithCredentials(
+                                serviceId = account.service.id,
                                 username = username.text,
                                 password = password.text,
                             )
-                            inputError = !result
-                            if (result) onDismissRequest()
+                            inputError = result !is EntryTrackingAccountOperationResult.Completed
+                            when (result) {
+                                EntryTrackingAccountOperationResult.Completed -> withUIContext {
+                                    context.toast(MR.strings.login_success)
+                                    onDismissRequest()
+                                }
+                                is EntryTrackingAccountOperationResult.Failed -> withUIContext {
+                                    context.toast(result.cause.message.toString())
+                                }
+                                is EntryTrackingAccountOperationResult.ExternalAuthorization,
+                                is EntryTrackingAccountOperationResult.Unavailable,
+                                -> Unit
+                            }
                             processing = false
                         }
                     },
@@ -310,34 +309,19 @@ object SettingsTrackingScreen : SearchableSettings {
         )
     }
 
-    private suspend fun checkLogin(
-        context: Context,
-        tracker: Tracker,
-        username: String,
-        password: String,
-    ): Boolean {
-        return try {
-            tracker.login(username, password)
-            withUIContext { context.toast(MR.strings.login_success) }
-            true
-        } catch (e: Throwable) {
-            tracker.logout()
-            withUIContext { context.toast(e.message.toString()) }
-            false
-        }
-    }
-
     @Composable
     private fun TrackingLogoutDialog(
-        tracker: Tracker,
+        account: EntryTrackingAccount,
+        trackingFeature: EntryTrackingFeature,
         onDismissRequest: () -> Unit,
     ) {
         val context = LocalContext.current
+        val scope = rememberCoroutineScope()
         AlertDialog(
             onDismissRequest = onDismissRequest,
             title = {
                 Text(
-                    text = stringResource(MR.strings.logout_title, tracker.name),
+                    text = stringResource(MR.strings.logout_title, account.service.name),
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -353,9 +337,20 @@ object SettingsTrackingScreen : SearchableSettings {
                     Button(
                         modifier = Modifier.weight(1f),
                         onClick = {
-                            tracker.logout()
-                            onDismissRequest()
-                            context.toast(MR.strings.logout_success)
+                            scope.launchIO {
+                                when (val result = trackingFeature.logout(account.service.id)) {
+                                    EntryTrackingAccountOperationResult.Completed -> withUIContext {
+                                        onDismissRequest()
+                                        context.toast(MR.strings.logout_success)
+                                    }
+                                    is EntryTrackingAccountOperationResult.Failed -> withUIContext {
+                                        context.toast(result.cause.message.toString())
+                                    }
+                                    is EntryTrackingAccountOperationResult.ExternalAuthorization,
+                                    is EntryTrackingAccountOperationResult.Unavailable,
+                                    -> Unit
+                                }
+                            }
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.error,
@@ -371,10 +366,11 @@ object SettingsTrackingScreen : SearchableSettings {
 }
 
 private data class LoginDialog(
-    val tracker: Tracker,
-    val uNameStringRes: StringResource,
+    val account: EntryTrackingAccount,
+    val storedUsername: String,
+    val storedPassword: String,
 )
 
 private data class LogoutDialog(
-    val tracker: Tracker,
+    val account: EntryTrackingAccount,
 )

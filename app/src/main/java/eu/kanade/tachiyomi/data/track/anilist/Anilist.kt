@@ -7,6 +7,7 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
 import eu.kanade.tachiyomi.data.track.DeletableTracker
+import eu.kanade.tachiyomi.data.track.ExternalLoginTracker
 import eu.kanade.tachiyomi.data.track.anilist.dto.ALOAuth
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import kotlinx.serialization.json.Json
@@ -14,7 +15,9 @@ import tachiyomi.i18n.MR
 import uy.kohesive.injekt.injectLazy
 import tachiyomi.domain.track.model.EntryTrack as DomainTrack
 
-class Anilist(id: Long) : BaseTracker(id, "AniList"), DeletableTracker {
+class Anilist(id: Long) : BaseTracker(id, "AniList"), DeletableTracker, ExternalLoginTracker {
+
+    override val accountOrder = 2
 
     companion object {
         const val READING = 1L
@@ -43,6 +46,8 @@ class Anilist(id: Long) : BaseTracker(id, "AniList"), DeletableTracker {
 
     private val globalTrackPreferences: GlobalTrackPreferences by injectLazy()
     private val scorePreference = globalTrackPreferences.anilistScoreType
+
+    override fun authorizationUri() = AnilistApi.authUrl()
 
     init {
         // If the preference is an int from APIv1, logout user to force using APIv2

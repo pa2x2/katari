@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -30,7 +31,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
-import mihon.entry.interactions.EntryOpenInteraction
+import mihon.entry.interactions.EntryOpenFeature
 import mihon.feature.profiles.core.ProfileManager
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
@@ -50,6 +51,7 @@ class AnimePlayerLauncherScreen : Screen() {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = rememberScreenModel { Model() }
+        val entryOpenFeature = remember { Injekt.get<EntryOpenFeature>() }
         val state by screenModel.state.collectAsState()
 
         Scaffold(
@@ -85,12 +87,13 @@ class AnimePlayerLauncherScreen : Screen() {
                                 title = item.animeTitle,
                                 subtitle = item.episodeName,
                                 onPreferenceClick = {
-                                    Injekt.get<EntryOpenInteraction>().open(
+                                    entryOpenFeature.open(
                                         context = context,
                                         entry = item.entry,
                                         chapter = item.chapter,
                                     )
-                                },
+                                    Unit
+                                }.takeIf { entryOpenFeature.isApplicable(item.entry.type) },
                             )
                         }
                     }

@@ -139,14 +139,5 @@ private class FakeOverrideRepository : ViewerSettingOverrideRepository {
         overrides.value = overrides.value - (entryId to settingId)
     }
 
-    override suspend fun replaceForEntry(entryId: Long, overrides: List<ViewerSettingOverride>) {
-        this.overrides.value = this.overrides.value.filterKeys { it.first != entryId } +
-            overrides.associateBy { it.entryId to it.settingId }
-    }
-
-    override suspend fun copy(sourceEntryId: Long, targetEntryId: Long) {
-        getByEntryId(sourceEntryId).forEach { upsert(it.copy(entryId = targetEntryId)) }
-    }
-
     override suspend fun deleteByProviderForProfile(providerId: String, profileId: Long) = Unit
 }

@@ -14,6 +14,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.core.common.utils.mutate
+import mihon.entry.interactions.EntryMigrationAvailability
+import mihon.entry.interactions.EntryMigrationFeature
+import mihon.entry.interactions.EntryMigrationSelectionResult
+import mihon.entry.interactions.EntryMigrationSubject
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryRepository
@@ -25,6 +29,7 @@ class MigrateEntriesScreenModel(
     private val sourceId: Long,
     private val sourceManager: SourceManager = Injekt.get(),
     private val entryRepository: EntryRepository = Injekt.get(),
+    private val migration: EntryMigrationFeature = Injekt.get(),
 ) : StateScreenModel<MigrateEntriesScreenModel.State>(State()) {
 
     private val _events: Channel<MigrationEntriesEvent> = Channel()
@@ -46,6 +51,7 @@ class MigrateEntriesScreenModel(
                 }
                 .map { entries ->
                     entries
+                        .filter { migration.availability(it) is EntryMigrationAvailability.Available }
                         .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.title })
                 }
                 .collectLatest { list ->
@@ -65,6 +71,12 @@ class MigrateEntriesScreenModel(
 
     fun clearSelection() {
         mutableState.update { it.copy(selection = emptySet()) }
+    }
+
+    fun migrationSelection(): List<EntryMigrationSubject> {
+        val state = state.value
+        val entries = state.entries.filter { it.id in state.selection }
+        return (migration.prepareSelection(entries) as? EntryMigrationSelectionResult.Ready)?.subjects.orEmpty()
     }
 
     @Immutable

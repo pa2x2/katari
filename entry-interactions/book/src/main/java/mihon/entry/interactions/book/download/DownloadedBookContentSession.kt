@@ -118,7 +118,7 @@ internal class DownloadedBookContentSession(
             try {
                 lease.close()
             } catch (error: Throwable) {
-                if (failure == null) failure = error else failure?.addSuppressed(error)
+                if (failure == null) failure = error else failure.addSuppressed(error)
             }
         }
         failure?.let { throw it }

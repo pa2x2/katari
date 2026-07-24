@@ -21,19 +21,27 @@ class TrackChapter(
     private val delayedTrackingStore: DelayedTrackingStore,
 ) {
 
-    suspend fun await(context: Context, entryId: Long, chapterNumber: Double, setupJobOnFailure: Boolean = true) {
-        withNonCancellableContext {
+    suspend fun await(
+        context: Context,
+        entryId: Long,
+        chapterNumber: Double,
+        serviceIds: Set<Long>,
+        setupJobOnFailure: Boolean = true,
+    ): List<TrackChapterFailure> {
+        return withNonCancellableContext {
             val tracks = getTracks.await(entryId)
-            if (tracks.isEmpty()) return@withNonCancellableContext
+            if (tracks.isEmpty()) return@withNonCancellableContext emptyList()
 
             tracks.mapNotNull { track ->
                 val service = trackerManager.get(track.trackerId)
-                if (service == null || !service.isLoggedIn || chapterNumber <= track.progress) {
+                if (service == null || service.id !in serviceIds || !service.isLoggedIn ||
+                    chapterNumber <= track.progress
+                ) {
                     return@mapNotNull null
                 }
 
                 async {
-                    runCatching {
+                    service to runCatching {
                         try {
                             val updatedTrack = service.refresh(track.toDbTrack())
                                 .toDomainTrack(idRequired = true)!!
@@ -52,8 +60,18 @@ class TrackChapter(
                 }
             }
                 .awaitAll()
-                .mapNotNull { it.exceptionOrNull() }
-                .forEach { logcat(LogPriority.WARN, it) }
+                .mapNotNull { (service, result) ->
+                    result.exceptionOrNull()?.let { error ->
+                        logcat(LogPriority.WARN, error)
+                        TrackChapterFailure(service.id, service.name, error)
+                    }
+                }
         }
     }
 }
+
+data class TrackChapterFailure(
+    val serviceId: Long,
+    val serviceName: String,
+    val cause: Throwable,
+)

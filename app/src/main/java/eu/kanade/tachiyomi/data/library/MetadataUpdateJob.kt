@@ -21,10 +21,14 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import logcat.LogPriority
+import mihon.entry.interactions.EntryMergeMetadataRefreshFeature
+import mihon.entry.interactions.EntrySourceRefreshFailure
+import mihon.entry.interactions.EntrySourceRefreshFeature
+import mihon.entry.interactions.EntrySourceRefreshRequest
+import mihon.entry.interactions.EntrySourceRefreshResult
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.interactor.GetLibraryEntries
-import tachiyomi.domain.entry.interactor.SyncEntryWithSource
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.model.LibraryItem
@@ -41,7 +45,8 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
 
     private val getLibraryEntries: GetLibraryEntries = Injekt.get()
     private val entryRepository: EntryRepository = Injekt.get()
-    private val syncEntryWithSource: SyncEntryWithSource = Injekt.get()
+    private val sourceRefreshFeature: EntrySourceRefreshFeature = Injekt.get()
+    private val mergeMetadataRefreshFeature: EntryMergeMetadataRefreshFeature = Injekt.get()
 
     private val notifier = LibraryUpdateNotifier(context)
 
@@ -94,13 +99,7 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
 
     private suspend fun List<LibraryItem>.expandToMemberEntries(): List<Entry> {
         return flatMap { libraryItem ->
-            libraryItem.memberEntryIds.mapNotNull { memberKey ->
-                if (memberKey.id == libraryItem.entry.id) {
-                    libraryItem.entry
-                } else {
-                    entryRepository.getEntryById(memberKey.id)
-                }
-            }
+            mergeMetadataRefreshFeature.resolveOwners(libraryItem.entry).orderedOwners
         }
             .distinctBy(Entry::id)
     }
@@ -129,11 +128,27 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
                                         return@withUpdateNotification
                                     }
                                     try {
-                                        syncEntryWithSource(
-                                            freshEntry,
-                                            fetchDetails = true,
-                                            fetchChapters = false,
-                                        )
+                                        when (
+                                            val result = sourceRefreshFeature.refresh(
+                                                EntrySourceRefreshRequest(
+                                                    entry = freshEntry,
+                                                    fetchDetails = true,
+                                                    fetchChildren = false,
+                                                    manual = false,
+                                                ),
+                                            )
+                                        ) {
+                                            is EntrySourceRefreshResult.Refreshed -> Unit
+                                            is EntrySourceRefreshResult.SourceUnavailable -> logcat(
+                                                LogPriority.ERROR,
+                                            ) {
+                                                "Metadata refresh source ${result.sourceId} is unavailable"
+                                            }
+                                            is EntrySourceRefreshResult.Failed -> when (val reason = result.reason) {
+                                                EntrySourceRefreshFailure.NoChildren -> Unit
+                                                is EntrySourceRefreshFailure.Operation -> throw reason.error
+                                            }
+                                        }
                                     } catch (e: Throwable) {
                                         // Ignore errors and continue
                                         logcat(LogPriority.ERROR, e)

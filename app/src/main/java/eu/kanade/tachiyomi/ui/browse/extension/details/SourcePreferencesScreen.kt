@@ -35,8 +35,12 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.preference.SharedPreferencesDataStore
-import eu.kanade.tachiyomi.source.entry.ConfigurableSource
 import eu.kanade.tachiyomi.widget.TachiyomiTextInputEditText.Companion.setIncognito
+import logcat.LogPriority
+import mihon.entry.interactions.EntrySourceSettingsFeature
+import mihon.entry.interactions.EntrySourceSettingsPopulateResult
+import mihon.entry.interactions.EntrySourceSettingsResolution
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.screens.LoadingScreen
@@ -131,14 +135,20 @@ class SourcePreferencesFragment : PreferenceFragmentCompat() {
 
     private fun populateScreen(): PreferenceScreen {
         val sourceId = requireArguments().getLong(SOURCE_ID)
-        val source = Injekt.get<SourceManager>().getOrStub(sourceId)
         val sourceScreen = preferenceManager.createPreferenceScreen(requireContext())
+        val settings = Injekt.get<EntrySourceSettingsFeature>().resolve(sourceId)
 
-        if (source is ConfigurableSource) {
-            val dataStore = SharedPreferencesDataStore(source.getSourcePreferences())
+        if (settings is EntrySourceSettingsResolution.Available) {
+            val dataStore = SharedPreferencesDataStore(settings.preferences)
             preferenceManager.preferenceDataStore = dataStore
 
-            source.setupPreferenceScreen(sourceScreen)
+            when (val result = settings.populate(sourceScreen)) {
+                EntrySourceSettingsPopulateResult.Populated -> Unit
+                is EntrySourceSettingsPopulateResult.Failed -> {
+                    logcat(LogPriority.ERROR, result.cause) { "Failed to populate source preferences" }
+                    return sourceScreen
+                }
+            }
             sourceScreen.forEach { pref ->
                 pref.isIconSpaceReserved = false
                 pref.isSingleLineTitle = false

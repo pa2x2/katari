@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
+import mihon.entry.interactions.EntryDownloadMessage
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -25,6 +26,7 @@ internal data class MangaDownload(
     val chapter: EntryChapter,
 ) {
     var pages: List<Page>? = null
+    var failure: EntryDownloadMessage? = null
 
     val totalProgress: Int
         get() = pages?.sumOf(Page::progress) ?: 0

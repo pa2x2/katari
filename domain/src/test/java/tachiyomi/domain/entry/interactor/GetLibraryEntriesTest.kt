@@ -1,5 +1,6 @@
 package tachiyomi.domain.entry.interactor
 
+import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import io.kotest.matchers.shouldBe
@@ -15,13 +16,16 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
-import tachiyomi.domain.entry.repository.MergedEntryRepository
-import tachiyomi.domain.entry.service.EntryLibraryProgressCalculator
-import tachiyomi.domain.entry.service.EntryLibraryProgressResolver
-import tachiyomi.domain.entry.service.EntryLibraryState
-import tachiyomi.domain.library.model.LibraryItem
-import tachiyomi.domain.library.model.ProgressState
+import tachiyomi.domain.entry.service.EntryLibraryContinueTarget
+import tachiyomi.domain.entry.service.EntryLibraryGroupResolution
+import tachiyomi.domain.entry.service.EntryLibraryGroupingResolution
+import tachiyomi.domain.entry.service.EntryLibraryGroupingResolutionPort
+import tachiyomi.domain.entry.service.EntryLibraryProgressResolution
+import tachiyomi.domain.entry.service.EntryLibraryProgressResolutionPort
+import tachiyomi.domain.entry.service.EntryLibraryProgressSummary
+import tachiyomi.domain.source.model.EntrySourceDescription
 import tachiyomi.domain.source.model.SourceDisplayInfo
+import tachiyomi.domain.source.service.EntrySourceDescriptionResolutionPort
 import tachiyomi.domain.source.service.HiddenSourceIds
 import tachiyomi.domain.source.service.SourceManager
 
@@ -30,24 +34,29 @@ class GetLibraryEntriesTest {
     private val entryRepository = mockk<EntryRepository>()
     private val entryChapterRepository = mockk<EntryChapterRepository>()
     private val categoryRepository = mockk<CategoryRepository>()
-    private val mergedEntryRepository = mockk<MergedEntryRepository>()
+    private val libraryGrouping = mockk<EntryLibraryGroupingResolutionPort>()
     private val hiddenSourceIds = mockk<HiddenSourceIds>()
     private val sourceManager = mockk<SourceManager>()
-    private val entryLibraryProgressResolver = EntryLibraryProgressResolver(
-        listOf(
-            testCalculator(EntryType.MANGA),
-            testCalculator(EntryType.ANIME),
-        ),
-    )
+    private val sourceDescription = EntrySourceDescriptionResolutionPort {
+        EntrySourceDescription(
+            language = "",
+            supportedEntryTypes = null,
+            itemOrientation = EntryItemOrientation.VERTICAL,
+            catalogue = null,
+        )
+    }
+    private val unavailableSummaryEntryIds = mutableSetOf<Long>()
+    private val entryLibraryProgressResolver = testProgressPort()
 
     private val interactor = GetLibraryEntries(
         entryRepository = entryRepository,
         entryChapterRepository = entryChapterRepository,
         entryLibraryProgressResolver = entryLibraryProgressResolver,
         categoryRepository = categoryRepository,
-        mergedEntryRepository = mergedEntryRepository,
+        libraryGrouping = libraryGrouping,
         hiddenSourceIds = hiddenSourceIds,
         sourceManager = sourceManager,
+        sourceDescription = sourceDescription,
     )
 
     @Test
@@ -57,7 +66,7 @@ class GetLibraryEntriesTest {
 
         coEvery { entryRepository.getLibraryEntries() } returns listOf(manga, anime)
         coEvery { entryRepository.getLibraryLastRead() } returns emptyMap()
-        coEvery { mergedEntryRepository.getAll() } returns emptyList()
+        stubStandaloneGrouping(listOf(manga, anime))
         every { hiddenSourceIds.get() } returns setOf(10L, 20L)
         every { entryChapterRepository.getChaptersByEntryIds(listOf(1L, 2L)) } returns flowOf(emptyList())
         coEvery { categoryRepository.getCategoryIdsByEntryIds(listOf(1L, 2L)) } returns mapOf(
@@ -79,7 +88,7 @@ class GetLibraryEntriesTest {
 
         coEvery { entryRepository.getLibraryEntries() } returns listOf(manga, anime)
         coEvery { entryRepository.getLibraryLastRead() } returns mapOf(1L to 100L, 2L to 200L)
-        coEvery { mergedEntryRepository.getAll() } returns emptyList()
+        stubStandaloneGrouping(listOf(manga, anime))
         every { hiddenSourceIds.get() } returns emptySet()
         every { entryChapterRepository.getChaptersByEntryIds(listOf(1L, 2L)) } returns flowOf(emptyList())
         coEvery { categoryRepository.getCategoryIdsByEntryIds(listOf(1L, 2L)) } returns emptyMap()
@@ -96,6 +105,57 @@ class GetLibraryEntriesTest {
         items.map { it.lastRead } shouldBe listOf(100L, 200L)
     }
 
+    @Test
+    fun `entry without progress summary remains structurally visible`() = runTest {
+        val book = entry(id = 3L, source = 30L, type = EntryType.BOOK)
+        unavailableSummaryEntryIds += book.id
+        coEvery { entryRepository.getLibraryEntries() } returns listOf(book)
+        coEvery { entryRepository.getLibraryLastRead() } returns emptyMap()
+        stubStandaloneGrouping(listOf(book))
+        every { hiddenSourceIds.get() } returns emptySet()
+        every { entryChapterRepository.getChaptersByEntryIds(listOf(book.id)) } returns flowOf(emptyList())
+        coEvery { categoryRepository.getCategoryIdsByEntryIds(listOf(book.id)) } returns emptyMap()
+        every { sourceManager.getOrStub(book.source) } returns source(book.source)
+        every { sourceManager.getDisplayInfo(book.source) } returns sourceDisplayInfo(book.source)
+
+        val item = interactor.await().single()
+
+        item.entry shouldBe book
+        item.progressSummary shouldBe EntryLibraryProgressResolution.Inapplicable(EntryType.BOOK)
+        item.totalCount shouldBe null
+    }
+
+    @Test
+    fun `library grouping collapses supplied members in feature order`() = runTest {
+        val target = entry(id = 1L, source = 10L, type = EntryType.MANGA)
+        val member = entry(id = 2L, source = 20L, type = EntryType.MANGA)
+        val favorites = listOf(target, member)
+        coEvery { entryRepository.getLibraryEntries() } returns favorites
+        coEvery { entryRepository.getLibraryLastRead() } returns emptyMap()
+        coEvery { libraryGrouping.resolveLibraryGrouping(target.profileId, favorites) } returns
+            EntryLibraryGroupingResolution(
+                profileId = target.profileId,
+                groups = listOf(EntryLibraryGroupResolution(target, listOf(target, member))),
+            )
+        every { hiddenSourceIds.get() } returns emptySet()
+        every { entryChapterRepository.getChaptersByEntryIds(listOf(1L, 2L)) } returns flowOf(emptyList())
+        coEvery { categoryRepository.getCategoryIdsByEntryIds(listOf(1L, 2L)) } returns mapOf(
+            target.id to listOf(10L),
+            member.id to listOf(20L),
+        )
+        every { sourceManager.getOrStub(target.source) } returns source(target.source)
+        every { sourceManager.getOrStub(member.source) } returns source(member.source)
+        every { sourceManager.getDisplayInfo(target.source) } returns sourceDisplayInfo(target.source)
+        every { sourceManager.getDisplayInfo(member.source) } returns sourceDisplayInfo(member.source)
+
+        val item = interactor.await().single()
+
+        item.entry shouldBe target
+        item.isMerged shouldBe true
+        item.memberEntries shouldBe listOf(target, member)
+        item.categories shouldBe listOf(10L, 20L)
+    }
+
     private fun entry(id: Long, source: Long, type: EntryType): Entry {
         return Entry.create().copy(
             id = id,
@@ -104,6 +164,13 @@ class GetLibraryEntriesTest {
             initialized = true,
             title = "Entry $id",
             type = type,
+        )
+    }
+
+    private fun stubStandaloneGrouping(entries: List<Entry>) {
+        coEvery { libraryGrouping.resolveLibraryGrouping(any(), entries) } returns EntryLibraryGroupingResolution(
+            profileId = entries.firstOrNull()?.profileId ?: 0L,
+            groups = entries.map { entry -> EntryLibraryGroupResolution(entry, listOf(entry)) },
         )
     }
 
@@ -123,52 +190,40 @@ class GetLibraryEntriesTest {
         )
     }
 
-    private fun testCalculator(type: EntryType): EntryLibraryProgressCalculator {
-        return object : EntryLibraryProgressCalculator {
-            override val entryType = type
-
+    private fun testProgressPort(): EntryLibraryProgressResolutionPort {
+        return object : EntryLibraryProgressResolutionPort {
             override suspend fun calculate(
                 entry: Entry,
                 chapters: List<EntryChapter>,
                 lastRead: Long,
-            ): EntryLibraryState {
-                return EntryLibraryState(progress(type, chapters.size.toLong()), lastRead, continueEntryId = null)
+            ): EntryLibraryProgressResolution {
+                if (entry.id in unavailableSummaryEntryIds) {
+                    return EntryLibraryProgressResolution.Inapplicable(entry.type)
+                }
+                return EntryLibraryProgressResolution.Available(summary(chapters.size.toLong(), lastRead))
             }
 
-            override fun merge(members: List<LibraryItem>): EntryLibraryState {
-                return EntryLibraryState(
-                    progress(
-                        type,
-                        members.sumOf {
-                            it.totalCount
-                        },
-                    ),
-                    lastRead = 0L,
-                    continueEntryId = null,
+            override fun merge(
+                entryType: EntryType,
+                members: List<EntryLibraryProgressSummary>,
+            ): EntryLibraryProgressResolution {
+                return EntryLibraryProgressResolution.Available(
+                    summary(members.sumOf(EntryLibraryProgressSummary::totalCount), lastRead = 0L),
                 )
             }
         }
     }
 
-    private fun progress(type: EntryType, totalCount: Long): ProgressState {
-        return when (type) {
-            EntryType.MANGA -> ProgressState(
-                totalCount = totalCount,
-                consumedCount = 0L,
-                hasStarted = false,
-            )
-            EntryType.ANIME -> ProgressState(
-                totalCount = totalCount,
-                consumedCount = 0L,
-                hasStarted = false,
-                continueMode = ProgressState.ContinueMode.TARGET_AVAILABLE,
-            )
-            EntryType.BOOK -> ProgressState(
-                totalCount = totalCount,
-                consumedCount = 0L,
-                hasStarted = false,
-                continueMode = ProgressState.ContinueMode.TARGET_AVAILABLE,
-            )
-        }
+    private fun summary(totalCount: Long, lastRead: Long): EntryLibraryProgressSummary {
+        return EntryLibraryProgressSummary(
+            totalCount = totalCount,
+            consumedCount = 0L,
+            hasStarted = false,
+            bookmarkCount = null,
+            inProgressItemId = null,
+            inProgressFraction = null,
+            lastRead = lastRead,
+            continueTarget = EntryLibraryContinueTarget.Inapplicable,
+        )
     }
 }

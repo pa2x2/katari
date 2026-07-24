@@ -88,7 +88,11 @@ internal class AnimeDownloadStore(
                     runCatching { entryRepository.getEntryById(obj.animeId) }.getOrNull()
                 }
             }
-            if (entry?.type != EntryType.ANIME || entry.profileId != (obj.profileId ?: entry.profileId)) {
+            if (
+                entry?.type != EntryType.ANIME ||
+                entry.profileId != (obj.profileId ?: entry.profileId) ||
+                (obj.sourceId != null && entry.source != obj.sourceId)
+            ) {
                 return@mapNotNull null
             }
 
@@ -113,7 +117,8 @@ internal class AnimeDownloadStore(
         return downloads
     }
 
-    private fun getKey(download: AnimeDownload): String = download.episode.id.toString()
+    private fun getKey(download: AnimeDownload): String =
+        "${download.anime.profileId}:${download.anime.id}:${download.episode.id}"
 
     private fun serialize(download: AnimeDownload, order: Int): String {
         return json.encodeToString(
@@ -121,6 +126,7 @@ internal class AnimeDownloadStore(
                 profileId = download.anime.profileId,
                 animeId = download.anime.id,
                 episodeId = download.episode.id,
+                sourceId = download.anime.source,
                 dubKey = download.preferences.dubKey,
                 streamKey = download.preferences.streamKey,
                 subtitleKey = download.preferences.subtitleKey,
@@ -175,6 +181,7 @@ private data class AnimeDownloadObject(
     val profileId: Long? = null,
     val animeId: Long,
     val episodeId: Long,
+    val sourceId: Long? = null,
     val dubKey: String?,
     val streamKey: String?,
     val subtitleKey: String?,

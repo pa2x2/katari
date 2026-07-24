@@ -1,0 +1,6 @@
+ALTER TABLE merge_consequences
+RENAME COLUMN artifact_id TO participant_id;
+
+-- Existing fixed consequences used an implicit schema 1; owner-contributed payloads start at schema 2.
+ALTER TABLE merge_consequences
+ADD COLUMN schema_version INTEGER NOT NULL DEFAULT 1;

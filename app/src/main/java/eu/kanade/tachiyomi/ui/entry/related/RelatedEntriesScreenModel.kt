@@ -5,24 +5,24 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.produceState
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import tachiyomi.domain.entry.interactor.GetEntry
-import tachiyomi.domain.entry.interactor.GetRelatedEntries
+import mihon.entry.interactions.EntryRelatedEntriesFeature
+import mihon.entry.interactions.EntryRelatedEntriesLoadResult
+import mihon.entry.interactions.EntryRelatedEntriesUnavailableReason
 import tachiyomi.domain.entry.model.Entry
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 class RelatedEntriesScreenModel(
     private val entryId: Long,
-    private val getEntry: GetEntry = Injekt.get(),
-    private val getRelatedEntries: GetRelatedEntries = Injekt.get(),
+    private val relatedEntriesFeature: EntryRelatedEntriesFeature = Injekt.get(),
 ) : StateScreenModel<RelatedEntriesScreenModel.State>(State.Idle) {
 
     private var loadJob: Job? = null
@@ -31,8 +31,7 @@ class RelatedEntriesScreenModel(
     @Composable
     fun getEntryState(initialEntry: Entry): androidx.compose.runtime.State<Entry> {
         return produceState(initialValue = initialEntry) {
-            getEntry.subscribe(initialEntry.url, initialEntry.source, initialEntry.type)
-                .filterNotNull()
+            relatedEntriesFeature.observeEntry(initialEntry)
                 .collectLatest { entry -> value = entry }
         }
     }
@@ -69,16 +68,19 @@ class RelatedEntriesScreenModel(
         }
         loadJob = screenModelScope.launch {
             try {
-                val entry = getEntry.await(entryId)
-                    ?: error("Entry $entryId was not found")
-                val relatedEntries = getRelatedEntries.await(entry)
+                val result = relatedEntriesFeature.load(entryId)
                 if (generation == loadGeneration) {
-                    mutableState.update {
-                        State.Success(
-                            entry = entry,
-                            relatedEntries = relatedEntries.toImmutableList(),
-                            isRefreshing = false,
-                        )
+                    when (result) {
+                        is EntryRelatedEntriesLoadResult.Loaded -> mutableState.update {
+                            State.Success(
+                                relatedEntries = result.entries.toImmutableList(),
+                                sourceItemOrientation = result.orientation,
+                                isRefreshing = false,
+                            )
+                        }
+                        is EntryRelatedEntriesLoadResult.Unavailable -> mutableState.update {
+                            State.Unavailable(result.reason)
+                        }
                     }
                 }
             } catch (e: CancellationException) {
@@ -102,9 +104,13 @@ class RelatedEntriesScreenModel(
         data object Idle : State
         data object Loading : State
 
+        data class Unavailable(
+            val reason: EntryRelatedEntriesUnavailableReason,
+        ) : State
+
         data class Success(
-            val entry: Entry,
             val relatedEntries: ImmutableList<Entry>,
+            val sourceItemOrientation: EntryItemOrientation,
             val isRefreshing: Boolean = false,
         ) : State
 

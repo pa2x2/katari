@@ -54,9 +54,9 @@ jobs:
       - name: Verify legacy source ABI
         run: ./gradlew --quiet verifyLegacySourceAbi
 
-      - name: Run unit tests
+      - name: Verify Entry Feature architecture and run unit tests
         id: unit_tests
-        run: ./gradlew testFossUnitTest
+        run: ./gradlew verifyEntryFeatureArchitecture testFossUnitTest
 
       - name: Verify SQLDelight migrations
         run: ./gradlew verifySqlDelightMigration
@@ -68,11 +68,8 @@ jobs:
           name: test-report-${{ github.sha }}
           path: app/build/reports/tests/testFossUnitTest
 
-      - name: Build app
-        run: ./gradlew assembleRelease -Pinclude-telemetry -Penable-updater
-
-      - name: Verify extension runtime ABI
-        run: ./gradlew --quiet verifyExtensionRuntimeAbi -Pinclude-telemetry -Penable-updater
+      - name: Build app and verify extension runtime ABI
+        run: ./gradlew assembleRelease verifyExtensionRuntimeAbi -Pinclude-telemetry -Penable-updater
 
       - name: Upload APK
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

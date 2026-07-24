@@ -16,6 +16,8 @@ import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.core.preference.asState
 import eu.kanade.domain.source.interactor.GetIncognitoState
+import eu.kanade.domain.source.model.CATALOGUE_LATEST_QUERY
+import eu.kanade.domain.source.model.CATALOGUE_POPULAR_QUERY
 import eu.kanade.domain.source.model.FeedListingMode
 import eu.kanade.domain.source.model.FilterStateNode
 import eu.kanade.domain.source.model.SourceFeedPreset
@@ -23,23 +25,16 @@ import eu.kanade.domain.source.model.applySnapshot
 import eu.kanade.domain.source.model.snapshot
 import eu.kanade.domain.source.service.BrowseFeedService
 import eu.kanade.domain.source.service.SourcePreferences
-import eu.kanade.domain.track.interactor.AddTracks
 import eu.kanade.presentation.entry.components.MergeEditorEntry
 import eu.kanade.presentation.entry.components.MergeTarget
 import eu.kanade.presentation.entry.components.buildMergeTargetQuery
 import eu.kanade.presentation.entry.components.buildMergeTargets
 import eu.kanade.presentation.entry.components.rankMergeTargets
 import eu.kanade.presentation.util.ioCoroutineScope
-import eu.kanade.tachiyomi.data.cache.CoverCache
-import eu.kanade.tachiyomi.data.track.EntryTrackingSource
-import eu.kanade.tachiyomi.source.entry.ConfigurableSource
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.source.entry.SourceHomePage
-import eu.kanade.tachiyomi.source.sourceItemOrientation
 import eu.kanade.tachiyomi.source.sourceNotInstalledName
-import eu.kanade.tachiyomi.source.toCatalogSource
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.SharingStarted
@@ -50,41 +45,60 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import logcat.LogPriority
 import mihon.core.common.CustomPreferences
 import mihon.core.common.browseLongPressActionPriorityForSource
 import mihon.core.common.sanitizeBrowseLongPressActionPriority
-import mihon.entry.interactions.EntryDownloadInteraction
-import mihon.entry.interactions.EntryPreviewInteraction
+import mihon.entry.interactions.EntryCatalogueBrowseRequest
+import mihon.entry.interactions.EntryCatalogueFeature
+import mihon.entry.interactions.EntryCatalogueListing
+import mihon.entry.interactions.EntryCatalogueSourceResolution
+import mihon.entry.interactions.EntryImmersiveAvailability
+import mihon.entry.interactions.EntryImmersiveContext
+import mihon.entry.interactions.EntryImmersiveFeature
+import mihon.entry.interactions.EntryImmersiveSourceAvailability
+import mihon.entry.interactions.EntryLibraryAddRequest
+import mihon.entry.interactions.EntryLibraryAddResult
+import mihon.entry.interactions.EntryLibraryCategorySelection
+import mihon.entry.interactions.EntryLibraryDuplicatePolicy
+import mihon.entry.interactions.EntryLibraryMembershipFeature
+import mihon.entry.interactions.EntryLibraryRemovalResult
+import mihon.entry.interactions.EntryMergeCommitIntent
+import mihon.entry.interactions.EntryMergeEditReference
+import mihon.entry.interactions.EntryMergeEditorEntry
+import mihon.entry.interactions.EntryMergeEditorEntryOrigin
+import mihon.entry.interactions.EntryMergeEditorEntryReference
+import mihon.entry.interactions.EntryMergeExecutionResult
+import mihon.entry.interactions.EntryMergeFeature
+import mihon.entry.interactions.EntryMergeMemberPreparationIntent
+import mihon.entry.interactions.EntryMergePreparationResult
+import mihon.entry.interactions.EntryMergePrepareIntent
+import mihon.entry.interactions.EntryPreviewAvailability
+import mihon.entry.interactions.EntryPreviewContext
+import mihon.entry.interactions.EntryPreviewFeature
+import mihon.entry.interactions.EntrySourceHomeFeature
+import mihon.entry.interactions.EntrySourceHomeResolution
+import mihon.entry.interactions.EntrySourceSettingsFeature
+import mihon.entry.interactions.EntrySourceSettingsResolution
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.mapAsCheckboxState
 import tachiyomi.core.common.util.lang.launchIO
-import tachiyomi.domain.category.interactor.GetCategories
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.category.repository.CategoryRepository
-import tachiyomi.domain.entry.interactor.GetDuplicateLibraryEntries
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.GetLibraryEntries
-import tachiyomi.domain.entry.interactor.GetMergedEntry
-import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
-import tachiyomi.domain.entry.interactor.SetEntryCategories
-import tachiyomi.domain.entry.interactor.SetEntryChapterFlags
-import tachiyomi.domain.entry.interactor.UpdateMergedEntry
 import tachiyomi.domain.entry.model.DuplicateEntryCandidate
 import tachiyomi.domain.entry.model.Entry
-import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.domain.library.service.LibraryPreferences
-import tachiyomi.domain.source.interactor.GetRemoteCatalog
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.domain.source.model.SourceDisplayInfo
-import tachiyomi.domain.source.service.CatalogSource
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.MR
-import tachiyomi.source.local.LocalSource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import java.time.Instant
 import java.util.UUID
 import eu.kanade.tachiyomi.source.entry.EntryFilter as SourceModelFilter
 
@@ -101,23 +115,17 @@ class CatalogScreenModel(
     customPreferences: CustomPreferences = Injekt.get(),
     private val browseFeedService: BrowseFeedService = Injekt.get(),
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
-    private val coverCache: CoverCache = Injekt.get(),
-    private val getRemoteCatalog: GetRemoteCatalog = Injekt.get(),
     private val getEntry: GetEntry = Injekt.get(),
-    private val getDuplicateLibraryEntries: GetDuplicateLibraryEntries = Injekt.get(),
-    private val getCategories: GetCategories = Injekt.get(),
+    private val entryLibraryMembershipFeature: EntryLibraryMembershipFeature = Injekt.get(),
+    private val entryMergeFeature: EntryMergeFeature = Injekt.get(),
     private val categoryRepository: CategoryRepository = Injekt.get(),
-    private val setEntryCategories: SetEntryCategories = Injekt.get(),
-    private val setEntryChapterFlags: SetEntryChapterFlags = Injekt.get(),
     private val getLibraryEntries: GetLibraryEntries = Injekt.get(),
-    private val getMergedEntry: GetMergedEntry = Injekt.get(),
     private val duplicatePreferences: DuplicatePreferences = Injekt.get(),
-    private val networkToLocalEntry: NetworkToLocalEntry = Injekt.get(),
-    private val updateMergedEntry: UpdateMergedEntry = Injekt.get(),
-    private val entryRepository: EntryRepository = Injekt.get(),
-    private val entryDownloadInteraction: EntryDownloadInteraction = Injekt.get(),
-    private val entryPreviewInteraction: EntryPreviewInteraction = Injekt.get(),
-    private val addTracks: AddTracks = Injekt.get(),
+    private val entryPreviewFeature: EntryPreviewFeature = Injekt.get(),
+    private val entryImmersiveFeature: EntryImmersiveFeature = Injekt.get(),
+    private val entryCatalogueFeature: EntryCatalogueFeature = Injekt.get(),
+    private val entrySourceHomeFeature: EntrySourceHomeFeature = Injekt.get(),
+    private val entrySourceSettingsFeature: EntrySourceSettingsFeature = Injekt.get(),
     private val getIncognitoState: GetIncognitoState = Injekt.get(),
     private val application: Application = Injekt.get(),
 ) : StateScreenModel<CatalogScreenModel.State>(
@@ -137,16 +145,20 @@ class CatalogScreenModel(
             overrides = browseLongPressActionOverrides,
         )
 
-    private val filterLoader = CatalogFilterLoader(sourceManager)
-    private val presetHelper = CatalogPresetHelper(sourceId, sourceManager, browseFeedService)
+    private val filterLoader = CatalogFilterLoader(entryCatalogueFeature)
+    private val presetHelper = CatalogPresetHelper(sourceId, browseFeedService, entryCatalogueFeature)
 
-    val catalogSource = sourceManager.get(sourceId)?.toCatalogSource()
+    val catalogSource =
+        (entryCatalogueFeature.source(sourceId) as? EntryCatalogueSourceResolution.Available)?.source
+    val isImmersiveSourceAvailable: Boolean
+        get() = entryImmersiveFeature.sourceAvailability(sourceManager.get(sourceId)) is
+            EntryImmersiveSourceAvailability.Available
 
     init {
         if (catalogSource == null) {
             mutableState.update { it.copy(filterState = FilterUiState.Unavailable) }
         } else {
-            if (filterLoader.hasAsyncFilters(sourceId) && state.value.listing is Listing.Search) {
+            if (filterLoader.usesAsyncFilters(sourceId) && state.value.listing is Listing.Search) {
                 mutableState.update {
                     it.copy(
                         filterState = FilterUiState.Loading,
@@ -160,9 +172,7 @@ class CatalogScreenModel(
             }
 
             if (!getIncognitoState.await(sourceId)) {
-                when (catalogSource) {
-                    is CatalogSource.Mixed -> sourcePreferences.lastUsedSource.set(sourceId)
-                }
+                sourcePreferences.lastUsedSource.set(sourceId)
             }
         }
     }
@@ -176,7 +186,9 @@ class CatalogScreenModel(
                 emptyFlow()
             } else {
                 Pager(PagingConfig(pageSize = 25)) {
-                    getRemoteCatalog(sourceId, listing.query ?: "", listing.filters)
+                    entryCatalogueFeature.paging(
+                        EntryCatalogueBrowseRequest(sourceId, listing.toFeatureListing()),
+                    )
                 }.flow.map { pagingData ->
                     pagingData.map { item ->
                         val entryItem = item as CatalogListItem.EntryItem
@@ -202,7 +214,7 @@ class CatalogScreenModel(
         .stateIn(ioCoroutineScope, SharingStarted.Lazily, emptyFlow())
 
     val sourceName: String
-        get() = catalogSource?.source?.name ?: ""
+        get() = catalogSource?.name ?: ""
 
     val sourceDisplayInfo: SourceDisplayInfo
         get() = sourceManager.getDisplayInfo(sourceId)
@@ -214,13 +226,13 @@ class CatalogScreenModel(
         get() = state.value.filterState !is FilterUiState.Unavailable
 
     val sourceItemOrientation: EntryItemOrientation
-        get() = catalogSource?.source?.sourceItemOrientation() ?: EntryItemOrientation.VERTICAL
+        get() = catalogSource?.itemOrientation ?: EntryItemOrientation.VERTICAL
 
     val homeUrl: String?
-        get() = (sourceManager.getOrStub(sourceId) as? SourceHomePage)?.getHomeUrl()
+        get() = (entrySourceHomeFeature.resolve(sourceId) as? EntrySourceHomeResolution.Available)?.url
 
     val isConfigurable: Boolean
-        get() = catalogSource?.source is ConfigurableSource
+        get() = entrySourceSettingsFeature.resolve(sourceId) is EntrySourceSettingsResolution.Available
 
     fun getColumnsPreference(
         orientation: Int,
@@ -393,7 +405,23 @@ class CatalogScreenModel(
     }
 
     fun addFavorite(entry: Entry) {
-        addFavoriteInternal(entry)
+        screenModelScope.launchIO {
+            applyLibraryAdd(
+                EntryLibraryAddRequest(entry, duplicatePolicy = EntryLibraryDuplicatePolicy.ALLOW),
+            )
+        }
+    }
+
+    fun addFavorite(entry: Entry, categoryIds: List<Long>) {
+        screenModelScope.launchIO {
+            applyLibraryAdd(
+                EntryLibraryAddRequest(
+                    entry = entry,
+                    duplicatePolicy = EntryLibraryDuplicatePolicy.ALLOW,
+                    categorySelection = EntryLibraryCategorySelection.Selected(categoryIds),
+                ),
+            )
+        }
     }
 
     fun confirmBrowseLibraryAction(item: CatalogListItem) {
@@ -408,13 +436,23 @@ class CatalogScreenModel(
 
     internal suspend fun onItemLongClick(
         item: CatalogListItem,
-        supportsImmersive: Boolean,
     ): BrowseLongPressOutcome {
+        val immersiveAvailable = entryImmersiveFeature.availability(
+            EntryImmersiveContext(
+                entry = item.entry,
+                source = sourceManager.get(item.entry.source),
+            ),
+        ) is EntryImmersiveAvailability.Available
         return when (
             resolveBrowseLongPressAction(
                 priority = browseLongPressActionPriority,
-                supportsImmersive = supportsImmersive,
-                previewEnabled = entryPreviewInteraction.config(item.entry).enabled,
+                immersiveAvailable = immersiveAvailable,
+                previewEnabled = entryPreviewFeature.availability(
+                    EntryPreviewContext(
+                        entry = item.entry,
+                        source = sourceManager.getOrStub(item.entry.source),
+                    ),
+                ) is EntryPreviewAvailability.Available,
             )
         ) {
             CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION -> {
@@ -436,86 +474,44 @@ class CatalogScreenModel(
         }
 
         setDialog(Dialog.CheckingDuplicates)
-        val duplicates = getDuplicateLibraryEntries(entry)
-        when {
-            duplicates.isNotEmpty() -> setDialog(Dialog.DuplicateEntry(entry, duplicates))
-            else -> {
-                setDialog(null)
-                addFavorite(entry)
-            }
-        }
+        applyLibraryAdd(EntryLibraryAddRequest(entry))
     }
 
     fun changeFavorite(entry: Entry) {
-        screenModelScope.launch {
-            val favorite = !entry.favorite
-            var new = entry.copy(
-                favorite = favorite,
-                dateAdded = if (favorite) Instant.now().toEpochMilli() else 0L,
-            )
-
-            if (!favorite) {
-                new = new.removeCovers()
+        screenModelScope.launchIO {
+            if (entry.favorite) {
+                when (val result = entryLibraryMembershipFeature.remove(listOf(entry))) {
+                    is EntryLibraryRemovalResult.Failed -> logcat(LogPriority.ERROR, result.cause)
+                    is EntryLibraryRemovalResult.Removed,
+                    EntryLibraryRemovalResult.NoChange,
+                    -> Unit
+                }
             } else {
-                setEntryChapterFlags.await(entry.id, computeDefaultChapterFlags(libraryPreferences))
-                val source = sourceManager.getOrStub(sourceId)
-                addTracks.bindEnhancedTrackers(
-                    entry = entry,
-                    source = EntryTrackingSource.from(source, sourceManager.getDisplayInfo(sourceId)),
+                applyLibraryAdd(
+                    EntryLibraryAddRequest(entry, duplicatePolicy = EntryLibraryDuplicatePolicy.ALLOW),
                 )
             }
-
-            entryRepository.update(new)
         }
     }
 
-    private fun addFavoriteInternal(entry: Entry) {
-        screenModelScope.launch {
-            val categories = getAllCategories()
-            val defaultCategoryId = libraryPreferences.defaultCategory.get()
-            val defaultCategory = categories.find { it.id == defaultCategoryId.toLong() }
-
-            when {
-                defaultCategory != null -> {
-                    moveEntryToCategories(entry, defaultCategory)
-                    changeFavorite(entry)
-                }
-                defaultCategoryId == 0 || categories.isEmpty() -> {
-                    moveEntryToCategories(entry)
-                    changeFavorite(entry)
-                }
-                else -> {
-                    val preselectedIds = categoryRepository
-                        .getCategoriesByEntryId(entry.id)
-                        .map { it.id }
-                    setDialog(
-                        Dialog.ChangeEntryCategory(
-                            entry,
-                            categories.mapAsCheckboxState { it.id in preselectedIds },
-                        ),
-                    )
-                }
-            }
-        }
-    }
-
-    suspend fun getAllCategories(): List<Category> {
-        return getCategories.subscribe()
-            .firstOrNull()
-            ?.filterNot { it.isSystemCategory }
-            .orEmpty()
-    }
-
-    fun moveEntryToCategories(entry: Entry, vararg categories: Category) {
-        moveEntryToCategories(entry, categories.filter { it.id != 0L }.map { it.id })
-    }
-
-    fun moveEntryToCategories(entry: Entry, categoryIds: List<Long>) {
-        screenModelScope.launchIO {
-            setEntryCategories.await(
-                entryId = entry.id,
-                categoryIds = categoryIds.toList(),
+    private suspend fun applyLibraryAdd(request: EntryLibraryAddRequest) {
+        when (val result = entryLibraryMembershipFeature.add(request)) {
+            is EntryLibraryAddResult.DuplicateCandidates -> setDialog(
+                Dialog.DuplicateEntry(result.entry, result.candidates),
             )
+            is EntryLibraryAddResult.CategorySelectionRequired -> setDialog(
+                Dialog.ChangeEntryCategory(
+                    result.entry,
+                    result.categories.mapAsCheckboxState { it.id in result.selectedCategoryIds },
+                ),
+            )
+            is EntryLibraryAddResult.Failed -> {
+                setDialog(null)
+                logcat(LogPriority.ERROR, result.cause)
+            }
+            is EntryLibraryAddResult.Added,
+            is EntryLibraryAddResult.AlreadyInLibrary,
+            -> setDialog(null)
         }
     }
 
@@ -571,7 +567,8 @@ class CatalogScreenModel(
             is Dialog.SelectEntryMergeTarget -> {
                 screenModelScope.launchIO {
                     val target = dialog.targets.firstOrNull { it.id == targetId } ?: return@launchIO
-                    setDialog(createEntryMergeEditorDialog(dialog.entry, target))
+                    val editor = createEntryMergeEditorDialog(dialog.entry, target) ?: return@launchIO
+                    setDialog(editor)
                 }
             }
             else -> {}
@@ -597,10 +594,13 @@ class CatalogScreenModel(
         mutableState.update { currentState ->
             when (val dialog = currentState.dialog) {
                 is Dialog.EditEntryMerge -> {
-                    if (dialog.targetLocked || dialog.entries.none { it.id == itemId }) return@update currentState
+                    val entry = dialog.entries.firstOrNull { it.id == itemId } ?: return@update currentState
+                    val reference = dialog.referencesById[itemId] ?: return@update currentState
+                    if (dialog.targetLocked) return@update currentState
                     currentState.copy(
                         dialog = dialog.copy(
                             targetId = itemId,
+                            targetReference = reference,
                             removedIds = dialog.removedIds - itemId,
                             libraryRemovalIds = dialog.libraryRemovalIds - itemId,
                         ),
@@ -647,20 +647,18 @@ class CatalogScreenModel(
         when (val dialog = state.value.dialog) {
             is Dialog.EditEntryMerge -> {
                 screenModelScope.launchIO {
-                    val remoteEntry = networkToLocalEntry(dialog.entry)
-                    ensureEntryFavorite(remoteEntry)
-                    setEntryCategories.await(remoteEntry.id, dialog.categoryIds)
-
-                    val orderedIds = dialog.entries
-                        .filterNot { it.id in (dialog.removedIds + dialog.libraryRemovalIds) }
-                        .map(MergeEditorEntry::id)
-                        .distinct()
-
-                    if (orderedIds.size > 1) {
-                        updateMergedEntry.awaitMerge(dialog.targetId, orderedIds)
+                    val result = entryMergeFeature.execute(
+                        EntryMergeCommitIntent(
+                            editReference = dialog.editReference,
+                            target = dialog.targetReference,
+                            orderedEntries = dialog.entries.mapNotNull { dialog.referencesById[it.id] },
+                            removedEntries = dialog.referencesById.referencesFor(dialog.removedIds),
+                            libraryRemovalEntries = dialog.referencesById.referencesFor(dialog.libraryRemovalIds),
+                        ),
+                    )
+                    if (result is EntryMergeExecutionResult.Applied) {
+                        dismissDialog()
                     }
-                    removeMergedMembersFromLibrary(dialog.libraryRemovalIds)
-                    dismissDialog()
                 }
             }
             else -> {}
@@ -670,102 +668,55 @@ class CatalogScreenModel(
     private suspend fun createEntryMergeEditorDialog(
         entry: Entry,
         target: MergeTarget,
-    ): Dialog.EditEntryMerge {
-        return createEntryMergeEditorDialog(
-            entry = entry,
-            targetId = target.id,
-            memberEntries = target.memberEntries,
-            categoryIds = target.categoryIds,
-            isMerged = target.isMerged,
-        )
-    }
-
-    private suspend fun createEntryMergeEditorDialog(
-        entry: Entry,
-        targetId: Long,
-        memberEntries: List<Entry>,
-        categoryIds: List<Long>,
-        isMerged: Boolean,
-    ): Dialog.EditEntryMerge {
-        val remoteEntry = networkToLocalEntry(entry)
-        val orderedMembers = if (isMerged) {
-            val membersById = memberEntries.associateBy(Entry::id)
-            getMergedEntry.awaitGroupByTargetId(targetId)
-                .sortedBy { it.position }
-                .mapNotNull { merge -> membersById[merge.entryId] }
-                .ifEmpty { memberEntries }
-        } else {
-            memberEntries
+    ): Dialog.EditEntryMerge? {
+        val targetEntry = target.memberEntries.firstOrNull { it.id == target.id }
+            ?: target.memberEntries.firstOrNull()
+            ?: return null
+        val categoryIds = target.categoryIds.ifEmpty {
+            categoryRepository.getCategoriesByEntryId(targetEntry.id).map(Category::id)
         }
-
-        val entries = buildList {
-            if (isMerged && orderedMembers.none { it.id == remoteEntry.id }) {
-                add(
-                    MergeEditorEntry(
-                        id = remoteEntry.id,
-                        entry = remoteEntry,
-                        subtitle = getEntrySourceSubtitle(remoteEntry) + " • New",
-                        isRemovable = false,
-                    ),
-                )
-            }
-            orderedMembers.forEach { member ->
-                add(
-                    MergeEditorEntry(
-                        id = member.id,
-                        entry = member,
-                        subtitle = getEntrySourceSubtitle(member),
-                        isRemovable = true,
-                        isMember = true,
-                    ),
-                )
-            }
-            if (!isMerged && none { it.id == remoteEntry.id }) {
-                add(
-                    MergeEditorEntry(
-                        id = remoteEntry.id,
-                        entry = remoteEntry,
-                        subtitle = getEntrySourceSubtitle(remoteEntry) + " • New",
-                        isRemovable = false,
-                    ),
-                )
-            }
-        }.toImmutableList()
-
+        val preparations = if (entry.favorite) {
+            emptyList()
+        } else {
+            listOf(EntryMergeMemberPreparationIntent(entry, categoryIds))
+        }
+        val editor = when (
+            val result = entryMergeFeature.prepare(
+                EntryMergePrepareIntent(
+                    selectedEntries = if (target.isMerged) {
+                        listOf(entry, targetEntry)
+                    } else {
+                        listOf(targetEntry, entry)
+                    },
+                    preparations = preparations,
+                ),
+            )
+        ) {
+            is EntryMergePreparationResult.Ready -> result.editor
+            is EntryMergePreparationResult.Rejected -> return null
+        }
+        val targetEditorEntry = editor.entries.firstOrNull { it.reference == editor.target } ?: return null
         return Dialog.EditEntryMerge(
-            entry = remoteEntry,
-            targetId = targetId,
-            targetLocked = false,
-            entries = entries,
+            entry = entry,
+            editReference = editor.editReference,
+            targetId = targetEditorEntry.entry.id,
+            targetReference = targetEditorEntry.reference,
+            targetLocked = editor.targetLocked,
+            entries = editor.entries.map(::toMergeEditorEntry).toImmutableList(),
+            referencesById = editor.entries.associate { it.entry.id to it.reference },
             removedIds = emptySet(),
             libraryRemovalIds = emptySet(),
-            categoryIds = categoryIds,
         )
     }
 
-    private suspend fun removeMergedMembersFromLibrary(entryIds: Collection<Long>) {
-        entryIds.distinct().forEach { entryId ->
-            val entry = getEntry.await(entryId) ?: return@forEach
-            val withRemovedCovers = entry.removeCovers()
-            val updated = withRemovedCovers.copy(favorite = false, dateAdded = 0L)
-            entryRepository.update(updated)
-            entryDownloadInteraction.deleteEntryDownloads(entry)
-        }
-    }
-
-    private suspend fun ensureEntryFavorite(entry: Entry) {
-        if (entry.favorite) return
-        setEntryChapterFlags.await(entry.id, computeDefaultChapterFlags(libraryPreferences))
-        val source = sourceManager.getOrStub(sourceId)
-        addTracks.bindEnhancedTrackers(
-            entry = entry,
-            source = EntryTrackingSource.from(source, sourceManager.getDisplayInfo(sourceId)),
-        )
-        entryRepository.update(
-            entry.copy(
-                favorite = true,
-                dateAdded = Instant.now().toEpochMilli(),
-            ),
+    private fun toMergeEditorEntry(item: EntryMergeEditorEntry): MergeEditorEntry {
+        val existing = item.origin == EntryMergeEditorEntryOrigin.EXISTING_MEMBER
+        return MergeEditorEntry(
+            id = item.entry.id,
+            entry = item.entry,
+            subtitle = getEntrySourceSubtitle(item.entry) + if (existing) "" else " • New",
+            isRemovable = item.removable,
+            isMember = existing,
         )
     }
 
@@ -779,17 +730,6 @@ class CatalogScreenModel(
                 append(" • ")
                 append(creator)
             }
-        }
-    }
-
-    private fun Entry.isLocal(): Boolean = source == LocalSource.ID
-
-    private fun Entry.removeCovers(): Entry {
-        if (isLocal()) return this
-        return if (coverCache.deleteFromCache(this, true) > 0) {
-            copy(coverLastModified = Instant.now().toEpochMilli())
-        } else {
-            this
         }
     }
 
@@ -1012,8 +952,8 @@ class CatalogScreenModel(
     }
 
     sealed class Listing(open val query: String?, open val filters: EntryFilterList) {
-        data object Popular : Listing(query = GetRemoteCatalog.QUERY_POPULAR, filters = EntryFilterList())
-        data object Latest : Listing(query = GetRemoteCatalog.QUERY_LATEST, filters = EntryFilterList())
+        data object Popular : Listing(query = CATALOGUE_POPULAR_QUERY, filters = EntryFilterList())
+        data object Latest : Listing(query = CATALOGUE_LATEST_QUERY, filters = EntryFilterList())
         data class Search(
             override val query: String?,
             override val filters: EntryFilterList,
@@ -1022,8 +962,8 @@ class CatalogScreenModel(
         companion object {
             fun valueOf(query: String?): Listing {
                 return when (query) {
-                    GetRemoteCatalog.QUERY_POPULAR -> Popular
-                    GetRemoteCatalog.QUERY_LATEST -> Latest
+                    CATALOGUE_POPULAR_QUERY -> Popular
+                    CATALOGUE_LATEST_QUERY -> Latest
                     else -> Search(query = query, filters = EntryFilterList())
                 }
             }
@@ -1070,12 +1010,14 @@ class CatalogScreenModel(
 
         data class EditEntryMerge(
             val entry: Entry,
+            val editReference: EntryMergeEditReference,
             val targetId: Long,
+            val targetReference: EntryMergeEditorEntryReference,
             val targetLocked: Boolean,
             val entries: ImmutableList<MergeEditorEntry>,
+            val referencesById: Map<Long, EntryMergeEditorEntryReference>,
             val removedIds: Set<Long>,
             val libraryRemovalIds: Set<Long>,
-            val categoryIds: List<Long>,
         ) : Dialog {
             val enabled: Boolean
                 get() = entries.count { it.id !in (removedIds + libraryRemovalIds) } > 1
@@ -1100,6 +1042,21 @@ class CatalogScreenModel(
         val isUserQuery get() = listing is Listing.Search && !listing.query.isNullOrEmpty()
         val hasFilterCapability get() = filterState !is FilterUiState.Unavailable
     }
+}
+
+private fun CatalogScreenModel.Listing.toFeatureListing(): EntryCatalogueListing {
+    return when (this) {
+        CatalogScreenModel.Listing.Popular -> EntryCatalogueListing.Popular
+        CatalogScreenModel.Listing.Latest -> EntryCatalogueListing.Latest
+        is CatalogScreenModel.Listing.Search -> EntryCatalogueListing.Search(query.orEmpty(), filters)
+    }
+}
+
+private fun Map<Long, EntryMergeEditorEntryReference>.referencesFor(
+    entryIds: Collection<Long>,
+): Set<EntryMergeEditorEntryReference> {
+    val ids = entryIds.toSet()
+    return filterKeys { it in ids }.values.toSet()
 }
 
 sealed interface FilterUiState {
@@ -1141,14 +1098,14 @@ internal enum class BrowseLongPressOutcome {
 
 internal fun resolveBrowseLongPressAction(
     priority: Collection<CustomPreferences.BrowseLongPressAction>,
-    supportsImmersive: Boolean,
+    immersiveAvailable: Boolean,
     previewEnabled: Boolean,
 ): CustomPreferences.BrowseLongPressAction {
     return sanitizeBrowseLongPressActionPriority(priority).first { action ->
         when (action) {
             CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION -> true
             CustomPreferences.BrowseLongPressAction.PREVIEW -> previewEnabled
-            CustomPreferences.BrowseLongPressAction.IMMERSIVE -> supportsImmersive
+            CustomPreferences.BrowseLongPressAction.IMMERSIVE -> immersiveAvailable
         }
     }
 }
@@ -1177,11 +1134,4 @@ internal fun CatalogScreenModel.State.toSavedPresetState(defaultFilters: EntryFi
         query = query,
         filters = filterSnapshot,
     )
-}
-
-private fun computeDefaultChapterFlags(libraryPreferences: LibraryPreferences): Long {
-    return Entry.SHOW_ALL or
-        libraryPreferences.sortChapterBySourceOrNumber.get() or
-        libraryPreferences.displayChapterByNameOrNumber.get() or
-        libraryPreferences.sortChapterByAscendingOrDescending.get()
 }

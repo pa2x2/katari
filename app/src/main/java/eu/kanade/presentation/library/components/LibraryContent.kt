@@ -157,6 +157,7 @@ fun LibraryContent(
     onChangeCurrentPage: (Int) -> Unit,
     onClickItem: (LibraryItem) -> Unit,
     onContinueReadingClicked: ((LibraryItem) -> Unit)?,
+    isContinueReadingAvailable: (LibraryItem) -> Boolean,
     onToggleSelection: (LibraryPage, LibraryItem) -> Unit,
     onToggleRangeSelection: (LibraryPage, LibraryItem) -> Unit,
     onRefresh: () -> Boolean,
@@ -209,6 +210,7 @@ fun LibraryContent(
                 }
             },
             onClickContinueReading = onContinueReadingClicked,
+            isContinueReadingAvailable = isContinueReadingAvailable,
         )
     }
 }

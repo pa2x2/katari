@@ -59,35 +59,3 @@ class EntryInteractionPreferences(
         EntryPreviewSize.MEDIUM,
     )
 }
-
-class EntryMediaCachePreferences(
-    preferenceStore: PreferenceStore,
-) {
-    private val legacyAutoClearCacheEnabled = preferenceStore.getBoolean(
-        AUTO_CLEAR_ENTRY_PAGE_IMAGE_CACHE_KEY,
-        false,
-    ).get()
-    private val hasMigratedAnimeAutoClearPreference =
-        AUTO_CLEAR_ANIME_PLAYBACK_CACHE_KEY in preferenceStore.getAll()
-
-    val autoClearEntryPageImageCache: Preference<Boolean> = preferenceStore.getBoolean(
-        AUTO_CLEAR_ENTRY_PAGE_IMAGE_CACHE_KEY,
-        false,
-    )
-
-    val autoClearAnimePlaybackCache: Preference<Boolean> = preferenceStore.getBoolean(
-        AUTO_CLEAR_ANIME_PLAYBACK_CACHE_KEY,
-        false,
-    )
-
-    init {
-        if (!hasMigratedAnimeAutoClearPreference) {
-            autoClearAnimePlaybackCache.set(legacyAutoClearCacheEnabled)
-        }
-    }
-
-    companion object {
-        const val AUTO_CLEAR_ENTRY_PAGE_IMAGE_CACHE_KEY = "auto_clear_chapter_cache"
-        const val AUTO_CLEAR_ANIME_PLAYBACK_CACHE_KEY = "auto_clear_anime_playback_cache"
-    }
-}

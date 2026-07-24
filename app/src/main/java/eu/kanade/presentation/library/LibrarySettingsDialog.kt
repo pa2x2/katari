@@ -20,6 +20,7 @@ import eu.kanade.presentation.components.TabbedDialog
 import eu.kanade.presentation.components.TabbedDialogPaddings
 import eu.kanade.tachiyomi.ui.library.LibrarySettingsScreenModel
 import eu.kanade.tachiyomi.util.system.isReleaseBuildType
+import mihon.entry.interactions.EntryLibraryFilterAvailability
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.model.LibraryDisplayMode
@@ -45,6 +46,7 @@ fun LibrarySettingsDialog(
     onDismissRequest: () -> Unit,
     screenModel: LibrarySettingsScreenModel,
     category: Category?,
+    filterAvailability: EntryLibraryFilterAvailability,
 ) {
     TabbedDialog(
         onDismissRequest = onDismissRequest,
@@ -63,10 +65,12 @@ fun LibrarySettingsDialog(
             when (page) {
                 0 -> FilterPage(
                     screenModel = screenModel,
+                    filterAvailability = filterAvailability,
                 )
                 1 -> SortPage(
                     category = category,
                     screenModel = screenModel,
+                    progressSummaryAvailable = filterAvailability.progressSummary.isAvailable,
                 )
                 2 -> DisplayPage(
                     screenModel = screenModel,
@@ -82,6 +86,7 @@ fun LibrarySettingsDialog(
 @Composable
 private fun FilterPage(
     screenModel: LibrarySettingsScreenModel,
+    filterAvailability: EntryLibraryFilterAvailability,
 ) {
     val filterDownloaded by screenModel.libraryPreferences.filterDownloaded.collectAsState()
     val downloadedOnly by screenModel.libraryPreferences.downloadedOnly.collectAsState()
@@ -97,24 +102,28 @@ private fun FilterPage(
         enabled = !downloadedOnly,
         onClick = { screenModel.toggleFilter(LibraryPreferences::filterDownloaded) },
     )
-    val filterUnread by screenModel.libraryPreferences.filterUnread.collectAsState()
-    TriStateItem(
-        label = stringResource(MR.strings.action_filter_unconsumed),
-        state = filterUnread,
-        onClick = { screenModel.toggleFilter(LibraryPreferences::filterUnread) },
-    )
-    val filterNotStarted by screenModel.libraryPreferences.filterNotStarted.collectAsState()
-    TriStateItem(
-        label = stringResource(MR.strings.label_not_started),
-        state = filterNotStarted,
-        onClick = { screenModel.toggleFilter(LibraryPreferences::filterNotStarted) },
-    )
-    val filterBookmarked by screenModel.libraryPreferences.filterBookmarked.collectAsState()
-    TriStateItem(
-        label = stringResource(MR.strings.action_filter_bookmarked),
-        state = filterBookmarked,
-        onClick = { screenModel.toggleFilter(LibraryPreferences::filterBookmarked) },
-    )
+    if (filterAvailability.progressSummary.isAvailable) {
+        val filterUnread by screenModel.libraryPreferences.filterUnread.collectAsState()
+        TriStateItem(
+            label = stringResource(MR.strings.action_filter_unconsumed),
+            state = filterUnread,
+            onClick = { screenModel.toggleFilter(LibraryPreferences::filterUnread) },
+        )
+        val filterNotStarted by screenModel.libraryPreferences.filterNotStarted.collectAsState()
+        TriStateItem(
+            label = stringResource(MR.strings.label_not_started),
+            state = filterNotStarted,
+            onClick = { screenModel.toggleFilter(LibraryPreferences::filterNotStarted) },
+        )
+    }
+    if (filterAvailability.bookmarking.isAvailable) {
+        val filterBookmarked by screenModel.libraryPreferences.filterBookmarked.collectAsState()
+        TriStateItem(
+            label = stringResource(MR.strings.action_filter_bookmarked),
+            state = filterBookmarked,
+            onClick = { screenModel.toggleFilter(LibraryPreferences::filterBookmarked) },
+        )
+    }
     val filterCompleted by screenModel.libraryPreferences.filterCompleted.collectAsState()
     TriStateItem(
         label = stringResource(MR.strings.completed),
@@ -122,7 +131,11 @@ private fun FilterPage(
         onClick = { screenModel.toggleFilter(LibraryPreferences::filterCompleted) },
     )
     // TODO: re-enable when custom intervals are ready for stable
-    if ((!isReleaseBuildType) && LibraryPreferences.ENTRY_OUTSIDE_RELEASE_PERIOD in autoUpdateEntryRestrictions) {
+    if (
+        (!isReleaseBuildType) &&
+        filterAvailability.outsideReleasePeriod.isAvailable &&
+        LibraryPreferences.ENTRY_OUTSIDE_RELEASE_PERIOD in autoUpdateEntryRestrictions
+    ) {
         val filterIntervalCustom by screenModel.libraryPreferences.filterIntervalCustom.collectAsState()
         TriStateItem(
             label = stringResource(MR.strings.action_filter_interval_custom),
@@ -131,28 +144,32 @@ private fun FilterPage(
         )
     }
 
-    val trackers by screenModel.trackersFlow.collectAsState()
-    when (trackers.size) {
+    val trackingServices by screenModel.trackingServicesFlow.collectAsState()
+    when (trackingServices.size) {
         0 -> {
             // No trackers
         }
         1 -> {
-            val service = trackers[0]
-            val filterTracker by screenModel.libraryPreferences.filterTracking(service.id.toInt()).collectAsState()
+            val service = trackingServices[0]
+            val filterTracker by screenModel.libraryPreferences
+                .filterTracking(service.id.value.toInt())
+                .collectAsState()
             TriStateItem(
                 label = stringResource(MR.strings.action_filter_tracked),
                 state = filterTracker,
-                onClick = { screenModel.toggleTracker(service.id.toInt()) },
+                onClick = { screenModel.toggleTracker(service.id.value.toInt()) },
             )
         }
         else -> {
             HeadingItem(MR.strings.action_filter_tracked)
-            trackers.map { service ->
-                val filterTracker by screenModel.libraryPreferences.filterTracking(service.id.toInt()).collectAsState()
+            trackingServices.map { service ->
+                val filterTracker by screenModel.libraryPreferences
+                    .filterTracking(service.id.value.toInt())
+                    .collectAsState()
                 TriStateItem(
                     label = service.name,
                     state = filterTracker,
-                    onClick = { screenModel.toggleTracker(service.id.toInt()) },
+                    onClick = { screenModel.toggleTracker(service.id.value.toInt()) },
                 )
             }
         }
@@ -163,25 +180,29 @@ private fun FilterPage(
 private fun SortPage(
     category: Category?,
     screenModel: LibrarySettingsScreenModel,
+    progressSummaryAvailable: Boolean,
 ) {
-    val trackers by screenModel.trackersFlow.collectAsState()
+    val trackingServices by screenModel.trackingServicesFlow.collectAsState()
     val globalSort by screenModel.libraryPreferences.sortingMode.collectAsState()
     val currentSort = category.effectiveLibrarySort(globalSort)
     val sortingMode = currentSort.type
     val sortDescending = !currentSort.isAscending
 
-    val options = remember(trackers.isEmpty()) {
-        val trackerMeanPair = if (trackers.isNotEmpty()) {
+    val options = remember(trackingServices.isEmpty(), progressSummaryAvailable) {
+        val trackerMeanPair = if (trackingServices.isNotEmpty()) {
             MR.strings.action_sort_tracker_score to LibrarySort.Type.TrackerMean
         } else {
             null
         }
         listOfNotNull(
             MR.strings.action_sort_alpha to LibrarySort.Type.Alphabetical,
-            MR.strings.action_sort_total to LibrarySort.Type.TotalChapters,
-            MR.strings.action_sort_last_read to LibrarySort.Type.LastRead,
+            (MR.strings.action_sort_total to LibrarySort.Type.TotalChapters)
+                .takeIf { progressSummaryAvailable },
+            (MR.strings.action_sort_last_read to LibrarySort.Type.LastRead)
+                .takeIf { progressSummaryAvailable },
             MR.strings.action_sort_last_manga_update to LibrarySort.Type.LastUpdate,
-            MR.strings.action_sort_unread_count to LibrarySort.Type.UnreadCount,
+            (MR.strings.action_sort_unread_count to LibrarySort.Type.UnreadCount)
+                .takeIf { progressSummaryAvailable },
             MR.strings.action_sort_latest_chapter to LibrarySort.Type.LatestChapter,
             MR.strings.action_sort_chapter_fetch_date to LibrarySort.Type.ChapterFetchDate,
             MR.strings.action_sort_date_added to LibrarySort.Type.DateAdded,

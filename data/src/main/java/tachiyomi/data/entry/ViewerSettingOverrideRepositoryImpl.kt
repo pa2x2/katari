@@ -60,32 +60,6 @@ class ViewerSettingOverrideRepositoryImpl(
         }
     }
 
-    override suspend fun replaceForEntry(entryId: Long, overrides: List<ViewerSettingOverride>) {
-        require(overrides.all { it.entryId == entryId }) { "Override entry IDs must match the replaced entry" }
-        handler.await(inTransaction = true) {
-            viewer_setting_overridesQueries.deleteByEntryId(entryId)
-            overrides.forEach { override ->
-                require(override.encodedValue.length <= MAX_VALUE_LENGTH) { "Viewer setting override is too large" }
-                viewer_setting_overridesQueries.upsert(
-                    entryId = entryId,
-                    providerId = override.settingId.providerId,
-                    settingKey = override.settingId.key,
-                    encodedValue = override.encodedValue,
-                    updatedAt = override.updatedAt,
-                )
-            }
-        }
-    }
-
-    override suspend fun copy(sourceEntryId: Long, targetEntryId: Long) {
-        handler.await {
-            viewer_setting_overridesQueries.copy(
-                sourceEntryId = sourceEntryId,
-                targetEntryId = targetEntryId,
-            )
-        }
-    }
-
     override suspend fun deleteByProviderForProfile(providerId: String, profileId: Long) {
         handler.await {
             viewer_setting_overridesQueries.deleteByProviderForProfile(

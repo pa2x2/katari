@@ -1,29 +1,37 @@
 package mihon.feature.migration.list.search
 
-import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.source.entry.SEntry
-import tachiyomi.domain.entry.adapter.toEntry
+import mihon.entry.interactions.EntryCatalogueFeature
+import mihon.entry.interactions.EntryCatalogueSearchRequest
+import mihon.entry.interactions.EntryCatalogueSearchResult
+import mihon.entry.interactions.EntryCatalogueSourceInfo
 import tachiyomi.domain.entry.model.Entry
 
-class SmartSourceSearchEngine(extraSearchParams: String?) : BaseSmartSearchEngine<SEntry>(extraSearchParams) {
+class SmartSourceSearchEngine(
+    extraSearchParams: String?,
+    private val catalogueFeature: EntryCatalogueFeature,
+) : BaseSmartSearchEngine<Entry>(extraSearchParams) {
 
-    override fun getTitle(result: SEntry) = result.title
+    override fun getTitle(result: Entry) = result.title
 
-    suspend fun regularSearch(source: EntryCatalogueSource, title: String, type: EntryType): Entry? {
-        return regularSearch(makeSearchAction(source, type), title).let {
-            it?.toEntry(source.id)
-        }
+    suspend fun regularSearch(source: EntryCatalogueSourceInfo, title: String, type: EntryType): Entry? {
+        return regularSearch(makeSearchAction(source, type), title)
     }
 
-    suspend fun deepSearch(source: EntryCatalogueSource, title: String, type: EntryType): Entry? {
-        return deepSearch(makeSearchAction(source, type), title).let {
-            it?.toEntry(source.id)
-        }
+    suspend fun deepSearch(source: EntryCatalogueSourceInfo, title: String, type: EntryType): Entry? {
+        return deepSearch(makeSearchAction(source, type), title)
     }
 
-    private fun makeSearchAction(source: EntryCatalogueSource, type: EntryType): SearchAction<SEntry> = { query ->
-        source.getSearchContent(1, query, source.getFilterList()).items
-            .filter { it.type == type }
+    private fun makeSearchAction(source: EntryCatalogueSourceInfo, type: EntryType): SearchAction<Entry> = { query ->
+        when (
+            val result = catalogueFeature.search(
+                EntryCatalogueSearchRequest(source.id, query, requiredType = type),
+            )
+        ) {
+            is EntryCatalogueSearchResult.Success -> result.entries
+            is EntryCatalogueSearchResult.Unavailable,
+            is EntryCatalogueSearchResult.Failed,
+            -> emptyList()
+        }
     }
 }

@@ -280,6 +280,7 @@ class MangaReaderSettingsProvider(
         intSetting("navigation_mode_webtoon", navigationModeWebtoon) { it in TapZones.indices },
         profileOnly("pager_navigation_inverted", pagerNavInverted, enumCodec(TappingInvertMode.entries)),
         profileOnly("webtoon_navigation_inverted", webtoonNavInverted, enumCodec(TappingInvertMode.entries)),
+        booleanSetting("show_navigation_overlay_new_user", showNavigationOverlayNewUser),
         booleanSetting("show_navigation_overlay_on_start", showNavigationOverlayOnStart),
     )
 

@@ -1,0 +1,2 @@
+id=entry.destructive-removal
+module=mihon.entry.interactions.EntryDestructiveRemovalFeatureRuntimeModule

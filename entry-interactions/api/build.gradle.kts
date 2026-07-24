@@ -1,6 +1,7 @@
 plugins {
     alias(mihonx.plugins.android.library)
     alias(mihonx.plugins.compose)
+    alias(libs.plugins.kotlin.serialization)
     alias(mihonx.plugins.spotless)
 }
 

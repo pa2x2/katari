@@ -100,4 +100,21 @@ class LibraryItemSortTest {
         val sort = LibrarySort(LibrarySort.Type.LastRead, LibrarySort.Direction.Ascending)
         sortIds(sort, a, b) shouldBe listOf(1L, 2L)
     }
+
+    @Test
+    fun `missing summary sort values remain last in both directions`() {
+        val available = key(id = 1L, title = "Available", lastRead = 100L)
+        val unavailable = key(id = 2L, title = "Unavailable").copy(lastRead = null)
+
+        sortIds(
+            LibrarySort(LibrarySort.Type.LastRead, LibrarySort.Direction.Ascending),
+            unavailable,
+            available,
+        ) shouldBe listOf(1L, 2L)
+        sortIds(
+            LibrarySort(LibrarySort.Type.LastRead, LibrarySort.Direction.Descending),
+            unavailable,
+            available,
+        ) shouldBe listOf(1L, 2L)
+    }
 }

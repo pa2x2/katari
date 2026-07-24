@@ -5,6 +5,7 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
 import eu.kanade.tachiyomi.data.track.DeletableTracker
+import eu.kanade.tachiyomi.data.track.ExternalLoginTracker
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import eu.kanade.tachiyomi.data.track.myanimelist.dto.MALOAuth
 import kotlinx.serialization.json.Json
@@ -12,7 +13,9 @@ import tachiyomi.i18n.MR
 import uy.kohesive.injekt.injectLazy
 import tachiyomi.domain.track.model.EntryTrack as DomainTrack
 
-class MyAnimeList(id: Long) : BaseTracker(id, "MyAnimeList"), DeletableTracker {
+class MyAnimeList(id: Long) : BaseTracker(id, "MyAnimeList"), DeletableTracker, ExternalLoginTracker {
+
+    override val accountOrder = 1
 
     companion object {
         const val READING = 1L
@@ -35,6 +38,8 @@ class MyAnimeList(id: Long) : BaseTracker(id, "MyAnimeList"), DeletableTracker {
     private val api by lazy { MyAnimeListApi(id, client, interceptor) }
 
     override val supportsReadingDates: Boolean = true
+
+    override fun authorizationUri() = MyAnimeListApi.authUrl()
 
     override fun getLogo() = R.drawable.brand_myanimelist
 

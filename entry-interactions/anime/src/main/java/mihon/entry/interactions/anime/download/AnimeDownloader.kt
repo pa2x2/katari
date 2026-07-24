@@ -140,9 +140,9 @@ internal class AnimeDownloader(
                 )
             }
         val episodeDirName = provider.getEpisodeDirName(download.episode.name, download.episode.url)
-        animeDir.findFile(episodeDirName + AnimeDownloadManager.TMP_DIR_SUFFIX)?.delete()
-        val tmpDir = animeDir.createDirectory(episodeDirName + AnimeDownloadManager.TMP_DIR_SUFFIX)
-            ?: return AnimeDownloadFailure(AnimeDownloadFailure.Reason.UNKNOWN)
+        val tmpDir = provider.beginEpisodePackage(animeDir, episodeDirName)
+            .getOrElse { return AnimeDownloadFailure(AnimeDownloadFailure.Reason.UNKNOWN, it.message) }
+        var packagePublished = false
 
         try {
             download.status = AnimeDownload.State.RESOLVING
@@ -164,16 +164,15 @@ internal class AnimeDownloader(
 
             writeManifest(download, stream, videoFileName, subtitleFiles, tmpDir)
 
-            if (!tmpDir.renameTo(episodeDirName)) {
-                return AnimeDownloadFailure(AnimeDownloadFailure.Reason.UNKNOWN, "Failed to finalize episode package")
-            }
+            provider.publishEpisodePackage(animeDir, tmpDir, episodeDirName).getOrThrow()
+            packagePublished = true
             cache.addEpisode(episodeDirName, animeDir, download.anime)
             download.progress = 100
             download.status = AnimeDownload.State.DOWNLOADED
             return null
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
-            tmpDir.delete()
+            if (!packagePublished) tmpDir.delete()
             return AnimeDownloadFailure(
                 reason = when {
                     e is UnsupportedOperationException -> AnimeDownloadFailure.Reason.UNSUPPORTED_STREAM
@@ -566,6 +565,7 @@ internal class AnimeDownloader(
                 mimeType = stream.mimeType,
             ),
             subtitles = subtitleFiles,
+            artifacts = provider.createArtifactRecords(tmpDir),
         )
         file.openOutputStream().use {
             it.write(json.encodeToString(manifest).toByteArray())

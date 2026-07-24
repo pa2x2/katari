@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import tachiyomi.domain.source.model.EntryCatalogueDescription
 import tachiyomi.domain.source.model.Source
 
 class FeedsScreenModelTest {
@@ -40,7 +41,13 @@ class FeedsScreenModelTest {
     fun `latest feed becomes invalid when source no longer supports latest`() {
         val state = FeedsScreenModel.State(
             sources = listOf(
-                Source(id = 1L, lang = "en", name = "Source", supportsLatest = false, isStub = false),
+                Source(
+                    id = 1L,
+                    lang = "en",
+                    name = "Source",
+                    catalogue = EntryCatalogueDescription(supportsLatest = false),
+                    isStub = false,
+                ),
             ).toImmutableListForTest(),
             feeds = listOf(
                 SourceFeed(id = "feed", sourceId = 1L, presetId = BUILTIN_LATEST_PRESET_ID),
@@ -55,7 +62,13 @@ class FeedsScreenModelTest {
     fun `custom preset remains valid only for matching source`() {
         val state = FeedsScreenModel.State(
             sources = listOf(
-                Source(id = 1L, lang = "en", name = "Source", supportsLatest = true, isStub = false),
+                Source(
+                    id = 1L,
+                    lang = "en",
+                    name = "Source",
+                    catalogue = EntryCatalogueDescription(supportsLatest = true),
+                    isStub = false,
+                ),
             ).toImmutableListForTest(),
             presets = listOf(
                 SourceFeedPreset(id = "preset", sourceId = 2L, name = "Custom", listingMode = FeedListingMode.Search),
@@ -91,7 +104,7 @@ class FeedsScreenModelTest {
         }
 
         sourcesByProfile.getValue(1L).emit(
-            listOf(Source(id = 1L, lang = "en", name = "Source 1", supportsLatest = true, isStub = false)),
+            listOf(source(id = 1L, name = "Source 1")),
         )
         browseStateByProfile.getValue(1L).emit(
             BrowseFeedService.State(
@@ -119,7 +132,7 @@ class FeedsScreenModelTest {
         states.size shouldBe 1
 
         sourcesByProfile.getValue(2L).emit(
-            listOf(Source(id = 2L, lang = "en", name = "Source 2", supportsLatest = true, isStub = false)),
+            listOf(source(id = 2L, name = "Source 2")),
         )
         advanceUntilIdle()
 
@@ -154,7 +167,7 @@ class FeedsScreenModelTest {
         }
 
         sourcesByProfile.getValue(1L).emit(
-            listOf(Source(id = 1L, lang = "en", name = "Source 1", supportsLatest = true, isStub = false)),
+            listOf(source(id = 1L, name = "Source 1")),
         )
         browseStateByProfile.getValue(1L).emit(
             BrowseFeedService.State(
@@ -173,7 +186,7 @@ class FeedsScreenModelTest {
         states.last().selectedFeedId shouldBe "feed-1"
 
         sourcesByProfile.getValue(2L).emit(
-            listOf(Source(id = 2L, lang = "en", name = "Source 2", supportsLatest = true, isStub = false)),
+            listOf(source(id = 2L, name = "Source 2")),
         )
         browseStateByProfile.getValue(2L).emit(
             BrowseFeedService.State(
@@ -211,7 +224,7 @@ class FeedsScreenModelTest {
         }
 
         sourcesByProfile.getValue(1L).emit(
-            listOf(Source(id = 1L, lang = "en", name = "Mixed Source", supportsLatest = true, isStub = false)),
+            listOf(source(id = 1L, name = "Mixed Source")),
         )
         browseStateByProfile.getValue(1L).emit(
             BrowseFeedService.State(
@@ -275,7 +288,7 @@ class FeedsScreenModelTest {
         }
 
         sourcesByProfile.getValue(1L).emit(
-            listOf(Source(id = 1L, lang = "en", name = "Anime Source", supportsLatest = true, isStub = false)),
+            listOf(source(id = 1L, name = "Anime Source")),
         )
         browseStateByProfile.getValue(1L).emit(
             BrowseFeedService.State(
@@ -305,6 +318,16 @@ class FeedsScreenModelTest {
 
         job.cancel()
     }
+}
+
+private fun source(id: Long, name: String): Source {
+    return Source(
+        id = id,
+        lang = "en",
+        name = name,
+        catalogue = EntryCatalogueDescription(supportsLatest = true),
+        isStub = false,
+    )
 }
 
 private fun <T> List<T>.toImmutableListForTest() = toImmutableList()

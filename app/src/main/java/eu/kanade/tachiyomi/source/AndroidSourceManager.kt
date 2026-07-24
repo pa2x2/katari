@@ -4,7 +4,6 @@ import android.content.Context
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
-import eu.kanade.tachiyomi.source.entry.SourceHomePage
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,7 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import mihon.entry.interactions.EntryDownloadInteraction
+import mihon.entry.interactions.EntryDownloadMaintenanceFeature
 import tachiyomi.domain.source.model.SourceDisplayInfo
 import tachiyomi.domain.source.model.StubSource
 import tachiyomi.domain.source.model.UnifiedStubSource
@@ -37,7 +36,7 @@ class AndroidSourceManager(
     private val _isInitialized = MutableStateFlow(false)
     override val isInitialized: StateFlow<Boolean> = _isInitialized.asStateFlow()
 
-    private val entryDownloadInteraction: EntryDownloadInteraction by injectLazy()
+    private val downloadMaintenance: EntryDownloadMaintenanceFeature by injectLazy()
 
     private val scope = CoroutineScope(Job() + Dispatchers.IO)
 
@@ -101,22 +100,10 @@ class AndroidSourceManager(
         return sourcesMap.values.toList()
     }
 
-    override fun getCatalogueSources(): List<UnifiedSource> {
-        return sourcesMap.values.filterIsInstance<EntryCatalogueSource>()
-    }
-
-    override fun getCatalogueSource(sourceKey: Long): EntryCatalogueSource? {
-        return sourcesMap[sourceKey] as? EntryCatalogueSource
-    }
-
-    override fun getOnlineSources(): List<UnifiedSource> {
-        return sourcesMap.values.filterIsInstance<SourceHomePage>()
-    }
-
     override fun getStubSources(): List<UnifiedSource> {
-        val onlineSourceIds = getOnlineSources().map { it.id }
+        val installedSourceIds = sourcesMap.keys
         return stubSourcesMap.values
-            .filterNot { it.id in onlineSourceIds }
+            .filterNot { it.id in installedSourceIds }
             .map(::UnifiedStubSource)
     }
 
@@ -153,7 +140,7 @@ class AndroidSourceManager(
             if (dbSource == stub) return@launch
             sourceRepository.upsertStubSource(stub.id, stub.lang, stub.name)
             if (dbSource != null) {
-                entryDownloadInteraction.renameSource(UnifiedStubSource(dbSource), UnifiedStubSource(stub))
+                downloadMaintenance.renameSource(UnifiedStubSource(dbSource), UnifiedStubSource(stub))
             }
         }
     }

@@ -4,6 +4,7 @@ import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
+import eu.kanade.tachiyomi.data.track.ExternalLoginTracker
 import eu.kanade.tachiyomi.data.track.bangumi.dto.BGMOAuth
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import kotlinx.serialization.json.Json
@@ -11,7 +12,9 @@ import tachiyomi.i18n.MR
 import uy.kohesive.injekt.injectLazy
 import tachiyomi.domain.track.model.EntryTrack as DomainTrack
 
-class Bangumi(id: Long) : BaseTracker(id, "Bangumi") {
+class Bangumi(id: Long) : BaseTracker(id, "Bangumi"), ExternalLoginTracker {
+
+    override val accountOrder = 6
 
     private val json: Json by injectLazy()
 
@@ -20,6 +23,8 @@ class Bangumi(id: Long) : BaseTracker(id, "Bangumi") {
     private val api by lazy { BangumiApi(id, client, interceptor) }
 
     override val supportsPrivateTracking: Boolean = true
+
+    override fun authorizationUri() = BangumiApi.authUrl()
 
     override fun getScoreList(): List<String> = SCORE_LIST
 

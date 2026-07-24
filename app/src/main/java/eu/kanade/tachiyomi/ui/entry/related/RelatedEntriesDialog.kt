@@ -51,7 +51,6 @@ import tachiyomi.presentation.core.screens.LoadingScreen
 @Composable
 fun RelatedEntriesDialog(
     screenModel: RelatedEntriesScreenModel,
-    sourceItemOrientation: EntryItemOrientation,
     onDismissRequest: () -> Unit,
     onEntryClick: (Entry) -> Unit,
 ) {
@@ -117,6 +116,18 @@ fun RelatedEntriesDialog(
                             ),
                         )
 
+                        is RelatedEntriesScreenModel.State.Unavailable -> EmptyScreen(
+                            message = stringResource(MR.strings.no_results_found),
+                            modifier = Modifier.fillMaxSize(),
+                            actions = listOf(
+                                EmptyScreenAction(
+                                    stringRes = MR.strings.action_retry,
+                                    icon = Icons.Outlined.Refresh,
+                                    onClick = screenModel::retry,
+                                ),
+                            ),
+                        )
+
                         is RelatedEntriesScreenModel.State.Success -> {
                             if (currentState.relatedEntries.isEmpty()) {
                                 EmptyScreen(
@@ -139,7 +150,7 @@ fun RelatedEntriesDialog(
                                 ) {
                                     RelatedEntriesContent(
                                         entries = currentState.relatedEntries,
-                                        sourceItemOrientation = sourceItemOrientation,
+                                        sourceItemOrientation = currentState.sourceItemOrientation,
                                         entryState = screenModel::getEntryState,
                                         onEntryClick = onEntryClick,
                                     )

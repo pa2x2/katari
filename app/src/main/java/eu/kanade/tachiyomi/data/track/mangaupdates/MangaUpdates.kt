@@ -15,6 +15,8 @@ import tachiyomi.domain.track.model.EntryTrack as DomainTrack
 
 class MangaUpdates(id: Long) : BaseTracker(id, "MangaUpdates"), DeletableTracker {
 
+    override val accountOrder = 4
+
     companion object {
         const val READING_LIST = 0L
         const val WISH_LIST = 1L

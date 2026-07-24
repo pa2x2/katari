@@ -7,14 +7,14 @@ import org.junit.jupiter.api.Test
 class BrowseLongPressActionTest {
 
     @Test
-    fun `immersive priority starts immersive view when source supports it`() {
+    fun `immersive priority starts immersive view when feature makes it available`() {
         resolveBrowseLongPressAction(
             priority = priority(
                 CustomPreferences.BrowseLongPressAction.IMMERSIVE,
                 CustomPreferences.BrowseLongPressAction.PREVIEW,
                 CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION,
             ),
-            supportsImmersive = true,
+            immersiveAvailable = true,
             previewEnabled = true,
         ) shouldBe CustomPreferences.BrowseLongPressAction.IMMERSIVE
     }
@@ -27,7 +27,7 @@ class BrowseLongPressActionTest {
                 CustomPreferences.BrowseLongPressAction.PREVIEW,
                 CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION,
             ),
-            supportsImmersive = false,
+            immersiveAvailable = false,
             previewEnabled = true,
         ) shouldBe CustomPreferences.BrowseLongPressAction.PREVIEW
     }
@@ -40,7 +40,7 @@ class BrowseLongPressActionTest {
                 CustomPreferences.BrowseLongPressAction.PREVIEW,
                 CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION,
             ),
-            supportsImmersive = false,
+            immersiveAvailable = false,
             previewEnabled = false,
         ) shouldBe CustomPreferences.BrowseLongPressAction.LIBRARY_ACTION
     }

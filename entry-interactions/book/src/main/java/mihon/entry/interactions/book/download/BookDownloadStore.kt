@@ -39,11 +39,12 @@ internal class BookDownloadStore(
         backend.clear()
         backend.putAll(
             downloads.mapIndexed { order, download ->
-                download.chapter.id.toString() to json.encodeToString(
+                "${download.entry.profileId}:${download.entry.id}:${download.chapter.id}" to json.encodeToString(
                     BookDownloadObject(
                         profileId = download.entry.profileId,
                         entryId = download.entry.id,
                         chapterId = download.chapter.id,
+                        sourceId = download.entry.source,
                         order = order,
                     ),
                 )
@@ -70,7 +71,11 @@ internal class BookDownloadStore(
 
         return objects.mapNotNull { stored ->
             val entry = entriesByProfile[stored.profileId]?.get(stored.entryId)
-                ?.takeIf { it.type == EntryType.BOOK && it.profileId == stored.profileId }
+                ?.takeIf {
+                    it.type == EntryType.BOOK &&
+                        it.profileId == stored.profileId &&
+                        (stored.sourceId == null || it.source == stored.sourceId)
+                }
                 ?: return@mapNotNull null
             val chapter = runCatching { entryChapterRepository.getChapterById(stored.chapterId) }.getOrNull()
                 ?.takeIf { it.entryId == entry.id }
@@ -109,5 +114,6 @@ private data class BookDownloadObject(
     val profileId: Long,
     val entryId: Long,
     val chapterId: Long,
+    val sourceId: Long? = null,
     val order: Int,
 )

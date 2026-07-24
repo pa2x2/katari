@@ -10,7 +10,9 @@ android {
 
 dependencies {
     api(projects.entryInteractions.api)
+    api(projects.featureGraph)
     api(libs.androidx.appCompat)
+    api(libs.coil.core)
 
     implementation(projects.presentationCore)
     implementation(libs.androidx.activity.compose)

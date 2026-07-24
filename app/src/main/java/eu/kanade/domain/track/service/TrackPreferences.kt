@@ -5,37 +5,62 @@ import eu.kanade.tachiyomi.data.track.Tracker
 import eu.kanade.tachiyomi.data.track.mangabaka.MangaBaka
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
+import tachiyomi.core.common.preference.ProfilePreferenceKeyPattern
 import tachiyomi.core.common.preference.getEnum
 
 class TrackPreferences(
     private val preferenceStore: PreferenceStore,
 ) {
 
+    companion object {
+        val USERNAME_KEY_FAMILY = privateFamily("pref_mangasync_username_")
+        val DISPLAY_USERNAME_KEY_FAMILY = privateFamily("pref_mangasync_displayname_")
+        val PASSWORD_KEY_FAMILY = privateFamily("pref_mangasync_password_")
+        val AUTH_EXPIRED_KEY_FAMILY = privateFamily("pref_tracker_auth_expired_")
+        val TOKEN_KEY_FAMILY = privateFamily("track_token_")
+        val OAUTH_STATE_KEY_FAMILY = privateFamily("track_oauth_state_")
+        val OAUTH_CODE_VERIFIER_KEY_FAMILY = privateFamily("track_oauth_code_verifier_")
+
+        val profileKeyPatterns = setOf(
+            USERNAME_KEY_FAMILY,
+            DISPLAY_USERNAME_KEY_FAMILY,
+            PASSWORD_KEY_FAMILY,
+            AUTH_EXPIRED_KEY_FAMILY,
+            TOKEN_KEY_FAMILY,
+            OAUTH_STATE_KEY_FAMILY,
+            OAUTH_CODE_VERIFIER_KEY_FAMILY,
+        )
+
+        private fun privateFamily(prefix: String): ProfilePreferenceKeyPattern.Prefix {
+            return ProfilePreferenceKeyPattern.Prefix(Preference.privateKey(prefix))
+        }
+    }
+
     fun trackUsername(tracker: Tracker) = trackUsername(tracker.id)
 
     fun trackUsername(trackerId: Long) = preferenceStore.getString(
-        Preference.privateKey("pref_mangasync_username_$trackerId"),
+        USERNAME_KEY_FAMILY.key(trackerId),
         "",
     )
 
     fun trackDisplayUsername(tracker: Tracker) = trackDisplayUsername(tracker.id)
 
     fun trackDisplayUsername(trackerId: Long) = preferenceStore.getString(
-        Preference.privateKey("pref_mangasync_displayname_$trackerId"),
+        DISPLAY_USERNAME_KEY_FAMILY.key(trackerId),
         "",
     )
 
     fun trackPassword(tracker: Tracker) = trackPassword(tracker.id)
 
     fun trackPassword(trackerId: Long) = preferenceStore.getString(
-        Preference.privateKey("pref_mangasync_password_$trackerId"),
+        PASSWORD_KEY_FAMILY.key(trackerId),
         "",
     )
 
     fun trackAuthExpired(tracker: Tracker) = trackAuthExpired(tracker.id)
 
     fun trackAuthExpired(trackerId: Long) = preferenceStore.getBoolean(
-        Preference.privateKey("pref_tracker_auth_expired_$trackerId"),
+        AUTH_EXPIRED_KEY_FAMILY.key(trackerId),
         false,
     )
 
@@ -47,19 +72,19 @@ class TrackPreferences(
 
     fun trackToken(tracker: Tracker) = trackToken(tracker.id)
 
-    fun trackToken(trackerId: Long) = preferenceStore.getString(Preference.privateKey("track_token_$trackerId"), "")
+    fun trackToken(trackerId: Long) = preferenceStore.getString(TOKEN_KEY_FAMILY.key(trackerId), "")
 
     fun oauthState(tracker: Tracker) = oauthState(tracker.id)
 
     fun oauthState(trackerId: Long) = preferenceStore.getString(
-        Preference.privateKey("track_oauth_state_$trackerId"),
+        OAUTH_STATE_KEY_FAMILY.key(trackerId),
         "",
     )
 
     fun oauthCodeVerifier(tracker: Tracker) = oauthCodeVerifier(tracker.id)
 
     fun oauthCodeVerifier(trackerId: Long) = preferenceStore.getString(
-        Preference.privateKey("track_oauth_code_verifier_$trackerId"),
+        OAUTH_CODE_VERIFIER_KEY_FAMILY.key(trackerId),
         "",
     )
 

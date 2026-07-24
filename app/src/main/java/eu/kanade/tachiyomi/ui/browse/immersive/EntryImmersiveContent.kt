@@ -71,6 +71,10 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.EntryImmersiveHandle
+import mihon.entry.interactions.EntryImmersiveOpenTargetResult
+import mihon.entry.interactions.EntryImmersivePreloadRadiusResult
+import mihon.entry.interactions.EntryImmersiveRendererResult
+import mihon.entry.interactions.EntryImmersiveUnavailableReason
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.asEntryCover
 import tachiyomi.i18n.MR
@@ -106,18 +110,25 @@ internal fun EntryImmersiveContent(
     val initialPageInBounds = positionState.itemIndex.coerceIn(0, (itemCount - 1).coerceAtLeast(0))
     val pagerState = rememberPagerState(initialPage = initialPageInBounds) { itemCount }
     val scope = rememberCoroutineScope()
-    val entryOpenInteraction = remember { Injekt.get<mihon.entry.interactions.EntryOpenInteraction>() }
+    val entryOpenFeature = remember { Injekt.get<mihon.entry.interactions.EntryOpenFeature>() }
+    val immersiveFeature = remember { Injekt.get<mihon.entry.interactions.EntryImmersiveFeature>() }
     val currentOnPageSettled by rememberUpdatedState(onPageSettled)
     val currentOnNearEnd by rememberUpdatedState(onNearEnd)
     var isZoomed by remember { mutableStateOf(false) }
     var controlsVisible by remember { mutableStateOf(false) }
 
+    val preloadRadius = when (
+        val result = itemIdentity(pagerState.currentPage)?.type?.let(immersiveFeature::preloadRadius)
+    ) {
+        is EntryImmersivePreloadRadiusResult.Available -> result.radius
+        is EntryImmersivePreloadRadiusResult.Inapplicable, null -> 0
+    }
     val retainedItemKeys = buildSet {
         pagerState.settledPage
             .takeIf { it in 0 until itemCount }
             ?.let(itemIdentity)
             ?.let(::add)
-        for (page in pagerState.currentPage - PRELOAD_RADIUS..pagerState.currentPage + PRELOAD_RADIUS) {
+        for (page in pagerState.currentPage - preloadRadius..pagerState.currentPage + preloadRadius) {
             if (page in 0 until itemCount) itemIdentity(page)?.let(::add)
         }
     }
@@ -161,13 +172,13 @@ internal fun EntryImmersiveContent(
                     itemIdentity(page)?.let(::entryImmersiveItemKey) ?: "immersive:$page"
                 },
                 userScrollEnabled = !isZoomed,
-                beyondViewportPageCount = PRELOAD_RADIUS,
+                beyondViewportPageCount = preloadRadius,
             ) { page ->
                 val entry = itemContent(page)
                 val itemKey = entry?.immersiveItemKey() ?: itemIdentity(page)
                 val itemState = itemKey?.let(immersiveState.items::get)
                 val isActive = page == pagerState.settledPage
-                val preloadRange = (pagerState.currentPage - PRELOAD_RADIUS)..(pagerState.currentPage + PRELOAD_RADIUS)
+                val preloadRange = (pagerState.currentPage - preloadRadius)..(pagerState.currentPage + preloadRadius)
 
                 if (entry != null && (page in preloadRange || isActive)) {
                     LaunchedEffect(itemKey) { immersiveModel.load(context, entry) }
@@ -189,12 +200,20 @@ internal fun EntryImmersiveContent(
                     showBackToTop = pagerState.currentPage > 0,
                     onBackToTop = { scope.launch { pagerState.animateScrollToPage(0) } },
                     onOpenChapter = if (entry != null && itemState is EntryImmersiveScreenModel.ItemState.Ready) {
-                        {
-                            entryOpenInteraction.open(
-                                context = context,
-                                entry = entry,
-                                chapter = itemState.chapter,
-                            )
+                        val openTarget = immersiveFeature.openTarget(itemState.handle)
+                        val chapter = itemState.chapter
+                        if (openTarget is EntryImmersiveOpenTargetResult.Available &&
+                            chapter?.id == openTarget.childId
+                        ) {
+                            {
+                                entryOpenFeature.open(
+                                    context = context,
+                                    entry = entry,
+                                    chapter = chapter,
+                                )
+                            }
+                        } else {
+                            null
                         }
                     } else {
                         null
@@ -258,21 +277,39 @@ private fun EntryImmersivePage(
 
         when (itemState) {
             is EntryImmersiveScreenModel.ItemState.Ready -> {
-                val renderer = remember(itemState.handle, immersiveModel) {
-                    immersiveModel.renderer(itemState.handle)
+                when (
+                    val renderer = remember(itemState.handle, immersiveModel) {
+                        immersiveModel.renderer(itemState.handle)
+                    }
+                ) {
+                    is EntryImmersiveRendererResult.Available -> renderer.renderer.Content(
+                        modifier = Modifier.fillMaxSize(),
+                        active = isActive,
+                        controlsVisible = controlsVisible,
+                        controlsBottomInset = controlsBottomInset,
+                        onToggleControls = onToggleControls,
+                        onZoomStateChange = onZoomStateChange,
+                        onProgress = { immersiveModel.persistProgress(itemState.handle, it) },
+                    )
+                    is EntryImmersiveRendererResult.Failed -> ImmersiveError(
+                        message = renderer.error.message ?: stringResource(MR.strings.unknown_error),
+                        onRetry = onRetry,
+                        modifier = Modifier.align(Alignment.Center),
+                    )
                 }
-                renderer.Content(
-                    modifier = Modifier.fillMaxSize(),
-                    active = isActive,
-                    controlsVisible = controlsVisible,
-                    controlsBottomInset = controlsBottomInset,
-                    onToggleControls = onToggleControls,
-                    onZoomStateChange = onZoomStateChange,
-                    onProgress = { immersiveModel.persistProgress(itemState.handle, it) },
-                )
             }
             is EntryImmersiveScreenModel.ItemState.Error -> ImmersiveError(
                 message = itemState.throwable.message ?: stringResource(MR.strings.unknown_error),
+                onRetry = onRetry,
+                modifier = Modifier.align(Alignment.Center),
+            )
+            is EntryImmersiveScreenModel.ItemState.Inapplicable -> ImmersiveError(
+                message = stringResource(MR.strings.source_unsupported),
+                onRetry = onRetry,
+                modifier = Modifier.align(Alignment.Center),
+            )
+            is EntryImmersiveScreenModel.ItemState.Unavailable -> ImmersiveError(
+                message = immersiveUnavailableMessage(itemState.reason),
                 onRetry = onRetry,
                 modifier = Modifier.align(Alignment.Center),
             )
@@ -560,5 +597,14 @@ internal fun ImmersiveSystemBarsEffect(enabled: Boolean) {
 
 internal fun shouldShowImmersivePoster(handle: EntryImmersiveHandle?): Boolean = true
 
-private const val PRELOAD_RADIUS = 1
+@Composable
+private fun immersiveUnavailableMessage(reason: EntryImmersiveUnavailableReason): String {
+    return when (reason) {
+        EntryImmersiveUnavailableReason.SourceUnavailable ->
+            stringResource(MR.strings.browse_video_feed_source_not_found)
+        EntryImmersiveUnavailableReason.SourceOptedOut -> stringResource(MR.strings.source_unsupported)
+        EntryImmersiveUnavailableReason.NoReadingChild -> stringResource(MR.strings.no_chapters_error)
+    }
+}
+
 private const val LOAD_MORE_PAGE_THRESHOLD = 3

@@ -5,10 +5,8 @@ import androidx.compose.runtime.Immutable
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.core.util.insertSeparators
-import eu.kanade.domain.track.interactor.AddTracks
 import eu.kanade.presentation.history.HistoryUiItem
 import eu.kanade.presentation.history.HistoryUiModel
-import eu.kanade.tachiyomi.data.track.EntryTrackingSource
 import eu.kanade.tachiyomi.ui.collapseByVisibleEntry
 import eu.kanade.tachiyomi.util.lang.toLocalDate
 import kotlinx.coroutines.Dispatchers
@@ -23,45 +21,38 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.entry.interactions.EntryLibraryAddRequest
+import mihon.entry.interactions.EntryLibraryAddResult
+import mihon.entry.interactions.EntryLibraryCategorySelection
+import mihon.entry.interactions.EntryLibraryDuplicatePolicy
+import mihon.entry.interactions.EntryLibraryMembershipFeature
+import mihon.entry.interactions.EntryMergeNavigationFeature
+import mihon.entry.interactions.EntryMergeSubject
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.mapAsCheckboxState
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.model.Category
-import tachiyomi.domain.category.repository.CategoryRepository
-import tachiyomi.domain.entry.interactor.GetDuplicateLibraryEntries
 import tachiyomi.domain.entry.interactor.GetEntry
-import tachiyomi.domain.entry.interactor.GetMergedEntry
-import tachiyomi.domain.entry.interactor.SetEntryCategories
-import tachiyomi.domain.entry.interactor.SetEntryFavorite
 import tachiyomi.domain.entry.model.DuplicateEntryCandidate
 import tachiyomi.domain.entry.model.Entry
-import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.asEntryCover
 import tachiyomi.domain.history.interactor.GetHistory
 import tachiyomi.domain.history.interactor.RemoveHistory
 import tachiyomi.domain.history.model.HistoryItem
 import tachiyomi.domain.history.model.HistoryWithRelations
 import tachiyomi.domain.history.model.toHistoryItem
-import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 class HistoryScreenModel(
-    private val addTracks: AddTracks = Injekt.get(),
-    private val categoryRepository: CategoryRepository = Injekt.get(),
-    private val getCategories: GetCategories = Injekt.get(),
-    private val getDuplicateLibraryEntries: GetDuplicateLibraryEntries = Injekt.get(),
+    private val entryLibraryMembershipFeature: EntryLibraryMembershipFeature = Injekt.get(),
+    private val entryMergeNavigationFeature: EntryMergeNavigationFeature = Injekt.get(),
     private val getEntry: GetEntry = Injekt.get(),
-    private val getMergedEntry: GetMergedEntry = Injekt.get(),
     private val getHistory: GetHistory = Injekt.get(),
-    private val libraryPreferences: LibraryPreferences = Injekt.get(),
     private val removeHistory: RemoveHistory = Injekt.get(),
-    private val setEntryCategories: SetEntryCategories = Injekt.get(),
-    private val setEntryFavorite: SetEntryFavorite = Injekt.get(),
     private val sourceManager: SourceManager = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
 ) : StateScreenModel<HistoryScreenModel.State>(State()) {
@@ -93,8 +84,13 @@ class HistoryScreenModel(
 
         return map { historyWithRelations ->
             val historyItem = historyWithRelations.toHistoryItem()
+            val ownerEntry = entryCache.getOrPut(historyItem.entryId) { getEntry.await(historyItem.entryId) }
             val visibleEntryId = visibleTargetCache.getOrPut(historyItem.entryId) {
-                getMergedEntry.awaitVisibleTargetId(historyItem.entryId)
+                ownerEntry?.let { entry ->
+                    entryMergeNavigationFeature.resolveNavigation(
+                        EntryMergeSubject(entry.profileId, historyItem.entryId),
+                    ).visibleEntryId
+                } ?: historyItem.entryId
             }
             val entry = entryCache.getOrPut(visibleEntryId) {
                 getEntry.await(visibleEntryId)
@@ -165,85 +161,52 @@ class HistoryScreenModel(
         mutableState.update { it.copy(dialog = dialog) }
     }
 
-    /**
-     * Get user categories.
-     *
-     * @return List of categories, not including the default category
-     */
-    suspend fun getCategories(): List<Category> {
-        return getCategories.await().filterNot { it.isSystemCategory }
-    }
-
-    private fun moveEntryToCategory(entryId: Long, categories: Category?) {
-        val categoryIds = listOfNotNull(categories).map { it.id }
-        moveEntryToCategory(entryId, categoryIds)
-    }
-
-    private fun moveEntryToCategory(entryId: Long, categoryIds: List<Long>) {
-        screenModelScope.launchIO {
-            setEntryCategories.await(entryId, categoryIds)
-        }
-    }
-
     fun moveEntryToCategoriesAndAddToLibrary(entry: Entry, categories: List<Long>) {
-        moveEntryToCategory(entry.id, categories)
-        if (entry.favorite) return
-
         screenModelScope.launchIO {
-            setEntryFavorite.await(entry.id, true)
+            addToLibrary(
+                EntryLibraryAddRequest(
+                    entry = entry,
+                    duplicatePolicy = EntryLibraryDuplicatePolicy.ALLOW,
+                    categorySelection = EntryLibraryCategorySelection.Selected(categories),
+                ),
+            )
         }
-    }
-
-    private suspend fun getEntryCategoryIds(entry: Entry): List<Long> {
-        return categoryRepository.getCategoriesByEntryId(entry.id)
-            .map { it.id }
     }
 
     fun addFavorite(entryId: Long) {
         screenModelScope.launchIO {
             val entry = getEntry.await(entryId) ?: return@launchIO
-
-            val duplicates = getDuplicateLibraryEntries(entry)
-            if (duplicates.isNotEmpty()) {
-                mutableState.update { it.copy(dialog = Dialog.DuplicateEntry(entry, duplicates)) }
-                return@launchIO
-            }
-
-            addFavorite(entry)
+            addToLibrary(EntryLibraryAddRequest(entry))
         }
     }
 
     fun addFavorite(entry: Entry) {
         screenModelScope.launchIO {
-            // Move to default category if applicable
-            val categories = getCategories()
-            val defaultCategoryId = libraryPreferences.defaultCategory.get().toLong()
-            val defaultCategory = categories.find { it.id == defaultCategoryId }
-
-            when {
-                // Default category set
-                defaultCategory != null -> {
-                    val result = setEntryFavorite.await(entry.id, true)
-                    if (!result) return@launchIO
-                    moveEntryToCategory(entry.id, defaultCategory)
-                }
-
-                // Automatic 'Default' or no categories
-                defaultCategoryId == 0L || categories.isEmpty() -> {
-                    val result = setEntryFavorite.await(entry.id, true)
-                    if (!result) return@launchIO
-                    moveEntryToCategory(entry.id, null)
-                }
-
-                // Choose a category
-                else -> showChangeCategoryDialog(entry)
-            }
-
-            val source = sourceManager.getOrStub(entry.source)
-            addTracks.bindEnhancedTrackers(
-                entry = entry,
-                source = EntryTrackingSource.from(source, sourceManager.getDisplayInfo(entry.source)),
+            addToLibrary(
+                EntryLibraryAddRequest(entry, duplicatePolicy = EntryLibraryDuplicatePolicy.ALLOW),
             )
+        }
+    }
+
+    private suspend fun addToLibrary(request: EntryLibraryAddRequest) {
+        when (val result = entryLibraryMembershipFeature.add(request)) {
+            is EntryLibraryAddResult.DuplicateCandidates -> mutableState.update {
+                it.copy(dialog = Dialog.DuplicateEntry(result.entry, result.candidates))
+            }
+            is EntryLibraryAddResult.CategorySelectionRequired -> mutableState.update {
+                it.copy(
+                    dialog = Dialog.ChangeCategory(
+                        entry = result.entry,
+                        initialSelection = result.categories.mapAsCheckboxState {
+                            it.id in result.selectedCategoryIds
+                        },
+                    ),
+                )
+            }
+            is EntryLibraryAddResult.Failed -> logcat(LogPriority.ERROR, result.cause)
+            is EntryLibraryAddResult.Added,
+            is EntryLibraryAddResult.AlreadyInLibrary,
+            -> Unit
         }
     }
 
@@ -253,23 +216,9 @@ class HistoryScreenModel(
         }
     }
 
-    fun showChangeCategoryDialog(entry: Entry) {
-        screenModelScope.launch {
-            val categories = getCategories()
-            val selection = getEntryCategoryIds(entry)
-            mutableState.update { currentState ->
-                currentState.copy(
-                    dialog = Dialog.ChangeCategory(
-                        entry = entry,
-                        initialSelection = categories.mapAsCheckboxState { it.id in selection },
-                    ),
-                )
-            }
-        }
-    }
-
     suspend fun getVisibleEntryId(entryId: Long): Long {
-        return getMergedEntry.awaitVisibleTargetId(entryId)
+        val entry = getEntry.await(entryId) ?: return entryId
+        return entryMergeNavigationFeature.resolveNavigation(EntryMergeSubject(entry.profileId, entryId)).visibleEntryId
     }
 
     @Immutable
@@ -291,7 +240,6 @@ class HistoryScreenModel(
     }
 
     sealed interface Event {
-        data class OpenChapter(val chapter: EntryChapter?) : Event
         data object InternalError : Event
         data object HistoryCleared : Event
     }

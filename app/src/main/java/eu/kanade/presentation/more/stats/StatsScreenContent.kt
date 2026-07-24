@@ -57,6 +57,7 @@ private fun LazyItemScope.OverviewSection(
     data: StatsData.Overview,
 ) {
     val none = stringResource(MR.strings.none)
+    val notApplicable = stringResource(MR.strings.not_applicable)
     val context = LocalContext.current
     val readDurationString = remember(data.totalReadDuration) {
         data.totalReadDuration
@@ -78,7 +79,7 @@ private fun LazyItemScope.OverviewSection(
                 icon = Icons.Outlined.Schedule,
             )
             StatsOverviewItem(
-                title = data.completedEntryCount.toString(),
+                title = data.completedEntryCount?.toString() ?: notApplicable,
                 subtitle = stringResource(MR.strings.label_completed_titles),
                 icon = Icons.Outlined.LocalLibrary,
             )
@@ -90,6 +91,7 @@ private fun LazyItemScope.OverviewSection(
 private fun LazyItemScope.TitlesStats(
     data: StatsData.Titles,
 ) {
+    val notApplicable = stringResource(MR.strings.not_applicable)
     SectionCard(MR.strings.label_titles_section) {
         Row {
             StatsItem(
@@ -97,7 +99,7 @@ private fun LazyItemScope.TitlesStats(
                 stringResource(MR.strings.label_titles_in_global_update),
             )
             StatsItem(
-                data.startedEntryCount.toString(),
+                data.startedEntryCount?.toString() ?: notApplicable,
                 stringResource(MR.strings.label_started),
             )
             StatsItem(
@@ -112,14 +114,15 @@ private fun LazyItemScope.TitlesStats(
 private fun LazyItemScope.ChapterStats(
     data: StatsData.Chapters,
 ) {
+    val notApplicable = stringResource(MR.strings.not_applicable)
     SectionCard(MR.strings.label_items_section) {
         Row {
             StatsItem(
-                data.totalChapterCount.toString(),
+                data.totalChapterCount?.toString() ?: notApplicable,
                 stringResource(MR.strings.label_total_chapters),
             )
             StatsItem(
-                data.readChapterCount.toString(),
+                data.readChapterCount?.toString() ?: notApplicable,
                 stringResource(MR.strings.label_read_chapters),
             )
             StatsItem(

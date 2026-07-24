@@ -35,6 +35,7 @@ fun EntryToolbar(
     onClickFilter: () -> Unit,
     onClickShare: (() -> Unit)?,
     onClickDownload: ((DownloadAction) -> Unit)?,
+    bookmarkedDownloadsSupported: Boolean,
     onClickEditCategory: (() -> Unit)?,
     onClickEditDisplayName: (() -> Unit)?,
     onClickManageMerge: (() -> Unit)?,
@@ -76,6 +77,7 @@ fun EntryToolbar(
                     expanded = downloadExpanded,
                     onDismissRequest = onDismissRequest,
                     onDownloadClicked = onClickDownload,
+                    bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
                     presentation = entryType.entryTypePresentation(),
                 )
             }

@@ -12,6 +12,7 @@ import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -30,7 +31,7 @@ import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
-import tachiyomi.domain.entry.service.EntryMetadataUpdateHooks
+import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
 import tachiyomi.domain.entry.service.FetchInterval
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.service.SourceManager
@@ -218,7 +219,7 @@ class SyncEntryWithSourceTest {
     }
 
     @Test
-    fun `manual metadata refresh invalidates same url cover but respects title preference`() = runTest {
+    fun `manual metadata refresh publishes persisted cover change while respecting title preference`() = runTest {
         val entry = entry().copy(
             favorite = true,
             title = "Stored title",
@@ -229,35 +230,35 @@ class SyncEntryWithSourceTest {
         val entryRepository = mockEntryRepository()
         val updated = slot<Entry>()
         coEvery { entryRepository.update(capture(updated)) } returns true
-        val hooks = mockk<EntryMetadataUpdateHooks>(relaxed = true)
+        val notifier = mockk<EntryMetadataChangeNotifier>(relaxed = true)
 
         sync(
             source = TestSource(details = details),
             entryRepository = entryRepository,
-            metadataUpdateHooks = hooks,
+            metadataChangeNotifier = notifier,
             now = { 200L },
         )(entry, fetchChapters = false, manualFetch = true)
 
         updated.captured.title shouldBe "Stored title"
         updated.captured.coverLastModified shouldBe 200L
-        coVerify(exactly = 0) { hooks.onTitleChanged(any(), any()) }
+        coVerify(exactly = 1) { notifier.changed(entry, updated.captured) }
     }
 
     @Test
-    fun `allowed source title change invokes metadata hook`() = runTest {
+    fun `allowed source title change publishes metadata transition`() = runTest {
         val preferences = LibraryPreferences(InMemoryPreferenceStore()).also {
             it.updateMangaTitles.set(true)
         }
-        val hooks = mockk<EntryMetadataUpdateHooks>(relaxed = true)
+        val notifier = mockk<EntryMetadataChangeNotifier>(relaxed = true)
         val stored = entry().copy(favorite = true, title = "Stored title")
         val source = TestSource(details = sourceEntry(title = "Remote title"))
 
-        sync(source, libraryPreferences = preferences, metadataUpdateHooks = hooks)(
+        sync(source, libraryPreferences = preferences, metadataChangeNotifier = notifier)(
             stored,
             fetchChapters = false,
         )
 
-        coVerify(exactly = 1) { hooks.onTitleChanged(stored, "Remote title") }
+        coVerify(exactly = 1) { notifier.changed(stored, stored.copy(title = "Remote title", initialized = true)) }
     }
 
     @Test
@@ -356,6 +357,68 @@ class SyncEntryWithSourceTest {
         updatedEntries.last().dateAdded shouldBe 900L
     }
 
+    @Test
+    fun `strict synchronization pins entry updates to the requested profile`() = runTest {
+        val repository = mockEntryRepository()
+        coEvery { repository.update(any(), 8L) } returns true
+        val stored = entry().copy(profileId = 8L, title = "Stored")
+
+        sync(
+            source = TestSource(details = sourceEntry(title = "Remote")),
+            entryRepository = repository,
+        ).syncStrictly(
+            entry = stored,
+            profileId = 8L,
+            updateLibraryTitles = true,
+            fetchChapters = false,
+        )
+
+        coVerify(exactly = 1) { repository.update(match { it.title == "Remote" }, 8L) }
+        coVerify(exactly = 0) { repository.update(any()) }
+    }
+
+    @Test
+    fun `strict synchronization rejects swallowed chapter insertion failure`() = runTest {
+        val chapters = chapterRepository(emptyList())
+        coEvery { chapters.insertOrUpdate(any()) } returns emptyList()
+
+        val error = runCatching {
+            sync(
+                source = TestSource(chapters = listOf(sourceChapter())),
+                repository = chapters,
+            ).syncStrictly(
+                entry = entry().copy(profileId = 8L),
+                profileId = 8L,
+                updateLibraryTitles = false,
+                fetchDetails = false,
+            )
+        }.exceptionOrNull()
+
+        error.shouldBeInstanceOf<IllegalStateException>()
+    }
+
+    @Test
+    fun `strict synchronization verifies requested chapter removals`() = runTest {
+        val retained = chapter(id = 1L, url = "/old", sourceOrder = 0L, read = true)
+        val removed = chapter(id = 2L, url = "/current", sourceOrder = 0L)
+        val chapters = chapterRepository(listOf(retained, removed))
+        coEvery { chapters.getChapterById(removed.id) } returns removed
+
+        val error = runCatching {
+            sync(
+                source = TestSource(chapters = listOf(sourceChapter(url = "/current"))),
+                repository = chapters,
+            ).syncStrictly(
+                entry = entry().copy(profileId = 8L),
+                profileId = 8L,
+                updateLibraryTitles = false,
+                fetchDetails = false,
+            )
+        }.exceptionOrNull()
+
+        error.shouldBeInstanceOf<IllegalStateException>()
+    }
+
     private fun sync(
         source: UnifiedSource,
         repository: EntryChapterRepository = chapterRepository(emptyList()),
@@ -363,7 +426,7 @@ class SyncEntryWithSourceTest {
         entryRepository: EntryRepository = mockEntryRepository(),
         libraryPreferences: LibraryPreferences = LibraryPreferences(InMemoryPreferenceStore()),
         fetchInterval: FetchInterval = mockFetchInterval(),
-        metadataUpdateHooks: EntryMetadataUpdateHooks = mockk(relaxed = true),
+        metadataChangeNotifier: EntryMetadataChangeNotifier = mockk(relaxed = true),
         now: () -> Long = { 1000L },
     ): SyncEntryWithSource {
         val sourceManager = mockk<SourceManager> {
@@ -376,7 +439,7 @@ class SyncEntryWithSourceTest {
             sourceManager = sourceManager,
             libraryPreferences = libraryPreferences,
             fetchInterval = fetchInterval,
-            metadataUpdateHooks = metadataUpdateHooks,
+            metadataChangeNotifier = metadataChangeNotifier,
             now = now,
         )
     }

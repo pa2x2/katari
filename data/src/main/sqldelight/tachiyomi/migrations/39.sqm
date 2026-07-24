@@ -1,0 +1,5 @@
+ALTER TABLE entry_migration_consequences
+RENAME COLUMN artifact_id TO participant_id;
+
+ALTER TABLE entry_migration_consequences
+ADD COLUMN schema_version INTEGER NOT NULL DEFAULT 1;

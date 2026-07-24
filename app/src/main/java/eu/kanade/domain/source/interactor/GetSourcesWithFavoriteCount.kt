@@ -28,6 +28,15 @@ class GetSourcesWithFavoriteCount(
         }
     }
 
+    fun sort(sources: List<Pair<Source, Long>>): List<Pair<Source, Long>> {
+        return sources.sortedWith(
+            sortFn(
+                preferences.migrationSortingDirection.get(),
+                preferences.migrationSortingMode.get(),
+            ),
+        )
+    }
+
     private fun sortFn(
         direction: SetMigrateSorting.Direction,
         sorting: SetMigrateSorting.Mode,

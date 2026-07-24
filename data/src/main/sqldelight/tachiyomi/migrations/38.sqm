@@ -1,0 +1,28 @@
+CREATE TABLE entry_migration_operations(
+    operation_id TEXT NOT NULL PRIMARY KEY,
+    intent_fingerprint TEXT NOT NULL,
+    profile_id INTEGER NOT NULL,
+    source_entry_id INTEGER NOT NULL,
+    target_entry_id INTEGER NOT NULL,
+    mode TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY(profile_id) REFERENCES profiles(_id) ON DELETE CASCADE
+);
+
+CREATE TABLE entry_migration_consequences(
+    consequence_id TEXT NOT NULL PRIMARY KEY,
+    operation_id TEXT NOT NULL,
+    profile_id INTEGER NOT NULL,
+    artifact_id TEXT NOT NULL,
+    payload TEXT NOT NULL,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    next_attempt_at INTEGER NOT NULL DEFAULT 0,
+    last_error TEXT,
+    created_at INTEGER NOT NULL,
+    UNIQUE(operation_id, artifact_id),
+    FOREIGN KEY(operation_id) REFERENCES entry_migration_operations(operation_id) ON DELETE CASCADE,
+    FOREIGN KEY(profile_id) REFERENCES profiles(_id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_entry_migration_consequences_pending
+ON entry_migration_consequences(next_attempt_at, created_at);

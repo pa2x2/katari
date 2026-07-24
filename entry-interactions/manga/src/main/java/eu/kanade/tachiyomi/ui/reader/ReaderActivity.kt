@@ -78,6 +78,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.entry.interactions.EntryChildWebViewResolution
 import mihon.entry.interactions.EntryInteractionActivity
 import mihon.entry.interactions.manga.R
 import mihon.entry.interactions.manga.databinding.ReaderActivityBinding
@@ -127,6 +128,7 @@ class ReaderActivity : EntryInteractionActivity() {
 
     internal val viewModel by viewModels<ReaderViewModel>()
     private var assistUrl: String? = null
+    private var chapterWebView by mutableStateOf<EntryChildWebViewResolution.Available?>(null)
 
     /**
      * Configuration at reader level, like background color or forced orientation.
@@ -471,7 +473,7 @@ class ReaderActivity : EntryInteractionActivity() {
             return
         }
 
-        val supportsChapterWebView = viewModel.supportsChapterWebView()
+        val supportsChapterWebView = chapterWebView != null
 
         val cropBorderPaged by readerPreferences.cropBorders.collectAsState()
         val cropBorderWebtoon by readerPreferences.cropBordersWebtoon.collectAsState()
@@ -603,11 +605,9 @@ class ReaderActivity : EntryInteractionActivity() {
 
     private fun openChapterInWebView() {
         val manga = viewModel.manga ?: return
-        val sourceId = viewModel.getChapterWebViewSourceId() ?: return
-        assistUrl?.let {
-            val intent = readerWebViewIntent(it, sourceId, manga.displayTitle)
-            startActivity(intent)
-        }
+        val resolution = chapterWebView ?: return
+        val intent = readerWebViewIntent(resolution.url, resolution.sourceId, manga.displayTitle)
+        startActivity(intent)
     }
 
     private fun openChapterInBrowser() {
@@ -646,9 +646,23 @@ class ReaderActivity : EntryInteractionActivity() {
             initialPageIndex = null
         }
 
+        val chapterId = viewerChapters.current.chapter.id
+        chapterWebView = null
+        assistUrl = null
         lifecycleScope.launchIO {
-            viewModel.getChapterUrl()?.let { url ->
-                assistUrl = url
+            val resolution = viewModel.resolveChapterWebView()
+            withUIContext {
+                if (viewModel.state.value.currentChapter?.chapter?.id != chapterId) return@withUIContext
+                when (resolution) {
+                    is EntryChildWebViewResolution.Available -> {
+                        chapterWebView = resolution
+                        assistUrl = resolution.url
+                    }
+                    is EntryChildWebViewResolution.Failed -> {
+                        logcat(LogPriority.ERROR, resolution.cause) { "Failed to resolve chapter WebView URL" }
+                    }
+                    else -> Unit
+                }
             }
         }
     }

@@ -36,7 +36,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 fun HistoryListItem(
     item: HistoryUiItem,
     onClickCover: () -> Unit,
-    onClickResume: () -> Unit,
+    onClickResume: (() -> Unit)?,
     onClickDelete: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -44,7 +44,13 @@ fun HistoryListItem(
 
     Row(
         modifier = modifier
-            .clickable(onClick = onClickResume)
+            .then(
+                if (onClickResume != null) {
+                    Modifier.clickable(onClick = onClickResume)
+                } else {
+                    Modifier
+                },
+            )
             .height(56.dp)
             .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
         verticalAlignment = Alignment.CenterVertically,

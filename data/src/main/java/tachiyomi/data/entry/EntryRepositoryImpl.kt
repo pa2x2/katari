@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import logcat.LogPriority
+import tachiyomi.core.common.util.lang.toLong
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
@@ -29,6 +30,12 @@ class EntryRepositoryImpl(
     override suspend fun getEntryById(id: Long): Entry? {
         return handler.awaitOneOrNull {
             entriesQueries.getEntryById(id, profileProvider.activeProfileId, EntryMapper::mapEntry)
+        }
+    }
+
+    override suspend fun getEntryById(id: Long, profileId: Long): Entry? {
+        return handler.awaitOneOrNull {
+            entriesQueries.getEntryById(id, profileId, EntryMapper::mapEntry)
         }
     }
 
@@ -142,6 +149,21 @@ class EntryRepositoryImpl(
     override suspend fun getReadEntriesNotInLibraryByProfile(profileId: Long): List<Entry> {
         return handler.awaitList {
             entriesQueries.getReadEntriesNotInLibrary(profileId, EntryMapper::mapEntry)
+        }
+    }
+
+    override suspend fun getNonLibraryEntriesBySources(
+        sourceIds: List<Long>,
+        keepReadEntries: Boolean,
+    ): List<Entry> {
+        if (sourceIds.isEmpty()) return emptyList()
+        return handler.awaitList {
+            entriesQueries.getNonLibraryEntriesBySources(
+                profileId = profileProvider.activeProfileId,
+                sourceIds = sourceIds,
+                keepReadEntries = keepReadEntries.toLong(),
+                mapper = EntryMapper::mapEntry,
+            )
         }
     }
 
@@ -288,9 +310,12 @@ class EntryRepositoryImpl(
     }
 
     override suspend fun update(entry: Entry): Boolean {
+        return update(entry, profileProvider.activeProfileId)
+    }
+
+    override suspend fun update(entry: Entry, profileId: Long): Boolean {
         return try {
-            partialUpdate(entry)
-            true
+            partialUpdate(entry, profileId)
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e)
             false
@@ -322,16 +347,15 @@ class EntryRepositoryImpl(
     private suspend fun updateField(id: Long, transform: Entry.() -> Entry): Boolean {
         val entry = getEntryById(id) ?: return false
         return try {
-            partialUpdate(transform(entry))
-            true
+            partialUpdate(transform(entry), profileProvider.activeProfileId)
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e)
             false
         }
     }
 
-    private suspend fun partialUpdate(entry: Entry) {
-        handler.await {
+    private suspend fun partialUpdate(entry: Entry, profileId: Long): Boolean {
+        return handler.await {
             entriesQueries.update(
                 source = entry.source,
                 url = entry.url,
@@ -359,41 +383,8 @@ class EntryRepositoryImpl(
                 memo = MemoColumnAdapter.encode(entry.memo),
                 type = entry.type.name.lowercase(),
                 entryId = entry.id,
-                profileId = profileProvider.activeProfileId,
-            )
-        }
-    }
-
-    override suspend fun delete(id: Long): Boolean {
-        return try {
-            handler.await {
-                entriesQueries.deleteById(profileProvider.activeProfileId, id)
-            }
-            true
-        } catch (e: Exception) {
-            logcat(LogPriority.ERROR, e)
-            false
-        }
-    }
-
-    override suspend fun deleteNonFavorite(): Boolean {
-        return try {
-            handler.await(inTransaction = true) {
-                val sourceIds = entriesQueries.getSourceIdsWithNonLibraryEntries(
-                    profileProvider.activeProfileId,
-                ).awaitAsList().map { it.source }
-                if (sourceIds.isNotEmpty()) {
-                    entriesQueries.deleteNonLibraryEntries(
-                        profileProvider.activeProfileId,
-                        sourceIds,
-                        keepReadEntries = 0,
-                    )
-                }
-            }
-            true
-        } catch (e: Exception) {
-            logcat(LogPriority.ERROR, e)
-            false
+                profileId = profileId,
+            ) > 0L
         }
     }
 

@@ -14,7 +14,9 @@ import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-object SettingsReadiumEpubReaderScreen : SearchableSettings {
+object SettingsReadiumEpubReaderScreen : AppEntryViewerSettingsScreenProjection {
+
+    override val surfaceId: String = ReadiumEpubSettingsProvider.PROVIDER_ID
 
     @ReadOnlyComposable
     @Composable

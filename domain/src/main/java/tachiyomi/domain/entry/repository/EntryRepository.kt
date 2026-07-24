@@ -9,6 +9,8 @@ interface EntryRepository {
 
     suspend fun getEntryById(id: Long): Entry?
 
+    suspend fun getEntryById(id: Long, profileId: Long): Entry?
+
     suspend fun getEntryByIdAsFlow(id: Long): Flow<Entry>
 
     suspend fun getEntryByUrlAndSourceId(
@@ -49,6 +51,11 @@ interface EntryRepository {
 
     suspend fun getReadEntriesNotInLibraryByProfile(profileId: Long): List<Entry>
 
+    suspend fun getNonLibraryEntriesBySources(
+        sourceIds: List<Long>,
+        keepReadEntries: Boolean,
+    ): List<Entry>
+
     suspend fun getLibraryEntries(): List<Entry>
 
     fun getLibraryEntriesAsFlow(): Flow<List<Entry>>
@@ -74,6 +81,8 @@ interface EntryRepository {
 
     suspend fun update(entry: Entry): Boolean
 
+    suspend fun update(entry: Entry, profileId: Long): Boolean
+
     suspend fun updateFromSource(entry: Entry): Boolean
 
     suspend fun setViewerFlags(id: Long, viewerFlags: Long): Boolean
@@ -81,10 +90,6 @@ interface EntryRepository {
     suspend fun setChapterFlags(id: Long, flags: Long): Boolean
 
     suspend fun setUpdateStrategy(id: Long, strategy: EntryUpdateStrategy): Boolean
-
-    suspend fun delete(id: Long): Boolean
-
-    suspend fun deleteNonFavorite(): Boolean
 
     suspend fun getCoverHash(entryId: Long, coverLastModified: Long): Long?
 

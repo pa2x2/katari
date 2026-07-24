@@ -5,12 +5,12 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import mihon.entry.interactions.EntryDownloadInteraction
+import mihon.entry.interactions.EntryDownloadRuntimeFeature
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.service.EntryLibraryProgressResolution
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
-import tachiyomi.domain.library.model.ProgressState
 
 class LibraryDownloadCountTest {
 
@@ -18,9 +18,9 @@ class LibraryDownloadCountTest {
     fun `merged download count uses each member's source and title`() {
         val first = entry(id = 1L, source = 10L, title = "First")
         val second = entry(id = 2L, source = 20L, title = "Second")
-        val downloads = mockk<EntryDownloadInteraction> {
-            every { getDownloadCount(first) } returns 2
-            every { getDownloadCount(second) } returns 3
+        val downloads = mockk<EntryDownloadRuntimeFeature> {
+            every { downloadCount(first) } returns 2
+            every { downloadCount(second) } returns 3
         }
         val item = libraryItem(first, second)
 
@@ -46,10 +46,8 @@ class LibraryDownloadCountTest {
         isMerged = true,
         memberEntryIds = entries.map { LibraryItemKey(it.type, it.id) },
         memberEntries = entries.toList(),
-        progress = ProgressState(0L, 0L, false),
+        progressSummary = EntryLibraryProgressResolution.Inapplicable(entries.first().type),
         latestUpload = 0L,
-        lastRead = 0L,
-        continueEntryId = null,
         downloadCount = 0,
     )
 }

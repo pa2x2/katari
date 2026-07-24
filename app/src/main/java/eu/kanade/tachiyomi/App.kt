@@ -54,6 +54,7 @@ import logcat.LogPriority
 import logcat.LogcatLogger
 import mihon.core.migration.Migrator
 import mihon.core.migration.migrations.migrations
+import mihon.entry.interactions.EntryLibraryUpdateNotificationFeature
 import mihon.entry.interactions.addEntryInteractionImageComponents
 import mihon.telemetry.TelemetryConfig
 import org.conscrypt.Conscrypt
@@ -245,7 +246,10 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
 
     private fun setupNotificationChannels() {
         try {
-            Notifications.createChannels(this)
+            Notifications.createChannels(
+                context = this,
+                libraryUpdateRoutes = Injekt.get<EntryLibraryUpdateNotificationFeature>().routes(),
+            )
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Failed to modify notification channels" }
         }

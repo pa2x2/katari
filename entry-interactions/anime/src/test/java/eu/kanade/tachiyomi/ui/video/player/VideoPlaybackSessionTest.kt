@@ -51,6 +51,7 @@ class VideoPlaybackSessionTest {
         val snapshot = session.snapshot(positionMs = 90_000L, durationMs = 100_000L)
 
         snapshot.progressState.completed shouldBe true
+        snapshot.completedNow shouldBe true
         snapshot.progressState.completionUpdatedAt shouldBe 4_000L
         snapshot.historyUpdate?.sessionReadDuration shouldBe 90_000L
     }
@@ -78,5 +79,6 @@ class VideoPlaybackSessionTest {
         snapshot.progressState.locatorUpdatedAt shouldBe 8_000L
         snapshot.progressState.completionUpdatedAt shouldBe 8_000L
         snapshot.historyUpdate.shouldBeNull()
+        snapshot.completedNow shouldBe false
     }
 }

@@ -1,6 +1,5 @@
 package tachiyomi.domain.source.service
 
-import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,12 +23,6 @@ interface SourceManager {
     fun getOrStub(sourceKey: Long): UnifiedSource
 
     fun getAll(): List<UnifiedSource>
-
-    fun getCatalogueSources(): List<UnifiedSource>
-
-    fun getCatalogueSource(sourceKey: Long): EntryCatalogueSource?
-
-    fun getOnlineSources(): List<UnifiedSource>
 
     fun getStubSources(): List<UnifiedSource>
 

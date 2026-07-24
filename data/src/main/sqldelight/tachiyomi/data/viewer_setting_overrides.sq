@@ -42,10 +42,6 @@ WHERE entry_id = :entryId
 AND provider_id = :providerId
 AND setting_key = :settingKey;
 
-deleteByEntryId:
-DELETE FROM viewer_setting_overrides
-WHERE entry_id = :entryId;
-
 deleteByProviderForProfile:
 DELETE FROM viewer_setting_overrides
 WHERE provider_id = :providerId
@@ -54,23 +50,3 @@ AND entry_id IN (
     FROM entries
     WHERE profile_id = :profileId
 );
-
-copy:
-INSERT INTO viewer_setting_overrides(
-    entry_id,
-    provider_id,
-    setting_key,
-    encoded_value,
-    updated_at
-)
-SELECT
-    :targetEntryId,
-    provider_id,
-    setting_key,
-    encoded_value,
-    updated_at
-FROM viewer_setting_overrides
-WHERE entry_id = :sourceEntryId
-ON CONFLICT(entry_id, provider_id, setting_key) DO UPDATE SET
-    encoded_value = excluded.encoded_value,
-    updated_at = excluded.updated_at;

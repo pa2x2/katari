@@ -1,10 +1,6 @@
 package tachiyomi.data.source
 
-import eu.kanade.tachiyomi.source.entry.ConfigurableSource
-import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
-import eu.kanade.tachiyomi.source.entry.SourceHomePage
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
-import eu.kanade.tachiyomi.source.entry.preferenceKey
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -15,8 +11,8 @@ import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.source.model.SourceWithCount
 import tachiyomi.domain.source.model.UnifiedStubSource
 import tachiyomi.domain.source.repository.SourceRepository
+import tachiyomi.domain.source.service.EntrySourceDescriptionResolutionPort
 import tachiyomi.domain.source.service.SourceManager
-import tachiyomi.domain.source.service.resolvedSupportedEntryTypes
 import tachiyomi.domain.source.model.Source as DomainSource
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -24,39 +20,11 @@ class SourceRepositoryImpl(
     private val sourceManager: SourceManager,
     private val handler: DatabaseHandler,
     private val profileProvider: ActiveProfileProvider,
+    private val sourceDescription: EntrySourceDescriptionResolutionPort,
 ) : SourceRepository {
 
-    override fun getConfigurableSourceIds(): List<Long> {
-        return sourceManager.getAll()
-            .filterIsInstance<ConfigurableSource>()
-            .map { it.id }
-            .distinct()
-    }
-
-    override fun getConfigurableSourceKeys(): List<String> {
-        return sourceManager.getAll()
-            .filterIsInstance<ConfigurableSource>()
-            .map { it.preferenceKey() }
-            .distinct()
-    }
-
     override fun getSources(): Flow<List<DomainSource>> {
-        return sourceManager.sources.map { sources ->
-            sources.map {
-                mapSourceToDomainSource(it).copy(
-                    supportsLatest = (it as? EntryCatalogueSource)?.supportsLatest ?: false,
-                    supportsImmersiveFeed = (it as? EntryCatalogueSource)?.supportsImmersiveFeed ?: false,
-                )
-            }
-        }
-    }
-
-    override fun getOnlineSources(): Flow<List<DomainSource>> {
-        return sourceManager.sources.map { sources ->
-            sources
-                .filterIsInstance<SourceHomePage>()
-                .map(::mapSourceToDomainSource)
-        }
+        return sourceManager.sources.map { sources -> sources.map(::mapSourceToDomainSource) }
     }
 
     override fun getSourcesWithFavoriteCount(): Flow<List<Pair<DomainSource, Long>>> {
@@ -92,14 +60,15 @@ class SourceRepositoryImpl(
         }
     }
 
-    private fun mapSourceToDomainSource(source: UnifiedSource): DomainSource = DomainSource(
-        id = source.id,
-        lang = (source as? EntryCatalogueSource)?.lang
-            ?: (source as? UnifiedStubSource)?.lang
-            ?: "",
-        name = source.name,
-        supportsLatest = false,
-        supportedEntryTypes = source.resolvedSupportedEntryTypes(),
-        isStub = false,
-    )
+    private fun mapSourceToDomainSource(source: UnifiedSource): DomainSource {
+        val description = sourceDescription.describe(source)
+        return DomainSource(
+            id = source.id,
+            lang = description.language,
+            name = source.name,
+            catalogue = description.catalogue,
+            supportedEntryTypes = description.supportedEntryTypes,
+            isStub = false,
+        )
+    }
 }

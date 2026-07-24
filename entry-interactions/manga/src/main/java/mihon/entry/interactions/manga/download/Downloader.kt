@@ -13,6 +13,7 @@ import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.storage.DiskUtil.NOMEDIA_FILE
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -40,8 +41,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import logcat.LogPriority
 import mihon.core.archive.ZipWriter
+import mihon.entry.interactions.EntryDownloadEntryIdentity
 import mihon.entry.interactions.EntryDownloadEvent
 import mihon.entry.interactions.EntryDownloadMessage
+import mihon.entry.interactions.EntryDownloadQueuePolicy
 import mihon.entry.interactions.EntryPageImageCache
 import mihon.entry.interactions.manga.download.model.DownloadState
 import mihon.entry.interactions.manga.download.model.MangaDownload
@@ -105,6 +108,9 @@ internal class Downloader(
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var downloaderJob: Job? = null
+    private val _isRunningFlow = MutableStateFlow(false)
+    val isRunningFlow = _isRunningFlow.asStateFlow()
+    private val initialized = CompletableDeferred<Unit>()
 
     /**
      * Whether the downloader is running.
@@ -120,8 +126,12 @@ internal class Downloader(
 
     init {
         launchNow {
-            val chapters = async { store.restore() }
-            addAllToQueue(chapters.await())
+            try {
+                val chapters = async { store.restore() }
+                addAllToQueue(chapters.await())
+            } finally {
+                initialized.complete(Unit)
+            }
         }
     }
 
@@ -137,10 +147,12 @@ internal class Downloader(
         }
 
         val pending = queueState.value.filter { it.status != DownloadState.DOWNLOADED }
+        if (pending.isEmpty()) return false
         pending.forEach { if (it.status != DownloadState.QUEUE) it.status = DownloadState.QUEUE }
 
         isPaused = false
 
+        _isRunningFlow.value = true
         launchDownloaderJob()
 
         return pending.isNotEmpty()
@@ -149,20 +161,18 @@ internal class Downloader(
     /**
      * Stops the downloader.
      */
-    fun stop(reason: String? = null) {
+    fun stop(reason: EntryDownloadMessage? = null) {
         cancelDownloaderJob()
         queueState.value
             .filter { it.status == DownloadState.DOWNLOADING }
             .forEach { it.status = DownloadState.ERROR }
 
         if (reason != null) {
-            reportWarning(EntryDownloadMessage.Text(reason))
+            reportWarning(reason)
             return
         }
 
         isPaused = false
-
-        DownloadJob.stop(context)
     }
 
     /**
@@ -191,7 +201,7 @@ internal class Downloader(
     private fun launchDownloaderJob() {
         if (isRunning) return
 
-        downloaderJob = scope.launch {
+        val job = scope.launch {
             val activeDownloadsFlow = combine(
                 queueState,
                 downloadPreferences.parallelSourceLimit.changes(),
@@ -235,6 +245,11 @@ internal class Downloader(
                 }
             }
         }
+        downloaderJob = job
+        job.invokeOnCompletion {
+            _isRunningFlow.value = false
+            if (downloaderJob === job) downloaderJob = null
+        }
     }
 
     private fun CoroutineScope.launchDownloadJob(download: MangaDownload) = launchIO {
@@ -251,7 +266,7 @@ internal class Downloader(
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
             logcat(LogPriority.ERROR, e)
-            reportError(e.message)
+            reportError()
             stop()
         }
     }
@@ -262,6 +277,15 @@ internal class Downloader(
     private fun cancelDownloaderJob() {
         downloaderJob?.cancel()
         downloaderJob = null
+        _isRunningFlow.value = false
+    }
+
+    suspend fun awaitIdle() {
+        downloaderJob?.join()
+    }
+
+    suspend fun awaitInitialized() {
+        initialized.await()
     }
 
     /**
@@ -303,17 +327,14 @@ internal class Downloader(
                     maxDownloadsFromSource > CHAPTERS_PER_SOURCE_QUEUE_WARNING_THRESHOLD
                 ) {
                     reportWarning(
-                        message = EntryDownloadMessage.Text(
-                            context.stringResource(
-                                MR.strings.download_queue_size_warning,
-                                context.stringResource(MR.strings.app_name),
-                            ),
+                        message = EntryDownloadMessage.Resource(
+                            resource = MR.strings.download_queue_size_warning,
+                            args = listOf(context.stringResource(MR.strings.app_name)),
                         ),
                         timeoutMillis = WARNING_NOTIF_TIMEOUT_MS,
                         helpUrl = HELP_WARNING_URL,
                     )
                 }
-                DownloadJob.start(context)
             }
         }
     }
@@ -324,19 +345,19 @@ internal class Downloader(
      * @param download the chapter to be downloaded.
      */
     private suspend fun downloadChapter(download: MangaDownload) {
-        val mangaDir = provider.getEntryDir(download.entry.title, download.source).getOrElse { e ->
+        val mangaDir = provider.getEntryDir(download.entry.title, download.source).getOrElse {
+            reportError(EntryDownloadMessage.Resource(MR.strings.download_notifier_storage_error), download)
             download.status = DownloadState.ERROR
-            reportError(e.message, download)
             return
         }
 
         val availSpace = DiskUtil.getAvailableStorageSpace(mangaDir)
         if (availSpace != -1L && availSpace < MIN_DISK_SPACE) {
-            download.status = DownloadState.ERROR
             reportError(
-                context.stringResource(MR.strings.download_insufficient_space),
+                EntryDownloadMessage.Resource(MR.strings.download_notifier_insufficient_storage),
                 download,
             )
+            download.status = DownloadState.ERROR
             return
         }
 
@@ -395,23 +416,21 @@ internal class Downloader(
                 download.source,
             )
 
-            // Only rename the directory if it's downloaded
             if (downloadPreferences.saveChaptersAsCBZ.get()) {
                 archiveChapter(mangaDir, chapterDirname, tmpDir)
             } else {
-                tmpDir.renameTo(chapterDirname)
+                DiskUtil.createNoMediaFile(tmpDir, context)
+                publishChapterDirectory(mangaDir, chapterDirname, tmpDir, download)
             }
             cache.addChapter(chapterDirname, mangaDir, download.entry)
-
-            DiskUtil.createNoMediaFile(tmpDir, context)
 
             download.status = DownloadState.DOWNLOADED
         } catch (error: Throwable) {
             if (error is CancellationException) throw error
             // If the page list threw, it will resume here
             logcat(LogPriority.ERROR, error)
+            reportError(download = download)
             download.status = DownloadState.ERROR
-            reportError(error.message, download)
         }
     }
 
@@ -458,19 +477,22 @@ internal class Downloader(
             // Mark this page as error and allow to download the remaining
             page.progress = 0
             page.status = Page.State.Error(e)
-            reportError(e.message, download)
+            reportError(download = download)
         }
     }
 
-    private fun reportError(message: String?, download: MangaDownload? = null) {
+    private fun reportError(
+        message: EntryDownloadMessage = EntryDownloadMessage.Resource(MR.strings.download_notifier_unknown_error),
+        download: MangaDownload? = null,
+    ) {
+        download?.failure = message
         _events.tryEmit(
             EntryDownloadEvent.Error(
                 entryType = EntryType.MANGA,
-                entryId = download?.entry?.id,
+                entryIdentity = download?.entry?.let(EntryDownloadEntryIdentity::from),
                 title = download?.entry?.title,
                 subtitle = download?.chapter?.name,
-                message = message?.takeIf(String::isNotBlank)?.let(EntryDownloadMessage::Text)
-                    ?: EntryDownloadMessage.Resource(MR.strings.download_notifier_unknown_error),
+                message = message,
             ),
         )
     }
@@ -646,14 +668,71 @@ internal class Downloader(
         dirname: String,
         tmpDir: UniFile,
     ) {
-        val zip = mangaDir.createFile("$dirname.cbz$TMP_DIR_SUFFIX")!!
+        val finalName = "$dirname.cbz"
+        val stagingName = finalName + TMP_DIR_SUFFIX
+        val backupName = finalName + PUBLISH_BACKUP_SUFFIX
+        recoverPublicationBackup(mangaDir, finalName)
+        mangaDir.findFile(stagingName)?.delete()
+        val zip = mangaDir.createFile(stagingName) ?: error("Failed to create temporary chapter archive")
         ZipWriter(context, zip).use { writer ->
             tmpDir.listFiles()?.forEach { file ->
                 writer.write(file)
             }
         }
-        zip.renameTo("$dirname.cbz")
+        check(zip.length() != 0L) { "Temporary chapter archive is empty" }
+        val existing = mangaDir.findFile(finalName)
+        if (existing != null && !existing.renameTo(backupName)) {
+            error("Failed to preserve existing chapter archive")
+        }
+        if (!zip.renameTo(finalName)) {
+            mangaDir.findFile(backupName)?.renameTo(finalName)
+            error("Failed to publish chapter archive")
+        }
+        val published = mangaDir.findFile(finalName)
+        if (published == null || !published.isFile || published.length() == 0L) {
+            published?.delete()
+            mangaDir.findFile(backupName)?.renameTo(finalName)
+            error("Published chapter archive failed validation")
+        }
+        mangaDir.findFile(backupName)?.delete()
         tmpDir.delete()
+    }
+
+    private fun publishChapterDirectory(
+        mangaDir: UniFile,
+        dirname: String,
+        tmpDir: UniFile,
+        download: MangaDownload,
+    ) {
+        check(isDownloadSuccessful(download, tmpDir)) { "Temporary chapter directory failed validation" }
+        val backupName = dirname + PUBLISH_BACKUP_SUFFIX
+        recoverPublicationBackup(mangaDir, dirname)
+        val existing = mangaDir.findFile(dirname)
+        if (existing != null && !existing.renameTo(backupName)) {
+            error("Failed to preserve existing chapter directory")
+        }
+        if (!tmpDir.renameTo(dirname)) {
+            mangaDir.findFile(backupName)?.renameTo(dirname)
+            error("Failed to publish chapter directory")
+        }
+        val published = mangaDir.findFile(dirname)
+        if (published == null || !published.isDirectory || !isDownloadSuccessful(download, published)) {
+            published?.delete()
+            mangaDir.findFile(backupName)?.renameTo(dirname)
+            error("Published chapter directory failed validation")
+        }
+        mangaDir.findFile(backupName)?.delete()
+    }
+
+    private fun recoverPublicationBackup(mangaDir: UniFile, finalName: String) {
+        val backup = mangaDir.findFile(finalName + PUBLISH_BACKUP_SUFFIX) ?: return
+        val published = mangaDir.findFile(finalName)
+        if (published?.isValidMangaChapterArtifact() == true) {
+            backup.delete()
+            return
+        }
+        published?.delete()
+        backup.renameTo(finalName)
     }
 
     /**
@@ -751,25 +830,23 @@ internal class Downloader(
     }
 
     fun updateQueue(downloads: List<MangaDownload>) {
-        val wasRunning = isRunning
-
-        if (downloads.isEmpty()) {
-            clearQueue()
-            stop()
-            return
+        _queueState.update { current ->
+            val reordered = EntryDownloadQueuePolicy.reorderPending(
+                queue = current,
+                requested = downloads,
+                keyOf = { it.chapter.id },
+                isActive = { it.status == DownloadState.DOWNLOADING },
+            )
+            store.clear()
+            store.addAll(reordered)
+            reordered
         }
-
-        pause()
-        internalClearQueue()
-        addAllToQueue(downloads)
-
-        if (wasRunning) {
-            start()
-        }
+        if (queueState.value.isEmpty()) stop()
     }
 
     companion object {
         const val TMP_DIR_SUFFIX = "_tmp"
+        const val PUBLISH_BACKUP_SUFFIX = ".bak_tmp"
         const val WARNING_NOTIF_TIMEOUT_MS = 30_000L
         const val CHAPTERS_PER_SOURCE_QUEUE_WARNING_THRESHOLD = 15
         private const val HELP_WARNING_URL =

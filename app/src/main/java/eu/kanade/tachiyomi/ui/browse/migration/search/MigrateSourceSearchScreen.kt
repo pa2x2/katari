@@ -26,8 +26,6 @@ import eu.kanade.presentation.browse.CatalogContent
 import eu.kanade.presentation.components.AppSnackbarHost
 import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.util.Screen
-import eu.kanade.tachiyomi.source.entry.SourceHomePage
-import eu.kanade.tachiyomi.source.sourceItemOrientation
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreenModel
 import eu.kanade.tachiyomi.ui.browse.catalog.FilterUiState
 import eu.kanade.tachiyomi.ui.browse.source.browse.SourceFilterDialog
@@ -36,6 +34,11 @@ import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import mihon.entry.interactions.EntryMigrationFeature
+import mihon.entry.interactions.EntryMigrationPreparationResult
+import mihon.entry.interactions.EntryMigrationPrepareIntent
+import mihon.entry.interactions.EntrySourceHomeFeature
+import mihon.entry.interactions.EntrySourceHomeResolution
 import mihon.feature.migration.dialog.MigrateEntryDialog
 import mihon.feature.migration.list.MigrationListScreen
 import mihon.presentation.core.util.collectAsLazyPagingItems
@@ -48,6 +51,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.source.local.LocalSource
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 
 data class MigrateSourceSearchScreen(
     private val currentEntry: Entry,
@@ -65,6 +70,7 @@ data class MigrateSourceSearchScreen(
         val uriHandler = LocalUriHandler.current
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
+        val migration = remember { Injekt.get<EntryMigrationFeature>() }
         val screenModel = rememberScreenModel {
             CatalogScreenModel(
                 sourceId = sourceId,
@@ -75,6 +81,7 @@ data class MigrateSourceSearchScreen(
         val state by screenModel.state.collectAsState()
 
         val snackbarHostState = remember { SnackbarHostState() }
+        val migrationFailureMessage = stringResource(MR.strings.internal_error)
 
         @Suppress("UNCHECKED_CAST")
         val catalogList = screenModel.catalogPagerFlowFlow.collectAsLazyPagingItems() as
@@ -105,15 +112,22 @@ data class MigrateSourceSearchScreen(
         ) { paddingValues ->
             val openMigrateDialog: (Entry) -> Unit = openMigrateDialog@{ target ->
                 if (target.type != currentEntry.type) return@openMigrateDialog
-                val migrateListScreen = navigator.items
-                    .filterIsInstance<MigrationListScreen>()
-                    .lastOrNull()
+                scope.launch {
+                    val preparation = migration.prepare(EntryMigrationPrepareIntent(currentEntry, target))
+                    if (preparation !is EntryMigrationPreparationResult.Ready) {
+                        snackbarHostState.showSnackbar(migrationFailureMessage)
+                        return@launch
+                    }
+                    val migrateListScreen = navigator.items
+                        .filterIsInstance<MigrationListScreen>()
+                        .lastOrNull()
 
-                if (migrateListScreen == null) {
-                    screenModel.showMigrateEntryDialog(current = currentEntry, target = target)
-                } else {
-                    migrateListScreen.addMatchOverride(current = currentEntry.id, target = target.id)
-                    navigator.popUntil { screen -> screen is MigrationListScreen }
+                    if (migrateListScreen == null) {
+                        screenModel.showMigrateEntryDialog(current = currentEntry, target = target)
+                    } else {
+                        migrateListScreen.addMatchOverride(current = currentEntry.id, target = target.id)
+                        navigator.popUntil { screen -> screen is MigrationListScreen }
+                    }
                 }
             }
             if (state.isWaitingForInitialFilterLoad) {
@@ -148,12 +162,14 @@ data class MigrateSourceSearchScreen(
                         }
                     },
                     onWebViewClick = {
-                        val source = screenModel.catalogSource?.source as? SourceHomePage
-                        val homeUrl = source?.getHomeUrl()
-                        if (homeUrl != null) {
+                        val source = screenModel.catalogSource
+                        val home = source?.let {
+                            Injekt.get<EntrySourceHomeFeature>().resolve(it.id)
+                        } as? EntrySourceHomeResolution.Available
+                        if (source != null && home != null) {
                             navigator.push(
                                 WebViewScreen(
-                                    url = homeUrl,
+                                    url = home.url,
                                     initialTitle = source.name,
                                     sourceId = source.id,
                                 ),

@@ -50,6 +50,15 @@ class EntryPreviewLayoutTest {
     }
 
     @Test
+    fun `entry level preview remains loaded without a child id`() {
+        EntryScreenModel.EntryPreviewState(
+            chapterId = null,
+            pages = emptyList(),
+            hasLoaded = true,
+        ).hasLoadedContent shouldBe true
+    }
+
+    @Test
     fun `preview page only opens when both page and chapter are openable`() {
         previewPage(0).isOpenable(chapterId = 1L) shouldBe true
         previewPage(0).copy(canOpen = false).isOpenable(chapterId = 1L) shouldBe false

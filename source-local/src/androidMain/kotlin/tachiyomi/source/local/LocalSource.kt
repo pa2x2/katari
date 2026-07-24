@@ -12,6 +12,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
+import eu.kanade.tachiyomi.source.entry.SourceMetadata
 import eu.kanade.tachiyomi.source.entry.UnmeteredSource
 import eu.kanade.tachiyomi.util.lang.compareToCaseInsensitiveNaturalOrder
 import kotlinx.coroutines.async
@@ -51,7 +52,7 @@ actual class LocalSource(
     private val context: Context,
     private val fileSystem: LocalSourceFileSystem,
     private val coverManager: LocalCoverManager,
-) : EntryCatalogueSource, EmptyChapterListSource, UnmeteredSource {
+) : EntryCatalogueSource, EmptyChapterListSource, SourceMetadata, UnmeteredSource {
 
     private val json: Json by injectLazy()
     private val xml: XML by injectLazy()
@@ -67,6 +68,8 @@ actual class LocalSource(
     override val id: Long = ID
 
     override val lang: String = "other"
+
+    override val supportedEntryTypes: Set<EntryType> = LOCAL_SOURCE_SUPPORTED_ENTRY_TYPES
 
     override fun toString() = name
 

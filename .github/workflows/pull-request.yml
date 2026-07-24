@@ -2,6 +2,7 @@ name: Pull request checks
 
 on:
   pull_request:
+    types: [opened, reopened, synchronize, ready_for_review, converted_to_draft]
 
 concurrency:
   group: pull-request-checks-${{ github.event.pull_request.number }}
@@ -13,6 +14,7 @@ permissions:
 jobs:
   changes:
     name: Determine required checks
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-24.04
     outputs:
       app: ${{ steps.filter.outputs.app }}
@@ -98,7 +100,7 @@ jobs:
 
   gate:
     name: PR checks
-    if: always()
+    if: always() && github.event.pull_request.draft == false
     needs: [changes, app, docs]
     runs-on: ubuntu-24.04
 

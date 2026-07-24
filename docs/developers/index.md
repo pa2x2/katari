@@ -1,6 +1,13 @@
 # Developer documentation
 
-Katari's developer documentation covers the public Entry SDK and the extensions that consume it. It is intended for extension authors integrating with the SDK, rather than general app users.
+Katari's developer documentation covers both the public Entry SDK and the internal Feature architecture that consumes
+Entry capabilities. It is intended for extension and application contributors rather than general app users.
+
+## Work on application Features
+
+Read the [Entry Feature architecture](./feature-architecture.md) before adding a content type, application Feature,
+cross-Feature consequence, app-owned projection, or Feature-owned backup state. It explains how contributions are
+discovered and which validation gate prevents follow-up integrations from being silently omitted.
 
 ## Build an extension
 

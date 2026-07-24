@@ -40,6 +40,20 @@ For example:
 
 Git-generated subjects beginning with `Merge `, `Revert `, `fixup! `, or `squash! ` are exempt from this format. Commit-message bodies are unrestricted.
 
+## Inspect feature relationships
+
+When changing a content-type provider, shared feature integration, contextual rule, contract, or specialized adapter,
+generate the evaluated developer report from the repository root:
+
+```bash
+./gradlew generateEntryFeatureReport
+```
+
+The task writes `entry-interactions/build/reports/entry-features/developer-report.txt`. The report lists discovered
+content types and providers, every evaluated feature integration, conditional inputs and possible blockers, selected or
+conditional consequences, contract results, projections, and obligations with their responsible owners. A passing
+contextual validation scenario remains labeled as a scenario and does not establish type-wide support.
+
 ## Preview the documentation
 
 From the repository root, run:

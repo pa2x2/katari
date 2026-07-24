@@ -7,6 +7,7 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
 import eu.kanade.tachiyomi.data.track.DeletableTracker
+import eu.kanade.tachiyomi.data.track.ExternalLoginTracker
 import eu.kanade.tachiyomi.data.track.mangabaka.dto.MangaBakaOAuth
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import eu.kanade.tachiyomi.util.PkceUtil
@@ -23,7 +24,9 @@ import tachiyomi.domain.track.model.EntryTrack as DomainTrack
 class MangaBaka(
     id: Long,
     private val profileStore: ProfileStore? = null,
-) : BaseTracker(id, "MangaBaka"), DeletableTracker {
+) : BaseTracker(id, "MangaBaka"), DeletableTracker, ExternalLoginTracker {
+
+    override val accountOrder = 0
 
     private val json: Json by injectLazy()
 
@@ -176,7 +179,7 @@ class MangaBaka(
         }
     }
 
-    fun authUrl(): Uri {
+    override fun authorizationUri(): Uri {
         val profileId = profileStore?.currentProfileId ?: 0L
         val preferences = preferences(profileId)
         val codes = PkceUtil.generateS256Codes()

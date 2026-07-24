@@ -9,13 +9,17 @@ import androidx.fragment.app.FragmentActivity
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.source.service.SourcePreferences
+import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.tachiyomi.util.system.AuthenticatorUtil.authenticate
 import kotlinx.collections.immutable.toImmutableMap
 import mihon.core.common.CustomPreferences
 import mihon.domain.extension.interactor.GetExtensionStoreCountAsFlow
+import mihon.entry.interactions.EntryPreviewFeature
+import mihon.entry.interactions.EntryPreviewSettings
 import mihon.entry.interactions.EntryPreviewSize
+import mihon.entry.interactions.EntryPreviewSourceRequirement
 import mihon.entry.interactions.settings.EntryInteractionPreferences
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
@@ -39,12 +43,10 @@ object SettingsBrowseScreen : SearchableSettings {
 
         val sourcePreferences = remember { Injekt.get<SourcePreferences>() }
         val customPreferences = remember { Injekt.get<CustomPreferences>() }
-        val entryInteractionPreferences = remember { Injekt.get<EntryInteractionPreferences>() }
+        val entryPreviewFeature = remember { Injekt.get<EntryPreviewFeature>() }
         val getExtensionStoreCountAsFlow = remember { Injekt.get<GetExtensionStoreCountAsFlow>() }
 
         val reposCount by getExtensionStoreCountAsFlow().collectFlowAsState(0)
-        val mangaPreviewEnabled by entryInteractionPreferences.enableMangaPreview.collectAsState()
-        val animePreviewEnabled by entryInteractionPreferences.enableAnimePreview.collectAsState()
 
         return listOf(
             Preference.PreferenceGroup(
@@ -84,9 +86,7 @@ object SettingsBrowseScreen : SearchableSettings {
                 onOpenLongPressActions = { navigator.push(BrowseLongPressActionsScreen()) },
             ),
             getPreviewGroup(
-                entryInteractionPreferences = entryInteractionPreferences,
-                mangaPreviewEnabled = mangaPreviewEnabled,
-                animePreviewEnabled = animePreviewEnabled,
+                settings = entryPreviewFeature.settings,
             ),
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.pref_duplicate_detection),
@@ -131,68 +131,56 @@ object SettingsBrowseScreen : SearchableSettings {
 
     @Composable
     private fun getPreviewGroup(
-        entryInteractionPreferences: EntryInteractionPreferences,
-        mangaPreviewEnabled: Boolean,
-        animePreviewEnabled: Boolean,
+        settings: List<EntryPreviewSettings>,
     ): Preference.PreferenceGroup {
-        val mangaPreviewPageCount by entryInteractionPreferences.mangaPreviewPageCount.collectAsState()
-        val animePreviewPageCount by entryInteractionPreferences.animePreviewPageCount.collectAsState()
+        val items = buildList {
+            settings.forEach { previewSettings ->
+                val enabled by previewSettings.enabled.collectAsState()
+                val pageCount by previewSettings.pageCount.collectAsState()
+                val typeName = stringResource(previewSettings.type.entryTypePresentation().displayNameLabel)
+
+                add(
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = previewSettings.enabled,
+                        title = "$typeName ${stringResource(MR.strings.pref_browse_long_press_action_preview)}",
+                    ),
+                )
+                if (previewSettings.sourceRequirement == EntryPreviewSourceRequirement.PREVIEW_CAPABILITY) {
+                    add(
+                        Preference.PreferenceItem.InfoPreference(
+                            stringResource(MR.strings.pref_anime_preview_source_support_info),
+                        ),
+                    )
+                }
+                add(
+                    Preference.PreferenceItem.SliderPreference(
+                        value = pageCount,
+                        preference = previewSettings.pageCount,
+                        valueRange = EntryInteractionPreferences.PREVIEW_PAGE_COUNT_RANGE,
+                        title = stringResource(MR.strings.pref_manga_preview_page_count),
+                        valueString = pageCount.toString(),
+                        enabled = enabled,
+                        onValueChanged = {
+                            previewSettings.pageCount.set(it)
+                        },
+                    ),
+                )
+                add(
+                    Preference.PreferenceItem.ListPreference(
+                        preference = previewSettings.size,
+                        entries = EntryPreviewSize.entries
+                            .associateWith { stringResource(it.previewSizeTitleRes) }
+                            .toImmutableMap(),
+                        title = stringResource(MR.strings.pref_manga_preview_size),
+                        enabled = enabled,
+                    ),
+                )
+            }
+        }
 
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_browse_long_press_action_preview),
-            preferenceItems = listOf(
-                Preference.PreferenceItem.SwitchPreference(
-                    preference = entryInteractionPreferences.enableMangaPreview,
-                    title = stringResource(MR.strings.pref_enable_manga_preview),
-                    subtitle = stringResource(MR.strings.pref_enable_manga_preview_summary),
-                ),
-                Preference.PreferenceItem.SwitchPreference(
-                    preference = entryInteractionPreferences.enableAnimePreview,
-                    title = stringResource(MR.strings.pref_enable_anime_preview),
-                    subtitle = stringResource(MR.strings.pref_enable_anime_preview_summary),
-                ),
-                Preference.PreferenceItem.InfoPreference(
-                    stringResource(MR.strings.pref_anime_preview_source_support_info),
-                ),
-                Preference.PreferenceItem.SliderPreference(
-                    value = mangaPreviewPageCount,
-                    preference = entryInteractionPreferences.mangaPreviewPageCount,
-                    valueRange = EntryInteractionPreferences.PREVIEW_PAGE_COUNT_RANGE,
-                    title = stringResource(MR.strings.pref_manga_preview_page_count),
-                    valueString = mangaPreviewPageCount.toString(),
-                    enabled = mangaPreviewEnabled,
-                    onValueChanged = {
-                        entryInteractionPreferences.mangaPreviewPageCount.set(it)
-                    },
-                ),
-                Preference.PreferenceItem.SliderPreference(
-                    value = animePreviewPageCount,
-                    preference = entryInteractionPreferences.animePreviewPageCount,
-                    valueRange = EntryInteractionPreferences.PREVIEW_PAGE_COUNT_RANGE,
-                    title = stringResource(MR.strings.pref_anime_preview_page_count),
-                    valueString = animePreviewPageCount.toString(),
-                    enabled = animePreviewEnabled,
-                    onValueChanged = {
-                        entryInteractionPreferences.animePreviewPageCount.set(it)
-                    },
-                ),
-                Preference.PreferenceItem.ListPreference(
-                    preference = entryInteractionPreferences.mangaPreviewSize,
-                    entries = EntryPreviewSize.entries
-                        .associateWith { stringResource(it.previewSizeTitleRes) }
-                        .toImmutableMap(),
-                    title = stringResource(MR.strings.pref_manga_preview_size),
-                    enabled = mangaPreviewEnabled,
-                ),
-                Preference.PreferenceItem.ListPreference(
-                    preference = entryInteractionPreferences.animePreviewSize,
-                    entries = EntryPreviewSize.entries
-                        .associateWith { stringResource(it.previewSizeTitleRes) }
-                        .toImmutableMap(),
-                    title = stringResource(MR.strings.pref_anime_preview_size),
-                    enabled = animePreviewEnabled,
-                ),
-            ),
+            preferenceItems = items,
         )
     }
 

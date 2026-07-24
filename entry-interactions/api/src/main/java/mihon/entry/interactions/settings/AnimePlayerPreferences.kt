@@ -20,11 +20,6 @@ class AnimePlayerPreferences(
         const val PROVIDER_ID = "builtin.anime.player"
         const val ENABLE_ANIME_PICTURE_IN_PICTURE_KEY = "enable_anime_picture_in_picture"
         const val ENABLE_ANIME_SEEK_PREVIEW_KEY = "enable_anime_seek_preview"
-
-        val profileKeys = setOf(
-            ENABLE_ANIME_PICTURE_IN_PICTURE_KEY,
-            ENABLE_ANIME_SEEK_PREVIEW_KEY,
-        )
     }
 
     val enableAnimePictureInPicture: Preference<Boolean> = preferenceStore.getBoolean(

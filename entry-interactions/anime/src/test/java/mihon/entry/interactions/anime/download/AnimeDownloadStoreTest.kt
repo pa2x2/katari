@@ -44,7 +44,7 @@ class AnimeDownloadStoreTest {
             VideoDownloadQualityMode.DATA_SAVING,
         )
         restored.map { it.anime.profileId } shouldContainExactly listOf(20L, 10L)
-        backend.data.keys.toList() shouldContainExactly listOf("22", "11")
+        backend.data.keys.toList() shouldContainExactly listOf("20:2:22", "10:1:11")
         coVerify(exactly = 0) { entryRepository.getEntryById(any()) }
     }
 
@@ -86,7 +86,7 @@ class AnimeDownloadStoreTest {
         val restored = store().restore()
 
         restored.map { it.episode.id } shouldContainExactly listOf(1L)
-        backend.data.keys.toList() shouldContainExactly listOf("1", "2", "malformed", "wrong type")
+        backend.data.keys.toList() shouldContainExactly listOf("10:1:1", "10:1:2", "malformed", "wrong type")
     }
 
     @Test
@@ -105,6 +105,21 @@ class AnimeDownloadStoreTest {
         restored.preferences.dubKey shouldBe "dub"
     }
 
+    @Test
+    fun `rejects rows whose persisted source no longer owns the entry`() = runTest {
+        val entry = anime(id = 5L, profileId = 10L)
+        val download = download(entry, episodeId = 6L)
+        store().addAll(listOf(download))
+        val validValue = backend.data.values.single() as String
+        backend.data["wrong-source"] = validValue.replace("\"sourceId\":42", "\"sourceId\":99")
+        coEvery { entryRepository.getAllEntriesByProfile(entry.profileId) } returns listOf(entry)
+        coEvery { chapterRepository.getChapterById(download.episode.id) } returns download.episode
+
+        val restored = store().restore()
+
+        restored.map { it.episode.id } shouldContainExactly listOf(download.episode.id)
+    }
+
     private fun store() = AnimeDownloadStore(
         backend = backend,
         json = Json,
@@ -115,6 +130,7 @@ class AnimeDownloadStoreTest {
     private fun anime(id: Long, profileId: Long): Entry = Entry.create().copy(
         id = id,
         profileId = profileId,
+        source = 42L,
         type = EntryType.ANIME,
     )
 

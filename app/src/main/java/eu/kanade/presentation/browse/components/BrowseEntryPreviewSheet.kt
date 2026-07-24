@@ -59,8 +59,9 @@ import eu.kanade.presentation.entry.components.PreviewSizeUi
 import eu.kanade.tachiyomi.ui.entry.EntryScreenModel
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.EntryOpenInteraction
+import mihon.entry.interactions.EntryOpenFeature
 import mihon.entry.interactions.EntryOpenOptions
+import mihon.entry.interactions.EntryPreviewOpenTargetResult
 import mihon.entry.interactions.EntryPreviewSize
 import mihon.feature.profiles.core.ProfileManager
 import tachiyomi.domain.entry.model.Entry
@@ -85,7 +86,7 @@ fun BrowseEntryPreviewSheet(
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
     val profileManager = remember { Injekt.get<ProfileManager>() }
-    val entryOpenInteraction = remember { Injekt.get<EntryOpenInteraction>() }
+    val entryOpenFeature = remember { Injekt.get<EntryOpenFeature>() }
     val activeProfile by profileManager.activeProfile.collectAsStateWithLifecycle()
     var previousProfileId by remember(entryId) { mutableStateOf(activeProfile?.id) }
     var hasRequestedPreview by rememberSaveable(entryId) { mutableStateOf(false) }
@@ -156,13 +157,26 @@ fun BrowseEntryPreviewSheet(
                     },
                     onRetry = screenModel::retryPreview,
                     onPageLoad = screenModel::loadPreviewPage,
-                    onPageClick = { chapterId, pageIndex ->
-                        scope.launch {
-                            val chapter = currentState.chapters.firstOrNull {
-                                it.chapter.id == chapterId
-                            }?.chapter ?: return@launch
-                            openChapter(context, entryOpenInteraction, currentState.entry, chapter, pageIndex)
+                    onPageClick = (
+                        { _: Long, pageIndex: Int ->
+                            val target = screenModel.previewOpenTarget(pageIndex)
+                            if (target is EntryPreviewOpenTargetResult.Available) {
+                                scope.launch {
+                                    val chapter = currentState.chapters.firstOrNull {
+                                        it.chapter.id == target.childId
+                                    }?.chapter ?: return@launch
+                                    openChapter(
+                                        context,
+                                        entryOpenFeature,
+                                        currentState.entry,
+                                        chapter,
+                                        target.pageIndex,
+                                    )
+                                }
+                            }
                         }
+                        ).takeIf {
+                        screenModel.isPreviewOpenApplicable(currentState.entry.type)
                     },
                 )
             }
@@ -183,7 +197,7 @@ private fun BrowseEntryPreviewDialogContent(
     onOpenEntry: () -> Unit,
     onRetry: () -> Unit,
     onPageLoad: (Int) -> Unit,
-    onPageClick: (Long, Int) -> Unit,
+    onPageClick: ((Long, Int) -> Unit)?,
 ) {
     val displayedPreviewState = if (
         previewState.chapterId == null && previewState.pages.isEmpty() && state.isRefreshingData
@@ -395,12 +409,12 @@ private fun PreviewBottomBarActionContent(icon: ImageVector, label: String) {
 
 private suspend fun openChapter(
     context: Context,
-    entryOpenInteraction: EntryOpenInteraction,
+    entryOpenFeature: EntryOpenFeature,
     entry: Entry,
     chapter: EntryChapter,
     pageIndex: Int? = null,
 ) {
-    entryOpenInteraction.open(
+    entryOpenFeature.open(
         context = context,
         entry = entry,
         chapter = chapter,

@@ -15,11 +15,11 @@ import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.coil.EntryCoverFetcher.Companion.USE_CUSTOM_COVER_KEY
 import eu.kanade.tachiyomi.network.await
-import eu.kanade.tachiyomi.source.entry.EntryImageSource
 import logcat.LogPriority
+import mihon.entry.interactions.EntryCoverNetworkFeature
+import mihon.entry.interactions.EntryCoverNetworkResolution
 import okhttp3.CacheControl
 import okhttp3.Call
-import okhttp3.Headers
 import okhttp3.Request
 import okhttp3.Response
 import okio.FileSystem
@@ -31,7 +31,6 @@ import okio.source
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryCover
-import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.injectLazy
 import java.io.File
 import java.io.IOException
@@ -53,8 +52,7 @@ class EntryCoverFetcher(
     private val coverFileLazy: Lazy<File?>,
     private val customCoverFileLazy: Lazy<File>,
     private val diskCacheKeyLazy: Lazy<String>,
-    private val sourceCallFactoryLazy: Lazy<Call.Factory?>,
-    private val sourceHeadersLazy: Lazy<Headers?>,
+    private val sourceNetworkResolutionLazy: Lazy<EntryCoverNetworkResolution>,
     private val callFactoryLazy: Lazy<Call.Factory>,
     private val imageLoader: ImageLoader,
 ) : Fetcher {
@@ -173,7 +171,7 @@ class EntryCoverFetcher(
     }
 
     private suspend fun executeNetworkRequest(): Response {
-        val client = sourceCallFactoryLazy.value ?: callFactoryLazy.value
+        val client = sourceNetworkAccess()?.callFactory ?: callFactoryLazy.value
         val response = client.newCall(newRequest()).await()
         if (!response.isSuccessful && response.code != HTTP_NOT_MODIFIED) {
             response.close()
@@ -186,9 +184,8 @@ class EntryCoverFetcher(
         val request = Request.Builder().apply {
             url(url!!)
 
-            val sourceHeaders = sourceHeadersLazy.value
-            if (sourceHeaders != null) {
-                headers(sourceHeaders)
+            sourceNetworkAccess()?.headers?.let {
+                headers(it)
             }
         }
 
@@ -204,6 +201,16 @@ class EntryCoverFetcher(
         }
 
         return request.build()
+    }
+
+    private fun sourceNetworkAccess(): EntryCoverNetworkResolution.Available? {
+        return when (val resolution = sourceNetworkResolutionLazy.value) {
+            is EntryCoverNetworkResolution.Available -> resolution
+            is EntryCoverNetworkResolution.Failed -> throw resolution.cause
+            is EntryCoverNetworkResolution.Missing,
+            is EntryCoverNetworkResolution.Unsupported,
+            -> null
+        }
     }
 
     private fun moveSnapshotToCoverCache(snapshot: DiskCache.Snapshot, cacheFile: File?): File? {
@@ -316,7 +323,7 @@ class EntryCoverFetcher(
     ) : Fetcher.Factory<Entry> {
 
         private val coverCache: CoverCache by injectLazy()
-        private val sourceManager: SourceManager by injectLazy()
+        private val coverNetworkFeature: EntryCoverNetworkFeature by injectLazy()
 
         override fun create(data: Entry, options: Options, imageLoader: ImageLoader): Fetcher {
             return EntryCoverFetcher(
@@ -326,12 +333,7 @@ class EntryCoverFetcher(
                 coverFileLazy = lazy { coverCache.getCoverFile(data.thumbnailUrl) },
                 customCoverFileLazy = lazy { coverCache.getCustomCoverFile(data.id) },
                 diskCacheKeyLazy = lazy { imageLoader.components.key(data, options)!! },
-                sourceCallFactoryLazy = lazy {
-                    (sourceManager.get(data.source) as? EntryImageSource)?.client
-                },
-                sourceHeadersLazy = lazy {
-                    (sourceManager.get(data.source) as? EntryImageSource)?.headers
-                },
+                sourceNetworkResolutionLazy = lazy { coverNetworkFeature.resolve(data.source) },
                 callFactoryLazy = callFactoryLazy,
                 imageLoader = imageLoader,
             )
@@ -343,7 +345,7 @@ class EntryCoverFetcher(
     ) : Fetcher.Factory<EntryCover> {
 
         private val coverCache: CoverCache by injectLazy()
-        private val sourceManager: SourceManager by injectLazy()
+        private val coverNetworkFeature: EntryCoverNetworkFeature by injectLazy()
 
         override fun create(data: EntryCover, options: Options, imageLoader: ImageLoader): Fetcher {
             return EntryCoverFetcher(
@@ -353,12 +355,7 @@ class EntryCoverFetcher(
                 coverFileLazy = lazy { coverCache.getCoverFile(data.url) },
                 customCoverFileLazy = lazy { coverCache.getCustomCoverFile(data.entryId) },
                 diskCacheKeyLazy = lazy { imageLoader.components.key(data, options)!! },
-                sourceCallFactoryLazy = lazy {
-                    (sourceManager.get(data.sourceId) as? EntryImageSource)?.client
-                },
-                sourceHeadersLazy = lazy {
-                    (sourceManager.get(data.sourceId) as? EntryImageSource)?.headers
-                },
+                sourceNetworkResolutionLazy = lazy { coverNetworkFeature.resolve(data.sourceId) },
                 callFactoryLazy = callFactoryLazy,
                 imageLoader = imageLoader,
             )

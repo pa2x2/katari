@@ -12,7 +12,6 @@ import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.source.entry.SourceHomePage
 import eu.kanade.tachiyomi.ui.browse.BrowseContentTypeFilterController
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import kotlinx.coroutines.delay
@@ -29,6 +28,8 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.entry.interactions.EntrySourceHomeFeature
+import mihon.entry.interactions.EntrySourceHomeResolution
 import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
@@ -44,6 +45,7 @@ class ExtensionsScreenModel(
     private val preferences: SourcePreferences = Injekt.get(),
     private val getExtensionLanguages: GetExtensionLanguages = Injekt.get(),
     private val toggleLanguage: ToggleLanguage = Injekt.get(),
+    private val sourceHomeFeature: EntrySourceHomeFeature = Injekt.get(),
     private val contentTypeFilterController: BrowseContentTypeFilterController =
         BrowseContentTypeFilterController(preferences),
 ) : StateScreenModel<ExtensionListState>(ExtensionListState()) {
@@ -153,7 +155,11 @@ class ExtensionsScreenModel(
                 when (extension) {
                     is Extension.Installed -> extension.sources.any { source ->
                         source.name.contains(subquery, ignoreCase = true) ||
-                            (source as? SourceHomePage)?.getHomeUrl()?.contains(
+                            (
+                                sourceHomeFeature.resolve(
+                                    source.id,
+                                ) as? EntrySourceHomeResolution.Available
+                                )?.url?.contains(
                                 subquery,
                                 ignoreCase = true,
                             ) ==

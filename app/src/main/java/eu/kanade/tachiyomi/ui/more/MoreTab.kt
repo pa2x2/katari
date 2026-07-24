@@ -29,18 +29,16 @@ import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.ui.stats.StatsScreen
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.EntryDownloadInteraction
+import mihon.entry.interactions.EntryDownloadRuntimeFeature
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.ui.ProfilePickerScreen
 import mihon.feature.profiles.ui.handleProfileShortcut
 import mihon.feature.support.SupportUsScreen
-import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
@@ -104,7 +102,7 @@ data object MoreTab : Tab {
 }
 
 private class MoreScreenModel(
-    private val entryDownloadInteraction: EntryDownloadInteraction = Injekt.get(),
+    downloadRuntime: EntryDownloadRuntimeFeature = Injekt.get(),
     basePreferences: BasePreferences = Injekt.get(),
     libraryPreferences: LibraryPreferences = Injekt.get(),
 ) : ScreenModel {
@@ -112,26 +110,20 @@ private class MoreScreenModel(
     var downloadedOnly by libraryPreferences.downloadedOnly.asState(screenModelScope)
     var incognitoMode by basePreferences.incognitoMode.asState(screenModelScope)
 
-    private var _downloadQueueState: MutableStateFlow<DownloadQueueState> = MutableStateFlow(DownloadQueueState.Stopped)
-    val downloadQueueState: StateFlow<DownloadQueueState> = _downloadQueueState.asStateFlow()
-
-    init {
-        // Handle running/paused status change and queue progress updating
-        screenModelScope.launchIO {
-            combine(
-                entryDownloadInteraction.isRunning,
-                entryDownloadInteraction.queueState,
-            ) { isRunning, downloadQueue -> Pair(isRunning, downloadQueue.sumOf { it.items.size }) }
-                .collectLatest { (isDownloading, downloadQueueSize) ->
-                    val pendingDownloadExists = downloadQueueSize != 0
-                    _downloadQueueState.value = when {
-                        !pendingDownloadExists -> DownloadQueueState.Stopped
-                        !isDownloading -> DownloadQueueState.Paused(downloadQueueSize)
-                        else -> DownloadQueueState.Downloading(downloadQueueSize)
-                    }
-                }
+    val downloadQueueState: StateFlow<DownloadQueueState> = downloadRuntime.state
+        .map { runtime ->
+            val queueSize = runtime.queue.sumOf { it.items.size }
+            when {
+                queueSize == 0 -> DownloadQueueState.Stopped
+                !runtime.isRunning -> DownloadQueueState.Paused(queueSize)
+                else -> DownloadQueueState.Downloading(queueSize)
+            }
         }
-    }
+        .stateIn(
+            screenModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            DownloadQueueState.Stopped,
+        )
 }
 
 sealed interface DownloadQueueState {

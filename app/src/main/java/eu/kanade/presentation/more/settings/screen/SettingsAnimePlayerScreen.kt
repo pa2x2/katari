@@ -12,7 +12,9 @@ import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-object SettingsAnimePlayerScreen : SearchableSettings {
+object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection {
+
+    override val surfaceId: String = AnimePlayerPreferences.PROVIDER_ID
 
     @ReadOnlyComposable
     @Composable

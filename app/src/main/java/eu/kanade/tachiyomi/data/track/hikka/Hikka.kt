@@ -8,6 +8,7 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
 import eu.kanade.tachiyomi.data.track.DeletableTracker
+import eu.kanade.tachiyomi.data.track.ExternalLoginTracker
 import eu.kanade.tachiyomi.data.track.hikka.dto.HKOAuth
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import kotlinx.collections.immutable.ImmutableList
@@ -22,7 +23,9 @@ class Hikka(
     id: Long,
     private val profileStore: ProfileStore? = null,
     private val globalTrackPreferences: GlobalTrackPreferences? = null,
-) : BaseTracker(id, "Hikka"), DeletableTracker {
+) : BaseTracker(id, "Hikka"), DeletableTracker, ExternalLoginTracker {
+
+    override val accountOrder = 7
 
     companion object {
         const val READING = 0L
@@ -161,7 +164,7 @@ class Hikka(
         }
     }
 
-    fun authUrl(): Uri {
+    override fun authorizationUri(): Uri {
         globalTrackPreferences?.pendingHikkaOAuthProfileId?.set(currentProfileId())
         return HikkaApi.authUrl()
     }

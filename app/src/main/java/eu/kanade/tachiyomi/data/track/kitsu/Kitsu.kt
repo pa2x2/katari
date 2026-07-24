@@ -5,6 +5,8 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
 import eu.kanade.tachiyomi.data.track.DeletableTracker
+import eu.kanade.tachiyomi.data.track.TrackerCredentialIdentity
+import eu.kanade.tachiyomi.data.track.TrackerLogin
 import eu.kanade.tachiyomi.data.track.kitsu.dto.KitsuOAuth
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import kotlinx.serialization.json.Json
@@ -14,6 +16,8 @@ import java.text.DecimalFormat
 import tachiyomi.domain.track.model.EntryTrack as DomainTrack
 
 class Kitsu(id: Long) : BaseTracker(id, "Kitsu"), DeletableTracker {
+
+    override val accountOrder = 3
 
     companion object {
         const val READING = 1L
@@ -26,6 +30,8 @@ class Kitsu(id: Long) : BaseTracker(id, "Kitsu"), DeletableTracker {
     override val supportsReadingDates: Boolean = true
 
     override val supportsPrivateTracking: Boolean = true
+
+    override val accountLogin = TrackerLogin.Credentials(TrackerCredentialIdentity.EMAIL)
 
     private val json: Json by injectLazy()
 

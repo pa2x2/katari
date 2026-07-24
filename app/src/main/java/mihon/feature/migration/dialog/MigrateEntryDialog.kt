@@ -21,14 +21,20 @@ import androidx.compose.ui.util.fastForEach
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
-import eu.kanade.domain.entry.model.hasCustomCover
 import eu.kanade.domain.source.service.SourcePreferences
-import eu.kanade.tachiyomi.data.cache.CoverCache
 import kotlinx.coroutines.flow.update
-import mihon.domain.migration.models.MigrationFlag
-import mihon.domain.migration.usecases.MigrateEntryUseCase
-import mihon.entry.interactions.EntryDownloadInteraction
-import mihon.feature.common.utils.getLabel
+import mihon.entry.interactions.EntryMigrationExecuteIntent
+import mihon.entry.interactions.EntryMigrationExecutionResult
+import mihon.entry.interactions.EntryMigrationFeature
+import mihon.entry.interactions.EntryMigrationMode
+import mihon.entry.interactions.EntryMigrationOption
+import mihon.entry.interactions.EntryMigrationPreparationResult
+import mihon.entry.interactions.EntryMigrationPrepareIntent
+import mihon.entry.interactions.EntryMigrationReference
+import mihon.feature.migration.options.getLabel
+import mihon.feature.migration.options.toEntryMigrationOptions
+import mihon.feature.migration.options.toMigrationFlag
+import mihon.feature.migration.options.toMigrationFlags
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.domain.entry.model.Entry
@@ -58,7 +64,7 @@ internal fun Screen.MigrateEntryDialog(
 
     if (state.isMigrated) return
 
-    if (state.isMigrating) {
+    if (state.isLoading || state.isMigrating) {
         LoadingScreen(
             modifier = Modifier.background(MaterialTheme.colorScheme.background.copy(alpha = 0.7f)),
         )
@@ -74,11 +80,17 @@ internal fun Screen.MigrateEntryDialog(
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
             ) {
-                state.applicableFlags.fastForEach { flag ->
+                state.availableOptions.fastForEach { option ->
                     LabeledCheckbox(
-                        label = stringResource(flag.getLabel()),
-                        checked = flag in state.selectedFlags,
-                        onCheckedChange = { screenModel.toggleSelection(flag) },
+                        label = stringResource(option.toMigrationFlag().getLabel()),
+                        checked = option in state.selectedOptions,
+                        onCheckedChange = { screenModel.toggleSelection(option) },
+                    )
+                }
+                if (state.hasFailure) {
+                    Text(
+                        text = stringResource(MR.strings.internal_error),
+                        color = MaterialTheme.colorScheme.error,
                     )
                 }
             }
@@ -101,20 +113,24 @@ internal fun Screen.MigrateEntryDialog(
                 TextButton(
                     onClick = {
                         scope.launchIO {
-                            screenModel.migrateEntry(replace = false)
-                            withUIContext { onComplete() }
+                            if (screenModel.migrateEntry(EntryMigrationMode.COPY)) {
+                                withUIContext { onComplete() }
+                            }
                         }
                     },
+                    enabled = state.reference != null,
                 ) {
                     Text(text = stringResource(MR.strings.copy))
                 }
                 TextButton(
                     onClick = {
                         scope.launchIO {
-                            screenModel.migrateEntry(replace = true)
-                            withUIContext { onComplete() }
+                            if (screenModel.migrateEntry(EntryMigrationMode.REPLACE)) {
+                                withUIContext { onComplete() }
+                            }
                         }
                     },
+                    enabled = state.reference != null,
                 ) {
                     Text(text = stringResource(MR.strings.migrate))
                 }
@@ -125,60 +141,88 @@ internal fun Screen.MigrateEntryDialog(
 
 private class MigrateEntryDialogScreenModel(
     private val sourcePreference: SourcePreferences = Injekt.get(),
-    private val coverCache: CoverCache = Injekt.get(),
-    private val entryDownloadInteraction: EntryDownloadInteraction = Injekt.get(),
-    private val migrateEntry: MigrateEntryUseCase = Injekt.get(),
+    private val migration: EntryMigrationFeature = Injekt.get(),
 ) : StateScreenModel<MigrateEntryDialogScreenModel.State>(State()) {
+    private var source: Entry? = null
+    private var target: Entry? = null
 
-    fun init(current: Entry, target: Entry) {
-        val applicableFlags = buildList {
-            MigrationFlag.entries.forEach {
-                val applicable = when (it) {
-                    MigrationFlag.CHAPTER -> true
-                    MigrationFlag.CATEGORY -> true
-                    MigrationFlag.CUSTOM_COVER -> current.hasCustomCover(coverCache)
-                    MigrationFlag.NOTES -> current.notes.isNotBlank()
-                    MigrationFlag.REMOVE_DOWNLOAD -> entryDownloadInteraction.hasDownloads(current)
+    suspend fun init(current: Entry, target: Entry) {
+        source = current
+        this.target = target
+        mutableState.update { State(isLoading = true) }
+        when (val result = migration.prepare(EntryMigrationPrepareIntent(current, target))) {
+            is EntryMigrationPreparationResult.Ready -> {
+                val defaults = sourcePreference.migrationFlags.get().toEntryMigrationOptions()
+                val selectedOptions = defaults.intersect(result.availableOptions)
+                mutableState.update {
+                    State(
+                        reference = result.reference,
+                        availableOptions = result.availableOptions.toList(),
+                        selectedOptions = selectedOptions,
+                        preservedDefaults = defaults - result.availableOptions,
+                    )
                 }
-                if (applicable) add(it)
+            }
+            is EntryMigrationPreparationResult.OperationalFailure,
+            is EntryMigrationPreparationResult.Rejected,
+            -> mutableState.update { State(isLoading = false, hasFailure = true) }
+        }
+    }
+
+    fun toggleSelection(option: EntryMigrationOption) {
+        mutableState.update {
+            val selectedOptions = it.selectedOptions.toMutableSet()
+                .apply { if (contains(option)) remove(option) else add(option) }
+                .toSet()
+            it.copy(selectedOptions = selectedOptions)
+        }
+    }
+
+    suspend fun migrateEntry(mode: EntryMigrationMode): Boolean {
+        val state = state.value
+        val reference = state.reference ?: return false
+        sourcePreference.migrationFlags.set((state.selectedOptions + state.preservedDefaults).toMigrationFlags())
+        mutableState.update { it.copy(isMigrating = true, hasFailure = false) }
+        return when (
+            migration.execute(
+                EntryMigrationExecuteIntent(
+                    reference = reference,
+                    mode = mode,
+                    selectedOptions = state.selectedOptions,
+                ),
+            )
+        ) {
+            is EntryMigrationExecutionResult.Applied -> {
+                mutableState.update { it.copy(isMigrating = false, isMigrated = true) }
+                true
+            }
+            EntryMigrationExecutionResult.Conflict -> {
+                val source = source
+                val target = target
+                if (source != null && target != null) {
+                    init(source, target)
+                } else {
+                    mutableState.update { it.copy(isMigrating = false, hasFailure = true) }
+                }
+                false
+            }
+            is EntryMigrationExecutionResult.OperationalFailure,
+            is EntryMigrationExecutionResult.Rejected,
+            -> {
+                mutableState.update { it.copy(isMigrating = false, hasFailure = true) }
+                false
             }
         }
-        val selectedFlags = sourcePreference.migrationFlags.get()
-        mutableState.update {
-            State(
-                current = current,
-                target = target,
-                applicableFlags = applicableFlags,
-                selectedFlags = selectedFlags,
-            )
-        }
-    }
-
-    fun toggleSelection(flag: MigrationFlag) {
-        mutableState.update {
-            val selectedFlags = it.selectedFlags.toMutableSet()
-                .apply { if (contains(flag)) remove(flag) else add(flag) }
-                .toSet()
-            it.copy(selectedFlags = selectedFlags)
-        }
-    }
-
-    suspend fun migrateEntry(replace: Boolean) {
-        val state = state.value
-        val current = state.current ?: return
-        val target = state.target ?: return
-        sourcePreference.migrationFlags.set(state.selectedFlags)
-        mutableState.update { it.copy(isMigrating = true) }
-        migrateEntry(current, target, replace)
-        mutableState.update { it.copy(isMigrating = false, isMigrated = true) }
     }
 
     data class State(
-        val current: Entry? = null,
-        val target: Entry? = null,
-        val applicableFlags: List<MigrationFlag> = emptyList(),
-        val selectedFlags: Set<MigrationFlag> = emptySet(),
+        val reference: EntryMigrationReference? = null,
+        val availableOptions: List<EntryMigrationOption> = emptyList(),
+        val selectedOptions: Set<EntryMigrationOption> = emptySet(),
+        val preservedDefaults: Set<EntryMigrationOption> = emptySet(),
+        val isLoading: Boolean = true,
         val isMigrating: Boolean = false,
         val isMigrated: Boolean = false,
+        val hasFailure: Boolean = false,
     )
 }

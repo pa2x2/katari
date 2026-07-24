@@ -30,6 +30,14 @@ Changing an entry's source identity or URL can make Katari treat it as new. This
 
 Common metadata, categories, favorites, updates, and history use the shared Entry model. Opening, progress, settings, and downloads remain type-specific, so behavior configured for one interaction does not automatically apply to another.
 
+Library-update notifications are grouped and worded for the updated entry type. Their actions reflect the behavior that
+type currently provides: opening a child, marking it consumed, and downloading it appear independently. Tapping a child
+notification still opens the entry details when that type does not provide direct child opening.
+
+Download controls likewise follow the content type's actual download support and the participating sources. Local or
+missing sources do not expose remote-download actions. Bulk actions operate on the children currently visible after
+entry filters are applied; reader navigation preferences do not change that selection.
+
 See [Content type support](content-type-reference.md) for a comparison of cross-type capabilities.
 
 For entries from multiple sources that represent the same title, see [Merged entries](./merged-entries.md).

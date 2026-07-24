@@ -31,6 +31,7 @@ internal class VideoPlaybackSession(
         val safePositionMs = positionMs.coerceAtLeast(0L)
         val safeDurationMs = durationMs.coerceAtLeast(0L)
         val completed = safeDurationMs > 0L && safePositionMs * 100 >= safeDurationMs * COMPLETION_PERCENTAGE
+        val completedNow = completed && !savedCompleted
         val watchedDelta = (safePositionMs - savedPositionMs).coerceAtLeast(0L)
         val timestamp = now()
         if (completed != savedCompleted) {
@@ -58,12 +59,14 @@ internal class VideoPlaybackSession(
                     sessionReadDuration = it,
                 )
             },
+            completedNow = completedNow,
         )
     }
 
     data class Snapshot(
         val progressState: EntryProgressState,
         val historyUpdate: HistoryUpdate?,
+        val completedNow: Boolean,
     )
 
     private companion object {

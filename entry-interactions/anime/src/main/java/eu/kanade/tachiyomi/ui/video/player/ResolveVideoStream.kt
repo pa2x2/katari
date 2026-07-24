@@ -14,10 +14,8 @@ import eu.kanade.tachiyomi.source.entry.VideoSubtitle
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlinx.serialization.json.Json
 import logcat.LogPriority
 import mihon.entry.interactions.anime.download.AnimeDownloadProvider
-import mihon.entry.interactions.anime.download.AnimeDownloader
 import mihon.entry.interactions.anime.download.model.AnimeDownloadManifest
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
@@ -38,7 +36,6 @@ internal class ResolveVideoStream(
     private val playbackPreferencesRepository: PlaybackPreferencesRepository = Injekt.get(),
     private val videoSourceManager: SourceManager = Injekt.get(),
     private val animeDownloadProvider: AnimeDownloadProvider = Injekt.get(),
-    private val json: Json = Injekt.get(),
     private val context: Application = Injekt.get(),
     private val isOnline: () -> Boolean = context::isOnline,
     private val sourceInitTimeoutMs: Long = SOURCE_INIT_TIMEOUT_MS,
@@ -266,12 +263,7 @@ internal class ResolveVideoStream(
     }
 
     private fun readDownloadedPlayback(episodeDir: UniFile): DownloadedPlaybackData? {
-        val manifest = runCatchingCancellable {
-            episodeDir.findFile(AnimeDownloader.MANIFEST_FILE_NAME)
-                ?.openInputStream()
-                ?.bufferedReader()
-                ?.use { json.decodeFromString<AnimeDownloadManifest>(it.readText()) }
-        }.getOrNull()
+        val manifest = animeDownloadProvider.readValidManifest(episodeDir)
 
         if (manifest != null) {
             val videoFile = resolveDownloadedVideoFile(episodeDir, manifest) ?: return null

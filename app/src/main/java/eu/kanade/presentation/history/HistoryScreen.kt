@@ -36,6 +36,7 @@ fun HistoryScreen(
     snackbarHostState: SnackbarHostState,
     onSearchQueryChange: (String?) -> Unit,
     onClickCover: (HistoryUiItem) -> Unit,
+    canResume: (HistoryUiItem) -> Boolean,
     onClickResume: (HistoryUiItem) -> Unit,
     onClickDelete: (HistoryItem) -> Unit,
     onClickFavorite: (HistoryUiItem) -> Unit,
@@ -83,6 +84,7 @@ fun HistoryScreen(
                     history = it,
                     contentPadding = contentPadding,
                     onClickCover = onClickCover,
+                    canResume = canResume,
                     onClickResume = onClickResume,
                     onClickDelete = onClickDelete,
                     onClickFavorite = onClickFavorite,
@@ -97,6 +99,7 @@ private fun HistoryScreenContent(
     history: List<HistoryUiModel>,
     contentPadding: PaddingValues,
     onClickCover: (HistoryUiItem) -> Unit,
+    canResume: (HistoryUiItem) -> Boolean,
     onClickResume: (HistoryUiItem) -> Unit,
     onClickDelete: (HistoryItem) -> Unit,
     onClickFavorite: (HistoryUiItem) -> Unit,
@@ -126,7 +129,11 @@ private fun HistoryScreenContent(
                         modifier = Modifier.animateItemFastScroll(),
                         item = item.item,
                         onClickCover = { onClickCover(item.item) },
-                        onClickResume = { onClickResume(item.item) },
+                        onClickResume = if (canResume(item.item)) {
+                            { onClickResume(item.item) }
+                        } else {
+                            null
+                        },
                         onClickDelete = { onClickDelete(item.item.historyItem) },
                     )
                 }
@@ -152,6 +159,7 @@ internal fun HistoryScreenPreviews(
             snackbarHostState = SnackbarHostState(),
             onSearchQueryChange = {},
             onClickCover = {},
+            canResume = { true },
             onClickResume = {},
             onClickDelete = {},
             onClickFavorite = {},

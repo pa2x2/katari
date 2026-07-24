@@ -1,12 +1,13 @@
 package tachiyomi.domain.entry.interactor
 
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
-import eu.kanade.tachiyomi.source.entry.entryItemOrientation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.retry
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
@@ -14,14 +15,15 @@ import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.category.repository.CategoryRepository
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.domain.entry.model.EntryMerge
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
-import tachiyomi.domain.entry.repository.MergedEntryRepository
-import tachiyomi.domain.entry.service.EntryLibraryProgressResolver
-import tachiyomi.domain.entry.service.EntryLibraryState
+import tachiyomi.domain.entry.service.EntryLibraryGroupResolution
+import tachiyomi.domain.entry.service.EntryLibraryGroupingResolutionPort
+import tachiyomi.domain.entry.service.EntryLibraryProgressResolution
+import tachiyomi.domain.entry.service.EntryLibraryProgressResolutionPort
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
+import tachiyomi.domain.source.service.EntrySourceDescriptionResolutionPort
 import tachiyomi.domain.source.service.HiddenSourceIds
 import tachiyomi.domain.source.service.SourceManager
 import kotlin.time.Duration.Companion.seconds
@@ -29,29 +31,37 @@ import kotlin.time.Duration.Companion.seconds
 class GetLibraryEntries(
     private val entryRepository: EntryRepository,
     private val entryChapterRepository: EntryChapterRepository,
-    private val entryLibraryProgressResolver: EntryLibraryProgressResolver,
+    private val entryLibraryProgressResolver: EntryLibraryProgressResolutionPort,
     private val categoryRepository: CategoryRepository,
-    private val mergedEntryRepository: MergedEntryRepository,
+    private val libraryGrouping: EntryLibraryGroupingResolutionPort,
     private val hiddenSourceIds: HiddenSourceIds,
     private val sourceManager: SourceManager,
+    private val sourceDescription: EntrySourceDescriptionResolutionPort,
 ) {
 
     suspend fun await(): List<LibraryItem> {
+        val favorites = entryRepository.getLibraryEntries()
+        if (favorites.isEmpty()) return emptyList()
+        val profileId = favorites.first().profileId
         return buildItems(
-            favorites = entryRepository.getLibraryEntries(),
-            merges = mergedEntryRepository.getAll(),
+            favorites = favorites,
+            groups = libraryGrouping.resolveLibraryGrouping(profileId, favorites).groups,
             hiddenSources = hiddenSourceIds.get(),
         )
     }
 
     fun subscribe(): Flow<List<LibraryItem>> {
-        return combine(
-            entryRepository.getLibraryEntriesAsFlow(),
-            mergedEntryRepository.subscribeAll(),
-            hiddenSourceIds.subscribe(),
-        ) { favorites, merges, hiddenSources ->
-            buildItems(favorites, merges, hiddenSources)
-        }
+        return entryRepository.getLibraryEntriesAsFlow()
+            .flatMapLatest { favorites ->
+                if (favorites.isEmpty()) return@flatMapLatest flowOf(emptyList())
+                val profileId = favorites.first().profileId
+                combine(
+                    libraryGrouping.observeLibraryGrouping(profileId, flowOf(favorites)),
+                    hiddenSourceIds.subscribe(),
+                ) { grouping, hiddenSources ->
+                    buildItems(favorites, grouping.groups, hiddenSources)
+                }
+            }
             .retry {
                 if (it is NullPointerException) {
                     delay(0.5.seconds)
@@ -67,7 +77,7 @@ class GetLibraryEntries(
 
     private suspend fun buildItems(
         favorites: List<Entry>,
-        merges: List<EntryMerge>,
+        groups: List<EntryLibraryGroupResolution>,
         hiddenSources: Set<Long>,
     ): List<LibraryItem> {
         if (favorites.isEmpty()) return emptyList()
@@ -79,7 +89,7 @@ class GetLibraryEntries(
 
         val itemsById = favorites.associate { entry ->
             val entryChapters = chapters.filter { it.entryId == entry.id }
-            val libraryState = entryLibraryProgressResolver.resolve(
+            val libraryState = entryLibraryProgressResolver.calculate(
                 entry = entry,
                 chapters = entryChapters,
                 lastRead = lastReadByEntryId[entry.id] ?: 0L,
@@ -97,26 +107,12 @@ class GetLibraryEntries(
             )
         }
 
-        val mergesByTargetId = merges.groupBy { it.targetId }
-        val mergeByEntryId = merges.associateBy { it.entryId }
-        val collapsedItems = mutableListOf<LibraryItem>()
-        val consumedIds = mutableSetOf<Long>()
-
-        favorites.forEach { entry ->
-            if (!consumedIds.add(entry.id)) return@forEach
-
-            val targetId = mergeByEntryId[entry.id]?.targetId
-            val members = targetId
-                ?.let { mergesByTargetId[it] }
-                .orEmpty()
-                .sortedBy { it.position }
-                .mapNotNull { itemsById[it.entryId] }
-
-            if (members.size > 1) {
-                collapsedItems += mergeEntryItem(targetId ?: entry.id, members)
-                consumedIds += members.map { it.entry.id }
-            } else {
-                collapsedItems += itemsById.getValue(entry.id)
+        val collapsedItems = groups.mapNotNull { group ->
+            val members = group.orderedEntries.mapNotNull { entry -> itemsById[entry.id] }
+            when {
+                members.size > 1 -> mergeEntryItem(group.visibleEntry.id, members)
+                members.size == 1 -> members.single()
+                else -> null
             }
         }
 
@@ -151,7 +147,12 @@ class GetLibraryEntries(
                 ?: EntryItemOrientation.VERTICAL
         }
 
-        val libraryState = entryLibraryProgressResolver.merge(target.entry.type, members)
+        val memberSummaries = members.mapNotNull { it.availableProgressSummary }
+        val libraryState = if (memberSummaries.size == members.size) {
+            entryLibraryProgressResolver.merge(target.entry.type, memberSummaries)
+        } else {
+            EntryLibraryProgressResolution.Inapplicable(target.entry.type)
+        }
 
         return target.copy(
             categories = members.flatMap { it.categories }.distinct(),
@@ -163,10 +164,8 @@ class GetLibraryEntries(
             isMerged = true,
             memberEntryIds = members.flatMap { it.memberEntryIds },
             memberEntries = members.flatMap { it.memberEntries },
-            progress = libraryState.progress,
+            progressSummary = libraryState,
             latestUpload = members.maxOfOrNull { it.latestUpload } ?: 0L,
-            lastRead = libraryState.lastRead,
-            continueEntryId = libraryState.continueEntryId,
         )
     }
 
@@ -178,13 +177,13 @@ class GetLibraryEntries(
         displaySourceId: Long,
         sourceIds: Set<Long>,
         isMerged: Boolean,
-        libraryState: EntryLibraryState,
+        libraryState: EntryLibraryProgressResolution,
     ): LibraryItem {
         val source = sourceManager.getOrStub(entry.source)
         val sourceDisplayInfo = sourceManager.getDisplayInfo(entry.source)
         val sourceName = sourceDisplayInfo.name
         val sourceLanguage = sourceDisplayInfo.lang
-        val sourceItemOrientation = source.entryItemOrientation()
+        val sourceItemOrientation = sourceDescription.describe(source).itemOrientation
 
         return LibraryItem(
             entry = entry,
@@ -198,10 +197,8 @@ class GetLibraryEntries(
             isMerged = isMerged,
             memberEntryIds = memberEntries.map { LibraryItemKey(entry.type, it.id) },
             memberEntries = memberEntries,
-            progress = libraryState.progress,
+            progressSummary = libraryState,
             latestUpload = chapters.maxOfOrNull { it.dateUpload }?.takeIf { it > 0 } ?: entry.lastUpdate,
-            lastRead = libraryState.lastRead,
-            continueEntryId = libraryState.continueEntryId,
             downloadCount = 0,
         )
     }

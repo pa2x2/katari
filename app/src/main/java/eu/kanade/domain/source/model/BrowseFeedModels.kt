@@ -22,7 +22,6 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
 import tachiyomi.domain.library.model.LibraryDisplayMode
-import tachiyomi.domain.source.interactor.GetRemoteCatalog
 
 const val BUILTIN_POPULAR_PRESET_ID = "builtin:popular"
 const val BUILTIN_LATEST_PRESET_ID = "builtin:latest"
@@ -259,8 +258,8 @@ data class FeedSavedListing(
 ) {
     val requestQuery: String?
         get() = when (mode) {
-            FeedListingMode.Popular -> GetRemoteCatalog.QUERY_POPULAR
-            FeedListingMode.Latest -> GetRemoteCatalog.QUERY_LATEST
+            FeedListingMode.Popular -> CATALOGUE_POPULAR_QUERY
+            FeedListingMode.Latest -> CATALOGUE_LATEST_QUERY
             FeedListingMode.Search -> query
         }
 }

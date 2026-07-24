@@ -21,7 +21,7 @@ import tachiyomi.presentation.core.util.secondaryItemAlpha
 @Composable
 fun MissingChapterCountListItem(
     count: Int,
-    entryType: EntryType = EntryType.MANGA,
+    entryType: EntryType,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -52,7 +52,7 @@ fun MissingChapterCountListItem(
 private fun Preview() {
     TachiyomiPreviewTheme {
         Surface {
-            MissingChapterCountListItem(count = 42)
+            MissingChapterCountListItem(count = 42, entryType = EntryType.MANGA)
         }
     }
 }

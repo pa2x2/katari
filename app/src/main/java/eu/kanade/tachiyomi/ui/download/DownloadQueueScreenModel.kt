@@ -8,16 +8,17 @@ import eu.kanade.tachiyomi.databinding.DownloadListBinding
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.EntryDownloadInteraction
 import mihon.entry.interactions.EntryDownloadQueueItem
+import mihon.entry.interactions.EntryDownloadRuntimeFeature
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 class DownloadQueueScreenModel(
-    private val entryDownloadInteraction: EntryDownloadInteraction = Injekt.get(),
+    private val downloadRuntime: EntryDownloadRuntimeFeature = Injekt.get(),
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(emptyList<DownloadQueueHeaderItem>())
@@ -35,7 +36,7 @@ class DownloadQueueScreenModel(
                     reorderedItems += item.payloadAsDownloadQueueItem()
                 }
             }
-            entryDownloadInteraction.reorderQueue(reorderedItems)
+            downloadRuntime.reorderQueue(reorderedItems)
         }
 
         override fun onMenuItemClick(position: Int, menuItem: MenuItem) {
@@ -66,12 +67,12 @@ class DownloadQueueScreenModel(
 
     init {
         screenModelScope.launch {
-            entryDownloadInteraction.queueState.collect { groups ->
+            downloadRuntime.state.map { it.queue }.collect { groups ->
                 val newList = groups.map { group ->
                     DownloadQueueHeaderItem(
                         DownloadQueueHeaderModel(
                             id = group.sourceId,
-                            contentType = group.entryType.toDownloadQueueContentType(),
+                            entryType = group.entryType,
                             title = group.sourceName,
                             count = group.items.size,
                         ),
@@ -97,22 +98,22 @@ class DownloadQueueScreenModel(
         adapter = null
     }
 
-    val isDownloaderRunning = entryDownloadInteraction.isRunning
+    val isDownloaderRunning = downloadRuntime.state.map { it.isRunning }
         .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), false)
 
-    fun getDownloadStatusFlow() = entryDownloadInteraction.queueStatusUpdates()
-    fun getDownloadProgressFlow() = entryDownloadInteraction.queueProgressUpdates()
+    fun getDownloadStatusFlow() = downloadRuntime.queueStatusUpdates()
+    fun getDownloadProgressFlow() = downloadRuntime.queueProgressUpdates()
 
     fun startDownloads() {
-        entryDownloadInteraction.startDownloads()
+        downloadRuntime.start()
     }
 
     fun pauseDownloads() {
-        entryDownloadInteraction.pauseDownloads()
+        downloadRuntime.pause()
     }
 
     fun clearQueue() {
-        entryDownloadInteraction.clearQueue()
+        downloadRuntime.clearQueue()
     }
 
     fun <R : Comparable<R>> reorderQueue(selector: (DownloadQueueItem) -> R, reverse: Boolean = false) {
@@ -127,7 +128,7 @@ class DownloadQueueScreenModel(
                 reorderedItems += item.payloadAsDownloadQueueItem()
             }
         }
-        entryDownloadInteraction.reorderQueue(reorderedItems)
+        downloadRuntime.reorderQueue(reorderedItems)
     }
 
     fun onStatusChange(download: EntryDownloadQueueItem) {
@@ -147,11 +148,11 @@ class DownloadQueueScreenModel(
 
     private fun moveSeries(selectedItem: DownloadQueueItem, moveToTop: Boolean) {
         val selected = selectedItem.payloadAsDownloadQueueItem()
-        entryDownloadInteraction.reorderSeries(selected.entryType, selected.entryId, moveToTop)
+        downloadRuntime.reorderEntry(selected.entryType, selected.entryId, moveToTop)
     }
 
     private fun cancelItem(selectedItem: DownloadQueueItem) {
-        entryDownloadInteraction.cancelQueuedDownloads(listOf(selectedItem.payloadAsDownloadQueueItem()))
+        downloadRuntime.cancelQueued(listOf(selectedItem.payloadAsDownloadQueueItem()))
     }
 
     private fun cancelSeries(selectedItem: DownloadQueueItem) {
@@ -162,7 +163,7 @@ class DownloadQueueScreenModel(
             .map(DownloadQueueItem::payloadAsDownloadQueueItem)
             .filter { it.entryType == selected.entryType && it.entryId == selected.entryId }
         if (downloads.isNotEmpty()) {
-            entryDownloadInteraction.cancelQueuedDownloads(downloads)
+            downloadRuntime.cancelQueued(downloads)
         }
     }
 

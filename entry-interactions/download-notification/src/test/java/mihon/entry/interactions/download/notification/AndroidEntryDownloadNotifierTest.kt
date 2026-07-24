@@ -6,6 +6,8 @@ import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
+import mihon.entry.interactions.EntryDownloadEntryIdentity
 import mihon.entry.interactions.EntryDownloadNotificationActions
 import mihon.entry.interactions.EntryDownloadNotifications
 import org.junit.Before
@@ -54,6 +56,7 @@ class AndroidEntryDownloadNotifierTest {
             listOf("Pause", "Cancel all", "Show entry"),
             notification.actions.map { it.title.toString() },
         )
+        verify { actions.openEntry(context, 7L, 42L) }
     }
 
     @Test
@@ -72,7 +75,7 @@ class AndroidEntryDownloadNotifierTest {
 
         notifier.showError(
             EntryDownloadErrorNotification(
-                entryType = EntryType.BOOK,
+                destination = null,
                 title = "Private entry",
                 message = "Private failure",
             ),
@@ -113,12 +116,11 @@ class AndroidEntryDownloadNotifierTest {
     )
 
     private fun progress() = EntryDownloadProgressNotification(
-        entryType = EntryType.BOOK,
+        destination = EntryDownloadEntryIdentity(7L, EntryType.BOOK, 42L),
         title = "Private entry",
         text = "Private child",
         maximum = 100,
         current = 25,
-        entryId = 42,
     )
 
     private class RecordingPublisher : EntryDownloadNotificationPublisher {

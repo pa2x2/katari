@@ -21,15 +21,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.settings.LocalPreferenceHighlighted
 import eu.kanade.presentation.track.components.TrackLogoIcon
-import eu.kanade.tachiyomi.data.track.Tracker
+import mihon.entry.interactions.EntryTrackingServiceDescriptor
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
 fun TrackingPreferenceWidget(
     modifier: Modifier = Modifier,
-    tracker: Tracker,
+    service: EntryTrackingServiceDescriptor,
     isLoggedIn: Boolean,
+    displayUsername: String,
     onClick: (() -> Unit)? = null,
 ) {
     val highlighted = LocalPreferenceHighlighted.current
@@ -41,22 +42,21 @@ fun TrackingPreferenceWidget(
                 .padding(horizontal = PrefsHorizontalPadding, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            TrackLogoIcon(tracker)
+            TrackLogoIcon(name = service.name, logoResource = service.logoResource)
             Column(
                 modifier = Modifier.weight(1f),
             ) {
                 Text(
-                    text = tracker.name,
+                    text = service.name,
                     modifier = Modifier.padding(horizontal = 16.dp),
                     maxLines = 1,
                     style = MaterialTheme.typography.titleLarge,
                     fontSize = TitleFontSize,
                     fontWeight = FontWeight.Medium,
                 )
-                val displayName = tracker.getDisplayUsername()
-                if (isLoggedIn && displayName.isNotBlank()) {
+                if (isLoggedIn && displayUsername.isNotBlank()) {
                     Text(
-                        text = displayName,
+                        text = displayUsername,
                         modifier = Modifier.padding(horizontal = 16.dp),
                         maxLines = 1,
                         style = MaterialTheme.typography.bodyMedium,

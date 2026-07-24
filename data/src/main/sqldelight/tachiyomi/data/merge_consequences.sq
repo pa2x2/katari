@@ -1,0 +1,81 @@
+CREATE TABLE merge_consequences(
+    consequence_id TEXT NOT NULL PRIMARY KEY,
+    operation_id TEXT NOT NULL,
+    profile_id INTEGER NOT NULL,
+    entry_id INTEGER NOT NULL,
+    participant_id TEXT NOT NULL,
+    schema_version INTEGER NOT NULL,
+    payload TEXT NOT NULL DEFAULT '',
+    attempts INTEGER NOT NULL DEFAULT 0,
+    next_attempt_at INTEGER NOT NULL DEFAULT 0,
+    last_error TEXT,
+    created_at INTEGER NOT NULL,
+    UNIQUE(operation_id, entry_id, participant_id),
+    FOREIGN KEY(profile_id) REFERENCES profiles(_id) ON DELETE CASCADE,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_merge_consequences_pending
+ON merge_consequences(next_attempt_at, created_at);
+
+pending:
+SELECT consequence_id, operation_id, profile_id, entry_id, participant_id, schema_version, payload, attempts
+FROM merge_consequences
+WHERE next_attempt_at <= :now
+ORDER BY created_at, consequence_id
+LIMIT :limit;
+
+countByOperation:
+SELECT count(*)
+FROM merge_consequences
+WHERE operation_id = :operationId;
+
+consequenceStatus:
+SELECT
+    count(*) AS pending_count,
+    coalesce(sum(CASE WHEN attempts > 0 THEN 1 ELSE 0 END), 0) AS failed_count,
+    (
+        SELECT last_error
+        FROM merge_consequences
+        WHERE last_error IS NOT NULL
+        ORDER BY next_attempt_at DESC, created_at DESC
+        LIMIT 1
+    ) AS last_failure
+FROM merge_consequences;
+
+insert:
+INSERT INTO merge_consequences(
+    consequence_id,
+    operation_id,
+    profile_id,
+    entry_id,
+    participant_id,
+    schema_version,
+    payload,
+    created_at
+)
+VALUES (
+    :consequenceId,
+    :operationId,
+    :profileId,
+    :entryId,
+    :participantId,
+    :schemaVersion,
+    :payload,
+    :createdAt
+);
+
+acknowledge:
+DELETE FROM merge_consequences
+WHERE consequence_id = :consequenceId;
+
+recordFailure:
+UPDATE merge_consequences
+SET attempts = attempts + 1,
+    next_attempt_at = :retryAtMillis,
+    last_error = :message
+WHERE consequence_id = :consequenceId;
+
+makeRetryable:
+UPDATE merge_consequences
+SET next_attempt_at = 0;

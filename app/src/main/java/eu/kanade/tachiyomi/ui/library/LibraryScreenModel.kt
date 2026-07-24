@@ -2,7 +2,6 @@ package eu.kanade.tachiyomi.ui.library
 
 import android.content.Context
 import androidx.compose.runtime.Immutable
-import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastMap
 import cafe.adriel.voyager.core.model.StateScreenModel
@@ -13,13 +12,10 @@ import eu.kanade.presentation.entry.DownloadAction
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.library.components.LibraryDisplaySettings
 import eu.kanade.presentation.library.components.LibraryToolbarTitle
-import eu.kanade.tachiyomi.data.track.TrackerManager
-import eu.kanade.tachiyomi.data.track.supportedEntryTypes
-import eu.kanade.tachiyomi.entry.EntryRemovalCleanupInteraction
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.getDisplayNameForEntryInfo
-import eu.kanade.tachiyomi.source.sourceItemOrientation
+import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.channels.Channel
@@ -34,22 +30,46 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.updateAndGet
 import mihon.core.common.utils.mutate
 import mihon.entry.interactions.EntryBulkDownloadAction
-import mihon.entry.interactions.EntryBulkDownloadCandidateResult
-import mihon.entry.interactions.EntryCapabilityInteraction
-import mihon.entry.interactions.EntryConsumptionInteraction
-import mihon.entry.interactions.EntryDownloadInteraction
-import mihon.entry.interactions.EntryLibraryFilterInteraction
-import mihon.entry.interactions.EntryMergeCapabilityItem
-import mihon.feature.profiles.core.EntryProfileMoveConflictResolution
-import mihon.feature.profiles.core.EntryProfileMovePreview
-import mihon.feature.profiles.core.EntryProfileMoveRequest
-import mihon.feature.profiles.core.EntryProfileMoveResult
-import mihon.feature.profiles.core.EntryProfileMoveService
+import mihon.entry.interactions.EntryBulkDownloadRequest
+import mihon.entry.interactions.EntryBulkDownloadResolutionResult
+import mihon.entry.interactions.EntryCatalogueFeature
+import mihon.entry.interactions.EntryConsumptionFeature
+import mihon.entry.interactions.EntryDownloadActionAvailability
+import mihon.entry.interactions.EntryDownloadActionFeature
+import mihon.entry.interactions.EntryDownloadActionRequest
+import mihon.entry.interactions.EntryDownloadRuntimeFeature
+import mihon.entry.interactions.EntryLibraryFilterAvailability
+import mihon.entry.interactions.EntryLibraryFilterControlAvailability
+import mihon.entry.interactions.EntryLibraryFilterFeature
+import mihon.entry.interactions.EntryLibraryFilterPolicy
+import mihon.entry.interactions.EntryLibraryFilterRequest
+import mihon.entry.interactions.EntryLibraryFilterTarget
+import mihon.entry.interactions.EntryLibraryMembershipFeature
+import mihon.entry.interactions.EntryLibraryRemovalResult
+import mihon.entry.interactions.EntryMergeCommitIntent
+import mihon.entry.interactions.EntryMergeEditReference
+import mihon.entry.interactions.EntryMergeEditorEntryReference
+import mihon.entry.interactions.EntryMergeExecutionResult
+import mihon.entry.interactions.EntryMergeFeature
+import mihon.entry.interactions.EntryMergePreparationResult
+import mihon.entry.interactions.EntryMergePrepareIntent
+import mihon.entry.interactions.EntryMigrationFeature
+import mihon.entry.interactions.EntryMigrationSelectionResult
+import mihon.entry.interactions.EntryMigrationSubject
+import mihon.entry.interactions.EntryProfileMoveConflictResolution
+import mihon.entry.interactions.EntryProfileMoveFeature
+import mihon.entry.interactions.EntryProfileMovePreview
+import mihon.entry.interactions.EntryProfileMoveRequest
+import mihon.entry.interactions.EntryProfileMoveResult
+import mihon.entry.interactions.EntryTrackingAccount
+import mihon.entry.interactions.EntryTrackingCollectionTrack
+import mihon.entry.interactions.EntryTrackingFeature
 import mihon.feature.profiles.core.Profile
 import mihon.feature.profiles.core.ProfileAwareStore
 import mihon.feature.profiles.core.ProfileDatabase
@@ -64,10 +84,7 @@ import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.GetLibraryEntries
-import tachiyomi.domain.entry.interactor.GetMergedEntry
 import tachiyomi.domain.entry.interactor.SetEntryCategories
-import tachiyomi.domain.entry.interactor.SetEntryFavorite
-import tachiyomi.domain.entry.interactor.UpdateMergedEntry
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryStatus
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -81,9 +98,6 @@ import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.service.LibrarySortKey
 import tachiyomi.domain.library.service.librarySortComparator
 import tachiyomi.domain.source.service.SourceManager
-import tachiyomi.domain.track.interactor.GetTracksPerEntry
-import tachiyomi.domain.track.model.EntryTrack
-import tachiyomi.domain.util.applyFilter
 import tachiyomi.i18n.MR
 import tachiyomi.source.local.LocalSource
 import uy.kohesive.injekt.Injekt
@@ -95,25 +109,24 @@ class LibraryScreenModel(
     private val context: Context,
     private val getLibraryEntries: GetLibraryEntries = Injekt.get(),
     private val getCategories: GetCategories = Injekt.get(),
-    private val getTracksPerEntry: GetTracksPerEntry = Injekt.get(),
     private val getEntry: GetEntry = Injekt.get(),
-    private val getMergedEntry: GetMergedEntry = Injekt.get(),
-    private val updateMergedEntry: UpdateMergedEntry = Injekt.get(),
-    private val setEntryFavorite: SetEntryFavorite = Injekt.get(),
     private val setEntryCategories: SetEntryCategories = Injekt.get(),
     private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
     private val sourceManager: SourceManager = Injekt.get(),
-    private val entryDownloadInteraction: EntryDownloadInteraction = Injekt.get(),
-    private val entryCapabilityInteraction: EntryCapabilityInteraction = Injekt.get(),
-    private val entryConsumptionInteraction: EntryConsumptionInteraction = Injekt.get(),
-    private val entryLibraryFilterInteraction: EntryLibraryFilterInteraction = Injekt.get(),
-    private val entryRemovalCleanupInteraction: EntryRemovalCleanupInteraction = Injekt.get(),
-    private val trackerManager: TrackerManager = Injekt.get(),
+    private val downloadRuntime: EntryDownloadRuntimeFeature = Injekt.get(),
+    private val entryDownloadActionFeature: EntryDownloadActionFeature = Injekt.get(),
+    private val entryMigrationFeature: EntryMigrationFeature = Injekt.get(),
+    private val entryMergeFeature: EntryMergeFeature = Injekt.get(),
+    private val entryLibraryMembershipFeature: EntryLibraryMembershipFeature = Injekt.get(),
+    private val entryConsumptionFeature: EntryConsumptionFeature = Injekt.get(),
+    private val entryLibraryFilterFeature: EntryLibraryFilterFeature = Injekt.get(),
+    private val entryCatalogueFeature: EntryCatalogueFeature = Injekt.get(),
+    private val trackingFeature: EntryTrackingFeature = Injekt.get(),
     private val profileStore: ProfileAwareStore = Injekt.get(),
     private val profileDatabase: ProfileDatabase = Injekt.get(),
     private val profileManager: ProfileManager = Injekt.get(),
-    private val entryProfileMoveService: EntryProfileMoveService = Injekt.get(),
+    private val entryProfileMoveFeature: EntryProfileMoveFeature = Injekt.get(),
 ) : StateScreenModel<LibraryScreenModel.State>(State()) {
 
     val moveEvents = Channel<MoveEvent>(Channel.BUFFERED)
@@ -123,6 +136,15 @@ class LibraryScreenModel(
         mutableState.update { state ->
             state.copy(activePageIndex = libraryPreferences.lastUsedCategory.get())
         }
+        state.map { current ->
+            current.selectedLibraryItems.flatMap(LibraryItem::memberEntries).distinctBy(Entry::id)
+        }
+            .distinctUntilChanged()
+            .mapLatest { entries ->
+                entryMergeFeature.prepare(EntryMergePrepareIntent(entries)) is EntryMergePreparationResult.Ready
+            }
+            .onEach { available -> mutableState.update { it.copy(mergeSelectionAvailable = available) } }
+            .launchIn(screenModelScope)
         profileStore.currentProfileIdFlow
             .drop(1)
             .onEach {
@@ -141,13 +163,13 @@ class LibraryScreenModel(
                 state.map { it.searchQuery }.distinctUntilChanged().debounce(0.25.seconds),
                 getCategories.subscribe(),
                 getLibraryItemsFlow(),
-                combine(getTracksPerEntry.subscribe(), getTrackingFiltersFlow(), ::Pair),
+                combine(trackingFeature.observeCollection(), getTrackingFiltersFlow(), ::Pair),
                 getLibraryItemPreferencesFlow(),
-            ) { searchQuery, categories, favorites, (tracksMap, trackingFilters), itemPreferences ->
+            ) { searchQuery, categories, favorites, (tracking, trackingFilters), itemPreferences ->
                 val showSystemCategory = favorites.any { it.categories.contains(0L) }
                 val categoryNamesById = categories.associate { it.id to it.name }
-                val filteredFavorites = favorites
-                    .applyFilters(tracksMap, trackingFilters, itemPreferences)
+                val filterResult = favorites.applyFilters(tracking.entries, trackingFilters, itemPreferences)
+                val filteredFavorites = filterResult.items
                     .let {
                         if (searchQuery ==
                             null
@@ -163,14 +185,19 @@ class LibraryScreenModel(
                     showSystemCategory = showSystemCategory,
                     categories = categories,
                     favorites = filteredFavorites,
-                    tracksMap = tracksMap,
-                    loggedInTrackerIds = trackingFilters.keys,
+                    trackingEntries = tracking.entries,
+                    trackingScoreSupportedEntryTypes = tracking.scoreSupportedEntryTypes,
+                    hasActiveFilters = filterResult.hasActiveFilters,
+                    filterAvailability = filterResult.availability,
                 )
             }
                 .distinctUntilChanged()
                 .collectLatest { libraryData ->
                     mutableState.update { state ->
-                        state.copy(libraryData = libraryData)
+                        state.copy(
+                            libraryData = libraryData,
+                            hasActiveFilters = libraryData.hasActiveFilters,
+                        )
                     }
                 }
         }
@@ -190,8 +217,8 @@ class LibraryScreenModel(
                 applySort = { pages, data, groupType, sortingMode, randomSortSeed ->
                     pages.applySort(
                         favoritesById = data.favoritesById,
-                        trackMap = data.tracksMap,
-                        loggedInTrackerIds = data.loggedInTrackerIds,
+                        trackingEntries = data.trackingEntries,
+                        trackingScoreSupportedEntryTypes = data.trackingScoreSupportedEntryTypes,
                         groupType = groupType,
                         globalSort = sortingMode,
                         randomSortSeed = randomSortSeed,
@@ -233,102 +260,47 @@ class LibraryScreenModel(
                 }
             }
             .launchIn(screenModelScope)
-
-        combine(
-            getLibraryItemPreferencesFlow(),
-            getTrackingFiltersFlow(),
-        ) { prefs, trackFilters ->
-            listOf(
-                prefs.globalFilterDownloaded,
-                prefs.filterDownloaded,
-                prefs.filterUnread,
-                prefs.filterNotStarted,
-                prefs.filterBookmarked,
-                prefs.filterCompleted,
-                prefs.filterIntervalCustom,
-                *trackFilters.values.toTypedArray(),
-            )
-                .any { it != TriState.DISABLED }
-        }
-            .distinctUntilChanged()
-            .onEach {
-                mutableState.update { state ->
-                    state.copy(hasActiveFilters = it)
-                }
-            }
-            .launchIn(screenModelScope)
     }
 
     private fun List<LibraryItem>.applyFilters(
-        trackMap: Map<Long, List<EntryTrack>>,
+        trackingEntries: Map<Long, List<EntryTrackingCollectionTrack>>,
         trackingFilter: Map<Long, TriState>,
         preferences: ItemPreferences,
-    ): List<LibraryItem> {
-        val downloadedOnly = preferences.globalFilterDownloaded
-        val skipOutsideReleasePeriod = preferences.skipOutsideReleasePeriod
-        val filterDownloaded = if (downloadedOnly) TriState.ENABLED_IS else preferences.filterDownloaded
-        val filterUnread = preferences.filterUnread
-        val filterNotStarted = preferences.filterNotStarted
-        val filterBookmarked = preferences.filterBookmarked
-        val filterCompleted = preferences.filterCompleted
-        val filterIntervalCustom = preferences.filterIntervalCustom
-
-        val isNotLoggedInAnyTrack = trackingFilter.isEmpty()
-
-        val excludedTracks = trackingFilter.mapNotNull { if (it.value == TriState.ENABLED_NOT) it.key else null }
-        val includedTracks = trackingFilter.mapNotNull { if (it.value == TriState.ENABLED_IS) it.key else null }
-        val trackFiltersIsIgnored = includedTracks.isEmpty() && excludedTracks.isEmpty()
-
-        val filterFnDownloaded: (LibraryItem) -> Boolean = {
-            applyFilter(filterDownloaded) { it.isLocal || it.downloadCount > 0 }
+    ): AppliedLibraryFilters {
+        val targets = map { item ->
+            EntryLibraryFilterTarget(
+                type = item.entry.type,
+                isDownloadedOrLocal = item.isLocal || item.downloadCount > 0,
+                hasUnconsumed = item.unconsumedCount?.let { it > 0 },
+                hasStarted = item.hasStarted,
+                hasBookmarks = item.hasBookmarks,
+                isCompleted = item.entry.status == EntryStatus.COMPLETED,
+                isOutsideReleasePeriod = item.entry.fetchInterval < 0,
+                trackerIds = trackingEntries[item.key.id].orEmpty()
+                    .mapTo(mutableSetOf()) { it.serviceId.value },
+            )
         }
-
-        val filterFnUnread: (LibraryItem) -> Boolean = { item ->
-            applyFilter(filterUnread) { item.unconsumedCount > 0 }
-        }
-
-        val filterFnNotStarted: (LibraryItem) -> Boolean = {
-            applyFilter(filterNotStarted) { !it.hasStarted }
-        }
-
-        val filterFnBookmarked: (LibraryItem) -> Boolean = { item ->
-            applyFilter(filterBookmarked) { item.hasBookmarks }
-        }
-
-        val filterFnCompleted: (LibraryItem) -> Boolean = { item ->
-            applyFilter(filterCompleted) { item.entry.status == EntryStatus.COMPLETED }
-        }
-
-        val filterFnIntervalCustom: (LibraryItem) -> Boolean = { item ->
-            if (skipOutsideReleasePeriod &&
-                entryLibraryFilterInteraction.supportsOutsideReleasePeriodFilter(item.entry)
-            ) {
-                applyFilter(filterIntervalCustom) { item.entry.fetchInterval < 0 }
-            } else {
-                true
-            }
-        }
-
-        val filterFnTracking: (LibraryItem) -> Boolean = tracking@{ item ->
-            if (isNotLoggedInAnyTrack || trackFiltersIsIgnored) return@tracking true
-
-            val entryTracks = trackMap[item.key.id].orEmpty().map { it.trackerId }
-
-            val isExcluded = excludedTracks.isNotEmpty() && entryTracks.fastAny { it in excludedTracks }
-            val isIncluded = includedTracks.isEmpty() || entryTracks.fastAny { it in includedTracks }
-
-            !isExcluded && isIncluded
-        }
-
-        return fastFilter {
-            filterFnDownloaded(it) &&
-                filterFnUnread(it) &&
-                filterFnNotStarted(it) &&
-                filterFnBookmarked(it) &&
-                filterFnCompleted(it) &&
-                filterFnIntervalCustom(it) &&
-                filterFnTracking(it)
-        }
+        val result = entryLibraryFilterFeature.filter(
+            EntryLibraryFilterRequest(
+                targets = targets,
+                policy = EntryLibraryFilterPolicy(
+                    downloadedOnly = preferences.globalFilterDownloaded,
+                    downloaded = preferences.filterDownloaded,
+                    unconsumed = preferences.filterUnread,
+                    notStarted = preferences.filterNotStarted,
+                    bookmarked = preferences.filterBookmarked,
+                    completed = preferences.filterCompleted,
+                    outsideReleasePeriod = preferences.filterIntervalCustom,
+                    outsideReleasePeriodEnabled = !isReleaseBuildType && preferences.skipOutsideReleasePeriod,
+                    tracking = trackingFilter,
+                ),
+            ),
+        )
+        return AppliedLibraryFilters(
+            items = result.includedTargetIndices.map(::get),
+            hasActiveFilters = result.hasActiveFilters,
+            availability = result.availability,
+        )
     }
 
     private fun List<LibraryItem>.applyGrouping(
@@ -477,27 +449,20 @@ class LibraryScreenModel(
 
     private fun List<LibraryPage>.applySort(
         favoritesById: Map<LibraryItemKey, LibraryItem>,
-        trackMap: Map<Long, List<EntryTrack>>,
-        loggedInTrackerIds: Set<Long>,
+        trackingEntries: Map<Long, List<EntryTrackingCollectionTrack>>,
+        trackingScoreSupportedEntryTypes: Set<EntryType>,
         groupType: LibraryGroupType,
         globalSort: LibrarySort,
         randomSortSeed: Int,
     ): List<LibraryPage> {
         val defaultTrackerScoreSortValue = -1.0
         val trackerScores by lazy {
-            val trackerMap = trackerManager.getAll(loggedInTrackerIds).associateBy { e -> e.id }
-            trackMap.mapValues { entry ->
+            trackingEntries.mapValues { entry ->
                 when {
                     entry.value.isEmpty() -> null
-                    else ->
-                        entry.value
-                            .mapNotNull { trackerMap[it.trackerId]?.get10PointScore(it) }
-                            .average()
+                    else -> entry.value.map(EntryTrackingCollectionTrack::normalizedScore).average()
                 }
             }
-        }
-        val trackerSupportedEntryTypes by lazy {
-            trackerManager.getAll(loggedInTrackerIds).supportedEntryTypes()
         }
 
         return map { page ->
@@ -520,8 +485,8 @@ class LibraryScreenModel(
                     trackerScores = trackerScores,
                     defaultTrackerScore = defaultTrackerScoreSortValue,
                 ).compare(
-                    a.toLibrarySortKey(trackerSupportedEntryTypes, defaultTrackerScoreSortValue),
-                    b.toLibrarySortKey(trackerSupportedEntryTypes, defaultTrackerScoreSortValue),
+                    a.toLibrarySortKey(trackingScoreSupportedEntryTypes, defaultTrackerScoreSortValue),
+                    b.toLibrarySortKey(trackingScoreSupportedEntryTypes, defaultTrackerScoreSortValue),
                 )
             }
 
@@ -585,7 +550,7 @@ class LibraryScreenModel(
     private fun getLibraryItemsFlow(): Flow<List<LibraryItem>> {
         return combine(
             getLibraryEntries.subscribe(),
-            entryDownloadInteraction.changes,
+            downloadRuntime.changes,
         ) { items, _ ->
             items.enrichEntryItems()
         }
@@ -603,12 +568,14 @@ class LibraryScreenModel(
             } else {
                 sourceDisplayInfo?.lang.orEmpty()
             }
-            val downloadCount = item.calculateDownloadCount(entryDownloadInteraction)
+            val downloadCount = item.calculateDownloadCount(downloadRuntime)
 
             item.copy(
                 sourceName = sourceName,
                 sourceLanguage = sourceLanguage,
-                sourceItemOrientation = displayUnifiedSource?.sourceItemOrientation() ?: EntryItemOrientation.VERTICAL,
+                sourceItemOrientation = displayUnifiedSource?.let { entryCatalogueFeature.description(it.id) }
+                    ?.itemOrientation
+                    ?: EntryItemOrientation.VERTICAL,
                 isLocal = item.sourceIds.size == 1 && item.entry.source == LocalSource.ID,
                 downloadCount = downloadCount,
             )
@@ -621,12 +588,14 @@ class LibraryScreenModel(
      * @return map of track id with the filter value
      */
     private fun getTrackingFiltersFlow(): Flow<Map<Long, TriState>> {
-        return trackerManager.loggedInTrackersFlow().flatMapLatest { loggedInTrackers ->
-            if (loggedInTrackers.isEmpty()) {
+        return trackingFeature.observeAccounts().flatMapLatest { snapshot ->
+            val loggedInServices = snapshot.accounts.filter(EntryTrackingAccount::isLoggedIn)
+            if (loggedInServices.isEmpty()) {
                 flowOf(emptyMap())
             } else {
-                val filterFlows = loggedInTrackers.map { tracker ->
-                    libraryPreferences.filterTracking(tracker.id.toInt()).changes().map { tracker.id to it }
+                val filterFlows = loggedInServices.map { account ->
+                    val serviceId = account.service.id.value
+                    libraryPreferences.filterTracking(serviceId.toInt()).changes().map { serviceId to it }
                 }
                 combine(filterFlows) { it.toMap() }
             }
@@ -661,38 +630,35 @@ class LibraryScreenModel(
      * Queues the amount specified of unread chapters from the list of selected entries.
      */
     fun performDownloadAction(action: DownloadAction) {
-        val entryIds = selectedActionEntryIds(state.value.selectedLibraryItems)
-        downloadBulkDownloadCandidates(action, entryIds)
+        downloadBulkDownloadCandidates(action, state.value.selectedLibraryItems)
         clearSelection()
     }
 
-    private fun downloadBulkDownloadCandidates(action: DownloadAction, entryIds: List<Long>) {
+    private fun downloadBulkDownloadCandidates(action: DownloadAction, items: List<LibraryItem>) {
         screenModelScope.launchNonCancellable {
-            val entries = getActionEntries(entryIds)
+            val entries = getActionEntries(selectedActionEntryIds(items))
             entries.forEach { entry ->
-                when (
-                    val result = entryDownloadInteraction.resolveBulkDownloadCandidates(
+                val result = entryDownloadActionFeature.resolveBulkDownloadCandidates(
+                    EntryBulkDownloadRequest(
                         entry = entry,
                         action = action.toEntryBulkDownloadAction(),
-                    )
-                ) {
-                    is EntryBulkDownloadCandidateResult.Supported -> {
-                        if (result.chapters.isNotEmpty()) {
-                            entryDownloadInteraction.download(entry, result.chapters)
-                        }
-                    }
-                    EntryBulkDownloadCandidateResult.Unsupported -> Unit
+                        sourceIds = items.downloadSourceIdsFor(entry),
+                    ),
+                )
+                if (result is EntryBulkDownloadResolutionResult.Candidates) {
+                    entryDownloadActionFeature.download(entry, result.chapters)
                 }
             }
         }
     }
 
-    fun canDownloadSelection(): Boolean {
-        val selectedItems = state.value.selectedLibraryItems
-        if (selectedItems.isEmpty()) return false
-        return selectedItems.all { item ->
-            !item.isLocal && entryCapabilityInteraction.supportsBulkDownload(item.entry)
-        }
+    fun canDownloadSelection(action: DownloadAction = DownloadAction.UNREAD_CHAPTERS): Boolean {
+        return entryDownloadActionFeature.bulkAvailability(
+            requests = state.value.selectedLibraryItems.map { item ->
+                EntryDownloadActionRequest(item.entry.type, item.sourceIds)
+            },
+            action = action.toEntryBulkDownloadAction(),
+        ) == EntryDownloadActionAvailability.Available
     }
 
     /**
@@ -705,11 +671,15 @@ class LibraryScreenModel(
             entries.forEach { entry ->
                 val chapters = entryChapterRepository.getChaptersByEntryIdAwait(entry.id)
                 if (chapters.isNotEmpty()) {
-                    entryConsumptionInteraction.setConsumed(entry, chapters, read)
+                    entryConsumptionFeature.setConsumed(entry, chapters, read)
                 }
             }
         }
         clearSelection()
+    }
+
+    fun canSetConsumedSelection(): Boolean {
+        return state.value.selectedEntryTypes.any(entryConsumptionFeature::isApplicable)
     }
 
     /**
@@ -724,17 +694,11 @@ class LibraryScreenModel(
             val distinctEntries = entries.distinctBy { it.id }
 
             if (deleteFromLibrary) {
-                val removedMergesByTargetId = distinctEntries.mapNotNull { entry ->
-                    getMergedEntry.awaitTargetId(entry.id)?.let { targetId -> targetId to entry.id }
-                }
-                    .groupBy(keySelector = { it.first }, valueTransform = { it.second })
-                removedMergesByTargetId.forEach { (targetId, entryIds) ->
-                    updateMergedEntry.awaitRemoveMembers(targetId, entryIds)
-                }
-
-                distinctEntries.forEach { entry ->
-                    entryRemovalCleanupInteraction.cleanupAfterLibraryRemoval(entry)
-                    setEntryFavorite.await(entry.id, false)
+                when (val result = entryLibraryMembershipFeature.remove(distinctEntries)) {
+                    is EntryLibraryRemovalResult.Failed -> throw result.cause
+                    is EntryLibraryRemovalResult.Removed,
+                    EntryLibraryRemovalResult.NoChange,
+                    -> Unit
                 }
             }
 
@@ -742,7 +706,7 @@ class LibraryScreenModel(
                 distinctEntries.forEach { entry ->
                     val chapters = entryChapterRepository.getChaptersByEntryIdAwait(entry.id)
                     if (chapters.isNotEmpty()) {
-                        entryDownloadInteraction.delete(entry, chapters)
+                        entryDownloadActionFeature.delete(entry, chapters)
                     }
                 }
             }
@@ -943,7 +907,7 @@ class LibraryScreenModel(
                 require(profileStore.currentProfileId == sourceProfileId) {
                     "Active profile changed before the move"
                 }
-                val preview = entryProfileMoveService.preview(
+                val preview = entryProfileMoveFeature.preview(
                     EntryProfileMoveRequest(
                         sourceProfileId = sourceProfileId,
                         destinationProfileId = profile.id,
@@ -993,7 +957,7 @@ class LibraryScreenModel(
         resolutions: Map<Long, EntryProfileMoveConflictResolution>,
     ) {
         try {
-            val result = entryProfileMoveService.execute(preview, resolutions)
+            val result = entryProfileMoveFeature.execute(preview, resolutions)
             clearSelection()
             mutableState.update { it.copy(dialog = null) }
             moveEvents.send(MoveEvent.Success(result))
@@ -1005,26 +969,47 @@ class LibraryScreenModel(
         }
     }
 
-    fun canMergeSelection(): Boolean {
-        val items = state.value.selection.mapNotNull { state.value.libraryData.favoritesById[it] }
-        return entryCapabilityInteraction.canMergeSelection(items.toEntryMergeCapabilityItems())
+    fun isMergeSelectionAvailable(): Boolean {
+        return state.value.mergeSelectionAvailable
     }
 
     fun canMigrateSelection(): Boolean {
-        val items = state.value.selectedLibraryItems
-        return entryCapabilityInteraction.canMigrate(items.map { it.entry })
+        return selectedMigrationResult() is EntryMigrationSelectionResult.Ready
     }
 
-    fun selectedMigrationEntryIds(): List<Long> {
-        return entryCapabilityInteraction.migrationEntries(state.value.selectedLibraryItems.map { it.entry })
-            .map { it.id }
+    fun selectedMigrationSubjects(): List<EntryMigrationSubject> {
+        return (selectedMigrationResult() as? EntryMigrationSelectionResult.Ready)
+            ?.subjects
+            .orEmpty()
+    }
+
+    private fun selectedMigrationResult(): EntryMigrationSelectionResult {
+        return entryMigrationFeature.prepareSelection(state.value.selectedLibraryItems.map { it.entry })
     }
 
     fun openMergeDialog() {
         val selectedItems = state.value.selectedLibraryItems
-        if (!entryCapabilityInteraction.canMergeSelection(selectedItems.toEntryMergeCapabilityItems())) return
         screenModelScope.launchIO {
-            val dialog = buildMergeDialog(selectedItems) ?: return@launchIO
+            val entries = selectedItems.flatMap(LibraryItem::memberEntries).distinctBy(Entry::id)
+            val editor = when (val result = entryMergeFeature.prepare(EntryMergePrepareIntent(entries))) {
+                is EntryMergePreparationResult.Ready -> result.editor
+                is EntryMergePreparationResult.Rejected -> return@launchIO
+            }
+            val target = editor.entries.firstOrNull { it.reference == editor.target } ?: return@launchIO
+            val dialog = Dialog.MergeEntry(
+                editReference = editor.editReference,
+                entries = editor.entries.map { item ->
+                    MergeEntry(
+                        id = item.entry.id,
+                        reference = item.reference,
+                        entry = item.entry,
+                        isFromExistingMerge = item.removable,
+                    )
+                }.toImmutableList(),
+                targetId = target.entry.id,
+                targetReference = target.reference,
+                targetLocked = editor.targetLocked,
+            )
             mutableState.update {
                 it.copy(
                     dialog = dialog,
@@ -1053,8 +1038,9 @@ class LibraryScreenModel(
         mutableState.update { state ->
             when (val dialog = state.dialog) {
                 is Dialog.MergeEntry -> {
-                    if (dialog.targetLocked || dialog.entries.none { it.id == id }) return@update state
-                    state.copy(dialog = dialog.copy(targetId = id))
+                    val entry = dialog.entries.firstOrNull { it.id == id } ?: return@update state
+                    if (dialog.targetLocked) return@update state
+                    state.copy(dialog = dialog.copy(targetId = id, targetReference = entry.reference))
                 }
                 else -> state
             }
@@ -1065,20 +1051,21 @@ class LibraryScreenModel(
         when (val dialog = state.value.dialog) {
             is Dialog.MergeEntry -> {
                 screenModelScope.launchNonCancellable {
-                    val targetId = dialog.targetId.takeIf { targetId -> dialog.entries.any { it.id == targetId } }
-                        ?: dialog.entries.firstOrNull()?.id
-                        ?: return@launchNonCancellable
-                    val mergedIds = orderedMergeIds(dialog.entries)
-
-                    if (mergedIds.size > 1) {
-                        updateMergedEntry.awaitMerge(targetId, mergedIds)
+                    val result = entryMergeFeature.execute(
+                        EntryMergeCommitIntent(
+                            editReference = dialog.editReference,
+                            target = dialog.targetReference,
+                            orderedEntries = dialog.entries.map(MergeEntry::reference),
+                        ),
+                    )
+                    if (result is EntryMergeExecutionResult.Applied) {
+                        clearSelection()
+                        closeDialog()
                     }
                 }
             }
             else -> return
         }
-        clearSelection()
-        closeDialog()
     }
 
     fun closeDialog() {
@@ -1098,8 +1085,10 @@ class LibraryScreenModel(
             val initialSelection: List<CheckboxState<Category>>,
         ) : Dialog
         data class MergeEntry(
+            val editReference: EntryMergeEditReference,
             val entries: ImmutableList<LibraryScreenModel.MergeEntry>,
             val targetId: Long,
+            val targetReference: EntryMergeEditorEntryReference,
             val targetLocked: Boolean,
         ) : Dialog
         data class DeleteEntries(
@@ -1125,6 +1114,7 @@ class LibraryScreenModel(
     @Immutable
     data class MergeEntry(
         val id: Long,
+        val reference: EntryMergeEditorEntryReference,
         val entry: Entry,
         val isFromExistingMerge: Boolean,
     ) {
@@ -1174,14 +1164,26 @@ class LibraryScreenModel(
         }
     }
 
+    private data class AppliedLibraryFilters(
+        val items: List<LibraryItem>,
+        val hasActiveFilters: Boolean,
+        val availability: EntryLibraryFilterAvailability,
+    )
+
     @Immutable
     data class LibraryData(
         val isInitialized: Boolean = false,
         val showSystemCategory: Boolean = false,
         val categories: List<Category> = emptyList(),
         val favorites: List<LibraryItem> = emptyList(),
-        val tracksMap: Map<Long, List<EntryTrack>> = emptyMap(),
-        val loggedInTrackerIds: Set<Long> = emptySet(),
+        val trackingEntries: Map<Long, List<EntryTrackingCollectionTrack>> = emptyMap(),
+        val trackingScoreSupportedEntryTypes: Set<EntryType> = emptySet(),
+        val hasActiveFilters: Boolean = false,
+        val filterAvailability: EntryLibraryFilterAvailability = EntryLibraryFilterAvailability(
+            progressSummary = EntryLibraryFilterControlAvailability(emptySet(), emptySet()),
+            bookmarking = EntryLibraryFilterControlAvailability(emptySet(), emptySet()),
+            outsideReleasePeriod = EntryLibraryFilterControlAvailability(emptySet(), emptySet()),
+        ),
     ) {
         val favoritesById by lazy { favorites.associateBy { it.key } }
     }
@@ -1191,6 +1193,7 @@ class LibraryScreenModel(
         val isLoading: Boolean = true,
         val searchQuery: String? = null,
         val selection: Set<LibraryItemKey> = setOf(),
+        val mergeSelectionAvailable: Boolean = false,
         val hasActiveFilters: Boolean = false,
         val showCategoryTabs: Boolean = false,
         val showEntryCount: Boolean = false,
@@ -1268,8 +1271,8 @@ class LibraryScreenModel(
     }
 }
 
-internal fun LibraryItem.calculateDownloadCount(entryDownloadInteraction: EntryDownloadInteraction): Int {
-    return memberEntries.sumOf(entryDownloadInteraction::getDownloadCount)
+internal fun LibraryItem.calculateDownloadCount(downloadRuntime: EntryDownloadRuntimeFeature): Int {
+    return memberEntries.sumOf(downloadRuntime::downloadCount)
 }
 
 internal fun buildTypeLibraryPages(
@@ -1387,38 +1390,19 @@ internal fun availableMoveProfiles(
         .map { it.copy(requiresAuth = requiresUnlock(it.id)) }
 }
 
-internal fun buildMergeDialog(selection: List<LibraryItem>): LibraryScreenModel.Dialog.MergeEntry? {
-    if (selection.size < 2) return null
-    if (selection.map { it.entry.type }.distinct().size != 1) return null
-
-    val mergedSelections = selection.filter { it.isMerged }
-    if (mergedSelections.size > 1) return null
-
-    val existingMerge = mergedSelections.firstOrNull()
-    val newEntries = selection
-        .filterNot(LibraryItem::isMerged)
-        .flatMap { item -> item.toMergeEntries(isFromExistingMerge = false) }
-    val existingEntries = selection
-        .filter(LibraryItem::isMerged)
-        .flatMap { item -> item.toMergeEntries(isFromExistingMerge = true) }
-    val entries = (newEntries + existingEntries)
-        .distinctBy(LibraryScreenModel.MergeEntry::id)
-        .toImmutableList()
-
-    if (entries.size < 2) return null
-
-    return LibraryScreenModel.Dialog.MergeEntry(
-        entries = entries,
-        targetId = existingMerge?.entry?.id ?: entries.first().id,
-        targetLocked = false,
-    )
-}
-
 internal fun selectedActionEntryIds(selection: List<LibraryItem>): List<Long> {
     return selection
         .flatMap(LibraryItem::memberEntryIds)
         .map(LibraryItemKey::id)
         .distinct()
+}
+
+internal fun List<LibraryItem>.downloadSourceIdsFor(entry: Entry): Set<Long> {
+    return asSequence()
+        .filter { item -> item.memberEntryIds.any { it.id == entry.id } }
+        .flatMap { it.sourceIds }
+        .toSet()
+        .ifEmpty { setOf(entry.source) }
 }
 
 internal suspend fun categoriesForLibraryItem(
@@ -1447,30 +1431,6 @@ internal suspend fun updateLibraryItemCategories(
             .toList()
         setCategoryIds(entryId, categoryIds)
     }
-}
-
-private fun LibraryItem.toMergeEntries(isFromExistingMerge: Boolean): List<LibraryScreenModel.MergeEntry> {
-    val memberEntriesByKey = memberEntries.associateBy { LibraryItemKey(it.type, it.id) }
-    return memberEntryIds.map { member ->
-        LibraryScreenModel.MergeEntry(
-            id = member.id,
-            entry = memberEntriesByKey[member] ?: entry.copy(id = member.id, type = member.type),
-            isFromExistingMerge = isFromExistingMerge,
-        )
-    }
-}
-
-private fun List<LibraryItem>.toEntryMergeCapabilityItems(): List<EntryMergeCapabilityItem> {
-    return map { item ->
-        EntryMergeCapabilityItem(
-            entry = item.entry,
-            isMerged = item.isMerged,
-        )
-    }
-}
-
-internal fun orderedMergeIds(entries: List<LibraryScreenModel.MergeEntry>): List<Long> {
-    return entries.map(LibraryScreenModel.MergeEntry::id).distinct()
 }
 
 private fun DownloadAction.toEntryBulkDownloadAction(): EntryBulkDownloadAction {

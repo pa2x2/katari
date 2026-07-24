@@ -7,10 +7,10 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.service.EntryLibraryProgressResolution
 import tachiyomi.domain.library.model.LibraryGroupType
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
-import tachiyomi.domain.library.model.ProgressState
 
 class LibraryTypeGroupingTest {
 
@@ -98,10 +98,8 @@ private fun libraryItem(id: Long, type: EntryType, categories: List<Long>): Libr
         isMerged = false,
         memberEntryIds = listOf(LibraryItemKey(type, id)),
         memberEntries = listOf(entry),
-        progress = ProgressState(0L, 0L, false),
+        progressSummary = EntryLibraryProgressResolution.Inapplicable(type),
         latestUpload = 0L,
-        lastRead = 0L,
-        continueEntryId = null,
         downloadCount = 0,
     )
 }

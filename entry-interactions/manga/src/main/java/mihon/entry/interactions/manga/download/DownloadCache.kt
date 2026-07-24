@@ -48,6 +48,7 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.storage.service.StorageManager
+import tachiyomi.source.local.LocalSource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.File
@@ -376,15 +377,16 @@ internal class DownloadCache(
                             .associate { it.name!! to MangaDirectory(it) }
 
                         sourceDir.mangaDirs.values.forEach { mangaDir ->
+                            mangaDir.dir?.recoverMangaPublicationBackups()
                             val chapterDirs = mangaDir.dir?.listFiles().orEmpty()
                                 .mapNotNull {
                                     when {
                                         // Ignore incomplete downloads
                                         it.name?.endsWith(Downloader.TMP_DIR_SUFFIX) == true -> null
                                         // Folder of images
-                                        it.isDirectory -> it.name
+                                        it.isDirectory && it.isValidMangaChapterArtifact() -> it.name
                                         // CBZ files
-                                        it.isFile && it.extension == "cbz" -> it.nameWithoutExtension
+                                        it.isFile && it.isValidMangaChapterArtifact() -> it.nameWithoutExtension
                                         // Anything else is irrelevant
                                         else -> null
                                     }
@@ -416,7 +418,7 @@ internal class DownloadCache(
     }
 
     private fun getSources(): List<UnifiedSource> {
-        return sourceManager.getOnlineSources() + sourceManager.getStubSources()
+        return sourceManager.getAll().filterNot { it.id == LocalSource.ID } + sourceManager.getStubSources()
     }
 
     private fun notifyChanges() {

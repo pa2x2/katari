@@ -16,7 +16,7 @@ import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.service.ChapterRecognition
-import tachiyomi.domain.entry.service.EntryMetadataUpdateHooks
+import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
 import tachiyomi.domain.entry.service.FetchInterval
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.model.SourceNotInstalledException
@@ -33,7 +33,7 @@ class SyncEntryWithSource(
     private val sourceManager: SourceManager,
     private val libraryPreferences: LibraryPreferences,
     private val fetchInterval: FetchInterval,
-    private val metadataUpdateHooks: EntryMetadataUpdateHooks,
+    private val metadataChangeNotifier: EntryMetadataChangeNotifier,
     private val now: () -> Long = { Instant.now().toEpochMilli() },
 ) {
 
@@ -43,6 +43,48 @@ class SyncEntryWithSource(
         fetchChapters: Boolean = true,
         manualFetch: Boolean = false,
         fetchWindow: Pair<Long, Long> = Pair(0L, 0L),
+    ): SyncResult = sync(
+        entry = entry,
+        fetchDetails = fetchDetails,
+        fetchChapters = fetchChapters,
+        manualFetch = manualFetch,
+        fetchWindow = fetchWindow,
+        explicitProfileId = null,
+        updateLibraryTitles = libraryPreferences.updateMangaTitles.get(),
+        verifyPersistence = false,
+    )
+
+    suspend fun syncStrictly(
+        entry: Entry,
+        profileId: Long,
+        updateLibraryTitles: Boolean,
+        fetchDetails: Boolean = true,
+        fetchChapters: Boolean = true,
+        manualFetch: Boolean = false,
+        fetchWindow: Pair<Long, Long> = Pair(0L, 0L),
+    ): SyncResult {
+        require(entry.profileId == profileId) { "Strict Entry synchronization cannot cross profiles" }
+        return sync(
+            entry = entry,
+            fetchDetails = fetchDetails,
+            fetchChapters = fetchChapters,
+            manualFetch = manualFetch,
+            fetchWindow = fetchWindow,
+            explicitProfileId = profileId,
+            updateLibraryTitles = updateLibraryTitles,
+            verifyPersistence = true,
+        )
+    }
+
+    private suspend fun sync(
+        entry: Entry,
+        fetchDetails: Boolean,
+        fetchChapters: Boolean,
+        manualFetch: Boolean,
+        fetchWindow: Pair<Long, Long>,
+        explicitProfileId: Long?,
+        updateLibraryTitles: Boolean,
+        verifyPersistence: Boolean,
     ): SyncResult {
         val source = sourceManager.get(entry.source) ?: throw SourceNotInstalledException()
 
@@ -55,7 +97,7 @@ class SyncEntryWithSource(
                 else -> now()
             }
             val sourceTitle = networkEntry.title.takeIf { it.isNotBlank() && it != entry.title }
-            val updatedTitle = sourceTitle?.takeIf { !entry.favorite || libraryPreferences.updateMangaTitles.get() }
+            val updatedTitle = sourceTitle?.takeIf { !entry.favorite || updateLibraryTitles }
 
             entry.copy(
                 title = updatedTitle ?: entry.title,
@@ -76,11 +118,11 @@ class SyncEntryWithSource(
         }
 
         val hasMetadataChanges = updatedEntry != entry
-        if (hasMetadataChanges && !entryRepository.update(updatedEntry)) {
+        if (hasMetadataChanges && !entryRepository.updateForSync(updatedEntry, explicitProfileId)) {
             error("Failed to update entry ${entry.id}")
         }
-        if (updatedEntry.title != entry.title) {
-            metadataUpdateHooks.onTitleChanged(entry, updatedEntry.title)
+        if (hasMetadataChanges) {
+            metadataChangeNotifier.changed(entry, updatedEntry)
         }
 
         if (!fetchChapters) {
@@ -253,6 +295,9 @@ class SyncEntryWithSource(
 
         if (chaptersToRemove.isNotEmpty()) {
             entryChapterRepository.removeChaptersWithIds(chaptersToRemove)
+            if (verifyPersistence && chaptersToRemove.any { entryChapterRepository.getChapterById(it) != null }) {
+                error("Failed to remove chapters for entry ${entry.id}")
+            }
         }
 
         if (chaptersToUpdate.isNotEmpty()) {
@@ -273,7 +318,11 @@ class SyncEntryWithSource(
 
         val insertedChapters =
             if (chaptersToInsert.isNotEmpty()) {
-                entryChapterRepository.insertOrUpdate(chaptersToInsert)
+                entryChapterRepository.insertOrUpdate(chaptersToInsert).also { inserted ->
+                    if (verifyPersistence && inserted.size != chaptersToInsert.size) {
+                        error("Failed to insert chapters for entry ${entry.id}")
+                    }
+                }
             } else {
                 emptyList()
             }
@@ -298,7 +347,7 @@ class SyncEntryWithSource(
             )
         }
         if (entryAfterChapterSync != updatedEntry) {
-            if (!entryRepository.update(entryAfterChapterSync)) {
+            if (!entryRepository.updateForSync(entryAfterChapterSync, explicitProfileId)) {
                 error("Failed to update entry ${entry.id}")
             }
         }
@@ -318,6 +367,10 @@ class SyncEntryWithSource(
             removedChapters = chaptersToRemove.size,
             hasMetadataChanges = hasMetadataChanges,
         )
+    }
+
+    private suspend fun EntryRepository.updateForSync(entry: Entry, explicitProfileId: Long?): Boolean {
+        return if (explicitProfileId == null) update(entry) else update(entry, explicitProfileId)
     }
 
     private fun stateRank(chapter: EntryChapter, progressRank: Int): Int {

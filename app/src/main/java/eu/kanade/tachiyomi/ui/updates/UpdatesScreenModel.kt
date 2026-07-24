@@ -32,17 +32,26 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.entry.interactions.EntryConsumptionInteraction
+import mihon.entry.interactions.EntryBookmarkAvailability
+import mihon.entry.interactions.EntryBookmarkFeature
+import mihon.entry.interactions.EntryBookmarkStatus
+import mihon.entry.interactions.EntryBookmarkTarget
+import mihon.entry.interactions.EntryConsumptionFeature
 import mihon.entry.interactions.EntryConsumptionStatus
-import mihon.entry.interactions.EntryDownloadInteraction
+import mihon.entry.interactions.EntryDownloadActionAvailability
+import mihon.entry.interactions.EntryDownloadActionFeature
+import mihon.entry.interactions.EntryDownloadActionRequest
+import mihon.entry.interactions.EntryDownloadCancellationResult
+import mihon.entry.interactions.EntryDownloadRuntimeFeature
 import mihon.entry.interactions.EntryDownloadState
 import mihon.entry.interactions.EntryDownloadStatus
+import mihon.entry.interactions.EntryMergeNavigationFeature
+import mihon.entry.interactions.EntryMergeSubject
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.interactor.GetEntry
-import tachiyomi.domain.entry.interactor.GetMergedEntry
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryCover
@@ -61,11 +70,13 @@ import uy.kohesive.injekt.api.get
 import java.time.ZonedDateTime
 
 class UpdatesScreenModel(
-    private val entryDownloadInteraction: EntryDownloadInteraction = Injekt.get(),
-    private val entryConsumptionInteraction: EntryConsumptionInteraction = Injekt.get(),
+    private val downloadRuntime: EntryDownloadRuntimeFeature = Injekt.get(),
+    private val entryDownloadActionFeature: EntryDownloadActionFeature = Injekt.get(),
+    private val entryConsumptionFeature: EntryConsumptionFeature = Injekt.get(),
+    private val entryBookmarkFeature: EntryBookmarkFeature = Injekt.get(),
     private val getUpdates: GetUpdates = Injekt.get(),
     private val getEntry: GetEntry = Injekt.get(),
-    private val getMergedEntry: GetMergedEntry = Injekt.get(),
+    private val entryMergeNavigationFeature: EntryMergeNavigationFeature = Injekt.get(),
     private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
     private val updatesPreferences: UpdatesPreferences = Injekt.get(),
@@ -98,7 +109,7 @@ class UpdatesScreenModel(
                             hideExcludedScanlators = it.filterExcludedScanlators,
                         ).distinctUntilChanged()
                     },
-                entryDownloadInteraction.changes,
+                downloadRuntime.changes,
                 // needed for Kotlin filters (downloaded)
                 getUpdatesItemPreferenceFlow().distinctUntilChanged { old, new ->
                     old.filterDownloaded == new.filterDownloaded
@@ -125,7 +136,7 @@ class UpdatesScreenModel(
         }
 
         screenModelScope.launchIO {
-            entryDownloadInteraction.updates()
+            downloadRuntime.statusUpdates()
                 .catch { logcat(LogPriority.ERROR, it) }
                 .collect(this@UpdatesScreenModel::updateDownloadState)
         }
@@ -172,9 +183,13 @@ class UpdatesScreenModel(
 
         return map { updateWithRelations ->
             val update = updateWithRelations.toUpdateItem(updateWithRelations.entryType)
-
+            val ownerEntry = entryCache.getOrPut(update.entryId) { getEntry.await(update.entryId) }
             val visibleEntryId = visibleTargetCache.getOrPut(update.entryId) {
-                getMergedEntry.awaitVisibleTargetId(update.entryId)
+                ownerEntry?.let { entry ->
+                    entryMergeNavigationFeature.resolveNavigation(
+                        EntryMergeSubject(entry.profileId, update.entryId),
+                    ).visibleEntryId
+                } ?: update.entryId
             }
             val entry = entryCache.getOrPut(visibleEntryId) {
                 getEntry.await(visibleEntryId)
@@ -183,14 +198,18 @@ class UpdatesScreenModel(
             when (update) {
                 is UpdateItem.EntryUpdate -> {
                     val chapterUpdate = update.update
-                    val downloadStatus = entryDownloadInteraction.getStatus(
-                        entryType = update.entryType,
-                        chapterId = chapterUpdate.chapterId,
-                        chapterName = chapterUpdate.chapterName,
-                        chapterScanlator = chapterUpdate.scanlator,
-                        chapterUrl = chapterUpdate.chapterUrl,
+                    val downloadStatus = downloadRuntime.status(
+                        type = update.entryType,
+                        childId = chapterUpdate.chapterId,
+                        childName = chapterUpdate.chapterName,
+                        childScanlator = chapterUpdate.scanlator,
+                        childUrl = chapterUpdate.chapterUrl,
                         entryTitle = chapterUpdate.entryTitle,
                         sourceId = chapterUpdate.sourceId,
+                    ) ?: EntryDownloadStatus(
+                        update.entryType,
+                        chapterUpdate.chapterId,
+                        EntryDownloadState.NOT_DOWNLOADED,
                     )
                     UpdatesItem(
                         update = update,
@@ -199,7 +218,9 @@ class UpdatesScreenModel(
                         visibleCoverData = entry?.asEntryCover() ?: chapterUpdate.coverData,
                         downloadStateProvider = { downloadStatus.state },
                         downloadProgressProvider = { downloadStatus.progress },
-                        downloadSupported = entryDownloadInteraction.supportsDownloads(update.entryType),
+                        downloadAvailable = entryDownloadActionFeature.individualAvailability(
+                            downloadActionRequest(update.entryType, update.sourceId),
+                        ) == EntryDownloadActionAvailability.Available,
                         selected = update.key in selectedKeys,
                     )
                 }
@@ -241,14 +262,20 @@ class UpdatesScreenModel(
     }
 
     fun downloadChapters(items: List<UpdatesItem>, action: ChapterDownloadAction) {
-        val chapterItems = items.filter { it.update is UpdateItem.EntryUpdate && it.downloadSupported }
+        if (!canUseDownloadActions(items)) return
+        val chapterItems = items.filter { it.update is UpdateItem.EntryUpdate }
         if (chapterItems.isEmpty()) return
         screenModelScope.launch {
             when (action) {
                 ChapterDownloadAction.START -> {
                     downloadChapters(chapterItems)
                     if (chapterItems.any { it.downloadStateProvider() == EntryDownloadState.ERROR }) {
-                        entryDownloadInteraction.startDownloads()
+                        entryDownloadActionFeature.retry(
+                            chapterItems.map { item ->
+                                val update = item.update as UpdateItem.EntryUpdate
+                                downloadActionRequest(update.entryType, update.sourceId)
+                            },
+                        )
                     }
                 }
                 ChapterDownloadAction.START_NOW -> {
@@ -258,7 +285,11 @@ class UpdatesScreenModel(
                     val entry = getEntry.await(chapterUpdate.update.entryId) ?: return@launch
                     val chapter = entryChapterRepository.getChapterById(chapterUpdate.update.chapterId)
                         ?: return@launch
-                    entryDownloadInteraction.download(entry, listOf(chapter), startNow = true)
+                    entryDownloadActionFeature.download(
+                        entry = entry,
+                        chapters = listOf(chapter),
+                        startNow = true,
+                    )
                 }
                 ChapterDownloadAction.CANCEL -> {
                     val update = chapterItems.singleOrNull()
@@ -274,19 +305,31 @@ class UpdatesScreenModel(
         }
     }
 
+    fun canUseDownloadActions(items: List<UpdatesItem>): Boolean {
+        val requests = items.mapNotNull { item ->
+            val update = item.update as? UpdateItem.EntryUpdate ?: return@mapNotNull null
+            downloadActionRequest(update.entryType, update.sourceId)
+        }
+        if (requests.size != items.size) return false
+        return entryDownloadActionFeature.individualSelectionAvailability(requests) ==
+            EntryDownloadActionAvailability.Available
+    }
+
     private fun cancelDownload(update: UpdateItem.EntryUpdate) {
-        val downloadStatus = entryDownloadInteraction.cancelQueuedDownload(
-            entryType = update.entryType,
+        val result = entryDownloadActionFeature.cancel(
+            request = downloadActionRequest(update.entryType, update.sourceId),
             chapterId = update.update.chapterId,
-        ) ?: return
-        updateDownloadState(downloadStatus)
+        )
+        if (result is EntryDownloadCancellationResult.Cancelled) {
+            updateDownloadState(result.status)
+        }
     }
 
     fun markUpdatesConsumed(updates: List<UpdatesItem>, consumed: Boolean) {
         screenModelScope.launchNonCancellable {
             updates.entryChapterSelections()
                 .forEach { (entry, chapters) ->
-                    entryConsumptionInteraction.setConsumed(entry, chapters, consumed)
+                    entryConsumptionFeature.setConsumed(entry, chapters, consumed)
                 }
         }
         toggleAllSelection(false)
@@ -300,7 +343,7 @@ class UpdatesScreenModel(
         screenModelScope.launchNonCancellable {
             updates.entryChapterSelections()
                 .forEach { (entry, chapters) ->
-                    entryConsumptionInteraction.setBookmarked(entry, chapters, bookmark)
+                    entryBookmarkFeature.setBookmarked(entry, chapters, bookmark)
                 }
         }
         toggleAllSelection(false)
@@ -309,15 +352,14 @@ class UpdatesScreenModel(
     fun hasBookmarkAction(updates: List<UpdatesItem>, bookmark: Boolean): Boolean {
         return updates.hasBookmarkAction(
             bookmark = bookmark,
-            supportsBookmark = entryConsumptionInteraction::supportsBookmark,
-            canSetBookmarked = entryConsumptionInteraction::canSetBookmarked,
+            feature = entryBookmarkFeature,
         )
     }
 
     fun hasConsumedAction(updates: List<UpdatesItem>, consumed: Boolean): Boolean {
         return updates.hasConsumedAction(
             consumed = consumed,
-            canSetConsumed = entryConsumptionInteraction::canSetConsumed,
+            canSetConsumed = entryConsumptionFeature::canSetConsumed,
         )
     }
 
@@ -333,7 +375,10 @@ class UpdatesScreenModel(
                 val entryId = updates.first().update.entryId
                 val entry = getEntry.await(entryId) ?: continue
                 val chapters = updates.mapNotNull { entryChapterRepository.getChapterById(it.update.chapterId) }
-                entryDownloadInteraction.download(entry, chapters)
+                entryDownloadActionFeature.download(
+                    entry = entry,
+                    chapters = chapters,
+                )
             }
         }
     }
@@ -352,7 +397,10 @@ class UpdatesScreenModel(
                 .forEach { (entryId, updates) ->
                     val entry = getEntry.await(entryId) ?: return@forEach
                     val chapters = updates.mapNotNull { entryChapterRepository.getChapterById(it.update.chapterId) }
-                    entryDownloadInteraction.delete(entry, chapters)
+                    entryDownloadActionFeature.delete(
+                        entry = entry,
+                        chapters = chapters,
+                    )
                 }
         }
         toggleAllSelection(false)
@@ -498,6 +546,10 @@ class UpdatesScreenModel(
             .filter { it.chapters.isNotEmpty() }
     }
 
+    private fun downloadActionRequest(type: EntryType, sourceId: Long): EntryDownloadActionRequest {
+        return EntryDownloadActionRequest(type, setOf(sourceId))
+    }
+
     private data class EntryChapterSelection(
         val entry: Entry,
         val chapters: List<EntryChapter>,
@@ -520,24 +572,18 @@ data class UpdatesItem(
     val visibleCoverData: EntryCover,
     val downloadStateProvider: () -> EntryDownloadState,
     val downloadProgressProvider: () -> Int,
-    val downloadSupported: Boolean = true,
+    val downloadAvailable: Boolean = true,
     val selected: Boolean = false,
 )
 
 internal fun List<UpdatesItem>.hasBookmarkAction(
     bookmark: Boolean,
-    supportsBookmark: (EntryType) -> Boolean,
-    canSetBookmarked: (entryType: EntryType, status: EntryConsumptionStatus, bookmarked: Boolean) -> Boolean,
+    feature: EntryBookmarkFeature,
 ): Boolean {
-    val supportedUpdates = mapNotNull { it.update as? UpdateItem.EntryUpdate }
-        .filter { supportsBookmark(it.entryType) }
-
-    return supportedUpdates.isNotEmpty() &&
-        supportedUpdates.size == size &&
-        when (bookmark) {
-            true -> supportedUpdates.any { canSetBookmarked(it.entryType, it.consumptionStatus(), true) }
-            false -> supportedUpdates.all { canSetBookmarked(it.entryType, it.consumptionStatus(), false) }
-        }
+    val entryUpdates = mapNotNull { it.update as? UpdateItem.EntryUpdate }
+    if (entryUpdates.size != size) return false
+    val targets = entryUpdates.map { EntryBookmarkTarget(it.entryType, it.bookmarkStatus()) }
+    return feature.selectionAvailability(targets, bookmark) == EntryBookmarkAvailability.Available
 }
 
 internal fun List<UpdatesItem>.hasConsumedAction(
@@ -551,7 +597,10 @@ internal fun List<UpdatesItem>.hasConsumedAction(
 private fun UpdateItem.EntryUpdate.consumptionStatus(): EntryConsumptionStatus {
     return EntryConsumptionStatus(
         consumed = update.read,
-        bookmarked = update.bookmark,
         hasPartialProgress = !update.read && update.started,
     )
+}
+
+private fun UpdateItem.EntryUpdate.bookmarkStatus(): EntryBookmarkStatus {
+    return EntryBookmarkStatus(bookmarked = update.bookmark)
 }

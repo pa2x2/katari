@@ -17,9 +17,25 @@ class InsertTrack(
         }
     }
 
+    suspend fun await(profileId: Long, track: EntryTrack) {
+        try {
+            trackRepository.insert(profileId, track)
+        } catch (e: Exception) {
+            logcat(LogPriority.ERROR, e)
+        }
+    }
+
     suspend fun awaitAll(tracks: List<EntryTrack>) {
         try {
             trackRepository.insertAll(tracks)
+        } catch (e: Exception) {
+            logcat(LogPriority.ERROR, e)
+        }
+    }
+
+    suspend fun awaitAll(profileId: Long, tracks: List<EntryTrack>) {
+        try {
+            trackRepository.insertAll(profileId, tracks)
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e)
         }

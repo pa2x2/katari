@@ -110,6 +110,7 @@ internal fun LazyListScope.unifiedUpdatesUiItems(
     selectionMode: Boolean,
     onUpdateSelected: (UpdatesItem, Boolean, Boolean) -> Unit,
     onClickCover: (UpdatesItem) -> Unit,
+    isOpenApplicable: (UpdatesItem) -> Boolean,
     onClickUpdate: (UpdatesItem) -> Unit,
     onDownloadChapter: (List<UpdatesItem>, ChapterDownloadAction) -> Unit,
 ) {
@@ -123,6 +124,7 @@ internal fun LazyListScope.unifiedUpdatesUiItems(
             selectionMode = selectionMode,
             onUpdateSelected = onUpdateSelected,
             onClickCover = onClickCover,
+            isOpenApplicable = isOpenApplicable,
             onClickUpdate = onClickUpdate,
             onDownloadChapter = onDownloadChapter,
         )
@@ -195,6 +197,7 @@ internal fun UnifiedUpdatesUiItem(
     selectionMode: Boolean,
     onUpdateSelected: (UpdatesItem, Boolean, Boolean) -> Unit,
     onClickCover: (UpdatesItem) -> Unit,
+    isOpenApplicable: (UpdatesItem) -> Boolean,
     onClickUpdate: (UpdatesItem) -> Unit,
     onDownloadChapter: (List<UpdatesItem>, ChapterDownloadAction) -> Unit,
     modifier: Modifier = Modifier,
@@ -208,7 +211,7 @@ internal fun UnifiedUpdatesUiItem(
         onClick = {
             when {
                 selectionMode -> onUpdateSelected(item, !item.selected, false)
-                else -> onClickUpdate(item)
+                isOpenApplicable(item) -> onClickUpdate(item)
             }
         },
         onLongClick = {
@@ -274,7 +277,7 @@ internal fun UnifiedUpdatesUiItem(
                 )
             }
         },
-        trailing = if (update is UpdateItem.EntryUpdate && !selectionMode && item.downloadSupported) {
+        trailing = if (update is UpdateItem.EntryUpdate && !selectionMode && item.downloadAvailable) {
             {
                 EntryChapterDownloadIndicator(
                     enabled = true,

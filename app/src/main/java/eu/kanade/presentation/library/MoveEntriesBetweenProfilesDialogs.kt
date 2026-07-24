@@ -22,8 +22,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import mihon.feature.profiles.core.EntryProfileMoveConflict
-import mihon.feature.profiles.core.EntryProfileMoveConflictResolution
+import mihon.entry.interactions.EntryProfileMoveConflict
+import mihon.entry.interactions.EntryProfileMoveConflictResolution
 import mihon.feature.profiles.core.Profile
 import tachiyomi.domain.category.model.Category
 import tachiyomi.i18n.MR

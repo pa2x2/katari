@@ -4,9 +4,9 @@ import androidx.annotation.IntRange
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
-import eu.kanade.tachiyomi.data.track.Tracker
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
+import mihon.entry.interactions.EntryTrackingAccount
 import mihon.feature.profiles.core.ProfileAwarePreferenceStore
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
@@ -165,8 +165,8 @@ sealed class Preference {
         /**
          * A [PreferenceItem] for individual tracker.
          */
-        data class TrackerPreference(
-            val tracker: Tracker,
+        data class TrackingAccountPreference(
+            val account: EntryTrackingAccount,
             val login: () -> Unit,
             val logout: () -> Unit,
             override val isProfileSpecific: Boolean = false,

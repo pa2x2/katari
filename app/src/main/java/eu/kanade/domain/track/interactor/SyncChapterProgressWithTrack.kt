@@ -5,8 +5,9 @@ import eu.kanade.tachiyomi.data.track.EnhancedTracker
 import eu.kanade.tachiyomi.data.track.Tracker
 import eu.kanade.tachiyomi.data.track.supportsEntryType
 import logcat.LogPriority
-import mihon.entry.interactions.EntryConsumptionInteraction
+import mihon.entry.interactions.EntryConsumptionFeature
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.track.interactor.InsertTrack
@@ -16,7 +17,7 @@ import kotlin.math.max
 class SyncChapterProgressWithTrack(
     private val entryRepository: EntryRepository,
     private val entryChapterRepository: EntryChapterRepository,
-    private val entryConsumptionInteraction: EntryConsumptionInteraction,
+    private val entryConsumptionFeature: EntryConsumptionFeature,
     private val insertTrack: InsertTrack,
 ) {
 
@@ -29,11 +30,19 @@ class SyncChapterProgressWithTrack(
             return
         }
         val entry = entryRepository.getEntryById(entryId) ?: return
+        await(entry, remoteTrack, tracker)
+    }
+
+    suspend fun await(
+        entry: Entry,
+        remoteTrack: EntryTrack,
+        tracker: Tracker,
+    ) {
         if (!tracker.supportsEntryType(entry.type)) {
             return
         }
 
-        val sortedChapters = entryChapterRepository.getChaptersByEntryIdAwait(entryId)
+        val sortedChapters = entryChapterRepository.getChaptersByEntryIdAwait(entry.id)
             .sortedBy { it.chapterNumber }
             .filter { it.isRecognizedNumber }
 
@@ -48,9 +57,9 @@ class SyncChapterProgressWithTrack(
         try {
             tracker.update(updatedTrack.toDbTrack())
             if (chaptersToUpdate.isNotEmpty()) {
-                entryConsumptionInteraction.setConsumed(entry, chaptersToUpdate, consumed = true)
+                entryConsumptionFeature.setConsumed(entry, chaptersToUpdate, consumed = true)
             }
-            insertTrack.await(updatedTrack)
+            insertTrack.await(entry.profileId, updatedTrack)
         } catch (e: Throwable) {
             logcat(LogPriority.WARN, e)
         }

@@ -8,9 +8,6 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.util.ioCoroutineScope
 import eu.kanade.tachiyomi.extension.ExtensionManager
-import eu.kanade.tachiyomi.source.defaultBackgroundFilterList
-import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
-import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
@@ -20,11 +17,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import mihon.entry.interactions.EntryCatalogueFeature
+import mihon.entry.interactions.EntryCatalogueSearchRequest
+import mihon.entry.interactions.EntryCatalogueSearchResult
+import mihon.entry.interactions.EntryCatalogueSourceInfo
 import tachiyomi.core.common.preference.toggle
-import tachiyomi.domain.entry.adapter.toEntry
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
-import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.concurrent.Executors
@@ -33,11 +32,11 @@ class GlobalSearchScreenModel(
     initialQuery: String = "",
     initialExtensionFilter: String? = null,
     sourcePreferences: SourcePreferences = Injekt.get(),
-    private val sourceManager: SourceManager = Injekt.get(),
     private val extensionManager: ExtensionManager = Injekt.get(),
     private val networkToLocalEntry: NetworkToLocalEntry = Injekt.get(),
     private val getEntry: GetEntry = Injekt.get(),
     private val preferences: SourcePreferences = Injekt.get(),
+    private val catalogueFeature: EntryCatalogueFeature = Injekt.get(),
 ) : StateScreenModel<GlobalSearchScreenModel.State>(State(searchQuery = initialQuery)) {
 
     private val coroutineDispatcher = Executors.newFixedThreadPool(5).asCoroutineDispatcher()
@@ -52,11 +51,11 @@ class GlobalSearchScreenModel(
 
     private var extensionFilter: String? = initialExtensionFilter
 
-    private val sortComparator = { map: Map<UnifiedSource, GlobalSearchItemResult> ->
-        compareBy<UnifiedSource>(
+    private val sortComparator = { map: Map<EntryCatalogueSourceInfo, GlobalSearchItemResult> ->
+        compareBy<EntryCatalogueSourceInfo>(
             { (map[it] as? GlobalSearchItemResult.Success)?.isEmpty ?: true },
             { "${it.id}" !in pinnedSources },
-            { "${it.name.lowercase()} (${(it as? EntryCatalogueSource)?.lang ?: ""})" },
+            { "${it.name.lowercase()} (${it.language})" },
         )
     }
 
@@ -87,19 +86,19 @@ class GlobalSearchScreenModel(
         }
     }
 
-    private fun getEnabledSources(): List<UnifiedSource> {
-        return sourceManager.getCatalogueSources()
-            .filter { (it as? EntryCatalogueSource)?.lang in enabledLanguages || it.isLocal }
+    private fun getEnabledSources(): List<EntryCatalogueSourceInfo> {
+        return catalogueFeature.sources()
+            .filter { it.language in enabledLanguages || it.isLocal }
             .filterNot { it.isDisabled(disabledSources) }
             .sortedWith(
                 compareBy(
                     { "${it.id}" !in pinnedSources },
-                    { "${it.name.lowercase()} (${(it as? EntryCatalogueSource)?.lang ?: ""})" },
+                    { "${it.name.lowercase()} (${it.language})" },
                 ),
             )
     }
 
-    private fun getSelectedSources(): List<UnifiedSource> {
+    private fun getSelectedSources(): List<EntryCatalogueSourceInfo> {
         val enabledSources = getEnabledSources()
 
         val filter = extensionFilter
@@ -108,10 +107,12 @@ class GlobalSearchScreenModel(
         }
 
         val enabledIds = enabledSources.map { it.id }.toSet()
-        return extensionManager.installedExtensionsFlow.value
+        val extensionSourceIds = extensionManager.installedExtensionsFlow.value
             .filter { it.pkgName == filter }
             .flatMap { it.sources }
-            .filter { it.id in enabledIds }
+            .map { it.id }
+            .toSet()
+        return enabledSources.filter { it.id in extensionSourceIds && it.id in enabledIds }
     }
 
     fun updateSearchQuery(query: String?) {
@@ -187,16 +188,18 @@ class GlobalSearchScreenModel(
         }
     }
 
-    private suspend fun searchSource(source: UnifiedSource, query: String): List<GlobalSearchItem> {
-        val page = source.getSearchContent(1, query, source.defaultBackgroundFilterList())
-        return page.items
-            .map { it.toEntry(source.id) }
-            .distinctBy { it.type to it.url }
-            .let { networkToLocalEntry(it) }
-            .map(::GlobalSearchItem)
+    private suspend fun searchSource(source: EntryCatalogueSourceInfo, query: String): List<GlobalSearchItem> {
+        return when (val result = catalogueFeature.search(EntryCatalogueSearchRequest(source.id, query))) {
+            is EntryCatalogueSearchResult.Success ->
+                result.entries
+                    .let { networkToLocalEntry(it) }
+                    .map(::GlobalSearchItem)
+            is EntryCatalogueSearchResult.Unavailable -> emptyList()
+            is EntryCatalogueSearchResult.Failed -> throw result.cause
+        }
     }
 
-    private fun updateItems(items: Map<UnifiedSource, GlobalSearchItemResult>) {
+    private fun updateItems(items: Map<EntryCatalogueSourceInfo, GlobalSearchItemResult>) {
         mutableState.update {
             it.copy(
                 items = items.toSortedMap(sortComparator(items)),
@@ -204,7 +207,7 @@ class GlobalSearchScreenModel(
         }
     }
 
-    private fun updateItem(source: UnifiedSource, result: GlobalSearchItemResult) {
+    private fun updateItem(source: EntryCatalogueSourceInfo, result: GlobalSearchItemResult) {
         updateItems(state.value.items + (source to result))
     }
 
@@ -213,7 +216,7 @@ class GlobalSearchScreenModel(
         val searchQuery: String? = null,
         val sourceFilter: SourceFilter = SourceFilter.PinnedOnly,
         val onlyShowHasResults: Boolean = false,
-        val items: Map<UnifiedSource, GlobalSearchItemResult> = mapOf(),
+        val items: Map<EntryCatalogueSourceInfo, GlobalSearchItemResult> = mapOf(),
     ) {
         val progress: Int = items.count { it.value !is GlobalSearchItemResult.Loading }
         val total: Int = items.size
@@ -240,16 +243,16 @@ sealed interface GlobalSearchItemResult {
     }
 }
 
-private val UnifiedSource.isLocal: Boolean
+private val EntryCatalogueSourceInfo.isLocal: Boolean
     get() = id == tachiyomi.source.local.LocalSource.ID
 
-private fun UnifiedSource.isDisabled(
+private fun EntryCatalogueSourceInfo.isDisabled(
     disabledSources: Set<String>,
 ): Boolean {
     return id.toString() in disabledSources
 }
 
-private fun UnifiedSource.isPinned(
+private fun EntryCatalogueSourceInfo.isPinned(
     pinnedSources: Set<String>,
 ): Boolean {
     return id.toString() in pinnedSources

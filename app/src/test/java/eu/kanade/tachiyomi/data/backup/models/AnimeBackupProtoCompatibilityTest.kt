@@ -144,6 +144,30 @@ class AnimeBackupProtoCompatibilityTest {
         state.locatorUpdatedAt shouldBe 10
     }
 
+    @Test
+    fun `entry backup bytes preserve unknown Feature state envelopes`() {
+        val bytes = ProtoBuf.encodeToByteArray(
+            serializer = BackupEntry.serializer(),
+            BackupEntry(
+                source = 1,
+                url = "/entry",
+                featureStates = listOf(
+                    BackupEntryFeatureState(
+                        participantId = "future.feature.backup",
+                        schemaVersion = 7,
+                        payload = byteArrayOf(1, 2, 3),
+                    ),
+                ),
+            ),
+        )
+
+        val state = ProtoBuf.decodeFromByteArray(BackupEntry.serializer(), bytes).featureStates.single()
+
+        state.participantId shouldBe "future.feature.backup"
+        state.schemaVersion shouldBe 7
+        state.payload.contentEquals(byteArrayOf(1, 2, 3)) shouldBe true
+    }
+
     @Serializable
     private data class LegacyBackup(
         @ProtoNumber(1) val backupManga: List<LegacyBackupManga> = emptyList(),

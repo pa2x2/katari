@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.source.adapter
 import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.SourceFactory
+import eu.kanade.tachiyomi.source.entry.EntryImageSource
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.IncrementalChapterSource
@@ -24,6 +25,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import rx.Observable
 import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
+import eu.kanade.tachiyomi.source.UnmeteredSource as LegacyUnmeteredSource
+import eu.kanade.tachiyomi.source.entry.UnmeteredSource as EntryUnmeteredSource
 
 class LegacyMangaSourceAdapterTest {
 
@@ -114,6 +117,21 @@ class LegacyMangaSourceAdapterTest {
         val adapted = DisabledRelatedHttpSource().asUnifiedSource()
 
         (adapted is RelatedEntriesSource) shouldBe false
+    }
+
+    @Test
+    fun `legacy unmetered source exposes current marker without losing other contracts`() {
+        val adapted = LegacyUnmeteredHttpSource().asUnifiedSource()
+
+        (adapted is EntryUnmeteredSource) shouldBe true
+        (adapted is EntryImageSource) shouldBe true
+    }
+
+    @Test
+    fun `ordinary legacy source does not expose current unmetered marker`() {
+        val adapted = InheritedRelatedHttpSource().asUnifiedSource()
+
+        (adapted is EntryUnmeteredSource) shouldBe false
     }
 
     @Test
@@ -243,6 +261,8 @@ private open class DirectRelatedHttpSource : InheritedRelatedHttpSource() {
         )
     }
 }
+
+private class LegacyUnmeteredHttpSource : InheritedRelatedHttpSource(), LegacyUnmeteredSource
 
 private class DisabledRelatedHttpSource : DirectRelatedHttpSource() {
     override val disableRelatedMangas = true

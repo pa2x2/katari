@@ -15,7 +15,7 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
-import mihon.entry.interactions.EntryOpenInteraction
+import mihon.entry.interactions.EntryOpenFeature
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -32,7 +32,7 @@ class DeepLinkScreen(
     override fun Content() {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
-        val entryOpenInteraction = remember { Injekt.get<EntryOpenInteraction>() }
+        val entryOpenFeature = remember { Injekt.get<EntryOpenFeature>() }
 
         val screenModel = rememberScreenModel {
             DeepLinkScreenModel(query = query)
@@ -64,12 +64,14 @@ class DeepLinkScreen(
                                 fromSource = true,
                             ),
                         )
+                    } else if (!entryOpenFeature.isApplicable(entry.type)) {
+                        navigator.replace(EntryScreen(entryId = entry.id, fromSource = true))
                     } else {
-                        navigator.pop()
                         LaunchedEffect(resultState.chapterId) {
                             val chapter = Injekt.get<EntryChapterRepository>().getChapterById(resultState.chapterId)
+                            navigator.pop()
                             if (chapter != null) {
-                                entryOpenInteraction.open(context, entry, chapter)
+                                entryOpenFeature.open(context, entry, chapter)
                             }
                         }
                     }

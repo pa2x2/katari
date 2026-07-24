@@ -20,12 +20,13 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import mihon.entry.interactions.EntryConsumptionInteraction
-import mihon.entry.interactions.EntryDownloadInteraction
-import mihon.entry.interactions.EntryOpenInteraction
+import mihon.entry.interactions.EntryConsumptionFeature
+import mihon.entry.interactions.EntryDownloadActionFeature
+import mihon.entry.interactions.EntryDownloadRuntimeFeature
+import mihon.entry.interactions.EntryMergeNavigationFeature
+import mihon.entry.interactions.EntryOpenFeature
 import mihon.entry.interactions.EntryOpenOptions
 import tachiyomi.core.common.Constants
-import tachiyomi.domain.entry.interactor.GetMergedEntry
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -45,20 +46,21 @@ import eu.kanade.tachiyomi.BuildConfig.APPLICATION_ID as ID
  */
 class NotificationReceiver : BroadcastReceiver() {
 
-    private val getMergedEntry: GetMergedEntry by injectLazy()
+    private val entryMergeNavigationFeature: EntryMergeNavigationFeature by injectLazy()
     private val entryRepository: EntryRepository by injectLazy()
     private val entryChapterRepository: EntryChapterRepository by injectLazy()
-    private val entryConsumptionInteraction: EntryConsumptionInteraction by injectLazy()
-    private val entryDownloadInteraction: EntryDownloadInteraction by injectLazy()
-    private val entryOpenInteraction: EntryOpenInteraction by injectLazy()
+    private val entryConsumptionFeature: EntryConsumptionFeature by injectLazy()
+    private val downloadRuntime: EntryDownloadRuntimeFeature by injectLazy()
+    private val entryDownloadActionFeature: EntryDownloadActionFeature by injectLazy()
+    private val entryOpenFeature: EntryOpenFeature by injectLazy()
     private val scope: CoroutineScope by injectLazy()
     private val entryActionHandler by lazy {
         NotificationEntryActionHandler(
             entryRepository = entryRepository,
             entryChapterRepository = entryChapterRepository,
-            entryConsumptionInteraction = entryConsumptionInteraction,
-            entryDownloadInteraction = entryDownloadInteraction,
-            entryOpenInteraction = entryOpenInteraction,
+            entryConsumptionFeature = entryConsumptionFeature,
+            entryDownloadActionFeature = entryDownloadActionFeature,
+            entryOpenFeature = entryOpenFeature,
         )
     }
 
@@ -68,15 +70,15 @@ class NotificationReceiver : BroadcastReceiver() {
             ACTION_DISMISS_NOTIFICATION -> dismissNotification(context, intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1))
             // Resume the download service
             ACTION_RESUME_DOWNLOADS -> {
-                entryDownloadInteraction.startDownloads()
+                downloadRuntime.start()
             }
             // Pause the download service
             ACTION_PAUSE_DOWNLOADS -> {
-                entryDownloadInteraction.pauseDownloads()
+                downloadRuntime.pause()
             }
             // Clear the download queue
             ACTION_CLEAR_DOWNLOADS -> {
-                entryDownloadInteraction.clearQueue()
+                downloadRuntime.clearQueue()
             }
             // Launch share activity and dismiss notification
             ACTION_SHARE_IMAGE ->
@@ -99,33 +101,48 @@ class NotificationReceiver : BroadcastReceiver() {
             // Cancel downloading app update
             ACTION_CANCEL_APP_UPDATE_DOWNLOAD -> cancelDownloadAppUpdate(context)
             ACTION_OPEN_EPISODE -> {
-                openChild(context, intent.legacyEpisodeOpenChildPayload())
+                openLegacyChild(context, intent.legacyEpisodeOpenChildPayload())
             }
             ACTION_OPEN_CHILD -> {
-                openChild(context, intent.openChildPayload())
+                val payload = intent.openChildPayload()
+                if (payload != null) {
+                    openChild(context, payload)
+                } else {
+                    openLegacyChild(context, intent.legacyGenericOpenChildPayload())
+                }
             }
             ACTION_OPEN_CHAPTER -> {
                 openLegacyChild(context, intent.legacyChapterOpenChildPayload())
             }
             ACTION_MARK_AS_READ -> {
-                dismissNotification(context, intent)
-                markConsumed(intent.legacyChapterUrlsPayload())
+                handleLegacyProfileAction(context, intent) {
+                    dismissNotification(context, intent)
+                    markConsumed(intent.legacyChapterUrlsPayload())
+                }
             }
             ACTION_DOWNLOAD_CHAPTER -> {
-                dismissNotification(context, intent)
-                downloadChildren(intent.legacyChapterUrlsPayload())
+                handleLegacyProfileAction(context, intent) {
+                    dismissNotification(context, intent)
+                    downloadChildren(intent.legacyChapterUrlsPayload())
+                }
             }
             ACTION_MARK_CONSUMED -> {
-                dismissNotification(context, intent)
-                markConsumed(intent.childIdsPayload())
+                handleLegacyProfileAction(context, intent) {
+                    dismissNotification(context, intent)
+                    markConsumed(intent.childIdsPayload())
+                }
             }
             ACTION_DOWNLOAD_CHILDREN -> {
-                dismissNotification(context, intent)
-                downloadChildren(intent.childIdsPayload())
+                handleLegacyProfileAction(context, intent) {
+                    dismissNotification(context, intent)
+                    downloadChildren(intent.childIdsPayload())
+                }
             }
             ACTION_MARK_AS_WATCHED -> {
-                dismissNotification(context, intent)
-                markConsumed(intent.legacyEpisodeIdsPayload())
+                handleLegacyProfileAction(context, intent) {
+                    dismissNotification(context, intent)
+                    markConsumed(intent.legacyEpisodeIdsPayload())
+                }
             }
         }
     }
@@ -133,7 +150,18 @@ class NotificationReceiver : BroadcastReceiver() {
     private fun openChild(context: Context, payload: OpenChildPayload?) {
         payload ?: return
         async(scope, Dispatchers.IO) {
-            entryActionHandler.openChild(context, payload.visibleEntryId, payload.ownerEntryId, payload.childId)
+            val opened = entryActionHandler.openChild(
+                context,
+                payload.profileId,
+                payload.visibleEntryId,
+                payload.ownerEntryId,
+                payload.childId,
+            )
+            if (!opened) {
+                withContext(Dispatchers.Main) {
+                    context.toast(MR.strings.chapter_error)
+                }
+            }
         }
     }
 
@@ -169,13 +197,17 @@ class NotificationReceiver : BroadcastReceiver() {
     private fun openLegacyChild(context: Context, payload: LegacyOpenChildPayload?) {
         payload ?: return
         async(scope, Dispatchers.IO) {
-            val visibleEntryId = getMergedEntry.awaitVisibleTargetId(payload.ownerEntryId)
-            val opened = entryActionHandler.openChild(context, visibleEntryId, payload.ownerEntryId, payload.childId)
-            if (!opened) {
-                withContext(Dispatchers.Main) {
-                    context.toast(MR.strings.chapter_error)
-                }
-            }
+            val destination = entryMergeNavigationFeature.resolveLegacyNotification(payload.ownerEntryId)
+                ?: return@async
+            context.startActivity(
+                profileChildIntent(
+                    context = context,
+                    profileId = destination.requestedSubject.profileId,
+                    visibleEntryId = payload.visibleEntryId ?: destination.visibleEntryId,
+                    ownerEntryId = payload.ownerEntryId,
+                    childId = payload.childId,
+                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
         }
     }
 
@@ -215,45 +247,69 @@ class NotificationReceiver : BroadcastReceiver() {
 
     private fun markConsumed(payload: ChildIdsPayload?) {
         payload ?: return
-        markConsumed(payload.entryId, payload.childIds)
+        markConsumed(payload.profileId, payload.entryId, payload.childIds)
     }
 
     private fun markConsumed(payload: ChildUrlsPayload?) {
         payload ?: return
-        markConsumed(payload.entryId, payload.childUrls)
+        markConsumed(payload.profileId, payload.entryId, payload.childUrls)
     }
 
-    private fun markConsumed(entryId: Long, childIds: LongArray) {
+    private fun markConsumed(profileId: Long, entryId: Long, childIds: LongArray) {
         async(scope, Dispatchers.IO) {
-            entryActionHandler.markConsumed(entryId, childIds)
+            entryActionHandler.markConsumed(profileId, entryId, childIds)
         }
     }
 
-    private fun markConsumed(entryId: Long, childUrls: Array<String>) {
+    private fun markConsumed(profileId: Long, entryId: Long, childUrls: Array<String>) {
         async(scope, Dispatchers.IO) {
-            entryActionHandler.markConsumed(entryId, childUrls)
+            entryActionHandler.markConsumed(profileId, entryId, childUrls)
         }
     }
 
     private fun downloadChildren(payload: ChildIdsPayload?) {
         payload ?: return
-        downloadChildren(payload.entryId, payload.childIds)
+        downloadChildren(payload.profileId, payload.entryId, payload.childIds)
     }
 
     private fun downloadChildren(payload: ChildUrlsPayload?) {
         payload ?: return
-        downloadChildren(payload.entryId, payload.childUrls)
+        downloadChildren(payload.profileId, payload.entryId, payload.childUrls)
     }
 
-    private fun downloadChildren(entryId: Long, childIds: LongArray) {
+    private fun downloadChildren(profileId: Long, entryId: Long, childIds: LongArray) {
         async(scope, Dispatchers.IO) {
-            entryActionHandler.downloadChildren(entryId, childIds)
+            entryActionHandler.downloadChildren(profileId, entryId, childIds)
         }
     }
 
-    private fun downloadChildren(entryId: Long, childUrls: Array<String>) {
+    private fun downloadChildren(profileId: Long, entryId: Long, childUrls: Array<String>) {
         async(scope, Dispatchers.IO) {
-            entryActionHandler.downloadChildren(entryId, childUrls)
+            entryActionHandler.downloadChildren(profileId, entryId, childUrls)
+        }
+    }
+
+    private fun handleLegacyProfileAction(context: Context, intent: Intent, routedAction: () -> Unit) {
+        if (intent.hasExtra(EXTRA_PROFILE_ID)) {
+            routedAction()
+            return
+        }
+        val entryId = when (intent.action) {
+            ACTION_MARK_AS_WATCHED -> intent.getLongExtra(EXTRA_ANIME_ID, -1L)
+            ACTION_MARK_AS_READ, ACTION_DOWNLOAD_CHAPTER -> intent.getLongExtra(EXTRA_MANGA_ID, -1L)
+            ACTION_MARK_CONSUMED, ACTION_DOWNLOAD_CHILDREN -> intent.getLongExtra(EXTRA_ENTRY_ID, -1L)
+            else -> -1L
+        }
+        if (entryId <= -1L) return
+        async(scope, Dispatchers.IO) {
+            val destination = entryMergeNavigationFeature.resolveLegacyNotification(entryId) ?: return@async
+            context.startActivity(
+                profileNotificationIntent(
+                    context = context,
+                    profileId = destination.requestedSubject.profileId,
+                    receiverAction = checkNotNull(intent.action),
+                ).putExtras(intent).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
         }
     }
 
@@ -274,66 +330,81 @@ class NotificationReceiver : BroadcastReceiver() {
     }
 
     private data class OpenChildPayload(
+        val profileId: Long,
         val visibleEntryId: Long,
         val ownerEntryId: Long,
         val childId: Long,
     )
 
     private data class LegacyOpenChildPayload(
+        val visibleEntryId: Long? = null,
         val ownerEntryId: Long,
         val childId: Long,
     )
 
     private data class ChildIdsPayload(
+        val profileId: Long,
         val entryId: Long,
         val childIds: LongArray,
     )
 
     private data class ChildUrlsPayload(
+        val profileId: Long,
         val entryId: Long,
         val childUrls: Array<String>,
     )
 
     private fun Intent.openChildPayload(): OpenChildPayload? {
+        val profileId = getLongExtra(EXTRA_PROFILE_ID, -1)
         val visibleEntryId = getLongExtra(EXTRA_VISIBLE_ENTRY_ID, -1)
         val ownerEntryId = getLongExtra(EXTRA_OWNER_ENTRY_ID, visibleEntryId)
         val childId = getLongExtra(EXTRA_CHILD_ID, -1)
-        return OpenChildPayload(visibleEntryId, ownerEntryId, childId).takeIf { it.isValid() }
+        return OpenChildPayload(profileId, visibleEntryId, ownerEntryId, childId).takeIf { it.isValid() }
     }
 
-    private fun Intent.legacyEpisodeOpenChildPayload(): OpenChildPayload? {
+    private fun Intent.legacyEpisodeOpenChildPayload(): LegacyOpenChildPayload? {
         val visibleEntryId = getLongExtra(EXTRA_ANIME_ID, -1)
         val ownerEntryId = getLongExtra(EXTRA_OWNER_ANIME_ID, visibleEntryId)
         val childId = getLongExtra(EXTRA_EPISODE_ID, -1)
-        return OpenChildPayload(visibleEntryId, ownerEntryId, childId).takeIf { it.isValid() }
+        return LegacyOpenChildPayload(visibleEntryId, ownerEntryId, childId).takeIf { it.isValid() }
     }
 
     private fun Intent.legacyChapterOpenChildPayload(): LegacyOpenChildPayload? {
         val ownerEntryId = getLongExtra(EXTRA_MANGA_ID, -1)
         val childId = getLongExtra(EXTRA_CHAPTER_ID, -1)
-        return LegacyOpenChildPayload(ownerEntryId, childId).takeIf { it.isValid() }
+        return LegacyOpenChildPayload(ownerEntryId = ownerEntryId, childId = childId).takeIf { it.isValid() }
+    }
+
+    private fun Intent.legacyGenericOpenChildPayload(): LegacyOpenChildPayload? {
+        val visibleEntryId = getLongExtra(EXTRA_VISIBLE_ENTRY_ID, -1L)
+        val ownerEntryId = getLongExtra(EXTRA_OWNER_ENTRY_ID, visibleEntryId)
+        val childId = getLongExtra(EXTRA_CHILD_ID, -1L)
+        return LegacyOpenChildPayload(visibleEntryId, ownerEntryId, childId).takeIf { it.isValid() }
     }
 
     private fun Intent.childIdsPayload(): ChildIdsPayload? {
+        val profileId = getLongExtra(EXTRA_PROFILE_ID, -1L)
         val entryId = getLongExtra(EXTRA_ENTRY_ID, -1)
         val childIds = getLongArrayExtra(EXTRA_CHILD_IDS) ?: return null
-        return ChildIdsPayload(entryId, childIds).takeIf { it.isValid() }
+        return ChildIdsPayload(profileId, entryId, childIds).takeIf { it.isValid() }
     }
 
     private fun Intent.legacyEpisodeIdsPayload(): ChildIdsPayload? {
+        val profileId = getLongExtra(EXTRA_PROFILE_ID, -1L)
         val entryId = getLongExtra(EXTRA_ANIME_ID, -1)
         val childIds = getLongArrayExtra(EXTRA_EPISODE_IDS) ?: return null
-        return ChildIdsPayload(entryId, childIds).takeIf { it.isValid() }
+        return ChildIdsPayload(profileId, entryId, childIds).takeIf { it.isValid() }
     }
 
     private fun Intent.legacyChapterUrlsPayload(): ChildUrlsPayload? {
+        val profileId = getLongExtra(EXTRA_PROFILE_ID, -1L)
         val entryId = getLongExtra(EXTRA_MANGA_ID, -1)
         val childUrls = getStringArrayExtra(EXTRA_CHAPTER_URL) ?: return null
-        return ChildUrlsPayload(entryId, childUrls).takeIf { it.isValid() }
+        return ChildUrlsPayload(profileId, entryId, childUrls).takeIf { it.isValid() }
     }
 
     private fun OpenChildPayload.isValid(): Boolean {
-        return visibleEntryId > -1 && ownerEntryId > -1 && childId > -1
+        return profileId > -1 && visibleEntryId > -1 && ownerEntryId > -1 && childId > -1
     }
 
     private fun LegacyOpenChildPayload.isValid(): Boolean {
@@ -341,11 +412,11 @@ class NotificationReceiver : BroadcastReceiver() {
     }
 
     private fun ChildIdsPayload.isValid(): Boolean {
-        return entryId > -1 && childIds.isNotEmpty()
+        return profileId > -1 && entryId > -1 && childIds.isNotEmpty()
     }
 
     private fun ChildUrlsPayload.isValid(): Boolean {
-        return entryId > -1 && childUrls.isNotEmpty()
+        return profileId > -1 && entryId > -1 && childUrls.isNotEmpty()
     }
 
     companion object {
@@ -364,6 +435,7 @@ class NotificationReceiver : BroadcastReceiver() {
 
         private const val ACTION_OPEN_EPISODE = "$ID.$NAME.ACTION_OPEN_EPISODE"
         private const val ACTION_OPEN_CHILD = "$ID.$NAME.ACTION_OPEN_CHILD"
+        private const val ACTION_ROUTE_PROFILE_NOTIFICATION = "$ID.$NAME.ACTION_ROUTE_PROFILE_NOTIFICATION"
         private const val ACTION_MARK_AS_READ = "$ID.$NAME.MARK_AS_READ"
         private const val ACTION_MARK_AS_WATCHED = "$ID.$NAME.MARK_AS_WATCHED"
         private const val ACTION_MARK_CONSUMED = "$ID.$NAME.MARK_CONSUMED"
@@ -392,6 +464,8 @@ class NotificationReceiver : BroadcastReceiver() {
         private const val EXTRA_ENTRY_ID = "$ID.$NAME.EXTRA_ENTRY_ID"
         private const val EXTRA_CHILD_ID = "$ID.$NAME.EXTRA_CHILD_ID"
         private const val EXTRA_CHILD_IDS = "$ID.$NAME.EXTRA_CHILD_IDS"
+        private const val EXTRA_PROFILE_ID = "$ID.$NAME.EXTRA_PROFILE_ID"
+        private const val EXTRA_ROUTED_ACTION = "$ID.$NAME.EXTRA_ROUTED_ACTION"
 
         /**
          * Returns a [PendingIntent] that resumes the download of a chapter
@@ -524,106 +598,73 @@ class NotificationReceiver : BroadcastReceiver() {
             )
         }
 
-        @Deprecated("Use openChildPendingActivity instead.")
-        internal fun openEntryChapterPendingActivity(
-            context: Context,
-            entry: Entry,
-            chapter: EntryChapter,
-        ): PendingIntent {
-            return openChildPendingActivity(context, entry, chapter)
-        }
-
-        internal fun openChildPendingActivity(
-            context: Context,
-            entry: Entry,
-            child: EntryChapter,
-        ): PendingIntent {
-            return Injekt.get<EntryOpenInteraction>().pendingIntent(
-                context = context,
-                entry = entry,
-                chapter = child,
-            )
-        }
-
-        @Deprecated("Use openChildPendingActivity instead.")
-        internal fun openEntryEpisodePendingActivity(
-            context: Context,
-            visibleAnimeId: Long,
-            ownerAnimeId: Long,
-            episodeId: Long,
-        ): PendingIntent {
-            return openChildPendingActivity(context, visibleAnimeId, ownerAnimeId, episodeId)
-        }
-
-        internal fun openChildPendingActivity(
-            context: Context,
-            visibleEntryId: Long,
-            ownerEntryId: Long,
-            childId: Long,
-        ): PendingIntent {
-            val newIntent = Intent(context, NotificationReceiver::class.java).apply {
-                action = ACTION_OPEN_CHILD
-                putExtra(EXTRA_VISIBLE_ENTRY_ID, visibleEntryId)
-                putExtra(EXTRA_OWNER_ENTRY_ID, ownerEntryId)
-                putExtra(EXTRA_CHILD_ID, childId)
-            }
-            return PendingIntent.getBroadcast(
-                context,
-                childId.hashCode(),
-                newIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-            )
-        }
-
         internal fun openChildPendingActivity(
             context: Context,
             visibleEntry: Entry,
             ownerEntry: Entry,
             chapter: EntryChapter,
-        ): PendingIntent {
-            val newIntent = Intent(context, NotificationReceiver::class.java).apply {
-                action = ACTION_OPEN_CHILD
-                putExtra(EXTRA_VISIBLE_ENTRY_ID, visibleEntry.id)
-                putExtra(EXTRA_OWNER_ENTRY_ID, ownerEntry.id)
-                putExtra(EXTRA_CHILD_ID, chapter.id)
+        ): PendingIntent? {
+            if (!Injekt.get<EntryOpenFeature>().isApplicable(visibleEntry.type)) return null
+            require(visibleEntry.profileId == ownerEntry.profileId) {
+                "Notification child destination and owner must belong to the same profile"
             }
-            return PendingIntent.getBroadcast(
-                context,
-                chapter.id.hashCode(),
-                newIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-            )
-        }
-
-        /**
-         * Returns [PendingIntent] that opens the manga info controller.
-         *
-         * @param context context of application
-         * @param entry entry of chapter
-         */
-        internal fun openEntryChapterPendingActivity(context: Context, entry: Entry, groupId: Int): PendingIntent {
-            val newIntent =
-                Intent(context, MainActivity::class.java).setAction(Constants.SHORTCUT_MANGA)
-                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                    .putExtra(Constants.ENTRY_EXTRA, entry.id)
-                    .putExtra("notificationId", entry.id.hashCode())
-                    .putExtra("groupId", groupId)
             return PendingIntent.getActivity(
                 context,
-                entry.id.hashCode(),
-                newIntent,
+                chapter.id.hashCode(),
+                profileChildIntent(
+                    context = context,
+                    profileId = visibleEntry.profileId,
+                    visibleEntryId = visibleEntry.id,
+                    ownerEntryId = ownerEntry.id,
+                    childId = chapter.id,
+                ),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
         }
 
-        @Deprecated("Use markConsumedPendingBroadcast instead.")
-        internal fun markEntryChaptersReadPendingBroadcast(
+        internal fun dispatchProfileNotificationIntent(context: Context, intent: Intent): Boolean {
+            if (intent.action != ACTION_ROUTE_PROFILE_NOTIFICATION) return false
+            val receiverAction = intent.getStringExtra(EXTRA_ROUTED_ACTION) ?: return false
+            val broadcast = Intent(context, NotificationReceiver::class.java).apply {
+                action = receiverAction
+                putExtras(intent)
+                putExtra(EXTRA_PROFILE_ID, intent.getLongExtra(Constants.PROFILE_EXTRA, -1L))
+            }
+            context.sendBroadcast(broadcast)
+            return true
+        }
+
+        private fun profileChildIntent(
             context: Context,
-            entry: Entry,
-            children: Array<EntryChapter>,
-            groupId: Int,
-        ): PendingIntent {
-            return markConsumedPendingBroadcast(context, entry, children, groupId)
+            profileId: Long,
+            visibleEntryId: Long,
+            ownerEntryId: Long,
+            childId: Long,
+        ): Intent {
+            return profileNotificationIntent(context, profileId, ACTION_OPEN_CHILD).apply {
+                putExtra(EXTRA_VISIBLE_ENTRY_ID, visibleEntryId)
+                putExtra(EXTRA_OWNER_ENTRY_ID, ownerEntryId)
+                putExtra(EXTRA_CHILD_ID, childId)
+            }
+        }
+
+        private fun profileNotificationIntent(
+            context: Context,
+            profileId: Long,
+            receiverAction: String,
+        ): Intent {
+            return Intent(context, MainActivity::class.java).apply {
+                action = ACTION_ROUTE_PROFILE_NOTIFICATION
+                data = Uri.Builder()
+                    .scheme("katari")
+                    .authority("notification-action")
+                    .appendPath(receiverAction)
+                    .appendPath(profileId.toString())
+                    .build()
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                putExtra(Constants.PROFILE_EXTRA, profileId)
+                putExtra(EXTRA_ROUTED_ACTION, receiverAction)
+            }
         }
 
         internal fun markConsumedPendingBroadcast(
@@ -632,29 +673,18 @@ class NotificationReceiver : BroadcastReceiver() {
             children: Array<EntryChapter>,
             groupId: Int,
         ): PendingIntent {
-            val newIntent = Intent(context, NotificationReceiver::class.java).apply {
-                action = ACTION_MARK_CONSUMED
+            val newIntent = profileNotificationIntent(context, entry.profileId, ACTION_MARK_CONSUMED).apply {
                 putExtra(EXTRA_ENTRY_ID, entry.id)
                 putExtra(EXTRA_CHILD_IDS, children.map { it.id }.toLongArray())
                 putExtra(EXTRA_NOTIFICATION_ID, entry.id.hashCode())
                 putExtra(EXTRA_GROUP_ID, groupId)
             }
-            return PendingIntent.getBroadcast(
+            return PendingIntent.getActivity(
                 context,
                 entry.id.hashCode(),
                 newIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
-        }
-
-        @Deprecated("Use downloadChildrenPendingBroadcast instead.")
-        internal fun downloadEntryChaptersPendingBroadcast(
-            context: Context,
-            entry: Entry,
-            children: Array<EntryChapter>,
-            groupId: Int,
-        ): PendingIntent {
-            return downloadChildrenPendingBroadcast(context, entry, children, groupId)
         }
 
         internal fun downloadChildrenPendingBroadcast(
@@ -663,29 +693,18 @@ class NotificationReceiver : BroadcastReceiver() {
             children: Array<EntryChapter>,
             groupId: Int,
         ): PendingIntent {
-            val newIntent = Intent(context, NotificationReceiver::class.java).apply {
-                action = ACTION_DOWNLOAD_CHILDREN
+            val newIntent = profileNotificationIntent(context, entry.profileId, ACTION_DOWNLOAD_CHILDREN).apply {
                 putExtra(EXTRA_ENTRY_ID, entry.id)
                 putExtra(EXTRA_CHILD_IDS, children.map { it.id }.toLongArray())
                 putExtra(EXTRA_NOTIFICATION_ID, entry.id.hashCode())
                 putExtra(EXTRA_GROUP_ID, groupId)
             }
-            return PendingIntent.getBroadcast(
+            return PendingIntent.getActivity(
                 context,
                 entry.id.hashCode(),
                 newIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
-        }
-
-        @Deprecated("Use markConsumedPendingBroadcast instead.")
-        internal fun markEntryEpisodesWatchedPendingBroadcast(
-            context: Context,
-            entry: Entry,
-            children: Array<EntryChapter>,
-            groupId: Int,
-        ): PendingIntent {
-            return markConsumedPendingBroadcast(context, entry, children, groupId)
         }
 
         /**
@@ -696,12 +715,14 @@ class NotificationReceiver : BroadcastReceiver() {
          */
         internal fun openEntryPendingActivity(
             context: Context,
+            profileId: Long,
             entryId: Long,
             groupId: Int? = null,
         ): PendingIntent {
             val newIntent = Intent(context, MainActivity::class.java).setAction(Constants.SHORTCUT_MANGA)
                 .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 .putExtra(Constants.ENTRY_EXTRA, entryId)
+                .putExtra(Constants.PROFILE_EXTRA, profileId)
                 .putExtra("notificationId", entryId.hashCode())
             groupId?.let { newIntent.putExtra("groupId", it) }
 
@@ -711,10 +732,6 @@ class NotificationReceiver : BroadcastReceiver() {
                 newIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
-        }
-
-        internal fun openAnimeTypedEntryPendingActivity(context: Context, entryId: Long, groupId: Int): PendingIntent {
-            return openEntryPendingActivity(context, entryId, groupId)
         }
 
         /**
@@ -853,12 +870,13 @@ class NotificationReceiver : BroadcastReceiver() {
 internal class NotificationEntryActionHandler(
     private val entryRepository: EntryRepository,
     private val entryChapterRepository: EntryChapterRepository,
-    private val entryConsumptionInteraction: EntryConsumptionInteraction,
-    private val entryDownloadInteraction: EntryDownloadInteraction,
-    private val entryOpenInteraction: EntryOpenInteraction,
+    private val entryConsumptionFeature: EntryConsumptionFeature,
+    private val entryDownloadActionFeature: EntryDownloadActionFeature,
+    private val entryOpenFeature: EntryOpenFeature,
 ) {
     suspend fun openChild(
         context: Context,
+        profileId: Long,
         visibleEntryId: Long,
         ownerEntryId: Long,
         childId: Long,
@@ -867,10 +885,13 @@ internal class NotificationEntryActionHandler(
             return false
         }
 
-        val entry = entryRepository.getEntryById(visibleEntryId) ?: return false
-        val chapter = entryChapterRepository.getChapterById(childId) ?: return false
+        val entry = entryRepository.getEntryById(visibleEntryId, profileId) ?: return false
+        val owner = entryRepository.getEntryById(ownerEntryId, profileId) ?: return false
+        val chapter = entryChapterRepository.getChapterById(childId)
+            ?.takeIf { it.entryId == owner.id }
+            ?: return false
 
-        entryOpenInteraction.open(
+        return entryOpenFeature.open(
             context = context,
             entry = entry,
             chapter = chapter,
@@ -880,36 +901,38 @@ internal class NotificationEntryActionHandler(
                 clearTop = true,
             ),
         )
-        return true
     }
 
-    suspend fun markConsumed(entryId: Long, childIds: LongArray) {
-        val entry = entryRepository.getEntryById(entryId) ?: return
+    suspend fun markConsumed(profileId: Long, entryId: Long, childIds: LongArray) {
+        val entry = entryRepository.getEntryById(entryId, profileId) ?: return
         val chapters = loadChapters(childIds)
         if (chapters.isNotEmpty()) {
-            entryConsumptionInteraction.setConsumed(entry, chapters, consumed = true)
+            entryConsumptionFeature.setConsumed(entry, chapters, consumed = true)
         }
     }
 
-    suspend fun markConsumed(entryId: Long, childUrls: Array<String>) {
+    suspend fun markConsumed(profileId: Long, entryId: Long, childUrls: Array<String>) {
         val childIds = loadChildIds(entryId, childUrls)
         if (childIds.isNotEmpty()) {
-            markConsumed(entryId, childIds)
+            markConsumed(profileId, entryId, childIds)
         }
     }
 
-    suspend fun downloadChildren(entryId: Long, childIds: LongArray) {
-        val entry = entryRepository.getEntryById(entryId) ?: return
+    suspend fun downloadChildren(profileId: Long, entryId: Long, childIds: LongArray) {
+        val entry = entryRepository.getEntryById(entryId, profileId) ?: return
         val chapters = loadChapters(childIds)
         if (chapters.isNotEmpty()) {
-            entryDownloadInteraction.download(entry, chapters)
+            entryDownloadActionFeature.download(
+                entry = entry,
+                chapters = chapters,
+            )
         }
     }
 
-    suspend fun downloadChildren(entryId: Long, childUrls: Array<String>) {
+    suspend fun downloadChildren(profileId: Long, entryId: Long, childUrls: Array<String>) {
         val childIds = loadChildIds(entryId, childUrls)
         if (childIds.isNotEmpty()) {
-            downloadChildren(entryId, childIds)
+            downloadChildren(profileId, entryId, childIds)
         }
     }
 
