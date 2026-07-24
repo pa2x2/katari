@@ -5,19 +5,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
@@ -25,12 +20,9 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.ViewCarousel
 import androidx.compose.material.icons.outlined.ViewStream
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -47,8 +39,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import mihon.book.api.BookLocator
@@ -59,12 +49,11 @@ import mihon.entry.interactions.book.BookReaderNavigationSheet
 import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
 import mihon.entry.viewer.settings.ResolvedViewerSetting
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.AdaptiveSheet
 import tachiyomi.presentation.core.components.CheckboxItem
 import tachiyomi.presentation.core.components.HeadingItem
 import tachiyomi.presentation.core.components.SettingsItemsPaddings
 import tachiyomi.presentation.core.components.SliderItem
-import tachiyomi.presentation.core.components.material.TabText
+import tachiyomi.presentation.core.components.ViewerSettingsTabbedDialog
 import tachiyomi.presentation.core.components.reader.ReaderChrome
 import tachiyomi.presentation.core.components.reader.ReaderPageIndicator
 import tachiyomi.presentation.core.components.reader.ReaderPageNavigator
@@ -312,47 +301,16 @@ private fun ReadiumEpubSettingsDialog(
     val pagerState = rememberPagerState { tabs.size }
     val scope = rememberCoroutineScope()
 
-    Dialog(
+    ViewerSettingsTabbedDialog(
         onDismissRequest = onDismissRequest,
-        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = true),
-    ) {
-        BoxWithConstraints {
-            AdaptiveSheet(
-                isTabletUi = maxWidth >= 720.dp,
-                enableImplicitDismiss = true,
-                onDismissRequest = onDismissRequest,
-                modifier = Modifier.heightIn(max = maxHeight * 0.75f),
-            ) {
-                Column {
-                    PrimaryTabRow(
-                        selectedTabIndex = pagerState.currentPage,
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        divider = {},
-                    ) {
-                        tabs.forEachIndexed { index, title ->
-                            Tab(
-                                selected = pagerState.currentPage == index,
-                                onClick = { scope.launch { pagerState.scrollToPage(index) } },
-                                text = { TabText(title) },
-                            )
-                        }
-                    }
-                    HorizontalDivider()
-                    HorizontalPager(state = pagerState) { page ->
-                        Column(
-                            modifier = Modifier
-                                .verticalScroll(rememberScrollState())
-                                .padding(vertical = 8.dp),
-                        ) {
-                            when (page) {
-                                0 -> ReadiumAppearanceSettings(settings)
-                                1 -> ReadiumLayoutSettings(settings)
-                                2 -> ReadiumControlSettings(settings)
-                            }
-                        }
-                    }
-                }
-            }
+        onResetSettings = { scope.launch { settings.resetSettings() } },
+        tabTitles = tabs,
+        pagerState = pagerState,
+    ) { page ->
+        when (page) {
+            0 -> ReadiumAppearanceSettings(settings)
+            1 -> ReadiumLayoutSettings(settings)
+            2 -> ReadiumControlSettings(settings)
         }
     }
 }

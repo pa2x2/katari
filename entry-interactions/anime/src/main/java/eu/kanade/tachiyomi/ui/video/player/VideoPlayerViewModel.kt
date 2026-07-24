@@ -74,7 +74,8 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
     private var ownerEntryId: Long = INVALID_ID
     private var chapterId: Long = INVALID_ID
     private var bypassMerge: Boolean = false
-    private var sessionPlaybackSpeed: Float = savedState[SESSION_PLAYBACK_SPEED_KEY] ?: DEFAULT_SESSION_PLAYBACK_SPEED
+    private var sessionPlaybackSpeed: Float =
+        savedState[SESSION_PLAYBACK_SPEED_KEY] ?: DEFAULT_PLAYER_SETTINGS_PLAYBACK_SPEED
     private var applySelectionJob: Job? = null
     private var previewSelectionJob: Job? = null
     private val selectionResultCache = LinkedHashMap<SelectionCacheKey, ResolveVideoStream.Result.Success>()
@@ -143,8 +144,19 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
     }
 
     fun previewSourceSelection(selection: PlaybackSelection) {
+        previewSourceSelection(selection, resolveCurrentDub = false)
+    }
+
+    fun previewDefaultSourceSelection() {
+        previewSourceSelection(PlaybackSelection(), resolveCurrentDub = true)
+    }
+
+    private fun previewSourceSelection(
+        selection: PlaybackSelection,
+        resolveCurrentDub: Boolean,
+    ) {
         val current = mutableState.value as? State.Ready ?: return
-        if (selection.dubKey == current.playback.sourceSelection.dubKey) {
+        if (!resolveCurrentDub && selection.dubKey == current.playback.sourceSelection.dubKey) {
             previewSelectionJob?.cancel()
             mutableState.value = current.copy(
                 playback = current.playback.copy(preview = VideoPlaybackPreviewState()),
@@ -274,6 +286,39 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
         mutableState.value = current.copy(
             playback = current.playback.copy(sessionPlaybackSpeed = normalizedSpeed),
         )
+    }
+
+    fun resetPlayerSettings() {
+        val current = mutableState.value as? State.Ready ?: return
+        previewSelectionJob?.cancel()
+        applySelectionJob?.cancel()
+        sessionPlaybackSpeed = DEFAULT_PLAYER_SETTINGS_PLAYBACK_SPEED
+        savedState[SESSION_PLAYBACK_SPEED_KEY] = DEFAULT_PLAYER_SETTINGS_PLAYBACK_SPEED
+        mutableState.value = current.copy(
+            playback = current.playback.copy(
+                sessionPlaybackSpeed = DEFAULT_PLAYER_SETTINGS_PLAYBACK_SPEED,
+                currentAdaptiveQuality = VideoAdaptiveQualityPreference.Auto,
+                currentSubtitle = VideoPlayerSubtitleSelection.Default,
+                preview = VideoPlaybackPreviewState(),
+            ),
+        )
+        applySelectionJob = viewModelScope.launch {
+            val defaultSelection = PlaybackSelection()
+            persistPlaybackPreferences(
+                entryId = current.ownerEntryId,
+                sourceSelection = defaultSelection,
+                adaptiveQuality = VideoAdaptiveQualityPreference.Auto,
+                subtitleKey = null,
+                updateSubtitleKey = true,
+            )
+            if (!isActive) return@launch
+            resolvePlayback(
+                selection = defaultSelection,
+                preservePositionMs = current.resumePositionMs,
+                showLoading = false,
+                requestedSubtitle = VideoPlayerSubtitleSelection.Default,
+            )
+        }
     }
 
     fun updateSubtitleOptions(options: List<VideoPlayerSubtitleOption>) {
@@ -838,7 +883,6 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
         private const val SESSION_PLAYBACK_SPEED_KEY = "session_playback_speed"
         private const val INVALID_ID = -1L
         private const val SELECTION_CACHE_LIMIT = 12
-        private const val DEFAULT_SESSION_PLAYBACK_SPEED = 1f
         private const val MIN_SESSION_PLAYBACK_SPEED = 0.5f
         private const val MAX_SESSION_PLAYBACK_SPEED = 2f
     }

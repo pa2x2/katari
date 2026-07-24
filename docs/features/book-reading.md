@@ -31,6 +31,8 @@ Changing profiles therefore changes reader defaults without affecting other prof
 
 Each reader exposes its currently available appearance, layout, and navigation controls in the app. The EPUB reader navigates the publication's table of contents. The prose reader uses Katari's stored chapter list for its chapter picker and previous/next transitions while keeping only the current chapter and its immediate neighbors prepared.
 
+Use **Reset** from a reader settings dialog to remove that reader's active-profile values and the current entry's reader overrides. Reading progress, bookmarks, and downloads are not changed.
+
 ## Offline downloads
 
 Download chapters for offline reading from the book's entry screen:

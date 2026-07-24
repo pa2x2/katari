@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -38,8 +37,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
@@ -48,13 +45,10 @@ import androidx.compose.material.icons.outlined.ViewCarousel
 import androidx.compose.material.icons.outlined.ViewStream
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -81,8 +75,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -100,12 +92,11 @@ import mihon.entry.viewer.settings.ResolvedViewerSetting
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.service.calculateChapterGap
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.AdaptiveSheet
 import tachiyomi.presentation.core.components.CheckboxItem
 import tachiyomi.presentation.core.components.HeadingItem
 import tachiyomi.presentation.core.components.SettingsItemsPaddings
 import tachiyomi.presentation.core.components.SliderItem
-import tachiyomi.presentation.core.components.material.TabText
+import tachiyomi.presentation.core.components.ViewerSettingsTabbedDialog
 import tachiyomi.presentation.core.components.reader.ReaderChrome
 import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransition
 import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransitionItem
@@ -889,47 +880,17 @@ private fun HtmlProseSettingsDialog(
     )
     val pagerState = rememberPagerState { tabs.size }
     val scope = rememberCoroutineScope()
-    Dialog(
+
+    ViewerSettingsTabbedDialog(
         onDismissRequest = onDismissRequest,
-        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = true),
-    ) {
-        BoxWithConstraints {
-            AdaptiveSheet(
-                isTabletUi = maxWidth >= 720.dp,
-                enableImplicitDismiss = true,
-                onDismissRequest = onDismissRequest,
-                modifier = Modifier.heightIn(max = maxHeight * 0.75f),
-            ) {
-                Column {
-                    PrimaryTabRow(
-                        selectedTabIndex = pagerState.currentPage,
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        divider = {},
-                    ) {
-                        tabs.forEachIndexed { index, title ->
-                            Tab(
-                                selected = pagerState.currentPage == index,
-                                onClick = { scope.launch { pagerState.scrollToPage(index) } },
-                                text = { TabText(title) },
-                            )
-                        }
-                    }
-                    HorizontalDivider()
-                    HorizontalPager(state = pagerState) { page ->
-                        Column(
-                            modifier = Modifier
-                                .verticalScroll(rememberScrollState())
-                                .padding(vertical = 8.dp),
-                        ) {
-                            when (page) {
-                                0 -> ProseAppearanceSettings(settings)
-                                1 -> ProseLayoutSettings(settings)
-                                2 -> ProseControlSettings(settings)
-                            }
-                        }
-                    }
-                }
-            }
+        onResetSettings = { scope.launch { settings.resetSettings() } },
+        tabTitles = tabs,
+        pagerState = pagerState,
+    ) { page ->
+        when (page) {
+            0 -> ProseAppearanceSettings(settings)
+            1 -> ProseLayoutSettings(settings)
+            2 -> ProseControlSettings(settings)
         }
     }
 }

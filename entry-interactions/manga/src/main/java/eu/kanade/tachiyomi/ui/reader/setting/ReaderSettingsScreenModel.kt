@@ -9,14 +9,18 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import mihon.entry.viewer.settings.ViewerSettingBinder
+import mihon.entry.viewer.settings.resetSettings
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 internal class ReaderSettingsScreenModel(
-    readerState: StateFlow<ReaderViewModel.State>,
+    private val readerState: StateFlow<ReaderViewModel.State>,
     val onChangeReadingMode: (ReadingMode) -> Unit,
     val onChangeOrientation: (ReaderOrientation) -> Unit,
     val preferences: MangaReaderSettingsProvider = Injekt.get(),
+    private val settingBinder: ViewerSettingBinder = Injekt.get(),
 ) {
 
     private val ioCoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -35,4 +39,13 @@ internal class ReaderSettingsScreenModel(
         .map { ReaderOrientation.fromPreference(it.orientationOverride) }
         .distinctUntilChanged()
         .stateIn(ioCoroutineScope, SharingStarted.Lazily, ReaderOrientation.DEFAULT)
+
+    fun resetSettings() {
+        ioCoroutineScope.launch {
+            settingBinder.resetSettings(
+                provider = preferences,
+                entryId = readerState.value.manga?.id,
+            )
+        }
+    }
 }

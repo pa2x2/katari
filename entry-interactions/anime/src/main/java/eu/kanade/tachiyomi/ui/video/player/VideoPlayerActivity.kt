@@ -1487,20 +1487,25 @@ class VideoPlayerActivity : AppCompatActivity() {
                             onApplySettings = { draft ->
                                 temporarySpeedBoostActive = false
                                 persistPlayback(currentPlayer)
-                                if (draft.playbackSpeed != initialSettingsDraft.playbackSpeed) {
-                                    viewModel.updateSessionPlaybackSpeed(draft.playbackSpeed)
-                                }
-                                if (draft.adaptiveQuality != initialSettingsDraft.adaptiveQuality) {
-                                    viewModel.selectAdaptiveQuality(draft.adaptiveQuality)
-                                }
-                                if (draft.subtitleSelection != initialSettingsDraft.subtitleSelection) {
-                                    viewModel.selectSubtitle(draft.subtitleSelection)
-                                }
-                                if (draft.sourceSelection != initialSettingsDraft.sourceSelection) {
-                                    viewModel.applySourceSelection(draft.sourceSelection)
+                                if (draft.resetToDefaults) {
+                                    viewModel.resetPlayerSettings()
+                                } else {
+                                    if (draft.playbackSpeed != initialSettingsDraft.playbackSpeed) {
+                                        viewModel.updateSessionPlaybackSpeed(draft.playbackSpeed)
+                                    }
+                                    if (draft.adaptiveQuality != initialSettingsDraft.adaptiveQuality) {
+                                        viewModel.selectAdaptiveQuality(draft.adaptiveQuality)
+                                    }
+                                    if (draft.subtitleSelection != initialSettingsDraft.subtitleSelection) {
+                                        viewModel.selectSubtitle(draft.subtitleSelection)
+                                    }
+                                    if (draft.sourceSelection != initialSettingsDraft.sourceSelection) {
+                                        viewModel.applySourceSelection(draft.sourceSelection)
+                                    }
                                 }
                             },
                             onPreviewSourceSelection = viewModel::previewSourceSelection,
+                            onPreviewDefaultSourceSelection = viewModel::previewDefaultSourceSelection,
                             onOpenSubtitleSettings = {
                                 temporarySpeedBoostActive = false
                                 settingsVisible = false

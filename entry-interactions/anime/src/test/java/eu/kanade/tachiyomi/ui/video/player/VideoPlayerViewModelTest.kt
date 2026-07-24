@@ -263,12 +263,88 @@ class VideoPlayerViewModelTest {
         state.nextChapterId shouldBe null
     }
 
+    @Test
+    fun `reset player settings persists defaults and keeps the current position`() = runTest(dispatcher) {
+        val preferencesRepository = FakePlaybackPreferencesRepository(
+            existing = PlaybackPreferences(
+                entryId = 1L,
+                dubKey = "dub",
+                streamKey = "stream",
+                sourceQualityKey = "source-quality",
+                subtitleKey = "subtitle",
+                playerQualityMode = PlayerQualityMode.SPECIFIC_HEIGHT,
+                playerQualityHeight = 720,
+                updatedAt = 10L,
+            ),
+        )
+        val viewModel = createViewModel(
+            entryChapterRepository = FakeEntryChapterRepository(emptyList()),
+            playbackRepository = FakeEntryProgressRepository(
+                existingState = animeProgressState(
+                    entryId = 1L,
+                    chapterId = 2L,
+                    resourceKey = "/chapter/2",
+                    positionMs = 12_345L,
+                    durationMs = 99_999L,
+                    completed = false,
+                    locatorUpdatedAt = 500L,
+                    completionUpdatedAt = 0L,
+                ),
+            ),
+            historyRepository = FakeHistoryRepository(),
+            resolver = RecordingVideoStreamResolver(),
+            playbackPreferencesRepository = preferencesRepository,
+        )
+        viewModel.init(entryId = 1L, chapterId = 2L)
+        advanceUntilIdle()
+        viewModel.updateSessionPlaybackSpeed(1.5f)
+
+        viewModel.resetPlayerSettings()
+        advanceUntilIdle()
+
+        preferencesRepository.upserts.last().run {
+            dubKey shouldBe null
+            streamKey shouldBe null
+            sourceQualityKey shouldBe null
+            subtitleKey shouldBe null
+            playerQualityMode shouldBe PlayerQualityMode.AUTO
+            playerQualityHeight shouldBe null
+        }
+        val state = viewModel.state.value as VideoPlayerViewModel.State.Ready
+        state.resumePositionMs shouldBe 12_345L
+        state.playback.sessionPlaybackSpeed shouldBe DEFAULT_PLAYER_SETTINGS_PLAYBACK_SPEED
+        state.playback.currentAdaptiveQuality shouldBe VideoAdaptiveQualityPreference.Auto
+        state.playback.currentSubtitle shouldBe VideoPlayerSubtitleSelection.None
+    }
+
+    @Test
+    fun `preview defaults resolves them when the active dub is already automatic`() = runTest(dispatcher) {
+        val resolvedDefaults = PlaybackSelection(sourceQualityKey = "default-quality")
+        val resolver = RecordingVideoStreamResolver(defaultSelection = resolvedDefaults)
+        val viewModel = createViewModel(
+            entryChapterRepository = FakeEntryChapterRepository(emptyList()),
+            playbackRepository = FakeEntryProgressRepository(existingState = null),
+            historyRepository = FakeHistoryRepository(),
+            resolver = resolver,
+        )
+        viewModel.init(entryId = 1L, chapterId = 2L)
+        advanceUntilIdle()
+
+        viewModel.previewDefaultSourceSelection()
+        advanceUntilIdle()
+
+        resolver.selections shouldBe listOf(null, PlaybackSelection())
+        val state = viewModel.state.value as VideoPlayerViewModel.State.Ready
+        state.playback.preview.playbackData?.selection shouldBe resolvedDefaults
+    }
+
     private fun createViewModel(
         entryChapterRepository: EntryChapterRepository,
         playbackRepository: EntryProgressRepository,
         historyRepository: HistoryRepository,
         resolver: VideoStreamResolver,
         getEntryWithChapters: GetEntryWithChapters? = null,
+        playbackPreferencesRepository: PlaybackPreferencesRepository = FakePlaybackPreferencesRepository(),
         mediaSession: EntryMediaSessionEventSink = EntryMediaSessionEventSink {
             EntryMediaSessionResult.Handled
         },
@@ -276,7 +352,7 @@ class VideoPlayerViewModelTest {
         return VideoPlayerViewModel(
             savedState = SavedStateHandle(),
             resolveVideoStream = resolver,
-            playbackPreferencesRepository = FakePlaybackPreferencesRepository(),
+            playbackPreferencesRepository = playbackPreferencesRepository,
             entryChapterRepository = entryChapterRepository,
             getEntryWithChapters = getEntryWithChapters,
             entryProgressRepository = playbackRepository,
@@ -317,8 +393,11 @@ class VideoPlayerViewModelTest {
         )
     }
 
-    private inner class RecordingVideoStreamResolver : VideoStreamResolver {
+    private inner class RecordingVideoStreamResolver(
+        private val defaultSelection: PlaybackSelection = PlaybackSelection(),
+    ) : VideoStreamResolver {
         val requests = mutableListOf<Long>()
+        val selections = mutableListOf<PlaybackSelection?>()
 
         override suspend fun invoke(
             entryId: Long,
@@ -327,6 +406,7 @@ class VideoPlayerViewModelTest {
             selection: PlaybackSelection?,
         ): ResolveVideoStream.Result {
             requests += chapterId
+            selections += selection
             val stream = VideoStream(
                 request = VideoRequest(url = "https://cdn.example.com/$chapterId.m3u8"),
                 label = "Auto",
@@ -337,7 +417,9 @@ class VideoPlayerViewModelTest {
                 ownerEntry = videoEntry(ownerEntryId),
                 chapter = chapter(id = chapterId, entryId = ownerEntryId, sourceOrder = chapterId),
                 playbackData = PlaybackDescriptor(
-                    selection = selection ?: PlaybackSelection(),
+                    selection = selection
+                        ?.takeUnless { it == PlaybackSelection() }
+                        ?: defaultSelection,
                     streams = listOf(stream),
                 ),
                 stream = stream,
@@ -357,17 +439,23 @@ class VideoPlayerViewModelTest {
     }
 
     private class FakePlaybackPreferencesRepository(
-        private val existing: PlaybackPreferences? = null,
+        existing: PlaybackPreferences? = null,
     ) : PlaybackPreferencesRepository {
-        override suspend fun getByEntryId(entryId: Long): PlaybackPreferences? = existing?.takeIf {
+        private var current = existing
+        val upserts = mutableListOf<PlaybackPreferences>()
+
+        override suspend fun getByEntryId(entryId: Long): PlaybackPreferences? = current?.takeIf {
             it.entryId == entryId
         }
 
         override fun getByEntryIdAsFlow(entryId: Long): Flow<PlaybackPreferences?> = flowOf(
-            existing?.takeIf { it.entryId == entryId },
+            current?.takeIf { it.entryId == entryId },
         )
 
-        override suspend fun upsert(preferences: PlaybackPreferences) = Unit
+        override suspend fun upsert(preferences: PlaybackPreferences) {
+            current = preferences
+            upserts += preferences
+        }
     }
 
     private class FakeEntryProgressRepository(

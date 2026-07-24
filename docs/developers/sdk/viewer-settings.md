@@ -59,6 +59,18 @@ automatically feeds the Reader/Player hub and settings search index.
 Adding a provider without its genuine screen therefore cannot silently ship a working renderer with missing settings
 UI. A type with no provider creates no projection obligation.
 
+## In-viewer settings
+
+A reader or player that exposes settings while content is open must use `ViewerSettingsTabbedDialog` or
+`ViewerSettingsSheet` from `presentation-core`. Reset is owned by these shared scaffolds and is therefore present by
+default when another viewer is introduced.
+
+Provider-backed viewers implement the callback with `ViewerSettingBinder.resetSettings(provider, entryId)`. The
+operation removes every profile preference declared by the provider and clears the current entry override for each
+definition that supports one. Because it derives the reset set from `ViewerSettingsProvider.settings`, a new
+definition cannot be omitted from reset behavior. A transactional settings surface, such as a player draft, may reset
+its draft instead and retain its existing Apply/Cancel behavior.
+
 ## Derived integrations
 
 `EntryViewerSettingsFeature` owns the integrations that follow from the provider definitions:
@@ -71,6 +83,6 @@ UI. A type with no provider creates no projection obligation.
 Consumers use the Feature rather than enumerating provider IDs or calling the override repository. Legacy Manga viewer
 flags are handled only by a named backup/reset compatibility adapter and are not evidence of current support.
 
-Profile-wide preference reset is separate from clearing per-entry overrides. The general discovery and lifecycle of
-preference-owner contributions belongs to the profile architecture; Viewer Settings contributes its provider-backed
-relationship and manages only its Feature-owned behavior.
+Lifecycle-wide preference reset remains separate from bulk clearing all per-entry overrides. The in-viewer reset above
+is scoped to one settings surface and, when available, the currently open entry. General discovery and lifecycle of
+preference-owner contributions belongs to the profile architecture.

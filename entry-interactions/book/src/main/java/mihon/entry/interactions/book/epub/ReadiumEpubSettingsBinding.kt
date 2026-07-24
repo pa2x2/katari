@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
 import mihon.entry.viewer.settings.ViewerSettingBinder
+import mihon.entry.viewer.settings.resetSettings
 import org.readium.r2.navigator.epub.EpubPreferences
 import org.readium.r2.navigator.preferences.ColumnCount
 import org.readium.r2.navigator.preferences.FontFamily
@@ -68,6 +69,10 @@ internal class ReadiumEpubSettingsBinding(
     val changes: Flow<EpubPreferences> = combine(appearance, textLayout, pageLayout, ::toReadiumPreferences)
         .drop(1)
         .distinctUntilChanged()
+
+    suspend fun resetSettings() {
+        binder.resetSettings(provider, entryId)
+    }
 
     suspend fun initialPreferences(): EpubPreferences {
         return toReadiumPreferences(

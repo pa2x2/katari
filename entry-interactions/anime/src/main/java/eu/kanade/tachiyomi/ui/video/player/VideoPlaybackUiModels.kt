@@ -85,6 +85,7 @@ internal data class VideoPlayerSettingsDraft(
     val adaptiveQuality: VideoAdaptiveQualityPreference,
     val playbackSpeed: Float,
     val subtitleSelection: VideoPlayerSubtitleSelection,
+    val resetToDefaults: Boolean = false,
 )
 
 internal data class VideoSubtitleAppearance(
@@ -290,6 +291,26 @@ internal fun VideoPlaybackUiState.toSettingsDraft(): VideoPlayerSettingsDraft {
     )
 }
 
+internal fun defaultVideoPlayerSettingsDraft(): VideoPlayerSettingsDraft {
+    return VideoPlayerSettingsDraft(
+        sourceSelection = PlaybackSelection(),
+        adaptiveQuality = VideoAdaptiveQualityPreference.Auto,
+        playbackSpeed = DEFAULT_PLAYER_SETTINGS_PLAYBACK_SPEED,
+        subtitleSelection = VideoPlayerSubtitleSelection.Default,
+        resetToDefaults = true,
+    )
+}
+
+internal fun VideoPlayerSettingsDraft.sourceSelectionForDisplay(
+    preview: VideoPlaybackPreviewState,
+): PlaybackSelection {
+    return if (resetToDefaults) {
+        preview.playbackData?.selection ?: sourceSelection
+    } else {
+        sourceSelection
+    }
+}
+
 internal fun PlaybackPreferences.toAdaptiveQualityPreference(): VideoAdaptiveQualityPreference {
     return when (playerQualityMode) {
         PlayerQualityMode.AUTO -> VideoAdaptiveQualityPreference.Auto
@@ -346,6 +367,7 @@ internal const val DEFAULT_SUBTITLE_BOTTOM_PADDING_FRACTION = 0.08f
 internal const val DEFAULT_SUBTITLE_BACKGROUND_OPACITY = 0.72f
 internal const val DEFAULT_SUBTITLE_OFFSET_X = 0f
 internal const val DEFAULT_SUBTITLE_OFFSET_Y = 0f
+internal const val DEFAULT_PLAYER_SETTINGS_PLAYBACK_SPEED = 1f
 internal const val MIN_SUBTITLE_TEXT_SIZE = 0.03f
 internal const val MAX_SUBTITLE_TEXT_SIZE = 0.12f
 internal const val MIN_SUBTITLE_OFFSET_X = -0.45f

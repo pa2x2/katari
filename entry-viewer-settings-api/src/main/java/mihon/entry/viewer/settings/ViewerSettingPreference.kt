@@ -17,6 +17,33 @@ fun <T> ViewerSettingBinding<T>.asProfilePreference(): Preference<T> {
     return ViewerSettingProfilePreference(this)
 }
 
+/**
+ * Returns every setting from one viewer surface to its processor default.
+ *
+ * Profile values are removed for all definitions. When [entryId] is provided,
+ * definitions that support entry overrides also clear the override for that
+ * entry, allowing it to inherit the reset profile value.
+ */
+suspend fun ViewerSettingBinder.resetSettings(
+    provider: ViewerSettingsProvider,
+    entryId: Long? = null,
+) {
+    provider.settings.forEach { definition ->
+        definition.profilePreference.delete()
+        if (entryId != null && definition.scope == ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE) {
+            clearEntryOverride(definition, entryId)
+        }
+    }
+}
+
+@Suppress("UNCHECKED_CAST")
+private suspend fun ViewerSettingBinder.clearEntryOverride(
+    definition: ViewerSettingDefinition<*>,
+    entryId: Long,
+) {
+    bind(definition as ViewerSettingDefinition<Any?>, entryId).clearEntryOverride()
+}
+
 private class ViewerSettingProfilePreference<T>(
     private val binding: ViewerSettingBinding<T>,
 ) : Preference<T> {

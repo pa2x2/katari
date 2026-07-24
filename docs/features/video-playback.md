@@ -17,7 +17,7 @@ Sources can fall back when a requested option disappears. Katari records the opt
 
 ## Player controls
 
-The player exposes its currently available playback and subtitle controls while an item is playing. Persistent player preferences are available under **More → Settings → Player**.
+The player exposes its currently available playback and subtitle controls while an item is playing. Use **Reset** in the player settings sheet to restore automatic source and quality selection, normal playback speed, and the default subtitle selection. Persistent player preferences are available under **More → Settings → Player**.
 
 ## Resume progress
 
