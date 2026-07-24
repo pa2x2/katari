@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.fragment.app.FragmentActivity
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
+import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
 import eu.kanade.tachiyomi.util.system.AuthenticatorUtil.authenticate
 import eu.kanade.tachiyomi.util.system.toast
 import mihon.feature.profiles.core.Profile
@@ -32,7 +33,8 @@ internal suspend fun switchToProfile(
     showToast: Boolean = false,
     onBeforeSwitch: () -> Unit = {},
 ): Boolean {
-    val authenticated = if (profileManager.profileRequiresUnlock(profile.id) && context is FragmentActivity) {
+    val requiresUnlock = profileManager.profileRequiresUnlock(profile.id)
+    val authenticated = if (requiresUnlock && context is FragmentActivity) {
         context.authenticate(
             title = context.stringResource(MR.strings.unlock_app_title, profile.name),
             subtitle = null,
@@ -42,6 +44,9 @@ internal suspend fun switchToProfile(
     }
     if (!authenticated) return false
 
+    if (requiresUnlock) {
+        SecureActivityDelegate.unlock()
+    }
     onBeforeSwitch()
     profileManager.setActiveProfile(profile.id)
     setAppCompatDelegateThemeMode(uiPreferences.themeMode.get())
