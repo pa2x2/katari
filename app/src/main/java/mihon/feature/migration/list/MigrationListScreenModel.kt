@@ -342,9 +342,8 @@ class MigrationListScreenModel(
 
                 if (failed) {
                     migrationFailureChannel.send(Unit)
-                } else {
-                    navigateBack()
                 }
+                navigateBack()
             } finally {
                 mutableState.update { it.copy(dialog = null) }
                 migrateJob = null
