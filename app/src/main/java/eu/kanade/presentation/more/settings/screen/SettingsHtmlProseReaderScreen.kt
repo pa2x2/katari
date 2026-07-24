@@ -31,9 +31,6 @@ object SettingsHtmlProseReaderScreen : AppEntryViewerSettingsScreenProjection {
         val fontSize = remember(provider, binder) { binder.bind(provider.fontSizeSetting).asProfilePreference() }
         val lineHeight = remember(provider, binder) { binder.bind(provider.lineHeightSetting).asProfilePreference() }
         val pageMargins = remember(provider, binder) { binder.bind(provider.pageMarginsSetting).asProfilePreference() }
-        val paragraphSpacing = remember(provider, binder) {
-            binder.bind(provider.paragraphSpacingSetting).asProfilePreference()
-        }
         val textAlignment = remember(provider, binder) {
             binder.bind(provider.textAlignmentSetting).asProfilePreference()
         }
@@ -51,7 +48,6 @@ object SettingsHtmlProseReaderScreen : AppEntryViewerSettingsScreenProjection {
         val fontSizeValue by fontSize.collectAsState()
         val lineHeightValue by lineHeight.collectAsState()
         val pageMarginsValue by pageMargins.collectAsState()
-        val paragraphSpacingValue by paragraphSpacing.collectAsState()
         val layoutModeValue by layoutMode.collectAsState()
 
         return listOf(
@@ -133,14 +129,6 @@ object SettingsHtmlProseReaderScreen : AppEntryViewerSettingsScreenProjection {
                         title = stringResource(MR.strings.pref_epub_line_height),
                         valueString = "$lineHeightValue%",
                         onValueChanged = lineHeight::set,
-                    ),
-                    Preference.PreferenceItem.SliderPreference(
-                        value = paragraphSpacingValue,
-                        preference = paragraphSpacing,
-                        valueRange = HtmlProseSettingsProvider.PARAGRAPH_SPACING_RANGE step 10,
-                        title = stringResource(MR.strings.pref_prose_paragraph_spacing),
-                        valueString = "$paragraphSpacingValue%",
-                        onValueChanged = paragraphSpacing::set,
                     ),
                     Preference.PreferenceItem.ListPreference(
                         preference = textAlignment,

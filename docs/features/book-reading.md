@@ -27,14 +27,9 @@ Open **More → Settings → Reader** to configure the profile defaults for each
 2. Active-profile value
 3. Processor default
 
-Changing profiles therefore changes reader defaults without affecting other profiles. The layout mode is currently the only book-reader setting that can also be overridden for an individual entry. Changing it from the reader's appearance controls stores an override for that entry; the remaining settings are profile defaults.
+Changing profiles therefore changes reader defaults without affecting other profiles. Settings that support an entry override can also be changed for an individual entry from the reader's controls.
 
-| Reader | Layouts | Profile settings |
-| ------ | ------- | ---------------- |
-| Readium EPUB reader | Paginated or continuous scrolling | Color theme, font family and size, page margins, column count, publisher styles, line height, text alignment and normalization, tap navigation, and page-number display |
-| Prose chapter reader | Paginated or continuous scrolling | Color theme, font family and size, page margins, line height, paragraph spacing, text alignment, cutout-area content, tap navigation, and progress display |
-
-Paginated reading is the default. The readers expose appearance and layout controls while reading, and paginated mode can use screen-edge taps for page turns. The EPUB reader navigates the publication's table of contents. The prose reader uses Katari's stored chapter list for its chapter picker and previous/next transitions while keeping only the current chapter and its immediate neighbors prepared.
+Each reader exposes its currently available appearance, layout, and navigation controls in the app. The EPUB reader navigates the publication's table of contents. The prose reader uses Katari's stored chapter list for its chapter picker and previous/next transitions while keeping only the current chapter and its immediate neighbors prepared.
 
 ## Offline downloads
 

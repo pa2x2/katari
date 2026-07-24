@@ -30,7 +30,6 @@
     <string name="prose_reader_font_size">Font size</string>
     <string name="prose_reader_line_height">Line height</string>
     <string name="prose_reader_page_margins">Page margins</string>
-    <string name="prose_reader_paragraph_spacing">Paragraph spacing</string>
     <string name="prose_reader_text_alignment">Text alignment</string>
     <string name="prose_reader_alignment_start">Reading direction</string>
     <string name="prose_reader_alignment_justify">Justified</string>

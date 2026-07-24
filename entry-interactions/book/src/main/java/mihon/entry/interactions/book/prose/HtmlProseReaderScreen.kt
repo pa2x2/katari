@@ -149,7 +149,6 @@ internal fun HtmlProseReaderScreen(
     val fontSize by settings.fontSize.state.collectEffectiveValue()
     val lineHeight by settings.lineHeight.state.collectEffectiveValue()
     val pageMargins by settings.pageMargins.state.collectEffectiveValue()
-    val paragraphSpacing by settings.paragraphSpacing.state.collectEffectiveValue()
     val textAlignment by settings.textAlignment.state.collectEffectiveValue()
     val layoutMode by settings.layoutMode.state.collectEffectiveValue()
     val tapNavigation by settings.tapNavigation.state.collectEffectiveValue()
@@ -189,7 +188,6 @@ internal fun HtmlProseReaderScreen(
                             fontSizePercent = fontSize,
                             lineHeightPercent = lineHeight,
                             pageMarginsPercent = pageMargins,
-                            paragraphSpacingPercent = paragraphSpacing,
                             textAlignment = textAlignment,
                             tapNavigation = tapNavigation,
                             chromeVisible = state.menuVisible,
@@ -210,7 +208,6 @@ internal fun HtmlProseReaderScreen(
                             fontSizePercent = fontSize,
                             lineHeightPercent = lineHeight,
                             pageMarginsPercent = pageMargins,
-                            paragraphSpacingPercent = paragraphSpacing,
                             textAlignment = textAlignment,
                             onPosition = {
                                 position = it
@@ -367,7 +364,6 @@ private fun PaginatedProseViewer(
     fontSizePercent: Int,
     lineHeightPercent: Int,
     pageMarginsPercent: Int,
-    paragraphSpacingPercent: Int,
     textAlignment: String,
     tapNavigation: Boolean,
     chromeVisible: Boolean,
@@ -390,9 +386,9 @@ private fun PaginatedProseViewer(
             }
         }
         val alignment = textAlignment.toLayoutAlignment()
-        val documents = remember(state.loadedChapters, paragraphSpacingPercent) {
+        val documents = remember(state.loadedChapters) {
             state.loadedChapters.mapValues { (_, chapter) ->
-                parseProseHtml(chapter.bodyHtml, paragraphSpacingPercent)
+                parseProseHtml(chapter.bodyHtml)
             }
         }
         val pages = remember(
@@ -403,7 +399,6 @@ private fun PaginatedProseViewer(
             paint.typeface,
             alignment,
             lineHeightPercent,
-            paragraphSpacingPercent,
         ) {
             state.loadedChapters.mapValues { (_, chapter) ->
                 paginateProse(
@@ -551,7 +546,6 @@ private fun ScrollingProseViewer(
     fontSizePercent: Int,
     lineHeightPercent: Int,
     pageMarginsPercent: Int,
-    paragraphSpacingPercent: Int,
     textAlignment: String,
     onPosition: (ProseViewerPosition) -> Unit,
     onChapterEntered: (EntryChapter) -> Unit,
@@ -614,8 +608,8 @@ private fun ScrollingProseViewer(
         items(items, key = ProseScrollItem::key) { item ->
             when (item) {
                 is ProseScrollItem.Chapter -> {
-                    val document = remember(item.content.bodyHtml, paragraphSpacingPercent) {
-                        parseProseHtml(item.content.bodyHtml, paragraphSpacingPercent)
+                    val document = remember(item.content.bodyHtml) {
+                        parseProseHtml(item.content.bodyHtml)
                     }
                     ProseText(
                         text = document.text,
@@ -988,7 +982,6 @@ private fun ProseLayoutSettings(settings: HtmlProseSettingsBinding) {
     val layout by settings.layoutMode.state.collectEffectiveValue()
     val lineHeight by settings.lineHeight.state.collectEffectiveValue()
     val margins by settings.pageMargins.state.collectEffectiveValue()
-    val paragraphSpacing by settings.paragraphSpacing.state.collectEffectiveValue()
     val alignment by settings.textAlignment.state.collectEffectiveValue()
     ProseSettingChips(
         stringResource(R.string.prose_reader_layout),
@@ -1012,13 +1005,6 @@ private fun ProseLayoutSettings(settings: HtmlProseSettingsBinding) {
         stringResource(R.string.prose_reader_page_margins),
         settings.pageMargins::setProfileValue,
         valueString = "$margins%",
-    )
-    SliderItem(
-        paragraphSpacing,
-        HtmlProseSettingsProvider.PARAGRAPH_SPACING_RANGE step 10,
-        stringResource(R.string.prose_reader_paragraph_spacing),
-        settings.paragraphSpacing::setProfileValue,
-        valueString = "$paragraphSpacing%",
     )
     ProseSettingChips(
         stringResource(R.string.prose_reader_text_alignment),

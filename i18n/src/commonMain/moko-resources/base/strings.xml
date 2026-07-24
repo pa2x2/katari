@@ -315,7 +315,6 @@
     <string name="pref_epub_publisher_styles">Use publisher styles</string>
     <string name="pref_epub_publisher_styles_summary">Preserve the book’s original typography and paragraph layout</string>
     <string name="pref_epub_line_height">Line height</string>
-    <string name="pref_prose_paragraph_spacing">Paragraph spacing</string>
     <string name="pref_epub_text_alignment">Text alignment</string>
     <string name="pref_epub_alignment_publisher">Book default</string>
     <string name="pref_epub_alignment_start">Reading direction</string>

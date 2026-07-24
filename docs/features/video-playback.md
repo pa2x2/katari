@@ -17,12 +17,7 @@ Sources can fall back when a requested option disappears. Katari records the opt
 
 ## Player controls
 
-The player provides seeking, brightness and volume gestures, subtitle controls, control locking, and next-episode navigation when another episode is available. Subtitle settings include position, size, text and background colors, and background opacity. Use **Reset** to restore the subtitle defaults.
-
-Under **More → Settings → Player**, configure:
-
-- **Picture-in-Picture**, which allows playback to continue in a small system window when supported.
-- **Seek preview**, which shows preview imagery while seeking when the media can provide it.
+The player exposes its currently available playback and subtitle controls while an item is playing. Persistent player preferences are available under **More → Settings → Player**.
 
 ## Resume progress
 

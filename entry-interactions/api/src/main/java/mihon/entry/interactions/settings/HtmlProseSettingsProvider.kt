@@ -21,7 +21,6 @@ class HtmlProseSettingsProvider(
     private val fontSize = preferenceStore.getInt("book.prose.html.font_size_percent", 100)
     private val lineHeight = preferenceStore.getInt("book.prose.html.line_height_percent", 170)
     private val pageMargins = preferenceStore.getInt("book.prose.html.page_margins_percent", 100)
-    private val paragraphSpacing = preferenceStore.getInt("book.prose.html.paragraph_spacing_percent", 100)
     private val textAlignment = preferenceStore.getString("book.prose.html.text_alignment", ALIGN_START)
     private val layoutMode = preferenceStore.getString("book.prose.html.layout_mode", LAYOUT_PAGINATED)
     private val tapNavigation = preferenceStore.getBoolean("book.prose.html.tap_navigation", false)
@@ -33,7 +32,6 @@ class HtmlProseSettingsProvider(
     val fontSizeSetting = intSetting(FONT_SIZE_KEY, fontSize, FONT_SIZE_RANGE)
     val lineHeightSetting = intSetting(LINE_HEIGHT_KEY, lineHeight, LINE_HEIGHT_RANGE)
     val pageMarginsSetting = intSetting(PAGE_MARGINS_KEY, pageMargins, PAGE_MARGINS_RANGE)
-    val paragraphSpacingSetting = intSetting(PARAGRAPH_SPACING_KEY, paragraphSpacing, PARAGRAPH_SPACING_RANGE)
     val textAlignmentSetting = stringSetting(TEXT_ALIGNMENT_KEY, textAlignment, SUPPORTED_TEXT_ALIGNMENTS)
     val layoutModeSetting = ViewerSettingDefinition(
         id = ViewerSettingId(PROVIDER_ID, LAYOUT_MODE_KEY),
@@ -53,7 +51,6 @@ class HtmlProseSettingsProvider(
         fontSizeSetting,
         lineHeightSetting,
         pageMarginsSetting,
-        paragraphSpacingSetting,
         textAlignmentSetting,
         layoutModeSetting,
         tapNavigationSetting,
@@ -99,7 +96,6 @@ class HtmlProseSettingsProvider(
         const val FONT_SIZE_KEY = "font_size_percent"
         const val LINE_HEIGHT_KEY = "line_height_percent"
         const val PAGE_MARGINS_KEY = "page_margins_percent"
-        const val PARAGRAPH_SPACING_KEY = "paragraph_spacing_percent"
         const val TEXT_ALIGNMENT_KEY = "text_alignment"
         const val LAYOUT_MODE_KEY = "layout_mode"
         const val TAP_NAVIGATION_KEY = "tap_navigation"
@@ -131,6 +127,5 @@ class HtmlProseSettingsProvider(
         val FONT_SIZE_RANGE = 70..200
         val LINE_HEIGHT_RANGE = 100..220
         val PAGE_MARGINS_RANGE = 0..200
-        val PARAGRAPH_SPACING_RANGE = 0..200
     }
 }

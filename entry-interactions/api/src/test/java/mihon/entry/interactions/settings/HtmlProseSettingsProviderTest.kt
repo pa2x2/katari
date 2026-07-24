@@ -14,8 +14,8 @@ class HtmlProseSettingsProviderTest {
     fun `provider exposes stable validated prose settings`() {
         provider.id shouldBe "builtin.book.prose.html"
         provider.category shouldBe ViewerSettingsCategory.READER
-        provider.settings shouldHaveSize 11
-        provider.settings.map { it.id.key }.toSet() shouldHaveSize 11
+        provider.settings shouldHaveSize 10
+        provider.settings.map { it.id.key }.toSet() shouldHaveSize 10
         provider.settings.all { it.id.providerId == provider.id } shouldBe true
         provider.settings.all { it.profilePreference.key().startsWith("book.prose.html.") } shouldBe true
     }
@@ -40,6 +40,5 @@ class HtmlProseSettingsProviderTest {
         provider.fontSizeSetting.validate(200) shouldBe true
         provider.lineHeightSetting.validate(221) shouldBe false
         provider.pageMarginsSetting.validate(-1) shouldBe false
-        provider.paragraphSpacingSetting.validate(201) shouldBe false
     }
 }

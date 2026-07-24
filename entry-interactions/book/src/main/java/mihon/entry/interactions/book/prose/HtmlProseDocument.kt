@@ -33,7 +33,7 @@ internal data class ParsedProseDocument(
     val anchors: Map<String, Int>,
 )
 
-internal fun parseProseHtml(bodyHtml: String, paragraphSpacingPercent: Int = 100): ParsedProseDocument {
+internal fun parseProseHtml(bodyHtml: String): ParsedProseDocument {
     val document = Jsoup.parseBodyFragment(bodyHtml)
     val anchorMarkers = buildList {
         document.select("[id], a[name]").forEach { element ->
@@ -47,14 +47,13 @@ internal fun parseProseHtml(bodyHtml: String, paragraphSpacingPercent: Int = 100
     val parsed = SpannableStringBuilder(
         HtmlCompat.fromHtml(document.body().html(), HtmlCompat.FROM_HTML_MODE_LEGACY),
     )
-    val replacement = "\n".repeat(1 + (paragraphSpacingPercent.coerceIn(0, 200) / 100))
     var index = parsed.length - 1
     while (index >= 0) {
         if (parsed[index] == '\n') {
             val end = index + 1
             while (index >= 0 && parsed[index] == '\n') index--
             val start = index + 1
-            if (end - start >= 2) parsed.replace(start, end, replacement)
+            if (end - start >= 2) parsed.replace(start, end, "\n\n")
         } else {
             index--
         }
