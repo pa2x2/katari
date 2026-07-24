@@ -26,8 +26,6 @@ import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildTransition
 import tachiyomi.core.common.util.system.logcat
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
 import kotlin.math.max
 import kotlin.math.min
@@ -76,12 +74,6 @@ internal class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boo
      */
     private var currentItem: ReaderViewerItem? = null
 
-    private val threshold: Int =
-        Injekt.get<MangaReaderSettingsProvider>()
-            .readerHideThreshold
-            .get()
-            .threshold
-
     private var autoScrollLevel = MangaReaderSettingsProvider.AUTO_SCROLL_LEVEL_DEFAULT
     private var autoScrollRemainderPx = 0.0
     private var lastAutoScrollFrameNanos = 0L
@@ -101,7 +93,8 @@ internal class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boo
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                     onScrolled()
 
-                    if ((dy > threshold || dy < -threshold) && activity.viewModel.state.value.menuVisible) {
+                    val hideThreshold = config.scrollHideThreshold
+                    if ((dy > hideThreshold || dy < -hideThreshold) && activity.viewModel.state.value.menuVisible) {
                         activity.hideMenu()
                     }
 

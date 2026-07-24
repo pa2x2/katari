@@ -42,9 +42,15 @@ internal class WebtoonConfig(
 
     var doubleTapZoomChangedListener: ((Boolean) -> Unit)? = null
 
+    var scrollHideThreshold = readerPreferences.readerHideThreshold.get().threshold
+        private set
+
     val theme = readerPreferences.readerTheme.get()
 
     init {
+        readerPreferences.readerHideThreshold
+            .register({ scrollHideThreshold = it.threshold })
+
         readerPreferences.cropBordersWebtoon
             .register({ imageCropBorders = it }, { imagePropertyChangedListener?.invoke() })
 

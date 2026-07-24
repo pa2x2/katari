@@ -144,6 +144,7 @@ class ReaderActivity : EntryInteractionActivity() {
     private var loadingIndicator: ReaderProgressIndicator? = null
     private var isAutoScrollRunning by mutableStateOf(false)
     private var autoScrollSpeed by mutableStateOf(MangaReaderSettingsProvider.AUTO_SCROLL_LEVEL_DEFAULT)
+    private var appliedRuntimeSettings: ReaderRuntimeSettings? = null
 
     var isScrollingThroughPages = false
         private set
@@ -200,7 +201,14 @@ class ReaderActivity : EntryInteractionActivity() {
 
         config = ReaderConfig()
         setMenuVisibility(viewModel.state.value.menuVisible)
-        autoScrollSpeed = readerPreferences.autoScrollSpeed.get()
+        readerPreferences.autoScrollSpeed.changes()
+            .onEach { speed ->
+                autoScrollSpeed = speed
+                if (isAutoScrollRunning) {
+                    viewModel.state.value.viewer?.updateAutoScrollSpeed(speed)
+                }
+            }
+            .launchIn(lifecycleScope)
 
         // Finish when incognito mode is disabled
         preferences.incognitoMode.changes()
@@ -224,10 +232,18 @@ class ReaderActivity : EntryInteractionActivity() {
             .launchIn(lifecycleScope)
 
         viewModel.state
-            .map { it.manga }
+            .map { state ->
+                state.manga?.let { manga ->
+                    ReaderRuntimeSettings(
+                        entryId = manga.id,
+                        readingMode = state.effectiveReadingMode,
+                        orientation = state.effectiveOrientation,
+                    )
+                }
+            }
             .distinctUntilChanged()
             .filterNotNull()
-            .onEach { updateViewer() }
+            .onEach(::applyRuntimeSettings)
             .launchIn(lifecycleScope)
 
         viewModel.state
@@ -245,9 +261,6 @@ class ReaderActivity : EntryInteractionActivity() {
                     }
                     ReaderViewModel.Event.PageChanged -> {
                         displayRefreshHost.flash()
-                    }
-                    is ReaderViewModel.Event.SetOrientation -> {
-                        setOrientation(event.orientation)
                     }
                     is ReaderViewModel.Event.SavedImage -> {
                         onSaveImageResult(event.result)
@@ -563,6 +576,21 @@ class ReaderActivity : EntryInteractionActivity() {
     /**
      * Called from the presenter when a manga is ready. Used to instantiate the appropriate viewer.
      */
+    private fun applyRuntimeSettings(settings: ReaderRuntimeSettings) {
+        val previousSettings = appliedRuntimeSettings
+        when (settings.changeFrom(previousSettings)) {
+            ReaderRuntimeSettings.Change.RecreateViewer -> {
+                updateViewer()
+                if (previousSettings != null) {
+                    viewModel.state.value.viewerChapters?.let(::setChapters)
+                }
+            }
+            ReaderRuntimeSettings.Change.UpdateOrientation -> setOrientation(settings.orientation)
+            ReaderRuntimeSettings.Change.None -> Unit
+        }
+        appliedRuntimeSettings = settings
+    }
+
     private fun updateViewer() {
         val prevViewer = viewModel.state.value.viewer
         val newViewer = ReadingMode.toViewer(viewModel.getMangaReadingMode(), this)

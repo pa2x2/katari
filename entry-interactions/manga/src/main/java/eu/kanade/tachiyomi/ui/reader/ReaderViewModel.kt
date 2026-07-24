@@ -643,13 +643,6 @@ internal class ReaderViewModel @JvmOverloads constructor(
                 // Save current page
                 val currChapter = currChapters.current
                 currChapter.requestedPage = chapterPageIndex.coerceAtLeast(0)
-
-                mutableState.update {
-                    it.copy(
-                        viewerChapters = currChapters,
-                    )
-                }
-                eventChannel.send(Event.ReloadViewerChapters)
             }
         }
     }
@@ -687,7 +680,6 @@ internal class ReaderViewModel @JvmOverloads constructor(
                         viewerChapters = currChapters,
                     )
                 }
-                eventChannel.send(Event.SetOrientation(getMangaOrientation()))
                 eventChannel.send(Event.ReloadViewerChapters)
             }
         }
@@ -992,7 +984,6 @@ internal class ReaderViewModel @JvmOverloads constructor(
     sealed interface Event {
         data object ReloadViewerChapters : Event
         data object PageChanged : Event
-        data class SetOrientation(val orientation: Int) : Event
         data class SetCoverResult(val result: SetAsCoverResult) : Event
 
         data class SavedImage(val result: SaveImageResult) : Event
