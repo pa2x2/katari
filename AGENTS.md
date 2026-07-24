@@ -17,6 +17,8 @@
 - Test observable behavior through the narrowest stable boundary that owns it. Avoid assertions about internal intermediate state, private control flow, or paths that supported production callers cannot reach.
 - Avoid tests for pass-through wrappers or exact collaborator call sequences unless the wrapper adds meaningful branching, transformation, ordering, transaction, or error semantics.
 - A test must be capable of failing for a plausible regression. Avoid tautological assertions, duplicating production calculations in the test, or snapshots of incidental structure with no reviewed compatibility requirement.
+- Do not promote incidental representations, historical implementation details, or arbitrary mock outputs into product contracts. Assertions about exact presentation, persistence, sequencing, or compatibility policy must be traceable to an established requirement, supported prior behavior, or an authoritative producer contract.
+- Mocks and fakes must preserve the real collaborator's documented guarantees and supported output space. Do not manufacture inputs that production cannot emit merely to exercise consumer-side normalization; test that invariant at the boundary that actually owns it.
 - Before finishing a change, re-read every added or modified test and remove or narrow cases that are now subsumed by stronger coverage introduced later in the same change.
 
 ## Toolchain
