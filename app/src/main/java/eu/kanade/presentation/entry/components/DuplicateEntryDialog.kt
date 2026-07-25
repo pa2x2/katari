@@ -60,6 +60,8 @@ import eu.kanade.presentation.more.settings.LocalPreferenceMinHeight
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.sourceNotInstalledName
+import mihon.entry.interactions.EntryMigrationAvailability
+import mihon.entry.interactions.EntryMigrationFeature
 import tachiyomi.domain.entry.model.DuplicateEntryCandidate
 import tachiyomi.domain.entry.model.DuplicateMatchReason
 import tachiyomi.domain.entry.model.Entry
@@ -88,6 +90,7 @@ fun DuplicateEntryDialog(
     modifier: Modifier = Modifier,
 ) {
     val sourceManager = remember { Injekt.get<SourceManager>() }
+    val migration = remember { Injekt.get<EntryMigrationFeature>() }
     val minHeight = LocalPreferenceMinHeight.current
     val horizontalPadding = PaddingValues(horizontal = TabbedDialogPaddings.Horizontal)
     val horizontalPaddingModifier = Modifier.padding(horizontalPadding)
@@ -131,7 +134,11 @@ fun DuplicateEntryDialog(
                     DuplicateEntryListItem(
                         duplicate = it,
                         getSourceInfo = { sourceManager.getDisplayInfo(it.entry.source) },
-                        onMigrate = { onMigrate(it.entry) },
+                        onMigrate = if (migration.supportsDuplicateMigration(it.entry)) {
+                            { onMigrate(it.entry) }
+                        } else {
+                            null
+                        },
                         onDismissRequest = onDismissRequest,
                         onOpenEntry = { onOpenEntry(it.entry) },
                     )
@@ -178,7 +185,7 @@ private fun DuplicateEntryListItem(
     getSourceInfo: () -> SourceDisplayInfo,
     onDismissRequest: () -> Unit,
     onOpenEntry: () -> Unit,
-    onMigrate: () -> Unit,
+    onMigrate: (() -> Unit)?,
 ) {
     val sourceInfo = getSourceInfo()
     val entry = duplicate.entry
@@ -335,27 +342,33 @@ private fun DuplicateEntryListItem(
                         )
                     }
 
-                    Button(
-                        onClick = {
-                            onDismissRequest()
-                            onMigrate()
-                        },
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Warning,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                        )
-                        Text(
-                            text = stringResource(MR.strings.action_migrate),
-                            modifier = Modifier.padding(start = MaterialTheme.padding.extraSmall),
-                        )
+                    if (onMigrate != null) {
+                        Button(
+                            onClick = {
+                                onDismissRequest()
+                                onMigrate()
+                            },
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Warning,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Text(
+                                text = stringResource(MR.strings.action_migrate),
+                                modifier = Modifier.padding(start = MaterialTheme.padding.extraSmall),
+                            )
+                        }
                     }
                 }
             }
         }
     }
+}
+
+internal fun EntryMigrationFeature.supportsDuplicateMigration(entry: Entry): Boolean {
+    return availability(entry) is EntryMigrationAvailability.Available
 }
 
 @Composable
