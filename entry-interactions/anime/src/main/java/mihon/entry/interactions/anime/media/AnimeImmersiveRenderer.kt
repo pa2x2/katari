@@ -29,6 +29,7 @@ import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -102,6 +103,9 @@ internal class AnimeImmersiveRenderer(
         var playerErrorMessage by remember(handle.chapterId, handle.stream.request.url) {
             mutableStateOf<String?>(null)
         }
+        var isBuffering by remember(handle.chapterId, handle.stream.request.url) {
+            mutableStateOf(false)
+        }
         var hasRenderedFirstFrame by remember(handle.chapterId, handle.stream.request.url) {
             mutableStateOf(false)
         }
@@ -116,11 +120,16 @@ internal class AnimeImmersiveRenderer(
                 exoPlayer.repeatMode = Player.REPEAT_MODE_ONE
                 exoPlayer.addListener(
                     object : Player.Listener {
+                        override fun onPlaybackStateChanged(playbackState: Int) {
+                            isBuffering = playbackState == Player.STATE_BUFFERING
+                        }
+
                         override fun onRenderedFirstFrame() {
                             hasRenderedFirstFrame = true
                         }
 
                         override fun onPlayerError(error: PlaybackException) {
+                            isBuffering = false
                             playerErrorMessage = error.message ?: unknownError
                         }
                     },
@@ -259,6 +268,16 @@ internal class AnimeImmersiveRenderer(
                     .alpha(videoAlpha),
             )
 
+            if (active && isBuffering && !controlsVisible) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(40.dp),
+                    color = Color.White,
+                    trackColor = Color.White.copy(alpha = 0.2f),
+                )
+            }
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -331,6 +350,7 @@ internal class AnimeImmersiveRenderer(
                         }
                         playbackSnapshot = player.capturePlaybackSnapshot()
                     },
+                    enabled = !isBuffering,
                     modifier = Modifier
                         .align(Alignment.Center)
                         .size(56.dp),
@@ -341,18 +361,31 @@ internal class AnimeImmersiveRenderer(
                             .background(Color.Black.copy(alpha = 0.48f), CircleShape),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(
-                            imageVector = if (playbackSnapshot.isPlaying) {
-                                Icons.Filled.Pause
-                            } else {
-                                Icons.Filled.PlayArrow
-                            },
-                            contentDescription = stringResource(
-                                if (playbackSnapshot.isPlaying) MR.strings.action_pause else MR.strings.action_play,
-                            ),
-                            modifier = Modifier.size(28.dp),
-                            tint = Color.White,
-                        )
+                        if (isBuffering) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(28.dp),
+                                color = Color.White,
+                                trackColor = Color.White.copy(alpha = 0.2f),
+                                strokeWidth = 2.dp,
+                            )
+                        } else {
+                            Icon(
+                                imageVector = if (playbackSnapshot.isPlaying) {
+                                    Icons.Filled.Pause
+                                } else {
+                                    Icons.Filled.PlayArrow
+                                },
+                                contentDescription = stringResource(
+                                    if (playbackSnapshot.isPlaying) {
+                                        MR.strings.action_pause
+                                    } else {
+                                        MR.strings.action_play
+                                    },
+                                ),
+                                modifier = Modifier.size(28.dp),
+                                tint = Color.White,
+                            )
+                        }
                     }
                 }
                 IconButton(
