@@ -867,7 +867,7 @@ private fun ProseLoading(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier,
+        modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
