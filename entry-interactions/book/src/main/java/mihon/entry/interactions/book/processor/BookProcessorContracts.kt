@@ -96,4 +96,7 @@ internal interface BookPublicationSession : AutoCloseable {
     val publication: BookPublication
 
     fun validate(locator: BookLocator): Boolean
+
+    suspend fun reconcileMigratedLocator(locator: BookLocator): BookLocator? =
+        locator.takeIf(::validate)
 }

@@ -162,6 +162,13 @@ class ReadiumEpubProcessorTest {
         assertEquals(locator.copy(extensions = emptyMap()), restored.copy(extensions = emptyMap()))
         assertTrue(session.validate(locator))
 
+        val migrated = checkNotNull(
+            session.reconcileMigratedLocator(
+                BookLocator(resourceId = "missing-source-resource.xhtml", totalProgression = 0.2),
+            ),
+        )
+        assertTrue(session.validate(migrated))
+
         session.close()
     }
 

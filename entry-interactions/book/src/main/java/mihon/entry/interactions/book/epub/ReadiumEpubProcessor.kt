@@ -18,6 +18,7 @@ import mihon.entry.interactions.book.BookSessionCloseStack
 import mihon.entry.interactions.book.MaterializedBookResource
 import org.readium.r2.shared.publication.Layout
 import org.readium.r2.shared.publication.Publication
+import org.readium.r2.shared.publication.services.positions
 import org.readium.r2.shared.util.AbsoluteUrl
 import org.readium.r2.shared.util.Try
 import org.readium.r2.shared.util.asset.Asset
@@ -29,6 +30,7 @@ import org.readium.r2.shared.util.resource.Resource
 import org.readium.r2.shared.util.resource.ResourceFactory
 import org.readium.r2.streamer.PublicationOpener
 import org.readium.r2.streamer.parser.epub.EpubParser
+import kotlin.math.abs
 
 internal class ReadiumEpubProcessor(
     private val archiveValidator: EpubArchiveValidator = EpubArchiveValidator(),
@@ -190,6 +192,15 @@ internal class ReadiumPublicationSession(
 
     override fun validate(locator: BookLocator): Boolean =
         ReadiumLocatorAdapter.restore(locator, enginePublication) != null
+
+    override suspend fun reconcileMigratedLocator(locator: BookLocator): BookLocator? {
+        if (validate(locator)) return locator
+        val totalProgression = locator.totalProgression ?: return null
+        return enginePublication.positions()
+            .filter { it.locations.totalProgression != null }
+            .minByOrNull { abs(checkNotNull(it.locations.totalProgression) - totalProgression) }
+            ?.let(ReadiumLocatorAdapter::adapt)
+    }
 
     fun readiumPublication(): Publication = enginePublication
 

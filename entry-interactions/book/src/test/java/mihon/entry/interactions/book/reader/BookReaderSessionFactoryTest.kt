@@ -14,6 +14,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookLocator
@@ -53,6 +54,7 @@ class BookReaderSessionFactoryTest {
         )
         val progressRepository = mockk<EntryProgressRepository> {
             coEvery { get(entry.id, "volume-1", "publication.epub") } returns currentProgress
+            coEvery { getByEntryId(entry.id) } returns emptyList()
         }
         val events = mutableListOf<EntryMediaSessionEvent>()
         val source = mockk<UnifiedSource> {
@@ -134,6 +136,94 @@ class BookReaderSessionFactoryTest {
     }
 
     @Test
+    fun `first target open reconciles and rekeys pending migrated progress`() = runTest {
+        val entry = entry()
+        val chapter = chapter()
+        val sourceLocator = BookLocator("source-chapter.xhtml", progression = 0.25, totalProgression = 0.2)
+        val targetLocator = BookLocator("target-chapter.xhtml", progression = 0.3, totalProgression = 0.2)
+        val pending = EntryProgressState(
+            entryId = entry.id,
+            chapterId = chapter.id,
+            contentKey = BOOK_PENDING_MIGRATION_CONTENT_KEY,
+            resourceKey = bookPendingMigrationResourceKey(chapter.id),
+            locator = BookProgressLocatorCodec.encode(sourceLocator),
+            locatorUpdatedAt = 50L,
+        )
+        val resolved = pending.copy(
+            contentKey = "volume-1",
+            resourceKey = "publication.epub",
+            locator = BookProgressLocatorCodec.encode(targetLocator),
+        )
+        val promoted = slot<EntryProgressState>()
+        val progressRepository = mockk<EntryProgressRepository> {
+            coEvery { get(entry.id, "volume-1", "publication.epub") } returnsMany listOf(null, resolved)
+            coEvery { getByEntryId(entry.id) } returns listOf(pending)
+            coEvery { upsert(capture(promoted)) } returns Unit
+            coEvery { rekey(any(), any(), any(), any(), any(), any()) } returns Unit
+        }
+        val source = mockk<UnifiedSource> {
+            every { id } returns entry.source
+            coEvery { getMedia(any(), any()) } returns EntryMedia.Book(
+                descriptor = BookContentDescriptor("application/epub+zip"),
+                publicationKeyOverride = "volume-1",
+                catalog = BookResourceCatalog(
+                    resources = listOf(
+                        BookSourceResource(
+                            id = "publication.epub",
+                            location = BookResourceLocation.InlineBytes(byteArrayOf(1, 2, 3)),
+                        ),
+                    ),
+                ),
+                initialResourceId = "publication.epub",
+            )
+        }
+        val publicationSession = MigratingPublicationSession(targetLocator)
+        val processor = SessionFactoryTestProcessor(publicationSession)
+        val context = mockk<Context> {
+            every { applicationContext } returns this@mockk
+            every { contentResolver } returns mockk<ContentResolver>()
+            every { cacheDir } returns Files.createTempDirectory("book-reader-migration").toFile()
+        }
+        val factory = BookReaderSessionFactory(
+            entryRepository = mockk {
+                coEvery { getEntryById(entry.id) } returns entry
+            },
+            entryChapterRepository = mockk {
+                coEvery { getChapterById(chapter.id) } returns chapter
+            },
+            entryProgressRepository = progressRepository,
+            sourceManager = mockk {
+                every { get(entry.source) } returns source
+            },
+            processorRegistry = BookProcessorRegistry(listOf(processor)),
+            networkHelper = mockk {
+                every { client } returns mockk<OkHttpClient>()
+            },
+            materializationStore = mockk(relaxed = true),
+            downloadCache = emptyDownloadCache(),
+            mediaSession = mockk(relaxed = true),
+        )
+
+        val session = assertIs<BookReaderOpenResult.Success>(
+            factory.open(context, BookReaderRequest(entry.id, chapter.id), processor.id),
+        ).session
+
+        assertEquals(targetLocator, session.initialLocator)
+        assertEquals(targetLocator, BookProgressLocatorCodec.decode(promoted.captured.locator))
+        coVerify(exactly = 1) {
+            progressRepository.rekey(
+                entry.id,
+                chapter.id,
+                BOOK_PENDING_MIGRATION_CONTENT_KEY,
+                bookPendingMigrationResourceKey(chapter.id),
+                "volume-1",
+                "publication.epub",
+            )
+        }
+        session.close()
+    }
+
+    @Test
     fun `saving progress preserves a manually consumed child without resolving media`() = runTest {
         val chapter = chapter().copy(read = true)
         val events = mutableListOf<EntryMediaSessionEvent>()
@@ -183,6 +273,7 @@ class BookReaderSessionFactoryTest {
         }
         val progressRepository = mockk<EntryProgressRepository> {
             coEvery { get(owner.id, any(), any()) } returns null
+            coEvery { getByEntryId(owner.id) } returns emptyList()
         }
         val events = mutableListOf<EntryMediaSessionEvent>()
         val processor = SessionFactoryTestProcessor(TestPublicationSession())
@@ -292,4 +383,24 @@ private class TestPublicationSession : BookPublicationSession {
     override fun close() {
         closeCount++
     }
+}
+
+private class MigratingPublicationSession(
+    private val targetLocator: BookLocator,
+) : BookPublicationSession {
+    override val publication = BookPublication(
+        id = "target-book",
+        revision = "1",
+        title = "Target Book",
+        languages = emptyList(),
+        readingDirection = null,
+        readingOrder = emptyList(),
+        navigation = emptyList(),
+    )
+
+    override fun validate(locator: BookLocator): Boolean = locator.resourceId == targetLocator.resourceId
+
+    override suspend fun reconcileMigratedLocator(locator: BookLocator): BookLocator = targetLocator
+
+    override fun close() = Unit
 }

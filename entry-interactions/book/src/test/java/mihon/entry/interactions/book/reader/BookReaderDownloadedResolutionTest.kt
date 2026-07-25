@@ -54,6 +54,7 @@ class BookReaderDownloadedResolutionTest {
         val sourceManager = mockk<SourceManager>()
         val progressRepository = mockk<EntryProgressRepository> {
             coEvery { get(owner.id, "volume-1", "chapter") } returns null
+            coEvery { getByEntryId(owner.id) } returns emptyList()
         }
         val processor = DownloadedContentRecordingProcessor()
         val factory = BookReaderSessionFactory(

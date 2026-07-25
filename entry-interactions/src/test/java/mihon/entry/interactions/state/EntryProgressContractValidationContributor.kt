@@ -87,6 +87,12 @@ class EntryProgressContractValidationContributor : FeatureValidationContributor 
                                 targetEntry: Entry,
                                 resourceMappings: List<EntryProgressResourceMapping>,
                             ) = Unit
+
+                            override suspend fun prepareMigration(
+                                sourceEntry: Entry,
+                                targetEntry: Entry,
+                                resourceMappings: List<EntryProgressResourceMapping>,
+                            ): EntryProgressSnapshot = snapshot
                         },
                         repository = mockk(relaxed = true),
                         getEntryWithChapters = mockk(relaxed = true),

@@ -46,3 +46,5 @@ Downloaded chapters open without a network connection. Automatic downloads follo
 ## Reading progress
 
 Book processors report progress as a format-neutral reading location rather than requiring every format to use pages or chapters. Katari stores that location for the active profile, entry, openable child, and publication resource. EPUB progress may target a resource inside an archive, while serialized prose progress belongs to one independently openable source chapter.
+
+When migrating a book to another source, Katari carries saved progress to the matched target item and reconciles it when that target publication is first opened. Compatible locations are restored directly; otherwise prose uses its portable progression and EPUB uses the closest position exposed by the target publication. If the target reader cannot produce a valid location, consumed state is still preserved but the target item opens from the beginning.

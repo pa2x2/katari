@@ -229,17 +229,11 @@ internal class DefaultEntryProgressFeature(
         val inapplicableTypes = setOf(sourceEntry.type, targetEntry.type) - migrationTypes
         if (inapplicableTypes.isNotEmpty()) return EntryProgressMigrationPreparation.Inapplicable(inapplicableTypes)
 
-        val sourceStates = interaction.snapshot(sourceEntry).states
-            .associateBy { it.contentKey to it.resourceKey }
-        val targetStates = resourceMappings.mapNotNull { mapping ->
-            sourceStates[mapping.sourceContentKey to mapping.sourceResourceKey]?.copy(
-                contentKey = mapping.targetContentKey,
-                resourceKey = mapping.targetResourceKey,
-                sourceChildKey = mapping.targetResourceKey,
-            )
-        }
         return EntryProgressMigrationPreparation.Prepared(
-            EntryProgressMigrationPayload(targetEntry, EntryProgressSnapshot(targetStates)),
+            EntryProgressMigrationPayload(
+                targetEntry,
+                interaction.prepareMigration(sourceEntry, targetEntry, resourceMappings),
+            ),
         )
     }
 

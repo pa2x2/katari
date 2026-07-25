@@ -46,6 +46,29 @@ interface EntryProgressProcessor : EntryInteractionProvider {
         targetEntry: Entry,
         resourceMappings: List<EntryProgressResourceMapping>,
     )
+
+    /**
+     * Captures target-ready progress for durable Migration delivery.
+     *
+     * Entry types whose child identity differs from their persisted media identity may override this
+     * without replacing the shared Entry Migration transaction.
+     */
+    suspend fun prepareMigration(
+        sourceEntry: Entry,
+        targetEntry: Entry,
+        resourceMappings: List<EntryProgressResourceMapping>,
+    ): EntryProgressSnapshot {
+        val sourceStates = snapshot(sourceEntry).states.associateBy { it.contentKey to it.resourceKey }
+        return EntryProgressSnapshot(
+            resourceMappings.mapNotNull { mapping ->
+                sourceStates[mapping.sourceContentKey to mapping.sourceResourceKey]?.copy(
+                    contentKey = mapping.targetContentKey,
+                    resourceKey = mapping.targetResourceKey,
+                    sourceChildKey = mapping.targetResourceKey,
+                )
+            },
+        )
+    }
 }
 
 val EntryProgressCapability = entryInteractionCapability<EntryProgressProcessor>(

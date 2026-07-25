@@ -142,6 +142,17 @@ internal class HtmlProseChapterSession(
         locator.resourceId == resourceId &&
             locator.progression?.let { it.isFinite() && it in 0.0..1.0 } != false
 
+    override suspend fun reconcileMigratedLocator(locator: BookLocator): BookLocator? {
+        if (validate(locator)) return locator
+        val progression = locator.progression ?: locator.totalProgression ?: return null
+        return BookLocator(
+            resourceId = resourceId,
+            progression = progression,
+            totalProgression = locator.totalProgression,
+            textContext = locator.textContext,
+        )
+    }
+
     override fun close() = Unit
 }
 

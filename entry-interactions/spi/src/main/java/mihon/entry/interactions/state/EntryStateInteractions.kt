@@ -26,6 +26,12 @@ interface EntryProgressInteraction {
         targetEntry: Entry,
         resourceMappings: List<EntryProgressResourceMapping>,
     )
+
+    suspend fun prepareMigration(
+        sourceEntry: Entry,
+        targetEntry: Entry,
+        resourceMappings: List<EntryProgressResourceMapping>,
+    ): EntryProgressSnapshot
 }
 
 interface EntryPlaybackPreferencesInteraction {

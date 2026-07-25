@@ -57,6 +57,21 @@ internal class ProviderBackedEntryProgressInteraction(
         processor.requireMatchingEntryType("progress", targetEntry, processors.keys)
         processor.copy(sourceEntry, targetEntry, resourceMappings)
     }
+
+    override suspend fun prepareMigration(
+        sourceEntry: Entry,
+        targetEntry: Entry,
+        resourceMappings: List<EntryProgressResourceMapping>,
+    ): EntryProgressSnapshot {
+        require(sourceEntry.type == targetEntry.type) {
+            "Progress Migration requires matching Entry types, but source was ${sourceEntry.type} and target was " +
+                targetEntry.type
+        }
+        val processor = processors.requireProcessor("progress", sourceEntry.type)
+        processor.requireMatchingEntryType("progress", sourceEntry, processors.keys)
+        processor.requireMatchingEntryType("progress", targetEntry, processors.keys)
+        return processor.prepareMigration(sourceEntry, targetEntry, resourceMappings)
+    }
 }
 
 internal class ProviderBackedEntryPlaybackPreferencesInteraction(

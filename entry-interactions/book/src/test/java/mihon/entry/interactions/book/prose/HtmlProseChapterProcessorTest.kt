@@ -8,6 +8,7 @@ import mihon.book.api.BookContentResource
 import mihon.book.api.BookContentResourceGroup
 import mihon.book.api.BookContentResourcePage
 import mihon.book.api.BookFailureReason
+import mihon.book.api.BookLocator
 import mihon.book.api.BookResourceAvailability
 import mihon.book.api.BookResourceCapability
 import mihon.entry.interactions.book.BookByteRange
@@ -66,6 +67,32 @@ class HtmlProseChapterProcessorTest {
         assertEquals(listOf("#note"), urls)
         assertTrue("note" in session.document.document.anchors)
         assertEquals(1, content.openCount)
+    }
+
+    @Test
+    fun `migration maps portable progression onto the target prose resource`() = runTest {
+        val result = assertIs<BookOpenResult.Success>(
+            processor.open(TestProseContentSession(html = "<p>Target chapter</p>")),
+        )
+        val session = assertIs<HtmlProseChapterSession>(result.session)
+
+        val reconciled = session.reconcileMigratedLocator(
+            BookLocator(
+                resourceId = "source-chapter",
+                progression = 0.4,
+                totalProgression = 0.4,
+                fragments = listOf("source-anchor"),
+            ),
+        )
+
+        assertEquals(
+            BookLocator(
+                resourceId = "chapter-7",
+                progression = 0.4,
+                totalProgression = 0.4,
+            ),
+            reconciled,
+        )
     }
 
     @Test

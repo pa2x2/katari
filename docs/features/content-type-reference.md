@@ -29,7 +29,7 @@ Status meanings:
 | Bookmark individual child items | — | — | ✓ |
 | Show gaps between missing child items | — | — | ✓ |
 | Filter child items by release group | — | — | ✓ |
-| Migrate an entry to another source | ✓ | — | ✓ |
+| Migrate an entry to another source | ✓ | ✓ | ✓ |
 | Clear temporary media cache manually/on app launch | ✓ | ✓ | ✓ |
 | Preserve playback preferences through backup and migration | ✓ | — | — |
 | Configure media viewer settings | ✓ | ✓ | ✓ |

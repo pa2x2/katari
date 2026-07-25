@@ -7,6 +7,7 @@ import mihon.entry.interactions.EntryProgressSnapshot
 import mihon.entry.interactions.EntryProgressStateSnapshot
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryProgressState
+import tachiyomi.domain.entry.model.progressResourceKey
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 
@@ -23,7 +24,7 @@ internal class BookProgressProcessor(
                 state.toSnapshot(
                     sourceChildKey = state.chapterId
                         ?.let { entryChapterRepository.getChapterById(it) }
-                        ?.url,
+                        ?.progressResourceKey,
                 )
             },
         )
@@ -31,9 +32,11 @@ internal class BookProgressProcessor(
 
     override suspend fun restore(entry: Entry, snapshot: EntryProgressSnapshot) {
         entry.requireBook()
+        val chaptersByProgressKey = entryChapterRepository.getChaptersByEntryIdAwait(entry.id)
+            .associateBy { it.progressResourceKey }
         snapshot.states.forEach { state ->
             val chapterId = state.sourceChildKey
-                ?.let { entryChapterRepository.getChapterByUrlAndEntryId(it, entry.id) }
+                ?.let(chaptersByProgressKey::get)
                 ?.id
             entryProgressRepository.mergeAndSyncChild(state.toDomainState(entry.id, chapterId))
         }
@@ -60,6 +63,29 @@ internal class BookProgressProcessor(
                 ),
             )
         }
+    }
+
+    override suspend fun prepareMigration(
+        sourceEntry: Entry,
+        targetEntry: Entry,
+        resourceMappings: List<EntryProgressResourceMapping>,
+    ): EntryProgressSnapshot {
+        sourceEntry.requireBook()
+        targetEntry.requireBook()
+        val sourceStatesByChild = snapshot(sourceEntry).states
+            .mapNotNull { state -> state.sourceChildKey?.let { it to state } }
+            .toMap()
+        return EntryProgressSnapshot(
+            resourceMappings.mapNotNull { mapping ->
+                val targetChapterId = mapping.targetChapterId ?: return@mapNotNull null
+                sourceStatesByChild[mapping.sourceResourceKey]?.copy(
+                    contentKey = BOOK_PENDING_MIGRATION_CONTENT_KEY,
+                    resourceKey = bookPendingMigrationResourceKey(targetChapterId),
+                    sourceChildKey = mapping.targetResourceKey,
+                    resourceRevision = null,
+                )
+            },
+        )
     }
 }
 

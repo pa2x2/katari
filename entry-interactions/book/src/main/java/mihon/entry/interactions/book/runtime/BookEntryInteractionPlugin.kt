@@ -13,6 +13,7 @@ import mihon.entry.interactions.EntryLibraryProgressCapability
 import mihon.entry.interactions.EntryMediaCacheCapability
 import mihon.entry.interactions.EntryMediaSessionCapability
 import mihon.entry.interactions.EntryMediaSessionProcessor
+import mihon.entry.interactions.EntryMigrationCapability
 import mihon.entry.interactions.EntryOpenCapability
 import mihon.entry.interactions.EntryOutsideReleasePeriodFilterCapability
 import mihon.entry.interactions.EntryProgressCapability
@@ -61,6 +62,7 @@ fun bookEntryInteractionPlugin(
     val childListProcessor = BookChildListProcessor(dependencies.entryProgressRepository)
     val libraryProgressProvider = BookLibraryProgressProvider(dependencies.entryProgressRepository)
     val outsideReleasePeriodFilterProvider = BookOutsideReleasePeriodFilterProvider()
+    val migrationProvider = BookMigrationProvider()
     return object : EntryInteractionPlugin {
         override val type = EntryType.BOOK
         override val owner = ContributionOwner("entry-interactions.book")
@@ -76,6 +78,7 @@ fun bookEntryInteractionPlugin(
             add(EntryTypePresentationCapability.bind(BookEntryTypePresentationProvider))
             add(EntryMediaCacheCapability.bind(BookMediaCacheProvider { Injekt.get() }))
             add(EntryMediaSessionCapability.bind(dependencies.mediaSession))
+            add(EntryMigrationCapability.bind(migrationProvider))
             if (downloadProcessor != null) {
                 add(EntryDownloadCapability.bind(downloadProcessor))
                 add(EntryBulkDownloadCandidateCapability.bind(downloadProcessor))
