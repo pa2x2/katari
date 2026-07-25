@@ -1,22 +1,19 @@
 package eu.kanade.tachiyomi.ui.browse.source.browse.filter
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.ListItem
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -66,9 +63,27 @@ internal fun AutocompleteFilterItem(
         onDispose(controller::close)
     }
 
-    Column {
+    val autocompleteState = controller.state
+    val expanded = when (autocompleteState) {
+        FilterAutocompleteUiState.Idle -> false
+        FilterAutocompleteUiState.Loading -> true
+        is FilterAutocompleteUiState.Suggestions -> autocompleteState.items.isNotEmpty()
+        is FilterAutocompleteUiState.Error -> true
+    }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { shouldExpand ->
+            if (shouldExpand) {
+                controller.retry()
+            } else {
+                controller.dismissSuggestions()
+            }
+        },
+    ) {
         OutlinedTextField(
             modifier = Modifier
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable)
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 4.dp)
                 .onFocusChanged { controller.updateFocus(it.isFocused) },
@@ -90,59 +105,58 @@ internal fun AutocompleteFilterItem(
             singleLine = true,
         )
 
-        when (val state = controller.state) {
-            FilterAutocompleteUiState.Idle -> Unit
-            FilterAutocompleteUiState.Loading -> {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                ) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                    Text(
-                        text = stringResource(MR.strings.loading),
-                        modifier = Modifier.padding(start = 12.dp),
-                        style = MaterialTheme.typography.bodyMedium,
+        ExposedDropdownMenu(
+            modifier = Modifier.exposedDropdownSize(matchAnchorWidth = true),
+            expanded = expanded,
+            onDismissRequest = controller::dismissSuggestions,
+        ) {
+            when (val state = autocompleteState) {
+                FilterAutocompleteUiState.Idle -> Unit
+                FilterAutocompleteUiState.Loading -> {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(MR.strings.loading)) },
+                        onClick = {},
+                        enabled = false,
+                        leadingIcon = {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                        },
+                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                     )
                 }
-            }
-            is FilterAutocompleteUiState.Suggestions -> {
-                state.items.forEachIndexed { index, suggestion ->
-                    key(suggestion.id) {
-                        ListItem(
-                            headlineContent = { Text(suggestion.label) },
-                            modifier = Modifier.clickable {
-                                val edit = controller.applySuggestion(suggestion) ?: return@clickable
+                is FilterAutocompleteUiState.Suggestions -> {
+                    state.items.forEach { suggestion ->
+                        DropdownMenuItem(
+                            text = { Text(suggestion.label) },
+                            onClick = {
+                                val edit = controller.applySuggestion(suggestion)
+                                    ?: return@DropdownMenuItem
                                 fieldValue = TextFieldValue(
                                     text = edit.text,
                                     selection = TextRange(edit.selectionStart, edit.selectionEnd),
                                 )
                                 onUpdate()
                             },
+                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                         )
                     }
-                    if (index != state.items.lastIndex) {
-                        HorizontalDivider()
-                    }
                 }
-            }
-            is FilterAutocompleteUiState.Error -> {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                ) {
-                    Text(
-                        text = stringResource(MR.strings.internal_error),
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(vertical = 12.dp),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium,
+                is FilterAutocompleteUiState.Error -> {
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = stringResource(MR.strings.internal_error),
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        },
+                        onClick = controller::retry,
+                        trailingIcon = {
+                            Text(
+                                text = stringResource(MR.strings.action_retry),
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        },
+                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                     )
-                    TextButton(onClick = controller::retry) {
-                        Text(stringResource(MR.strings.action_retry))
-                    }
                 }
             }
         }

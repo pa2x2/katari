@@ -64,6 +64,11 @@ internal class FilterAutocompleteController(
         }
     }
 
+    fun dismissSuggestions() {
+        cancelRequest()
+        state = FilterAutocompleteUiState.Idle
+    }
+
     fun applySuggestion(suggestion: EntryFilterSuggestion): EntryFilterTextEdit? {
         val edit = runCatching {
             filter.applySuggestion(input, suggestion)

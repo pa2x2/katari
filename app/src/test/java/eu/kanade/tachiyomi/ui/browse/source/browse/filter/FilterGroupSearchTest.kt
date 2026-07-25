@@ -16,7 +16,7 @@ class FilterGroupSearchTest {
         )
 
         filters.filterGroupOptions("romnce").map { it.name } shouldBe
-                listOf("Romance", "Romance adventure")
+            listOf("Romance", "Romance adventure")
     }
 
     private fun options(count: Int): List<EntryFilter<*>> {
