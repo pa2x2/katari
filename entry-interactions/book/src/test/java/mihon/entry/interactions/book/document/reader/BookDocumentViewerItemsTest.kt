@@ -53,7 +53,9 @@ class BookDocumentViewerItemsTest {
 
         val location = bookDocumentViewerLocation(
             items = listOf(item),
-            visibleItems = listOf(BookDocumentVisibleItemLayout(index = 0, offset = 0, size = 800)),
+            visibleItems = listOf(
+                BookDocumentVisibleItemLayout(index = 0, key = item.key, offset = 0, size = 800),
+            ),
             viewportStartOffset = 0,
             viewportEndOffset = 800,
         )
@@ -72,8 +74,8 @@ class BookDocumentViewerItemsTest {
         val location = bookDocumentViewerLocation(
             items = items,
             visibleItems = listOf(
-                BookDocumentVisibleItemLayout(index = 0, offset = -1_400, size = 2_000),
-                BookDocumentVisibleItemLayout(index = 1, offset = 600, size = 100),
+                BookDocumentVisibleItemLayout(index = 0, key = items[0].key, offset = -1_400, size = 2_000),
+                BookDocumentVisibleItemLayout(index = 1, key = items[1].key, offset = 600, size = 100),
             ),
             viewportStartOffset = 0,
             viewportEndOffset = 800,
@@ -95,14 +97,58 @@ class BookDocumentViewerItemsTest {
         val location = bookDocumentViewerLocation(
             items = items,
             visibleItems = listOf(
-                BookDocumentVisibleItemLayout(index = 0, offset = -600, size = 700),
-                BookDocumentVisibleItemLayout(index = 1, offset = 100, size = 700),
+                BookDocumentVisibleItemLayout(index = 0, key = items[0].key, offset = -600, size = 700),
+                BookDocumentVisibleItemLayout(index = 1, key = items[1].key, offset = 100, size = 700),
             ),
             viewportStartOffset = 0,
             viewportEndOffset = 800,
         )
 
         assertEquals(null, location)
+    }
+
+    @Test
+    fun `location follows visible key when section crossing shifts item indexes`() {
+        val first = section("first", listOf("One", "Two"))
+        val second = section("second", listOf("Three", "Four"))
+        val third = section("third", listOf("Five", "Six"))
+        val fourth = section("fourth", listOf("Seven", "Eight"))
+        val loaded = listOf(first, second, third, fourth).associateBy { it.owner }
+        val beforeCrossing = buildBookDocumentViewerItems(
+            window = EntryChildWindow("second", "first", "third"),
+            loaded = loaded,
+            keyOf = { it },
+        )
+        val afterCrossing = buildBookDocumentViewerItems(
+            window = EntryChildWindow("third", "second", "fourth"),
+            loaded = loaded,
+            keyOf = { it },
+        )
+        val visible = beforeCrossing
+            .filterIsInstance<BookDocumentViewerItem.Block<String>>()
+            .last { it.section.owner == "second" }
+        val staleIndex = beforeCrossing.indexOf(visible)
+        assertEquals(
+            "third",
+            assertIs<BookDocumentViewerItem.Block<String>>(afterCrossing[staleIndex]).section.owner,
+        )
+
+        val location = bookDocumentViewerLocation(
+            items = afterCrossing,
+            visibleItems = listOf(
+                BookDocumentVisibleItemLayout(
+                    index = staleIndex,
+                    key = visible.key,
+                    offset = 0,
+                    size = 800,
+                ),
+            ),
+            viewportStartOffset = 0,
+            viewportEndOffset = 800,
+        )
+
+        assertNotNull(location)
+        assertEquals("second", location.section.owner)
     }
 
     @Test

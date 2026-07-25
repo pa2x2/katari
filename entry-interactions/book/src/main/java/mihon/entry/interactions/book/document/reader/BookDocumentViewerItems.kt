@@ -84,6 +84,7 @@ private fun <T, K> EntryChildTransition<T>.toViewerItem(
 
 internal data class BookDocumentVisibleItemLayout(
     val index: Int,
+    val key: Any,
     val offset: Int,
     val size: Int,
 )
@@ -107,7 +108,12 @@ internal fun <T> bookDocumentViewerLocation(
         abs((it.offset + it.size / 2) - viewportAnchor)
     }
         ?: return null
-    val item = items.getOrNull(layout.index) as? BookDocumentViewerItem.Block ?: return null
+    // A chapter-window update can expose layout indexes from the previous item set for one frame.
+    // Keep the index as the normal fast path, but use the stable key when that index has moved.
+    val item = (
+        items.getOrNull(layout.index)?.takeIf { it.key == layout.key }
+            ?: items.firstOrNull { it.key == layout.key }
+        ) as? BookDocumentViewerItem.Block ?: return null
     val fraction = (viewportAnchor - layout.offset).toFloat()
         .div(layout.size.coerceAtLeast(1))
         .coerceIn(0f, 1f)

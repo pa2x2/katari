@@ -45,6 +45,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -585,9 +586,28 @@ private fun ScrollingProseViewer(
     }?.coerceAtLeast(0) ?: 0
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
     var initialPositionRestored by remember(listState) { mutableStateOf(false) }
+    var pendingWindowAnchor by remember(listState) {
+        mutableStateOf<ProseViewerWindowAnchor?>(null)
+    }
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
     val textViews = remember { mutableMapOf<String, TextView>() }
+    val windowAnchor = pendingWindowAnchor?.takeIf {
+        it.destinationChapterId == state.currentChapterId
+    }
+    val windowAnchorIndex = windowAnchor?.let { anchor ->
+        items.indexOfFirst { it.key == anchor.itemKey }
+    } ?: -1
+    // Entering an adjacent chapter rotates the previous/current/next window. If the outgoing
+    // previous chapter has a different block count, retaining the old numeric index can clamp the
+    // list into the following chapter. Re-anchor the next measure to the visible stable key instead.
+    SideEffect {
+        if (windowAnchor == null) return@SideEffect
+        if (windowAnchorIndex >= 0) {
+            listState.requestScrollToItem(windowAnchorIndex, windowAnchor.scrollOffset)
+        }
+        pendingWindowAnchor = null
+    }
 
     suspend fun scrollToPosition(
         sectionKey: String,
@@ -737,8 +757,8 @@ private fun ScrollingProseViewer(
             }
         }
     }
-    LaunchedEffect(listState, items, initialPositionRestored) {
-        if (!initialPositionRestored) return@LaunchedEffect
+    LaunchedEffect(listState, items, initialPositionRestored, windowAnchor) {
+        if (!initialPositionRestored || windowAnchor != null) return@LaunchedEffect
         snapshotFlow { listState.layoutInfo }
             .map { info ->
                 // LazyListItemInfo offsets are mutable and the instances are reused between scroll frames.
@@ -746,7 +766,12 @@ private fun ScrollingProseViewer(
                 bookDocumentViewerLocation(
                     items = items,
                     visibleItems = info.visibleItemsInfo.map {
-                        BookDocumentVisibleItemLayout(index = it.index, offset = it.offset, size = it.size)
+                        BookDocumentVisibleItemLayout(
+                            index = it.index,
+                            key = it.key,
+                            offset = it.offset,
+                            size = it.size,
+                        )
                     },
                     viewportStartOffset = info.viewportStartOffset,
                     viewportEndOffset = info.viewportEndOffset,
@@ -765,7 +790,18 @@ private fun ScrollingProseViewer(
                         documentPosition = location.position,
                     ),
                 )
-                if (location.section.owner.id != state.currentChapterId) onChapterEntered(location.section.owner)
+                if (location.section.owner.id != state.currentChapterId) {
+                    val firstVisible = listState.layoutInfo.visibleItemsInfo.firstOrNull()
+                    val itemKey = firstVisible?.key as? String
+                    if (itemKey != null) {
+                        pendingWindowAnchor = ProseViewerWindowAnchor(
+                            destinationChapterId = location.section.owner.id,
+                            itemKey = itemKey,
+                            scrollOffset = listState.firstVisibleItemScrollOffset,
+                        )
+                    }
+                    onChapterEntered(location.section.owner)
+                }
             }
     }
 }
@@ -1041,6 +1077,12 @@ private data class ProseViewerPosition(
     val currentPage: Int,
     val totalPages: Int,
     val documentPosition: BookDocumentPosition?,
+)
+
+private data class ProseViewerWindowAnchor(
+    val destinationChapterId: Long,
+    val itemKey: String,
+    val scrollOffset: Int,
 )
 
 private data class ProseViewerActions(
