@@ -46,4 +46,73 @@ class VideoPlayerGestureTest {
             playerHeight = 640,
         ) shouldBe 0f
     }
+
+    @Test
+    fun `seek position moves five seconds and stays within the video duration`() {
+        resolveVideoPlayerSeekPosition(
+            positionMs = 20_000L,
+            durationMs = 60_000L,
+            direction = VideoPlayerSeekDirection.Backward,
+        ) shouldBe 15_000L
+        resolveVideoPlayerSeekPosition(
+            positionMs = 20_000L,
+            durationMs = 60_000L,
+            direction = VideoPlayerSeekDirection.Forward,
+        ) shouldBe 25_000L
+        resolveVideoPlayerSeekPosition(
+            positionMs = 2_000L,
+            durationMs = 60_000L,
+            direction = VideoPlayerSeekDirection.Backward,
+        ) shouldBe 0L
+        resolveVideoPlayerSeekPosition(
+            positionMs = 58_000L,
+            durationMs = 60_000L,
+            direction = VideoPlayerSeekDirection.Forward,
+        ) shouldBe 60_000L
+    }
+
+    @Test
+    fun `seek feedback accumulates a same-direction burst`() {
+        val initial = nextVideoPlayerSeekFeedbackState(
+            previousState = null,
+            direction = VideoPlayerSeekDirection.Forward,
+            hidePlayerChrome = true,
+            sequence = 1L,
+            updatedAtMillis = 1_000L,
+        )
+
+        nextVideoPlayerSeekFeedbackState(
+            previousState = initial,
+            direction = VideoPlayerSeekDirection.Forward,
+            hidePlayerChrome = true,
+            sequence = 2L,
+            updatedAtMillis = 1_900L,
+        ).totalSeconds shouldBe 10
+    }
+
+    @Test
+    fun `seek feedback resets outside a same-direction burst`() {
+        val initial = nextVideoPlayerSeekFeedbackState(
+            previousState = null,
+            direction = VideoPlayerSeekDirection.Forward,
+            hidePlayerChrome = true,
+            sequence = 1L,
+            updatedAtMillis = 1_000L,
+        )
+
+        nextVideoPlayerSeekFeedbackState(
+            previousState = initial,
+            direction = VideoPlayerSeekDirection.Forward,
+            hidePlayerChrome = true,
+            sequence = 2L,
+            updatedAtMillis = 1_901L,
+        ).totalSeconds shouldBe 5
+        nextVideoPlayerSeekFeedbackState(
+            previousState = initial,
+            direction = VideoPlayerSeekDirection.Backward,
+            hidePlayerChrome = true,
+            sequence = 2L,
+            updatedAtMillis = 1_500L,
+        ).totalSeconds shouldBe 5
+    }
 }

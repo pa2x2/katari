@@ -591,21 +591,12 @@ class VideoPlayerActivity : AppCompatActivity() {
                 }
                 val triggerSeekFeedback: (VideoPlayerSeekDirection, Boolean) -> Unit = { direction, hidePlayerChrome ->
                     seekFeedbackSequence += 1L
-                    val now = System.currentTimeMillis()
-                    val previousState = seekFeedbackState
-                    val isBurstContinuation = previousState != null &&
-                        previousState.direction == direction &&
-                        now - previousState.updatedAtMillis <= SEEK_FEEDBACK_BURST_WINDOW_MS
-                    seekFeedbackState = VideoPlayerSeekFeedbackState(
+                    seekFeedbackState = nextVideoPlayerSeekFeedbackState(
+                        previousState = seekFeedbackState,
                         direction = direction,
-                        totalSeconds = if (isBurstContinuation) {
-                            previousState.totalSeconds + (SEEK_INCREMENT_MS / 1000L).toInt()
-                        } else {
-                            (SEEK_INCREMENT_MS / 1000L).toInt()
-                        },
                         hidePlayerChrome = hidePlayerChrome,
                         sequence = seekFeedbackSequence,
-                        updatedAtMillis = now,
+                        updatedAtMillis = System.currentTimeMillis(),
                     )
                 }
                 val triggerSideGestureFeedback: (
@@ -661,35 +652,25 @@ class VideoPlayerActivity : AppCompatActivity() {
                         maxLevel,
                     )
                 }
-                val seekBy: (Long) -> Unit = { deltaMs ->
+                val seekInDirection: (VideoPlayerSeekDirection) -> Unit = { direction ->
                     val durationMs = playbackSnapshot.durationMs.takeIf { it > 0L }
                         ?: currentPlayer.duration.coerceAtLeast(0L)
                     val basePositionMs = if (isScrubbing) scrubPositionMs else currentPlayer.currentPosition
-                    val targetPositionMs = (basePositionMs + deltaMs).coerceToPlaybackDuration(durationMs)
+                    val targetPositionMs = resolveVideoPlayerSeekPosition(
+                        positionMs = basePositionMs,
+                        durationMs = durationMs,
+                        direction = direction,
+                    )
 
                     isScrubbing = false
                     scrubPositionMs = targetPositionMs
                     playbackSnapshot = playbackSnapshot.copy(positionMs = targetPositionMs)
                     currentPlayer.seekTo(targetPositionMs)
                 }
-                val resolveSeekDirectionFromTap: (Float, Int) -> VideoPlayerSeekDirection? = { tapX, width ->
-                    when {
-                        width <= 0 -> null
-                        tapX <= width / 3f -> VideoPlayerSeekDirection.Backward
-                        tapX >= width * 2f / 3f -> VideoPlayerSeekDirection.Forward
-                        else -> null
-                    }
-                }
                 val performGestureSeek: (VideoPlayerSeekDirection) -> Unit = { direction ->
                     controlsVisible = false
                     registerControllerInteraction(false)
-                    seekBy(
-                        if (direction == VideoPlayerSeekDirection.Backward) {
-                            -SEEK_INCREMENT_MS
-                        } else {
-                            SEEK_INCREMENT_MS
-                        },
-                    )
+                    seekInDirection(direction)
                     triggerSeekFeedback(direction, true)
                 }
                 val togglePlayback = {
@@ -930,7 +911,6 @@ class VideoPlayerActivity : AppCompatActivity() {
                 val latestControlsVisible by rememberUpdatedState(controlsVisible)
                 val latestControlsLocked by rememberUpdatedState(controlsLocked)
                 val latestRegisterControllerInteraction by rememberUpdatedState(registerControllerInteraction)
-                val latestResolveSeekDirectionFromTap by rememberUpdatedState(resolveSeekDirectionFromTap)
                 val latestPerformGestureSeek by rememberUpdatedState(performGestureSeek)
                 val latestSeekGestureModeActive by rememberUpdatedState(shouldHideChromeForSeekFeedback)
                 val latestSpeedBoostEligibility by rememberUpdatedState(
@@ -1129,7 +1109,10 @@ class VideoPlayerActivity : AppCompatActivity() {
                                             return true
                                         }
                                         if (!latestSettingsVisible && !subtitleEditorVisible) {
-                                            val direction = latestResolveSeekDirectionFromTap(e.x, playerView.width)
+                                            val direction = resolveVideoPlayerSeekDirectionFromTap(
+                                                tapX = e.x,
+                                                viewportWidth = playerView.width.toFloat(),
+                                            )
                                             if (direction != null) {
                                                 ignoreNextGestureSeekTapUp = true
                                                 latestPerformGestureSeek(direction)
@@ -1284,7 +1267,10 @@ class VideoPlayerActivity : AppCompatActivity() {
                                     latestSeekGestureModeActive &&
                                     motionEvent.actionMasked == MotionEvent.ACTION_UP
                                 ) {
-                                    val direction = latestResolveSeekDirectionFromTap(motionEvent.x, playerView.width)
+                                    val direction = resolveVideoPlayerSeekDirectionFromTap(
+                                        tapX = motionEvent.x,
+                                        viewportWidth = playerView.width.toFloat(),
+                                    )
                                     if (direction != null) {
                                         if (ignoreNextGestureSeekTapUp) {
                                             ignoreNextGestureSeekTapUp = false
@@ -1383,13 +1369,13 @@ class VideoPlayerActivity : AppCompatActivity() {
                             onPreviousEpisode = onPreviousEpisode,
                             onSeekBackward = {
                                 registerControllerInteraction(true)
-                                seekBy(-SEEK_INCREMENT_MS)
+                                seekInDirection(VideoPlayerSeekDirection.Backward)
                                 triggerSeekFeedback(VideoPlayerSeekDirection.Backward, false)
                             },
                             onTogglePlayback = togglePlayback,
                             onSeekForward = {
                                 registerControllerInteraction(true)
-                                seekBy(SEEK_INCREMENT_MS)
+                                seekInDirection(VideoPlayerSeekDirection.Forward)
                                 triggerSeekFeedback(VideoPlayerSeekDirection.Forward, false)
                             },
                             onNextEpisode = onNextEpisode,
@@ -1924,8 +1910,6 @@ class VideoPlayerActivity : AppCompatActivity() {
         private const val CONTROLS_AUTO_HIDE_DELAY_MS = 3_000L
         private const val PLAYBACK_SNAPSHOT_INTERVAL_MS = 250L
         private const val PAUSED_PLAYBACK_SNAPSHOT_INTERVAL_MS = 750L
-        private const val SEEK_INCREMENT_MS = 5_000L
-        private const val SEEK_FEEDBACK_BURST_WINDOW_MS = 900L
         private val DEFAULT_PICTURE_IN_PICTURE_ASPECT_RATIO = Rational(16, 9)
 
         fun newIntent(

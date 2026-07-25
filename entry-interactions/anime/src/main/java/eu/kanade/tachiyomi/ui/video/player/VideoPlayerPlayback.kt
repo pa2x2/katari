@@ -40,19 +40,6 @@ internal data class VideoPlayerPlaybackSnapshot(
     val playbackEnded: Boolean = false,
 )
 
-internal enum class VideoPlayerSeekDirection {
-    Backward,
-    Forward,
-}
-
-internal data class VideoPlayerSeekFeedbackState(
-    val direction: VideoPlayerSeekDirection,
-    val totalSeconds: Int,
-    val hidePlayerChrome: Boolean,
-    val sequence: Long,
-    val updatedAtMillis: Long,
-)
-
 internal data class VideoPlayerSeekPreviewState(
     val positionMs: Long = 0L,
     val visible: Boolean = false,

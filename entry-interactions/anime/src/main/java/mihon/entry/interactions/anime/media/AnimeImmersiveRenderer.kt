@@ -64,10 +64,16 @@ import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.ui.video.player.AnimePlayerBasePreferences
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerMediaCache
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerPlaybackSnapshot
+import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekDirection
+import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekFeedbackState
 import eu.kanade.tachiyomi.ui.video.player.buildVideoPlayer
 import eu.kanade.tachiyomi.ui.video.player.capturePlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.coerceToPlaybackDuration
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSeekFeedback
 import eu.kanade.tachiyomi.ui.video.player.formatPlaybackTimestamp
+import eu.kanade.tachiyomi.ui.video.player.nextVideoPlayerSeekFeedbackState
+import eu.kanade.tachiyomi.ui.video.player.resolveVideoPlayerSeekDirectionFromTap
+import eu.kanade.tachiyomi.ui.video.player.resolveVideoPlayerSeekPosition
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -139,11 +145,38 @@ internal class AnimeImmersiveRenderer(
         var playbackSnapshot by remember(player) { mutableStateOf(player.capturePlaybackSnapshot()) }
         var speedBoostActive by remember(player) { mutableStateOf(false) }
         var playIntent by remember(player) { mutableStateOf(true) }
+        var seekFeedbackSequence by remember(player) { mutableStateOf(0L) }
+        var seekFeedbackState by remember(player) { mutableStateOf<VideoPlayerSeekFeedbackState?>(null) }
         var muted by remember(player) { mutableStateOf(preferences.immersiveFeedMuted) }
         val audioManager = remember(context) {
             context.applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         }
         val latestPlayIntent by rememberUpdatedState(playIntent)
+        val latestControlsVisible by rememberUpdatedState(controlsVisible)
+        val latestOnToggleControls by rememberUpdatedState(onToggleControls)
+        val latestSeekFeedbackState by rememberUpdatedState(seekFeedbackState)
+        val performGestureSeek: (VideoPlayerSeekDirection) -> Unit = { direction ->
+            val durationMs = playbackSnapshot.durationMs.takeIf { it > 0L }
+                ?: player.duration.coerceAtLeast(0L)
+            player.seekTo(
+                resolveVideoPlayerSeekPosition(
+                    positionMs = player.currentPosition,
+                    durationMs = durationMs,
+                    direction = direction,
+                ),
+            )
+            playbackSnapshot = player.capturePlaybackSnapshot()
+            if (latestControlsVisible) latestOnToggleControls()
+            seekFeedbackSequence += 1L
+            seekFeedbackState = nextVideoPlayerSeekFeedbackState(
+                previousState = seekFeedbackState,
+                direction = direction,
+                hidePlayerChrome = true,
+                sequence = seekFeedbackSequence,
+                updatedAtMillis = System.currentTimeMillis(),
+            )
+        }
+        val latestPerformGestureSeek by rememberUpdatedState(performGestureSeek)
         val videoAlpha by animateFloatAsState(
             targetValue = if (hasRenderedFirstFrame) 1f else 0f,
             animationSpec = tween(durationMillis = 180),
@@ -282,7 +315,27 @@ internal class AnimeImmersiveRenderer(
                 modifier = Modifier
                     .fillMaxSize()
                     .pointerInput(player) {
+                        var suppressNextTap = false
                         detectTapGestures(
+                            onDoubleTap = { offset ->
+                                suppressNextTap = false
+                                resolveVideoPlayerSeekDirectionFromTap(
+                                    tapX = offset.x,
+                                    viewportWidth = size.width.toFloat(),
+                                )?.let(latestPerformGestureSeek)
+                            },
+                            onTap = { offset ->
+                                if (suppressNextTap) {
+                                    suppressNextTap = false
+                                } else if (latestSeekFeedbackState != null) {
+                                    resolveVideoPlayerSeekDirectionFromTap(
+                                        tapX = offset.x,
+                                        viewportWidth = size.width.toFloat(),
+                                    )?.let(latestPerformGestureSeek)
+                                } else {
+                                    latestOnToggleControls()
+                                }
+                            },
                             onPress = {
                                 coroutineScope {
                                     var boosted = false
@@ -292,14 +345,13 @@ internal class AnimeImmersiveRenderer(
                                         boosted = true
                                         speedBoostActive = true
                                     }
+                                    var released = false
                                     try {
-                                        val released = tryAwaitRelease()
-                                        if (!boosted && released) {
-                                            onToggleControls()
-                                        }
+                                        released = tryAwaitRelease()
                                     } finally {
                                         boostJob.cancel()
                                         if (boosted) {
+                                            suppressNextTap = released
                                             player.setPlaybackSpeed(NORMAL_PLAYBACK_SPEED)
                                             speedBoostActive = false
                                             playbackSnapshot = player.capturePlaybackSnapshot()
@@ -309,6 +361,11 @@ internal class AnimeImmersiveRenderer(
                             },
                         )
                     },
+            )
+
+            VideoPlayerSeekFeedback(
+                feedbackState = seekFeedbackState,
+                onDismissed = { seekFeedbackState = null },
             )
 
             if (speedBoostActive) {
