@@ -31,6 +31,8 @@ import eu.kanade.tachiyomi.ui.video.player.VideoPlayerEpisodeListEntry
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekFeedbackState
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekPreviewState
+import mihon.entry.interactions.EntryChildWebViewAction
+import mihon.entry.interactions.EntryChildWebViewResolution
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
@@ -69,6 +71,8 @@ internal fun VideoPlayerOverlay(
     onEnterPictureInPicture: () -> Unit,
     onToggleLock: () -> Unit,
     onOpenSettings: () -> Unit,
+    childWebView: EntryChildWebViewResolution.Available?,
+    onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
     onOpenEpisodes: () -> Unit,
     onDismissEpisodes: () -> Unit,
     onEpisodeSelected: (EntryChapter) -> Unit,
@@ -113,6 +117,8 @@ internal fun VideoPlayerOverlay(
                         onEnterPictureInPicture = onEnterPictureInPicture,
                         onToggleLock = onToggleLock,
                         onOpenSettings = onOpenSettings,
+                        childWebView = childWebView,
+                        onChildWebViewAction = onChildWebViewAction,
                     )
                 }
             }

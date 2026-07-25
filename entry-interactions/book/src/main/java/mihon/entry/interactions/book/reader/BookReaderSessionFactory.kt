@@ -143,6 +143,7 @@ internal class BookReaderSessionFactory(
                     BookReaderOpenResult.Success(
                         OpenedBookReaderSession(
                             entry = visibleEntry,
+                            owner = owner,
                             chapter = chapter,
                             progressIdentity = progressIdentity,
                             contentSession = contentSession,
@@ -342,6 +343,7 @@ internal sealed interface BookReaderOpenResult {
 
 internal class OpenedBookReaderSession(
     val entry: Entry,
+    val owner: Entry,
     val chapter: EntryChapter,
     private val progressIdentity: BookProgressIdentity,
     contentSession: BookContentSession,

@@ -38,6 +38,19 @@ Put playback headers in `VideoRequest`; player requests do not automatically inh
 
 :::
 
+## Expose episode webpages
+
+Implement `ChapterWebViewSource` when the provider has a canonical webpage for an episode or movie:
+
+```kotlin
+class ExamplePlaybackSource : EntryHttpSource(), ChapterWebViewSource {
+    override fun getChapterUrl(chapter: SEntryChapter): String =
+        canonicalEpisodeUrl(chapter)
+}
+```
+
+The player exposes its shared WebView, browser, and share actions only when this capability is present. Return an absolute webpage URL, not a stream manifest, signed media URL, or opaque child identity. If the provider cannot deep-link a particular child reliably, do not implement the capability.
+
 ## Dubs and source qualities
 
 Expose selectable dimensions as stable keyed options:

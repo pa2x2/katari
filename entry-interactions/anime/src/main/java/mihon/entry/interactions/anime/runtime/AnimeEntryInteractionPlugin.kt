@@ -4,6 +4,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.EntryBulkDownloadCandidateCapability
 import mihon.entry.interactions.EntryChildListCapability
 import mihon.entry.interactions.EntryChildProgressCapability
+import mihon.entry.interactions.EntryChildWebViewHostContribution
 import mihon.entry.interactions.EntryConsumptionCapability
 import mihon.entry.interactions.EntryContinueCapability
 import mihon.entry.interactions.EntryDownloadCapability
@@ -25,6 +26,7 @@ import mihon.entry.interactions.EntryViewerSettingsCapability
 import mihon.entry.interactions.EntryViewerSettingsProvider
 import mihon.entry.interactions.anime.download.AnimeDownloadCache
 import mihon.entry.interactions.anime.download.AnimeDownloadManager
+import mihon.entry.interactions.anime.player.AnimeChildWebViewHostAdapter
 import mihon.entry.interactions.settings.EntryInteractionPreferences
 import mihon.feature.graph.ContributionOwner
 import tachiyomi.domain.download.service.DownloadPreferences
@@ -121,6 +123,9 @@ internal fun animeEntryInteractionPlugin(
             )
             viewerSettingsProvider?.let { add(EntryViewerSettingsCapability.bind(it)) }
         }
+        override val specializedAdapters = listOf(
+            EntryChildWebViewHostContribution.bind(AnimeChildWebViewHostAdapter),
+        )
     }
 }
 

@@ -44,6 +44,9 @@ import kotlinx.coroutines.launch
 import mihon.book.api.BookLocator
 import mihon.book.api.BookNavigationItem
 import mihon.book.api.BookReadingDirection
+import mihon.entry.interactions.EntryChildWebViewAction
+import mihon.entry.interactions.EntryChildWebViewActionsMenu
+import mihon.entry.interactions.EntryChildWebViewResolution
 import mihon.entry.interactions.book.BookReaderNavigationRow
 import mihon.entry.interactions.book.BookReaderNavigationSheet
 import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
@@ -77,6 +80,7 @@ internal data class ReadiumEpubReaderUiState(
     val menuVisible: Boolean = false,
     val tocVisible: Boolean = false,
     val settingsVisible: Boolean = false,
+    val childWebView: EntryChildWebViewResolution.Available? = null,
 )
 
 @Composable
@@ -94,6 +98,7 @@ internal fun ReadiumEpubReaderScreen(
     onPreviousSection: () -> Unit,
     onNextSection: () -> Unit,
     onNavigationItemClick: (BookNavigationItem) -> Unit,
+    onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val showPageNumber by settings.showPageNumber.state.collectEffectiveValue()
@@ -129,6 +134,8 @@ internal fun ReadiumEpubReaderScreen(
                     bookTitle = state.bookTitle,
                     sectionTitle = state.sectionTitle,
                     onClose = onClose,
+                    childWebView = state.childWebView,
+                    onChildWebViewAction = onChildWebViewAction,
                     modifier = Modifier.background(backgroundColor),
                 )
             },
@@ -221,6 +228,8 @@ private fun ReadiumReaderTopBar(
     bookTitle: String,
     sectionTitle: String?,
     onClose: () -> Unit,
+    childWebView: EntryChildWebViewResolution.Available?,
+    onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     TopAppBar(
@@ -240,6 +249,12 @@ private fun ReadiumReaderTopBar(
                     contentDescription = stringResource(MR.strings.action_close),
                 )
             }
+        },
+        actions = {
+            EntryChildWebViewActionsMenu(
+                resolution = childWebView,
+                onAction = onChildWebViewAction,
+            )
         },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Color.Transparent,

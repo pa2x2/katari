@@ -21,6 +21,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import mihon.entry.interactions.EntryChildWebViewAction
+import mihon.entry.interactions.EntryChildWebViewActionsMenu
+import mihon.entry.interactions.EntryChildWebViewResolution
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -33,6 +36,8 @@ internal fun VideoPlayerTopBar(
     onEnterPictureInPicture: () -> Unit,
     onToggleLock: () -> Unit,
     onOpenSettings: () -> Unit,
+    childWebView: EntryChildWebViewResolution.Available?,
+    onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -100,6 +105,11 @@ internal fun VideoPlayerTopBar(
                     tint = Color.White,
                 )
             }
+            EntryChildWebViewActionsMenu(
+                resolution = childWebView,
+                onAction = onChildWebViewAction,
+                contentColor = Color.White,
+            )
         }
     }
 }

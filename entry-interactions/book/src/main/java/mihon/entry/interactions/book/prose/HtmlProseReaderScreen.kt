@@ -71,6 +71,9 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import mihon.entry.interactions.EntryChildWebViewAction
+import mihon.entry.interactions.EntryChildWebViewActionsMenu
+import mihon.entry.interactions.EntryChildWebViewResolution
 import mihon.entry.interactions.book.BookReaderNavigationRow
 import mihon.entry.interactions.book.BookReaderNavigationSheet
 import mihon.entry.interactions.book.R
@@ -117,6 +120,7 @@ internal data class HtmlProseReaderUiState(
     val menuVisible: Boolean = false,
     val chapterListVisible: Boolean = false,
     val settingsVisible: Boolean = false,
+    val childWebView: EntryChildWebViewResolution.Available? = null,
     val loadingChapterId: Long? = null,
     val loadError: String? = null,
 )
@@ -132,6 +136,7 @@ internal fun HtmlProseReaderScreen(
     onChapterListVisibilityChange: (Boolean) -> Unit,
     onChapterSelected: (EntryChapter) -> Unit,
     onSettingsVisibilityChange: (Boolean) -> Unit,
+    onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
 ) {
     val theme by settings.theme.state.collectEffectiveValue()
     val fontFamily by settings.fontFamily.state.collectEffectiveValue()
@@ -250,6 +255,12 @@ internal fun HtmlProseReaderScreen(
                                     stringResource(R.string.book_reader_close),
                                 )
                             }
+                        },
+                        actions = {
+                            EntryChildWebViewActionsMenu(
+                                resolution = state.childWebView,
+                                onAction = onChildWebViewAction,
+                            )
                         },
                         colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = Color.Transparent,

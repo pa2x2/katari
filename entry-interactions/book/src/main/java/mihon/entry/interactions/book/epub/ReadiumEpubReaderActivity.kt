@@ -2,13 +2,16 @@
 
 package mihon.entry.interactions.book.epub
 
+import android.app.assist.AssistContent
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,13 +23,19 @@ import androidx.fragment.app.commitNow
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.withStarted
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import logcat.LogPriority
 import mihon.book.api.BookLocator
 import mihon.book.api.BookNavigationItem
 import mihon.book.api.BookReadingDirection
 import mihon.book.api.BookResource
+import mihon.entry.interactions.EntryChildWebViewAction
+import mihon.entry.interactions.EntryChildWebViewResolution
 import mihon.entry.interactions.EntryInteractionActivity
+import mihon.entry.interactions.EntryWebViewFeature
 import mihon.entry.interactions.book.BookReaderErrorScreen
 import mihon.entry.interactions.book.BookReaderLoadingScreen
 import mihon.entry.interactions.book.BookReaderOpenResult
@@ -37,6 +46,7 @@ import mihon.entry.interactions.book.BookReaderSessionViewModel
 import mihon.entry.interactions.book.OpenedBookReaderSession
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.displayName
+import mihon.entry.interactions.launchEntryChildWebViewAction
 import mihon.entry.interactions.setEntryInteractionContent
 import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
 import mihon.entry.viewer.settings.ViewerSettingBinder
@@ -46,6 +56,7 @@ import org.readium.r2.navigator.input.InputListener
 import org.readium.r2.navigator.input.TapEvent
 import org.readium.r2.shared.publication.Locator
 import tachiyomi.core.common.util.lang.launchNonCancellable
+import tachiyomi.core.common.util.system.logcat
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -66,6 +77,7 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
     private var navigation by mutableStateOf<List<ReadiumNavigationRow>>(emptyList())
     private val resolvedNavigationPositions = mutableMapOf<String, ReadiumNavigationPosition>()
     private var navigationResolutionJob: Job? = null
+    private var childWebViewResolutionJob: Job? = null
     private var navigationResolutionKey: String? = null
     private var resourceCurrentPage = 1
     private var resourceTotalPages = 1
@@ -77,6 +89,7 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
     private lateinit var seekDispatcher: ThrottledLatestDispatcher<ReaderSeekTarget>
 
     private val windowInsetsController by lazy { WindowCompat.getInsetsController(window, window.decorView) }
+    private val webViewFeature by lazy { Injekt.get<EntryWebViewFeature>() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Reopen from persisted BOOK progress instead of restoring a Fragment whose Publication is process-scoped.
@@ -131,6 +144,7 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
                         onPreviousSection = { goToAdjacentSection(-1) },
                         onNextSection = { goToAdjacentSection(1) },
                         onNavigationItemClick = ::goToNavigationItem,
+                        onChildWebViewAction = ::launchChildWebViewAction,
                     )
                 }
             }
@@ -245,6 +259,8 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
         seekDispatcher.cancel()
         navigationResolutionJob?.cancel()
         navigationResolutionJob = null
+        childWebViewResolutionJob?.cancel()
+        childWebViewResolutionJob = null
         inputListener?.let { listener -> navigator?.removeInputListener(listener) }
         inputListener = null
         super.onDestroy()
@@ -316,6 +332,7 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
             readingDirection = effectiveReadingDirection,
             fixedLayout = host.isFixedLayout,
         )
+        resolveChildWebView(session)
         inputListener = createInputListener(effectiveReadingDirection).also(fragment::addInputListener)
         readingStartedAt = SystemClock.elapsedRealtime()
         host.observeLocations(fragment, lifecycleScope) { locator ->
@@ -335,6 +352,41 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
         surfaceState = ReaderSurfaceState.Ready
         setMenuVisibility(false)
         return true
+    }
+
+    override fun onProvideAssistContent(outContent: AssistContent) {
+        super.onProvideAssistContent(outContent)
+        uiState.childWebView?.url?.let { outContent.webUri = Uri.parse(it) }
+    }
+
+    private fun resolveChildWebView(session: OpenedBookReaderSession) {
+        childWebViewResolutionJob?.cancel()
+        uiState = uiState.copy(childWebView = null)
+        childWebViewResolutionJob = lifecycleScope.launch {
+            val resolution = withContext(Dispatchers.IO) {
+                webViewFeature.resolveChild(session.owner, session.chapter)
+            }
+            if (openedSession?.chapter?.id != session.chapter.id) return@launch
+            when (resolution) {
+                is EntryChildWebViewResolution.Available -> {
+                    uiState = uiState.copy(childWebView = resolution)
+                }
+                is EntryChildWebViewResolution.Failed -> {
+                    logcat(LogPriority.ERROR, resolution.cause) { "Failed to resolve BOOK child WebView URL" }
+                }
+                else -> Unit
+            }
+        }
+    }
+
+    private fun launchChildWebViewAction(
+        action: EntryChildWebViewAction,
+        resolution: EntryChildWebViewResolution.Available,
+    ) {
+        launchEntryChildWebViewAction(action, resolution, openedSession?.entry?.displayTitle)
+            .onFailure {
+                Toast.makeText(this, it.message, Toast.LENGTH_LONG).show()
+            }
     }
 
     private fun updateLocation(locator: Locator) {

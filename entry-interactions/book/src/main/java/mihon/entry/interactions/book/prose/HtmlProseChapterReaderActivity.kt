@@ -1,9 +1,12 @@
 package mihon.entry.interactions.book.prose
 
+import android.app.assist.AssistContent
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.os.SystemClock
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
@@ -14,10 +17,16 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.withStarted
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import logcat.LogPriority
 import mihon.book.api.BookLocator
+import mihon.entry.interactions.EntryChildWebViewAction
+import mihon.entry.interactions.EntryChildWebViewResolution
 import mihon.entry.interactions.EntryInteractionActivity
+import mihon.entry.interactions.EntryWebViewFeature
 import mihon.entry.interactions.book.BookChapterNavigationResolver
 import mihon.entry.interactions.book.BookReaderErrorScreen
 import mihon.entry.interactions.book.BookReaderLoadingScreen
@@ -31,12 +40,14 @@ import mihon.entry.interactions.book.displayName
 import mihon.entry.interactions.book.document.location.locatorAt
 import mihon.entry.interactions.book.document.location.resolvePosition
 import mihon.entry.interactions.book.document.model.BookDocumentPosition
+import mihon.entry.interactions.launchEntryChildWebViewAction
 import mihon.entry.interactions.setEntryInteractionContent
 import mihon.entry.interactions.settings.HtmlProseSettingsProvider
 import mihon.entry.interactions.viewer.EntryChildWindow
 import mihon.entry.interactions.viewer.entryChildWindow
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import tachiyomi.core.common.util.lang.launchNonCancellable
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.EntryChapter
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -53,11 +64,13 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
     private var chapters: List<EntryChapter> = emptyList()
     private val preloadJobs = mutableMapOf<Long, Job>()
     private var chapterSwitchJob: Job? = null
+    private var childWebViewResolutionJob: Job? = null
     private var processorId: String? = null
     private var readingStartedAt: Long? = null
     private var pageLoaded = false
 
     private val windowInsetsController by lazy { WindowCompat.getInsetsController(window, window.decorView) }
+    private val webViewFeature by lazy { Injekt.get<EntryWebViewFeature>() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -94,6 +107,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
                             onSettingsVisibilityChange = { visible ->
                                 uiState = uiState?.copy(settingsVisible = visible)
                             },
+                            onChildWebViewAction = ::launchChildWebViewAction,
                         )
                     }
                 }
@@ -129,6 +143,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
         preloadJobs.values.forEach(Job::cancel)
         preloadJobs.clear()
         chapterSwitchJob?.cancel()
+        childWebViewResolutionJob?.cancel()
         openedSession = null
         settings = null
         super.onDestroy()
@@ -214,6 +229,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
                 loadedChapters = uiState?.loadedChapters.orEmpty() + (session.chapter.id to loadedChapter),
                 viewerResetKey = (uiState?.viewerResetKey ?: 0L) + if (resetViewer) 1L else 0L,
             )
+            resolveChildWebView(session)
             readingStartedAt = SystemClock.elapsedRealtime()
             surfaceState = ProseReaderSurfaceState.Ready
             setMenuVisibility(false)
@@ -224,6 +240,41 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
             retainedSession.release()
             showError(error.message ?: getString(R.string.prose_reader_incompatible_session))
         }
+    }
+
+    override fun onProvideAssistContent(outContent: AssistContent) {
+        super.onProvideAssistContent(outContent)
+        uiState?.childWebView?.url?.let { outContent.webUri = Uri.parse(it) }
+    }
+
+    private fun resolveChildWebView(session: OpenedBookReaderSession) {
+        childWebViewResolutionJob?.cancel()
+        uiState = uiState?.copy(childWebView = null)
+        childWebViewResolutionJob = lifecycleScope.launch {
+            val resolution = withContext(Dispatchers.IO) {
+                webViewFeature.resolveChild(session.owner, session.chapter)
+            }
+            if (openedSession?.chapter?.id != session.chapter.id) return@launch
+            when (resolution) {
+                is EntryChildWebViewResolution.Available -> {
+                    uiState = uiState?.copy(childWebView = resolution)
+                }
+                is EntryChildWebViewResolution.Failed -> {
+                    logcat(LogPriority.ERROR, resolution.cause) { "Failed to resolve BOOK child WebView URL" }
+                }
+                else -> Unit
+            }
+        }
+    }
+
+    private fun launchChildWebViewAction(
+        action: EntryChildWebViewAction,
+        resolution: EntryChildWebViewResolution.Available,
+    ) {
+        launchEntryChildWebViewAction(action, resolution, openedSession?.entry?.displayTitle)
+            .onFailure {
+                Toast.makeText(this, it.message, Toast.LENGTH_LONG).show()
+            }
     }
 
     private fun updateLocation(

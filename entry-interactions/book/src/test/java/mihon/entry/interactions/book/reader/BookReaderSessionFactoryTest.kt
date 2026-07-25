@@ -229,6 +229,7 @@ class BookReaderSessionFactoryTest {
         val events = mutableListOf<EntryMediaSessionEvent>()
         val session = OpenedBookReaderSession(
             entry = entry(),
+            owner = entry(),
             chapter = chapter,
             progressIdentity = BookProgressIdentity("", "publication.epub", null),
             contentSession = mockk(relaxed = true),
@@ -311,6 +312,7 @@ class BookReaderSessionFactoryTest {
         val session = assertIs<BookReaderOpenResult.Success>(
             factory.open(context, BookReaderRequest(visible.id, chapter.id), processor.id),
         ).session
+        assertEquals(owner, session.owner)
         session.saveLocation(BookLocator("chapter-1.xhtml", progression = 0.5))
         session.recordHistory(500L)
 

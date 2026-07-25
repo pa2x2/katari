@@ -59,6 +59,19 @@ Use one child per independently openable source item. Do not project an EPUB's i
 
 The child URL is persistent identity for consumption and history. Keep expiring acquisition URLs and authorization tokens out of it. Resolve current resource access inside `getMedia()`.
 
+## Expose child webpages
+
+Implement `ChapterWebViewSource` when the provider has a canonical webpage for each openable publication or prose chapter:
+
+```kotlin
+class ExampleBookSource : EntryHttpSource(), SourceMetadata, ChapterWebViewSource {
+    override fun getChapterUrl(chapter: SEntryChapter): String =
+        canonicalBookChildUrl(chapter)
+}
+```
+
+The reader exposes its shared WebView, browser, and share actions only when this capability is present. Return an absolute webpage URL rather than an EPUB acquisition URL, signed resource URL, or opaque child identity. An EPUB child resolves to its source publication page; Katari does not pass the reader's internal table-of-contents section to this contract.
+
 ## Return a remote EPUB
 
 The built-in EPUB processor recognizes the `application/epub+zip` format. It accepts an absent profile or the `reflowable` profile, requires unprotected content, and rejects fixed-layout EPUBs.

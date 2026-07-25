@@ -85,7 +85,7 @@ Bookmark-aware download cleanup is enabled automatically when the content type s
 | Refresh entry details and child items from a source | ◇ | ◇ | ◇ |
 | Configure source-specific settings | ◇ | ◇ | ◇ |
 | Open entries in a source WebView | ◇ | ◇ | ◇ |
-| Open child items in a source WebView | — | — | ◇ |
+| Open child items in a source WebView | ◇ | ◇ | ◇ |
 | Use tracking-service sources in discovery | ◇ | ◇ | ◇ |
 
 <!-- END GENERATED CONTENT TYPE SUPPORT -->

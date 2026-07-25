@@ -5,22 +5,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material.icons.outlined.BookmarkBorder
-import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
+import mihon.entry.interactions.EntryChildWebViewAction
+import mihon.entry.interactions.EntryChildWebViewActionsMenu
+import mihon.entry.interactions.EntryChildWebViewResolution
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -31,9 +27,8 @@ fun ReaderTopBar(
     navigateUp: () -> Unit,
     bookmarked: Boolean,
     onToggleBookmarked: () -> Unit,
-    onOpenInWebView: (() -> Unit)?,
-    onOpenInBrowser: (() -> Unit)?,
-    onShare: (() -> Unit)?,
+    childWebView: EntryChildWebViewResolution.Available?,
+    onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     TopAppBar(
@@ -78,10 +73,9 @@ fun ReaderTopBar(
                 )
             }
 
-            ReaderOverflowMenu(
-                onOpenInWebView = onOpenInWebView,
-                onOpenInBrowser = onOpenInBrowser,
-                onShare = onShare,
+            EntryChildWebViewActionsMenu(
+                resolution = childWebView,
+                onAction = onChildWebViewAction,
             )
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -89,57 +83,4 @@ fun ReaderTopBar(
             scrolledContainerColor = Color.Transparent,
         ),
     )
-}
-
-@Composable
-private fun ReaderOverflowMenu(
-    onOpenInWebView: (() -> Unit)?,
-    onOpenInBrowser: (() -> Unit)?,
-    onShare: (() -> Unit)?,
-) {
-    if (onOpenInWebView == null && onOpenInBrowser == null && onShare == null) {
-        return
-    }
-
-    var expanded by remember { mutableStateOf(false) }
-
-    IconButton(onClick = { expanded = true }) {
-        Icon(
-            imageVector = Icons.Outlined.MoreVert,
-            contentDescription = stringResource(MR.strings.label_more),
-        )
-    }
-
-    DropdownMenu(
-        expanded = expanded,
-        onDismissRequest = { expanded = false },
-    ) {
-        onOpenInWebView?.let {
-            DropdownMenuItem(
-                text = { Text(stringResource(MR.strings.action_open_in_web_view)) },
-                onClick = {
-                    expanded = false
-                    it()
-                },
-            )
-        }
-        onOpenInBrowser?.let {
-            DropdownMenuItem(
-                text = { Text(stringResource(MR.strings.action_open_in_browser)) },
-                onClick = {
-                    expanded = false
-                    it()
-                },
-            )
-        }
-        onShare?.let {
-            DropdownMenuItem(
-                text = { Text(stringResource(MR.strings.action_share)) },
-                onClick = {
-                    expanded = false
-                    it()
-                },
-            )
-        }
-    }
 }

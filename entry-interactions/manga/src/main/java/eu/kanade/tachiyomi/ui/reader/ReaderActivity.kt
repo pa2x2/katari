@@ -78,8 +78,10 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.entry.interactions.EntryChildWebViewAction
 import mihon.entry.interactions.EntryChildWebViewResolution
 import mihon.entry.interactions.EntryInteractionActivity
+import mihon.entry.interactions.launchEntryChildWebViewAction
 import mihon.entry.interactions.manga.R
 import mihon.entry.interactions.manga.databinding.ReaderActivityBinding
 import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
@@ -127,7 +129,6 @@ class ReaderActivity : EntryInteractionActivity() {
     lateinit var binding: ReaderActivityBinding
 
     internal val viewModel by viewModels<ReaderViewModel>()
-    private var assistUrl: String? = null
     private var chapterWebView by mutableStateOf<EntryChildWebViewResolution.Available?>(null)
 
     /**
@@ -408,7 +409,7 @@ class ReaderActivity : EntryInteractionActivity() {
 
     override fun onProvideAssistContent(outContent: AssistContent) {
         super.onProvideAssistContent(outContent)
-        assistUrl?.let { outContent.webUri = it.toUri() }
+        chapterWebView?.url?.let { outContent.webUri = it.toUri() }
     }
 
     /**
@@ -486,8 +487,6 @@ class ReaderActivity : EntryInteractionActivity() {
             return
         }
 
-        val supportsChapterWebView = chapterWebView != null
-
         val cropBorderPaged by readerPreferences.cropBorders.collectAsState()
         val cropBorderWebtoon by readerPreferences.cropBordersWebtoon.collectAsState()
         val autoScrollFeatureEnabled by readerPreferences.autoScrollEnabled.collectAsState()
@@ -511,9 +510,8 @@ class ReaderActivity : EntryInteractionActivity() {
             onClickTopAppBar = ::openMangaScreen,
             bookmarked = state.bookmarked,
             onToggleBookmarked = viewModel::toggleChapterBookmark,
-            onOpenInWebView = ::openChapterInWebView.takeIf { supportsChapterWebView },
-            onOpenInBrowser = ::openChapterInBrowser.takeIf { supportsChapterWebView },
-            onShare = ::shareChapter.takeIf { supportsChapterWebView },
+            childWebView = chapterWebView,
+            onChildWebViewAction = ::launchChapterWebViewAction,
 
             chapterNavigatorType = if (!verticalNavigator) {
                 if (state.viewer is R2LPagerViewer) {
@@ -631,24 +629,12 @@ class ReaderActivity : EntryInteractionActivity() {
         }
     }
 
-    private fun openChapterInWebView() {
-        val manga = viewModel.manga ?: return
-        val resolution = chapterWebView ?: return
-        val intent = readerWebViewIntent(resolution.url, resolution.sourceId, manga.displayTitle)
-        startActivity(intent)
-    }
-
-    private fun openChapterInBrowser() {
-        assistUrl?.let {
-            openInBrowser(it.toUri(), forceDefaultBrowser = false)
-        }
-    }
-
-    private fun shareChapter() {
-        assistUrl?.let {
-            val intent = it.toUri().toReaderShareIntent(this, type = "text/plain")
-            startActivity(intent)
-        }
+    private fun launchChapterWebViewAction(
+        action: EntryChildWebViewAction,
+        resolution: EntryChildWebViewResolution.Available,
+    ) {
+        launchEntryChildWebViewAction(action, resolution, viewModel.manga?.displayTitle)
+            .onFailure { toast(it.message) }
     }
 
     private fun showReadingModeToast(mode: Int) {
@@ -676,7 +662,6 @@ class ReaderActivity : EntryInteractionActivity() {
 
         val chapterId = viewerChapters.current.chapter.id
         chapterWebView = null
-        assistUrl = null
         lifecycleScope.launchIO {
             val resolution = viewModel.resolveChapterWebView()
             withUIContext {
@@ -684,7 +669,6 @@ class ReaderActivity : EntryInteractionActivity() {
                 when (resolution) {
                     is EntryChildWebViewResolution.Available -> {
                         chapterWebView = resolution
-                        assistUrl = resolution.url
                     }
                     is EntryChildWebViewResolution.Failed -> {
                         logcat(LogPriority.ERROR, resolution.cause) { "Failed to resolve chapter WebView URL" }

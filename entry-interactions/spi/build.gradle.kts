@@ -16,6 +16,7 @@ dependencies {
 
     implementation(projects.presentationCore)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.compose.materialIcons)
     implementation(libs.androidx.compose.material3)
     implementation(libs.injekt)
 }

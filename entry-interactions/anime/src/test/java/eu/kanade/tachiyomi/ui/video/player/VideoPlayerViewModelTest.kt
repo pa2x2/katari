@@ -10,7 +10,9 @@ import eu.kanade.tachiyomi.source.entry.VideoStreamType
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -20,9 +22,11 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import mihon.entry.interactions.EntryChildWebViewResolution
 import mihon.entry.interactions.EntryMediaSessionEvent
 import mihon.entry.interactions.EntryMediaSessionEventSink
 import mihon.entry.interactions.EntryMediaSessionResult
+import mihon.entry.interactions.EntryWebViewFeature
 import mihon.entry.interactions.anime.AnimeMediaSessionProcessor
 import mihon.entry.interactions.anime.animeProgressState
 import org.junit.jupiter.api.AfterEach
@@ -95,6 +99,38 @@ class VideoPlayerViewModelTest {
         state.resumePositionMs shouldBe 12_345L
         playbackRepository.requestedResourceKeys shouldBe listOf("/chapter/2")
         historyRepository.upserts shouldBe emptyList()
+    }
+
+    @Test
+    fun `child WebView resolves through Feature with the episode owner`() = runTest(dispatcher) {
+        val resolution = EntryChildWebViewResolution.Available(
+            sourceId = 99L,
+            url = "https://example.test/episode/20",
+        )
+        val webViewFeature = mockk<EntryWebViewFeature> {
+            every { resolveChild(any(), any()) } returns resolution
+        }
+        val viewModel = createViewModel(
+            entryChapterRepository = FakeEntryChapterRepository(
+                listOf(chapter(id = 20L, entryId = 2L, sourceOrder = 1L)),
+            ),
+            playbackRepository = FakeEntryProgressRepository(existingState = null),
+            historyRepository = FakeHistoryRepository(),
+            resolver = RecordingVideoStreamResolver(),
+            webViewFeature = webViewFeature,
+        )
+
+        viewModel.init(entryId = 100L, chapterId = 20L, ownerEntryId = 2L)
+        advanceUntilIdle()
+
+        val state = viewModel.state.value as VideoPlayerViewModel.State.Ready
+        state.childWebView shouldBe resolution
+        verify(exactly = 1) {
+            webViewFeature.resolveChild(
+                match { it.id == 2L },
+                match { it.id == 20L && it.entryId == 2L },
+            )
+        }
     }
 
     @Test
@@ -348,6 +384,9 @@ class VideoPlayerViewModelTest {
         mediaSession: EntryMediaSessionEventSink = EntryMediaSessionEventSink {
             EntryMediaSessionResult.Handled
         },
+        webViewFeature: EntryWebViewFeature = mockk {
+            every { resolveChild(any(), any()) } returns EntryChildWebViewResolution.Unsupported(99L)
+        },
     ): VideoPlayerViewModel {
         return VideoPlayerViewModel(
             savedState = SavedStateHandle(),
@@ -357,6 +396,7 @@ class VideoPlayerViewModelTest {
             getEntryWithChapters = getEntryWithChapters,
             entryProgressRepository = playbackRepository,
             mediaSession = AnimeMediaSessionProcessor(mediaSession),
+            webViewFeature = webViewFeature,
             resolveDispatcher = dispatcher,
             persistenceDispatcher = dispatcher,
         )

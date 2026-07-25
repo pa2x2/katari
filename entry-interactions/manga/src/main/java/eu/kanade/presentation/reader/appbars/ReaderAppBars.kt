@@ -34,6 +34,8 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.reader.components.ChapterNavigator
 import eu.kanade.presentation.reader.components.ChapterNavigatorType
+import mihon.entry.interactions.EntryChildWebViewAction
+import mihon.entry.interactions.EntryChildWebViewResolution
 import mihon.entry.interactions.reader.settings.ReaderOrientation
 import mihon.entry.interactions.reader.settings.ReadingMode
 import tachiyomi.presentation.core.components.material.padding
@@ -52,9 +54,8 @@ internal fun ReaderAppBars(
     onClickTopAppBar: () -> Unit,
     bookmarked: Boolean,
     onToggleBookmarked: () -> Unit,
-    onOpenInWebView: (() -> Unit)?,
-    onOpenInBrowser: (() -> Unit)?,
-    onShare: (() -> Unit)?,
+    childWebView: EntryChildWebViewResolution.Available?,
+    onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
 
     chapterNavigatorType: ChapterNavigatorType,
     verticalNavigatorHeight: Float,
@@ -93,9 +94,8 @@ internal fun ReaderAppBars(
                 navigateUp = navigateUp,
                 bookmarked = bookmarked,
                 onToggleBookmarked = onToggleBookmarked,
-                onOpenInWebView = onOpenInWebView,
-                onOpenInBrowser = onOpenInBrowser,
-                onShare = onShare,
+                childWebView = childWebView,
+                onChildWebViewAction = onChildWebViewAction,
             )
         },
         middleContent = {

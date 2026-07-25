@@ -22,13 +22,17 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import logcat.LogPriority
+import mihon.entry.interactions.EntryChildWebViewResolution
 import mihon.entry.interactions.EntryMediaSessionActivity
 import mihon.entry.interactions.EntryMediaSessionEvent
+import mihon.entry.interactions.EntryWebViewFeature
 import mihon.entry.interactions.anime.AnimeMediaSessionProcessor
 import mihon.entry.interactions.anime.positionMs
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildWindow
 import mihon.entry.interactions.viewer.entryChildWindow
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -57,6 +61,7 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
     private val entryRepository: EntryRepository? = runCatching { Injekt.get<EntryRepository>() }.getOrNull(),
     private val entryProgressRepository: EntryProgressRepository = Injekt.get(),
     private val mediaSession: AnimeMediaSessionProcessor = Injekt.get(),
+    private val webViewFeature: EntryWebViewFeature = Injekt.get(),
     private val resolveDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val persistenceDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val now: () -> Long = { System.currentTimeMillis() },
@@ -644,6 +649,14 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
                     ?: resolvePersistedSubtitleSelection(result.savedPreferences.subtitleKey, result.subtitles),
             )
             .copy(preview = preview)
+        val childWebView = when (val resolution = webViewFeature.resolveChild(result.ownerEntry, result.chapter)) {
+            is EntryChildWebViewResolution.Available -> resolution
+            is EntryChildWebViewResolution.Failed -> {
+                logcat(LogPriority.ERROR, resolution.cause) { "Failed to resolve episode WebView URL" }
+                null
+            }
+            else -> null
+        }
         return State.Ready(
             visibleEntryId = result.visibleEntry.id,
             ownerEntryId = result.ownerEntry.id,
@@ -656,6 +669,7 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
             memberTitleById = episodeDrawerData.memberTitleById,
             playbackStateByChapterId = episodeDrawerData.playbackStateByChapterId,
             sourceAvailable = true,
+            childWebView = childWebView,
             chapterTitle = result.visibleEntry.displayTitle,
             chapterName = result.chapter.name,
             streamLabel = playback.currentStreamLabel,
@@ -823,6 +837,7 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
             val memberTitleById: Map<Long, String>,
             val playbackStateByChapterId: Map<Long, EntryProgressState>,
             val sourceAvailable: Boolean,
+            val childWebView: EntryChildWebViewResolution.Available?,
             val chapterTitle: String,
             val chapterName: String,
             val streamLabel: String,

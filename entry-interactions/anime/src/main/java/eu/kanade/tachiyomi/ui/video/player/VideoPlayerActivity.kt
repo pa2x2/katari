@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.PendingIntent
 import android.app.PictureInPictureParams
 import android.app.RemoteAction
+import android.app.assist.AssistContent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -91,7 +92,10 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.entry.interactions.EntryChildWebViewAction
+import mihon.entry.interactions.EntryChildWebViewResolution
 import mihon.entry.interactions.anime.R
+import mihon.entry.interactions.launchEntryChildWebViewAction
 import mihon.entry.interactions.settings.AnimePlayerPreferences
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import tachiyomi.core.common.i18n.stringResource
@@ -183,6 +187,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var pictureInPictureEnabled by mutableStateOf(false)
     private var isInPictureInPictureModeState by mutableStateOf(false)
     private var pendingPictureInPictureOnPause = false
+    private var suppressAutomaticPictureInPicture = false
     private var latestPlaybackSnapshot = VideoPlayerPlaybackSnapshot()
     private var playbackBrightnessLevel by mutableStateOf(DEFAULT_GESTURE_LEVEL)
     private var playbackBrightnessOverlayValue by mutableStateOf(0)
@@ -285,8 +290,10 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        suppressAutomaticPictureInPicture = false
         pictureInPictureEnabled = pictureInPictureSetting.resolveProfile().effectiveValue
         pendingPictureInPictureOnPause = false
+        updatePictureInPictureParams(latestPlaybackSnapshot)
         syncPlaybackBrightnessState()
         syncPlaybackVolumeState(player)
         hideSystemUi()
@@ -1343,6 +1350,14 @@ class VideoPlayerActivity : AppCompatActivity() {
                                 settingsVisible = true
                                 registerControllerInteraction(true)
                             },
+                            childWebView = current.childWebView,
+                            onChildWebViewAction = { action, resolution ->
+                                launchEpisodeWebViewAction(
+                                    action = action,
+                                    resolution = resolution,
+                                    title = current.chapterTitle,
+                                )
+                            },
                             onOpenEpisodes = {
                                 temporarySpeedBoostActive = false
                                 settingsVisible = false
@@ -1612,6 +1627,11 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     override fun onUserLeaveHint() {
+        if (suppressAutomaticPictureInPicture) {
+            pendingPictureInPictureOnPause = false
+            super.onUserLeaveHint()
+            return
+        }
         pendingPictureInPictureOnPause = canAutoEnterPictureInPicture()
         if (
             Build.VERSION.SDK_INT < Build.VERSION_CODES.S &&
@@ -1630,6 +1650,12 @@ class VideoPlayerActivity : AppCompatActivity() {
         if (!isInPictureInPictureMode) {
             hideSystemUi()
         }
+    }
+
+    override fun onProvideAssistContent(outContent: AssistContent) {
+        super.onProvideAssistContent(outContent)
+        val resolution = (viewModel.state.value as? VideoPlayerViewModel.State.Ready)?.childWebView
+        resolution?.url?.let { outContent.webUri = android.net.Uri.parse(it) }
     }
 
     override fun onStop() {
@@ -1814,6 +1840,35 @@ class VideoPlayerActivity : AppCompatActivity() {
         enterPictureInPictureIfAvailable()
     }
 
+    private fun launchEpisodeWebViewAction(
+        action: EntryChildWebViewAction,
+        resolution: EntryChildWebViewResolution.Available,
+        title: String,
+    ) {
+        suppressAutomaticPictureInPictureForNavigation()
+        launchEntryChildWebViewAction(action, resolution, title)
+            .onFailure {
+                suppressAutomaticPictureInPicture = false
+                toast(it.message)
+            }
+    }
+
+    private fun suppressAutomaticPictureInPictureForNavigation() {
+        suppressAutomaticPictureInPicture = true
+        if (
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            supportsPictureInPicture &&
+            pictureInPictureEnabled
+        ) {
+            setPictureInPictureParams(
+                buildPictureInPictureParams(
+                    snapshot = latestPlaybackSnapshot,
+                    allowAutoEnter = false,
+                ),
+            )
+        }
+    }
+
     private fun enterPictureInPictureIfAvailable(): Boolean {
         if (!canUsePictureInPicture()) return false
 
@@ -1847,13 +1902,16 @@ class VideoPlayerActivity : AppCompatActivity() {
         setPictureInPictureParams(buildPictureInPictureParams(snapshot))
     }
 
-    private fun buildPictureInPictureParams(snapshot: VideoPlayerPlaybackSnapshot): PictureInPictureParams {
+    private fun buildPictureInPictureParams(
+        snapshot: VideoPlayerPlaybackSnapshot,
+        allowAutoEnter: Boolean = true,
+    ): PictureInPictureParams {
         val paramsBuilder = PictureInPictureParams.Builder()
             .setAspectRatio(resolvePictureInPictureAspectRatio(snapshot))
             .setActions(buildPictureInPictureActions(snapshot))
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            paramsBuilder.setAutoEnterEnabled(snapshot.isPlaying && !snapshot.isLoading)
+            paramsBuilder.setAutoEnterEnabled(allowAutoEnter && snapshot.isPlaying && !snapshot.isLoading)
         }
 
         return paramsBuilder.build()
