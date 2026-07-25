@@ -34,10 +34,9 @@ internal class AnimePlayerBasePreferences(
     preferenceStore: PreferenceStore,
 ) {
     val incognitoMode = preferenceStore.getBoolean(Preference.appStateKey("incognito_mode"), false)
-    val immersiveFeedMuted = preferenceStore.getBoolean(
-        Preference.appStateKey("immersive_feed_muted"),
-        true,
-    )
+
+    // Keep this session-scoped so every new app process starts immersive playback muted.
+    var immersiveFeedMuted = true
 }
 
 internal fun AppCompatActivity.registerAnimePlayerSecureScreen() {

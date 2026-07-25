@@ -7,14 +7,15 @@ import tachiyomi.core.common.preference.InMemoryPreferenceStore
 class AnimePlayerBasePreferencesTest {
 
     @Test
-    fun `immersive feed starts muted and remembers user choice`() {
+    fun `immersive feed mute state resets for each app session`() {
         val store = InMemoryPreferenceStore()
-        val preferences = AnimePlayerBasePreferences(store)
+        val firstSession = AnimePlayerBasePreferences(store)
 
-        preferences.immersiveFeedMuted.get() shouldBe true
+        firstSession.immersiveFeedMuted shouldBe true
 
-        preferences.immersiveFeedMuted.set(false)
+        firstSession.immersiveFeedMuted = false
 
-        preferences.immersiveFeedMuted.get() shouldBe false
+        firstSession.immersiveFeedMuted shouldBe false
+        AnimePlayerBasePreferences(store).immersiveFeedMuted shouldBe true
     }
 }

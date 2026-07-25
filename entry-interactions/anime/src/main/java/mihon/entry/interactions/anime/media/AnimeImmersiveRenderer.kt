@@ -139,7 +139,7 @@ internal class AnimeImmersiveRenderer(
         var playbackSnapshot by remember(player) { mutableStateOf(player.capturePlaybackSnapshot()) }
         var speedBoostActive by remember(player) { mutableStateOf(false) }
         var playIntent by remember(player) { mutableStateOf(true) }
-        var muted by remember(player) { mutableStateOf(preferences.immersiveFeedMuted.get()) }
+        var muted by remember(player) { mutableStateOf(preferences.immersiveFeedMuted) }
         val audioManager = remember(context) {
             context.applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         }
@@ -160,7 +160,7 @@ internal class AnimeImmersiveRenderer(
         }
         LaunchedEffect(player, active, muted) {
             if (active) {
-                val storedMuted = preferences.immersiveFeedMuted.get()
+                val storedMuted = preferences.immersiveFeedMuted
                 if (storedMuted != muted) {
                     muted = storedMuted
                     return@LaunchedEffect
@@ -182,7 +182,7 @@ internal class AnimeImmersiveRenderer(
                     val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
                     if (shouldUnmuteAfterVolumeChange(muted, previousVolume, currentVolume)) {
                         muted = false
-                        preferences.immersiveFeedMuted.set(false)
+                        preferences.immersiveFeedMuted = false
                     }
                     previousVolume = currentVolume
                 }
@@ -391,7 +391,7 @@ internal class AnimeImmersiveRenderer(
                 IconButton(
                     onClick = {
                         muted = !muted
-                        preferences.immersiveFeedMuted.set(muted)
+                        preferences.immersiveFeedMuted = muted
                     },
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
