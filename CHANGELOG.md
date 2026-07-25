@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.4.2] - 2026-07-25
+
+### Added
+
+- Added double-tap seeking to the left and right sides of immersive anime videos.
+
+### Improved
+
+- Improved prose-book reader responsiveness.
+
+### Fixed
+
+- Showed a buffering indicator during immersive anime video playback.
+- Reset immersive anime video audio to muted when restarting the app.
+
 ## [1.4.1] - 2026-07-24
 
 ### Fixed
@@ -203,7 +218,8 @@ Based on [Mihon v0.20.1](https://github.com/mihonapp/mihon/releases/tag/v0.20.1)
 - Rebranded the application as Katari with its own package identity, visual
   identity, release pipeline, and documentation.
 
-[Unreleased]: https://github.com/katariapp/katari/compare/v1.4.1...upcoming
+[Unreleased]: https://github.com/katariapp/katari/compare/v1.4.2...upcoming
+[1.4.2]: https://github.com/katariapp/katari/releases/tag/v1.4.2
 [1.4.1]: https://github.com/katariapp/katari/releases/tag/v1.4.1
 [1.4.0]: https://github.com/katariapp/katari/releases/tag/v1.4.0
 [1.3.2]: https://github.com/katariapp/katari/releases/tag/v1.3.2
