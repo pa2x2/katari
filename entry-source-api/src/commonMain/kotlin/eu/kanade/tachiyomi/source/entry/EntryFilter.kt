@@ -26,6 +26,55 @@ sealed class EntryFilter<T>(val name: String, var state: T) {
     /** Free-form text filter. */
     abstract class Text(name: String, state: String = "") : EntryFilter<String>(name, state)
 
+    /**
+     * Free-form text filter that can load source-defined suggestions for the text around the current selection.
+     *
+     * The host owns request scheduling, cancellation, and presentation. Implementations own their input grammar:
+     * [getSuggestionQuery] extracts the lookup value and [applySuggestion] returns the complete text edit after a
+     * user selects a result.
+     *
+     * The durable [state] remains a plain string, so searches and saved filter presets do not depend on transient
+     * suggestion results.
+     *
+     * @property options request policy applied by the host while this filter is focused.
+     */
+    abstract class Autocomplete(
+        name: String,
+        state: String = "",
+        val options: EntryFilterAutocompleteOptions = EntryFilterAutocompleteOptions(),
+    ) : Text(name, state) {
+
+        /**
+         * Extracts the lookup value for [input].
+         *
+         * Return `null` when suggestions do not apply at the current selection, such as while editing an unsupported
+         * operator or metadata expression.
+         */
+        abstract fun getSuggestionQuery(input: EntryFilterTextInput): String?
+
+        /**
+         * Loads suggestions for [query].
+         *
+         * [input] is the snapshot from which [query] was extracted and may be used to distinguish source-defined
+         * syntax contexts. Results should use stable [EntryFilterSuggestion.id] values.
+         */
+        abstract suspend fun getSuggestions(
+            input: EntryFilterTextInput,
+            query: String,
+        ): List<EntryFilterSuggestion>
+
+        /**
+         * Applies [suggestion] to [input].
+         *
+         * Implementations must return the complete resulting text and selection. This lets the source preserve or
+         * insert its own separators, quoting, grouping, exclusion, and other syntax without host interpretation.
+         */
+        abstract fun applySuggestion(
+            input: EntryFilterTextInput,
+            suggestion: EntryFilterSuggestion,
+        ): EntryFilterTextEdit
+    }
+
     /** Boolean filter rendered as a check box. */
     abstract class CheckBox(name: String, state: Boolean = false) : EntryFilter<Boolean>(name, state)
 

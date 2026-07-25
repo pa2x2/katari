@@ -1,7 +1,12 @@
 package mihon.entry.interactions
 
 import androidx.paging.PagingSource
+import eu.kanade.tachiyomi.source.entry.EntryFilter
+import eu.kanade.tachiyomi.source.entry.EntryFilterAutocompleteOptions
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
+import eu.kanade.tachiyomi.source.entry.EntryFilterSuggestion
+import eu.kanade.tachiyomi.source.entry.EntryFilterTextEdit
+import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryPageResult
 import eu.kanade.tachiyomi.source.entry.EntryType
@@ -9,6 +14,7 @@ import eu.kanade.tachiyomi.source.entry.SEntry
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CancellationException
@@ -62,6 +68,57 @@ class EntryCatalogueFeatureTest {
         feature.filters(7L) shouldBe EntryCatalogueFiltersResult.Failed(failure)
         feature.filters(8L) shouldBe
             EntryCatalogueFiltersResult.Unavailable(EntryCatalogueUnavailableReason.CATALOGUE_UNSUPPORTED)
+    }
+
+    @Test
+    fun `filter suggestions enforce source query policy and result limit`() = runTest {
+        val input = EntryFilterTextInput("al", 2, 2)
+        val filter = autocomplete(
+            options = EntryFilterAutocompleteOptions(
+                minimumQueryLength = 2,
+                maximumResults = 2,
+            ),
+        )
+        val suggestions = listOf(
+            EntryFilterSuggestion("1", "Alpha"),
+            EntryFilterSuggestion("1", "Duplicate Alpha"),
+            EntryFilterSuggestion("2", "Alpine"),
+            EntryFilterSuggestion("3", "Alt"),
+        )
+        val host = host()
+        every { host.source(7L) } returns EntryCatalogueHostSourceResolution.Available(source)
+        coEvery { host.filterSuggestions(7L, filter, input, "al") } returns suggestions
+
+        feature(host).filterSuggestions(7L, filter, input) shouldBe
+            EntryCatalogueFilterSuggestionsResult.Available(
+                listOf(
+                    EntryFilterSuggestion("1", "Alpha"),
+                    EntryFilterSuggestion("2", "Alpine"),
+                ),
+            )
+
+        val shortInput = EntryFilterTextInput("a", 1, 1)
+        feature(host).filterSuggestions(7L, filter, shortInput) shouldBe
+            EntryCatalogueFilterSuggestionsResult.NotApplicable
+        coVerify(exactly = 0) { host.filterSuggestions(7L, filter, shortInput, any()) }
+    }
+
+    @Test
+    fun `filter suggestion failures are normalized while cancellation remains cancellation`() = runTest {
+        val input = EntryFilterTextInput("query", 5, 5)
+        val filter = autocomplete()
+        val failure = IllegalStateException("suggestions failed")
+        val host = host()
+        every { host.source(7L) } returns EntryCatalogueHostSourceResolution.Available(source)
+        coEvery { host.filterSuggestions(7L, filter, input, "query") } throws failure andThenThrows
+            CancellationException()
+        val feature = feature(host)
+
+        feature.filterSuggestions(7L, filter, input) shouldBe
+            EntryCatalogueFilterSuggestionsResult.Failed(failure)
+        org.junit.jupiter.api.assertThrows<CancellationException> {
+            feature.filterSuggestions(7L, filter, input)
+        }
     }
 
     @Test
@@ -149,5 +206,21 @@ class EntryCatalogueFeatureTest {
         this.url = url
         title = url
         this.type = type
+    }
+
+    private fun autocomplete(
+        options: EntryFilterAutocompleteOptions = EntryFilterAutocompleteOptions(),
+    ) = object : EntryFilter.Autocomplete("Autocomplete", options = options) {
+        override fun getSuggestionQuery(input: EntryFilterTextInput): String = input.text
+
+        override suspend fun getSuggestions(
+            input: EntryFilterTextInput,
+            query: String,
+        ): List<EntryFilterSuggestion> = error("Host executes suggestions")
+
+        override fun applySuggestion(
+            input: EntryFilterTextInput,
+            suggestion: EntryFilterSuggestion,
+        ): EntryFilterTextEdit = EntryFilterTextEdit(suggestion.value, suggestion.value.length)
     }
 }

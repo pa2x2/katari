@@ -98,6 +98,53 @@ Only opt in when the entry types shown by those catalogue or feed surfaces have 
 
 `EntryItemOrientationProvider.itemOrientation` controls source thumbnails in browse, library, and feeds. It is presentation metadata, not content-type classification.
 
+## Dynamic filter suggestions
+
+Use `EntryFilter.Autocomplete` when a free-form text filter can obtain suggestions from the provider while the user
+types. Its durable state remains a string: transient lookup input, loading state, results, and failures are owned by the
+host and are not passed to catalogue searches or saved in filter presets.
+
+```kotlin
+class TagsFilter : EntryFilter.Autocomplete(
+    name = "Tags",
+    options = EntryFilterAutocompleteOptions(
+        debounceMillis = 750,
+        minimumQueryLength = 2,
+        maximumResults = 15,
+    ),
+) {
+    override fun getSuggestionQuery(input: EntryFilterTextInput): String? {
+        return activeTagAt(input.text, input.selectionStart)
+    }
+
+    override suspend fun getSuggestions(
+        input: EntryFilterTextInput,
+        query: String,
+    ): List<EntryFilterSuggestion> {
+        return api.findTags(query).map { tag ->
+            EntryFilterSuggestion(id = tag.id, label = tag.label, value = tag.value)
+        }
+    }
+
+    override fun applySuggestion(
+        input: EntryFilterTextInput,
+        suggestion: EntryFilterSuggestion,
+    ): EntryFilterTextEdit {
+        return replaceActiveTag(input, suggestion.value)
+    }
+}
+```
+
+The host does not parse filter syntax. `getSuggestionQuery()` decides whether the current selection represents a
+lookup value, and returning `null` suppresses the request. `applySuggestion()` returns the complete text and selection,
+so the extension can preserve source-specific separators, exclusions, groups, quoting, metadata expressions, and
+cursor placement.
+
+`debounceMillis` coalesces edits before a lookup but is not a network rate limit. Extensions must continue enforcing
+provider request limits in their own HTTP clients because retries and unrelated source operations do not share the
+filter UI's debounce lifecycle. The host cancels superseded requests, rejects stale results, and stops requesting after
+the field or filter sheet loses focus.
+
 ## Source metadata
 
 Implement `SourceMetadata` when Katari can describe the source's catalogue before loading it:

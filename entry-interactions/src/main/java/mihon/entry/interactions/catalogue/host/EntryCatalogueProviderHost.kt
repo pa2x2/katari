@@ -1,6 +1,9 @@
 package mihon.entry.interactions
 
+import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
+import eu.kanade.tachiyomi.source.entry.EntryFilterSuggestion
+import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.source.entry.EntryPageResult
 import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
@@ -19,6 +22,13 @@ internal interface EntryCatalogueProviderHost {
     fun describe(source: UnifiedSource): EntrySourceDescription
 
     suspend fun filters(sourceId: Long): EntryFilterList
+
+    suspend fun filterSuggestions(
+        sourceId: Long,
+        filter: EntryFilter.Autocomplete,
+        input: EntryFilterTextInput,
+        query: String,
+    ): List<EntryFilterSuggestion>
 
     fun backgroundFilters(sourceId: Long): EntryFilterList
 

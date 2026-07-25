@@ -1,7 +1,10 @@
 package mihon.entry.interactions
 
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
+import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
+import eu.kanade.tachiyomi.source.entry.EntryFilterSuggestion
+import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientationProvider
 import eu.kanade.tachiyomi.source.entry.EntryPageResult
 import eu.kanade.tachiyomi.source.entry.SEntry
@@ -46,6 +49,16 @@ internal class SourceManagerEntryCatalogueProviderHost(
 
     override suspend fun filters(sourceId: Long): EntryFilterList {
         return catalogueProvider(sourceId).getFilterList()
+    }
+
+    override suspend fun filterSuggestions(
+        sourceId: Long,
+        filter: EntryFilter.Autocomplete,
+        input: EntryFilterTextInput,
+        query: String,
+    ): List<EntryFilterSuggestion> {
+        catalogueProvider(sourceId)
+        return filter.getSuggestions(input, query)
     }
 
     override fun backgroundFilters(sourceId: Long): EntryFilterList {

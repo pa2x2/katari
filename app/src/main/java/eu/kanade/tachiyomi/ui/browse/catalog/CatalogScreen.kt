@@ -344,6 +344,7 @@ data class CatalogScreen(
                     onUpdateCurrentPreset = if (feedsEnabled) screenModel::showUpdateCurrentPresetDialog else null,
                     onFilter = { screenModel.search(filters = state.filters) },
                     onUpdate = screenModel::setFilters,
+                    onRequestSuggestions = screenModel::filterSuggestions,
                     onRetry = screenModel::retryFilterLoad,
                 )
             }

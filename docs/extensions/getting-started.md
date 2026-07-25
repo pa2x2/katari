@@ -19,14 +19,14 @@ dependencyResolutionManagement {
 Add the Entry SDK as a compile-only dependency in the extension module:
 
 ```kotlin
-val katariSdkTag = "sdk-2.2.0"
+val katariSdkTag = "sdk-2.3.0"
 
 dependencies {
     compileOnly("com.github.katariapp.katari:entry-source-api:$katariSdkTag")
 }
 ```
 
-`sdk-2.2.0` is the current stable Entry SDK. Check [Katari tags](https://github.com/katariapp/katari/tags) and the [SDK changelog](../developers/sdk/changelog.md) before adopting a later release.
+`sdk-2.3.0` is the current stable Entry SDK. Check [Katari tags](https://github.com/katariapp/katari/tags) and the [SDK changelog](../developers/sdk/changelog.md) before adopting a later release.
 
 `compileOnly` is intentional. Katari supplies the API and its runtime dependencies when it loads the extension; packaging another copy in the APK can cause incompatible classes to be loaded.
 
@@ -35,7 +35,7 @@ Book sources use `BookContentDescriptor` and related models from the transitive 
 The current SDK requires Android API 26 or newer. A typical extension module uses the following Android configuration:
 
 ```kotlin
-val entryApiFamily = "2.2"
+val entryApiFamily = "2.3"
 
 android {
     namespace = "eu.kanade.tachiyomi.extension.all.example"

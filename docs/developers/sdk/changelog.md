@@ -2,6 +2,26 @@
 
 This changelog covers the public Entry SDK contracts in `entry-source-api` and `book-api`. It is separate from Katari app release notes and from individual extension revisions.
 
+## `sdk-2.3.0`
+
+Dynamic catalogue-filter suggestions release.
+
+### Added
+
+- `EntryFilter.Autocomplete`, an optional text-filter subtype that loads source-defined suggestions.
+- Source-owned query extraction and complete text-edit application, allowing extensions to preserve arbitrary tag,
+  grouping, exclusion, quoting, and separator syntax.
+- Per-filter debounce, minimum-query-length, focus-request, and maximum-result configuration through
+  `EntryFilterAutocompleteOptions`.
+
+### Compatibility
+
+- First supplied by Katari `1.5.0`.
+- New loader family: `2.3`.
+- Katari continues to accept Entry SDK families `2.0` through `2.2`; existing compiled extensions do not need to move to `2.3`.
+- Extensions implementing `EntryFilter.Autocomplete` must declare family `2.3` in the first two components of Android `versionName`.
+- Existing `EntryFilter.Text` and `EntryFilter.Select` behavior is unchanged.
+
 ## `sdk-2.2.0`
 
 Source-defined related-entry discovery release.

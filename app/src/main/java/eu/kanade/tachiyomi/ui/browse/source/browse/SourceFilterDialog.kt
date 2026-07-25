@@ -33,6 +33,10 @@ import eu.kanade.presentation.components.AdaptiveSheet
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
+import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.AutocompleteFilterItem
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.SearchableFilterGroupContent
+import mihon.entry.interactions.EntryCatalogueFilterSuggestionsResult
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.CheckboxItem
@@ -62,6 +66,10 @@ fun SourceFilterDialog(
     onUpdateCurrentPreset: (() -> Unit)? = null,
     onFilter: () -> Unit,
     onUpdate: (EntryFilterList) -> Unit,
+    onRequestSuggestions: suspend (
+        EntryFilter.Autocomplete,
+        EntryFilterTextInput,
+    ) -> EntryCatalogueFilterSuggestionsResult,
     onRetry: (() -> Unit)? = null,
 ) {
     val updateFilters = { onUpdate(filters) }
@@ -222,7 +230,7 @@ fun SourceFilterDialog(
                 }
             } else {
                 items(filters) {
-                    FilterItem(it, updateFilters)
+                    FilterItem(it, updateFilters, onRequestSuggestions)
                 }
             }
         }
@@ -230,7 +238,14 @@ fun SourceFilterDialog(
 }
 
 @Composable
-private fun FilterItem(filter: EntryFilter<*>, onUpdate: () -> Unit) {
+private fun FilterItem(
+    filter: EntryFilter<*>,
+    onUpdate: () -> Unit,
+    onRequestSuggestions: suspend (
+        EntryFilter.Autocomplete,
+        EntryFilterTextInput,
+    ) -> EntryCatalogueFilterSuggestionsResult,
+) {
     when (filter) {
         is EntryFilter.Header -> {
             HeadingItem(filter.name)
@@ -255,6 +270,13 @@ private fun FilterItem(filter: EntryFilter<*>, onUpdate: () -> Unit) {
                 filter.state = filter.state.toTriStateFilter().next().toTriStateInt()
                 onUpdate()
             }
+        }
+        is EntryFilter.Autocomplete -> {
+            AutocompleteFilterItem(
+                filter = filter,
+                onUpdate = onUpdate,
+                onRequestSuggestions = onRequestSuggestions,
+            )
         }
         is EntryFilter.Text -> {
             TextItem(
@@ -307,10 +329,12 @@ private fun FilterItem(filter: EntryFilter<*>, onUpdate: () -> Unit) {
             CollapsibleBox(
                 heading = filter.name,
             ) {
-                Column {
-                    filter.state
-                        .filterIsInstance<EntryFilter<*>>()
-                        .map { FilterItem(filter = it, onUpdate = onUpdate) }
+                SearchableFilterGroupContent(group = filter) {
+                    FilterItem(
+                        filter = it,
+                        onUpdate = onUpdate,
+                        onRequestSuggestions = onRequestSuggestions,
+                    )
                 }
             }
         }

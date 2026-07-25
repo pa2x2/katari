@@ -34,6 +34,7 @@ class ExtensionLoaderTest {
         ExtensionLoader.shouldUseDelegateLastClassLoader("2.0.1", Build.VERSION_CODES.VANILLA_ICE_CREAM) shouldBe false
         ExtensionLoader.shouldUseDelegateLastClassLoader("2.1.0", Build.VERSION_CODES.VANILLA_ICE_CREAM) shouldBe false
         ExtensionLoader.shouldUseDelegateLastClassLoader("2.2.0", Build.VERSION_CODES.VANILLA_ICE_CREAM) shouldBe false
+        ExtensionLoader.shouldUseDelegateLastClassLoader("2.3.0", Build.VERSION_CODES.VANILLA_ICE_CREAM) shouldBe false
     }
 
     @Test
@@ -42,10 +43,11 @@ class ExtensionLoaderTest {
         ExtensionLoader.isLibVersionCompatible("2.0.1") shouldBe true
         ExtensionLoader.isLibVersionCompatible("2.1.1") shouldBe true
         ExtensionLoader.isLibVersionCompatible("2.2.1") shouldBe true
-        ExtensionLoader.isLibVersionCompatible("2.3.1") shouldBe false
+        ExtensionLoader.isLibVersionCompatible("2.3.1") shouldBe true
+        ExtensionLoader.isLibVersionCompatible("2.4.1") shouldBe false
 
         ExtensionLoader.isRawLibVersionCompatible("2.0.99") shouldBe true
-        ExtensionLoader.isRawLibVersionCompatible("2.2.99") shouldBe true
+        ExtensionLoader.isRawLibVersionCompatible("2.3.99") shouldBe true
     }
 
     @Test

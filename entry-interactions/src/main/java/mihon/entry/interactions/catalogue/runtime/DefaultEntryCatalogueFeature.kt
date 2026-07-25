@@ -1,5 +1,7 @@
 package mihon.entry.interactions
 
+import eu.kanade.tachiyomi.source.entry.EntryFilter
+import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import kotlinx.coroutines.CancellationException
 import tachiyomi.domain.entry.adapter.toEntry
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
@@ -51,6 +53,44 @@ internal class DefaultEntryCatalogueFeature(
             throw error
         } catch (error: Exception) {
             EntryCatalogueFiltersResult.Failed(error)
+        }
+    }
+
+    override suspend fun filterSuggestions(
+        sourceId: Long,
+        filter: EntryFilter.Autocomplete,
+        input: EntryFilterTextInput,
+    ): EntryCatalogueFilterSuggestionsResult {
+        val source = when (val resolution = source(sourceId)) {
+            is EntryCatalogueSourceResolution.Available -> resolution.source
+            is EntryCatalogueSourceResolution.Missing -> {
+                return EntryCatalogueFilterSuggestionsResult.Unavailable(
+                    EntryCatalogueUnavailableReason.SOURCE_MISSING,
+                )
+            }
+            is EntryCatalogueSourceResolution.Unsupported -> {
+                return EntryCatalogueFilterSuggestionsResult.Unavailable(
+                    EntryCatalogueUnavailableReason.CATALOGUE_UNSUPPORTED,
+                )
+            }
+        }
+        return try {
+            val query = filter.getSuggestionQuery(input)
+                ?.takeIf { it.length >= filter.options.minimumQueryLength }
+                ?: return EntryCatalogueFilterSuggestionsResult.NotApplicable
+            val suggestions = host.filterSuggestions(
+                sourceId = source.id,
+                filter = filter,
+                input = input,
+                query = query,
+            )
+                .distinctBy { it.id }
+                .take(filter.options.maximumResults)
+            EntryCatalogueFilterSuggestionsResult.Available(suggestions)
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            EntryCatalogueFilterSuggestionsResult.Failed(error)
         }
     }
 

@@ -185,6 +185,7 @@ data class MigrateSourceSearchScreen(
                     onSaveAsNewPreset = null,
                     onFilter = { screenModel.search(filters = state.filters) },
                     onUpdate = screenModel::setFilters,
+                    onRequestSuggestions = screenModel::filterSuggestions,
                     onRetry = screenModel::retryFilterLoad,
                 )
             }

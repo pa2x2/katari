@@ -32,6 +32,7 @@ import eu.kanade.presentation.entry.components.buildMergeTargets
 import eu.kanade.presentation.entry.components.rankMergeTargets
 import eu.kanade.presentation.util.ioCoroutineScope
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
+import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.sourceNotInstalledName
@@ -51,6 +52,7 @@ import mihon.core.common.browseLongPressActionPriorityForSource
 import mihon.core.common.sanitizeBrowseLongPressActionPriority
 import mihon.entry.interactions.EntryCatalogueBrowseRequest
 import mihon.entry.interactions.EntryCatalogueFeature
+import mihon.entry.interactions.EntryCatalogueFilterSuggestionsResult
 import mihon.entry.interactions.EntryCatalogueListing
 import mihon.entry.interactions.EntryCatalogueSourceResolution
 import mihon.entry.interactions.EntryImmersiveAvailability
@@ -84,6 +86,7 @@ import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.mapAsCheckboxState
 import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.category.repository.CategoryRepository
@@ -256,6 +259,19 @@ class CatalogScreenModel(
 
     fun setFilters(filters: EntryFilterList) {
         mutableState.update { it.copy(filters = filters) }
+    }
+
+    suspend fun filterSuggestions(
+        filter: SourceModelFilter.Autocomplete,
+        input: EntryFilterTextInput,
+    ): EntryCatalogueFilterSuggestionsResult {
+        return withIOContext {
+            entryCatalogueFeature.filterSuggestions(
+                sourceId = sourceId,
+                filter = filter,
+                input = input,
+            )
+        }
     }
 
     fun search(query: String? = null, filters: EntryFilterList? = null) {

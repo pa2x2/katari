@@ -1,6 +1,8 @@
 package eu.kanade.tachiyomi.source.entry
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotEquals
 
 class EntryFilterListTest {
@@ -29,8 +31,32 @@ class EntryFilterListTest {
         assertNotEquals(filters, EntryFilterList(filters.toList()))
     }
 
+    @Test
+    fun `autocomplete options provide safe defaults and reject invalid request policies`() {
+        assertEquals(
+            EntryFilterAutocompleteOptions(),
+            EntryFilterAutocompleteOptions(
+                debounceMillis = EntryFilterAutocompleteOptions.DEFAULT_DEBOUNCE_MILLIS,
+                minimumQueryLength = EntryFilterAutocompleteOptions.DEFAULT_MINIMUM_QUERY_LENGTH,
+                requestOnFocus = false,
+                maximumResults = EntryFilterAutocompleteOptions.DEFAULT_MAXIMUM_RESULTS,
+            ),
+        )
+
+        assertFailsWith<IllegalArgumentException> {
+            EntryFilterAutocompleteOptions(debounceMillis = -1)
+        }
+        assertFailsWith<IllegalArgumentException> {
+            EntryFilterAutocompleteOptions(minimumQueryLength = -1)
+        }
+        assertFailsWith<IllegalArgumentException> {
+            EntryFilterAutocompleteOptions(maximumResults = 0)
+        }
+    }
+
     private fun interactiveFilters(): List<EntryFilter<*>> = listOf(
         textFilter(),
+        autocompleteFilter(),
         object : EntryFilter.CheckBox("Check box") {},
         object : EntryFilter.TriState("Tri-state") {},
         object : EntryFilter.Select<String>("Select", arrayOf("First", "Second")) {},
@@ -38,6 +64,20 @@ class EntryFilterListTest {
     )
 
     private fun textFilter() = object : EntryFilter.Text("Text") {}
+
+    private fun autocompleteFilter() = object : EntryFilter.Autocomplete("Autocomplete") {
+        override fun getSuggestionQuery(input: EntryFilterTextInput): String = input.text
+
+        override suspend fun getSuggestions(
+            input: EntryFilterTextInput,
+            query: String,
+        ): List<EntryFilterSuggestion> = emptyList()
+
+        override fun applySuggestion(
+            input: EntryFilterTextInput,
+            suggestion: EntryFilterSuggestion,
+        ): EntryFilterTextEdit = EntryFilterTextEdit(suggestion.value, suggestion.value.length)
+    }
 
     private fun mutate(filter: EntryFilter<*>) {
         when (filter) {
