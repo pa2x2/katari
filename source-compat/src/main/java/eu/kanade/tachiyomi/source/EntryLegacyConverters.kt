@@ -4,12 +4,10 @@ import eu.kanade.tachiyomi.network.ProgressListener
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryImagePage
-import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import eu.kanade.tachiyomi.source.model.Filter
 import eu.kanade.tachiyomi.source.model.FilterList
 import eu.kanade.tachiyomi.source.model.Page
-import eu.kanade.tachiyomi.source.model.SourceItemOrientation
 import eu.kanade.tachiyomi.source.model.UpdateStrategy
 
 fun FilterList.toEntryFilterList(): EntryFilterList =
@@ -52,16 +50,6 @@ fun EntryImagePage.toLegacyPage(progress: ProgressListener?): Page {
             progress.update(bytesRead, contentLength, done)
         }
     }
-}
-
-fun SourceItemOrientation.toEntryItemOrientation(): EntryItemOrientation = when (this) {
-    SourceItemOrientation.VERTICAL -> EntryItemOrientation.VERTICAL
-    SourceItemOrientation.HORIZONTAL -> EntryItemOrientation.HORIZONTAL
-}
-
-fun EntryItemOrientation.toLegacySourceItemOrientation(): SourceItemOrientation = when (this) {
-    EntryItemOrientation.VERTICAL -> SourceItemOrientation.VERTICAL
-    EntryItemOrientation.HORIZONTAL -> SourceItemOrientation.HORIZONTAL
 }
 
 @Suppress("UNCHECKED_CAST")

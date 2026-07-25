@@ -39,7 +39,6 @@ class EntryCatalogueContractValidationContributor : FeatureValidationContributor
                             id = 7L,
                             name = "Source",
                             description = description.copy(supportedEntryTypes = setOf(type)),
-                            usesAsyncFilters = false,
                         )
                         val filters = EntryFilterList()
                         val host = mockk<EntryCatalogueProviderHost> {

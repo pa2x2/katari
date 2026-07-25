@@ -33,7 +33,6 @@ internal data class EntryCatalogueHostSource(
     val id: Long,
     val name: String,
     val description: EntrySourceDescription,
-    val usesAsyncFilters: Boolean,
 )
 
 internal sealed interface EntryCatalogueHostSourceResolution {

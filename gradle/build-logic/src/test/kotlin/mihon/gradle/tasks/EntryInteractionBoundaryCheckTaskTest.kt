@@ -198,14 +198,14 @@ class EntryInteractionBoundaryCheckTaskTest {
                 package app
 
                 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
-                import eu.kanade.tachiyomi.source.sourceItemOrientation
+                import eu.kanade.tachiyomi.source.entry.entryItemOrientation
                 import tachiyomi.domain.source.service.EntrySourceDescriptionResolutionPort
 
                 class AppFeature(
                     private val source: EntryCatalogueSource,
                     private val description: EntrySourceDescriptionResolutionPort,
                 ) {
-                    val orientation = source.sourceItemOrientation()
+                    val orientation = source.entryItemOrientation()
                 }
             """.trimIndent(),
         )
@@ -215,7 +215,7 @@ class EntryInteractionBoundaryCheckTaskTest {
         error.message shouldContain "application consumers must use EntryCatalogueFeature"
         error.message shouldContain "raw source contract"
         error.message shouldContain "EntryCatalogueSource"
-        error.message shouldContain "sourceItemOrientation"
+        error.message shouldContain "entryItemOrientation"
     }
 
     @Test

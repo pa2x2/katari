@@ -1247,7 +1247,6 @@ private class EntryInteractionBoundaryRules(
             "eu.kanade.tachiyomi.source.entry.SourceMetadata",
             "eu.kanade.tachiyomi.source.entry.entryItemOrientation",
             "eu.kanade.tachiyomi.source.entry.supportedEntryTypes",
-            "eu.kanade.tachiyomi.source.sourceItemOrientation",
         )
 
         private val CATALOGUE_PROVIDER_ASSEMBLY_FILES = setOf(
@@ -1264,9 +1263,6 @@ private class EntryInteractionBoundaryRules(
             "getFilterList",
             "getCatalogueSource",
             "getCatalogueSources",
-            "resolveFilterList",
-            "defaultBackgroundFilterList",
-            "hasAsyncFilters",
             "toCatalogSource",
         )
 

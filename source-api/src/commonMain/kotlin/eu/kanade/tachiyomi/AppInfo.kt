@@ -9,16 +9,6 @@ object AppInfo {
 
     fun getVersionName(): String = readAppBuildString("VERSION_NAME") ?: "0"
 
-    fun getSupportedImageMimeTypes(): List<String> = listOf(
-        "image/avif",
-        "image/gif",
-        "image/heif",
-        "image/jpeg",
-        "image/jxl",
-        "image/png",
-        "image/webp",
-    )
-
     private fun readAppBuildInt(fieldName: String): Int? {
         return (readAppBuildField(fieldName) as? Number)?.toInt()
     }

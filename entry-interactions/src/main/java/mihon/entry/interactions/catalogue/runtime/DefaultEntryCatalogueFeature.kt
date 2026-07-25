@@ -97,7 +97,6 @@ internal class DefaultEntryCatalogueFeature(
             supportedEntryTypes = description.supportedEntryTypes,
             itemOrientation = description.itemOrientation,
             supportsLatest = catalogue.supportsLatest,
-            usesAsyncFilters = usesAsyncFilters,
         )
     }
 }

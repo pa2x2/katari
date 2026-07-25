@@ -19,16 +19,6 @@ interface CatalogueSource : Source {
     override val lang: String
 
     /**
-     * Whether the source opts in to the immersive feed view.
-     *
-     * Sources that return `true` advertise that their content can be consumed inline
-     * through the feed's immersive view. Defaults to `false`; sources must explicitly
-     * opt in.
-     */
-    val supportsImmersiveFeed: Boolean
-        get() = false
-
-    /**
      * Whether the source can provide related manga directly.
      *
      * Retained for compatibility with Keiyoushi's extensions-lib 1.6 surface.

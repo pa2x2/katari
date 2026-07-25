@@ -3,7 +3,6 @@ package tachiyomi.domain.entry.adapter
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import eu.kanade.tachiyomi.source.entry.SEntry
-import eu.kanade.tachiyomi.source.model.CatalogItem
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.model.UpdateStrategy
 import tachiyomi.domain.entry.model.Entry
@@ -43,10 +42,6 @@ fun SEntry.toEntry(sourceId: Long): Entry {
         memo = memo,
         type = type,
     )
-}
-
-fun CatalogItem.toEntry(sourceId: Long): Entry = when (this) {
-    is CatalogItem.MangaItem -> manga.toEntry(sourceId)
 }
 
 private fun UpdateStrategy.toEntryUpdateStrategy(): EntryUpdateStrategy = when (this) {

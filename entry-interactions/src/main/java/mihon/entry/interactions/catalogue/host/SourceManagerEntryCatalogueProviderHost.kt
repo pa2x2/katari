@@ -1,8 +1,5 @@
 package mihon.entry.interactions
 
-import eu.kanade.tachiyomi.source.adapter.defaultBackgroundFilterList
-import eu.kanade.tachiyomi.source.adapter.hasAsyncFilters
-import eu.kanade.tachiyomi.source.adapter.resolveFilterList
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientationProvider
@@ -48,11 +45,11 @@ internal class SourceManagerEntryCatalogueProviderHost(
     }
 
     override suspend fun filters(sourceId: Long): EntryFilterList {
-        return catalogueProvider(sourceId).resolveFilterList()
+        return catalogueProvider(sourceId).getFilterList()
     }
 
     override fun backgroundFilters(sourceId: Long): EntryFilterList {
-        return catalogueProvider(sourceId).defaultBackgroundFilterList()
+        return catalogueProvider(sourceId).getFilterList()
     }
 
     override suspend fun page(
@@ -74,7 +71,6 @@ internal class SourceManagerEntryCatalogueProviderHost(
             id = source.id,
             name = source.name,
             description = describe(source),
-            usesAsyncFilters = source.hasAsyncFilters(),
         )
     }
 

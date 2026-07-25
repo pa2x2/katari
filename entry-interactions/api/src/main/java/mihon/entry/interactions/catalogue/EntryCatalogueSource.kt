@@ -10,7 +10,6 @@ data class EntryCatalogueSourceInfo(
     val supportedEntryTypes: Set<EntryType>?,
     val itemOrientation: EntryItemOrientation,
     val supportsLatest: Boolean,
-    val usesAsyncFilters: Boolean,
 )
 
 sealed interface EntryCatalogueSourceResolution {

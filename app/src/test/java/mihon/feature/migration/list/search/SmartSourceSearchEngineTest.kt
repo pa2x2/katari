@@ -23,7 +23,6 @@ class SmartSourceSearchEngineTest {
             supportedEntryTypes = setOf(EntryType.MANGA, EntryType.ANIME),
             itemOrientation = EntryItemOrientation.VERTICAL,
             supportsLatest = true,
-            usesAsyncFilters = false,
         )
         val feature = mockk<EntryCatalogueFeature> {
             coEvery { search(any()) } answers {

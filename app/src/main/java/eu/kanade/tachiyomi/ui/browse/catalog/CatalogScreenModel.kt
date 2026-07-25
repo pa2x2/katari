@@ -158,15 +158,6 @@ class CatalogScreenModel(
         if (catalogSource == null) {
             mutableState.update { it.copy(filterState = FilterUiState.Unavailable) }
         } else {
-            if (filterLoader.usesAsyncFilters(sourceId) && state.value.listing is Listing.Search) {
-                mutableState.update {
-                    it.copy(
-                        filterState = FilterUiState.Loading,
-                        isWaitingForInitialFilterLoad = true,
-                    )
-                }
-            }
-
             screenModelScope.launchIO {
                 loadFilters(initialFilterSnapshot = initialFilterSnapshot)
             }
@@ -179,10 +170,10 @@ class CatalogScreenModel(
 
     private val hideInLibraryItems = sourcePreferences.hideInLibraryItems.get()
 
-    val catalogPagerFlowFlow = state.map { it.listing to it.isWaitingForInitialFilterLoad }
+    val catalogPagerFlowFlow = state.map { it.listing }
         .distinctUntilChanged()
-        .map { (listing, isWaitingForInitialFilterLoad) ->
-            if (isWaitingForInitialFilterLoad || catalogSource == null) {
+        .map { listing ->
+            if (catalogSource == null) {
                 emptyFlow()
             } else {
                 Pager(PagingConfig(pageSize = 25)) {
@@ -325,7 +316,6 @@ class CatalogScreenModel(
                     listing = listing,
                     toolbarQuery = listing.query,
                     filterState = FilterUiState.Ready,
-                    isWaitingForInitialFilterLoad = false,
                 )
             }
         }
@@ -344,19 +334,11 @@ class CatalogScreenModel(
     fun retryFilterLoad() {
         if (catalogSource == null) return
         screenModelScope.launchIO {
-            loadFilters(
-                initialFilterSnapshot = if (state.value.isWaitingForInitialFilterLoad) {
-                    initialFilterSnapshot
-                } else {
-                    emptyList()
-                },
-            )
+            loadFilters()
         }
     }
 
     private suspend fun loadFilters(initialFilterSnapshot: List<FilterStateNode> = emptyList()) {
-        val keepWaitingOnFailure = state.value.isWaitingForInitialFilterLoad
-
         mutableState.update { it.copy(filterState = FilterUiState.Loading) }
 
         runCatching {
@@ -368,14 +350,12 @@ class CatalogScreenModel(
                     initialFilterSnapshot = initialFilterSnapshot,
                 ).copy(
                     filterState = FilterUiState.Ready,
-                    isWaitingForInitialFilterLoad = false,
                 )
             }
         }.onFailure { throwable ->
             mutableState.update {
                 it.copy(
                     filterState = FilterUiState.Error(throwable),
-                    isWaitingForInitialFilterLoad = keepWaitingOnFailure,
                 )
             }
         }
@@ -388,7 +368,6 @@ class CatalogScreenModel(
             mutableState.update {
                 it.copy(
                     filterState = FilterUiState.Error(throwable),
-                    isWaitingForInitialFilterLoad = it.isWaitingForInitialFilterLoad,
                 )
             }
         }.getOrNull()
@@ -1034,7 +1013,6 @@ class CatalogScreenModel(
         val listing: Listing,
         val filters: EntryFilterList = EntryFilterList(),
         val filterState: FilterUiState = FilterUiState.Uninitialized,
-        val isWaitingForInitialFilterLoad: Boolean = false,
         val toolbarQuery: String? = null,
         val appliedCustomPresetId: String? = null,
         val dialog: Dialog? = null,

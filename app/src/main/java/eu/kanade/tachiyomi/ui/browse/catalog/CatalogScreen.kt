@@ -88,7 +88,6 @@ import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
 
 data class CatalogScreen(
@@ -280,59 +279,47 @@ data class CatalogScreen(
                 },
                 snackbarHost = { AppSnackbarHost(hostState = snackbarHostState) },
             ) { paddingValues ->
-                if (state.isWaitingForInitialFilterLoad) {
-                    when (val filterState = state.filterState) {
-                        is FilterUiState.Error -> {
-                            EmptyScreen(
-                                message = filterState.throwable.message ?: stringResource(MR.strings.unknown_error),
-                                modifier = Modifier.padding(paddingValues),
-                            )
-                        }
-                        else -> LoadingScreen(Modifier.padding(paddingValues))
-                    }
-                } else {
-                    PullRefresh(
-                        refreshing = catalogList.itemCount > 0 && catalogList.loadState.refresh is LoadState.Loading,
-                        enabled = catalogList.loadState.refresh !is LoadState.Loading,
-                        onRefresh = catalogList::refresh,
-                        modifier = Modifier.fillMaxSize(),
-                        indicatorPadding = paddingValues,
-                    ) {
-                        CatalogContent(
-                            catalogList = catalogList,
-                            columns = screenModel.getColumnsPreference(
-                                LocalConfiguration.current.orientation,
-                                screenModel.sourceItemOrientation,
-                            ),
-                            displayMode = screenModel.displayMode,
-                            sourceItemOrientation = screenModel.sourceItemOrientation,
-                            snackbarHostState = snackbarHostState,
-                            contentPadding = paddingValues,
-                            onItemClick = { item ->
-                                val entryId = (item as CatalogListItem.EntryItem).entry.id
-                                navigator.push(EntryScreen(entryId, fromSource = true))
-                            },
-                            onItemLongClick = { item ->
-                                scope.launch {
-                                    val outcome = withIOContext {
-                                        screenModel.onItemLongClick(item)
-                                    }
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    if (outcome == BrowseLongPressOutcome.StartImmersive) {
-                                        val selectedIndex = (0 until catalogList.itemCount).firstOrNull { index ->
-                                            val candidate = catalogList.peek(index)?.value
-                                            candidate?.id == item.id && candidate.entryType == item.entryType
-                                        }
-                                        selectedIndex?.let(immersivePositionState::updateItemIndex)
-                                        immersiveMode = true
-                                    }
+                PullRefresh(
+                    refreshing = catalogList.itemCount > 0 && catalogList.loadState.refresh is LoadState.Loading,
+                    enabled = catalogList.loadState.refresh !is LoadState.Loading,
+                    onRefresh = catalogList::refresh,
+                    modifier = Modifier.fillMaxSize(),
+                    indicatorPadding = paddingValues,
+                ) {
+                    CatalogContent(
+                        catalogList = catalogList,
+                        columns = screenModel.getColumnsPreference(
+                            LocalConfiguration.current.orientation,
+                            screenModel.sourceItemOrientation,
+                        ),
+                        displayMode = screenModel.displayMode,
+                        sourceItemOrientation = screenModel.sourceItemOrientation,
+                        snackbarHostState = snackbarHostState,
+                        contentPadding = paddingValues,
+                        onItemClick = { item ->
+                            val entryId = (item as CatalogListItem.EntryItem).entry.id
+                            navigator.push(EntryScreen(entryId, fromSource = true))
+                        },
+                        onItemLongClick = { item ->
+                            scope.launch {
+                                val outcome = withIOContext {
+                                    screenModel.onItemLongClick(item)
                                 }
-                            },
-                            onWebViewClick = onWebViewClick,
-                            onSettingsClick = onSettingsClick,
-                            positionState = immersivePositionState,
-                        )
-                    }
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                if (outcome == BrowseLongPressOutcome.StartImmersive) {
+                                    val selectedIndex = (0 until catalogList.itemCount).firstOrNull { index ->
+                                        val candidate = catalogList.peek(index)?.value
+                                        candidate?.id == item.id && candidate.entryType == item.entryType
+                                    }
+                                    selectedIndex?.let(immersivePositionState::updateItemIndex)
+                                    immersiveMode = true
+                                }
+                            }
+                        },
+                        onWebViewClick = onWebViewClick,
+                        onSettingsClick = onSettingsClick,
+                        positionState = immersivePositionState,
+                    )
                 }
             }
         }

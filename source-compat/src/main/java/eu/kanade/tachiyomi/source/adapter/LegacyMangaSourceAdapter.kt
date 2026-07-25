@@ -34,10 +34,8 @@ import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.model.UpdateStrategy
 import eu.kanade.tachiyomi.source.online.HttpSource
-import eu.kanade.tachiyomi.source.sourceItemOrientation
 import eu.kanade.tachiyomi.source.sourcePreferences
 import eu.kanade.tachiyomi.source.toEntryFilterList
-import eu.kanade.tachiyomi.source.toEntryItemOrientation
 import eu.kanade.tachiyomi.source.toEntryUpdateStrategy
 import eu.kanade.tachiyomi.source.toLegacyFilterList
 import eu.kanade.tachiyomi.source.toLegacyPage
@@ -70,8 +68,7 @@ open class LegacyMangaSourceAdapter(
     override val id: Long get() = source.id
     override val name: String get() = source.name
     override val supportedEntryTypes: Set<EntryType> = LEGACY_MANGA_SOURCE_SUPPORTED_ENTRY_TYPES
-    override val itemOrientation: EntryItemOrientation
-        get() = source.sourceItemOrientation().toEntryItemOrientation()
+    override val itemOrientation: EntryItemOrientation = EntryItemOrientation.VERTICAL
 
     override fun getFilterList(): EntryFilterList = source.getFilterList().toEntryFilterList()
 
@@ -149,12 +146,7 @@ open class LegacyMangaCatalogueSourceAdapter(
 
     override val lang: String get() = catalogueSource.lang
     override val supportsLatest: Boolean get() = catalogueSource.supportsLatest
-    override val supportsImmersiveFeed: Boolean
-        get() = try {
-            catalogueSource.supportsImmersiveFeed
-        } catch (_: AbstractMethodError) {
-            false
-        }
+    override val supportsImmersiveFeed: Boolean = false
 }
 
 private interface LegacyRelatedEntriesBridge : RelatedEntriesSource {

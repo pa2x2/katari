@@ -3,7 +3,10 @@ package eu.kanade.tachiyomi.source.adapter
 import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.SourceFactory
+import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.EntryImageSource
+import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
+import eu.kanade.tachiyomi.source.entry.EntryItemOrientationProvider
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.IncrementalChapterSource
@@ -84,6 +87,14 @@ class LegacyMangaSourceAdapterTest {
         }
 
         (runCatching { adapted.getContentDetails(anime) }.exceptionOrNull() is IllegalArgumentException) shouldBe true
+    }
+
+    @Test
+    fun `legacy source uses upstream presentation defaults`() {
+        val adapted = LegacyRxCatalogueSource().asUnifiedSource()
+
+        (adapted as EntryItemOrientationProvider).itemOrientation shouldBe EntryItemOrientation.VERTICAL
+        (adapted as EntryCatalogueSource).supportsImmersiveFeed shouldBe false
     }
 
     @Test

@@ -48,7 +48,6 @@ import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.source.local.LocalSource
 import uy.kohesive.injekt.Injekt
@@ -130,55 +129,43 @@ data class MigrateSourceSearchScreen(
                     }
                 }
             }
-            if (state.isWaitingForInitialFilterLoad) {
-                when (val filterState = state.filterState) {
-                    is FilterUiState.Error -> {
-                        EmptyScreen(
-                            message = filterState.throwable.message ?: stringResource(MR.strings.unknown_error),
-                            modifier = Modifier.padding(paddingValues),
+            CatalogContent(
+                catalogList = catalogList,
+                columns = screenModel.getColumnsPreference(
+                    LocalConfiguration.current.orientation,
+                    screenModel.sourceItemOrientation,
+                ),
+                displayMode = screenModel.displayMode,
+                sourceItemOrientation = screenModel.sourceItemOrientation,
+                snackbarHostState = snackbarHostState,
+                contentPadding = paddingValues,
+                onItemClick = { item ->
+                    if (item is CatalogListItem.EntryItem) {
+                        openMigrateDialog(item.entry)
+                    }
+                },
+                onItemLongClick = { item ->
+                    if (item is CatalogListItem.EntryItem) {
+                        navigator.push(EntryScreen(item.entry.id, fromSource = true))
+                    }
+                },
+                onWebViewClick = {
+                    val source = screenModel.catalogSource
+                    val home = source?.let {
+                        Injekt.get<EntrySourceHomeFeature>().resolve(it.id)
+                    } as? EntrySourceHomeResolution.Available
+                    if (source != null && home != null) {
+                        navigator.push(
+                            WebViewScreen(
+                                url = home.url,
+                                initialTitle = source.name,
+                                sourceId = source.id,
+                            ),
                         )
                     }
-                    else -> LoadingScreen(Modifier.padding(paddingValues))
-                }
-            } else {
-                CatalogContent(
-                    catalogList = catalogList,
-                    columns = screenModel.getColumnsPreference(
-                        LocalConfiguration.current.orientation,
-                        screenModel.sourceItemOrientation,
-                    ),
-                    displayMode = screenModel.displayMode,
-                    sourceItemOrientation = screenModel.sourceItemOrientation,
-                    snackbarHostState = snackbarHostState,
-                    contentPadding = paddingValues,
-                    onItemClick = { item ->
-                        if (item is CatalogListItem.EntryItem) {
-                            openMigrateDialog(item.entry)
-                        }
-                    },
-                    onItemLongClick = { item ->
-                        if (item is CatalogListItem.EntryItem) {
-                            navigator.push(EntryScreen(item.entry.id, fromSource = true))
-                        }
-                    },
-                    onWebViewClick = {
-                        val source = screenModel.catalogSource
-                        val home = source?.let {
-                            Injekt.get<EntrySourceHomeFeature>().resolve(it.id)
-                        } as? EntrySourceHomeResolution.Available
-                        if (source != null && home != null) {
-                            navigator.push(
-                                WebViewScreen(
-                                    url = home.url,
-                                    initialTitle = source.name,
-                                    sourceId = source.id,
-                                ),
-                            )
-                        }
-                    },
-                    onSettingsClick = { uriHandler.openUri(Constants.URL_HELP) },
-                )
-            }
+                },
+                onSettingsClick = { uriHandler.openUri(Constants.URL_HELP) },
+            )
         }
 
         val onDismissRequest = screenModel::dismissDialog

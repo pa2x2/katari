@@ -29,7 +29,7 @@ class EntryCatalogueFeatureTest {
         itemOrientation = EntryItemOrientation.HORIZONTAL,
         catalogue = EntryCatalogueDescription(supportsLatest = true),
     )
-    private val source = EntryCatalogueHostSource(7L, "Source", description, usesAsyncFilters = true)
+    private val source = EntryCatalogueHostSource(7L, "Source", description)
 
     @Test
     fun `source discovery and resolution expose Feature-owned catalogue facts`() {
@@ -143,7 +143,6 @@ class EntryCatalogueFeatureTest {
         supportedEntryTypes = description.supportedEntryTypes,
         itemOrientation = description.itemOrientation,
         supportsLatest = description.catalogue?.supportsLatest == true,
-        usesAsyncFilters = usesAsyncFilters,
     )
 
     private fun sourceEntry(url: String, type: EntryType): SEntry = SEntry.create().apply {
