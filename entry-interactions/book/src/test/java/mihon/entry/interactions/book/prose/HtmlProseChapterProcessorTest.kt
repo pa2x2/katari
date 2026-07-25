@@ -1,5 +1,6 @@
 package mihon.entry.interactions.book.prose
 
+import android.text.style.URLSpan
 import kotlinx.coroutines.test.runTest
 import mihon.book.api.BookCatalogCoverage
 import mihon.book.api.BookContentDescriptor
@@ -14,13 +15,16 @@ import mihon.entry.interactions.book.BookContentSession
 import mihon.entry.interactions.book.BookOpenResult
 import mihon.entry.interactions.book.MaterializedBookResource
 import mihon.entry.interactions.book.OpenedBookResource
-import org.junit.jupiter.api.Test
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 import java.io.ByteArrayInputStream
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
+@RunWith(RobolectricTestRunner::class)
 class HtmlProseChapterProcessorTest {
     private val processor = HtmlProseChapterProcessor()
 
@@ -52,15 +56,15 @@ class HtmlProseChapterProcessorTest {
 
         val result = assertIs<BookOpenResult.Success>(processor.open(content))
         val session = assertIs<HtmlProseChapterSession>(result.session)
+        val text = session.document.combinedText
+        val urls = text.getSpans(0, text.length, URLSpan::class.java).map(URLSpan::getURL)
 
         assertEquals(listOf("chapter-7"), session.publication.readingOrder.map { it.id })
-        assertTrue(session.bodyHtml.contains("<em>reader</em>"))
-        assertTrue(session.bodyHtml.contains("href=\"#note\""))
-        assertTrue(session.bodyHtml.contains("<aside id=\"note\">Footnote</aside>"))
-        assertFalse(session.bodyHtml.contains("onclick"))
-        assertFalse(session.bodyHtml.contains("<script"))
-        assertFalse(session.bodyHtml.contains("https://example.com"))
-        assertFalse(session.bodyHtml.contains("<img"))
+        assertTrue(text.contains("Hello reader."))
+        assertTrue(text.contains("Footnote"))
+        assertFalse(text.contains("steal"))
+        assertEquals(listOf("#note"), urls)
+        assertTrue("note" in session.document.document.anchors)
         assertEquals(1, content.openCount)
     }
 

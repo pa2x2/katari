@@ -1,18 +1,8 @@
 package mihon.entry.interactions.book.prose
 
-import android.content.Context
 import android.graphics.Typeface
 import android.text.Layout
-import android.text.Selection
-import android.text.Spannable
-import android.text.SpannableString
-import android.text.Spanned
 import android.text.TextPaint
-import android.text.method.LinkMovementMethod
-import android.text.style.ClickableSpan
-import android.text.style.URLSpan
-import android.view.MotionEvent
-import android.view.View
 import android.widget.TextView
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -74,7 +64,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -84,6 +73,14 @@ import kotlinx.coroutines.launch
 import mihon.entry.interactions.book.BookReaderNavigationRow
 import mihon.entry.interactions.book.BookReaderNavigationSheet
 import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.document.model.BookDocumentPosition
+import mihon.entry.interactions.book.document.reader.BookDocumentText
+import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
+import mihon.entry.interactions.book.document.reader.BookDocumentVisibleItemLayout
+import mihon.entry.interactions.book.document.reader.blockScrollOffset
+import mihon.entry.interactions.book.document.reader.bookDocumentViewerLocation
+import mihon.entry.interactions.book.document.reader.buildBookDocumentViewerItems
+import mihon.entry.interactions.book.document.reader.indexOfPosition
 import mihon.entry.interactions.settings.HtmlProseSettingsProvider
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildTransition
@@ -127,7 +124,7 @@ internal data class HtmlProseReaderUiState(
 internal fun HtmlProseReaderScreen(
     state: HtmlProseReaderUiState,
     settings: HtmlProseSettingsBinding,
-    onLocation: (chapterId: Long, progression: Float) -> Unit,
+    onLocation: (chapterId: Long, progression: Float, position: BookDocumentPosition?) -> Unit,
     onChapterEntered: (EntryChapter) -> Unit,
     onClose: () -> Unit,
     onMenuVisibilityChange: (Boolean) -> Unit,
@@ -148,8 +145,17 @@ internal fun HtmlProseReaderScreen(
     val paginated = layoutMode == HtmlProseSettingsProvider.LAYOUT_PAGINATED
     val palette = prosePalette(theme, isSystemInDarkTheme())
     var position by remember(state.currentChapterId) {
-        val progression = state.loadedChapters[state.currentChapterId]?.initialProgression ?: 0f
-        mutableStateOf(ProseViewerPosition(state.currentChapterId, progression, 1, 1))
+        val loaded = state.loadedChapters[state.currentChapterId]
+        val progression = loaded?.document?.document?.progressionAt(loaded.initialPosition) ?: 0f
+        mutableStateOf(
+            ProseViewerPosition(
+                chapterId = state.currentChapterId,
+                progression = progression,
+                currentPage = 1,
+                totalPages = 1,
+                documentPosition = loaded?.initialPosition,
+            ),
+        )
     }
     var viewerActions by remember { mutableStateOf(ProseViewerActions()) }
 
@@ -184,7 +190,7 @@ internal fun HtmlProseReaderScreen(
                             chromeVisible = state.menuVisible,
                             onPosition = {
                                 position = it
-                                onLocation(it.chapterId, it.progression)
+                                onLocation(it.chapterId, it.progression, it.documentPosition)
                             },
                             onChapterEntered = onChapterEntered,
                             onMenuToggle = { onMenuVisibilityChange(!state.menuVisible) },
@@ -194,6 +200,7 @@ internal fun HtmlProseReaderScreen(
                         ScrollingProseViewer(
                             state = state,
                             initialProgression = position.progression,
+                            initialDocumentPosition = position.documentPosition,
                             palette = palette,
                             fontFamily = fontFamily,
                             fontSizePercent = fontSize,
@@ -202,7 +209,7 @@ internal fun HtmlProseReaderScreen(
                             textAlignment = textAlignment,
                             onPosition = {
                                 position = it
-                                onLocation(it.chapterId, it.progression)
+                                onLocation(it.chapterId, it.progression, it.documentPosition)
                             },
                             onChapterEntered = onChapterEntered,
                             onMenuToggle = { onMenuVisibilityChange(!state.menuVisible) },
@@ -378,9 +385,7 @@ private fun PaginatedProseViewer(
         }
         val alignment = textAlignment.toLayoutAlignment()
         val documents = remember(state.loadedChapters) {
-            state.loadedChapters.mapValues { (_, chapter) ->
-                parseProseHtml(chapter.bodyHtml)
-            }
+            state.loadedChapters.mapValues { (_, chapter) -> chapter.document }
         }
         val pages = remember(
             documents,
@@ -394,7 +399,7 @@ private fun PaginatedProseViewer(
             state.loadedChapters.mapValues { (_, chapter) ->
                 paginateProse(
                     chapter = chapter,
-                    text = checkNotNull(documents[chapter.chapter.id]).text,
+                    text = checkNotNull(documents[chapter.owner.id]).combinedText,
                     paint = paint,
                     availableWidthPx = widthPx,
                     availableHeightPx = heightPx,
@@ -475,20 +480,27 @@ private fun PaginatedProseViewer(
             beyondViewportPageCount = 1,
         ) { index ->
             when (val item = items[index]) {
-                is ProsePagerItem.Page -> ProseText(
+                is ProsePagerItem.Page -> BookDocumentText(
                     text = item.page.text,
-                    palette = palette,
-                    fontFamily = fontFamily,
-                    fontSizePercent = fontSizePercent,
-                    lineHeightPercent = lineHeightPercent,
-                    textAlignment = textAlignment,
+                    textColor = palette.foreground.toArgbValue(),
+                    textSizeSp = 16f * fontSizePercent / 100f,
+                    typeface = proseTypeface(fontFamily),
+                    lineSpacingMultiplier = lineHeightPercent / 100f,
+                    textAlignment = textAlignment.toTextViewAlignment(),
+                    justificationMode = if (textAlignment == HtmlProseSettingsProvider.ALIGN_JUSTIFY) {
+                        Layout.JUSTIFICATION_MODE_INTER_WORD
+                    } else {
+                        Layout.JUSTIFICATION_MODE_NONE
+                    },
                     onAnchorClick = { anchorId, _ ->
-                        val anchorOffset = documents[item.page.chapter.id]?.anchors?.get(anchorId)
-                            ?: return@ProseText
+                        val document = documents[item.page.chapter.id] ?: return@BookDocumentText
+                        val anchorPosition = document.document.anchors[anchorId]
+                            ?: return@BookDocumentText
+                        val anchorOffset = document.document.logicalOffset(anchorPosition) ?: return@BookDocumentText
                         val targetPage = pageIndexForAnchor(
                             pages = pages[item.page.chapter.id].orEmpty(),
                             anchorOffset = anchorOffset,
-                        ) ?: return@ProseText
+                        ) ?: return@BookDocumentText
                         val targetIndex = items.indexOfFirst { target ->
                             target is ProsePagerItem.Page &&
                                 target.page.chapter.id == item.page.chapter.id &&
@@ -496,6 +508,7 @@ private fun PaginatedProseViewer(
                         }
                         if (targetIndex >= 0) scope.launch { pagerState.animateScrollToPage(targetIndex) }
                     },
+                    onViewChanged = {},
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = horizontalMargin, vertical = verticalMargin),
@@ -521,7 +534,18 @@ private fun PaginatedProseViewer(
                 .distinctUntilChanged()
                 .collect { item ->
                     val page = (item as ProsePagerItem.Page).page
-                    onPosition(ProseViewerPosition(page.chapter.id, page.progression, page.index + 1, page.total))
+                    val documentPosition = documents[page.chapter.id]
+                        ?.document
+                        ?.positionAtProgression(page.progression)
+                    onPosition(
+                        ProseViewerPosition(
+                            page.chapter.id,
+                            page.progression,
+                            page.index + 1,
+                            page.total,
+                            documentPosition,
+                        ),
+                    )
                     if (page.chapter.id != state.currentChapterId) onChapterEntered(page.chapter)
                 }
         }
@@ -532,6 +556,7 @@ private fun PaginatedProseViewer(
 private fun ScrollingProseViewer(
     state: HtmlProseReaderUiState,
     initialProgression: Float,
+    initialDocumentPosition: BookDocumentPosition?,
     palette: ProsePalette,
     fontFamily: String,
     fontSizePercent: Int,
@@ -543,51 +568,75 @@ private fun ScrollingProseViewer(
     onMenuToggle: () -> Unit,
     onActions: (ProseViewerActions) -> Unit,
 ) {
-    val items = remember(state.window, state.loadedChapters) { buildScrollingItems(state.window, state.loadedChapters) }
-    val initialIndex = items.indexOfFirst {
-        it is ProseScrollItem.Chapter && it.content.chapter.id == state.currentChapterId
-    }.coerceAtLeast(0)
+    val items = remember(state.window, state.loadedChapters) {
+        buildBookDocumentViewerItems(
+            window = state.window,
+            loaded = state.loadedChapters,
+            keyOf = EntryChapter::id,
+        )
+    }
+    val currentSection = state.loadedChapters[state.currentChapterId]
+    val initialPosition = initialDocumentPosition
+        ?.takeIf { currentSection?.document?.document?.contains(it) == true }
+        ?: currentSection?.document?.document?.positionAtProgression(initialProgression)
+        ?: currentSection?.initialPosition
+    val initialIndex = initialPosition?.let {
+        items.indexOfPosition(state.currentChapterId.toString(), it)
+    }?.coerceAtLeast(0) ?: 0
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
-    var initialPositionRestored by remember(listState, state.currentChapterId) { mutableStateOf(false) }
+    var initialPositionRestored by remember(listState) { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    val verticalPaddingPx = with(LocalDensity.current) { (16.dp * pageMarginsPercent / 100).roundToPx() }
-    LaunchedEffect(listState, items, state.currentChapterId, initialProgression) {
+    val density = LocalDensity.current
+    val textViews = remember { mutableMapOf<String, TextView>() }
+
+    suspend fun scrollToPosition(
+        sectionKey: String,
+        position: BookDocumentPosition,
+    ) {
+        val index = items.indexOfPosition(sectionKey, position)
+        if (index < 0) return
+        val block = (items[index] as BookDocumentViewerItem.Block).content.block
+        listState.scrollToItem(index)
+        val info = snapshotFlow {
+            listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == index }
+        }.filter { it != null }.first() ?: return
+        listState.scrollToItem(
+            index,
+            blockScrollOffset(info.size, block.logicalLength, position.offsetWithinBlock),
+        )
+    }
+
+    LaunchedEffect(listState, items, state.currentChapterId, initialPosition) {
         if (initialPositionRestored) return@LaunchedEffect
-        val chapterIndex = items.indexOfFirst {
-            it is ProseScrollItem.Chapter && it.content.chapter.id == state.currentChapterId
-        }
-        if (chapterIndex < 0) return@LaunchedEffect
-        if (initialProgression > 0f) {
-            val info = snapshotFlow {
-                listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == chapterIndex }
-            }.filter { it != null }.first() ?: return@LaunchedEffect
-            listState.scrollToItem(
-                chapterIndex,
-                scrollOffsetForProgression(info.size, listState.layoutInfo.viewportSize.height, initialProgression),
-            )
-        }
+        val target = initialPosition ?: return@LaunchedEffect
+        scrollToPosition(state.currentChapterId.toString(), target)
         initialPositionRestored = true
     }
     LaunchedEffect(listState, items, state.currentChapterId) {
-        val currentIndex = items.indexOfFirst {
-            it is ProseScrollItem.Chapter && it.content.chapter.id == state.currentChapterId
-        }
         onActions(
             ProseViewerActions(
-                seekProgress = { progression ->
-                    val info = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == currentIndex }
-                    val scrollable = ((info?.size ?: 0) - listState.layoutInfo.viewportSize.height).coerceAtLeast(0)
-                    if (currentIndex >= 0) {
-                        scope.launch { listState.scrollToItem(currentIndex, (scrollable * progression).roundToInt()) }
+                seekProgress = seekProgress@{ progression ->
+                    val section = state.loadedChapters[state.currentChapterId] ?: return@seekProgress
+                    scope.launch {
+                        scrollToPosition(
+                            section.key,
+                            section.document.document.positionAtProgression(progression),
+                        )
                     }
                 },
                 previousSection = {
-                    (currentIndex - 1).takeIf { it >= 0 }?.let { scope.launch { listState.animateScrollToItem(it) } }
+                    items.indexOfFirst { item ->
+                        item is BookDocumentViewerItem.Transition &&
+                            item.transition.direction == EntryChildDirection.PREVIOUS &&
+                            item.transition.from.id == state.currentChapterId
+                    }.takeIf { it >= 0 }?.let { scope.launch { listState.animateScrollToItem(it) } }
                 },
                 nextSection = {
-                    (currentIndex + 1).takeIf { it <= items.lastIndex }?.let {
-                        scope.launch { listState.animateScrollToItem(it) }
-                    }
+                    items.indexOfFirst { item ->
+                        item is BookDocumentViewerItem.Transition &&
+                            item.transition.direction == EntryChildDirection.NEXT &&
+                            item.transition.from.id == state.currentChapterId
+                    }.takeIf { it >= 0 }?.let { scope.launch { listState.animateScrollToItem(it) } }
                 },
             ),
         )
@@ -596,32 +645,56 @@ private fun ScrollingProseViewer(
         state = listState,
         modifier = Modifier.fillMaxSize(),
     ) {
-        items(items, key = ProseScrollItem::key) { item ->
+        items(items, key = { it.key }) { item ->
             when (item) {
-                is ProseScrollItem.Chapter -> {
-                    val document = remember(item.content.bodyHtml) {
-                        parseProseHtml(item.content.bodyHtml)
-                    }
-                    ProseText(
-                        text = document.text,
-                        palette = palette,
-                        fontFamily = fontFamily,
-                        fontSizePercent = fontSizePercent,
-                        lineHeightPercent = lineHeightPercent,
-                        textAlignment = textAlignment,
-                        onAnchorClick = { anchorId, view ->
-                            val anchorOffset = document.anchors[anchorId] ?: return@ProseText
-                            val layout = view.layout ?: return@ProseText
-                            val line = layout.getLineForOffset(anchorOffset.coerceIn(0, view.text.length))
-                            val itemIndex = items.indexOf(item)
-                            if (itemIndex >= 0) {
-                                scope.launch {
-                                    listState.animateScrollToItem(
-                                        itemIndex,
-                                        verticalPaddingPx + layout.getLineTop(line),
-                                    )
+                is BookDocumentViewerItem.Block -> {
+                    val block = item.content.block
+                    val sectionBlocks = item.section.document.document.blocks
+                    val topPadding = if (block.id == sectionBlocks.first().id) 16.dp else 0.dp
+                    val bottomPadding = if (block.id == sectionBlocks.last().id) 16.dp else 0.dp
+                    BookDocumentText(
+                        text = item.content.renderedText,
+                        textColor = palette.foreground.toArgbValue(),
+                        textSizeSp = 16f * fontSizePercent / 100f,
+                        typeface = proseTypeface(fontFamily),
+                        lineSpacingMultiplier = lineHeightPercent / 100f,
+                        textAlignment = textAlignment.toTextViewAlignment(),
+                        justificationMode = if (textAlignment == HtmlProseSettingsProvider.ALIGN_JUSTIFY) {
+                            Layout.JUSTIFICATION_MODE_INTER_WORD
+                        } else {
+                            Layout.JUSTIFICATION_MODE_NONE
+                        },
+                        trimTerminalLine = block.id != sectionBlocks.last().id,
+                        onAnchorClick = { anchorId, _ ->
+                            val target = item.section.document.document.anchors[anchorId]
+                                ?: return@BookDocumentText
+                            val targetIndex = items.indexOfPosition(item.section.key, target)
+                            if (targetIndex < 0) return@BookDocumentText
+                            val targetItem = items[targetIndex] as BookDocumentViewerItem.Block
+                            scope.launch {
+                                listState.scrollToItem(targetIndex)
+                                val view = snapshotFlow { textViews[targetItem.key] }
+                                    .filter { it?.layout != null }
+                                    .first()
+                                    ?: return@launch
+                                val layout = view.layout ?: return@launch
+                                val line = layout.getLineForOffset(
+                                    target.offsetWithinBlock.coerceIn(0, view.text.length),
+                                )
+                                val targetTopPadding = if (
+                                    targetItem.content.block.id ==
+                                    targetItem.section.document.document.blocks.first().id
+                                ) {
+                                    16.dp * pageMarginsPercent / 100
+                                } else {
+                                    0.dp
                                 }
+                                val paddingPx = with(density) { targetTopPadding.roundToPx() }
+                                listState.animateScrollToItem(targetIndex, paddingPx + layout.getLineTop(line))
                             }
+                        },
+                        onViewChanged = { view ->
+                            if (view == null) textViews.remove(item.key) else textViews[item.key] = view
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -631,12 +704,14 @@ private fun ScrollingProseViewer(
                                 onClick = onMenuToggle,
                             )
                             .padding(
-                                horizontal = 20.dp * pageMarginsPercent / 100,
-                                vertical = 16.dp * pageMarginsPercent / 100,
+                                start = 20.dp * pageMarginsPercent / 100,
+                                top = topPadding * pageMarginsPercent / 100,
+                                end = 20.dp * pageMarginsPercent / 100,
+                                bottom = bottomPadding * pageMarginsPercent / 100,
                             ),
                     )
                 }
-                is ProseScrollItem.Transition -> ProseTransition(
+                is BookDocumentViewerItem.Transition -> ProseTransition(
                     transition = item.transition,
                     palette = palette,
                     modifier = Modifier
@@ -648,8 +723,8 @@ private fun ScrollingProseViewer(
                         )
                         .padding(28.dp),
                 )
-                is ProseScrollItem.Loading -> ProseLoading(
-                    chapterName = item.chapter.name,
+                is BookDocumentViewerItem.Loading -> ProseLoading(
+                    chapterName = item.owner.name,
                     palette = palette,
                     modifier = Modifier
                         .fillParentMaxHeight()
@@ -668,10 +743,10 @@ private fun ScrollingProseViewer(
             .map { info ->
                 // LazyListItemInfo offsets are mutable and the instances are reused between scroll frames.
                 // Snapshot their values before distinctUntilChanged so live offset changes are not suppressed.
-                scrollingProseLocation(
+                bookDocumentViewerLocation(
                     items = items,
                     visibleItems = info.visibleItemsInfo.map {
-                        ProseVisibleItemLayout(index = it.index, offset = it.offset, size = it.size)
+                        BookDocumentVisibleItemLayout(index = it.index, offset = it.offset, size = it.size)
                     },
                     viewportStartOffset = info.viewportStartOffset,
                     viewportEndOffset = info.viewportEndOffset,
@@ -681,127 +756,18 @@ private fun ScrollingProseViewer(
             .distinctUntilChanged()
             .collect { location ->
                 location ?: return@collect
-                onPosition(ProseViewerPosition(location.chapter.id, location.progression, 1, 1))
-                if (location.chapter.id != state.currentChapterId) onChapterEntered(location.chapter)
+                onPosition(
+                    ProseViewerPosition(
+                        chapterId = location.section.owner.id,
+                        progression = location.progression,
+                        currentPage = 1,
+                        totalPages = 1,
+                        documentPosition = location.position,
+                    ),
+                )
+                if (location.section.owner.id != state.currentChapterId) onChapterEntered(location.section.owner)
             }
     }
-}
-
-internal fun scrollOffsetForProgression(itemSize: Int, viewportSize: Int, progression: Float): Int {
-    val scrollable = (itemSize - viewportSize).coerceAtLeast(0)
-    return (scrollable * progression.coerceIn(0f, 1f)).roundToInt()
-}
-
-internal data class ProseVisibleItemLayout(
-    val index: Int,
-    val offset: Int,
-    val size: Int,
-)
-
-internal data class ProseScrollLocation(
-    val chapter: EntryChapter,
-    val progression: Float,
-)
-
-internal fun scrollingProseLocation(
-    items: List<ProseScrollItem>,
-    visibleItems: List<ProseVisibleItemLayout>,
-    viewportStartOffset: Int,
-    viewportEndOffset: Int,
-): ProseScrollLocation? {
-    val center = (viewportStartOffset + viewportEndOffset) / 2
-    val layout = visibleItems
-        .minByOrNull { kotlin.math.abs((it.offset + it.size / 2) - center) }
-        ?: return null
-    val chapter = items.getOrNull(layout.index) as? ProseScrollItem.Chapter ?: return null
-    val viewportSize = (viewportEndOffset - viewportStartOffset).coerceAtLeast(1)
-    val scrollable = (layout.size - viewportSize).coerceAtLeast(1)
-    val progression = (viewportStartOffset - layout.offset).toFloat().div(scrollable).coerceIn(0f, 1f)
-    return ProseScrollLocation(chapter.content.chapter, progression)
-}
-
-@Composable
-private fun ProseText(
-    text: CharSequence,
-    palette: ProsePalette,
-    fontFamily: String,
-    fontSizePercent: Int,
-    lineHeightPercent: Int,
-    textAlignment: String,
-    onAnchorClick: (String, TextView) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    AndroidView(
-        modifier = modifier,
-        factory = { context ->
-            ProseTextView(context).apply {
-                includeFontPadding = false
-                setTextIsSelectable(false)
-                setBackgroundColor(android.graphics.Color.TRANSPARENT)
-                movementMethod = LinkMovementMethod.getInstance()
-                highlightColor = android.graphics.Color.TRANSPARENT
-            }
-        },
-        update = { view ->
-            view.text = text.withAnchorClicks { anchorId -> onAnchorClick(anchorId, view) }
-            view.setTextColor(palette.foreground.toArgbValue())
-            view.textSize = 16f * fontSizePercent / 100f
-            view.typeface = proseTypeface(fontFamily)
-            view.setLineSpacing(0f, lineHeightPercent / 100f)
-            view.textAlignment = textAlignment.toTextViewAlignment()
-            view.justificationMode = if (textAlignment == HtmlProseSettingsProvider.ALIGN_JUSTIFY) {
-                Layout.JUSTIFICATION_MODE_INTER_WORD
-            } else {
-                Layout.JUSTIFICATION_MODE_NONE
-            }
-        },
-    )
-}
-
-internal class ProseTextView(context: Context) : TextView(context) {
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (event.actionMasked == MotionEvent.ACTION_DOWN || event.actionMasked == MotionEvent.ACTION_UP) {
-            val buffer = text as? Spanned
-            if (buffer?.clickableSpanAt(this, event) == null) {
-                (buffer as? Spannable)?.let(Selection::removeSelection)
-                return false
-            }
-        }
-        return super.onTouchEvent(event)
-    }
-}
-
-private fun Spanned.clickableSpanAt(widget: TextView, event: MotionEvent): ClickableSpan? {
-    val layout = widget.layout ?: return null
-    val x = event.x - widget.totalPaddingLeft + widget.scrollX
-    val y = event.y - widget.totalPaddingTop + widget.scrollY
-    if (y < 0 || y > layout.height) return null
-
-    val line = layout.getLineForVertical(y.toInt())
-    if (x < layout.getLineLeft(line) || x > layout.getLineRight(line)) return null
-    val offset = layout.getOffsetForHorizontal(line, x)
-    return getSpans(offset, offset, ClickableSpan::class.java).firstOrNull()
-}
-
-internal fun CharSequence.withAnchorClicks(onAnchorClick: (String) -> Unit): CharSequence {
-    val spannable = SpannableString(this)
-    spannable.getSpans(0, spannable.length, URLSpan::class.java).forEach { span ->
-        val anchorId = span.url.removePrefix("#").takeIf { span.url.startsWith("#") && it.isNotBlank() }
-            ?: return@forEach
-        val start = spannable.getSpanStart(span)
-        val end = spannable.getSpanEnd(span)
-        val flags = spannable.getSpanFlags(span)
-        spannable.removeSpan(span)
-        spannable.setSpan(
-            object : ClickableSpan() {
-                override fun onClick(widget: View) = onAnchorClick(anchorId)
-            },
-            start,
-            end,
-            flags.takeIf { it != 0 } ?: Spannable.SPAN_EXCLUSIVE_EXCLUSIVE,
-        )
-    }
-    return spannable
 }
 
 @Composable
@@ -1053,21 +1019,6 @@ internal fun initialPaginatedItemIndex(
     }.coerceAtLeast(0)
 }
 
-internal fun buildScrollingItems(
-    window: EntryChildWindow<EntryChapter>,
-    loaded: Map<Long, HtmlProseLoadedChapter>,
-): List<ProseScrollItem> = buildList {
-    window.previous?.let { previous ->
-        add(loaded[previous.id]?.let(ProseScrollItem::Chapter) ?: ProseScrollItem.Loading(previous))
-    }
-    add(ProseScrollItem.Transition(window.previousTransition()))
-    add(loaded[window.current.id]?.let(ProseScrollItem::Chapter) ?: ProseScrollItem.Loading(window.current))
-    add(ProseScrollItem.Transition(window.nextTransition()))
-    window.next?.let { next ->
-        add(loaded[next.id]?.let(ProseScrollItem::Chapter) ?: ProseScrollItem.Loading(next))
-    }
-}
-
 internal sealed interface ProsePagerItem {
     val key: String
 
@@ -1084,27 +1035,12 @@ internal sealed interface ProsePagerItem {
     }
 }
 
-internal sealed interface ProseScrollItem {
-    val key: String
-
-    data class Chapter(val content: HtmlProseLoadedChapter) : ProseScrollItem {
-        override val key = "chapter:${content.chapter.id}"
-    }
-
-    data class Transition(val transition: EntryChildTransition<EntryChapter>) : ProseScrollItem {
-        override val key = "transition:${transitionKey(transition)}"
-    }
-
-    data class Loading(val chapter: EntryChapter) : ProseScrollItem {
-        override val key = "loading:${chapter.id}"
-    }
-}
-
 private data class ProseViewerPosition(
     val chapterId: Long,
     val progression: Float,
     val currentPage: Int,
     val totalPages: Int,
+    val documentPosition: BookDocumentPosition?,
 )
 
 private data class ProseViewerActions(

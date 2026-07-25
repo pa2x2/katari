@@ -41,7 +41,10 @@ class DownloadedBookContentSessionTest {
         val result = assertIs<BookOpenResult.Success>(HtmlProseChapterProcessor().open(content))
         val session = assertIs<HtmlProseChapterSession>(result.session)
 
-        assertTrue(session.bodyHtml.contains("Readable prose"))
+        assertEquals(
+            listOf("Downloaded", "Readable prose."),
+            session.document.document.blocks.map { it.plainText },
+        )
         session.close()
         content.close()
     }

@@ -1,140 +1,148 @@
 package mihon.entry.interactions.book.prose
 
+import android.graphics.Typeface
 import android.text.Layout
 import android.text.SpannableString
-import android.text.Spanned
+import android.text.SpannableStringBuilder
 import android.text.StaticLayout
 import android.text.TextPaint
-import android.text.style.ClickableSpan
-import android.view.MotionEvent
-import android.view.View
-import android.view.View.MeasureSpec
-import android.view.ViewGroup
-import android.widget.TextView
+import android.text.style.StyleSpan
+import android.text.style.URLSpan
+import mihon.entry.interactions.book.document.model.BookDocumentBlockKind
+import mihon.entry.interactions.book.document.reader.BookDocumentSection
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import tachiyomi.domain.entry.model.EntryChapter
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class HtmlProseDocumentTest {
     @Test
-    fun `native prose parser preserves visible chapter content`() {
-        val document = parseProseHtml("<h1>Chapter 1</h1><p>Hello <strong>reader</strong>.</p>")
+    fun `splitting blocks preserves the legacy whole-document text layout`() {
+        val html = """
+            <div>Intro line<br>second line</div>
+            <h2>Heading</h2>
+            <p>Paragraph one.</p>
+            <p><br></p>
+            <ol start="3">
+                <li>Third item</li>
+                <li>Fourth item<ul><li>Nested item</li></ul>Tail</li>
+            </ol>
+            <blockquote>Quoted text</blockquote>
+            <p>Final paragraph.</p>
+        """.trimIndent()
+        val prepared = prepare(html)
+        val legacy = legacyWholeDocumentText(html)
+        val recombined = SpannableStringBuilder().apply {
+            prepared.blocks.forEach { append(it.renderedText) }
+        }
 
-        assertTrue(document.text.contains("Chapter 1"))
-        assertTrue(document.text.contains("Hello reader."))
+        assertEquals(legacy.toString(), prepared.combinedText.toString())
+        assertEquals(legacy.toString(), recombined.toString())
+        assertEquals(spanLayout(legacy), spanLayout(prepared.combinedText))
+        prepared.blocks.forEach { preparedBlock ->
+            assertEquals(preparedBlock.block.logicalLength, preparedBlock.renderedText.length)
+        }
     }
 
     @Test
-    fun `native prose parser maps same-document anchor targets`() {
-        val document = parseProseHtml(
-            "<p><a href=\"#note\">See note</a></p><aside id=\"note\">Footnote text</aside>",
+    fun `HTML adapter preserves semantic block order and nested list structure`() {
+        val prepared = prepare(
+            """
+                Intro <em>outside a paragraph</em>
+                <h2 id="section">Heading</h2>
+                <p>Body with <strong>emphasis</strong>.</p>
+                <ol>
+                    <li>Outer<ul><li>Nested</li></ul></li>
+                    <li>Second</li>
+                </ol>
+                <blockquote><p>Quoted text</p></blockquote>
+            """.trimIndent(),
         )
 
-        val offset = requireNotNull(document.anchors["note"])
-        assertTrue(document.text.substring(offset).startsWith("Footnote text"))
-        assertTrue(document.text.none { it == '\uE000' || it == '\uE001' })
+        assertEquals(
+            listOf(
+                BookDocumentBlockKind.PARAGRAPH,
+                BookDocumentBlockKind.HEADING,
+                BookDocumentBlockKind.PARAGRAPH,
+                BookDocumentBlockKind.LIST,
+                BookDocumentBlockKind.QUOTE,
+            ),
+            prepared.document.blocks.map { it.role.kind },
+        )
+        assertEquals(2, prepared.document.blocks[1].role.level)
+        assertEquals(listOf("section"), prepared.document.blocks[1].sourceFragments)
+        assertEquals(true, prepared.document.blocks[3].role.ordered)
+        assertTrue(prepared.document.blocks[3].plainText.contains("Outer"))
+        assertTrue(prepared.document.blocks[3].plainText.contains("Nested"))
+        assertTrue(prepared.document.blocks[3].plainText.contains("Second"))
+        assertTrue(
+            prepared.blocks[2].renderedText
+                .getSpans(0, prepared.blocks[2].renderedText.length, StyleSpan::class.java)
+                .any { it.style == Typeface.BOLD },
+        )
     }
 
     @Test
-    fun `same-document links dispatch their anchor id`() {
-        val document = parseProseHtml("<a href=\"#note\">See note</a><p id=\"note\">Footnote</p>")
-        var clickedAnchor: String? = null
+    fun `generated block identity survives unrelated insertion and disambiguates duplicate text`() {
+        val original = prepare("<p>Repeated</p><p>Stable target</p><p>Repeated</p>")
+        val edited = prepare("<p>Inserted</p><p>Repeated</p><p>Stable target</p><p>Repeated</p>")
 
-        val linked = document.text.withAnchorClicks { clickedAnchor = it } as Spanned
-        val span = linked.getSpans(0, linked.length, ClickableSpan::class.java).single()
-        span.onClick(View(RuntimeEnvironment.getApplication()))
+        val originalTarget = original.document.blocks.single { it.plainText == "Stable target" }.id
+        val editedTarget = edited.document.blocks.single { it.plainText == "Stable target" }.id
+        val duplicateIds = original.document.blocks.filter { it.plainText == "Repeated" }.map { it.id }
 
-        assertEquals("note", clickedAnchor)
+        assertEquals(originalTarget, editedTarget)
+        assertEquals(2, duplicateIds.distinct().size)
+        assertNotEquals(duplicateIds[0], duplicateIds[1])
     }
 
     @Test
-    fun `ordinary prose taps remain available to the reader chrome`() {
-        val view = laidOutTextView(
-            SpannableString("Link then plain prose").apply {
-                setSpan(testClickableSpan(), 0, 4, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            },
+    fun `same-document anchors retain their block position and link span`() {
+        val prepared = prepare(
+            "<p><a href=\"#note\">See note</a></p><aside><p id=\"note\">Footnote text</p></aside>",
         )
-        val plainTextX = view.layout.getPrimaryHorizontal(10)
-        val textY = (view.layout.getLineTop(0) + view.layout.getLineBottom(0)) / 2f
-        val event = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, plainTextX, textY, 0)
 
-        val handled = view.dispatchTouchEvent(event)
+        val position = requireNotNull(prepared.document.anchors["note"])
+        val target = requireNotNull(prepared.block(position.blockId))
+        val linkBlock = prepared.blocks.first()
 
-        event.recycle()
-        assertEquals(false, handled)
+        assertTrue(target.block.plainText.startsWith("Footnote text"))
+        assertTrue(
+            target.renderedText
+                .subSequence(position.offsetWithinBlock, target.renderedText.length)
+                .startsWith("Footnote text"),
+        )
+        assertTrue("note" in target.block.sourceFragments)
+        assertEquals(
+            "#note",
+            linkBlock.renderedText.getSpans(0, linkBlock.renderedText.length, URLSpan::class.java).single().url,
+        )
+        assertTrue(prepared.combinedText.none { it == '\uE000' || it == '\uE001' })
     }
 
     @Test
-    fun `prose links remain clickable`() {
-        var clicked = false
-        val view = laidOutTextView(
-            SpannableString("Link then plain prose").apply {
-                setSpan(testClickableSpan { clicked = true }, 0, 4, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            },
+    fun `pagination excludes a line that does not fully fit`() {
+        val prepared = prepare(
+            List(30) { "<p>Line $it with enough prose to wrap across the page width.</p>" }.joinToString(""),
         )
-        val linkX = view.layout.getPrimaryHorizontal(2)
-        val textY = (view.layout.getLineTop(0) + view.layout.getLineBottom(0)) / 2f
-        val down = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, linkX, textY, 0)
-        val up = MotionEvent.obtain(0, 1, MotionEvent.ACTION_UP, linkX, textY, 0)
-
-        val downHandled = view.dispatchTouchEvent(down)
-        val upHandled = view.dispatchTouchEvent(up)
-
-        down.recycle()
-        up.recycle()
-        assertTrue(downHandled)
-        assertTrue(upHandled)
-        assertTrue(clicked)
-    }
-
-    @Test
-    fun `pagination fills multiple lines before advancing`() {
-        val chapter = HtmlProseLoadedChapter(
-            chapter = EntryChapter.create().copy(id = 1L, name = "Chapter 1"),
-            resourceId = "chapter-1",
-            bodyHtml = List(30) {
-                "<p>Paragraph $it contains enough prose to wrap onto another line.</p>"
-            }.joinToString(""),
-            initialProgression = 0f,
+        val chapter = chapter()
+        val section = BookDocumentSection(
+            key = chapter.id.toString(),
+            owner = chapter,
+            document = prepared,
+            initialPosition = prepared.document.positionAtProgression(0f),
         )
-        val document = parseProseHtml(chapter.bodyHtml)
-        val pages = paginateProse(
-            chapter = chapter,
-            text = document.text,
-            paint = TextPaint(TextPaint.ANTI_ALIAS_FLAG).apply { textSize = 20f },
-            availableWidthPx = 320,
-            availableHeightPx = 480,
-            alignment = Layout.Alignment.ALIGN_NORMAL,
-            lineSpacingMultiplier = 1.5f,
-            justificationMode = Layout.JUSTIFICATION_MODE_NONE,
-        )
-
-        assertTrue(pages.size > 1)
-        assertTrue(pages.first().text.lines().size > 1)
-        assertEquals(pages.size, pages.last().total)
-    }
-
-    @Test
-    fun `pagination only includes lines that fully fit on the page`() {
-        val chapter = HtmlProseLoadedChapter(
-            chapter = EntryChapter.create().copy(id = 1L, name = "Chapter 1"),
-            resourceId = "chapter-1",
-            bodyHtml = List(30) { "<p>Line $it with enough prose to wrap across the page width.</p>" }
-                .joinToString(""),
-            initialProgression = 0f,
-        )
-        val document = parseProseHtml(chapter.bodyHtml)
         val paint = TextPaint(TextPaint.ANTI_ALIAS_FLAG).apply { textSize = 20f }
         val availableWidth = 320
         val availableHeight = 97
+
         val pages = paginateProse(
-            chapter = chapter,
-            text = document.text,
+            chapter = section,
+            text = prepared.combinedText,
             paint = paint,
             availableWidthPx = availableWidth,
             availableHeightPx = availableHeight,
@@ -153,11 +161,11 @@ class HtmlProseDocumentTest {
     }
 
     @Test
-    fun `anchor offsets resolve to their containing page`() {
-        val chapter = EntryChapter.create().copy(id = 1L, name = "Chapter 1")
+    fun `anchor at a page boundary resolves to the following page`() {
+        val chapter = chapter()
         val pages = listOf(
-            HtmlProsePage(chapter, 0, 2, "First", sourceStart = 0, sourceEndExclusive = 5),
-            HtmlProsePage(chapter, 1, 2, "Second", sourceStart = 5, sourceEndExclusive = 11),
+            HtmlProsePage(chapter, 0, 2, SpannableString("First"), 0f, 0, 5),
+            HtmlProsePage(chapter, 1, 2, SpannableString("Second"), 1f, 5, 11),
         )
 
         assertEquals(0, pageIndexForAnchor(pages, 4))
@@ -165,24 +173,43 @@ class HtmlProseDocumentTest {
         assertEquals(1, pageIndexForAnchor(pages, 11))
     }
 
-    private fun laidOutTextView(text: SpannableString): TextView {
-        return ProseTextView(RuntimeEnvironment.getApplication()).apply {
-            layoutParams = ViewGroup.LayoutParams(600, 100)
-            movementMethod = android.text.method.LinkMovementMethod.getInstance()
-            setText(text, TextView.BufferType.SPANNABLE)
-            includeFontPadding = false
-            setPadding(0, 0, 0, 0)
-            measure(
-                MeasureSpec.makeMeasureSpec(600, MeasureSpec.EXACTLY),
-                MeasureSpec.makeMeasureSpec(100, MeasureSpec.EXACTLY),
-            )
-            layout(0, 0, measuredWidth, measuredHeight)
+    private fun prepare(html: String) = prepareHtmlBookDocument(
+        resourceId = "chapter-1",
+        revision = "r1",
+        bodyHtml = html,
+    )
+
+    private fun chapter() = EntryChapter.create().copy(id = 1L, name = "Chapter 1")
+
+    private fun legacyWholeDocumentText(html: String): SpannableStringBuilder {
+        val parsed = SpannableStringBuilder(
+            androidx.core.text.HtmlCompat.fromHtml(
+                org.jsoup.Jsoup.parseBodyFragment(html).body().html(),
+                androidx.core.text.HtmlCompat.FROM_HTML_MODE_LEGACY,
+            ),
+        )
+        var index = parsed.length - 1
+        while (index >= 0) {
+            if (parsed[index] == '\n') {
+                val end = index + 1
+                while (index >= 0 && parsed[index] == '\n') index--
+                val start = index + 1
+                if (end - start >= 2) parsed.replace(start, end, "\n\n")
+            } else {
+                index--
+            }
         }
+        return parsed
     }
 
-    private fun testClickableSpan(onClick: () -> Unit = {}): ClickableSpan {
-        return object : ClickableSpan() {
-            override fun onClick(widget: View) = onClick()
-        }
-    }
+    private fun spanLayout(text: android.text.Spanned): List<Triple<String, Int, Int>> =
+        text.getSpans(0, text.length, Any::class.java)
+            .map { span ->
+                Triple(
+                    span.javaClass.name,
+                    text.getSpanStart(span),
+                    text.getSpanEnd(span),
+                )
+            }
+            .sortedWith(compareBy({ it.second }, { it.third }, { it.first }))
 }

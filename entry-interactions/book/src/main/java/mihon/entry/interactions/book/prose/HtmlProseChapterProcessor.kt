@@ -3,6 +3,8 @@ package mihon.entry.interactions.book.prose
 import android.content.Context
 import android.content.Intent
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookContentResource
 import mihon.book.api.BookFailure
@@ -19,7 +21,9 @@ import mihon.entry.interactions.book.BookOpenResult
 import mihon.entry.interactions.book.BookProcessor
 import mihon.entry.interactions.book.BookPublicationSession
 import mihon.entry.interactions.book.BookReaderRequest
+import mihon.entry.interactions.book.document.render.PreparedBookDocument
 import org.jsoup.Jsoup
+import org.jsoup.nodes.Element
 import org.jsoup.safety.Cleaner
 import org.jsoup.safety.Safelist
 import java.io.ByteArrayOutputStream
@@ -65,18 +69,23 @@ internal class HtmlProseChapterProcessor : BookProcessor {
             val bytes = content.openResource(resourceId).getOrElse {
                 return contentFailure(it.message ?: "Unable to open the prose chapter")
             }.use { opened ->
-                opened.stream.readBounded(MAX_HTML_RESOURCE_BYTES)
+                withContext(Dispatchers.IO) {
+                    opened.stream.readBounded(MAX_HTML_RESOURCE_BYTES)
+                }
             }
-            val bodyHtml = sanitize(bytes)
-            if (Jsoup.parseBodyFragment(bodyHtml).text().isBlank()) {
-                return failure(BookFailureReason.MALFORMED_CONTENT, "The prose chapter contains no readable text")
+            val document = withContext(Dispatchers.Default) {
+                prepareHtmlBookDocument(
+                    resourceId = resourceId,
+                    revision = metadata.revision ?: content.revision,
+                    body = sanitize(bytes),
+                )
             }
             BookOpenResult.Success(
                 HtmlProseChapterSession(
                     publicationId = content.publicationId,
                     revision = metadata.revision ?: content.revision,
                     resource = metadata,
-                    bodyHtml = bodyHtml,
+                    document = document,
                 ),
             )
         } catch (error: CancellationException) {
@@ -104,7 +113,7 @@ internal class HtmlProseChapterSession(
     publicationId: String,
     revision: String,
     resource: BookContentResource,
-    val bodyHtml: String,
+    val document: PreparedBookDocument,
 ) : BookPublicationSession {
     val resourceId: String = resource.id
 
@@ -136,7 +145,7 @@ internal class HtmlProseChapterSession(
     override fun close() = Unit
 }
 
-private fun sanitize(bytes: ByteArray): String {
+private fun sanitize(bytes: ByteArray): Element {
     val parsed = Jsoup.parse(bytes.inputStream(), null, "")
     val cleaned = Cleaner(PROSE_SAFELIST).clean(parsed)
     cleaned.select("a[href]").forEach { link ->
@@ -145,7 +154,7 @@ private fun sanitize(bytes: ByteArray): String {
     cleaned.outputSettings()
         .charset(StandardCharsets.UTF_8)
         .prettyPrint(false)
-    return cleaned.body().html()
+    return cleaned.body()
 }
 
 private fun java.io.InputStream.readBounded(maxBytes: Int): ByteArray {

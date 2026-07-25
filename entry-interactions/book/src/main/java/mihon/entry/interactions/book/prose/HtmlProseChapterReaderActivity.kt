@@ -28,6 +28,9 @@ import mihon.entry.interactions.book.BookReaderSessionRegistry
 import mihon.entry.interactions.book.OpenedBookReaderSession
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.displayName
+import mihon.entry.interactions.book.document.location.locatorAt
+import mihon.entry.interactions.book.document.location.resolvePosition
+import mihon.entry.interactions.book.document.model.BookDocumentPosition
 import mihon.entry.interactions.setEntryInteractionContent
 import mihon.entry.interactions.settings.HtmlProseSettingsProvider
 import mihon.entry.interactions.viewer.EntryChildWindow
@@ -192,14 +195,16 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
             val locator = retainedSession.currentLocator
                 ?.takeIf(content::validate)
                 ?: BookLocator(content.resourceId, progression = 0.0)
+            val initialPosition = content.document.resolvePosition(locator)
+                ?: content.document.document.positionAtProgression((locator.progression ?: 0.0).toFloat())
             openedSession = session
             latestLocator = locator
             pageLoaded = false
             val loadedChapter = HtmlProseLoadedChapter(
-                chapter = session.chapter,
-                resourceId = content.resourceId,
-                bodyHtml = content.bodyHtml,
-                initialProgression = (locator.progression ?: 0.0).toFloat(),
+                key = session.chapter.id.toString(),
+                owner = session.chapter,
+                document = content.document,
+                initialPosition = initialPosition,
             )
             uiState = HtmlProseReaderUiState(
                 entryTitle = session.entry.displayTitle,
@@ -221,12 +226,21 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
         }
     }
 
-    private fun updateLocation(chapterId: Long, progression: Float) {
+    private fun updateLocation(
+        chapterId: Long,
+        progression: Float,
+        position: BookDocumentPosition?,
+    ) {
         if (chapterId != openedSession?.chapter?.id) return
-        val resourceId = uiState?.loadedChapters?.get(chapterId)?.resourceId ?: return
+        val loaded = uiState?.loadedChapters?.get(chapterId) ?: return
         pageLoaded = true
-        val safeProgression = progression.coerceIn(0f, 1f)
-        val locator = BookLocator(resourceId = resourceId, progression = safeProgression.toDouble())
+        val locator = position
+            ?.takeIf(loaded.document.document::contains)
+            ?.let(loaded.document::locatorAt)
+            ?: BookLocator(
+                resourceId = loaded.document.document.resourceId,
+                progression = progression.coerceIn(0f, 1f).toDouble(),
+            )
         latestLocator = locator
         retainedSession.updateLocation(locator)
     }
@@ -379,11 +393,13 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
         val locator = retainedSession.locator(session.chapter.id)
             ?.takeIf(content::validate)
             ?: BookLocator(content.resourceId, progression = 0.0)
+        val initialPosition = content.document.resolvePosition(locator)
+            ?: content.document.document.positionAtProgression((locator.progression ?: 0.0).toFloat())
         val loaded = HtmlProseLoadedChapter(
-            chapter = session.chapter,
-            resourceId = content.resourceId,
-            bodyHtml = content.bodyHtml,
-            initialProgression = (locator.progression ?: 0.0).toFloat(),
+            key = session.chapter.id.toString(),
+            owner = session.chapter,
+            document = content.document,
+            initialPosition = initialPosition,
         )
         uiState = uiState?.copy(
             loadedChapters = uiState?.loadedChapters.orEmpty() + (session.chapter.id to loaded),
