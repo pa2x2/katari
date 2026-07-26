@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.5.0] - 2026-07-26
+
+### Added
+
+- Added search to long source-filter option lists and source-provided filter suggestions for
+  compatible extensions.
+- Added BOOK source migration with reading-progress transfer and compatible location restoration.
+- Added WebView, browser, and share actions for active book chapters and anime episodes when
+  supported by their source.
+
+### Changed
+
+- Changed BOOK entry terminology from items to chapters throughout the app.
+
+### Removed
+
+- Removed Katari-specific legacy source API contracts
+
+### Fixed
+
+- Restored precise prose-reader progress after reopening a chapter.
+
+### Other
+
+- Updated Entry SDK to 2.3.0 with `EntryFilter.Autocomplete` for source-defined filter
+  suggestions.
+
 ## [1.4.3] - 2026-07-25
 
 ### Fixed
@@ -226,7 +253,8 @@ Based on [Mihon v0.20.1](https://github.com/mihonapp/mihon/releases/tag/v0.20.1)
 - Rebranded the application as Katari with its own package identity, visual
   identity, release pipeline, and documentation.
 
-[Unreleased]: https://github.com/katariapp/katari/compare/v1.4.3...upcoming
+[Unreleased]: https://github.com/katariapp/katari/compare/v1.5.0...upcoming
+[1.5.0]: https://github.com/katariapp/katari/releases/tag/v1.5.0
 [1.4.3]: https://github.com/katariapp/katari/releases/tag/v1.4.3
 [1.4.2]: https://github.com/katariapp/katari/releases/tag/v1.4.2
 [1.4.1]: https://github.com/katariapp/katari/releases/tag/v1.4.1
