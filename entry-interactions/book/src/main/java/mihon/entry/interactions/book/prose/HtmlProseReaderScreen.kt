@@ -729,10 +729,11 @@ private fun ScrollingProseViewer(
     } ?: -1
     // Entering an adjacent chapter rotates the previous/current/next window. If the outgoing
     // previous chapter has a different block count, retaining the old numeric index can clamp the
-    // list into the following chapter. Re-anchor the next measure to the visible stable key instead.
+    // list into the following chapter. Re-anchor an idle list to the visible stable key, but let an
+    // active scroll use LazyColumn's keyed-item position retention so its momentum is not cancelled.
     SideEffect {
         if (windowAnchor == null) return@SideEffect
-        if (windowAnchorIndex >= 0) {
+        if (windowAnchorIndex >= 0 && !listState.isScrollInProgress) {
             listState.requestScrollToItem(windowAnchorIndex, windowAnchor.scrollOffset)
         }
         pendingWindowAnchor = null
