@@ -50,16 +50,19 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -74,6 +77,7 @@ import kotlinx.coroutines.launch
 import mihon.entry.interactions.EntryChildWebViewAction
 import mihon.entry.interactions.EntryChildWebViewActionsMenu
 import mihon.entry.interactions.EntryChildWebViewResolution
+import mihon.entry.interactions.book.BookReaderLoadingScreen
 import mihon.entry.interactions.book.BookReaderNavigationRow
 import mihon.entry.interactions.book.BookReaderNavigationSheet
 import mihon.entry.interactions.book.R
@@ -164,6 +168,21 @@ internal fun HtmlProseReaderScreen(
         )
     }
     var viewerActions by remember { mutableStateOf(ProseViewerActions()) }
+    val preparationToken = remember(
+        state.viewerResetKey,
+        paginated,
+        fontFamily,
+        fontSize,
+        lineHeight,
+        pageMargins,
+        textAlignment,
+        drawUnderCutout,
+    ) {
+        Any()
+    }
+    var preparedToken by remember { mutableStateOf<Any?>(null) }
+    val viewerPrepared = preparedToken === preparationToken
+    val onViewerPrepared = { preparedToken = preparationToken }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -186,6 +205,7 @@ internal fun HtmlProseReaderScreen(
                         PaginatedProseViewer(
                             state = state,
                             initialProgression = position.progression,
+                            initialDocumentPosition = position.documentPosition,
                             palette = palette,
                             fontFamily = fontFamily,
                             fontSizePercent = fontSize,
@@ -194,6 +214,7 @@ internal fun HtmlProseReaderScreen(
                             textAlignment = textAlignment,
                             tapNavigation = tapNavigation,
                             chromeVisible = state.menuVisible,
+                            preparationToken = preparationToken,
                             onPosition = {
                                 position = it
                                 onLocation(it.chapterId, it.progression, it.documentPosition)
@@ -201,6 +222,7 @@ internal fun HtmlProseReaderScreen(
                             onChapterEntered = onChapterEntered,
                             onMenuToggle = { onMenuVisibilityChange(!state.menuVisible) },
                             onActions = { viewerActions = it },
+                            onPrepared = onViewerPrepared,
                         )
                     } else {
                         ScrollingProseViewer(
@@ -213,6 +235,7 @@ internal fun HtmlProseReaderScreen(
                             lineHeightPercent = lineHeight,
                             pageMarginsPercent = pageMargins,
                             textAlignment = textAlignment,
+                            preparationToken = preparationToken,
                             onPosition = {
                                 position = it
                                 onLocation(it.chapterId, it.progression, it.documentPosition)
@@ -220,6 +243,7 @@ internal fun HtmlProseReaderScreen(
                             onChapterEntered = onChapterEntered,
                             onMenuToggle = { onMenuVisibilityChange(!state.menuVisible) },
                             onActions = { viewerActions = it },
+                            onPrepared = onViewerPrepared,
                         )
                     }
                 }
@@ -345,6 +369,12 @@ internal fun HtmlProseReaderScreen(
                     Text(error, modifier = Modifier.padding(24.dp), color = MaterialTheme.colorScheme.error)
                 }
             }
+
+            if (!viewerPrepared) {
+                BookReaderLoadingScreen(
+                    contentDescription = stringResource(R.string.book_reader_loading),
+                )
+            }
         }
     }
 
@@ -369,6 +399,7 @@ internal fun HtmlProseReaderScreen(
 private fun PaginatedProseViewer(
     state: HtmlProseReaderUiState,
     initialProgression: Float,
+    initialDocumentPosition: BookDocumentPosition?,
     palette: ProsePalette,
     fontFamily: String,
     fontSizePercent: Int,
@@ -377,10 +408,12 @@ private fun PaginatedProseViewer(
     textAlignment: String,
     tapNavigation: Boolean,
     chromeVisible: Boolean,
+    preparationToken: Any,
     onPosition: (ProseViewerPosition) -> Unit,
     onChapterEntered: (EntryChapter) -> Unit,
     onMenuToggle: () -> Unit,
     onActions: (ProseViewerActions) -> Unit,
+    onPrepared: () -> Unit,
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val density = LocalDensity.current
@@ -429,8 +462,26 @@ private fun PaginatedProseViewer(
             buildPaginatedItems(state.window, pages)
         }
         if (items.isEmpty()) return@BoxWithConstraints
-        val initialPage = initialPaginatedItemIndex(items, state.currentChapterId, initialProgression)
-        val pagerState = rememberPagerState(initialPage = initialPage) { items.size }
+        val paginationKey = items.map { item ->
+            val pageRange = (item as? ProsePagerItem.Page)?.page?.let {
+                it.sourceStart to it.sourceEndExclusive
+            }
+            item.key to pageRange
+        }
+        val initialSourceOffset = initialDocumentPosition
+            ?.takeIf { documents[state.currentChapterId]?.document?.contains(it) == true }
+            ?.let { documents[state.currentChapterId]?.document?.logicalOffset(it) }
+        val initialPage = initialPaginatedItemIndex(
+            items = items,
+            chapterId = state.currentChapterId,
+            progression = initialProgression,
+            sourceOffset = initialSourceOffset,
+        )
+        val pagerState = key(paginationKey) {
+            rememberPagerState(initialPage = initialPage) { items.size }
+        }
+        var initialPositionPending by remember(pagerState) { mutableStateOf(true) }
+        val laidOutPages = remember(pagerState) { mutableStateMapOf<String, Boolean>() }
         val scope = rememberCoroutineScope()
         LaunchedEffect(pagerState, items, state.currentChapterId) {
             onActions(
@@ -508,7 +559,8 @@ private fun PaginatedProseViewer(
                         val document = documents[item.page.chapter.id] ?: return@BookDocumentText
                         val anchorPosition = document.document.anchors[anchorId]
                             ?: return@BookDocumentText
-                        val anchorOffset = document.document.logicalOffset(anchorPosition) ?: return@BookDocumentText
+                        val anchorOffset = document.document.logicalOffset(anchorPosition)
+                            ?: return@BookDocumentText
                         val targetPage = pageIndexForAnchor(
                             pages = pages[item.page.chapter.id].orEmpty(),
                             anchorOffset = anchorOffset,
@@ -518,11 +570,16 @@ private fun PaginatedProseViewer(
                                 target.page.chapter.id == item.page.chapter.id &&
                                 target.page.index == targetPage
                         }
-                        if (targetIndex >= 0) scope.launch { pagerState.animateScrollToPage(targetIndex) }
+                        if (targetIndex >= 0) {
+                            scope.launch { pagerState.animateScrollToPage(targetIndex) }
+                        }
                     },
                     onViewChanged = {},
                     modifier = Modifier
                         .fillMaxSize()
+                        .onGloballyPositioned {
+                            laidOutPages[item.key] = true
+                        }
                         .padding(horizontal = horizontalMargin, vertical = verticalMargin),
                 )
                 is ProsePagerItem.Transition -> ProseTransition(
@@ -546,9 +603,36 @@ private fun PaginatedProseViewer(
                 .distinctUntilChanged()
                 .collect { item ->
                     val page = (item as ProsePagerItem.Page).page
+                    if (initialPositionPending) {
+                        initialPositionPending = false
+                        if (
+                            pagerState.settledPage == initialPage &&
+                            page.chapter.id == state.currentChapterId
+                        ) {
+                            onPosition(
+                                ProseViewerPosition(
+                                    chapterId = page.chapter.id,
+                                    progression = initialProgression,
+                                    currentPage = page.index + 1,
+                                    totalPages = page.total,
+                                    documentPosition = initialDocumentPosition
+                                        ?: documents[page.chapter.id]
+                                            ?.document
+                                            ?.positionAtProgression(initialProgression),
+                                ),
+                            )
+                            return@collect
+                        }
+                    }
                     val documentPosition = documents[page.chapter.id]
                         ?.document
-                        ?.positionAtProgression(page.progression)
+                        ?.positionAtLogicalOffset(
+                            if (page.index == page.total - 1) {
+                                page.sourceEndExclusive
+                            } else {
+                                page.sourceStart
+                            },
+                        )
                     onPosition(
                         ProseViewerPosition(
                             page.chapter.id,
@@ -560,6 +644,38 @@ private fun PaginatedProseViewer(
                     )
                     if (page.chapter.id != state.currentChapterId) onChapterEntered(page.chapter)
                 }
+        }
+        LaunchedEffect(
+            pagerState,
+            items,
+            initialPage,
+            preparationToken,
+            fontFamily,
+            fontSizePercent,
+            lineHeightPercent,
+            pageMarginsPercent,
+            textAlignment,
+        ) {
+            val settledItem = snapshotFlow {
+                if (initialPositionPending || pagerState.isScrollInProgress) {
+                    return@snapshotFlow null
+                }
+                val settledPage = pagerState.settledPage
+                (items.getOrNull(settledPage) as? ProsePagerItem.Page)
+                    ?.takeIf {
+                        settledPage == initialPage &&
+                            it.page.chapter.id == state.currentChapterId &&
+                            laidOutPages[it.key] == true
+                    }
+            }.filter { it != null }.first() ?: return@LaunchedEffect
+            withFrameNanos {}
+            if (
+                pagerState.settledPage == initialPage &&
+                !pagerState.isScrollInProgress &&
+                laidOutPages[settledItem.key] == true
+            ) {
+                onPrepared()
+            }
         }
     }
 }
@@ -575,10 +691,12 @@ private fun ScrollingProseViewer(
     lineHeightPercent: Int,
     pageMarginsPercent: Int,
     textAlignment: String,
+    preparationToken: Any,
     onPosition: (ProseViewerPosition) -> Unit,
     onChapterEntered: (EntryChapter) -> Unit,
     onMenuToggle: () -> Unit,
     onActions: (ProseViewerActions) -> Unit,
+    onPrepared: () -> Unit,
 ) {
     val items = remember(state.window, state.loadedChapters) {
         buildBookDocumentViewerItems(
@@ -628,20 +746,38 @@ private fun ScrollingProseViewer(
         if (index < 0) return
         val block = (items[index] as BookDocumentViewerItem.Block).content.block
         listState.scrollToItem(index)
-        val info = snapshotFlow {
-            listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == index }
+        val layout = snapshotFlow {
+            val layoutInfo = listState.layoutInfo
+            val item = layoutInfo.visibleItemsInfo.firstOrNull { it.index == index }
+            item?.let {
+                ProseViewerRestorationLayout(
+                    itemSize = it.size,
+                    viewportStartOffset = layoutInfo.viewportStartOffset,
+                    viewportEndOffset = layoutInfo.viewportEndOffset,
+                )
+            }
         }.filter { it != null }.first() ?: return
         listState.scrollToItem(
             index,
-            blockScrollOffset(info.size, block.logicalLength, position.offsetWithinBlock),
+            blockScrollOffset(
+                itemSize = layout.itemSize,
+                blockLength = block.logicalLength,
+                offsetWithinBlock = position.offsetWithinBlock,
+                viewportStartOffset = layout.viewportStartOffset,
+                viewportEndOffset = layout.viewportEndOffset,
+            ),
         )
     }
 
-    LaunchedEffect(listState, items, state.currentChapterId, initialPosition) {
-        if (initialPositionRestored) return@LaunchedEffect
-        val target = initialPosition ?: return@LaunchedEffect
-        scrollToPosition(state.currentChapterId.toString(), target)
-        initialPositionRestored = true
+    LaunchedEffect(listState, items, state.currentChapterId, initialPosition, preparationToken) {
+        if (!initialPositionRestored) {
+            initialPosition?.let {
+                scrollToPosition(state.currentChapterId.toString(), it)
+            }
+            initialPositionRestored = true
+        }
+        withFrameNanos {}
+        onPrepared()
     }
     LaunchedEffect(listState, items, state.currentChapterId) {
         onActions(
@@ -1058,12 +1194,22 @@ internal fun initialPaginatedItemIndex(
     items: List<ProsePagerItem>,
     chapterId: Long,
     progression: Float,
+    sourceOffset: Int? = null,
 ): Int {
-    return items.indexOfFirst { item ->
-        item is ProsePagerItem.Page &&
-            item.page.chapter.id == chapterId &&
-            item.page.progression >= progression.coerceIn(0f, 1f)
-    }.coerceAtLeast(0)
+    val chapterPages = items.withIndex().filter { (_, item) ->
+        item is ProsePagerItem.Page && item.page.chapter.id == chapterId
+    }
+    if (chapterPages.isEmpty()) return 0
+    val documentEnd = chapterPages.maxOf { (_, item) ->
+        (item as ProsePagerItem.Page).page.sourceEndExclusive
+    }
+    val targetOffset = sourceOffset?.coerceIn(0, documentEnd)
+        ?: (documentEnd * progression.coerceIn(0f, 1f)).roundToInt()
+    return chapterPages.firstOrNull { (_, item) ->
+        val page = (item as ProsePagerItem.Page).page
+        targetOffset >= page.sourceStart &&
+            (targetOffset < page.sourceEndExclusive || page.index == page.total - 1)
+    }?.index ?: chapterPages.last().index
 }
 
 internal sealed interface ProsePagerItem {
@@ -1094,6 +1240,12 @@ private data class ProseViewerWindowAnchor(
     val destinationChapterId: Long,
     val itemKey: String,
     val scrollOffset: Int,
+)
+
+private data class ProseViewerRestorationLayout(
+    val itemSize: Int,
+    val viewportStartOffset: Int,
+    val viewportEndOffset: Int,
 )
 
 private data class ProseViewerActions(

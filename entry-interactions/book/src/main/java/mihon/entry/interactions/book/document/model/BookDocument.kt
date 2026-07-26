@@ -35,7 +35,11 @@ internal data class BookDocument(
     }
 
     fun positionAtProgression(progression: Float): BookDocumentPosition {
-        val target = (logicalExtent * progression.coerceIn(0f, 1f)).toInt()
+        return positionAtLogicalOffset((logicalExtent * progression.coerceIn(0f, 1f)).toInt())
+    }
+
+    fun positionAtLogicalOffset(offset: Int): BookDocumentPosition {
+        val target = offset.coerceIn(0, logicalExtent)
         val block = blocks.firstOrNull { target < it.logicalEndExclusive } ?: blocks.last()
         return BookDocumentPosition(
             blockId = block.id,

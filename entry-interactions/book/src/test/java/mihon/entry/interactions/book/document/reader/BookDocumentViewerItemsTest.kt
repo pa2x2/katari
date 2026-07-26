@@ -67,6 +67,16 @@ class BookDocumentViewerItemsTest {
     }
 
     @Test
+    fun `restoring an early block position returns it to the viewport reading anchor`() {
+        assertRestorationRoundTrip(offsetWithinBlock = 20)
+    }
+
+    @Test
+    fun `restoring a late block position returns it to the viewport reading anchor`() {
+        assertRestorationRoundTrip(offsetWithinBlock = 70)
+    }
+
+    @Test
     fun `progress follows the block containing the viewport anchor rather than a nearby block center`() {
         val section = section("current", listOf("a".repeat(100), "b".repeat(100)))
         val items = section.document.blocks.map { BookDocumentViewerItem.Block(section, it) }
@@ -166,6 +176,38 @@ class BookDocumentViewerItemsTest {
 
         val item = assertIs<BookDocumentViewerItem.Block<String>>(items[index])
         assertEquals("second", item.section.key)
+    }
+
+    private fun assertRestorationRoundTrip(offsetWithinBlock: Int) {
+        val section = section("current", listOf("a".repeat(100)))
+        val item = BookDocumentViewerItem.Block(section, section.document.blocks.single())
+        val viewportStartOffset = 0
+        val viewportEndOffset = 800
+        val itemSize = 1_000
+        val scrollOffset = blockScrollOffset(
+            itemSize = itemSize,
+            blockLength = item.content.block.logicalLength,
+            offsetWithinBlock = offsetWithinBlock,
+            viewportStartOffset = viewportStartOffset,
+            viewportEndOffset = viewportEndOffset,
+        )
+
+        val restored = bookDocumentViewerLocation(
+            items = listOf(item),
+            visibleItems = listOf(
+                BookDocumentVisibleItemLayout(
+                    index = 0,
+                    key = item.key,
+                    offset = -scrollOffset,
+                    size = itemSize,
+                ),
+            ),
+            viewportStartOffset = viewportStartOffset,
+            viewportEndOffset = viewportEndOffset,
+        )
+
+        assertNotNull(restored)
+        assertEquals(offsetWithinBlock, restored.position.offsetWithinBlock)
     }
 
     private fun section(owner: String, texts: List<String>): BookDocumentSection<String> {

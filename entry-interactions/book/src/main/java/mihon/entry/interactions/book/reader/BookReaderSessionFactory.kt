@@ -138,7 +138,12 @@ internal class BookReaderSessionFactory(
                     )
                     val initialLocator = progress
                         ?.locator
-                        ?.let(BookProgressLocatorCodec::decode)
+                        ?.let { locator ->
+                            BookProgressLocatorCodec.decode(
+                                locator = locator,
+                                fallbackResourceId = opened.session.publication.readingOrder.singleOrNull()?.id,
+                            )
+                        }
                         ?.takeIf(opened.session::validate)
                     BookReaderOpenResult.Success(
                         OpenedBookReaderSession(

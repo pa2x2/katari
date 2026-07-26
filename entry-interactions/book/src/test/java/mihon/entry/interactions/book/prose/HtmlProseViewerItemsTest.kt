@@ -57,6 +57,26 @@ class HtmlProseViewerItemsTest {
         assertEquals(4, initialPaginatedItemIndex(items, current.id, progression = 0.6f))
     }
 
+    @Test
+    fun `paginated mode restores the page containing a scrolling position`() {
+        val current = chapter(2L)
+        val items = listOf(
+            ProsePagerItem.Page(page(current, index = 0, total = 3)),
+            ProsePagerItem.Page(page(current, index = 1, total = 3)),
+            ProsePagerItem.Page(page(current, index = 2, total = 3)),
+        )
+
+        assertEquals(
+            1,
+            initialPaginatedItemIndex(
+                items = items,
+                chapterId = current.id,
+                progression = 0.38f,
+                sourceOffset = 114,
+            ),
+        )
+    }
+
     private fun chapter(id: Long) = EntryChapter.create().copy(id = id, entryId = 9L, name = "Chapter $id")
 
     private fun page(chapter: EntryChapter, index: Int = 0, total: Int = 1) =
@@ -66,5 +86,7 @@ class HtmlProseViewerItemsTest {
             total = total,
             text = SpannableString("Text"),
             progression = if (total <= 1) 1f else index.toFloat() / (total - 1),
+            sourceStart = index * 100,
+            sourceEndExclusive = (index + 1) * 100,
         )
 }

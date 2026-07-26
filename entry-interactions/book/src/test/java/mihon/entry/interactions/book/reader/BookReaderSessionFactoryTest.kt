@@ -19,6 +19,7 @@ import kotlinx.coroutines.test.runTest
 import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookLocator
 import mihon.book.api.BookPublication
+import mihon.book.api.BookResource
 import mihon.entry.interactions.EntryMediaSessionEvent
 import mihon.entry.interactions.EntryMediaSessionEventSink
 import mihon.entry.interactions.EntryMediaSessionResult
@@ -27,6 +28,7 @@ import okhttp3.OkHttpClient
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryProgressLocator
 import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
@@ -48,7 +50,11 @@ class BookReaderSessionFactoryTest {
             chapterId = chapter.id,
             contentKey = "volume-1",
             resourceKey = "publication.epub",
-            locator = BookProgressLocatorCodec.encode(initialLocator),
+            locator = EntryProgressLocator(
+                kind = BOOK_PROGRESS_LOCATOR_KIND,
+                progression = initialLocator.progression,
+                totalProgression = initialLocator.totalProgression,
+            ),
             completed = false,
             completionUpdatedAt = 0L,
         )
@@ -73,7 +79,15 @@ class BookReaderSessionFactoryTest {
             ),
             initialResourceId = "publication.epub",
         )
-        val publicationSession = TestPublicationSession()
+        val publicationSession = TestPublicationSession(
+            readingOrder = listOf(
+                BookResource(
+                    id = initialLocator.resourceId,
+                    mediaType = "application/xhtml+xml",
+                    title = null,
+                ),
+            ),
+        )
         val processor = SessionFactoryTestProcessor(publicationSession)
         val context = mockk<Context> {
             every { applicationContext } returns this@mockk
@@ -368,14 +382,16 @@ private class SessionFactoryTestProcessor(
     }
 }
 
-private class TestPublicationSession : BookPublicationSession {
+private class TestPublicationSession(
+    readingOrder: List<BookResource> = emptyList(),
+) : BookPublicationSession {
     override val publication = BookPublication(
         id = "book",
         revision = "1",
         title = "Book",
         languages = emptyList(),
         readingDirection = null,
-        readingOrder = emptyList(),
+        readingOrder = readingOrder,
         navigation = emptyList(),
     )
     var closeCount = 0

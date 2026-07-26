@@ -1,6 +1,7 @@
 package mihon.entry.interactions
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import kotlinx.serialization.json.JsonObject
 import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
 import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
 import mihon.feature.graph.CapabilityExpression
@@ -246,7 +247,13 @@ internal class DefaultEntryProgressFeature(
     ): EntryProgressState {
         if (!event.preserveLocatorExtensions) return this
         val current = repository.get(entryId, contentKey, resourceKey) ?: return this
-        return copy(locator = locator.copy(extensions = current.locator.extensions))
+        return copy(
+            locator = locator.copy(
+                extensions = JsonObject(
+                    current.locator.extensions + locator.extensions,
+                ),
+            ),
+        )
     }
 
     private fun duplicateCompletionEnabled(): Boolean {

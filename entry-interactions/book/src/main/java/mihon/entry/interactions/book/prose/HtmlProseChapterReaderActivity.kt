@@ -202,11 +202,13 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
             }
             navigation = chapters.entryChildWindow(session.chapter.id, EntryChapter::id)
             val window = navigation ?: error("The selected prose chapter is missing from the reading order")
-            settings = settings ?: HtmlProseSettingsBinding(
-                provider = Injekt.get<HtmlProseSettingsProvider>(),
-                binder = Injekt.get<ViewerSettingBinder>(),
-                entryId = session.entry.id,
-            )
+            if (settings == null) {
+                settings = HtmlProseSettingsBinding(
+                    provider = Injekt.get<HtmlProseSettingsProvider>(),
+                    binder = Injekt.get<ViewerSettingBinder>(),
+                    entryId = session.entry.id,
+                ).also { it.awaitInitialLayoutMode() }
+            }
             val locator = retainedSession.currentLocator
                 ?.takeIf(content::validate)
                 ?: BookLocator(content.resourceId, progression = 0.0)

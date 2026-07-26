@@ -47,4 +47,22 @@ class BookProgressLocatorCodecTest {
         assertNull(BookProgressLocatorCodec.decode(EntryProgressLocator(kind = "page", position = 1)))
         assertNull(BookProgressLocatorCodec.decode(EntryProgressLocator(kind = BOOK_PROGRESS_LOCATOR_KIND)))
     }
+
+    @Test
+    fun `extensionless scalar progress can be recovered for a known resource`() {
+        val locator = EntryProgressLocator(
+            kind = BOOK_PROGRESS_LOCATOR_KIND,
+            progression = 0.4,
+            totalProgression = 0.7,
+        )
+
+        assertEquals(
+            BookLocator(
+                resourceId = "chapter-2.xhtml",
+                progression = 0.4,
+                totalProgression = 0.7,
+            ),
+            BookProgressLocatorCodec.decode(locator, fallbackResourceId = "chapter-2.xhtml"),
+        )
+    }
 }

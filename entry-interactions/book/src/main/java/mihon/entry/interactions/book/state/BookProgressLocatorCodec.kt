@@ -55,24 +55,34 @@ internal object BookProgressLocatorCodec {
         )
     }
 
-    fun decode(locator: EntryProgressLocator): BookLocator? {
+    fun decode(
+        locator: EntryProgressLocator,
+        fallbackResourceId: String? = null,
+    ): BookLocator? {
         if (locator.kind != BOOK_PROGRESS_LOCATOR_KIND) return null
-        val precise = locator.extensions[PRECISE_LOCATION_KEY] as? JsonObject ?: return null
-        val resourceId = (precise[RESOURCE_ID_KEY] as? JsonPrimitive)
+        val precise = locator.extensions[PRECISE_LOCATION_KEY] as? JsonObject
+        val preciseResourceId = (precise?.get(RESOURCE_ID_KEY) as? JsonPrimitive)
             ?.contentOrNull
             ?.takeIf(String::isNotBlank)
+        val hasScalarLocation = locator.position != null ||
+            locator.progression != null ||
+            locator.totalProgression != null
+        val resourceId = preciseResourceId
+            ?: fallbackResourceId
+                ?.takeIf(String::isNotBlank)
+                ?.takeIf { precise == null && hasScalarLocation }
             ?: return null
-        val fragments = (precise[FRAGMENTS_KEY] as? JsonArray)
+        val fragments = (precise?.get(FRAGMENTS_KEY) as? JsonArray)
             ?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull?.takeIf(String::isNotBlank) }
             .orEmpty()
-        val text = (precise[TEXT_KEY] as? JsonObject)?.let { value ->
+        val text = (precise?.get(TEXT_KEY) as? JsonObject)?.let { value ->
             BookTextContext(
                 before = value.boundedText(BEFORE_KEY),
                 highlight = value.boundedText(HIGHLIGHT_KEY),
                 after = value.boundedText(AFTER_KEY),
             )
         }?.takeUnless { it == BookTextContext() }
-        val processorExtensions = (precise[PROCESSOR_EXTENSIONS_KEY] as? JsonObject).orEmpty()
+        val processorExtensions = (precise?.get(PROCESSOR_EXTENSIONS_KEY) as? JsonObject).orEmpty()
         val logicalPosition = locator.position
             ?.takeIf { it in 1..Int.MAX_VALUE.toLong() }
             ?.toInt()

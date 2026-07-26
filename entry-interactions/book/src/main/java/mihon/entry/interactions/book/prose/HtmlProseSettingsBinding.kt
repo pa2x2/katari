@@ -1,5 +1,6 @@
 package mihon.entry.interactions.book.prose
 
+import kotlinx.coroutines.flow.first
 import mihon.entry.interactions.settings.HtmlProseSettingsProvider
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.resetSettings
@@ -19,6 +20,11 @@ internal class HtmlProseSettingsBinding(
     val tapNavigation = binder.bind(provider.tapNavigationSetting)
     val showProgress = binder.bind(provider.showProgressSetting)
     val drawUnderCutout = binder.bind(provider.drawUnderCutoutSetting)
+
+    suspend fun awaitInitialLayoutMode() {
+        val resolved = binder.resolve(provider.layoutModeSetting, entryId)
+        layoutMode.state.first { it == resolved }
+    }
 
     suspend fun resetSettings() {
         binder.resetSettings(provider, entryId)

@@ -141,7 +141,12 @@ internal fun blockScrollOffset(
     itemSize: Int,
     blockLength: Int,
     offsetWithinBlock: Int,
+    viewportStartOffset: Int,
+    viewportEndOffset: Int,
 ): Int {
     if (itemSize <= 0 || blockLength <= 0) return 0
-    return (itemSize * offsetWithinBlock.coerceIn(0, blockLength).toFloat() / blockLength).roundToInt()
+    val offsetWithinItem =
+        (itemSize * offsetWithinBlock.coerceIn(0, blockLength).toFloat() / blockLength).roundToInt()
+    val viewportAnchor = (viewportStartOffset + viewportEndOffset) / 2
+    return offsetWithinItem - viewportAnchor
 }
