@@ -17,6 +17,10 @@ EPUB publications must be supplied as `application/epub+zip`. If a source does n
 
 Serialized prose sources expose each provider chapter as a separate entry child. Opening a chapter resolves only that chapter's normalized HTML; previous and next navigation opens adjacent stored chapters rather than combining the novel into an EPUB-style publication. The reader preloads only the immediate neighbors. Its chapter picker uses the already stored chapter metadata and resolves a chapter body only after selection.
 
+The prose reader preserves authored structure in scrolling and paginated modes, including thematic breaks, ordered and nested lists, whitespace-sensitive passages, figures and captions, bounded tables, internal notes, safe external links, native disclosure blocks, and a reviewed subset of meaning-bearing colors, borders, alignment, and fonts. Ordinary styled prose remains in the continuous text flow; only structural content and styled panels that require atomic rendering receive dedicated pages. Images and custom fonts are fetched through Katari's controlled resource path rather than by a WebView. Images are sampled to their rendered bounds and released with the figure that owns them, while missing images retain readable alternative text.
+
+Audio, video, embedded webpages or objects, canvas/SVG, mathematics, and specialized charts are not rendered. Each outermost unsupported content block appears as `-- unsupported content block --` so unsupported material is visible and can be investigated without executing or fetching it.
+
 When no compatible reader is available, Katari shows an unsupported-content screen instead of trying to open the publication in another media viewer. Support for additional book formats may be added through new readers in the future.
 
 ## Reader settings
@@ -41,7 +45,7 @@ Download chapters for offline reading from the book's entry screen:
 - Choose **Next N** or **Unread** from the download menu to download multiple chapters.
 - Manage queued and saved chapters from the Downloads screen.
 
-Downloaded chapters open without a network connection. Automatic downloads follow your existing download settings.
+Downloaded chapters open without a network connection. Prose downloads include every image and custom font referenced by the normalized supported content; Katari does not publish the download as complete if one of those required assets cannot be verified. Dependency discovery and packaging use the same primary bytes. Resource acquisition is bounded before and during each read by the renderer's media limit and the package's remaining byte budget, while dependency count and cumulative encoded bytes are bounded across the package. Malformed, dishonest, or changing resources therefore cannot turn a rejected dependency into an unbounded intermediate download. Automatic downloads follow your existing download settings.
 
 ## Reading progress
 

@@ -2,12 +2,14 @@ package mihon.entry.interactions.book
 
 import android.content.Context
 import android.net.Uri
-import eu.kanade.tachiyomi.network.awaitSuccess
+import eu.kanade.tachiyomi.network.HttpException
+import eu.kanade.tachiyomi.network.await
 import eu.kanade.tachiyomi.source.entry.BookResourceLocation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
+import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -22,6 +24,12 @@ internal class AndroidBookExternalResourceResolver(
     private val appReferenceResolver: BookAppReferenceResolver? = null,
 ) : BookExternalResourceResolver {
     private val contentResolver = context.applicationContext.contentResolver
+    private val redirectControlledHttpClient by lazy {
+        httpClient.newBuilder()
+            .followRedirects(false)
+            .followSslRedirects(false)
+            .build()
+    }
     override val canResolveAppReferences: Boolean = appReferenceResolver != null
 
     override suspend fun open(
@@ -55,7 +63,7 @@ internal class AndroidBookExternalResourceResolver(
                 range?.let { header("Range", it.toHttpRange()) }
             }
             .build()
-        val response = httpClient.newCall(request).awaitSuccess()
+        val response = executeRemoteRequest(request)
         return try {
             val responseStream = response.body.byteStream()
             val rangedStream = when {
@@ -76,6 +84,32 @@ internal class AndroidBookExternalResourceResolver(
         }
     }
 
+    private suspend fun executeRemoteRequest(initialRequest: Request): Response {
+        var request = initialRequest
+        repeat(MAX_REDIRECTS + 1) { redirectCount ->
+            val response = redirectControlledHttpClient.newCall(request).await()
+            val redirectTarget = response.takeIf { it.code in REDIRECT_STATUS_CODES }
+                ?.header("Location")
+                ?.let(request.url::resolve)
+            if (redirectTarget == null) {
+                if (response.isSuccessful) return response
+                response.close()
+                throw HttpException(response.code)
+            }
+            if (redirectCount == MAX_REDIRECTS) {
+                response.close()
+                throw IOException("Too many redirects while loading a BOOK resource")
+            }
+            if (request.url.isHttps && !redirectTarget.isHttps) {
+                response.close()
+                throw IOException("HTTPS BOOK resource redirected to an insecure URL")
+            }
+            response.close()
+            request = request.redirectedTo(redirectTarget)
+        }
+        error("Unreachable redirect loop")
+    }
+
     private suspend fun openLocal(
         location: BookResourceLocation.LocalUri,
         range: BookByteRange?,
@@ -93,8 +127,34 @@ internal class AndroidBookExternalResourceResolver(
 
     private companion object {
         const val HTTP_PARTIAL_CONTENT = 206
+        const val MAX_REDIRECTS = 20
+        val REDIRECT_STATUS_CODES = setOf(300, 301, 302, 303, 307, 308)
     }
 }
+
+private fun HttpUrl.isSameOriginAs(other: HttpUrl): Boolean =
+    scheme == other.scheme && host == other.host && port == other.port
+
+private fun Request.redirectedTo(target: HttpUrl): Request {
+    val redirected = newBuilder().url(target)
+    if (!url.isSameOriginAs(target)) {
+        headers.names()
+            .filterNot { name ->
+                CROSS_ORIGIN_REDIRECT_HEADERS.any {
+                    it.equals(name, ignoreCase = true)
+                }
+            }
+            .forEach(redirected::removeHeader)
+    }
+    return redirected.build()
+}
+
+private val CROSS_ORIGIN_REDIRECT_HEADERS = setOf(
+    "Accept",
+    "Accept-Language",
+    "Range",
+    "User-Agent",
+)
 
 /** Resolves opaque references to Katari-owned cache or download resources. */
 internal interface BookAppReferenceResolver {
@@ -105,6 +165,7 @@ private class ResponseExternalBookResource(
     private val response: Response,
     override val stream: InputStream,
 ) : ExternalBookResource {
+    override val mediaType: String? = response.body.contentType()?.toString()
     private var closed = false
 
     override fun close() {

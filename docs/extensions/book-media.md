@@ -156,7 +156,7 @@ override suspend fun getMedia(
         text = resolved.bodyHtml,
         mediaType = PROSE_FORMAT,
     )
-    val resource = BookSourceResource(
+    val chapterResource = BookSourceResource(
         id = resolved.stableId,
         title = chapter.name,
         order = 0,
@@ -165,6 +165,21 @@ override suspend fun getMedia(
         availability = BookResourceAvailability.AVAILABLE,
         location = location,
     )
+    val assets = resolved.assets.map { asset ->
+        BookSourceResource(
+            id = asset.stableId,
+            title = asset.title,
+            order = asset.order,
+            mediaType = asset.mediaType,
+            size = asset.size,
+            revision = asset.revision,
+            availability = BookResourceAvailability.AVAILABLE,
+            location = BookResourceLocation.RemoteRequest(
+                url = asset.httpsUrl,
+                headers = asset.requestHeaders,
+            ),
+        )
+    }
 
     return EntryMedia.Book(
         descriptor = BookContentDescriptor(
@@ -173,10 +188,10 @@ override suspend fun getMedia(
             protection = "none",
         ),
         catalog = BookResourceCatalog(
-            resources = listOf(resource),
+            resources = listOf(chapterResource) + assets,
             coverage = BookCatalogCoverage.PARTIAL,
         ),
-        initialResourceId = resource.id,
+        initialResourceId = chapterResource.id,
         initialResourceLocation = location,
     )
 }
@@ -184,7 +199,24 @@ override suspend fun getMedia(
 
 The result contains one resource even when the entry has thousands of chapters. Katari already stores the sibling `SEntryChapter` records and uses them for previous/next navigation. The prose processor renders only the selected resource and tracks progression against that chapter.
 
-`fetchNormalizedChapter()` must return the prose body rather than the provider's complete website shell. Preserve meaningful structure such as headings, paragraphs, emphasis, quotations, lists, tables, and same-document anchors. The built-in processor applies its own sanitization and disables active or remote web content, but extensions should still avoid returning scripts, forms, embedded media, styles, or navigation chrome.
+`fetchNormalizedChapter()` must return the prose body rather than the provider's complete website shell. Preserve meaningful passive structure: headings, paragraphs, emphasis, quotations, thematic breaks, ordered and unordered lists, preformatted passages, figures, tables, same-document notes, safe HTTP/HTTPS links, disclosures, and meaning-bearing styles.
+
+The prose processor recognizes the following subordinate assets:
+
+- HTTPS raster images with declared JPEG, PNG, WebP, or GIF media types;
+- HTTPS TrueType or OpenType fonts referenced by admitted `@font-face` rules.
+
+Rewrite every admitted asset URL in the normalized HTML to its stable `BookSourceResource.id`, and include that resource in the same catalog as the chapter. Supply all required request headers on each `RemoteRequest`. Do not leave expiring URLs as document identity. Katari bounds acquisition by each asset type's byte limit, validates media and image dimensions, samples images to rendered bounds, loads assets outside WebView, and includes every referenced supported asset in an offline package. A missing or invalid required asset therefore fails download completion rather than publishing a partial chapter.
+
+The processor admits a bounded style subset: start/center/end alignment, `normal`/`pre-wrap`/`pre` whitespace, foreground and background colors, solid/dashed/dotted borders, bounded padding and font size, bold weight, approved generic families, and catalogued custom fonts. Meaningful text-level colors, backgrounds, size, weight, and font families are also retained on inline descendants. Preserve either local style declarations or simple tag/class/ID stylesheet rules when they carry meaning. Arbitrary layout, animation, positioning, and unrecognized selectors are ignored.
+
+Active and website-only material such as scripts, event handlers, forms, navigation, advertisements, and tracking elements is removed silently. Unsupported content-bearing blocks—audio, video, iframe, object/embed, canvas, SVG, mathematics, and specialized charts—are replaced by the processor with exactly:
+
+```text
+-- unsupported content block --
+```
+
+Preserve these elements long enough for the processor to classify them; do not flatten their fallback text into ordinary prose. Nested unsupported elements produce one marker for the outermost block. They are never executed, navigated, or fetched.
 
 If the selected chapter is locked, removed, or otherwise inaccessible, return the same one-resource shape with the accurate `BookResourceAvailability` and no readable location. Do not return a preview while marking the resource `AVAILABLE`.
 
@@ -216,7 +248,7 @@ Use `BookCatalogCoverage.COMPLETE` when the result describes the complete known 
 
 ## Provide resource access safely
 
-`BookResourceLocation.RemoteRequest` must contain an absolute HTTP or HTTPS URL and every header required by the resource host. Catalogue headers are not automatically copied into the resource request. Include only required values such as `User-Agent`, `Accept`, `Referer`, `Origin`, or authorization.
+`BookResourceLocation.RemoteRequest` must contain an absolute HTTP or HTTPS URL and every header required by the resource host. Catalogue headers are not automatically copied into the resource request. Include only required values such as `User-Agent`, `Accept`, `Referer`, `Origin`, or authorization. Same-origin redirects retain those values, while cross-origin redirects retain only Katari's small safe-header allowlist; credentials and arbitrary extension headers are never forwarded to a different origin.
 
 Resolve short-lived URLs and credentials in `getMedia()`. Do not put secrets in entry URLs, child URLs, titles, errors, revisions, or logs. Preserve signed query parameters in the remote request.
 
@@ -234,7 +266,7 @@ The descriptor must describe the actual content even when Katari has no compatib
 
 - Keep resource IDs unique within a publication and catalog sizes within the SDK limit.
 - Return exactly one primary EPUB archive for the built-in EPUB processor.
-- Return exactly one primary HTML resource for the built-in prose chapter processor.
+- Return exactly one primary HTML resource for the built-in prose chapter processor, plus every referenced supported asset.
 - Prefer HTTPS and resolve redirects or expiring acquisitions at open time.
 - Keep `getMedia()` safe for concurrent calls; do not store a mutable current entry or child.
 - Preserve coroutine cancellation when fetching metadata.

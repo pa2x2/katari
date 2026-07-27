@@ -242,6 +242,7 @@ class BookDocumentViewerItemsTest {
             owner = owner,
             document = prepared,
             initialPosition = BookDocumentPosition(blocks.first().id, 0),
+            resourceLoader = null,
         )
     }
 }

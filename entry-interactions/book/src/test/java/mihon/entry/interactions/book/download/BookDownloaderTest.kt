@@ -22,9 +22,13 @@ import mihon.entry.interactions.book.BookMaterializationCache
 import mihon.entry.interactions.book.BookOpenResult
 import mihon.entry.interactions.book.BookProcessor
 import mihon.entry.interactions.book.BookProcessorRegistry
+import mihon.entry.interactions.book.BookPublicationResourceDependencies
 import mihon.entry.interactions.book.BookPublicationSession
 import mihon.entry.interactions.book.BookReaderRequest
+import mihon.entry.interactions.book.BookResourceRequirement
+import mihon.entry.interactions.book.document.resource.PROSE_IMAGE_RESOURCE_REQUIREMENT
 import mihon.entry.interactions.book.download.model.BookDownload
+import mihon.entry.interactions.book.download.model.BookDownloadFailure
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
 import okhttp3.Response
@@ -39,13 +43,14 @@ import tachiyomi.domain.source.service.SourceManager
 import java.nio.file.Files
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class BookDownloaderTest {
     @Test
-    fun `download validates materializes publishes and indexes one book resource`() = runTest {
+    fun `download publishes the primary prose chapter and all referenced resources`() = runTest {
         val application = RuntimeEnvironment.getApplication()
         val root = Files.createTempDirectory("book-download-root").toFile()
         val provider = BookDownloadProvider(downloadsDirectory = { UniFile.fromFile(root) })
@@ -81,6 +86,13 @@ class BookDownloaderTest {
                         revision = "chapter-1",
                         location = BookResourceLocation.InlineText("<p>Offline</p>"),
                     ),
+                    BookSourceResource(
+                        id = "figure",
+                        title = "Figure",
+                        mediaType = "image/png",
+                        revision = "figure-1",
+                        location = BookResourceLocation.InlineBytes(byteArrayOf(1, 2, 3)),
+                    ),
                 ),
             ),
             initialResourceId = "chapter",
@@ -103,7 +115,9 @@ class BookDownloaderTest {
             sourceManager = sourceManager,
             networkHelper = networkHelper,
             materializationStore = materializationCache,
-            processorRegistry = BookProcessorRegistry(listOf(ValidatingProcessor(descriptor))),
+            processorRegistry = BookProcessorRegistry(
+                listOf(ValidatingProcessor(descriptor, requiredResourceIds = setOf("figure"))),
+            ),
             now = { 123L },
         )
         val download = BookDownload(entry, chapter)
@@ -120,7 +134,159 @@ class BookDownloaderTest {
             "<p>Offline</p>",
             completed?.resources?.get("chapter")?.openInputStream()?.reader()?.use { it.readText() },
         )
+        assertEquals(
+            listOf<Byte>(1, 2, 3),
+            completed?.resources?.get("figure")?.openInputStream()?.use { it.readBytes().toList() },
+        )
+        assertEquals(setOf("chapter", "figure"), completed?.manifest?.resources?.map { it.id }?.toSet())
         assertTrue(provider.scanPackages().invalidPackageCount == 0)
+    }
+
+    @Test
+    fun `download fails without publishing when a required prose resource is unavailable`() = runTest {
+        val application = RuntimeEnvironment.getApplication()
+        val root = Files.createTempDirectory("book-download-root").toFile()
+        val provider = BookDownloadProvider(downloadsDirectory = { UniFile.fromFile(root) })
+        val cache = BookDownloadCache(provider)
+        val entry = Entry.create().copy(
+            id = 1L,
+            profileId = 2L,
+            source = 42L,
+            url = "/books/test",
+            title = "Test Book",
+            type = EntryType.BOOK,
+        )
+        val chapter = EntryChapter.create().copy(
+            id = 10L,
+            entryId = entry.id,
+            url = "/books/test/chapter",
+            name = "Chapter",
+        )
+        val descriptor = BookContentDescriptor("text/html", profile = "prose")
+        val source = mockk<UnifiedSource> {
+            every { id } returns entry.source
+            every { name } returns "Fixture"
+            coEvery { getMedia(any(), any()) } returns EntryMedia.Book(
+                descriptor = descriptor,
+                catalog = BookResourceCatalog(
+                    resources = listOf(
+                        BookSourceResource(
+                            id = "chapter",
+                            title = "Chapter",
+                            mediaType = "text/html",
+                            location = BookResourceLocation.InlineText("<p>Offline</p>"),
+                        ),
+                    ),
+                ),
+                initialResourceId = "chapter",
+            )
+        }
+        val downloader = BookDownloader(
+            application = application,
+            provider = provider,
+            cache = cache,
+            sourceManager = mockk {
+                every { get(entry.source) } returns source
+            },
+            networkHelper = mockk {
+                every { client } returns OkHttpClient()
+            },
+            materializationStore = BookMaterializationCache(
+                application,
+                Files.createTempDirectory("book-materialization").toFile(),
+            ),
+            processorRegistry = BookProcessorRegistry(
+                listOf(ValidatingProcessor(descriptor, requiredResourceIds = setOf("missing-figure"))),
+            ),
+        )
+
+        val failure = downloader.download(BookDownload(entry, chapter))
+
+        assertNotNull(failure)
+        assertEquals(BookDownloadFailure.Reason.NETWORK, failure.reason)
+        assertNull(cache.get(BookDownloadPackageKey(entry.source, entry.url, chapter.url)))
+        assertTrue(provider.scanPackages().packages.isEmpty())
+    }
+
+    @Test
+    fun `download rejects a required resource that exceeds its renderer byte constraint`() = runTest {
+        val application = RuntimeEnvironment.getApplication()
+        val root = Files.createTempDirectory("book-download-root").toFile()
+        val provider = BookDownloadProvider(downloadsDirectory = { UniFile.fromFile(root) })
+        val cache = BookDownloadCache(provider)
+        val entry = Entry.create().copy(
+            id = 1L,
+            profileId = 2L,
+            source = 42L,
+            url = "/books/test",
+            title = "Test Book",
+            type = EntryType.BOOK,
+        )
+        val chapter = EntryChapter.create().copy(
+            id = 10L,
+            entryId = entry.id,
+            url = "/books/test/chapter",
+            name = "Chapter",
+        )
+        val descriptor = BookContentDescriptor("text/html", profile = "prose")
+        val media = EntryMedia.Book(
+            descriptor = descriptor,
+            catalog = BookResourceCatalog(
+                resources = listOf(
+                    BookSourceResource(
+                        id = "chapter",
+                        title = "Chapter",
+                        mediaType = "text/html",
+                        location = BookResourceLocation.InlineText("<p>Offline</p>"),
+                    ),
+                    BookSourceResource(
+                        id = "figure",
+                        title = "Oversized figure",
+                        mediaType = "image/png",
+                        location = BookResourceLocation.InlineBytes(byteArrayOf(1, 2, 3)),
+                    ),
+                ),
+            ),
+            initialResourceId = "chapter",
+        )
+        val source = mockk<UnifiedSource> {
+            every { id } returns entry.source
+            every { name } returns "Fixture"
+            coEvery { getMedia(any(), any()) } returns media
+        }
+        val downloader = BookDownloader(
+            application = application,
+            provider = provider,
+            cache = cache,
+            sourceManager = mockk {
+                every { get(entry.source) } returns source
+            },
+            networkHelper = mockk {
+                every { client } returns OkHttpClient()
+            },
+            materializationStore = BookMaterializationCache(
+                application,
+                Files.createTempDirectory("book-materialization").toFile(),
+            ),
+            processorRegistry = BookProcessorRegistry(
+                listOf(
+                    ValidatingProcessor(
+                        descriptor = descriptor,
+                        requiredResourceIds = setOf("figure"),
+                        resourceRequirements = mapOf(
+                            "figure" to PROSE_IMAGE_RESOURCE_REQUIREMENT.copy(maxBytes = 2),
+                        ),
+                    ),
+                ),
+            ),
+        )
+
+        val failure = downloader.download(BookDownload(entry, chapter))
+
+        assertNotNull(failure)
+        assertEquals(BookDownloadFailure.Reason.INTEGRITY, failure.reason)
+        assertNull(cache.get(BookDownloadPackageKey(entry.source, entry.url, chapter.url)))
+        assertTrue(provider.scanPackages().packages.isEmpty())
     }
 
     @Test
@@ -167,13 +333,21 @@ class BookDownloaderTest {
         val sourceRequests = AtomicInteger()
         val sourceClient = OkHttpClient.Builder()
             .addInterceptor { chain ->
-                sourceRequests.incrementAndGet()
+                val request = sourceRequests.incrementAndGet()
                 Response.Builder()
                     .request(chain.request())
                     .protocol(Protocol.HTTP_1_1)
                     .code(200)
                     .message("OK")
-                    .body("<p>Authenticated</p>".toResponseBody())
+                    .body(
+                        (
+                            if (request == 1) {
+                                "<p>Authenticated A</p>"
+                            } else {
+                                "<p>Authenticated B</p>"
+                            }
+                            ).toResponseBody(),
+                    )
                     .build()
             }
             .build()
@@ -201,20 +375,149 @@ class BookDownloaderTest {
                 every { client } returns globalClient
             },
             materializationStore = materializationCache,
-            processorRegistry = BookProcessorRegistry(listOf(ValidatingProcessor(descriptor, "<p>Authenticated</p>"))),
+            processorRegistry = BookProcessorRegistry(
+                listOf(ValidatingProcessor(descriptor, "<p>Authenticated A</p>")),
+            ),
         )
 
         val failure = downloader.download(BookDownload(entry, chapter))
 
         assertNull(failure)
-        assertTrue(sourceRequests.get() > 0)
+        assertEquals(1, sourceRequests.get())
         assertEquals(0, globalRequests.get())
+        assertEquals(
+            "<p>Authenticated A</p>",
+            cache.get(BookDownloadPackageKey(entry.source, entry.url, chapter.url))
+                ?.resources
+                ?.get("chapter")
+                ?.openInputStream()
+                ?.reader()
+                ?.use { it.readText() },
+        )
+    }
+
+    @Test
+    fun `download rejects a dependency set above the resource count budget`() = runTest {
+        val result = downloadWithBudget(
+            BookDownloadResourceBudget(maxResourceCount = 1, maxEncodedBytes = 1_024),
+        )
+
+        assertEquals(BookDownloadFailure.Reason.INTEGRITY, result.failure?.reason)
+        assertNull(result.completedPackage)
+    }
+
+    @Test
+    fun `download counts actual bytes for resources without declared sizes`() = runTest {
+        val primaryBytes = "<p>Budgeted</p>".encodeToByteArray()
+        val assetBytes = byteArrayOf(1, 2, 3, 4)
+        val result = downloadWithBudget(
+            BookDownloadResourceBudget(
+                maxResourceCount = 2,
+                maxEncodedBytes = primaryBytes.size + assetBytes.size - 1L,
+            ),
+            primaryBytes = primaryBytes,
+            assetBytes = assetBytes,
+        )
+
+        assertEquals(BookDownloadFailure.Reason.INTEGRITY, result.failure?.reason)
+        assertNull(result.completedPackage)
+    }
+
+    private suspend fun downloadWithBudget(
+        budget: BookDownloadResourceBudget,
+        primaryBytes: ByteArray = "<p>Budgeted</p>".encodeToByteArray(),
+        assetBytes: ByteArray = byteArrayOf(1, 2, 3, 4),
+    ): BudgetDownloadResult {
+        val application = RuntimeEnvironment.getApplication()
+        val downloadRoot = Files.createTempDirectory("book-budget-download").toFile()
+        val provider = BookDownloadProvider(
+            downloadsDirectory = { UniFile.fromFile(downloadRoot) },
+        )
+        val cache = BookDownloadCache(provider)
+        val entry = Entry.create().copy(
+            id = 101L,
+            profileId = 2L,
+            source = 142L,
+            url = "/books/budget",
+            title = "Budget Book",
+            type = EntryType.BOOK,
+        )
+        val chapter = EntryChapter.create().copy(
+            id = 110L,
+            entryId = entry.id,
+            url = "/books/budget/chapter",
+            name = "Budget Chapter",
+        )
+        val descriptor = BookContentDescriptor("text/html", profile = "prose")
+        val media = EntryMedia.Book(
+            descriptor = descriptor,
+            catalog = BookResourceCatalog(
+                resources = listOf(
+                    BookSourceResource(
+                        id = "chapter",
+                        title = "Chapter",
+                        mediaType = "text/html",
+                        location = BookResourceLocation.InlineBytes(primaryBytes),
+                    ),
+                    BookSourceResource(
+                        id = "asset",
+                        title = "Asset",
+                        mediaType = "application/octet-stream",
+                        location = BookResourceLocation.InlineBytes(assetBytes),
+                    ),
+                ),
+            ),
+            initialResourceId = "chapter",
+        )
+        val source = mockk<UnifiedSource> {
+            every { id } returns entry.source
+            every { name } returns "Fixture"
+            coEvery { getMedia(any(), any()) } returns media
+        }
+        val downloader = BookDownloader(
+            application = application,
+            provider = provider,
+            cache = cache,
+            sourceManager = mockk {
+                every { get(entry.source) } returns source
+            },
+            networkHelper = mockk {
+                every { client } returns OkHttpClient()
+            },
+            materializationStore = BookMaterializationCache(
+                application,
+                Files.createTempDirectory("book-budget-materialization").toFile(),
+            ),
+            processorRegistry = BookProcessorRegistry(
+                listOf(
+                    ValidatingProcessor(
+                        descriptor = descriptor,
+                        expectedContent = primaryBytes.decodeToString(),
+                        requiredResourceIds = setOf("asset"),
+                    ),
+                ),
+            ),
+            resourceBudget = budget,
+        )
+
+        val failure = downloader.download(BookDownload(entry, chapter))
+        return BudgetDownloadResult(
+            failure = failure,
+            completedPackage = cache.get(BookDownloadPackageKey(entry.source, entry.url, chapter.url)),
+        )
     }
 }
+
+private data class BudgetDownloadResult(
+    val failure: BookDownloadFailure?,
+    val completedPackage: VerifiedBookDownloadPackage?,
+)
 
 private class ValidatingProcessor(
     private val descriptor: BookContentDescriptor,
     private val expectedContent: String = "<p>Offline</p>",
+    private val requiredResourceIds: Set<String> = emptySet(),
+    private val resourceRequirements: Map<String, BookResourceRequirement> = emptyMap(),
 ) : BookProcessor {
     override val id = "validating"
     override val displayName = "Validating"
@@ -229,7 +532,9 @@ private class ValidatingProcessor(
             check(resource.stream.reader().readText() == expectedContent)
         }
         return BookOpenResult.Success(
-            object : BookPublicationSession {
+            object : BookPublicationSession, BookPublicationResourceDependencies {
+                override val requiredResourceIds = this@ValidatingProcessor.requiredResourceIds
+                override val resourceRequirements = this@ValidatingProcessor.resourceRequirements
                 override val publication = BookPublication(
                     id = content.publicationId,
                     revision = content.revision,

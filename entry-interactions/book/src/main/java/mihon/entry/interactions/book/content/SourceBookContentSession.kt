@@ -19,6 +19,7 @@ import mihon.book.api.BookResourceCacheState
 import mihon.book.api.BookResourceCapability
 import tachiyomi.domain.entry.model.Entry
 import java.io.ByteArrayInputStream
+import java.io.IOException
 import java.io.InputStream
 
 /**
@@ -102,7 +103,7 @@ internal class SourceBookContentSession(
         )
         val raw = openTerminalLocation(terminal, range)
         val lease = SessionOpenedBookResource(
-            metadata = metadata,
+            metadata = raw.mediaType?.let { metadata.copy(mediaType = it) } ?: metadata,
             stream = raw.stream,
             delegate = raw,
             onClose = ::unregisterLease,
@@ -111,24 +112,41 @@ internal class SourceBookContentSession(
         lease
     }
 
-    override suspend fun materializeResource(resourceId: String): Result<MaterializedBookResource> = resultOf {
+    override suspend fun materializeResource(resourceId: String): Result<MaterializedBookResource> =
+        materializeResource(resourceId, MAX_MATERIALIZED_BYTES)
+
+    internal suspend fun materializeResource(
+        resourceId: String,
+        maxBytes: Long,
+    ): Result<MaterializedBookResource> = resultOf {
         checkOpen()
+        val boundedMaxBytes = maxBytes.coerceIn(1L, MAX_MATERIALIZED_BYTES)
         val record = resource(resourceId)
         val metadata = record.currentMetadata()
         metadata.size?.let { size ->
-            require(size <= MAX_MATERIALIZED_BYTES) {
-                "BOOK resource $resourceId exceeds the materialization limit"
+            if (size > boundedMaxBytes) {
+                throw BookResourceMaterializationLimitException(
+                    "BOOK resource $resourceId exceeds its $boundedMaxBytes-byte acquisition limit",
+                )
             }
         }
 
-        materializationStore.acquire(record.materializationKey(), metadata) { file ->
+        val cachedLease = materializationStore.acquire(record.materializationKey(), metadata) { file ->
             val opened = openResource(resourceId).getOrThrow()
             try {
-                copyToMaterialization(opened.stream, file)
+                copyToMaterialization(opened.stream, file, boundedMaxBytes)
             } finally {
                 opened.close()
             }
         }
+        if (cachedLease.file.length() > boundedMaxBytes) {
+            cachedLease.invalidate()
+            cachedLease.close()
+            throw BookResourceMaterializationLimitException(
+                "BOOK resource $resourceId exceeds its $boundedMaxBytes-byte acquisition limit",
+            )
+        }
+        cachedLease
     }.map { cachedLease ->
         val sessionLease = SessionMaterializedBookResource(
             delegate = cachedLease,
@@ -246,16 +264,29 @@ internal class SourceBookContentSession(
         return SimpleExternalBookResource(stream)
     }
 
-    private suspend fun copyToMaterialization(input: InputStream, output: java.io.File) = withContext(Dispatchers.IO) {
+    private suspend fun copyToMaterialization(
+        input: InputStream,
+        output: java.io.File,
+        maxBytes: Long,
+    ) = withContext(Dispatchers.IO) {
         output.outputStream().buffered().use { target ->
             val buffer = ByteArray(COPY_BUFFER_SIZE)
             var copied = 0L
             while (true) {
                 currentCoroutineContext().ensureActive()
-                val read = input.read(buffer)
+                val remainingWithOverflowByte = maxBytes - copied + 1L
+                val read = input.read(
+                    buffer,
+                    0,
+                    minOf(buffer.size.toLong(), remainingWithOverflowByte).toInt(),
+                )
                 if (read < 0) break
                 copied += read
-                require(copied <= MAX_MATERIALIZED_BYTES) { "BOOK resource exceeds the materialization limit" }
+                if (copied > maxBytes) {
+                    throw BookResourceMaterializationLimitException(
+                        "BOOK resource exceeds its $maxBytes-byte acquisition limit",
+                    )
+                }
                 target.write(buffer, 0, read)
             }
         }
@@ -308,6 +339,10 @@ internal class SourceBookContentSession(
     }
 }
 
+internal class BookResourceMaterializationLimitException(
+    message: String,
+) : IOException(message)
+
 /**
  * Katari-side resolver for locations which cannot be opened from inline source data.
  *
@@ -327,6 +362,8 @@ internal interface BookExternalResourceResolver {
 /** Scoped external stream. Closing it must cancel/release all underlying I/O. */
 internal interface ExternalBookResource : AutoCloseable {
     val stream: InputStream
+    val mediaType: String?
+        get() = null
 }
 
 private class SimpleExternalBookResource(

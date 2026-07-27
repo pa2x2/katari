@@ -19,6 +19,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
+import mihon.entry.interactions.book.document.model.BookDocumentLinkTarget
+import mihon.entry.interactions.book.document.model.toBookDocumentLinkTarget
 
 @Composable
 internal fun BookDocumentText(
@@ -31,14 +33,17 @@ internal fun BookDocumentText(
     justificationMode: Int,
     trimTerminalLine: Boolean = false,
     onAnchorClick: (String, TextView) -> Unit,
+    onExternalLinkClick: (String) -> Unit = {},
     onViewChanged: (TextView?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val currentAnchorClick by rememberUpdatedState(onAnchorClick)
+    val currentExternalLinkClick by rememberUpdatedState(onExternalLinkClick)
     val linkedText = remember(text) {
-        text.withDocumentAnchorClicks { anchorId, view ->
-            currentAnchorClick(anchorId, view)
-        }
+        text.withDocumentLinkClicks(
+            onAnchorClick = { anchorId, view -> currentAnchorClick(anchorId, view) },
+            onExternalLinkClick = { url -> currentExternalLinkClick(url) },
+        )
     }
     val style = BookDocumentTextStyle(
         textColor = textColor,
@@ -142,19 +147,27 @@ private fun Spanned.clickableSpanAt(widget: TextView, event: MotionEvent): Click
 
 internal fun Spanned.withDocumentAnchorClicks(
     onAnchorClick: (String, TextView) -> Unit,
+): Spanned = withDocumentLinkClicks(onAnchorClick, onExternalLinkClick = {})
+
+internal fun Spanned.withDocumentLinkClicks(
+    onAnchorClick: (String, TextView) -> Unit,
+    onExternalLinkClick: (String) -> Unit,
 ): Spanned {
     val spannable = SpannableString(this)
     spannable.getSpans(0, spannable.length, URLSpan::class.java).forEach { span ->
-        val anchorId = span.url.removePrefix("#").takeIf { span.url.startsWith("#") && it.isNotBlank() }
-            ?: return@forEach
         val start = spannable.getSpanStart(span)
         val end = spannable.getSpanEnd(span)
         val flags = spannable.getSpanFlags(span)
         spannable.removeSpan(span)
+        val target = span.url.toBookDocumentLinkTarget() ?: return@forEach
         spannable.setSpan(
             object : ClickableSpan() {
                 override fun onClick(widget: View) {
-                    (widget as? TextView)?.let { onAnchorClick(anchorId, it) }
+                    when (target) {
+                        is BookDocumentLinkTarget.Anchor ->
+                            (widget as? TextView)?.let { onAnchorClick(target.fragment, it) }
+                        is BookDocumentLinkTarget.External -> onExternalLinkClick(target.url)
+                    }
                 }
             },
             start,

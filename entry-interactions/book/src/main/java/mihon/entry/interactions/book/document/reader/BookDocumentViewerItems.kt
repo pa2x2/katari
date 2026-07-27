@@ -13,6 +13,7 @@ internal data class BookDocumentSection<T>(
     val owner: T,
     val document: PreparedBookDocument,
     val initialPosition: BookDocumentPosition,
+    val resourceLoader: BookDocumentResourceLoader?,
 ) {
     init {
         require(key.isNotBlank()) { "document section key must not be blank" }

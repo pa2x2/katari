@@ -3,6 +3,7 @@ package mihon.entry.interactions.book.document.render
 import android.text.Spanned
 import mihon.entry.interactions.book.document.model.BookDocument
 import mihon.entry.interactions.book.document.model.BookDocumentBlock
+import mihon.entry.interactions.book.document.model.BookDocumentBlockContent
 import mihon.entry.interactions.book.document.model.BookDocumentBlockId
 
 /**
@@ -30,4 +31,12 @@ internal data class PreparedBookDocument(
 internal data class PreparedBookDocumentBlock(
     val block: BookDocumentBlock,
     val renderedText: Spanned,
-)
+    val disclosureBody: List<PreparedBookDocumentBlock> = emptyList(),
+) {
+    init {
+        val semanticBody = (block.content as? BookDocumentBlockContent.Disclosure)?.body.orEmpty()
+        require(disclosureBody.map(PreparedBookDocumentBlock::block) == semanticBody) {
+            "prepared disclosure blocks must match the semantic disclosure body"
+        }
+    }
+}

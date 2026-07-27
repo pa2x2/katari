@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookContentResource
@@ -19,15 +21,20 @@ import mihon.book.api.BookResourceCapability
 import mihon.entry.interactions.book.BookContentSession
 import mihon.entry.interactions.book.BookOpenResult
 import mihon.entry.interactions.book.BookProcessor
+import mihon.entry.interactions.book.BookPublicationResourceDependencies
 import mihon.entry.interactions.book.BookPublicationSession
 import mihon.entry.interactions.book.BookReaderRequest
+import mihon.entry.interactions.book.BookResourceRequirement
+import mihon.entry.interactions.book.document.model.BookDocument
+import mihon.entry.interactions.book.document.model.BookDocumentBlock
+import mihon.entry.interactions.book.document.model.BookDocumentBlockContent
+import mihon.entry.interactions.book.document.model.BookDocumentFontFamily
+import mihon.entry.interactions.book.document.reader.BookDocumentBinaryResource
+import mihon.entry.interactions.book.document.reader.BookDocumentResourceLoader
 import mihon.entry.interactions.book.document.render.PreparedBookDocument
-import org.jsoup.Jsoup
-import org.jsoup.nodes.Element
-import org.jsoup.safety.Cleaner
-import org.jsoup.safety.Safelist
+import mihon.entry.interactions.book.document.resource.PROSE_FONT_RESOURCE_REQUIREMENT
+import mihon.entry.interactions.book.document.resource.PROSE_IMAGE_RESOURCE_REQUIREMENT
 import java.io.ByteArrayOutputStream
-import java.nio.charset.StandardCharsets
 
 /** Built-in reader processor for one source-normalized prose chapter. */
 internal class HtmlProseChapterProcessor : BookProcessor {
@@ -77,7 +84,7 @@ internal class HtmlProseChapterProcessor : BookProcessor {
                 prepareHtmlBookDocument(
                     resourceId = resourceId,
                     revision = metadata.revision ?: content.revision,
-                    body = sanitize(bytes),
+                    body = sanitizeProseDocument(bytes),
                 )
             }
             BookOpenResult.Success(
@@ -86,6 +93,7 @@ internal class HtmlProseChapterProcessor : BookProcessor {
                     revision = metadata.revision ?: content.revision,
                     resource = metadata,
                     document = document,
+                    content = content,
                 ),
             )
         } catch (error: CancellationException) {
@@ -114,8 +122,17 @@ internal class HtmlProseChapterSession(
     revision: String,
     resource: BookContentResource,
     val document: PreparedBookDocument,
-) : BookPublicationSession {
+    content: BookContentSession,
+) : BookPublicationSession, BookPublicationResourceDependencies {
     val resourceId: String = resource.id
+    val resourceLoader: BookDocumentResourceLoader = HtmlProseResourceLoader(content)
+    override val requiredResourceIds: Set<String> = document.document.resourceIds
+    override val resourceRequirements: Map<String, BookResourceRequirement> =
+        document.document.resourceRequirements().also { requirements ->
+            require(requirements.keys == requiredResourceIds) {
+                "Every required prose resource must declare offline validation constraints"
+            }
+        }
 
     override val publication = BookPublication(
         id = publicationId,
@@ -156,23 +173,110 @@ internal class HtmlProseChapterSession(
     override fun close() = Unit
 }
 
-private fun sanitize(bytes: ByteArray): Element {
-    val parsed = Jsoup.parse(bytes.inputStream(), null, "")
-    val cleaned = Cleaner(PROSE_SAFELIST).clean(parsed)
-    cleaned.select("a[href]").forEach { link ->
-        if (!link.attr("href").startsWith("#")) link.removeAttr("href")
+private fun BookDocument.resourceRequirements(): Map<String, BookResourceRequirement> = buildMap {
+    fun register(resourceId: String, requirement: BookResourceRequirement) {
+        val existing = get(resourceId)
+        require(existing == null || existing == requirement) {
+            "Prose resource $resourceId is used with incompatible validation constraints"
+        }
+        put(resourceId, requirement)
     }
-    cleaned.outputSettings()
-        .charset(StandardCharsets.UTF_8)
-        .prettyPrint(false)
-    return cleaned.body()
+
+    fun collect(blocks: List<BookDocumentBlock>) {
+        blocks.forEach { block ->
+            (block.style.fontFamily as? BookDocumentFontFamily.Resource)?.resourceId?.let { resourceId ->
+                register(resourceId, PROSE_FONT_RESOURCE_REQUIREMENT)
+            }
+            block.inlineStyles.forEach { inline ->
+                (inline.style.fontFamily as? BookDocumentFontFamily.Resource)?.resourceId?.let { resourceId ->
+                    register(resourceId, PROSE_FONT_RESOURCE_REQUIREMENT)
+                }
+            }
+            when (val content = block.content) {
+                is BookDocumentBlockContent.Figure ->
+                    register(content.image.resourceId, PROSE_IMAGE_RESOURCE_REQUIREMENT)
+                is BookDocumentBlockContent.Disclosure -> collect(content.body)
+                else -> Unit
+            }
+        }
+    }
+    collect(blocks)
 }
 
-private fun java.io.InputStream.readBounded(maxBytes: Int): ByteArray {
+private class HtmlProseResourceLoader(
+    private val content: BookContentSession,
+) : BookDocumentResourceLoader {
+    private val cacheLock = Any()
+    private val cache = LinkedHashMap<String, BookDocumentBinaryResource>(4, 0.75f, true)
+    private var cachedBytes = 0
+
+    override suspend fun load(
+        resourceId: String,
+        acceptedMediaTypes: Set<String>,
+        maxBytes: Int,
+    ): Result<BookDocumentBinaryResource> {
+        return try {
+            require(maxBytes in 1..MAX_SUBORDINATE_RESOURCE_BYTES) { "Invalid prose resource byte limit" }
+            synchronized(cacheLock) {
+                cache[resourceId]?.takeIf { resource ->
+                    resource.bytes.size <= maxBytes && resource.mediaType in acceptedMediaTypes
+                }
+            }?.let { return Result.success(it) }
+
+            val metadata = content.getResource(resourceId).getOrThrow()
+            require(metadata.isReadable()) { "Prose resource $resourceId is not readable" }
+            val mediaType = metadata.mediaType.normalizedMediaType()
+            require(mediaType in acceptedMediaTypes) {
+                "Prose resource $resourceId has unsupported media type ${metadata.mediaType}"
+            }
+            metadata.size?.let { size ->
+                require(size <= maxBytes) { "Prose resource $resourceId exceeds its byte limit" }
+            }
+            val bytes = content.openResource(resourceId).getOrThrow().use { opened ->
+                require(opened.metadata.mediaType.normalizedMediaType() in acceptedMediaTypes) {
+                    "Prose resource $resourceId returned an unsupported media type ${opened.metadata.mediaType}"
+                }
+                withContext(Dispatchers.IO) {
+                    opened.stream.readBounded(maxBytes)
+                }
+            }
+            require(bytes.isNotEmpty()) { "Prose resource $resourceId is empty" }
+            Result.success(BookDocumentBinaryResource(resourceId, mediaType, bytes).also(::storeInCache))
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            Result.failure(error)
+        }
+    }
+
+    private fun storeInCache(resource: BookDocumentBinaryResource) {
+        if (resource.bytes.size > MAX_RESOURCE_CACHE_BYTES) return
+        synchronized(cacheLock) {
+            cache.put(resource.resourceId, resource)?.let { previous ->
+                cachedBytes -= previous.bytes.size
+            }
+            cachedBytes += resource.bytes.size
+            while (cache.size > MAX_RESOURCE_CACHE_ENTRIES || cachedBytes > MAX_RESOURCE_CACHE_BYTES) {
+                val oldest = cache.entries.firstOrNull() ?: break
+                cache.remove(oldest.key)
+                cachedBytes -= oldest.value.bytes.size
+            }
+        }
+    }
+
+    private companion object {
+        const val MAX_SUBORDINATE_RESOURCE_BYTES = 16 * 1024 * 1024
+        const val MAX_RESOURCE_CACHE_BYTES = 16 * 1024 * 1024
+        const val MAX_RESOURCE_CACHE_ENTRIES = 8
+    }
+}
+
+private suspend fun java.io.InputStream.readBounded(maxBytes: Int): ByteArray {
     val output = ByteArrayOutputStream(minOf(maxBytes, DEFAULT_BUFFER_SIZE))
     val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
     var total = 0
     while (true) {
+        currentCoroutineContext().ensureActive()
         val read = read(buffer)
         if (read < 0) break
         total += read
@@ -193,21 +297,8 @@ private fun BookContentResource.isReadable(): Boolean =
     BookResourceCapability.STREAM in capabilities &&
         (availability == BookResourceAvailability.UNKNOWN || availability == BookResourceAvailability.AVAILABLE)
 
+private fun String?.normalizedMediaType(): String? = this?.substringBefore(';')?.trim()?.lowercase()
+
 internal const val HTML_MEDIA_TYPE = "text/html"
 internal const val PROSE_CHAPTER_PROFILE = "prose-chapter"
 private const val XHTML_MEDIA_TYPE = "application/xhtml+xml"
-
-private val PROSE_SAFELIST = Safelist.none()
-    .addTags(
-        "a", "article", "aside", "b", "blockquote", "br", "caption", "cite", "code", "col", "colgroup", "dd",
-        "div", "dl", "dt", "em", "figcaption", "figure", "h1", "h2", "h3", "h4", "h5", "h6", "hr", "i",
-        "li", "ol", "p", "pre", "q", "s", "section", "small", "span", "strike", "strong", "sub", "sup",
-        "table", "tbody", "td", "tfoot", "th", "thead", "tr", "u", "ul",
-    )
-    .addAttributes(":all", "id", "lang", "dir")
-    .addAttributes("a", "href", "name", "title")
-    .addAttributes("col", "span")
-    .addAttributes("colgroup", "span")
-    .addAttributes("ol", "start", "type")
-    .addAttributes("td", "colspan", "rowspan")
-    .addAttributes("th", "colspan", "rowspan", "scope")

@@ -343,6 +343,57 @@ class SourceBookContentSessionTest {
     }
 
     @Test
+    fun `bounded materialization stops reading after the acquisition limit`() = runTest {
+        val bytesRead = AtomicInteger()
+        val resolver = object : BookExternalResourceResolver {
+            override suspend fun open(
+                location: BookResourceLocation,
+                range: BookByteRange?,
+            ): ExternalBookResource {
+                val stream = object : InputStream() {
+                    private var position = 0
+
+                    override fun read(): Int {
+                        if (position == 64) return -1
+                        position++
+                        bytesRead.incrementAndGet()
+                        return 1
+                    }
+
+                    override fun read(buffer: ByteArray, offset: Int, length: Int): Int {
+                        if (position == 64) return -1
+                        val count = minOf(length, 64 - position)
+                        buffer.fill(1, offset, offset + count)
+                        position += count
+                        bytesRead.addAndGet(count)
+                        return count
+                    }
+                }
+                return object : ExternalBookResource {
+                    override val stream: InputStream = stream
+                    override fun close() = stream.close()
+                }
+            }
+        }
+        val session = session(
+            media = bookMedia(
+                resources = listOf(
+                    resource(
+                        id = "unknown-size",
+                        location = BookResourceLocation.RemoteRequest("https://example.invalid/unknown-size"),
+                    ),
+                ),
+            ),
+            resolver = resolver,
+        )
+
+        val failure = session.materializeResource("unknown-size", maxBytes = 4).exceptionOrNull()
+
+        assertIs<BookResourceMaterializationLimitException>(failure)
+        assertEquals(5, bytesRead.get())
+    }
+
+    @Test
     fun `session close releases outstanding streams once`() = runTest {
         val resolver = FakeExternalResolver(
             mapOf("remote:https://example.invalid/book" to "content".encodeToByteArray()),

@@ -100,3 +100,29 @@ internal interface BookPublicationSession : AutoCloseable {
     suspend fun reconcileMigratedLocator(locator: BookLocator): BookLocator? =
         locator.takeIf(::validate)
 }
+
+/** Publication-scoped resources that must accompany the primary resource offline. */
+internal interface BookPublicationResourceDependencies {
+    val requiredResourceIds: Set<String>
+    val resourceRequirements: Map<String, BookResourceRequirement>
+        get() = emptyMap()
+}
+
+internal data class BookResourceRequirement(
+    val acceptedMediaTypes: Set<String>,
+    val maxBytes: Int,
+    val contentKind: BookResourceContentKind,
+) {
+    init {
+        require(acceptedMediaTypes.isNotEmpty()) { "required BOOK resource media types must not be empty" }
+        require(acceptedMediaTypes.none(String::isBlank)) {
+            "required BOOK resource media types must not be blank"
+        }
+        require(maxBytes > 0) { "required BOOK resource byte limit must be positive" }
+    }
+}
+
+internal enum class BookResourceContentKind {
+    RASTER_IMAGE,
+    FONT,
+}

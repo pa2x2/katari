@@ -77,6 +77,29 @@ class HtmlProseViewerItemsTest {
         )
     }
 
+    @Test
+    fun `structured block scroll maps to a durable document offset`() {
+        assertEquals(0, structuredBlockPositionOffset(100, scrollValue = 0, maxScrollValue = 800))
+        assertEquals(50, structuredBlockPositionOffset(100, scrollValue = 400, maxScrollValue = 800))
+        assertEquals(100, structuredBlockPositionOffset(100, scrollValue = 800, maxScrollValue = 800))
+        assertEquals(400, structuredBlockScrollValue(50, blockLength = 100, maxScrollValue = 800))
+    }
+
+    @Test
+    fun `structured block without inner scrolling records only fully visible content as complete`() {
+        assertEquals(100, structuredBlockPositionOffset(100, scrollValue = 0, maxScrollValue = 0))
+        assertEquals(
+            0,
+            structuredBlockPositionOffset(
+                blockLength = 100,
+                scrollValue = 0,
+                maxScrollValue = 0,
+                contentFullyVisible = false,
+            ),
+        )
+        assertEquals(0, structuredBlockScrollValue(50, blockLength = 100, maxScrollValue = 0))
+    }
+
     private fun chapter(id: Long) = EntryChapter.create().copy(id = id, entryId = 9L, name = "Chapter $id")
 
     private fun page(chapter: EntryChapter, index: Int = 0, total: Int = 1) =

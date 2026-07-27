@@ -108,6 +108,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
                                 uiState = uiState?.copy(settingsVisible = visible)
                             },
                             onChildWebViewAction = ::launchChildWebViewAction,
+                            onExternalLinkClick = ::launchExternalLink,
                         )
                     }
                 }
@@ -222,6 +223,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
                 owner = session.chapter,
                 document = content.document,
                 initialPosition = initialPosition,
+                resourceLoader = content.resourceLoader,
             )
             uiState = HtmlProseReaderUiState(
                 entryTitle = session.entry.displayTitle,
@@ -277,6 +279,15 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
             .onFailure {
                 Toast.makeText(this, it.message, Toast.LENGTH_LONG).show()
             }
+    }
+
+    private fun launchExternalLink(url: String) {
+        runCatching {
+            val uri = url.toValidatedProseExternalUri()
+            startActivity(Intent(Intent.ACTION_VIEW, uri))
+        }.onFailure {
+            Toast.makeText(this, it.message, Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun updateLocation(
@@ -453,6 +464,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
             owner = session.chapter,
             document = content.document,
             initialPosition = initialPosition,
+            resourceLoader = content.resourceLoader,
         )
         uiState = uiState?.copy(
             loadedChapters = uiState?.loadedChapters.orEmpty() + (session.chapter.id to loaded),
@@ -508,6 +520,20 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
             putExtra(EXTRA_SESSION_TOKEN, sessionToken)
         }
     }
+}
+
+internal fun String.toValidatedProseExternalUri(): Uri {
+    val uri = Uri.parse(this)
+    require(
+        uri.scheme.equals("https", ignoreCase = true) ||
+            uri.scheme.equals("http", ignoreCase = true),
+    ) {
+        "Unsupported prose link"
+    }
+    require(!uri.host.isNullOrBlank()) { "Invalid prose link" }
+    return uri.buildUpon()
+        .scheme(uri.scheme?.lowercase())
+        .build()
 }
 
 private sealed interface ProseReaderSurfaceState {
