@@ -11,6 +11,7 @@ import mihon.entry.interactions.documentation.EntryContentTypeReferenceRow
 import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
 import mihon.entry.interactions.documentation.EntryContentTypeReferenceSelection
 import mihon.entry.interactions.documentation.EntryContentTypeReferenceStatus
+import mihon.entry.interactions.entryContentType
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.CapabilityId
 import mihon.feature.graph.CapabilityProvider
@@ -106,7 +107,7 @@ class EntryContentTypeReferencePlannerTest {
             evaluation = evaluateFeatureGraph(graph),
             contextEvidence = EntryContentTypeReferenceContextEvidenceProvider { subject, input ->
                 if (input == context) {
-                    contextEvidence(context, subject.contentType == ContentTypeId("future.registered"))
+                    contextEvidence(context, subject.entryContentType == ContentTypeId("future.registered"))
                 } else {
                     null
                 }

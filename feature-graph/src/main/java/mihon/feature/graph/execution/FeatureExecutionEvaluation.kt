@@ -1,9 +1,8 @@
 package mihon.feature.graph
 
-/** One participant evaluated for one installed content type. */
+/** One participant evaluated for one installed Feature subject. */
 data class FeatureExecutionParticipantSubject(
-    val contentType: ContentTypeId,
-    val contentTypeOwner: ContributionOwner,
+    val affectedSubject: FeatureSubjectReference,
     val point: FeatureExecutionPointId,
     val participant: FeatureExecutionParticipantId,
     val participantOwner: ContributionOwner,
@@ -60,27 +59,28 @@ internal fun evaluateFeatureExecutionParticipants(
     graph: FeatureGraph,
 ): List<FeatureExecutionParticipantEvaluation> {
     return buildList {
-        graph.contentTypes.forEach { contentType ->
-            graph.executionParticipants.forEach { participant ->
-                add(evaluateFeatureExecutionParticipant(contentType, participant))
-            }
+        graph.subjects.forEach { subject ->
+            graph.executionParticipants
+                .filter { it.point.subjectScope == subject.subject.scope }
+                .forEach { participant ->
+                    add(evaluateFeatureExecutionParticipant(subject, participant))
+                }
         }
     }
 }
 
 private fun evaluateFeatureExecutionParticipant(
-    contentType: ContentTypeContribution,
+    affectedSubject: FeatureSubjectContribution,
     participant: FeatureExecutionParticipantDefinition<*>,
 ): FeatureExecutionParticipantEvaluation {
     val subject = FeatureExecutionParticipantSubject(
-        contentType = contentType.contentType,
-        contentTypeOwner = contentType.owner,
+        affectedSubject = affectedSubject.reference(),
         point = participant.point.id,
         participant = participant.id,
         participantOwner = participant.owner,
     )
-    val prerequisiteResult = participant.prerequisites.evaluateAgainst(contentType.providers)
-    val adaptersById = contentType.specializedAdapters.associateBy { it.definition.id }
+    val prerequisiteResult = participant.prerequisites.evaluateAgainst(affectedSubject.providers)
+    val adaptersById = affectedSubject.specializedAdapters.associateBy { it.definition.id }
     val specializedPrerequisites = participant.specializedPrerequisites.sortedBy { it.id.value }
     val missingSpecializedPrerequisites = specializedPrerequisites.filter { it.id !in adaptersById }
 
@@ -119,7 +119,7 @@ private fun evaluateFeatureExecutionParticipant(
             suppliedAdapters = suppliedAdapters,
             obligations = missingRequirements.map { requirement ->
                 SpecializedExecutionParticipantObligation(
-                    responsibleOwner = contentType.owner,
+                    responsibleOwner = affectedSubject.owner,
                     subject = subject,
                     requirement = requirement,
                 )
@@ -230,7 +230,7 @@ fun resolveFeatureExecutionContext(
                     evidence = supplied,
                     obligations = missingRequirements.map { requirement ->
                         SpecializedExecutionParticipantObligation(
-                            responsibleOwner = candidate.subject.contentTypeOwner,
+                            responsibleOwner = candidate.subject.affectedSubject.owner,
                             subject = candidate.subject,
                             requirement = requirement,
                         )

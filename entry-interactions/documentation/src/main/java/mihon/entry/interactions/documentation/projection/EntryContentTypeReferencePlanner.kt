@@ -9,6 +9,9 @@ import mihon.entry.interactions.documentation.EntryContentTypeReferenceProjectio
 import mihon.entry.interactions.documentation.EntryContentTypeReferenceRow
 import mihon.entry.interactions.documentation.EntryContentTypeReferenceSelection
 import mihon.entry.interactions.documentation.EntryContentTypeReferenceStatus
+import mihon.entry.interactions.entryContentType
+import mihon.entry.interactions.entryContentTypes
+import mihon.entry.interactions.resolveFeatureContext
 import mihon.feature.graph.ApplicableFeatureContext
 import mihon.feature.graph.BlockedFeatureContext
 import mihon.feature.graph.ConditionalFeatureIntegration
@@ -17,7 +20,6 @@ import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureProjectionSelection
 import mihon.feature.graph.IncompleteFeatureContext
 import mihon.feature.graph.MissingFeatureContextEvidence
-import mihon.feature.graph.resolveFeatureContext
 import mihon.feature.graph.selectContextualFeatureArtifacts
 import mihon.feature.graph.selectFeatureArtifacts
 import mihon.feature.graph.validation.projection.classifyFeatureProjectionParticipation
@@ -110,7 +112,7 @@ fun planEntryContentTypeReference(
             }
             val resolved = resolveFeatureContext(
                 evaluation = evaluation,
-                contentType = candidate.subject.contentType,
+                contentType = candidate.subject.entryContentType,
                 feature = candidate.subject.feature,
                 integration = candidate.subject.integration,
                 evidence = evidence,
@@ -174,7 +176,7 @@ fun planEntryContentTypeReference(
         when (val element = projection.element) {
             is EntryContentTypeReferenceRow -> when (result) {
                 is EntryContentTypeReferenceProjectionResult.Cell -> {
-                    val key = element.id to selection.subject.contentType
+                    val key = element.id to selection.subject.entryContentType
                     val previous = rowStatuses.put(key, result.status)
                     if (previous != null && previous != result.status) {
                         issues += EntryContentTypeReferenceIssue(
@@ -188,14 +190,14 @@ fun planEntryContentTypeReference(
             }
             is EntryContentTypeReferenceNote -> when (result) {
                 EntryContentTypeReferenceProjectionResult.IncludedNote ->
-                    noteTypes.getOrPut(element.id, ::mutableSetOf) += selection.subject.contentType
+                    noteTypes.getOrPut(element.id, ::mutableSetOf) += selection.subject.entryContentType
                 is EntryContentTypeReferenceProjectionResult.Cell -> issues += kindMismatch(selection, element)
             }
         }
     }
 
     return EntryContentTypeReferencePlan(
-        contentTypes = graph.contentTypes.map { it.contentType },
+        contentTypes = graph.entryContentTypes.map { it.contentType },
         rows = elements.filterIsInstance<EntryContentTypeReferenceRow>()
             .sortedWith(
                 compareBy({
@@ -205,7 +207,7 @@ fun planEntryContentTypeReference(
             .map { row ->
                 EntryContentTypeReferencePlannedRow(
                     definition = row,
-                    statuses = graph.contentTypes.mapNotNull { type ->
+                    statuses = graph.entryContentTypes.mapNotNull { type ->
                         rowStatuses[row.id to type.contentType]?.let { type.contentType to it }
                     }.toMap(),
                 )

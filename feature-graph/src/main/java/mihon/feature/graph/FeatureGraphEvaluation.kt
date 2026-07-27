@@ -1,22 +1,21 @@
 package mihon.feature.graph
 
-/** The stable subject of one feature integration evaluated for one content type. */
+/** The stable subject of one feature integration evaluated for one installed Feature subject. */
 data class FeatureIntegrationSubject(
-    val contentType: ContentTypeId,
-    val contentTypeOwner: ContributionOwner,
+    val affectedSubject: FeatureSubjectReference,
     val feature: FeatureId,
     val featureOwner: ContributionOwner,
     val integration: FeatureIntegrationId,
 )
 
-/** Result of evaluating a positive capability expression against one content type's providers. */
+/** Result of evaluating a positive capability expression against one Feature subject's providers. */
 data class CapabilityExpressionEvaluation(
     val isSatisfied: Boolean,
     val matchedProviders: List<CapabilityProvider<*>>,
     val unmetRequirements: List<CapabilityExpression>,
 )
 
-/** Evaluation state of one feature integration for one content type. */
+/** Evaluation state of one feature integration for one Feature subject. */
 sealed interface FeatureIntegrationEvaluation {
     val subject: FeatureIntegrationSubject
     val integration: FeatureIntegration
@@ -43,7 +42,7 @@ data class ConditionalFeatureIntegration internal constructor(
     val pendingSpecializedRequirements: List<SpecializedAdapterDefinition<*>>,
 ) : FeatureIntegrationEvaluation
 
-/** Prerequisites are satisfied, but the affected content type has not supplied required specialized work. */
+/** Prerequisites are satisfied, but the affected Feature subject has not supplied required specialized work. */
 @ConsistentCopyVisibility
 data class IncompleteFeatureIntegration internal constructor(
     override val subject: FeatureIntegrationSubject,
@@ -63,9 +62,9 @@ data class ApplicableFeatureIntegration internal constructor(
 ) : FeatureIntegrationEvaluation
 
 /**
- * Actionable media-specific work exposed only after the feature's prerequisites are satisfied.
+ * Actionable subject-specific work exposed only after the feature's prerequisites are satisfied.
  *
- * The feature owner defines the requirement. The affected content-type owner is responsible for supplying its adapter.
+ * The feature owner defines the requirement. The affected subject owner is responsible for supplying its adapter.
  */
 sealed interface FeatureObligation {
     val responsibleOwner: ContributionOwner
@@ -78,9 +77,9 @@ data class SpecializedFeatureObligation(
 ) : FeatureObligation
 
 /**
- * An applicability edge from one content type to one feature-owned behavior projection.
+ * An applicability edge from one Feature subject to one feature-owned behavior projection.
  *
- * The projection object is not copied or instantiated per content type. It only describes behavior already owned by
+ * The projection object is not copied or instantiated per subject. It only describes behavior already owned by
  * the Feature coordinator.
  */
 data class BehaviorProjectionApplicability(
@@ -107,11 +106,14 @@ data class FeatureGraphEvaluation internal constructor(
 
 fun evaluateFeatureGraph(graph: FeatureGraph): FeatureGraphEvaluation {
     val evaluations = buildList {
-        graph.contentTypes.forEach { contentType ->
+        graph.subjects.forEach { subject ->
             graph.features.forEach { feature ->
-                feature.integrations.sortedBy { it.id.value }.forEach { integration ->
-                    add(evaluateIntegration(contentType, feature, integration))
-                }
+                feature.integrations
+                    .filter { it.subjectScope == subject.subject.scope }
+                    .sortedBy { it.id.value }
+                    .forEach { integration ->
+                        add(evaluateIntegration(subject, feature, integration))
+                    }
             }
         }
     }
@@ -151,20 +153,19 @@ fun CapabilityExpression.evaluateAgainst(
 }
 
 private fun evaluateIntegration(
-    contentType: ContentTypeContribution,
+    affectedSubject: FeatureSubjectContribution,
     feature: FeatureContribution,
     integration: FeatureIntegration,
 ): FeatureIntegrationEvaluation {
     val subject = FeatureIntegrationSubject(
-        contentType = contentType.contentType,
-        contentTypeOwner = contentType.owner,
+        affectedSubject = affectedSubject.reference(),
         feature = feature.feature,
         featureOwner = feature.owner,
         integration = integration.id,
     )
-    val prerequisiteResult = integration.prerequisites.evaluateAgainst(contentType.providers)
+    val prerequisiteResult = integration.prerequisites.evaluateAgainst(affectedSubject.providers)
 
-    val adaptersById = contentType.specializedAdapters.associateBy { it.definition.id }
+    val adaptersById = affectedSubject.specializedAdapters.associateBy { it.definition.id }
     val specializedPrerequisites = integration.specializedPrerequisites.sortedBy { it.id.value }
     val missingSpecializedPrerequisites = specializedPrerequisites.filter { it.id !in adaptersById }
 
@@ -203,7 +204,7 @@ private fun evaluateIntegration(
             suppliedAdapters = suppliedAdapters,
             obligations = missingRequirements.map { requirement ->
                 SpecializedFeatureObligation(
-                    responsibleOwner = contentType.owner,
+                    responsibleOwner = affectedSubject.owner,
                     subject = subject,
                     requirement = requirement,
                 )

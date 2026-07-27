@@ -22,7 +22,7 @@ class EntryDestructiveRemovalContractValidationContributor : FeatureValidationCo
                 ),
             ) { input ->
                 verifyFeatureContract {
-                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
                     val entry = removalEntry(type)
                     var committed = false
                     val host = object : EntryDestructiveRemovalHost {

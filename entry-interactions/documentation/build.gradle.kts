@@ -9,6 +9,7 @@ android {
 
 dependencies {
     implementation(projects.entryInteractions)
+    implementation(projects.entryInteractions.spi)
     implementation(projects.featureGraph)
     implementation(projects.featureValidation)
     implementation(platform(libs.androidx.compose.bom))

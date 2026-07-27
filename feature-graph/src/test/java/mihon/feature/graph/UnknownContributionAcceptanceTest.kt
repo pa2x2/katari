@@ -53,7 +53,8 @@ class UnknownContributionAcceptanceTest {
 
         val initial = discoverAndAssembleFeatureGraph(contributors)
             .let { graph -> graph to evaluateFeatureGraph(graph) }
-        initial.second.behaviorProjections.map { it.subject.contentType.value } shouldContainExactly listOf("existing")
+        initial.second.behaviorProjections.map { it.subject.entryContentType.value } shouldContainExactly
+            listOf("existing")
         initial.second.obligations shouldBe emptyList()
 
         types += contentType("future-complete", typesOwner, alpha, adapterDefinition)
@@ -67,19 +68,19 @@ class UnknownContributionAcceptanceTest {
         val expandedEvaluation = evaluateFeatureGraph(expandedGraph)
         val selected = selectFeatureArtifacts(expandedGraph, expandedEvaluation)
 
-        expandedEvaluation.behaviorProjections.map { it.subject.contentType.value } shouldContainExactly listOf(
+        expandedEvaluation.behaviorProjections.map { it.subject.entryContentType.value } shouldContainExactly listOf(
             "existing",
             "future-complete",
         )
         expandedEvaluation.behaviorProjections.all { it.projection === behavior } shouldBe true
-        expandedEvaluation.obligations.map { it.subject.contentType.value } shouldContainExactly listOf(
+        expandedEvaluation.obligations.map { it.subject.entryContentType.value } shouldContainExactly listOf(
             "future-incomplete",
         )
-        selected.behavioralContracts.map { it.subject.contentType.value } shouldContainExactly listOf(
+        selected.behavioralContracts.map { it.subject.entryContentType.value } shouldContainExactly listOf(
             "existing",
             "future-complete",
         )
-        selected.projections.map { it.subject.contentType.value } shouldContainExactly listOf(
+        selected.projections.map { it.subject.entryContentType.value } shouldContainExactly listOf(
             "existing",
             "future-complete",
         )
@@ -166,7 +167,7 @@ class UnknownContributionAcceptanceTest {
         val evaluation = evaluateFeatureGraph(graph)
         evaluation.candidateBehaviorProjections
             .filter { it.subject.feature == FeatureId("future.conditional") }
-            .map { it.subject.contentType } shouldContainExactly listOf(
+            .map { it.subject.entryContentType } shouldContainExactly listOf(
             ContentTypeId("future.complete"),
             ContentTypeId("future.incomplete"),
         )
@@ -176,7 +177,7 @@ class UnknownContributionAcceptanceTest {
 
         resolveFeatureContext(
             evaluation,
-            ContentTypeId("future.complete"),
+            FeatureSubjectId.EntryContentType(ContentTypeId("future.complete")),
             FeatureId("future.conditional"),
             FeatureIntegrationId("future.conditional"),
             emptyList(),
@@ -184,14 +185,14 @@ class UnknownContributionAcceptanceTest {
             .integration.shouldBeInstanceOf<MissingFeatureContextEvidence>()
         resolveFeatureContext(
             evaluation = evaluation,
-            contentType = ContentTypeId("future.complete"),
+            subject = FeatureSubjectId.EntryContentType(ContentTypeId("future.complete")),
             feature = FeatureId("future.conditional"),
             integration = FeatureIntegrationId("future.conditional"),
             evidence = listOf(contextEvidence(context, FutureContext(enabled = false))),
         ).integration.shouldBeInstanceOf<BlockedFeatureContext>()
         resolveFeatureContext(
             evaluation = evaluation,
-            contentType = ContentTypeId("future.complete"),
+            subject = FeatureSubjectId.EntryContentType(ContentTypeId("future.complete")),
             feature = FeatureId("future.conditional"),
             integration = FeatureIntegrationId("future.conditional"),
             evidence = listOf(contextEvidence(context, FutureContext(enabled = true))),
@@ -199,7 +200,7 @@ class UnknownContributionAcceptanceTest {
 
         val incomplete = resolveFeatureContext(
             evaluation = evaluation,
-            contentType = ContentTypeId("future.incomplete"),
+            subject = FeatureSubjectId.EntryContentType(ContentTypeId("future.incomplete")),
             feature = FeatureId("future.conditional"),
             integration = FeatureIntegrationId("future.conditional"),
             evidence = listOf(contextEvidence(context, FutureContext(enabled = true))),
@@ -232,7 +233,7 @@ class UnknownContributionAcceptanceTest {
         val subjects = mutableListOf<ContentTypeId>()
 
         fun execute(subject: FeatureIntegrationSubject) {
-            subjects += subject.contentType
+            subjects += subject.entryContentType
         }
     }
 
@@ -240,7 +241,7 @@ class UnknownContributionAcceptanceTest {
         val subjects = mutableListOf<ContentTypeId>()
 
         fun project(subject: FeatureIntegrationSubject) {
-            subjects += subject.contentType
+            subjects += subject.entryContentType
         }
     }
 

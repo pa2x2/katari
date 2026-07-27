@@ -38,6 +38,7 @@ sealed interface FeatureExecutionPointDefinition<E : Any> {
     val id: FeatureExecutionPointId
     val owner: ContributionOwner
     val eventType: KClass<E>
+    val subjectScope: FeatureSubjectScope
     val phase: FeatureExecutionPhase
     val failurePolicy: FeatureExecutionFailurePolicy
 }
@@ -47,6 +48,7 @@ data class InlineFeatureExecutionPointDefinition<E : Any>(
     override val owner: ContributionOwner,
     override val eventType: KClass<E>,
     override val failurePolicy: FeatureExecutionFailurePolicy,
+    override val subjectScope: FeatureSubjectScope = FeatureSubjectScope.EntryContentType,
 ) : FeatureExecutionPointDefinition<E> {
     override val phase = FeatureExecutionPhase.Inline
 }
@@ -56,6 +58,7 @@ data class TransactionalFeatureExecutionPointDefinition<E : Any>(
     override val owner: ContributionOwner,
     override val eventType: KClass<E>,
     override val failurePolicy: FeatureExecutionFailurePolicy,
+    override val subjectScope: FeatureSubjectScope = FeatureSubjectScope.EntryContentType,
 ) : FeatureExecutionPointDefinition<E> {
     override val phase = FeatureExecutionPhase.InTransaction
 }
@@ -65,6 +68,7 @@ data class AfterCommitVolatileFeatureExecutionPointDefinition<E : Any>(
     override val owner: ContributionOwner,
     override val eventType: KClass<E>,
     override val failurePolicy: FeatureExecutionFailurePolicy,
+    override val subjectScope: FeatureSubjectScope = FeatureSubjectScope.EntryContentType,
 ) : FeatureExecutionPointDefinition<E> {
     override val phase = FeatureExecutionPhase.AfterCommitVolatile
 }
@@ -74,6 +78,7 @@ data class DurableFeatureExecutionPointDefinition<E : Any>(
     override val owner: ContributionOwner,
     override val eventType: KClass<E>,
     override val failurePolicy: FeatureExecutionFailurePolicy,
+    override val subjectScope: FeatureSubjectScope = FeatureSubjectScope.EntryContentType,
 ) : FeatureExecutionPointDefinition<E> {
     override val phase = FeatureExecutionPhase.Durable
 }
@@ -82,44 +87,52 @@ inline fun <reified E : Any> inlineFeatureExecutionPointDefinition(
     id: FeatureExecutionPointId,
     owner: ContributionOwner,
     failurePolicy: FeatureExecutionFailurePolicy,
+    subjectScope: FeatureSubjectScope = FeatureSubjectScope.EntryContentType,
 ): InlineFeatureExecutionPointDefinition<E> = InlineFeatureExecutionPointDefinition(
     id = id,
     owner = owner,
     eventType = E::class,
     failurePolicy = failurePolicy,
+    subjectScope = subjectScope,
 )
 
 inline fun <reified E : Any> transactionalFeatureExecutionPointDefinition(
     id: FeatureExecutionPointId,
     owner: ContributionOwner,
     failurePolicy: FeatureExecutionFailurePolicy,
+    subjectScope: FeatureSubjectScope = FeatureSubjectScope.EntryContentType,
 ): TransactionalFeatureExecutionPointDefinition<E> = TransactionalFeatureExecutionPointDefinition(
     id = id,
     owner = owner,
     eventType = E::class,
     failurePolicy = failurePolicy,
+    subjectScope = subjectScope,
 )
 
 inline fun <reified E : Any> afterCommitVolatileFeatureExecutionPointDefinition(
     id: FeatureExecutionPointId,
     owner: ContributionOwner,
     failurePolicy: FeatureExecutionFailurePolicy,
+    subjectScope: FeatureSubjectScope = FeatureSubjectScope.EntryContentType,
 ): AfterCommitVolatileFeatureExecutionPointDefinition<E> = AfterCommitVolatileFeatureExecutionPointDefinition(
     id = id,
     owner = owner,
     eventType = E::class,
     failurePolicy = failurePolicy,
+    subjectScope = subjectScope,
 )
 
 inline fun <reified E : Any> durableFeatureExecutionPointDefinition(
     id: FeatureExecutionPointId,
     owner: ContributionOwner,
     failurePolicy: FeatureExecutionFailurePolicy,
+    subjectScope: FeatureSubjectScope = FeatureSubjectScope.EntryContentType,
 ): DurableFeatureExecutionPointDefinition<E> = DurableFeatureExecutionPointDefinition(
     id = id,
     owner = owner,
     eventType = E::class,
     failurePolicy = failurePolicy,
+    subjectScope = subjectScope,
 )
 
 /** Explicit dependencies between independently owned participants in one execution point. */
@@ -137,7 +150,7 @@ data class FeatureExecutionOrder(
 /**
  * One independently owned executable participant.
  *
- * Applicability is evaluated directly from the same content-type providers, contextual evidence, and specialized
+ * Applicability is evaluated directly from the same subject providers, contextual evidence, and specialized
  * adapters used by Feature integrations. The target execution point remains owned by its coordinator.
  */
 data class FeatureExecutionParticipantDefinition<E : Any>(

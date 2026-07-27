@@ -23,7 +23,7 @@ class EntrySourceHomeContractValidationContributor : FeatureValidationContributo
         sink.add(
             FeatureContractVerifier(reference) { input ->
                 verifyFeatureContract {
-                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
                     val source = mockk<SourceHomePage> {
                         every { id } returns 7L
                         every { name } returns "Contract Source"

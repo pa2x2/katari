@@ -26,7 +26,7 @@ class EntryRelatedEntriesContractValidationContributor : FeatureValidationContri
         sink.add(
             FeatureContractVerifier(reference) { input ->
                 verifyFeatureContract {
-                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
                     val source = mockk<RelatedEntriesSource> { every { id } returns 9L }
                     val feature = DefaultEntryRelatedEntriesFeature(
                         productionSubjectEvaluation(type, EntryRelatedEntriesFeatureContributor),

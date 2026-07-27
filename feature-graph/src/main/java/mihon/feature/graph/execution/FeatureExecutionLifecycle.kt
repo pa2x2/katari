@@ -12,9 +12,9 @@ class FeatureTransactionalExecutionScope private constructor(
 ) {
     suspend fun <E : Any> execute(
         point: TransactionalFeatureExecutionPointDefinition<E>,
-        contentType: ContentTypeId,
+        subject: FeatureSubjectId,
         event: E,
-    ): FeatureExecutionResult = runtime.executeTransactional(point, contentType, event)
+    ): FeatureExecutionResult = runtime.executeTransactional(point, subject, event)
 
     internal companion object {
         fun create(runtime: FeatureExecutionRuntime) = FeatureTransactionalExecutionScope(runtime)
@@ -72,9 +72,9 @@ class FeatureAfterCommitVolatileExecutionScope internal constructor(
 ) {
     suspend fun <E : Any> execute(
         point: AfterCommitVolatileFeatureExecutionPointDefinition<E>,
-        contentType: ContentTypeId,
+        subject: FeatureSubjectId,
         event: E,
-    ): FeatureExecutionResult = runtime.executeAfterCommitVolatile(point, contentType, event)
+    ): FeatureExecutionResult = runtime.executeAfterCommitVolatile(point, subject, event)
 }
 
 sealed interface FeatureCommitExecutionResult<out C, out A> {

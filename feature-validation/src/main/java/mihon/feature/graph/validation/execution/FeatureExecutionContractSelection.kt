@@ -216,7 +216,7 @@ private fun selectExecutionContract(
     if (missing.isNotEmpty()) {
         missing.forEach { requirement ->
             obligations += MissingFeatureExecutionContractFixtureObligation(
-                responsibleOwner = subject.contentTypeOwner,
+                responsibleOwner = subject.affectedSubject.owner,
                 subject = subject,
                 requirement = requirement,
                 affectedContracts = listOf(contract),
@@ -291,7 +291,7 @@ private fun FeatureBehaviorContract.fixtures(
     graph: FeatureGraph,
     subject: FeatureExecutionParticipantSubject,
 ): List<ContractFixture<*>> {
-    val supplied = graph.contentTypes.single { it.contentType == subject.contentType }.contractFixtures
+    val supplied = graph.entryContentTypes.single { it.contentType == subject.entryContentType }.contractFixtures
         .associateBy { it.definition.id }
     return fixtureRequirements.sortedBy { it.id.value }.mapNotNull { supplied[it.id] }
 }
@@ -304,7 +304,7 @@ private fun OwnedFeatureExecutionContractScenario.invalid(
 }
 
 private fun FeatureExecutionParticipantSubject.sortKey(): String {
-    return "${contentType.value}:${point.value}:${participant.value}"
+    return "${entryContentType.value}:${point.value}:${participant.value}"
 }
 
 private fun List<FeatureContractValidationObligation>.normalized(): List<FeatureContractValidationObligation> {

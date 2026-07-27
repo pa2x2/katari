@@ -80,7 +80,7 @@ private val notificationContracts = listOf(
 private suspend fun verifyLibraryUpdateNotification(
     input: FeatureContractExecutionInput,
 ): FeatureContractVerificationResult = verifyFeatureContract {
-    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
     val integration = input.subject.integration
     val bindings = when (integration) {
         ENTRY_LIBRARY_UPDATE_NOTIFICATION_PRESENTATION_INTEGRATION_ID -> listOf(

@@ -34,7 +34,7 @@ class EntryCatalogueContractValidationContributor : FeatureValidationContributor
             sink.add(
                 FeatureContractVerifier(reference) { input ->
                     verifyFeatureContract {
-                        val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+                        val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
                         val source = EntryCatalogueHostSource(
                             id = 7L,
                             name = "Source",

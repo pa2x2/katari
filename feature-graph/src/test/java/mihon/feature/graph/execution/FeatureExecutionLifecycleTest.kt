@@ -33,7 +33,11 @@ class FeatureExecutionLifecycleTest {
             commit = {
                 val insideTransaction = callback {
                     runtimeResult(
-                        execute(transactionalPoint, contentType, Event("transactional")),
+                        execute(
+                            transactionalPoint,
+                            FeatureSubjectId.EntryContentType(contentType),
+                            Event("transactional"),
+                        ),
                     )
                 }
                 trace += "host-transaction-started"
@@ -43,7 +47,9 @@ class FeatureExecutionLifecycleTest {
             },
             committed = { it == Commit.Applied },
             volatileConsequences = {
-                runtimeResult(execute(afterCommitPoint, contentType, Event("after-commit")))
+                runtimeResult(
+                    execute(afterCommitPoint, FeatureSubjectId.EntryContentType(contentType), Event("after-commit")),
+                )
             },
         )
 
@@ -65,7 +71,11 @@ class FeatureExecutionLifecycleTest {
             commit = {
                 val insideTransaction = callback {
                     runtimeResult(
-                        execute(transactionalPoint, contentType, Event("transactional")),
+                        execute(
+                            transactionalPoint,
+                            FeatureSubjectId.EntryContentType(contentType),
+                            Event("transactional"),
+                        ),
                     )
                 }
                 insideTransaction()
@@ -73,7 +83,9 @@ class FeatureExecutionLifecycleTest {
             },
             committed = { it == Commit.Applied },
             volatileConsequences = {
-                runtimeResult(execute(afterCommitPoint, contentType, Event("after-commit")))
+                runtimeResult(
+                    execute(afterCommitPoint, FeatureSubjectId.EntryContentType(contentType), Event("after-commit")),
+                )
             },
         )
 
@@ -90,7 +102,11 @@ class FeatureExecutionLifecycleTest {
             commit = {
                 transactionCallback = callback {
                     runtimeResult(
-                        execute(transactionalPoint, contentType, Event("transactional")),
+                        execute(
+                            transactionalPoint,
+                            FeatureSubjectId.EntryContentType(contentType),
+                            Event("transactional"),
+                        ),
                     )
                 }
                 transactionCallback()

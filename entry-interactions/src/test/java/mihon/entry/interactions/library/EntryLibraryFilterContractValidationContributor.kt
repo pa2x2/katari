@@ -62,7 +62,7 @@ private val libraryFilterContracts = listOf(
 private suspend fun verifyLibraryFilter(
     input: FeatureContractExecutionInput,
 ): FeatureContractVerificationResult = verifyFeatureContract {
-    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
     val bindings = when (input.subject.integration) {
         ENTRY_LIBRARY_FILTER_PROGRESS_INTEGRATION -> listOf(
             EntryLibraryProgressCapability.bind(input.provider(EntryLibraryProgressCapability.definition)),

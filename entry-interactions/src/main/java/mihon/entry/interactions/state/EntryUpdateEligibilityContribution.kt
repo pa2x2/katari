@@ -194,7 +194,7 @@ internal fun FeatureGraphEvaluation.updateEligibilityContentTypes(): Set<Content
                 applicability.subject.integration == ENTRY_UPDATE_ELIGIBILITY_POLICY_INTEGRATION &&
                 applicability.projection.id == EntryUpdateEligibilityPolicyBehavior.TYPE_PARTICIPATION.id
         }
-        .mapTo(mutableSetOf()) { it.subject.contentType }
+        .mapTo(mutableSetOf()) { it.subject.entryContentType }
 
 internal fun FeatureGraphEvaluation.requireUpdateEligibilityContext(
     type: EntryType,

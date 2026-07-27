@@ -37,7 +37,7 @@ class EntryMigrationContractValidationContributor : FeatureValidationContributor
         input: FeatureContractExecutionInput,
         contract: EntryMigrationBehaviorContract,
     ) = verifyFeatureContract {
-        val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+        val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
         val source = entry(10L, type, favorite = true).copy(notes = "contract")
         val target = entry(20L, type, favorite = false)
         val sourceChild = EntryChapter.create().copy(id = 11L, entryId = source.id, read = true, bookmark = true)

@@ -33,8 +33,16 @@ class FeatureExecutionRuntimeTest {
         val events = mutableListOf<String>()
         val runtime = runtime(graph, binding(participant) { events += it.value })
 
-        val supported = runtime.executeInline(point, ContentTypeId("supported"), Event("supported"))
-        val unsupported = runtime.executeInline(point, ContentTypeId("unsupported"), Event("unsupported"))
+        val supported = runtime.executeInline(
+            point,
+            FeatureSubjectId.EntryContentType(ContentTypeId("supported")),
+            Event("supported"),
+        )
+        val unsupported = runtime.executeInline(
+            point,
+            FeatureSubjectId.EntryContentType(ContentTypeId("unsupported")),
+            Event("unsupported"),
+        )
 
         supported.selectedParticipants shouldContainExactly listOf(participant.id)
         supported.completedParticipants shouldContainExactly listOf(participant.id)
@@ -101,7 +109,11 @@ class FeatureExecutionRuntimeTest {
             binding(independent) { calls += independent.id.value },
         )
 
-        val result = runtime.executeInline(point, ContentTypeId("subject"), Event("event"))
+        val result = runtime.executeInline(
+            point,
+            FeatureSubjectId.EntryContentType(ContentTypeId("subject")),
+            Event("event"),
+        )
 
         result.selectedParticipants shouldContainExactly listOf(independent.id, first.id, last.id)
         calls shouldContainExactly result.selectedParticipants.map { it.value }
@@ -141,9 +153,17 @@ class FeatureExecutionRuntimeTest {
             ),
         )
 
-        runtime.executeInline(point, ContentTypeId("subject"), Event("disabled", enabled = false))
+        runtime.executeInline(
+            point,
+            FeatureSubjectId.EntryContentType(ContentTypeId("subject")),
+            Event("disabled", enabled = false),
+        )
             .selectedParticipants shouldBe emptyList()
-        runtime.executeInline(point, ContentTypeId("subject"), Event("enabled", enabled = true))
+        runtime.executeInline(
+            point,
+            FeatureSubjectId.EntryContentType(ContentTypeId("subject")),
+            Event("enabled", enabled = true),
+        )
             .selectedParticipants shouldContainExactly listOf(participant.id)
         calls shouldContainExactly listOf("enabled")
     }
@@ -160,7 +180,11 @@ class FeatureExecutionRuntimeTest {
             binding(completed) {},
         )
 
-        val result = runtime.executeInline(point, ContentTypeId("subject"), Event("event"))
+        val result = runtime.executeInline(
+            point,
+            FeatureSubjectId.EntryContentType(ContentTypeId("subject")),
+            Event("event"),
+        )
 
         result.completedParticipants shouldContainExactly listOf(completed.id)
         result.failures.map { it.participant } shouldContainExactly listOf(failed.id)
@@ -180,7 +204,11 @@ class FeatureExecutionRuntimeTest {
             binding(skipped) { skippedCalls++ },
         )
 
-        val result = runtime.executeInline(point, ContentTypeId("subject"), Event("event"))
+        val result = runtime.executeInline(
+            point,
+            FeatureSubjectId.EntryContentType(ContentTypeId("subject")),
+            Event("event"),
+        )
 
         result.failures.map { it.participant } shouldContainExactly listOf(failed.id)
         result.stoppedEarly shouldBe true
@@ -198,7 +226,7 @@ class FeatureExecutionRuntimeTest {
         )
 
         shouldThrow<CancellationException> {
-            runtime.executeInline(point, ContentTypeId("subject"), Event("event"))
+            runtime.executeInline(point, FeatureSubjectId.EntryContentType(ContentTypeId("subject")), Event("event"))
         }
     }
 

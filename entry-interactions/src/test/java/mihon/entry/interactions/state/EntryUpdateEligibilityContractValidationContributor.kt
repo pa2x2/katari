@@ -25,7 +25,7 @@ class EntryUpdateEligibilityContractValidationContributor : FeatureValidationCon
                 ),
             ) { input ->
                 verifyFeatureContract {
-                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
                     val policy = EntryUpdateEligibilityPolicy(false, false, false, false)
                     val feature = eligibilityFeature(type, policy)
                     contractExpectation(
@@ -44,7 +44,7 @@ class EntryUpdateEligibilityContractValidationContributor : FeatureValidationCon
             ) { input ->
                 verifyFeatureContract {
                     val policy = input.evidence(ENTRY_UPDATE_ELIGIBILITY_POLICY_CONTEXT)
-                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
                     contractExpectation(
                         !policy.skipCompleted &&
                             !policy.skipWhenUnconsumed &&

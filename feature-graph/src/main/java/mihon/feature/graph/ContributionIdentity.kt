@@ -92,7 +92,7 @@ value class ContextInputId(val value: String) {
     override fun toString(): String = value
 }
 
-/** Stable identity of media-specific work required only after a feature becomes applicable. */
+/** Stable identity of subject-specific work required only after a feature becomes applicable. */
 @JvmInline
 value class SpecializedAdapterId(val value: String) {
     init {
@@ -102,7 +102,7 @@ value class SpecializedAdapterId(val value: String) {
     override fun toString(): String = value
 }
 
-/** Stable identity of media-specific fixture input required by a feature-owned behavioral contract. */
+/** Stable identity of subject-specific fixture input required by a feature-owned behavioral contract. */
 @JvmInline
 value class ContractFixtureId(val value: String) {
     init {

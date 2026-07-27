@@ -1,5 +1,6 @@
 package mihon.entry.interactions.documentation
 
+import mihon.entry.interactions.entryContentType
 import mihon.feature.graph.CapabilityProvider
 import mihon.feature.graph.ContentTypeId
 import mihon.feature.graph.ContextEvidence
@@ -75,7 +76,7 @@ data class EntryContentTypeReferenceProjectionInput(
     val contextEvidence: List<ContextEvidence<*>>,
 ) {
     val contentType: ContentTypeId
-        get() = subject.contentType
+        get() = subject.entryContentType
 
     inline fun <reified P : Any> requireMatchedProvider(): P {
         return matchedProviders

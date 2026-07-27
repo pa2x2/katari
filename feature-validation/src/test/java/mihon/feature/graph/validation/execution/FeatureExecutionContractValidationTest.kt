@@ -25,6 +25,7 @@ import mihon.feature.graph.validation.FeatureExecutionContractReference
 import mihon.feature.graph.validation.FeatureExecutionContractVerifier
 import mihon.feature.graph.validation.MissingFeatureExecutionContractVerifierObligation
 import mihon.feature.graph.validation.ValidationFeatureContractPlanIssue
+import mihon.feature.graph.validation.entryContentType
 import mihon.feature.graph.validation.featureValidationContributor
 import mihon.feature.graph.validation.planFeatureContractValidation
 import mihon.feature.graph.validation.validateFeatureContracts
@@ -64,7 +65,7 @@ class FeatureExecutionContractValidationTest {
                     FeatureExecutionContractReference(participant.id, contract),
                 ) { input ->
                     input.provider(capability)
-                    executedTypes += input.subject.contentType
+                    executedTypes += input.subject.entryContentType
                     FeatureContractVerificationResult.Passed
                 },
             )
@@ -92,7 +93,7 @@ class FeatureExecutionContractValidationTest {
                 MissingFeatureExecutionContractVerifierObligation
         }.single().let { obligation ->
             obligation.contract.participant shouldBe participant.id
-            obligation.affectedSubjects.map { it.contentType } shouldContainExactly listOf(
+            obligation.affectedSubjects.map { it.entryContentType } shouldContainExactly listOf(
                 ContentTypeId("also-supported"),
                 ContentTypeId("supported"),
             )

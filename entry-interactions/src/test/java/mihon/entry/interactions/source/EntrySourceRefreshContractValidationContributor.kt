@@ -26,7 +26,7 @@ class EntrySourceRefreshContractValidationContributor : FeatureValidationContrib
         sink.add(
             FeatureContractVerifier(reference) { input ->
                 verifyFeatureContract {
-                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
                     val entry = Entry.create().copy(id = 11L, source = 7L, profileId = 3L, type = type)
                     val child = EntryChapter.create().copy(id = 12L, entryId = entry.id)
                     val sync = mockk<SyncEntryWithSource> {

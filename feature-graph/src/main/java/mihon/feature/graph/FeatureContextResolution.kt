@@ -92,22 +92,22 @@ data class FeatureContextEvaluation internal constructor(
 
 fun resolveFeatureContext(
     evaluation: FeatureGraphEvaluation,
-    contentType: ContentTypeId,
+    subject: FeatureSubjectId,
     feature: FeatureId,
     integration: FeatureIntegrationId,
     evidence: Iterable<ContextEvidence<*>>,
 ): FeatureContextEvaluation {
     val matches = evaluation.integrations.filter { evaluated ->
-        evaluated.subject.contentType == contentType &&
+        evaluated.subject.affectedSubject.id == subject &&
             evaluated.subject.feature == feature &&
             evaluated.subject.integration == integration
     }
+    val description = "${subject.stableValue}:${feature.value}:${integration.value}"
     check(matches.size == 1) {
-        "Expected one evaluated integration for ${contentType.value}:${feature.value}:${integration.value}; " +
-            "found ${matches.size}"
+        "Expected one evaluated integration for $description; found ${matches.size}"
     }
     val candidate = matches.single() as? ConditionalFeatureIntegration
-        ?: error("Integration ${contentType.value}:${feature.value}:${integration.value} is not conditional")
+        ?: error("Integration $description is not conditional")
     return resolveFeatureContext(candidate, evidence)
 }
 
@@ -190,7 +190,7 @@ private fun ConditionalFeatureIntegration.resolveApplicable(
     if (missingRequirements.isNotEmpty()) {
         val obligations = missingRequirements.map { requirement ->
             SpecializedFeatureObligation(
-                responsibleOwner = subject.contentTypeOwner,
+                responsibleOwner = subject.affectedSubject.owner,
                 subject = subject,
                 requirement = requirement,
             )
@@ -229,4 +229,4 @@ private fun ConditionalFeatureIntegration.suppliedAdaptersById(): Map<Specialize
 }
 
 private fun FeatureIntegrationSubject.describe(): String =
-    "${contentType.value}:${feature.value}:${integration.value}"
+    "${affectedSubject.id.stableValue}:${feature.value}:${integration.value}"

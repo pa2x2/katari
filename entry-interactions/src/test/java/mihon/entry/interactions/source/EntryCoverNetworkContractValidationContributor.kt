@@ -27,7 +27,7 @@ class EntryCoverNetworkContractValidationContributor : FeatureValidationContribu
         sink.add(
             FeatureContractVerifier(reference) { input ->
                 verifyFeatureContract {
-                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
                     val client = mockk<OkHttpClient>()
                     val headers = Headers.headersOf("Contract", "source")
                     val source = mockk<EntryImageSource> {

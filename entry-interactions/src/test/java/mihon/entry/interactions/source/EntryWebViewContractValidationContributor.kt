@@ -45,7 +45,7 @@ class EntryWebViewContractValidationContributor : FeatureValidationContributor {
 
     private suspend fun verifyEntry(input: mihon.feature.graph.validation.FeatureContractExecutionInput) =
         verifyFeatureContract {
-            val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+            val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
             val source = mockk<WebViewSource> {
                 every { id } returns 7L
                 every { getContentUrl(any()) } returns "https://example.test/entry"
@@ -68,7 +68,7 @@ class EntryWebViewContractValidationContributor : FeatureValidationContributor {
 
     private suspend fun verifyChild(input: mihon.feature.graph.validation.FeatureContractExecutionInput) =
         verifyFeatureContract {
-            val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+            val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
             val source = mockk<ChapterWebViewSource> {
                 every { getChapterUrl(any()) } returns "https://example.test/child"
             }

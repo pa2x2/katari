@@ -42,7 +42,7 @@ internal fun <T> FeatureValidationContributionSink.addEntryBackupParticipationCo
             FeatureExecutionContractReference(participant.id, contract),
         ) { input ->
             verifyFeatureContract {
-                val value = example(input.subject.contentType)
+                val value = example(input.subject.entryContentType)
                 val payload = EntryBackupStateCodec.encode(serializer, value)
                 contractExpectation(
                     EntryBackupStateCodec.decode(serializer, payload) == value,

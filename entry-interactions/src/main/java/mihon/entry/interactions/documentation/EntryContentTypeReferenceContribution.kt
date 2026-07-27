@@ -1,5 +1,6 @@
 package mihon.entry.interactions.documentation
 
+import mihon.entry.interactions.entryContentType
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureProjection

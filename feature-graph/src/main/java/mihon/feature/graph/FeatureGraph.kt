@@ -6,7 +6,7 @@ package mihon.feature.graph
  * This graph contains relationships but does not evaluate applicability or materialize obligations.
  */
 data class FeatureGraph(
-    val contentTypes: List<ContentTypeContribution>,
+    val subjects: List<FeatureSubjectContribution>,
     val features: List<FeatureContribution>,
     val executionPoints: List<FeatureExecutionPointDefinition<*>>,
     val executionParticipants: List<FeatureExecutionParticipantDefinition<*>>,
@@ -20,12 +20,12 @@ data class FeatureGraph(
 fun assembleFeatureGraph(
     discovered: DiscoveredFeatureGraphContributions,
 ): FeatureGraph {
-    validateUniqueContentTypes(discovered.contentTypes)
+    validateUniqueSubjects(discovered.subjects)
     validateUniqueFeatures(discovered.features)
     validateUniqueExecutionPoints(discovered.executionPoints)
 
     val capabilityDefinitions = buildList {
-        discovered.contentTypes.flatMapTo(this) { type -> type.providers.map { it.capability } }
+        discovered.subjects.flatMapTo(this) { subject -> subject.providers.map { it.capability } }
         discovered.features.flatMapTo(this) { feature ->
             feature.integrations.flatMap { integration -> integration.prerequisites.capabilities() }
         }
@@ -40,8 +40,8 @@ fun assembleFeatureGraph(
         discovered.executionParticipants.flatMapTo(this) { it.contextInputs }
     }
     val specializedAdapterDefinitions = buildList {
-        discovered.contentTypes.flatMapTo(this) { type ->
-            type.specializedAdapters.map { it.definition }
+        discovered.subjects.flatMapTo(this) { subject ->
+            subject.specializedAdapters.map { it.definition }
         }
         discovered.features.flatMapTo(this) { feature ->
             feature.integrations.flatMap { it.specializedPrerequisites + it.specializedRequirements }
@@ -51,8 +51,8 @@ fun assembleFeatureGraph(
         }
     }
     val contractFixtureDefinitions = buildList {
-        discovered.contentTypes.flatMapTo(this) { type ->
-            type.contractFixtures.map { it.definition }
+        discovered.subjects.flatMapTo(this) { subject ->
+            subject.contractFixtures.map { it.definition }
         }
         discovered.features.flatMapTo(this) { feature ->
             feature.integrations
@@ -111,7 +111,7 @@ fun assembleFeatureGraph(
     validateReachability(discovered)
 
     return FeatureGraph(
-        contentTypes = discovered.contentTypes.sortedBy { it.contentType.value },
+        subjects = discovered.subjects.sortedBy { it.subject.stableValue },
         features = discovered.features.sortedBy { it.feature.value },
         executionPoints = executionPoints.sortedBy { it.id.value },
         executionParticipants = discovered.executionParticipants.sortedBy { it.id.value },
@@ -219,12 +219,17 @@ fun discoverAndAssembleFeatureGraph(
     contributors: Iterable<FeatureGraphContributor>,
 ): FeatureGraph = assembleFeatureGraph(discoverFeatureGraphContributions(contributors))
 
-private fun validateUniqueContentTypes(contributions: List<ContentTypeContribution>) {
-    contributions.groupBy { it.contentType }
+private fun validateUniqueSubjects(contributions: List<FeatureSubjectContribution>) {
+    contributions.groupBy { it.subject }
         .filterValues { it.size > 1 }
         .forEach { (id, duplicates) ->
             val owners = duplicates.map { it.owner }.distinct().sortedBy { it.value }
-            error("Duplicate content-type contribution $id from owners $owners")
+            when (id) {
+                FeatureSubjectId.Application ->
+                    error("Duplicate application subject contribution from owners $owners")
+                is FeatureSubjectId.EntryContentType ->
+                    error("Duplicate content-type contribution ${id.contentType} from owners $owners")
+            }
         }
 }
 
@@ -252,52 +257,58 @@ private fun <D> consistentDefinitions(
 }
 
 private fun validateReachability(discovered: DiscoveredFeatureGraphContributions) {
-    val consumedCapabilities = discovered.features
-        .flatMap { it.integrations }
-        .flatMap { it.prerequisites.capabilities() }
-        .mapTo(mutableSetOf()) { it.id }
-        .apply {
-            discovered.executionParticipants
-                .flatMap { it.prerequisites.capabilities() }
-                .mapTo(this) { it.id }
-        }
-    val requiredAdapters = discovered.features
-        .flatMap { it.integrations }
-        .flatMap { it.specializedPrerequisites + it.specializedRequirements }
-        .mapTo(mutableSetOf()) { it.id }
-        .apply {
-            discovered.executionParticipants
-                .flatMap { it.specializedPrerequisites + it.specializedRequirements }
-                .mapTo(this) { it.id }
-        }
-    val requiredFixtures = discovered.features
-        .flatMap { it.integrations }
-        .flatMap { it.behavioralContracts }
-        .flatMap { it.fixtureRequirements }
-        .mapTo(mutableSetOf()) { it.id }
-        .apply {
-            discovered.executionParticipants
-                .flatMap { it.behavioralContracts }
-                .flatMap { it.fixtureRequirements }
-                .mapTo(this) { it.id }
-        }
+    discovered.subjects.forEach { subject ->
+        val consumedCapabilities = discovered.features
+            .flatMap { it.integrations }
+            .filter { it.subjectScope == subject.subject.scope }
+            .flatMap { it.prerequisites.capabilities() }
+            .mapTo(mutableSetOf()) { it.id }
+            .apply {
+                discovered.executionParticipants
+                    .filter { it.point.subjectScope == subject.subject.scope }
+                    .flatMap { it.prerequisites.capabilities() }
+                    .mapTo(this) { it.id }
+            }
+        val requiredAdapters = discovered.features
+            .flatMap { it.integrations }
+            .filter { it.subjectScope == subject.subject.scope }
+            .flatMap { it.specializedPrerequisites + it.specializedRequirements }
+            .mapTo(mutableSetOf()) { it.id }
+            .apply {
+                discovered.executionParticipants
+                    .filter { it.point.subjectScope == subject.subject.scope }
+                    .flatMap { it.specializedPrerequisites + it.specializedRequirements }
+                    .mapTo(this) { it.id }
+            }
+        val requiredFixtures = discovered.features
+            .flatMap { it.integrations }
+            .filter { it.subjectScope == subject.subject.scope }
+            .flatMap { it.behavioralContracts }
+            .flatMap { it.fixtureRequirements }
+            .mapTo(mutableSetOf()) { it.id }
+            .apply {
+                discovered.executionParticipants
+                    .filter { it.point.subjectScope == subject.subject.scope }
+                    .flatMap { it.behavioralContracts }
+                    .flatMap { it.fixtureRequirements }
+                    .mapTo(this) { it.id }
+            }
 
-    discovered.contentTypes.forEach { type ->
-        type.providers.forEach { provider ->
+        subject.providers.forEach { provider ->
             check(provider.capability.id in consumedCapabilities) {
-                "Unreachable capability provider ${provider.capability.id} on ${type.contentType}: " +
+                "Unreachable capability provider ${provider.capability.id} on ${subject.subject.displayValue}: " +
                     "no feature integration consumes it"
             }
         }
-        type.specializedAdapters.forEach { adapter ->
+        subject.specializedAdapters.forEach { adapter ->
             check(adapter.definition.id in requiredAdapters) {
-                "Unreachable specialized adapter ${adapter.definition.id} on ${type.contentType}: " +
+                "Unreachable specialized adapter ${adapter.definition.id} on ${subject.subject.displayValue}: " +
                     "no feature integration requires it"
             }
         }
-        type.contractFixtures.forEach { fixture ->
+        subject.contractFixtures.forEach { fixture ->
             check(fixture.definition.id in requiredFixtures) {
-                "Unreachable contract fixture ${fixture.definition.id} on ${type.contentType}: " +
+                "Unreachable contract fixture ${fixture.definition.id} on ${subject.subject.displayValue}: " +
                     "no behavioral contract requires it"
             }
         }

@@ -8,7 +8,6 @@ import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.resolveFeatureContext
 
 internal fun FeatureGraphEvaluation.requireEntryContextState(
     type: EntryType,

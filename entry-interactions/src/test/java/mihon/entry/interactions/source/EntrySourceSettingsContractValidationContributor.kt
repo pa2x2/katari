@@ -24,7 +24,7 @@ class EntrySourceSettingsContractValidationContributor : FeatureValidationContri
         sink.add(
             FeatureContractVerifier(reference) { input ->
                 verifyFeatureContract {
-                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
                     val preferences = mockk<SharedPreferences>()
                     val source = mockk<ConfigurableSource> {
                         every { id } returns 7L

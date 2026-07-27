@@ -1,6 +1,6 @@
 package mihon.feature.graph
 
-/** One feature-owned behavioral contract selected for an applicable content type. */
+/** One feature-owned behavioral contract selected for an applicable Feature subject. */
 data class BehavioralContractSelection(
     val subject: FeatureIntegrationSubject,
     val contract: FeatureBehaviorContract,
@@ -10,7 +10,7 @@ data class BehavioralContractSelection(
     val contextEvidence: List<ContextEvidence<*>>,
 )
 
-/** One feature-owned projection selected for an applicable content type. */
+/** One feature-owned projection selected for an applicable Feature subject. */
 data class FeatureProjectionSelection(
     val subject: FeatureIntegrationSubject,
     val projection: FeatureProjection<*>,
@@ -21,7 +21,7 @@ data class FeatureProjectionSelection(
 
 sealed interface FeatureArtifactObligation : FeatureObligation
 
-/** Missing validation-only input for one or more contracts selected for an affected content type. */
+/** Missing validation-only input for one or more contracts selected for an affected Feature subject. */
 data class MissingContractFixtureObligation(
     override val responsibleOwner: ContributionOwner,
     val subject: FeatureIntegrationSubject,
@@ -108,11 +108,11 @@ private fun selectApplicableArtifacts(
     graph: FeatureGraph,
     applicable: List<ArtifactApplicability>,
 ): FeatureArtifactSelection {
-    val contentTypesById = graph.contentTypes.associateBy { it.contentType }
+    val subjectsById = graph.subjects.associateBy { it.subject }
 
     val contractSelections = applicable.flatMap { evaluated ->
-        val contentType = contentTypesById.getValue(evaluated.subject.contentType)
-        val fixturesById = contentType.contractFixtures.associateBy { it.definition.id }
+        val affectedSubject = subjectsById.getValue(evaluated.subject.affectedSubject.id)
+        val fixturesById = affectedSubject.contractFixtures.associateBy { it.definition.id }
         evaluated.integration.behavioralContracts
             .sortedBy { it.id.value }
             .map { contract ->
@@ -141,7 +141,7 @@ private fun selectApplicableArtifacts(
         .map { candidates ->
             val first = candidates.first()
             MissingContractFixtureObligation(
-                responsibleOwner = first.selection.subject.contentTypeOwner,
+                responsibleOwner = first.selection.subject.affectedSubject.owner,
                 subject = first.selection.subject,
                 requirement = first.requirement,
                 affectedContracts = candidates.map { it.selection.contract }.sortedBy { it.id.value },
@@ -149,7 +149,7 @@ private fun selectApplicableArtifacts(
         }
         .sortedWith(
             compareBy<MissingContractFixtureObligation>(
-                { it.subject.contentType.value },
+                { it.subject.affectedSubject.id.stableValue },
                 { it.subject.feature.value },
                 { it.subject.integration.value },
                 { it.requirement.id.value },
@@ -224,20 +224,21 @@ private fun validateEvaluationCoverage(
     evaluation: FeatureGraphEvaluation,
 ) {
     val expected = buildMap {
-        graph.contentTypes.forEach { contentType ->
+        graph.subjects.forEach { subject ->
             graph.features.forEach { feature ->
-                feature.integrations.forEach { integration ->
-                    put(
-                        FeatureIntegrationSubject(
-                            contentType = contentType.contentType,
-                            contentTypeOwner = contentType.owner,
-                            feature = feature.feature,
-                            featureOwner = feature.owner,
-                            integration = integration.id,
-                        ),
-                        integration,
-                    )
-                }
+                feature.integrations
+                    .filter { it.subjectScope == subject.subject.scope }
+                    .forEach { integration ->
+                        put(
+                            FeatureIntegrationSubject(
+                                affectedSubject = subject.reference(),
+                                feature = feature.feature,
+                                featureOwner = feature.owner,
+                                integration = integration.id,
+                            ),
+                            integration,
+                        )
+                    }
             }
         }
     }
@@ -260,7 +261,7 @@ private fun validateEvaluationCoverage(
 }
 
 private fun FeatureIntegrationSubject.describe(): String {
-    return "${contentType.value}:${feature.value}:${integration.value}"
+    return "${affectedSubject.id.stableValue}:${feature.value}:${integration.value}"
 }
 
 private data class MissingFixtureCandidate(

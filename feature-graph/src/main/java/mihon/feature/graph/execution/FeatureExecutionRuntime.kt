@@ -34,7 +34,7 @@ data class FeatureExecutionFailure(
 
 data class FeatureExecutionResult(
     val point: FeatureExecutionPointId,
-    val contentType: ContentTypeId,
+    val affectedSubject: FeatureSubjectId,
     val selectedParticipants: List<FeatureExecutionParticipantId>,
     val completedParticipants: List<FeatureExecutionParticipantId>,
     val failures: List<FeatureExecutionFailure>,
@@ -79,25 +79,25 @@ class FeatureExecutionRuntime(
 
     suspend fun <E : Any> executeInline(
         point: InlineFeatureExecutionPointDefinition<E>,
-        contentType: ContentTypeId,
+        subject: FeatureSubjectId,
         event: E,
-    ): FeatureExecutionResult = executeTransient(point, contentType, event)
+    ): FeatureExecutionResult = executeTransient(point, subject, event)
 
     internal suspend fun <E : Any> executeTransactional(
         point: TransactionalFeatureExecutionPointDefinition<E>,
-        contentType: ContentTypeId,
+        subject: FeatureSubjectId,
         event: E,
-    ): FeatureExecutionResult = executeTransient(point, contentType, event)
+    ): FeatureExecutionResult = executeTransient(point, subject, event)
 
     internal suspend fun <E : Any> executeAfterCommitVolatile(
         point: AfterCommitVolatileFeatureExecutionPointDefinition<E>,
-        contentType: ContentTypeId,
+        subject: FeatureSubjectId,
         event: E,
-    ): FeatureExecutionResult = executeTransient(point, contentType, event)
+    ): FeatureExecutionResult = executeTransient(point, subject, event)
 
     private suspend fun <E : Any> executeTransient(
         point: FeatureExecutionPointDefinition<E>,
-        contentType: ContentTypeId,
+        subject: FeatureSubjectId,
         event: E,
     ): FeatureExecutionResult {
         check(point.phase != FeatureExecutionPhase.Durable) {
@@ -108,25 +108,29 @@ class FeatureExecutionRuntime(
         check(declaredPoint == point) {
             "Execution point ${point.id} does not match its graph declaration"
         }
+        check(point.subjectScope == subject.scope) {
+            "Execution point ${point.id} targets ${point.subjectScope}, not ${subject.scope}"
+        }
         require(point.eventType.isInstance(event)) {
             "Execution point ${point.id} requires event ${point.eventType.qualifiedName}, " +
                 "received ${event::class.qualifiedName}"
         }
-        check(graph.contentTypes.any { it.contentType == contentType }) {
-            "Unknown execution content type $contentType"
+        check(graph.subjects.any { it.subject == subject }) {
+            "Unknown execution subject ${subject.stableValue}"
         }
 
         val applicableIds = mutableSetOf<FeatureExecutionParticipantId>()
         evaluation.executionParticipants
             .filter { evaluated ->
-                evaluated.subject.contentType == contentType && evaluated.subject.point == point.id
+                evaluated.subject.affectedSubject.id == subject && evaluated.subject.point == point.id
             }
             .forEach { evaluated ->
                 when (evaluated) {
                     is ApplicableFeatureExecutionParticipant -> applicableIds += evaluated.subject.participant
                     is InapplicableFeatureExecutionParticipant -> Unit
                     is IncompleteFeatureExecutionParticipant -> error(
-                        "Execution participant ${evaluated.subject.participant} is incomplete for $contentType: " +
+                        "Execution participant ${evaluated.subject.participant} is incomplete for " +
+                            "${subject.stableValue}: " +
                             evaluated.obligations.map { it.requirement.id },
                     )
                     is ConditionalFeatureExecutionParticipant -> {
@@ -137,7 +141,8 @@ class FeatureExecutionRuntime(
                             is BlockedFeatureExecutionContext -> Unit
                             is IncompleteFeatureExecutionContext -> error(
                                 "Execution participant ${evaluated.subject.participant} is contextually incomplete " +
-                                    "for $contentType: ${resolved.obligations.map { it.requirement.id }}",
+                                    "for ${subject.stableValue}: " +
+                                    resolved.obligations.map { it.requirement.id },
                             )
                             is MissingFeatureExecutionContextEvidence -> error(
                                 "Execution participant ${evaluated.subject.participant} is missing context evidence: " +
@@ -170,7 +175,7 @@ class FeatureExecutionRuntime(
         }
         return FeatureExecutionResult(
             point = point.id,
-            contentType = contentType,
+            affectedSubject = subject,
             selectedParticipants = selected.map { it.id },
             completedParticipants = completed,
             failures = failures,
@@ -180,9 +185,9 @@ class FeatureExecutionRuntime(
 
     suspend fun <E : Any> prepareDurable(
         point: DurableFeatureExecutionPointDefinition<E>,
-        contentType: ContentTypeId,
+        subject: FeatureSubjectId,
         event: E,
-    ): FeatureDurableExecutionPreparationResult = durableRuntime.prepare(point, contentType, event)
+    ): FeatureDurableExecutionPreparationResult = durableRuntime.prepare(point, subject, event)
 
     suspend fun deliverDurable(envelope: FeatureDurableExecutionEnvelope) {
         durableRuntime.deliver(envelope)
@@ -194,19 +199,20 @@ class FeatureExecutionRuntime(
 
     private fun validateEvaluationCoverage() {
         val expected = buildMap {
-            graph.contentTypes.forEach { contentType ->
-                graph.executionParticipants.forEach { participant ->
-                    put(
-                        FeatureExecutionParticipantSubject(
-                            contentType = contentType.contentType,
-                            contentTypeOwner = contentType.owner,
-                            point = participant.point.id,
-                            participant = participant.id,
-                            participantOwner = participant.owner,
-                        ),
-                        participant,
-                    )
-                }
+            graph.subjects.forEach { subject ->
+                graph.executionParticipants
+                    .filter { it.point.subjectScope == subject.subject.scope }
+                    .forEach { participant ->
+                        put(
+                            FeatureExecutionParticipantSubject(
+                                affectedSubject = subject.reference(),
+                                point = participant.point.id,
+                                participant = participant.id,
+                                participantOwner = participant.owner,
+                            ),
+                            participant,
+                        )
+                    }
             }
         }
         val actual = evaluation.executionParticipants.groupBy { it.subject }

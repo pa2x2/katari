@@ -24,7 +24,7 @@ class EntryLibraryUpdateRefreshContractValidationContributor : FeatureValidation
                 ),
             ) { input ->
                 verifyFeatureContract {
-                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
                     val entry = Entry.create().copy(id = 85L, type = type)
                     val earlier = EntryChapter.create().copy(id = 86L, entryId = entry.id, sourceOrder = 1L)
                     val later = EntryChapter.create().copy(id = 87L, entryId = entry.id, sourceOrder = 2L)

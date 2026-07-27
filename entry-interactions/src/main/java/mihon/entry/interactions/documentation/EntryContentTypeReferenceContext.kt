@@ -3,6 +3,7 @@ package mihon.entry.interactions.documentation
 import mihon.entry.interactions.ENTRY_TRACKING_REGISTERED_SUPPORT
 import mihon.entry.interactions.LEGACY_SOURCE_REGISTERED_SUPPORT_CONTEXT
 import mihon.entry.interactions.LOCAL_SOURCE_REGISTERED_SUPPORT_CONTEXT
+import mihon.entry.interactions.entryContentType
 import mihon.feature.graph.ContentTypeId
 import mihon.feature.graph.ContextEvidence
 import mihon.feature.graph.ContextInputDefinition
@@ -29,15 +30,15 @@ fun entryContentTypeReferenceContextEvidence(
         when (input) {
             LOCAL_SOURCE_REGISTERED_SUPPORT_CONTEXT -> contextEvidence(
                 LOCAL_SOURCE_REGISTERED_SUPPORT_CONTEXT,
-                subject.contentType in registrations.localSource,
+                subject.entryContentType in registrations.localSource,
             )
             LEGACY_SOURCE_REGISTERED_SUPPORT_CONTEXT -> contextEvidence(
                 LEGACY_SOURCE_REGISTERED_SUPPORT_CONTEXT,
-                subject.contentType in registrations.legacyExtensions,
+                subject.entryContentType in registrations.legacyExtensions,
             )
             ENTRY_TRACKING_REGISTERED_SUPPORT -> contextEvidence(
                 ENTRY_TRACKING_REGISTERED_SUPPORT,
-                subject.contentType in registrations.trackingServices,
+                subject.entryContentType in registrations.trackingServices,
             )
             else -> null
         }

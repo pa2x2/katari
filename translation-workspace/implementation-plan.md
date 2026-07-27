@@ -1,6 +1,6 @@
 # Application-scoped Feature Graph and Translation Feature implementation plan
 
-Status: approved for implementation planning; production implementation not started.
+Status: Phase 1 complete; awaiting approval to begin Phase 2.
 
 The manifestos in this directory are authoritative:
 
@@ -16,11 +16,11 @@ The first usable consumer is a top-level Translation settings/test flow. Reader 
 
 ## Phase 0: Baseline and workspace discipline
 
-- [ ] Record the starting branch, commit, and worktree status under `validation/`.
-- [ ] Run the existing focused Feature Graph and architecture gates before refactoring.
-- [ ] Save only concise command/evidence summaries; do not paste full Gradle output.
-- [ ] Confirm no unrelated user changes overlap the planned graph/runtime files.
-- [ ] Keep any additional planning, research, progress, and validation artifacts beneath `translation-workspace`.
+- [x] Record the starting branch, commit, and worktree status under `validation/`.
+- [x] Run the existing focused Feature Graph and architecture gates before refactoring.
+- [x] Save only concise command/evidence summaries; do not paste full Gradle output.
+- [x] Confirm no unrelated user changes overlap the planned graph/runtime files.
+- [x] Keep any additional planning, research, progress, and validation artifacts beneath `translation-workspace`.
 
 Exit condition: baseline behavior and pre-existing failures are known.
 
@@ -28,34 +28,34 @@ Exit condition: baseline behavior and pre-existing failures are known.
 
 ### Model changes
 
-- [ ] Add sealed `FeatureSubjectScope` with only `Application` and `EntryContentType`.
-- [ ] Add sealed `FeatureSubjectId`.
-- [ ] Introduce a shared subject contribution contract.
-- [ ] Retain `ContentTypeContribution` as the Entry-specific implementation.
-- [ ] Add `ApplicationSubjectContribution`.
-- [ ] Change `FeatureGraph` to expose subjects as its kernel collection; provide Entry-filtered access only at the Entry
+- [x] Add sealed `FeatureSubjectScope` with only `Application` and `EntryContentType`.
+- [x] Add sealed `FeatureSubjectId`.
+- [x] Introduce a shared subject contribution contract.
+- [x] Retain `ContentTypeContribution` as the Entry-specific implementation.
+- [x] Add `ApplicationSubjectContribution`.
+- [x] Change `FeatureGraph` to expose subjects as its kernel collection; provide Entry-filtered access only at the Entry
   boundary.
-- [ ] Add subject scope to `FeatureIntegration`.
-- [ ] Add subject scope to execution point definitions.
-- [ ] Replace content-type identity in integration and execution evaluation subjects with a common subject reference.
+- [x] Add subject scope to `FeatureIntegration`.
+- [x] Add subject scope to execution point definitions.
+- [x] Replace content-type identity in integration and execution evaluation subjects with a common subject reference.
 
 ### Evaluation changes
 
-- [ ] Evaluate integrations only against subjects of their declared scope.
-- [ ] Evaluate execution participants only for the execution point's subject scope.
-- [ ] Generalize context resolution, artifact selection, fixtures, obligations, projections, and coverage validation.
-- [ ] Generalize transient, transactional, post-commit, and durable execution entry points.
-- [ ] Preserve Entry convenience overloads outside the graph kernel to limit call-site churn.
+- [x] Evaluate integrations only against subjects of their declared scope.
+- [x] Evaluate execution participants only for the execution point's subject scope.
+- [x] Generalize context resolution, artifact selection, fixtures, obligations, projections, and coverage validation.
+- [x] Generalize transient, transactional, post-commit, and durable execution entry points.
+- [x] Preserve Entry convenience overloads outside the graph kernel to limit call-site churn.
 
 ### Tests
 
-- [ ] Application integration evaluates once with zero, one, and multiple Entry subjects present.
-- [ ] Entry integrations retain the existing cross-product.
-- [ ] Mixed-scope Feature contribution selects the correct subjects.
-- [ ] Context and artifact selection reject mismatched subjects.
-- [ ] Obligation ownership is correct in both scopes.
-- [ ] Every execution phase accepts an application subject without changing Entry behavior.
-- [ ] Existing graph tests are migrated without duplicating assertions at the same boundary.
+- [x] Application integration evaluates once with zero, one, and multiple Entry subjects present.
+- [x] Entry integrations retain the existing cross-product.
+- [x] Mixed-scope Feature contribution selects the correct subjects.
+- [x] Context and artifact selection reject mismatched subjects.
+- [x] Obligation ownership is correct in both scopes.
+- [x] Every execution phase accepts an application subject without changing Entry behavior.
+- [x] Existing graph tests are migrated without duplicating assertions at the same boundary.
 
 Exit condition: `feature-graph` is subject-generic and its focused tests pass.
 

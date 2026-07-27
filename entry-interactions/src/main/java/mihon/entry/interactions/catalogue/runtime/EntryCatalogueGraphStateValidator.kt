@@ -6,7 +6,6 @@ import mihon.feature.graph.ContextEvidence
 import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureIntegrationId
 import mihon.feature.graph.contextEvidence
-import mihon.feature.graph.resolveFeatureContext
 import tachiyomi.domain.source.model.EntrySourceDescription
 
 internal class EntryCatalogueGraphStateValidator(
@@ -48,7 +47,7 @@ internal class EntryCatalogueGraphStateValidator(
         subjects.forEach { subject ->
             val resolution = resolveFeatureContext(
                 evaluation = evaluation,
-                contentType = subject.contentType,
+                contentType = subject.entryContentType,
                 feature = ENTRY_CATALOGUE_FEATURE_ID,
                 integration = integration,
                 evidence = listOf(evidence),
@@ -61,7 +60,7 @@ internal class EntryCatalogueGraphStateValidator(
                     resolution.integration is BlockedFeatureContext && !hasBehavior
                 },
             ) {
-                "Entry Catalogue integration $integration resolved inconsistently for ${subject.contentType}: " +
+                "Entry Catalogue integration $integration resolved inconsistently for ${subject.entryContentType}: " +
                     "${resolution.integration}, behaviors=${resolution.behaviorProjections}"
             }
         }

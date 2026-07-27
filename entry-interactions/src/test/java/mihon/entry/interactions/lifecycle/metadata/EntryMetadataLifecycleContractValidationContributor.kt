@@ -22,7 +22,7 @@ class EntryMetadataLifecycleContractValidationContributor : FeatureValidationCon
                 ),
             ) { input ->
                 verifyFeatureContract {
-                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
                     val entry = metadataEntry(type)
                     val composition = lifecycleContractComposition(
                         type,

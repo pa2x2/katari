@@ -26,7 +26,11 @@ class FeatureDurableExecutionRuntimeTest {
             ),
         )
 
-        val result = runtime.prepareDurable(point, ContentTypeId("subject"), Event("persisted"))
+        val result = runtime.prepareDurable(
+            point,
+            FeatureSubjectId.EntryContentType(ContentTypeId("subject")),
+            Event("persisted"),
+        )
 
         result.execution.completedParticipants shouldContainExactly listOf(participant.id)
         result.envelopes shouldContainExactly listOf(
@@ -52,7 +56,11 @@ class FeatureDurableExecutionRuntimeTest {
             binding(discovered, prepare = { FeatureDurableExecutionPayload(1, "discovered") }),
         )
 
-        val result = runtime.prepareDurable(point, ContentTypeId("subject"), Event("event"))
+        val result = runtime.prepareDurable(
+            point,
+            FeatureSubjectId.EntryContentType(ContentTypeId("subject")),
+            Event("event"),
+        )
 
         result.envelopes.map { it.participant } shouldContainExactly listOf(discovered.id, initial.id)
     }
@@ -71,7 +79,11 @@ class FeatureDurableExecutionRuntimeTest {
                 discard = discarded::add,
             ),
         )
-        val envelope = runtime.prepareDurable(point, ContentTypeId("subject"), Event("event")).envelopes.single()
+        val envelope = runtime.prepareDurable(
+            point,
+            FeatureSubjectId.EntryContentType(ContentTypeId("subject")),
+            Event("event"),
+        ).envelopes.single()
 
         runtime.discardDurable(listOf(envelope)) shouldBe emptyList()
         discarded shouldContainExactly listOf(FeatureDurableExecutionPayload(1, "stage"))

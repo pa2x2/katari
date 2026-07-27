@@ -100,7 +100,7 @@ class EntryTrackingContractValidationContributor : FeatureValidationContributor 
                 ),
             ) { input ->
                 verifyFeatureContract {
-                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
                     val source = Entry.create().copy(id = 43L, type = type)
                     val target = source.copy(id = 44L)
                     val preparedTrack = track(target.id).toTrackingRecord()
@@ -127,7 +127,7 @@ class EntryTrackingContractValidationContributor : FeatureValidationContributor 
                 ),
             ) { input ->
                 verifyFeatureContract {
-                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
                     val persisted = Entry.create().copy(
                         id = 42L,
                         profileId = 7L,
@@ -195,7 +195,7 @@ class EntryTrackingContractValidationContributor : FeatureValidationContributor 
     private suspend fun verifyLibraryAddition(
         input: FeatureExecutionContractExecutionInput,
     ) = verifyFeatureContract {
-        val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+        val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
         val entry = Entry.create().copy(id = 41L, type = type)
         val service = service(type)
         val feature = DefaultEntryTrackingFeature(
@@ -219,7 +219,7 @@ class EntryTrackingContractValidationContributor : FeatureValidationContributor 
         input: FeatureContractExecutionInput,
         integration: EntryTrackingIntegration,
     ) = verifyFeatureContract {
-        val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+        val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
         val entry = Entry.create().copy(id = 11L, type = type)
         val target = entry.copy(id = 12L)
         val track = track(entry.id)

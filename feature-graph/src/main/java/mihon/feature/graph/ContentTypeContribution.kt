@@ -5,7 +5,7 @@ import kotlin.reflect.KClass
 /**
  * Defines a provider-backed capability without registering it in a central catalog.
  *
- * The contract owner defines the provider API. A content type supports the capability only when its contribution
+ * The contract owner defines the provider API. A Feature subject supports the capability only when its contribution
  * contains an implementation of this definition.
  */
 data class CapabilityDefinition<P : Any>(
@@ -19,7 +19,7 @@ inline fun <reified P : Any> capabilityDefinition(
     owner: ContributionOwner,
 ): CapabilityDefinition<P> = CapabilityDefinition(id, owner, P::class)
 
-/** An actual capability implementation contributed by a content type. */
+/** An actual capability implementation contributed by a Feature subject. */
 data class CapabilityProvider<P : Any>(
     val capability: CapabilityDefinition<P>,
     val implementation: P,
@@ -32,7 +32,7 @@ data class CapabilityProvider<P : Any>(
 }
 
 /**
- * Defines media-specific work that an applicable feature cannot supply through shared behavior.
+ * Defines subject-specific work that an applicable feature cannot supply through shared behavior.
  *
  * Unlike a capability prerequisite, an absent adapter becomes an obligation only after the owning feature's
  * prerequisites are satisfied.
@@ -48,7 +48,7 @@ inline fun <reified A : Any> specializedAdapterDefinition(
     owner: ContributionOwner,
 ): SpecializedAdapterDefinition<A> = SpecializedAdapterDefinition(id, owner, A::class)
 
-/** A media-specific adapter supplied by a content type for an applicable feature. */
+/** A subject-specific adapter supplied by a Feature subject for an applicable feature. */
 data class SpecializedAdapter<A : Any>(
     val definition: SpecializedAdapterDefinition<A>,
     val implementation: A,
@@ -91,11 +91,13 @@ data class ContractFixture<F : Any>(
  */
 data class ContentTypeContribution(
     val contentType: ContentTypeId,
-    val owner: ContributionOwner,
-    val providers: List<CapabilityProvider<*>> = emptyList(),
-    val specializedAdapters: List<SpecializedAdapter<*>> = emptyList(),
-    val contractFixtures: List<ContractFixture<*>> = emptyList(),
-) {
+    override val owner: ContributionOwner,
+    override val providers: List<CapabilityProvider<*>> = emptyList(),
+    override val specializedAdapters: List<SpecializedAdapter<*>> = emptyList(),
+    override val contractFixtures: List<ContractFixture<*>> = emptyList(),
+) : FeatureSubjectContribution {
+    override val subject = FeatureSubjectId.EntryContentType(contentType)
+
     init {
         requireUnique(
             label = "Capability providers for $contentType",

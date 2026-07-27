@@ -95,11 +95,11 @@ internal class FeatureDurableExecutionRuntime(
 
     suspend fun <E : Any> prepare(
         point: DurableFeatureExecutionPointDefinition<E>,
-        contentType: ContentTypeId,
+        subject: FeatureSubjectId,
         event: E,
     ): FeatureDurableExecutionPreparationResult {
-        validateRequest(point, contentType, event)
-        val applicableIds = applicableParticipantIds(point, contentType, event)
+        validateRequest(point, subject, event)
+        val applicableIds = applicableParticipantIds(point, subject, event)
         val selected = orderedExecutionParticipants(point, graph.executionParticipants)
             .filter { it.id in applicableIds }
         val completed = mutableListOf<FeatureExecutionParticipantId>()
@@ -130,7 +130,7 @@ internal class FeatureDurableExecutionRuntime(
         return FeatureDurableExecutionPreparationResult(
             execution = FeatureExecutionResult(
                 point = point.id,
-                contentType = contentType,
+                affectedSubject = subject,
                 selectedParticipants = selected.map { it.id },
                 completedParticipants = completed,
                 failures = failures,
@@ -176,7 +176,7 @@ internal class FeatureDurableExecutionRuntime(
 
     private fun <E : Any> validateRequest(
         point: DurableFeatureExecutionPointDefinition<E>,
-        contentType: ContentTypeId,
+        subject: FeatureSubjectId,
         event: E,
     ) {
         val declaredPoint = graph.executionPoints.singleOrNull { it.id == point.id }
@@ -184,30 +184,34 @@ internal class FeatureDurableExecutionRuntime(
         check(declaredPoint == point) {
             "Execution point ${point.id} does not match its graph declaration"
         }
+        check(point.subjectScope == subject.scope) {
+            "Execution point ${point.id} targets ${point.subjectScope}, not ${subject.scope}"
+        }
         require(point.eventType.isInstance(event)) {
             "Execution point ${point.id} requires event ${point.eventType.qualifiedName}, " +
                 "received ${event::class.qualifiedName}"
         }
-        check(graph.contentTypes.any { it.contentType == contentType }) {
-            "Unknown execution content type $contentType"
+        check(graph.subjects.any { it.subject == subject }) {
+            "Unknown execution subject ${subject.stableValue}"
         }
     }
 
     private suspend fun <E : Any> applicableParticipantIds(
         point: FeatureExecutionPointDefinition<E>,
-        contentType: ContentTypeId,
+        subject: FeatureSubjectId,
         event: E,
     ): Set<FeatureExecutionParticipantId> = buildSet {
         evaluation.executionParticipants
             .filter { evaluated ->
-                evaluated.subject.contentType == contentType && evaluated.subject.point == point.id
+                evaluated.subject.affectedSubject.id == subject && evaluated.subject.point == point.id
             }
             .forEach { evaluated ->
                 when (evaluated) {
                     is ApplicableFeatureExecutionParticipant -> add(evaluated.subject.participant)
                     is InapplicableFeatureExecutionParticipant -> Unit
                     is IncompleteFeatureExecutionParticipant -> error(
-                        "Execution participant ${evaluated.subject.participant} is incomplete for $contentType: " +
+                        "Execution participant ${evaluated.subject.participant} is incomplete for " +
+                            "${subject.stableValue}: " +
                             evaluated.obligations.map { it.requirement.id },
                     )
                     is ConditionalFeatureExecutionParticipant -> {
@@ -218,7 +222,8 @@ internal class FeatureDurableExecutionRuntime(
                             is BlockedFeatureExecutionContext -> Unit
                             is IncompleteFeatureExecutionContext -> error(
                                 "Execution participant ${evaluated.subject.participant} is contextually incomplete " +
-                                    "for $contentType: ${resolved.obligations.map { it.requirement.id }}",
+                                    "for ${subject.stableValue}: " +
+                                    resolved.obligations.map { it.requirement.id },
                             )
                             is MissingFeatureExecutionContextEvidence -> error(
                                 "Execution participant ${evaluated.subject.participant} is missing context evidence: " +

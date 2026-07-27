@@ -103,12 +103,13 @@ inline fun <reified P : Any> featureProjectionExclusion(reason: String): Feature
  * One feature-owned relationship between provider-backed prerequisites and their behavior projections.
  *
  * Context inputs describe additional runtime information that later evaluation must retain. Specialized prerequisites
- * make the relationship inapplicable when the affected type has not contributed that media-specific participation.
+ * make the relationship inapplicable when the affected subject has not contributed that subject-specific participation.
  * Specialized requirements instead become obligations after the other prerequisites establish applicability.
  */
 data class FeatureIntegration(
     val id: FeatureIntegrationId,
     val prerequisites: CapabilityExpression,
+    val subjectScope: FeatureSubjectScope = FeatureSubjectScope.EntryContentType,
     val contextInputs: List<ContextInputDefinition<*>> = emptyList(),
     val contextRule: FeatureContextRule? = null,
     val contextBlockers: List<FeatureContextBlocker> = emptyList(),

@@ -28,7 +28,7 @@ class EntryDeepLinkContractValidationContributor : FeatureValidationContributor 
         sink.add(
             FeatureContractVerifier(reference) { input ->
                 verifyFeatureContract {
-                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
                     val uri = "https://example.test/entry"
                     val networkEntry = SEntry.create().apply {
                         url = "/entry"

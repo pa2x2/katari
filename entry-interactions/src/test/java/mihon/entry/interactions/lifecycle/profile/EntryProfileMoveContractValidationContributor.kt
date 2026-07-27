@@ -21,7 +21,7 @@ class EntryProfileMoveContractValidationContributor : FeatureValidationContribut
                 FeatureContractReference(FeatureId("entry.profile-move"), EntryProfileMoveBehaviorContract),
             ) { input ->
                 verifyFeatureContract {
-                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
                     val entry = profileMoveEntry(type)
                     var beforeCore = false
                     var afterCore = false

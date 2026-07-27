@@ -66,7 +66,7 @@ class FeatureContractValidationTest {
         val executed = mutableListOf<ContentTypeId>()
         val contributor = verifierContributor(contract) { input ->
             input.provider(providerDefinition).state shouldBe "ready"
-            executed += input.subject.contentType
+            executed += input.subject.entryContentType
             FeatureContractVerificationResult.Passed
         }
 
@@ -135,11 +135,11 @@ class FeatureContractValidationTest {
         plan.isComplete shouldBe false
         plan.validationIssues<MissingFeatureContractVerifierObligation>().single().apply {
             responsibleOwner shouldBe featureOwner
-            affectedSubjects.map { it.contentType.value } shouldContainExactly listOf("complete", "missing")
+            affectedSubjects.map { it.entryContentType.value } shouldContainExactly listOf("complete", "missing")
         }
         plan.graphIssues<MissingContractFixtureObligation>().single().apply {
             responsibleOwner shouldBe ContributionOwner("missing.type")
-            subject.contentType shouldBe ContentTypeId("missing")
+            subject.entryContentType shouldBe ContentTypeId("missing")
         }
         validateFeatureContracts(plan).isSuccessful shouldBe false
     }
@@ -202,7 +202,7 @@ class FeatureContractValidationTest {
         plan.executions.single().contractSelection.contextEvidence.single().value shouldBe ExampleContext(true)
         plan.graphIssues<SpecializedFeatureObligation>().single().apply {
             responsibleOwner shouldBe ContributionOwner("incomplete.type")
-            subject.contentType shouldBe ContentTypeId("incomplete")
+            subject.entryContentType shouldBe ContentTypeId("incomplete")
         }
     }
 
@@ -227,7 +227,7 @@ class FeatureContractValidationTest {
         planFeatureContractValidation(graph, evaluateFeatureGraph(graph), listOf(verifierOnly))
             .validationIssues<MissingFeatureContractScenarioObligation>()
             .single()
-            .affectedSubjects.map { it.contentType.value } shouldContainExactly listOf("future", "second")
+            .affectedSubjects.map { it.entryContentType.value } shouldContainExactly listOf("future", "second")
 
         val blockedScenario = featureValidationContributor(featureOwner) {
             verifierOnly.contributeTo(this)

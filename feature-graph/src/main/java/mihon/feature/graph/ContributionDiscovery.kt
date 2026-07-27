@@ -1,7 +1,7 @@
 package mihon.feature.graph
 
 /**
- * Owning composition boundary for one or more content-type or feature contributions.
+ * Owning composition boundary for one or more subject or feature contributions.
  *
  * The environment supplies contributors to discovery. The graph kernel never maintains a list of concrete types,
  * capabilities, or features.
@@ -30,6 +30,7 @@ class FeatureGraphContributionSink internal constructor(
     private val owner: ContributionOwner,
 ) {
     private val contentTypes = mutableListOf<ContentTypeContribution>()
+    private val applicationSubjects = mutableListOf<ApplicationSubjectContribution>()
     private val features = mutableListOf<FeatureContribution>()
     private val executionPoints = mutableListOf<FeatureExecutionPointDefinition<*>>()
     private val executionParticipants = mutableListOf<FeatureExecutionParticipantDefinition<*>>()
@@ -39,6 +40,13 @@ class FeatureGraphContributionSink internal constructor(
             "Contributor $owner cannot submit content type ${contribution.contentType} owned by ${contribution.owner}"
         }
         contentTypes += contribution
+    }
+
+    fun add(contribution: ApplicationSubjectContribution) {
+        require(contribution.owner == owner) {
+            "Contributor $owner cannot submit application subject owned by ${contribution.owner}"
+        }
+        applicationSubjects += contribution
     }
 
     fun add(contribution: FeatureContribution) {
@@ -65,6 +73,7 @@ class FeatureGraphContributionSink internal constructor(
     internal fun snapshot(): DiscoveredFeatureGraphContributions {
         return DiscoveredFeatureGraphContributions(
             contentTypes = contentTypes.toList(),
+            applicationSubjects = applicationSubjects.toList(),
             features = features.toList(),
             executionPoints = executionPoints.toList(),
             executionParticipants = executionParticipants.toList(),
@@ -76,9 +85,13 @@ class FeatureGraphContributionSink internal constructor(
 data class DiscoveredFeatureGraphContributions(
     val contentTypes: List<ContentTypeContribution>,
     val features: List<FeatureContribution>,
+    val applicationSubjects: List<ApplicationSubjectContribution> = emptyList(),
     val executionPoints: List<FeatureExecutionPointDefinition<*>> = emptyList(),
     val executionParticipants: List<FeatureExecutionParticipantDefinition<*>> = emptyList(),
-)
+) {
+    val subjects: List<FeatureSubjectContribution>
+        get() = applicationSubjects + contentTypes
+}
 
 fun discoverFeatureGraphContributions(
     contributors: Iterable<FeatureGraphContributor>,
@@ -90,6 +103,7 @@ fun discoverFeatureGraphContributions(
     }
     return DiscoveredFeatureGraphContributions(
         contentTypes = snapshots.flatMap { it.contentTypes },
+        applicationSubjects = snapshots.flatMap { it.applicationSubjects },
         features = snapshots.flatMap { it.features },
         executionPoints = snapshots.flatMap { it.executionPoints },
         executionParticipants = snapshots.flatMap { it.executionParticipants },

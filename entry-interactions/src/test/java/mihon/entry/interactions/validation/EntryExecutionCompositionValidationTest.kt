@@ -7,6 +7,8 @@ import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.EntryInteractionPlugin
 import mihon.entry.interactions.EntryInteractionProviderBinding
 import mihon.entry.interactions.createEntryInteractionComposition
+import mihon.entry.interactions.executeInline
+import mihon.entry.interactions.prepareDurable
 import mihon.entry.interactions.toContentTypeId
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId

@@ -8,7 +8,6 @@ import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.resolveFeatureContext
 
 internal fun FeatureGraphEvaluation.requireSourceContextState(
     feature: FeatureId,
@@ -21,13 +20,13 @@ internal fun FeatureGraphEvaluation.requireSourceContextState(
     val subjects = integrations
         .map { it.subject }
         .filter { it.feature == feature && it.integration == integration }
-        .filter { contentType == null || it.contentType == contentType.toContentTypeId() }
+        .filter { contentType == null || it.entryContentType == contentType.toContentTypeId() }
     check(subjects.isNotEmpty()) { "Source integration $feature:$integration was not discovered" }
 
     subjects.forEach { subject ->
         val resolution = resolveFeatureContext(
             evaluation = this,
-            contentType = subject.contentType,
+            contentType = subject.entryContentType,
             feature = feature,
             integration = integration,
             evidence = evidence,
@@ -39,7 +38,7 @@ internal fun FeatureGraphEvaluation.requireSourceContextState(
             resolution.integration is BlockedFeatureContext && !hasBehavior
         }
         check(matches) {
-            "Source integration $feature:$integration resolved inconsistently for ${subject.contentType}: " +
+            "Source integration $feature:$integration resolved inconsistently for ${subject.entryContentType}: " +
                 "${resolution.integration}, behaviors=${resolution.behaviorProjections}"
         }
     }

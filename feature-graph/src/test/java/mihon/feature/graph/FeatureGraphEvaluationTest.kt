@@ -91,7 +91,7 @@ class FeatureGraphEvaluationTest {
         val result = evaluation.integrations.single() as IncompleteFeatureIntegration
         result.obligations shouldHaveSize 1
         result.obligations.single().responsibleOwner shouldBe type.owner
-        result.obligations.single().subject.contentType shouldBe type.contentType
+        result.obligations.single().subject.entryContentType shouldBe type.contentType
         result.obligations.single().subject.feature shouldBe FeatureId("example")
         result.obligations.single().requirement shouldBe adapter
         evaluation.obligations shouldContainExactly result.obligations
@@ -240,7 +240,8 @@ class FeatureGraphEvaluationTest {
             ),
         )
 
-        evaluation.behaviorProjections.map { it.subject.contentType.value } shouldContainExactly listOf("alpha", "zeta")
+        evaluation.behaviorProjections.map { it.subject.entryContentType.value } shouldContainExactly
+            listOf("alpha", "zeta")
         evaluation.behaviorProjections.all { it.projection === behavior } shouldBe true
     }
 
@@ -258,7 +259,7 @@ class FeatureGraphEvaluationTest {
         )
 
         evaluation.integrations.map {
-            "${it.subject.contentType.value}:${it.subject.integration.value}"
+            "${it.subject.entryContentType.value}:${it.subject.integration.value}"
         } shouldContainExactly listOf(
             "alpha:example.alpha",
             "alpha:example.zeta",

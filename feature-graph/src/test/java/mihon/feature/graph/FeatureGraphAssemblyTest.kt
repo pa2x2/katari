@@ -20,12 +20,12 @@ class FeatureGraphAssemblyTest {
         }
         val featureContributor = featureContributor(alpha)
 
-        discoverAndAssembleFeatureGraph(listOf(typeContributor, featureContributor)).contentTypes
+        discoverAndAssembleFeatureGraph(listOf(typeContributor, featureContributor)).entryContentTypes
             .map { it.contentType } shouldContainExactly listOf(ContentTypeId("first"))
 
         ownedTypes += type("second", typesOwner)
 
-        discoverAndAssembleFeatureGraph(listOf(typeContributor, featureContributor)).contentTypes
+        discoverAndAssembleFeatureGraph(listOf(typeContributor, featureContributor)).entryContentTypes
             .map { it.contentType } shouldContainExactly listOf(ContentTypeId("first"), ContentTypeId("second"))
     }
 
@@ -73,7 +73,7 @@ class FeatureGraphAssemblyTest {
         val reverse = discoverAndAssembleFeatureGraph(listOf(feature, types))
 
         forward shouldContainSameGraphAs reverse
-        forward.contentTypes.map { it.contentType.value } shouldContainExactly listOf("alpha", "zeta")
+        forward.entryContentTypes.map { it.contentType.value } shouldContainExactly listOf("alpha", "zeta")
     }
 
     @Test
@@ -154,7 +154,7 @@ class FeatureGraphAssemblyTest {
             listOf(featureContributor(alpha)),
         )
 
-        graph.contentTypes shouldContainExactly emptyList()
+        graph.entryContentTypes shouldContainExactly emptyList()
         graph.capabilities.map { it.id } shouldContainExactly listOf(alpha.id)
     }
 
@@ -274,7 +274,7 @@ class FeatureGraphAssemblyTest {
     }
 
     private infix fun FeatureGraph.shouldContainSameGraphAs(other: FeatureGraph) {
-        contentTypes.map { it.contentType } shouldContainExactly other.contentTypes.map { it.contentType }
+        entryContentTypes.map { it.contentType } shouldContainExactly other.entryContentTypes.map { it.contentType }
         features.map { it.feature } shouldContainExactly other.features.map { it.feature }
         executionPoints.map { it.id } shouldContainExactly other.executionPoints.map { it.id }
         executionParticipants.map { it.id } shouldContainExactly other.executionParticipants.map { it.id }

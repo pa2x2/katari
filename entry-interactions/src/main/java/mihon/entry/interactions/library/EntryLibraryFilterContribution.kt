@@ -236,5 +236,5 @@ private fun FeatureGraphEvaluation.selectedContentTypes(
                 applicability.subject.integration == integration &&
                 applicability.projection.id == behaviorProjection
         }
-        .mapTo(mutableSetOf()) { it.subject.contentType }
+        .mapTo(mutableSetOf()) { it.subject.entryContentType }
 }

@@ -147,4 +147,4 @@ private fun FeatureGraphEvaluation.libraryUpdateRefreshContentTypes(): Set<Conte
                 applicability.subject.integration == ENTRY_LIBRARY_UPDATE_REFRESH_INTEGRATION &&
                 applicability.projection.id == EntryLibraryUpdateRefreshBehavior.SOURCE_REFRESH.id
         }
-        .mapTo(mutableSetOf()) { it.subject.contentType }
+        .mapTo(mutableSetOf()) { it.subject.entryContentType }

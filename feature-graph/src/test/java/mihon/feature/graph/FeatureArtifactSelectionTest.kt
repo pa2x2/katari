@@ -74,9 +74,9 @@ class FeatureArtifactSelectionTest {
 
         val selected = selectFeatureArtifacts(graph, evaluateFeatureGraph(graph))
 
-        selected.behavioralContracts.map { it.subject.contentType.value } shouldContainExactly
+        selected.behavioralContracts.map { it.subject.entryContentType.value } shouldContainExactly
             listOf("complete", "second")
-        selected.projections.map { it.subject.contentType.value } shouldContainExactly listOf("complete", "second")
+        selected.projections.map { it.subject.entryContentType.value } shouldContainExactly listOf("complete", "second")
         selected.behavioralContracts.all { it.contract === contract } shouldBe true
         selected.projections.all { it.projection === projection } shouldBe true
         selected.projections.all { it.projection.implementation === projectionImplementation } shouldBe true
@@ -135,13 +135,13 @@ class FeatureArtifactSelectionTest {
         val selected = selectFeatureArtifacts(graph, evaluateFeatureGraph(graph))
 
         selected.behavioralContracts shouldHaveSize 4
-        selected.behavioralContracts.filter { it.subject.contentType.value == "missing" }
+        selected.behavioralContracts.filter { it.subject.entryContentType.value == "missing" }
             .all { it.fixtures.isEmpty() } shouldBe true
-        selected.behavioralContracts.filter { it.subject.contentType.value == "supplied" }
+        selected.behavioralContracts.filter { it.subject.entryContentType.value == "supplied" }
             .all { it.fixtures == listOf(suppliedFixture) } shouldBe true
         val obligation = selected.obligations.single() as MissingContractFixtureObligation
         obligation.responsibleOwner shouldBe ContributionOwner("missing.type")
-        obligation.subject.contentType shouldBe ContentTypeId("missing")
+        obligation.subject.entryContentType shouldBe ContentTypeId("missing")
         obligation.requirement shouldBe fixtureDefinition
         obligation.affectedContracts shouldContainExactly listOf(contract, secondContract)
     }
@@ -178,7 +178,7 @@ class FeatureArtifactSelectionTest {
         val obligation = selected.obligations.single() as MissingFeatureProjectionObligation
         obligation.responsibleOwner shouldBe featureOwner
         obligation.requirement shouldBe projectionDefinition
-        obligation.affectedSubjects.map { it.contentType.value } shouldContainExactly listOf("alpha", "zeta")
+        obligation.affectedSubjects.map { it.entryContentType.value } shouldContainExactly listOf("alpha", "zeta")
     }
 
     @Test
@@ -290,7 +290,7 @@ class FeatureArtifactSelectionTest {
         val executedSubjects = mutableListOf<ContentTypeId>()
 
         fun execute(subject: FeatureIntegrationSubject) {
-            executedSubjects += subject.contentType
+            executedSubjects += subject.entryContentType
         }
     }
 
@@ -298,7 +298,7 @@ class FeatureArtifactSelectionTest {
         val projectedSubjects = mutableListOf<ContentTypeId>()
 
         fun project(subject: FeatureIntegrationSubject) {
-            projectedSubjects += subject.contentType
+            projectedSubjects += subject.entryContentType
         }
     }
 

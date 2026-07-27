@@ -1,5 +1,7 @@
 package mihon.feature.graph.validation.reporting
 
+import mihon.feature.graph.validation.entryContentType
+
 fun renderFeatureDeveloperReport(report: FeatureDeveloperReport): String = buildString {
     appendLine("Katari feature developer report")
     appendLine("================================")

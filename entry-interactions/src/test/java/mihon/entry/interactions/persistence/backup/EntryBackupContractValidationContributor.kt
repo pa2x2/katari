@@ -19,7 +19,7 @@ class EntryBackupContractValidationContributor : FeatureValidationContributor {
                 FeatureContractReference(FeatureId("entry.backup"), EntryBackupBehaviorContract),
             ) { input ->
                 verifyFeatureContract {
-                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
                     val composition = lifecycleContractComposition(
                         type,
                         EntryBackupFeatureContributor,

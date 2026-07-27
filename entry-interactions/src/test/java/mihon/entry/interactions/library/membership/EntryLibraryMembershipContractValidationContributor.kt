@@ -37,7 +37,7 @@ class EntryLibraryMembershipContractValidationContributor : FeatureValidationCon
                 ),
             ) { input ->
                 verifyFeatureContract {
-                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
                     val entry = Entry.create().copy(id = 91L, type = type, favorite = false)
                     val host = RecordingLibraryMembershipHost(entry.copy(favorite = true))
                     val feature = membershipFeature(type, host)
@@ -113,7 +113,7 @@ class EntryLibraryCustomCoverContractValidationContributor : FeatureValidationCo
                 ),
             ) { input ->
                 verifyFeatureContract {
-                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
                     val entry = Entry.create().copy(id = 96L, profileId = 7L, type = type)
                     val cleaned = mutableListOf<Long>()
                     val binding = entryMergeCustomCoverBinding(
@@ -142,7 +142,7 @@ class EntryLibraryCustomCoverContractValidationContributor : FeatureValidationCo
                 ),
             ) { input ->
                 verifyFeatureContract {
-                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+                    val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
                     val source = Entry.create().copy(id = 95L, type = type)
                     val target = source.copy(id = 96L)
                     val payload = EntryMigrationCustomCoverPayload("contract-stage", target.id)

@@ -94,7 +94,7 @@ class EntryMergeContractValidationContributor : FeatureValidationContributor {
     private suspend fun verifyLibraryRemovalParticipation(
         input: FeatureExecutionContractExecutionInput,
     ) = verifyFeatureContract {
-        val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+        val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
         val entries = listOf(entry(1L, type), entry(2L, type))
         val membership = EntryMergeMembershipSnapshot(7L, 1L, entries.map(Entry::id))
         val host = RecordingEntryMergeHost(entries, listOf(membership))
@@ -110,7 +110,7 @@ class EntryMergeContractValidationContributor : FeatureValidationContributor {
     private suspend fun verifyProfileMoveParticipation(
         input: FeatureExecutionContractExecutionInput,
     ) = verifyFeatureContract {
-        val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+        val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
         val entries = listOf(entry(1L, type), entry(2L, type))
         val host = RecordingEntryMergeHost(
             entries,
@@ -137,7 +137,7 @@ class EntryMergeContractValidationContributor : FeatureValidationContributor {
         input: FeatureContractExecutionInput,
         contract: EntryMergeBehaviorContract,
     ) = verifyFeatureContract {
-        val type = EntryType.entries.single { it.toContentTypeId() == input.subject.contentType }
+        val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
         val entries = listOf(entry(1L, type), entry(2L, type))
         val membership = EntryMergeMembershipSnapshot(7L, 1L, entries.map(Entry::id))
         when (contract) {

@@ -148,7 +148,7 @@ fun planFeatureContractValidation(
 
     val contextualFixtureCandidates = mutableListOf<MissingContextualFixtureCandidate>()
     conditional.forEach { candidate ->
-        val contentType = graph.contentTypes.single { it.contentType == candidate.subject.contentType }
+        val contentType = graph.entryContentTypes.single { it.contentType == candidate.subject.entryContentType }
         candidate.integration.behavioralContracts.forEach contractLoop@{ contract ->
             val reference = contract.reference(candidate.subject)
             val scenarios = scenariosByContractIntegration[reference to candidate.integration.id].orEmpty()
@@ -181,7 +181,7 @@ fun planFeatureContractValidation(
                 val resolved = try {
                     resolveFeatureContext(
                         evaluation = evaluation,
-                        contentType = candidate.subject.contentType,
+                        subject = candidate.subject.affectedSubject.id,
                         feature = candidate.subject.feature,
                         integration = candidate.subject.integration,
                         evidence = evidence,
@@ -363,7 +363,7 @@ private fun List<MissingContextualFixtureCandidate>.toFixtureObligations(): List
     return groupBy { it.subject to it.requirement.id }.values.map { candidates ->
         val first = candidates.first()
         MissingContractFixtureObligation(
-            responsibleOwner = first.subject.contentTypeOwner,
+            responsibleOwner = first.subject.affectedSubject.owner,
             subject = first.subject,
             requirement = first.requirement,
             affectedContracts = candidates.map { it.contract }.distinct().sortedBy { it.id.value },
@@ -391,4 +391,4 @@ private fun List<FeatureObligation>.normalized(): List<FeatureObligation> {
 }
 
 private fun FeatureIntegrationSubject.sortKey(): String =
-    "${contentType.value}:${feature.value}:${integration.value}"
+    "${entryContentType.value}:${feature.value}:${integration.value}"
