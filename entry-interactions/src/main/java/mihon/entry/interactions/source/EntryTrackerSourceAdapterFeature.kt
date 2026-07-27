@@ -182,8 +182,8 @@ internal class DefaultEntryTrackerSourceAdapterFeature(
 
         return EntryTrackerSourceAdapterResolution.Available(
             sourceId = sourceId,
-            preferences = (settingsResult as EntrySourceSettingsResolution.Available).preferences,
-            homeUrl = (homeResult as EntrySourceHomeResolution.Available).url,
+            preferences = settingsResult.preferences,
+            homeUrl = homeResult.url,
             imageClient = checkNotNull(imageSource).client,
         )
     }

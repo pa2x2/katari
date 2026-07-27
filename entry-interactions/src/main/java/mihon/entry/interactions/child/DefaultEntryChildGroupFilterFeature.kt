@@ -1,6 +1,7 @@
 package mihon.entry.interactions
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.mapLatest
@@ -26,6 +27,7 @@ internal class DefaultEntryChildGroupFilterFeature(
         return EntryChildGroupFilterStateResult.Available(loadState(scope, profileId = null))
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun observe(scope: EntryChildGroupFilterScope): EntryChildGroupFilterObservationResult {
         if (scope.entry.type !in applicableTypes) {
             return EntryChildGroupFilterObservationResult.Inapplicable(scope.entry.type)

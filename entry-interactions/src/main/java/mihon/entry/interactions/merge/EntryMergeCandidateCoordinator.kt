@@ -1,5 +1,6 @@
 package mihon.entry.interactions
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -14,6 +15,7 @@ internal class EntryMergeCandidateCoordinator(
         return host.profile(entry.profileId).duplicateCandidates(entry)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun observeCandidates(entry: Flow<Entry>): Flow<List<DuplicateEntryCandidate>> {
         return entry.flatMapLatest { current ->
             host.profile(current.profileId).observeDuplicateCandidates(flowOf(current))

@@ -74,7 +74,7 @@ data class InvalidFeatureContractScenarioObligation(
 fun discoverAndPlanFeatureContractValidation(
     graph: FeatureGraph,
     evaluation: FeatureGraphEvaluation,
-    classLoader: ClassLoader = Thread.currentThread().contextClassLoader,
+    classLoader: ClassLoader = defaultFeatureValidationClassLoader(),
 ): FeatureContractValidationPlan {
     return planFeatureContractValidation(
         graph = graph,

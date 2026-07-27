@@ -1,6 +1,7 @@
 package mihon.entry.interactions
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.mapLatest
@@ -182,6 +183,7 @@ internal class EntryMergeWorkflowCoordinator(
         )
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun observeExisting(entry: Entry): Flow<EntryMergeEditorProjection?> {
         if (entry.id <= 0L) return kotlinx.coroutines.flow.flowOf(null)
         return host.profile(entry.profileId).observeMembership(entry.id).mapLatest { membership ->

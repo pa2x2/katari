@@ -20,7 +20,7 @@ class AppEntryChildGroupFilterDataSource(
         return entryIds.distinct()
             .map(entryChapterRepository::getChaptersByEntryId)
             .merge()
-            .map { Unit }
+            .map {}
     }
 
     override suspend fun children(entryIds: Collection<Long>): List<EntryChapter> {

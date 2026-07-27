@@ -160,9 +160,7 @@ internal fun ProseDocumentBlock(
         val coordinates = anchorCoordinates?.takeIf { it.isAttached } ?: return@LaunchedEffect
         val offsetPx = anchorTextView?.let { view ->
             val layout = view.layout ?: return@let 0
-            val characterOffset = anchorOffsetWithinBlock
-                ?.coerceIn(0, view.text.length)
-                ?: 0
+            val characterOffset = anchorOffsetWithinBlock.coerceIn(0, view.text.length)
             layout.getLineTop(layout.getLineForOffset(characterOffset))
         } ?: 0
         onAnchorTargetPositioned(coordinates, offsetPx)

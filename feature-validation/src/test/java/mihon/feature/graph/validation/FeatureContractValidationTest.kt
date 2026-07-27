@@ -312,6 +312,21 @@ class FeatureContractValidationTest {
     }
 
     @Test
+    fun `validation discovery falls back when the thread context class loader is unavailable`() {
+        val thread = Thread.currentThread()
+        val previousClassLoader = thread.contextClassLoader
+        try {
+            thread.contextClassLoader = null
+
+            loadFeatureValidationContributors()
+                .single()
+                .shouldBeInstanceOf<ServiceLoadedValidationContributor>()
+        } finally {
+            thread.contextClassLoader = previousClassLoader
+        }
+    }
+
+    @Test
     fun `validation bindings reject duplicate foreign and unreachable ownership`() {
         val contract = contract()
         val graph = graph(listOf(type("future")), integration(contract))

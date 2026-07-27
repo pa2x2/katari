@@ -179,7 +179,14 @@ fun discoverFeatureValidationContributions(
 
 /** Discovers independently packaged validation contributors without a central contract or feature list. */
 fun loadFeatureValidationContributors(
-    classLoader: ClassLoader = Thread.currentThread().contextClassLoader,
+    classLoader: ClassLoader = defaultFeatureValidationClassLoader(),
 ): List<FeatureValidationContributor> {
     return ServiceLoader.load(FeatureValidationContributor::class.java, classLoader).toList()
+}
+
+internal fun defaultFeatureValidationClassLoader(): ClassLoader {
+    return Thread.currentThread().contextClassLoader
+        ?: checkNotNull(FeatureValidationContributor::class.java.classLoader) {
+            "Feature validation contributor class loader is unavailable"
+        }
 }

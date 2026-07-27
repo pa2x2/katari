@@ -28,7 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.semantics.invisibleToUser
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import tachiyomi.presentation.core.components.reader.ReaderPageIndicator
@@ -94,7 +94,7 @@ internal fun BookReaderScaffold(
                             .padding(vertical = 2.dp)
                             .graphicsLayer { alpha = if (progressVisible) 1f else 0f }
                             .semantics {
-                                if (!progressVisible) invisibleToUser()
+                                if (!progressVisible) hideFromAccessibility()
                             },
                     )
                 }

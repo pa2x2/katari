@@ -3,6 +3,7 @@ package mihon.feature.graph.validation.reporting
 import mihon.feature.graph.FeatureGraph
 import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.validation.FeatureContractValidationResult
+import mihon.feature.graph.validation.defaultFeatureValidationClassLoader
 import mihon.feature.graph.validation.discoverAndPlanFeatureContractValidation
 import mihon.feature.graph.validation.validateFeatureContracts
 
@@ -14,7 +15,7 @@ data class FeatureDeveloperReportingResult(
 suspend fun validateAndBuildFeatureDeveloperReport(
     graph: FeatureGraph,
     evaluation: FeatureGraphEvaluation,
-    classLoader: ClassLoader = Thread.currentThread().contextClassLoader,
+    classLoader: ClassLoader = defaultFeatureValidationClassLoader(),
 ): FeatureDeveloperReportingResult {
     val validation = validateFeatureContracts(
         discoverAndPlanFeatureContractValidation(
