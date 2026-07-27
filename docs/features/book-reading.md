@@ -15,7 +15,7 @@ Katari selects a reader from the publication format reported by the source. Form
 
 EPUB publications must be supplied as `application/epub+zip`. If a source does not declare a layout, Katari inspects the publication while opening it and accepts it only when it is reflowable.
 
-Serialized prose sources expose each provider chapter as a separate entry child. Opening a chapter resolves only that chapter's normalized HTML; previous and next navigation opens adjacent stored chapters rather than combining the novel into an EPUB-style publication. The reader preloads only the immediate neighbors. Its chapter picker uses the already stored chapter metadata and resolves a chapter body only after selection.
+Serialized prose sources expose each provider chapter as a separate entry child. Opening a chapter resolves only that chapter's normalized HTML; previous and next navigation opens adjacent stored chapters rather than combining the novel into an EPUB-style publication. An adjacent chapter body is resolved only after its transition becomes the active reading item, or after the chapter is selected explicitly. Loading failures and retry remain inline with that transition. The chapter picker uses the already stored chapter metadata and resolves a chapter body only after selection.
 
 The prose reader preserves authored structure in scrolling and paginated modes, including thematic breaks, ordered and nested lists, whitespace-sensitive passages, figures and captions, bounded tables, internal notes, safe external links, native disclosure blocks, and a reviewed subset of meaning-bearing colors, borders, alignment, and fonts. Ordinary styled prose remains in the continuous text flow; only structural content and styled panels that require atomic rendering receive dedicated pages. Images and custom fonts are fetched through Katari's controlled resource path rather than by a WebView. Images are sampled to their rendered bounds and released with the figure that owns them, while missing images retain readable alternative text.
 
@@ -33,7 +33,7 @@ Open **More → Settings → Reader** to configure the profile defaults for each
 
 Changing profiles therefore changes reader defaults without affecting other profiles. Settings that support an entry override can also be changed for an individual entry from the reader's controls.
 
-Each reader exposes its currently available appearance, layout, and navigation controls in the app. The EPUB reader navigates the publication's table of contents. The prose reader uses Katari's stored chapter list for its chapter picker and previous/next transitions while keeping only the current chapter and its immediate neighbors prepared.
+Each reader exposes its currently available appearance, layout, and navigation controls in the app. The EPUB reader navigates the publication's table of contents. The prose reader uses Katari's stored chapter list for its chapter picker and previous/next transitions while keeping the current chapter and any already-requested immediate neighbors prepared.
 
 Use **Reset** from a reader settings dialog to remove that reader's active-profile values and the current entry's reader overrides. Reading progress, bookmarks, and downloads are not changed.
 

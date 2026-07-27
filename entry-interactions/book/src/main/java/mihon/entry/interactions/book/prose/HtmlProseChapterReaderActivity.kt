@@ -62,7 +62,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
     private var latestLocator: BookLocator? = null
     private var navigation: EntryChildWindow<EntryChapter>? = null
     private var chapters: List<EntryChapter> = emptyList()
-    private val preloadJobs = mutableMapOf<Long, Job>()
+    private val chapterLoadJobs = mutableMapOf<Long, Job>()
     private var chapterSwitchJob: Job? = null
     private var childWebViewResolutionJob: Job? = null
     private var processorId: String? = null
@@ -104,6 +104,12 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
                                 uiState = uiState?.copy(chapterListVisible = visible)
                             },
                             onChapterSelected = ::selectChapter,
+                            onTransitionChapterRequested = {
+                                requestTransitionChapter(it, retry = false)
+                            },
+                            onTransitionChapterRetry = {
+                                requestTransitionChapter(it, retry = true)
+                            },
                             onSettingsVisibilityChange = { visible ->
                                 uiState = uiState?.copy(settingsVisible = visible)
                             },
@@ -141,8 +147,8 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
     }
 
     override fun onDestroy() {
-        preloadJobs.values.forEach(Job::cancel)
-        preloadJobs.clear()
+        chapterLoadJobs.values.forEach(Job::cancel)
+        chapterLoadJobs.clear()
         chapterSwitchJob?.cancel()
         childWebViewResolutionJob?.cancel()
         openedSession = null
@@ -237,7 +243,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
             readingStartedAt = SystemClock.elapsedRealtime()
             surfaceState = ProseReaderSurfaceState.Ready
             setMenuVisibility(false)
-            preloadAdjacent()
+            retainAdjacentSessions()
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
@@ -384,7 +390,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
         resetViewer: Boolean,
     ) {
         val id = chapter.id
-        preloadJobs[id]?.join()
+        chapterLoadJobs[id]?.join()
         val cached = retainedSession.cached(id)
         val destination = cached ?: when (val result = openChapter(chapter)) {
             is BookReaderOpenResult.Failure -> {
@@ -417,39 +423,100 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
         session.recordHistory(elapsed)
     }
 
-    private fun preloadAdjacent() {
+    private fun retainAdjacentSessions() {
         val adjacent = listOfNotNull(navigation?.previous, navigation?.next)
         retainedSession.retain(adjacent.mapTo(mutableSetOf()) { it.id })
         val retainedIds = adjacent.mapTo(mutableSetOf()) { it.id }.apply {
             openedSession?.chapter?.id?.let(::add)
         }
+        chapterLoadJobs.keys.toList()
+            .filterNot(retainedIds::contains)
+            .forEach { chapterId ->
+                chapterLoadJobs.remove(chapterId)?.cancel()
+            }
         uiState = uiState?.copy(
             loadedChapters = uiState?.loadedChapters.orEmpty().filterKeys(retainedIds::contains),
+            transitionLoadStates = uiState
+                ?.transitionLoadStates
+                .orEmpty()
+                .filterKeys(retainedIds::contains),
         )
         adjacent.forEach { chapter ->
             retainedSession.cached(chapter.id)?.let { cached ->
                 addLoadedChapter(cached)
-                return@forEach
             }
-            if (preloadJobs[chapter.id]?.isActive == true) return@forEach
-            preloadJobs[chapter.id] = lifecycleScope.launch {
-                try {
-                    val result = openChapter(chapter)
-                    if (result is BookReaderOpenResult.Success) {
-                        val stillAdjacent = listOfNotNull(navigation?.previous, navigation?.next).any {
-                            it.id == chapter.id
+        }
+    }
+
+    private fun requestTransitionChapter(
+        chapter: EntryChapter,
+        retry: Boolean,
+    ) {
+        if (!isAdjacent(chapter.id)) return
+        retainedSession.cached(chapter.id)?.let {
+            addLoadedChapter(it)
+            return
+        }
+        if (chapterLoadJobs[chapter.id]?.isActive == true) return
+        val existingState = uiState?.transitionLoadStates?.get(chapter.id)
+        if (
+            (!retry && existingState != null) ||
+            (retry && existingState !is HtmlProseChapterLoadState.Failed)
+        ) {
+            return
+        }
+        setTransitionLoadState(chapter.id, HtmlProseChapterLoadState.Loading)
+        chapterLoadJobs[chapter.id] = lifecycleScope.launch {
+            try {
+                when (val result = openChapter(chapter)) {
+                    is BookReaderOpenResult.Failure -> {
+                        if (isAdjacent(chapter.id)) {
+                            setTransitionLoadState(
+                                chapter.id,
+                                HtmlProseChapterLoadState.Failed(result.failure.message),
+                            )
                         }
-                        if (!stillAdjacent || !retainedSession.cache(result.session)) {
+                    }
+                    is BookReaderOpenResult.Success -> {
+                        if (!isAdjacent(chapter.id) || !retainedSession.cache(result.session)) {
                             result.session.close()
                         } else {
                             addLoadedChapter(result.session)
                         }
                     }
-                } finally {
-                    preloadJobs.remove(chapter.id)
                 }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                logcat(LogPriority.ERROR, error) { "Failed to load prose transition destination" }
+                if (isAdjacent(chapter.id)) {
+                    setTransitionLoadState(
+                        chapter.id,
+                        HtmlProseChapterLoadState.Failed(
+                            error.message ?: getString(R.string.prose_reader_incompatible_session),
+                        ),
+                    )
+                }
+            } finally {
+                chapterLoadJobs.remove(chapter.id)
             }
         }
+    }
+
+    private fun isAdjacent(chapterId: Long): Boolean =
+        listOfNotNull(navigation?.previous, navigation?.next).any { it.id == chapterId }
+
+    private fun setTransitionLoadState(
+        chapterId: Long,
+        state: HtmlProseChapterLoadState?,
+    ) {
+        val states = uiState?.transitionLoadStates.orEmpty().toMutableMap()
+        if (state == null) {
+            states.remove(chapterId)
+        } else {
+            states[chapterId] = state
+        }
+        uiState = uiState?.copy(transitionLoadStates = states)
     }
 
     private fun addLoadedChapter(session: OpenedBookReaderSession) {
@@ -469,6 +536,10 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
         uiState = uiState?.copy(
             loadedChapters = uiState?.loadedChapters.orEmpty() + (session.chapter.id to loaded),
             loadingChapterId = null,
+            transitionLoadStates = uiState
+                ?.transitionLoadStates
+                .orEmpty()
+                .minus(session.chapter.id),
         )
     }
 

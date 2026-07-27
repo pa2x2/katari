@@ -17,6 +17,8 @@ import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderViewerItem
 import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
+import eu.kanade.tachiyomi.ui.reader.model.automaticTransitionLoadDestination
+import eu.kanade.tachiyomi.ui.reader.model.automaticTransitionLoadItemAtAnchor
 import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
 import eu.kanade.tachiyomi.ui.reader.viewer.ViewerNavigation.NavigationRegion
 import kotlinx.coroutines.MainScope
@@ -73,6 +75,7 @@ internal class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boo
      * Currently active item. It can be a chapter page or a chapter transition.
      */
     private var currentItem: ReaderViewerItem? = null
+    private var anchoredTransition: EntryChildTransition<ReaderChapter>? = null
 
     private var autoScrollLevel = MangaReaderSettingsProvider.AUTO_SCROLL_LEVEL_DEFAULT
     private var autoScrollRemainderPx = 0.0
@@ -96,17 +99,6 @@ internal class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boo
                     val hideThreshold = config.scrollHideThreshold
                     if ((dy > hideThreshold || dy < -hideThreshold) && activity.viewModel.state.value.menuVisible) {
                         activity.hideMenu()
-                    }
-
-                    if (dy < 0) {
-                        val firstIndex = layoutManager.findFirstVisibleItemPosition()
-                        val firstItem = adapter.items.getOrNull(firstIndex)
-                        if (
-                            firstItem is ReaderViewerItem.Transition &&
-                            firstItem.transition.direction == EntryChildDirection.PREVIOUS
-                        ) {
-                            firstItem.transition.to?.let(activity::requestPreloadChapter)
-                        }
                     }
 
                     val lastIndex = layoutManager.findLastEndVisibleItemPosition()
@@ -174,30 +166,6 @@ internal class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boo
 
         frame.layoutParams = ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT)
         frame.addView(recycler)
-    }
-
-    private fun checkAllowPreload(page: ReaderPage?): Boolean {
-        // Page is transition page - preload allowed
-        page ?: return true
-
-        // Initial opening - preload allowed
-        currentItem ?: return true
-
-        val nextItem = adapter.items.getOrNull(adapter.items.size - 1)
-        val nextChapter = when (nextItem) {
-            is ReaderViewerItem.Page -> nextItem.page.chapter
-            is ReaderViewerItem.Transition -> nextItem.transition.to
-            null -> null
-        }
-
-        // Allow preload for
-        // 1. Going between pages of same chapter
-        // 2. Next chapter page
-        return when (page.chapter) {
-            (currentItem as? ReaderViewerItem.Page)?.page?.chapter -> true
-            nextChapter -> true
-            else -> false
-        }
     }
 
     /**
@@ -277,41 +245,40 @@ internal class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boo
     }
 
     /**
-     * Called from the RecyclerView listener when a [page] is marked as active. It notifies the
-     * activity of the change and requests the preload of the next chapter if this is the last page.
+     * Called from the RecyclerView listener when a [page] is marked as active.
      */
-    private fun onPageSelected(page: ReaderPage, allowPreload: Boolean) {
+    private fun onPageSelected(page: ReaderPage) {
         val pages = page.chapter.pages ?: return
         logcat { "onPageSelected: ${page.number}/${pages.size}" }
         activity.onPageSelected(page)
-
-        // Preload next chapter once we're within the last 5 pages of the current chapter
-        val inPreloadRange = pages.size - page.number < 5
-        if (inPreloadRange && allowPreload && page.chapter == adapter.currentChapter) {
-            logcat { "Request preload next chapter because we're at page ${page.number} of ${pages.size}" }
-            val nextItem = adapter.items.getOrNull(adapter.items.size - 1)
-            val transitionChapter = when (nextItem) {
-                is ReaderViewerItem.Page -> nextItem.page.chapter
-                is ReaderViewerItem.Transition -> nextItem.transition.to
-                null -> null
-            }
-            if (transitionChapter != null) {
-                logcat { "Requesting to preload chapter ${transitionChapter.chapter.chapter_number}" }
-                activity.requestPreloadChapter(transitionChapter)
-            }
-        }
     }
 
     /**
-     * Called from the RecyclerView listener when a [transition] is marked as active. It request the
-     * preload of the destination chapter of the transition.
+     * Keeps the existing active-item tracking independent from demand-driven chapter loading.
      */
     private fun onTransitionSelected(transition: EntryChildTransition<ReaderChapter>) {
         logcat { "onTransitionSelected: $transition" }
-        val toChapter = transition.to
-        if (toChapter != null) {
-            logcat { "Request preload destination chapter because we're on the transition" }
-            activity.requestPreloadChapter(toChapter)
+    }
+
+    private fun onTransitionAnchorChanged() {
+        val anchorView = recycler.findChildViewUnder(recycler.width / 2f, recycler.height / 2f)
+        val anchorPosition = anchorView?.let(recycler::getChildAdapterPosition) ?: RecyclerView.NO_POSITION
+        val centeredItem = adapter.items.getOrNull(anchorPosition)
+        val canScrollBackward = recycler.canScrollVertically(-1)
+        val canScrollForward = recycler.canScrollVertically(1)
+        val anchorItem = automaticTransitionLoadItemAtAnchor(
+            centeredItem = centeredItem,
+            firstVisibleItem = adapter.items.getOrNull(layoutManager.findFirstVisibleItemPosition()),
+            lastVisibleItem = adapter.items.getOrNull(layoutManager.findLastEndVisibleItemPosition()),
+            canScrollBackward = canScrollBackward,
+            canScrollForward = canScrollForward,
+        )
+        val transition = anchorItem?.transition
+        if (transition == anchoredTransition) return
+        anchoredTransition = transition
+        anchorItem.automaticTransitionLoadDestination()?.let { destination ->
+            logcat { "Request destination chapter because its transition reached the reading anchor" }
+            activity.requestTransitionChapterLoad(destination)
         }
     }
 
@@ -346,13 +313,13 @@ internal class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boo
     }
 
     fun onScrolled(pos: Int? = null) {
+        onTransitionAnchorChanged()
         val position = pos ?: layoutManager.findLastEndVisibleItemPosition()
         val item = adapter.items.getOrNull(position)
-        val allowPreload = checkAllowPreload((item as? ReaderViewerItem.Page)?.page)
         if (item != null && currentItem != item) {
             currentItem = item
             when (item) {
-                is ReaderViewerItem.Page -> onPageSelected(item.page, allowPreload)
+                is ReaderViewerItem.Page -> onPageSelected(item.page)
                 is ReaderViewerItem.Transition -> onTransitionSelected(item.transition)
             }
         }

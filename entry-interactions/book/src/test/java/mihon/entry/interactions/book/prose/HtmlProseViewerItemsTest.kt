@@ -42,6 +42,50 @@ class HtmlProseViewerItemsTest {
     }
 
     @Test
+    fun `unloaded paginated neighbors contribute only transition pages`() {
+        val previous = chapter(1L)
+        val current = chapter(2L)
+        val next = chapter(3L)
+
+        val items = buildPaginatedItems(
+            EntryChildWindow(current, previous, next),
+            mapOf(current.id to listOf(page(current))),
+        )
+
+        assertEquals(3, items.size)
+        assertIs<ProsePagerItem.Transition>(items[0])
+        assertEquals(current.id, assertIs<ProsePagerItem.Page>(items[1]).page.chapter.id)
+        assertIs<ProsePagerItem.Transition>(items[2])
+    }
+
+    @Test
+    fun `inserting previous pages preserves the settled transition key`() {
+        val previous = chapter(1L)
+        val current = chapter(2L)
+        val window = EntryChildWindow(current, previous, null)
+        val beforeLoading = buildPaginatedItems(
+            window,
+            mapOf(current.id to listOf(page(current))),
+        )
+        val afterLoading = buildPaginatedItems(
+            window,
+            mapOf(
+                previous.id to listOf(page(previous, index = 0, total = 2), page(previous, index = 1, total = 2)),
+                current.id to listOf(page(current)),
+            ),
+        )
+
+        assertEquals(
+            2,
+            prosePagerDatasetAnchor(
+                previousItemKeys = beforeLoading.map(ProsePagerItem::key),
+                items = afterLoading,
+                settledPage = 0,
+            ),
+        )
+    }
+
+    @Test
     fun `paginated mode starts from the live reader progression`() {
         val previous = chapter(1L)
         val current = chapter(2L)

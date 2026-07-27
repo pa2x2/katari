@@ -16,6 +16,7 @@ import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderViewerItem
 import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
+import eu.kanade.tachiyomi.ui.reader.model.automaticTransitionLoadDestination
 import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
 import eu.kanade.tachiyomi.ui.reader.viewer.ViewerNavigation.NavigationRegion
 import kotlinx.coroutines.MainScope
@@ -76,9 +77,6 @@ internal abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
                 awaitingIdleViewerChapters?.let { viewerChapters ->
                     setChaptersInternal(viewerChapters)
                     awaitingIdleViewerChapters = null
-                    if (viewerChapters.current.pages?.size == 1) {
-                        adapter.nextTransition?.to?.let(activity::requestPreloadChapter)
-                    }
                 }
             }
         }
@@ -182,7 +180,6 @@ internal abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
             val page = (item as? ReaderViewerItem.Page)?.page
             val currentPage = (currentItem as? ReaderViewerItem.Page)?.page
             val currentTransition = (currentItem as? ReaderViewerItem.Transition)?.transition
-            val allowPreload = checkAllowPreload(page)
             val forward = when {
                 currentPage != null && page != null -> {
                     // if both pages have the same number, it's a split page with an InsertPage
@@ -199,71 +196,34 @@ internal abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
             }
             currentItem = item
             when (item) {
-                is ReaderViewerItem.Page -> onReaderPageSelected(item.page, allowPreload, forward)
+                is ReaderViewerItem.Page -> onReaderPageSelected(item.page, forward)
                 is ReaderViewerItem.Transition -> onTransitionSelected(item.transition)
             }
         }
     }
 
-    private fun checkAllowPreload(page: ReaderPage?): Boolean {
-        // Page is transition page - preload allowed
-        page ?: return true
-
-        // Initial opening - preload allowed
-        currentItem ?: return true
-
-        // Allow preload for
-        // 1. Going to next chapter from chapter transition
-        // 2. Going between pages of same chapter
-        // 3. Next chapter page
-        val currentTransition = (currentItem as? ReaderViewerItem.Transition)?.transition
-        val nextChapter = currentTransition
-            ?.takeIf { it.direction == EntryChildDirection.NEXT }
-            ?.to
-        return when (page.chapter) {
-            nextChapter -> true
-            (currentItem as? ReaderViewerItem.Page)?.page?.chapter -> true
-            adapter.nextTransition?.to -> true
-            else -> false
-        }
-    }
-
     /**
-     * Called when a [ReaderPage] is marked as active. It notifies the
-     * activity of the change and requests the preload of the next chapter if this is the last page.
+     * Called when a [ReaderPage] is marked as active.
      */
-    private fun onReaderPageSelected(page: ReaderPage, allowPreload: Boolean, forward: Boolean) {
+    private fun onReaderPageSelected(page: ReaderPage, forward: Boolean) {
         val pages = page.chapter.pages ?: return
         logcat { "onReaderPageSelected: ${page.number}/${pages.size}" }
         activity.onPageSelected(page)
 
         // Notify holder of page change
         getPageHolder(page)?.onPageSelected(forward)
-
-        // Skip preload on inserts it causes unwanted page jumping
-        if (page is InsertPage) {
-            return
-        }
-
-        // Preload next chapter once we're within the last 5 pages of the current chapter
-        val inPreloadRange = pages.size - page.number < 5
-        if (inPreloadRange && allowPreload && page.chapter == adapter.currentChapter) {
-            logcat { "Request preload next chapter because we're at page ${page.number} of ${pages.size}" }
-            adapter.nextTransition?.to?.let(activity::requestPreloadChapter)
-        }
     }
 
     /**
-     * Called when a [EntryChildTransition] is marked as active. It request the
-     * preload of the destination chapter of the transition.
+     * Called when an [EntryChildTransition] is marked as active.
      */
     private fun onTransitionSelected(transition: EntryChildTransition<ReaderChapter>) {
         logcat { "onTransitionSelected: $transition" }
-        val toChapter = transition.to
+        val toChapter = ReaderViewerItem.Transition(transition).automaticTransitionLoadDestination()
         if (toChapter != null) {
-            logcat { "Request preload destination chapter because we're on the transition" }
-            activity.requestPreloadChapter(toChapter)
-        } else if (transition.direction == EntryChildDirection.NEXT) {
+            logcat { "Request destination chapter because its transition is active" }
+            activity.requestTransitionChapterLoad(toChapter)
+        } else if (transition.to == null && transition.direction == EntryChildDirection.NEXT) {
             // No more chapters, show menu because the user is probably going to close the reader
             activity.showMenu()
         }

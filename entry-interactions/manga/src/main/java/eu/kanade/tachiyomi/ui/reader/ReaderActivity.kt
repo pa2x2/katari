@@ -693,7 +693,7 @@ class ReaderActivity : EntryInteractionActivity() {
      * Called from the presenter whenever it's loading the next or previous chapter. It shows or
      * dismisses a non-cancellable dialog to prevent user interaction according to the value of
      * [show]. This is only used when the next/previous buttons on the toolbar are clicked; the
-     * other cases are handled with chapter transitions on the viewers and chapter preloading.
+     * other cases are handled by active chapter transitions in the viewers.
      */
     private fun setProgressDialog(show: Boolean) {
         if (show) {
@@ -753,11 +753,10 @@ class ReaderActivity : EntryInteractionActivity() {
     }
 
     /**
-     * Called from the viewer when the given [chapter] should be preloaded. It should be called when
-     * the viewer is reaching the beginning or end of a chapter or the transition page is active.
+     * Called when an active chapter transition requests its destination.
      */
-    internal fun requestPreloadChapter(chapter: ReaderChapter) {
-        lifecycleScope.launchIO { viewModel.preload(chapter) }
+    internal fun requestTransitionChapterLoad(chapter: ReaderChapter) {
+        lifecycleScope.launchIO { viewModel.loadChapterForTransition(chapter) }
     }
 
     /**

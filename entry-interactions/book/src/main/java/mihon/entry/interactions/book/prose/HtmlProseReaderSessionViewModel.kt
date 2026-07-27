@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import mihon.book.api.BookLocator
 import mihon.entry.interactions.book.OpenedBookReaderSession
 
-/** Retains the active prose chapter and its small preloaded neighbor window across configuration changes. */
+/** Retains the active prose chapter and already-requested neighbors across configuration changes. */
 internal class HtmlProseReaderSessionViewModel : ViewModel() {
     private val sessions = linkedMapOf<Long, OpenedBookReaderSession>()
     private val locations = mutableMapOf<Long, BookLocator>()

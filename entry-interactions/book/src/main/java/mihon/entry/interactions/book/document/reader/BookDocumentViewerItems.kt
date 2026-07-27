@@ -35,11 +35,6 @@ internal sealed interface BookDocumentViewerItem<T> {
         val transition: EntryChildTransition<T>,
         override val key: String,
     ) : BookDocumentViewerItem<T>
-
-    data class Loading<T>(
-        val owner: T,
-        override val key: String,
-    ) : BookDocumentViewerItem<T>
 }
 
 internal fun <T, K> buildBookDocumentViewerItems(
@@ -48,26 +43,24 @@ internal fun <T, K> buildBookDocumentViewerItems(
     keyOf: (T) -> K,
 ): List<BookDocumentViewerItem<T>> = buildList {
     window.previous?.let { previous ->
-        addDocumentOrLoading(previous, loaded[keyOf(previous)], keyOf(previous))
+        loaded[keyOf(previous)]?.let(::addDocument)
     }
     add(window.previousTransition().toViewerItem(keyOf))
-    addDocumentOrLoading(window.current, loaded[keyOf(window.current)], keyOf(window.current))
+    addDocument(
+        requireNotNull(loaded[keyOf(window.current)]) {
+            "The current document section must be loaded"
+        },
+    )
     add(window.nextTransition().toViewerItem(keyOf))
     window.next?.let { next ->
-        addDocumentOrLoading(next, loaded[keyOf(next)], keyOf(next))
+        loaded[keyOf(next)]?.let(::addDocument)
     }
 }
 
-private fun <T> MutableList<BookDocumentViewerItem<T>>.addDocumentOrLoading(
-    owner: T,
-    section: BookDocumentSection<T>?,
-    ownerKey: Any?,
+private fun <T> MutableList<BookDocumentViewerItem<T>>.addDocument(
+    section: BookDocumentSection<T>,
 ) {
-    if (section == null) {
-        add(BookDocumentViewerItem.Loading(owner, "document-loading:$ownerKey"))
-    } else {
-        section.document.blocks.mapTo(this) { block -> BookDocumentViewerItem.Block(section, block) }
-    }
+    section.document.blocks.mapTo(this) { block -> BookDocumentViewerItem.Block(section, block) }
 }
 
 private fun <T, K> EntryChildTransition<T>.toViewerItem(
@@ -90,6 +83,28 @@ internal data class BookDocumentVisibleItemLayout(
     val size: Int,
 )
 
+internal data class BookDocumentViewerDatasetAnchor(
+    val index: Int,
+    val scrollOffset: Int,
+)
+
+internal fun <T> bookDocumentViewerDatasetAnchor(
+    items: List<BookDocumentViewerItem<T>>,
+    visibleItems: List<BookDocumentVisibleItemLayout>,
+    viewportStartOffset: Int,
+): BookDocumentViewerDatasetAnchor? {
+    visibleItems.forEach { layout ->
+        val index = items.indexOfFirst { it.key == layout.key }
+        if (index >= 0) {
+            return BookDocumentViewerDatasetAnchor(
+                index = index,
+                scrollOffset = viewportStartOffset - layout.offset,
+            )
+        }
+    }
+    return null
+}
+
 internal data class BookDocumentViewerLocation<T>(
     val section: BookDocumentSection<T>,
     val position: BookDocumentPosition,
@@ -102,6 +117,24 @@ internal fun <T> bookDocumentViewerLocation(
     viewportStartOffset: Int,
     viewportEndOffset: Int,
 ): BookDocumentViewerLocation<T>? {
+    val topLayout = visibleItems.firstOrNull { it.offset == viewportStartOffset }
+    val topItem = topLayout?.let { layout ->
+        (
+            items.getOrNull(layout.index)?.takeIf { it.key == layout.key }
+                ?: items.firstOrNull { it.key == layout.key }
+            ) as? BookDocumentViewerItem.Block
+    }
+    if (
+        topItem != null &&
+        topItem.content.block.id == topItem.section.document.document.blocks.firstOrNull()?.id
+    ) {
+        val position = BookDocumentPosition(topItem.content.block.id, 0)
+        return BookDocumentViewerLocation(
+            section = topItem.section,
+            position = position,
+            progression = topItem.section.document.document.progressionAt(position),
+        )
+    }
     val viewportAnchor = (viewportStartOffset + viewportEndOffset) / 2
     val layout = visibleItems.firstOrNull {
         viewportAnchor >= it.offset && viewportAnchor < it.offset + it.size
@@ -129,6 +162,49 @@ internal fun <T> bookDocumentViewerLocation(
     )
 }
 
+internal fun <T> bookDocumentViewerTransitionAtAnchor(
+    items: List<BookDocumentViewerItem<T>>,
+    visibleItems: List<BookDocumentVisibleItemLayout>,
+    viewportStartOffset: Int,
+    viewportEndOffset: Int,
+    canScrollBackward: Boolean = true,
+    canScrollForward: Boolean = true,
+): EntryChildTransition<T>? {
+    val viewportAnchor = (viewportStartOffset + viewportEndOffset) / 2
+    val centeredLayout = visibleItems.firstOrNull {
+        viewportAnchor >= it.offset && viewportAnchor < it.offset + it.size
+    }
+    val centeredTransition = centeredLayout?.resolveViewerItem(items)
+        ?.let { it as? BookDocumentViewerItem.Transition }
+        ?.transition
+    if (centeredTransition != null && (canScrollBackward || canScrollForward)) {
+        return centeredTransition
+    }
+
+    val boundaryLayout = when {
+        !canScrollBackward && !canScrollForward -> visibleItems.firstOrNull { layout ->
+            val transition = (layout.resolveViewerItem(items) as? BookDocumentViewerItem.Transition)?.transition
+            transition?.to != null && items.none { item ->
+                item is BookDocumentViewerItem.Block && item.section.owner == transition.to
+            }
+        }
+        !canScrollBackward && canScrollForward -> visibleItems.firstOrNull()
+        !canScrollForward && canScrollBackward -> visibleItems.lastOrNull()
+        else -> null
+    }
+    return boundaryLayout
+        ?.resolveViewerItem(items)
+        ?.let { it as? BookDocumentViewerItem.Transition }
+        ?.transition
+        ?: centeredTransition
+}
+
+private fun <T> BookDocumentVisibleItemLayout.resolveViewerItem(
+    items: List<BookDocumentViewerItem<T>>,
+): BookDocumentViewerItem<T>? =
+    items.getOrNull(index)?.takeIf { it.key == key }
+        ?: items.firstOrNull { it.key == key }
+
 internal fun <T> List<BookDocumentViewerItem<T>>.indexOfPosition(
     sectionKey: String,
     position: BookDocumentPosition,
@@ -150,4 +226,22 @@ internal fun blockScrollOffset(
         (itemSize * offsetWithinBlock.coerceIn(0, blockLength).toFloat() / blockLength).roundToInt()
     val viewportAnchor = (viewportStartOffset + viewportEndOffset) / 2
     return offsetWithinItem - viewportAnchor
+}
+
+internal fun bookDocumentScrollOffset(
+    document: PreparedBookDocument,
+    position: BookDocumentPosition,
+    itemSize: Int,
+    viewportStartOffset: Int,
+    viewportEndOffset: Int,
+): Int {
+    if (document.document.logicalOffset(position) == 0) return 0
+    val block = document.block(position.blockId)?.block ?: return 0
+    return blockScrollOffset(
+        itemSize = itemSize,
+        blockLength = block.logicalLength,
+        offsetWithinBlock = position.offsetWithinBlock,
+        viewportStartOffset = viewportStartOffset,
+        viewportEndOffset = viewportEndOffset,
+    )
 }

@@ -137,6 +137,7 @@ internal class BookReaderSessionFactory(
                         publicationSession = opened.session,
                     )
                     val initialLocator = progress
+                        ?.takeIf { !chapter.read && it.hasPartialBookProgress }
                         ?.locator
                         ?.let { locator ->
                             BookProgressLocatorCodec.decode(

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
@@ -14,6 +15,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -21,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
@@ -44,6 +47,19 @@ data class ReaderEntryChildTransitionItem(
     val availableOffline: Boolean = false,
 )
 
+sealed interface ReaderEntryChildTransitionLoadState {
+    data object Idle : ReaderEntryChildTransitionLoadState
+
+    data class Loading(val message: String) : ReaderEntryChildTransitionLoadState
+
+    data class Failed(val message: String) : ReaderEntryChildTransitionLoadState
+}
+
+enum class ReaderEntryChildTransitionDestinationSlot {
+    TOP,
+    BOTTOM,
+}
+
 /** Presentation-only transition model shared by built-in entry viewers. */
 data class ReaderEntryChildTransitionUiModel(
     val topLabel: String,
@@ -52,12 +68,15 @@ data class ReaderEntryChildTransitionUiModel(
     val bottomChild: ReaderEntryChildTransitionItem?,
     val fallbackLabel: String,
     val missingChildCount: Int = 0,
+    val destinationLoadState: ReaderEntryChildTransitionLoadState,
+    val destinationSlot: ReaderEntryChildTransitionDestinationSlot,
 )
 
 /** Format-neutral boundary content for manga chapters, BOOK children, and episodes. */
 @Composable
 fun ReaderEntryChildTransition(
     model: ReaderEntryChildTransitionUiModel,
+    onRetry: (() -> Unit)?,
     modifier: Modifier = Modifier,
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
     accentColor: Color = MaterialTheme.colorScheme.primary,
@@ -86,6 +105,16 @@ fun ReaderEntryChildTransition(
                     accentColor = accentColor,
                     outlineColor = outlineColor,
                 )
+                if (model.destinationSlot == ReaderEntryChildTransitionDestinationSlot.TOP) {
+                    DestinationLoadStatus(
+                        state = model.destinationLoadState,
+                        onRetry = onRetry,
+                        contentColor = contentColor,
+                        accentColor = accentColor,
+                        warningColor = warningColor,
+                        outlineColor = outlineColor,
+                    )
+                }
 
                 model.bottomChild?.let { child ->
                     if (model.missingChildCount > 0) {
@@ -112,6 +141,76 @@ fun ReaderEntryChildTransition(
                     accentColor = accentColor,
                     outlineColor = outlineColor,
                 )
+
+                if (model.destinationSlot == ReaderEntryChildTransitionDestinationSlot.BOTTOM) {
+                    DestinationLoadStatus(
+                        state = model.destinationLoadState,
+                        onRetry = onRetry,
+                        contentColor = contentColor,
+                        accentColor = accentColor,
+                        warningColor = warningColor,
+                        outlineColor = outlineColor,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DestinationLoadStatus(
+    state: ReaderEntryChildTransitionLoadState,
+    onRetry: (() -> Unit)?,
+    contentColor: Color,
+    accentColor: Color,
+    warningColor: Color,
+    outlineColor: Color,
+) {
+    when (state) {
+        ReaderEntryChildTransitionLoadState.Idle -> Unit
+        is ReaderEntryChildTransitionLoadState.Loading -> {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = accentColor,
+                    strokeWidth = 2.dp,
+                )
+                Text(state.message, color = contentColor)
+            }
+        }
+        is ReaderEntryChildTransitionLoadState.Failed -> {
+            OutlinedCard(
+                colors = CardDefaults.outlinedCardColors(
+                    containerColor = Color.Transparent,
+                    contentColor = contentColor,
+                ),
+                border = BorderStroke(1.dp, outlineColor),
+            ) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Warning,
+                            tint = warningColor,
+                            contentDescription = null,
+                        )
+                        Text(state.message, style = MaterialTheme.typography.bodyMedium)
+                    }
+                    onRetry?.let { retry ->
+                        TextButton(onClick = retry) {
+                            Text(stringResource(MR.strings.action_retry))
+                        }
+                    }
+                }
             }
         }
     }

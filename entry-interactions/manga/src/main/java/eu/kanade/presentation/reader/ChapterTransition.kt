@@ -8,7 +8,9 @@ import mihon.entry.interactions.viewer.EntryChildTransition
 import tachiyomi.domain.entry.service.calculateChapterGap
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransition
+import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransitionDestinationSlot
 import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransitionItem
+import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransitionLoadState
 import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransitionUiModel
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -17,6 +19,8 @@ internal fun ChapterTransition(
     transition: EntryChildTransition<ReaderChapter>,
     currChapterDownloaded: Boolean,
     goingToChapterDownloaded: Boolean,
+    loadState: ReaderEntryChildTransitionLoadState,
+    onRetry: (() -> Unit)?,
 ) {
     val current = transition.from.chapter.toDomainChapter()
     val destination = transition.to?.chapter?.toDomainChapter()
@@ -45,6 +49,8 @@ internal fun ChapterTransition(
                 current?.chapterNumber ?: -1.0,
                 destination?.chapterNumber ?: -1.0,
             ),
+            destinationLoadState = loadState,
+            destinationSlot = ReaderEntryChildTransitionDestinationSlot.TOP,
         )
         EntryChildDirection.NEXT -> ReaderEntryChildTransitionUiModel(
             topLabel = stringResource(MR.strings.transition_finished),
@@ -56,7 +62,9 @@ internal fun ChapterTransition(
                 destination?.chapterNumber ?: -1.0,
                 current?.chapterNumber ?: -1.0,
             ),
+            destinationLoadState = loadState,
+            destinationSlot = ReaderEntryChildTransitionDestinationSlot.BOTTOM,
         )
     }
-    ReaderEntryChildTransition(model)
+    ReaderEntryChildTransition(model, onRetry)
 }

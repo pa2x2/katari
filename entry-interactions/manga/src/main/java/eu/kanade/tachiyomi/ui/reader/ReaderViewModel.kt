@@ -409,11 +409,8 @@ internal class ReaderViewModel @JvmOverloads constructor(
         }
     }
 
-    /**
-     * Called when the viewers decide it's a good time to preload a [chapter] and improve the UX so
-     * that the user doesn't have to wait too long to continue reading.
-     */
-    suspend fun preload(chapter: ReaderChapter) {
+    /** Loads a destination after its chapter transition becomes active or its failure is retried. */
+    suspend fun loadChapterForTransition(chapter: ReaderChapter) {
         if (chapter.state is ReaderChapter.State.Loaded || chapter.state == ReaderChapter.State.Loading) {
             return
         }
@@ -440,7 +437,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
 
         val loader = loader ?: return
         try {
-            logcat { "Preloading ${chapter.chapter.url}" }
+            logcat { "Loading transition destination ${chapter.chapter.url}" }
             loader.loadChapter(chapter)
         } catch (e: Throwable) {
             if (e is CancellationException) {

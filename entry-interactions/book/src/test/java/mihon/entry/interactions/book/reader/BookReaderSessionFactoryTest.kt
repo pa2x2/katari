@@ -37,6 +37,7 @@ import tachiyomi.domain.source.service.SourceManager
 import java.nio.file.Files
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class BookReaderSessionFactoryTest {
@@ -147,6 +148,30 @@ class BookReaderSessionFactoryTest {
         session.close()
         assertEquals(1, publicationSession.closeCount)
         assertTrue(checkNotNull(processor.contentSession).getResource("publication.epub").isFailure)
+    }
+
+    @Test
+    fun `completed book progress reopens from the beginning`() = runTest {
+        val locator = BookLocator("chapter-1.xhtml", progression = 0.8)
+        val session = openWithProgress(
+            chapter = chapter(),
+            progress = bookProgress(locator, completed = true),
+        )
+
+        assertNull(session.initialLocator)
+        session.close()
+    }
+
+    @Test
+    fun `read child ignores an inconsistent incomplete locator`() = runTest {
+        val locator = BookLocator("chapter-1.xhtml", progression = 0.4)
+        val session = openWithProgress(
+            chapter = chapter().copy(read = true),
+            progress = bookProgress(locator, completed = false),
+        )
+
+        assertNull(session.initialLocator)
+        session.close()
     }
 
     @Test
@@ -348,6 +373,83 @@ class BookReaderSessionFactoryTest {
         url = "/publication.epub",
         name = "EPUB",
     )
+
+    private fun bookProgress(
+        locator: BookLocator,
+        completed: Boolean,
+    ) = EntryProgressState(
+        entryId = entry().id,
+        chapterId = chapter().id,
+        contentKey = "volume-1",
+        resourceKey = "publication.epub",
+        locator = BookProgressLocatorCodec.encode(locator),
+        completed = completed,
+    )
+
+    private suspend fun openWithProgress(
+        chapter: EntryChapter,
+        progress: EntryProgressState,
+    ): OpenedBookReaderSession {
+        val entry = entry()
+        val source = mockk<UnifiedSource> {
+            every { id } returns entry.source
+            coEvery { getMedia(any(), any()) } returns EntryMedia.Book(
+                descriptor = BookContentDescriptor("application/epub+zip"),
+                publicationKeyOverride = "volume-1",
+                catalog = BookResourceCatalog(
+                    resources = listOf(
+                        BookSourceResource(
+                            id = "publication.epub",
+                            location = BookResourceLocation.InlineBytes(byteArrayOf(1)),
+                        ),
+                    ),
+                ),
+                initialResourceId = "publication.epub",
+            )
+        }
+        val processor = SessionFactoryTestProcessor(
+            TestPublicationSession(
+                readingOrder = listOf(
+                    BookResource(
+                        id = "chapter-1.xhtml",
+                        mediaType = "application/xhtml+xml",
+                        title = null,
+                    ),
+                ),
+            ),
+        )
+        val context = mockk<Context> {
+            every { applicationContext } returns this@mockk
+            every { contentResolver } returns mockk<ContentResolver>()
+            every { cacheDir } returns Files.createTempDirectory("book-reader-completed").toFile()
+        }
+        val factory = BookReaderSessionFactory(
+            entryRepository = mockk {
+                coEvery { getEntryById(entry.id) } returns entry
+            },
+            entryChapterRepository = mockk {
+                coEvery { getChapterById(chapter.id) } returns chapter
+            },
+            entryProgressRepository = mockk {
+                coEvery { get(entry.id, "volume-1", "publication.epub") } returns progress
+                coEvery { getByEntryId(entry.id) } returns emptyList()
+            },
+            sourceManager = mockk {
+                every { get(entry.source) } returns source
+            },
+            processorRegistry = BookProcessorRegistry(listOf(processor)),
+            networkHelper = mockk {
+                every { client } returns mockk<OkHttpClient>()
+            },
+            materializationStore = mockk(relaxed = true),
+            downloadCache = emptyDownloadCache(),
+            mediaSession = mockk(relaxed = true),
+        )
+
+        return assertIs<BookReaderOpenResult.Success>(
+            factory.open(context, BookReaderRequest(entry.id, chapter.id), processor.id),
+        ).session
+    }
 
     private fun emptyDownloadCache(): BookDownloadCache {
         val cache = mockk<BookDownloadCache>()
