@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.5.1] - 2026-07-27
+
+### Added
+
+- Added richer serialized-prose rendering for thematic breaks, nested and ordered lists,
+  preformatted passages, figures, tables, links, disclosures, and meaning-bearing styles.
+- Added offline support for prose images and custom fonts.
+
+### Changed
+
+- Changed manga and prose readers to load adjacent chapters only when their transition is
+  reached, keeping loading failures and retry inline.
+
+### Improved
+
+- Improved remote `BOOK` resource safety by rejecting HTTPS downgrade redirects and
+  preventing credentials or extension headers from leaking across origins.
+
+### Fixed
+
+- Reopened completed or already-read `BOOK` chapters from the beginning instead of restoring
+  stale partial positions.
+- Kept prose and EPUB content clear of the reading-progress footer and system navigation area.
+
 ## [1.5.0] - 2026-07-26
 
 ### Added
@@ -253,7 +277,8 @@ Based on [Mihon v0.20.1](https://github.com/mihonapp/mihon/releases/tag/v0.20.1)
 - Rebranded the application as Katari with its own package identity, visual
   identity, release pipeline, and documentation.
 
-[Unreleased]: https://github.com/katariapp/katari/compare/v1.5.0...upcoming
+[Unreleased]: https://github.com/katariapp/katari/compare/v1.5.1...upcoming
+[1.5.1]: https://github.com/katariapp/katari/releases/tag/v1.5.1
 [1.5.0]: https://github.com/katariapp/katari/releases/tag/v1.5.0
 [1.4.3]: https://github.com/katariapp/katari/releases/tag/v1.4.3
 [1.4.2]: https://github.com/katariapp/katari/releases/tag/v1.4.2
