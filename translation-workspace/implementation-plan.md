@@ -1,0 +1,287 @@
+# Application-scoped Feature Graph and Translation Feature implementation plan
+
+Status: approved for implementation planning; production implementation not started.
+
+The manifestos in this directory are authoritative:
+
+- [Feature Graph refactor manifesto](feature-graph-manifesto.md)
+- [Translation Feature manifesto](translation-feature-manifesto.md)
+
+## Outcome
+
+Deliver one generalized production Feature Graph with application and Entry-content-type subjects, then install an
+app-wide Translation Feature that resolves Android system and build-specific ML Kit engines behind one typed API.
+
+The first usable consumer is a top-level Translation settings/test flow. Reader selection adapters follow separately.
+
+## Phase 0: Baseline and workspace discipline
+
+- [ ] Record the starting branch, commit, and worktree status under `validation/`.
+- [ ] Run the existing focused Feature Graph and architecture gates before refactoring.
+- [ ] Save only concise command/evidence summaries; do not paste full Gradle output.
+- [ ] Confirm no unrelated user changes overlap the planned graph/runtime files.
+- [ ] Keep any additional planning, research, progress, and validation artifacts beneath `translation-workspace`.
+
+Exit condition: baseline behavior and pre-existing failures are known.
+
+## Phase 1: Generalize graph subject identity
+
+### Model changes
+
+- [ ] Add sealed `FeatureSubjectScope` with only `Application` and `EntryContentType`.
+- [ ] Add sealed `FeatureSubjectId`.
+- [ ] Introduce a shared subject contribution contract.
+- [ ] Retain `ContentTypeContribution` as the Entry-specific implementation.
+- [ ] Add `ApplicationSubjectContribution`.
+- [ ] Change `FeatureGraph` to expose subjects as its kernel collection; provide Entry-filtered access only at the Entry
+  boundary.
+- [ ] Add subject scope to `FeatureIntegration`.
+- [ ] Add subject scope to execution point definitions.
+- [ ] Replace content-type identity in integration and execution evaluation subjects with a common subject reference.
+
+### Evaluation changes
+
+- [ ] Evaluate integrations only against subjects of their declared scope.
+- [ ] Evaluate execution participants only for the execution point's subject scope.
+- [ ] Generalize context resolution, artifact selection, fixtures, obligations, projections, and coverage validation.
+- [ ] Generalize transient, transactional, post-commit, and durable execution entry points.
+- [ ] Preserve Entry convenience overloads outside the graph kernel to limit call-site churn.
+
+### Tests
+
+- [ ] Application integration evaluates once with zero, one, and multiple Entry subjects present.
+- [ ] Entry integrations retain the existing cross-product.
+- [ ] Mixed-scope Feature contribution selects the correct subjects.
+- [ ] Context and artifact selection reject mismatched subjects.
+- [ ] Obligation ownership is correct in both scopes.
+- [ ] Every execution phase accepts an application subject without changing Entry behavior.
+- [ ] Existing graph tests are migrated without duplicating assertions at the same boundary.
+
+Exit condition: `feature-graph` is subject-generic and its focused tests pass.
+
+## Phase 2: Extract shared runtime composition
+
+- [ ] Add a shared `FeatureRuntimeComposition` owning graph, evaluation, artifacts, and execution runtime.
+- [ ] Split Entry installation from graph assembly so Entry contributes graph/runtime inputs.
+- [ ] Add application Feature installation inputs and application capability bindings.
+- [ ] Aggregate the application subject from installed application Feature modules.
+- [ ] Assemble one runtime composition from Entry and application inputs in app DI.
+- [ ] Point existing Entry Feature factories at the shared composition.
+- [ ] Preserve Entry runtime boundaries, warmups, host dependencies, and provider indexes.
+- [ ] Add owner-local `*.application-feature-module` descriptors.
+- [ ] Generate direct application module references for each Android variant.
+- [ ] Reject malformed IDs, duplicate modules, duplicate capabilities, missing symbols, and wrong module types.
+
+Exit condition: existing production Entry Features use the shared composition and no second graph exists.
+
+## Phase 3: Reporting, validation, and architecture documentation
+
+- [ ] Add an Application Features section to the production developer report.
+- [ ] Keep Entry content-type reference generation filtered to Entry subjects.
+- [ ] Add `verifyFeatureArchitecture`.
+- [ ] Keep `verifyEntryFeatureArchitecture` working as a compatibility alias/dependency.
+- [ ] Update build-logic boundary checks for the new application module boundary.
+- [ ] Rewrite `docs/developers/feature-architecture.md` around the two subject scopes.
+- [ ] Validate that production Entry applicability and obligations are unchanged.
+
+Exit condition: architecture gates, report generation, and checked-in developer documentation agree with production.
+
+## Phase 4: Create Translation modules and contracts
+
+Add:
+
+- [ ] `:translation:api`
+- [ ] `:translation:spi`
+- [ ] `:translation:runtime`
+- [ ] `:translation:mlkit`
+- [ ] `:translation:ui`
+
+### `translation:api`
+
+Define:
+
+- [ ] `TranslationFeature`
+- [ ] `TranslationRequest`
+- [ ] `TranslationLanguageTag`
+- [ ] automatic/explicit source and engine selections
+- [ ] `TranslationPreparation`
+- [ ] opaque `ReadyTranslation`
+- [ ] `TranslationResult`
+- [ ] engine/model status types
+- [ ] setup, choice, unavailable, rejection, and failure reasons
+- [ ] provider presentation and invocation policy
+
+The API must contain no `EntryType`, reader, OCR, ML Kit, or OEM implementation types.
+
+### `translation:spi`
+
+Define internal contracts for:
+
+- [ ] translation engines;
+- [ ] source-language detectors;
+- [ ] engine readiness/capability inspection;
+- [ ] model inventory/download/deletion;
+- [ ] provider presentation and attribution assets;
+- [ ] known-engine catalog entries.
+
+### Feature contribution
+
+- [ ] Define `TranslationEngineRegistry` capability.
+- [ ] Contribute it to the application subject.
+- [ ] Add an application-scoped Translation integration requiring the registry.
+- [ ] Install `TranslationFeature` as the application-facing runtime boundary.
+- [ ] Assert that the production integration is applicable at runtime construction.
+
+Exit condition: fake engines can drive the complete Translation API without Android or Google implementations.
+
+## Phase 5: Preferences, detection, and resolution
+
+### Preferences
+
+- [ ] Register a profile preference owner for engine and explicit target.
+- [ ] Resolve an unset target dynamically from Katari's effective UI locale.
+- [ ] Store Wi-Fi policy and Google disclosure acknowledgement in the base/device store.
+- [ ] Do not create source/result/history preferences.
+- [ ] Reserve the future profile auto-selection preference contract but do not expose a nonfunctional row.
+
+### Detection
+
+- [ ] Implement Android `TextClassifier` detection for API 29+ on a worker dispatcher.
+- [ ] Implement bundled ML Kit detection for standard API 26–28.
+- [ ] Normalize detector output to BCP-47.
+- [ ] Return `SourceUndetermined` when no usable result exists.
+
+### Resolution
+
+- [ ] Implement explicit engine resolution without fallback.
+- [ ] Implement Automatic ready-first ranking.
+- [ ] Prefer Android system when both supported engines are ready.
+- [ ] Prefer ML Kit setup when neither standard-build engine is ready.
+- [ ] Return `SelectedEngineUnavailable` without mutating the saved preference.
+- [ ] Return a target chooser when source equals target.
+- [ ] Enforce provider limits and the 10,000-code-point shared ceiling.
+- [ ] Revalidate prepared handles immediately before translation.
+- [ ] Never silently retry after provider failure.
+
+Exit condition: resolver tests cover the complete build/device/model/language matrix with fakes.
+
+## Phase 6: Android system engine
+
+- [ ] Implement API-31-gated `TranslationManager` access.
+- [ ] Query capabilities on a worker dispatcher.
+- [ ] Map `ON_DEVICE`, `AVAILABLE_TO_DOWNLOAD`, `DOWNLOADING`, and unavailable states precisely.
+- [ ] Observe capability updates and release listeners.
+- [ ] Use OEM settings `PendingIntent` only when supplied.
+- [ ] Create, invoke, cancel, and destroy translators safely.
+- [ ] Return typed service-missing, settings-missing, pair-unsupported, and runtime-failure states.
+
+Exit condition: the engine passes contract tests using Android wrapper fakes and contains no OEM assumptions.
+
+## Phase 7: ML Kit engine and strict variant separation
+
+- [ ] Add version-catalog entries for `translate:17.0.3` and bundled `language-id:17.0.6`.
+- [ ] Put ML Kit dependencies only on standard/debug/preview/benchmark configurations.
+- [ ] Use variant source composition so FOSS never references ML Kit symbols.
+- [ ] Implement language-pair support, readiness, translation, cancellation, and deterministic close.
+- [ ] Implement downloaded-model inventory, pre-download, delete, and progress.
+- [ ] Estimate storage from missing language models at approximately 30 MB each.
+- [ ] Enforce Wi-Fi by default and support one explicit metered override.
+- [ ] Add the one-time provider/download disclosure.
+- [ ] Return explicit `Translate with Google` invocation policy.
+- [ ] Return official adjacent result attribution and disclaimer metadata.
+- [ ] Keep the known ML Kit catalog entry available in FOSS without implementation loading.
+
+Exit condition: standard provider contracts pass and FOSS runtime classpath contains no ML Kit artifact.
+
+## Phase 8: Shared session UI
+
+### Controller
+
+- [ ] Implement latest-session-wins cancellation.
+- [ ] Support optional screen-space anchors.
+- [ ] Debounce changing selections by 250 ms.
+- [ ] Separate preparation, provider action, setup, translation, success, and failure states.
+- [ ] Keep source/result text in memory only.
+
+### Popup and sheet
+
+- [ ] Render a non-modal anchored popup for fitting ready/result states.
+- [ ] Measure overflow and promote to the adaptive sheet.
+- [ ] Use the sheet for setup, language/engine choice, errors, and missing anchors.
+- [ ] Add copy, expand, change-language, use-as-default, retry, and close actions.
+- [ ] Auto-execute ready Android system translations.
+- [ ] Require the ML Kit labeled action before execution.
+- [ ] Render provider attribution from metadata without engine ID checks.
+- [ ] Clear all session text on dismissal.
+
+Exit condition: presenter/controller tests protect user-visible transitions and provider invocation policy.
+
+## Phase 9: Translation settings and test consumer
+
+- [ ] Add Translation as a top-level Settings destination.
+- [ ] Add engine selection and precise engine availability reasons.
+- [ ] Add target-language selection.
+- [ ] Add device-wide Wi-Fi-only policy.
+- [ ] Add model inventory, pre-download, delete, estimated size, and progress.
+- [ ] Add provider/privacy/disclaimer links.
+- [ ] Show ML Kit disabled in FOSS as not included in the build.
+- [ ] Add transient `Test translation` input.
+- [ ] Drive the test flow through the production `TranslationFeature` and shared session UI.
+- [ ] Do not retain test input or output after dismissal/navigation.
+
+Exit condition: the first slice is operable end to end without any reader integration.
+
+## Phase 10: User documentation and releases
+
+- [ ] Add `docs/features/translation.md`.
+- [ ] Add it to documentation navigation.
+- [ ] Update `docs/differences/builds-telemetry-and-privacy.md`.
+- [ ] Document standard ML Kit inclusion, FOSS system-only behavior, OEM/API limits, model storage, SDK diagnostics,
+  profile/device ownership, attribution, and no history.
+- [ ] Update `.github/workflows/release.yml` so every generated release body warns about engine differences.
+- [ ] Link releases to
+  `https://katariapp.github.io/katari/differences/builds-telemetry-and-privacy#translation`.
+
+Exit condition: documentation and release messaging match the produced artifacts.
+
+## Phase 11: Final validation
+
+Run sequentially:
+
+- [ ] `./gradlew spotlessApply`
+- [ ] `./gradlew spotlessCheck`
+- [ ] `./gradlew verifyFeatureArchitecture`
+- [ ] focused Feature Graph tests
+- [ ] focused Translation module tests
+- [ ] `./gradlew :app:testFossUnitTest`
+- [ ] `./gradlew :app:compileFossKotlin`
+- [ ] inspect `fossRuntimeClasspath` for ML Kit absence
+- [ ] inspect the FOSS APK for ML Kit classes/resources
+- [ ] `./gradlew assembleFoss`
+- [ ] separately: `./gradlew :app:compileReleaseKotlin -Pinclude-telemetry`
+- [ ] separately: `./gradlew assembleRelease -Pinclude-telemetry -Penable-updater`
+- [ ] `pnpm docs:build`
+- [ ] `git diff --check`
+- [ ] inspect every touched source directory for cohesive ownership
+- [ ] inspect final staged and unstaged diffs independently
+
+Do not combine FOSS/unit/architecture tasks with telemetry or updater properties.
+
+## Final acceptance matrix
+
+- [ ] Application Translation integration appears exactly once in the production Feature report.
+- [ ] Existing Entry Feature applicability and lifecycle tests remain unchanged in meaning.
+- [ ] Settings test translates immediately through a ready Android system engine.
+- [ ] ML Kit cannot execute without `Translate with Google`.
+- [ ] ML Kit results carry adjacent official attribution.
+- [ ] Missing models show languages, estimate, Wi-Fi policy, and explicit download.
+- [ ] One-download mobile-data override does not change global policy.
+- [ ] Explicit provider failure does not fall back.
+- [ ] Source equals target opens a one-request target chooser.
+- [ ] Profile changes isolate engine/target preferences.
+- [ ] Models and disclosure remain device-wide.
+- [ ] No source/result text is persisted or logged.
+- [ ] FOSS contains no ML Kit implementation or dependency.
+- [ ] FOSS still explains ML Kit as unavailable in this build.
+- [ ] Documentation and release template disclose the build difference.
+- [ ] No reader, OCR, external-app, cloud-engine, or history scope slipped into the first slice.
