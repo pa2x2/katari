@@ -130,6 +130,7 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
                         state = uiState,
                         navigation = navigation,
                         settings = readerSettings,
+                        nativeContentView = readerContainer,
                         onClose = ::finish,
                         onTocVisibilityChange = { visible ->
                             uiState = uiState.copy(tocVisible = visible)
