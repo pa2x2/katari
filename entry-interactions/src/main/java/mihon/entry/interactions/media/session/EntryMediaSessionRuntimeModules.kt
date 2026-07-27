@@ -2,6 +2,7 @@ package mihon.entry.interactions
 
 import mihon.feature.graph.FeatureExecutionHandler
 import mihon.feature.graph.FeatureExecutionParticipantBinding
+import mihon.feature.runtime.FeatureRuntimeComposition
 import tachiyomi.domain.entry.repository.EntryRepository
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.addSingletonFactory
@@ -15,10 +16,10 @@ internal val EntryMediaSessionFeatureRuntimeModule = EntryFeatureRuntimeModule(
         EntryMediaSessionEventSink { event -> Injekt.get<EntryMediaSessionFeature>().onEvent(event) }
     }
     addSingletonFactory<EntryMediaSessionFeature> {
-        val composition = get<EntryInteractionComposition>()
+        val composition = get<FeatureRuntimeComposition>()
         DefaultEntryMediaSessionFeature(
-            evaluation = composition.featureGraphEvaluation,
-            executions = composition.featureExecutions,
+            evaluation = composition.evaluation,
+            executions = composition.executions,
         )
     }
     EntryFeatureRuntimeArtifacts(

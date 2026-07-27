@@ -2,6 +2,7 @@ import mihon.gradle.Config
 import mihon.gradle.getBuildTime
 import mihon.gradle.getLatestCommitCount
 import mihon.gradle.getLatestCommitSha
+import mihon.gradle.tasks.GenerateApplicationFeatureTopologyTask
 import mihon.gradle.tasks.ReplaceShortcutsPlaceholderTask
 import org.gradle.api.tasks.testing.Test
 import java.io.File
@@ -221,6 +222,7 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.coreMetadata.path)))
     implementation(dependencies.project(mapOf("path" to projects.entryInteractions.path)))
     implementation(dependencies.project(mapOf("path" to projects.entrySourceApi.path)))
+    implementation(dependencies.project(mapOf("path" to projects.featureRuntime.path)))
     implementation(dependencies.project(mapOf("path" to projects.sourceApi.path)))
     implementation(dependencies.project(mapOf("path" to projects.sourceCompat.path)))
     implementation(dependencies.project(mapOf("path" to projects.sourceLocal.path)))
@@ -430,6 +432,28 @@ tasks.register<Test>("verifySourceSdkConsumerCoverage") {
 
 androidComponents {
     onVariants { variant ->
+        val javaSources = variant.sources.java
+        if (javaSources != null) {
+            val variantName = variant.name.replaceFirstChar { it.uppercase() }
+            val generateApplicationFeatureTopology = tasks.register<GenerateApplicationFeatureTopologyTask>(
+                "generate${variantName}ApplicationFeatureTopology",
+            ) {
+                this.variantName.set(variant.name)
+                moduleDescriptors.from(
+                    rootProject.fileTree(rootProject.layout.projectDirectory) {
+                        include("**/src/main/**/*.application-feature-module")
+                        include("**/src/${variant.name}/**/*.application-feature-module")
+                        exclude("**/build/**")
+                        exclude("translation-workspace/**")
+                    },
+                )
+                outputDirectory.set(
+                    layout.buildDirectory.dir("generated/source/application-feature-topology/${variant.name}"),
+                )
+            }
+            javaSources.addGeneratedSourceDirectory(generateApplicationFeatureTopology) { it.outputDirectory }
+        }
+
         if (Config.includeTelemetry) {
             variant.sources.manifests.addStaticManifestFile(
                 projectDir.resolve("src/telemetry/AndroidManifest.xml").absolutePath,

@@ -4,6 +4,7 @@ import mihon.feature.graph.FeatureExecutionContextResolver
 import mihon.feature.graph.FeatureExecutionHandler
 import mihon.feature.graph.FeatureExecutionParticipantBinding
 import mihon.feature.graph.contextEvidence
+import mihon.feature.runtime.FeatureRuntimeComposition
 import uy.kohesive.injekt.api.addSingletonFactory
 import uy.kohesive.injekt.api.get
 
@@ -21,7 +22,7 @@ internal val EntryTrackingFeatureRuntimeModule = EntryFeatureRuntimeModule(
 ) { context ->
     addSingletonFactory<EntryTrackingFeature> {
         DefaultEntryTrackingFeature(
-            evaluation = get<EntryInteractionComposition>().featureGraphEvaluation,
+            evaluation = get<FeatureRuntimeComposition>().evaluation,
             host = context.dependencies.trackingHost,
         )
     }

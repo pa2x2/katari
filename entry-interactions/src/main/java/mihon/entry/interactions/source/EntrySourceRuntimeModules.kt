@@ -1,5 +1,6 @@
 package mihon.entry.interactions
 
+import mihon.feature.runtime.FeatureRuntimeComposition
 import uy.kohesive.injekt.api.addSingletonFactory
 import uy.kohesive.injekt.api.get
 
@@ -9,7 +10,7 @@ internal val EntrySourceSettingsFeatureRuntimeModule = EntryFeatureRuntimeModule
 ) {
     addSingletonFactory<EntrySourceSettingsFeature> {
         DefaultEntrySourceSettingsFeature(
-            evaluation = get<EntryInteractionComposition>().featureGraphEvaluation,
+            evaluation = get<FeatureRuntimeComposition>().evaluation,
             sourceManager = get(),
         )
     }
@@ -24,7 +25,7 @@ internal val EntrySourceHomeFeatureRuntimeModule = EntryFeatureRuntimeModule(
 ) {
     addSingletonFactory<EntrySourceHomeFeature> {
         DefaultEntrySourceHomeFeature(
-            evaluation = get<EntryInteractionComposition>().featureGraphEvaluation,
+            evaluation = get<FeatureRuntimeComposition>().evaluation,
             sourceManager = get(),
         )
     }
@@ -40,7 +41,7 @@ internal val EntryCoverNetworkFeatureRuntimeModule = EntryFeatureRuntimeModule(
 ) { context ->
     addSingletonFactory<EntryCoverNetworkFeature> {
         DefaultEntryCoverNetworkFeature(
-            evaluation = get<EntryInteractionComposition>().featureGraphEvaluation,
+            evaluation = get<FeatureRuntimeComposition>().evaluation,
             sourceManager = get(),
         )
     }
@@ -63,8 +64,8 @@ internal val EntrySourceRefreshFeatureRuntimeModule = EntryFeatureRuntimeModule(
 ) { context ->
     addSingletonFactory<EntrySourceRefreshFeature> {
         DefaultEntrySourceRefreshFeature(
-            evaluation = get<EntryInteractionComposition>().featureGraphEvaluation,
-            executions = get<EntryInteractionComposition>().featureExecutions,
+            evaluation = get<FeatureRuntimeComposition>().evaluation,
+            executions = get<FeatureRuntimeComposition>().executions,
             sourceManager = get(),
             syncEntryWithSource = get(),
             updateLibraryTitles = context.dependencies.sourceRefreshUpdateLibraryTitles,
@@ -81,7 +82,7 @@ internal val EntryWebViewFeatureRuntimeModule = EntryFeatureRuntimeModule(
 ) {
     addSingletonFactory<EntryWebViewFeature> {
         DefaultEntryWebViewFeature(
-            evaluation = get<EntryInteractionComposition>().featureGraphEvaluation,
+            evaluation = get<FeatureRuntimeComposition>().evaluation,
             sourceManager = get(),
         )
     }
@@ -96,7 +97,7 @@ internal val EntryDeepLinkFeatureRuntimeModule = EntryFeatureRuntimeModule(
 ) {
     addSingletonFactory<EntryDeepLinkFeature> {
         DefaultEntryDeepLinkFeature(
-            evaluation = get<EntryInteractionComposition>().featureGraphEvaluation,
+            evaluation = get<FeatureRuntimeComposition>().evaluation,
             sourceManager = get(),
             networkToLocalEntry = get(),
             entryChapterRepository = get(),
@@ -114,7 +115,7 @@ internal val EntryTrackerSourceAdapterFeatureRuntimeModule = EntryFeatureRuntime
 ) {
     addSingletonFactory<EntryTrackerSourceAdapterFeature> {
         DefaultEntryTrackerSourceAdapterFeature(
-            evaluation = get<EntryInteractionComposition>().featureGraphEvaluation,
+            evaluation = get<FeatureRuntimeComposition>().evaluation,
             sourceManager = get(),
             settings = get(),
             home = get(),

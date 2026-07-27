@@ -1,5 +1,6 @@
 package mihon.entry.interactions
 
+import mihon.feature.runtime.FeatureRuntimeComposition
 import uy.kohesive.injekt.api.addSingletonFactory
 import uy.kohesive.injekt.api.get
 
@@ -8,10 +9,10 @@ internal val EntryOpenFeatureRuntimeModule = EntryFeatureRuntimeModule(
     contributor = EntryOpenFeatureContributor,
 ) {
     addSingletonFactory<EntryOpenFeature> {
-        val composition = get<EntryInteractionComposition>()
+        val composition = get<FeatureRuntimeComposition>()
         DefaultEntryOpenFeature(
-            evaluation = composition.featureGraphEvaluation,
-            interaction = composition.interactions.open,
+            evaluation = composition.evaluation,
+            interaction = get<EntryInteractions>().open,
         )
     }
     EntryFeatureRuntimeArtifacts(
@@ -24,10 +25,10 @@ internal val EntryContinueFeatureRuntimeModule = EntryFeatureRuntimeModule(
     contributor = EntryContinueFeatureContributor,
 ) {
     addSingletonFactory<EntryContinueFeature> {
-        val composition = get<EntryInteractionComposition>()
+        val composition = get<FeatureRuntimeComposition>()
         DefaultEntryContinueFeature(
-            evaluation = composition.featureGraphEvaluation,
-            interaction = composition.interactions.continueEntry,
+            evaluation = composition.evaluation,
+            interaction = get<EntryInteractions>().continueEntry,
         )
     }
     EntryFeatureRuntimeArtifacts(

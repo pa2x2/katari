@@ -10,6 +10,7 @@ import mihon.entry.viewer.settings.ViewerSettingOverride
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import mihon.feature.graph.FeatureExecutionHandler
 import mihon.feature.graph.FeatureExecutionParticipantBinding
+import mihon.feature.runtime.FeatureRuntimeComposition
 import tachiyomi.domain.entry.repository.EntryRepository
 import uy.kohesive.injekt.api.addSingletonFactory
 import uy.kohesive.injekt.api.get
@@ -23,10 +24,10 @@ internal val EntryPlaybackPreferencesFeatureRuntimeModule = EntryFeatureRuntimeM
     ),
 ) {
     addSingletonFactory<EntryPlaybackPreferencesFeature> {
-        val composition = get<EntryInteractionComposition>()
+        val composition = get<FeatureRuntimeComposition>()
         DefaultEntryPlaybackPreferencesFeature(
-            evaluation = composition.featureGraphEvaluation,
-            interaction = composition.interactions.playbackPreferences,
+            evaluation = composition.evaluation,
+            interaction = get<EntryInteractions>().playbackPreferences,
         )
     }
     EntryFeatureRuntimeArtifacts(
@@ -73,10 +74,10 @@ internal val EntryPreviewFeatureRuntimeModule = EntryFeatureRuntimeModule(
     contributor = EntryPreviewFeatureContributor,
 ) {
     addSingletonFactory<EntryPreviewFeature> {
-        val composition = get<EntryInteractionComposition>()
+        val composition = get<FeatureRuntimeComposition>()
         DefaultEntryPreviewFeature(
-            evaluation = composition.featureGraphEvaluation,
-            interaction = composition.interactions.preview,
+            evaluation = composition.evaluation,
+            interaction = get<EntryInteractions>().preview,
             childList = get(),
         )
     }
@@ -90,10 +91,10 @@ internal val EntryImmersiveFeatureRuntimeModule = EntryFeatureRuntimeModule(
     contributor = EntryImmersiveFeatureContributor,
 ) {
     addSingletonFactory<EntryImmersiveFeature> {
-        val composition = get<EntryInteractionComposition>()
+        val composition = get<FeatureRuntimeComposition>()
         DefaultEntryImmersiveFeature(
-            evaluation = composition.featureGraphEvaluation,
-            interaction = composition.interactions.immersive,
+            evaluation = composition.evaluation,
+            interaction = get<EntryInteractions>().immersive,
             childList = get(),
             sourceRefresh = get(),
         )
@@ -115,10 +116,10 @@ internal val EntryViewerSettingsFeatureRuntimeModule = EntryFeatureRuntimeModule
         )
     }
     addSingletonFactory<EntryViewerSettingsFeature> {
-        val composition = get<EntryInteractionComposition>()
+        val composition = get<FeatureRuntimeComposition>()
         DefaultEntryViewerSettingsFeature(
-            evaluation = composition.featureGraphEvaluation,
-            interaction = composition.interactions.viewerSettings,
+            evaluation = composition.evaluation,
+            interaction = get<EntryInteractions>().viewerSettings,
             projectionResolver = context.dependencies.viewerSettingsScreenProjectionResolver,
             overrideRepository = get<ViewerSettingOverrideRepository>(),
             legacyMangaViewerFlagsReset = EntryLegacyMangaViewerFlagsReset {
@@ -195,10 +196,10 @@ internal val EntryMediaCacheFeatureRuntimeModule = EntryFeatureRuntimeModule(
     contributor = EntryMediaCacheFeatureContributor,
 ) { context ->
     addSingletonFactory<EntryMediaCacheFeature> {
-        val composition = get<EntryInteractionComposition>()
+        val composition = get<FeatureRuntimeComposition>()
         DefaultEntryMediaCacheFeature(
-            evaluation = composition.featureGraphEvaluation,
-            interaction = composition.interactions.mediaCache,
+            evaluation = composition.evaluation,
+            interaction = get<EntryInteractions>().mediaCache,
             preferenceStore = context.dependencies.basePreferenceStore,
         )
     }

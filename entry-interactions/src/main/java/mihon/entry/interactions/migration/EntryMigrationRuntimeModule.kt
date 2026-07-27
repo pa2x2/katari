@@ -4,6 +4,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import mihon.feature.runtime.FeatureRuntimeComposition
 import uy.kohesive.injekt.api.addSingletonFactory
 import uy.kohesive.injekt.api.get
 
@@ -14,13 +15,13 @@ internal val EntryMigrationFeatureRuntimeModule = EntryFeatureRuntimeModule(
 ) { context ->
     val dependencies = context.dependencies
     addSingletonFactory {
-        EntryMigrationDurableConsequences(get<EntryInteractionComposition>().featureExecutions)
+        EntryMigrationDurableConsequences(get<FeatureRuntimeComposition>().executions)
     }
     addSingletonFactory {
-        EntryMigrationOptionDiscovery(get<EntryInteractionComposition>().featureExecutions)
+        EntryMigrationOptionDiscovery(get<FeatureRuntimeComposition>().executions)
     }
     addSingletonFactory {
-        EntryMigrationTransitionPreparation(get<EntryInteractionComposition>().featureExecutions)
+        EntryMigrationTransitionPreparation(get<FeatureRuntimeComposition>().executions)
     }
     addSingletonFactory {
         EntryMigrationCustomCoverOrphanCleanup(
@@ -40,7 +41,7 @@ internal val EntryMigrationFeatureRuntimeModule = EntryFeatureRuntimeModule(
     }
     addSingletonFactory<EntryMigrationFeature> {
         DefaultEntryMigrationFeature(
-            evaluation = get<EntryInteractionComposition>().featureGraphEvaluation,
+            evaluation = get<FeatureRuntimeComposition>().evaluation,
             preparationHost = dependencies.migrationPreparationHost,
             executionHost = dependencies.migrationExecutionHost,
             sourceRefresh = get(),

@@ -6,6 +6,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import mihon.feature.graph.FeatureExecutionHandler
 import mihon.feature.graph.FeatureExecutionParticipantBinding
+import mihon.feature.runtime.FeatureRuntimeComposition
 import tachiyomi.domain.entry.service.EntryChildOwnershipResolutionPort
 import tachiyomi.domain.entry.service.EntryLibraryGroupingResolutionPort
 import uy.kohesive.injekt.api.addSingletonFactory
@@ -24,7 +25,7 @@ internal val EntryMergeFeatureRuntimeModule = EntryFeatureRuntimeModule(
 ) { context ->
     val dependencies = context.dependencies
     addSingletonFactory {
-        EntryMergeDurableConsequences(get<EntryInteractionComposition>().featureExecutions)
+        EntryMergeDurableConsequences(get<FeatureRuntimeComposition>().executions)
     }
     addSingletonFactory {
         EntryMergeLegacyConsequenceDelivery(
@@ -43,7 +44,7 @@ internal val EntryMergeFeatureRuntimeModule = EntryFeatureRuntimeModule(
     }
     addSingletonFactory<EntryMergeFeature> {
         EntryMergeWorkflowCoordinator(
-            evaluation = get<EntryInteractionComposition>().featureGraphEvaluation,
+            evaluation = get<FeatureRuntimeComposition>().evaluation,
             host = dependencies.mergeHost,
             durableConsequences = get<EntryMergeDurableConsequences>(),
             consequences = get(),

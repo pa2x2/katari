@@ -2,6 +2,7 @@ package mihon.entry.interactions
 
 import mihon.feature.graph.FeatureExecutionHandler
 import mihon.feature.graph.FeatureExecutionParticipantBinding
+import mihon.feature.runtime.FeatureRuntimeComposition
 import uy.kohesive.injekt.api.addSingletonFactory
 import uy.kohesive.injekt.api.get
 
@@ -10,12 +11,12 @@ internal val EntryChildListFeatureRuntimeModule = EntryFeatureRuntimeModule(
     contributor = EntryChildListFeatureContributor,
 ) {
     addSingletonFactory<EntryChildListFeature> {
-        val composition = get<EntryInteractionComposition>()
+        val composition = get<FeatureRuntimeComposition>()
         DefaultEntryChildListFeature(
-            evaluation = composition.featureGraphEvaluation,
-            childList = composition.interactions.childList,
-            childProgress = composition.interactions.childProgress,
-            missingChildGap = composition.interactions.missingChildGap,
+            evaluation = composition.evaluation,
+            childList = get<EntryInteractions>().childList,
+            childProgress = get<EntryInteractions>().childProgress,
+            missingChildGap = get<EntryInteractions>().missingChildGap,
         )
     }
     EntryFeatureRuntimeArtifacts(
@@ -32,10 +33,10 @@ internal val EntryChildGroupFilterFeatureRuntimeModule = EntryFeatureRuntimeModu
     ),
 ) { context ->
     addSingletonFactory<EntryChildGroupFilterFeature> {
-        val composition = get<EntryInteractionComposition>()
+        val composition = get<FeatureRuntimeComposition>()
         DefaultEntryChildGroupFilterFeature(
-            evaluation = composition.featureGraphEvaluation,
-            interaction = composition.interactions.childGroupFilter,
+            evaluation = composition.evaluation,
+            interaction = get<EntryInteractions>().childGroupFilter,
             dataSource = get(),
         )
     }
@@ -84,9 +85,9 @@ internal val EntryRelatedEntriesFeatureRuntimeModule = EntryFeatureRuntimeModule
     contributor = EntryRelatedEntriesFeatureContributor,
 ) {
     addSingletonFactory<EntryRelatedEntriesFeature> {
-        val composition = get<EntryInteractionComposition>()
+        val composition = get<FeatureRuntimeComposition>()
         DefaultEntryRelatedEntriesFeature(
-            evaluation = composition.featureGraphEvaluation,
+            evaluation = composition.evaluation,
             sourceManager = get(),
             networkToLocalEntry = get(),
             getEntry = get(),

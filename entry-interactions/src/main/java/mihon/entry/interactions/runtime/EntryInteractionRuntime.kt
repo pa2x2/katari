@@ -12,6 +12,8 @@ import mihon.entry.interactions.host.EntryMigrationPreparationHost
 import mihon.entry.interactions.host.tracking.EntryTrackingHost
 import mihon.entry.interactions.reader.settings.ReaderBasePreferences
 import mihon.entry.interactions.settings.EntryInteractionPreferences
+import mihon.feature.runtime.FeatureRuntimeComposition
+import mihon.feature.runtime.FeatureRuntimeInputs
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
@@ -50,14 +52,15 @@ data class EntryInteractionRuntimeDependencies(
     val trackingHost: EntryTrackingHost,
 )
 
-fun interface EntryInteractionRuntimeWarmup {
-    fun warmup()
-}
+data class EntryInteractionRuntimeInstallation(
+    val featureRuntimeInputs: FeatureRuntimeInputs,
+    val warmups: List<() -> Unit>,
+)
 
 fun InjektRegistrar.addEntryInteractionRuntime(
     app: Application,
     dependencies: EntryInteractionRuntimeDependencies,
-) {
+): EntryInteractionRuntimeInstallation {
     installEntryInteractionHostServices(dependencies)
 
     val installedFeatureModules = installEntryFeatureRuntimeModules(
@@ -78,22 +81,26 @@ fun InjektRegistrar.addEntryInteractionRuntime(
             typeRuntimeContributions.flatMap(EntryTypeRuntimeContribution::imageComponentInstallers),
         )
     }
+    val interactionInstallation = createEntryInteractionInstallation(
+        plugins = typeRuntimeContributions.map(EntryTypeRuntimeContribution::plugin),
+        featureContributors = installedFeatureModules.flatMap { it.module.graphContributors },
+        executionBindings = installedFeatureModules.flatMap { it.artifacts.executionBindings },
+        durableExecutionBindings = installedFeatureModules.flatMap {
+            it.artifacts.durableExecutionBindings
+        },
+    )
+    addSingletonFactory<EntryInteractions> { interactionInstallation.interactions }
     addSingletonFactory<EntryInteractionComposition> {
-        createEntryInteractionComposition(
-            plugins = typeRuntimeContributions.map(EntryTypeRuntimeContribution::plugin),
-            featureContributors = installedFeatureModules.flatMap { it.module.graphContributors },
-            executionBindings = installedFeatureModules.flatMap { it.artifacts.executionBindings },
-            durableExecutionBindings = installedFeatureModules.flatMap {
-                it.artifacts.durableExecutionBindings
-            },
+        EntryInteractionComposition(
+            interactions = get(),
+            featureRuntime = get<FeatureRuntimeComposition>(),
         )
     }
-    addSingletonFactory<EntryInteractionRuntimeWarmup> {
-        EntryInteractionRuntimeWarmup {
-            installedFeatureModules.flatMap { it.artifacts.warmups }.forEach { it() }
-            typeRuntimeContributions.flatMap(EntryTypeRuntimeContribution::warmups).forEach { it() }
-        }
-    }
+    return EntryInteractionRuntimeInstallation(
+        featureRuntimeInputs = interactionInstallation.featureRuntimeInputs,
+        warmups = installedFeatureModules.flatMap { it.artifacts.warmups } +
+            typeRuntimeContributions.flatMap(EntryTypeRuntimeContribution::warmups),
+    )
 }
 
 private fun InjektRegistrar.installEntryInteractionHostServices(

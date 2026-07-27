@@ -11,6 +11,7 @@ android {
 dependencies {
     api(projects.entryInteractions.api)
     api(projects.featureGraph)
+    api(projects.featureRuntime)
     api(libs.androidx.appCompat)
     api(libs.coil.core)
 

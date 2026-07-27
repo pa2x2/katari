@@ -2,6 +2,7 @@ package mihon.entry.interactions
 
 import mihon.feature.graph.FeatureExecutionHandler
 import mihon.feature.graph.FeatureExecutionParticipantBinding
+import mihon.feature.runtime.FeatureRuntimeComposition
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.addSingletonFactory
 import uy.kohesive.injekt.api.get
@@ -14,10 +15,10 @@ internal val EntryDownloadRuntimeFeatureRuntimeModule = EntryFeatureRuntimeModul
         DefaultEntryDownloadWorkController(context.application)
     }
     addSingletonFactory<EntryDownloadRuntimeCoordinator> {
-        val composition = get<EntryInteractionComposition>()
+        val composition = get<FeatureRuntimeComposition>()
         DefaultEntryDownloadRuntimeFeature(
-            evaluation = composition.featureGraphEvaluation,
-            interaction = composition.interactions.download,
+            evaluation = composition.evaluation,
+            interaction = get<EntryInteractions>().download,
         )
     }
     addSingletonFactory<EntryDownloadRuntimeFeature> { get<EntryDownloadRuntimeCoordinator>() }
@@ -34,10 +35,10 @@ internal val EntryDownloadActionFeatureRuntimeModule = EntryFeatureRuntimeModule
         SourceManagerEntryDownloadSourceAccessResolver(get())
     }
     addSingletonFactory<EntryDownloadActionFeature> {
-        val composition = get<EntryInteractionComposition>()
+        val composition = get<FeatureRuntimeComposition>()
         DefaultEntryDownloadActionFeature(
-            evaluation = composition.featureGraphEvaluation,
-            interaction = composition.interactions.download,
+            evaluation = composition.evaluation,
+            interaction = get<EntryInteractions>().download,
             sourceAccessResolver = get(),
         )
     }
@@ -63,10 +64,10 @@ internal val EntryAutomaticDownloadFeatureRuntimeModule = EntryFeatureRuntimeMod
 ) {
     addSingletonFactory { EntryAutomaticDownloadPolicy(get(), get(), get()) }
     addSingletonFactory<EntryAutomaticDownloadCoordinator> {
-        val composition = get<EntryInteractionComposition>()
+        val composition = get<FeatureRuntimeComposition>()
         DefaultEntryAutomaticDownloadFeature(
-            evaluation = composition.featureGraphEvaluation,
-            interaction = composition.interactions.download,
+            evaluation = composition.evaluation,
+            interaction = get<EntryInteractions>().download,
             sharedPolicy = get(),
         )
     }
@@ -114,14 +115,14 @@ internal val EntryDownloadLifecycleFeatureRuntimeModule = EntryFeatureRuntimeMod
         }
     }
     addSingletonFactory<EntryDownloadLifecycleFeature> {
-        val composition = get<EntryInteractionComposition>()
+        val composition = get<FeatureRuntimeComposition>()
         DefaultEntryDownloadLifecycleFeature(
-            evaluation = composition.featureGraphEvaluation,
+            evaluation = composition.evaluation,
             downloadPreferences = get(),
             getCategories = get(),
             getEntryWithChapters = get(),
             entryRepository = get(),
-            downloads = composition.interactions.download,
+            downloads = get<EntryInteractions>().download,
         )
     }
     EntryFeatureRuntimeArtifacts(
@@ -167,18 +168,18 @@ internal val EntryDownloadConfigurationFeatureRuntimeModule = EntryFeatureRuntim
     additionalContributors = listOf(EntryDownloadConfigurationBackupContributor),
 ) {
     addSingletonFactory<EntryDownloadOptionsFeature> {
-        val composition = get<EntryInteractionComposition>()
+        val composition = get<FeatureRuntimeComposition>()
         DefaultEntryDownloadOptionsFeature(
-            evaluation = composition.featureGraphEvaluation,
-            interaction = composition.interactions.download,
+            evaluation = composition.evaluation,
+            interaction = get<EntryInteractions>().download,
         )
     }
     addSingletonFactory<EntryDownloadSettingsFeature> {
-        DefaultEntryDownloadSettingsFeature(get<EntryInteractionComposition>().featureGraphEvaluation)
+        DefaultEntryDownloadSettingsFeature(get<FeatureRuntimeComposition>().evaluation)
     }
     addSingletonFactory<EntryDownloadConfigurationBackupFeature> {
         DefaultEntryDownloadConfigurationBackupFeature(
-            evaluation = get<EntryInteractionComposition>().featureGraphEvaluation,
+            evaluation = get<FeatureRuntimeComposition>().evaluation,
             repository = get(),
         )
     }
@@ -233,10 +234,10 @@ internal val EntryDownloadMaintenanceFeatureRuntimeModule = EntryFeatureRuntimeM
     ),
 ) {
     addSingletonFactory<EntryDownloadMaintenanceFeature> {
-        val composition = get<EntryInteractionComposition>()
+        val composition = get<FeatureRuntimeComposition>()
         DefaultEntryDownloadMaintenanceFeature(
-            evaluation = composition.featureGraphEvaluation,
-            interaction = composition.interactions.download,
+            evaluation = composition.evaluation,
+            interaction = get<EntryInteractions>().download,
             ownership = get<EntryMergeDownloadOwnershipProjection>(),
         )
     }

@@ -2,6 +2,7 @@ package mihon.entry.interactions
 
 import mihon.feature.graph.FeatureExecutionHandler
 import mihon.feature.graph.FeatureExecutionParticipantBinding
+import mihon.feature.runtime.FeatureRuntimeComposition
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.service.EntryLibraryProgressResolutionPort
 import uy.kohesive.injekt.api.addSingletonFactory
@@ -16,7 +17,7 @@ internal val EntryLibraryMembershipFeatureRuntimeModule = EntryFeatureRuntimeMod
         EntryLibraryMembershipCoordinator(
             host = context.dependencies.libraryMembershipHost,
             mergeCandidates = get(),
-            executions = get<EntryInteractionComposition>().featureExecutions,
+            executions = get<FeatureRuntimeComposition>().executions,
         )
     }
     EntryFeatureRuntimeArtifacts(
@@ -39,7 +40,7 @@ internal val EntryLibraryFilterFeatureRuntimeModule = EntryFeatureRuntimeModule(
     contributor = EntryLibraryFilterFeatureContributor,
 ) {
     addSingletonFactory<EntryLibraryFilterFeature> {
-        DefaultEntryLibraryFilterFeature(get<EntryInteractionComposition>().featureGraphEvaluation)
+        DefaultEntryLibraryFilterFeature(get<FeatureRuntimeComposition>().evaluation)
     }
     EntryFeatureRuntimeArtifacts(
         runtimeBoundaries = listOf(entryFeatureRuntimeBoundary { get<EntryLibraryFilterFeature>() }),
@@ -51,10 +52,10 @@ internal val EntryLibraryProgressFeatureRuntimeModule = EntryFeatureRuntimeModul
     contributor = EntryLibraryProgressFeatureContributor,
 ) {
     addSingletonFactory<EntryLibraryProgressFeature> {
-        val composition = get<EntryInteractionComposition>()
+        val composition = get<FeatureRuntimeComposition>()
         DefaultEntryLibraryProgressFeature(
-            evaluation = composition.featureGraphEvaluation,
-            interaction = composition.interactions.libraryProgress,
+            evaluation = composition.evaluation,
+            interaction = get<EntryInteractions>().libraryProgress,
             continueFeature = get(),
         )
     }
@@ -70,9 +71,9 @@ internal val EntryLibraryUpdateRefreshFeatureRuntimeModule = EntryFeatureRuntime
 ) {
     addSingletonFactory<EntryLibraryUpdateRefreshFeature> {
         DefaultEntryLibraryUpdateRefreshFeature(
-            evaluation = get<EntryInteractionComposition>().featureGraphEvaluation,
+            evaluation = get<FeatureRuntimeComposition>().evaluation,
             sourceRefresh = get(),
-            executions = get<EntryInteractionComposition>().featureExecutions,
+            executions = get<FeatureRuntimeComposition>().executions,
         )
     }
     EntryFeatureRuntimeArtifacts(
@@ -85,9 +86,9 @@ internal val EntryLibraryUpdateNotificationFeatureRuntimeModule = EntryFeatureRu
     contributor = EntryLibraryUpdateNotificationFeatureContributor,
 ) {
     addSingletonFactory<EntryLibraryUpdateNotificationFeature> {
-        val composition = get<EntryInteractionComposition>()
+        val composition = get<FeatureRuntimeComposition>()
         DefaultEntryLibraryUpdateNotificationFeature(
-            evaluation = composition.featureGraphEvaluation,
+            evaluation = composition.evaluation,
             presentationFeature = get(),
             openFeature = get(),
             consumptionFeature = get(),

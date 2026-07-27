@@ -4,6 +4,7 @@ import mihon.feature.graph.FeatureExecutionContextResolver
 import mihon.feature.graph.FeatureExecutionHandler
 import mihon.feature.graph.FeatureExecutionParticipantBinding
 import mihon.feature.graph.contextEvidence
+import mihon.feature.runtime.FeatureRuntimeComposition
 import tachiyomi.domain.library.service.LibraryPreferences
 import uy.kohesive.injekt.api.addSingletonFactory
 import uy.kohesive.injekt.api.get
@@ -13,10 +14,10 @@ internal val EntryConsumptionFeatureRuntimeModule = EntryFeatureRuntimeModule(
     contributor = EntryConsumptionFeatureContributor,
 ) {
     addSingletonFactory<EntryConsumptionFeature> {
-        val composition = get<EntryInteractionComposition>()
+        val composition = get<FeatureRuntimeComposition>()
         DefaultEntryConsumptionFeature(
-            evaluation = composition.featureGraphEvaluation,
-            interaction = composition.interactions.consumption,
+            evaluation = composition.evaluation,
+            interaction = get<EntryInteractions>().consumption,
             downloadLifecycle = get(),
         )
     }
@@ -30,10 +31,10 @@ internal val EntryBookmarkFeatureRuntimeModule = EntryFeatureRuntimeModule(
     contributor = EntryBookmarkFeatureContributor,
 ) {
     addSingletonFactory<EntryBookmarkFeature> {
-        val composition = get<EntryInteractionComposition>()
+        val composition = get<FeatureRuntimeComposition>()
         DefaultEntryBookmarkFeature(
-            evaluation = composition.featureGraphEvaluation,
-            interaction = composition.interactions.bookmark,
+            evaluation = composition.evaluation,
+            interaction = get<EntryInteractions>().bookmark,
         )
     }
     EntryFeatureRuntimeArtifacts(
@@ -46,10 +47,10 @@ internal val EntryUpdateEligibilityFeatureRuntimeModule = EntryFeatureRuntimeMod
     contributor = EntryUpdateEligibilityFeatureContributor,
 ) {
     addSingletonFactory<EntryUpdateEligibilityFeature> {
-        val composition = get<EntryInteractionComposition>()
+        val composition = get<FeatureRuntimeComposition>()
         val preferences = get<LibraryPreferences>()
         DefaultEntryUpdateEligibilityFeature(
-            evaluation = composition.featureGraphEvaluation,
+            evaluation = composition.evaluation,
             currentPolicy = {
                 preferences.autoUpdateEntryRestrictions.get().toEntryUpdateEligibilityPolicy()
             },
@@ -70,10 +71,10 @@ internal val EntryProgressFeatureRuntimeModule = EntryFeatureRuntimeModule(
     ),
 ) {
     addSingletonFactory<EntryProgressFeature> {
-        val composition = get<EntryInteractionComposition>()
+        val composition = get<FeatureRuntimeComposition>()
         DefaultEntryProgressFeature(
-            evaluation = composition.featureGraphEvaluation,
-            interaction = composition.interactions.progress,
+            evaluation = composition.evaluation,
+            interaction = get<EntryInteractions>().progress,
             repository = get(),
             getEntryWithChapters = get(),
             globalLibraryPreferences = get(),

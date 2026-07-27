@@ -1,6 +1,6 @@
 # Application-scoped Feature Graph and Translation Feature implementation plan
 
-Status: Phase 1 complete; awaiting approval to begin Phase 2.
+Status: Phase 2 complete; awaiting approval to begin Phase 3.
 
 The manifestos in this directory are authoritative:
 
@@ -61,16 +61,17 @@ Exit condition: `feature-graph` is subject-generic and its focused tests pass.
 
 ## Phase 2: Extract shared runtime composition
 
-- [ ] Add a shared `FeatureRuntimeComposition` owning graph, evaluation, artifacts, and execution runtime.
-- [ ] Split Entry installation from graph assembly so Entry contributes graph/runtime inputs.
-- [ ] Add application Feature installation inputs and application capability bindings.
-- [ ] Aggregate the application subject from installed application Feature modules.
-- [ ] Assemble one runtime composition from Entry and application inputs in app DI.
-- [ ] Point existing Entry Feature factories at the shared composition.
-- [ ] Preserve Entry runtime boundaries, warmups, host dependencies, and provider indexes.
-- [ ] Add owner-local `*.application-feature-module` descriptors.
-- [ ] Generate direct application module references for each Android variant.
-- [ ] Reject malformed IDs, duplicate modules, duplicate capabilities, missing symbols, and wrong module types.
+- [x] Add a shared `FeatureRuntimeComposition` owning graph, evaluation, artifacts, and execution runtime.
+- [x] Split Entry installation from graph assembly so Entry contributes graph/runtime inputs.
+- [x] Add application Feature installation inputs and application capability bindings.
+- [x] Aggregate the application subject from installed application Feature modules.
+- [x] Assemble one runtime composition from Entry and application inputs in app DI.
+- [x] Point existing Entry Feature factories at the shared composition.
+- [x] Preserve Entry runtime boundaries, warmups, host dependencies, and provider indexes.
+- [x] Add the owner-local `*.application-feature-module` descriptor contract; the topology is intentionally empty until
+  the first application Feature is added.
+- [x] Generate direct application module references for each Android variant.
+- [x] Reject malformed IDs, duplicate modules, duplicate capabilities, missing symbols, and wrong module types.
 
 Exit condition: existing production Entry Features use the shared composition and no second graph exists.
 

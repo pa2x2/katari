@@ -29,7 +29,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import mihon.entry.interactions.EntryInteractionActivityTheme
 import mihon.entry.interactions.EntryInteractionRuntimeDependencies
-import mihon.entry.interactions.EntryInteractionRuntimeWarmup
 import mihon.entry.interactions.addEntryInteractionRuntime
 import mihon.entry.interactions.host.AppEntryMergeDuplicateCandidateHost
 import mihon.entry.interactions.host.AppEntryMergeHost
@@ -50,6 +49,12 @@ import mihon.feature.profiles.core.ProfileDatabase
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.core.ProfileSourcePreferenceProvider
 import mihon.feature.profiles.core.ProfileStore
+import mihon.feature.runtime.ApplicationFeatureRuntimeInstallationContext
+import mihon.feature.runtime.FeatureRuntimeComposition
+import mihon.feature.runtime.FeatureRuntimeWarmup
+import mihon.feature.runtime.createFeatureRuntimeComposition
+import mihon.feature.runtime.installApplicationFeatureRuntimeModules
+import mihon.feature.runtime.productionApplicationFeatureRuntimeModules
 import nl.adaptivity.xmlutil.XmlDeclMode
 import nl.adaptivity.xmlutil.core.XmlVersion
 import nl.adaptivity.xmlutil.serialization.DefaultXmlSerializationPolicy
@@ -219,7 +224,7 @@ class AppModule(val app: Application) : InjektModule {
             syncChapterProgress = { get() },
             trackPreferences = get(),
         )
-        addEntryInteractionRuntime(
+        val entryRuntimeInstallation = addEntryInteractionRuntime(
             app = app,
             dependencies = EntryInteractionRuntimeDependencies(
                 activityTheme = EntryInteractionActivityTheme(ThemingDelegateImpl()::applyAppTheme),
@@ -256,6 +261,26 @@ class AppModule(val app: Application) : InjektModule {
                 trackingHost = trackingHost,
             ),
         )
+        val applicationFeatureRuntimeInstallation = installApplicationFeatureRuntimeModules(
+            registrar = this,
+            modules = productionApplicationFeatureRuntimeModules(),
+            context = ApplicationFeatureRuntimeInstallationContext(app),
+        )
+        addSingletonFactory { applicationFeatureRuntimeInstallation }
+        addSingletonFactory<FeatureRuntimeComposition> {
+            createFeatureRuntimeComposition(
+                listOf(
+                    entryRuntimeInstallation.featureRuntimeInputs,
+                    applicationFeatureRuntimeInstallation.featureRuntimeInputs,
+                ),
+            )
+        }
+        addSingletonFactory {
+            FeatureRuntimeWarmup {
+                entryRuntimeInstallation.warmups.forEach { it() }
+                applicationFeatureRuntimeInstallation.warmups.forEach { it() }
+            }
+        }
 
         addSingletonFactory { ImageSaver(app) }
 
@@ -267,7 +292,7 @@ class AppModule(val app: Application) : InjektModule {
 
             get<Database>()
 
-            get<EntryInteractionRuntimeWarmup>().warmup()
+            get<FeatureRuntimeWarmup>().warmup()
         }
     }
 }

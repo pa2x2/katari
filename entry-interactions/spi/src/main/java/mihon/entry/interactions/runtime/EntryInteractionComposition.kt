@@ -1,16 +1,12 @@
 package mihon.entry.interactions
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.feature.graph.FeatureArtifactSelection
 import mihon.feature.graph.FeatureDurableExecutionParticipantBinding
 import mihon.feature.graph.FeatureExecutionParticipantBinding
-import mihon.feature.graph.FeatureExecutionRuntime
-import mihon.feature.graph.FeatureGraph
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
-import mihon.feature.graph.discoverAndAssembleFeatureGraph
-import mihon.feature.graph.evaluateFeatureGraph
-import mihon.feature.graph.selectFeatureArtifacts
+import mihon.feature.runtime.FeatureRuntimeComposition
+import mihon.feature.runtime.FeatureRuntimeInputs
+import mihon.feature.runtime.createFeatureRuntimeComposition
 import tachiyomi.domain.entry.model.Entry
 
 fun createEntryInteractions(
@@ -25,13 +21,27 @@ fun createEntryInteractions(
     durableExecutionBindings,
 ).interactions
 
+data class EntryInteractionInstallation(
+    val interactions: EntryInteractions,
+    val featureRuntimeInputs: FeatureRuntimeInputs,
+)
+
 data class EntryInteractionComposition(
     val interactions: EntryInteractions,
-    val featureGraph: FeatureGraph,
-    val featureGraphEvaluation: FeatureGraphEvaluation,
-    val featureArtifacts: FeatureArtifactSelection,
-    val featureExecutions: FeatureExecutionRuntime,
-)
+    val featureRuntime: FeatureRuntimeComposition,
+) {
+    val featureGraph
+        get() = featureRuntime.graph
+
+    val featureGraphEvaluation
+        get() = featureRuntime.evaluation
+
+    val featureArtifacts
+        get() = featureRuntime.artifacts
+
+    val featureExecutions
+        get() = featureRuntime.executions
+}
 
 fun createEntryInteractionComposition(
     plugins: List<EntryInteractionPlugin>,
@@ -39,12 +49,27 @@ fun createEntryInteractionComposition(
     executionBindings: List<FeatureExecutionParticipantBinding<*>> = emptyList(),
     durableExecutionBindings: List<FeatureDurableExecutionParticipantBinding<*>> = emptyList(),
 ): EntryInteractionComposition {
-    validateEntryInteractionPlugins(plugins)
-    val featureGraph = discoverAndAssembleFeatureGraph(plugins + featureContributors)
-    val featureGraphEvaluation = evaluateFeatureGraph(featureGraph)
-    val featureArtifacts = selectFeatureArtifacts(featureGraph, featureGraphEvaluation)
-    val providers = EntryInteractionProviderIndex(plugins)
+    val installation = createEntryInteractionInstallation(
+        plugins = plugins,
+        featureContributors = featureContributors,
+        executionBindings = executionBindings,
+        durableExecutionBindings = durableExecutionBindings,
+    )
     return EntryInteractionComposition(
+        interactions = installation.interactions,
+        featureRuntime = createFeatureRuntimeComposition(listOf(installation.featureRuntimeInputs)),
+    )
+}
+
+fun createEntryInteractionInstallation(
+    plugins: List<EntryInteractionPlugin>,
+    featureContributors: List<FeatureGraphContributor>,
+    executionBindings: List<FeatureExecutionParticipantBinding<*>> = emptyList(),
+    durableExecutionBindings: List<FeatureDurableExecutionParticipantBinding<*>> = emptyList(),
+): EntryInteractionInstallation {
+    validateEntryInteractionPlugins(plugins)
+    val providers = EntryInteractionProviderIndex(plugins)
+    return EntryInteractionInstallation(
         interactions = DefaultEntryInteractions(
             openProcessors = providers[EntryOpenCapability],
             continueProcessors = providers[EntryContinueCapability],
@@ -67,14 +92,10 @@ fun createEntryInteractionComposition(
             viewerSettingsProviders = providers[EntryViewerSettingsCapability],
             mediaCacheProviders = providers[EntryMediaCacheCapability],
         ),
-        featureGraph = featureGraph,
-        featureGraphEvaluation = featureGraphEvaluation,
-        featureArtifacts = featureArtifacts,
-        featureExecutions = FeatureExecutionRuntime(
-            featureGraph,
-            featureGraphEvaluation,
-            executionBindings,
-            durableExecutionBindings,
+        featureRuntimeInputs = FeatureRuntimeInputs(
+            graphContributors = plugins + featureContributors,
+            executionBindings = executionBindings,
+            durableExecutionBindings = durableExecutionBindings,
         ),
     )
 }

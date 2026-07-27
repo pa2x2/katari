@@ -2,6 +2,7 @@ package mihon.entry.interactions
 
 import mihon.feature.graph.FeatureExecutionHandler
 import mihon.feature.graph.FeatureExecutionParticipantBinding
+import mihon.feature.runtime.FeatureRuntimeComposition
 import uy.kohesive.injekt.api.addSingletonFactory
 import uy.kohesive.injekt.api.get
 
@@ -13,7 +14,7 @@ internal val EntryDestructiveRemovalFeatureRuntimeModule = EntryFeatureRuntimeMo
     addSingletonFactory<EntryDestructiveRemovalFeature> {
         EntryDestructiveRemovalCoordinator(
             host = context.dependencies.destructiveRemovalHost,
-            executions = get<EntryInteractionComposition>().featureExecutions,
+            executions = get<FeatureRuntimeComposition>().executions,
         )
     }
     EntryFeatureRuntimeArtifacts(
