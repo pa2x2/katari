@@ -9,4 +9,14 @@
     <string name="offline_translator_testing">Testing connection…</string>
     <string name="offline_translator_ready">Offline Translator is ready.</string>
     <string name="offline_translator_connection_failed">Katari could not reach Offline Translator. Enable its HTTP API and verify the port.</string>
+    <string name="libretranslate_server_setup_title">LibreTranslate Server setup</string>
+    <string name="libretranslate_server_setup_description">Remote servers must use HTTPS. Cleartext HTTP is accepted only for localhost and loopback addresses.</string>
+    <string name="libretranslate_server_endpoint">Server URL</string>
+    <string name="libretranslate_server_api_key">API key (optional)</string>
+    <string name="libretranslate_server_save_and_test">Save and test connection</string>
+    <string name="libretranslate_server_invalid_endpoint">Enter an HTTPS URL, or an HTTP loopback URL, without credentials, query, or fragment.</string>
+    <string name="libretranslate_server_testing">Testing connection…</string>
+    <string name="libretranslate_server_ready">LibreTranslate Server is ready.</string>
+    <string name="libretranslate_server_connection_failed">Katari could not validate this LibreTranslate server.</string>
+    <string name="libretranslate_server_save_failed">Katari could not securely save this server configuration.</string>
 </resources>

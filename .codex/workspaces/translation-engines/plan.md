@@ -58,6 +58,8 @@ Status: completed and manifesto-audited on 2026-07-28.
 
 ## Milestone 3: configurable LibreTranslate server
 
+Status: completed and manifesto-audited on 2026-07-28.
+
 1. Add a separately selectable LibreTranslate Server contribution using the
    same client.
 2. Add provider-owned configuration for:
@@ -66,7 +68,8 @@ Status: completed and manifesto-audited on 2026-07-28.
    - test connection.
 3. Require HTTPS remotely and permit cleartext HTTP only for loopback
    addresses.
-4. Store the API key through the app's established encrypted secret mechanism.
+4. Store the API key through provider-scoped Android Keystore-backed encrypted
+   storage.
 5. Require one successful initial connection before selection; retain an
    existing selection across later temporary failures.
 6. Add endpoint validation, credential redaction, persistence, and picker-state

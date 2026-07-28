@@ -66,6 +66,31 @@ class LibreTranslateHttpClientTest {
     }
 
     @Test
+    fun `optional API key is sent only in the translation body`() = runTest {
+        MockWebServer().use { server ->
+            server.enqueue(
+                MockResponse.Builder()
+                    .body("""{"translatedText":"Bonjour"}""")
+                    .build(),
+            )
+            server.start()
+            val client = LibreTranslateHttpClient(
+                httpClient = OkHttpClient(),
+                endpoint = server.url("/"),
+                apiKey = "private-key",
+            )
+
+            client.translate("Hello", "en", "fr") shouldBe "Bonjour"
+
+            server.takeRequest().apply {
+                url.query shouldBe null
+                body?.utf8() shouldBe
+                    """{"q":"Hello","source":"en","target":"fr","api_key":"private-key"}"""
+            }
+        }
+    }
+
+    @Test
     fun `provider failures do not expose response payloads`() = runTest {
         MockWebServer().use { server ->
             server.enqueue(

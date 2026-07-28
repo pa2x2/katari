@@ -25,6 +25,7 @@ internal interface LibreTranslateService {
 internal class LibreTranslateHttpClient(
     private val httpClient: OkHttpClient,
     private val endpoint: HttpUrl,
+    private val apiKey: String? = null,
     private val json: Json = DEFAULT_JSON,
 ) : LibreTranslateService {
     override suspend fun languages(): List<LibreTranslateLanguage> {
@@ -57,6 +58,7 @@ internal class LibreTranslateHttpClient(
                 q = text,
                 source = source,
                 target = target,
+                apiKey = apiKey,
             ),
         )
         val request = Request.Builder()

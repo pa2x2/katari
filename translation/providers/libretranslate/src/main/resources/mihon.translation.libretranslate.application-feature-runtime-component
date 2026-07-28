@@ -1,0 +1,2 @@
+id=translation.libretranslate
+component=mihon.translation.provider.libretranslate.libreTranslateRuntimeComponent

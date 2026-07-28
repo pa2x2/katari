@@ -94,7 +94,8 @@ continuing.
 2. Require HTTPS for non-loopback destinations.
 3. Permit cleartext HTTP only for loopback destinations.
 4. Reject credentials embedded in endpoint URLs.
-5. Keep optional API keys in the established encrypted secret store.
+5. Keep optional API keys in provider-scoped Android Keystore-backed encrypted
+   storage; never place plaintext API keys in preferences.
 6. Redact API keys and payloads from diagnostics.
 7. Require a successful initial connection before selection.
 8. Treat later network outages as transient without erasing selection.

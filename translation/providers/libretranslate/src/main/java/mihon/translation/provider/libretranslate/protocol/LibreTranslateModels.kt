@@ -1,5 +1,6 @@
 package mihon.translation.provider.libretranslate.protocol
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 internal data class LibreTranslateLanguage(
@@ -27,6 +28,8 @@ internal data class LibreTranslateRequest(
     val source: String,
     val target: String,
     val format: String = "text",
+    @SerialName("api_key")
+    val apiKey: String? = null,
 )
 
 @Serializable
