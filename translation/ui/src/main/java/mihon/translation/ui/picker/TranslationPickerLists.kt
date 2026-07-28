@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -20,6 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import mihon.translation.api.KnownTranslationEngine
 import mihon.translation.api.TranslationEngineBuildAvailability
@@ -109,6 +111,7 @@ fun TranslationEnginePickerList(
                     supportingContent = {
                         Text(stringResource(MR.strings.translation_settings_missing_engine_no_fallback))
                     },
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                 )
             }
         }
@@ -174,6 +177,7 @@ private fun TranslationPickerRow(
         } else {
             null
         },
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         modifier = Modifier.clickable(enabled = enabled, onClick = onClick),
     )
 }

@@ -84,24 +84,10 @@ internal fun TranslationSessionContent(
             )
         }
         if (showHeader) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 20.dp, end = 8.dp, top = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(MR.strings.translation_title),
-                    modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                IconButton(onClick = onDismiss) {
-                    Icon(
-                        imageVector = Icons.Outlined.Close,
-                        contentDescription = stringResource(MR.strings.action_close),
-                    )
-                }
-            }
+            TranslationSessionHeader(
+                title = stringResource(MR.strings.translation_title),
+                onDismiss = onDismiss,
+            )
             HorizontalDivider()
         }
         Column(
@@ -138,6 +124,32 @@ internal fun TranslationSessionContent(
                     is TranslationSessionState.Failed -> FailedContent(state, onRetry, onExternalAction)
                 }
             }
+        }
+    }
+}
+
+@Composable
+internal fun TranslationSessionHeader(
+    title: String,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = 20.dp, end = 8.dp, top = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = title,
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        IconButton(onClick = onDismiss) {
+            Icon(
+                imageVector = Icons.Outlined.Close,
+                contentDescription = stringResource(MR.strings.action_close),
+            )
         }
     }
 }

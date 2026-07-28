@@ -5,8 +5,10 @@ import android.net.Uri
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -21,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import mihon.translation.api.TranslationEngineSelection
 import mihon.translation.api.TranslationHostActionResult
 import mihon.translation.api.TranslationSourceLanguageSelection
@@ -85,7 +88,11 @@ fun CoordinatedTranslationSessionHost(
         resultMessage?.let { android.widget.Toast.makeText(context, it, android.widget.Toast.LENGTH_LONG).show() }
     }
     picker?.let { selectedPicker ->
-        TranslationSessionPickerDialog(coordinator, selectedPicker)
+        TranslationSessionPickerDialog(
+            coordinator = coordinator,
+            picker = selectedPicker,
+            isTabletUi = isTabletUi,
+        )
     }
 }
 
@@ -93,14 +100,18 @@ fun CoordinatedTranslationSessionHost(
 private fun TranslationSessionPickerDialog(
     coordinator: TranslationSessionHostCoordinator,
     picker: TranslationSessionPicker,
+    isTabletUi: Boolean,
 ) {
     val state by coordinator.controller.state.collectAsState()
     val active = state as? TranslationSessionState.Active
     val options = remember { translationLanguageOptions() }
-    Dialog(onDismissRequest = coordinator::dismissPicker) {
-        BoxWithConstraints {
+    Dialog(
+        onDismissRequest = coordinator::dismissPicker,
+        properties = translationSessionPickerDialogProperties,
+    ) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             AdaptiveSheet(
-                isTabletUi = maxWidth >= 720.dp,
+                isTabletUi = isTabletUi,
                 enableImplicitDismiss = true,
                 onDismissRequest = coordinator::dismissPicker,
                 modifier = Modifier
@@ -108,8 +119,8 @@ private fun TranslationSessionPickerDialog(
                     .heightIn(max = maxHeight * 0.85f),
             ) {
                 Column(modifier = Modifier.fillMaxHeight()) {
-                    Text(
-                        text = stringResource(
+                    TranslationSessionHeader(
+                        title = stringResource(
                             when (picker) {
                                 TranslationSessionPicker.SourceLanguage ->
                                     MR.strings.translation_choose_source_language
@@ -118,7 +129,7 @@ private fun TranslationSessionPickerDialog(
                                 TranslationSessionPicker.Engine -> MR.strings.translation_choose_engine
                             },
                         ),
-                        modifier = Modifier.fillMaxWidth(),
+                        onDismiss = coordinator::dismissPicker,
                     )
                     HorizontalDivider()
                     when (picker) {
@@ -143,7 +154,9 @@ private fun TranslationSessionPickerDialog(
                                 options = options,
                                 selected = selected,
                                 onSelect = coordinator::selectLanguage,
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(top = 8.dp),
                             )
                         }
                         TranslationSessionPicker.Engine -> {
@@ -168,3 +181,8 @@ private fun TranslationSessionPickerDialog(
         }
     }
 }
+
+private val translationSessionPickerDialogProperties = DialogProperties(
+    usePlatformDefaultWidth = false,
+    decorFitsSystemWindows = true,
+)
