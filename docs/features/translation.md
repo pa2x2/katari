@@ -36,6 +36,11 @@ supporting translation between them.
 The default target language follows Katari's app language until another language is selected. The source and target
 languages can be changed for an individual translation without changing that default.
 
+The Translation settings screen uses the playground as a staged profile editor. Changing its target language or
+engine does not affect readers immediately; **Save** becomes available when either differs from the active profile
+and persists both together. Leaving the screen without saving discards those changes. The playground's source
+language and sample text remain request-only because reader translation detects the source language automatically.
+
 Android manages the language files required for translation. Katari can show when setup is needed and open Android's
 translation settings when the device provides them, but it does not download or delete language files itself.
 

@@ -71,28 +71,57 @@ Katari's changelog focused on behavior that differs from Mihon.
 
 ## Update the changelog
 
-1. Write a Keep a Changelog section named `[X.Y.Z]` with the current date. Use only the
-   applicable headings `Added`, `Changed`, `Improved`, `Removed`, `Fixed`, and `Other`.
-2. Describe user-visible outcomes in concise past-tense-neutral bullets. Mention extension
-   developer changes only when they alter Katari's public SDK or compatibility contract.
-   Do not create one bullet per commit or pull request, include commit hashes, or add a
-   catch-all list of minor/internal changes. Prefer fewer, broader bullets that each
-   communicate one distinct and useful outcome. For an outcome with an associated pull
-   request, end its bullet with the verified PR-author credit in the form `(by @user)` or
-   `(by @user1, @user2)`, immediately followed in the same paragraph by the PR Markdown link
-   in the form `([#123](https://github.com/OWNER/REPO/pull/123))`. Never place a pull-request
-   link on a standalone continuation line. Append every associated PR link when one outcome
-   combines multiple pull requests. For an outcome without an associated PR, omit both the
+1. Write a polished, Keep a Changelog-compatible section named `[X.Y.Z]` with the current
+   date. Follow the heading with a one-sentence blockquote that summarizes the release's most
+   meaningful verified user benefit. Make the summary specific to the release; do not use
+   generic filler such as "This release includes improvements and bug fixes." Use only the
+   applicable decorated headings from this mapping:
+
+   - `✨ Added`
+   - `🔄 Changed`
+   - `⚡ Improved`
+   - `🗑️ Removed`
+   - `🐛 Fixed`
+   - `🧩 Other`
+
+   Use this shape:
+
+   ```markdown
+   ## [X.Y.Z] - YYYY-MM-DD
+
+   > A concise, user-focused summary of the release.
+
+   ### ✨ Added
+
+   - A distinct user-visible outcome.
+   ```
+
+   Omit headings that have no qualifying outcomes.
+2. Describe user-visible outcomes in concise, natural, polished language. Let each heading
+   provide the category context, so avoid mechanically starting bullets with `Added`,
+   `Changed`, `Improved`, `Removed`, or `Fixed` unless the sentence requires it. Keep the
+   tone factual rather than promotional, and make each bullet understandable without commit
+   or implementation context. Mention extension developer changes only when they alter
+   Katari's public SDK or compatibility contract. Do not create one bullet per commit or
+   pull request, include commit hashes, or add a catch-all list of minor/internal changes.
+   Prefer fewer, broader bullets that each communicate one distinct and useful outcome. For
+   an outcome with an associated pull request, end its bullet with the verified PR-author
+   credit in the form `(by @user)` or `(by @user1, @user2)`, immediately followed in the
+   same paragraph by the PR Markdown link in the form
+   `([#123](https://github.com/OWNER/REPO/pull/123))`. Never place a pull-request link on a
+   standalone continuation line. Append every associated PR link when one outcome combines
+   multiple pull requests. For an outcome without an associated PR, omit both the
    contributor credit and PR link; never use a commit-author display name as a substitute.
 3. Update `CHANGELOG.md` in the worktree. Insert the complete release section in descending
    version order without changing existing release text. Update `[Unreleased]` to compare
    the target tag with `HEAD`, and add or update the target version's release link using the
    repository URL established by the existing link definitions. Preserve unrelated
    worktree changes and do not modify any other repository file.
-4. Return the complete section in a Markdown code block in the response. When invoked by a
-   command that requests a GitHub release body, show that exact proposed body and require
-   explicit user confirmation before editing the GitHub release. Do not stage or commit
-   changes, create or push tags, or create or publish a GitHub release.
+4. Return the complete beautified section in a Markdown code block in the response. When
+   invoked by a command that requests a GitHub release body, use that same section as the
+   exact proposed body and require explicit user confirmation before editing the GitHub
+   release. Do not stage or commit changes, create or push tags, or create or publish a
+   GitHub release.
 
 ## Safety rules
 
