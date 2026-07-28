@@ -660,13 +660,15 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
                     controller.clearSelection()
                     return@launch
                 }
-                val containerPosition = IntArray(2).also(readerContainer::getLocationInWindow)
+                val navigatorView = fragment.publicationView
+                val navigatorPosition = IntArray(2).also(navigatorView::getLocationInWindow)
                 val anchor = selection.rect?.toReaderRootAnchor(
-                    nativeContainerPositionInWindow = Offset(
-                        containerPosition[0].toFloat(),
-                        containerPosition[1].toFloat(),
+                    navigatorViewPositionInWindow = Offset(
+                        navigatorPosition[0].toFloat(),
+                        navigatorPosition[1].toFloat(),
                     ),
                     readerRootPositionInWindow = readerRootPositionInWindow,
+                    readiumContentTopInset = navigatorView.readiumSelectionContentTopInset(),
                 )
                 val resourceIdentity = selection.locator.href.toString()
                 val rectIdentity = selection.rect?.let {
