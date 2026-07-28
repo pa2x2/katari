@@ -8,8 +8,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -30,6 +33,7 @@ import mihon.translation.ui.session.TranslationSelectionAnchor
 import mihon.translation.ui.session.TranslationSessionFailure
 import mihon.translation.ui.session.TranslationSessionInput
 import mihon.translation.ui.session.TranslationSessionState
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -53,6 +57,14 @@ class TranslationSessionOverlayTest {
 
         composeRule.onNodeWithText("Witaj świecie").assertIsDisplayed()
         composeRule.onNodeWithTag(TRANSLATION_SESSION_POPUP_TAG).assertIsDisplayed()
+        composeRule.onAllNodesWithContentDescription(
+            composeRule.activity.stringResource(MR.strings.action_expand),
+        ).assertCountEquals(0)
+        composeRule.onNodeWithContentDescription(
+            composeRule.activity.stringResource(MR.strings.copy),
+        )
+            .assertWidthIsEqualTo(36.dp)
+            .assertHeightIsEqualTo(36.dp)
     }
 
     @Test
@@ -157,7 +169,7 @@ class TranslationSessionOverlayTest {
     }
 
     @Test
-    fun measured_popup_overflow_promotes_to_adaptive_sheet() {
+    fun long_success_stays_in_a_compact_anchored_popup_with_expansion() {
         val state = success(
             translatedText = List(80) { "A translated line that must be measured." }.joinToString("\n"),
             anchor = TranslationSelectionAnchor(400f, 1100f, 680f, 1160f),
@@ -165,7 +177,16 @@ class TranslationSessionOverlayTest {
 
         render(state)
 
-        composeRule.onNodeWithTag(TRANSLATION_SESSION_SHEET_TAG).assertIsDisplayed()
+        val popup = composeRule.onNodeWithTag(TRANSLATION_SESSION_POPUP_TAG)
+            .assertIsDisplayed()
+            .fetchSemanticsNode()
+        assertTrue(
+            popup.boundsInRoot.height <= 360 * composeRule.activity.resources.displayMetrics.density,
+        )
+        composeRule.onAllNodesWithTag(TRANSLATION_SESSION_SHEET_TAG).assertCountEquals(0)
+        composeRule.onNodeWithContentDescription(
+            composeRule.activity.stringResource(MR.strings.action_expand),
+        ).assertIsDisplayed()
     }
 
     @Test

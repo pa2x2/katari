@@ -3,6 +3,8 @@ package mihon.entry.interactions.book
 import android.content.Context
 import android.content.Intent
 import mihon.book.api.BookContentDescriptor
+import mihon.entry.viewer.settings.ReaderCapabilityId
+import mihon.entry.viewer.settings.StandardReaderCapabilities
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -67,13 +69,50 @@ class BookProcessorRegistryTest {
             BookProcessorRegistry(listOf(epub, FakeBookProcessor(epub.id, "Duplicate", "text/plain")))
         }
     }
+
+    @Test
+    fun `potential capabilities are associated with processor settings surfaces`() {
+        val prose = FakeBookProcessor(
+            id = "prose",
+            displayName = "Prose",
+            format = "text/html",
+            settingsSurfaceId = "builtin.book.prose",
+            capabilities = setOf(StandardReaderCapabilities.StableTextSelection),
+        )
+        val alternateProse = FakeBookProcessor(
+            id = "alternate-prose",
+            displayName = "Alternate prose",
+            format = "text/html",
+            settingsSurfaceId = "builtin.book.prose",
+            capabilities = setOf(StandardReaderCapabilities.SelectionAnchoring),
+        )
+
+        val capabilitiesBySurface = BookProcessorRegistry(
+            listOf(prose, alternateProse),
+        ).potentialReaderCapabilitiesBySettingsSurface()
+
+        assertEquals(
+            mapOf(
+                "builtin.book.prose" to setOf(
+                    StandardReaderCapabilities.StableTextSelection,
+                    StandardReaderCapabilities.SelectionAnchoring,
+                ),
+            ),
+            capabilitiesBySurface,
+        )
+    }
 }
 
 private class FakeBookProcessor(
     override val id: String,
     override val displayName: String,
     private val format: String,
+    private val settingsSurfaceId: String? = null,
+    private val capabilities: Set<ReaderCapabilityId> = emptySet(),
 ) : BookProcessor {
+    override val viewerSettingsSurfaceId = settingsSurfaceId
+    override val potentialReaderCapabilities = capabilities
+
     override fun supports(descriptor: BookContentDescriptor): Boolean = descriptor.format == format
 
     override fun createReaderIntent(

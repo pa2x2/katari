@@ -66,12 +66,14 @@ to Android System Translation or another engine.
 
 ## Automatic reader translation
 
-Enable **Translate selected text automatically** from **More → Settings →
-Readers** or from a supported BOOK reader's **General** settings tab. The
-profile-scoped setting is off by default. After it is enabled, selecting text
-and leaving the selection settled briefly opens the existing translation
-popup. Moving the selection handles replaces an in-progress request, so only
-the latest settled selection is translated.
+Enable **Translate selected text automatically** from either capable BOOK
+reader under **More → Settings → Readers**, or from a supported BOOK reader's
+**General** settings tab. The profile-scoped setting is off by default and
+stored independently for each reader. Changing a reader-specific or in-reader
+toggle affects only that reader. After it is enabled, selecting text and
+leaving the selection settled briefly opens the existing translation popup.
+Moving the selection handles replaces an in-progress request, so only the
+latest settled selection is translated.
 
 Automatic selection translation is available in the serialized HTML prose
 reader and for reflowable EPUB. It is not available for fixed-layout EPUB or

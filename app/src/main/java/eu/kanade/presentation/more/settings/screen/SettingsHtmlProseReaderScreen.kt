@@ -14,7 +14,7 @@ import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-object SettingsHtmlProseReaderScreen : AppEntryViewerSettingsScreenProjection {
+object SettingsHtmlProseReaderScreen : AppEntryViewerSettingsScreenProjection() {
 
     override val surfaceId: String = HtmlProseSettingsProvider.PROVIDER_ID
 
@@ -23,7 +23,7 @@ object SettingsHtmlProseReaderScreen : AppEntryViewerSettingsScreenProjection {
     override fun getTitleRes() = MR.strings.pref_web_prose_reader
 
     @Composable
-    override fun getPreferences(): List<Preference> {
+    override fun getSurfacePreferences(): List<Preference> {
         val provider = remember { Injekt.get<HtmlProseSettingsProvider>() }
         val binder = remember { Injekt.get<ViewerSettingBinder>() }
         val theme = remember(provider, binder) { binder.bind(provider.themeSetting).asProfilePreference() }

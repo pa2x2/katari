@@ -24,11 +24,6 @@ class ProfileTranslationPreferences(
         deserializer = ::deserializeTargetLanguage,
     )
 
-    val automaticSelectionTranslationEnabled: Preference<Boolean> = preferenceStore.getBoolean(
-        key = "translation_automatic_selection_enabled",
-        defaultValue = false,
-    )
-
     private fun serializeTargetLanguage(selection: TranslationTargetLanguageSelection): String {
         return when (selection) {
             TranslationTargetLanguageSelection.Default -> DEFAULT_TARGET_VALUE

@@ -5,6 +5,7 @@ import mihon.entry.viewer.settings.ReaderSharedSettingAvailability
 import mihon.entry.viewer.settings.ReaderSharedSettingId
 import mihon.entry.viewer.settings.ReaderSharedSettingText
 import mihon.entry.viewer.settings.ReaderSharedSettingsProvider
+import mihon.entry.viewer.settings.ReaderSharedTogglePreferenceBinding
 import mihon.entry.viewer.settings.ReaderSharedToggleSetting
 import mihon.entry.viewer.settings.StandardReaderCapabilities
 import mihon.translation.api.TranslationDeviceAvailability
@@ -12,9 +13,15 @@ import mihon.translation.api.TranslationHostActions
 
 internal class BookAutomaticTranslationSettingsProvider(
     processorRegistry: BookProcessorRegistry,
+    private val preferences: BookAutomaticTranslationPreferences,
     private val translationHostActions: TranslationHostActions,
 ) : ReaderSharedSettingsProvider {
     override val potentialCapabilities = processorRegistry.potentialReaderCapabilities()
+    override val potentialCapabilitiesBySettingsSurface =
+        processorRegistry.potentialReaderCapabilitiesBySettingsSurface()
+    private val automaticSelectionPreferences = potentialCapabilitiesBySettingsSurface.keys.associateWith(
+        preferences::automaticSelectionEnabled,
+    )
 
     val automaticSelection = ReaderSharedToggleSetting(
         id = AUTOMATIC_SELECTION_SETTING_ID,
@@ -24,7 +31,9 @@ internal class BookAutomaticTranslationSettingsProvider(
         summary = ReaderSharedSettingText { context ->
             context.getString(R.string.book_reader_automatic_translation_summary)
         },
-        preference = translationHostActions.automaticSelectionEnabled,
+        preferenceBinding = ReaderSharedTogglePreferenceBinding.PerSettingsSurface(
+            automaticSelectionPreferences,
+        ),
         defaultValue = false,
         requiredCapabilities = setOf(
             StandardReaderCapabilities.StableTextSelection,
@@ -37,6 +46,11 @@ internal class BookAutomaticTranslationSettingsProvider(
     )
 
     override val settings = listOf(automaticSelection)
+
+    fun automaticSelectionEnabled(settingsSurfaceId: String) =
+        requireNotNull(automaticSelectionPreferences[settingsSurfaceId]) {
+            "No automatic translation preference is registered for viewer settings surface '$settingsSurfaceId'"
+        }
 
     private fun TranslationDeviceAvailability.toReaderAvailability(): ReaderSharedSettingAvailability {
         return when (this) {

@@ -118,3 +118,18 @@ Validation evidence:
   contribution and build registration, not edits to shared translation UI or
   session control.
 - Existing Android System preferences and behavior remain compatible.
+
+## Post-implementation merge checkpoint
+
+Status: `upcoming` merged and manifesto-audited on 2026-07-28.
+
+- Integrated reader-specific automatic-translation preferences, EPUB anchoring
+  fixes, overlay rendering fixes, and the compact translation popup.
+- Resolved the translation documentation conflict by retaining the explicit
+  engine/no-fallback model and documenting the new per-reader toggle scope.
+- Confirmed that BOOK still submits the profile-selected engine through the
+  provider-neutral Translation boundary.
+- Translation runtime, Translation UI, BOOK, and Translation settings focused
+  tests passed.
+- `spotlessCheck`, `verifyEntryFeatureArchitecture`, `testFossUnitTest`, and the
+  VitePress production build passed.

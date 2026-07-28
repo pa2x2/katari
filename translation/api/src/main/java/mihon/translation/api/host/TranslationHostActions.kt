@@ -11,7 +11,6 @@ interface TranslationHostActions {
     val knownEngines: List<KnownTranslationEngine>
     val selectedEngine: Preference<TranslationEngineId>
     val defaultTargetLanguage: Preference<TranslationTargetLanguageSelection>
-    val automaticSelectionEnabled: Preference<Boolean>
 
     suspend fun deviceAvailability(): TranslationDeviceAvailability
 

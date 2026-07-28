@@ -95,6 +95,7 @@ class BookSelectionTranslationControllerTest {
     ) = BookSelectionTranslationController(
         feature = feature,
         hostActions = host,
+        automaticSelectionEnabled = host.automaticSelectionEnabled,
         scope = backgroundScope,
         initialCapabilities = setOf(
             StandardReaderCapabilities.StableTextSelection,
@@ -137,7 +138,7 @@ class BookSelectionTranslationControllerTest {
                 { "default" },
                 { TranslationTargetLanguageSelection.Default },
             )
-        override val automaticSelectionEnabled = store.getBoolean("automatic", true)
+        val automaticSelectionEnabled = store.getBoolean("automatic", true)
         var availability: TranslationDeviceAvailability = TranslationDeviceAvailability.Available
 
         override suspend fun deviceAvailability() = availability

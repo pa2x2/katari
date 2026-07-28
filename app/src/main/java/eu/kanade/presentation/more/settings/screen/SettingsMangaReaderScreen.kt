@@ -21,7 +21,7 @@ import uy.kohesive.injekt.api.get
 import java.text.NumberFormat
 import tachiyomi.core.common.preference.Preference as CorePreference
 
-object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection {
+object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
 
     override val surfaceId: String = MangaReaderSettingsProvider.PROVIDER_ID
 
@@ -30,7 +30,7 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection {
     override fun getTitleRes() = MR.strings.pref_manga_reader
 
     @Composable
-    override fun getPreferences(): List<Preference> {
+    override fun getSurfacePreferences(): List<Preference> {
         val readerPref = remember { Injekt.get<MangaReaderSettingsProvider>() }
         val settingBinder = remember { Injekt.get<ViewerSettingBinder>() }
         val defaultReadingMode = remember(readerPref, settingBinder) {

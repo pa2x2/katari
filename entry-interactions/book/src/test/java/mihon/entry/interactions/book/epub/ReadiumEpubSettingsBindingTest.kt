@@ -106,7 +106,12 @@ class ReadiumEpubSettingsBindingTest {
     fun `runtime preferences react to changes from the shared binding`() = runTest {
         val provider = ReadiumEpubSettingsProvider(InMemoryPreferenceStore())
         val binder = TestViewerSettingBinder()
-        val settings = ReadiumEpubSettingsBinding(provider, binder, entryId = 7L)
+        val settings = ReadiumEpubSettingsBinding(
+            provider,
+            binder,
+            entryId = 7L,
+            readerSettingsSurfaceId = ReadiumEpubSettingsProvider.PROVIDER_ID,
+        )
         val nextPreferences = async(start = CoroutineStart.UNDISPATCHED) {
             settings.changes.first()
         }

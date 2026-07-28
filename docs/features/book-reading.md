@@ -37,11 +37,13 @@ Each reader exposes its currently available appearance, layout, and navigation c
 
 Use **Reset** from a reader settings dialog to remove that reader's active-profile values and the current entry's reader overrides. Reading progress, bookmarks, and downloads are not changed.
 
-Shared settings are declared once and appear both in the global Readers screen and in capable readers. The
-profile-scoped **Translate selected text automatically** setting is available for serialized prose and reflowable EPUB.
-It uses the profile's explicitly selected Translation engine and target language after a text selection settles.
-Katari does not switch to another engine if that provider is unavailable. Resetting either capable reader also returns
-this shared setting to its default of off.
+The profile-scoped **Translate selected text automatically** setting is
+available independently for the serialized prose and reflowable EPUB readers.
+Each toggle appears both in the global Readers screen and in its capable reader.
+It uses the profile's explicitly selected Translation engine and target
+language after a text selection settles. Katari does not switch to another
+engine if that provider is unavailable. Resetting a capable reader returns only
+that reader's toggle to its default of off.
 
 ## Selected-text translation
 

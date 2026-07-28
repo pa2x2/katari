@@ -37,6 +37,7 @@ import mihon.entry.interactions.EntryChildWebViewAction
 import mihon.entry.interactions.EntryChildWebViewResolution
 import mihon.entry.interactions.EntryInteractionActivity
 import mihon.entry.interactions.EntryWebViewFeature
+import mihon.entry.interactions.book.BookAutomaticTranslationSettingsProvider
 import mihon.entry.interactions.book.BookReaderErrorScreen
 import mihon.entry.interactions.book.BookReaderLoadingScreen
 import mihon.entry.interactions.book.BookReaderOpenResult
@@ -201,10 +202,14 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
                 is BookReaderOpenResult.Success -> {
                     if (retainedSession.session == null) retainedSession.attach(result.session)
                     try {
+                        val settingsSurfaceId = requireNotNull(result.session.readerSettingsSurfaceId) {
+                            "The EPUB reader session has no viewer settings surface"
+                        }
                         val readerSettings = ReadiumEpubSettingsBinding(
                             provider = Injekt.get<ReadiumEpubSettingsProvider>(),
                             binder = Injekt.get<ViewerSettingBinder>(),
                             entryId = result.session.entry.id,
+                            readerSettingsSurfaceId = settingsSurfaceId,
                             readerCapabilities = result.session.readerCapabilities,
                         )
                         val initialPreferences = readerSettings.initialPreferences()
@@ -308,6 +313,8 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
         val activeTranslationController = BookSelectionTranslationController(
             feature = Injekt.get<TranslationFeature>(),
             hostActions = Injekt.get<TranslationHostActions>(),
+            automaticSelectionEnabled = Injekt.get<BookAutomaticTranslationSettingsProvider>()
+                .automaticSelectionEnabled(readerSettings.readerSettingsSurfaceId),
             scope = lifecycleScope,
             initialCapabilities = session.readerCapabilities,
         ).also { translationController = it }
@@ -653,13 +660,15 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
                     controller.clearSelection()
                     return@launch
                 }
-                val containerPosition = IntArray(2).also(readerContainer::getLocationInWindow)
+                val navigatorView = fragment.publicationView
+                val navigatorPosition = IntArray(2).also(navigatorView::getLocationInWindow)
                 val anchor = selection.rect?.toReaderRootAnchor(
-                    nativeContainerPositionInWindow = Offset(
-                        containerPosition[0].toFloat(),
-                        containerPosition[1].toFloat(),
+                    navigatorViewPositionInWindow = Offset(
+                        navigatorPosition[0].toFloat(),
+                        navigatorPosition[1].toFloat(),
                     ),
                     readerRootPositionInWindow = readerRootPositionInWindow,
+                    readiumContentTopInset = navigatorView.readiumSelectionContentTopInset(),
                 )
                 val resourceIdentity = selection.locator.href.toString()
                 val rectIdentity = selection.rect?.let {

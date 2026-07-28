@@ -1407,6 +1407,7 @@ private fun HtmlProseSettingsDialog(
         i18nStringResource(MR.strings.pref_epub_controls),
     )
     BookReaderSettingsDialog(
+        settingsSurfaceId = settings.readerSettingsSurfaceId,
         capabilities = settings.readerCapabilities,
         onDismissRequest = onDismissRequest,
         onResetProcessorSettings = settings::resetSettings,

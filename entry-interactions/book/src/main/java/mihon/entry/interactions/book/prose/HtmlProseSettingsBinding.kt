@@ -10,6 +10,7 @@ internal class HtmlProseSettingsBinding(
     private val provider: HtmlProseSettingsProvider,
     private val binder: ViewerSettingBinder,
     private val entryId: Long,
+    val readerSettingsSurfaceId: String,
     val readerCapabilities: Set<ReaderCapabilityId> = emptySet(),
 ) {
     val theme = binder.bind(provider.themeSetting)

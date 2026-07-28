@@ -157,6 +157,7 @@ internal class BookReaderSessionFactory(
                             initialLocator = initialLocator,
                             mediaSession = mediaSession,
                             now = now,
+                            readerSettingsSurfaceId = processor.viewerSettingsSurfaceId,
                             readerCapabilities = processor.readerCapabilities(opened.session),
                         ),
                     )
@@ -358,6 +359,7 @@ internal class OpenedBookReaderSession(
     val initialLocator: BookLocator?,
     private val mediaSession: EntryMediaSessionProcessor,
     private val now: () -> Long,
+    val readerSettingsSurfaceId: String? = null,
     val readerCapabilities: Set<mihon.entry.viewer.settings.ReaderCapabilityId> = emptySet(),
 ) : AutoCloseable {
     private val closeStack = BookSessionCloseStack().apply {

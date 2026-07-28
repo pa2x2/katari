@@ -34,6 +34,7 @@ import mihon.entry.interactions.book.document.reader.BookDocumentResourceLoader
 import mihon.entry.interactions.book.document.render.PreparedBookDocument
 import mihon.entry.interactions.book.document.resource.PROSE_FONT_RESOURCE_REQUIREMENT
 import mihon.entry.interactions.book.document.resource.PROSE_IMAGE_RESOURCE_REQUIREMENT
+import mihon.entry.interactions.settings.HtmlProseSettingsProvider
 import mihon.entry.viewer.settings.StandardReaderCapabilities
 import java.io.ByteArrayOutputStream
 
@@ -41,6 +42,7 @@ import java.io.ByteArrayOutputStream
 internal class HtmlProseChapterProcessor : BookProcessor {
     override val id: String = "builtin.html.prose-chapter"
     override val displayName: String = "Prose chapter reader"
+    override val viewerSettingsSurfaceId = HtmlProseSettingsProvider.PROVIDER_ID
     override val potentialReaderCapabilities = TEXT_SELECTION_CAPABILITIES
 
     override fun supports(descriptor: BookContentDescriptor): Boolean =

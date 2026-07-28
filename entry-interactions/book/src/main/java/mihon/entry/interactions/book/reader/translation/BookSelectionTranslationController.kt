@@ -20,6 +20,7 @@ import mihon.translation.api.TranslationTargetLanguageSelection
 import mihon.translation.ui.session.TranslationSelectionAnchor
 import mihon.translation.ui.session.TranslationSessionHostCoordinator
 import mihon.translation.ui.session.TranslationSessionInput
+import tachiyomi.core.common.preference.Preference
 
 internal data class BookReaderTextSelection(
     val ownerIdentity: String,
@@ -37,6 +38,7 @@ internal data class BookReaderTextSelection(
 internal class BookSelectionTranslationController(
     feature: TranslationFeature,
     private val hostActions: TranslationHostActions,
+    private val automaticSelectionEnabled: Preference<Boolean>,
     private val scope: CoroutineScope,
     initialCapabilities: Set<ReaderCapabilityId>,
 ) : AutoCloseable {
@@ -59,7 +61,7 @@ internal class BookSelectionTranslationController(
     private var dismissedSelectionIdentity: String? = null
     private var availabilityJob: Job? = null
     private val observerJobs = listOf(
-        hostActions.automaticSelectionEnabled.changes()
+        automaticSelectionEnabled.changes()
             .onEach {
                 clearSelection()
                 updateEffectiveState()
@@ -152,7 +154,7 @@ internal class BookSelectionTranslationController(
 
     private fun updateEffectiveState() {
         val capable = capabilities.containsAll(REQUIRED_CAPABILITIES)
-        val enabled = hostActions.automaticSelectionEnabled.get() &&
+        val enabled = automaticSelectionEnabled.get() &&
             capable &&
             mutableDeviceAvailability.value == TranslationDeviceAvailability.Available
         if (mutableEffectiveEnabled.value == enabled) return

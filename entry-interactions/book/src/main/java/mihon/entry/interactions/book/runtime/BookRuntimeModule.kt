@@ -20,6 +20,7 @@ import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
 import mihon.entry.viewer.settings.ReaderSharedSettingsRegistry
 import mihon.entry.viewer.settings.ViewerSettingsProvider
 import mihon.translation.api.TranslationHostActions
+import tachiyomi.core.common.preference.ProfilePreferenceKeyPattern
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerGroupId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
@@ -78,8 +79,16 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
         keyPatterns = BookProcessorPreferences.profileKeyPatterns,
         factory = ::BookProcessorPreferences,
     )
+    val automaticTranslationPreferencesOwner = profilePreferenceOwners.register(
+        id = ProfilePreferenceOwnerId("entry-interactions.book.automatic-translation"),
+        keyPatterns = setOf(
+            ProfilePreferenceKeyPattern.Prefix(BookAutomaticTranslationPreferences.SURFACE_KEY_PREFIX),
+        ),
+        factory = ::BookAutomaticTranslationPreferences,
+    )
     val readiumSettingsProvider = readiumSettingsOwner.create()
     val proseSettingsProvider = proseSettingsOwner.create()
+    val automaticTranslationPreferences = automaticTranslationPreferencesOwner.create()
     val processorRegistry = BookProcessorRegistry(
         processors = listOf(
             ReadiumEpubProcessor(),
@@ -102,10 +111,12 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
     addSingletonFactory { BookChapterNavigationResolver(get()) }
     addSingletonFactory { readiumSettingsProvider }
     addSingletonFactory { proseSettingsProvider }
+    addSingletonFactory { automaticTranslationPreferences }
     addSingletonFactory { processorRegistry }
     addSingletonFactory {
         BookAutomaticTranslationSettingsProvider(
             processorRegistry = processorRegistry,
+            preferences = automaticTranslationPreferences,
             translationHostActions = get<TranslationHostActions>(),
         )
     }

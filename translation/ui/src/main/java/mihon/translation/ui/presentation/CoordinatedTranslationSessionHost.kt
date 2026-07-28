@@ -108,7 +108,7 @@ private fun TranslationSessionPickerDialog(
     val options = remember { translationLanguageOptions() }
     Dialog(
         onDismissRequest = coordinator::dismissPicker,
-        properties = translationSessionPickerDialogProperties,
+        properties = translationSessionDialogProperties,
     ) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             AdaptiveSheet(
@@ -184,7 +184,7 @@ private fun TranslationSessionPickerDialog(
     }
 }
 
-private val translationSessionPickerDialogProperties = DialogProperties(
+internal val translationSessionDialogProperties = DialogProperties(
     usePlatformDefaultWidth = false,
     decorFitsSystemWindows = true,
 )

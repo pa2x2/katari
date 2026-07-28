@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 import mihon.entry.viewer.settings.ReaderCapabilityId
 import mihon.entry.viewer.settings.ReaderSharedSettingAvailability
 import mihon.entry.viewer.settings.ReaderSharedSettingsRegistry
-import mihon.entry.viewer.settings.ReaderSharedToggleSetting
+import mihon.entry.viewer.settings.ResolvedReaderSharedToggleSetting
 import tachiyomi.presentation.core.components.CheckboxItem
 import tachiyomi.presentation.core.components.ViewerSettingsTabbedDialog
 import tachiyomi.presentation.core.util.collectAsState
@@ -31,6 +31,7 @@ import uy.kohesive.injekt.api.get
  */
 @Composable
 internal fun BookReaderSettingsDialog(
+    settingsSurfaceId: String,
     capabilities: Set<ReaderCapabilityId>,
     onDismissRequest: () -> Unit,
     onResetProcessorSettings: suspend () -> Unit,
@@ -38,7 +39,9 @@ internal fun BookReaderSettingsDialog(
     content: @Composable ColumnScope.(Int) -> Unit,
 ) {
     val registry = remember { Injekt.get<ReaderSharedSettingsRegistry>() }
-    val sharedSettings = remember(registry, capabilities) { registry.settingsFor(capabilities) }
+    val sharedSettings = remember(registry, capabilities, settingsSurfaceId) {
+        registry.settingsFor(capabilities, settingsSurfaceId)
+    }
     val tabTitles = if (sharedSettings.isEmpty()) {
         processorTabTitles
     } else {
@@ -51,7 +54,7 @@ internal fun BookReaderSettingsDialog(
         onResetSettings = {
             scope.launch {
                 onResetProcessorSettings()
-                sharedSettings.forEach(ReaderSharedToggleSetting::reset)
+                sharedSettings.forEach(ResolvedReaderSharedToggleSetting::reset)
             }
         },
         tabTitles = tabTitles,
@@ -65,7 +68,7 @@ internal fun BookReaderSettingsDialog(
 }
 
 @Composable
-private fun SharedReaderToggleRow(setting: ReaderSharedToggleSetting) {
+private fun SharedReaderToggleRow(setting: ResolvedReaderSharedToggleSetting) {
     val context = LocalContext.current
     val checked by setting.preference.collectAsState()
     val availability = rememberSharedSettingAvailability(setting)
@@ -88,7 +91,7 @@ private fun SharedReaderToggleRow(setting: ReaderSharedToggleSetting) {
 
 @Composable
 private fun rememberSharedSettingAvailability(
-    setting: ReaderSharedToggleSetting,
+    setting: ResolvedReaderSharedToggleSetting,
 ): ReaderSharedSettingAvailability? {
     val lifecycleOwner = LocalLifecycleOwner.current
     var resumeGeneration by remember(setting) { mutableIntStateOf(0) }

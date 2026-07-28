@@ -19,14 +19,41 @@ import mihon.entry.interactions.EntryViewerSettingsFeature
 import mihon.entry.interactions.EntryViewerSettingsScreenProjection
 import mihon.entry.viewer.settings.ReaderSharedSettingAvailability
 import mihon.entry.viewer.settings.ReaderSharedSettingsRegistry
-import mihon.entry.viewer.settings.ReaderSharedToggleSetting
+import mihon.entry.viewer.settings.ResolvedReaderSharedToggleSetting
 import mihon.entry.viewer.settings.ViewerSettingsCategory
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-internal interface AppEntryViewerSettingsScreenProjection : EntryViewerSettingsScreenProjection, SearchableSettings
+abstract class AppEntryViewerSettingsScreenProjection :
+    EntryViewerSettingsScreenProjection,
+    SearchableSettings {
+
+    @Composable
+    protected abstract fun getSurfacePreferences(): List<Preference>
+
+    /**
+     * Common app-level viewer settings host.
+     *
+     * Concrete screens contribute only surface-owned preferences. Applicable shared reader declarations are
+     * projected here so a new declaration cannot be omitted from an individual capable screen.
+     */
+    @Composable
+    final override fun getPreferences(): List<Preference> {
+        val registry = remember { Injekt.get<ReaderSharedSettingsRegistry>() }
+        val sharedSettings = remember(registry, surfaceId) { registry.settingsForSurface(surfaceId) }
+        val surfacePreferences = getSurfacePreferences()
+        if (sharedSettings.isEmpty()) return surfacePreferences
+
+        return listOf(
+            Preference.PreferenceGroup(
+                title = stringResource(MR.strings.pref_category_general),
+                preferenceItems = sharedSettings.map { setting -> setting.toAppPreference() },
+            ),
+        ) + surfacePreferences
+    }
+}
 
 object SettingsReaderScreen : SearchableSettings {
 
@@ -67,13 +94,13 @@ private fun viewerProviderPreferences(category: ViewerSettingsCategory): List<Pr
     if (category != ViewerSettingsCategory.READER) return destinations
 
     val sharedSettings = remember {
-        Injekt.get<ReaderSharedSettingsRegistry>().globalSettings()
+        Injekt.get<ReaderSharedSettingsRegistry>().rootSettings()
     }
     return sharedSettings.map { setting -> setting.toAppPreference() } + destinations
 }
 
 @Composable
-private fun ReaderSharedToggleSetting.toAppPreference(): Preference.PreferenceItem.SwitchPreference {
+private fun ResolvedReaderSharedToggleSetting.toAppPreference(): Preference.PreferenceItem.SwitchPreference {
     val context = androidx.compose.ui.platform.LocalContext.current
     val availability = rememberReaderSharedSettingAvailability(this)
     return Preference.PreferenceItem.SwitchPreference(
@@ -91,7 +118,7 @@ private fun ReaderSharedToggleSetting.toAppPreference(): Preference.PreferenceIt
 
 @Composable
 private fun rememberReaderSharedSettingAvailability(
-    setting: ReaderSharedToggleSetting,
+    setting: ResolvedReaderSharedToggleSetting,
 ): ReaderSharedSettingAvailability? {
     val lifecycleOwner = LocalLifecycleOwner.current
     var resumeGeneration by remember(setting) { mutableIntStateOf(0) }

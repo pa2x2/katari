@@ -16,6 +16,7 @@ import mihon.entry.interactions.book.BookPublicationSession
 import mihon.entry.interactions.book.BookReaderRequest
 import mihon.entry.interactions.book.BookSessionCloseStack
 import mihon.entry.interactions.book.MaterializedBookResource
+import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
 import mihon.entry.viewer.settings.StandardReaderCapabilities
 import org.readium.r2.shared.publication.Layout
 import org.readium.r2.shared.publication.Publication
@@ -38,6 +39,7 @@ internal class ReadiumEpubProcessor(
 ) : BookProcessor {
     override val id: String = "builtin.readium.epub"
     override val displayName: String = "EPUB reader"
+    override val viewerSettingsSurfaceId = ReadiumEpubSettingsProvider.PROVIDER_ID
     override val potentialReaderCapabilities = TEXT_SELECTION_CAPABILITIES
 
     private val httpClient = DefaultHttpClient()
