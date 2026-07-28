@@ -4,7 +4,7 @@ data class TranslationRequest(
     val text: String,
     val sourceLanguage: TranslationSourceLanguageSelection = TranslationSourceLanguageSelection.Automatic,
     val targetLanguage: TranslationTargetLanguageSelection = TranslationTargetLanguageSelection.Default,
-    val engine: TranslationEngineSelection = TranslationEngineSelection.Automatic,
+    val engine: TranslationEngineSelection = TranslationEngineSelection.ProfileDefault,
 )
 
 sealed interface TranslationSourceLanguageSelection {

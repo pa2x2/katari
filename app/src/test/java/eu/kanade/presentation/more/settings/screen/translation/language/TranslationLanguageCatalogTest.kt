@@ -1,4 +1,4 @@
-package eu.kanade.presentation.more.settings.screen.translation
+package eu.kanade.presentation.more.settings.screen.translation.language
 
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe

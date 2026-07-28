@@ -1,26 +1,35 @@
 package eu.kanade.presentation.more.settings.screen.translation
 
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mihon.translation.api.KnownTranslationEngine
 import mihon.translation.api.TranslationEngineId
+import mihon.translation.api.TranslationEngineSelection
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.TranslationLanguageTag
 import mihon.translation.api.TranslationModelDescriptor
 import mihon.translation.api.TranslationModelOperationResult
 import mihon.translation.api.TranslationProviderDisclosure
 import mihon.translation.api.TranslationRequest
+import mihon.translation.api.TranslationSourceLanguageSelection
 import mihon.translation.api.TranslationTargetLanguageSelection
 import mihon.translation.runtime.ProfileTranslationPreferences
 import mihon.translation.spi.KnownTranslationEngineCatalog
 import mihon.translation.spi.TranslationEngineSetupRegistry
 import mihon.translation.spi.TranslationSystemSetupResult
 import mihon.translation.ui.session.TranslationSessionController
+import mihon.translation.ui.session.TranslationSessionExecutionMode
 import mihon.translation.ui.session.TranslationSessionInput
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.util.Locale
 
 internal class TranslationSettingsScreenModel(
     feature: TranslationFeature = Injekt.get(),
@@ -29,15 +38,77 @@ internal class TranslationSettingsScreenModel(
     private val setupRegistry: TranslationEngineSetupRegistry = Injekt.get(),
 ) : ScreenModel {
     val engines: List<KnownTranslationEngine> = knownEngineCatalog.knownEngines
-    val controller = TranslationSessionController(feature, screenModelScope)
+    val controller = TranslationSessionController(
+        feature = feature,
+        parentScope = screenModelScope,
+        executionMode = TranslationSessionExecutionMode.AutoExecute,
+        selectionSettleDelayMillis = PLAYGROUND_DEBOUNCE_MILLIS,
+    )
+    private val mutablePlayground = MutableStateFlow(initialPlaygroundState())
+    val playground = mutablePlayground.asStateFlow()
 
-    fun submitTest(text: String) {
+    init {
+        submitPlayground()
+    }
+
+    fun setText(text: String) {
+        mutablePlayground.update { it.copy(text = text) }
+        submitPlayground()
+    }
+
+    fun setSourceLanguage(language: TranslationLanguageTag) {
+        mutablePlayground.update { it.copy(sourceLanguage = language) }
+        submitPlayground()
+    }
+
+    fun setTargetLanguage(language: TranslationLanguageTag) {
+        mutablePlayground.update { it.copy(targetLanguage = language) }
+        submitPlayground()
+    }
+
+    fun swapLanguages() {
+        mutablePlayground.update {
+            it.copy(
+                sourceLanguage = it.targetLanguage,
+                targetLanguage = it.sourceLanguage,
+            )
+        }
+        submitPlayground()
+    }
+
+    fun setEngine(engine: TranslationEngineId) {
+        mutablePlayground.update { it.copy(engine = engine) }
+        submitPlayground()
+    }
+
+    fun usePlaygroundTargetAsDefault() {
+        setDefaultTarget(mutablePlayground.value.targetLanguage)
+    }
+
+    fun usePlaygroundEngineAsDefault() {
+        preferences.engine.set(mutablePlayground.value.engine)
+    }
+
+    fun setProfileEngine(engine: TranslationEngineId) {
+        preferences.engine.set(engine)
+        setEngine(engine)
+    }
+
+    fun setProfileTarget(language: TranslationLanguageTag?) {
+        setDefaultTarget(language)
+        val resolved = language ?: effectiveUiLanguage() ?: return
+        setTargetLanguage(resolved)
+    }
+
+    private fun submitPlayground() {
+        val state = mutablePlayground.value
         controller.submit(
             TranslationSessionInput(
                 request = TranslationRequest(
-                    text = text,
-                    targetLanguage = preferences.targetLanguage.get(),
-                    engine = preferences.engineSelection.get(),
+                    text = state.text,
+                    sourceLanguage = TranslationSourceLanguageSelection.Explicit(state.sourceLanguage),
+                    targetLanguage = TranslationTargetLanguageSelection.Explicit(state.targetLanguage),
+                    engine = TranslationEngineSelection.Explicit(state.engine),
                 ),
             ),
         )
@@ -107,6 +178,21 @@ internal class TranslationSettingsScreenModel(
         controller.close()
     }
 
+    private fun initialPlaygroundState(): TranslationPlaygroundState {
+        val target = when (val selection = preferences.targetLanguage.get()) {
+            TranslationTargetLanguageSelection.Default -> effectiveUiLanguage()
+            is TranslationTargetLanguageSelection.Explicit -> selection.language
+        } ?: ENGLISH
+        val source = if (target.languageCode() == ENGLISH.value) FRENCH else ENGLISH
+        val sample = if (source == FRENCH) FRENCH_SAMPLE else ENGLISH_SAMPLE
+        return TranslationPlaygroundState(
+            text = sample,
+            sourceLanguage = source,
+            targetLanguage = target,
+            engine = preferences.engine.get(),
+        )
+    }
+
     private fun performSetupAction(
         engine: TranslationEngineId,
         onComplete: (TranslationHostActionResult) -> Unit,
@@ -128,6 +214,32 @@ internal class TranslationSettingsScreenModel(
             onComplete(result)
         }
     }
+
+    private companion object {
+        val ENGLISH = TranslationLanguageTag.require("en")
+        val FRENCH = TranslationLanguageTag.require("fr")
+        const val ENGLISH_SAMPLE = "Hello, world"
+        const val FRENCH_SAMPLE = "Bonjour tout le monde"
+        const val PLAYGROUND_DEBOUNCE_MILLIS = 400L
+    }
+}
+
+internal data class TranslationPlaygroundState(
+    val text: String,
+    val sourceLanguage: TranslationLanguageTag,
+    val targetLanguage: TranslationLanguageTag,
+    val engine: TranslationEngineId,
+)
+
+private fun effectiveUiLanguage(): TranslationLanguageTag? {
+    val locale = AppCompatDelegate.getApplicationLocales().get(0)
+        ?: LocaleListCompat.getAdjustedDefault().get(0)
+        ?: Locale.getDefault()
+    return TranslationLanguageTag.parse(locale.toLanguageTag())
+}
+
+private fun TranslationLanguageTag.languageCode(): String {
+    return Locale.forLanguageTag(value).language
 }
 
 internal sealed interface TranslationHostActionResult {

@@ -126,6 +126,10 @@ internal fun TranslationSessionOverlay(
                 TranslationSessionContent(
                     state = active,
                     expanded = true,
+                    showHeader = true,
+                    showExpand = false,
+                    showLanguageChange = true,
+                    useExternalEnginePicker = false,
                     onDismiss = onDismiss,
                     onExecute = onExecute,
                     onRetry = onRetry,
@@ -227,6 +231,10 @@ private fun TranslationSessionPopup(
             TranslationSessionContent(
                 state = state,
                 expanded = false,
+                showHeader = true,
+                showExpand = true,
+                showLanguageChange = true,
+                useExternalEnginePicker = false,
                 onDismiss = onDismiss,
                 onExecute = onExecute,
                 onRetry = onRetry,

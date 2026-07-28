@@ -22,7 +22,10 @@ import mihon.translation.api.TranslationTargetLanguageSelection
 class TranslationSessionController(
     private val feature: TranslationFeature,
     parentScope: CoroutineScope,
+    private val executionMode: TranslationSessionExecutionMode =
+        TranslationSessionExecutionMode.FollowProviderPolicy,
     private val selectionSettleDelayMillis: Long = DEFAULT_SELECTION_SETTLE_DELAY_MILLIS,
+    private val executionTimeoutMillis: Long = DEFAULT_EXECUTION_TIMEOUT_MILLIS,
 ) {
     private val controllerJob = SupervisorJob(parentScope.coroutineContext[Job])
     private val scope = CoroutineScope(parentScope.coroutineContext + controllerJob)
@@ -32,14 +35,17 @@ class TranslationSessionController(
 
     private var generation = 0L
     private var activeJob: Job? = null
+    private var executionTimeoutJob: Job? = null
     private var currentInput: TranslationSessionInput? = null
     private var closed = false
 
     init {
         require(selectionSettleDelayMillis >= 0)
+        require(executionTimeoutMillis > 0)
         controllerJob.invokeOnCompletion {
             closed = true
             activeJob = null
+            executionTimeoutJob = null
             currentInput = null
             mutableState.value = TranslationSessionState.Hidden
         }
@@ -100,6 +106,8 @@ class TranslationSessionController(
         nextGeneration()
         activeJob?.cancel()
         activeJob = null
+        executionTimeoutJob?.cancel()
+        executionTimeoutJob = null
         currentInput = null
         mutableState.value = TranslationSessionState.Hidden
     }
@@ -124,29 +132,40 @@ class TranslationSessionController(
     ) {
         val operationGeneration = nextGeneration()
         activeJob?.cancel()
+        executionTimeoutJob?.cancel()
+        executionTimeoutJob = null
         currentInput = input
         mutableState.value = TranslationSessionState.Settling(input)
         activeJob = scope.launch {
             if (delayMillis > 0) delay(delayMillis)
             if (!isCurrent(operationGeneration)) return@launch
 
-            mutableState.value = TranslationSessionState.Preparing(input)
-            val preparation = try {
-                feature.prepare(input.request)
-            } catch (error: CancellationException) {
-                throw error
-            } catch (_: Exception) {
-                latestInput(operationGeneration, input)?.let { latestInput ->
-                    mutableState.value = TranslationSessionState.Failed(
-                        input = latestInput,
-                        failure = TranslationSessionFailure.UnexpectedPreparationFailure,
-                    )
+            var firstPreparation = true
+            while (isCurrent(operationGeneration)) {
+                if (firstPreparation) {
+                    mutableState.value = TranslationSessionState.Preparing(input)
                 }
-                return@launch
+                val preparation = try {
+                    feature.prepare(input.request)
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (_: Exception) {
+                    latestInput(operationGeneration, input)?.let { latestInput ->
+                        mutableState.value = TranslationSessionState.Failed(
+                            input = latestInput,
+                            failure = TranslationSessionFailure.UnexpectedPreparationFailure,
+                        )
+                    }
+                    return@launch
+                }
+                if (!isCurrent(operationGeneration)) return@launch
+                val latestInput = latestInput(operationGeneration, input) ?: return@launch
+                acceptPreparation(operationGeneration, latestInput, preparation, autoExecuteImmediate = true)
+                if (preparation !is TranslationPreparation.SetupInProgress) return@launch
+
+                firstPreparation = false
+                delay(SETUP_PROGRESS_POLL_INTERVAL_MILLIS)
             }
-            if (!isCurrent(operationGeneration)) return@launch
-            val latestInput = latestInput(operationGeneration, input) ?: return@launch
-            acceptPreparation(operationGeneration, latestInput, preparation, autoExecuteImmediate = true)
         }
     }
 
@@ -161,7 +180,13 @@ class TranslationSessionController(
                 mutableState.value = TranslationSessionState.Ready(input, preparation)
                 if (
                     autoExecuteImmediate &&
-                    preparation.presentation.invocationPolicy == TranslationInvocationPolicy.Immediate
+                    (
+                        executionMode == TranslationSessionExecutionMode.AutoExecute ||
+                            (
+                                executionMode == TranslationSessionExecutionMode.FollowProviderPolicy &&
+                                    preparation.presentation.invocationPolicy == TranslationInvocationPolicy.Immediate
+                                )
+                        )
                 ) {
                     executeReady(operationGeneration, input, preparation)
                 }
@@ -179,6 +204,19 @@ class TranslationSessionController(
     ) {
         if (!isCurrent(operationGeneration)) return
         mutableState.value = TranslationSessionState.Translating(input, ready.presentation)
+        val timeoutJob = scope.launch {
+            delay(executionTimeoutMillis)
+            val latestInput = latestInput(operationGeneration, input) ?: return@launch
+            nextGeneration()
+            mutableState.value = TranslationSessionState.Failed(
+                input = latestInput,
+                failure = TranslationSessionFailure.ExecutionTimedOut,
+                presentation = ready.presentation,
+            )
+            activeJob?.cancel()
+        }
+        executionTimeoutJob?.cancel()
+        executionTimeoutJob = timeoutJob
         val execution = try {
             feature.translate(ready.translation)
         } catch (error: CancellationException) {
@@ -192,6 +230,11 @@ class TranslationSessionController(
                 )
             }
             return
+        } finally {
+            timeoutJob.cancel()
+            if (executionTimeoutJob === timeoutJob) {
+                executionTimeoutJob = null
+            }
         }
         if (!isCurrent(operationGeneration)) return
         val latestInput = latestInput(operationGeneration, input) ?: return
@@ -207,6 +250,9 @@ class TranslationSessionController(
                     preparation = execution.preparation,
                     autoExecuteImmediate = false,
                 )
+                if (execution.preparation is TranslationPreparation.SetupInProgress) {
+                    pollSetupProgress(operationGeneration, latestInput)
+                }
             }
             is TranslationExecution.Failed -> {
                 mutableState.value = TranslationSessionState.Failed(
@@ -215,6 +261,33 @@ class TranslationSessionController(
                     presentation = ready.presentation,
                 )
             }
+        }
+    }
+
+    private suspend fun pollSetupProgress(
+        operationGeneration: Long,
+        input: TranslationSessionInput,
+    ) {
+        var lastInput = input
+        while (isCurrent(operationGeneration)) {
+            delay(SETUP_PROGRESS_POLL_INTERVAL_MILLIS)
+            val preparation = try {
+                feature.prepare(lastInput.request)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
+                latestInput(operationGeneration, lastInput)?.let { latestInput ->
+                    mutableState.value = TranslationSessionState.Failed(
+                        input = latestInput,
+                        failure = TranslationSessionFailure.UnexpectedPreparationFailure,
+                    )
+                }
+                return
+            }
+            if (!isCurrent(operationGeneration)) return
+            lastInput = latestInput(operationGeneration, lastInput) ?: return
+            acceptPreparation(operationGeneration, lastInput, preparation, autoExecuteImmediate = true)
+            if (preparation !is TranslationPreparation.SetupInProgress) return
         }
     }
 
@@ -239,5 +312,13 @@ class TranslationSessionController(
 
     private companion object {
         const val DEFAULT_SELECTION_SETTLE_DELAY_MILLIS = 250L
+        const val DEFAULT_EXECUTION_TIMEOUT_MILLIS = 30_000L
+        const val SETUP_PROGRESS_POLL_INTERVAL_MILLIS = 1_000L
     }
+}
+
+enum class TranslationSessionExecutionMode {
+    FollowProviderPolicy,
+    AutoExecute,
+    AwaitUserAction,
 }

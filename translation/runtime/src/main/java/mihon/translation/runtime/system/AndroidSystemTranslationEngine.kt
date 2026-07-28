@@ -12,7 +12,6 @@ import mihon.translation.api.TranslationProviderPresentation
 import mihon.translation.api.TranslationSystemSetupReason
 import mihon.translation.api.TranslationUnavailableReason
 import mihon.translation.spi.ReadyTranslationEngineRequest
-import mihon.translation.spi.TranslationAutomaticSelectionPriority
 import mihon.translation.spi.TranslationEngine
 import mihon.translation.spi.TranslationEngineExecution
 import mihon.translation.spi.TranslationEnginePreparation
@@ -36,10 +35,6 @@ internal class AndroidSystemTranslationEngine(
         invocationPolicy = TranslationInvocationPolicy.Immediate,
     )
     override val maximumInputCodePoints: Int? = null
-    override val automaticSelectionPriority = TranslationAutomaticSelectionPriority(
-        ready = 200,
-        setup = 100,
-    )
     override val engine: TranslationEngineId = ENGINE_ID
 
     override suspend fun prepare(request: ResolvedTranslationRequest): TranslationEnginePreparation {

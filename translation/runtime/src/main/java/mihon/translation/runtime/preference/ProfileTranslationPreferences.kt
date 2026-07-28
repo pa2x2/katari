@@ -1,7 +1,6 @@
 package mihon.translation.runtime
 
 import mihon.translation.api.TranslationEngineId
-import mihon.translation.api.TranslationEngineSelection
 import mihon.translation.api.TranslationLanguageTag
 import mihon.translation.api.TranslationTargetLanguageSelection
 import tachiyomi.core.common.preference.Preference
@@ -9,12 +8,13 @@ import tachiyomi.core.common.preference.PreferenceStore
 
 class ProfileTranslationPreferences(
     preferenceStore: PreferenceStore,
+    private val defaultEngine: TranslationEngineId,
 ) {
-    val engineSelection: Preference<TranslationEngineSelection> = preferenceStore.getObjectFromString(
+    val engine: Preference<TranslationEngineId> = preferenceStore.getObjectFromString(
         key = "translation_engine",
-        defaultValue = TranslationEngineSelection.Automatic,
-        serializer = ::serializeEngineSelection,
-        deserializer = ::deserializeEngineSelection,
+        defaultValue = defaultEngine,
+        serializer = TranslationEngineId::value,
+        deserializer = { deserializeTranslationEngine(it, defaultEngine) },
     )
 
     val targetLanguage: Preference<TranslationTargetLanguageSelection> = preferenceStore.getObjectFromString(
@@ -32,20 +32,6 @@ class ProfileTranslationPreferences(
         defaultValue = false,
     )
 
-    private fun serializeEngineSelection(selection: TranslationEngineSelection): String {
-        return when (selection) {
-            TranslationEngineSelection.Automatic -> AUTOMATIC_VALUE
-            is TranslationEngineSelection.Explicit -> selection.engine.value
-        }
-    }
-
-    private fun deserializeEngineSelection(value: String): TranslationEngineSelection {
-        if (value == AUTOMATIC_VALUE) return TranslationEngineSelection.Automatic
-        return runCatching {
-            TranslationEngineSelection.Explicit(TranslationEngineId(value))
-        }.getOrDefault(TranslationEngineSelection.Automatic)
-    }
-
     private fun serializeTargetLanguage(selection: TranslationTargetLanguageSelection): String {
         return when (selection) {
             TranslationTargetLanguageSelection.Default -> DEFAULT_TARGET_VALUE
@@ -61,7 +47,14 @@ class ProfileTranslationPreferences(
     }
 
     private companion object {
-        const val AUTOMATIC_VALUE = "automatic"
         const val DEFAULT_TARGET_VALUE = "default"
     }
+}
+
+internal fun deserializeTranslationEngine(
+    value: String,
+    defaultEngine: TranslationEngineId,
+): TranslationEngineId {
+    if (value == "automatic") return defaultEngine
+    return runCatching { TranslationEngineId(value) }.getOrDefault(defaultEngine)
 }

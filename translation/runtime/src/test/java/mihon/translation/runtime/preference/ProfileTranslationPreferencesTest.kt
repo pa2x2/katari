@@ -3,7 +3,6 @@ package mihon.translation.runtime
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import mihon.translation.api.TranslationEngineId
-import mihon.translation.api.TranslationEngineSelection
 import mihon.translation.api.TranslationLanguageTag
 import mihon.translation.api.TranslationTargetLanguageSelection
 import org.junit.jupiter.api.Test
@@ -19,7 +18,7 @@ class ProfileTranslationPreferencesTest {
         val registry = ProfilePreferenceOwnerRegistry()
         ProfilePreferenceOwnerInstaller(registry, ::InMemoryPreferenceStore).register(
             id = ProfilePreferenceOwnerId("translation"),
-            factory = ::ProfileTranslationPreferences,
+            factory = { ProfileTranslationPreferences(it, DEFAULT_ENGINE) },
         )
 
         registry.ownership().profileKeys shouldContainExactlyInAnyOrder setOf(
@@ -31,15 +30,26 @@ class ProfileTranslationPreferencesTest {
 
     @Test
     fun `engine and target selections preserve provider-neutral identities`() {
-        val preferences = ProfileTranslationPreferences(InMemoryPreferenceStore())
-        val engine = TranslationEngineSelection.Explicit(TranslationEngineId("example.engine"))
+        val preferences = ProfileTranslationPreferences(InMemoryPreferenceStore(), DEFAULT_ENGINE)
+        val engine = TranslationEngineId("example.engine")
         val target = TranslationTargetLanguageSelection.Explicit(TranslationLanguageTag.require("pt-BR"))
 
-        preferences.engineSelection.set(engine)
+        preferences.engine.set(engine)
         preferences.targetLanguage.set(target)
 
-        preferences.engineSelection.get() shouldBe engine
+        preferences.engine.get() shouldBe engine
         preferences.targetLanguage.get() shouldBe target
         preferences.automaticSelectionTranslationEnabled.get() shouldBe false
+    }
+
+    @Test
+    fun `legacy automatic engine migrates once to the bundled default`() {
+        deserializeTranslationEngine("automatic", DEFAULT_ENGINE) shouldBe DEFAULT_ENGINE
+        deserializeTranslationEngine("example.engine", DEFAULT_ENGINE) shouldBe
+            TranslationEngineId("example.engine")
+    }
+
+    private companion object {
+        val DEFAULT_ENGINE = TranslationEngineId("android-system")
     }
 }

@@ -27,7 +27,7 @@ value class TranslationProviderId(
 }
 
 sealed interface TranslationEngineSelection {
-    data object Automatic : TranslationEngineSelection
+    data object ProfileDefault : TranslationEngineSelection
 
     data class Explicit(
         val engine: TranslationEngineId,

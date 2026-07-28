@@ -10,6 +10,8 @@ sealed interface TranslationSessionExternalAction {
 
     data object ChooseTargetLanguage : TranslationSessionExternalAction
 
+    data object ChooseEngine : TranslationSessionExternalAction
+
     data class ChangeLanguages(
         val source: TranslationLanguageTag,
         val target: TranslationLanguageTag,

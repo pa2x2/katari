@@ -11,7 +11,7 @@ class ProfileTranslationDefaultTargetLanguageResolverTest {
 
     @Test
     fun `unset profile target follows the effective UI locale dynamically`() {
-        val preferences = ProfileTranslationPreferences(InMemoryPreferenceStore())
+        val preferences = ProfileTranslationPreferences(InMemoryPreferenceStore(), DEFAULT_ENGINE)
         var locale = Locale.forLanguageTag("pl-PL")
         val resolver = ProfileTranslationDefaultTargetLanguageResolver(preferences) { locale }
 
@@ -22,7 +22,7 @@ class ProfileTranslationDefaultTargetLanguageResolverTest {
 
     @Test
     fun `explicit profile target wins over the effective UI locale`() {
-        val preferences = ProfileTranslationPreferences(InMemoryPreferenceStore())
+        val preferences = ProfileTranslationPreferences(InMemoryPreferenceStore(), DEFAULT_ENGINE)
         preferences.targetLanguage.set(
             TranslationTargetLanguageSelection.Explicit(TranslationLanguageTag.require("es")),
         )
@@ -31,5 +31,9 @@ class ProfileTranslationDefaultTargetLanguageResolverTest {
         }
 
         resolver.resolve() shouldBe TranslationLanguageTag.require("es")
+    }
+
+    private companion object {
+        val DEFAULT_ENGINE = mihon.translation.api.TranslationEngineId("android-system")
     }
 }

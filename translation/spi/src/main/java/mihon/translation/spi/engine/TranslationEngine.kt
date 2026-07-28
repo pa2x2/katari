@@ -17,8 +17,6 @@ interface TranslationEngine {
     val catalogEntry: KnownTranslationEngine
     val presentation: TranslationProviderPresentation
     val maximumInputCodePoints: Int?
-    val automaticSelectionPriority: TranslationAutomaticSelectionPriority
-        get() = TranslationAutomaticSelectionPriority()
 
     suspend fun prepare(request: ResolvedTranslationRequest): TranslationEnginePreparation
 
@@ -26,11 +24,6 @@ interface TranslationEngine {
 
     suspend fun translate(ready: ReadyTranslationEngineRequest): TranslationEngineExecution
 }
-
-data class TranslationAutomaticSelectionPriority(
-    val ready: Int = 0,
-    val setup: Int = 0,
-)
 
 /** Provider-owned opaque preparation state. Only the engine that produced it may execute it. */
 interface ReadyTranslationEngineRequest

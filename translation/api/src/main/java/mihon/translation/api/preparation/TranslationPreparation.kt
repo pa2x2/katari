@@ -82,8 +82,6 @@ sealed interface TranslationTargetChoiceReason {
 }
 
 sealed interface TranslationEngineChoiceReason {
-    data object NoSelection : TranslationEngineChoiceReason
-
     data class SelectedEngineUnavailable(
         val engine: TranslationEngineId,
     ) : TranslationEngineChoiceReason
@@ -115,8 +113,6 @@ sealed interface TranslationUnavailableReason {
             require(reason.isNotBlank())
         }
     }
-
-    data object NoEngineAvailable : TranslationUnavailableReason
 }
 
 sealed interface TranslationRejectionReason {

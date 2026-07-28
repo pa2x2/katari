@@ -20,7 +20,12 @@ val translationFeatureRuntimeModule = ApplicationFeatureRuntimeModule(
 ) { context ->
     val profilePreferencesOwner = context.dependencies.profilePreferenceOwners.register(
         id = ProfilePreferenceOwnerId("translation"),
-        factory = ::ProfileTranslationPreferences,
+        factory = {
+            ProfileTranslationPreferences(
+                preferenceStore = it,
+                defaultEngine = AndroidSystemTranslationEngine.ENGINE_ID,
+            )
+        },
     )
     val profilePreferences = profilePreferencesOwner.create()
     val androidSystemEngine = AndroidSystemTranslationEngine(
@@ -39,7 +44,7 @@ val translationFeatureRuntimeModule = ApplicationFeatureRuntimeModule(
             components = context.components,
         ),
         defaultTargetLanguageResolver = ProfileTranslationDefaultTargetLanguageResolver(profilePreferences),
-        preferredEngineSelection = profilePreferences.engineSelection::get,
+        selectedEngine = profilePreferences.engine::get,
     )
 
     addSingletonFactory { profilePreferences }

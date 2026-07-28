@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -55,6 +56,78 @@ class TranslationSessionControllerTest {
         feature.translatedTexts shouldContainExactly listOf("hello")
         val success = controller.state.value as TranslationSessionState.Success
         success.result.translatedText shouldBe "translated hello"
+    }
+
+    @Test
+    fun `manual session prepares an immediate provider before explicit execution`() = runTest {
+        val feature = FakeTranslationFeature(invocationPolicy = TranslationInvocationPolicy.Immediate)
+        val controller = TranslationSessionController(
+            feature = feature,
+            parentScope = backgroundScope,
+            executionMode = TranslationSessionExecutionMode.AwaitUserAction,
+            selectionSettleDelayMillis = 0,
+        )
+
+        controller.submit(input("hello"))
+        runCurrent()
+
+        controller.state.value.shouldBeInstanceOf<TranslationSessionState.Ready>()
+        feature.translatedTexts shouldBe emptyList()
+
+        controller.execute()
+        runCurrent()
+
+        feature.translatedTexts shouldContainExactly listOf("hello")
+        controller.state.value.shouldBeInstanceOf<TranslationSessionState.Success>()
+    }
+
+    @Test
+    fun `automatic session executes without exposing an explicit provider action`() = runTest {
+        val feature = FakeTranslationFeature(
+            invocationPolicy = TranslationInvocationPolicy.ExplicitAction("Translate"),
+        )
+        val controller = TranslationSessionController(
+            feature = feature,
+            parentScope = backgroundScope,
+            executionMode = TranslationSessionExecutionMode.AutoExecute,
+            selectionSettleDelayMillis = 0,
+        )
+
+        controller.submit(input("hello"))
+        runCurrent()
+
+        feature.translatedTexts shouldContainExactly listOf("hello")
+        controller.state.value.shouldBeInstanceOf<TranslationSessionState.Success>()
+    }
+
+    @Test
+    fun `unresponsive execution leaves translating state after the timeout`() = runTest {
+        val feature = object : TranslationFeature {
+            override suspend fun prepare(request: TranslationRequest): TranslationPreparation {
+                return ready(request, TranslationInvocationPolicy.Immediate)
+            }
+
+            override suspend fun translate(ready: ReadyTranslation): TranslationExecution {
+                awaitCancellation()
+            }
+        }
+        val controller = TranslationSessionController(
+            feature = feature,
+            parentScope = backgroundScope,
+            executionMode = TranslationSessionExecutionMode.AutoExecute,
+            selectionSettleDelayMillis = 0,
+            executionTimeoutMillis = 1_000,
+        )
+
+        controller.submit(input("hello"))
+        runCurrent()
+        controller.state.value.shouldBeInstanceOf<TranslationSessionState.Translating>()
+
+        advanceTimeBy(1_000)
+        runCurrent()
+
+        val failed = controller.state.value.shouldBeInstanceOf<TranslationSessionState.Failed>()
+        failed.failure shouldBe TranslationSessionFailure.ExecutionTimedOut
     }
 
     @Test
@@ -146,6 +219,37 @@ class TranslationSessionControllerTest {
     }
 
     @Test
+    fun `setup progress is rechecked automatically until preparation changes`() = runTest {
+        var preparationCount = 0
+        val feature = FakeTranslationFeature(
+            prepareOverride = { request ->
+                preparationCount += 1
+                if (preparationCount == 1) {
+                    TranslationPreparation.SetupInProgress(ENGINE, PRESENTATION)
+                } else {
+                    ready(request)
+                }
+            },
+        )
+        val controller = TranslationSessionController(
+            feature = feature,
+            parentScope = backgroundScope,
+            executionMode = TranslationSessionExecutionMode.AwaitUserAction,
+            selectionSettleDelayMillis = 0,
+        )
+
+        controller.submit(input("hello"))
+        runCurrent()
+        controller.state.value.shouldBeInstanceOf<TranslationSessionState.PreparationRequired>()
+
+        advanceTimeBy(1_000)
+        runCurrent()
+
+        preparationCount shouldBe 2
+        controller.state.value.shouldBeInstanceOf<TranslationSessionState.Ready>()
+    }
+
+    @Test
     fun `dismissal cancels work and removes session text from state`() = runTest {
         val gate = CompletableDeferred<Unit>()
         val feature = FakeTranslationFeature(
@@ -201,6 +305,12 @@ class TranslationSessionControllerTest {
         val TARGET = TranslationLanguageTag.require("pl")
         val ENGINE = TranslationEngineId("fake")
         val PROVIDER = TranslationProviderId("fake")
+        val PRESENTATION = TranslationProviderPresentation(
+            providerId = PROVIDER,
+            providerName = "Fake",
+            engineName = "Fake engine",
+            invocationPolicy = TranslationInvocationPolicy.ExplicitAction("Translate"),
+        )
 
         fun input(text: String): TranslationSessionInput {
             return TranslationSessionInput(
@@ -225,12 +335,7 @@ class TranslationSessionControllerTest {
                     targetLanguage = TARGET,
                     engine = ENGINE,
                 ),
-                presentation = TranslationProviderPresentation(
-                    providerId = PROVIDER,
-                    providerName = "Fake",
-                    engineName = "Fake engine",
-                    invocationPolicy = invocationPolicy,
-                ),
+                presentation = PRESENTATION.copy(invocationPolicy = invocationPolicy),
             )
             return preparation.copy(
                 translation = FakeReadyTranslation(request, preparation),

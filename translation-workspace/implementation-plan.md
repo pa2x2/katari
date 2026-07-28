@@ -156,8 +156,8 @@ Exit condition: fake engines can drive the complete Translation API without conc
 ### Resolution
 
 - [x] Implement explicit engine resolution without fallback.
-- [x] Implement Automatic ready-first ranking.
-- [x] Keep ranking provider-neutral and deterministic for future engines.
+- [x] Store one explicit profile engine and support an explicit per-request override.
+- [x] Migrate the legacy Automatic preference to the Android system engine.
 - [x] Return `SelectedEngineUnavailable` without mutating the saved preference.
 - [x] Return a target chooser when source equals target.
 - [x] Enforce provider limits and the 10,000-code-point shared ceiling.
@@ -201,6 +201,7 @@ obligation remains in the current tree.
 - [x] Debounce changing selections by 250 ms.
 - [x] Separate preparation, provider action, setup, translation, success, and failure states.
 - [x] Keep source/result text in memory only.
+- [x] Support an explicit-action mode that prepares without auto-executing an immediate provider.
 
 ### Popup and sheet
 
@@ -211,6 +212,7 @@ obligation remains in the current tree.
 - [x] Auto-execute ready Android system translations.
 - [x] Render provider attribution from metadata without engine ID checks.
 - [x] Clear all session text on dismissal.
+- [x] Reuse the same state renderer in an embedded Settings panel.
 
 Exit condition: presenter/controller tests protect user-visible transitions and provider invocation policy.
 
@@ -221,8 +223,12 @@ Exit condition: presenter/controller tests protect user-visible transitions and 
 - [x] Add target-language selection.
 - [x] Route system setup through the OEM-provided action when available.
 - [x] Add provider documentation/privacy links when supplied by provider metadata.
-- [x] Add transient `Test translation` input.
-- [x] Drive the test flow through the production `TranslationFeature` and shared session UI.
+- [x] Add an inline, prefilled, transient Translation playground.
+- [x] Show pair-specific setup before the playground executes and refresh in-progress setup automatically.
+- [x] Debounce playground edits and display the translated result without a separate execution action.
+- [x] Use full-screen language and engine screens on the app navigator instead of nested dialogs.
+- [x] Keep playground language and engine experiments session-only until explicitly saved as profile defaults.
+- [x] Drive the playground through the production `TranslationFeature` and shared session renderer.
 - [x] Do not retain test input or output after dismissal/navigation.
 
 Exit condition: the first slice is operable end to end without any reader integration.

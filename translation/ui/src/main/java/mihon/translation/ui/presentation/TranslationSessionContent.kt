@@ -28,7 +28,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import mihon.translation.api.KnownTranslationEngine
 import mihon.translation.api.TranslationEngineBuildAvailability
-import mihon.translation.api.TranslationEngineChoiceReason
 import mihon.translation.api.TranslationEngineSelection
 import mihon.translation.api.TranslationFailureReason
 import mihon.translation.api.TranslationInvocationPolicy
@@ -48,6 +47,10 @@ import java.util.Locale
 internal fun TranslationSessionContent(
     state: TranslationSessionState.Active,
     expanded: Boolean,
+    showHeader: Boolean,
+    showExpand: Boolean,
+    showLanguageChange: Boolean,
+    useExternalEnginePicker: Boolean,
     onDismiss: () -> Unit,
     onExecute: () -> Unit,
     onRetry: () -> Unit,
@@ -59,31 +62,35 @@ internal fun TranslationSessionContent(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 20.dp, end = 8.dp, top = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResource(MR.strings.translation_title),
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            IconButton(onClick = onDismiss) {
-                Icon(
-                    imageVector = Icons.Outlined.Close,
-                    contentDescription = stringResource(MR.strings.action_close),
+        if (showHeader) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 20.dp, end = 8.dp, top = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(MR.strings.translation_title),
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.titleMedium,
                 )
+                IconButton(onClick = onDismiss) {
+                    Icon(
+                        imageVector = Icons.Outlined.Close,
+                        contentDescription = stringResource(MR.strings.action_close),
+                    )
+                }
             }
+            HorizontalDivider()
         }
-        HorizontalDivider()
         Column(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             when (state) {
-                is TranslationSessionState.Settling -> Unit
+                is TranslationSessionState.Settling -> ProgressContent(
+                    stringResource(MR.strings.translation_checking_pair),
+                )
                 is TranslationSessionState.Preparing -> ProgressContent(
                     stringResource(MR.strings.translation_preparing),
                 )
@@ -96,11 +103,14 @@ internal fun TranslationSessionContent(
                     onRetry = onRetry,
                     onSelectSource = onSelectSource,
                     onSelectEngine = onSelectEngine,
+                    useExternalEnginePicker = useExternalEnginePicker,
                     onExternalAction = onExternalAction,
                 )
                 is TranslationSessionState.Success -> SuccessContent(
                     state = state,
                     expanded = expanded,
+                    showExpand = showExpand,
+                    showLanguageChange = showLanguageChange,
                     onCopy = onCopy,
                     onExpand = onExpand,
                     onExternalAction = onExternalAction,
@@ -149,6 +159,8 @@ private fun ReadyContent(
 private fun SuccessContent(
     state: TranslationSessionState.Success,
     expanded: Boolean,
+    showExpand: Boolean,
+    showLanguageChange: Boolean,
     onCopy: (String) -> Unit,
     onExpand: () -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
@@ -185,7 +197,7 @@ private fun SuccessContent(
                 contentDescription = stringResource(MR.strings.copy),
             )
         }
-        if (!expanded) {
+        if (showExpand && !expanded) {
             IconButton(onClick = onExpand) {
                 Icon(
                     imageVector = Icons.Outlined.OpenInFull,
@@ -193,20 +205,22 @@ private fun SuccessContent(
                 )
             }
         }
-        IconButton(
-            onClick = {
-                onExternalAction(
-                    TranslationSessionExternalAction.ChangeLanguages(
-                        source = state.result.sourceLanguage,
-                        target = state.result.targetLanguage,
-                    ),
+        if (showLanguageChange) {
+            IconButton(
+                onClick = {
+                    onExternalAction(
+                        TranslationSessionExternalAction.ChangeLanguages(
+                            source = state.result.sourceLanguage,
+                            target = state.result.targetLanguage,
+                        ),
+                    )
+                },
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Language,
+                    contentDescription = stringResource(MR.strings.action_change_language),
                 )
-            },
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Language,
-                contentDescription = stringResource(MR.strings.action_change_language),
-            )
+            }
         }
         IconButton(
             onClick = {
@@ -230,6 +244,7 @@ private fun PreparationContent(
     onRetry: () -> Unit,
     onSelectSource: (TranslationLanguageTag) -> Unit,
     onSelectEngine: (TranslationEngineSelection) -> Unit,
+    useExternalEnginePicker: Boolean,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
 ) {
     when (preparation) {
@@ -298,9 +313,6 @@ private fun PreparationContent(
             } else {
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             }
-            TextButton(onClick = onRetry, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(MR.strings.action_retry))
-            }
         }
         is TranslationPreparation.SourceUndetermined -> {
             Text(stringResource(MR.strings.translation_source_undetermined))
@@ -341,15 +353,21 @@ private fun PreparationContent(
         }
         is TranslationPreparation.EngineChoiceRequired -> {
             Text(
-                when (preparation.reason) {
-                    TranslationEngineChoiceReason.NoSelection ->
-                        stringResource(MR.strings.translation_engine_required)
-                    is TranslationEngineChoiceReason.SelectedEngineUnavailable ->
-                        stringResource(MR.strings.translation_selected_engine_unavailable)
-                },
+                stringResource(MR.strings.translation_selected_engine_unavailable),
             )
-            preparation.engines.forEach { engine ->
-                EngineChoice(engine, onSelectEngine)
+            if (useExternalEnginePicker) {
+                Button(
+                    onClick = {
+                        onExternalAction(TranslationSessionExternalAction.ChooseEngine)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(MR.strings.translation_choose_engine))
+                }
+            } else {
+                preparation.engines.forEach { engine ->
+                    EngineChoice(engine, onSelectEngine)
+                }
             }
         }
         is TranslationPreparation.Unavailable -> {
@@ -402,6 +420,8 @@ private fun FailedContent(
             TranslationSessionFailure.UnexpectedPreparationFailure,
             TranslationSessionFailure.UnexpectedExecutionFailure,
             -> stringResource(MR.strings.translation_failed)
+            TranslationSessionFailure.ExecutionTimedOut ->
+                stringResource(MR.strings.translation_timed_out)
             is TranslationSessionFailure.ExecutionFailure -> {
                 when (val reason = failure.execution.reason) {
                     TranslationFailureReason.InvalidReadyTranslation ->
@@ -465,8 +485,6 @@ private fun TranslationUnavailableReason.message(): String {
             )
         is TranslationUnavailableReason.EngineUnavailable ->
             stringResource(MR.strings.translation_engine_unavailable, engine.value, reason)
-        TranslationUnavailableReason.NoEngineAvailable ->
-            stringResource(MR.strings.translation_no_engine)
     }
 }
 

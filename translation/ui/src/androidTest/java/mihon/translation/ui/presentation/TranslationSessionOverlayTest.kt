@@ -6,8 +6,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -73,6 +76,84 @@ class TranslationSessionOverlayTest {
             composeRule.activity.stringResource(MR.strings.translation_source_undetermined),
         ).assertIsDisplayed()
         composeRule.onNodeWithTag(TRANSLATION_SESSION_SHEET_TAG).assertIsDisplayed()
+    }
+
+    @Test
+    fun embedded_content_reuses_setup_renderer_without_overlay_chrome() {
+        val state = TranslationSessionState.PreparationRequired(
+            input = input(anchor = null),
+            preparation = TranslationPreparation.SystemSetupRequired(
+                engine = mihon.translation.api.TranslationEngineId("android-system"),
+                presentation = PRESENTATION,
+                reason = mihon.translation.api.TranslationSystemSetupReason.LanguageModelsRequired,
+            ),
+        )
+
+        composeRule.setContent {
+            MaterialTheme {
+                TranslationSessionContent(
+                    state = state,
+                    expanded = true,
+                    showHeader = false,
+                    showExpand = false,
+                    showLanguageChange = false,
+                    useExternalEnginePicker = true,
+                    onDismiss = {},
+                    onExecute = {},
+                    onRetry = {},
+                    onCopy = {},
+                    onExpand = {},
+                    onSelectSource = {},
+                    onSelectEngine = {},
+                    onExternalAction = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(
+            composeRule.activity.stringResource(MR.strings.translation_system_setup_required),
+        ).assertIsDisplayed()
+        composeRule.onAllNodesWithTag(TRANSLATION_SESSION_SHEET_TAG).assertCountEquals(0)
+        composeRule.onAllNodesWithTag(TRANSLATION_SESSION_POPUP_TAG).assertCountEquals(0)
+    }
+
+    @Test
+    fun setup_progress_does_not_offer_a_manual_retry() {
+        val state = TranslationSessionState.PreparationRequired(
+            input = input(anchor = null),
+            preparation = TranslationPreparation.SetupInProgress(
+                engine = mihon.translation.api.TranslationEngineId("android-system"),
+                presentation = PRESENTATION,
+            ),
+        )
+
+        composeRule.setContent {
+            MaterialTheme {
+                TranslationSessionContent(
+                    state = state,
+                    expanded = true,
+                    showHeader = false,
+                    showExpand = false,
+                    showLanguageChange = false,
+                    useExternalEnginePicker = true,
+                    onDismiss = {},
+                    onExecute = {},
+                    onRetry = {},
+                    onCopy = {},
+                    onExpand = {},
+                    onSelectSource = {},
+                    onSelectEngine = {},
+                    onExternalAction = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText(
+            composeRule.activity.stringResource(MR.strings.translation_setup_in_progress),
+        ).assertIsDisplayed()
+        composeRule.onAllNodesWithText(
+            composeRule.activity.stringResource(MR.strings.action_retry),
+        ).assertCountEquals(0)
     }
 
     private fun render(state: TranslationSessionState) {

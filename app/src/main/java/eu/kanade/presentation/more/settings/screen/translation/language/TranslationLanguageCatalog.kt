@@ -1,4 +1,4 @@
-package eu.kanade.presentation.more.settings.screen.translation
+package eu.kanade.presentation.more.settings.screen.translation.language
 
 import mihon.translation.api.TranslationLanguageTag
 import java.text.Collator

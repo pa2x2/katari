@@ -6,6 +6,8 @@ import mihon.feature.graph.validation.FeatureContractVerificationResult
 import mihon.feature.graph.validation.FeatureContractVerifier
 import mihon.feature.graph.validation.FeatureValidationContributionSink
 import mihon.feature.graph.validation.FeatureValidationContributor
+import mihon.translation.api.TranslationEngineChoiceReason
+import mihon.translation.api.TranslationEngineId
 import mihon.translation.api.TranslationEngineSelection
 import mihon.translation.api.TranslationLanguageTag
 import mihon.translation.api.TranslationPreparation
@@ -30,6 +32,7 @@ class TranslationFeatureContractValidationContributor : FeatureValidationContrib
                     knownEngineCatalog = registry,
                     sourceLanguageDetectors = emptyList(),
                     defaultTargetLanguageResolver = TranslationDefaultTargetLanguageResolver { null },
+                    selectedEngine = { TranslationEngineId("missing") },
                 )
                 val preparation = feature.prepare(
                     TranslationRequest(
@@ -40,11 +43,15 @@ class TranslationFeatureContractValidationContributor : FeatureValidationContrib
                         targetLanguage = TranslationTargetLanguageSelection.Explicit(
                             TranslationLanguageTag.require("pl"),
                         ),
-                        engine = TranslationEngineSelection.Automatic,
+                        engine = TranslationEngineSelection.ProfileDefault,
                     ),
                 )
-                if (preparation == TranslationPreparation.Unavailable(
-                        mihon.translation.api.TranslationUnavailableReason.NoEngineAvailable,
+                if (
+                    preparation == TranslationPreparation.EngineChoiceRequired(
+                        reason = TranslationEngineChoiceReason.SelectedEngineUnavailable(
+                            TranslationEngineId("missing"),
+                        ),
+                        engines = emptyList(),
                     )
                 ) {
                     FeatureContractVerificationResult.Passed
@@ -52,7 +59,7 @@ class TranslationFeatureContractValidationContributor : FeatureValidationContrib
                     FeatureContractVerificationResult.Failed(
                         listOf(
                             FeatureContractFailure(
-                                "Translation runtime without installed engines must report NoEngineAvailable, " +
+                                "Translation runtime must preserve an unavailable explicit engine, " +
                                     "but returned $preparation",
                             ),
                         ),

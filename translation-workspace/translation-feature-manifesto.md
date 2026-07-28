@@ -54,15 +54,16 @@ explicitly deferred.
 
 ## Provider resolution
 
-Profile engine selection defaults to `Automatic`.
+Every profile stores one explicit engine ID. Existing `Automatic` values migrate once to the bundled Android system
+engine.
 
 Resolution rules:
 
-1. A ready engine beats one requiring setup.
-2. The Android system engine is the only installed engine in the first implementation.
-3. An explicitly selected engine never silently falls back.
+1. The Android system engine is the default and only installed engine in the first implementation.
+2. A request uses its explicit override or the profile's explicit engine.
+3. An unavailable engine never silently falls back.
 4. A runtime provider failure never silently retries another provider.
-5. If an explicitly saved engine is absent on another build or device, ask the user to choose; preserve the stored
+5. If a saved engine is absent on another build or device, ask the user to choose; preserve the stored
    preference until they do.
 
 The static Feature Graph declares that an engine registry exists. Per-device services, language-pair support, setup,
@@ -153,6 +154,9 @@ Coroutine cancellation is cancellation, not a provider error. Changing selection
 - wait 250 ms after selection movement settles;
 - cancel prior preparation/translation;
 - clear when the selection, document, or host disappears.
+- follow provider invocation policy in readers;
+- automatically recheck setup while a provider reports progress;
+- debounce and automatically execute ready playground requests.
 
 Use an anchored, non-modal popup when an anchor exists and content fits. Use measured layout overflow, not a character
 threshold. Promote to the adaptive sheet for:
@@ -166,8 +170,9 @@ threshold. Promote to the adaptive sheet for:
 
 The popup exposes translation, language pair, optional provider attribution, copy, expand, language change, and close.
 
-No reader adapter ships in the first slice. Translation Settings supplies the first real consumer through a transient
-`Test translation` flow using the same controller and UI.
+No reader adapter ships in the first slice. Translation Settings supplies the first real consumer through an inline,
+transient playground. Its embedded setup, progress, failure, execution, and result panel shares the same renderer as
+the reader popup/sheet host.
 
 Future reader behavior is profile opt-in and off by default. Do not expose that preference before a reader adapter
 exists.
@@ -178,7 +183,7 @@ Translation is a top-level Settings category, not a child of Readers or Appearan
 
 Profile-owned:
 
-- Automatic or explicit engine;
+- explicit engine;
 - explicit target language.
 
 The first implementation has no Translation-owned device-wide preferences.
@@ -204,7 +209,7 @@ These obligations are part of the feature, not optional release polish.
 
 The first slice is complete only when:
 
-- Settings can exercise preparation, system setup, translation, and result UI end to end;
+- Settings can expose preparation and setup before execution, then exercise translation and result UI end to end;
 - system-ready translation appears immediately;
 - successful results carry the provider presentation returned by the Feature;
 - profile preferences have correct ownership;
