@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
@@ -16,13 +17,21 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import mihon.translation.api.KnownTranslationEngine
 import mihon.translation.api.TranslationEngineBuildAvailability
@@ -60,6 +69,7 @@ internal fun TranslationSessionContent(
     onSelectEngine: (TranslationEngineSelection) -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
     modifier: Modifier = Modifier,
+    compact: Boolean = false,
 ) {
     val inProgress = state is TranslationSessionState.Settling ||
         state is TranslationSessionState.Preparing ||
@@ -83,24 +93,31 @@ internal fun TranslationSessionContent(
                     .testTag(TRANSLATION_SESSION_PROGRESS_TAG),
             )
         }
-        if (showHeader) {
+        val compactResult = compact && displayedResult != null
+        if (showHeader && !compactResult) {
             TranslationSessionHeader(
                 title = stringResource(MR.strings.translation_title),
                 onDismiss = onDismiss,
+                compact = compact,
             )
             HorizontalDivider()
         }
         Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.padding(
+                horizontal = if (compact) 16.dp else 20.dp,
+                vertical = if (compact) 12.dp else 20.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 12.dp),
         ) {
             if (displayedResult != null) {
                 SuccessContent(
                     result = displayedResult,
                     expanded = expanded,
+                    compact = compact,
                     showExpand = showExpand,
                     showLanguageChange = showLanguageChange,
                     showCopy = showCopy,
+                    onDismiss = if (compactResult) onDismiss else null,
                     onCopy = onCopy,
                     onExpand = onExpand,
                     onExternalAction = onExternalAction,
@@ -133,11 +150,16 @@ internal fun TranslationSessionHeader(
     title: String,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    compact: Boolean = false,
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = 20.dp, end = 8.dp, top = 8.dp),
+            .padding(
+                start = if (compact) 16.dp else 20.dp,
+                end = if (compact) 4.dp else 8.dp,
+                top = if (compact) 4.dp else 8.dp,
+            ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -145,11 +167,19 @@ internal fun TranslationSessionHeader(
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.titleMedium,
         )
-        IconButton(onClick = onDismiss) {
-            Icon(
-                imageVector = Icons.Outlined.Close,
+        if (compact) {
+            TranslationCompactIconButton(
+                icon = Icons.Outlined.Close,
                 contentDescription = stringResource(MR.strings.action_close),
+                onClick = onDismiss,
             )
+        } else {
+            IconButton(onClick = onDismiss) {
+                Icon(
+                    imageVector = Icons.Outlined.Close,
+                    contentDescription = stringResource(MR.strings.action_close),
+                )
+            }
         }
     }
 }
@@ -181,26 +211,86 @@ private fun ReadyContent(
 private fun SuccessContent(
     result: TranslationResult,
     expanded: Boolean,
+    compact: Boolean,
     showExpand: Boolean,
     showLanguageChange: Boolean,
     showCopy: Boolean,
+    onDismiss: (() -> Unit)?,
     onCopy: (String) -> Unit,
     onExpand: () -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
 ) {
-    Text(
-        text = stringResource(
-            MR.strings.translation_language_pair,
-            result.sourceLanguage.displayName(),
-            result.targetLanguage.displayName(),
-        ),
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    var resultOverflowed by remember(result.translatedText, compact) { mutableStateOf(false) }
+    val showOverflowAction = showExpand && !expanded && (!compact || resultOverflowed)
+    val languagePair = stringResource(
+        MR.strings.translation_language_pair,
+        result.sourceLanguage.displayName(),
+        result.targetLanguage.displayName(),
     )
+    val changeLanguages = {
+        onExternalAction(
+            TranslationSessionExternalAction.ChangeLanguages(
+                source = result.sourceLanguage,
+                target = result.targetLanguage,
+            ),
+        )
+    }
+    if (!compact) {
+        Text(
+            text = languagePair,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    } else {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = languagePair,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (showCopy) {
+                TranslationCompactIconButton(
+                    icon = Icons.Outlined.ContentCopy,
+                    contentDescription = stringResource(MR.strings.copy),
+                    onClick = { onCopy(result.translatedText) },
+                )
+            }
+            if (showOverflowAction) {
+                TranslationCompactIconButton(
+                    icon = Icons.Outlined.OpenInFull,
+                    contentDescription = stringResource(MR.strings.action_expand),
+                    onClick = onExpand,
+                )
+            }
+            if (showLanguageChange) {
+                TranslationCompactIconButton(
+                    icon = Icons.Outlined.Language,
+                    contentDescription = stringResource(MR.strings.action_change_language),
+                    onClick = changeLanguages,
+                )
+            }
+            onDismiss?.let {
+                TranslationCompactIconButton(
+                    icon = Icons.Outlined.Close,
+                    contentDescription = stringResource(MR.strings.action_close),
+                    onClick = it,
+                )
+            }
+        }
+    }
     SelectionContainer {
         Text(
             text = result.translatedText,
             style = MaterialTheme.typography.bodyLarge,
+            maxLines = if (compact) ANCHORED_RESULT_MAX_LINES else Int.MAX_VALUE,
+            overflow = if (compact) TextOverflow.Ellipsis else TextOverflow.Clip,
+            onTextLayout = { resultOverflowed = it.hasVisualOverflow },
         )
     }
     result.presentation.resultAttribution?.let { attribution ->
@@ -210,7 +300,7 @@ private fun SuccessContent(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
-    if (showCopy || (showExpand && !expanded) || showLanguageChange) {
+    if (!compact && (showCopy || showOverflowAction || showLanguageChange)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End,
@@ -223,7 +313,7 @@ private fun SuccessContent(
                     )
                 }
             }
-            if (showExpand && !expanded) {
+            if (showOverflowAction) {
                 IconButton(onClick = onExpand) {
                     Icon(
                         imageVector = Icons.Outlined.OpenInFull,
@@ -233,14 +323,7 @@ private fun SuccessContent(
             }
             if (showLanguageChange) {
                 IconButton(
-                    onClick = {
-                        onExternalAction(
-                            TranslationSessionExternalAction.ChangeLanguages(
-                                source = result.sourceLanguage,
-                                target = result.targetLanguage,
-                            ),
-                        )
-                    },
+                    onClick = changeLanguages,
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Language,
@@ -251,6 +334,28 @@ private fun SuccessContent(
         }
     }
     DocumentationAction(result.presentation.documentationUrl, onExternalAction)
+}
+
+private const val ANCHORED_RESULT_MAX_LINES = 5
+
+@Composable
+private fun TranslationCompactIconButton(
+    icon: ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit,
+) {
+    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
+        IconButton(
+            onClick = onClick,
+            modifier = Modifier.size(36.dp),
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+    }
 }
 
 @Composable

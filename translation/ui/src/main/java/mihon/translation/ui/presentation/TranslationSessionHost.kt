@@ -301,6 +301,7 @@ private fun TranslationSessionPopup(
                 onSelectEngine = onSelectEngine,
                 onExternalAction = onExternalAction,
                 modifier = Modifier.fillMaxWidth(),
+                compact = true,
             )
         }
     }
