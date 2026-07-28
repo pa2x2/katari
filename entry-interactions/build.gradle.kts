@@ -1,5 +1,4 @@
 import mihon.gradle.tasks.GenerateEntryInteractionTopologyTask
-import org.gradle.api.tasks.testing.Test
 
 plugins {
     alias(mihonx.plugins.android.library)
@@ -74,33 +73,15 @@ dependencies {
     testFixturesImplementation(libs.bundles.serialization)
     testFixturesImplementation(libs.kotlinx.coroutines.test)
     testFixturesImplementation(libs.unifile)
+    testFixturesImplementation(projects.featureValidation)
     testFixturesImplementation(platform(libs.androidx.compose.bom))
     testFixturesApi(projects.entryInteractions.spi)
 }
 
-val featureReportFile = layout.buildDirectory.file("reports/features/developer-report.txt")
-
-val generateFeatureReport = tasks.register<Test>("generateFeatureReport") {
+val generateFeatureReport = tasks.register("generateFeatureReport") {
     group = "reporting"
-    description = "Renders the evaluated application and Entry Feature graph for developers"
-
-    testClassesDirs = files(
-        providers.provider { tasks.named<Test>("testDebugUnitTest").get().testClassesDirs },
-    )
-    classpath = files(
-        providers.provider { tasks.named<Test>("testDebugUnitTest").get().classpath },
-    )
-    filter {
-        includeTestsMatching(
-            "mihon.entry.interactions.validation.ProductionEntryInteractionDeveloperReportTest",
-        )
-    }
-    systemProperty(
-        "mihon.feature.report.output",
-        featureReportFile.get().asFile.absolutePath,
-    )
-    outputs.file(featureReportFile)
-    testLogging.showStandardStreams = true
+    description = "Compatibility alias for :app:generateFeatureReport"
+    dependsOn(":app:generateFeatureReport")
 }
 
 tasks.register("generateEntryFeatureReport") {

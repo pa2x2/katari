@@ -338,6 +338,7 @@ dependencies {
     // Tests
     testImplementation(libs.bundles.test)
     testImplementation(projects.entryInteractions.documentation)
+    testImplementation(projects.featureValidation)
     testImplementation(testFixtures(projects.entryInteractions))
     testRuntimeOnly(libs.junit.platform.launcher)
     androidTestImplementation(platform(libs.androidx.compose.bom))
@@ -350,6 +351,31 @@ dependencies {
     implementation(libs.leakCanary.plumber)
 
     testImplementation(libs.kotlinx.coroutines.test)
+}
+
+val featureReportFile = layout.buildDirectory.file("reports/features/developer-report.txt")
+
+val generateFeatureReport = tasks.register<Test>("generateFeatureReport") {
+    group = "reporting"
+    description = "Renders the evaluated application and Entry Feature graph for developers"
+
+    testClassesDirs = files(
+        providers.provider { tasks.named<Test>("testFossUnitTest").get().testClassesDirs },
+    )
+    classpath = files(
+        providers.provider { tasks.named<Test>("testFossUnitTest").get().classpath },
+    )
+    filter {
+        includeTestsMatching(
+            "eu.kanade.tachiyomi.validation.ProductionFeatureDeveloperReportTest",
+        )
+    }
+    systemProperty(
+        "mihon.feature.report.output",
+        featureReportFile.get().asFile.absolutePath,
+    )
+    outputs.file(featureReportFile)
+    testLogging.showStandardStreams = true
 }
 
 val contentTypeReferenceFile = rootProject.layout.projectDirectory.file("docs/features/content-type-reference.md")

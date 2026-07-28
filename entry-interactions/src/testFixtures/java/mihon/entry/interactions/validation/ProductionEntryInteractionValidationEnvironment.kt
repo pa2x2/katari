@@ -43,9 +43,11 @@ import mihon.entry.interactions.settings.EntryInteractionPreferences
 import mihon.entry.interactions.validateInstalledEntryFeatureRuntimeModules
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import mihon.feature.runtime.ApplicationFeatureRuntimeInstallationContext
+import mihon.feature.runtime.ApplicationFeatureRuntimeModule
 import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.createFeatureRuntimeComposition
 import mihon.feature.runtime.installApplicationFeatureRuntimeModules
+import mihon.feature.runtime.validateInstalledApplicationFeatureRuntimeModules
 import nl.adaptivity.xmlutil.serialization.XML
 import okhttp3.OkHttpClient
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
@@ -90,7 +92,9 @@ class ProductionEntryInteractionValidationEnvironment(
         Dispatchers.setMain(UnconfinedTestDispatcher())
     }
 
-    fun composition(): EntryInteractionComposition {
+    fun composition(
+        applicationFeatureRuntimeModules: List<ApplicationFeatureRuntimeModule> = emptyList(),
+    ): EntryInteractionComposition {
         val application = application()
         val preferenceOwners = ProfilePreferenceOwnerInstaller(
             owners = ProfilePreferenceOwnerRegistry(),
@@ -130,7 +134,7 @@ class ProductionEntryInteractionValidationEnvironment(
         )
         val applicationRuntimeInstallation = installApplicationFeatureRuntimeModules(
             registrar = Injekt,
-            modules = emptyList(),
+            modules = applicationFeatureRuntimeModules,
             context = ApplicationFeatureRuntimeInstallationContext(application),
         )
         Injekt.addSingletonFactory<FeatureRuntimeComposition> {
@@ -143,6 +147,7 @@ class ProductionEntryInteractionValidationEnvironment(
         }
         val installation = Injekt.get<EntryFeatureRuntimeInstallation>()
         validateInstalledEntryFeatureRuntimeModules(installation.modules)
+        validateInstalledApplicationFeatureRuntimeModules(applicationRuntimeInstallation)
         return Injekt.get<EntryInteractionComposition>()
     }
 

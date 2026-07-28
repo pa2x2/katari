@@ -1,16 +1,19 @@
-package mihon.entry.interactions.validation
+package eu.kanade.tachiyomi.validation
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.test.runTest
+import mihon.entry.interactions.validation.ProductionEntryInteractionValidationEnvironment
 import mihon.feature.graph.validation.reporting.renderFeatureDeveloperReport
+import mihon.feature.graph.validation.reporting.validateAndBuildFeatureDeveloperReport
+import mihon.feature.runtime.productionApplicationFeatureRuntimeModules
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
-class ProductionEntryInteractionDeveloperReportTest {
+class ProductionFeatureDeveloperReportTest {
     @TempDir
     lateinit var temporaryDirectory: File
 
@@ -28,7 +31,11 @@ class ProductionEntryInteractionDeveloperReportTest {
 
     @Test
     fun `production composition renders the evaluated developer report`() = runTest {
-        val result = evaluateEntryInteractionContracts(environment.composition())
+        val composition = environment.composition(productionApplicationFeatureRuntimeModules())
+        val result = validateAndBuildFeatureDeveloperReport(
+            graph = composition.featureGraph,
+            evaluation = composition.featureGraphEvaluation,
+        )
         val rendered = renderFeatureDeveloperReport(result.report)
 
         System.getProperty(REPORT_OUTPUT_PROPERTY)?.let { path ->

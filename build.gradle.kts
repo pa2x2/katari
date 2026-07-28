@@ -265,7 +265,7 @@ val verifyFeatureArchitecture = tasks.register("verifyFeatureArchitecture") {
         ":feature-validation:testDebugUnitTest",
         ":entry-interactions:documentation:testDebugUnitTest",
         ":entry-interactions:testDebugUnitTest",
-        ":entry-interactions:generateFeatureReport",
+        ":app:generateFeatureReport",
         verifyFeatureDocumentation,
     )
 }
