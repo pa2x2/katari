@@ -44,6 +44,7 @@ const sidebar: DefaultTheme.SidebarItem[] = [
       { text: 'Profiles', link: '/features/profiles' },
       { text: 'Merged entries', link: '/features/merged-entries' },
       { text: 'Feeds and discovery', link: '/features/feeds-and-discovery' },
+      { text: 'Translation', link: '/features/translation' },
       { text: 'Book reading', link: '/features/book-reading' },
       { text: 'Video playback', link: '/features/video-playback' },
       { text: 'Extensions and compatibility', link: '/differences/extensions-and-compatibility' },
