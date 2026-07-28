@@ -9,6 +9,7 @@ import android.text.style.URLSpan
 import android.view.MotionEvent
 import android.view.View
 import android.view.View.MeasureSpec
+import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.compose.ui.geometry.Offset
@@ -149,6 +150,86 @@ class BookDocumentTextViewTest {
     }
 
     @Test
+    fun `short prose tap reaches reader navigation while a selection is active`() {
+        val view = laidOutTextView(SpannableString("Selected prose remains tappable")) as BookDocumentTextView
+        var selectionWasActiveAtTap = false
+        view.selectionInteraction = BookDocumentTextInteraction(
+            observeSelections = false,
+            rootPositionInWindow = Offset.Zero,
+            onSelection = {},
+            onNonLinkTap = { _, _ ->
+                selectionWasActiveAtTap = view.selectionStart != view.selectionEnd
+            },
+        )
+        Selection.setSelection(view.text as Spannable, 0, 8)
+        val x = view.layout.getPrimaryHorizontal(12)
+        val y = (view.layout.getLineTop(0) + view.layout.getLineBottom(0)) / 2f
+        val down = event(x, y, MotionEvent.ACTION_DOWN)
+        val up = event(x, y, MotionEvent.ACTION_UP)
+
+        view.dispatchTouchEvent(down)
+        Selection.setSelection(view.text as Spannable, 0, 8)
+        view.dispatchTouchEvent(up)
+
+        down.recycle()
+        up.recycle()
+        assertTrue(selectionWasActiveAtTap)
+    }
+
+    @Test
+    fun `long press is not forwarded as reader navigation`() {
+        val view = laidOutTextView(SpannableString("Long press selection")) as BookDocumentTextView
+        var tapForwarded = false
+        view.selectionInteraction = BookDocumentTextInteraction(
+            observeSelections = false,
+            rootPositionInWindow = Offset.Zero,
+            onSelection = {},
+            onNonLinkTap = { _, _ -> tapForwarded = true },
+        )
+        val x = view.layout.getPrimaryHorizontal(5)
+        val y = (view.layout.getLineTop(0) + view.layout.getLineBottom(0)) / 2f
+        val down = event(x, y, MotionEvent.ACTION_DOWN)
+        val up = event(
+            x = x,
+            y = y,
+            action = MotionEvent.ACTION_UP,
+            eventTime = ViewConfiguration.getLongPressTimeout().toLong(),
+        )
+
+        view.dispatchTouchEvent(down)
+        view.dispatchTouchEvent(up)
+
+        down.recycle()
+        up.recycle()
+        assertFalse(tapForwarded)
+    }
+
+    @Test
+    fun `drag gesture is not forwarded as reader navigation`() {
+        val view = laidOutTextView(SpannableString("Dragged selection")) as BookDocumentTextView
+        var tapForwarded = false
+        view.selectionInteraction = BookDocumentTextInteraction(
+            observeSelections = false,
+            rootPositionInWindow = Offset.Zero,
+            onSelection = {},
+            onNonLinkTap = { _, _ -> tapForwarded = true },
+        )
+        val x = view.layout.getPrimaryHorizontal(5)
+        val y = (view.layout.getLineTop(0) + view.layout.getLineBottom(0)) / 2f
+        val dragDistance = ViewConfiguration.get(view.context).scaledTouchSlop * 2f
+        val down = event(x, y, MotionEvent.ACTION_DOWN)
+        val move = event(x + dragDistance, y, MotionEvent.ACTION_MOVE)
+        val up = event(x + dragDistance, y, MotionEvent.ACTION_UP)
+
+        view.dispatchTouchEvent(down)
+        view.dispatchTouchEvent(move)
+        view.dispatchTouchEvent(up)
+
+        listOf(down, move, up).forEach(MotionEvent::recycle)
+        assertFalse(tapForwarded)
+    }
+
+    @Test
     fun `selectable text emits the exact substring and reader-root bounds`() {
         val view = laidOutTextView(SpannableString("  exact selection  ")) as BookDocumentTextView
         var emitted: BookDocumentTextSelection? = null
@@ -200,6 +281,10 @@ class BookDocumentTextViewTest {
         }
     }
 
-    private fun event(x: Float, y: Float, action: Int): MotionEvent =
-        MotionEvent.obtain(0, 0, action, x, y, 0)
+    private fun event(
+        x: Float,
+        y: Float,
+        action: Int,
+        eventTime: Long = 0,
+    ): MotionEvent = MotionEvent.obtain(0, eventTime, action, x, y, 0)
 }

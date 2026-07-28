@@ -593,6 +593,7 @@ private fun PaginatedProseViewer(
                 }
             }
         }
+        val currentHandleTapFraction = rememberUpdatedState(handleTapFraction)
         var pendingAnchor by remember(pagerState) {
             mutableStateOf(
                 initialDocumentPosition
@@ -645,7 +646,7 @@ private fun PaginatedProseViewer(
                                 it.transition.from.id == state.currentChapterId
                         }.takeIf { it >= 0 }?.let { scope.launch { pagerState.animateScrollToPage(it) } }
                     },
-                    onTapFraction = handleTapFraction,
+                    onTapFraction = { fraction -> currentHandleTapFraction.value(fraction) },
                 ),
             )
         }
@@ -1132,6 +1133,7 @@ private fun ScrollingProseViewer(
         withFrameNanos {}
         onPrepared()
     }
+    val currentOnMenuToggle = rememberUpdatedState(onMenuToggle)
     LaunchedEffect(listState, items, state.currentChapterId) {
         onActions(
             ProseViewerActions(
@@ -1158,7 +1160,7 @@ private fun ScrollingProseViewer(
                             item.transition.from.id == state.currentChapterId
                     }.takeIf { it >= 0 }?.let { scope.launch { listState.animateScrollToItem(it) } }
                 },
-                onTapFraction = { onMenuToggle() },
+                onTapFraction = { currentOnMenuToggle.value() },
             ),
         )
     }

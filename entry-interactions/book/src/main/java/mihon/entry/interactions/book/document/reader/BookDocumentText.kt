@@ -15,6 +15,7 @@ import android.text.style.ClickableSpan
 import android.text.style.URLSpan
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import android.widget.TextView
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
@@ -91,6 +92,10 @@ internal fun BookDocumentText(
 
 internal class BookDocumentTextView(context: Context) : TextView(context) {
     private val selectionOwnerIdentity = "text-view-${System.identityHashCode(this)}"
+    private val tapTouchSlop = ViewConfiguration.get(context).scaledTouchSlop.toFloat()
+    private var trackingNonLinkTap = false
+    private var nonLinkTapDownX = 0f
+    private var nonLinkTapDownY = 0f
     internal var selectionInteraction: BookDocumentTextInteraction? = null
     internal var appliedStyle: BookDocumentTextStyle? = null
     internal var trimTerminalLine: Boolean = false
@@ -120,20 +125,39 @@ internal class BookDocumentTextView(context: Context) : TextView(context) {
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         val interaction = selectionInteraction ?: BookDocumentTextInteraction.Disabled
-        if (event.actionMasked == MotionEvent.ACTION_DOWN || event.actionMasked == MotionEvent.ACTION_UP) {
-            val buffer = text as? Spanned
-            if (buffer?.clickableSpanAt(this, event) == null) {
-                val handled = super.onTouchEvent(event)
+        val buffer = text as? Spanned
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                trackingNonLinkTap = buffer?.clickableSpanAt(this, event) == null
+                nonLinkTapDownX = event.x
+                nonLinkTapDownY = event.y
+            }
+            MotionEvent.ACTION_MOVE -> updateNonLinkTapTracking(event)
+            MotionEvent.ACTION_UP -> {
+                updateNonLinkTapTracking(event)
+                val isShortTap =
+                    event.eventTime - event.downTime < ViewConfiguration.getLongPressTimeout()
                 if (
-                    event.actionMasked == MotionEvent.ACTION_UP &&
-                    selectionStart == selectionEnd
+                    trackingNonLinkTap &&
+                    isShortTap &&
+                    buffer?.clickableSpanAt(this, event) == null
                 ) {
                     interaction.onNonLinkTap(event.x, width.toFloat())
                 }
-                return handled
+                trackingNonLinkTap = false
             }
+            MotionEvent.ACTION_CANCEL -> trackingNonLinkTap = false
         }
         return super.onTouchEvent(event)
+    }
+
+    private fun updateNonLinkTapTracking(event: MotionEvent) {
+        if (!trackingNonLinkTap) return
+        val deltaX = event.x - nonLinkTapDownX
+        val deltaY = event.y - nonLinkTapDownY
+        if (deltaX * deltaX + deltaY * deltaY > tapTouchSlop * tapTouchSlop) {
+            trackingNonLinkTap = false
+        }
     }
 
     override fun onSelectionChanged(selStart: Int, selEnd: Int) {
