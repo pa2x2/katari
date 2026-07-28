@@ -1,5 +1,7 @@
 package mihon.translation.api
 
+import androidx.annotation.DrawableRes
+
 @JvmInline
 value class TranslationEngineId(
     val value: String,
@@ -40,8 +42,53 @@ data class KnownTranslationEngine(
     val providerName: String,
     val engineName: String,
     val buildAvailability: TranslationEngineBuildAvailability,
+    val artwork: TranslationEngineArtwork,
+    val details: TranslationEngineDetails,
     val documentationUrl: String? = null,
-)
+) {
+    init {
+        require(providerName.isNotBlank())
+        require(engineName.isNotBlank())
+        require(documentationUrl == null || documentationUrl.isNotBlank())
+    }
+}
+
+sealed interface TranslationEngineArtwork {
+    data class Bundled(
+        @DrawableRes val resourceId: Int,
+    ) : TranslationEngineArtwork {
+        init {
+            require(resourceId != 0)
+        }
+    }
+
+    data class InstalledApplication(
+        val packageName: String,
+        @DrawableRes val fallbackResourceId: Int,
+    ) : TranslationEngineArtwork {
+        init {
+            require(packageName.isNotBlank())
+            require(fallbackResourceId != 0)
+        }
+    }
+}
+
+data class TranslationEngineDetails(
+    val description: String,
+    val processingLocation: String,
+    val privacyDescription: String,
+    val artworkAttribution: String? = null,
+    val artworkAttributionUrl: String? = null,
+) {
+    init {
+        require(description.isNotBlank())
+        require(processingLocation.isNotBlank())
+        require(privacyDescription.isNotBlank())
+        require(artworkAttribution == null || artworkAttribution.isNotBlank())
+        require(artworkAttributionUrl == null || artworkAttributionUrl.isNotBlank())
+        require(artworkAttributionUrl == null || artworkAttribution != null)
+    }
+}
 
 data class TranslationEngineState(
     val engine: KnownTranslationEngine,

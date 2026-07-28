@@ -5,7 +5,9 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import mihon.translation.api.KnownTranslationEngine
 import mihon.translation.api.ResolvedTranslationRequest
+import mihon.translation.api.TranslationEngineArtwork
 import mihon.translation.api.TranslationEngineBuildAvailability
+import mihon.translation.api.TranslationEngineDetails
 import mihon.translation.api.TranslationEngineId
 import mihon.translation.api.TranslationInvocationPolicy
 import mihon.translation.api.TranslationModelId
@@ -105,6 +107,12 @@ class DefaultTranslationEngineRegistryTest {
             providerName = id,
             engineName = id,
             buildAvailability = TranslationEngineBuildAvailability.Included,
+            artwork = TranslationEngineArtwork.Bundled(1),
+            details = TranslationEngineDetails(
+                description = "Test engine description",
+                processingLocation = "Test processing location",
+                privacyDescription = "Test privacy description",
+            ),
         )
     }
 }

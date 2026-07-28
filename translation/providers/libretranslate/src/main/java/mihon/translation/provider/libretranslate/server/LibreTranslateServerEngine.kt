@@ -3,7 +3,9 @@ package mihon.translation.provider.libretranslate.server
 import kotlinx.coroutines.CancellationException
 import mihon.translation.api.KnownTranslationEngine
 import mihon.translation.api.ResolvedTranslationRequest
+import mihon.translation.api.TranslationEngineArtwork
 import mihon.translation.api.TranslationEngineBuildAvailability
+import mihon.translation.api.TranslationEngineDetails
 import mihon.translation.api.TranslationEngineId
 import mihon.translation.api.TranslationInvocationPolicy
 import mihon.translation.api.TranslationProviderDisclosure
@@ -12,6 +14,7 @@ import mihon.translation.api.TranslationProviderPresentation
 import mihon.translation.api.TranslationResultAttribution
 import mihon.translation.api.TranslationSystemSetupReason
 import mihon.translation.api.TranslationUnavailableReason
+import mihon.translation.provider.libretranslate.R
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateException
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateFailureKind
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateLanguageResolver
@@ -32,6 +35,13 @@ internal class LibreTranslateServerEngine(
         providerName = PROVIDER_NAME,
         engineName = ENGINE_NAME,
         buildAvailability = TranslationEngineBuildAvailability.Included,
+        artwork = TranslationEngineArtwork.Bundled(R.drawable.ic_libretranslate_server),
+        details = TranslationEngineDetails(
+            description = "Translation through a server you choose and configure.",
+            processingLocation = "The configured LibreTranslate-compatible server.",
+            privacyDescription = "Katari sends selected text to the configured server. The server operator’s " +
+                "privacy and retention policies apply.",
+        ),
         documentationUrl = DOCUMENTATION_URL,
     )
     override val presentation = TranslationProviderPresentation(
@@ -147,7 +157,7 @@ internal class LibreTranslateServerEngine(
         val ENGINE_ID = TranslationEngineId("libretranslate-server")
         val PROVIDER_ID = TranslationProviderId("libretranslate")
         const val PROVIDER_NAME = "LibreTranslate"
-        const val ENGINE_NAME = "Configured LibreTranslate server"
+        const val ENGINE_NAME = "LibreTranslate Server"
         const val DOCUMENTATION_URL = "https://docs.libretranslate.com/"
         const val CONFIGURATION_DESCRIPTION = "Configure and test a LibreTranslate server."
         val DISCLOSURE = TranslationProviderDisclosure(

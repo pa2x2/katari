@@ -6,7 +6,9 @@ import mihon.translation.api.KnownTranslationEngine
 import mihon.translation.api.ResolvedTranslationRequest
 import mihon.translation.api.TranslationDeviceAvailability
 import mihon.translation.api.TranslationEngineAction
+import mihon.translation.api.TranslationEngineArtwork
 import mihon.translation.api.TranslationEngineBuildAvailability
+import mihon.translation.api.TranslationEngineDetails
 import mihon.translation.api.TranslationEngineId
 import mihon.translation.api.TranslationEngineStatus
 import mihon.translation.api.TranslationInvocationPolicy
@@ -180,6 +182,12 @@ class DefaultTranslationHostActionsTest {
             providerName = PRESENTATION.providerName,
             engineName = PRESENTATION.engineName,
             buildAvailability = TranslationEngineBuildAvailability.Included,
+            artwork = TranslationEngineArtwork.Bundled(1),
+            details = TranslationEngineDetails(
+                description = "Test engine description",
+                processingLocation = "Test processing location",
+                privacyDescription = "Test privacy description",
+            ),
         )
     }
 }

@@ -9,8 +9,10 @@ import kotlinx.coroutines.test.runTest
 import mihon.translation.api.KnownTranslationEngine
 import mihon.translation.api.ReadyTranslation
 import mihon.translation.api.ResolvedTranslationRequest
+import mihon.translation.api.TranslationEngineArtwork
 import mihon.translation.api.TranslationEngineBuildAvailability
 import mihon.translation.api.TranslationEngineChoiceReason
+import mihon.translation.api.TranslationEngineDetails
 import mihon.translation.api.TranslationEngineId
 import mihon.translation.api.TranslationEngineSelection
 import mihon.translation.api.TranslationExecution
@@ -369,12 +371,20 @@ class DefaultTranslationFeatureTest {
             engineName = "Fake engine",
             invocationPolicy = TranslationInvocationPolicy.Immediate,
         )
+        val FAKE_ARTWORK = TranslationEngineArtwork.Bundled(1)
+        val FAKE_DETAILS = TranslationEngineDetails(
+            description = "Fake engine description",
+            processingLocation = "Fake processing location",
+            privacyDescription = "Fake privacy description",
+        )
         val KNOWN_ENGINE = KnownTranslationEngine(
             id = ENGINE_ID,
             providerId = PROVIDER_ID,
             providerName = "Fake provider",
             engineName = "Fake engine",
             buildAvailability = TranslationEngineBuildAvailability.Included,
+            artwork = FAKE_ARTWORK,
+            details = FAKE_DETAILS,
         )
 
         fun knownEngine(id: String) = KnownTranslationEngine(
@@ -383,6 +393,8 @@ class DefaultTranslationFeatureTest {
             providerName = id,
             engineName = id,
             buildAvailability = TranslationEngineBuildAvailability.Included,
+            artwork = FAKE_ARTWORK,
+            details = FAKE_DETAILS,
         )
 
         fun presentation(engine: KnownTranslationEngine) = TranslationProviderPresentation(

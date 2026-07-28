@@ -2,7 +2,9 @@ package mihon.translation.runtime.system
 
 import mihon.translation.api.KnownTranslationEngine
 import mihon.translation.api.ResolvedTranslationRequest
+import mihon.translation.api.TranslationEngineArtwork
 import mihon.translation.api.TranslationEngineBuildAvailability
+import mihon.translation.api.TranslationEngineDetails
 import mihon.translation.api.TranslationEngineId
 import mihon.translation.api.TranslationInvocationPolicy
 import mihon.translation.api.TranslationModelId
@@ -11,6 +13,7 @@ import mihon.translation.api.TranslationProviderId
 import mihon.translation.api.TranslationProviderPresentation
 import mihon.translation.api.TranslationSystemSetupReason
 import mihon.translation.api.TranslationUnavailableReason
+import mihon.translation.runtime.R
 import mihon.translation.spi.ReadyTranslationEngineRequest
 import mihon.translation.spi.TranslationEngine
 import mihon.translation.spi.TranslationEngineDeviceAvailability
@@ -26,8 +29,18 @@ internal class AndroidSystemTranslationEngine(
         id = ENGINE_ID,
         providerId = PROVIDER_ID,
         providerName = "Android",
-        engineName = "System on-device translation",
+        engineName = "Android System Translation",
         buildAvailability = TranslationEngineBuildAvailability.Included,
+        artwork = TranslationEngineArtwork.Bundled(R.drawable.ic_android_robot),
+        details = TranslationEngineDetails(
+            description = "Uses Android’s translation service on this device.",
+            processingLocation = "Android translation service on this device.",
+            privacyDescription = "Katari passes selected text to Android’s translation service. " +
+                "Android controls model downloads and whether the configured service uses a network.",
+            artworkAttribution = ANDROID_ROBOT_ATTRIBUTION,
+            artworkAttributionUrl = ANDROID_BRAND_GUIDELINES_URL,
+        ),
+        documentationUrl = ANDROID_TRANSLATION_DOCUMENTATION_URL,
     )
     override val presentation = TranslationProviderPresentation(
         providerId = PROVIDER_ID,
@@ -168,5 +181,12 @@ internal class AndroidSystemTranslationEngine(
     companion object {
         val ENGINE_ID = TranslationEngineId("android-system")
         val PROVIDER_ID = TranslationProviderId("android")
+        private const val ANDROID_ROBOT_ATTRIBUTION =
+            "The Android robot is reproduced or modified from work created and shared by Google and used " +
+                "according to terms described in the Creative Commons 3.0 Attribution License."
+        private const val ANDROID_BRAND_GUIDELINES_URL =
+            "https://developer.android.com/distribute/marketing-tools/brand-guidelines"
+        private const val ANDROID_TRANSLATION_DOCUMENTATION_URL =
+            "https://developer.android.com/reference/android/view/translation/TranslationManager"
     }
 }

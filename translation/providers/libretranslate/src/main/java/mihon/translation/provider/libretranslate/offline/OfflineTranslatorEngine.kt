@@ -3,7 +3,9 @@ package mihon.translation.provider.libretranslate.offline
 import kotlinx.coroutines.CancellationException
 import mihon.translation.api.KnownTranslationEngine
 import mihon.translation.api.ResolvedTranslationRequest
+import mihon.translation.api.TranslationEngineArtwork
 import mihon.translation.api.TranslationEngineBuildAvailability
+import mihon.translation.api.TranslationEngineDetails
 import mihon.translation.api.TranslationEngineId
 import mihon.translation.api.TranslationInvocationPolicy
 import mihon.translation.api.TranslationProviderDisclosure
@@ -12,6 +14,7 @@ import mihon.translation.api.TranslationProviderPresentation
 import mihon.translation.api.TranslationResultAttribution
 import mihon.translation.api.TranslationSystemSetupReason
 import mihon.translation.api.TranslationUnavailableReason
+import mihon.translation.provider.libretranslate.R
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateException
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateFailureKind
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateLanguageResolver
@@ -34,6 +37,16 @@ internal class OfflineTranslatorEngine(
         providerName = PROVIDER_NAME,
         engineName = ENGINE_NAME,
         buildAvailability = TranslationEngineBuildAvailability.Included,
+        artwork = TranslationEngineArtwork.InstalledApplication(
+            packageName = OfflineTranslatorApplication.PACKAGE_NAME,
+            fallbackResourceId = R.drawable.ic_offline_translator,
+        ),
+        details = TranslationEngineDetails(
+            description = "Private on-device translation through the Offline Translator app.",
+            processingLocation = "Offline Translator on this device, over localhost.",
+            privacyDescription = "Katari sends selected text to the separate Offline Translator app over " +
+                "127.0.0.1. Translation stays on this device when its HTTP API is bound to localhost.",
+        ),
         documentationUrl = OfflineTranslatorApplication.DOCUMENTATION_URL,
     )
     override val presentation = TranslationProviderPresentation(
@@ -166,7 +179,7 @@ internal class OfflineTranslatorEngine(
         val ENGINE_ID = TranslationEngineId("offline-translator")
         val PROVIDER_ID = TranslationProviderId("offline-translator")
         const val PROVIDER_NAME = "Offline Translator"
-        const val ENGINE_NAME = "Offline on-device translation"
+        const val ENGINE_NAME = "Offline Translator"
         const val SETUP_DESCRIPTION =
             "Enable the HTTP API in Offline Translator, download the required language models, and verify the port."
         val DISCLOSURE = TranslationProviderDisclosure(

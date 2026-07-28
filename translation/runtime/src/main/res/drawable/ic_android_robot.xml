@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The Android robot is reproduced or modified from work created and shared by
+  Google and used according to terms described in the Creative Commons 3.0
+  Attribution License.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#3DDC84"
+        android:pathData="M17.6,9.48L19.44,6.3C19.6,5.99 19.48,5.6 19.18,5.45C18.89,5.3 18.53,5.39 18.35,5.67L16.47,8.91C13.61,7.7 10.39,7.7 7.53,8.91L5.65,5.67C5.46,5.38 5.08,5.29 4.78,5.47C4.5,5.65 4.41,6.01 4.56,6.3L6.4,9.48C3.3,11.25 1.28,14.44 1,18H23C22.72,14.44 20.7,11.25 17.6,9.48ZM7,15.25C6.31,15.25 5.75,14.69 5.75,14C5.75,13.31 6.31,12.75 7,12.75C7.69,12.75 8.25,13.31 8.25,14C8.25,14.69 7.69,15.25 7,15.25ZM17,15.25C16.31,15.25 15.75,14.69 15.75,14C15.75,13.31 16.31,12.75 17,12.75C17.69,12.75 18.25,13.31 18.25,14C18.25,14.69 17.69,15.25 17,15.25Z" />
+</vector>
