@@ -49,6 +49,7 @@ internal fun TranslationSessionContent(
     showHeader: Boolean,
     showExpand: Boolean,
     showLanguageChange: Boolean,
+    showCopy: Boolean,
     useExternalEnginePicker: Boolean,
     onDismiss: () -> Unit,
     onExecute: () -> Unit,
@@ -113,6 +114,7 @@ internal fun TranslationSessionContent(
                     expanded = expanded,
                     showExpand = showExpand,
                     showLanguageChange = showLanguageChange,
+                    showCopy = showCopy,
                     onCopy = onCopy,
                     onExpand = onExpand,
                     onExternalAction = onExternalAction,
@@ -169,6 +171,7 @@ private fun SuccessContent(
     expanded: Boolean,
     showExpand: Boolean,
     showLanguageChange: Boolean,
+    showCopy: Boolean,
     onCopy: (String) -> Unit,
     onExpand: () -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
@@ -195,39 +198,43 @@ private fun SuccessContent(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.End,
-    ) {
-        IconButton(onClick = { onCopy(result.translatedText) }) {
-            Icon(
-                imageVector = Icons.Outlined.ContentCopy,
-                contentDescription = stringResource(MR.strings.copy),
-            )
-        }
-        if (showExpand && !expanded) {
-            IconButton(onClick = onExpand) {
-                Icon(
-                    imageVector = Icons.Outlined.OpenInFull,
-                    contentDescription = stringResource(MR.strings.action_expand),
-                )
-            }
-        }
-        if (showLanguageChange) {
-            IconButton(
-                onClick = {
-                    onExternalAction(
-                        TranslationSessionExternalAction.ChangeLanguages(
-                            source = result.sourceLanguage,
-                            target = result.targetLanguage,
-                        ),
+    if (showCopy || (showExpand && !expanded) || showLanguageChange) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            if (showCopy) {
+                IconButton(onClick = { onCopy(result.translatedText) }) {
+                    Icon(
+                        imageVector = Icons.Outlined.ContentCopy,
+                        contentDescription = stringResource(MR.strings.copy),
                     )
-                },
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Language,
-                    contentDescription = stringResource(MR.strings.action_change_language),
-                )
+                }
+            }
+            if (showExpand && !expanded) {
+                IconButton(onClick = onExpand) {
+                    Icon(
+                        imageVector = Icons.Outlined.OpenInFull,
+                        contentDescription = stringResource(MR.strings.action_expand),
+                    )
+                }
+            }
+            if (showLanguageChange) {
+                IconButton(
+                    onClick = {
+                        onExternalAction(
+                            TranslationSessionExternalAction.ChangeLanguages(
+                                source = result.sourceLanguage,
+                                target = result.targetLanguage,
+                            ),
+                        )
+                    },
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Language,
+                        contentDescription = stringResource(MR.strings.action_change_language),
+                    )
+                }
             }
         }
     }

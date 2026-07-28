@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mihon.translation.api.KnownTranslationEngine
-import mihon.translation.api.TranslationDeviceAvailability
 import mihon.translation.api.TranslationEngineId
 import mihon.translation.api.TranslationEngineSelection
 import mihon.translation.api.TranslationFeature
@@ -31,71 +30,61 @@ import java.util.Locale
 
 internal class TranslationSettingsScreenModel(
     feature: TranslationFeature = Injekt.get(),
-    val hostActions: TranslationHostActions = Injekt.get(),
+    private val hostActions: TranslationHostActions = Injekt.get(),
 ) : ScreenModel {
     val engines: List<KnownTranslationEngine> = hostActions.knownEngines
-    val enginePreference = hostActions.selectedEngine
-    val targetLanguagePreference = hostActions.defaultTargetLanguage
     val controller = TranslationSessionController(
         feature = feature,
         parentScope = screenModelScope,
         executionMode = TranslationSessionExecutionMode.FollowProviderPolicy,
         selectionSettleDelayMillis = PLAYGROUND_DEBOUNCE_MILLIS,
     )
-    private val mutablePlayground = MutableStateFlow(initialPlaygroundState())
+    private var savedDefaults = initialPlaygroundDefaults()
+    private val mutablePlayground = MutableStateFlow(initialPlaygroundState(savedDefaults))
     val playground = mutablePlayground.asStateFlow()
-    private val mutableDeviceAvailability = MutableStateFlow<TranslationDeviceAvailability?>(null)
-    val deviceAvailability = mutableDeviceAvailability.asStateFlow()
 
     init {
         submitPlayground()
-        refreshDeviceAvailability()
     }
 
     fun setText(text: String) {
-        mutablePlayground.update { it.copy(text = text) }
-        submitPlayground()
+        updatePlayground { it.copy(text = text) }
     }
 
     fun setSourceLanguage(language: TranslationLanguageTag) {
-        mutablePlayground.update { it.copy(sourceLanguage = language) }
-        submitPlayground()
+        updatePlayground { it.copy(sourceLanguage = language) }
     }
 
     fun setTargetLanguage(language: TranslationLanguageTag) {
-        mutablePlayground.update { it.copy(targetLanguage = language) }
-        submitPlayground()
+        updatePlayground { it.copy(targetLanguage = language) }
     }
 
     fun swapLanguages() {
-        mutablePlayground.update {
+        updatePlayground {
             it.copy(
                 sourceLanguage = it.targetLanguage,
                 targetLanguage = it.sourceLanguage,
             )
         }
-        submitPlayground()
     }
 
     fun setEngine(engine: TranslationEngineId) {
-        mutablePlayground.update { it.copy(engine = engine) }
-        submitPlayground()
+        updatePlayground { it.copy(engine = engine) }
     }
 
-    fun usePlaygroundEngineAsDefault() {
-        hostActions.setSelectedEngine(mutablePlayground.value.engine)
-    }
+    fun supportsSystemSetup(engine: TranslationEngineId): Boolean =
+        hostActions.supportsSystemSetup(engine)
 
-    fun setProfileEngine(engine: TranslationEngineId) {
-        hostActions.setSelectedEngine(engine)
-        setEngine(engine)
-        refreshDeviceAvailability()
-    }
-
-    fun setProfileTarget(language: TranslationLanguageTag?) {
-        setDefaultTarget(language)
-        val resolved = language ?: effectiveUiLanguage() ?: return
-        setTargetLanguage(resolved)
+    fun savePlaygroundDefaults() {
+        val state = mutablePlayground.value
+        if (!state.hasUnsavedProfileChanges) return
+        hostActions.setSelectedEngine(state.engine)
+        hostActions.setDefaultTargetLanguage(state.targetLanguage)
+        savedDefaults = TranslationPlaygroundDefaults(
+            engine = state.engine,
+            targetLanguage = state.targetLanguage,
+        )
+        mutablePlayground.update { it.copy(hasUnsavedProfileChanges = false) }
     }
 
     private fun submitPlayground() {
@@ -110,10 +99,6 @@ internal class TranslationSettingsScreenModel(
                 ),
             ),
         )
-    }
-
-    private fun setDefaultTarget(language: TranslationLanguageTag?) {
-        hostActions.setDefaultTargetLanguage(language)
     }
 
     fun acknowledge(
@@ -145,29 +130,45 @@ internal class TranslationSettingsScreenModel(
         }
     }
 
-    fun refreshDeviceAvailability() {
-        screenModelScope.launch {
-            mutableDeviceAvailability.value = hostActions.deviceAvailability()
-        }
-    }
-
     override fun onDispose() {
         controller.close()
     }
 
-    private fun initialPlaygroundState(): TranslationPlaygroundState {
-        val target = when (val selection = targetLanguagePreference.get()) {
+    private fun initialPlaygroundDefaults(): TranslationPlaygroundDefaults {
+        val target = when (val selection = hostActions.defaultTargetLanguage.get()) {
             TranslationTargetLanguageSelection.Default -> effectiveUiLanguage()
             is TranslationTargetLanguageSelection.Explicit -> selection.language
         } ?: ENGLISH
+        return TranslationPlaygroundDefaults(
+            engine = hostActions.selectedEngine.get(),
+            targetLanguage = target,
+        )
+    }
+
+    private fun initialPlaygroundState(defaults: TranslationPlaygroundDefaults): TranslationPlaygroundState {
+        val target = defaults.targetLanguage
         val source = if (target.languageCode() == ENGLISH.value) FRENCH else ENGLISH
         val sample = if (source == FRENCH) FRENCH_SAMPLE else ENGLISH_SAMPLE
         return TranslationPlaygroundState(
             text = sample,
             sourceLanguage = source,
             targetLanguage = target,
-            engine = enginePreference.get(),
+            engine = defaults.engine,
+            hasUnsavedProfileChanges = false,
         )
+    }
+
+    private fun updatePlayground(transform: (TranslationPlaygroundState) -> TranslationPlaygroundState) {
+        mutablePlayground.update { current ->
+            transform(current).let { updated ->
+                updated.copy(
+                    hasUnsavedProfileChanges =
+                    updated.engine != savedDefaults.engine ||
+                        updated.targetLanguage != savedDefaults.targetLanguage,
+                )
+            }
+        }
+        submitPlayground()
     }
 
     private fun performHostAction(
@@ -200,6 +201,12 @@ internal data class TranslationPlaygroundState(
     val sourceLanguage: TranslationLanguageTag,
     val targetLanguage: TranslationLanguageTag,
     val engine: TranslationEngineId,
+    val hasUnsavedProfileChanges: Boolean,
+)
+
+private data class TranslationPlaygroundDefaults(
+    val engine: TranslationEngineId,
+    val targetLanguage: TranslationLanguageTag,
 )
 
 private fun effectiveUiLanguage(): TranslationLanguageTag? {

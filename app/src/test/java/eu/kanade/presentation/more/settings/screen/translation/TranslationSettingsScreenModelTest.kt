@@ -35,7 +35,7 @@ import tachiyomi.core.common.preference.InMemoryPreferenceStore
 class TranslationSettingsScreenModelTest {
 
     @Test
-    fun `playground checks a real explicit pair before translation and engine experiments stay transient`() = runTest {
+    fun `playground stages profile settings until save while request-only edits stay transient`() = runTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
         Dispatchers.setMain(dispatcher)
         val hostActions = FakeHostActions()
@@ -57,22 +57,57 @@ class TranslationSettingsScreenModelTest {
             )
             model.controller.state.value
                 .shouldBeInstanceOf<TranslationSessionState.PreparationRequired>()
+            model.playground.value.hasUnsavedProfileChanges shouldBe false
+            model.supportsSystemSetup(ANDROID_ENGINE) shouldBe true
+            model.supportsSystemSetup(SECOND_ENGINE) shouldBe false
 
-            model.swapLanguages()
+            model.setSourceLanguage(ENGLISH)
+            model.setText("A request-only experiment")
             advanceUntilIdle()
-            feature.lastRequest?.sourceLanguage shouldBe
-                TranslationSourceLanguageSelection.Explicit(ENGLISH)
-            feature.lastRequest?.targetLanguage shouldBe
-                TranslationTargetLanguageSelection.Explicit(FRENCH)
+            model.playground.value.hasUnsavedProfileChanges shouldBe false
 
+            model.setTargetLanguage(FRENCH)
             model.setEngine(SECOND_ENGINE)
             advanceUntilIdle()
+            model.playground.value.hasUnsavedProfileChanges shouldBe true
             hostActions.selectedEngine.get() shouldBe ANDROID_ENGINE
+            hostActions.defaultTargetLanguage.get() shouldBe
+                TranslationTargetLanguageSelection.Explicit(ENGLISH)
 
-            model.usePlaygroundEngineAsDefault()
+            model.savePlaygroundDefaults()
+
             hostActions.selectedEngine.get() shouldBe SECOND_ENGINE
+            hostActions.defaultTargetLanguage.get() shouldBe
+                TranslationTargetLanguageSelection.Explicit(FRENCH)
+            model.playground.value.hasUnsavedProfileChanges shouldBe false
         } finally {
             model.onDispose()
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun `disposing the playground discards unsaved profile changes`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+        val hostActions = FakeHostActions()
+        hostActions.defaultTargetLanguage.set(TranslationTargetLanguageSelection.Explicit(ENGLISH))
+        val model = TranslationSettingsScreenModel(
+            feature = SetupRequiredFeature(),
+            hostActions = hostActions,
+        )
+
+        try {
+            model.setTargetLanguage(FRENCH)
+            model.setEngine(SECOND_ENGINE)
+            model.playground.value.hasUnsavedProfileChanges shouldBe true
+
+            model.onDispose()
+
+            hostActions.selectedEngine.get() shouldBe ANDROID_ENGINE
+            hostActions.defaultTargetLanguage.get() shouldBe
+                TranslationTargetLanguageSelection.Explicit(ENGLISH)
+        } finally {
             Dispatchers.resetMain()
         }
     }
@@ -116,6 +151,8 @@ class TranslationSettingsScreenModelTest {
             models: List<TranslationModelDescriptor>,
             allowMeteredNetwork: Boolean,
         ) = TranslationHostActionResult.ModelsReady
+
+        override fun supportsSystemSetup(engine: TranslationEngineId) = engine == ANDROID_ENGINE
 
         override suspend fun openSystemSetup(engine: TranslationEngineId) =
             TranslationHostActionResult.SetupUnsupported

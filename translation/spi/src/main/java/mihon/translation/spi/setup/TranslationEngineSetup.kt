@@ -7,6 +7,8 @@ import mihon.translation.api.TranslationProviderDisclosure
 
 interface TranslationEngineSetup {
     val engine: TranslationEngineId
+    val supportsSystemSetup: Boolean
+        get() = false
 
     suspend fun acknowledge(disclosure: TranslationProviderDisclosure)
 

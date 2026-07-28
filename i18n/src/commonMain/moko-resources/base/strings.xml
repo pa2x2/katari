@@ -281,6 +281,7 @@
     <string name="translation_settings_test_input">Text to translate</string>
     <string name="translation_settings_language_search">Search languages</string>
     <string name="translation_settings_saved">Translation settings saved</string>
+    <string name="translation_settings_open_provider_settings">Open %s translation settings</string>
     <string name="translation_settings_setup_opened">Complete setup in Android settings, then return to Katari.</string>
     <string name="translation_settings_setup_unsupported">This engine does not provide a setup action.</string>
     <string name="translation_settings_setup_failed">Translation setup failed: %s</string>

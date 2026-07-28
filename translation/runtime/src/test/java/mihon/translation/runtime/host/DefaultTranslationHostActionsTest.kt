@@ -8,6 +8,9 @@ import mihon.translation.api.TranslationDeviceAvailability
 import mihon.translation.api.TranslationEngineBuildAvailability
 import mihon.translation.api.TranslationEngineId
 import mihon.translation.api.TranslationInvocationPolicy
+import mihon.translation.api.TranslationModelId
+import mihon.translation.api.TranslationModelOperationResult
+import mihon.translation.api.TranslationProviderDisclosure
 import mihon.translation.api.TranslationProviderId
 import mihon.translation.api.TranslationProviderPresentation
 import mihon.translation.spi.ReadyTranslationEngineRequest
@@ -15,6 +18,8 @@ import mihon.translation.spi.TranslationEngine
 import mihon.translation.spi.TranslationEngineDeviceAvailability
 import mihon.translation.spi.TranslationEngineExecution
 import mihon.translation.spi.TranslationEnginePreparation
+import mihon.translation.spi.TranslationEngineSetup
+import mihon.translation.spi.TranslationSystemSetupResult
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 
@@ -49,9 +54,23 @@ class DefaultTranslationHostActionsTest {
             TranslationDeviceAvailability.SelectedEngineMissing(ENGINE_ID)
     }
 
+    @Test
+    fun `system setup shortcut is exposed only when the selected engine declares support`() {
+        actions(
+            engine = null,
+            setups = listOf(FakeSetup(supportsSystemSetup = true)),
+        ).supportsSystemSetup(ENGINE_ID) shouldBe true
+        actions(
+            engine = null,
+            setups = listOf(FakeSetup(supportsSystemSetup = false)),
+        ).supportsSystemSetup(ENGINE_ID) shouldBe false
+        actions(engine = null).supportsSystemSetup(ENGINE_ID) shouldBe false
+    }
+
     private fun actions(
         engine: FakeEngine?,
         known: List<KnownTranslationEngine> = listOf(KNOWN_ENGINE),
+        setups: List<TranslationEngineSetup> = emptyList(),
     ): DefaultTranslationHostActions {
         val preferences = ProfileTranslationPreferences(InMemoryPreferenceStore(), ENGINE_ID)
         val registry = DefaultTranslationEngineRegistry(
@@ -62,8 +81,23 @@ class DefaultTranslationHostActionsTest {
             preferences = preferences,
             engineRegistry = registry,
             knownEngineCatalog = registry,
-            setupRegistry = DefaultTranslationEngineSetupRegistry(emptyList()),
+            setupRegistry = DefaultTranslationEngineSetupRegistry(setups),
         )
+    }
+
+    private class FakeSetup(
+        override val supportsSystemSetup: Boolean,
+    ) : TranslationEngineSetup {
+        override val engine = ENGINE_ID
+
+        override suspend fun acknowledge(disclosure: TranslationProviderDisclosure) = Unit
+
+        override suspend fun openSystemSetup() = TranslationSystemSetupResult.Opened
+
+        override suspend fun downloadModels(
+            models: Set<TranslationModelId>,
+            allowMeteredNetwork: Boolean,
+        ) = TranslationModelOperationResult.Completed
     }
 
     private class FakeEngine(

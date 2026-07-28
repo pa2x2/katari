@@ -28,6 +28,7 @@ fun TranslationSessionPanel(
     controller: TranslationSessionController,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
     modifier: Modifier = Modifier,
+    showCopy: Boolean = true,
 ) {
     val state by controller.state.collectAsState()
     val active = state as? TranslationSessionState.Active ?: return
@@ -47,6 +48,7 @@ fun TranslationSessionPanel(
             showHeader = false,
             showExpand = false,
             showLanguageChange = false,
+            showCopy = showCopy,
             useExternalEnginePicker = true,
             onDismiss = controller::dismiss,
             onExecute = controller::execute,

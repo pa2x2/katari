@@ -84,6 +84,9 @@ class DefaultTranslationHostActions(
         }
     }
 
+    override fun supportsSystemSetup(engine: TranslationEngineId): Boolean =
+        setupRegistry.find(engine)?.supportsSystemSetup == true
+
     override suspend fun openSystemSetup(engine: TranslationEngineId): TranslationHostActionResult =
         performSetup(engine) {
             when (val result = openSystemSetup()) {

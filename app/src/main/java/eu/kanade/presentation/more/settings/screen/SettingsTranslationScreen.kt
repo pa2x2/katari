@@ -18,7 +18,6 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.translation.TranslationSettingsScreenModel
 import eu.kanade.presentation.more.settings.screen.translation.engine.TranslationEnginePickerScreen
-import eu.kanade.presentation.more.settings.screen.translation.engine.TranslationEnginePickerTarget
 import eu.kanade.presentation.more.settings.screen.translation.engine.translationEngineLabel
 import eu.kanade.presentation.more.settings.screen.translation.language.TranslationLanguagePickerScreen
 import eu.kanade.presentation.more.settings.screen.translation.language.TranslationLanguagePickerTarget
@@ -53,7 +52,7 @@ object SettingsTranslationScreen : SearchableSettings {
         val targetSelection = target
         return listOf(
             Preference.PreferenceGroup(
-                title = stringResource(MR.strings.translation_settings_defaults),
+                title = stringResource(MR.strings.translation_settings_playground),
                 preferenceItems = listOf(
                     Preference.PreferenceItem.TextPreference(
                         title = stringResource(MR.strings.translation_settings_engine),
@@ -87,9 +86,6 @@ object SettingsTranslationScreen : SearchableSettings {
         val navigator = LocalNavigator.currentOrThrow
         val model = rememberScreenModel { TranslationSettingsScreenModel() }
         val playground by model.playground.collectAsState()
-        val deviceAvailability by model.deviceAvailability.collectAsState()
-        val defaultEngine by model.enginePreference.collectPreferenceAsState()
-        val defaultTarget by model.targetLanguagePreference.collectPreferenceAsState()
         val searchHighlightKey = remember { SearchableSettings.highlightKey }
         var retryAfterResume by remember { mutableStateOf(false) }
 
@@ -103,7 +99,6 @@ object SettingsTranslationScreen : SearchableSettings {
         DisposableEffect(lifecycleOwner, model) {
             val observer = LifecycleEventObserver { _, event ->
                 if (event == Lifecycle.Event.ON_RESUME) {
-                    model.refreshDeviceAvailability()
                     if (retryAfterResume) {
                         retryAfterResume = false
                         model.controller.retry()
@@ -159,10 +154,7 @@ object SettingsTranslationScreen : SearchableSettings {
                 )
                 TranslationSessionExternalAction.ChooseEngine ->
                     navigator.push(
-                        TranslationEnginePickerScreen(
-                            TranslationEnginePickerTarget.Playground,
-                            model,
-                        ),
+                        TranslationEnginePickerScreen(model),
                     )
                 is TranslationSessionExternalAction.ConfirmProviderDisclosure ->
                     model.acknowledge(action.engine, action.disclosure, ::handleHostResult)
@@ -178,9 +170,6 @@ object SettingsTranslationScreen : SearchableSettings {
         TranslationSettingsContent(
             playground = playground,
             engines = model.engines,
-            defaultEngine = defaultEngine,
-            defaultTarget = defaultTarget,
-            deviceAvailability = deviceAvailability,
             controller = model.controller,
             searchHighlightKey = searchHighlightKey,
             onSearchHighlightConsumed = { key ->
@@ -208,32 +197,15 @@ object SettingsTranslationScreen : SearchableSettings {
             },
             onSwapLanguages = model::swapLanguages,
             onChooseEngine = {
-                navigator.push(
-                    TranslationEnginePickerScreen(
-                        TranslationEnginePickerTarget.Playground,
-                        model,
-                    ),
-                )
+                navigator.push(TranslationEnginePickerScreen(model))
             },
-            onChooseDefaultEngine = {
-                navigator.push(
-                    TranslationEnginePickerScreen(
-                        TranslationEnginePickerTarget.Profile,
-                        model,
-                    ),
-                )
+            canOpenSystemSetup = model.supportsSystemSetup(playground.engine),
+            onOpenSystemSetup = {
+                model.openSystemSetup(playground.engine, ::handleHostResult)
             },
-            onChooseDefaultTarget = {
-                navigator.push(
-                    TranslationLanguagePickerScreen(
-                        TranslationLanguagePickerTarget.ProfileTarget,
-                        model,
-                    ),
-                )
-            },
-            onUseEngineAsDefault = {
-                model.usePlaygroundEngineAsDefault()
-                context.toast(MR.strings.translation_settings_default_engine_updated)
+            onSave = {
+                model.savePlaygroundDefaults()
+                context.toast(MR.strings.translation_settings_saved)
             },
             onExternalAction = ::handleExternalAction,
         )

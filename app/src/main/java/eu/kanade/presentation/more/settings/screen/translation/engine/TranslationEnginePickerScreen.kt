@@ -9,10 +9,8 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.screen.translation.TranslationSettingsScreenModel
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.openInBrowser
-import tachiyomi.presentation.core.util.collectAsState as collectPreferenceAsState
 
 internal class TranslationEnginePickerScreen(
-    private val target: TranslationEnginePickerTarget,
     private val model: TranslationSettingsScreenModel,
 ) : Screen() {
 
@@ -21,28 +19,16 @@ internal class TranslationEnginePickerScreen(
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
         val playground by model.playground.collectAsState()
-        val defaultEngine by model.enginePreference.collectPreferenceAsState()
 
         TranslationEnginePickerContent(
             engines = model.engines,
-            selected = when (target) {
-                TranslationEnginePickerTarget.Playground -> playground.engine
-                TranslationEnginePickerTarget.Profile -> defaultEngine
-            },
+            selected = playground.engine,
             onSelect = { engine ->
-                when (target) {
-                    TranslationEnginePickerTarget.Playground -> model.setEngine(engine)
-                    TranslationEnginePickerTarget.Profile -> model.setProfileEngine(engine)
-                }
+                model.setEngine(engine)
                 navigator.pop()
             },
             onOpenDocumentation = { context.openInBrowser(it, forceDefaultBrowser = true) },
             onBack = navigator::pop,
         )
     }
-}
-
-internal enum class TranslationEnginePickerTarget {
-    Playground,
-    Profile,
 }

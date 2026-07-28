@@ -1,6 +1,5 @@
 package eu.kanade.presentation.more.settings.screen.translation.presentation
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,17 +8,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowForward
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material.icons.outlined.Translate
+import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
@@ -35,14 +31,10 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.more.settings.screen.translation.TranslationPlaygroundState
 import eu.kanade.presentation.more.settings.screen.translation.engine.translationEngineLabel
-import eu.kanade.presentation.more.settings.screen.translation.language.defaultTranslationTargetLabel
 import eu.kanade.presentation.more.settings.widget.ProfileSpecificChip
 import eu.kanade.presentation.more.settings.widget.highlightBackground
 import kotlinx.coroutines.delay
 import mihon.translation.api.KnownTranslationEngine
-import mihon.translation.api.TranslationDeviceAvailability
-import mihon.translation.api.TranslationEngineId
-import mihon.translation.api.TranslationTargetLanguageSelection
 import mihon.translation.ui.picker.displayName
 import mihon.translation.ui.presentation.TranslationSessionExternalAction
 import mihon.translation.ui.presentation.TranslationSessionPanel
@@ -58,9 +50,6 @@ import kotlin.time.Duration.Companion.milliseconds
 internal fun TranslationSettingsContent(
     playground: TranslationPlaygroundState,
     engines: List<KnownTranslationEngine>,
-    defaultEngine: TranslationEngineId,
-    defaultTarget: TranslationTargetLanguageSelection,
-    deviceAvailability: TranslationDeviceAvailability?,
     controller: TranslationSessionController,
     searchHighlightKey: String?,
     onSearchHighlightConsumed: (String) -> Unit,
@@ -70,28 +59,23 @@ internal fun TranslationSettingsContent(
     onChooseTarget: () -> Unit,
     onSwapLanguages: () -> Unit,
     onChooseEngine: () -> Unit,
-    onChooseDefaultEngine: () -> Unit,
-    onChooseDefaultTarget: () -> Unit,
-    onUseEngineAsDefault: () -> Unit,
+    canOpenSystemSetup: Boolean,
+    onOpenSystemSetup: () -> Unit,
+    onSave: () -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
 ) {
     val playgroundTitle = stringResource(MR.strings.translation_settings_playground)
     val engineTitle = stringResource(MR.strings.translation_settings_engine)
     val targetTitle = stringResource(MR.strings.translation_settings_target)
-    val unavailableMessage = deviceAvailabilityMessage(deviceAvailability)
     val listState = rememberLazyListState()
-    val highlightedItemIndex = when (searchHighlightKey) {
-        playgroundTitle -> PLAYGROUND_ITEM_INDEX
-        engineTitle,
-        targetTitle,
-        -> DEFAULTS_ITEM_INDEX
-        else -> null
-    }
-    LaunchedEffect(searchHighlightKey, highlightedItemIndex) {
+    val highlightPlayground = searchHighlightKey == playgroundTitle ||
+        searchHighlightKey == engineTitle ||
+        searchHighlightKey == targetTitle
+    LaunchedEffect(searchHighlightKey, highlightPlayground) {
         val key = searchHighlightKey ?: return@LaunchedEffect
-        if (highlightedItemIndex != null) {
+        if (highlightPlayground) {
             delay(SEARCH_HIGHLIGHT_SCROLL_DELAY)
-            listState.animateScrollToItem(highlightedItemIndex)
+            listState.animateScrollToItem(PLAYGROUND_ITEM_INDEX)
         }
         onSearchHighlightConsumed(key)
     }
@@ -117,99 +101,23 @@ internal fun TranslationSettingsContent(
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
         ) {
             item {
-                SectionTitle(stringResource(MR.strings.translation_settings_playground))
-            }
-            item {
                 TranslationPlayground(
                     state = playground,
                     engines = engines,
-                    defaultEngine = defaultEngine,
                     controller = controller,
                     onTextChange = onTextChange,
                     onChooseSource = onChooseSource,
                     onChooseTarget = onChooseTarget,
                     onSwapLanguages = onSwapLanguages,
                     onChooseEngine = onChooseEngine,
-                    onUseEngineAsDefault = onUseEngineAsDefault,
+                    canOpenSystemSetup = canOpenSystemSetup,
+                    onOpenSystemSetup = onOpenSystemSetup,
+                    onSave = onSave,
                     onExternalAction = onExternalAction,
-                    highlighted = searchHighlightKey == playgroundTitle,
+                    highlighted = highlightPlayground,
                 )
-            }
-            item {
-                SectionTitle(stringResource(MR.strings.translation_settings_defaults))
-            }
-            item {
-                TranslationDefaults(
-                    engines = engines,
-                    defaultEngine = defaultEngine,
-                    defaultTarget = defaultTarget,
-                    onChooseEngine = onChooseDefaultEngine,
-                    onChooseTarget = onChooseDefaultTarget,
-                    highlightedEngine = searchHighlightKey == engineTitle,
-                    highlightedTarget = searchHighlightKey == targetTitle,
-                )
-            }
-            item {
-                Row(
-                    modifier = Modifier.padding(horizontal = MaterialTheme.padding.large),
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
-                    verticalAlignment = Alignment.Top,
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Info,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Text(
-                        text = stringResource(MR.strings.translation_settings_system_notice_explicit),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
-            }
-            if (unavailableMessage != null) {
-                item {
-                    Row(
-                        modifier = Modifier.padding(horizontal = MaterialTheme.padding.large),
-                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
-                        verticalAlignment = Alignment.Top,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Info,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
-                        )
-                        Text(
-                            text = unavailableMessage,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                        )
-                    }
-                }
             }
         }
-    }
-}
-
-@Composable
-private fun deviceAvailabilityMessage(availability: TranslationDeviceAvailability?): String? {
-    return when (availability) {
-        null,
-        TranslationDeviceAvailability.Available,
-        -> null
-        is TranslationDeviceAvailability.SelectedEngineMissing,
-        is TranslationDeviceAvailability.SelectedEngineUnavailable,
-        -> stringResource(MR.strings.translation_selected_engine_unavailable)
-        is TranslationDeviceAvailability.UnsupportedOs ->
-            stringResource(MR.strings.translation_unsupported_os, availability.minimumApi)
-        TranslationDeviceAvailability.TranslationServiceMissing ->
-            stringResource(MR.strings.translation_service_missing)
-        is TranslationDeviceAvailability.ProviderFailure ->
-            stringResource(
-                MR.strings.translation_engine_unavailable,
-                availability.engine.value,
-                availability.reason,
-            )
     }
 }
 
@@ -217,17 +125,22 @@ private fun deviceAvailabilityMessage(availability: TranslationDeviceAvailabilit
 private fun TranslationPlayground(
     state: TranslationPlaygroundState,
     engines: List<KnownTranslationEngine>,
-    defaultEngine: TranslationEngineId,
     controller: TranslationSessionController,
     onTextChange: (String) -> Unit,
     onChooseSource: () -> Unit,
     onChooseTarget: () -> Unit,
     onSwapLanguages: () -> Unit,
     onChooseEngine: () -> Unit,
-    onUseEngineAsDefault: () -> Unit,
+    canOpenSystemSetup: Boolean,
+    onOpenSystemSetup: () -> Unit,
+    onSave: () -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
     highlighted: Boolean,
 ) {
+    val selectedProviderName = engines
+        .firstOrNull { it.id == state.engine }
+        ?.providerName
+
     ElevatedCard(
         modifier = Modifier
             .padding(horizontal = MaterialTheme.padding.medium)
@@ -241,17 +154,6 @@ private fun TranslationPlayground(
                 .padding(MaterialTheme.padding.large),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
         ) {
-            Column {
-                Text(
-                    text = stringResource(MR.strings.translation_settings_try_translation),
-                    style = MaterialTheme.typography.titleLarge,
-                )
-                Text(
-                    text = stringResource(MR.strings.translation_settings_try_translation_summary),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
@@ -292,14 +194,6 @@ private fun TranslationPlayground(
                 onClick = onChooseEngine,
                 modifier = Modifier.testTag(TRANSLATION_ENGINE_TAG),
             )
-            if (state.engine != defaultEngine) {
-                TextButton(
-                    onClick = onUseEngineAsDefault,
-                    modifier = Modifier.align(Alignment.End),
-                ) {
-                    Text(stringResource(MR.strings.translation_settings_use_engine_as_default))
-                }
-            }
             OutlinedTextField(
                 value = state.text,
                 onValueChange = onTextChange,
@@ -310,14 +204,44 @@ private fun TranslationPlayground(
                 leadingIcon = {
                     Icon(Icons.Outlined.Translate, contentDescription = null)
                 },
-                minLines = 3,
-                maxLines = 8,
+                minLines = 1,
+                maxLines = 4,
             )
             TranslationSessionPanel(
                 controller = controller,
                 onExternalAction = onExternalAction,
                 modifier = Modifier.testTag(TRANSLATION_OUTPUT_TAG),
+                showCopy = false,
             )
+            Button(
+                onClick = onSave,
+                enabled = state.hasUnsavedProfileChanges,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(TRANSLATION_SAVE_TAG),
+            ) {
+                Text(stringResource(MR.strings.action_save))
+            }
+            if (canOpenSystemSetup && selectedProviderName != null) {
+                TextButton(
+                    onClick = onOpenSystemSetup,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .testTag(TRANSLATION_SYSTEM_SETUP_TAG),
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.OpenInNew,
+                        contentDescription = null,
+                    )
+                    Text(
+                        text = stringResource(
+                            MR.strings.translation_settings_open_provider_settings,
+                            selectedProviderName,
+                        ),
+                        modifier = Modifier.padding(start = MaterialTheme.padding.small),
+                    )
+                }
+            }
         }
     }
 }
@@ -359,80 +283,14 @@ private fun PlaygroundSelector(
     }
 }
 
-@Composable
-private fun TranslationDefaults(
-    engines: List<KnownTranslationEngine>,
-    defaultEngine: TranslationEngineId,
-    defaultTarget: TranslationTargetLanguageSelection,
-    onChooseEngine: () -> Unit,
-    onChooseTarget: () -> Unit,
-    highlightedEngine: Boolean,
-    highlightedTarget: Boolean,
-) {
-    OutlinedCard(
-        modifier = Modifier
-            .padding(horizontal = MaterialTheme.padding.medium)
-            .fillMaxWidth(),
-    ) {
-        ListItem(
-            headlineContent = { Text(stringResource(MR.strings.translation_settings_engine)) },
-            supportingContent = { Text(translationEngineLabel(defaultEngine, engines)) },
-            leadingContent = {
-                Icon(Icons.Outlined.Settings, contentDescription = null)
-            },
-            trailingContent = {
-                Icon(Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = null)
-            },
-            modifier = Modifier
-                .highlightBackground(highlightedEngine)
-                .clickable(onClick = onChooseEngine),
-        )
-        HorizontalDivider()
-        ListItem(
-            headlineContent = { Text(stringResource(MR.strings.translation_settings_target)) },
-            supportingContent = {
-                Text(
-                    when (defaultTarget) {
-                        TranslationTargetLanguageSelection.Default -> defaultTranslationTargetLabel()
-                        is TranslationTargetLanguageSelection.Explicit ->
-                            defaultTarget.language.displayName()
-                    },
-                )
-            },
-            leadingContent = {
-                Icon(Icons.Outlined.Language, contentDescription = null)
-            },
-            trailingContent = {
-                Icon(Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = null)
-            },
-            modifier = Modifier
-                .highlightBackground(highlightedTarget)
-                .clickable(onClick = onChooseTarget),
-        )
-    }
-}
-
-@Composable
-private fun SectionTitle(title: String) {
-    Text(
-        text = title,
-        modifier = Modifier.padding(
-            start = MaterialTheme.padding.large,
-            top = MaterialTheme.padding.medium,
-            end = MaterialTheme.padding.large,
-        ),
-        color = MaterialTheme.colorScheme.primary,
-        style = MaterialTheme.typography.titleSmall,
-    )
-}
-
 internal const val TRANSLATION_PLAYGROUND_TAG = "translation_playground"
 internal const val TRANSLATION_SOURCE_TAG = "translation_source"
 internal const val TRANSLATION_TARGET_TAG = "translation_target"
 internal const val TRANSLATION_ENGINE_TAG = "translation_engine"
+internal const val TRANSLATION_SYSTEM_SETUP_TAG = "translation_system_setup"
 internal const val TRANSLATION_INPUT_TAG = "translation_input"
 internal const val TRANSLATION_OUTPUT_TAG = "translation_output"
+internal const val TRANSLATION_SAVE_TAG = "translation_save"
 
-private const val PLAYGROUND_ITEM_INDEX = 1
-private const val DEFAULTS_ITEM_INDEX = 3
+private const val PLAYGROUND_ITEM_INDEX = 0
 private val SEARCH_HIGHLIGHT_SCROLL_DELAY = 500.milliseconds

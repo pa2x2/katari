@@ -37,6 +37,7 @@ internal class AndroidSystemTranslationEngine(
     )
     override val maximumInputCodePoints: Int? = null
     override val engine: TranslationEngineId = ENGINE_ID
+    override val supportsSystemSetup = true
 
     override suspend fun inspectDevice(): TranslationEngineDeviceAvailability {
         return when (val inspection = platform.inspectDevice()) {

@@ -26,6 +26,8 @@ interface TranslationHostActions {
         allowMeteredNetwork: Boolean = false,
     ): TranslationHostActionResult
 
+    fun supportsSystemSetup(engine: TranslationEngineId): Boolean
+
     suspend fun openSystemSetup(engine: TranslationEngineId): TranslationHostActionResult
 
     fun setSelectedEngine(engine: TranslationEngineId)

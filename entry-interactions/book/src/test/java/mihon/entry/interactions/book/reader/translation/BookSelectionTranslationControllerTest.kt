@@ -150,6 +150,8 @@ class BookSelectionTranslationControllerTest {
             allowMeteredNetwork: Boolean,
         ) = TranslationHostActionResult.ModelsReady
 
+        override fun supportsSystemSetup(engine: TranslationEngineId) = false
+
         override suspend fun openSystemSetup(engine: TranslationEngineId) =
             TranslationHostActionResult.SetupUnsupported
 
