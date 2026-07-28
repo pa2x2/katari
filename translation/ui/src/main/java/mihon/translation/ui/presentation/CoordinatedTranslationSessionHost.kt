@@ -28,6 +28,7 @@ import mihon.translation.api.TranslationEngineSelection
 import mihon.translation.api.TranslationHostActionResult
 import mihon.translation.api.TranslationSourceLanguageSelection
 import mihon.translation.api.TranslationTargetLanguageSelection
+import mihon.translation.ui.picker.TranslationEnginePickerDensity
 import mihon.translation.ui.picker.TranslationEnginePickerList
 import mihon.translation.ui.picker.TranslationLanguagePickerList
 import mihon.translation.ui.picker.translationLanguageOptions
@@ -102,6 +103,7 @@ private fun TranslationSessionPickerDialog(
     picker: TranslationSessionPicker,
     isTabletUi: Boolean,
 ) {
+    val context = LocalContext.current
     val state by coordinator.controller.state.collectAsState()
     val engineStates by coordinator.engineStates.collectAsState()
     val active = state as? TranslationSessionState.Active
@@ -172,8 +174,14 @@ private fun TranslationSessionPickerDialog(
                             TranslationEnginePickerList(
                                 engines = engineStates,
                                 selected = selected,
+                                density = TranslationEnginePickerDensity.Compact,
                                 onSelect = coordinator::selectEngine,
                                 onOpenSetup = coordinator::openEngineSetup,
+                                onOpenDocumentation = { url ->
+                                    runCatching {
+                                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                                    }
+                                },
                                 modifier = Modifier.weight(1f),
                             )
                         }

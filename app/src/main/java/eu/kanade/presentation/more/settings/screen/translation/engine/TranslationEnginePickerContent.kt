@@ -8,6 +8,7 @@ import eu.kanade.presentation.components.AppBar
 import mihon.translation.api.KnownTranslationEngine
 import mihon.translation.api.TranslationEngineId
 import mihon.translation.api.TranslationEngineState
+import mihon.translation.ui.picker.TranslationEnginePickerDensity
 import mihon.translation.ui.picker.TranslationEnginePickerList
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -34,11 +35,11 @@ internal fun TranslationEnginePickerContent(
         TranslationEnginePickerList(
             engines = engines,
             selected = selected,
+            density = TranslationEnginePickerDensity.Full,
             onSelect = onSelect,
             onOpenSetup = onOpenSetup,
             onOpenDocumentation = onOpenDocumentation,
             showMissingSelectionNotice = true,
-            showExplicitPolicyNotice = true,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(contentPadding),
@@ -52,6 +53,6 @@ internal fun translationEngineLabel(
     engines: List<KnownTranslationEngine>,
 ): String {
     val known = engines.firstOrNull { it.id == engine }
-    return known?.let { "${it.engineName} · ${it.providerName}" }
+    return known?.engineName
         ?: stringResource(MR.strings.translation_settings_engine_unknown, engine.value)
 }

@@ -16,6 +16,8 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.materialIcons)
+    implementation(libs.androidx.compose.uiToolingPreview)
+    implementation(libs.androidx.core)
     implementation(libs.kotlinx.coroutines.core)
 
     testImplementation(libs.bundles.test)
@@ -26,4 +28,5 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.uiTestJunit4)
     androidTestImplementation(libs.androidx.test.junit)
     debugImplementation(libs.androidx.compose.uiTestManifest)
+    debugImplementation(libs.androidx.compose.uiTooling)
 }
