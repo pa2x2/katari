@@ -13,19 +13,11 @@ internal enum class TranslationSessionSurface {
 internal fun TranslationSessionState.preferredSurface(): TranslationSessionSurface {
     return when (this) {
         TranslationSessionState.Hidden -> TranslationSessionSurface.None
-        is TranslationSessionState.Settling,
-        is TranslationSessionState.Preparing,
-        is TranslationSessionState.Ready,
-        is TranslationSessionState.Translating,
-        is TranslationSessionState.Success,
-        -> if (input.anchor == null) {
+        is TranslationSessionState.Active -> if (input.anchor == null) {
             TranslationSessionSurface.AdaptiveSheet
         } else {
             TranslationSessionSurface.AnchoredPopup
         }
-        is TranslationSessionState.PreparationRequired,
-        is TranslationSessionState.Failed,
-        -> TranslationSessionSurface.AdaptiveSheet
     }
 }
 

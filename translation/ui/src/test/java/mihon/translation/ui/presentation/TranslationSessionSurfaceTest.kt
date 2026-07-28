@@ -3,6 +3,7 @@ package mihon.translation.ui.presentation
 import io.kotest.matchers.shouldBe
 import mihon.translation.api.TranslationRequest
 import mihon.translation.ui.session.TranslationSelectionAnchor
+import mihon.translation.ui.session.TranslationSessionFailure
 import mihon.translation.ui.session.TranslationSessionInput
 import mihon.translation.ui.session.TranslationSessionState
 import org.junit.jupiter.api.Test
@@ -20,6 +21,22 @@ class TranslationSessionSurfaceTest {
 
         TranslationSessionState.Settling(
             TranslationSessionInput(request = TranslationRequest("settings text")),
+        ).preferredSurface() shouldBe TranslationSessionSurface.AdaptiveSheet
+    }
+
+    @Test
+    fun `translation failure follows its anchor instead of forcing a sheet`() {
+        TranslationSessionState.Failed(
+            input = TranslationSessionInput(
+                request = TranslationRequest("selected text"),
+                anchor = TranslationSelectionAnchor(400f, 200f, 600f, 240f),
+            ),
+            failure = TranslationSessionFailure.UnexpectedExecutionFailure,
+        ).preferredSurface() shouldBe TranslationSessionSurface.AnchoredPopup
+
+        TranslationSessionState.Failed(
+            input = TranslationSessionInput(request = TranslationRequest("settings text")),
+            failure = TranslationSessionFailure.UnexpectedExecutionFailure,
         ).preferredSurface() shouldBe TranslationSessionSurface.AdaptiveSheet
     }
 

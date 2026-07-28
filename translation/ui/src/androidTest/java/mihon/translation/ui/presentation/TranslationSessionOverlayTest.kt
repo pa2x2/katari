@@ -27,6 +27,7 @@ import mihon.translation.api.TranslationResult
 import mihon.translation.api.TranslationSourceLanguageSelection
 import mihon.translation.api.TranslationTargetLanguageSelection
 import mihon.translation.ui.session.TranslationSelectionAnchor
+import mihon.translation.ui.session.TranslationSessionFailure
 import mihon.translation.ui.session.TranslationSessionInput
 import mihon.translation.ui.session.TranslationSessionState
 import org.junit.Rule
@@ -69,6 +70,24 @@ class TranslationSessionOverlayTest {
     }
 
     @Test
+    fun failed_translation_with_a_valid_anchor_uses_the_shared_popup_content() {
+        render(
+            TranslationSessionState.Failed(
+                input = input(
+                    anchor = TranslationSelectionAnchor(400f, 280f, 680f, 340f),
+                ),
+                failure = TranslationSessionFailure.UnexpectedExecutionFailure,
+            ),
+        )
+
+        composeRule.onNodeWithText(
+            composeRule.activity.stringResource(MR.strings.translation_failed),
+        ).assertIsDisplayed()
+        composeRule.onNodeWithTag(TRANSLATION_SESSION_POPUP_TAG).assertIsDisplayed()
+        composeRule.onAllNodesWithTag(TRANSLATION_SESSION_SHEET_TAG).assertCountEquals(0)
+    }
+
+    @Test
     fun embedded_first_loading_keeps_a_visible_padded_container() {
         composeRule.setContent {
             MaterialTheme {
@@ -78,6 +97,7 @@ class TranslationSessionOverlayTest {
                     showHeader = false,
                     showExpand = false,
                     showLanguageChange = false,
+                    showCopy = true,
                     useExternalEnginePicker = true,
                     onDismiss = {},
                     onExecute = {},
@@ -115,6 +135,7 @@ class TranslationSessionOverlayTest {
                     showHeader = false,
                     showExpand = false,
                     showLanguageChange = false,
+                    showCopy = true,
                     useExternalEnginePicker = true,
                     onDismiss = {},
                     onExecute = {},
@@ -181,6 +202,7 @@ class TranslationSessionOverlayTest {
                     showHeader = false,
                     showExpand = false,
                     showLanguageChange = false,
+                    showCopy = true,
                     useExternalEnginePicker = true,
                     onDismiss = {},
                     onExecute = {},
@@ -219,6 +241,7 @@ class TranslationSessionOverlayTest {
                     showHeader = false,
                     showExpand = false,
                     showLanguageChange = false,
+                    showCopy = true,
                     useExternalEnginePicker = true,
                     onDismiss = {},
                     onExecute = {},

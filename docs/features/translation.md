@@ -26,7 +26,8 @@ selection-menu action.
 If the selected engine or device translation service becomes unavailable, Katari preserves the enabled profile
 preference but disables its effective behavior and explains why in reader settings. Translation resumes after
 availability returns. Request-specific setup, source detection, target choices, and model states continue in the
-translation sheet after a selection is made.
+translation session after a selection is made. Session content, including failures, stays anchored to a valid
+selection when it fits safely; a missing or unusable anchor falls back to the adaptive sheet.
 
 ## Languages
 
