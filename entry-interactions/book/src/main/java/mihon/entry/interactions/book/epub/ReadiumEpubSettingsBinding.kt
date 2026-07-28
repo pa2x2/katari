@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
+import mihon.entry.viewer.settings.ReaderCapabilityId
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.resetSettings
 import org.readium.r2.navigator.epub.EpubPreferences
@@ -19,6 +20,7 @@ internal class ReadiumEpubSettingsBinding(
     private val provider: ReadiumEpubSettingsProvider,
     private val binder: ViewerSettingBinder,
     private val entryId: Long,
+    val readerCapabilities: Set<ReaderCapabilityId> = emptySet(),
 ) {
     val theme = binder.bind(provider.themeSetting)
     val fontFamily = binder.bind(provider.fontFamilySetting)

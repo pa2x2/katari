@@ -36,13 +36,14 @@ import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.more.settings.screen.translation.TranslationPlaygroundState
 import eu.kanade.presentation.more.settings.screen.translation.engine.translationEngineLabel
 import eu.kanade.presentation.more.settings.screen.translation.language.defaultTranslationTargetLabel
-import eu.kanade.presentation.more.settings.screen.translation.language.displayName
 import eu.kanade.presentation.more.settings.widget.ProfileSpecificChip
 import eu.kanade.presentation.more.settings.widget.highlightBackground
 import kotlinx.coroutines.delay
 import mihon.translation.api.KnownTranslationEngine
+import mihon.translation.api.TranslationDeviceAvailability
 import mihon.translation.api.TranslationEngineId
 import mihon.translation.api.TranslationTargetLanguageSelection
+import mihon.translation.ui.picker.displayName
 import mihon.translation.ui.presentation.TranslationSessionExternalAction
 import mihon.translation.ui.presentation.TranslationSessionPanel
 import mihon.translation.ui.session.TranslationSessionController
@@ -59,6 +60,7 @@ internal fun TranslationSettingsContent(
     engines: List<KnownTranslationEngine>,
     defaultEngine: TranslationEngineId,
     defaultTarget: TranslationTargetLanguageSelection,
+    deviceAvailability: TranslationDeviceAvailability?,
     controller: TranslationSessionController,
     searchHighlightKey: String?,
     onSearchHighlightConsumed: (String) -> Unit,
@@ -76,6 +78,7 @@ internal fun TranslationSettingsContent(
     val playgroundTitle = stringResource(MR.strings.translation_settings_playground)
     val engineTitle = stringResource(MR.strings.translation_settings_engine)
     val targetTitle = stringResource(MR.strings.translation_settings_target)
+    val unavailableMessage = deviceAvailabilityMessage(deviceAvailability)
     val listState = rememberLazyListState()
     val highlightedItemIndex = when (searchHighlightKey) {
         playgroundTitle -> PLAYGROUND_ITEM_INDEX
@@ -164,7 +167,49 @@ internal fun TranslationSettingsContent(
                     )
                 }
             }
+            if (unavailableMessage != null) {
+                item {
+                    Row(
+                        modifier = Modifier.padding(horizontal = MaterialTheme.padding.large),
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
+                        verticalAlignment = Alignment.Top,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Info,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                        )
+                        Text(
+                            text = unavailableMessage,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
+            }
         }
+    }
+}
+
+@Composable
+private fun deviceAvailabilityMessage(availability: TranslationDeviceAvailability?): String? {
+    return when (availability) {
+        null,
+        TranslationDeviceAvailability.Available,
+        -> null
+        is TranslationDeviceAvailability.SelectedEngineMissing,
+        is TranslationDeviceAvailability.SelectedEngineUnavailable,
+        -> stringResource(MR.strings.translation_selected_engine_unavailable)
+        is TranslationDeviceAvailability.UnsupportedOs ->
+            stringResource(MR.strings.translation_unsupported_os, availability.minimumApi)
+        TranslationDeviceAvailability.TranslationServiceMissing ->
+            stringResource(MR.strings.translation_service_missing)
+        is TranslationDeviceAvailability.ProviderFailure ->
+            stringResource(
+                MR.strings.translation_engine_unavailable,
+                availability.engine.value,
+                availability.reason,
+            )
     }
 }
 

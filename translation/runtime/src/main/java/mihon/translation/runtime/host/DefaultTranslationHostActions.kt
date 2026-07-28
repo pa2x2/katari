@@ -1,0 +1,122 @@
+package mihon.translation.runtime
+
+import kotlinx.coroutines.CancellationException
+import mihon.translation.api.KnownTranslationEngine
+import mihon.translation.api.TranslationDeviceAvailability
+import mihon.translation.api.TranslationEngineId
+import mihon.translation.api.TranslationHostActionResult
+import mihon.translation.api.TranslationHostActions
+import mihon.translation.api.TranslationLanguageTag
+import mihon.translation.api.TranslationModelDescriptor
+import mihon.translation.api.TranslationModelOperationResult
+import mihon.translation.api.TranslationProviderDisclosure
+import mihon.translation.api.TranslationTargetLanguageSelection
+import mihon.translation.spi.KnownTranslationEngineCatalog
+import mihon.translation.spi.TranslationEngineDeviceAvailability
+import mihon.translation.spi.TranslationEngineRegistry
+import mihon.translation.spi.TranslationEngineSetupRegistry
+import mihon.translation.spi.TranslationSystemSetupResult
+import tachiyomi.core.common.preference.Preference
+
+class DefaultTranslationHostActions(
+    private val preferences: ProfileTranslationPreferences,
+    private val engineRegistry: TranslationEngineRegistry,
+    knownEngineCatalog: KnownTranslationEngineCatalog,
+    private val setupRegistry: TranslationEngineSetupRegistry,
+) : TranslationHostActions {
+    override val knownEngines: List<KnownTranslationEngine> = knownEngineCatalog.knownEngines
+    override val selectedEngine: Preference<TranslationEngineId> = preferences.engine
+    override val defaultTargetLanguage: Preference<TranslationTargetLanguageSelection> = preferences.targetLanguage
+    override val automaticSelectionEnabled: Preference<Boolean> =
+        preferences.automaticSelectionTranslationEnabled
+
+    override suspend fun deviceAvailability(): TranslationDeviceAvailability {
+        val selected = selectedEngine.get()
+        val engine = engineRegistry.find(selected)
+            ?: return if (knownEngines.any { it.id == selected }) {
+                TranslationDeviceAvailability.SelectedEngineUnavailable(selected)
+            } else {
+                TranslationDeviceAvailability.SelectedEngineMissing(selected)
+            }
+        return try {
+            when (val availability = engine.inspectDevice()) {
+                TranslationEngineDeviceAvailability.Available -> TranslationDeviceAvailability.Available
+                is TranslationEngineDeviceAvailability.UnsupportedOs ->
+                    TranslationDeviceAvailability.UnsupportedOs(availability.minimumApi)
+                TranslationEngineDeviceAvailability.ServiceMissing ->
+                    TranslationDeviceAvailability.TranslationServiceMissing
+                is TranslationEngineDeviceAvailability.Unavailable ->
+                    TranslationDeviceAvailability.SelectedEngineUnavailable(selected, availability.reason)
+                is TranslationEngineDeviceAvailability.Failed ->
+                    TranslationDeviceAvailability.ProviderFailure(selected, availability.reason)
+            }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Exception) {
+            TranslationDeviceAvailability.ProviderFailure(
+                selected,
+                "Translation engine availability could not be inspected",
+            )
+        }
+    }
+
+    override suspend fun acknowledgeProviderDisclosure(
+        engine: TranslationEngineId,
+        disclosure: TranslationProviderDisclosure,
+    ): TranslationHostActionResult = performSetup(engine) {
+        acknowledge(disclosure)
+        TranslationHostActionResult.Completed
+    }
+
+    override suspend fun downloadModels(
+        engine: TranslationEngineId,
+        models: List<TranslationModelDescriptor>,
+        allowMeteredNetwork: Boolean,
+    ): TranslationHostActionResult = performSetup(engine) {
+        when (
+            val result = downloadModels(
+                models = models.mapTo(mutableSetOf()) { it.id },
+                allowMeteredNetwork = allowMeteredNetwork,
+            )
+        ) {
+            TranslationModelOperationResult.Completed -> TranslationHostActionResult.ModelsReady
+            is TranslationModelOperationResult.Failed -> TranslationHostActionResult.ModelsFailed(result.reason)
+        }
+    }
+
+    override suspend fun openSystemSetup(engine: TranslationEngineId): TranslationHostActionResult =
+        performSetup(engine) {
+            when (val result = openSystemSetup()) {
+                TranslationSystemSetupResult.Opened -> TranslationHostActionResult.SystemSetupOpened
+                TranslationSystemSetupResult.Unsupported -> TranslationHostActionResult.SetupUnsupported
+                TranslationSystemSetupResult.ServiceMissing -> TranslationHostActionResult.ServiceMissing
+                TranslationSystemSetupResult.SettingsUnavailable -> TranslationHostActionResult.SettingsUnavailable
+                is TranslationSystemSetupResult.Failed -> TranslationHostActionResult.Failed(result.reason)
+            }
+        }
+
+    override fun setSelectedEngine(engine: TranslationEngineId) {
+        selectedEngine.set(engine)
+    }
+
+    override fun setDefaultTargetLanguage(language: TranslationLanguageTag?) {
+        defaultTargetLanguage.set(
+            language?.let(TranslationTargetLanguageSelection::Explicit)
+                ?: TranslationTargetLanguageSelection.Default,
+        )
+    }
+
+    private suspend fun performSetup(
+        engine: TranslationEngineId,
+        action: suspend mihon.translation.spi.TranslationEngineSetup.() -> TranslationHostActionResult,
+    ): TranslationHostActionResult {
+        val setup = setupRegistry.find(engine) ?: return TranslationHostActionResult.SetupUnsupported
+        return try {
+            setup.action()
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Exception) {
+            TranslationHostActionResult.Failed("Unexpected translation setup failure")
+        }
+    }
+}

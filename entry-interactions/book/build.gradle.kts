@@ -14,10 +14,12 @@ dependencies {
     api(projects.domain)
     api(projects.entryInteractions.spi)
     api(projects.entryViewerSettingsApi)
+    implementation(projects.translation.api)
 
     implementation(projects.core.common)
     implementation(projects.i18n)
     implementation(projects.presentationCore)
+    implementation(projects.translation.ui)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core)
     implementation(libs.androidx.compose.foundation)

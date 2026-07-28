@@ -16,21 +16,20 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
-import eu.kanade.presentation.more.settings.screen.translation.TranslationHostActionResult
 import eu.kanade.presentation.more.settings.screen.translation.TranslationSettingsScreenModel
 import eu.kanade.presentation.more.settings.screen.translation.engine.TranslationEnginePickerScreen
 import eu.kanade.presentation.more.settings.screen.translation.engine.TranslationEnginePickerTarget
 import eu.kanade.presentation.more.settings.screen.translation.engine.translationEngineLabel
 import eu.kanade.presentation.more.settings.screen.translation.language.TranslationLanguagePickerScreen
 import eu.kanade.presentation.more.settings.screen.translation.language.TranslationLanguagePickerTarget
-import eu.kanade.presentation.more.settings.screen.translation.language.displayName
 import eu.kanade.presentation.more.settings.screen.translation.presentation.TranslationSettingsContent
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toast
+import mihon.translation.api.TranslationHostActionResult
+import mihon.translation.api.TranslationHostActions
 import mihon.translation.api.TranslationTargetLanguageSelection
-import mihon.translation.runtime.ProfileTranslationPreferences
-import mihon.translation.spi.KnownTranslationEngineCatalog
+import mihon.translation.ui.picker.displayName
 import mihon.translation.ui.presentation.TranslationSessionExternalAction
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
@@ -47,10 +46,10 @@ object SettingsTranslationScreen : SearchableSettings {
 
     @Composable
     override fun getPreferences(): List<Preference> {
-        val preferences = remember { Injekt.get<ProfileTranslationPreferences>() }
-        val engines = remember { Injekt.get<KnownTranslationEngineCatalog>().knownEngines }
-        val engine by preferences.engine.collectPreferenceAsState()
-        val target by preferences.targetLanguage.collectPreferenceAsState()
+        val hostActions = remember { Injekt.get<TranslationHostActions>() }
+        val engines = remember(hostActions) { hostActions.knownEngines }
+        val engine by hostActions.selectedEngine.collectPreferenceAsState()
+        val target by hostActions.defaultTargetLanguage.collectPreferenceAsState()
         val targetSelection = target
         return listOf(
             Preference.PreferenceGroup(
@@ -88,8 +87,9 @@ object SettingsTranslationScreen : SearchableSettings {
         val navigator = LocalNavigator.currentOrThrow
         val model = rememberScreenModel { TranslationSettingsScreenModel() }
         val playground by model.playground.collectAsState()
-        val defaultEngine by model.preferences.engine.collectPreferenceAsState()
-        val defaultTarget by model.preferences.targetLanguage.collectPreferenceAsState()
+        val deviceAvailability by model.deviceAvailability.collectAsState()
+        val defaultEngine by model.enginePreference.collectPreferenceAsState()
+        val defaultTarget by model.targetLanguagePreference.collectPreferenceAsState()
         val searchHighlightKey = remember { SearchableSettings.highlightKey }
         var retryAfterResume by remember { mutableStateOf(false) }
 
@@ -102,9 +102,12 @@ object SettingsTranslationScreen : SearchableSettings {
         }
         DisposableEffect(lifecycleOwner, model) {
             val observer = LifecycleEventObserver { _, event ->
-                if (event == Lifecycle.Event.ON_RESUME && retryAfterResume) {
-                    retryAfterResume = false
-                    model.controller.retry()
+                if (event == Lifecycle.Event.ON_RESUME) {
+                    model.refreshDeviceAvailability()
+                    if (retryAfterResume) {
+                        retryAfterResume = false
+                        model.controller.retry()
+                    }
                 }
             }
             lifecycleOwner.lifecycle.addObserver(observer)
@@ -177,6 +180,7 @@ object SettingsTranslationScreen : SearchableSettings {
             engines = model.engines,
             defaultEngine = defaultEngine,
             defaultTarget = defaultTarget,
+            deviceAvailability = deviceAvailability,
             controller = model.controller,
             searchHighlightKey = searchHighlightKey,
             onSearchHighlightConsumed = { key ->

@@ -1,14 +1,25 @@
 package eu.kanade.presentation.more.settings.screen
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
 import mihon.entry.interactions.EntryViewerSettingsFeature
 import mihon.entry.interactions.EntryViewerSettingsScreenProjection
+import mihon.entry.viewer.settings.ReaderSharedSettingAvailability
+import mihon.entry.viewer.settings.ReaderSharedSettingsRegistry
+import mihon.entry.viewer.settings.ReaderSharedToggleSetting
 import mihon.entry.viewer.settings.ViewerSettingsCategory
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
@@ -42,7 +53,7 @@ private fun viewerProviderPreferences(category: ViewerSettingsCategory): List<Pr
     val navigator = LocalNavigator.currentOrThrow
     val feature = remember { Injekt.get<EntryViewerSettingsFeature>() }
 
-    return feature.destinations
+    val destinations = feature.destinations
         .filter { it.category == category }
         .map { destination ->
             val screen = destination.appScreen
@@ -53,6 +64,55 @@ private fun viewerProviderPreferences(category: ViewerSettingsCategory): List<Pr
                 onClick = { navigator.push(screen) },
             )
         }
+    if (category != ViewerSettingsCategory.READER) return destinations
+
+    val sharedSettings = remember {
+        Injekt.get<ReaderSharedSettingsRegistry>().globalSettings()
+    }
+    return sharedSettings.map { setting -> setting.toAppPreference() } + destinations
+}
+
+@Composable
+private fun ReaderSharedToggleSetting.toAppPreference(): Preference.PreferenceItem.SwitchPreference {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val availability = rememberReaderSharedSettingAvailability(this)
+    return Preference.PreferenceItem.SwitchPreference(
+        preference = preference,
+        title = title.resolve(context),
+        subtitle = when (availability) {
+            null,
+            ReaderSharedSettingAvailability.Available,
+            -> summary.resolve(context)
+            is ReaderSharedSettingAvailability.Disabled -> availability.reason.resolve(context)
+        },
+        enabled = availability == ReaderSharedSettingAvailability.Available,
+    )
+}
+
+@Composable
+private fun rememberReaderSharedSettingAvailability(
+    setting: ReaderSharedToggleSetting,
+): ReaderSharedSettingAvailability? {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var resumeGeneration by remember(setting) { mutableIntStateOf(0) }
+    var availability by remember(setting) { mutableStateOf<ReaderSharedSettingAvailability?>(null) }
+
+    DisposableEffect(lifecycleOwner, setting) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) resumeGeneration++
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+    LaunchedEffect(setting, resumeGeneration) {
+        availability = setting.resolveAvailability()
+    }
+    LaunchedEffect(setting) {
+        setting.availabilityChanges.collect {
+            availability = setting.resolveAvailability()
+        }
+    }
+    return availability
 }
 
 internal fun viewerProviderSettingsScreens(

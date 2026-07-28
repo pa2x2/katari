@@ -10,6 +10,7 @@ import mihon.book.api.BookContentResourcePage
 import mihon.book.api.BookFailure
 import mihon.book.api.BookLocator
 import mihon.book.api.BookPublication
+import mihon.entry.viewer.settings.ReaderCapabilityId
 import java.io.File
 import java.io.InputStream
 
@@ -70,6 +71,10 @@ internal interface BookProcessor {
     /** User-facing processor name for the compatibility chooser. */
     val displayName: String
 
+    /** Capabilities discoverable before a publication is opened. */
+    val potentialReaderCapabilities: Set<ReaderCapabilityId>
+        get() = emptySet()
+
     fun supports(descriptor: BookContentDescriptor): Boolean
 
     /** Creates the processor-owned reader UI entry point for a prepared BOOK session. */
@@ -80,6 +85,9 @@ internal interface BookProcessor {
     ): Intent
 
     suspend fun open(content: BookContentSession): BookOpenResult
+
+    /** Capabilities which are effective for this concrete opened publication. */
+    fun readerCapabilities(session: BookPublicationSession): Set<ReaderCapabilityId> = emptySet()
 }
 
 internal data class BookReaderRequest(

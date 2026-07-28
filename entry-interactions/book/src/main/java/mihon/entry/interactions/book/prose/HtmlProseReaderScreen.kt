@@ -46,6 +46,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.State
@@ -63,6 +64,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
@@ -88,13 +90,19 @@ import mihon.entry.interactions.book.BookReaderNavigationRow
 import mihon.entry.interactions.book.BookReaderNavigationSheet
 import mihon.entry.interactions.book.BookReaderProgress
 import mihon.entry.interactions.book.BookReaderScaffold
+import mihon.entry.interactions.book.BookReaderSettingsDialog
+import mihon.entry.interactions.book.BookReaderTextSelection
+import mihon.entry.interactions.book.BookSelectionTranslationController
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.model.BookDocumentBlockContent
 import mihon.entry.interactions.book.document.model.BookDocumentFontFamily
 import mihon.entry.interactions.book.document.model.BookDocumentPosition
 import mihon.entry.interactions.book.document.reader.BookDocumentText
+import mihon.entry.interactions.book.document.reader.BookDocumentTextInteraction
+import mihon.entry.interactions.book.document.reader.BookDocumentTextSelection
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
 import mihon.entry.interactions.book.document.reader.BookDocumentVisibleItemLayout
+import mihon.entry.interactions.book.document.reader.LocalBookDocumentTextInteraction
 import mihon.entry.interactions.book.document.reader.bookDocumentScrollOffset
 import mihon.entry.interactions.book.document.reader.bookDocumentViewerDatasetAnchor
 import mihon.entry.interactions.book.document.reader.bookDocumentViewerLocation
@@ -106,6 +114,7 @@ import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildTransition
 import mihon.entry.interactions.viewer.EntryChildWindow
 import mihon.entry.viewer.settings.ResolvedViewerSetting
+import mihon.translation.ui.session.TranslationSelectionAnchor
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.service.calculateChapterGap
 import tachiyomi.i18n.MR
@@ -113,7 +122,6 @@ import tachiyomi.presentation.core.components.CheckboxItem
 import tachiyomi.presentation.core.components.HeadingItem
 import tachiyomi.presentation.core.components.SettingsItemsPaddings
 import tachiyomi.presentation.core.components.SliderItem
-import tachiyomi.presentation.core.components.ViewerSettingsTabbedDialog
 import tachiyomi.presentation.core.components.reader.ReaderChrome
 import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransition
 import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransitionDestinationSlot
@@ -163,6 +171,7 @@ internal fun HtmlProseReaderScreen(
     onSettingsVisibilityChange: (Boolean) -> Unit,
     onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
     onExternalLinkClick: (String) -> Unit,
+    translationController: BookSelectionTranslationController? = null,
 ) {
     val theme by settings.theme.state.collectEffectiveValue()
     val fontFamily by settings.fontFamily.state.collectEffectiveValue()
@@ -190,6 +199,9 @@ internal fun HtmlProseReaderScreen(
         )
     }
     var viewerActions by remember { mutableStateOf(ProseViewerActions()) }
+    var readerRootPositionInWindow by remember { mutableStateOf(Offset.Zero) }
+    val automaticTranslationEnabled =
+        translationController?.effectiveEnabled?.collectAsState()?.value == true
     val preparationToken = remember(
         state.viewerResetKey,
         paginated,
@@ -206,208 +218,245 @@ internal fun HtmlProseReaderScreen(
     val viewerPrepared = preparedToken === preparationToken
     val onViewerPrepared = { preparedToken = preparationToken }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = palette.background,
-    ) {
-        BookReaderScaffold(
-            progress = if (!showProgress) {
-                null
-            } else if (paginated) {
-                BookReaderProgress.Page(position.currentPage, position.totalPages)
-            } else {
-                BookReaderProgress.Percentage((position.progression * 100).toInt())
-            },
-            progressVisible = !state.menuVisible,
-            footerColor = palette.background,
-            modifier = Modifier.fillMaxSize(),
-            content = {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .then(
-                            if (drawUnderCutout) {
-                                Modifier
-                            } else {
-                                Modifier.windowInsetsPadding(WindowInsets.displayCutout)
+    CompositionLocalProvider(
+        LocalBookDocumentTextInteraction provides BookDocumentTextInteraction(
+            enabled = automaticTranslationEnabled,
+            rootPositionInWindow = readerRootPositionInWindow,
+            onSelection = { selection ->
+                when (selection) {
+                    is BookDocumentTextSelection.Changed -> translationController?.submitSelection(
+                        BookReaderTextSelection(
+                            ownerIdentity = selection.ownerIdentity,
+                            identity = selection.identity,
+                            text = selection.text,
+                            anchor = selection.boundsInReaderRoot.let { bounds ->
+                                TranslationSelectionAnchor(
+                                    left = bounds.left,
+                                    top = bounds.top,
+                                    right = bounds.right,
+                                    bottom = bounds.bottom,
+                                )
                             },
                         ),
-                ) {
-                    key(state.viewerResetKey) {
-                        if (paginated) {
-                            PaginatedProseViewer(
-                                state = state,
-                                initialProgression = position.progression,
-                                initialDocumentPosition = position.documentPosition,
-                                palette = palette,
-                                fontFamily = fontFamily,
-                                fontSizePercent = fontSize,
-                                lineHeightPercent = lineHeight,
-                                pageMarginsPercent = pageMargins,
-                                textAlignment = textAlignment,
-                                tapNavigation = tapNavigation,
-                                chromeVisible = state.menuVisible,
-                                preparationToken = preparationToken,
-                                onPosition = {
-                                    position = it
-                                    onLocation(it.chapterId, it.progression, it.documentPosition)
-                                },
-                                onChapterEntered = onChapterEntered,
-                                onTransitionChapterRequested = onTransitionChapterRequested,
-                                onTransitionChapterRetry = onTransitionChapterRetry,
-                                onMenuToggle = { onMenuVisibilityChange(!state.menuVisible) },
-                                onExternalLinkClick = onExternalLinkClick,
-                                onActions = { viewerActions = it },
-                                onPrepared = onViewerPrepared,
-                            )
-                        } else {
-                            ScrollingProseViewer(
-                                state = state,
-                                initialProgression = position.progression,
-                                initialDocumentPosition = position.documentPosition,
-                                palette = palette,
-                                fontFamily = fontFamily,
-                                fontSizePercent = fontSize,
-                                lineHeightPercent = lineHeight,
-                                pageMarginsPercent = pageMargins,
-                                textAlignment = textAlignment,
-                                preparationToken = preparationToken,
-                                onPosition = {
-                                    position = it
-                                    onLocation(it.chapterId, it.progression, it.documentPosition)
-                                },
-                                onChapterEntered = onChapterEntered,
-                                onTransitionChapterRequested = onTransitionChapterRequested,
-                                onTransitionChapterRetry = onTransitionChapterRetry,
-                                onMenuToggle = { onMenuVisibilityChange(!state.menuVisible) },
-                                onExternalLinkClick = onExternalLinkClick,
-                                onActions = { viewerActions = it },
-                                onPrepared = onViewerPrepared,
-                            )
-                        }
-                    }
+                    )
+                    is BookDocumentTextSelection.Cleared ->
+                        translationController?.clearSelection(selection.ownerIdentity)
                 }
             },
-            overlay = {
-                val chromeColor = MaterialTheme.colorScheme
-                    .surfaceColorAtElevation(3.dp)
-                    .copy(alpha = if (isSystemInDarkTheme()) 0.9f else 0.95f)
-                ReaderChrome(
-                    visible = state.menuVisible,
-                    topBar = {
-                        TopAppBar(
-                            modifier = Modifier.background(chromeColor),
-                            title = {
-                                Column {
-                                    Text(state.entryTitle, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                    Text(state.window.current.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                }
-                            },
-                            navigationIcon = {
-                                IconButton(onClick = onClose) {
-                                    Icon(
-                                        Icons.AutoMirrored.Outlined.ArrowBack,
-                                        stringResource(R.string.book_reader_close),
-                                    )
-                                }
-                            },
-                            actions = {
-                                EntryChildWebViewActionsMenu(
-                                    resolution = state.childWebView,
-                                    onAction = onChildWebViewAction,
-                                )
-                            },
-                            colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = Color.Transparent,
-                                scrolledContainerColor = Color.Transparent,
+            onNonLinkTap = { x, width ->
+                viewerActions.onTapFraction(x / width.coerceAtLeast(1f))
+            },
+        ),
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = palette.background,
+        ) {
+            BookReaderScaffold(
+                progress = if (!showProgress) {
+                    null
+                } else if (paginated) {
+                    BookReaderProgress.Page(position.currentPage, position.totalPages)
+                } else {
+                    BookReaderProgress.Percentage((position.progression * 100).toInt())
+                },
+                progressVisible = !state.menuVisible,
+                footerColor = palette.background,
+                modifier = Modifier.fillMaxSize(),
+                translationController = translationController,
+                onRootPositionInWindow = { readerRootPositionInWindow = it },
+                content = {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .then(
+                                if (drawUnderCutout) {
+                                    Modifier
+                                } else {
+                                    Modifier.windowInsetsPadding(WindowInsets.displayCutout)
+                                },
                             ),
-                        )
-                    },
-                    bottomBar = {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ) {
+                        key(state.viewerResetKey) {
                             if (paginated) {
-                                ReaderPageNavigator(
-                                    type = ReaderPageNavigatorType.HORIZONTAL_LTR,
-                                    onNextSection = viewerActions.nextSection,
-                                    nextSectionEnabled = state.window.next != null,
-                                    onPreviousSection = viewerActions.previousSection,
-                                    previousSectionEnabled = state.window.previous != null,
-                                    currentPage = position.currentPage,
-                                    totalPages = position.totalPages,
-                                    onPageIndexChange = viewerActions.seekPage,
-                                    showSinglePageLabel = true,
-                                    previousSectionDescription = stringResource(R.string.prose_reader_previous_chapter),
-                                    nextSectionDescription = stringResource(R.string.prose_reader_next_chapter),
+                                PaginatedProseViewer(
+                                    state = state,
+                                    initialProgression = position.progression,
+                                    initialDocumentPosition = position.documentPosition,
+                                    palette = palette,
+                                    fontFamily = fontFamily,
+                                    fontSizePercent = fontSize,
+                                    lineHeightPercent = lineHeight,
+                                    pageMarginsPercent = pageMargins,
+                                    textAlignment = textAlignment,
+                                    tapNavigation = tapNavigation,
+                                    chromeVisible = state.menuVisible,
+                                    preparationToken = preparationToken,
+                                    onPosition = {
+                                        position = it
+                                        onLocation(it.chapterId, it.progression, it.documentPosition)
+                                    },
+                                    onChapterEntered = onChapterEntered,
+                                    onTransitionChapterRequested = onTransitionChapterRequested,
+                                    onTransitionChapterRetry = onTransitionChapterRetry,
+                                    onMenuToggle = { onMenuVisibilityChange(!state.menuVisible) },
+                                    onExternalLinkClick = onExternalLinkClick,
+                                    onActions = { viewerActions = it },
+                                    onPrepared = onViewerPrepared,
                                 )
                             } else {
-                                ReaderProgressNavigator(
-                                    isRtl = false,
-                                    onNextSection = viewerActions.nextSection,
-                                    nextSectionEnabled = state.window.next != null,
-                                    onPreviousSection = viewerActions.previousSection,
-                                    previousSectionEnabled = state.window.previous != null,
-                                    currentProgress = position.progression,
-                                    onProgressChange = viewerActions.seekProgress,
-                                    onProgressChangeFinished = viewerActions.seekProgress,
-                                    previousSectionDescription = stringResource(R.string.prose_reader_previous_chapter),
-                                    nextSectionDescription = stringResource(R.string.prose_reader_next_chapter),
+                                ScrollingProseViewer(
+                                    state = state,
+                                    initialProgression = position.progression,
+                                    initialDocumentPosition = position.documentPosition,
+                                    palette = palette,
+                                    fontFamily = fontFamily,
+                                    fontSizePercent = fontSize,
+                                    lineHeightPercent = lineHeight,
+                                    pageMarginsPercent = pageMargins,
+                                    textAlignment = textAlignment,
+                                    preparationToken = preparationToken,
+                                    onPosition = {
+                                        position = it
+                                        onLocation(it.chapterId, it.progression, it.documentPosition)
+                                    },
+                                    onChapterEntered = onChapterEntered,
+                                    onTransitionChapterRequested = onTransitionChapterRequested,
+                                    onTransitionChapterRetry = onTransitionChapterRetry,
+                                    onMenuToggle = { onMenuVisibilityChange(!state.menuVisible) },
+                                    onExternalLinkClick = onExternalLinkClick,
+                                    onActions = { viewerActions = it },
+                                    onPrepared = onViewerPrepared,
                                 )
                             }
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(chromeColor)
-                                    .navigationBarsPadding()
-                                    .padding(horizontal = 8.dp),
-                                horizontalArrangement = Arrangement.SpaceEvenly,
-                            ) {
-                                val scope = rememberCoroutineScope()
-                                IconButton(
-                                    onClick = {
-                                        val target = if (paginated) {
-                                            HtmlProseSettingsProvider.LAYOUT_SCROLLING
-                                        } else {
-                                            HtmlProseSettingsProvider.LAYOUT_PAGINATED
-                                        }
-                                        scope.launch { settings.layoutMode.setEntryOverride(target) }
-                                    },
+                        }
+                    }
+                },
+                overlay = {
+                    val chromeColor = MaterialTheme.colorScheme
+                        .surfaceColorAtElevation(3.dp)
+                        .copy(alpha = if (isSystemInDarkTheme()) 0.9f else 0.95f)
+                    ReaderChrome(
+                        visible = state.menuVisible,
+                        topBar = {
+                            TopAppBar(
+                                modifier = Modifier.background(chromeColor),
+                                title = {
+                                    Column {
+                                        Text(state.entryTitle, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                        Text(state.window.current.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    }
+                                },
+                                navigationIcon = {
+                                    IconButton(onClick = onClose) {
+                                        Icon(
+                                            Icons.AutoMirrored.Outlined.ArrowBack,
+                                            stringResource(R.string.book_reader_close),
+                                        )
+                                    }
+                                },
+                                actions = {
+                                    EntryChildWebViewActionsMenu(
+                                        resolution = state.childWebView,
+                                        onAction = onChildWebViewAction,
+                                    )
+                                },
+                                colors = TopAppBarDefaults.topAppBarColors(
+                                    containerColor = Color.Transparent,
+                                    scrolledContainerColor = Color.Transparent,
+                                ),
+                            )
+                        },
+                        bottomBar = {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                if (paginated) {
+                                    ReaderPageNavigator(
+                                        type = ReaderPageNavigatorType.HORIZONTAL_LTR,
+                                        onNextSection = viewerActions.nextSection,
+                                        nextSectionEnabled = state.window.next != null,
+                                        onPreviousSection = viewerActions.previousSection,
+                                        previousSectionEnabled = state.window.previous != null,
+                                        currentPage = position.currentPage,
+                                        totalPages = position.totalPages,
+                                        onPageIndexChange = viewerActions.seekPage,
+                                        showSinglePageLabel = true,
+                                        previousSectionDescription = stringResource(
+                                            R.string.prose_reader_previous_chapter,
+                                        ),
+                                        nextSectionDescription = stringResource(R.string.prose_reader_next_chapter),
+                                    )
+                                } else {
+                                    ReaderProgressNavigator(
+                                        isRtl = false,
+                                        onNextSection = viewerActions.nextSection,
+                                        nextSectionEnabled = state.window.next != null,
+                                        onPreviousSection = viewerActions.previousSection,
+                                        previousSectionEnabled = state.window.previous != null,
+                                        currentProgress = position.progression,
+                                        onProgressChange = viewerActions.seekProgress,
+                                        onProgressChangeFinished = viewerActions.seekProgress,
+                                        previousSectionDescription = stringResource(
+                                            R.string.prose_reader_previous_chapter,
+                                        ),
+                                        nextSectionDescription = stringResource(R.string.prose_reader_next_chapter),
+                                    )
+                                }
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(chromeColor)
+                                        .navigationBarsPadding()
+                                        .padding(horizontal = 8.dp),
+                                    horizontalArrangement = Arrangement.SpaceEvenly,
                                 ) {
-                                    Icon(
-                                        if (paginated) Icons.Outlined.ViewCarousel else Icons.Outlined.ViewStream,
-                                        stringResource(R.string.prose_reader_layout),
-                                    )
-                                }
-                                IconButton(onClick = { onSettingsVisibilityChange(true) }) {
-                                    Icon(Icons.Outlined.Settings, stringResource(R.string.prose_reader_settings))
-                                }
-                                IconButton(onClick = { onChapterListVisibilityChange(true) }) {
-                                    Icon(
-                                        Icons.AutoMirrored.Filled.ViewList,
-                                        i18nStringResource(MR.strings.book_table_of_contents),
-                                    )
+                                    val scope = rememberCoroutineScope()
+                                    IconButton(
+                                        onClick = {
+                                            val target = if (paginated) {
+                                                HtmlProseSettingsProvider.LAYOUT_SCROLLING
+                                            } else {
+                                                HtmlProseSettingsProvider.LAYOUT_PAGINATED
+                                            }
+                                            scope.launch { settings.layoutMode.setEntryOverride(target) }
+                                        },
+                                    ) {
+                                        Icon(
+                                            if (paginated) Icons.Outlined.ViewCarousel else Icons.Outlined.ViewStream,
+                                            stringResource(R.string.prose_reader_layout),
+                                        )
+                                    }
+                                    IconButton(onClick = { onSettingsVisibilityChange(true) }) {
+                                        Icon(Icons.Outlined.Settings, stringResource(R.string.prose_reader_settings))
+                                    }
+                                    IconButton(onClick = { onChapterListVisibilityChange(true) }) {
+                                        Icon(
+                                            Icons.AutoMirrored.Filled.ViewList,
+                                            i18nStringResource(MR.strings.book_table_of_contents),
+                                        )
+                                    }
                                 }
                             }
-                        }
-                    },
-                )
-
-                state.loadError?.let { error ->
-                    Surface(
-                        modifier = Modifier.align(Alignment.Center).padding(32.dp),
-                        shape = MaterialTheme.shapes.large,
-                        tonalElevation = 6.dp,
-                    ) {
-                        Text(error, modifier = Modifier.padding(24.dp), color = MaterialTheme.colorScheme.error)
-                    }
-                }
-
-                if (!viewerPrepared) {
-                    BookReaderLoadingScreen(
-                        contentDescription = stringResource(R.string.book_reader_loading),
+                        },
                     )
-                }
-            },
-        )
+
+                    state.loadError?.let { error ->
+                        Surface(
+                            modifier = Modifier.align(Alignment.Center).padding(32.dp),
+                            shape = MaterialTheme.shapes.large,
+                            tonalElevation = 6.dp,
+                        ) {
+                            Text(error, modifier = Modifier.padding(24.dp), color = MaterialTheme.colorScheme.error)
+                        }
+                    }
+
+                    if (!viewerPrepared) {
+                        BookReaderLoadingScreen(
+                            contentDescription = stringResource(R.string.book_reader_loading),
+                        )
+                    }
+                },
+            )
+        }
     }
 
     BookReaderNavigationSheet(
@@ -533,6 +582,17 @@ private fun PaginatedProseViewer(
         var initialPositionPending by remember(pagerState) { mutableStateOf(true) }
         val laidOutPages = remember(pagerState) { mutableStateMapOf<String, Boolean>() }
         val scope = rememberCoroutineScope()
+        val handleTapFraction: (Float) -> Unit = { fraction ->
+            when {
+                chromeVisible || !tapNavigation || fraction in 0.33f..0.66f -> onMenuToggle()
+                fraction < 0.33f && pagerState.currentPage > 0 -> scope.launch {
+                    pagerState.animateScrollToPage(pagerState.currentPage - 1)
+                }
+                fraction > 0.66f && pagerState.currentPage < items.lastIndex -> scope.launch {
+                    pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                }
+            }
+        }
         var pendingAnchor by remember(pagerState) {
             mutableStateOf(
                 initialDocumentPosition
@@ -585,6 +645,7 @@ private fun PaginatedProseViewer(
                                 it.transition.from.id == state.currentChapterId
                         }.takeIf { it >= 0 }?.let { scope.launch { pagerState.animateScrollToPage(it) } }
                     },
+                    onTapFraction = handleTapFraction,
                 ),
             )
         }
@@ -609,16 +670,7 @@ private fun PaginatedProseViewer(
                 .fillMaxSize()
                 .pointerInput(tapNavigation, chromeVisible, pagerState.currentPage) {
                     detectTapGestures { offset ->
-                        val fraction = offset.x / size.width.coerceAtLeast(1)
-                        when {
-                            chromeVisible || !tapNavigation || fraction in 0.33f..0.66f -> onMenuToggle()
-                            fraction < 0.33f && pagerState.currentPage > 0 -> scope.launch {
-                                pagerState.animateScrollToPage(pagerState.currentPage - 1)
-                            }
-                            fraction > 0.66f && pagerState.currentPage < items.lastIndex -> scope.launch {
-                                pagerState.animateScrollToPage(pagerState.currentPage + 1)
-                            }
-                        }
+                        handleTapFraction(offset.x / size.width.coerceAtLeast(1))
                     }
                 },
             key = { items[it].key },
@@ -1106,6 +1158,7 @@ private fun ScrollingProseViewer(
                             item.transition.from.id == state.currentChapterId
                     }.takeIf { it >= 0 }?.let { scope.launch { listState.animateScrollToItem(it) } }
                 },
+                onTapFraction = { onMenuToggle() },
             ),
         )
     }
@@ -1351,14 +1404,11 @@ private fun HtmlProseSettingsDialog(
         i18nStringResource(MR.strings.pref_epub_page_layout),
         i18nStringResource(MR.strings.pref_epub_controls),
     )
-    val pagerState = rememberPagerState { tabs.size }
-    val scope = rememberCoroutineScope()
-
-    ViewerSettingsTabbedDialog(
+    BookReaderSettingsDialog(
+        capabilities = settings.readerCapabilities,
         onDismissRequest = onDismissRequest,
-        onResetSettings = { scope.launch { settings.resetSettings() } },
-        tabTitles = tabs,
-        pagerState = pagerState,
+        onResetProcessorSettings = settings::resetSettings,
+        processorTabTitles = tabs,
     ) { page ->
         when (page) {
             0 -> ProseAppearanceSettings(settings)
@@ -1610,6 +1660,7 @@ private data class ProseViewerActions(
     val seekProgress: (Float) -> Unit = {},
     val previousSection: () -> Unit = {},
     val nextSection: () -> Unit = {},
+    val onTapFraction: (Float) -> Unit = {},
 )
 
 private data class ProsePalette(val background: Color, val foreground: Color)

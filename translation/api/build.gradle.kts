@@ -8,6 +8,8 @@ android {
 }
 
 dependencies {
+    api(projects.core.common)
+
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.junit.platform.launcher)
 }

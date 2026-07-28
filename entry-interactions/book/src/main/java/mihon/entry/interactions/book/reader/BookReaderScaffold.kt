@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -25,12 +26,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import mihon.translation.ui.presentation.CoordinatedTranslationSessionHost
 import tachiyomi.presentation.core.components.reader.ReaderPageIndicator
 import tachiyomi.presentation.core.components.reader.ReaderProgressIndicator
 
@@ -48,6 +53,8 @@ internal fun BookReaderScaffold(
     footerColor: Color,
     modifier: Modifier = Modifier,
     nativeContentView: View? = null,
+    translationController: BookSelectionTranslationController? = null,
+    onRootPositionInWindow: (Offset) -> Unit = {},
     content: @Composable BoxScope.() -> Unit,
     overlay: @Composable BoxScope.() -> Unit = {},
 ) {
@@ -69,7 +76,11 @@ internal fun BookReaderScaffold(
         }
     }
 
-    Box(modifier = modifier) {
+    Box(
+        modifier = modifier.onGloballyPositioned { coordinates ->
+            onRootPositionInWindow(coordinates.positionInWindow())
+        },
+    ) {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(
                 modifier = Modifier
@@ -104,6 +115,16 @@ internal fun BookReaderScaffold(
             modifier = Modifier.fillMaxSize(),
             content = overlay,
         )
+        translationController?.let { controller ->
+            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                CoordinatedTranslationSessionHost(
+                    coordinator = controller.hostCoordinator,
+                    isTabletUi = maxWidth >= 720.dp,
+                    modifier = Modifier.fillMaxSize(),
+                    onDismiss = controller::dismissTranslation,
+                )
+            }
+        }
     }
 }
 

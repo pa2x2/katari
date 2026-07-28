@@ -10,20 +10,18 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mihon.translation.api.KnownTranslationEngine
+import mihon.translation.api.TranslationDeviceAvailability
 import mihon.translation.api.TranslationEngineId
 import mihon.translation.api.TranslationEngineSelection
 import mihon.translation.api.TranslationFeature
+import mihon.translation.api.TranslationHostActionResult
+import mihon.translation.api.TranslationHostActions
 import mihon.translation.api.TranslationLanguageTag
 import mihon.translation.api.TranslationModelDescriptor
-import mihon.translation.api.TranslationModelOperationResult
 import mihon.translation.api.TranslationProviderDisclosure
 import mihon.translation.api.TranslationRequest
 import mihon.translation.api.TranslationSourceLanguageSelection
 import mihon.translation.api.TranslationTargetLanguageSelection
-import mihon.translation.runtime.ProfileTranslationPreferences
-import mihon.translation.spi.KnownTranslationEngineCatalog
-import mihon.translation.spi.TranslationEngineSetupRegistry
-import mihon.translation.spi.TranslationSystemSetupResult
 import mihon.translation.ui.session.TranslationSessionController
 import mihon.translation.ui.session.TranslationSessionExecutionMode
 import mihon.translation.ui.session.TranslationSessionInput
@@ -33,11 +31,11 @@ import java.util.Locale
 
 internal class TranslationSettingsScreenModel(
     feature: TranslationFeature = Injekt.get(),
-    val preferences: ProfileTranslationPreferences = Injekt.get(),
-    knownEngineCatalog: KnownTranslationEngineCatalog = Injekt.get(),
-    private val setupRegistry: TranslationEngineSetupRegistry = Injekt.get(),
+    val hostActions: TranslationHostActions = Injekt.get(),
 ) : ScreenModel {
-    val engines: List<KnownTranslationEngine> = knownEngineCatalog.knownEngines
+    val engines: List<KnownTranslationEngine> = hostActions.knownEngines
+    val enginePreference = hostActions.selectedEngine
+    val targetLanguagePreference = hostActions.defaultTargetLanguage
     val controller = TranslationSessionController(
         feature = feature,
         parentScope = screenModelScope,
@@ -46,9 +44,12 @@ internal class TranslationSettingsScreenModel(
     )
     private val mutablePlayground = MutableStateFlow(initialPlaygroundState())
     val playground = mutablePlayground.asStateFlow()
+    private val mutableDeviceAvailability = MutableStateFlow<TranslationDeviceAvailability?>(null)
+    val deviceAvailability = mutableDeviceAvailability.asStateFlow()
 
     init {
         submitPlayground()
+        refreshDeviceAvailability()
     }
 
     fun setText(text: String) {
@@ -82,12 +83,13 @@ internal class TranslationSettingsScreenModel(
     }
 
     fun usePlaygroundEngineAsDefault() {
-        preferences.engine.set(mutablePlayground.value.engine)
+        hostActions.setSelectedEngine(mutablePlayground.value.engine)
     }
 
     fun setProfileEngine(engine: TranslationEngineId) {
-        preferences.engine.set(engine)
+        hostActions.setSelectedEngine(engine)
         setEngine(engine)
+        refreshDeviceAvailability()
     }
 
     fun setProfileTarget(language: TranslationLanguageTag?) {
@@ -111,10 +113,7 @@ internal class TranslationSettingsScreenModel(
     }
 
     private fun setDefaultTarget(language: TranslationLanguageTag?) {
-        preferences.targetLanguage.set(
-            language?.let(TranslationTargetLanguageSelection::Explicit)
-                ?: TranslationTargetLanguageSelection.Default,
-        )
+        hostActions.setDefaultTargetLanguage(language)
     }
 
     fun acknowledge(
@@ -122,12 +121,8 @@ internal class TranslationSettingsScreenModel(
         disclosure: TranslationProviderDisclosure,
         onComplete: (TranslationHostActionResult) -> Unit,
     ) {
-        performSetupAction(
-            engine = engine,
-            onComplete = onComplete,
-        ) {
-            acknowledge(disclosure)
-            TranslationHostActionResult.Completed
+        performHostAction(onComplete) {
+            hostActions.acknowledgeProviderDisclosure(engine, disclosure)
         }
     }
 
@@ -136,19 +131,8 @@ internal class TranslationSettingsScreenModel(
         models: List<TranslationModelDescriptor>,
         onComplete: (TranslationHostActionResult) -> Unit,
     ) {
-        performSetupAction(
-            engine = engine,
-            onComplete = onComplete,
-        ) {
-            when (
-                val result = downloadModels(
-                    models = models.mapTo(mutableSetOf()) { it.id },
-                    allowMeteredNetwork = false,
-                )
-            ) {
-                TranslationModelOperationResult.Completed -> TranslationHostActionResult.ModelsReady
-                is TranslationModelOperationResult.Failed -> TranslationHostActionResult.ModelsFailed(result.reason)
-            }
+        performHostAction(onComplete) {
+            hostActions.downloadModels(engine, models)
         }
     }
 
@@ -156,17 +140,14 @@ internal class TranslationSettingsScreenModel(
         engine: TranslationEngineId,
         onComplete: (TranslationHostActionResult) -> Unit,
     ) {
-        performSetupAction(
-            engine = engine,
-            onComplete = onComplete,
-        ) {
-            when (val result = openSystemSetup()) {
-                TranslationSystemSetupResult.Opened -> TranslationHostActionResult.SystemSetupOpened
-                TranslationSystemSetupResult.Unsupported -> TranslationHostActionResult.SetupUnsupported
-                TranslationSystemSetupResult.ServiceMissing -> TranslationHostActionResult.ServiceMissing
-                TranslationSystemSetupResult.SettingsUnavailable -> TranslationHostActionResult.SettingsUnavailable
-                is TranslationSystemSetupResult.Failed -> TranslationHostActionResult.Failed(result.reason)
-            }
+        performHostAction(onComplete) {
+            hostActions.openSystemSetup(engine)
+        }
+    }
+
+    fun refreshDeviceAvailability() {
+        screenModelScope.launch {
+            mutableDeviceAvailability.value = hostActions.deviceAvailability()
         }
     }
 
@@ -175,7 +156,7 @@ internal class TranslationSettingsScreenModel(
     }
 
     private fun initialPlaygroundState(): TranslationPlaygroundState {
-        val target = when (val selection = preferences.targetLanguage.get()) {
+        val target = when (val selection = targetLanguagePreference.get()) {
             TranslationTargetLanguageSelection.Default -> effectiveUiLanguage()
             is TranslationTargetLanguageSelection.Explicit -> selection.language
         } ?: ENGLISH
@@ -185,23 +166,17 @@ internal class TranslationSettingsScreenModel(
             text = sample,
             sourceLanguage = source,
             targetLanguage = target,
-            engine = preferences.engine.get(),
+            engine = enginePreference.get(),
         )
     }
 
-    private fun performSetupAction(
-        engine: TranslationEngineId,
+    private fun performHostAction(
         onComplete: (TranslationHostActionResult) -> Unit,
-        action: suspend mihon.translation.spi.TranslationEngineSetup.() -> TranslationHostActionResult,
+        action: suspend () -> TranslationHostActionResult,
     ) {
-        val setup = setupRegistry.find(engine)
-        if (setup == null) {
-            onComplete(TranslationHostActionResult.SetupUnsupported)
-            return
-        }
         screenModelScope.launch {
             val result = try {
-                setup.action()
+                action()
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Exception) {
@@ -236,26 +211,4 @@ private fun effectiveUiLanguage(): TranslationLanguageTag? {
 
 private fun TranslationLanguageTag.languageCode(): String {
     return Locale.forLanguageTag(value).language
-}
-
-internal sealed interface TranslationHostActionResult {
-    data object Completed : TranslationHostActionResult
-
-    data object ModelsReady : TranslationHostActionResult
-
-    data class ModelsFailed(
-        val reason: String,
-    ) : TranslationHostActionResult
-
-    data object SystemSetupOpened : TranslationHostActionResult
-
-    data object SetupUnsupported : TranslationHostActionResult
-
-    data object ServiceMissing : TranslationHostActionResult
-
-    data object SettingsUnavailable : TranslationHostActionResult
-
-    data class Failed(
-        val reason: String,
-    ) : TranslationHostActionResult
 }

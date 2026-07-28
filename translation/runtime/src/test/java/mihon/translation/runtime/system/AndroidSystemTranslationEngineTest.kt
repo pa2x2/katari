@@ -7,12 +7,22 @@ import mihon.translation.api.TranslationEngineId
 import mihon.translation.api.TranslationLanguageTag
 import mihon.translation.api.TranslationSystemSetupReason
 import mihon.translation.api.TranslationUnavailableReason
+import mihon.translation.spi.TranslationEngineDeviceAvailability
 import mihon.translation.spi.TranslationEngineExecution
 import mihon.translation.spi.TranslationEnginePreparation
 import mihon.translation.spi.TranslationSystemSetupResult
 import org.junit.jupiter.api.Test
 
 class AndroidSystemTranslationEngineTest {
+    @Test
+    fun `device inspection does not require text or a language pair`() = runTest {
+        val platform = FakePlatform(onDevice())
+        val engine = AndroidSystemTranslationEngine(platform)
+
+        engine.inspectDevice() shouldBe TranslationEngineDeviceAvailability.Available
+        platform.pairInspectionCount shouldBe 0
+    }
+
     @Test
     fun `platform availability maps to precise preparation states`() = runTest {
         val cases = listOf(
@@ -114,10 +124,23 @@ class AndroidSystemTranslationEngineTest {
     ) : AndroidSystemTranslationPlatform {
         var translatedPair: AndroidSystemTranslationPair? = null
         var translatedText: String? = null
+        var pairInspectionCount = 0
+
+        override suspend fun inspectDevice(): AndroidSystemDeviceInspection {
+            return when (val current = inspection) {
+                AndroidSystemTranslationInspection.UnsupportedOs -> AndroidSystemDeviceInspection.UnsupportedOs
+                AndroidSystemTranslationInspection.ServiceMissing -> AndroidSystemDeviceInspection.ServiceMissing
+                is AndroidSystemTranslationInspection.Failed -> AndroidSystemDeviceInspection.Failed(current.reason)
+                else -> AndroidSystemDeviceInspection.Available
+            }
+        }
 
         override suspend fun inspect(
             pair: AndroidSystemTranslationPair,
-        ): AndroidSystemTranslationInspection = inspection
+        ): AndroidSystemTranslationInspection {
+            pairInspectionCount++
+            return inspection
+        }
 
         override suspend fun translate(
             pair: AndroidSystemTranslationPair,

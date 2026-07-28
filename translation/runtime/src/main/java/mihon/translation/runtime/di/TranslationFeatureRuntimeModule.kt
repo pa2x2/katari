@@ -5,6 +5,7 @@ import mihon.feature.runtime.ApplicationFeatureRuntimeGraphValidator
 import mihon.feature.runtime.ApplicationFeatureRuntimeModule
 import mihon.feature.runtime.applicationFeatureRuntimeBoundary
 import mihon.translation.api.TranslationFeature
+import mihon.translation.api.TranslationHostActions
 import mihon.translation.runtime.system.AndroidSystemTranslationEngine
 import mihon.translation.runtime.system.DefaultAndroidSystemTranslationPlatform
 import mihon.translation.runtime.system.createAndroidTranslationManagerBridge
@@ -46,12 +47,19 @@ val translationFeatureRuntimeModule = ApplicationFeatureRuntimeModule(
         defaultTargetLanguageResolver = ProfileTranslationDefaultTargetLanguageResolver(profilePreferences),
         selectedEngine = profilePreferences.engine::get,
     )
+    val hostActions = DefaultTranslationHostActions(
+        preferences = profilePreferences,
+        engineRegistry = registry,
+        knownEngineCatalog = registry,
+        setupRegistry = setupRegistry,
+    )
 
     addSingletonFactory { profilePreferences }
     addSingletonFactory<TranslationEngineRegistry> { registry }
     addSingletonFactory<TranslationEngineSetupRegistry> { setupRegistry }
     addSingletonFactory<KnownTranslationEngineCatalog> { registry }
     addSingletonFactory<TranslationFeature> { feature }
+    addSingletonFactory<TranslationHostActions> { hostActions }
 
     ApplicationFeatureRuntimeArtifacts(
         capabilityProviders = listOf(TranslationEngineRegistryCapability.bind(registry)),

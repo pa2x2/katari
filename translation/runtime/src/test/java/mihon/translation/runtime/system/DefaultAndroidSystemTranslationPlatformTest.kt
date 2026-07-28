@@ -10,6 +10,16 @@ import org.junit.jupiter.api.Test
 
 class DefaultAndroidSystemTranslationPlatformTest {
     @Test
+    fun `device inspection only gates OS and service presence`() = runTest {
+        DefaultAndroidSystemTranslationPlatform(31, FakeBridge(emptyList())).inspectDevice() shouldBe
+            AndroidSystemDeviceInspection.Available
+        DefaultAndroidSystemTranslationPlatform(30, null).inspectDevice() shouldBe
+            AndroidSystemDeviceInspection.UnsupportedOs
+        DefaultAndroidSystemTranslationPlatform(31, null).inspectDevice() shouldBe
+            AndroidSystemDeviceInspection.ServiceMissing
+    }
+
+    @Test
     fun `regional request can use a provider language-only capability`() = runTest {
         val bridge = FakeBridge(
             capabilities = listOf(capability("en", "pl")),

@@ -2,6 +2,7 @@ package mihon.entry.interactions.book.prose
 
 import kotlinx.coroutines.flow.first
 import mihon.entry.interactions.settings.HtmlProseSettingsProvider
+import mihon.entry.viewer.settings.ReaderCapabilityId
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.resetSettings
 
@@ -9,6 +10,7 @@ internal class HtmlProseSettingsBinding(
     private val provider: HtmlProseSettingsProvider,
     private val binder: ViewerSettingBinder,
     private val entryId: Long,
+    val readerCapabilities: Set<ReaderCapabilityId> = emptySet(),
 ) {
     val theme = binder.bind(provider.themeSetting)
     val fontFamily = binder.bind(provider.fontFamilySetting)

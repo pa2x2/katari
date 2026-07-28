@@ -42,6 +42,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -159,6 +160,7 @@ fun CheckboxItem(
     label: String,
     subtitle: String?,
     checked: Boolean,
+    enabled: Boolean = true,
     onClick: () -> Unit,
 ) {
     BaseSettingsItem(
@@ -167,9 +169,11 @@ fun CheckboxItem(
         widget = {
             Checkbox(
                 checked = checked,
+                enabled = enabled,
                 onCheckedChange = null,
             )
         },
+        enabled = enabled,
         onClick = onClick,
     )
 }
@@ -452,12 +456,14 @@ private fun BaseSettingsItem(
     label: String,
     subtitle: String? = null,
     widget: @Composable RowScope.() -> Unit,
+    enabled: Boolean = true,
     onClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
-            .clickable(onClick = onClick)
+            .clickable(enabled = enabled, onClick = onClick)
             .fillMaxWidth()
+            .alpha(if (enabled) 1f else DISABLED_ALPHA)
             .padding(
                 horizontal = SettingsItemsPaddings.Horizontal,
                 vertical = SettingsItemsPaddings.Vertical,

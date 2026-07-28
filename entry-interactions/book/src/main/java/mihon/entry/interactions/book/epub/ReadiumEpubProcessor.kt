@@ -16,6 +16,7 @@ import mihon.entry.interactions.book.BookPublicationSession
 import mihon.entry.interactions.book.BookReaderRequest
 import mihon.entry.interactions.book.BookSessionCloseStack
 import mihon.entry.interactions.book.MaterializedBookResource
+import mihon.entry.viewer.settings.StandardReaderCapabilities
 import org.readium.r2.shared.publication.Layout
 import org.readium.r2.shared.publication.Publication
 import org.readium.r2.shared.publication.services.positions
@@ -37,6 +38,7 @@ internal class ReadiumEpubProcessor(
 ) : BookProcessor {
     override val id: String = "builtin.readium.epub"
     override val displayName: String = "EPUB reader"
+    override val potentialReaderCapabilities = TEXT_SELECTION_CAPABILITIES
 
     private val httpClient = DefaultHttpClient()
     private val assetRetriever = AssetRetriever(
@@ -154,6 +156,13 @@ internal class ReadiumEpubProcessor(
         }
     }
 
+    override fun readerCapabilities(session: BookPublicationSession) =
+        if (session is ReadiumPublicationSession && !session.isFixedLayout) {
+            TEXT_SELECTION_CAPABILITIES
+        } else {
+            emptySet()
+        }
+
     private fun failureAndClose(
         lease: MaterializedBookResource,
         reason: BookFailureReason,
@@ -170,6 +179,10 @@ internal class ReadiumEpubProcessor(
     private companion object {
         const val EPUB_MEDIA_TYPE = "application/epub+zip"
         const val REFLOWABLE_PROFILE = "reflowable"
+        val TEXT_SELECTION_CAPABILITIES = setOf(
+            StandardReaderCapabilities.StableTextSelection,
+            StandardReaderCapabilities.SelectionAnchoring,
+        )
     }
 }
 
@@ -179,6 +192,8 @@ internal class ReadiumPublicationSession(
     publicationId: String,
     revision: String,
 ) : BookPublicationSession {
+    val isFixedLayout: Boolean
+        get() = enginePublication.metadata.layout == Layout.FIXED
     private val closeStack = BookSessionCloseStack().apply {
         own(lease)
         own(AutoCloseable(enginePublication::close))

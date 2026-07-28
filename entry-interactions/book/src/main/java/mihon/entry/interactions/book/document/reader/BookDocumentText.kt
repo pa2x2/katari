@@ -1,6 +1,8 @@
 package mihon.entry.interactions.book.document.reader
 
 import android.content.Context
+import android.graphics.Path
+import android.graphics.RectF
 import android.graphics.Typeface
 import android.text.Layout
 import android.text.Selection
@@ -14,10 +16,12 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.TextView
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.viewinterop.AndroidView
 import mihon.entry.interactions.book.document.model.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.model.toBookDocumentLinkTarget
@@ -37,6 +41,7 @@ internal fun BookDocumentText(
     onViewChanged: (TextView?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val interaction = LocalBookDocumentTextInteraction.current
     val currentAnchorClick by rememberUpdatedState(onAnchorClick)
     val currentExternalLinkClick by rememberUpdatedState(onExternalLinkClick)
     val linkedText = remember(text) {
@@ -66,12 +71,21 @@ internal fun BookDocumentText(
             }
         },
         update = { view ->
-            if (view.text !== linkedText) view.text = linkedText
+            view.selectionInteraction = interaction
+            if (view.text !== linkedText) {
+                view.clearOwnedSelection()
+                view.text = linkedText
+            }
+            if (view.isTextSelectable != interaction.enabled) {
+                view.setTextIsSelectable(interaction.enabled)
+            }
+            view.movementMethod = LinkMovementMethod.getInstance()
             view.trimTerminalLine = trimTerminalLine
             view.applyStyle(style)
             onViewChanged(view)
         },
         onRelease = { view ->
+            view.clearOwnedSelection()
             onViewChanged(null)
             view.text = null
         },
@@ -79,6 +93,8 @@ internal fun BookDocumentText(
 }
 
 internal class BookDocumentTextView(context: Context) : TextView(context) {
+    private val selectionOwnerIdentity = "text-view-${System.identityHashCode(this)}"
+    internal var selectionInteraction: BookDocumentTextInteraction? = null
     internal var appliedStyle: BookDocumentTextStyle? = null
     internal var trimTerminalLine: Boolean = false
         set(value) {
@@ -102,16 +118,103 @@ internal class BookDocumentTextView(context: Context) : TextView(context) {
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        val interaction = selectionInteraction ?: BookDocumentTextInteraction.Disabled
         if (event.actionMasked == MotionEvent.ACTION_DOWN || event.actionMasked == MotionEvent.ACTION_UP) {
             val buffer = text as? Spanned
             if (buffer?.clickableSpanAt(this, event) == null) {
-                (buffer as? Spannable)?.let(Selection::removeSelection)
-                return false
+                if (!interaction.enabled) {
+                    (buffer as? Spannable)?.let(Selection::removeSelection)
+                    return false
+                }
+                val handled = super.onTouchEvent(event)
+                if (
+                    event.actionMasked == MotionEvent.ACTION_UP &&
+                    selectionStart == selectionEnd
+                ) {
+                    interaction.onNonLinkTap(event.x, width.toFloat())
+                }
+                return handled
             }
         }
         return super.onTouchEvent(event)
     }
+
+    override fun onSelectionChanged(selStart: Int, selEnd: Int) {
+        super.onSelectionChanged(selStart, selEnd)
+        val interaction = selectionInteraction ?: BookDocumentTextInteraction.Disabled
+        if (!interaction.enabled || selStart < 0 || selEnd <= selStart) {
+            interaction.onSelection(BookDocumentTextSelection.Cleared(selectionOwnerIdentity))
+            return
+        }
+        val selectedText = text?.subSequence(selStart, selEnd)?.toString() ?: return
+        if (selectedText.isBlank()) {
+            interaction.onSelection(BookDocumentTextSelection.Cleared(selectionOwnerIdentity))
+            return
+        }
+        val layout = layout ?: return
+        val path = Path()
+        layout.getSelectionPath(selStart, selEnd, path)
+        val bounds = RectF()
+        path.computeBounds(bounds, true)
+        if (bounds.isEmpty) return
+        val position = IntArray(2)
+        getLocationInWindow(position)
+        bounds.offset(
+            position[0] + totalPaddingLeft - scrollX.toFloat(),
+            position[1] + totalPaddingTop - scrollY.toFloat(),
+        )
+        val root = interaction.rootPositionInWindow
+        bounds.offset(-root.x, -root.y)
+        interaction.onSelection(
+            BookDocumentTextSelection.Changed(
+                ownerIdentity = selectionOwnerIdentity,
+                identity = "$selectionOwnerIdentity:$selStart:$selEnd:${selectedText.hashCode()}",
+                text = selectedText,
+                boundsInReaderRoot = bounds,
+            ),
+        )
+    }
+
+    internal fun clearOwnedSelection() {
+        selectionInteraction
+            ?.onSelection
+            ?.invoke(BookDocumentTextSelection.Cleared(selectionOwnerIdentity))
+        (text as? Spannable)?.let(Selection::removeSelection)
+    }
 }
+
+internal data class BookDocumentTextInteraction(
+    val enabled: Boolean,
+    val rootPositionInWindow: Offset,
+    val onSelection: (BookDocumentTextSelection) -> Unit,
+    val onNonLinkTap: (x: Float, width: Float) -> Unit,
+) {
+    companion object {
+        val Disabled = BookDocumentTextInteraction(
+            enabled = false,
+            rootPositionInWindow = Offset.Zero,
+            onSelection = {},
+            onNonLinkTap = { _, _ -> },
+        )
+    }
+}
+
+internal sealed interface BookDocumentTextSelection {
+    val ownerIdentity: String
+
+    data class Changed(
+        override val ownerIdentity: String,
+        val identity: String,
+        val text: String,
+        val boundsInReaderRoot: RectF,
+    ) : BookDocumentTextSelection
+
+    data class Cleared(
+        override val ownerIdentity: String,
+    ) : BookDocumentTextSelection
+}
+
+internal val LocalBookDocumentTextInteraction = compositionLocalOf { BookDocumentTextInteraction.Disabled }
 
 internal data class BookDocumentTextStyle(
     val textColor: Int,

@@ -48,6 +48,7 @@ fun TranslationSessionHost(
     isTabletUi: Boolean,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
     modifier: Modifier = Modifier,
+    onDismiss: () -> Unit = controller::dismiss,
 ) {
     val state by controller.state.collectAsState()
     val active = state as? TranslationSessionState.Active
@@ -57,14 +58,14 @@ fun TranslationSessionHost(
     val clipboardLabel = stringResource(MR.strings.translation_title)
 
     DisposableEffect(controller) {
-        onDispose(controller::dismiss)
+        onDispose(onDismiss)
     }
 
     TranslationSessionOverlay(
         state = state,
         expanded = expanded,
         isTabletUi = isTabletUi,
-        onDismiss = controller::dismiss,
+        onDismiss = onDismiss,
         onExecute = controller::execute,
         onRetry = controller::retry,
         onCopy = { text ->

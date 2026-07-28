@@ -9,24 +9,25 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import mihon.translation.api.KnownTranslationEngine
+import mihon.translation.api.TranslationDeviceAvailability
 import mihon.translation.api.TranslationEngineBuildAvailability
 import mihon.translation.api.TranslationEngineId
 import mihon.translation.api.TranslationEngineSelection
 import mihon.translation.api.TranslationExecution
 import mihon.translation.api.TranslationFeature
+import mihon.translation.api.TranslationHostActionResult
+import mihon.translation.api.TranslationHostActions
 import mihon.translation.api.TranslationInvocationPolicy
 import mihon.translation.api.TranslationLanguageTag
+import mihon.translation.api.TranslationModelDescriptor
 import mihon.translation.api.TranslationPreparation
+import mihon.translation.api.TranslationProviderDisclosure
 import mihon.translation.api.TranslationProviderId
 import mihon.translation.api.TranslationProviderPresentation
 import mihon.translation.api.TranslationRequest
 import mihon.translation.api.TranslationSourceLanguageSelection
 import mihon.translation.api.TranslationSystemSetupReason
 import mihon.translation.api.TranslationTargetLanguageSelection
-import mihon.translation.runtime.ProfileTranslationPreferences
-import mihon.translation.spi.KnownTranslationEngineCatalog
-import mihon.translation.spi.TranslationEngineSetup
-import mihon.translation.spi.TranslationEngineSetupRegistry
 import mihon.translation.ui.session.TranslationSessionState
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
@@ -37,19 +38,12 @@ class TranslationSettingsScreenModelTest {
     fun `playground checks a real explicit pair before translation and engine experiments stay transient`() = runTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
         Dispatchers.setMain(dispatcher)
-        val preferences = ProfileTranslationPreferences(InMemoryPreferenceStore(), ANDROID_ENGINE).apply {
-            targetLanguage.set(TranslationTargetLanguageSelection.Explicit(ENGLISH))
-        }
+        val hostActions = FakeHostActions()
+        hostActions.defaultTargetLanguage.set(TranslationTargetLanguageSelection.Explicit(ENGLISH))
         val feature = SetupRequiredFeature()
         val model = TranslationSettingsScreenModel(
             feature = feature,
-            preferences = preferences,
-            knownEngineCatalog = object : KnownTranslationEngineCatalog {
-                override val knownEngines = listOf(knownEngine(ANDROID_ENGINE))
-            },
-            setupRegistry = object : TranslationEngineSetupRegistry {
-                override fun find(engine: TranslationEngineId): TranslationEngineSetup? = null
-            },
+            hostActions = hostActions,
         )
 
         try {
@@ -73,13 +67,68 @@ class TranslationSettingsScreenModelTest {
 
             model.setEngine(SECOND_ENGINE)
             advanceUntilIdle()
-            preferences.engine.get() shouldBe ANDROID_ENGINE
+            hostActions.selectedEngine.get() shouldBe ANDROID_ENGINE
 
             model.usePlaygroundEngineAsDefault()
-            preferences.engine.get() shouldBe SECOND_ENGINE
+            hostActions.selectedEngine.get() shouldBe SECOND_ENGINE
         } finally {
             model.onDispose()
             Dispatchers.resetMain()
+        }
+    }
+
+    private class FakeHostActions : TranslationHostActions {
+        private val store = InMemoryPreferenceStore()
+        override val knownEngines = listOf(knownEngine(ANDROID_ENGINE))
+        override val selectedEngine = store.getObjectFromString(
+            "engine",
+            ANDROID_ENGINE,
+            TranslationEngineId::value,
+            ::TranslationEngineId,
+        )
+        override val defaultTargetLanguage:
+            tachiyomi.core.common.preference.Preference<TranslationTargetLanguageSelection> =
+            store.getObjectFromString(
+                "target",
+                TranslationTargetLanguageSelection.Default,
+                { selection ->
+                    (selection as? TranslationTargetLanguageSelection.Explicit)?.language?.value ?: "default"
+                },
+                { value ->
+                    if (value == "default") {
+                        TranslationTargetLanguageSelection.Default
+                    } else {
+                        TranslationTargetLanguageSelection.Explicit(TranslationLanguageTag.require(value))
+                    }
+                },
+            )
+        override val automaticSelectionEnabled = store.getBoolean("automatic", false)
+
+        override suspend fun deviceAvailability() = TranslationDeviceAvailability.Available
+
+        override suspend fun acknowledgeProviderDisclosure(
+            engine: TranslationEngineId,
+            disclosure: TranslationProviderDisclosure,
+        ) = TranslationHostActionResult.Completed
+
+        override suspend fun downloadModels(
+            engine: TranslationEngineId,
+            models: List<TranslationModelDescriptor>,
+            allowMeteredNetwork: Boolean,
+        ) = TranslationHostActionResult.ModelsReady
+
+        override suspend fun openSystemSetup(engine: TranslationEngineId) =
+            TranslationHostActionResult.SetupUnsupported
+
+        override fun setSelectedEngine(engine: TranslationEngineId) {
+            selectedEngine.set(engine)
+        }
+
+        override fun setDefaultTargetLanguage(language: TranslationLanguageTag?) {
+            defaultTargetLanguage.set(
+                language?.let(TranslationTargetLanguageSelection::Explicit)
+                    ?: TranslationTargetLanguageSelection.Default,
+            )
         }
     }
 

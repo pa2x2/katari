@@ -34,12 +34,14 @@ import mihon.entry.interactions.book.document.reader.BookDocumentResourceLoader
 import mihon.entry.interactions.book.document.render.PreparedBookDocument
 import mihon.entry.interactions.book.document.resource.PROSE_FONT_RESOURCE_REQUIREMENT
 import mihon.entry.interactions.book.document.resource.PROSE_IMAGE_RESOURCE_REQUIREMENT
+import mihon.entry.viewer.settings.StandardReaderCapabilities
 import java.io.ByteArrayOutputStream
 
 /** Built-in reader processor for one source-normalized prose chapter. */
 internal class HtmlProseChapterProcessor : BookProcessor {
     override val id: String = "builtin.html.prose-chapter"
     override val displayName: String = "Prose chapter reader"
+    override val potentialReaderCapabilities = TEXT_SELECTION_CAPABILITIES
 
     override fun supports(descriptor: BookContentDescriptor): Boolean =
         descriptor.format == HTML_MEDIA_TYPE &&
@@ -106,6 +108,9 @@ internal class HtmlProseChapterProcessor : BookProcessor {
         }
     }
 
+    override fun readerCapabilities(session: BookPublicationSession) =
+        if (session is HtmlProseChapterSession) TEXT_SELECTION_CAPABILITIES else emptySet()
+
     private fun failure(reason: BookFailureReason, message: String): BookOpenResult.Failure =
         BookOpenResult.Failure(BookFailure(reason, message))
 
@@ -114,6 +119,10 @@ internal class HtmlProseChapterProcessor : BookProcessor {
 
     private companion object {
         const val MAX_HTML_RESOURCE_BYTES = 4 * 1024 * 1024
+        val TEXT_SELECTION_CAPABILITIES = setOf(
+            StandardReaderCapabilities.StableTextSelection,
+            StandardReaderCapabilities.SelectionAnchoring,
+        )
     }
 }
 

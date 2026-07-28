@@ -33,6 +33,9 @@ internal class BookProcessorRegistry(
         processors.values.filter { it.supports(descriptor) }
 
     fun get(processorId: String): BookProcessor? = processors[processorId]
+
+    fun potentialReaderCapabilities(): Set<mihon.entry.viewer.settings.ReaderCapabilityId> =
+        processors.values.flatMapTo(mutableSetOf()) { it.potentialReaderCapabilities }
 }
 
 internal sealed interface BookProcessorSelection {

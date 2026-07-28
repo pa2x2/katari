@@ -27,6 +27,7 @@ import mihon.translation.api.TranslationSourceLanguageSelection
 import mihon.translation.api.TranslationTargetLanguageSelection
 import mihon.translation.spi.ReadyTranslationEngineRequest
 import mihon.translation.spi.TranslationEngine
+import mihon.translation.spi.TranslationEngineDeviceAvailability
 import mihon.translation.spi.TranslationEngineExecution
 import mihon.translation.spi.TranslationEnginePreparation
 import mihon.translation.spi.TranslationSourceLanguageDetection
@@ -280,6 +281,8 @@ class DefaultTranslationFeatureTest {
         var preparedRequest: ResolvedTranslationRequest? = null
         var preparationCount = 0
         var translationCount = 0
+
+        override suspend fun inspectDevice() = TranslationEngineDeviceAvailability.Available
 
         override suspend fun prepare(request: ResolvedTranslationRequest): TranslationEnginePreparation {
             preparedRequest = request

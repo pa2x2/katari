@@ -34,6 +34,7 @@ import mihon.entry.interactions.book.BookReaderOpenResult
 import mihon.entry.interactions.book.BookReaderRequest
 import mihon.entry.interactions.book.BookReaderSessionFactory
 import mihon.entry.interactions.book.BookReaderSessionRegistry
+import mihon.entry.interactions.book.BookSelectionTranslationController
 import mihon.entry.interactions.book.OpenedBookReaderSession
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.displayName
@@ -46,6 +47,8 @@ import mihon.entry.interactions.settings.HtmlProseSettingsProvider
 import mihon.entry.interactions.viewer.EntryChildWindow
 import mihon.entry.interactions.viewer.entryChildWindow
 import mihon.entry.viewer.settings.ViewerSettingBinder
+import mihon.translation.api.TranslationFeature
+import mihon.translation.api.TranslationHostActions
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.EntryChapter
@@ -68,6 +71,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
     private var processorId: String? = null
     private var readingStartedAt: Long? = null
     private var pageLoaded = false
+    private var translationController: BookSelectionTranslationController? = null
 
     private val windowInsetsController by lazy { WindowCompat.getInsetsController(window, window.decorView) }
     private val webViewFeature by lazy { Injekt.get<EntryWebViewFeature>() }
@@ -115,6 +119,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
                             },
                             onChildWebViewAction = ::launchChildWebViewAction,
                             onExternalLinkClick = ::launchExternalLink,
+                            translationController = translationController,
                         )
                     }
                 }
@@ -128,6 +133,11 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
         if (openedSession != null && readingStartedAt == null) {
             readingStartedAt = SystemClock.elapsedRealtime()
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        translationController?.onResume()
     }
 
     override fun onStop() {
@@ -151,6 +161,8 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
         chapterLoadJobs.clear()
         chapterSwitchJob?.cancel()
         childWebViewResolutionJob?.cancel()
+        translationController?.close()
+        translationController = null
         openedSession = null
         settings = null
         super.onDestroy()
@@ -196,6 +208,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
         attach: Boolean = false,
         resetViewer: Boolean = false,
     ) {
+        translationController?.clearSelection()
         if (attach) retainedSession.attachInitial(session)
         val content = session.publicationSession as? HtmlProseChapterSession
         if (content == null) {
@@ -204,6 +217,13 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
             return
         }
         try {
+            val activeTranslationController = translationController ?: BookSelectionTranslationController(
+                feature = Injekt.get<TranslationFeature>(),
+                hostActions = Injekt.get<TranslationHostActions>(),
+                scope = lifecycleScope,
+                initialCapabilities = session.readerCapabilities,
+            ).also { translationController = it }
+            activeTranslationController.updateCapabilities(session.readerCapabilities)
             if (chapters.isEmpty()) {
                 chapters = Injekt.get<BookChapterNavigationResolver>().resolveAll(session.entry)
             }
@@ -214,6 +234,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
                     provider = Injekt.get<HtmlProseSettingsProvider>(),
                     binder = Injekt.get<ViewerSettingBinder>(),
                     entryId = session.entry.id,
+                    readerCapabilities = session.readerCapabilities,
                 ).also { it.awaitInitialLayoutMode() }
             }
             val locator = retainedSession.currentLocator

@@ -21,7 +21,7 @@ internal class TranslationEnginePickerScreen(
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
         val playground by model.playground.collectAsState()
-        val defaultEngine by model.preferences.engine.collectPreferenceAsState()
+        val defaultEngine by model.enginePreference.collectPreferenceAsState()
 
         TranslationEnginePickerContent(
             engines = model.engines,

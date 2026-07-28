@@ -18,11 +18,36 @@ interface TranslationEngine {
     val presentation: TranslationProviderPresentation
     val maximumInputCodePoints: Int?
 
+    /** Request-independent device inspection. No text or language pair may be manufactured for this check. */
+    suspend fun inspectDevice(): TranslationEngineDeviceAvailability
+
     suspend fun prepare(request: ResolvedTranslationRequest): TranslationEnginePreparation
 
     suspend fun revalidate(ready: ReadyTranslationEngineRequest): TranslationEnginePreparation
 
     suspend fun translate(ready: ReadyTranslationEngineRequest): TranslationEngineExecution
+}
+
+sealed interface TranslationEngineDeviceAvailability {
+    data object Available : TranslationEngineDeviceAvailability
+
+    data class UnsupportedOs(
+        val minimumApi: Int,
+    ) : TranslationEngineDeviceAvailability
+
+    data object ServiceMissing : TranslationEngineDeviceAvailability
+
+    data class Unavailable(
+        val reason: String? = null,
+    ) : TranslationEngineDeviceAvailability
+
+    data class Failed(
+        val reason: String,
+    ) : TranslationEngineDeviceAvailability {
+        init {
+            require(reason.isNotBlank())
+        }
+    }
 }
 
 /** Provider-owned opaque preparation state. Only the engine that produced it may execute it. */

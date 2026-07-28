@@ -1,4 +1,4 @@
-package eu.kanade.presentation.more.settings.screen.translation.language
+package mihon.translation.ui.picker
 
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test
 import java.util.Locale
 
 class TranslationLanguageCatalogTest {
-
     @Test
     fun `region variants collapse while script variants remain distinct`() {
         val options = translationLanguageOptions(

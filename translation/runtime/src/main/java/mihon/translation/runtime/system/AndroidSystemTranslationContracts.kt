@@ -30,6 +30,18 @@ internal sealed interface AndroidSystemTranslationInspection {
     ) : AndroidSystemTranslationInspection
 }
 
+internal sealed interface AndroidSystemDeviceInspection {
+    data object Available : AndroidSystemDeviceInspection
+
+    data object UnsupportedOs : AndroidSystemDeviceInspection
+
+    data object ServiceMissing : AndroidSystemDeviceInspection
+
+    data class Failed(
+        val reason: String,
+    ) : AndroidSystemDeviceInspection
+}
+
 internal sealed interface AndroidSystemPlatformExecution {
     data class Success(
         val translatedText: String,
@@ -59,6 +71,8 @@ internal sealed interface AndroidSystemPlatformSetup {
 }
 
 internal interface AndroidSystemTranslationPlatform {
+    suspend fun inspectDevice(): AndroidSystemDeviceInspection
+
     suspend fun inspect(pair: AndroidSystemTranslationPair): AndroidSystemTranslationInspection
 
     suspend fun translate(

@@ -9,6 +9,7 @@ import android.view.View
 import android.view.View.MeasureSpec
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.compose.ui.geometry.Offset
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -114,6 +115,26 @@ class BookDocumentTextViewTest {
         assertTrue(linkDownHandled)
         assertTrue(linkUpHandled)
         assertTrue(anchorClicked)
+    }
+
+    @Test
+    fun `selectable text emits the exact substring and reader-root bounds`() {
+        val view = laidOutTextView(SpannableString("  exact selection  ")) as BookDocumentTextView
+        var emitted: BookDocumentTextSelection? = null
+        view.selectionInteraction = BookDocumentTextInteraction(
+            enabled = true,
+            rootPositionInWindow = Offset.Zero,
+            onSelection = { emitted = it },
+            onNonLinkTap = { _, _ -> },
+        )
+        view.setTextIsSelectable(true)
+
+        android.text.Selection.setSelection(view.text as android.text.Spannable, 2, 17)
+
+        val selection = emitted as BookDocumentTextSelection.Changed
+        assertEquals("exact selection", selection.text)
+        assertTrue(selection.boundsInReaderRoot.width() > 0f)
+        assertTrue(selection.boundsInReaderRoot.height() > 0f)
     }
 
     private fun laidOutTextView(text: SpannableString): TextView {

@@ -24,9 +24,6 @@ class ProfileTranslationPreferences(
         deserializer = ::deserializeTargetLanguage,
     )
 
-    /**
-     * Reserved for future reader adapters. No settings row or runtime behavior may be exposed before an adapter ships.
-     */
     val automaticSelectionTranslationEnabled: Preference<Boolean> = preferenceStore.getBoolean(
         key = "translation_automatic_selection_enabled",
         defaultValue = false,

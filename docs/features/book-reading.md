@@ -25,7 +25,7 @@ When no compatible reader is available, Katari shows an unsupported-content scre
 
 ## Reader settings
 
-Open **More → Settings → Reader** to configure the profile defaults for each installed reader. Each book processor can provide its own reader and settings, and Katari resolves every effective value in this order:
+Open **More → Settings → Readers** to configure the profile defaults for each installed reader. Each book processor can provide its own reader and settings, and Katari resolves every effective value in this order:
 
 1. Entry override, when the setting supports one
 2. Active-profile value
@@ -36,6 +36,23 @@ Changing profiles therefore changes reader defaults without affecting other prof
 Each reader exposes its currently available appearance, layout, and navigation controls in the app. The EPUB reader navigates the publication's table of contents. The prose reader uses Katari's stored chapter list for its chapter picker and previous/next transitions while keeping the current chapter and any already-requested immediate neighbors prepared.
 
 Use **Reset** from a reader settings dialog to remove that reader's active-profile values and the current entry's reader overrides. Reading progress, bookmarks, and downloads are not changed.
+
+Shared settings are declared once and appear both in the global Readers screen and in capable readers. The
+profile-scoped **Translate selected text automatically** setting is available for serialized prose and reflowable EPUB.
+It uses the profile's Translation engine and target language after a text selection settles. Resetting either capable
+reader also returns this shared setting to its default of off.
+
+## Selected-text translation
+
+The prose reader supports selection within one rendered text block in both scrolling and paginated layouts. Selection
+does not span separate blocks. Links retain their existing internal-note or external-browser behavior, and ordinary
+taps retain menu and page-navigation behavior.
+
+The reflowable EPUB reader uses Readium's selected-text and selection-rectangle APIs. Native selection handles,
+Copy/Share actions, links, and page gestures remain owned by Readium. Fixed-layout EPUB does not support this feature.
+
+Selected text, results, and setup state are temporary and are never added to reading progress, downloads, translation
+history, logging, or telemetry. See [Translation](./translation.md) for device availability and privacy details.
 
 ## Offline downloads
 

@@ -157,6 +157,7 @@ internal class BookReaderSessionFactory(
                             initialLocator = initialLocator,
                             mediaSession = mediaSession,
                             now = now,
+                            readerCapabilities = processor.readerCapabilities(opened.session),
                         ),
                     )
                 } catch (error: CancellationException) {
@@ -357,6 +358,7 @@ internal class OpenedBookReaderSession(
     val initialLocator: BookLocator?,
     private val mediaSession: EntryMediaSessionProcessor,
     private val now: () -> Long,
+    val readerCapabilities: Set<mihon.entry.viewer.settings.ReaderCapabilityId> = emptySet(),
 ) : AutoCloseable {
     private val closeStack = BookSessionCloseStack().apply {
         own(contentSession)

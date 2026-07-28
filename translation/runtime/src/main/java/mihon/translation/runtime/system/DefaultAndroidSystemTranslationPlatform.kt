@@ -12,6 +12,12 @@ internal class DefaultAndroidSystemTranslationPlatform(
     private val sdkInt: Int,
     private val bridge: AndroidTranslationManagerBridge?,
 ) : AndroidSystemTranslationPlatform {
+    override suspend fun inspectDevice(): AndroidSystemDeviceInspection {
+        if (sdkInt < Build.VERSION_CODES.S) return AndroidSystemDeviceInspection.UnsupportedOs
+        if (bridge == null) return AndroidSystemDeviceInspection.ServiceMissing
+        return AndroidSystemDeviceInspection.Available
+    }
+
     override suspend fun inspect(pair: AndroidSystemTranslationPair): AndroidSystemTranslationInspection {
         if (sdkInt < Build.VERSION_CODES.S) return AndroidSystemTranslationInspection.UnsupportedOs
         val manager = bridge ?: return AndroidSystemTranslationInspection.ServiceMissing

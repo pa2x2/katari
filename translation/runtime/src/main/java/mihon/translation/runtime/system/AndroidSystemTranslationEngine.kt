@@ -13,6 +13,7 @@ import mihon.translation.api.TranslationSystemSetupReason
 import mihon.translation.api.TranslationUnavailableReason
 import mihon.translation.spi.ReadyTranslationEngineRequest
 import mihon.translation.spi.TranslationEngine
+import mihon.translation.spi.TranslationEngineDeviceAvailability
 import mihon.translation.spi.TranslationEngineExecution
 import mihon.translation.spi.TranslationEnginePreparation
 import mihon.translation.spi.TranslationEngineSetup
@@ -36,6 +37,17 @@ internal class AndroidSystemTranslationEngine(
     )
     override val maximumInputCodePoints: Int? = null
     override val engine: TranslationEngineId = ENGINE_ID
+
+    override suspend fun inspectDevice(): TranslationEngineDeviceAvailability {
+        return when (val inspection = platform.inspectDevice()) {
+            AndroidSystemDeviceInspection.Available -> TranslationEngineDeviceAvailability.Available
+            AndroidSystemDeviceInspection.UnsupportedOs ->
+                TranslationEngineDeviceAvailability.UnsupportedOs(minimumApi = 31)
+            AndroidSystemDeviceInspection.ServiceMissing -> TranslationEngineDeviceAvailability.ServiceMissing
+            is AndroidSystemDeviceInspection.Failed ->
+                TranslationEngineDeviceAvailability.Failed(inspection.reason)
+        }
+    }
 
     override suspend fun prepare(request: ResolvedTranslationRequest): TranslationEnginePreparation {
         val ready = AndroidSystemReadyRequest(

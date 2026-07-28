@@ -17,7 +17,9 @@ import mihon.entry.interactions.book.epub.ReadiumEpubProcessor
 import mihon.entry.interactions.book.prose.HtmlProseChapterProcessor
 import mihon.entry.interactions.settings.HtmlProseSettingsProvider
 import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
+import mihon.entry.viewer.settings.ReaderSharedSettingsRegistry
 import mihon.entry.viewer.settings.ViewerSettingsProvider
+import mihon.translation.api.TranslationHostActions
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerGroupId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
@@ -78,6 +80,12 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
     )
     val readiumSettingsProvider = readiumSettingsOwner.create()
     val proseSettingsProvider = proseSettingsOwner.create()
+    val processorRegistry = BookProcessorRegistry(
+        processors = listOf(
+            ReadiumEpubProcessor(),
+            HtmlProseChapterProcessor(),
+        ),
+    )
     addSingletonFactory { materializationCache }
     addSingletonFactory<BookMaterializationStore> { get<BookMaterializationCache>() }
     addSingletonFactory { BookDownloadProvider(get<StorageManager>()) }
@@ -94,12 +102,16 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
     addSingletonFactory { BookChapterNavigationResolver(get()) }
     addSingletonFactory { readiumSettingsProvider }
     addSingletonFactory { proseSettingsProvider }
+    addSingletonFactory { processorRegistry }
     addSingletonFactory {
-        BookProcessorRegistry(
-            processors = listOf(
-                ReadiumEpubProcessor(),
-                HtmlProseChapterProcessor(),
-            ),
+        BookAutomaticTranslationSettingsProvider(
+            processorRegistry = processorRegistry,
+            translationHostActions = get<TranslationHostActions>(),
+        )
+    }
+    addSingletonFactory {
+        ReaderSharedSettingsRegistry(
+            providers = listOf(get<BookAutomaticTranslationSettingsProvider>()),
         )
     }
     addSingletonFactory {

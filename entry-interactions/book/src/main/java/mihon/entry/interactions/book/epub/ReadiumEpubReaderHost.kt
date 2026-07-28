@@ -22,12 +22,21 @@ internal class ReadiumEpubReaderHost(
         initialLocator: BookLocator?,
         initialPreferences: EpubPreferences,
         paginationListener: EpubNavigatorFragment.PaginationListener? = null,
+        selectionChangeBridge: ReadiumSelectionChangeBridge? = null,
     ): FragmentFactory {
         val publication = publicationSession.readiumPublication()
+        val configuration = EpubNavigatorFragment.Configuration().apply {
+            if (!isFixedLayout && selectionChangeBridge != null) {
+                registerJavascriptInterface(READIUM_SELECTION_JAVASCRIPT_INTERFACE) {
+                    selectionChangeBridge
+                }
+            }
+        }
         return EpubNavigatorFactory(publication).createFragmentFactory(
             initialLocator = initialLocator?.let { ReadiumLocatorAdapter.restore(it, publication) },
             initialPreferences = initialPreferences,
             paginationListener = paginationListener,
+            configuration = configuration,
         )
     }
 

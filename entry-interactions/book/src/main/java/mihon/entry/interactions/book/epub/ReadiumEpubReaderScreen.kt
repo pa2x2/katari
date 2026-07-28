@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
@@ -37,6 +36,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -52,6 +52,8 @@ import mihon.entry.interactions.book.BookReaderNavigationRow
 import mihon.entry.interactions.book.BookReaderNavigationSheet
 import mihon.entry.interactions.book.BookReaderProgress
 import mihon.entry.interactions.book.BookReaderScaffold
+import mihon.entry.interactions.book.BookReaderSettingsDialog
+import mihon.entry.interactions.book.BookSelectionTranslationController
 import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
 import mihon.entry.viewer.settings.ResolvedViewerSetting
 import tachiyomi.i18n.MR
@@ -59,7 +61,6 @@ import tachiyomi.presentation.core.components.CheckboxItem
 import tachiyomi.presentation.core.components.HeadingItem
 import tachiyomi.presentation.core.components.SettingsItemsPaddings
 import tachiyomi.presentation.core.components.SliderItem
-import tachiyomi.presentation.core.components.ViewerSettingsTabbedDialog
 import tachiyomi.presentation.core.components.reader.ReaderChrome
 import tachiyomi.presentation.core.components.reader.ReaderPageNavigator
 import tachiyomi.presentation.core.components.reader.ReaderPageNavigatorType
@@ -101,6 +102,8 @@ internal fun ReadiumEpubReaderScreen(
     onNextSection: () -> Unit,
     onNavigationItemClick: (BookNavigationItem) -> Unit,
     onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
+    translationController: BookSelectionTranslationController? = null,
+    onReaderRootPositionInWindow: (Offset) -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
     val theme by settings.theme.state.collectEffectiveValue()
@@ -125,6 +128,8 @@ internal fun ReadiumEpubReaderScreen(
         footerColor = footerColor,
         modifier = Modifier.fillMaxSize(),
         nativeContentView = nativeContentView,
+        translationController = translationController,
+        onRootPositionInWindow = onReaderRootPositionInWindow,
         content = {},
         overlay = {
             val backgroundColor = MaterialTheme.colorScheme
@@ -317,14 +322,11 @@ private fun ReadiumEpubSettingsDialog(
         stringResource(MR.strings.pref_epub_page_layout),
         stringResource(MR.strings.pref_epub_controls),
     )
-    val pagerState = rememberPagerState { tabs.size }
-    val scope = rememberCoroutineScope()
-
-    ViewerSettingsTabbedDialog(
+    BookReaderSettingsDialog(
+        capabilities = settings.readerCapabilities,
         onDismissRequest = onDismissRequest,
-        onResetSettings = { scope.launch { settings.resetSettings() } },
-        tabTitles = tabs,
-        pagerState = pagerState,
+        onResetProcessorSettings = settings::resetSettings,
+        processorTabTitles = tabs,
     ) { page ->
         when (page) {
             0 -> ReadiumAppearanceSettings(settings)

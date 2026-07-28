@@ -9,6 +9,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.screen.translation.TranslationSettingsScreenModel
 import eu.kanade.presentation.util.Screen
 import mihon.translation.api.TranslationTargetLanguageSelection
+import mihon.translation.ui.picker.translationLanguageOptions
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState as collectPreferenceAsState
@@ -23,7 +24,7 @@ internal class TranslationLanguagePickerScreen(
         val navigator = LocalNavigator.currentOrThrow
         val options = remember { translationLanguageOptions() }
         val playground by model.playground.collectAsState()
-        val defaultTarget by model.preferences.targetLanguage.collectPreferenceAsState()
+        val defaultTarget by model.targetLanguagePreference.collectPreferenceAsState()
 
         TranslationLanguagePickerContent(
             title = stringResource(
