@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="offline_translator_setup_title">Offline Translator setup</string>
+    <string name="offline_translator_setup_description">Enable the HTTP API in Offline Translator’s Advanced settings and keep its bind mode set to localhost. Katari connects only to 127.0.0.1.</string>
+    <string name="offline_translator_port_label">HTTP API port</string>
+    <string name="offline_translator_save_and_test">Save and test connection</string>
+    <string name="offline_translator_open_app">Open Offline Translator</string>
+    <string name="offline_translator_invalid_port">Enter a port from 1 to 65535.</string>
+    <string name="offline_translator_testing">Testing connection…</string>
+    <string name="offline_translator_ready">Offline Translator is ready.</string>
+    <string name="offline_translator_connection_failed">Katari could not reach Offline Translator. Enable its HTTP API and verify the port.</string>
+</resources>

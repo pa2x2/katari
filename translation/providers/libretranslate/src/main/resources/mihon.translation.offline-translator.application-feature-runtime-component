@@ -1,0 +1,2 @@
+id=translation.offline-translator
+component=mihon.translation.provider.libretranslate.offlineTranslatorRuntimeComponent

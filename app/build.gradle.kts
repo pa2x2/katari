@@ -233,6 +233,7 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.telemetry.path)))
     implementation(dependencies.project(mapOf("path" to projects.translation.runtime.path)))
     implementation(dependencies.project(mapOf("path" to projects.translation.ui.path)))
+    implementation(dependencies.project(mapOf("path" to projects.translation.providers.libretranslate.path)))
 
     // Compose
     implementation(libs.androidx.activity.compose)

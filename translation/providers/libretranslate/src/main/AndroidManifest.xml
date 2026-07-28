@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <queries>
+        <package android:name="dev.davidv.translator" />
+    </queries>
+
+    <application>
+        <activity
+            android:name=".offline.setup.OfflineTranslatorSetupActivity"
+            android:exported="false"
+            android:label="@string/offline_translator_setup_title"
+            android:theme="@style/Theme.Katari.TranslationProvider" />
+    </application>
+
+</manifest>

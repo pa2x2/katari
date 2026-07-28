@@ -38,6 +38,8 @@ Status: completed and manifesto-audited on 2026-07-28.
 
 ## Milestone 2: LibreTranslate protocol and Offline Translator
 
+Status: completed and manifesto-audited on 2026-07-28.
+
 1. Add a provider-owned module containing a reusable LibreTranslate client.
 2. Add the Offline Translator contribution:
    - package `dev.davidv.translator`;
