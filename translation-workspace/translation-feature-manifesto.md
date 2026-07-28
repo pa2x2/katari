@@ -3,12 +3,12 @@
 ## Product promise
 
 Katari provides one app-wide Translation Feature that any current or future surface can consume. Readers provide
-selected text and an optional visual anchor; they do not know which translation engines are built, installed, ready,
-downloaded, preferred, or legally constrained.
+selected text and an optional visual anchor; they do not know which translation engines are installed, ready,
+preferred, or supported by the device.
 
-The intended reader experience is an automatic, anchored translation popup after selection settles. Android system
-translation may produce the result immediately. Google ML Kit requires one in-popup `Translate with Google` action
-before execution.
+The first implementation uses Android system translation. A ready system translation may produce an anchored result
+immediately. Devices without the required Android service, OS support, language pair, or setup action receive a
+precise typed state instead of a hidden fallback.
 
 ## Scope of the first implementation
 
@@ -17,20 +17,19 @@ Included:
 - app-wide Translation Feature API;
 - internal engine SPI;
 - Android system translation;
-- standard-build-only Google ML Kit translation;
-- automatic source-language detection;
-- profile preferences and device-wide model policy;
-- model download, inventory, pre-download, and deletion;
+- Android platform source-language detection where available;
+- profile-owned engine and target preferences;
 - reusable anchored popup and adaptive setup/result sheet;
 - top-level Translation settings;
 - an end-to-end `Test translation` consumer;
-- user documentation, privacy disclosure, and release-template warning.
+- user documentation for platform and OEM limitations.
 
 Deferred:
 
 - HTML prose selection integration;
 - Readium selection integration;
 - manga OCR;
+- bundled third-party translation or detection SDKs;
 - external translator-app handoff;
 - cloud translation APIs and user API keys;
 - Katari/community model-package distribution;
@@ -43,49 +42,45 @@ Feature.
 
 ## Build and provider policy
 
-Every build contains the Translation Feature and Android system engine adapter.
+Every build contains the same Translation Feature and Android system engine adapter. The first implementation has no
+bundled third-party translation engine or language-detection SDK.
 
-Standard, debug, preview, and benchmark builds additionally contain Google ML Kit. FOSS must contain no ML Kit
-dependency, implementation class, resource, or transitive runtime artifact.
+The API and SPI remain provider-neutral so a future engine can be added behind the Feature without changing readers
+or other consumers. Adding any provider implementation is a separate product and dependency decision; generic
+contracts do not authorize bundling one.
 
-Settings still lists all known engines. In FOSS, Google ML Kit appears disabled as `Not included in this build`, with
-a link explaining build and privacy differences. Describing a known engine must not load or package its implementation.
-
-Installed translator apps are not inline engines. Android text-processing intents are external handoff and are
+Installed translator apps are not inline engines. Android text-processing intents are external handoff and remain
 explicitly deferred.
 
 ## Provider resolution
 
 Profile engine selection defaults to `Automatic`.
 
-Automatic resolution rules:
+Resolution rules:
 
 1. A ready engine beats one requiring setup.
-2. If Android system translation and ML Kit are both ready, Android system wins to preserve the immediate result.
-3. If neither is ready in the standard build, prefer the ML Kit setup path.
-4. FOSS resolves only the Android system path.
-5. An explicitly selected engine never silently falls back.
-6. A runtime provider failure never silently retries another provider.
-7. If an explicitly saved engine is absent on another build or device, ask the user to choose; preserve the stored
+2. The Android system engine is the only installed engine in the first implementation.
+3. An explicitly selected engine never silently falls back.
+4. A runtime provider failure never silently retries another provider.
+5. If an explicitly saved engine is absent on another build or device, ask the user to choose; preserve the stored
    preference until they do.
 
-The static Feature Graph declares that an engine registry exists. Per-device services, model state, language-pair
-support, connectivity, and user choices are runtime Translation Feature states.
+The static Feature Graph declares that an engine registry exists. Per-device services, language-pair support, setup,
+and user choices are runtime Translation Feature states.
 
 ## Language behavior
 
 - Language identities are normalized BCP-47 tags, never provider enums.
-- Source language is detected automatically.
+- Source language is detected automatically when the Android platform detector is available.
 - API 29 and newer use Android `TextClassifier` off the main thread.
-- Standard API 26 through 28 uses bundled ML Kit language identification.
-- A genuinely undetermined source opens a per-request source chooser.
+- When platform detection is unavailable or genuinely undetermined, open a per-request source chooser.
 - The target defaults to Katari's effective UI locale while the profile has no explicit override.
 - If source equals target, ask for a target for the current request without changing the profile default.
 - Source and target can both be overridden for one request.
 - A profile default changes only through an explicit `Use as default` action.
 - Mixed-language selections are treated as one detected language in the first version.
 
-## Invocation and attribution
+## Invocation and presentation
 
 Provider presentation is data returned by the provider/Feature, not UI knowledge inferred from engine IDs.
 
@@ -93,24 +88,13 @@ Presentation metadata includes:
 
 - localized provider and engine names;
 - immediate or explicit-labeled invocation policy;
-- provider disclosure;
-- result attribution;
-- official attribution asset reference;
-- documentation/privacy link.
+- optional provider disclosure;
+- optional result attribution and asset reference;
+- optional documentation/privacy link.
 
-Android system translation uses immediate invocation when ready.
-
-ML Kit uses:
-
-- an explicit `Translate with Google` action inside the already-open popup;
-- official Google Translate attribution adjacent to every result;
-- the required disclaimer available in the UI and documentation.
-
-A result label such as `Translated with Google` does not replace the required triggering action. Do not automatically
-execute ML Kit merely because the popup can display attribution afterward.
-
-Do not place a Google logo next to competing provider logos in Settings. Textual engine identification is sufficient
-there; provider branding belongs beside the active provider result.
+Android system translation uses immediate invocation when ready. Future providers must declare their own invocation
+and presentation requirements through the existing contracts; the shared UI must render those contracts without
+provider-specific branches.
 
 ## Privacy and persistence
 
@@ -126,30 +110,16 @@ Never write them to:
 - logs;
 - this workspace.
 
-The standard build must disclose before first ML Kit model download that:
+No network translation engine is permitted in this scope. Katari does not own system language-data downloads; Android
+or the OEM owns any service setup and network behavior outside Katari's process.
 
-- translation input and output processing is on-device;
-- model files are downloaded from Google;
-- the SDK reports its documented diagnostics and usage metadata;
-- Google attribution appears with results.
+## Model and setup behavior
 
-Disclosure acknowledgement is device-wide. Engine and target choices are profile-specific. Model files and Wi-Fi
-download policy are device-wide.
-
-No network translation engine is permitted in this scope. Model downloads are the only provider network operation
-owned by Translation.
-
-## Model behavior
-
-- Wi-Fi-only downloads default to enabled.
-- The inline setup flow may offer an explicit one-download mobile-data override.
-- That override does not alter the global Wi-Fi policy.
-- Display the missing languages and approximate size before downloading.
-- ML Kit estimates use approximately 30 MB per missing language model.
-- Settings lists installed models and supports pre-download and deletion.
 - Android/OEM model management stays in system settings when the OEM exposes an intent.
 - Do not manufacture a Katari deletion or download UI for system models Katari cannot control.
-- Close translators, detectors, listeners, and cancellation resources deterministically.
+- Generic model-management contracts remain reserved for a future provider that can actually implement them.
+- Do not add model preferences, inventory, or download controls before such a provider exists.
+- Close translators, listeners, and cancellation resources deterministically.
 
 ## API behavior
 
@@ -171,8 +141,8 @@ Preparation returns typed states for:
 Prepared execution handles are opaque and process-local. Revalidate provider readiness before execution. If state
 changed, return the latest setup or unavailable state rather than running a stale handle.
 
-Each provider declares a safe input limit. Apply a defensive shared ceiling of 10,000 Unicode code points when no lower
-provider limit exists. Reject oversized input with guidance; never truncate or chunk invisibly.
+Each provider declares a safe input limit. Apply a defensive shared ceiling of 10,000 Unicode code points when no
+lower provider limit exists. Reject oversized input with guidance; never truncate or chunk invisibly.
 
 Coroutine cancellation is cancellation, not a provider error. Changing selection cancels the previous session.
 
@@ -190,11 +160,11 @@ threshold. Promote to the adaptive sheet for:
 - missing/unsafe anchor;
 - overflowing result;
 - provider disclosure;
-- model/system setup;
+- system setup;
 - language or engine choice;
 - errors requiring action.
 
-The popup exposes translation, language pair, provider attribution, copy, expand, language change, and close.
+The popup exposes translation, language pair, optional provider attribution, copy, expand, language change, and close.
 
 No reader adapter ships in the first slice. Translation Settings supplies the first real consumer through a transient
 `Test translation` flow using the same controller and UI.
@@ -211,34 +181,22 @@ Profile-owned:
 - Automatic or explicit engine;
 - explicit target language.
 
-Device-wide:
-
-- Wi-Fi-only model downloads;
-- ML Kit disclosure acknowledgement;
-- model inventory.
+The first implementation has no Translation-owned device-wide preferences.
 
 Settings must show precise reasons such as:
 
-- not included in this build;
 - unsupported Android version;
 - OEM service missing;
-- model required;
-- model downloading;
+- system setup required;
+- setup in progress;
 - unsupported language pair.
 
 Do not collapse these into a generic unavailable state.
 
-## Documentation and release obligations
+## Documentation obligations
 
-The user documentation must explain engines, on-device processing, SDK diagnostics, model storage, profile/device
-ownership, FOSS limitations, attribution, and lack of history.
-
-The builds/privacy page must stop claiming that standard and FOSS contain identical media features.
-
-Every generated GitHub release body must link to the build comparison and warn that:
-
-- standard includes ML Kit;
-- FOSS relies on Android/OEM system translation.
+User documentation must explain Android/OEM requirements, on-device processing, system-owned language data, profile
+ownership, and lack of history.
 
 These obligations are part of the feature, not optional release polish.
 
@@ -246,13 +204,12 @@ These obligations are part of the feature, not optional release polish.
 
 The first slice is complete only when:
 
-- Settings can exercise preparation, setup, translation, and result UI end to end;
+- Settings can exercise preparation, system setup, translation, and result UI end to end;
 - system-ready translation appears immediately;
-- ML Kit cannot execute without its labeled action;
-- every successful result carries provider metadata and required attribution;
-- profile and global preferences have correct ownership;
-- model management is observable and cancellable;
-- FOSS has no ML Kit runtime dependency;
+- successful results carry the provider presentation returned by the Feature;
+- profile preferences have correct ownership;
+- no Translation-owned device preference exists without active behavior;
 - no text/history persistence or logging exists;
-- documentation and release templates describe the real build behavior;
+- documentation describes the real platform and OEM limitations;
+- all builds contain the same system-only Translation implementation;
 - reader-specific and OCR code has not leaked into the Translation API.

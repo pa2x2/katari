@@ -9,10 +9,9 @@ Date: 2026-07-28
 - `:translation:spi` owns internal engine, detector, setup, model-management, registry, and known-engine contracts.
 - `:translation:runtime` owns provider-neutral orchestration, registry implementation, Feature Graph contribution, and
   application runtime installation.
-- `:translation:mlkit` and `:translation:ui` exist as dependency-direction boundaries. Their production
-  implementations remain intentionally deferred to the provider and UI phases.
+- `:translation:ui` exists as the dependency-direction boundary for the shared UI implementation.
 
-The API and SPI contain no Entry type, reader, OCR, ML Kit, or OEM implementation type.
+The API and SPI contain no Entry type, reader, OCR, concrete provider, or OEM implementation type.
 
 ## Request and execution authority
 

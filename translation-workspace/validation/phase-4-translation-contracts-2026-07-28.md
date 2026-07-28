@@ -27,7 +27,6 @@ The generated production report contains:
 
 ## Build and formatting evidence
 
-- `:translation:mlkit:compileDebugKotlin` — passed with the provider implementation intentionally deferred.
 - `:translation:ui:compileDebugKotlin` — passed with UI implementation intentionally deferred.
 - `:app:compileFossKotlin` — passed.
 - `:app:compileReleaseKotlin -Pinclude-telemetry` — passed in a separate invocation.

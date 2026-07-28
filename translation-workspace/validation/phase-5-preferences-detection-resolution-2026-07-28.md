@@ -2,44 +2,23 @@
 
 Date: 2026-07-28
 
-## Focused behavior
+This record describes the retained Phase 5 behavior after the Phase 7 provider cleanup. Phase 7 validation contains
+the current command evidence.
 
-- `:translation:runtime:testDebugUnitTest`: 24 tests passed across Feature resolution, profile/device preferences,
-  default target resolution, Android detection, component detector aggregation, and graph installation.
-- `:translation:mlkit:testDebugUnitTest`: 3 tests passed for BCP-47, undetermined output, and cancellation.
-- `:feature-runtime:testDebugUnitTest`: 8 tests passed, including typed runtime-component lookup and duplicate IDs.
-- Build-logic focused tests: 13 tests passed for component generation and owner-local boundary rules.
+## Retained behavior
 
-The resolver coverage proves ready-first priority, system-ready preference, ML Kit setup preference, explicit
-no-fallback behavior, saved-absent behavior, source-undetermined and source-equals-target outcomes, stale-handle
-revalidation, provider limits, cancellation, and no retry after provider failure.
+- `:translation:runtime` owns profile preferences, default-target resolution, Android platform detection, typed
+  component aggregation, and provider-neutral engine resolution.
+- Resolver coverage protects ready-first selection, provider-declared priorities, explicit no-fallback behavior,
+  saved-absent behavior, source-undetermined and source-equals-target outcomes, stale-handle revalidation, input
+  limits, cancellation, and no retry after provider failure.
+- API 29 and newer can use Android `TextClassifier`; a missing platform detector yields a typed source-undetermined
+  outcome requiring explicit source selection.
+- All build variants now have an empty optional Translation component registry.
 
-## Architecture and app builds
+## Architecture
 
-- `spotlessApply`: passed.
-- `spotlessCheck`: passed.
-- `verifyFeatureArchitecture`: passed.
-- Production report remains one application subject, three Entry content types, 45 Features, 370 evaluated
-  integrations, and zero obligations. Translation remains applicable.
-- `:app:compileFossKotlin`: passed.
-- `:app:compileReleaseKotlin -Pinclude-telemetry`: passed in a separate invocation.
-- `git diff --check`: passed.
-
-Generated topology inspection:
-
-- FOSS `productionApplicationFeatureRuntimeComponents()` contains no registrations.
-- Debug contains one direct registration for
-  `mihon.translation.mlkit.mlKitTranslationRuntimeComponent`.
-
-Runtime classpath inspection:
-
-- `fossRuntimeClasspath`: no `com.google.mlkit` or `language-id` match.
-- `debugRuntimeClasspath`: `com.google.mlkit:language-id:17.0.6` with its ML Kit common dependencies.
+The general application runtime-component generator and its duplicate-ID validation remain because they are
+provider-neutral Feature infrastructure. Translation does not currently register an optional component.
 
 No emulator or physical device was used.
-
-## Documentation
-
-The developer Feature architecture documentation now covers owner-local profile preference installation and
-variant-aware runtime components. User-facing Translation documentation remains Phase 10 because no user-operable
-Translation surface exists yet.

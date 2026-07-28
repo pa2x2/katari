@@ -23,7 +23,6 @@ val translationFeatureRuntimeModule = ApplicationFeatureRuntimeModule(
         factory = ::ProfileTranslationPreferences,
     )
     val profilePreferences = profilePreferencesOwner.create()
-    val devicePreferences = DeviceTranslationPreferences(context.dependencies.basePreferenceStore)
     val androidSystemEngine = AndroidSystemTranslationEngine(
         DefaultAndroidSystemTranslationPlatform(
             sdkInt = android.os.Build.VERSION.SDK_INT,
@@ -44,7 +43,6 @@ val translationFeatureRuntimeModule = ApplicationFeatureRuntimeModule(
     )
 
     addSingletonFactory { profilePreferences }
-    addSingletonFactory { devicePreferences }
     addSingletonFactory<TranslationEngineRegistry> { registry }
     addSingletonFactory<TranslationEngineSetupRegistry> { setupRegistry }
     addSingletonFactory<KnownTranslationEngineCatalog> { registry }

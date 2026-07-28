@@ -11,7 +11,6 @@ import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.SpecializedAdapter
 import mihon.feature.graph.featureGraphContributor
-import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
 import uy.kohesive.injekt.api.InjektRegistrar
 import kotlin.reflect.KClass
@@ -46,7 +45,6 @@ data class ApplicationFeatureRuntimeInstallationContext(
 )
 
 data class ApplicationFeatureRuntimeDependencies(
-    val basePreferenceStore: PreferenceStore,
     val profilePreferenceOwners: ProfilePreferenceOwnerInstaller,
 )
 

@@ -232,10 +232,6 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.presentationWidget.path)))
     implementation(dependencies.project(mapOf("path" to projects.telemetry.path)))
     implementation(dependencies.project(mapOf("path" to projects.translation.runtime.path)))
-    add("debugImplementation", projects.translation.mlkit)
-    add("releaseImplementation", projects.translation.mlkit)
-    add("previewImplementation", projects.translation.mlkit)
-    add("benchmarkImplementation", projects.translation.mlkit)
 
     // Compose
     implementation(libs.androidx.activity.compose)

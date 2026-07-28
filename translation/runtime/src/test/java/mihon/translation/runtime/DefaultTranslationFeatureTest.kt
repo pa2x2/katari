@@ -129,12 +129,12 @@ class DefaultTranslationFeatureTest {
             catalogEntry = knownEngine("android-system"),
             automaticSelectionPriority = TranslationAutomaticSelectionPriority(ready = 20, setup = 0),
         )
-        val mlKit = FakeTranslationEngine(
-            catalogEntry = knownEngine("mlkit"),
+        val secondary = FakeTranslationEngine(
+            catalogEntry = knownEngine("secondary"),
             automaticSelectionPriority = TranslationAutomaticSelectionPriority(ready = 10, setup = 20),
         )
 
-        val bothReady = feature(DefaultTranslationEngineRegistry(listOf(system, mlKit)))
+        val bothReady = feature(DefaultTranslationEngineRegistry(listOf(system, secondary)))
             .prepare(automaticEngineRequest()) as TranslationPreparation.Ready
 
         bothReady.request.engine shouldBe system.catalogEntry.id
@@ -146,19 +146,19 @@ class DefaultTranslationFeatureTest {
             ),
             automaticSelectionPriority = TranslationAutomaticSelectionPriority(ready = 20, setup = 100),
         )
-        val mlKitReady = FakeTranslationEngine(
-            catalogEntry = knownEngine("mlkit"),
+        val secondaryReady = FakeTranslationEngine(
+            catalogEntry = knownEngine("secondary"),
             automaticSelectionPriority = TranslationAutomaticSelectionPriority(ready = 0, setup = 0),
         )
 
-        val readyBeatsSetup = feature(DefaultTranslationEngineRegistry(listOf(systemSetup, mlKitReady)))
+        val readyBeatsSetup = feature(DefaultTranslationEngineRegistry(listOf(systemSetup, secondaryReady)))
             .prepare(automaticEngineRequest()) as TranslationPreparation.Ready
 
-        readyBeatsSetup.request.engine shouldBe mlKitReady.catalogEntry.id
+        readyBeatsSetup.request.engine shouldBe secondaryReady.catalogEntry.id
     }
 
     @Test
-    fun `automatic resolution prefers ML Kit setup priority when no engine is ready`() = runTest {
+    fun `automatic resolution uses provider setup priority when no engine is ready`() = runTest {
         val system = FakeTranslationEngine(
             catalogEntry = knownEngine("android-system"),
             preparation = TranslationEnginePreparation.SystemSetupRequired(
@@ -166,18 +166,18 @@ class DefaultTranslationFeatureTest {
             ),
             automaticSelectionPriority = TranslationAutomaticSelectionPriority(ready = 20, setup = 10),
         )
-        val mlKit = FakeTranslationEngine(
-            catalogEntry = knownEngine("mlkit"),
+        val higherSetupPriority = FakeTranslationEngine(
+            catalogEntry = knownEngine("higher-setup-priority"),
             preparation = TranslationEnginePreparation.SystemSetupRequired(
                 mihon.translation.api.TranslationSystemSetupReason.LanguageModelsRequired,
             ),
             automaticSelectionPriority = TranslationAutomaticSelectionPriority(ready = 10, setup = 20),
         )
 
-        feature(DefaultTranslationEngineRegistry(listOf(system, mlKit)))
+        feature(DefaultTranslationEngineRegistry(listOf(system, higherSetupPriority)))
             .prepare(automaticEngineRequest()) shouldBe TranslationPreparation.SystemSetupRequired(
-            engine = mlKit.catalogEntry.id,
-            presentation = mlKit.presentation,
+            engine = higherSetupPriority.catalogEntry.id,
+            presentation = higherSetupPriority.presentation,
             reason = mihon.translation.api.TranslationSystemSetupReason.LanguageModelsRequired,
         )
     }

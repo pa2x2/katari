@@ -271,7 +271,6 @@ class AppModule(val app: Application) : InjektModule {
             context = ApplicationFeatureRuntimeInstallationContext(
                 application = app,
                 dependencies = ApplicationFeatureRuntimeDependencies(
-                    basePreferenceStore = get<ProfileStore>().basePreferenceStore(),
                     profilePreferenceOwners = ProfilePreferenceOwnerInstaller(get()) {
                         get<ProfileStore>().profileStore()
                     },

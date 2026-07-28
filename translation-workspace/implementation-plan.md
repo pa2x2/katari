@@ -1,6 +1,6 @@
 # Application-scoped Feature Graph and Translation Feature implementation plan
 
-Status: Phase 6 complete; awaiting milestone approval before Phase 7.
+Status: Phase 7 provider cleanup complete; awaiting milestone approval before Phase 8.
 
 The manifestos in this directory are authoritative:
 
@@ -10,7 +10,8 @@ The manifestos in this directory are authoritative:
 ## Outcome
 
 Deliver one generalized production Feature Graph with application and Entry-content-type subjects, then install an
-app-wide Translation Feature that resolves Android system and build-specific ML Kit engines behind one typed API.
+app-wide Translation Feature that resolves the Android system engine behind one typed API that can accept future
+provider implementations without changing consumers.
 
 The first usable consumer is a top-level Translation settings/test flow. Reader selection adapters follow separately.
 
@@ -94,7 +95,6 @@ Add:
 - [x] `:translation:api`
 - [x] `:translation:spi`
 - [x] `:translation:runtime`
-- [x] `:translation:mlkit`
 - [x] `:translation:ui`
 
 ### `translation:api`
@@ -112,7 +112,7 @@ Define:
 - [x] setup, choice, unavailable, rejection, and failure reasons
 - [x] provider presentation and invocation policy
 
-The API must contain no `EntryType`, reader, OCR, ML Kit, or OEM implementation types.
+The API must contain no `EntryType`, reader, OCR, concrete provider, or OEM implementation types.
 
 ### `translation:spi`
 
@@ -135,7 +135,7 @@ Define internal contracts for:
 - [x] Install `TranslationFeature` as the application-facing runtime boundary.
 - [x] Assert that the production integration is applicable at runtime construction.
 
-Exit condition: fake engines can drive the complete Translation API without Android or Google implementations.
+Exit condition: fake engines can drive the complete Translation API without concrete provider implementations.
 
 ## Phase 5: Preferences, detection, and resolution
 
@@ -143,23 +143,21 @@ Exit condition: fake engines can drive the complete Translation API without Andr
 
 - [x] Register a profile preference owner for engine and explicit target.
 - [x] Resolve an unset target dynamically from Katari's effective UI locale.
-- [x] Store Wi-Fi policy and Google disclosure acknowledgement in the base/device store.
 - [x] Do not create source/result/history preferences.
 - [x] Reserve the future profile auto-selection preference contract but do not expose a nonfunctional row.
 
 ### Detection
 
 - [x] Implement Android `TextClassifier` detection for API 29+ on a worker dispatcher.
-- [x] Implement bundled ML Kit detection for standard API 26–28.
 - [x] Normalize detector output to BCP-47.
 - [x] Return `SourceUndetermined` when no usable result exists.
+- [x] Require explicit source selection when platform detection is unavailable.
 
 ### Resolution
 
 - [x] Implement explicit engine resolution without fallback.
 - [x] Implement Automatic ready-first ranking.
-- [x] Prefer Android system when both supported engines are ready.
-- [x] Prefer ML Kit setup when neither standard-build engine is ready.
+- [x] Keep ranking provider-neutral and deterministic for future engines.
 - [x] Return `SelectedEngineUnavailable` without mutating the saved preference.
 - [x] Return a target chooser when source equals target.
 - [x] Enforce provider limits and the 10,000-code-point shared ceiling.
@@ -180,21 +178,19 @@ Exit condition: resolver tests cover the complete build/device/model/language ma
 
 Exit condition: the engine passes contract tests using Android wrapper fakes and contains no OEM assumptions.
 
-## Phase 7: ML Kit engine and strict variant separation
+## Phase 7: Remove the bundled third-party provider
 
-- [ ] Add the version-catalog entry for `translate:17.0.3`; bundled `language-id:17.0.6` was added in Phase 5.
-- [x] Put current ML Kit dependencies only on standard/debug/preview/benchmark configurations.
-- [x] Use variant source composition so FOSS never references ML Kit symbols.
-- [ ] Implement language-pair support, readiness, translation, cancellation, and deterministic close.
-- [ ] Implement downloaded-model inventory, pre-download, delete, and progress.
-- [ ] Estimate storage from missing language models at approximately 30 MB each.
-- [ ] Enforce Wi-Fi by default and support one explicit metered override.
-- [ ] Add the one-time provider/download disclosure.
-- [ ] Return explicit `Translate with Google` invocation policy.
-- [ ] Return official adjacent result attribution and disclaimer metadata.
-- [ ] Keep the known ML Kit catalog entry available in FOSS without implementation loading.
+- [x] Remove the provider implementation module and all generated component descriptors.
+- [x] Remove app variant wiring and dependency-catalog entries.
+- [x] Remove the bundled source-language detector.
+- [x] Remove provider-specific catalog, disclosure, attribution, model-registry, tests, and preferences.
+- [x] Preserve provider-neutral Translation API/SPI contracts and the typed runtime-component seam.
+- [x] Make every build use the same Android system translation implementation.
+- [x] Rewrite the Translation manifesto and implementation plan around the system-only first slice.
+- [x] Remove stale provider-specific research and validation claims.
 
-Exit condition: standard provider contracts pass and FOSS runtime classpath contains no ML Kit artifact.
+Exit condition: no bundled third-party translation implementation, dependency, symbol, resource, or planning
+obligation remains in the current tree.
 
 ## Phase 8: Shared session UI
 
@@ -213,7 +209,6 @@ Exit condition: standard provider contracts pass and FOSS runtime classpath cont
 - [ ] Use the sheet for setup, language/engine choice, errors, and missing anchors.
 - [ ] Add copy, expand, change-language, use-as-default, retry, and close actions.
 - [ ] Auto-execute ready Android system translations.
-- [ ] Require the ML Kit labeled action before execution.
 - [ ] Render provider attribution from metadata without engine ID checks.
 - [ ] Clear all session text on dismissal.
 
@@ -224,28 +219,21 @@ Exit condition: presenter/controller tests protect user-visible transitions and 
 - [ ] Add Translation as a top-level Settings destination.
 - [ ] Add engine selection and precise engine availability reasons.
 - [ ] Add target-language selection.
-- [ ] Add device-wide Wi-Fi-only policy.
-- [ ] Add model inventory, pre-download, delete, estimated size, and progress.
-- [ ] Add provider/privacy/disclaimer links.
-- [ ] Show ML Kit disabled in FOSS as not included in the build.
+- [ ] Route system setup through the OEM-provided action when available.
+- [ ] Add provider documentation/privacy links when supplied by provider metadata.
 - [ ] Add transient `Test translation` input.
 - [ ] Drive the test flow through the production `TranslationFeature` and shared session UI.
 - [ ] Do not retain test input or output after dismissal/navigation.
 
 Exit condition: the first slice is operable end to end without any reader integration.
 
-## Phase 10: User documentation and releases
+## Phase 10: User documentation
 
 - [ ] Add `docs/features/translation.md`.
 - [ ] Add it to documentation navigation.
-- [ ] Update `docs/differences/builds-telemetry-and-privacy.md`.
-- [ ] Document standard ML Kit inclusion, FOSS system-only behavior, OEM/API limits, model storage, SDK diagnostics,
-  profile/device ownership, attribution, and no history.
-- [ ] Update `.github/workflows/release.yml` so every generated release body warns about engine differences.
-- [ ] Link releases to
-  `https://katariapp.github.io/katari/differences/builds-telemetry-and-privacy#translation`.
+- [ ] Document Android/OEM/API limits, system-managed language data, profile ownership, and no history.
 
-Exit condition: documentation and release messaging match the produced artifacts.
+Exit condition: documentation matches the produced artifacts.
 
 ## Phase 11: Final validation
 
@@ -258,8 +246,6 @@ Run sequentially:
 - [ ] focused Translation module tests
 - [ ] `./gradlew :app:testFossUnitTest`
 - [ ] `./gradlew :app:compileFossKotlin`
-- [ ] inspect `fossRuntimeClasspath` for ML Kit absence
-- [ ] inspect the FOSS APK for ML Kit classes/resources
 - [ ] `./gradlew assembleFoss`
 - [ ] separately: `./gradlew :app:compileReleaseKotlin -Pinclude-telemetry`
 - [ ] separately: `./gradlew assembleRelease -Pinclude-telemetry -Penable-updater`
@@ -275,16 +261,10 @@ Do not combine FOSS/unit/architecture tasks with telemetry or updater properties
 - [ ] Application Translation integration appears exactly once in the production Feature report.
 - [ ] Existing Entry Feature applicability and lifecycle tests remain unchanged in meaning.
 - [ ] Settings test translates immediately through a ready Android system engine.
-- [ ] ML Kit cannot execute without `Translate with Google`.
-- [ ] ML Kit results carry adjacent official attribution.
-- [ ] Missing models show languages, estimate, Wi-Fi policy, and explicit download.
-- [ ] One-download mobile-data override does not change global policy.
 - [ ] Explicit provider failure does not fall back.
 - [ ] Source equals target opens a one-request target chooser.
 - [ ] Profile changes isolate engine/target preferences.
-- [ ] Models and disclosure remain device-wide.
 - [ ] No source/result text is persisted or logged.
-- [ ] FOSS contains no ML Kit implementation or dependency.
-- [ ] FOSS still explains ML Kit as unavailable in this build.
-- [ ] Documentation and release template disclose the build difference.
+- [ ] Every build exposes the same Android system translation implementation.
+- [ ] Documentation describes the real platform and OEM limitations.
 - [ ] No reader, OCR, external-app, cloud-engine, or history scope slipped into the first slice.

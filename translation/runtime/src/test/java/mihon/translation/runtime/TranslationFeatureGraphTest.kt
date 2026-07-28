@@ -29,7 +29,6 @@ class TranslationFeatureGraphTest {
                 context = ApplicationFeatureRuntimeInstallationContext(
                     application = mockk<Application>(relaxed = true),
                     dependencies = ApplicationFeatureRuntimeDependencies(
-                        basePreferenceStore = InMemoryPreferenceStore(),
                         profilePreferenceOwners = ProfilePreferenceOwnerInstaller(
                             owners = ProfilePreferenceOwnerRegistry(),
                             preferenceStore = ::InMemoryPreferenceStore,

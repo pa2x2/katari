@@ -140,7 +140,6 @@ class ProductionEntryInteractionValidationEnvironment(
             context = ApplicationFeatureRuntimeInstallationContext(
                 application = application,
                 dependencies = ApplicationFeatureRuntimeDependencies(
-                    basePreferenceStore = InMemoryPreferenceStore(),
                     profilePreferenceOwners = preferenceOwners,
                 ),
             ),

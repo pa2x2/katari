@@ -11,7 +11,7 @@ import mihon.translation.api.TranslationSystemSetupReason
 import mihon.translation.api.TranslationUnavailableReason
 
 /**
- * Internal provider adapter. Android, Google, and future engines implement this contract without becoming public API.
+ * Internal provider adapter. Platform and future engines implement this contract without becoming public API.
  */
 interface TranslationEngine {
     val catalogEntry: KnownTranslationEngine
