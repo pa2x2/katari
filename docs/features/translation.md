@@ -9,8 +9,15 @@ unavailable.
 
 Choose an engine from **More → Settings → Translation → Translation engine**.
 The list includes supported provider apps even when they are not installed.
-Unavailable rows cannot be selected and show the relevant installation or
-configuration action.
+Each engine card keeps its selection, readiness, explanation, recovery action,
+and details together. Unavailable cards remain readable but cannot be selected;
+use their explicit **Install**, **Configure**, or **Manage** action to recover.
+Those actions never select the engine automatically.
+
+Choose **Details** on any card to see where that engine processes text, its
+privacy behavior, current status, artwork attribution, and provider
+documentation without leaving the engine list. The compact chooser shown during
+a translation uses the same statuses and recovery actions.
 
 ### Android System Translation
 
@@ -23,6 +30,12 @@ without hiding the other engines.
 Android owns this engine's language files. Katari can show when setup is needed
 and open Android's translation settings when the device provides them, but it
 does not download or delete Android language files.
+
+The Android robot is reproduced or modified from work created and shared by
+Google and used according to terms described in the
+[Creative Commons 3.0 Attribution License](https://creativecommons.org/licenses/by/3.0/).
+Android is a trademark of Google LLC. See the
+[Android brand guidelines](https://developer.android.com/distribute/marketing-tools/brand-guidelines).
 
 ### Offline Translator
 
@@ -37,8 +50,8 @@ After installing it:
 2. Enable its HTTP API and keep the API bound to localhost.
 3. In Katari, choose **Configure**, enter the API port, and test the connection.
    The default port is `5000`; valid ports are `1` through `65535`.
-4. Return to the engine list and select Offline Translator once it reports
-   ready.
+4. Choose **Done** after Katari reports **Ready to use**, then select Offline
+   Translator from the engine list.
 
 Katari connects only to `127.0.0.1` for this engine and bypasses configured
 network proxies. The first translation asks for confirmation that selected text
@@ -51,8 +64,9 @@ translations to its `/translate` endpoint.
 The LibreTranslate Server engine connects to an existing
 [LibreTranslate](https://docs.libretranslate.com/) deployment and returns the
 translation inline in Katari. Choose **Configure** to enter its base URL and an
-optional API key, then save and test the connection. The engine cannot be
-selected until that test succeeds.
+optional API key, then choose **Save and test**. Setup reports progress and
+failure inline; choose **Done** after it reports **Ready to use**. The engine
+cannot be selected until that test succeeds.
 
 Remote endpoints must use HTTPS. Cleartext HTTP is accepted only for
 `localhost`, `127.0.0.1`, or `::1`. Katari rejects endpoint URLs containing
