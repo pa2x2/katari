@@ -14,7 +14,7 @@ import tachiyomi.core.common.preference.ProfilePreferenceOwnerRegistry
 class ProfileTranslationPreferencesTest {
 
     @Test
-    fun `profile owner declares only engine target and future reader opt-in`() {
+    fun `profile owner declares only translation engine and target defaults`() {
         val registry = ProfilePreferenceOwnerRegistry()
         ProfilePreferenceOwnerInstaller(registry, ::InMemoryPreferenceStore).register(
             id = ProfilePreferenceOwnerId("translation"),
@@ -24,7 +24,6 @@ class ProfileTranslationPreferencesTest {
         registry.ownership().profileKeys shouldContainExactlyInAnyOrder setOf(
             "translation_engine",
             "translation_target_language",
-            "translation_automatic_selection_enabled",
         )
     }
 
@@ -39,7 +38,6 @@ class ProfileTranslationPreferencesTest {
 
         preferences.engine.get() shouldBe engine
         preferences.targetLanguage.get() shouldBe target
-        preferences.automaticSelectionTranslationEnabled.get() shouldBe false
     }
 
     private companion object {

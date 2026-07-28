@@ -20,6 +20,7 @@ internal class ReadiumEpubSettingsBinding(
     private val provider: ReadiumEpubSettingsProvider,
     private val binder: ViewerSettingBinder,
     private val entryId: Long,
+    val readerSettingsSurfaceId: String,
     val readerCapabilities: Set<ReaderCapabilityId> = emptySet(),
 ) {
     val theme = binder.bind(provider.themeSetting)

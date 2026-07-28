@@ -71,6 +71,10 @@ internal interface BookProcessor {
     /** User-facing processor name for the compatibility chooser. */
     val displayName: String
 
+    /** App-level viewer settings surface configured by this processor, when one exists. */
+    val viewerSettingsSurfaceId: String?
+        get() = null
+
     /** Capabilities discoverable before a publication is opened. */
     val potentialReaderCapabilities: Set<ReaderCapabilityId>
         get() = emptySet()

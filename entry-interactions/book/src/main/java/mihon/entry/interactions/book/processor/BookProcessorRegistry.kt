@@ -1,6 +1,7 @@
 package mihon.entry.interactions.book
 
 import mihon.book.api.BookContentDescriptor
+import mihon.entry.viewer.settings.ReaderCapabilityId
 
 internal class BookProcessorRegistry(
     processors: Collection<BookProcessor>,
@@ -13,6 +14,9 @@ internal class BookProcessorRegistry(
         }
         require(this.processors.keys.none(String::isBlank)) { "BOOK processor IDs must not be blank" }
         require(this.processors.values.none { it.displayName.isBlank() }) { "BOOK processor names must not be blank" }
+        require(this.processors.values.none { it.viewerSettingsSurfaceId?.isBlank() == true }) {
+            "BOOK processor viewer settings surface IDs must not be blank"
+        }
     }
 
     fun select(
@@ -34,8 +38,18 @@ internal class BookProcessorRegistry(
 
     fun get(processorId: String): BookProcessor? = processors[processorId]
 
-    fun potentialReaderCapabilities(): Set<mihon.entry.viewer.settings.ReaderCapabilityId> =
+    fun potentialReaderCapabilities(): Set<ReaderCapabilityId> =
         processors.values.flatMapTo(mutableSetOf()) { it.potentialReaderCapabilities }
+
+    fun potentialReaderCapabilitiesBySettingsSurface(): Map<String, Set<ReaderCapabilityId>> =
+        processors.values
+            .mapNotNull { processor ->
+                processor.viewerSettingsSurfaceId?.let { surfaceId ->
+                    surfaceId to processor.potentialReaderCapabilities
+                }
+            }
+            .groupBy({ it.first }, { it.second })
+            .mapValues { (_, capabilitySets) -> capabilitySets.flatten().toSet() }
 }
 
 internal sealed interface BookProcessorSelection {

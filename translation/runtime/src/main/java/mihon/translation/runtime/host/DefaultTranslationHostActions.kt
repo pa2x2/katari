@@ -27,8 +27,6 @@ class DefaultTranslationHostActions(
     override val knownEngines: List<KnownTranslationEngine> = knownEngineCatalog.knownEngines
     override val selectedEngine: Preference<TranslationEngineId> = preferences.engine
     override val defaultTargetLanguage: Preference<TranslationTargetLanguageSelection> = preferences.targetLanguage
-    override val automaticSelectionEnabled: Preference<Boolean> =
-        preferences.automaticSelectionTranslationEnabled
 
     override suspend fun deviceAvailability(): TranslationDeviceAvailability {
         val selected = selectedEngine.get()

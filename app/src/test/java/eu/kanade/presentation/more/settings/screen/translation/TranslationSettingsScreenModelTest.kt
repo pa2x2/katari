@@ -137,7 +137,6 @@ class TranslationSettingsScreenModelTest {
                     }
                 },
             )
-        override val automaticSelectionEnabled = store.getBoolean("automatic", false)
 
         override suspend fun deviceAvailability() = TranslationDeviceAvailability.Available
 

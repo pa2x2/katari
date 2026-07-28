@@ -14,7 +14,7 @@ import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-object SettingsReadiumEpubReaderScreen : AppEntryViewerSettingsScreenProjection {
+object SettingsReadiumEpubReaderScreen : AppEntryViewerSettingsScreenProjection() {
 
     override val surfaceId: String = ReadiumEpubSettingsProvider.PROVIDER_ID
 
@@ -23,7 +23,7 @@ object SettingsReadiumEpubReaderScreen : AppEntryViewerSettingsScreenProjection 
     override fun getTitleRes() = MR.strings.pref_epub_readium_reader
 
     @Composable
-    override fun getPreferences(): List<Preference> {
+    override fun getSurfacePreferences(): List<Preference> {
         val provider = remember { Injekt.get<ReadiumEpubSettingsProvider>() }
         val binder = remember { Injekt.get<ViewerSettingBinder>() }
         val theme = remember(provider, binder) { binder.bind(provider.themeSetting).asProfilePreference() }

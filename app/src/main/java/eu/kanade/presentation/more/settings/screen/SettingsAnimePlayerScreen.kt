@@ -12,7 +12,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection {
+object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
 
     override val surfaceId: String = AnimePlayerPreferences.PROVIDER_ID
 
@@ -21,7 +21,7 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection {
     override fun getTitleRes() = MR.strings.pref_anime_player
 
     @Composable
-    override fun getPreferences(): List<Preference> {
+    override fun getSurfacePreferences(): List<Preference> {
         val animePlayerPreferences = remember { Injekt.get<AnimePlayerPreferences>() }
         val settingBinder = remember { Injekt.get<ViewerSettingBinder>() }
         val pictureInPicture = remember(animePlayerPreferences, settingBinder) {

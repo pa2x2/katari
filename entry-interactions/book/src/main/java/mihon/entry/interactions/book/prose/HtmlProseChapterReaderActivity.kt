@@ -27,6 +27,7 @@ import mihon.entry.interactions.EntryChildWebViewAction
 import mihon.entry.interactions.EntryChildWebViewResolution
 import mihon.entry.interactions.EntryInteractionActivity
 import mihon.entry.interactions.EntryWebViewFeature
+import mihon.entry.interactions.book.BookAutomaticTranslationSettingsProvider
 import mihon.entry.interactions.book.BookChapterNavigationResolver
 import mihon.entry.interactions.book.BookReaderErrorScreen
 import mihon.entry.interactions.book.BookReaderLoadingScreen
@@ -217,9 +218,15 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
             return
         }
         try {
+            val settingsSurfaceId = requireNotNull(session.readerSettingsSurfaceId) {
+                "The prose reader session has no viewer settings surface"
+            }
+            val automaticTranslationSettings = Injekt.get<BookAutomaticTranslationSettingsProvider>()
             val activeTranslationController = translationController ?: BookSelectionTranslationController(
                 feature = Injekt.get<TranslationFeature>(),
                 hostActions = Injekt.get<TranslationHostActions>(),
+                automaticSelectionEnabled =
+                automaticTranslationSettings.automaticSelectionEnabled(settingsSurfaceId),
                 scope = lifecycleScope,
                 initialCapabilities = session.readerCapabilities,
             ).also { translationController = it }
@@ -234,6 +241,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
                     provider = Injekt.get<HtmlProseSettingsProvider>(),
                     binder = Injekt.get<ViewerSettingBinder>(),
                     entryId = session.entry.id,
+                    readerSettingsSurfaceId = settingsSurfaceId,
                     readerCapabilities = session.readerCapabilities,
                 ).also { it.awaitInitialLayoutMode() }
             }

@@ -27,7 +27,12 @@ class HtmlProseSettingsBindingTest {
             layoutId = provider.layoutModeSetting.id,
             resolvedLayout = HtmlProseSettingsProvider.LAYOUT_SCROLLING,
         )
-        val settings = HtmlProseSettingsBinding(provider, binder, entryId = 7L)
+        val settings = HtmlProseSettingsBinding(
+            provider,
+            binder,
+            entryId = 7L,
+            readerSettingsSurfaceId = HtmlProseSettingsProvider.PROVIDER_ID,
+        )
 
         val awaiting = async(start = CoroutineStart.UNDISPATCHED) {
             settings.awaitInitialLayoutMode()
