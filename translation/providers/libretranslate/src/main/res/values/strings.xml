@@ -1,22 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="offline_translator_setup_title">Offline Translator setup</string>
-    <string name="offline_translator_setup_description">Enable the HTTP API in Offline Translator’s Advanced settings and keep its bind mode set to localhost. Katari connects only to 127.0.0.1.</string>
+    <string name="offline_translator_setup_description">Private translation through the Offline Translator app on this device.</string>
+    <string name="offline_translator_step_models">Download language models in Offline Translator.</string>
+    <string name="offline_translator_step_api">Enable its HTTP API and bind it to localhost.</string>
+    <string name="offline_translator_step_port">Confirm the API port in Katari.</string>
     <string name="offline_translator_port_label">HTTP API port</string>
-    <string name="offline_translator_save_and_test">Save and test connection</string>
+    <string name="offline_translator_port_supporting">Default 5000 · Valid range 1–65535</string>
+    <string name="offline_translator_save_and_test">Test connection</string>
     <string name="offline_translator_open_app">Open Offline Translator</string>
     <string name="offline_translator_invalid_port">Enter a port from 1 to 65535.</string>
     <string name="offline_translator_testing">Testing connection…</string>
-    <string name="offline_translator_ready">Offline Translator is ready.</string>
-    <string name="offline_translator_connection_failed">Katari could not reach Offline Translator. Enable its HTTP API and verify the port.</string>
+    <string name="offline_translator_ready">Ready to use</string>
+    <string name="offline_translator_connection_failed">Katari could not find a usable language catalog. Open Offline Translator, download the needed models, enable its HTTP API, bind it to localhost, and verify the port.</string>
     <string name="libretranslate_server_setup_title">LibreTranslate Server setup</string>
-    <string name="libretranslate_server_setup_description">Remote servers must use HTTPS. Cleartext HTTP is accepted only for localhost and loopback addresses.</string>
+    <string name="libretranslate_server_setup_description">Translation through a LibreTranslate-compatible server you choose.</string>
+    <string name="libretranslate_server_security_title">Connection security</string>
+    <string name="libretranslate_server_security_description">HTTPS is required for remote servers. HTTP is allowed only on localhost or a loopback address. Your API key is encrypted with Android Keystore.</string>
     <string name="libretranslate_server_endpoint">Server URL</string>
     <string name="libretranslate_server_api_key">API key (optional)</string>
     <string name="libretranslate_server_save_and_test">Save and test connection</string>
     <string name="libretranslate_server_invalid_endpoint">Enter an HTTPS URL, or an HTTP loopback URL, without credentials, query, or fragment.</string>
     <string name="libretranslate_server_testing">Testing connection…</string>
-    <string name="libretranslate_server_ready">LibreTranslate Server is ready.</string>
-    <string name="libretranslate_server_connection_failed">Katari could not validate this LibreTranslate server.</string>
+    <string name="libretranslate_server_ready">Ready to use</string>
+    <string name="libretranslate_server_connection_failed">Katari could not validate this server. Check that it is reachable and exposes a LibreTranslate-compatible language catalog.</string>
     <string name="libretranslate_server_save_failed">Katari could not securely save this server configuration.</string>
+    <string name="translation_provider_done">Done</string>
+    <string name="translation_provider_status_testing">Testing connection</string>
+    <string name="translation_provider_status_success">Connection successful</string>
+    <string name="translation_provider_status_failure">Action required</string>
+    <string name="translation_provider_back">Back</string>
+    <string name="translation_provider_show_api_key">Show API key</string>
+    <string name="translation_provider_hide_api_key">Hide API key</string>
 </resources>
