@@ -104,7 +104,7 @@ Define:
 - [x] `TranslationFeature`
 - [x] `TranslationRequest`
 - [x] `TranslationLanguageTag`
-- [x] automatic/explicit source and engine selections
+- [x] automatic/explicit source and profile-default/explicit engine selections
 - [x] `TranslationPreparation`
 - [x] opaque `ReadyTranslation`
 - [x] `TranslationResult`
@@ -157,7 +157,6 @@ Exit condition: fake engines can drive the complete Translation API without conc
 
 - [x] Implement explicit engine resolution without fallback.
 - [x] Store one explicit profile engine and support an explicit per-request override.
-- [x] Migrate the legacy Automatic preference to the Android system engine.
 - [x] Return `SelectedEngineUnavailable` without mutating the saved preference.
 - [x] Return a target chooser when source equals target.
 - [x] Enforce provider limits and the 10,000-code-point shared ceiling.
@@ -225,7 +224,7 @@ Exit condition: presenter/controller tests protect user-visible transitions and 
 - [x] Add provider documentation/privacy links when supplied by provider metadata.
 - [x] Add an inline, prefilled, transient Translation playground.
 - [x] Show pair-specific setup before the playground executes and refresh in-progress setup automatically.
-- [x] Debounce playground edits and display the translated result without a separate execution action.
+- [x] Debounce playground edits and display immediate-provider results without a separate execution action.
 - [x] Use full-screen language and engine screens on the app navigator instead of nested dialogs.
 - [x] Keep playground language and engine experiments session-only until explicitly saved as profile defaults.
 - [x] Drive the playground through the production `TranslationFeature` and shared session renderer.

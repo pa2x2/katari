@@ -21,7 +21,7 @@ Included:
 - profile-owned engine and target preferences;
 - reusable anchored popup and adaptive setup/result sheet;
 - top-level Translation settings;
-- an end-to-end `Test translation` consumer;
+- an end-to-end Settings playground consumer;
 - user documentation for platform and OEM limitations.
 
 Deferred:
@@ -54,8 +54,7 @@ explicitly deferred.
 
 ## Provider resolution
 
-Every profile stores one explicit engine ID. Existing `Automatic` values migrate once to the bundled Android system
-engine.
+Every profile stores one explicit engine ID.
 
 Resolution rules:
 
@@ -156,7 +155,7 @@ Coroutine cancellation is cancellation, not a provider error. Changing selection
 - clear when the selection, document, or host disappears.
 - follow provider invocation policy in readers;
 - automatically recheck setup while a provider reports progress;
-- debounce and automatically execute ready playground requests.
+- debounce playground requests and automatically execute them only when the provider declares immediate invocation.
 
 Use an anchored, non-modal popup when an anchor exists and content fits. Use measured layout overflow, not a character
 threshold. Promote to the adaptive sheet for:

@@ -2,6 +2,9 @@
 
 Date: 2026-07-28
 
+Historical record: this validation predates the explicit-engine playground redesign in `e84547f91`; its Automatic
+engine and dialog observations are not current behavior.
+
 ## Automated checks
 
 Passed:

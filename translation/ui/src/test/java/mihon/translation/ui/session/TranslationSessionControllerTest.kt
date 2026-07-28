@@ -82,25 +82,6 @@ class TranslationSessionControllerTest {
     }
 
     @Test
-    fun `automatic session executes without exposing an explicit provider action`() = runTest {
-        val feature = FakeTranslationFeature(
-            invocationPolicy = TranslationInvocationPolicy.ExplicitAction("Translate"),
-        )
-        val controller = TranslationSessionController(
-            feature = feature,
-            parentScope = backgroundScope,
-            executionMode = TranslationSessionExecutionMode.AutoExecute,
-            selectionSettleDelayMillis = 0,
-        )
-
-        controller.submit(input("hello"))
-        runCurrent()
-
-        feature.translatedTexts shouldContainExactly listOf("hello")
-        controller.state.value.shouldBeInstanceOf<TranslationSessionState.Success>()
-    }
-
-    @Test
     fun `unresponsive execution leaves translating state after the timeout`() = runTest {
         val feature = object : TranslationFeature {
             override suspend fun prepare(request: TranslationRequest): TranslationPreparation {
@@ -114,7 +95,7 @@ class TranslationSessionControllerTest {
         val controller = TranslationSessionController(
             feature = feature,
             parentScope = backgroundScope,
-            executionMode = TranslationSessionExecutionMode.AutoExecute,
+            executionMode = TranslationSessionExecutionMode.FollowProviderPolicy,
             selectionSettleDelayMillis = 0,
             executionTimeoutMillis = 1_000,
         )

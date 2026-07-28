@@ -41,7 +41,7 @@ internal class TranslationSettingsScreenModel(
     val controller = TranslationSessionController(
         feature = feature,
         parentScope = screenModelScope,
-        executionMode = TranslationSessionExecutionMode.AutoExecute,
+        executionMode = TranslationSessionExecutionMode.FollowProviderPolicy,
         selectionSettleDelayMillis = PLAYGROUND_DEBOUNCE_MILLIS,
     )
     private val mutablePlayground = MutableStateFlow(initialPlaygroundState())

@@ -14,7 +14,7 @@ class ProfileTranslationPreferences(
         key = "translation_engine",
         defaultValue = defaultEngine,
         serializer = TranslationEngineId::value,
-        deserializer = { deserializeTranslationEngine(it, defaultEngine) },
+        deserializer = ::TranslationEngineId,
     )
 
     val targetLanguage: Preference<TranslationTargetLanguageSelection> = preferenceStore.getObjectFromString(
@@ -49,12 +49,4 @@ class ProfileTranslationPreferences(
     private companion object {
         const val DEFAULT_TARGET_VALUE = "default"
     }
-}
-
-internal fun deserializeTranslationEngine(
-    value: String,
-    defaultEngine: TranslationEngineId,
-): TranslationEngineId {
-    if (value == "automatic") return defaultEngine
-    return runCatching { TranslationEngineId(value) }.getOrDefault(defaultEngine)
 }

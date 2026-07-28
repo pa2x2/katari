@@ -99,12 +99,10 @@ internal fun TranslationEnginePickerContent(
                                     text = engine.engineName,
                                     style = MaterialTheme.typography.titleMedium,
                                 )
-                                if (engine.shouldShowProviderName()) {
-                                    Text(
-                                        text = engine.providerName,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
+                                Text(
+                                    text = engine.providerName,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
                             }
                             if (selected == engine.id) {
                                 Icon(
@@ -147,18 +145,6 @@ internal fun translationEngineLabel(
     engines: List<KnownTranslationEngine>,
 ): String {
     val known = engines.firstOrNull { it.id == engine }
-    return known?.let {
-        if (it.shouldShowProviderName()) {
-            "${it.engineName} · ${it.providerName}"
-        } else {
-            it.engineName
-        }
-    }
+    return known?.let { "${it.engineName} · ${it.providerName}" }
         ?: stringResource(MR.strings.translation_settings_engine_unknown, engine.value)
 }
-
-private fun KnownTranslationEngine.shouldShowProviderName(): Boolean {
-    return providerId.value != SYSTEM_TRANSLATION_PROVIDER_ID
-}
-
-private const val SYSTEM_TRANSLATION_PROVIDER_ID = "android"

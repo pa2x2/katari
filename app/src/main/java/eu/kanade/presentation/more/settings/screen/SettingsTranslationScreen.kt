@@ -90,8 +90,16 @@ object SettingsTranslationScreen : SearchableSettings {
         val playground by model.playground.collectAsState()
         val defaultEngine by model.preferences.engine.collectPreferenceAsState()
         val defaultTarget by model.preferences.targetLanguage.collectPreferenceAsState()
+        val searchHighlightKey = remember { SearchableSettings.highlightKey }
         var retryAfterResume by remember { mutableStateOf(false) }
 
+        DisposableEffect(searchHighlightKey) {
+            onDispose {
+                if (SearchableSettings.highlightKey == searchHighlightKey) {
+                    SearchableSettings.highlightKey = null
+                }
+            }
+        }
         DisposableEffect(lifecycleOwner, model) {
             val observer = LifecycleEventObserver { _, event ->
                 if (event == Lifecycle.Event.ON_RESUME && retryAfterResume) {
@@ -174,6 +182,12 @@ object SettingsTranslationScreen : SearchableSettings {
             defaultEngine = defaultEngine,
             defaultTarget = defaultTarget,
             controller = model.controller,
+            searchHighlightKey = searchHighlightKey,
+            onSearchHighlightConsumed = { key ->
+                if (SearchableSettings.highlightKey == key) {
+                    SearchableSettings.highlightKey = null
+                }
+            },
             onBack = backPress?.let { { it.invoke() } },
             onTextChange = model::setText,
             onChooseSource = {

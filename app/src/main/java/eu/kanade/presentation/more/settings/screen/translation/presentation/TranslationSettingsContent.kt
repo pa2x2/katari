@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.outlined.Info
@@ -25,6 +26,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -36,6 +38,8 @@ import eu.kanade.presentation.more.settings.screen.translation.engine.translatio
 import eu.kanade.presentation.more.settings.screen.translation.language.defaultTranslationTargetLabel
 import eu.kanade.presentation.more.settings.screen.translation.language.displayName
 import eu.kanade.presentation.more.settings.widget.ProfileSpecificChip
+import eu.kanade.presentation.more.settings.widget.highlightBackground
+import kotlinx.coroutines.delay
 import mihon.translation.api.KnownTranslationEngine
 import mihon.translation.api.TranslationEngineId
 import mihon.translation.api.TranslationTargetLanguageSelection
@@ -47,6 +51,7 @@ import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 internal fun TranslationSettingsContent(
@@ -55,6 +60,8 @@ internal fun TranslationSettingsContent(
     defaultEngine: TranslationEngineId,
     defaultTarget: TranslationTargetLanguageSelection,
     controller: TranslationSessionController,
+    searchHighlightKey: String?,
+    onSearchHighlightConsumed: (String) -> Unit,
     onBack: (() -> Unit)?,
     onTextChange: (String) -> Unit,
     onChooseSource: () -> Unit,
@@ -66,6 +73,26 @@ internal fun TranslationSettingsContent(
     onUseEngineAsDefault: () -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
 ) {
+    val playgroundTitle = stringResource(MR.strings.translation_settings_playground)
+    val engineTitle = stringResource(MR.strings.translation_settings_engine)
+    val targetTitle = stringResource(MR.strings.translation_settings_target)
+    val listState = rememberLazyListState()
+    val highlightedItemIndex = when (searchHighlightKey) {
+        playgroundTitle -> PLAYGROUND_ITEM_INDEX
+        engineTitle,
+        targetTitle,
+        -> DEFAULTS_ITEM_INDEX
+        else -> null
+    }
+    LaunchedEffect(searchHighlightKey, highlightedItemIndex) {
+        val key = searchHighlightKey ?: return@LaunchedEffect
+        if (highlightedItemIndex != null) {
+            delay(SEARCH_HIGHLIGHT_SCROLL_DELAY)
+            listState.animateScrollToItem(highlightedItemIndex)
+        }
+        onSearchHighlightConsumed(key)
+    }
+
     Scaffold(
         topBar = {
             AppBar(
@@ -82,6 +109,7 @@ internal fun TranslationSettingsContent(
     ) { contentPadding ->
         ScrollbarLazyColumn(
             modifier = Modifier.fillMaxSize(),
+            state = listState,
             contentPadding = contentPadding,
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
         ) {
@@ -101,6 +129,7 @@ internal fun TranslationSettingsContent(
                     onChooseEngine = onChooseEngine,
                     onUseEngineAsDefault = onUseEngineAsDefault,
                     onExternalAction = onExternalAction,
+                    highlighted = searchHighlightKey == playgroundTitle,
                 )
             }
             item {
@@ -113,6 +142,8 @@ internal fun TranslationSettingsContent(
                     defaultTarget = defaultTarget,
                     onChooseEngine = onChooseDefaultEngine,
                     onChooseTarget = onChooseDefaultTarget,
+                    highlightedEngine = searchHighlightKey == engineTitle,
+                    highlightedTarget = searchHighlightKey == targetTitle,
                 )
             }
             item {
@@ -150,6 +181,7 @@ private fun TranslationPlayground(
     onChooseEngine: () -> Unit,
     onUseEngineAsDefault: () -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
+    highlighted: Boolean,
 ) {
     ElevatedCard(
         modifier = Modifier
@@ -159,7 +191,9 @@ private fun TranslationPlayground(
         shape = MaterialTheme.shapes.extraLarge,
     ) {
         Column(
-            modifier = Modifier.padding(MaterialTheme.padding.large),
+            modifier = Modifier
+                .highlightBackground(highlighted)
+                .padding(MaterialTheme.padding.large),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
         ) {
             Column {
@@ -287,6 +321,8 @@ private fun TranslationDefaults(
     defaultTarget: TranslationTargetLanguageSelection,
     onChooseEngine: () -> Unit,
     onChooseTarget: () -> Unit,
+    highlightedEngine: Boolean,
+    highlightedTarget: Boolean,
 ) {
     OutlinedCard(
         modifier = Modifier
@@ -302,7 +338,9 @@ private fun TranslationDefaults(
             trailingContent = {
                 Icon(Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = null)
             },
-            modifier = Modifier.clickable(onClick = onChooseEngine),
+            modifier = Modifier
+                .highlightBackground(highlightedEngine)
+                .clickable(onClick = onChooseEngine),
         )
         HorizontalDivider()
         ListItem(
@@ -322,7 +360,9 @@ private fun TranslationDefaults(
             trailingContent = {
                 Icon(Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = null)
             },
-            modifier = Modifier.clickable(onClick = onChooseTarget),
+            modifier = Modifier
+                .highlightBackground(highlightedTarget)
+                .clickable(onClick = onChooseTarget),
         )
     }
 }
@@ -347,3 +387,7 @@ internal const val TRANSLATION_TARGET_TAG = "translation_target"
 internal const val TRANSLATION_ENGINE_TAG = "translation_engine"
 internal const val TRANSLATION_INPUT_TAG = "translation_input"
 internal const val TRANSLATION_OUTPUT_TAG = "translation_output"
+
+private const val PLAYGROUND_ITEM_INDEX = 1
+private const val DEFAULTS_ITEM_INDEX = 3
+private val SEARCH_HIGHLIGHT_SCROLL_DELAY = 500.milliseconds

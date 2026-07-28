@@ -180,13 +180,8 @@ class TranslationSessionController(
                 mutableState.value = TranslationSessionState.Ready(input, preparation)
                 if (
                     autoExecuteImmediate &&
-                    (
-                        executionMode == TranslationSessionExecutionMode.AutoExecute ||
-                            (
-                                executionMode == TranslationSessionExecutionMode.FollowProviderPolicy &&
-                                    preparation.presentation.invocationPolicy == TranslationInvocationPolicy.Immediate
-                                )
-                        )
+                    executionMode == TranslationSessionExecutionMode.FollowProviderPolicy &&
+                    preparation.presentation.invocationPolicy == TranslationInvocationPolicy.Immediate
                 ) {
                     executeReady(operationGeneration, input, preparation)
                 }
@@ -319,6 +314,5 @@ class TranslationSessionController(
 
 enum class TranslationSessionExecutionMode {
     FollowProviderPolicy,
-    AutoExecute,
     AwaitUserAction,
 }

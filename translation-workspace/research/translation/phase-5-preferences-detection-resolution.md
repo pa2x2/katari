@@ -22,7 +22,7 @@ owner within its own runtime module rather than adding a Translation-owned facto
 
 Profile-owned:
 
-- engine selection, defaulting to Automatic;
+- one explicit engine ID, defaulting to the bundled Android system engine;
 - explicit target language, defaulting dynamically to the effective AppCompat application/system locale;
 - a false-by-default future reader automatic-selection opt-in, with no UI or behavior yet.
 
@@ -42,19 +42,11 @@ When the Android platform detector is unavailable, the detector list is empty an
 
 ## Engine resolution
 
-An engine supplies independent ready and setup priorities through the SPI. This keeps the resolver provider-neutral:
+A request's explicit override wins over the saved profile engine. Otherwise, the resolver uses the saved engine ID.
+The registry resolves only that exact engine; there is no candidate ranking or fallback.
 
-1. prepare every eligible automatic candidate;
-2. choose a ready candidate before every setup or unavailable candidate;
-3. choose the highest declared priority within the applicable state class;
-4. retain registry order only as a deterministic equal-priority tie-break.
-
-The Android system engine is the only production candidate in the first slice. Multi-engine ranking remains covered
-with fakes so future providers do not require changing the Feature contract.
-
-An explicit request wins over the saved profile selection. A saved explicit engine that is absent produces
-`SelectedEngineUnavailable` and is not changed. Explicit engines never fall back. Provider limits are evaluated before
-preparation; the shared 10,000-code-point ceiling remains absolute.
+A saved engine that is absent produces `SelectedEngineUnavailable` and is not changed. Provider limits are evaluated
+before preparation; the shared 10,000-code-point ceiling remains absolute.
 
 Immediately before execution, the Feature checks registry identity and calls the provider's explicit
 `revalidate(ready)` operation. This keeps lifecycle authority with the provider instead of abandoning a

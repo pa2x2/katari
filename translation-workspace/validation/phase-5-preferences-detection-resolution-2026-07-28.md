@@ -2,6 +2,9 @@
 
 Date: 2026-07-28
 
+Historical record: the automatic candidate-ranking behavior validated at this milestone was superseded by explicit
+engine resolution in `e84547f91`.
+
 This record describes the retained Phase 5 behavior after the Phase 7 provider cleanup. Phase 7 validation contains
 the current command evidence.
 

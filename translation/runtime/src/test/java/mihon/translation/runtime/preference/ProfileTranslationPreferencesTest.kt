@@ -42,13 +42,6 @@ class ProfileTranslationPreferencesTest {
         preferences.automaticSelectionTranslationEnabled.get() shouldBe false
     }
 
-    @Test
-    fun `legacy automatic engine migrates once to the bundled default`() {
-        deserializeTranslationEngine("automatic", DEFAULT_ENGINE) shouldBe DEFAULT_ENGINE
-        deserializeTranslationEngine("example.engine", DEFAULT_ENGINE) shouldBe
-            TranslationEngineId("example.engine")
-    }
-
     private companion object {
         val DEFAULT_ENGINE = TranslationEngineId("android-system")
     }
