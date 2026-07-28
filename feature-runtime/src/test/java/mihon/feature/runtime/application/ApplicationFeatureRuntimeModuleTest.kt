@@ -128,6 +128,32 @@ class ApplicationFeatureRuntimeModuleTest {
         error.message shouldContain "runtime boundaries are installed by multiple modules"
     }
 
+    @Test
+    fun `installed modules validate the assembled application graph`() {
+        var validated = false
+        val installation = installApplicationFeatureRuntimeModules(
+            registrar = registrar,
+            modules = listOf(
+                module("example.graph") {
+                    ApplicationFeatureRuntimeArtifacts(
+                        graphValidators = listOf(
+                            ApplicationFeatureRuntimeGraphValidator { evaluation ->
+                                evaluation.obligations shouldBe emptyList()
+                                validated = true
+                            },
+                        ),
+                    )
+                },
+            ),
+            context = context,
+        )
+        val composition = createFeatureRuntimeComposition(listOf(installation.featureRuntimeInputs))
+
+        validateInstalledApplicationFeatureRuntimeGraph(installation, composition.evaluation)
+
+        validated shouldBe true
+    }
+
     private fun module(
         id: String,
         installRuntime:

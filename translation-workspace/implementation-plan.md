@@ -1,6 +1,6 @@
 # Application-scoped Feature Graph and Translation Feature implementation plan
 
-Status: Phase 3 complete; awaiting approval to begin Phase 4.
+Status: Phase 4 complete; awaiting approval to commit and begin Phase 5.
 
 The manifestos in this directory are authoritative:
 
@@ -91,26 +91,26 @@ Exit condition: architecture gates, report generation, and checked-in developer 
 
 Add:
 
-- [ ] `:translation:api`
-- [ ] `:translation:spi`
-- [ ] `:translation:runtime`
-- [ ] `:translation:mlkit`
-- [ ] `:translation:ui`
+- [x] `:translation:api`
+- [x] `:translation:spi`
+- [x] `:translation:runtime`
+- [x] `:translation:mlkit`
+- [x] `:translation:ui`
 
 ### `translation:api`
 
 Define:
 
-- [ ] `TranslationFeature`
-- [ ] `TranslationRequest`
-- [ ] `TranslationLanguageTag`
-- [ ] automatic/explicit source and engine selections
-- [ ] `TranslationPreparation`
-- [ ] opaque `ReadyTranslation`
-- [ ] `TranslationResult`
-- [ ] engine/model status types
-- [ ] setup, choice, unavailable, rejection, and failure reasons
-- [ ] provider presentation and invocation policy
+- [x] `TranslationFeature`
+- [x] `TranslationRequest`
+- [x] `TranslationLanguageTag`
+- [x] automatic/explicit source and engine selections
+- [x] `TranslationPreparation`
+- [x] opaque `ReadyTranslation`
+- [x] `TranslationResult`
+- [x] engine/model status types
+- [x] setup, choice, unavailable, rejection, and failure reasons
+- [x] provider presentation and invocation policy
 
 The API must contain no `EntryType`, reader, OCR, ML Kit, or OEM implementation types.
 
@@ -118,22 +118,22 @@ The API must contain no `EntryType`, reader, OCR, ML Kit, or OEM implementation 
 
 Define internal contracts for:
 
-- [ ] translation engines;
-- [ ] source-language detectors;
-- [ ] engine readiness/capability inspection;
-- [ ] model inventory/download/deletion;
-- [ ] provider presentation and attribution assets;
-- [ ] known-engine catalog entries.
+- [x] translation engines;
+- [x] source-language detectors;
+- [x] engine readiness/capability inspection;
+- [x] model inventory/download/deletion;
+- [x] provider presentation and attribution assets;
+- [x] known-engine catalog entries.
 
 ### Feature contribution
 
-- [ ] Move the production report host to the generated application topology when the first application Feature
+- [x] Move the production report host to the generated application topology when the first application Feature
   descriptor is added; do not introduce a validation-only module list.
-- [ ] Define `TranslationEngineRegistry` capability.
-- [ ] Contribute it to the application subject.
-- [ ] Add an application-scoped Translation integration requiring the registry.
-- [ ] Install `TranslationFeature` as the application-facing runtime boundary.
-- [ ] Assert that the production integration is applicable at runtime construction.
+- [x] Define `TranslationEngineRegistry` capability.
+- [x] Contribute it to the application subject.
+- [x] Add an application-scoped Translation integration requiring the registry.
+- [x] Install `TranslationFeature` as the application-facing runtime boundary.
+- [x] Assert that the production integration is applicable at runtime construction.
 
 Exit condition: fake engines can drive the complete Translation API without Android or Google implementations.
 

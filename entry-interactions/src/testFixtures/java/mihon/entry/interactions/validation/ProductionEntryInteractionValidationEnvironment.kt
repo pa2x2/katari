@@ -47,6 +47,7 @@ import mihon.feature.runtime.ApplicationFeatureRuntimeModule
 import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.createFeatureRuntimeComposition
 import mihon.feature.runtime.installApplicationFeatureRuntimeModules
+import mihon.feature.runtime.validateInstalledApplicationFeatureRuntimeGraph
 import mihon.feature.runtime.validateInstalledApplicationFeatureRuntimeModules
 import nl.adaptivity.xmlutil.serialization.XML
 import okhttp3.OkHttpClient
@@ -148,6 +149,10 @@ class ProductionEntryInteractionValidationEnvironment(
         val installation = Injekt.get<EntryFeatureRuntimeInstallation>()
         validateInstalledEntryFeatureRuntimeModules(installation.modules)
         validateInstalledApplicationFeatureRuntimeModules(applicationRuntimeInstallation)
+        validateInstalledApplicationFeatureRuntimeGraph(
+            applicationRuntimeInstallation,
+            Injekt.get<FeatureRuntimeComposition>().evaluation,
+        )
         return Injekt.get<EntryInteractionComposition>()
     }
 

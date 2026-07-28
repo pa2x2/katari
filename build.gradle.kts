@@ -263,6 +263,8 @@ val verifyFeatureArchitecture = tasks.register("verifyFeatureArchitecture") {
         ":feature-graph:testDebugUnitTest",
         ":feature-runtime:testDebugUnitTest",
         ":feature-validation:testDebugUnitTest",
+        ":translation:api:testDebugUnitTest",
+        ":translation:runtime:testDebugUnitTest",
         ":entry-interactions:documentation:testDebugUnitTest",
         ":entry-interactions:testDebugUnitTest",
         ":app:generateFeatureReport",

@@ -55,6 +55,8 @@ import mihon.feature.runtime.FeatureRuntimeWarmup
 import mihon.feature.runtime.createFeatureRuntimeComposition
 import mihon.feature.runtime.installApplicationFeatureRuntimeModules
 import mihon.feature.runtime.productionApplicationFeatureRuntimeModules
+import mihon.feature.runtime.validateInstalledApplicationFeatureRuntimeGraph
+import mihon.feature.runtime.validateInstalledApplicationFeatureRuntimeModules
 import nl.adaptivity.xmlutil.XmlDeclMode
 import nl.adaptivity.xmlutil.core.XmlVersion
 import nl.adaptivity.xmlutil.serialization.DefaultXmlSerializationPolicy
@@ -277,6 +279,11 @@ class AppModule(val app: Application) : InjektModule {
         }
         addSingletonFactory {
             FeatureRuntimeWarmup {
+                validateInstalledApplicationFeatureRuntimeModules(applicationFeatureRuntimeInstallation)
+                validateInstalledApplicationFeatureRuntimeGraph(
+                    applicationFeatureRuntimeInstallation,
+                    get<FeatureRuntimeComposition>().evaluation,
+                )
                 entryRuntimeInstallation.warmups.forEach { it() }
                 applicationFeatureRuntimeInstallation.warmups.forEach { it() }
             }

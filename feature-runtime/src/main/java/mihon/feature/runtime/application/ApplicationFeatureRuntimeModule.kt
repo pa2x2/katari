@@ -8,6 +8,7 @@ import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureDurableExecutionParticipantBinding
 import mihon.feature.graph.FeatureExecutionParticipantBinding
 import mihon.feature.graph.FeatureGraphContributor
+import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.SpecializedAdapter
 import mihon.feature.graph.featureGraphContributor
 import uy.kohesive.injekt.api.InjektRegistrar
@@ -47,6 +48,7 @@ data class ApplicationFeatureRuntimeArtifacts(
     val executionBindings: List<FeatureExecutionParticipantBinding<*>> = emptyList(),
     val durableExecutionBindings: List<FeatureDurableExecutionParticipantBinding<*>> = emptyList(),
     val runtimeBoundaries: List<ApplicationFeatureRuntimeBoundary<*>> = emptyList(),
+    val graphValidators: List<ApplicationFeatureRuntimeGraphValidator> = emptyList(),
     val warmups: List<() -> Unit> = emptyList(),
 )
 
@@ -58,6 +60,10 @@ data class ApplicationFeatureRuntimeBoundary<T : Any>(
 inline fun <reified T : Any> applicationFeatureRuntimeBoundary(
     noinline resolve: () -> T,
 ): ApplicationFeatureRuntimeBoundary<T> = ApplicationFeatureRuntimeBoundary(T::class, resolve)
+
+fun interface ApplicationFeatureRuntimeGraphValidator {
+    fun validate(evaluation: FeatureGraphEvaluation)
+}
 
 data class InstalledApplicationFeatureRuntimeModule(
     val module: ApplicationFeatureRuntimeModule,
@@ -117,6 +123,17 @@ fun validateInstalledApplicationFeatureRuntimeModules(
             check(boundary.type.isInstance(resolved)) {
                 "Application Feature module ${installed.module.id} resolved ${resolved::class} for ${boundary.type}"
             }
+        }
+    }
+}
+
+fun validateInstalledApplicationFeatureRuntimeGraph(
+    installation: ApplicationFeatureRuntimeInstallation,
+    evaluation: FeatureGraphEvaluation,
+) {
+    installation.modules.forEach { installed ->
+        installed.artifacts.graphValidators.forEach { validator ->
+            validator.validate(evaluation)
         }
     }
 }

@@ -231,6 +231,7 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.presentationCore.path)))
     implementation(dependencies.project(mapOf("path" to projects.presentationWidget.path)))
     implementation(dependencies.project(mapOf("path" to projects.telemetry.path)))
+    implementation(dependencies.project(mapOf("path" to projects.translation.runtime.path)))
 
     // Compose
     implementation(libs.androidx.activity.compose)
@@ -340,6 +341,7 @@ dependencies {
     testImplementation(projects.entryInteractions.documentation)
     testImplementation(projects.featureValidation)
     testImplementation(testFixtures(projects.entryInteractions))
+    testImplementation(testFixtures(projects.translation.runtime))
     testRuntimeOnly(libs.junit.platform.launcher)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.uiTestJunit4)

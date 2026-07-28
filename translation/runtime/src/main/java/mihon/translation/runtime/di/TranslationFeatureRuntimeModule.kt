@@ -1,0 +1,39 @@
+package mihon.translation.runtime
+
+import mihon.feature.runtime.ApplicationFeatureRuntimeArtifacts
+import mihon.feature.runtime.ApplicationFeatureRuntimeGraphValidator
+import mihon.feature.runtime.ApplicationFeatureRuntimeModule
+import mihon.feature.runtime.applicationFeatureRuntimeBoundary
+import mihon.translation.api.TranslationFeature
+import mihon.translation.spi.KnownTranslationEngineCatalog
+import mihon.translation.spi.TranslationEngineRegistry
+import uy.kohesive.injekt.api.addSingletonFactory
+
+val translationFeatureRuntimeModule = ApplicationFeatureRuntimeModule(
+    id = "translation",
+    contributor = TranslationFeatureContributor,
+) {
+    val registry = DefaultTranslationEngineRegistry(engines = emptyList())
+    val feature = DefaultTranslationFeature(
+        engineRegistry = registry,
+        knownEngineCatalog = registry,
+        sourceLanguageDetectors = emptyList(),
+        defaultTargetLanguageResolver = TranslationDefaultTargetLanguageResolver { null },
+    )
+
+    addSingletonFactory<TranslationEngineRegistry> { registry }
+    addSingletonFactory<KnownTranslationEngineCatalog> { registry }
+    addSingletonFactory<TranslationFeature> { feature }
+
+    ApplicationFeatureRuntimeArtifacts(
+        capabilityProviders = listOf(TranslationEngineRegistryCapability.bind(registry)),
+        runtimeBoundaries = listOf(
+            applicationFeatureRuntimeBoundary<TranslationFeature> { feature },
+        ),
+        graphValidators = listOf(
+            ApplicationFeatureRuntimeGraphValidator { evaluation ->
+                TranslationFeatureGraphStateValidator(evaluation).validate()
+            },
+        ),
+    )
+}
