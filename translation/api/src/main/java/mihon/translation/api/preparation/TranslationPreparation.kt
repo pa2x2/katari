@@ -96,6 +96,8 @@ sealed interface TranslationUnavailableReason {
 
     data object ServiceMissing : TranslationUnavailableReason
 
+    data object SystemSettingsUnavailable : TranslationUnavailableReason
+
     data class UnsupportedLanguage(
         val language: TranslationLanguageTag,
     ) : TranslationUnavailableReason

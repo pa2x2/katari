@@ -23,12 +23,11 @@ class TranslationFeatureContractValidationContributor : FeatureValidationContrib
                     feature = TRANSLATION_FEATURE_ID,
                     contract = TranslationFeatureBehaviorContract,
                 ),
-            ) { input ->
-                val registry = input.provider(TranslationEngineRegistryCapability.definition)
-                val catalog = DefaultTranslationEngineRegistry(registry.engines)
+            ) {
+                val registry = DefaultTranslationEngineRegistry(emptyList())
                 val feature = DefaultTranslationFeature(
                     engineRegistry = registry,
-                    knownEngineCatalog = catalog,
+                    knownEngineCatalog = registry,
                     sourceLanguageDetectors = emptyList(),
                     defaultTargetLanguageResolver = TranslationDefaultTargetLanguageResolver { null },
                 )

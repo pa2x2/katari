@@ -1,6 +1,6 @@
 # Application-scoped Feature Graph and Translation Feature implementation plan
 
-Status: Phase 5 complete; awaiting milestone approval before Phase 6.
+Status: Phase 6 complete; awaiting milestone approval before Phase 7.
 
 The manifestos in this directory are authoritative:
 
@@ -170,13 +170,13 @@ Exit condition: resolver tests cover the complete build/device/model/language ma
 
 ## Phase 6: Android system engine
 
-- [ ] Implement API-31-gated `TranslationManager` access.
-- [ ] Query capabilities on a worker dispatcher.
-- [ ] Map `ON_DEVICE`, `AVAILABLE_TO_DOWNLOAD`, `DOWNLOADING`, and unavailable states precisely.
-- [ ] Observe capability updates and release listeners.
-- [ ] Use OEM settings `PendingIntent` only when supplied.
-- [ ] Create, invoke, cancel, and destroy translators safely.
-- [ ] Return typed service-missing, settings-missing, pair-unsupported, and runtime-failure states.
+- [x] Implement API-31-gated `TranslationManager` access.
+- [x] Query capabilities on a worker dispatcher.
+- [x] Map `ON_DEVICE`, `AVAILABLE_TO_DOWNLOAD`, `DOWNLOADING`, and unavailable states precisely.
+- [x] Observe capability updates and release listeners.
+- [x] Use OEM settings `PendingIntent` only when supplied.
+- [x] Create, invoke, cancel, and destroy translators safely.
+- [x] Return typed service-missing, settings-missing, pair-unsupported, and runtime-failure states.
 
 Exit condition: the engine passes contract tests using Android wrapper fakes and contains no OEM assumptions.
 

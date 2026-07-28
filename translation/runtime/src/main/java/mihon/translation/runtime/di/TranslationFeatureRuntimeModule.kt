@@ -5,8 +5,12 @@ import mihon.feature.runtime.ApplicationFeatureRuntimeGraphValidator
 import mihon.feature.runtime.ApplicationFeatureRuntimeModule
 import mihon.feature.runtime.applicationFeatureRuntimeBoundary
 import mihon.translation.api.TranslationFeature
+import mihon.translation.runtime.system.AndroidSystemTranslationEngine
+import mihon.translation.runtime.system.DefaultAndroidSystemTranslationPlatform
+import mihon.translation.runtime.system.createAndroidTranslationManagerBridge
 import mihon.translation.spi.KnownTranslationEngineCatalog
 import mihon.translation.spi.TranslationEngineRegistry
+import mihon.translation.spi.TranslationEngineSetupRegistry
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
 import uy.kohesive.injekt.api.addSingletonFactory
 
@@ -20,7 +24,14 @@ val translationFeatureRuntimeModule = ApplicationFeatureRuntimeModule(
     )
     val profilePreferences = profilePreferencesOwner.create()
     val devicePreferences = DeviceTranslationPreferences(context.dependencies.basePreferenceStore)
-    val registry = DefaultTranslationEngineRegistry(engines = emptyList())
+    val androidSystemEngine = AndroidSystemTranslationEngine(
+        DefaultAndroidSystemTranslationPlatform(
+            sdkInt = android.os.Build.VERSION.SDK_INT,
+            bridge = createAndroidTranslationManagerBridge(context.application),
+        ),
+    )
+    val registry = DefaultTranslationEngineRegistry(engines = listOf(androidSystemEngine))
+    val setupRegistry = DefaultTranslationEngineSetupRegistry(setups = listOf(androidSystemEngine))
     val feature = DefaultTranslationFeature(
         engineRegistry = registry,
         knownEngineCatalog = registry,
@@ -35,6 +46,7 @@ val translationFeatureRuntimeModule = ApplicationFeatureRuntimeModule(
     addSingletonFactory { profilePreferences }
     addSingletonFactory { devicePreferences }
     addSingletonFactory<TranslationEngineRegistry> { registry }
+    addSingletonFactory<TranslationEngineSetupRegistry> { setupRegistry }
     addSingletonFactory<KnownTranslationEngineCatalog> { registry }
     addSingletonFactory<TranslationFeature> { feature }
 
