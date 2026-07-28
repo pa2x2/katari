@@ -12,7 +12,6 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.OpenInFull
-import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -222,18 +221,6 @@ private fun SuccessContent(
                 )
             }
         }
-        IconButton(
-            onClick = {
-                onExternalAction(
-                    TranslationSessionExternalAction.UseTargetAsDefault(state.result.targetLanguage),
-                )
-            },
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.PushPin,
-                contentDescription = stringResource(MR.strings.action_use_as_default),
-            )
-        }
     }
     DocumentationAction(state.result.presentation.documentationUrl, onExternalAction)
 }
@@ -420,7 +407,9 @@ private fun FailedContent(
             TranslationSessionFailure.UnexpectedPreparationFailure,
             TranslationSessionFailure.UnexpectedExecutionFailure,
             -> stringResource(MR.strings.translation_failed)
-            TranslationSessionFailure.ExecutionTimedOut ->
+            TranslationSessionFailure.PreparationTimedOut,
+            TranslationSessionFailure.ExecutionTimedOut,
+            ->
                 stringResource(MR.strings.translation_timed_out)
             is TranslationSessionFailure.ExecutionFailure -> {
                 when (val reason = failure.execution.reason) {

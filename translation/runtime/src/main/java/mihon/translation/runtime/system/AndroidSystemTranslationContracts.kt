@@ -21,7 +21,6 @@ internal sealed interface AndroidSystemTranslationInspection {
 
     data class Capability(
         val state: AndroidSystemCapabilityState,
-        val settingsAvailable: Boolean,
     ) : AndroidSystemTranslationInspection
 
     data object UnsupportedPair : AndroidSystemTranslationInspection

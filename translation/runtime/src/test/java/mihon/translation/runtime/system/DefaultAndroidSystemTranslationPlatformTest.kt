@@ -17,10 +17,8 @@ class DefaultAndroidSystemTranslationPlatformTest {
         )
         val platform = DefaultAndroidSystemTranslationPlatform(31, bridge)
 
-        platform.inspect(pair("en-US", "pl-PL")) shouldBe AndroidSystemTranslationInspection.Capability(
-            AndroidSystemCapabilityState.OnDevice,
-            settingsAvailable = true,
-        )
+        platform.inspect(pair("en-US", "pl-PL")) shouldBe
+            AndroidSystemTranslationInspection.Capability(AndroidSystemCapabilityState.OnDevice)
         platform.translate(pair("en-US", "pl-PL"), "Hello") shouldBe
             AndroidSystemPlatformExecution.Success("Cześć")
 
@@ -57,10 +55,7 @@ class DefaultAndroidSystemTranslationPlatformTest {
         )
 
         execution.await() shouldBe AndroidSystemPlatformExecution.CapabilityChanged(
-            AndroidSystemTranslationInspection.Capability(
-                AndroidSystemCapabilityState.Downloading,
-                settingsAvailable = true,
-            ),
+            AndroidSystemTranslationInspection.Capability(AndroidSystemCapabilityState.Downloading),
         )
         bridge.cancellation.cancelled shouldBe true
         translator.destroyed shouldBe true
@@ -110,8 +105,6 @@ class DefaultAndroidSystemTranslationPlatformTest {
         val cancellation = FakeCancellation()
 
         override suspend fun capabilities(): List<AndroidTranslationManagerCapability> = capabilities
-
-        override fun settingsAvailable(): Boolean = hasSettings
 
         override suspend fun openSettings(): AndroidSystemPlatformSetup {
             return if (hasSettings) {

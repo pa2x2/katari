@@ -17,10 +17,6 @@ sealed interface TranslationSessionExternalAction {
         val target: TranslationLanguageTag,
     ) : TranslationSessionExternalAction
 
-    data class UseTargetAsDefault(
-        val language: TranslationLanguageTag,
-    ) : TranslationSessionExternalAction
-
     data class ConfirmProviderDisclosure(
         val engine: TranslationEngineId,
         val disclosure: TranslationProviderDisclosure,

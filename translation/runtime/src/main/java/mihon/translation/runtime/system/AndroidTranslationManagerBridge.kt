@@ -61,8 +61,6 @@ internal interface AndroidTranslationManagerTranslator {
 internal interface AndroidTranslationManagerBridge {
     suspend fun capabilities(): List<AndroidTranslationManagerCapability>
 
-    fun settingsAvailable(): Boolean
-
     suspend fun openSettings(): AndroidSystemPlatformSetup
 
     fun observeCapabilities(
@@ -99,10 +97,6 @@ private class FrameworkAndroidTranslationManagerBridge(
                 TranslationSpec.DATA_FORMAT_TEXT,
             ).map(::mapCapability)
         }
-    }
-
-    override fun settingsAvailable(): Boolean {
-        return manager.onDeviceTranslationSettingsActivityIntent != null
     }
 
     override suspend fun openSettings(): AndroidSystemPlatformSetup {

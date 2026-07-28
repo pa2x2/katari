@@ -81,10 +81,6 @@ internal class TranslationSettingsScreenModel(
         submitPlayground()
     }
 
-    fun usePlaygroundTargetAsDefault() {
-        setDefaultTarget(mutablePlayground.value.targetLanguage)
-    }
-
     fun usePlaygroundEngineAsDefault() {
         preferences.engine.set(mutablePlayground.value.engine)
     }
@@ -114,7 +110,7 @@ internal class TranslationSettingsScreenModel(
         )
     }
 
-    fun setDefaultTarget(language: TranslationLanguageTag?) {
+    private fun setDefaultTarget(language: TranslationLanguageTag?) {
         preferences.targetLanguage.set(
             language?.let(TranslationTargetLanguageSelection::Explicit)
                 ?: TranslationTargetLanguageSelection.Default,

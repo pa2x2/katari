@@ -26,23 +26,14 @@ class AndroidSystemTranslationEngineTest {
                 ),
             AndroidSystemTranslationInspection.Capability(
                 AndroidSystemCapabilityState.AvailableToDownload,
-                settingsAvailable = true,
             ) to TranslationEnginePreparation.SystemSetupRequired(
                 TranslationSystemSetupReason.LanguageModelsRequired,
             ),
             AndroidSystemTranslationInspection.Capability(
-                AndroidSystemCapabilityState.AvailableToDownload,
-                settingsAvailable = false,
-            ) to TranslationEnginePreparation.Unavailable(
-                TranslationUnavailableReason.SystemSettingsUnavailable,
-            ),
-            AndroidSystemTranslationInspection.Capability(
                 AndroidSystemCapabilityState.Downloading,
-                settingsAvailable = true,
             ) to TranslationEnginePreparation.SetupInProgress(),
             AndroidSystemTranslationInspection.Capability(
                 AndroidSystemCapabilityState.Unavailable,
-                settingsAvailable = true,
             ) to TranslationEnginePreparation.Unavailable(
                 TranslationUnavailableReason.UnsupportedLanguagePair(ENGLISH, POLISH),
             ),
@@ -77,7 +68,6 @@ class AndroidSystemTranslationEngineTest {
             execution = AndroidSystemPlatformExecution.CapabilityChanged(
                 AndroidSystemTranslationInspection.Capability(
                     AndroidSystemCapabilityState.Downloading,
-                    settingsAvailable = true,
                 ),
             ),
         )
@@ -153,7 +143,6 @@ class AndroidSystemTranslationEngineTest {
 
         fun onDevice() = AndroidSystemTranslationInspection.Capability(
             AndroidSystemCapabilityState.OnDevice,
-            settingsAvailable = true,
         )
     }
 }

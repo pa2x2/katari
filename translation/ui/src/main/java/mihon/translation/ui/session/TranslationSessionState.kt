@@ -67,6 +67,8 @@ sealed interface TranslationSessionState {
 sealed interface TranslationSessionFailure {
     data object UnexpectedPreparationFailure : TranslationSessionFailure
 
+    data object PreparationTimedOut : TranslationSessionFailure
+
     data class ExecutionFailure(
         val execution: TranslationExecution.Failed,
     ) : TranslationSessionFailure

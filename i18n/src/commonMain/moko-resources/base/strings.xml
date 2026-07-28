@@ -138,7 +138,6 @@
     <string name="action_translate">Translate</string>
     <string name="action_expand">Expand</string>
     <string name="action_change_language">Change language</string>
-    <string name="action_use_as_default">Use as default</string>
     <string name="action_choose_language">Choose language</string>
     <string name="action_learn_more">Learn more</string>
     <string name="action_remove">Remove</string>
@@ -284,7 +283,6 @@
     <string name="translation_settings_target_default">App language (%s)</string>
     <string name="translation_settings_test_input">Text to translate</string>
     <string name="translation_settings_language_search">Search languages</string>
-    <string name="translation_settings_default_updated">Default translation language updated</string>
     <string name="translation_settings_default_engine_updated">Default translation engine updated</string>
     <string name="translation_settings_setup_opened">Complete setup in Android settings, then return to Katari.</string>
     <string name="translation_settings_setup_unsupported">This engine does not provide a setup action.</string>

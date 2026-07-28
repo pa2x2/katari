@@ -112,6 +112,39 @@ class TranslationSessionControllerTest {
     }
 
     @Test
+    fun `unresponsive preparation publishes a retryable timeout and ignores its late result`() = runTest {
+        val preparationGate = CompletableDeferred<Unit>()
+        val feature = FakeTranslationFeature(
+            prepareOverride = { request ->
+                withContext(NonCancellable) {
+                    preparationGate.await()
+                }
+                ready(request)
+            },
+        )
+        val controller = TranslationSessionController(
+            feature = feature,
+            parentScope = backgroundScope,
+            selectionSettleDelayMillis = 0,
+            preparationTimeoutMillis = 1_000,
+        )
+
+        controller.submit(input("hello"))
+        runCurrent()
+        controller.state.value.shouldBeInstanceOf<TranslationSessionState.Preparing>()
+
+        advanceTimeBy(1_000)
+        runCurrent()
+
+        val failed = controller.state.value.shouldBeInstanceOf<TranslationSessionState.Failed>()
+        failed.failure shouldBe TranslationSessionFailure.PreparationTimedOut
+
+        preparationGate.complete(Unit)
+        runCurrent()
+        controller.state.value shouldBe failed
+    }
+
+    @Test
     fun `explicit provider waits for its declared action`() = runTest {
         val feature = FakeTranslationFeature(
             invocationPolicy = TranslationInvocationPolicy.ExplicitAction("Translate"),

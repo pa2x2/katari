@@ -154,17 +154,7 @@ internal class DefaultAndroidSystemTranslationPlatform(
     private fun AndroidTranslationManagerBridge.toInspection(
         capability: AndroidTranslationManagerCapability,
     ): AndroidSystemTranslationInspection {
-        return try {
-            AndroidSystemTranslationInspection.Capability(
-                state = capability.state,
-                settingsAvailable = capability.state != AndroidSystemCapabilityState.AvailableToDownload ||
-                    settingsAvailable(),
-            )
-        } catch (_: RuntimeException) {
-            AndroidSystemTranslationInspection.Failed(
-                "Android translation capabilities could not be read",
-            )
-        }
+        return AndroidSystemTranslationInspection.Capability(capability.state)
     }
 
     private fun AndroidTranslationManagerCapability.samePairAs(

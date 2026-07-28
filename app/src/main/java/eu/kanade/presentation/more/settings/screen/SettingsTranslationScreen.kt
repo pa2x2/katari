@@ -161,10 +161,6 @@ object SettingsTranslationScreen : SearchableSettings {
                             model,
                         ),
                     )
-                is TranslationSessionExternalAction.UseTargetAsDefault -> {
-                    model.setDefaultTarget(action.language)
-                    context.toast(MR.strings.translation_settings_default_updated)
-                }
                 is TranslationSessionExternalAction.ConfirmProviderDisclosure ->
                     model.acknowledge(action.engine, action.disclosure, ::handleHostResult)
                 is TranslationSessionExternalAction.DownloadModels ->

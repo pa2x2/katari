@@ -130,17 +130,10 @@ internal class AndroidSystemTranslationEngine(
                 )
             is AndroidSystemTranslationInspection.Capability -> when (state) {
                 AndroidSystemCapabilityState.OnDevice -> TranslationEnginePreparation.Ready(ready)
-                AndroidSystemCapabilityState.AvailableToDownload -> {
-                    if (settingsAvailable) {
-                        TranslationEnginePreparation.SystemSetupRequired(
-                            TranslationSystemSetupReason.LanguageModelsRequired,
-                        )
-                    } else {
-                        TranslationEnginePreparation.Unavailable(
-                            TranslationUnavailableReason.SystemSettingsUnavailable,
-                        )
-                    }
-                }
+                AndroidSystemCapabilityState.AvailableToDownload ->
+                    TranslationEnginePreparation.SystemSetupRequired(
+                        TranslationSystemSetupReason.LanguageModelsRequired,
+                    )
                 AndroidSystemCapabilityState.Downloading ->
                     TranslationEnginePreparation.SetupInProgress()
                 AndroidSystemCapabilityState.Unavailable ->
