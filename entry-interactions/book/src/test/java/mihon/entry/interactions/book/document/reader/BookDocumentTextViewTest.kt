@@ -1,5 +1,7 @@
 package mihon.entry.interactions.book.document.reader
 
+import android.text.Selection
+import android.text.Spannable
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.ClickableSpan
@@ -86,8 +88,9 @@ class BookDocumentTextViewTest {
     }
 
     @Test
-    fun `text view passes plain prose taps through while consuming anchor taps`() {
+    fun `selectable text forwards plain prose taps while consuming anchor taps`() {
         var anchorClicked = false
+        var plainTapFraction: Float? = null
         val text = SpannableString("Link then plain prose").apply {
             setSpan(
                 object : ClickableSpan() {
@@ -100,21 +103,49 @@ class BookDocumentTextViewTest {
                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
             )
         }
-        val view = laidOutTextView(text)
+        val view = laidOutTextView(text) as BookDocumentTextView
+        view.selectionInteraction = BookDocumentTextInteraction(
+            observeSelections = false,
+            rootPositionInWindow = Offset.Zero,
+            onSelection = {},
+            onNonLinkTap = { x, width -> plainTapFraction = x / width },
+        )
         val textY = (view.layout.getLineTop(0) + view.layout.getLineBottom(0)) / 2f
         val plainDown = event(view.layout.getPrimaryHorizontal(10), textY, MotionEvent.ACTION_DOWN)
+        val plainUp = event(view.layout.getPrimaryHorizontal(10), textY, MotionEvent.ACTION_UP)
         val linkDown = event(view.layout.getPrimaryHorizontal(2), textY, MotionEvent.ACTION_DOWN)
         val linkUp = event(view.layout.getPrimaryHorizontal(2), textY, MotionEvent.ACTION_UP)
 
-        val plainHandled = view.dispatchTouchEvent(plainDown)
+        val plainDownHandled = view.dispatchTouchEvent(plainDown)
+        val plainUpHandled = view.dispatchTouchEvent(plainUp)
         val linkDownHandled = view.dispatchTouchEvent(linkDown)
         val linkUpHandled = view.dispatchTouchEvent(linkUp)
 
-        listOf(plainDown, linkDown, linkUp).forEach(MotionEvent::recycle)
-        assertFalse(plainHandled)
+        listOf(plainDown, plainUp, linkDown, linkUp).forEach(MotionEvent::recycle)
+        assertTrue(plainDownHandled)
+        assertTrue(plainUpHandled)
         assertTrue(linkDownHandled)
         assertTrue(linkUpHandled)
         assertTrue(anchorClicked)
+        assertTrue(plainTapFraction != null)
+    }
+
+    @Test
+    fun `reader text remains selectable without translation observation`() {
+        val view = laidOutTextView(SpannableString("Independent selection")) as BookDocumentTextView
+        var emitted = false
+        view.selectionInteraction = BookDocumentTextInteraction(
+            observeSelections = false,
+            rootPositionInWindow = Offset.Zero,
+            onSelection = { emitted = true },
+            onNonLinkTap = { _, _ -> },
+        )
+
+        Selection.setSelection(view.text as Spannable, 0, 11)
+
+        assertTrue(view.isTextSelectable)
+        assertEquals("Independent", view.text.subSequence(view.selectionStart, view.selectionEnd).toString())
+        assertFalse(emitted)
     }
 
     @Test
@@ -122,7 +153,7 @@ class BookDocumentTextViewTest {
         val view = laidOutTextView(SpannableString("  exact selection  ")) as BookDocumentTextView
         var emitted: BookDocumentTextSelection? = null
         view.selectionInteraction = BookDocumentTextInteraction(
-            enabled = true,
+            observeSelections = true,
             rootPositionInWindow = Offset.Zero,
             onSelection = { emitted = it },
             onNonLinkTap = { _, _ -> },

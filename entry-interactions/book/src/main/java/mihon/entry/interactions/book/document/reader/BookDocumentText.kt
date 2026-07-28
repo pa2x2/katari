@@ -64,7 +64,6 @@ internal fun BookDocumentText(
         factory = { context ->
             BookDocumentTextView(context).apply {
                 includeFontPadding = false
-                setTextIsSelectable(false)
                 setBackgroundColor(Color.TRANSPARENT)
                 movementMethod = LinkMovementMethod.getInstance()
                 applyVisibleSelectionHighlight()
@@ -76,9 +75,6 @@ internal fun BookDocumentText(
             if (view.text !== linkedText) {
                 view.clearOwnedSelection()
                 view.text = linkedText
-            }
-            if (view.isTextSelectable != interaction.enabled) {
-                view.setTextIsSelectable(interaction.enabled)
             }
             view.movementMethod = LinkMovementMethod.getInstance()
             view.trimTerminalLine = trimTerminalLine
@@ -104,6 +100,10 @@ internal class BookDocumentTextView(context: Context) : TextView(context) {
             requestLayout()
         }
 
+    init {
+        setTextIsSelectable(true)
+    }
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         val currentLayout = layout
@@ -123,10 +123,6 @@ internal class BookDocumentTextView(context: Context) : TextView(context) {
         if (event.actionMasked == MotionEvent.ACTION_DOWN || event.actionMasked == MotionEvent.ACTION_UP) {
             val buffer = text as? Spanned
             if (buffer?.clickableSpanAt(this, event) == null) {
-                if (!interaction.enabled) {
-                    (buffer as? Spannable)?.let(Selection::removeSelection)
-                    return false
-                }
                 val handled = super.onTouchEvent(event)
                 if (
                     event.actionMasked == MotionEvent.ACTION_UP &&
@@ -143,7 +139,8 @@ internal class BookDocumentTextView(context: Context) : TextView(context) {
     override fun onSelectionChanged(selStart: Int, selEnd: Int) {
         super.onSelectionChanged(selStart, selEnd)
         val interaction = selectionInteraction ?: BookDocumentTextInteraction.Disabled
-        if (!interaction.enabled || selStart < 0 || selEnd <= selStart) {
+        if (!interaction.observeSelections) return
+        if (selStart < 0 || selEnd <= selStart) {
             interaction.onSelection(BookDocumentTextSelection.Cleared(selectionOwnerIdentity))
             return
         }
@@ -178,6 +175,7 @@ internal class BookDocumentTextView(context: Context) : TextView(context) {
 
     internal fun clearOwnedSelection() {
         selectionInteraction
+            ?.takeIf(BookDocumentTextInteraction::observeSelections)
             ?.onSelection
             ?.invoke(BookDocumentTextSelection.Cleared(selectionOwnerIdentity))
         (text as? Spannable)?.let(Selection::removeSelection)
@@ -208,14 +206,14 @@ private fun Int.withSelectionAlpha(): Int = Color.argb(
 )
 
 internal data class BookDocumentTextInteraction(
-    val enabled: Boolean,
+    val observeSelections: Boolean,
     val rootPositionInWindow: Offset,
     val onSelection: (BookDocumentTextSelection) -> Unit,
     val onNonLinkTap: (x: Float, width: Float) -> Unit,
 ) {
     companion object {
         val Disabled = BookDocumentTextInteraction(
-            enabled = false,
+            observeSelections = false,
             rootPositionInWindow = Offset.Zero,
             onSelection = {},
             onNonLinkTap = { _, _ -> },

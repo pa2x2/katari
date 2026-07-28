@@ -220,7 +220,7 @@ internal fun HtmlProseReaderScreen(
 
     CompositionLocalProvider(
         LocalBookDocumentTextInteraction provides BookDocumentTextInteraction(
-            enabled = automaticTranslationEnabled,
+            observeSelections = automaticTranslationEnabled,
             rootPositionInWindow = readerRootPositionInWindow,
             onSelection = { selection ->
                 when (selection) {
