@@ -78,6 +78,8 @@ Status: completed and manifesto-audited on 2026-07-28.
 
 ## Milestone 4: integration, documentation, and release validation
 
+Status: completed and manifesto-audited on 2026-07-28.
+
 1. Verify BOOK automatic translation uses the selected contribution and becomes
    unavailable honestly when that provider cannot execute.
 2. Verify Android System remains the default and first engine.
@@ -88,6 +90,18 @@ Status: completed and manifesto-audited on 2026-07-28.
    invocations.
 5. Perform a final full-manifest audit and commit any final focused integration
    work.
+
+Validation evidence:
+
+- LibreTranslate provider, translation runtime, BOOK interaction, and
+  Translation settings focused tests passed.
+- `spotlessCheck`, `verifyEntryFeatureArchitecture`, and
+  `verifyLegacySourceAbi` passed.
+- `testFossUnitTest` passed without telemetry/updater properties.
+- Telemetry/updater-enabled `assembleRelease` passed in a separate invocation;
+  all five generated release APKs passed APK Signature Scheme v2 verification.
+- The VitePress documentation production build passed.
+- No emulator or physical device was used.
 
 ## Acceptance criteria
 

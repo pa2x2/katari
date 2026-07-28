@@ -9,6 +9,7 @@ import mihon.translation.api.KnownTranslationEngine
 import mihon.translation.api.ReadyTranslation
 import mihon.translation.api.TranslationDeviceAvailability
 import mihon.translation.api.TranslationEngineId
+import mihon.translation.api.TranslationEngineSelection
 import mihon.translation.api.TranslationEngineState
 import mihon.translation.api.TranslationExecution
 import mihon.translation.api.TranslationFeature
@@ -40,6 +41,7 @@ class BookSelectionTranslationControllerTest {
         runCurrent()
 
         feature.requests.map(TranslationRequest::text) shouldBe listOf("second")
+        feature.requests.single().engine shouldBe TranslationEngineSelection.ProfileDefault
         controller.close()
     }
 

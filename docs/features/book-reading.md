@@ -39,8 +39,9 @@ Use **Reset** from a reader settings dialog to remove that reader's active-profi
 
 Shared settings are declared once and appear both in the global Readers screen and in capable readers. The
 profile-scoped **Translate selected text automatically** setting is available for serialized prose and reflowable EPUB.
-It uses the profile's Translation engine and target language after a text selection settles. Resetting either capable
-reader also returns this shared setting to its default of off.
+It uses the profile's explicitly selected Translation engine and target language after a text selection settles.
+Katari does not switch to another engine if that provider is unavailable. Resetting either capable reader also returns
+this shared setting to its default of off.
 
 ## Selected-text translation
 
@@ -52,7 +53,8 @@ The reflowable EPUB reader uses Readium's selected-text and selection-rectangle 
 Copy/Share actions, links, and page gestures remain owned by Readium. Fixed-layout EPUB does not support this feature.
 
 Selected text, results, and setup state are temporary and are never added to reading progress, downloads, translation
-history, logging, or telemetry. See [Translation](./translation.md) for device availability and privacy details.
+history, logging, or telemetry. See [Translation](./translation.md) for engine installation, availability, setup,
+security, and privacy details.
 
 ## Offline downloads
 
