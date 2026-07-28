@@ -16,6 +16,7 @@ import mihon.translation.api.TranslationFeature
 import mihon.translation.api.TranslationInvocationPolicy
 import mihon.translation.api.TranslationLanguageTag
 import mihon.translation.api.TranslationPreparation
+import mihon.translation.api.TranslationResult
 import mihon.translation.api.TranslationSourceLanguageSelection
 import mihon.translation.api.TranslationTargetLanguageSelection
 
@@ -136,6 +137,7 @@ class TranslationSessionController(
         input: TranslationSessionInput,
         delayMillis: Long,
     ) {
+        var previousResult = mutableState.value.resultForRefresh()
         val operationGeneration = nextGeneration()
         activeJob?.cancel()
         preparationTimeoutJob?.cancel()
@@ -143,7 +145,7 @@ class TranslationSessionController(
         executionTimeoutJob?.cancel()
         executionTimeoutJob = null
         currentInput = input
-        mutableState.value = TranslationSessionState.Settling(input)
+        mutableState.value = TranslationSessionState.Settling(input, previousResult)
         activeJob = scope.launch {
             if (delayMillis > 0) delay(delayMillis)
             if (!isCurrent(operationGeneration)) return@launch
@@ -151,7 +153,7 @@ class TranslationSessionController(
             var firstPreparation = true
             while (isCurrent(operationGeneration)) {
                 if (firstPreparation) {
-                    mutableState.value = TranslationSessionState.Preparing(input)
+                    mutableState.value = TranslationSessionState.Preparing(input, previousResult)
                 }
                 val preparation = try {
                     prepareWithinDeadline(operationGeneration, input)
@@ -168,9 +170,16 @@ class TranslationSessionController(
                 }
                 if (!isCurrent(operationGeneration)) return@launch
                 val latestInput = latestInput(operationGeneration, input) ?: return@launch
-                acceptPreparation(operationGeneration, latestInput, preparation, autoExecuteImmediate = true)
+                acceptPreparation(
+                    operationGeneration = operationGeneration,
+                    input = latestInput,
+                    preparation = preparation,
+                    autoExecuteImmediate = true,
+                    previousResult = previousResult,
+                )
                 if (preparation !is TranslationPreparation.SetupInProgress) return@launch
 
+                previousResult = null
                 firstPreparation = false
                 delay(SETUP_PROGRESS_POLL_INTERVAL_MILLIS)
             }
@@ -182,6 +191,7 @@ class TranslationSessionController(
         input: TranslationSessionInput,
         preparation: TranslationPreparation,
         autoExecuteImmediate: Boolean,
+        previousResult: TranslationResult? = null,
     ) {
         when (preparation) {
             is TranslationPreparation.Ready -> {
@@ -191,7 +201,7 @@ class TranslationSessionController(
                     executionMode == TranslationSessionExecutionMode.FollowProviderPolicy &&
                     preparation.presentation.invocationPolicy == TranslationInvocationPolicy.Immediate
                 ) {
-                    executeReady(operationGeneration, input, preparation)
+                    executeReady(operationGeneration, input, preparation, previousResult)
                 }
             }
             else -> {
@@ -204,9 +214,14 @@ class TranslationSessionController(
         operationGeneration: Long,
         input: TranslationSessionInput,
         ready: TranslationPreparation.Ready,
+        previousResult: TranslationResult? = null,
     ) {
         if (!isCurrent(operationGeneration)) return
-        mutableState.value = TranslationSessionState.Translating(input, ready.presentation)
+        mutableState.value = TranslationSessionState.Translating(
+            input = input,
+            presentation = ready.presentation,
+            previousResult = previousResult,
+        )
         val timeoutJob = scope.launch {
             delay(executionTimeoutMillis)
             val latestInput = latestInput(operationGeneration, input) ?: return@launch

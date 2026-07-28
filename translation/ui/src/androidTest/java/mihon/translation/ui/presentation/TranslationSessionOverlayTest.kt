@@ -7,12 +7,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mihon.translation.api.TranslationInvocationPolicy
 import mihon.translation.api.TranslationLanguageTag
@@ -49,6 +52,87 @@ class TranslationSessionOverlayTest {
 
         composeRule.onNodeWithText("Witaj świecie").assertIsDisplayed()
         composeRule.onNodeWithTag(TRANSLATION_SESSION_POPUP_TAG).assertIsDisplayed()
+    }
+
+    @Test
+    fun settling_request_immediately_uses_an_anchored_loading_popup() {
+        render(
+            TranslationSessionState.Settling(
+                input(
+                    anchor = TranslationSelectionAnchor(400f, 280f, 680f, 340f),
+                ),
+            ),
+        )
+
+        composeRule.onNodeWithTag(TRANSLATION_SESSION_PROGRESS_TAG).assertIsDisplayed()
+        composeRule.onNodeWithTag(TRANSLATION_SESSION_POPUP_TAG).assertIsDisplayed()
+    }
+
+    @Test
+    fun embedded_first_loading_keeps_a_visible_padded_container() {
+        composeRule.setContent {
+            MaterialTheme {
+                TranslationSessionContent(
+                    state = TranslationSessionState.Settling(input(anchor = null)),
+                    expanded = true,
+                    showHeader = false,
+                    showExpand = false,
+                    showLanguageChange = false,
+                    useExternalEnginePicker = true,
+                    onDismiss = {},
+                    onExecute = {},
+                    onRetry = {},
+                    onCopy = {},
+                    onExpand = {},
+                    onSelectSource = {},
+                    onSelectEngine = {},
+                    onExternalAction = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag(TRANSLATION_SESSION_PROGRESS_TAG).assertIsDisplayed()
+        composeRule.onNodeWithTag(TRANSLATION_SESSION_CONTENT_TAG).assertHeightIsAtLeast(40.dp)
+    }
+
+    @Test
+    fun embedded_progress_keeps_the_previous_result_and_its_actions() {
+        val previousResult = success(
+            translatedText = "Previous translation",
+            anchor = null,
+        ).result
+        val state = TranslationSessionState.Translating(
+            input = input(anchor = null),
+            presentation = PRESENTATION,
+            previousResult = previousResult,
+        )
+
+        composeRule.setContent {
+            MaterialTheme {
+                TranslationSessionContent(
+                    state = state,
+                    expanded = true,
+                    showHeader = false,
+                    showExpand = false,
+                    showLanguageChange = false,
+                    useExternalEnginePicker = true,
+                    onDismiss = {},
+                    onExecute = {},
+                    onRetry = {},
+                    onCopy = {},
+                    onExpand = {},
+                    onSelectSource = {},
+                    onSelectEngine = {},
+                    onExternalAction = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag(TRANSLATION_SESSION_PROGRESS_TAG).assertIsDisplayed()
+        composeRule.onNodeWithText("Previous translation").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription(
+            composeRule.activity.stringResource(MR.strings.copy),
+        ).assertIsDisplayed()
     }
 
     @Test

@@ -12,9 +12,8 @@ internal enum class TranslationSessionSurface {
 
 internal fun TranslationSessionState.preferredSurface(): TranslationSessionSurface {
     return when (this) {
-        TranslationSessionState.Hidden,
+        TranslationSessionState.Hidden -> TranslationSessionSurface.None
         is TranslationSessionState.Settling,
-        -> TranslationSessionSurface.None
         is TranslationSessionState.Preparing,
         is TranslationSessionState.Ready,
         is TranslationSessionState.Translating,

@@ -59,6 +59,66 @@ class TranslationSessionControllerTest {
     }
 
     @Test
+    fun `successful result remains available while its replacement is in progress`() = runTest {
+        val preparationGate = CompletableDeferred<Unit>()
+        val executionGate = CompletableDeferred<Unit>()
+        val feature = object : TranslationFeature {
+            override suspend fun prepare(request: TranslationRequest): TranslationPreparation {
+                if (request.text == "second") preparationGate.await()
+                return ready(request, TranslationInvocationPolicy.Immediate)
+            }
+
+            override suspend fun translate(ready: ReadyTranslation): TranslationExecution {
+                val pending = ready as FakeReadyTranslation
+                if (pending.request.text == "second") executionGate.await()
+                return TranslationExecution.Success(
+                    TranslationResult(
+                        translatedText = "translated ${pending.request.text}",
+                        sourceLanguage = SOURCE,
+                        targetLanguage = TARGET,
+                        presentation = pending.preparation.presentation,
+                    ),
+                )
+            }
+        }
+        val controller = TranslationSessionController(
+            feature = feature,
+            parentScope = backgroundScope,
+            selectionSettleDelayMillis = 100,
+        )
+
+        controller.submit(input("first"))
+        advanceTimeBy(100)
+        runCurrent()
+        val previousResult = controller.state.value
+            .shouldBeInstanceOf<TranslationSessionState.Success>()
+            .result
+
+        controller.submit(input("second"))
+        controller.state.value
+            .shouldBeInstanceOf<TranslationSessionState.Settling>()
+            .previousResult shouldBe previousResult
+
+        advanceTimeBy(100)
+        runCurrent()
+        controller.state.value
+            .shouldBeInstanceOf<TranslationSessionState.Preparing>()
+            .previousResult shouldBe previousResult
+
+        preparationGate.complete(Unit)
+        runCurrent()
+        controller.state.value
+            .shouldBeInstanceOf<TranslationSessionState.Translating>()
+            .previousResult shouldBe previousResult
+
+        executionGate.complete(Unit)
+        runCurrent()
+        controller.state.value
+            .shouldBeInstanceOf<TranslationSessionState.Success>()
+            .result.translatedText shouldBe "translated second"
+    }
+
+    @Test
     fun `manual session prepares an immediate provider before explicit execution`() = runTest {
         val feature = FakeTranslationFeature(invocationPolicy = TranslationInvocationPolicy.Immediate)
         val controller = TranslationSessionController(

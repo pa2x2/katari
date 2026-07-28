@@ -27,10 +27,12 @@ sealed interface TranslationSessionState {
 
     data class Settling(
         override val input: TranslationSessionInput,
+        val previousResult: TranslationResult? = null,
     ) : Active
 
     data class Preparing(
         override val input: TranslationSessionInput,
+        val previousResult: TranslationResult? = null,
     ) : Active
 
     data class Ready(
@@ -41,6 +43,7 @@ sealed interface TranslationSessionState {
     data class Translating(
         override val input: TranslationSessionInput,
         val presentation: TranslationProviderPresentation,
+        val previousResult: TranslationResult? = null,
     ) : Active
 
     data class PreparationRequired(
@@ -76,6 +79,20 @@ sealed interface TranslationSessionFailure {
     data object ExecutionTimedOut : TranslationSessionFailure
 
     data object UnexpectedExecutionFailure : TranslationSessionFailure
+}
+
+internal fun TranslationSessionState.resultForRefresh(): TranslationResult? {
+    return when (this) {
+        is TranslationSessionState.Success -> result
+        is TranslationSessionState.Settling -> previousResult
+        is TranslationSessionState.Preparing -> previousResult
+        is TranslationSessionState.Translating -> previousResult
+        TranslationSessionState.Hidden,
+        is TranslationSessionState.Ready,
+        is TranslationSessionState.PreparationRequired,
+        is TranslationSessionState.Failed,
+        -> null
+    }
 }
 
 internal fun TranslationSessionState.withInput(

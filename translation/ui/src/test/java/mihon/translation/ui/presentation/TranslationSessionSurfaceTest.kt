@@ -1,10 +1,27 @@
 package mihon.translation.ui.presentation
 
 import io.kotest.matchers.shouldBe
+import mihon.translation.api.TranslationRequest
 import mihon.translation.ui.session.TranslationSelectionAnchor
+import mihon.translation.ui.session.TranslationSessionInput
+import mihon.translation.ui.session.TranslationSessionState
 import org.junit.jupiter.api.Test
 
 class TranslationSessionSurfaceTest {
+
+    @Test
+    fun `settling request is visible on the surface appropriate for its anchor`() {
+        TranslationSessionState.Settling(
+            TranslationSessionInput(
+                request = TranslationRequest("selected text"),
+                anchor = TranslationSelectionAnchor(400f, 200f, 600f, 240f),
+            ),
+        ).preferredSurface() shouldBe TranslationSessionSurface.AnchoredPopup
+
+        TranslationSessionState.Settling(
+            TranslationSessionInput(request = TranslationRequest("settings text")),
+        ).preferredSurface() shouldBe TranslationSessionSurface.AdaptiveSheet
+    }
 
     @Test
     fun `popup prefers below the selection and centers horizontally`() {

@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
@@ -13,7 +12,6 @@ import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.OpenInFull
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -24,6 +22,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import mihon.translation.api.KnownTranslationEngine
 import mihon.translation.api.TranslationEngineBuildAvailability
@@ -33,6 +32,7 @@ import mihon.translation.api.TranslationInvocationPolicy
 import mihon.translation.api.TranslationLanguageTag
 import mihon.translation.api.TranslationPreparation
 import mihon.translation.api.TranslationRejectionReason
+import mihon.translation.api.TranslationResult
 import mihon.translation.api.TranslationSystemSetupReason
 import mihon.translation.api.TranslationTargetChoiceReason
 import mihon.translation.api.TranslationUnavailableReason
@@ -60,7 +60,28 @@ internal fun TranslationSessionContent(
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier) {
+    val inProgress = state is TranslationSessionState.Settling ||
+        state is TranslationSessionState.Preparing ||
+        state is TranslationSessionState.Translating
+    val displayedResult = when (state) {
+        is TranslationSessionState.Settling -> state.previousResult
+        is TranslationSessionState.Preparing -> state.previousResult
+        is TranslationSessionState.Translating -> state.previousResult
+        is TranslationSessionState.Success -> state.result
+        is TranslationSessionState.Ready,
+        is TranslationSessionState.PreparationRequired,
+        is TranslationSessionState.Failed,
+        -> null
+    }
+
+    Column(modifier = modifier.testTag(TRANSLATION_SESSION_CONTENT_TAG)) {
+        if (inProgress) {
+            LinearProgressIndicator(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(TRANSLATION_SESSION_PROGRESS_TAG),
+            )
+        }
         if (showHeader) {
             Row(
                 modifier = Modifier
@@ -86,27 +107,9 @@ internal fun TranslationSessionContent(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            when (state) {
-                is TranslationSessionState.Settling -> ProgressContent(
-                    stringResource(MR.strings.translation_checking_pair),
-                )
-                is TranslationSessionState.Preparing -> ProgressContent(
-                    stringResource(MR.strings.translation_preparing),
-                )
-                is TranslationSessionState.Ready -> ReadyContent(state, onExecute)
-                is TranslationSessionState.Translating -> ProgressContent(
-                    stringResource(MR.strings.translation_translating),
-                )
-                is TranslationSessionState.PreparationRequired -> PreparationContent(
-                    preparation = state.preparation,
-                    onRetry = onRetry,
-                    onSelectSource = onSelectSource,
-                    onSelectEngine = onSelectEngine,
-                    useExternalEnginePicker = useExternalEnginePicker,
-                    onExternalAction = onExternalAction,
-                )
-                is TranslationSessionState.Success -> SuccessContent(
-                    state = state,
+            if (displayedResult != null) {
+                SuccessContent(
+                    result = displayedResult,
                     expanded = expanded,
                     showExpand = showExpand,
                     showLanguageChange = showLanguageChange,
@@ -114,20 +117,26 @@ internal fun TranslationSessionContent(
                     onExpand = onExpand,
                     onExternalAction = onExternalAction,
                 )
-                is TranslationSessionState.Failed -> FailedContent(state, onRetry, onExternalAction)
+            } else {
+                when (state) {
+                    is TranslationSessionState.Settling,
+                    is TranslationSessionState.Preparing,
+                    is TranslationSessionState.Translating,
+                    is TranslationSessionState.Success,
+                    -> Unit
+                    is TranslationSessionState.Ready -> ReadyContent(state, onExecute)
+                    is TranslationSessionState.PreparationRequired -> PreparationContent(
+                        preparation = state.preparation,
+                        onRetry = onRetry,
+                        onSelectSource = onSelectSource,
+                        onSelectEngine = onSelectEngine,
+                        useExternalEnginePicker = useExternalEnginePicker,
+                        onExternalAction = onExternalAction,
+                    )
+                    is TranslationSessionState.Failed -> FailedContent(state, onRetry, onExternalAction)
+                }
             }
         }
-    }
-}
-
-@Composable
-private fun ProgressContent(message: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
-        Text(message)
     }
 }
 
@@ -156,7 +165,7 @@ private fun ReadyContent(
 
 @Composable
 private fun SuccessContent(
-    state: TranslationSessionState.Success,
+    result: TranslationResult,
     expanded: Boolean,
     showExpand: Boolean,
     showLanguageChange: Boolean,
@@ -167,19 +176,19 @@ private fun SuccessContent(
     Text(
         text = stringResource(
             MR.strings.translation_language_pair,
-            state.result.sourceLanguage.displayName(),
-            state.result.targetLanguage.displayName(),
+            result.sourceLanguage.displayName(),
+            result.targetLanguage.displayName(),
         ),
         style = MaterialTheme.typography.labelLarge,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
     SelectionContainer {
         Text(
-            text = state.result.translatedText,
+            text = result.translatedText,
             style = MaterialTheme.typography.bodyLarge,
         )
     }
-    state.result.presentation.resultAttribution?.let { attribution ->
+    result.presentation.resultAttribution?.let { attribution ->
         Text(
             text = attribution.label,
             style = MaterialTheme.typography.labelSmall,
@@ -190,7 +199,7 @@ private fun SuccessContent(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.End,
     ) {
-        IconButton(onClick = { onCopy(state.result.translatedText) }) {
+        IconButton(onClick = { onCopy(result.translatedText) }) {
             Icon(
                 imageVector = Icons.Outlined.ContentCopy,
                 contentDescription = stringResource(MR.strings.copy),
@@ -209,8 +218,8 @@ private fun SuccessContent(
                 onClick = {
                     onExternalAction(
                         TranslationSessionExternalAction.ChangeLanguages(
-                            source = state.result.sourceLanguage,
-                            target = state.result.targetLanguage,
+                            source = result.sourceLanguage,
+                            target = result.targetLanguage,
                         ),
                     )
                 },
@@ -222,7 +231,7 @@ private fun SuccessContent(
             }
         }
     }
-    DocumentationAction(state.result.presentation.documentationUrl, onExternalAction)
+    DocumentationAction(result.presentation.documentationUrl, onExternalAction)
 }
 
 @Composable
@@ -494,3 +503,6 @@ private fun TranslationLanguageTag.displayName(): String {
         .getDisplayName(Locale.getDefault())
         .ifBlank { value }
 }
+
+internal const val TRANSLATION_SESSION_PROGRESS_TAG = "translation_session_progress"
+internal const val TRANSLATION_SESSION_CONTENT_TAG = "translation_session_content"

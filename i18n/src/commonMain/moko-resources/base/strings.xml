@@ -249,9 +249,6 @@
 
     <!-- Translation -->
     <string name="translation_title">Translation</string>
-    <string name="translation_preparing">Preparing translation…</string>
-    <string name="translation_checking_pair">Checking this language pair…</string>
-    <string name="translation_translating">Translating…</string>
     <string name="translation_language_pair">%1$s → %2$s</string>
     <string name="translation_source_undetermined">The source language could not be determined.</string>
     <string name="translation_choose_source_language">Choose source language</string>
