@@ -1,6 +1,6 @@
 # Application-scoped Feature Graph and Translation Feature implementation plan
 
-Status: Phase 7 provider cleanup complete; awaiting milestone approval before Phase 8.
+Status: Phase 8 shared session UI complete; awaiting milestone approval before Phase 9.
 
 The manifestos in this directory are authoritative:
 
@@ -196,21 +196,21 @@ obligation remains in the current tree.
 
 ### Controller
 
-- [ ] Implement latest-session-wins cancellation.
-- [ ] Support optional screen-space anchors.
-- [ ] Debounce changing selections by 250 ms.
-- [ ] Separate preparation, provider action, setup, translation, success, and failure states.
-- [ ] Keep source/result text in memory only.
+- [x] Implement latest-session-wins cancellation.
+- [x] Support optional screen-space anchors.
+- [x] Debounce changing selections by 250 ms.
+- [x] Separate preparation, provider action, setup, translation, success, and failure states.
+- [x] Keep source/result text in memory only.
 
 ### Popup and sheet
 
-- [ ] Render a non-modal anchored popup for fitting ready/result states.
-- [ ] Measure overflow and promote to the adaptive sheet.
-- [ ] Use the sheet for setup, language/engine choice, errors, and missing anchors.
-- [ ] Add copy, expand, change-language, use-as-default, retry, and close actions.
-- [ ] Auto-execute ready Android system translations.
-- [ ] Render provider attribution from metadata without engine ID checks.
-- [ ] Clear all session text on dismissal.
+- [x] Render a non-modal anchored popup for fitting ready/result states.
+- [x] Measure overflow and promote to the adaptive sheet.
+- [x] Use the sheet for setup, language/engine choice, errors, and missing anchors.
+- [x] Add copy, expand, change-language, use-as-default, retry, and close actions.
+- [x] Auto-execute ready Android system translations.
+- [x] Render provider attribution from metadata without engine ID checks.
+- [x] Clear all session text on dismissal.
 
 Exit condition: presenter/controller tests protect user-visible transitions and provider invocation policy.
 

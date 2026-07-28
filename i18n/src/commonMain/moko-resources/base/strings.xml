@@ -135,6 +135,12 @@
     <string name="action_previous_chapter">Previous chapter</string>
     <string name="action_next_chapter">Next chapter</string>
     <string name="action_retry">Retry</string>
+    <string name="action_translate">Translate</string>
+    <string name="action_expand">Expand</string>
+    <string name="action_change_language">Change language</string>
+    <string name="action_use_as_default">Use as default</string>
+    <string name="action_choose_language">Choose language</string>
+    <string name="action_learn_more">Learn more</string>
     <string name="action_remove">Remove</string>
     <string name="action_remove_everything">Remove everything</string>
     <string name="action_start">Start</string>
@@ -241,6 +247,35 @@
 
     <!-- Operations -->
     <string name="loading">Loading…</string>
+
+    <!-- Translation -->
+    <string name="translation_title">Translation</string>
+    <string name="translation_preparing">Preparing translation…</string>
+    <string name="translation_translating">Translating…</string>
+    <string name="translation_language_pair">%1$s → %2$s</string>
+    <string name="translation_source_undetermined">The source language could not be determined.</string>
+    <string name="translation_choose_source_language">Choose source language</string>
+    <string name="translation_target_required">Choose a target language for this translation.</string>
+    <string name="translation_source_equals_target">Source and target languages are the same. Choose a different target.</string>
+    <string name="translation_choose_target_language">Choose target language</string>
+    <string name="translation_engine_required">Choose a translation engine.</string>
+    <string name="translation_selected_engine_unavailable">The selected translation engine is unavailable.</string>
+    <string name="translation_models_required">Language data is required before translation can continue.</string>
+    <string name="translation_system_setup_required">Complete translation setup in Android settings.</string>
+    <string name="translation_service_disabled">Enable the Android translation service to continue.</string>
+    <string name="translation_provider_action_required">%s</string>
+    <string name="translation_setup_in_progress">Translation setup is in progress…</string>
+    <string name="translation_unsupported_os">Translation requires Android API %d or newer.</string>
+    <string name="translation_service_missing">This device does not provide the Android translation service.</string>
+    <string name="translation_settings_unavailable">Android translation settings are unavailable.</string>
+    <string name="translation_unsupported_language">The language %s is not supported.</string>
+    <string name="translation_unsupported_pair">Translation from %1$s to %2$s is not supported.</string>
+    <string name="translation_engine_unavailable">%1$s is unavailable: %2$s</string>
+    <string name="translation_no_engine">No translation engine is available.</string>
+    <string name="translation_blank_input">Select or enter text to translate.</string>
+    <string name="translation_input_too_large">The selection contains %1$d characters; this engine accepts at most %2$d.</string>
+    <string name="translation_failed">Translation failed. Try again.</string>
+    <string name="translation_invalid_session">This translation session expired. Try again.</string>
     <string name="not_found">Not found</string>
     <string name="internal_error">InternalError: Check crash logs for further information</string>
 
