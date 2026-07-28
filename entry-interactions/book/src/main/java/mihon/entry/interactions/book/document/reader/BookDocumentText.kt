@@ -1,6 +1,7 @@
 package mihon.entry.interactions.book.document.reader
 
 import android.content.Context
+import android.graphics.Color
 import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.Typeface
@@ -64,9 +65,9 @@ internal fun BookDocumentText(
             BookDocumentTextView(context).apply {
                 includeFontPadding = false
                 setTextIsSelectable(false)
-                setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                setBackgroundColor(Color.TRANSPARENT)
                 movementMethod = LinkMovementMethod.getInstance()
-                highlightColor = android.graphics.Color.TRANSPARENT
+                applyVisibleSelectionHighlight()
                 onViewChanged(this)
             }
         },
@@ -183,6 +184,29 @@ internal class BookDocumentTextView(context: Context) : TextView(context) {
     }
 }
 
+internal fun BookDocumentTextView.applyVisibleSelectionHighlight() {
+    val attributes = context.obtainStyledAttributes(
+        intArrayOf(
+            android.R.attr.textColorHighlight,
+            android.R.attr.colorAccent,
+        ),
+    )
+    highlightColor = try {
+        attributes.getColor(0, Color.TRANSPARENT)
+            .takeIf { Color.alpha(it) > 0 }
+            ?: attributes.getColor(1, DEFAULT_SELECTION_ACCENT).withSelectionAlpha()
+    } finally {
+        attributes.recycle()
+    }
+}
+
+private fun Int.withSelectionAlpha(): Int = Color.argb(
+    SELECTION_HIGHLIGHT_ALPHA,
+    Color.red(this),
+    Color.green(this),
+    Color.blue(this),
+)
+
 internal data class BookDocumentTextInteraction(
     val enabled: Boolean,
     val rootPositionInWindow: Offset,
@@ -247,6 +271,9 @@ private fun Spanned.clickableSpanAt(widget: TextView, event: MotionEvent): Click
     val offset = layout.getOffsetForHorizontal(line, x)
     return getSpans(offset, offset, ClickableSpan::class.java).firstOrNull()
 }
+
+private const val SELECTION_HIGHLIGHT_ALPHA = 0x66
+private const val DEFAULT_SELECTION_ACCENT = 0xFF3F51B5.toInt()
 
 internal fun Spanned.withDocumentAnchorClicks(
     onAnchorClick: (String, TextView) -> Unit,
