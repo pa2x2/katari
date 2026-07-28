@@ -1,6 +1,6 @@
 # Application-scoped Feature Graph and Translation Feature implementation plan
 
-Status: Phase 8 shared session UI complete; awaiting milestone approval before Phase 9.
+Status: Phase 9 Translation settings and test consumer complete; awaiting milestone approval before Phase 10.
 
 The manifestos in this directory are authoritative:
 
@@ -216,14 +216,14 @@ Exit condition: presenter/controller tests protect user-visible transitions and 
 
 ## Phase 9: Translation settings and test consumer
 
-- [ ] Add Translation as a top-level Settings destination.
-- [ ] Add engine selection and precise engine availability reasons.
-- [ ] Add target-language selection.
-- [ ] Route system setup through the OEM-provided action when available.
-- [ ] Add provider documentation/privacy links when supplied by provider metadata.
-- [ ] Add transient `Test translation` input.
-- [ ] Drive the test flow through the production `TranslationFeature` and shared session UI.
-- [ ] Do not retain test input or output after dismissal/navigation.
+- [x] Add Translation as a top-level Settings destination.
+- [x] Add engine selection and precise engine availability reasons.
+- [x] Add target-language selection.
+- [x] Route system setup through the OEM-provided action when available.
+- [x] Add provider documentation/privacy links when supplied by provider metadata.
+- [x] Add transient `Test translation` input.
+- [x] Drive the test flow through the production `TranslationFeature` and shared session UI.
+- [x] Do not retain test input or output after dismissal/navigation.
 
 Exit condition: the first slice is operable end to end without any reader integration.
 

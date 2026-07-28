@@ -13,6 +13,7 @@ class SettingsProfileVisibilityTest {
         isSettingsScreenVisible(SettingsPlayerScreen) shouldBe true
         isSettingsScreenVisible(SettingsDownloadScreen) shouldBe true
         isSettingsScreenVisible(SettingsTrackingScreen) shouldBe true
+        isSettingsScreenVisible(SettingsTranslationScreen) shouldBe true
         isSettingsScreenVisible(SettingsAppearanceScreen) shouldBe true
         isSettingsScreenVisible(SettingsLibraryScreen) shouldBe true
         isSettingsScreenVisible(SettingsBrowseScreen) shouldBe true

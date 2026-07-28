@@ -232,6 +232,8 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.presentationWidget.path)))
     implementation(dependencies.project(mapOf("path" to projects.telemetry.path)))
     implementation(dependencies.project(mapOf("path" to projects.translation.runtime.path)))
+    implementation(dependencies.project(mapOf("path" to projects.translation.spi.path)))
+    implementation(dependencies.project(mapOf("path" to projects.translation.ui.path)))
 
     // Compose
     implementation(libs.androidx.activity.compose)

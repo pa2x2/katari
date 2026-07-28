@@ -26,6 +26,8 @@ code. Do not silently reinterpret a decision because a local implementation shor
 - Put command results and acceptance evidence under `validation/`.
 - Record newly discovered decisions in the relevant manifesto before relying on them broadly.
 - Keep transient build output in normal Gradle/build directories; do not copy generated artifacts here.
+- Do not retain or commit emulator/device screenshots. Visual verification may be performed live, but any captures
+  must be deleted before the milestone is committed.
 - Do not place secrets, selected text, translated text, API keys, signed URLs, or private user data here.
 - Update checklist status in the implementation plan as phases complete.
 

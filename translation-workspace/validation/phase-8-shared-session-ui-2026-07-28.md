@@ -22,12 +22,8 @@ Date: 2026-07-28
 - A long measured result promoted from popup eligibility to the adaptive sheet without a character-count heuristic.
 - The instrumentation assertions use semantic surface tags and visible content, not pixel snapshots.
 
-Visual inspection captures from the emulator:
-
-- [anchored result popup](phase-8-screenshots/phase-8-translation-popup.png)
-- [source-language adaptive sheet](phase-8-screenshots/phase-8-translation-sheet.png)
-
-The captures contain fixed test strings only and no private or real selected text.
+The anchored popup and adaptive sheet were also inspected live on the emulator. Screenshots are intentionally not
+retained in the workspace.
 
 ## Architecture, build, and formatting evidence
 

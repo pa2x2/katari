@@ -1,5 +1,6 @@
 package mihon.translation.runtime.system
 
+import android.app.ActivityOptions
 import android.app.Application
 import android.app.PendingIntent
 import android.icu.util.ULocale
@@ -82,11 +83,12 @@ internal fun createAndroidTranslationManagerBridge(
 ): AndroidTranslationManagerBridge? {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return null
     val manager = application.getSystemService(TranslationManager::class.java) ?: return null
-    return FrameworkAndroidTranslationManagerBridge(manager, workerDispatcher)
+    return FrameworkAndroidTranslationManagerBridge(application, manager, workerDispatcher)
 }
 
 @RequiresApi(Build.VERSION_CODES.S)
 private class FrameworkAndroidTranslationManagerBridge(
+    private val application: Application,
     private val manager: TranslationManager,
     private val workerDispatcher: CoroutineDispatcher,
 ) : AndroidTranslationManagerBridge {
@@ -107,13 +109,40 @@ private class FrameworkAndroidTranslationManagerBridge(
         val intent = manager.onDeviceTranslationSettingsActivityIntent
             ?: return AndroidSystemPlatformSetup.SettingsUnavailable
         return try {
-            intent.send()
+            intent.send(
+                application,
+                0,
+                null,
+                null,
+                null,
+                null,
+                pendingIntentActivityOptions(),
+            )
             AndroidSystemPlatformSetup.Opened
         } catch (_: PendingIntent.CanceledException) {
             AndroidSystemPlatformSetup.Failed("Android translation settings are no longer available")
         } catch (_: RuntimeException) {
             AndroidSystemPlatformSetup.Failed("Android translation settings could not be opened")
         }
+    }
+
+    private fun pendingIntentActivityOptions() = when {
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA -> {
+            ActivityOptions.makeBasic()
+                .setPendingIntentBackgroundActivityStartMode(
+                    ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOW_IF_VISIBLE,
+                )
+                .toBundle()
+        }
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> {
+            @Suppress("DEPRECATION")
+            ActivityOptions.makeBasic()
+                .setPendingIntentBackgroundActivityStartMode(
+                    ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED,
+                )
+                .toBundle()
+        }
+        else -> null
     }
 
     override fun observeCapabilities(
