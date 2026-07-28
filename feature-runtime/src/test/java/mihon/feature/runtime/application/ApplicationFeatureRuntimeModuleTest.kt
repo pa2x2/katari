@@ -19,7 +19,10 @@ import uy.kohesive.injekt.api.InjektRegistrar
 class ApplicationFeatureRuntimeModuleTest {
 
     private val registrar = mockk<InjektRegistrar>(relaxed = true)
-    private val context = ApplicationFeatureRuntimeInstallationContext(mockk<Application>(relaxed = true))
+    private val context = ApplicationFeatureRuntimeInstallationContext(
+        application = mockk<Application>(relaxed = true),
+        dependencies = mockk(relaxed = true),
+    )
 
     @Test
     fun `installed modules aggregate their providers into exactly one application subject`() {
@@ -154,6 +157,34 @@ class ApplicationFeatureRuntimeModuleTest {
         validated shouldBe true
     }
 
+    @Test
+    fun `runtime components expose only requested typed participation`() {
+        val components = ApplicationFeatureRuntimeComponents(
+            listOf(
+                RegisteredApplicationFeatureRuntimeComponent("example.first", FirstRuntimeComponent()),
+                RegisteredApplicationFeatureRuntimeComponent("example.second", SecondRuntimeComponent()),
+            ),
+        )
+
+        components.instances<FirstRuntimeComponent>().size shouldBe 1
+        components.instances<SecondRuntimeComponent>().size shouldBe 1
+        components.instances<MissingRuntimeComponent>() shouldBe emptyList()
+    }
+
+    @Test
+    fun `runtime component ids must be unique`() {
+        val error = shouldThrow<IllegalArgumentException> {
+            ApplicationFeatureRuntimeComponents(
+                listOf(
+                    RegisteredApplicationFeatureRuntimeComponent("example.same", FirstRuntimeComponent()),
+                    RegisteredApplicationFeatureRuntimeComponent("example.same", SecondRuntimeComponent()),
+                ),
+            )
+        }
+
+        error.message shouldContain "Duplicate Application Feature runtime components"
+    }
+
     private fun module(
         id: String,
         installRuntime:
@@ -175,4 +206,10 @@ class ApplicationFeatureRuntimeModuleTest {
     private class SecondProvider
 
     private class SharedBoundary
+
+    private class FirstRuntimeComponent : ApplicationFeatureRuntimeComponent
+
+    private class SecondRuntimeComponent : ApplicationFeatureRuntimeComponent
+
+    private class MissingRuntimeComponent : ApplicationFeatureRuntimeComponent
 }

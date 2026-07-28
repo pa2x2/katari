@@ -42,6 +42,7 @@ import mihon.entry.interactions.host.tracking.EntryTrackingHost
 import mihon.entry.interactions.settings.EntryInteractionPreferences
 import mihon.entry.interactions.validateInstalledEntryFeatureRuntimeModules
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
+import mihon.feature.runtime.ApplicationFeatureRuntimeDependencies
 import mihon.feature.runtime.ApplicationFeatureRuntimeInstallationContext
 import mihon.feature.runtime.ApplicationFeatureRuntimeModule
 import mihon.feature.runtime.FeatureRuntimeComposition
@@ -136,7 +137,13 @@ class ProductionEntryInteractionValidationEnvironment(
         val applicationRuntimeInstallation = installApplicationFeatureRuntimeModules(
             registrar = Injekt,
             modules = applicationFeatureRuntimeModules,
-            context = ApplicationFeatureRuntimeInstallationContext(application),
+            context = ApplicationFeatureRuntimeInstallationContext(
+                application = application,
+                dependencies = ApplicationFeatureRuntimeDependencies(
+                    basePreferenceStore = InMemoryPreferenceStore(),
+                    profilePreferenceOwners = preferenceOwners,
+                ),
+            ),
         )
         Injekt.addSingletonFactory<FeatureRuntimeComposition> {
             createFeatureRuntimeComposition(

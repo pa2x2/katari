@@ -16,7 +16,9 @@ dependencies {
 
     implementation(projects.featureGraph)
     implementation(projects.featureRuntime)
+    implementation(projects.core.common)
     implementation(projects.translation.spi)
+    implementation(libs.androidx.appCompat)
     implementation(libs.injekt)
 
     testImplementation(projects.featureValidation)

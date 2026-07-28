@@ -7,20 +7,33 @@ import mihon.feature.runtime.applicationFeatureRuntimeBoundary
 import mihon.translation.api.TranslationFeature
 import mihon.translation.spi.KnownTranslationEngineCatalog
 import mihon.translation.spi.TranslationEngineRegistry
+import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
 import uy.kohesive.injekt.api.addSingletonFactory
 
 val translationFeatureRuntimeModule = ApplicationFeatureRuntimeModule(
     id = "translation",
     contributor = TranslationFeatureContributor,
-) {
+) { context ->
+    val profilePreferencesOwner = context.dependencies.profilePreferenceOwners.register(
+        id = ProfilePreferenceOwnerId("translation"),
+        factory = ::ProfileTranslationPreferences,
+    )
+    val profilePreferences = profilePreferencesOwner.create()
+    val devicePreferences = DeviceTranslationPreferences(context.dependencies.basePreferenceStore)
     val registry = DefaultTranslationEngineRegistry(engines = emptyList())
     val feature = DefaultTranslationFeature(
         engineRegistry = registry,
         knownEngineCatalog = registry,
-        sourceLanguageDetectors = emptyList(),
-        defaultTargetLanguageResolver = TranslationDefaultTargetLanguageResolver { null },
+        sourceLanguageDetectors = createTranslationSourceLanguageDetectors(
+            application = context.application,
+            components = context.components,
+        ),
+        defaultTargetLanguageResolver = ProfileTranslationDefaultTargetLanguageResolver(profilePreferences),
+        preferredEngineSelection = profilePreferences.engineSelection::get,
     )
 
+    addSingletonFactory { profilePreferences }
+    addSingletonFactory { devicePreferences }
     addSingletonFactory<TranslationEngineRegistry> { registry }
     addSingletonFactory<KnownTranslationEngineCatalog> { registry }
     addSingletonFactory<TranslationFeature> { feature }

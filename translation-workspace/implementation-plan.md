@@ -1,6 +1,6 @@
 # Application-scoped Feature Graph and Translation Feature implementation plan
 
-Status: Phase 4 complete; awaiting approval to commit and begin Phase 5.
+Status: Phase 5 complete; awaiting milestone approval before Phase 6.
 
 The manifestos in this directory are authoritative:
 
@@ -141,30 +141,30 @@ Exit condition: fake engines can drive the complete Translation API without Andr
 
 ### Preferences
 
-- [ ] Register a profile preference owner for engine and explicit target.
-- [ ] Resolve an unset target dynamically from Katari's effective UI locale.
-- [ ] Store Wi-Fi policy and Google disclosure acknowledgement in the base/device store.
-- [ ] Do not create source/result/history preferences.
-- [ ] Reserve the future profile auto-selection preference contract but do not expose a nonfunctional row.
+- [x] Register a profile preference owner for engine and explicit target.
+- [x] Resolve an unset target dynamically from Katari's effective UI locale.
+- [x] Store Wi-Fi policy and Google disclosure acknowledgement in the base/device store.
+- [x] Do not create source/result/history preferences.
+- [x] Reserve the future profile auto-selection preference contract but do not expose a nonfunctional row.
 
 ### Detection
 
-- [ ] Implement Android `TextClassifier` detection for API 29+ on a worker dispatcher.
-- [ ] Implement bundled ML Kit detection for standard API 26–28.
-- [ ] Normalize detector output to BCP-47.
-- [ ] Return `SourceUndetermined` when no usable result exists.
+- [x] Implement Android `TextClassifier` detection for API 29+ on a worker dispatcher.
+- [x] Implement bundled ML Kit detection for standard API 26–28.
+- [x] Normalize detector output to BCP-47.
+- [x] Return `SourceUndetermined` when no usable result exists.
 
 ### Resolution
 
-- [ ] Implement explicit engine resolution without fallback.
-- [ ] Implement Automatic ready-first ranking.
-- [ ] Prefer Android system when both supported engines are ready.
-- [ ] Prefer ML Kit setup when neither standard-build engine is ready.
-- [ ] Return `SelectedEngineUnavailable` without mutating the saved preference.
-- [ ] Return a target chooser when source equals target.
-- [ ] Enforce provider limits and the 10,000-code-point shared ceiling.
-- [ ] Revalidate prepared handles immediately before translation.
-- [ ] Never silently retry after provider failure.
+- [x] Implement explicit engine resolution without fallback.
+- [x] Implement Automatic ready-first ranking.
+- [x] Prefer Android system when both supported engines are ready.
+- [x] Prefer ML Kit setup when neither standard-build engine is ready.
+- [x] Return `SelectedEngineUnavailable` without mutating the saved preference.
+- [x] Return a target chooser when source equals target.
+- [x] Enforce provider limits and the 10,000-code-point shared ceiling.
+- [x] Revalidate prepared handles immediately before translation.
+- [x] Never silently retry after provider failure.
 
 Exit condition: resolver tests cover the complete build/device/model/language matrix with fakes.
 
@@ -182,9 +182,9 @@ Exit condition: the engine passes contract tests using Android wrapper fakes and
 
 ## Phase 7: ML Kit engine and strict variant separation
 
-- [ ] Add version-catalog entries for `translate:17.0.3` and bundled `language-id:17.0.6`.
-- [ ] Put ML Kit dependencies only on standard/debug/preview/benchmark configurations.
-- [ ] Use variant source composition so FOSS never references ML Kit symbols.
+- [ ] Add the version-catalog entry for `translate:17.0.3`; bundled `language-id:17.0.6` was added in Phase 5.
+- [x] Put current ML Kit dependencies only on standard/debug/preview/benchmark configurations.
+- [x] Use variant source composition so FOSS never references ML Kit symbols.
 - [ ] Implement language-pair support, readiness, translation, cancellation, and deterministic close.
 - [ ] Implement downloaded-model inventory, pre-download, delete, and progress.
 - [ ] Estimate storage from missing language models at approximately 30 MB each.

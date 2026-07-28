@@ -131,7 +131,8 @@ abstract class EntryInteractionBoundaryCheckTask : DefaultTask() {
                 file.isFile &&
                     (
                         (file.extension == "kt" && "/src/main/" in file.invariantSeparatorsPath) ||
-                            file.extension == "application-feature-module"
+                            file.extension == "application-feature-module" ||
+                            file.extension == "application-feature-runtime-component"
                         )
             }
             .filterNot { file ->

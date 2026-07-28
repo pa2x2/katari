@@ -4,11 +4,15 @@ import android.app.Application
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.mockk
 import mihon.feature.graph.ApplicableFeatureIntegration
+import mihon.feature.runtime.ApplicationFeatureRuntimeDependencies
 import mihon.feature.runtime.ApplicationFeatureRuntimeInstallationContext
 import mihon.feature.runtime.createFeatureRuntimeComposition
 import mihon.feature.runtime.installApplicationFeatureRuntimeModules
 import mihon.feature.runtime.validateInstalledApplicationFeatureRuntimeModules
 import org.junit.jupiter.api.Test
+import tachiyomi.core.common.preference.InMemoryPreferenceStore
+import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
+import tachiyomi.core.common.preference.ProfilePreferenceOwnerRegistry
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.InjektScope
 import uy.kohesive.injekt.registry.default.DefaultRegistrar
@@ -22,7 +26,16 @@ class TranslationFeatureGraphTest {
             val installation = installApplicationFeatureRuntimeModules(
                 registrar = Injekt,
                 modules = listOf(translationFeatureRuntimeModule),
-                context = ApplicationFeatureRuntimeInstallationContext(mockk<Application>(relaxed = true)),
+                context = ApplicationFeatureRuntimeInstallationContext(
+                    application = mockk<Application>(relaxed = true),
+                    dependencies = ApplicationFeatureRuntimeDependencies(
+                        basePreferenceStore = InMemoryPreferenceStore(),
+                        profilePreferenceOwners = ProfilePreferenceOwnerInstaller(
+                            owners = ProfilePreferenceOwnerRegistry(),
+                            preferenceStore = ::InMemoryPreferenceStore,
+                        ),
+                    ),
+                ),
             )
             val composition = createFeatureRuntimeComposition(listOf(installation.featureRuntimeInputs))
 

@@ -49,11 +49,13 @@ import mihon.feature.profiles.core.ProfileDatabase
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.core.ProfileSourcePreferenceProvider
 import mihon.feature.profiles.core.ProfileStore
+import mihon.feature.runtime.ApplicationFeatureRuntimeDependencies
 import mihon.feature.runtime.ApplicationFeatureRuntimeInstallationContext
 import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.FeatureRuntimeWarmup
 import mihon.feature.runtime.createFeatureRuntimeComposition
 import mihon.feature.runtime.installApplicationFeatureRuntimeModules
+import mihon.feature.runtime.productionApplicationFeatureRuntimeComponents
 import mihon.feature.runtime.productionApplicationFeatureRuntimeModules
 import mihon.feature.runtime.validateInstalledApplicationFeatureRuntimeGraph
 import mihon.feature.runtime.validateInstalledApplicationFeatureRuntimeModules
@@ -266,7 +268,16 @@ class AppModule(val app: Application) : InjektModule {
         val applicationFeatureRuntimeInstallation = installApplicationFeatureRuntimeModules(
             registrar = this,
             modules = productionApplicationFeatureRuntimeModules(),
-            context = ApplicationFeatureRuntimeInstallationContext(app),
+            context = ApplicationFeatureRuntimeInstallationContext(
+                application = app,
+                dependencies = ApplicationFeatureRuntimeDependencies(
+                    basePreferenceStore = get<ProfileStore>().basePreferenceStore(),
+                    profilePreferenceOwners = ProfilePreferenceOwnerInstaller(get()) {
+                        get<ProfileStore>().profileStore()
+                    },
+                ),
+                components = productionApplicationFeatureRuntimeComponents(),
+            ),
         )
         addSingletonFactory { applicationFeatureRuntimeInstallation }
         addSingletonFactory<FeatureRuntimeComposition> {

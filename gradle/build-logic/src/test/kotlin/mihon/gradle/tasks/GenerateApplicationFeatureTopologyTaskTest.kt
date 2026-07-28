@@ -35,7 +35,28 @@ class GenerateApplicationFeatureTopologyTaskTest {
         )
 
         source shouldContain "productionApplicationFeatureRuntimeModules"
+        source shouldContain "productionApplicationFeatureRuntimeComponents"
         source shouldContain "listOf("
+    }
+
+    @Test
+    fun `active variant components generate deterministic direct references`() {
+        val source = generateApplicationFeatureProductionTopology(
+            variantName = "debug",
+            modules = emptyList(),
+            components = listOf(
+                component("translation.zeta", "example.ZetaTranslationRuntimeComponent"),
+                component("translation.alpha", "example.AlphaTranslationRuntimeComponent"),
+            ),
+        )
+
+        (
+            source.indexOf("example.AlphaTranslationRuntimeComponent") <
+                source.indexOf("example.ZetaTranslationRuntimeComponent")
+            ) shouldBe true
+        source shouldContain "ApplicationFeatureRuntimeComponents"
+        source shouldContain "RegisteredApplicationFeatureRuntimeComponent"
+        source shouldNotContain "ServiceLoader"
     }
 
     @Test
@@ -78,8 +99,35 @@ class GenerateApplicationFeatureTopologyTaskTest {
         }.message shouldContain "invalid symbol"
     }
 
+    @Test
+    fun `duplicate or malformed runtime components fail generation`() {
+        shouldThrow<GradleException> {
+            generateApplicationFeatureProductionTopology(
+                variantName = "debug",
+                modules = emptyList(),
+                components = listOf(
+                    component("translation.same", "example.FirstTranslationRuntimeComponent"),
+                    component("translation.same", "example.SecondTranslationRuntimeComponent"),
+                ),
+            )
+        }.message shouldContain "Duplicate Application Feature runtime component descriptor id"
+
+        shouldThrow<GradleException> {
+            generateApplicationFeatureProductionTopology(
+                variantName = "debug",
+                modules = emptyList(),
+                components = listOf(component("translation.valid", "not-qualified")),
+            )
+        }.message shouldContain "invalid symbol"
+    }
+
     private fun module(
         id: String,
         symbol: String,
     ) = ApplicationFeatureModuleDescriptor(id, symbol, "$id.descriptor")
+
+    private fun component(
+        id: String,
+        symbol: String,
+    ) = ApplicationFeatureRuntimeComponentDescriptor(id, symbol, "$id.component-descriptor")
 }

@@ -20,6 +20,7 @@ import mihon.translation.api.TranslationTargetLanguageSelection
 import mihon.translation.api.TranslationUnavailableReason
 import mihon.translation.spi.KnownTranslationEngineCatalog
 import mihon.translation.spi.ReadyTranslationEngineRequest
+import mihon.translation.spi.TranslationAutomaticSelectionPriority
 import mihon.translation.spi.TranslationEngine
 import mihon.translation.spi.TranslationEngineExecution
 import mihon.translation.spi.TranslationEnginePreparation
@@ -36,6 +37,9 @@ class DefaultTranslationFeature(
     private val knownEngineCatalog: KnownTranslationEngineCatalog,
     private val sourceLanguageDetectors: List<TranslationSourceLanguageDetector>,
     private val defaultTargetLanguageResolver: TranslationDefaultTargetLanguageResolver,
+    private val preferredEngineSelection: () -> TranslationEngineSelection = {
+        TranslationEngineSelection.Automatic
+    },
 ) : TranslationFeature {
     override suspend fun prepare(request: TranslationRequest): TranslationPreparation {
         if (request.text.isBlank()) {
@@ -65,22 +69,26 @@ class DefaultTranslationFeature(
             )
         }
 
-        val engine = resolveEngine(request.engine) ?: return missingEngine(request.engine)
-        val maximumCodePoints = minOf(
-            SHARED_MAXIMUM_CODE_POINTS,
-            engine.maximumInputCodePoints ?: SHARED_MAXIMUM_CODE_POINTS,
-        )
-        if (codePointCount > maximumCodePoints) {
-            return inputTooLarge(codePointCount, maximumCodePoints)
+        val engineSelection = when (request.engine) {
+            TranslationEngineSelection.Automatic -> preferredEngineSelection()
+            is TranslationEngineSelection.Explicit -> request.engine
         }
+        return when (engineSelection) {
+            TranslationEngineSelection.Automatic -> prepareAutomatically(
+                request = request,
+                sourceLanguage = sourceLanguage,
+                targetLanguage = targetLanguage,
+                codePointCount = codePointCount,
+            )
 
-        val resolvedRequest = ResolvedTranslationRequest(
-            text = request.text,
-            sourceLanguage = sourceLanguage,
-            targetLanguage = targetLanguage,
-            engine = engine.catalogEntry.id,
-        )
-        return engine.prepare(resolvedRequest).toApi(engine, resolvedRequest)
+            is TranslationEngineSelection.Explicit -> prepareExplicitly(
+                request = request,
+                sourceLanguage = sourceLanguage,
+                targetLanguage = targetLanguage,
+                codePointCount = codePointCount,
+                selection = engineSelection,
+            )
+        }
     }
 
     override suspend fun translate(ready: ReadyTranslation): TranslationExecution {
@@ -93,7 +101,14 @@ class DefaultTranslationFeature(
             )
         }
 
-        return when (val execution = prepared.engine.translate(prepared.engineRequest)) {
+        val refreshed = prepared.engine.revalidate(prepared.engineRequest)
+        if (refreshed !is TranslationEnginePreparation.Ready) {
+            return TranslationExecution.PreparationChanged(
+                refreshed.toApi(prepared.engine, prepared.request),
+            )
+        }
+
+        return when (val execution = prepared.engine.translate(refreshed.request)) {
             is TranslationEngineExecution.Success -> TranslationExecution.Success(
                 TranslationResult(
                     translatedText = execution.translatedText,
@@ -130,11 +145,87 @@ class DefaultTranslationFeature(
         }
     }
 
-    private fun resolveEngine(selection: TranslationEngineSelection): TranslationEngine? {
-        return when (selection) {
-            TranslationEngineSelection.Automatic -> engineRegistry.engines.singleOrNull()
-            is TranslationEngineSelection.Explicit -> engineRegistry.find(selection.engine)
+    private suspend fun prepareExplicitly(
+        request: TranslationRequest,
+        sourceLanguage: TranslationLanguageTag,
+        targetLanguage: TranslationLanguageTag,
+        codePointCount: Int,
+        selection: TranslationEngineSelection.Explicit,
+    ): TranslationPreparation {
+        val engine = engineRegistry.find(selection.engine) ?: return missingEngine(selection)
+        val maximumCodePoints = engine.effectiveMaximumInputCodePoints()
+        if (codePointCount > maximumCodePoints) {
+            return inputTooLarge(codePointCount, maximumCodePoints)
         }
+        val resolvedRequest = request.resolve(sourceLanguage, targetLanguage, engine)
+        return engine.prepare(resolvedRequest).toApi(engine, resolvedRequest)
+    }
+
+    private suspend fun prepareAutomatically(
+        request: TranslationRequest,
+        sourceLanguage: TranslationLanguageTag,
+        targetLanguage: TranslationLanguageTag,
+        codePointCount: Int,
+    ): TranslationPreparation {
+        if (engineRegistry.engines.isEmpty()) {
+            return missingEngine(TranslationEngineSelection.Automatic)
+        }
+        val eligibleEngines = engineRegistry.engines.filter { engine ->
+            codePointCount <= engine.effectiveMaximumInputCodePoints()
+        }
+        if (eligibleEngines.isEmpty()) {
+            val maximumCodePoints = engineRegistry.engines.maxOf { engine ->
+                engine.effectiveMaximumInputCodePoints()
+            }
+            return inputTooLarge(codePointCount, maximumCodePoints)
+        }
+
+        val candidates = eligibleEngines.map { engine ->
+            val resolvedRequest = request.resolve(sourceLanguage, targetLanguage, engine)
+            AutomaticCandidate(
+                engine = engine,
+                request = resolvedRequest,
+                preparation = engine.prepare(resolvedRequest),
+            )
+        }
+        val ready = candidates.filter { candidate ->
+            candidate.preparation is TranslationEnginePreparation.Ready
+        }
+        val actionableSetup = candidates.filter { candidate ->
+            candidate.preparation !is TranslationEnginePreparation.Ready &&
+                candidate.preparation !is TranslationEnginePreparation.Unavailable
+        }
+        val selected = when {
+            ready.isNotEmpty() -> ready.highestPriority { it.ready }
+            actionableSetup.isNotEmpty() -> actionableSetup.highestPriority { it.setup }
+            else -> candidates.highestPriority { it.setup }
+        }
+        return selected.preparation.toApi(selected.engine, selected.request)
+    }
+
+    private fun TranslationRequest.resolve(
+        sourceLanguage: TranslationLanguageTag,
+        targetLanguage: TranslationLanguageTag,
+        engine: TranslationEngine,
+    ) = ResolvedTranslationRequest(
+        text = text,
+        sourceLanguage = sourceLanguage,
+        targetLanguage = targetLanguage,
+        engine = engine.catalogEntry.id,
+    )
+
+    private fun TranslationEngine.effectiveMaximumInputCodePoints(): Int {
+        return minOf(
+            SHARED_MAXIMUM_CODE_POINTS,
+            maximumInputCodePoints ?: SHARED_MAXIMUM_CODE_POINTS,
+        )
+    }
+
+    private fun List<AutomaticCandidate>.highestPriority(
+        priority: (TranslationAutomaticSelectionPriority) -> Int,
+    ): AutomaticCandidate {
+        val maximum = maxOf { candidate -> priority(candidate.engine.automaticSelectionPriority) }
+        return first { candidate -> priority(candidate.engine.automaticSelectionPriority) == maximum }
     }
 
     private fun missingEngine(selection: TranslationEngineSelection): TranslationPreparation {
@@ -213,6 +304,12 @@ class DefaultTranslationFeature(
         val request: ResolvedTranslationRequest,
         val presentation: TranslationProviderPresentation,
     ) : ReadyTranslation
+
+    private data class AutomaticCandidate(
+        val engine: TranslationEngine,
+        val request: ResolvedTranslationRequest,
+        val preparation: TranslationEnginePreparation,
+    )
 
     private companion object {
         const val SHARED_MAXIMUM_CODE_POINTS = 10_000

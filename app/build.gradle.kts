@@ -232,6 +232,10 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.presentationWidget.path)))
     implementation(dependencies.project(mapOf("path" to projects.telemetry.path)))
     implementation(dependencies.project(mapOf("path" to projects.translation.runtime.path)))
+    add("debugImplementation", projects.translation.mlkit)
+    add("releaseImplementation", projects.translation.mlkit)
+    add("previewImplementation", projects.translation.mlkit)
+    add("benchmarkImplementation", projects.translation.mlkit)
 
     // Compose
     implementation(libs.androidx.activity.compose)
@@ -471,6 +475,14 @@ androidComponents {
                     rootProject.fileTree(rootProject.layout.projectDirectory) {
                         include("**/src/main/**/*.application-feature-module")
                         include("**/src/${variant.name}/**/*.application-feature-module")
+                        exclude("**/build/**")
+                        exclude("translation-workspace/**")
+                    },
+                )
+                componentDescriptors.from(
+                    rootProject.fileTree(rootProject.layout.projectDirectory) {
+                        include("**/src/main/**/*.application-feature-runtime-component")
+                        include("**/src/${variant.name}/**/*.application-feature-runtime-component")
                         exclude("**/build/**")
                         exclude("translation-workspace/**")
                     },

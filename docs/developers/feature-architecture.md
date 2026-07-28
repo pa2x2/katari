@@ -101,6 +101,25 @@ emits deterministic direct Kotlin references, so malformed, missing, or wrongly 
 reflection or `ServiceLoader`. Architecture validation also requires the descriptor to live in the same module as its
 runtime declaration.
 
+The installation context also supplies the base preference store and a profile-aware preference-owner installer.
+Application Feature modules register their own profile preference owner during installation; the app host must not
+construct Feature-owned preference classes or maintain a parallel owner list.
+
+An implementation that exists only in selected app variants contributes an
+`ApplicationFeatureRuntimeComponent` from its owner module and declares that component in each participating variant:
+
+```properties
+id=example.optional-component
+component=example.feature.ExampleRuntimeComponent
+```
+
+The `*.application-feature-runtime-component` descriptor is read only from `src/main` and the active variant. The
+generated topology passes typed components through `ApplicationFeatureRuntimeInstallationContext`; a Feature runtime
+module may query only the component contract it owns. Keep the declaration explicitly typed as
+`ApplicationFeatureRuntimeComponent`, keep the descriptor owner-local, and omit both the variant dependency and
+descriptor from builds where the implementation must not exist. This remains compile-time app composition, not a
+runtime plugin loader.
+
 Application installers contribute their providers to one aggregated `ApplicationSubjectContribution`. They do not
 each create an application subject. An empty module topology is valid, but the application subject still exists once.
 A future Feature may contain both an application integration for shared infrastructure and Entry integrations for

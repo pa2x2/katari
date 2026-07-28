@@ -11,6 +11,8 @@ import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.SpecializedAdapter
 import mihon.feature.graph.featureGraphContributor
+import tachiyomi.core.common.preference.PreferenceStore
+import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
 import uy.kohesive.injekt.api.InjektRegistrar
 import kotlin.reflect.KClass
 
@@ -39,7 +41,57 @@ class ApplicationFeatureRuntimeModule(
 
 data class ApplicationFeatureRuntimeInstallationContext(
     val application: Application,
+    val dependencies: ApplicationFeatureRuntimeDependencies,
+    val components: ApplicationFeatureRuntimeComponents = ApplicationFeatureRuntimeComponents(),
 )
+
+data class ApplicationFeatureRuntimeDependencies(
+    val basePreferenceStore: PreferenceStore,
+    val profilePreferenceOwners: ProfilePreferenceOwnerInstaller,
+)
+
+/**
+ * Build-variant-specific runtime participation owned by an application Feature implementation.
+ *
+ * Components are compile-time registrations. They are not dynamically loaded plugins and must remain behind a
+ * Feature-owned contract before application code can use them.
+ */
+interface ApplicationFeatureRuntimeComponent
+
+data class RegisteredApplicationFeatureRuntimeComponent(
+    val id: String,
+    val component: ApplicationFeatureRuntimeComponent,
+) {
+    init {
+        require(APPLICATION_FEATURE_MODULE_ID.matches(id)) {
+            "Application Feature runtime component id '$id' is invalid"
+        }
+    }
+}
+
+class ApplicationFeatureRuntimeComponents(
+    registrations: List<RegisteredApplicationFeatureRuntimeComponent> = emptyList(),
+) {
+    private val registrations = registrations.toList()
+
+    init {
+        val duplicateIds = this.registrations
+            .groupBy(RegisteredApplicationFeatureRuntimeComponent::id)
+            .filterValues { it.size > 1 }
+        require(duplicateIds.isEmpty()) {
+            "Duplicate Application Feature runtime components: ${duplicateIds.keys.sorted()}"
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T : ApplicationFeatureRuntimeComponent> instances(type: KClass<T>): List<T> =
+        registrations.mapNotNull { registration ->
+            registration.component.takeIf(type::isInstance) as T?
+        }
+}
+
+inline fun <reified T : ApplicationFeatureRuntimeComponent> ApplicationFeatureRuntimeComponents.instances(): List<T> =
+    instances(T::class)
 
 data class ApplicationFeatureRuntimeArtifacts(
     val capabilityProviders: List<CapabilityProvider<*>> = emptyList(),

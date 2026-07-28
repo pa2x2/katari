@@ -59,6 +59,53 @@ class ApplicationFeatureRuntimeModuleBoundaryRulesTest {
     }
 
     @Test
+    fun `variant runtime component descriptor stays with its owner`() {
+        val findings = checkApplicationFeatureRuntimeModuleBoundaries(
+            validTopology() + listOf(
+                ApplicationFeatureRuntimeModuleBoundarySource(
+                    relativePath = "feature-example/src/main/java/example/ExampleRuntimeComponent.kt",
+                    content = """
+                        package example
+
+                        internal val ExampleRuntimeComponent: ApplicationFeatureRuntimeComponent =
+                            object : ApplicationFeatureRuntimeComponent {}
+                    """.trimIndent(),
+                ),
+                ApplicationFeatureRuntimeModuleBoundarySource(
+                    relativePath = "feature-example/src/debug/resources/example.application-feature-runtime-component",
+                    content = "id=example.component\ncomponent=example.ExampleRuntimeComponent",
+                ),
+            ),
+        )
+
+        findings.shouldBeEmpty()
+    }
+
+    @Test
+    fun `runtime component descriptor cannot resolve another owner`() {
+        val findings = checkApplicationFeatureRuntimeModuleBoundaries(
+            validTopology() + listOf(
+                ApplicationFeatureRuntimeModuleBoundarySource(
+                    relativePath = "feature-example/src/main/java/example/ExampleRuntimeComponent.kt",
+                    content = """
+                        package example
+
+                        internal val ExampleRuntimeComponent: ApplicationFeatureRuntimeComponent =
+                            object : ApplicationFeatureRuntimeComponent {}
+                    """.trimIndent(),
+                ),
+                ApplicationFeatureRuntimeModuleBoundarySource(
+                    relativePath = "other/src/debug/resources/example.application-feature-runtime-component",
+                    content = "id=example.component\ncomponent=example.ExampleRuntimeComponent",
+                ),
+            ),
+        )
+
+        findings.shouldHaveSize(1)
+        findings.single().reason shouldContain "must live in feature-example"
+    }
+
+    @Test
     fun `runtime infrastructure requires generated app topology`() {
         val findings = checkApplicationFeatureRuntimeModuleBoundaries(
             listOf(
@@ -98,6 +145,7 @@ class ApplicationFeatureRuntimeModuleBoundaryRulesTest {
             content = """
                 import mihon.gradle.tasks.GenerateApplicationFeatureTopologyTask
                 include("**/*.application-feature-module")
+                include("**/*.application-feature-runtime-component")
             """.trimIndent(),
         ),
     )

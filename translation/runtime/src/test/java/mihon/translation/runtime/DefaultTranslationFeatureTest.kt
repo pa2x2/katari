@@ -26,9 +26,13 @@ import mihon.translation.api.TranslationResult
 import mihon.translation.api.TranslationSourceLanguageSelection
 import mihon.translation.api.TranslationTargetLanguageSelection
 import mihon.translation.spi.ReadyTranslationEngineRequest
+import mihon.translation.spi.TranslationAutomaticSelectionPriority
 import mihon.translation.spi.TranslationEngine
 import mihon.translation.spi.TranslationEngineExecution
 import mihon.translation.spi.TranslationEnginePreparation
+import mihon.translation.spi.TranslationSourceLanguageDetection
+import mihon.translation.spi.TranslationSourceLanguageDetector
+import mihon.translation.spi.TranslationSourceLanguageDetectorId
 import org.junit.jupiter.api.Test
 
 class DefaultTranslationFeatureTest {
@@ -119,16 +123,195 @@ class DefaultTranslationFeatureTest {
         shouldThrow<CancellationException> { execution.await() }
     }
 
+    @Test
+    fun `automatic resolution prefers ready priority and ready always beats setup`() = runTest {
+        val system = FakeTranslationEngine(
+            catalogEntry = knownEngine("android-system"),
+            automaticSelectionPriority = TranslationAutomaticSelectionPriority(ready = 20, setup = 0),
+        )
+        val mlKit = FakeTranslationEngine(
+            catalogEntry = knownEngine("mlkit"),
+            automaticSelectionPriority = TranslationAutomaticSelectionPriority(ready = 10, setup = 20),
+        )
+
+        val bothReady = feature(DefaultTranslationEngineRegistry(listOf(system, mlKit)))
+            .prepare(automaticEngineRequest()) as TranslationPreparation.Ready
+
+        bothReady.request.engine shouldBe system.catalogEntry.id
+
+        val systemSetup = FakeTranslationEngine(
+            catalogEntry = knownEngine("android-system"),
+            preparation = TranslationEnginePreparation.SystemSetupRequired(
+                mihon.translation.api.TranslationSystemSetupReason.ServiceDisabled,
+            ),
+            automaticSelectionPriority = TranslationAutomaticSelectionPriority(ready = 20, setup = 100),
+        )
+        val mlKitReady = FakeTranslationEngine(
+            catalogEntry = knownEngine("mlkit"),
+            automaticSelectionPriority = TranslationAutomaticSelectionPriority(ready = 0, setup = 0),
+        )
+
+        val readyBeatsSetup = feature(DefaultTranslationEngineRegistry(listOf(systemSetup, mlKitReady)))
+            .prepare(automaticEngineRequest()) as TranslationPreparation.Ready
+
+        readyBeatsSetup.request.engine shouldBe mlKitReady.catalogEntry.id
+    }
+
+    @Test
+    fun `automatic resolution prefers ML Kit setup priority when no engine is ready`() = runTest {
+        val system = FakeTranslationEngine(
+            catalogEntry = knownEngine("android-system"),
+            preparation = TranslationEnginePreparation.SystemSetupRequired(
+                mihon.translation.api.TranslationSystemSetupReason.ServiceDisabled,
+            ),
+            automaticSelectionPriority = TranslationAutomaticSelectionPriority(ready = 20, setup = 10),
+        )
+        val mlKit = FakeTranslationEngine(
+            catalogEntry = knownEngine("mlkit"),
+            preparation = TranslationEnginePreparation.SystemSetupRequired(
+                mihon.translation.api.TranslationSystemSetupReason.LanguageModelsRequired,
+            ),
+            automaticSelectionPriority = TranslationAutomaticSelectionPriority(ready = 10, setup = 20),
+        )
+
+        feature(DefaultTranslationEngineRegistry(listOf(system, mlKit)))
+            .prepare(automaticEngineRequest()) shouldBe TranslationPreparation.SystemSetupRequired(
+            engine = mlKit.catalogEntry.id,
+            presentation = mlKit.presentation,
+            reason = mihon.translation.api.TranslationSystemSetupReason.LanguageModelsRequired,
+        )
+    }
+
+    @Test
+    fun `saved explicit engine remains selected when absent and request override wins when present`() = runTest {
+        val available = FakeTranslationEngine(catalogEntry = knownEngine("available"))
+        val missing = TranslationEngineId("missing")
+        val registry = DefaultTranslationEngineRegistry(
+            engines = listOf(available),
+            knownEngines = listOf(available.catalogEntry, knownEngine(missing.value)),
+        )
+        val feature = feature(
+            registry = registry,
+            preferredEngineSelection = { TranslationEngineSelection.Explicit(missing) },
+        )
+
+        feature.prepare(automaticEngineRequest()) shouldBe TranslationPreparation.EngineChoiceRequired(
+            reason = TranslationEngineChoiceReason.SelectedEngineUnavailable(missing),
+            engines = registry.knownEngines,
+        )
+        val overridden = feature.prepare(
+            explicitRequest().copy(engine = TranslationEngineSelection.Explicit(available.catalogEntry.id)),
+        ) as TranslationPreparation.Ready
+        overridden.request.engine shouldBe available.catalogEntry.id
+    }
+
+    @Test
+    fun `explicit engine preparation never falls back`() = runTest {
+        val selected = FakeTranslationEngine(
+            catalogEntry = knownEngine("selected"),
+            preparation = TranslationEnginePreparation.Unavailable(
+                mihon.translation.api.TranslationUnavailableReason.ServiceMissing,
+            ),
+        )
+        val fallback = FakeTranslationEngine(catalogEntry = knownEngine("fallback"))
+        val feature = feature(DefaultTranslationEngineRegistry(listOf(selected, fallback)))
+        val request = explicitRequest().copy(
+            engine = TranslationEngineSelection.Explicit(selected.catalogEntry.id),
+        )
+
+        feature.prepare(request) shouldBe TranslationPreparation.Unavailable(
+            mihon.translation.api.TranslationUnavailableReason.ServiceMissing,
+        )
+        fallback.preparationCount shouldBe 0
+    }
+
+    @Test
+    fun `equal source and target requires a per-request target choice`() = runTest {
+        val request = explicitRequest().copy(
+            targetLanguage = TranslationTargetLanguageSelection.Explicit(ENGLISH),
+        )
+
+        feature(FakeTranslationEngine()).prepare(request) shouldBe TranslationPreparation.TargetLanguageRequired(
+            sourceLanguage = ENGLISH,
+            reason = mihon.translation.api.TranslationTargetChoiceReason.SourceEqualsTarget,
+        )
+    }
+
+    @Test
+    fun `execution revalidates preparation and never runs a stale provider handle`() = runTest {
+        val engine = FakeTranslationEngine(
+            revalidation = TranslationEnginePreparation.SystemSetupRequired(
+                mihon.translation.api.TranslationSystemSetupReason.ServiceDisabled,
+            ),
+        )
+        val feature = feature(engine)
+        val ready = (feature.prepare(explicitRequest()) as TranslationPreparation.Ready).translation
+
+        feature.translate(ready) shouldBe TranslationExecution.PreparationChanged(
+            TranslationPreparation.SystemSetupRequired(
+                engine = ENGINE_ID,
+                presentation = PRESENTATION,
+                reason = mihon.translation.api.TranslationSystemSetupReason.ServiceDisabled,
+            ),
+        )
+        engine.translationCount shouldBe 0
+    }
+
+    @Test
+    fun `provider failure never retries another ready engine`() = runTest {
+        val selected = FakeTranslationEngine(
+            catalogEntry = knownEngine("selected"),
+            execution = TranslationEngineExecution.Failed("provider failed"),
+            automaticSelectionPriority = TranslationAutomaticSelectionPriority(ready = 20),
+        )
+        val fallback = FakeTranslationEngine(
+            catalogEntry = knownEngine("fallback"),
+            automaticSelectionPriority = TranslationAutomaticSelectionPriority(ready = 10),
+        )
+        val feature = feature(DefaultTranslationEngineRegistry(listOf(selected, fallback)))
+        val ready = (feature.prepare(automaticEngineRequest()) as TranslationPreparation.Ready).translation
+
+        feature.translate(ready) shouldBe TranslationExecution.Failed(
+            TranslationFailureReason.ProviderFailure(
+                engine = selected.catalogEntry.id,
+                message = "provider failed",
+            ),
+        )
+        selected.translationCount shouldBe 1
+        fallback.translationCount shouldBe 0
+    }
+
+    @Test
+    fun `automatic source detection reports a chooser when every detector is inconclusive`() = runTest {
+        val feature = feature(
+            registry = DefaultTranslationEngineRegistry(listOf(FakeTranslationEngine())),
+            sourceLanguageDetectors = listOf(
+                FakeDetector("unavailable", TranslationSourceLanguageDetection.Unavailable("not available")),
+                FakeDetector("undetermined", TranslationSourceLanguageDetection.Undetermined),
+            ),
+        )
+        val request = explicitRequest().copy(sourceLanguage = TranslationSourceLanguageSelection.Automatic)
+
+        feature.prepare(request) shouldBe TranslationPreparation.SourceUndetermined()
+    }
+
     private fun feature(engine: TranslationEngine): DefaultTranslationFeature {
         return feature(DefaultTranslationEngineRegistry(listOf(engine)))
     }
 
-    private fun feature(registry: DefaultTranslationEngineRegistry): DefaultTranslationFeature {
+    private fun feature(
+        registry: DefaultTranslationEngineRegistry,
+        preferredEngineSelection: () -> TranslationEngineSelection = {
+            TranslationEngineSelection.Automatic
+        },
+        sourceLanguageDetectors: List<TranslationSourceLanguageDetector> = emptyList(),
+    ): DefaultTranslationFeature {
         return DefaultTranslationFeature(
             engineRegistry = registry,
             knownEngineCatalog = registry,
-            sourceLanguageDetectors = emptyList(),
+            sourceLanguageDetectors = sourceLanguageDetectors,
             defaultTargetLanguageResolver = TranslationDefaultTargetLanguageResolver { null },
+            preferredEngineSelection = preferredEngineSelection,
         )
     }
 
@@ -141,28 +324,52 @@ class DefaultTranslationFeatureTest {
         engine = TranslationEngineSelection.Explicit(ENGINE_ID),
     )
 
+    private fun automaticEngineRequest(text: String = "Hello") = explicitRequest(text).copy(
+        engine = TranslationEngineSelection.Automatic,
+    )
+
     private class FakeTranslationEngine(
         private val preparation: TranslationEnginePreparation = TranslationEnginePreparation.Ready(FakeReady),
+        private val revalidation: TranslationEnginePreparation? = null,
         private val execution: TranslationEngineExecution = TranslationEngineExecution.Success("translated"),
         private val executionBlock: (suspend () -> TranslationEngineExecution)? = null,
         override val maximumInputCodePoints: Int? = null,
+        override val catalogEntry: KnownTranslationEngine = KNOWN_ENGINE,
+        override val automaticSelectionPriority: TranslationAutomaticSelectionPriority =
+            TranslationAutomaticSelectionPriority(),
     ) : TranslationEngine {
-        override val catalogEntry = KNOWN_ENGINE
-        override val presentation = PRESENTATION
+        override val presentation = presentation(catalogEntry)
 
         var preparedRequest: ResolvedTranslationRequest? = null
+        var preparationCount = 0
+        var translationCount = 0
 
         override suspend fun prepare(request: ResolvedTranslationRequest): TranslationEnginePreparation {
             preparedRequest = request
+            preparationCount += 1
             return preparation
         }
 
+        override suspend fun revalidate(ready: ReadyTranslationEngineRequest): TranslationEnginePreparation {
+            return revalidation ?: TranslationEnginePreparation.Ready(ready)
+        }
+
         override suspend fun translate(ready: ReadyTranslationEngineRequest): TranslationEngineExecution {
+            translationCount += 1
             return executionBlock?.invoke() ?: execution
         }
     }
 
     private data object FakeReady : ReadyTranslationEngineRequest
+
+    private class FakeDetector(
+        id: String,
+        private val result: TranslationSourceLanguageDetection,
+    ) : TranslationSourceLanguageDetector {
+        override val id = TranslationSourceLanguageDetectorId("fake-detector-$id")
+
+        override suspend fun detect(text: String): TranslationSourceLanguageDetection = result
+    }
 
     private companion object {
         val ENGINE_ID = TranslationEngineId("fake")
@@ -181,6 +388,21 @@ class DefaultTranslationFeatureTest {
             providerName = "Fake provider",
             engineName = "Fake engine",
             buildAvailability = TranslationEngineBuildAvailability.Included,
+        )
+
+        fun knownEngine(id: String) = KnownTranslationEngine(
+            id = TranslationEngineId(id),
+            providerId = TranslationProviderId(id),
+            providerName = id,
+            engineName = id,
+            buildAvailability = TranslationEngineBuildAvailability.Included,
+        )
+
+        fun presentation(engine: KnownTranslationEngine) = TranslationProviderPresentation(
+            providerId = engine.providerId,
+            providerName = engine.providerName,
+            engineName = engine.engineName,
+            invocationPolicy = TranslationInvocationPolicy.Immediate,
         )
     }
 }

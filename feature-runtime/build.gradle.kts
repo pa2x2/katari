@@ -8,6 +8,7 @@ android {
 }
 
 dependencies {
+    api(projects.core.common)
     api(projects.featureGraph)
     api(libs.injekt)
 

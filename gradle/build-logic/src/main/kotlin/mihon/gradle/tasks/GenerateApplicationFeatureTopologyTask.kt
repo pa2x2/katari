@@ -24,6 +24,10 @@ abstract class GenerateApplicationFeatureTopologyTask : DefaultTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val moduleDescriptors: ConfigurableFileCollection
 
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val componentDescriptors: ConfigurableFileCollection
+
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
 
@@ -32,6 +36,7 @@ abstract class GenerateApplicationFeatureTopologyTask : DefaultTask() {
         val source = generateApplicationFeatureProductionTopology(
             variantName = variantName.get(),
             modules = moduleDescriptors.files.map(::applicationFeatureModuleDescriptor),
+            components = componentDescriptors.files.map(::applicationFeatureRuntimeComponentDescriptor),
         )
         val packageDirectory = outputDirectory.get().asFile.resolve("mihon/feature/runtime")
         packageDirectory.mkdirs()
@@ -45,11 +50,19 @@ internal data class ApplicationFeatureModuleDescriptor(
     val source: String,
 )
 
+internal data class ApplicationFeatureRuntimeComponentDescriptor(
+    val id: String,
+    val componentSymbol: String,
+    val source: String,
+)
+
 internal fun generateApplicationFeatureProductionTopology(
     variantName: String,
     modules: List<ApplicationFeatureModuleDescriptor>,
+    components: List<ApplicationFeatureRuntimeComponentDescriptor> = emptyList(),
 ): String {
     validateApplicationFeatureDescriptors(modules)
+    validateApplicationFeatureRuntimeComponentDescriptors(components)
     return buildString {
         appendLine("package mihon.feature.runtime")
         appendLine()
@@ -76,6 +89,20 @@ internal fun generateApplicationFeatureProductionTopology(
         appendLine("    }")
         appendLine("    return module")
         appendLine("}")
+        appendLine()
+        appendLine(
+            "internal fun productionApplicationFeatureRuntimeComponents(): " +
+                "ApplicationFeatureRuntimeComponents = ApplicationFeatureRuntimeComponents(",
+        )
+        appendLine("    registrations = listOf(")
+        components.sortedBy(ApplicationFeatureRuntimeComponentDescriptor::id).forEach { descriptor ->
+            appendLine("        RegisteredApplicationFeatureRuntimeComponent(")
+            appendLine("            id = \"${descriptor.id}\",")
+            appendLine("            component = ${descriptor.componentSymbol},")
+            appendLine("        ),")
+        }
+        appendLine("    ),")
+        appendLine(")")
     }
 }
 
@@ -112,6 +139,41 @@ private fun validateApplicationFeatureDescriptors(
         }
 }
 
+private fun validateApplicationFeatureRuntimeComponentDescriptors(
+    descriptors: List<ApplicationFeatureRuntimeComponentDescriptor>,
+) {
+    descriptors.forEach { descriptor ->
+        if (!APPLICATION_FEATURE_MODULE_ID.matches(descriptor.id)) {
+            throw GradleException(
+                "Application Feature runtime component descriptor ${descriptor.source} " +
+                    "has invalid id '${descriptor.id}'",
+            )
+        }
+        if (!APPLICATION_FEATURE_MODULE_SYMBOL.matches(descriptor.componentSymbol)) {
+            throw GradleException(
+                "Application Feature runtime component descriptor ${descriptor.source} " +
+                    "has invalid symbol '${descriptor.componentSymbol}'",
+            )
+        }
+    }
+    descriptors.groupBy(ApplicationFeatureRuntimeComponentDescriptor::id)
+        .filterValues { it.size > 1 }
+        .forEach { (id, duplicates) ->
+            throw GradleException(
+                "Duplicate Application Feature runtime component descriptor id '$id': " +
+                    duplicates.map(ApplicationFeatureRuntimeComponentDescriptor::source).sorted(),
+            )
+        }
+    descriptors.groupBy(ApplicationFeatureRuntimeComponentDescriptor::componentSymbol)
+        .filterValues { it.size > 1 }
+        .forEach { (symbol, duplicates) ->
+            throw GradleException(
+                "Duplicate Application Feature runtime component descriptor symbol '$symbol': " +
+                    duplicates.map(ApplicationFeatureRuntimeComponentDescriptor::source).sorted(),
+            )
+        }
+}
+
 private fun applicationFeatureModuleDescriptor(file: File): ApplicationFeatureModuleDescriptor {
     val properties = Properties().also { values -> file.inputStream().use(values::load) }
     val unknownKeys = properties.stringPropertyNames() - APPLICATION_FEATURE_DESCRIPTOR_KEYS
@@ -125,6 +187,21 @@ private fun applicationFeatureModuleDescriptor(file: File): ApplicationFeatureMo
     )
 }
 
+private fun applicationFeatureRuntimeComponentDescriptor(
+    file: File,
+): ApplicationFeatureRuntimeComponentDescriptor {
+    val properties = Properties().also { values -> file.inputStream().use(values::load) }
+    val unknownKeys = properties.stringPropertyNames() - APPLICATION_FEATURE_RUNTIME_COMPONENT_DESCRIPTOR_KEYS
+    if (unknownKeys.isNotEmpty()) {
+        throw GradleException("Unknown descriptor keys in ${file.invariantSeparatorsPath}: ${unknownKeys.sorted()}")
+    }
+    return ApplicationFeatureRuntimeComponentDescriptor(
+        id = properties.requiredApplicationFeatureValue("id", file),
+        componentSymbol = properties.requiredApplicationFeatureValue("component", file),
+        source = file.invariantSeparatorsPath,
+    )
+}
+
 private fun Properties.requiredApplicationFeatureValue(
     key: String,
     file: File,
@@ -134,6 +211,7 @@ private fun Properties.requiredApplicationFeatureValue(
 }
 
 private val APPLICATION_FEATURE_DESCRIPTOR_KEYS = setOf("id", "module")
+private val APPLICATION_FEATURE_RUNTIME_COMPONENT_DESCRIPTOR_KEYS = setOf("id", "component")
 private val APPLICATION_FEATURE_MODULE_ID = Regex("""[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*""")
 private val APPLICATION_FEATURE_MODULE_SYMBOL =
     Regex("""[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+""")
