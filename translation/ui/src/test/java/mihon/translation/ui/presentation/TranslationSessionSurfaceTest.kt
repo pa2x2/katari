@@ -1,5 +1,9 @@
 package mihon.translation.ui.presentation
 
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import io.kotest.matchers.shouldBe
 import mihon.translation.api.TranslationRequest
 import mihon.translation.ui.session.TranslationSelectionAnchor
@@ -83,6 +87,48 @@ class TranslationSessionSurfaceTest {
             anchor = TranslationSelectionAnchor(0f, 200f, 600f, 240f),
             popup = TranslationPopupSize(300, 200),
         ) shouldBe null
+    }
+
+    @Test
+    fun `platform popup placement preserves reader-root coordinates inside its window`() {
+        var available: Boolean? = null
+        val provider = TranslationPopupPositionProvider(
+            anchor = TranslationSelectionAnchor(400f, 200f, 600f, 240f),
+            hostSize = IntSize(1000, 1000),
+            windowInsets = TranslationWindowInsets(0, 0, 0, 0),
+            edgeMargin = 16,
+            anchorGap = 8,
+            onPlacementAvailabilityChanged = { available = it },
+        )
+
+        provider.calculatePosition(
+            anchorBounds = IntRect(50, 70, 1050, 1070),
+            windowSize = IntSize(1200, 1300),
+            layoutDirection = LayoutDirection.Ltr,
+            popupContentSize = IntSize(300, 200),
+        ) shouldBe IntOffset(400, 318)
+        available shouldBe true
+    }
+
+    @Test
+    fun `platform popup reports measured overflow for sheet fallback`() {
+        var available: Boolean? = null
+        val provider = TranslationPopupPositionProvider(
+            anchor = TranslationSelectionAnchor(400f, 420f, 600f, 460f),
+            hostSize = IntSize(1000, 1000),
+            windowInsets = TranslationWindowInsets(0, 0, 0, 0),
+            edgeMargin = 16,
+            anchorGap = 8,
+            onPlacementAvailabilityChanged = { available = it },
+        )
+
+        provider.calculatePosition(
+            anchorBounds = IntRect(50, 70, 1050, 1070),
+            windowSize = IntSize(1200, 1300),
+            layoutDirection = LayoutDirection.Ltr,
+            popupContentSize = IntSize(400, 520),
+        ) shouldBe IntOffset(-351, -451)
+        available shouldBe false
     }
 
     private fun calculate(

@@ -3,10 +3,12 @@ package mihon.translation.ui.presentation
 import android.content.ClipData
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -20,21 +22,27 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.toClipEntry
-import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupPositionProvider
+import androidx.compose.ui.window.PopupProperties
 import kotlinx.coroutines.launch
 import mihon.translation.ui.session.TranslationSessionController
 import mihon.translation.ui.session.TranslationSessionState
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.AdaptiveSheet
 import tachiyomi.presentation.core.i18n.stringResource
-import kotlin.math.min
 
 /**
  * Full-viewport Translation overlay.
@@ -106,6 +114,22 @@ internal fun TranslationSessionOverlay(
     }
     if (preferredSurface == TranslationSessionSurface.None) return
 
+    @Composable
+    fun Sheet() {
+        TranslationSessionSheetDialog(
+            state = active,
+            isTabletUi = isTabletUi,
+            onDismiss = onDismiss,
+            onExecute = onExecute,
+            onRetry = onRetry,
+            onCopy = onCopy,
+            onExpand = onExpand,
+            onSelectSource = onSelectSource,
+            onSelectEngine = onSelectEngine,
+            onExternalAction = onExternalAction,
+        )
+    }
+
     val density = LocalDensity.current
     val layoutDirection = LocalLayoutDirection.current
     val leftInset = WindowInsets.safeDrawing.getLeft(density, layoutDirection)
@@ -116,8 +140,95 @@ internal fun TranslationSessionOverlay(
     val anchorGap = with(density) { POPUP_ANCHOR_GAP.roundToPx() }
     val popupMaximumWidth = with(density) { POPUP_MAXIMUM_WIDTH.roundToPx() }
 
-    SubcomposeLayout(modifier = modifier.fillMaxSize()) { constraints ->
-        fun sheet() = subcompose(TranslationSessionSlot.Sheet) {
+    val anchor = active.input.anchor
+    if (preferredSurface == TranslationSessionSurface.AdaptiveSheet || anchor == null) {
+        Sheet()
+        return
+    }
+
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        val hostSize = IntSize(constraints.maxWidth, constraints.maxHeight)
+        val safeWidth = hostSize.width - leftInset - rightInset - edgeMargin * 2
+        val safeHeight = hostSize.height - topInset - bottomInset - edgeMargin * 2
+        if (safeWidth <= 0 || safeHeight <= 0) {
+            Sheet()
+            return@BoxWithConstraints
+        }
+
+        var popupFits by remember(active, hostSize) { mutableStateOf<Boolean?>(null) }
+        if (popupFits == false) {
+            Sheet()
+            return@BoxWithConstraints
+        }
+
+        val positionProvider = remember(
+            anchor,
+            hostSize,
+            leftInset,
+            topInset,
+            rightInset,
+            bottomInset,
+            edgeMargin,
+            anchorGap,
+        ) {
+            TranslationPopupPositionProvider(
+                anchor = anchor,
+                hostSize = hostSize,
+                windowInsets = TranslationWindowInsets(
+                    left = leftInset,
+                    top = topInset,
+                    right = rightInset,
+                    bottom = bottomInset,
+                ),
+                edgeMargin = edgeMargin,
+                anchorGap = anchorGap,
+                onPlacementAvailabilityChanged = { fits ->
+                    if (popupFits != fits) popupFits = fits
+                },
+            )
+        }
+
+        Popup(
+            popupPositionProvider = positionProvider,
+            onDismissRequest = onDismiss,
+            properties = translationPopupProperties,
+        ) {
+            TranslationSessionPopup(
+                state = active,
+                maximumWidth = with(density) {
+                    minOf(popupMaximumWidth, safeWidth).toDp()
+                },
+                onDismiss = onDismiss,
+                onExecute = onExecute,
+                onRetry = onRetry,
+                onCopy = onCopy,
+                onExpand = onExpand,
+                onSelectSource = onSelectSource,
+                onSelectEngine = onSelectEngine,
+                onExternalAction = onExternalAction,
+            )
+        }
+    }
+}
+
+@Composable
+private fun TranslationSessionSheetDialog(
+    state: TranslationSessionState.Active,
+    isTabletUi: Boolean,
+    onDismiss: () -> Unit,
+    onExecute: () -> Unit,
+    onRetry: () -> Unit,
+    onCopy: (String) -> Unit,
+    onExpand: () -> Unit,
+    onSelectSource: (mihon.translation.api.TranslationLanguageTag) -> Unit,
+    onSelectEngine: (mihon.translation.api.TranslationEngineSelection) -> Unit,
+    onExternalAction: (TranslationSessionExternalAction) -> Unit,
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = translationSessionDialogProperties,
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
             AdaptiveSheet(
                 isTabletUi = isTabletUi,
                 enableImplicitDismiss = true,
@@ -125,7 +236,7 @@ internal fun TranslationSessionOverlay(
                 modifier = Modifier.testTag(TRANSLATION_SESSION_SHEET_TAG),
             ) {
                 TranslationSessionContent(
-                    state = active,
+                    state = state,
                     expanded = true,
                     showHeader = true,
                     showExpand = false,
@@ -145,66 +256,6 @@ internal fun TranslationSessionOverlay(
                         .verticalScroll(rememberScrollState()),
                 )
             }
-        }.single().measure(constraints)
-
-        if (preferredSurface == TranslationSessionSurface.AdaptiveSheet) {
-            val sheet = sheet()
-            return@SubcomposeLayout layout(constraints.maxWidth, constraints.maxHeight) {
-                sheet.place(0, 0)
-            }
-        }
-
-        val safeWidth = constraints.maxWidth - leftInset - rightInset - edgeMargin * 2
-        val safeHeight = constraints.maxHeight - topInset - bottomInset - edgeMargin * 2
-        if (safeWidth <= 0 || safeHeight <= 0) {
-            val sheet = sheet()
-            return@SubcomposeLayout layout(constraints.maxWidth, constraints.maxHeight) {
-                sheet.place(0, 0)
-            }
-        }
-
-        val popup = subcompose(TranslationSessionSlot.Popup) {
-            TranslationSessionPopup(
-                state = active,
-                onDismiss = onDismiss,
-                onExecute = onExecute,
-                onRetry = onRetry,
-                onCopy = onCopy,
-                onExpand = onExpand,
-                onSelectSource = onSelectSource,
-                onSelectEngine = onSelectEngine,
-                onExternalAction = onExternalAction,
-            )
-        }.single().measure(
-            Constraints(
-                maxWidth = min(popupMaximumWidth, safeWidth),
-                maxHeight = Constraints.Infinity,
-            ),
-        )
-        val anchor = active.input.anchor
-        val placement = anchor?.let {
-            calculateTranslationPopupPlacement(
-                anchor = it,
-                popup = TranslationPopupSize(popup.width, popup.height),
-                viewport = TranslationViewportBounds(
-                    left = leftInset,
-                    top = topInset,
-                    right = constraints.maxWidth - rightInset,
-                    bottom = constraints.maxHeight - bottomInset,
-                ),
-                edgeMargin = edgeMargin,
-                anchorGap = anchorGap,
-            )
-        }
-        if (placement == null) {
-            val sheet = sheet()
-            layout(constraints.maxWidth, constraints.maxHeight) {
-                sheet.place(0, 0)
-            }
-        } else {
-            layout(constraints.maxWidth, constraints.maxHeight) {
-                popup.place(placement.x, placement.y)
-            }
         }
     }
 }
@@ -212,6 +263,7 @@ internal fun TranslationSessionOverlay(
 @Composable
 private fun TranslationSessionPopup(
     state: TranslationSessionState.Active,
+    maximumWidth: Dp,
     onDismiss: () -> Unit,
     onExecute: () -> Unit,
     onRetry: () -> Unit,
@@ -224,7 +276,9 @@ private fun TranslationSessionPopup(
     BackHandler(onBack = onDismiss)
     Box {
         Surface(
-            modifier = Modifier.testTag(TRANSLATION_SESSION_POPUP_TAG),
+            modifier = Modifier
+                .widthIn(max = maximumWidth)
+                .testTag(TRANSLATION_SESSION_POPUP_TAG),
             shape = MaterialTheme.shapes.extraLarge,
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
             tonalElevation = 6.dp,
@@ -252,14 +306,74 @@ private fun TranslationSessionPopup(
     }
 }
 
-private enum class TranslationSessionSlot {
-    Popup,
-    Sheet,
+internal data class TranslationWindowInsets(
+    val left: Int,
+    val top: Int,
+    val right: Int,
+    val bottom: Int,
+)
+
+internal class TranslationPopupPositionProvider(
+    private val anchor: mihon.translation.ui.session.TranslationSelectionAnchor,
+    private val hostSize: IntSize,
+    private val windowInsets: TranslationWindowInsets,
+    private val edgeMargin: Int,
+    private val anchorGap: Int,
+    private val onPlacementAvailabilityChanged: (Boolean) -> Unit,
+) : PopupPositionProvider {
+    override fun calculatePosition(
+        anchorBounds: IntRect,
+        windowSize: IntSize,
+        layoutDirection: LayoutDirection,
+        popupContentSize: IntSize,
+    ): IntOffset {
+        val rootLeft = anchorBounds.left
+        val rootTop = anchorBounds.top
+        val viewportLeft = (windowInsets.left - rootLeft).coerceAtLeast(0)
+        val viewportTop = (windowInsets.top - rootTop).coerceAtLeast(0)
+        val viewportRight = minOf(
+            hostSize.width,
+            windowSize.width - rootLeft - windowInsets.right,
+        )
+        val viewportBottom = minOf(
+            hostSize.height,
+            windowSize.height - rootTop - windowInsets.bottom,
+        )
+        val placement = if (viewportRight > viewportLeft && viewportBottom > viewportTop) {
+            calculateTranslationPopupPlacement(
+                anchor = anchor,
+                popup = TranslationPopupSize(popupContentSize.width, popupContentSize.height),
+                viewport = TranslationViewportBounds(
+                    left = viewportLeft,
+                    top = viewportTop,
+                    right = viewportRight,
+                    bottom = viewportBottom,
+                ),
+                edgeMargin = edgeMargin,
+                anchorGap = anchorGap,
+            )
+        } else {
+            null
+        }
+        onPlacementAvailabilityChanged(placement != null)
+        return placement?.let {
+            IntOffset(rootLeft + it.x, rootTop + it.y)
+        } ?: IntOffset(
+            x = rootLeft - popupContentSize.width - 1,
+            y = rootTop - popupContentSize.height - 1,
+        )
+    }
 }
 
 private val POPUP_EDGE_MARGIN = 16.dp
 private val POPUP_ANCHOR_GAP = 8.dp
 private val POPUP_MAXIMUM_WIDTH = 360.dp
+private val translationPopupProperties = PopupProperties(
+    focusable = false,
+    dismissOnBackPress = false,
+    dismissOnClickOutside = false,
+    clippingEnabled = false,
+)
 
 internal const val TRANSLATION_SESSION_POPUP_TAG = "translation_session_popup"
 internal const val TRANSLATION_SESSION_SHEET_TAG = "translation_session_sheet"
