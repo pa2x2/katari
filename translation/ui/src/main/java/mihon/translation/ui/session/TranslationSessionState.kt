@@ -60,6 +60,11 @@ sealed interface TranslationSessionState {
         val result: TranslationResult,
     ) : Active
 
+    data class ProviderSurfaceOpened(
+        override val input: TranslationSessionInput,
+        val presentation: TranslationProviderPresentation,
+    ) : Active
+
     data class Failed(
         override val input: TranslationSessionInput,
         val failure: TranslationSessionFailure,
@@ -90,6 +95,7 @@ internal fun TranslationSessionState.resultForRefresh(): TranslationResult? {
         TranslationSessionState.Hidden,
         is TranslationSessionState.Ready,
         is TranslationSessionState.PreparationRequired,
+        is TranslationSessionState.ProviderSurfaceOpened,
         is TranslationSessionState.Failed,
         -> null
     }
@@ -106,6 +112,7 @@ internal fun TranslationSessionState.withInput(
         is TranslationSessionState.Translating -> copy(input = input)
         is TranslationSessionState.PreparationRequired -> copy(input = input)
         is TranslationSessionState.Success -> copy(input = input)
+        is TranslationSessionState.ProviderSurfaceOpened -> copy(input = input)
         is TranslationSessionState.Failed -> copy(input = input)
     }
 }

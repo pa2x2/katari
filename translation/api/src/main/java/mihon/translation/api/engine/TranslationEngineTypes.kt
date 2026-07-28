@@ -47,10 +47,23 @@ data class TranslationEngineState(
     val engine: KnownTranslationEngine,
     val presentation: TranslationProviderPresentation?,
     val status: TranslationEngineStatus,
+    val action: TranslationEngineAction? = null,
 )
 
 sealed interface TranslationEngineStatus {
+    data object Checking : TranslationEngineStatus
+
     data object Ready : TranslationEngineStatus
+
+    data object NotInstalled : TranslationEngineStatus
+
+    data class ConfigurationRequired(
+        val reason: String,
+    ) : TranslationEngineStatus {
+        init {
+            require(reason.isNotBlank())
+        }
+    }
 
     data class ProviderDisclosureRequired(
         val disclosure: TranslationProviderDisclosure,
@@ -75,6 +88,12 @@ sealed interface TranslationEngineStatus {
     data class Unavailable(
         val reason: TranslationUnavailableReason,
     ) : TranslationEngineStatus
+}
+
+enum class TranslationEngineAction {
+    Install,
+    Configure,
+    Setup,
 }
 
 sealed interface TranslationEngineBuildAvailability {

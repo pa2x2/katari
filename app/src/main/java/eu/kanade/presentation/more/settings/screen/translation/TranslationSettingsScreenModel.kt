@@ -9,9 +9,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mihon.translation.api.KnownTranslationEngine
 import mihon.translation.api.TranslationEngineId
 import mihon.translation.api.TranslationEngineSelection
+import mihon.translation.api.TranslationEngineState
+import mihon.translation.api.TranslationEngineStatus
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.TranslationHostActionResult
 import mihon.translation.api.TranslationHostActions
@@ -32,7 +33,16 @@ internal class TranslationSettingsScreenModel(
     feature: TranslationFeature = Injekt.get(),
     private val hostActions: TranslationHostActions = Injekt.get(),
 ) : ScreenModel {
-    val engines: List<KnownTranslationEngine> = hostActions.knownEngines
+    private val mutableEngines = MutableStateFlow(
+        hostActions.knownEngines.map { engine ->
+            TranslationEngineState(
+                engine = engine,
+                presentation = null,
+                status = TranslationEngineStatus.Checking,
+            )
+        },
+    )
+    val engines = mutableEngines.asStateFlow()
     val controller = TranslationSessionController(
         feature = feature,
         parentScope = screenModelScope,
@@ -40,10 +50,12 @@ internal class TranslationSettingsScreenModel(
         selectionSettleDelayMillis = PLAYGROUND_DEBOUNCE_MILLIS,
     )
     private var savedDefaults = initialPlaygroundDefaults()
+    private var retryAfterSetupResume = false
     private val mutablePlayground = MutableStateFlow(initialPlaygroundState(savedDefaults))
     val playground = mutablePlayground.asStateFlow()
 
     init {
+        refreshEngineStates()
         submitPlayground()
     }
 
@@ -69,11 +81,28 @@ internal class TranslationSettingsScreenModel(
     }
 
     fun setEngine(engine: TranslationEngineId) {
+        if (mutableEngines.value.none { it.engine.id == engine && it.status == TranslationEngineStatus.Ready }) {
+            return
+        }
         updatePlayground { it.copy(engine = engine) }
     }
 
-    fun supportsSystemSetup(engine: TranslationEngineId): Boolean =
-        hostActions.supportsSystemSetup(engine)
+    fun refreshEngineStates() {
+        screenModelScope.launch {
+            mutableEngines.value = hostActions.inspectEngineStates()
+        }
+    }
+
+    fun onResume() {
+        refreshEngineStates()
+        if (retryAfterSetupResume) {
+            retryAfterSetupResume = false
+            controller.retry()
+        }
+    }
+
+    fun supportsSetup(engine: TranslationEngineId): Boolean =
+        hostActions.supportsSetup(engine)
 
     fun savePlaygroundDefaults() {
         val state = mutablePlayground.value
@@ -121,12 +150,19 @@ internal class TranslationSettingsScreenModel(
         }
     }
 
-    fun openSystemSetup(
+    fun openSetup(
         engine: TranslationEngineId,
         onComplete: (TranslationHostActionResult) -> Unit,
     ) {
-        performHostAction(onComplete) {
-            hostActions.openSystemSetup(engine)
+        performHostAction(
+            onComplete = { result ->
+                if (result == TranslationHostActionResult.SetupOpened) {
+                    retryAfterSetupResume = true
+                }
+                onComplete(result)
+            },
+        ) {
+            hostActions.openSetup(engine)
         }
     }
 

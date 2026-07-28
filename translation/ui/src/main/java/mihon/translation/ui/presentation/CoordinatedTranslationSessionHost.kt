@@ -74,7 +74,7 @@ fun CoordinatedTranslationSessionHost(
         TranslationHostActionResult.ModelsReady ->
             stringResource(MR.strings.translation_settings_models_ready)
         is TranslationHostActionResult.ModelsFailed -> result.reason
-        TranslationHostActionResult.SystemSetupOpened ->
+        TranslationHostActionResult.SetupOpened ->
             stringResource(MR.strings.translation_settings_setup_opened)
         TranslationHostActionResult.SetupUnsupported ->
             stringResource(MR.strings.translation_settings_setup_unsupported)
@@ -103,6 +103,7 @@ private fun TranslationSessionPickerDialog(
     isTabletUi: Boolean,
 ) {
     val state by coordinator.controller.state.collectAsState()
+    val engineStates by coordinator.engineStates.collectAsState()
     val active = state as? TranslationSessionState.Active
     val options = remember { translationLanguageOptions() }
     Dialog(
@@ -169,9 +170,10 @@ private fun TranslationSessionPickerDialog(
                                 -> coordinator.profileSelectedEngine
                             }
                             TranslationEnginePickerList(
-                                engines = coordinator.knownEngines,
+                                engines = engineStates,
                                 selected = selected,
                                 onSelect = coordinator::selectEngine,
+                                onOpenSetup = coordinator::openEngineSetup,
                                 modifier = Modifier.weight(1f),
                             )
                         }

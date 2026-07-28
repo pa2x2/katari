@@ -20,6 +20,10 @@ sealed interface TranslationExecution {
         val preparation: TranslationPreparation,
     ) : TranslationExecution
 
+    data class ProviderSurfaceOpened(
+        val presentation: TranslationProviderPresentation,
+    ) : TranslationExecution
+
     data class Failed(
         val reason: TranslationFailureReason,
     ) : TranslationExecution

@@ -7,8 +7,7 @@ import mihon.feature.runtime.applicationFeatureRuntimeBoundary
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.TranslationHostActions
 import mihon.translation.runtime.system.AndroidSystemTranslationEngine
-import mihon.translation.runtime.system.DefaultAndroidSystemTranslationPlatform
-import mihon.translation.runtime.system.createAndroidTranslationManagerBridge
+import mihon.translation.runtime.system.createAndroidSystemTranslationContribution
 import mihon.translation.spi.KnownTranslationEngineCatalog
 import mihon.translation.spi.TranslationEngineRegistry
 import mihon.translation.spi.TranslationEngineSetupRegistry
@@ -29,20 +28,21 @@ val translationFeatureRuntimeModule = ApplicationFeatureRuntimeModule(
         },
     )
     val profilePreferences = profilePreferencesOwner.create()
-    val androidSystemEngine = AndroidSystemTranslationEngine(
-        DefaultAndroidSystemTranslationPlatform(
-            sdkInt = android.os.Build.VERSION.SDK_INT,
-            bridge = createAndroidTranslationManagerBridge(context.application),
-        ),
+    val runtimeContributions = createTranslationRuntimeContributions(
+        application = context.application,
+        components = context.components,
     )
-    val registry = DefaultTranslationEngineRegistry(engines = listOf(androidSystemEngine))
-    val setupRegistry = DefaultTranslationEngineSetupRegistry(setups = listOf(androidSystemEngine))
+    val contributions = buildList {
+        add(createAndroidSystemTranslationContribution(context.application))
+        runtimeContributions.flatMapTo(this, TranslationRuntimeContribution::engineContributions)
+    }
+    val registry = DefaultTranslationEngineRegistry(contributions)
     val feature = DefaultTranslationFeature(
         engineRegistry = registry,
         knownEngineCatalog = registry,
         sourceLanguageDetectors = createTranslationSourceLanguageDetectors(
             application = context.application,
-            components = context.components,
+            contributions = runtimeContributions,
         ),
         defaultTargetLanguageResolver = ProfileTranslationDefaultTargetLanguageResolver(profilePreferences),
         selectedEngine = profilePreferences.engine::get,
@@ -51,12 +51,12 @@ val translationFeatureRuntimeModule = ApplicationFeatureRuntimeModule(
         preferences = profilePreferences,
         engineRegistry = registry,
         knownEngineCatalog = registry,
-        setupRegistry = setupRegistry,
+        setupRegistry = registry,
     )
 
     addSingletonFactory { profilePreferences }
     addSingletonFactory<TranslationEngineRegistry> { registry }
-    addSingletonFactory<TranslationEngineSetupRegistry> { setupRegistry }
+    addSingletonFactory<TranslationEngineSetupRegistry> { registry }
     addSingletonFactory<KnownTranslationEngineCatalog> { registry }
     addSingletonFactory<TranslationFeature> { feature }
     addSingletonFactory<TranslationHostActions> { hostActions }

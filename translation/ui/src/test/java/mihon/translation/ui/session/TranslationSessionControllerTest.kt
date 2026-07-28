@@ -27,6 +27,36 @@ import mihon.translation.api.TranslationTargetLanguageSelection
 import org.junit.jupiter.api.Test
 
 class TranslationSessionControllerTest {
+    @Test
+    fun `provider surface execution is represented without manufacturing an inline result`() = runTest {
+        val surfacePresentation = PRESENTATION.copy(
+            outputMode = mihon.translation.api.TranslationProviderOutputMode.ProviderSurface,
+        )
+        val feature = object : TranslationFeature {
+            override suspend fun prepare(request: TranslationRequest): TranslationPreparation {
+                return ready(request).copy(presentation = surfacePresentation)
+            }
+
+            override suspend fun translate(ready: ReadyTranslation): TranslationExecution {
+                return TranslationExecution.ProviderSurfaceOpened(surfacePresentation)
+            }
+        }
+        val controller = TranslationSessionController(
+            feature,
+            backgroundScope,
+            selectionSettleDelayMillis = 0,
+        )
+
+        controller.submit(input("hello"))
+        runCurrent()
+        controller.execute()
+        runCurrent()
+
+        controller.state.value shouldBe TranslationSessionState.ProviderSurfaceOpened(
+            input = input("hello"),
+            presentation = surfacePresentation,
+        )
+    }
 
     @Test
     fun `selection settling prepares only the latest changed request`() = runTest {

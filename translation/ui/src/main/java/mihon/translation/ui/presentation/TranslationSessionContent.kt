@@ -71,6 +71,7 @@ internal fun TranslationSessionContent(
         is TranslationSessionState.Success -> state.result
         is TranslationSessionState.Ready,
         is TranslationSessionState.PreparationRequired,
+        is TranslationSessionState.ProviderSurfaceOpened,
         is TranslationSessionState.Failed,
         -> null
     }
@@ -120,6 +121,12 @@ internal fun TranslationSessionContent(
                         onSelectEngine = onSelectEngine,
                         useExternalEnginePicker = useExternalEnginePicker,
                         onExternalAction = onExternalAction,
+                    )
+                    is TranslationSessionState.ProviderSurfaceOpened -> Text(
+                        stringResource(
+                            MR.strings.translation_provider_surface_opened,
+                            state.presentation.providerName,
+                        ),
                     )
                     is TranslationSessionState.Failed -> FailedContent(state, onRetry, onExternalAction)
                 }
@@ -308,7 +315,7 @@ private fun PreparationContent(
             Text(preparation.reason.message())
             Button(
                 onClick = {
-                    onExternalAction(TranslationSessionExternalAction.OpenSystemSetup(preparation.engine))
+                    onExternalAction(TranslationSessionExternalAction.OpenSetup(preparation.engine))
                 },
                 modifier = Modifier.fillMaxWidth(),
             ) {

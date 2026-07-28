@@ -272,6 +272,12 @@ class TranslationSessionController(
                     pollSetupProgress(operationGeneration, latestInput)
                 }
             }
+            is TranslationExecution.ProviderSurfaceOpened -> {
+                mutableState.value = TranslationSessionState.ProviderSurfaceOpened(
+                    input = latestInput,
+                    presentation = execution.presentation,
+                )
+            }
             is TranslationExecution.Failed -> {
                 mutableState.value = TranslationSessionState.Failed(
                     input = latestInput,

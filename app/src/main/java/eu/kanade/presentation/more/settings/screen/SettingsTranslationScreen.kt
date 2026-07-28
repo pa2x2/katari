@@ -5,9 +5,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -86,8 +84,8 @@ object SettingsTranslationScreen : SearchableSettings {
         val navigator = LocalNavigator.currentOrThrow
         val model = rememberScreenModel { TranslationSettingsScreenModel() }
         val playground by model.playground.collectAsState()
+        val engines by model.engines.collectAsState()
         val searchHighlightKey = remember { SearchableSettings.highlightKey }
-        var retryAfterResume by remember { mutableStateOf(false) }
 
         DisposableEffect(searchHighlightKey) {
             onDispose {
@@ -99,10 +97,7 @@ object SettingsTranslationScreen : SearchableSettings {
         DisposableEffect(lifecycleOwner, model) {
             val observer = LifecycleEventObserver { _, event ->
                 if (event == Lifecycle.Event.ON_RESUME) {
-                    if (retryAfterResume) {
-                        retryAfterResume = false
-                        model.controller.retry()
-                    }
+                    model.onResume()
                 }
             }
             lifecycleOwner.lifecycle.addObserver(observer)
@@ -119,8 +114,7 @@ object SettingsTranslationScreen : SearchableSettings {
                 is TranslationHostActionResult.ModelsFailed -> context.toast(
                     context.stringResource(MR.strings.translation_settings_models_failed, result.reason),
                 )
-                TranslationHostActionResult.SystemSetupOpened -> {
-                    retryAfterResume = true
+                TranslationHostActionResult.SetupOpened -> {
                     context.toast(MR.strings.translation_settings_setup_opened)
                 }
                 TranslationHostActionResult.SetupUnsupported ->
@@ -160,8 +154,8 @@ object SettingsTranslationScreen : SearchableSettings {
                     model.acknowledge(action.engine, action.disclosure, ::handleHostResult)
                 is TranslationSessionExternalAction.DownloadModels ->
                     model.downloadModels(action.engine, action.models, ::handleHostResult)
-                is TranslationSessionExternalAction.OpenSystemSetup ->
-                    model.openSystemSetup(action.engine, ::handleHostResult)
+                is TranslationSessionExternalAction.OpenSetup ->
+                    model.openSetup(action.engine, ::handleHostResult)
                 is TranslationSessionExternalAction.OpenDocumentation ->
                     context.openInBrowser(action.url, forceDefaultBrowser = true)
             }
@@ -169,7 +163,7 @@ object SettingsTranslationScreen : SearchableSettings {
 
         TranslationSettingsContent(
             playground = playground,
-            engines = model.engines,
+            engines = engines,
             controller = model.controller,
             searchHighlightKey = searchHighlightKey,
             onSearchHighlightConsumed = { key ->
@@ -199,9 +193,9 @@ object SettingsTranslationScreen : SearchableSettings {
             onChooseEngine = {
                 navigator.push(TranslationEnginePickerScreen(model))
             },
-            canOpenSystemSetup = model.supportsSystemSetup(playground.engine),
-            onOpenSystemSetup = {
-                model.openSystemSetup(playground.engine, ::handleHostResult)
+            canOpenSetup = model.supportsSetup(playground.engine),
+            onOpenSetup = {
+                model.openSetup(playground.engine, ::handleHostResult)
             },
             onSave = {
                 model.savePlaygroundDefaults()

@@ -10,7 +10,7 @@ import mihon.translation.api.TranslationUnavailableReason
 import mihon.translation.spi.TranslationEngineDeviceAvailability
 import mihon.translation.spi.TranslationEngineExecution
 import mihon.translation.spi.TranslationEnginePreparation
-import mihon.translation.spi.TranslationSystemSetupResult
+import mihon.translation.spi.TranslationSetupResult
 import org.junit.jupiter.api.Test
 
 class AndroidSystemTranslationEngineTest {
@@ -98,8 +98,8 @@ class AndroidSystemTranslationEngineTest {
             FakePlatform(onDevice(), setup = AndroidSystemPlatformSetup.SettingsUnavailable),
         )
 
-        opened.openSystemSetup() shouldBe TranslationSystemSetupResult.Opened
-        missing.openSystemSetup() shouldBe TranslationSystemSetupResult.SettingsUnavailable
+        opened.openSetup() shouldBe TranslationSetupResult.Opened
+        missing.openSetup() shouldBe TranslationSetupResult.SettingsUnavailable
     }
 
     @Test

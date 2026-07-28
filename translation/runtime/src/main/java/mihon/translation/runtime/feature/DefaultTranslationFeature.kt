@@ -11,6 +11,7 @@ import mihon.translation.api.TranslationFailureReason
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.TranslationLanguageTag
 import mihon.translation.api.TranslationPreparation
+import mihon.translation.api.TranslationProviderOutputMode
 import mihon.translation.api.TranslationProviderPresentation
 import mihon.translation.api.TranslationRejectionReason
 import mihon.translation.api.TranslationRequest
@@ -98,18 +99,30 @@ class DefaultTranslationFeature(
         }
 
         return when (val execution = prepared.engine.translate(refreshed.request)) {
-            is TranslationEngineExecution.Success -> TranslationExecution.Success(
-                TranslationResult(
-                    translatedText = execution.translatedText,
-                    sourceLanguage = prepared.request.sourceLanguage,
-                    targetLanguage = prepared.request.targetLanguage,
-                    presentation = prepared.presentation,
-                ),
-            )
+            is TranslationEngineExecution.Success ->
+                if (prepared.presentation.outputMode == TranslationProviderOutputMode.InlineResult) {
+                    TranslationExecution.Success(
+                        TranslationResult(
+                            translatedText = execution.translatedText,
+                            sourceLanguage = prepared.request.sourceLanguage,
+                            targetLanguage = prepared.request.targetLanguage,
+                            presentation = prepared.presentation,
+                        ),
+                    )
+                } else {
+                    invalidProviderOutput(prepared.request.engine)
+                }
 
             is TranslationEngineExecution.PreparationChanged -> TranslationExecution.PreparationChanged(
                 execution.preparation.toApi(prepared.engine, prepared.request),
             )
+
+            TranslationEngineExecution.ProviderSurfaceOpened ->
+                if (prepared.presentation.outputMode == TranslationProviderOutputMode.ProviderSurface) {
+                    TranslationExecution.ProviderSurfaceOpened(prepared.presentation)
+                } else {
+                    invalidProviderOutput(prepared.request.engine)
+                }
 
             is TranslationEngineExecution.Failed -> TranslationExecution.Failed(
                 TranslationFailureReason.ProviderFailure(
@@ -220,6 +233,15 @@ class DefaultTranslationFeature(
             TranslationRejectionReason.InputTooLarge(
                 actualCodePoints = actual,
                 maximumCodePoints = maximum,
+            ),
+        )
+    }
+
+    private fun invalidProviderOutput(engine: TranslationEngineId): TranslationExecution.Failed {
+        return TranslationExecution.Failed(
+            TranslationFailureReason.ProviderFailure(
+                engine = engine,
+                message = "Translation provider returned an incompatible output mode",
             ),
         )
     }

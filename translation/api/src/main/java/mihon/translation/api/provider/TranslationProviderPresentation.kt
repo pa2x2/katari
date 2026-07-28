@@ -5,6 +5,7 @@ data class TranslationProviderPresentation(
     val providerName: String,
     val engineName: String,
     val invocationPolicy: TranslationInvocationPolicy,
+    val outputMode: TranslationProviderOutputMode = TranslationProviderOutputMode.InlineResult,
     val disclosure: TranslationProviderDisclosure? = null,
     val resultAttribution: TranslationResultAttribution? = null,
     val documentationUrl: String? = null,
@@ -13,6 +14,11 @@ data class TranslationProviderPresentation(
         require(providerName.isNotBlank())
         require(engineName.isNotBlank())
     }
+}
+
+enum class TranslationProviderOutputMode {
+    InlineResult,
+    ProviderSurface,
 }
 
 sealed interface TranslationInvocationPolicy {

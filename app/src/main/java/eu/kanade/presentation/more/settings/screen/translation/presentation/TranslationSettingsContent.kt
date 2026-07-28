@@ -34,7 +34,7 @@ import eu.kanade.presentation.more.settings.screen.translation.engine.translatio
 import eu.kanade.presentation.more.settings.widget.ProfileSpecificChip
 import eu.kanade.presentation.more.settings.widget.highlightBackground
 import kotlinx.coroutines.delay
-import mihon.translation.api.KnownTranslationEngine
+import mihon.translation.api.TranslationEngineState
 import mihon.translation.ui.picker.displayName
 import mihon.translation.ui.presentation.TranslationSessionExternalAction
 import mihon.translation.ui.presentation.TranslationSessionPanel
@@ -49,7 +49,7 @@ import kotlin.time.Duration.Companion.milliseconds
 @Composable
 internal fun TranslationSettingsContent(
     playground: TranslationPlaygroundState,
-    engines: List<KnownTranslationEngine>,
+    engines: List<TranslationEngineState>,
     controller: TranslationSessionController,
     searchHighlightKey: String?,
     onSearchHighlightConsumed: (String) -> Unit,
@@ -59,8 +59,8 @@ internal fun TranslationSettingsContent(
     onChooseTarget: () -> Unit,
     onSwapLanguages: () -> Unit,
     onChooseEngine: () -> Unit,
-    canOpenSystemSetup: Boolean,
-    onOpenSystemSetup: () -> Unit,
+    canOpenSetup: Boolean,
+    onOpenSetup: () -> Unit,
     onSave: () -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
 ) {
@@ -110,8 +110,8 @@ internal fun TranslationSettingsContent(
                     onChooseTarget = onChooseTarget,
                     onSwapLanguages = onSwapLanguages,
                     onChooseEngine = onChooseEngine,
-                    canOpenSystemSetup = canOpenSystemSetup,
-                    onOpenSystemSetup = onOpenSystemSetup,
+                    canOpenSetup = canOpenSetup,
+                    onOpenSetup = onOpenSetup,
                     onSave = onSave,
                     onExternalAction = onExternalAction,
                     highlighted = highlightPlayground,
@@ -124,21 +124,22 @@ internal fun TranslationSettingsContent(
 @Composable
 private fun TranslationPlayground(
     state: TranslationPlaygroundState,
-    engines: List<KnownTranslationEngine>,
+    engines: List<TranslationEngineState>,
     controller: TranslationSessionController,
     onTextChange: (String) -> Unit,
     onChooseSource: () -> Unit,
     onChooseTarget: () -> Unit,
     onSwapLanguages: () -> Unit,
     onChooseEngine: () -> Unit,
-    canOpenSystemSetup: Boolean,
-    onOpenSystemSetup: () -> Unit,
+    canOpenSetup: Boolean,
+    onOpenSetup: () -> Unit,
     onSave: () -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
     highlighted: Boolean,
 ) {
     val selectedProviderName = engines
-        .firstOrNull { it.id == state.engine }
+        .firstOrNull { it.engine.id == state.engine }
+        ?.engine
         ?.providerName
 
     ElevatedCard(
@@ -187,7 +188,7 @@ private fun TranslationPlayground(
             }
             PlaygroundSelector(
                 label = stringResource(MR.strings.translation_settings_engine),
-                value = translationEngineLabel(state.engine, engines),
+                value = translationEngineLabel(state.engine, engines.map { it.engine }),
                 leadingIcon = {
                     Icon(Icons.Outlined.Settings, contentDescription = null)
                 },
@@ -222,9 +223,9 @@ private fun TranslationPlayground(
             ) {
                 Text(stringResource(MR.strings.action_save))
             }
-            if (canOpenSystemSetup && selectedProviderName != null) {
+            if (canOpenSetup && selectedProviderName != null) {
                 TextButton(
-                    onClick = onOpenSystemSetup,
+                    onClick = onOpenSetup,
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .testTag(TRANSLATION_SYSTEM_SETUP_TAG),

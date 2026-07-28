@@ -17,6 +17,8 @@ generic share, clipboard, or full-app fallback is introduced.
 
 ## Milestone 1: provider contribution foundation
 
+Status: completed and manifesto-audited on 2026-07-28.
+
 1. Introduce a provider contribution contract that owns:
    - the runtime engine;
    - stable catalog/presentation metadata;

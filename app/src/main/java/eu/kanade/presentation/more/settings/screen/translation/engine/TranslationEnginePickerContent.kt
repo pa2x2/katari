@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import eu.kanade.presentation.components.AppBar
 import mihon.translation.api.KnownTranslationEngine
 import mihon.translation.api.TranslationEngineId
+import mihon.translation.api.TranslationEngineState
 import mihon.translation.ui.picker.TranslationEnginePickerList
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -14,9 +15,10 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
 internal fun TranslationEnginePickerContent(
-    engines: List<KnownTranslationEngine>,
+    engines: List<TranslationEngineState>,
     selected: TranslationEngineId,
     onSelect: (TranslationEngineId) -> Unit,
+    onOpenSetup: (TranslationEngineId) -> Unit,
     onOpenDocumentation: (String) -> Unit,
     onBack: () -> Unit,
 ) {
@@ -33,6 +35,7 @@ internal fun TranslationEnginePickerContent(
             engines = engines,
             selected = selected,
             onSelect = onSelect,
+            onOpenSetup = onOpenSetup,
             onOpenDocumentation = onOpenDocumentation,
             showMissingSelectionNotice = true,
             showExplicitPolicyNotice = true,

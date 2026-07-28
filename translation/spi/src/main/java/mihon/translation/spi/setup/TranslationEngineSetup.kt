@@ -7,12 +7,12 @@ import mihon.translation.api.TranslationProviderDisclosure
 
 interface TranslationEngineSetup {
     val engine: TranslationEngineId
-    val supportsSystemSetup: Boolean
+    val supportsSetup: Boolean
         get() = false
 
     suspend fun acknowledge(disclosure: TranslationProviderDisclosure)
 
-    suspend fun openSystemSetup(): TranslationSystemSetupResult
+    suspend fun openSetup(): TranslationSetupResult
 
     suspend fun downloadModels(
         models: Set<TranslationModelId>,
@@ -21,21 +21,21 @@ interface TranslationEngineSetup {
 }
 
 interface TranslationEngineSetupRegistry {
-    fun find(engine: TranslationEngineId): TranslationEngineSetup?
+    fun findSetup(engine: TranslationEngineId): TranslationEngineSetup?
 }
 
-sealed interface TranslationSystemSetupResult {
-    data object Opened : TranslationSystemSetupResult
+sealed interface TranslationSetupResult {
+    data object Opened : TranslationSetupResult
 
-    data object Unsupported : TranslationSystemSetupResult
+    data object Unsupported : TranslationSetupResult
 
-    data object ServiceMissing : TranslationSystemSetupResult
+    data object ServiceMissing : TranslationSetupResult
 
-    data object SettingsUnavailable : TranslationSystemSetupResult
+    data object SettingsUnavailable : TranslationSetupResult
 
     data class Failed(
         val reason: String,
-    ) : TranslationSystemSetupResult {
+    ) : TranslationSetupResult {
         init {
             require(reason.isNotBlank())
         }

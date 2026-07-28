@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import mihon.translation.api.TranslationEngineId
 import mihon.translation.api.TranslationEngineSelection
+import mihon.translation.api.TranslationEngineState
+import mihon.translation.api.TranslationEngineStatus
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.TranslationHostActionResult
 import mihon.translation.api.TranslationHostActions
@@ -26,7 +28,16 @@ class TranslationSessionHostCoordinator(
     executionMode: TranslationSessionExecutionMode = TranslationSessionExecutionMode.FollowProviderPolicy,
     selectionSettleDelayMillis: Long = 250L,
 ) {
-    val knownEngines = hostActions.knownEngines
+    private val mutableEngineStates = MutableStateFlow(
+        hostActions.knownEngines.map { engine ->
+            TranslationEngineState(
+                engine = engine,
+                presentation = null,
+                status = TranslationEngineStatus.Checking,
+            )
+        },
+    )
+    val engineStates: StateFlow<List<TranslationEngineState>> = mutableEngineStates.asStateFlow()
     val profileSelectedEngine: TranslationEngineId
         get() = hostActions.selectedEngine.get()
 
@@ -46,6 +57,10 @@ class TranslationSessionHostCoordinator(
     private var actionJob: Job? = null
     private var retryAfterResume = false
 
+    init {
+        refreshEngineStates()
+    }
+
     fun handleExternalAction(
         action: TranslationSessionExternalAction,
         openDocumentation: (String) -> Unit,
@@ -64,8 +79,8 @@ class TranslationSessionHostCoordinator(
             is TranslationSessionExternalAction.DownloadModels -> performAction {
                 hostActions.downloadModels(action.engine, action.models)
             }
-            is TranslationSessionExternalAction.OpenSystemSetup -> performAction {
-                hostActions.openSystemSetup(action.engine)
+            is TranslationSessionExternalAction.OpenSetup -> performAction {
+                hostActions.openSetup(action.engine)
             }
             is TranslationSessionExternalAction.OpenDocumentation -> openDocumentation(action.url)
         }
@@ -83,8 +98,17 @@ class TranslationSessionHostCoordinator(
     }
 
     fun selectEngine(engine: TranslationEngineId) {
+        if (mutableEngineStates.value.none { it.engine.id == engine && it.status == TranslationEngineStatus.Ready }) {
+            return
+        }
         controller.selectEngine(TranslationEngineSelection.Explicit(engine))
         mutablePicker.value = null
+    }
+
+    fun openEngineSetup(engine: TranslationEngineId) {
+        performAction {
+            hostActions.openSetup(engine)
+        }
     }
 
     fun useCurrentTargetAsProfileDefault() {
@@ -99,6 +123,7 @@ class TranslationSessionHostCoordinator(
     }
 
     fun onResume() {
+        refreshEngineStates()
         if (!retryAfterResume) return
         retryAfterResume = false
         controller.retry()
@@ -124,7 +149,7 @@ class TranslationSessionHostCoordinator(
                 TranslationHostActionResult.Completed,
                 TranslationHostActionResult.ModelsReady,
                 -> controller.retry()
-                TranslationHostActionResult.SystemSetupOpened -> retryAfterResume = true
+                TranslationHostActionResult.SetupOpened -> retryAfterResume = true
                 is TranslationHostActionResult.ModelsFailed,
                 TranslationHostActionResult.SetupUnsupported,
                 TranslationHostActionResult.ServiceMissing,
@@ -133,6 +158,13 @@ class TranslationSessionHostCoordinator(
                 -> Unit
             }
             mutableResults.emit(result)
+            refreshEngineStates()
+        }
+    }
+
+    private fun refreshEngineStates() {
+        scope.launch {
+            mutableEngineStates.value = hostActions.inspectEngineStates()
         }
     }
 }

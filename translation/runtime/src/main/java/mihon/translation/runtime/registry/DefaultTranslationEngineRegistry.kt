@@ -4,25 +4,30 @@ import mihon.translation.api.KnownTranslationEngine
 import mihon.translation.api.TranslationEngineId
 import mihon.translation.spi.KnownTranslationEngineCatalog
 import mihon.translation.spi.TranslationEngine
+import mihon.translation.spi.TranslationEngineContribution
 import mihon.translation.spi.TranslationEngineRegistry
+import mihon.translation.spi.TranslationEngineSetup
+import mihon.translation.spi.TranslationEngineSetupRegistry
 
 class DefaultTranslationEngineRegistry(
-    engines: List<TranslationEngine>,
-    knownEngines: List<KnownTranslationEngine> = engines.map(TranslationEngine::catalogEntry),
-) : TranslationEngineRegistry, KnownTranslationEngineCatalog {
-    override val engines: List<TranslationEngine> = engines.toList()
-    override val knownEngines: List<KnownTranslationEngine> = knownEngines.toList()
+    contributions: List<TranslationEngineContribution>,
+) : TranslationEngineRegistry, KnownTranslationEngineCatalog, TranslationEngineSetupRegistry {
+    val contributions: List<TranslationEngineContribution> = contributions
+        .sortedWith(compareBy(TranslationEngineContribution::order, { it.catalogEntry.id.value }))
+    override val engines: List<TranslationEngine> = this.contributions.mapNotNull { it.engine }
+    override val knownEngines: List<KnownTranslationEngine> = this.contributions.map { it.catalogEntry }
 
     private val installedById: Map<TranslationEngineId, TranslationEngine>
+    private val setupsByEngine: Map<TranslationEngineId, TranslationEngineSetup>
 
     init {
-        val duplicateInstalled = this.engines
+        val duplicateContributions = this.contributions
             .groupingBy { it.catalogEntry.id }
             .eachCount()
             .filterValues { it > 1 }
             .keys
-        require(duplicateInstalled.isEmpty()) {
-            "Duplicate installed Translation engines: ${duplicateInstalled.map { it.value }.sorted()}"
+        require(duplicateContributions.isEmpty()) {
+            "Duplicate Translation engine contributions: ${duplicateContributions.map { it.value }.sorted()}"
         }
         this.engines.forEach { engine ->
             val maximumInputCodePoints = engine.maximumInputCodePoints
@@ -31,24 +36,13 @@ class DefaultTranslationEngineRegistry(
             }
         }
 
-        val duplicateKnown = knownEngines
-            .groupingBy(KnownTranslationEngine::id)
-            .eachCount()
-            .filterValues { it > 1 }
-            .keys
-        require(duplicateKnown.isEmpty()) {
-            "Duplicate known Translation engines: ${duplicateKnown.map { it.value }.sorted()}"
-        }
-
-        val knownIds = knownEngines.mapTo(mutableSetOf(), KnownTranslationEngine::id)
-        val missingCatalogEntries = this.engines.map { it.catalogEntry.id }.filterNot(knownIds::contains)
-        require(missingCatalogEntries.isEmpty()) {
-            "Installed Translation engines missing from the known catalog: " +
-                missingCatalogEntries.map { it.value }.sorted()
-        }
-
         installedById = this.engines.associateBy { it.catalogEntry.id }
+        setupsByEngine = this.contributions.mapNotNull { contribution ->
+            contribution.setup?.let { contribution.catalogEntry.id to it }
+        }.toMap()
     }
 
     override fun find(engine: TranslationEngineId): TranslationEngine? = installedById[engine]
+
+    override fun findSetup(engine: TranslationEngineId): TranslationEngineSetup? = setupsByEngine[engine]
 }

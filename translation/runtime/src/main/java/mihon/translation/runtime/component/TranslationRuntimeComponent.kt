@@ -2,6 +2,7 @@ package mihon.translation.runtime
 
 import android.app.Application
 import mihon.feature.runtime.ApplicationFeatureRuntimeComponent
+import mihon.translation.spi.TranslationEngineContribution
 import mihon.translation.spi.TranslationSourceLanguageDetector
 
 /**
@@ -16,4 +17,5 @@ interface TranslationRuntimeComponent : ApplicationFeatureRuntimeComponent {
 
 data class TranslationRuntimeContribution(
     val sourceLanguageDetectors: List<TranslationSourceLanguageDetector> = emptyList(),
+    val engineContributions: List<TranslationEngineContribution> = emptyList(),
 )

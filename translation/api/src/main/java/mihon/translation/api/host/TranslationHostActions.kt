@@ -15,6 +15,8 @@ interface TranslationHostActions {
 
     suspend fun deviceAvailability(): TranslationDeviceAvailability
 
+    suspend fun inspectEngineStates(): List<TranslationEngineState>
+
     suspend fun acknowledgeProviderDisclosure(
         engine: TranslationEngineId,
         disclosure: TranslationProviderDisclosure,
@@ -26,9 +28,9 @@ interface TranslationHostActions {
         allowMeteredNetwork: Boolean = false,
     ): TranslationHostActionResult
 
-    fun supportsSystemSetup(engine: TranslationEngineId): Boolean
+    fun supportsSetup(engine: TranslationEngineId): Boolean
 
-    suspend fun openSystemSetup(engine: TranslationEngineId): TranslationHostActionResult
+    suspend fun openSetup(engine: TranslationEngineId): TranslationHostActionResult
 
     fun setSelectedEngine(engine: TranslationEngineId)
 
@@ -48,7 +50,7 @@ sealed interface TranslationHostActionResult {
         }
     }
 
-    data object SystemSetupOpened : TranslationHostActionResult
+    data object SetupOpened : TranslationHostActionResult
 
     data object SetupUnsupported : TranslationHostActionResult
 

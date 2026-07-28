@@ -17,7 +17,7 @@ import mihon.translation.spi.TranslationEngineDeviceAvailability
 import mihon.translation.spi.TranslationEngineExecution
 import mihon.translation.spi.TranslationEnginePreparation
 import mihon.translation.spi.TranslationEngineSetup
-import mihon.translation.spi.TranslationSystemSetupResult
+import mihon.translation.spi.TranslationSetupResult
 
 internal class AndroidSystemTranslationEngine(
     private val platform: AndroidSystemTranslationPlatform,
@@ -37,7 +37,7 @@ internal class AndroidSystemTranslationEngine(
     )
     override val maximumInputCodePoints: Int? = null
     override val engine: TranslationEngineId = ENGINE_ID
-    override val supportsSystemSetup = true
+    override val supportsSetup = true
 
     override suspend fun inspectDevice(): TranslationEngineDeviceAvailability {
         return when (val inspection = platform.inspectDevice()) {
@@ -97,12 +97,12 @@ internal class AndroidSystemTranslationEngine(
 
     override suspend fun acknowledge(disclosure: mihon.translation.api.TranslationProviderDisclosure) = Unit
 
-    override suspend fun openSystemSetup(): TranslationSystemSetupResult {
+    override suspend fun openSetup(): TranslationSetupResult {
         return when (val result = platform.openSettings()) {
-            AndroidSystemPlatformSetup.Opened -> TranslationSystemSetupResult.Opened
-            AndroidSystemPlatformSetup.ServiceMissing -> TranslationSystemSetupResult.ServiceMissing
-            AndroidSystemPlatformSetup.SettingsUnavailable -> TranslationSystemSetupResult.SettingsUnavailable
-            is AndroidSystemPlatformSetup.Failed -> TranslationSystemSetupResult.Failed(result.reason)
+            AndroidSystemPlatformSetup.Opened -> TranslationSetupResult.Opened
+            AndroidSystemPlatformSetup.ServiceMissing -> TranslationSetupResult.ServiceMissing
+            AndroidSystemPlatformSetup.SettingsUnavailable -> TranslationSetupResult.SettingsUnavailable
+            is AndroidSystemPlatformSetup.Failed -> TranslationSetupResult.Failed(result.reason)
         }
     }
 

@@ -31,6 +31,16 @@ interface TranslationEngine {
 sealed interface TranslationEngineDeviceAvailability {
     data object Available : TranslationEngineDeviceAvailability
 
+    data object NotInstalled : TranslationEngineDeviceAvailability
+
+    data class ConfigurationRequired(
+        val reason: String,
+    ) : TranslationEngineDeviceAvailability {
+        init {
+            require(reason.isNotBlank())
+        }
+    }
+
     data class UnsupportedOs(
         val minimumApi: Int,
     ) : TranslationEngineDeviceAvailability
@@ -95,6 +105,8 @@ sealed interface TranslationEngineExecution {
     data class PreparationChanged(
         val preparation: TranslationEnginePreparation,
     ) : TranslationEngineExecution
+
+    data object ProviderSurfaceOpened : TranslationEngineExecution
 
     data class Failed(
         val message: String? = null,

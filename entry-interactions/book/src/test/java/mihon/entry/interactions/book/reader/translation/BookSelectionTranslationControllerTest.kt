@@ -9,6 +9,7 @@ import mihon.translation.api.KnownTranslationEngine
 import mihon.translation.api.ReadyTranslation
 import mihon.translation.api.TranslationDeviceAvailability
 import mihon.translation.api.TranslationEngineId
+import mihon.translation.api.TranslationEngineState
 import mihon.translation.api.TranslationExecution
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.TranslationHostActionResult
@@ -139,6 +140,8 @@ class BookSelectionTranslationControllerTest {
 
         override suspend fun deviceAvailability() = availability
 
+        override suspend fun inspectEngineStates() = emptyList<TranslationEngineState>()
+
         override suspend fun acknowledgeProviderDisclosure(
             engine: TranslationEngineId,
             disclosure: TranslationProviderDisclosure,
@@ -150,9 +153,9 @@ class BookSelectionTranslationControllerTest {
             allowMeteredNetwork: Boolean,
         ) = TranslationHostActionResult.ModelsReady
 
-        override fun supportsSystemSetup(engine: TranslationEngineId) = false
+        override fun supportsSetup(engine: TranslationEngineId) = false
 
-        override suspend fun openSystemSetup(engine: TranslationEngineId) =
+        override suspend fun openSetup(engine: TranslationEngineId) =
             TranslationHostActionResult.SetupUnsupported
 
         override fun setSelectedEngine(engine: TranslationEngineId) {

@@ -23,9 +23,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import mihon.translation.api.KnownTranslationEngine
+import mihon.translation.api.TranslationEngineAction
 import mihon.translation.api.TranslationEngineBuildAvailability
 import mihon.translation.api.TranslationEngineId
+import mihon.translation.api.TranslationEngineState
+import mihon.translation.api.TranslationEngineStatus
 import mihon.translation.api.TranslationLanguageTag
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
@@ -90,16 +92,17 @@ fun TranslationLanguagePickerList(
 
 @Composable
 fun TranslationEnginePickerList(
-    engines: List<KnownTranslationEngine>,
+    engines: List<TranslationEngineState>,
     selected: TranslationEngineId,
     onSelect: (TranslationEngineId) -> Unit,
     modifier: Modifier = Modifier,
+    onOpenSetup: (TranslationEngineId) -> Unit = {},
     onOpenDocumentation: (String) -> Unit = {},
     showMissingSelectionNotice: Boolean = false,
     showExplicitPolicyNotice: Boolean = false,
 ) {
     LazyColumn(modifier = modifier) {
-        if (showMissingSelectionNotice && engines.none { it.id == selected }) {
+        if (showMissingSelectionNotice && engines.none { it.engine.id == selected }) {
             item(key = "missing-selection") {
                 ListItem(
                     headlineContent = {
@@ -115,23 +118,33 @@ fun TranslationEnginePickerList(
                 )
             }
         }
-        items(engines, key = { it.id.value }) { engine ->
-            val included = engine.buildAvailability is TranslationEngineBuildAvailability.Included
+        items(engines, key = { it.engine.id.value }) { state ->
+            val engine = state.engine
             Column {
                 TranslationPickerRow(
                     label = engine.engineName,
-                    supporting = buildString {
-                        append(engine.providerName)
-                        val unavailable = engine.buildAvailability as? TranslationEngineBuildAvailability.NotIncluded
-                        unavailable?.let {
-                            append(" · ")
-                            append(it.reason)
-                        }
-                    },
+                    supporting = engineSupportingText(state),
                     selected = selected == engine.id,
-                    enabled = included,
+                    enabled = state.status == TranslationEngineStatus.Ready,
                     onClick = { onSelect(engine.id) },
                 )
+                state.action?.let { action ->
+                    TextButton(
+                        onClick = { onOpenSetup(engine.id) },
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    ) {
+                        Text(
+                            when (action) {
+                                TranslationEngineAction.Install ->
+                                    stringResource(MR.strings.action_install)
+                                TranslationEngineAction.Configure ->
+                                    stringResource(MR.strings.translation_settings_configure_provider)
+                                TranslationEngineAction.Setup ->
+                                    stringResource(MR.strings.action_settings)
+                            },
+                        )
+                    }
+                }
                 engine.documentationUrl?.let { url ->
                     TextButton(
                         onClick = { onOpenDocumentation(url) },
@@ -153,6 +166,31 @@ fun TranslationEnginePickerList(
             }
         }
     }
+}
+
+@Composable
+private fun engineSupportingText(state: TranslationEngineState): String {
+    val engine = state.engine
+    val detail = when (val status = state.status) {
+        TranslationEngineStatus.Checking ->
+            stringResource(MR.strings.translation_settings_checking_provider)
+        TranslationEngineStatus.Ready -> null
+        TranslationEngineStatus.NotInstalled ->
+            stringResource(MR.strings.translation_settings_provider_not_installed)
+        is TranslationEngineStatus.ConfigurationRequired -> status.reason
+        is TranslationEngineStatus.ProviderDisclosureRequired ->
+            stringResource(MR.strings.translation_provider_action_required, status.disclosure.message)
+        is TranslationEngineStatus.ModelDownloadRequired ->
+            stringResource(MR.strings.translation_models_required)
+        is TranslationEngineStatus.SystemSetupRequired ->
+            stringResource(MR.strings.translation_system_setup_required)
+        is TranslationEngineStatus.SetupInProgress ->
+            stringResource(MR.strings.translation_setup_in_progress)
+        is TranslationEngineStatus.Unavailable ->
+            (engine.buildAvailability as? TranslationEngineBuildAvailability.NotIncluded)?.reason
+                ?: stringResource(MR.strings.translation_selected_engine_unavailable)
+    }
+    return if (detail == null) engine.providerName else "${engine.providerName} · $detail"
 }
 
 @Composable

@@ -9,6 +9,10 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.screen.translation.TranslationSettingsScreenModel
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.openInBrowser
+import eu.kanade.tachiyomi.util.system.toast
+import mihon.translation.api.TranslationHostActionResult
+import tachiyomi.core.common.i18n.stringResource
+import tachiyomi.i18n.MR
 
 internal class TranslationEnginePickerScreen(
     private val model: TranslationSettingsScreenModel,
@@ -19,13 +23,40 @@ internal class TranslationEnginePickerScreen(
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
         val playground by model.playground.collectAsState()
+        val engines by model.engines.collectAsState()
 
         TranslationEnginePickerContent(
-            engines = model.engines,
+            engines = engines,
             selected = playground.engine,
             onSelect = { engine ->
                 model.setEngine(engine)
                 navigator.pop()
+            },
+            onOpenSetup = { engine ->
+                model.openSetup(engine) { result ->
+                    model.refreshEngineStates()
+                    when (result) {
+                        TranslationHostActionResult.Completed -> Unit
+                        TranslationHostActionResult.ModelsReady ->
+                            context.toast(MR.strings.translation_settings_models_ready)
+                        is TranslationHostActionResult.ModelsFailed ->
+                            context.toast(result.reason)
+                        TranslationHostActionResult.SetupOpened ->
+                            context.toast(MR.strings.translation_settings_setup_opened)
+                        TranslationHostActionResult.SetupUnsupported ->
+                            context.toast(MR.strings.translation_settings_setup_unsupported)
+                        TranslationHostActionResult.ServiceMissing ->
+                            context.toast(MR.strings.translation_service_missing)
+                        TranslationHostActionResult.SettingsUnavailable ->
+                            context.toast(MR.strings.translation_settings_unavailable)
+                        is TranslationHostActionResult.Failed -> context.toast(
+                            context.stringResource(
+                                MR.strings.translation_settings_setup_failed,
+                                result.reason,
+                            ),
+                        )
+                    }
+                }
             },
             onOpenDocumentation = { context.openInBrowser(it, forceDefaultBrowser = true) },
             onBack = navigator::pop,

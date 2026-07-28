@@ -19,6 +19,7 @@ import mihon.translation.api.TranslationInvocationPolicy
 import mihon.translation.api.TranslationLanguageTag
 import mihon.translation.api.TranslationPreparation
 import mihon.translation.api.TranslationProviderId
+import mihon.translation.api.TranslationProviderOutputMode
 import mihon.translation.api.TranslationProviderPresentation
 import mihon.translation.api.TranslationRejectionReason
 import mihon.translation.api.TranslationRequest
@@ -27,6 +28,7 @@ import mihon.translation.api.TranslationSourceLanguageSelection
 import mihon.translation.api.TranslationTargetLanguageSelection
 import mihon.translation.spi.ReadyTranslationEngineRequest
 import mihon.translation.spi.TranslationEngine
+import mihon.translation.spi.TranslationEngineContribution
 import mihon.translation.spi.TranslationEngineDeviceAvailability
 import mihon.translation.spi.TranslationEngineExecution
 import mihon.translation.spi.TranslationEnginePreparation
@@ -36,6 +38,34 @@ import mihon.translation.spi.TranslationSourceLanguageDetectorId
 import org.junit.jupiter.api.Test
 
 class DefaultTranslationFeatureTest {
+    @Test
+    fun `provider surfaces are a typed execution outcome and must match declared output mode`() = runTest {
+        val surfacePresentation = PRESENTATION.copy(
+            outputMode = TranslationProviderOutputMode.ProviderSurface,
+        )
+        val engine = FakeTranslationEngine(
+            execution = TranslationEngineExecution.ProviderSurfaceOpened,
+            presentation = surfacePresentation,
+        )
+        val feature = feature(engine)
+        val ready = (feature.prepare(explicitRequest()) as TranslationPreparation.Ready).translation
+
+        feature.translate(ready) shouldBe TranslationExecution.ProviderSurfaceOpened(surfacePresentation)
+
+        val invalidEngine = FakeTranslationEngine(
+            execution = TranslationEngineExecution.ProviderSurfaceOpened,
+        )
+        val invalidFeature = feature(invalidEngine)
+        val invalidReady =
+            (invalidFeature.prepare(explicitRequest()) as TranslationPreparation.Ready).translation
+        invalidFeature.translate(invalidReady) shouldBe TranslationExecution.Failed(
+            TranslationFailureReason.ProviderFailure(
+                engine = ENGINE_ID,
+                message = "Translation provider returned an incompatible output mode",
+            ),
+        )
+    }
+
     @Test
     fun `fake engine drives preparation and successful execution without provider implementation types`() = runTest {
         val engine = FakeTranslationEngine(
@@ -80,7 +110,7 @@ class DefaultTranslationFeatureTest {
     @Test
     fun `ready handles are process local and revalidate engine registration`() = runTest {
         val engine = FakeTranslationEngine()
-        val registry = DefaultTranslationEngineRegistry(listOf(engine))
+        val registry = DefaultTranslationEngineRegistry(listOf(TranslationEngineContribution(engine)))
         val feature = feature(registry)
         val ready = (feature.prepare(explicitRequest()) as TranslationPreparation.Ready).translation
 
@@ -128,8 +158,10 @@ class DefaultTranslationFeatureTest {
         val available = FakeTranslationEngine(catalogEntry = knownEngine("available"))
         val missing = TranslationEngineId("missing")
         val registry = DefaultTranslationEngineRegistry(
-            engines = listOf(available),
-            knownEngines = listOf(available.catalogEntry, knownEngine(missing.value)),
+            contributions = listOf(
+                TranslationEngineContribution(available),
+                TranslationEngineContribution(catalogEntry = knownEngine(missing.value)),
+            ),
         )
         val feature = feature(
             registry = registry,
@@ -155,7 +187,14 @@ class DefaultTranslationFeatureTest {
             ),
         )
         val fallback = FakeTranslationEngine(catalogEntry = knownEngine("fallback"))
-        val feature = feature(DefaultTranslationEngineRegistry(listOf(selected, fallback)))
+        val feature = feature(
+            DefaultTranslationEngineRegistry(
+                listOf(
+                    TranslationEngineContribution(selected),
+                    TranslationEngineContribution(fallback),
+                ),
+            ),
+        )
         val request = explicitRequest().copy(
             engine = TranslationEngineSelection.Explicit(selected.catalogEntry.id),
         )
@@ -207,7 +246,14 @@ class DefaultTranslationFeatureTest {
         val fallback = FakeTranslationEngine(
             catalogEntry = knownEngine("fallback"),
         )
-        val feature = feature(DefaultTranslationEngineRegistry(listOf(selected, fallback)))
+        val feature = feature(
+            DefaultTranslationEngineRegistry(
+                listOf(
+                    TranslationEngineContribution(selected),
+                    TranslationEngineContribution(fallback),
+                ),
+            ),
+        )
         val request = explicitRequest().copy(
             engine = TranslationEngineSelection.Explicit(selected.catalogEntry.id),
         )
@@ -226,7 +272,9 @@ class DefaultTranslationFeatureTest {
     @Test
     fun `automatic source detection reports a chooser when every detector is inconclusive`() = runTest {
         val feature = feature(
-            registry = DefaultTranslationEngineRegistry(listOf(FakeTranslationEngine())),
+            registry = DefaultTranslationEngineRegistry(
+                listOf(TranslationEngineContribution(FakeTranslationEngine())),
+            ),
             sourceLanguageDetectors = listOf(
                 FakeDetector("unavailable", TranslationSourceLanguageDetection.Unavailable("not available")),
                 FakeDetector("undetermined", TranslationSourceLanguageDetection.Undetermined),
@@ -238,7 +286,7 @@ class DefaultTranslationFeatureTest {
     }
 
     private fun feature(engine: TranslationEngine): DefaultTranslationFeature {
-        return feature(DefaultTranslationEngineRegistry(listOf(engine)))
+        return feature(DefaultTranslationEngineRegistry(listOf(TranslationEngineContribution(engine))))
     }
 
     private fun feature(
@@ -255,7 +303,7 @@ class DefaultTranslationFeatureTest {
         )
     }
 
-    private fun emptyRegistry() = DefaultTranslationEngineRegistry(emptyList())
+    private fun emptyRegistry() = DefaultTranslationEngineRegistry(emptyList<TranslationEngineContribution>())
 
     private fun explicitRequest(text: String = "Hello") = TranslationRequest(
         text = text,
@@ -275,9 +323,8 @@ class DefaultTranslationFeatureTest {
         private val executionBlock: (suspend () -> TranslationEngineExecution)? = null,
         override val maximumInputCodePoints: Int? = null,
         override val catalogEntry: KnownTranslationEngine = KNOWN_ENGINE,
+        override val presentation: TranslationProviderPresentation = presentation(catalogEntry),
     ) : TranslationEngine {
-        override val presentation = presentation(catalogEntry)
-
         var preparedRequest: ResolvedTranslationRequest? = null
         var preparationCount = 0
         var translationCount = 0

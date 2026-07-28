@@ -28,7 +28,10 @@ class TranslationSourceLanguageDetectorsTest {
 
         createTranslationSourceLanguageDetectors(
             application = mockk(relaxed = true),
-            components = components,
+            contributions = createTranslationRuntimeContributions(
+                application = mockk(relaxed = true),
+                components = components,
+            ),
         ) shouldContainExactly listOf(detector)
     }
 
@@ -50,7 +53,10 @@ class TranslationSourceLanguageDetectorsTest {
         val error = shouldThrow<IllegalStateException> {
             createTranslationSourceLanguageDetectors(
                 application = mockk(relaxed = true),
-                components = components,
+                contributions = createTranslationRuntimeContributions(
+                    application = mockk(relaxed = true),
+                    components = components,
+                ),
             )
         }
 

@@ -13,6 +13,8 @@ import mihon.translation.api.TranslationDeviceAvailability
 import mihon.translation.api.TranslationEngineBuildAvailability
 import mihon.translation.api.TranslationEngineId
 import mihon.translation.api.TranslationEngineSelection
+import mihon.translation.api.TranslationEngineState
+import mihon.translation.api.TranslationEngineStatus
 import mihon.translation.api.TranslationExecution
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.TranslationHostActionResult
@@ -33,6 +35,39 @@ import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 
 class TranslationSettingsScreenModelTest {
+    @Test
+    fun `engine cannot be selected before its readiness requirement is satisfied`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+        val hostActions = FakeHostActions().apply {
+            states = knownEngines.map { engine ->
+                TranslationEngineState(
+                    engine = engine,
+                    presentation = PRESENTATION,
+                    status = if (engine.id == SECOND_ENGINE) {
+                        TranslationEngineStatus.NotInstalled
+                    } else {
+                        TranslationEngineStatus.Ready
+                    },
+                )
+            }
+        }
+        val model = TranslationSettingsScreenModel(
+            feature = SetupRequiredFeature(),
+            hostActions = hostActions,
+        )
+
+        try {
+            advanceUntilIdle()
+            model.setEngine(SECOND_ENGINE)
+
+            model.playground.value.engine shouldBe ANDROID_ENGINE
+            model.playground.value.hasUnsavedProfileChanges shouldBe false
+        } finally {
+            model.onDispose()
+            Dispatchers.resetMain()
+        }
+    }
 
     @Test
     fun `playground stages profile settings until save while request-only edits stay transient`() = runTest {
@@ -58,8 +93,8 @@ class TranslationSettingsScreenModelTest {
             model.controller.state.value
                 .shouldBeInstanceOf<TranslationSessionState.PreparationRequired>()
             model.playground.value.hasUnsavedProfileChanges shouldBe false
-            model.supportsSystemSetup(ANDROID_ENGINE) shouldBe true
-            model.supportsSystemSetup(SECOND_ENGINE) shouldBe false
+            model.supportsSetup(ANDROID_ENGINE) shouldBe true
+            model.supportsSetup(SECOND_ENGINE) shouldBe false
 
             model.setSourceLanguage(ENGLISH)
             model.setText("A request-only experiment")
@@ -98,6 +133,7 @@ class TranslationSettingsScreenModelTest {
         )
 
         try {
+            advanceUntilIdle()
             model.setTargetLanguage(FRENCH)
             model.setEngine(SECOND_ENGINE)
             model.playground.value.hasUnsavedProfileChanges shouldBe true
@@ -114,7 +150,14 @@ class TranslationSettingsScreenModelTest {
 
     private class FakeHostActions : TranslationHostActions {
         private val store = InMemoryPreferenceStore()
-        override val knownEngines = listOf(knownEngine(ANDROID_ENGINE))
+        override val knownEngines = listOf(knownEngine(ANDROID_ENGINE), knownEngine(SECOND_ENGINE))
+        var states = knownEngines.map { engine ->
+            TranslationEngineState(
+                engine = engine,
+                presentation = PRESENTATION,
+                status = TranslationEngineStatus.Ready,
+            )
+        }
         override val selectedEngine = store.getObjectFromString(
             "engine",
             ANDROID_ENGINE,
@@ -141,6 +184,8 @@ class TranslationSettingsScreenModelTest {
 
         override suspend fun deviceAvailability() = TranslationDeviceAvailability.Available
 
+        override suspend fun inspectEngineStates() = states
+
         override suspend fun acknowledgeProviderDisclosure(
             engine: TranslationEngineId,
             disclosure: TranslationProviderDisclosure,
@@ -152,9 +197,9 @@ class TranslationSettingsScreenModelTest {
             allowMeteredNetwork: Boolean,
         ) = TranslationHostActionResult.ModelsReady
 
-        override fun supportsSystemSetup(engine: TranslationEngineId) = engine == ANDROID_ENGINE
+        override fun supportsSetup(engine: TranslationEngineId) = engine == ANDROID_ENGINE
 
-        override suspend fun openSystemSetup(engine: TranslationEngineId) =
+        override suspend fun openSetup(engine: TranslationEngineId) =
             TranslationHostActionResult.SetupUnsupported
 
         override fun setSelectedEngine(engine: TranslationEngineId) {

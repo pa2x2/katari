@@ -27,7 +27,7 @@ sealed interface TranslationSessionExternalAction {
         val models: List<TranslationModelDescriptor>,
     ) : TranslationSessionExternalAction
 
-    data class OpenSystemSetup(
+    data class OpenSetup(
         val engine: TranslationEngineId,
     ) : TranslationSessionExternalAction
 

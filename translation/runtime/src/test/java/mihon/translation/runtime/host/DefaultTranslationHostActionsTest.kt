@@ -5,8 +5,10 @@ import kotlinx.coroutines.test.runTest
 import mihon.translation.api.KnownTranslationEngine
 import mihon.translation.api.ResolvedTranslationRequest
 import mihon.translation.api.TranslationDeviceAvailability
+import mihon.translation.api.TranslationEngineAction
 import mihon.translation.api.TranslationEngineBuildAvailability
 import mihon.translation.api.TranslationEngineId
+import mihon.translation.api.TranslationEngineStatus
 import mihon.translation.api.TranslationInvocationPolicy
 import mihon.translation.api.TranslationModelId
 import mihon.translation.api.TranslationModelOperationResult
@@ -15,19 +17,52 @@ import mihon.translation.api.TranslationProviderId
 import mihon.translation.api.TranslationProviderPresentation
 import mihon.translation.spi.ReadyTranslationEngineRequest
 import mihon.translation.spi.TranslationEngine
+import mihon.translation.spi.TranslationEngineContribution
 import mihon.translation.spi.TranslationEngineDeviceAvailability
 import mihon.translation.spi.TranslationEngineExecution
 import mihon.translation.spi.TranslationEnginePreparation
 import mihon.translation.spi.TranslationEngineSetup
-import mihon.translation.spi.TranslationSystemSetupResult
+import mihon.translation.spi.TranslationSetupResult
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 
 class DefaultTranslationHostActionsTest {
     @Test
+    fun `engine inspection exposes typed readiness and generic recovery actions`() = runTest {
+        val notInstalled = actions(
+            engine = FakeEngine(TranslationEngineDeviceAvailability.NotInstalled),
+            setups = listOf(FakeSetup(supportsSetup = true)),
+        ).inspectEngineStates().single()
+        notInstalled.status shouldBe TranslationEngineStatus.NotInstalled
+        notInstalled.action shouldBe TranslationEngineAction.Install
+
+        val configurationRequired = actions(
+            engine = FakeEngine(TranslationEngineDeviceAvailability.ConfigurationRequired("Enable local API")),
+            setups = listOf(FakeSetup(supportsSetup = true)),
+        ).inspectEngineStates().single()
+        configurationRequired.status shouldBe
+            TranslationEngineStatus.ConfigurationRequired("Enable local API")
+        configurationRequired.action shouldBe TranslationEngineAction.Configure
+
+        val ready = actions(
+            engine = FakeEngine(TranslationEngineDeviceAvailability.Available),
+            setups = listOf(FakeSetup(supportsSetup = true)),
+        ).inspectEngineStates().single()
+        ready.status shouldBe TranslationEngineStatus.Ready
+        ready.action shouldBe TranslationEngineAction.Setup
+    }
+
+    @Test
     fun `device inspection maps request-independent engine states`() = runTest {
         val cases = listOf(
             TranslationEngineDeviceAvailability.Available to TranslationDeviceAvailability.Available,
+            TranslationEngineDeviceAvailability.NotInstalled to
+                TranslationDeviceAvailability.SelectedEngineUnavailable(
+                    ENGINE_ID,
+                    "Provider application is not installed",
+                ),
+            TranslationEngineDeviceAvailability.ConfigurationRequired("enable API") to
+                TranslationDeviceAvailability.SelectedEngineUnavailable(ENGINE_ID, "enable API"),
             TranslationEngineDeviceAvailability.UnsupportedOs(31) to
                 TranslationDeviceAvailability.UnsupportedOs(31),
             TranslationEngineDeviceAvailability.ServiceMissing to
@@ -57,14 +92,14 @@ class DefaultTranslationHostActionsTest {
     @Test
     fun `system setup shortcut is exposed only when the selected engine declares support`() {
         actions(
-            engine = null,
-            setups = listOf(FakeSetup(supportsSystemSetup = true)),
-        ).supportsSystemSetup(ENGINE_ID) shouldBe true
+            engine = FakeEngine(TranslationEngineDeviceAvailability.Available),
+            setups = listOf(FakeSetup(supportsSetup = true)),
+        ).supportsSetup(ENGINE_ID) shouldBe true
         actions(
-            engine = null,
-            setups = listOf(FakeSetup(supportsSystemSetup = false)),
-        ).supportsSystemSetup(ENGINE_ID) shouldBe false
-        actions(engine = null).supportsSystemSetup(ENGINE_ID) shouldBe false
+            engine = FakeEngine(TranslationEngineDeviceAvailability.Available),
+            setups = listOf(FakeSetup(supportsSetup = false)),
+        ).supportsSetup(ENGINE_ID) shouldBe false
+        actions(engine = null).supportsSetup(ENGINE_ID) shouldBe false
     }
 
     private fun actions(
@@ -74,25 +109,30 @@ class DefaultTranslationHostActionsTest {
     ): DefaultTranslationHostActions {
         val preferences = ProfileTranslationPreferences(InMemoryPreferenceStore(), ENGINE_ID)
         val registry = DefaultTranslationEngineRegistry(
-            engines = listOfNotNull(engine),
-            knownEngines = known,
+            contributions = known.map { catalogEntry ->
+                TranslationEngineContribution(
+                    catalogEntry = catalogEntry,
+                    engine = engine?.takeIf { it.catalogEntry.id == catalogEntry.id },
+                    setup = setups.firstOrNull { it.engine == catalogEntry.id },
+                )
+            },
         )
         return DefaultTranslationHostActions(
             preferences = preferences,
             engineRegistry = registry,
             knownEngineCatalog = registry,
-            setupRegistry = DefaultTranslationEngineSetupRegistry(setups),
+            setupRegistry = registry,
         )
     }
 
     private class FakeSetup(
-        override val supportsSystemSetup: Boolean,
+        override val supportsSetup: Boolean,
     ) : TranslationEngineSetup {
         override val engine = ENGINE_ID
 
         override suspend fun acknowledge(disclosure: TranslationProviderDisclosure) = Unit
 
-        override suspend fun openSystemSetup() = TranslationSystemSetupResult.Opened
+        override suspend fun openSetup() = TranslationSetupResult.Opened
 
         override suspend fun downloadModels(
             models: Set<TranslationModelId>,
