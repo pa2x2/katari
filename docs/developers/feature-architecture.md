@@ -1,24 +1,43 @@
-# Entry Feature architecture
+# Feature architecture
 
-Katari models Entry behavior as a discovered relationship between content-type providers and application Features.
-The purpose is to make support and its consequences follow from executable contributions instead of from a checklist
+Katari models application and Entry behavior as discovered relationships between subject-owned capabilities and
+Feature-owned integrations. Support and its consequences follow from executable contributions instead of a checklist
 that every developer must remember.
+
+## Subjects and runtime composition
+
+The Feature Graph has exactly two subject scopes:
+
+- `Application` represents infrastructure installed once for the running app.
+- `EntryContentType` represents each installed Entry content type, currently Manga, Anime, and Book.
+
+An integration or execution point declares one of those scopes. Application participation is evaluated once regardless
+of how many Entry content types are installed. Entry participation retains the one-evaluation-per-content-type
+cross-product.
+
+Production has one `FeatureRuntimeComposition`. It owns the assembled graph, static evaluation, selected artifacts, and
+execution runtime. Entry installation and application Feature installation produce independent `FeatureRuntimeInputs`;
+the app composition root combines them before a Feature-facing runtime resolves graph state. A domain installer may
+own provider dispatch and host dependencies, but it must not assemble a second graph.
+
+Static graph applicability answers whether an installed subject provides the declared contracts. Device services,
+downloaded models, connectivity, active profile choices, and request-specific context remain runtime Feature state.
 
 ## Layers and ownership
 
-The architecture has four boundaries:
+The architecture has five boundaries:
 
-1. A type module contributes the providers it genuinely implements. Provider presence means support; provider absence
-   is valid and means unsupported in the current version.
+1. A subject owner contributes only the providers, specialized adapters, and validation fixtures it genuinely
+   implements. Provider absence is valid unsupported behavior.
 2. A Feature contribution declares prerequisites, common behavior, specialized requirements, contracts, projections,
-   execution points, and participants. This is where relationships between capabilities are owned.
-3. A Feature runtime module installs that contribution together with its application-facing Feature implementation,
-   executable participant bindings, and warmups. Production installs the module once and derives those artifacts from
-   it.
-4. Screens, workers, notifications, and other app consumers call the application-facing `Entry…Feature`. They do not
-   dispatch type providers, inspect the Feature Graph, or recreate availability rules.
+   execution points, and participants.
+3. An owner-local runtime module installs that contribution together with its application-facing implementation,
+   executable bindings, runtime boundaries, and warmups.
+4. The app composition root combines every installer into the single shared runtime composition.
+5. Screens, workers, notifications, readers, and other consumers call the application-facing Feature API. They do not
+   inspect the graph, dispatch providers, or recreate availability rules.
 
-In simplified form:
+An Entry Feature installation looks like:
 
 ```kotlin
 // entry-interactions:audio
@@ -51,7 +70,44 @@ val result = entryExampleFeature.execute(request)
 Adding Download support later changes the Audio type contribution. Existing Download integrations, policies,
 contracts, reporting, and generic UI availability are then selected from that provider automatically. Extra work is
 required only when Download declares a genuine Audio-specific adapter or another specialized obligation; validation
-names that missing artifact.
+names that missing artifact and its responsible subject owner.
+
+## Adding an application Feature
+
+An application Feature owns a generic runtime module:
+
+```kotlin
+internal val ExampleApplicationFeatureRuntimeModule = ApplicationFeatureRuntimeModule(
+    id = "example.application",
+    contributor = ExampleApplicationFeatureContributor,
+) {
+    addSingletonFactory<ExampleFeature> { DefaultExampleFeature(/* runtime dependencies */) }
+    ApplicationFeatureRuntimeArtifacts(
+        capabilityProviders = listOf(CapabilityProvider(ExampleRegistryCapability, get<ExampleRegistry>())),
+        runtimeBoundaries = listOf(applicationFeatureRuntimeBoundary { get<ExampleFeature>() }),
+    )
+}
+```
+
+Declare it beside its owner:
+
+```properties
+id=example.application
+module=example.feature.ExampleApplicationFeatureRuntimeModule
+```
+
+The `*.application-feature-module` descriptor is discovered from `src/main` and the active Android variant. Generation
+emits deterministic direct Kotlin references, so malformed, missing, or wrongly typed symbols fail the build without
+reflection or `ServiceLoader`. Architecture validation also requires the descriptor to live in the same module as its
+runtime declaration.
+
+Application installers contribute their providers to one aggregated `ApplicationSubjectContribution`. They do not
+each create an application subject. An empty module topology is valid, but the application subject still exists once.
+A future Feature may contain both an application integration for shared infrastructure and Entry integrations for
+content-type-specific participation.
+
+Runtime availability remains behind the Feature API. For example, a static application capability may establish that
+an engine registry is installed while the API still reports that no engine is usable on the current device.
 
 ## Adding a content type
 
@@ -63,7 +119,7 @@ Type-specific mechanics stay behind the provider SPI. Generic app code must not 
 the new `EntryType` to execute behavior. If adding the type reveals such a branch, move that relationship into the
 Feature that owns it or contribute a specialized adapter when the mechanics cannot be shared.
 
-## Adding a Feature
+## Adding an Entry Feature
 
 A new Feature owns one cohesive contribution and runtime module:
 
@@ -100,17 +156,18 @@ module=mihon.entry.interactions.EntryExampleFeatureRuntimeModule
 ```
 
 The descriptor is the production registration. Its ID must match the runtime module ID, and its symbol must resolve to
-an `EntryFeatureRuntimeModule`. The active Android variant discovers descriptors from `src/main` and its own source set,
-then generates the Kotlin production registry in stable ID order.
+an `EntryFeatureRuntimeModule`. The Entry Interactions variant discovers descriptors from `src/main` and its own source
+set, then generates the Kotlin production registry in stable ID order.
 
 Declare shared behavior from provider prerequisites rather than naming current content types. If the Feature requires a
 media-specific implementation, declare a specialized requirement so a supporting type becomes incomplete visibly
 instead of silently losing the behavior.
 
-Behavioral contracts belong to the Feature and run for every graph-selected subject. Their validation contributor is
-loaded through the `FeatureValidationContributor` service registry; the build rejects a declaration omitted from that
-registry, duplicate entries, and unknown registrations. Tests should exercise observable behavior, not repeat which
-types have providers.
+Behavioral contracts belong to the Feature and run for every graph-selected subject in their integration scope. Their
+validation contributor is loaded through the `FeatureValidationContributor` service registry; the build rejects a
+declaration omitted from that registry, duplicate entries, and unknown registrations. Validation selects providers,
+adapters, and fixtures from the exact application or Entry subject. Tests should exercise observable behavior, not
+repeat which subjects have providers.
 
 Content-type modules use the same owner-local mechanism. Place an `*.entry-type-module` descriptor beside the type
 factory:
@@ -120,15 +177,15 @@ id=example
 factory=mihon.entry.interactions.example.exampleEntryTypeRuntimeModule
 ```
 
-There is no hand-written production topology list. The generator discovers both descriptor kinds, rejects malformed or
-duplicate registrations, and emits direct Kotlin references. Compilation therefore rejects missing or wrongly typed
-symbols without reflection, `ServiceLoader`, or Kotlin source-text parsing. Runtime installation and architecture
-validation consume that same generated composition and validate declared IDs and contributor ownership.
+There is no hand-written production topology list. The Entry and application generators reject malformed or duplicate
+registrations and emit direct Kotlin references. Compilation therefore rejects missing or wrongly typed symbols
+without reflection, `ServiceLoader`, or Kotlin source-text parsing. Runtime installation and architecture validation
+consume those generated registrations and validate declared IDs and contributor ownership.
 
 ## Contributing cross-Feature consequences
 
-When one coordinator must invoke independently owned work, it exposes a typed execution point. The affected Feature or
-host contributes its own participant and runtime binding:
+When one coordinator must invoke independently owned work, it exposes a typed execution point scoped to the application
+or to Entry content types. The affected Feature or host contributes its own participant and runtime binding:
 
 ```kotlin
 val libraryAdded = afterCommitVolatileFeatureExecutionPointDefinition<EntryLibraryAddedEvent>(
@@ -355,15 +412,28 @@ operation context.
 
 ## Verification and reporting
 
-Run the complete architecture gate after changing a type, Feature, participant, contract, or projection:
+Run the complete architecture gate after changing an application module, content type, Feature, participant, contract,
+or projection:
 
 ```bash
-./gradlew verifyEntryFeatureArchitecture
+./gradlew verifyFeatureArchitecture
 ```
 
-The gate generates the active production registry, checks boundaries and installation, runs graph and behavioral
-validation, verifies generated documentation, and generates the developer report. The content-type reference is a
-projection of the same evaluated graph; do not edit generated capability truth by hand.
+`verifyEntryFeatureArchitecture` remains a compatibility alias for existing CI and developer workflows.
+
+The gate generates active production registries, checks application and Entry boundaries and installation, runs graph
+and behavioral validation, verifies generated documentation, and generates the developer report:
+
+```bash
+./gradlew generateFeatureReport
+```
+
+The report is written to `entry-interactions/build/reports/features/developer-report.txt`. It has a distinct
+Application Features section and Entry-only sections. Obligations use the exact affected subject and responsible owner.
+
+The content-type reference remains intentionally filtered to `EntryContentType` subjects even though it is projected
+from the same evaluated graph. Do not add the application subject to its tables or edit generated capability truth by
+hand.
 
 Before adding an allowlist or exception, ask whether an unknown future type or Feature could now be omitted without the
 architecture noticing. If so, extend discovery or validation rather than documenting a new checklist.

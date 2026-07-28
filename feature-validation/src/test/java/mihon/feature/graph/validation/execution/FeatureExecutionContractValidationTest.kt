@@ -2,11 +2,14 @@ package mihon.feature.graph.validation.execution
 
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import mihon.feature.graph.ApplicationSubjectContribution
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.CapabilityId
 import mihon.feature.graph.CapabilityProvider
 import mihon.feature.graph.ContentTypeContribution
 import mihon.feature.graph.ContentTypeId
+import mihon.feature.graph.ContractFixture
+import mihon.feature.graph.ContractFixtureId
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.DiscoveredFeatureGraphContributions
 import mihon.feature.graph.FeatureArtifactId
@@ -15,9 +18,12 @@ import mihon.feature.graph.FeatureExecutionFailurePolicy
 import mihon.feature.graph.FeatureExecutionParticipantDefinition
 import mihon.feature.graph.FeatureExecutionParticipantId
 import mihon.feature.graph.FeatureExecutionPointId
+import mihon.feature.graph.FeatureSubjectId
+import mihon.feature.graph.FeatureSubjectScope
 import mihon.feature.graph.afterCommitVolatileFeatureExecutionPointDefinition
 import mihon.feature.graph.assembleFeatureGraph
 import mihon.feature.graph.capabilityDefinition
+import mihon.feature.graph.contractFixtureDefinition
 import mihon.feature.graph.evaluateFeatureGraph
 import mihon.feature.graph.validation.CompletedFeatureExecutionContractExecution
 import mihon.feature.graph.validation.FeatureContractVerificationResult
@@ -100,6 +106,67 @@ class FeatureExecutionContractValidationTest {
         }
     }
 
+    @Test
+    fun `application execution contract selects fixtures from the application subject`() = runSuspend {
+        val fixture = contractFixtureDefinition<ApplicationFixture>(
+            ContractFixtureId("example.application.fixture"),
+            participantOwner,
+        )
+        val applicationContract = object : FeatureBehaviorContract {
+            override val id = FeatureArtifactId("example.application.execution.contract")
+            override val fixtureRequirements = listOf(fixture)
+        }
+        val applicationPoint = afterCommitVolatileFeatureExecutionPointDefinition<ExampleEvent>(
+            id = FeatureExecutionPointId("example.application.point"),
+            owner = pointOwner,
+            failurePolicy = FeatureExecutionFailurePolicy.FAIL_FAST,
+            subjectScope = FeatureSubjectScope.Application,
+        )
+        val applicationParticipant = FeatureExecutionParticipantDefinition(
+            id = FeatureExecutionParticipantId("example.application.participant"),
+            owner = participantOwner,
+            point = applicationPoint,
+            prerequisites = CapabilityExpression.Provided(capability),
+            behavioralContracts = listOf(applicationContract),
+        )
+        val graph = assembleFeatureGraph(
+            DiscoveredFeatureGraphContributions(
+                contentTypes = emptyList(),
+                applicationSubjects = listOf(
+                    ApplicationSubjectContribution(
+                        owner = ContributionOwner("example.application"),
+                        providers = listOf(CapabilityProvider(capability, ExampleProvider())),
+                        contractFixtures = listOf(
+                            ContractFixture(fixture, ApplicationFixture("installed")),
+                        ),
+                    ),
+                ),
+                features = emptyList(),
+                executionPoints = listOf(applicationPoint),
+                executionParticipants = listOf(applicationParticipant),
+            ),
+        )
+        val contributor = featureValidationContributor(participantOwner) {
+            add(
+                FeatureExecutionContractVerifier(
+                    FeatureExecutionContractReference(applicationParticipant.id, applicationContract),
+                ) { input ->
+                    input.subject.affectedSubject.id shouldBe FeatureSubjectId.Application
+                    input.fixture(fixture).state shouldBe "installed"
+                    FeatureContractVerificationResult.Passed
+                },
+            )
+        }
+
+        val result = validateFeatureContracts(
+            planFeatureContractValidation(graph, evaluateFeatureGraph(graph), listOf(contributor)),
+        )
+
+        result.isSuccessful shouldBe true
+        result.executionParticipantExecutions.single()
+            .selection.contractSelection.subject.affectedSubject.id shouldBe FeatureSubjectId.Application
+    }
+
     private fun graph(vararg contentTypeNames: String) = assembleFeatureGraph(
         DiscoveredFeatureGraphContributions(
             contentTypes = contentTypeNames.map { contentTypeName ->
@@ -116,6 +183,7 @@ class FeatureExecutionContractValidationTest {
     )
 
     private class ExampleProvider
+    private data class ApplicationFixture(val state: String)
     private data class ExampleEvent(val value: String)
 }
 

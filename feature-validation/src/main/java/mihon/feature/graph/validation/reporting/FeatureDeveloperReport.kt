@@ -2,12 +2,20 @@ package mihon.feature.graph.validation.reporting
 
 /** Neutral, deterministic snapshot of discovered and evaluated feature participation. */
 data class FeatureDeveloperReport(
+    val application: FeatureDeveloperApplication?,
     val contentTypes: List<FeatureDeveloperContentType>,
     val features: List<FeatureDeveloperFeature>,
     val executionPoints: List<FeatureDeveloperExecutionPoint>,
     val executionParticipants: List<FeatureDeveloperExecutionParticipant>,
     val integrations: List<FeatureDeveloperIntegration>,
     val obligations: List<FeatureDeveloperObligation>,
+)
+
+data class FeatureDeveloperApplication(
+    val owner: String,
+    val providers: List<FeatureDeveloperOwnedReference>,
+    val specializedAdapters: List<FeatureDeveloperOwnedReference>,
+    val contractFixtures: List<FeatureDeveloperOwnedReference>,
 )
 
 data class FeatureDeveloperContentType(
@@ -32,7 +40,7 @@ data class FeatureDeveloperExecutionPoint(
 )
 
 data class FeatureDeveloperExecutionParticipant(
-    val contentType: FeatureDeveloperOwnedReference,
+    val subject: FeatureDeveloperSubjectReference,
     val point: FeatureDeveloperOwnedReference,
     val participant: FeatureDeveloperOwnedReference,
     val state: FeatureDeveloperIntegrationState,
@@ -54,7 +62,7 @@ data class FeatureDeveloperOwnedReference(
 )
 
 data class FeatureDeveloperIntegration(
-    val contentType: FeatureDeveloperOwnedReference,
+    val subject: FeatureDeveloperSubjectReference,
     val feature: FeatureDeveloperOwnedReference,
     val id: String,
     val state: FeatureDeveloperIntegrationState,
@@ -141,13 +149,24 @@ data class FeatureDeveloperProjection(
 data class FeatureDeveloperObligation(
     val responsibleOwner: String,
     val category: FeatureDeveloperObligationCategory,
-    val subjects: List<FeatureDeveloperSubject>,
+    val subjects: List<FeatureDeveloperEvaluationSubject>,
     val artifact: String,
     val details: String,
 )
 
-data class FeatureDeveloperSubject(
-    val contentType: String,
+data class FeatureDeveloperSubjectReference(
+    val id: String,
+    val owner: String,
+    val scope: FeatureDeveloperSubjectScope,
+)
+
+enum class FeatureDeveloperSubjectScope {
+    APPLICATION,
+    ENTRY_CONTENT_TYPE,
+}
+
+data class FeatureDeveloperEvaluationSubject(
+    val subject: FeatureDeveloperSubjectReference,
     val feature: String,
     val integration: String,
 )

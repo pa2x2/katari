@@ -240,27 +240,40 @@ tasks.register("publishEntrySdkToMavenLocal") {
     )
 }
 
-val verifyEntryFeatureDocumentation = tasks.register("verifyEntryFeatureDocumentation") {
+val verifyFeatureDocumentation = tasks.register("verifyFeatureDocumentation") {
     group = "verification"
-    description = "Verifies checked-in Entry Feature documentation against the production graph"
+    description = "Verifies checked-in Feature documentation against the production graph"
     dependsOn(
         ":app:verifyContentTypeReference",
         ":app:verifySourceSdkConsumerCoverage",
     )
 }
 
-tasks.register("verifyEntryFeatureArchitecture") {
+tasks.register("verifyEntryFeatureDocumentation") {
     group = "verification"
-    description = "Verifies Entry Feature boundaries, contracts, reporting, and documentation"
+    description = "Compatibility alias for verifyFeatureDocumentation"
+    dependsOn(verifyFeatureDocumentation)
+}
+
+val verifyFeatureArchitecture = tasks.register("verifyFeatureArchitecture") {
+    group = "verification"
+    description = "Verifies application and Entry Feature boundaries, contracts, reporting, and documentation"
     dependsOn(
-        "checkEntryInteractionBoundaries",
+        "checkFeatureArchitectureBoundaries",
         ":feature-graph:testDebugUnitTest",
+        ":feature-runtime:testDebugUnitTest",
         ":feature-validation:testDebugUnitTest",
         ":entry-interactions:documentation:testDebugUnitTest",
         ":entry-interactions:testDebugUnitTest",
-        ":entry-interactions:generateEntryFeatureReport",
-        verifyEntryFeatureDocumentation,
+        ":entry-interactions:generateFeatureReport",
+        verifyFeatureDocumentation,
     )
+}
+
+tasks.register("verifyEntryFeatureArchitecture") {
+    group = "verification"
+    description = "Compatibility alias for verifyFeatureArchitecture"
+    dependsOn(verifyFeatureArchitecture)
 }
 
 tasks {

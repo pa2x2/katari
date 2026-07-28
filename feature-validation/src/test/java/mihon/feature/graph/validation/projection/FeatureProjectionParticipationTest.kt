@@ -2,6 +2,7 @@ package mihon.feature.graph.validation.projection
 
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import mihon.feature.graph.ApplicationSubjectContribution
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContentTypeContribution
 import mihon.feature.graph.ContentTypeId
@@ -14,6 +15,7 @@ import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
 import mihon.feature.graph.FeatureProjection
+import mihon.feature.graph.FeatureSubjectScope
 import mihon.feature.graph.assembleFeatureGraph
 import mihon.feature.graph.featureProjectionDefinition
 import mihon.feature.graph.featureProjectionExclusion
@@ -39,6 +41,9 @@ class FeatureProjectionParticipationTest {
                         owner = ContributionOwner("future-type-owner"),
                         providers = emptyList(),
                     ),
+                ),
+                applicationSubjects = listOf(
+                    ApplicationSubjectContribution(ContributionOwner("future-application-owner")),
                 ),
                 features = listOf(
                     FeatureContribution(
@@ -83,11 +88,25 @@ class FeatureProjectionParticipationTest {
                         owner = unclassifiedOwner,
                         integrations = listOf(effectfulIntegration("future.unclassified.integration")),
                     ),
+                    FeatureContribution(
+                        feature = FeatureId("future.application-only"),
+                        owner = ContributionOwner("future-application-feature-owner"),
+                        integrations = listOf(
+                            effectfulIntegration(
+                                "future.application-only.integration",
+                                FeatureSubjectScope.Application,
+                            ),
+                        ),
+                    ),
                 ),
             ),
         )
 
-        val result = classifyFeatureProjectionParticipation(graph, FutureProjection::class)
+        val result = classifyFeatureProjectionParticipation(
+            graph,
+            FutureProjection::class,
+            FeatureSubjectScope.EntryContentType,
+        )
 
         result.participation.map { it.feature.value } shouldContainExactly listOf(
             "future.excluded",
@@ -103,9 +122,13 @@ class FeatureProjectionParticipationTest {
         result.isComplete shouldBe false
     }
 
-    private fun effectfulIntegration(id: String) = FeatureIntegration(
+    private fun effectfulIntegration(
+        id: String,
+        subjectScope: FeatureSubjectScope = FeatureSubjectScope.EntryContentType,
+    ) = FeatureIntegration(
         id = FeatureIntegrationId(id),
         prerequisites = CapabilityExpression.Always,
+        subjectScope = subjectScope,
         behaviorProjections = listOf(object : FeatureBehaviorProjection {
             override val id = FeatureArtifactId("$id.effect")
         }),

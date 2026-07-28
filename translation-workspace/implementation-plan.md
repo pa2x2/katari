@@ -1,6 +1,6 @@
 # Application-scoped Feature Graph and Translation Feature implementation plan
 
-Status: Phase 2 complete; awaiting approval to begin Phase 3.
+Status: Phase 3 complete; awaiting approval to begin Phase 4.
 
 The manifestos in this directory are authoritative:
 
@@ -77,13 +77,13 @@ Exit condition: existing production Entry Features use the shared composition an
 
 ## Phase 3: Reporting, validation, and architecture documentation
 
-- [ ] Add an Application Features section to the production developer report.
-- [ ] Keep Entry content-type reference generation filtered to Entry subjects.
-- [ ] Add `verifyFeatureArchitecture`.
-- [ ] Keep `verifyEntryFeatureArchitecture` working as a compatibility alias/dependency.
-- [ ] Update build-logic boundary checks for the new application module boundary.
-- [ ] Rewrite `docs/developers/feature-architecture.md` around the two subject scopes.
-- [ ] Validate that production Entry applicability and obligations are unchanged.
+- [x] Add an Application Features section to the production developer report.
+- [x] Keep Entry content-type reference generation filtered to Entry subjects.
+- [x] Add `verifyFeatureArchitecture`.
+- [x] Keep `verifyEntryFeatureArchitecture` working as a compatibility alias/dependency.
+- [x] Update build-logic boundary checks for the new application module boundary.
+- [x] Rewrite `docs/developers/feature-architecture.md` around the two subject scopes.
+- [x] Validate that production Entry applicability and obligations are unchanged.
 
 Exit condition: architecture gates, report generation, and checked-in developer documentation agree with production.
 
@@ -127,6 +127,8 @@ Define internal contracts for:
 
 ### Feature contribution
 
+- [ ] Move the production report host to the generated application topology when the first application Feature
+  descriptor is added; do not introduce a validation-only module list.
 - [ ] Define `TranslationEngineRegistry` capability.
 - [ ] Contribute it to the application subject.
 - [ ] Add an application-scoped Translation integration requiring the registry.

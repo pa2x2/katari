@@ -32,6 +32,15 @@ abstract class EntryInteractionBoundaryCheckTask : DefaultTask() {
                 reason = finding.reason,
             )
         }
+        findings += checkApplicationFeatureRuntimeModuleBoundaries(
+            applicationFeatureRuntimeModuleSources(root),
+        ).map { finding ->
+            Finding(
+                relativePath = finding.relativePath,
+                lineNumber = finding.lineNumber,
+                reason = finding.reason,
+            )
+        }
         findings += checkEntryViewerSettingsProjectionBoundaries(
             sourceIndex.files.map { source ->
                 EntryViewerSettingsProjectionBoundarySource(source.relativePath, source.content)
@@ -112,6 +121,43 @@ abstract class EntryInteractionBoundaryCheckTask : DefaultTask() {
                 )
             }
             .toList()
+    }
+
+    private fun applicationFeatureRuntimeModuleSources(
+        root: File,
+    ): List<ApplicationFeatureRuntimeModuleBoundarySource> {
+        val productionSources = root.walkTopDown()
+            .filter { file ->
+                file.isFile &&
+                    (
+                        (file.extension == "kt" && "/src/main/" in file.invariantSeparatorsPath) ||
+                            file.extension == "application-feature-module"
+                        )
+            }
+            .filterNot { file ->
+                val path = file.invariantSeparatorsPath
+                "/build/" in path ||
+                    "/.git/" in path ||
+                    "/.gradle/" in path ||
+                    "/node_modules/" in path ||
+                    "/translation-workspace/" in path
+            }
+            .map { file ->
+                ApplicationFeatureRuntimeModuleBoundarySource(
+                    relativePath = file.relativeTo(root).invariantSeparatorsPath,
+                    content = file.readText(),
+                )
+            }
+            .toList()
+        val appBuild = root.resolve("app/build.gradle.kts")
+            .takeIf(File::isFile)
+            ?.let { file ->
+                ApplicationFeatureRuntimeModuleBoundarySource(
+                    relativePath = file.relativeTo(root).invariantSeparatorsPath,
+                    content = file.readText(),
+                )
+            }
+        return productionSources + listOfNotNull(appBuild)
     }
 
     companion object {

@@ -148,7 +148,7 @@ fun planFeatureContractValidation(
 
     val contextualFixtureCandidates = mutableListOf<MissingContextualFixtureCandidate>()
     conditional.forEach { candidate ->
-        val contentType = graph.entryContentTypes.single { it.contentType == candidate.subject.entryContentType }
+        val subject = graph.subject(candidate.subject)
         candidate.integration.behavioralContracts.forEach contractLoop@{ contract ->
             val reference = contract.reference(candidate.subject)
             val scenarios = scenariosByContractIntegration[reference to candidate.integration.id].orEmpty()
@@ -156,7 +156,7 @@ fun planFeatureContractValidation(
                 missingScenarioCandidates += MissingScenarioCandidate(candidate.subject, reference)
                 return@contractLoop
             }
-            val fixtures = contract.selectedFixtures(contentType.contractFixtures)
+            val fixtures = contract.selectedFixtures(subject.contractFixtures)
             val suppliedFixtureIds = fixtures.mapTo(mutableSetOf()) { it.definition.id }
             contract.fixtureRequirements
                 .filter { it.id !in suppliedFixtureIds }
@@ -391,4 +391,4 @@ private fun List<FeatureObligation>.normalized(): List<FeatureObligation> {
 }
 
 private fun FeatureIntegrationSubject.sortKey(): String =
-    "${entryContentType.value}:${feature.value}:${integration.value}"
+    "${affectedSubject.id.stableValue}:${feature.value}:${integration.value}"

@@ -18,6 +18,8 @@ import mihon.feature.graph.ConditionalFeatureIntegration
 import mihon.feature.graph.FeatureGraph
 import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureProjectionSelection
+import mihon.feature.graph.FeatureSubjectId
+import mihon.feature.graph.FeatureSubjectScope
 import mihon.feature.graph.IncompleteFeatureContext
 import mihon.feature.graph.MissingFeatureContextEvidence
 import mihon.feature.graph.selectContextualFeatureArtifacts
@@ -32,6 +34,7 @@ fun planEntryContentTypeReference(
     val participation = classifyFeatureProjectionParticipation(
         graph,
         EntryContentTypeReferenceProjection::class,
+        FeatureSubjectScope.EntryContentType,
     )
     val issues = mutableListOf<EntryContentTypeReferenceIssue>()
     participation.missing.forEach { missing ->
@@ -50,21 +53,25 @@ fun planEntryContentTypeReference(
         )
     }
     val selections = mutableListOf<FeatureProjectionSelection>()
-    selectFeatureArtifacts(graph, evaluation).projections.contentReferenceSelections().forEach { selection ->
-        if (selection.contentReferenceProjection().selection ==
-            EntryContentTypeReferenceSelection.CONDITIONAL_RELATIONSHIP
-        ) {
-            issues += EntryContentTypeReferenceIssue(
-                responsibleOwner = selection.subject.featureOwner,
-                subject = selection.subject,
-                details = "Conditional content-reference projection was selected from a static relationship",
-            )
-        } else {
-            selections += selection
+    selectFeatureArtifacts(graph, evaluation).projections
+        .filter { it.subject.affectedSubject.id is FeatureSubjectId.EntryContentType }
+        .contentReferenceSelections()
+        .forEach { selection ->
+            if (selection.contentReferenceProjection().selection ==
+                EntryContentTypeReferenceSelection.CONDITIONAL_RELATIONSHIP
+            ) {
+                issues += EntryContentTypeReferenceIssue(
+                    responsibleOwner = selection.subject.featureOwner,
+                    subject = selection.subject,
+                    details = "Conditional content-reference projection was selected from a static relationship",
+                )
+            } else {
+                selections += selection
+            }
         }
-    }
     evaluation.integrations
         .filterIsInstance<ConditionalFeatureIntegration>()
+        .filter { it.subject.affectedSubject.id is FeatureSubjectId.EntryContentType }
         .filter { candidate ->
             candidate.integration.projectionRequirements.any { requirement ->
                 requirement.projectionType == EntryContentTypeReferenceProjection::class

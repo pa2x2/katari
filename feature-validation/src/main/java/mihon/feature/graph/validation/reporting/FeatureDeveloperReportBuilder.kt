@@ -2,6 +2,7 @@ package mihon.feature.graph.validation.reporting
 
 import mihon.feature.graph.ApplicableFeatureExecutionParticipant
 import mihon.feature.graph.ApplicableFeatureIntegration
+import mihon.feature.graph.ApplicationSubjectContribution
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.CapabilityProvider
 import mihon.feature.graph.ConditionalFeatureExecutionParticipant
@@ -11,6 +12,8 @@ import mihon.feature.graph.FeatureGraph
 import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureIntegrationEvaluation
 import mihon.feature.graph.FeatureIntegrationSubject
+import mihon.feature.graph.FeatureSubjectId
+import mihon.feature.graph.FeatureSubjectReference
 import mihon.feature.graph.InapplicableFeatureExecutionParticipant
 import mihon.feature.graph.InapplicableFeatureIntegration
 import mihon.feature.graph.IncompleteFeatureExecutionParticipant
@@ -38,7 +41,6 @@ import mihon.feature.graph.validation.MissingFeatureExecutionContractFixtureObli
 import mihon.feature.graph.validation.MissingFeatureExecutionContractScenarioObligation
 import mihon.feature.graph.validation.MissingFeatureExecutionContractVerifierObligation
 import mihon.feature.graph.validation.ValidationFeatureContractPlanIssue
-import mihon.feature.graph.validation.entryContentType
 import mihon.feature.graph.validation.entryContentTypes
 
 fun buildFeatureDeveloperReport(
@@ -73,6 +75,27 @@ fun buildFeatureDeveloperReport(
         }
 
     return FeatureDeveloperReport(
+        application = graph.subjects.filterIsInstance<ApplicationSubjectContribution>()
+            .singleOrNull()
+            ?.let { contribution ->
+                FeatureDeveloperApplication(
+                    owner = contribution.owner.value,
+                    providers = contribution.providers
+                        .map { it.reference() }
+                        .sortedBy(FeatureDeveloperOwnedReference::id),
+                    specializedAdapters = contribution.specializedAdapters
+                        .map { it.reference() }
+                        .sortedBy(FeatureDeveloperOwnedReference::id),
+                    contractFixtures = contribution.contractFixtures
+                        .map { fixture ->
+                            FeatureDeveloperOwnedReference(
+                                id = fixture.definition.id.value,
+                                owner = fixture.definition.owner.value,
+                            )
+                        }
+                        .sortedBy(FeatureDeveloperOwnedReference::id),
+                )
+            },
         contentTypes = graph.entryContentTypes.map { contribution ->
             FeatureDeveloperContentType(
                 id = contribution.contentType.value,
@@ -110,7 +133,8 @@ fun buildFeatureDeveloperReport(
         },
         executionParticipants = evaluation.executionParticipants
             .sortedBy {
-                "${it.subject.entryContentType.value}:${it.subject.point.value}:${it.subject.participant.value}"
+                "${it.subject.affectedSubject.id.stableValue}:" +
+                    "${it.subject.point.value}:${it.subject.participant.value}"
             }
             .map { evaluated ->
                 val state = when (evaluated) {
@@ -120,10 +144,7 @@ fun buildFeatureDeveloperReport(
                     is ApplicableFeatureExecutionParticipant -> FeatureDeveloperIntegrationState.APPLICABLE
                 }
                 FeatureDeveloperExecutionParticipant(
-                    contentType = FeatureDeveloperOwnedReference(
-                        evaluated.subject.entryContentType.value,
-                        evaluated.subject.affectedSubject.owner.value,
-                    ),
+                    subject = evaluated.subject.affectedSubject.report(),
                     point = FeatureDeveloperOwnedReference(
                         evaluated.participant.point.id.value,
                         evaluated.participant.point.owner.value,
@@ -212,10 +233,7 @@ private fun FeatureIntegrationEvaluation.report(
     }
 
     return FeatureDeveloperIntegration(
-        contentType = FeatureDeveloperOwnedReference(
-            id = subject.entryContentType.value,
-            owner = subject.affectedSubject.owner.value,
-        ),
+        subject = subject.affectedSubject.report(),
         feature = FeatureDeveloperOwnedReference(
             id = subject.feature.value,
             owner = subject.featureOwner.value,
@@ -432,8 +450,8 @@ private fun SpecializedExecutionParticipantObligation.report(): FeatureDeveloper
         responsibleOwner = responsibleOwner.value,
         category = FeatureDeveloperObligationCategory.EXECUTION_SPECIALIZED_ADAPTER,
         subjects = listOf(
-            FeatureDeveloperSubject(
-                contentType = subject.entryContentType.value,
+            FeatureDeveloperEvaluationSubject(
+                subject = subject.affectedSubject.report(),
                 feature = "execution.${subject.point.value}",
                 integration = subject.participant.value,
             ),
@@ -483,26 +501,40 @@ private fun SpecializedAdapterDefinition<*>.reference(): FeatureDeveloperOwnedRe
     return FeatureDeveloperOwnedReference(id.value, owner.value)
 }
 
-private fun FeatureIntegrationSubject.report(): FeatureDeveloperSubject {
-    return FeatureDeveloperSubject(
-        contentType = entryContentType.value,
+private fun FeatureIntegrationSubject.report(): FeatureDeveloperEvaluationSubject {
+    return FeatureDeveloperEvaluationSubject(
+        subject = affectedSubject.report(),
         feature = feature.value,
         integration = integration.value,
     )
 }
 
-private fun mihon.feature.graph.FeatureExecutionParticipantSubject.report(): FeatureDeveloperSubject {
-    return FeatureDeveloperSubject(
-        contentType = entryContentType.value,
+private fun mihon.feature.graph.FeatureExecutionParticipantSubject.report(): FeatureDeveloperEvaluationSubject {
+    return FeatureDeveloperEvaluationSubject(
+        subject = affectedSubject.report(),
         feature = "execution.${point.value}",
         integration = participant.value,
     )
 }
 
 private fun FeatureIntegrationSubject.sortKey(): String =
-    "${entryContentType.value}:${feature.value}:${integration.value}"
+    "${affectedSubject.id.stableValue}:${feature.value}:${integration.value}"
 
-private fun FeatureDeveloperSubject.sortKey(): String = "$contentType:$feature:$integration"
+private fun FeatureDeveloperEvaluationSubject.sortKey(): String = "${subject.id}:$feature:$integration"
+
+private fun FeatureSubjectReference.report(): FeatureDeveloperSubjectReference {
+    val (displayId, scope) = when (val subjectId = id) {
+        FeatureSubjectId.Application ->
+            "application" to FeatureDeveloperSubjectScope.APPLICATION
+        is FeatureSubjectId.EntryContentType ->
+            subjectId.contentType.value to FeatureDeveloperSubjectScope.ENTRY_CONTENT_TYPE
+    }
+    return FeatureDeveloperSubjectReference(
+        id = displayId,
+        owner = owner.value,
+        scope = scope,
+    )
+}
 
 private data class ContractKey(
     val subject: FeatureIntegrationSubject,

@@ -78,11 +78,11 @@ dependencies {
     testFixturesApi(projects.entryInteractions.spi)
 }
 
-val entryFeatureReportFile = layout.buildDirectory.file("reports/entry-features/developer-report.txt")
+val featureReportFile = layout.buildDirectory.file("reports/features/developer-report.txt")
 
-val generateEntryFeatureReport = tasks.register<Test>("generateEntryFeatureReport") {
+val generateFeatureReport = tasks.register<Test>("generateFeatureReport") {
     group = "reporting"
-    description = "Renders the evaluated Entry feature graph and validation results for developers"
+    description = "Renders the evaluated application and Entry Feature graph for developers"
 
     testClassesDirs = files(
         providers.provider { tasks.named<Test>("testDebugUnitTest").get().testClassesDirs },
@@ -96,9 +96,15 @@ val generateEntryFeatureReport = tasks.register<Test>("generateEntryFeatureRepor
         )
     }
     systemProperty(
-        "mihon.entry.feature.report.output",
-        entryFeatureReportFile.get().asFile.absolutePath,
+        "mihon.feature.report.output",
+        featureReportFile.get().asFile.absolutePath,
     )
-    outputs.file(entryFeatureReportFile)
+    outputs.file(featureReportFile)
     testLogging.showStandardStreams = true
+}
+
+tasks.register("generateEntryFeatureReport") {
+    group = "reporting"
+    description = "Compatibility alias for generateFeatureReport"
+    dependsOn(generateFeatureReport)
 }

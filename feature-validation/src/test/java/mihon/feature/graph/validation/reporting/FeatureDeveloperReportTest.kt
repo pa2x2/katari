@@ -3,12 +3,15 @@ package mihon.feature.graph.validation.reporting
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import mihon.feature.graph.ApplicationSubjectContribution
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.CapabilityId
 import mihon.feature.graph.CapabilityProvider
 import mihon.feature.graph.ContentTypeContribution
 import mihon.feature.graph.ContentTypeId
 import mihon.feature.graph.ContextInputId
+import mihon.feature.graph.ContractFixture
+import mihon.feature.graph.ContractFixtureId
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.DiscoveredFeatureGraphContributions
 import mihon.feature.graph.FeatureArtifactId
@@ -26,11 +29,14 @@ import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
 import mihon.feature.graph.FeatureProjection
+import mihon.feature.graph.FeatureSubjectId
+import mihon.feature.graph.FeatureSubjectScope
 import mihon.feature.graph.afterCommitVolatileFeatureExecutionPointDefinition
 import mihon.feature.graph.assembleFeatureGraph
 import mihon.feature.graph.capabilityDefinition
 import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.contextInputDefinition
+import mihon.feature.graph.contractFixtureDefinition
 import mihon.feature.graph.evaluateFeatureGraph
 import mihon.feature.graph.featureContextRule
 import mihon.feature.graph.featureProjectionDefinition
@@ -64,6 +70,83 @@ class FeatureDeveloperReportTest {
     }
     private val behavior = object : FeatureBehaviorProjection {
         override val id = FeatureArtifactId("future.queue.action")
+    }
+
+    @Test
+    fun `application Feature participation is reported once with application fixtures`() = runSuspend {
+        val applicationOwner = ContributionOwner("future.application")
+        val fixture = contractFixtureDefinition<FutureFixture>(
+            ContractFixtureId("future.application.fixture"),
+            featureOwner,
+        )
+        val applicationContract = object : FeatureBehaviorContract {
+            override val id = FeatureArtifactId("future.application.behavior")
+            override val fixtureRequirements = listOf(fixture)
+        }
+        val graph = assembleFeatureGraph(
+            DiscoveredFeatureGraphContributions(
+                contentTypes = emptyList(),
+                applicationSubjects = listOf(
+                    ApplicationSubjectContribution(
+                        owner = applicationOwner,
+                        contractFixtures = listOf(ContractFixture(fixture, FutureFixture("installed"))),
+                    ),
+                ),
+                features = listOf(
+                    FeatureContribution(
+                        feature = featureId,
+                        owner = featureOwner,
+                        integrations = listOf(
+                            FeatureIntegration(
+                                id = integrationId,
+                                prerequisites = CapabilityExpression.Always,
+                                subjectScope = FeatureSubjectScope.Application,
+                                contextInputs = listOf(context),
+                                contextRule = featureContextRule(featureOwner) {
+                                    FeatureContextDecision.Applicable
+                                },
+                                behavioralContracts = listOf(applicationContract),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        )
+        val validationContributor = featureValidationContributor(featureOwner) {
+            add(
+                FeatureContractVerifier(
+                    mihon.feature.graph.validation.FeatureContractReference(featureId, applicationContract),
+                ) { input ->
+                    input.subject.affectedSubject.id shouldBe FeatureSubjectId.Application
+                    input.fixture(fixture).state shouldBe "installed"
+                    FeatureContractVerificationResult.Passed
+                },
+            )
+            add(
+                FeatureContractScenario(
+                    id = FeatureContractScenarioId("future.application.applicable"),
+                    contract = mihon.feature.graph.validation.FeatureContractReference(featureId, applicationContract),
+                    integration = integrationId,
+                ) {
+                    it.fixture(fixture).state shouldBe "installed"
+                    listOf(contextEvidence(context, FutureContext(ready = true)))
+                },
+            )
+        }
+        val evaluation = evaluateFeatureGraph(graph)
+        val validation = validateFeatureContracts(
+            planFeatureContractValidation(graph, evaluation, listOf(validationContributor)),
+        )
+
+        val report = buildFeatureDeveloperReport(graph, evaluation, validation)
+        val rendered = renderFeatureDeveloperReport(report)
+
+        validation.isSuccessful shouldBe true
+        report.application?.owner shouldBe applicationOwner.value
+        report.contentTypes shouldBe emptyList()
+        report.integrations.single().subject.scope shouldBe FeatureDeveloperSubjectScope.APPLICATION
+        rendered shouldContain "Application Features"
+        rendered shouldContain "application -> future.queue/future.queue.playback [conditional]"
     }
 
     @Test
@@ -161,7 +244,7 @@ class FeatureDeveloperReportTest {
         )
         report.obligations.forEach { obligation ->
             obligation.responsibleOwner shouldBe featureOwner.value
-            obligation.subjects.single().contentType shouldBe "audio"
+            obligation.subjects.single().subject.id shouldBe "audio"
         }
     }
 
@@ -202,7 +285,7 @@ class FeatureDeveloperReportTest {
             category shouldBe FeatureDeveloperObligationCategory.PROJECTION
             responsibleOwner shouldBe featureOwner.value
             artifact shouldBe "future.queue.conditional-projection"
-            subjects.map { it.contentType } shouldContainExactly listOf("audio", "video")
+            subjects.map { it.subject.id } shouldContainExactly listOf("audio", "video")
         }
     }
 
@@ -362,6 +445,7 @@ class FeatureDeveloperReportTest {
     private data object FutureProvider
     private data class FutureContext(val ready: Boolean)
     private data object FutureProjection
+    private data class FutureFixture(val state: String)
     private data class FutureEvent(val entryId: Long)
 }
 

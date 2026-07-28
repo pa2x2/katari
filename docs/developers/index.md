@@ -5,7 +5,7 @@ Entry capabilities. It is intended for extension and application contributors ra
 
 ## Work on application Features
 
-Read the [Entry Feature architecture](./feature-architecture.md) before adding a content type, application Feature,
+Read the [Feature architecture](./feature-architecture.md) before adding a content type, application Feature,
 cross-Feature consequence, app-owned projection, or Feature-owned backup state. It explains how contributions are
 discovered and which validation gate prevents follow-up integrations from being silently omitted.
 

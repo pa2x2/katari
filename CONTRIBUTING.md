@@ -42,17 +42,19 @@ Git-generated subjects beginning with `Merge `, `Revert `, `fixup! `, or `squash
 
 ## Inspect feature relationships
 
-When changing a content-type provider, shared feature integration, contextual rule, contract, or specialized adapter,
+When changing an application or content-type provider, Feature integration, contextual rule, contract, or specialized
+adapter,
 generate the evaluated developer report from the repository root:
 
 ```bash
-./gradlew generateEntryFeatureReport
+./gradlew generateFeatureReport
 ```
 
-The task writes `entry-interactions/build/reports/entry-features/developer-report.txt`. The report lists discovered
-content types and providers, every evaluated feature integration, conditional inputs and possible blockers, selected or
-conditional consequences, contract results, projections, and obligations with their responsible owners. A passing
-contextual validation scenario remains labeled as a scenario and does not establish type-wide support.
+The task writes `entry-interactions/build/reports/features/developer-report.txt`. The report separates application
+Features from Entry content-type Features and lists discovered providers, every evaluated integration, conditional
+inputs and possible blockers, selected or conditional consequences, contract results, projections, and obligations
+with their responsible owners. A passing contextual validation scenario remains labeled as a scenario and does not
+establish subject-wide support.
 
 ## Preview the documentation
 

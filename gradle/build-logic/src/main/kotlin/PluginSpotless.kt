@@ -41,13 +41,18 @@ class PluginSpotless : Plugin<Project> {
 
         if (this == rootProject) {
             val boundaryCheck = tasks.register<EntryInteractionBoundaryCheckTask>("checkEntryInteractionBoundaries") {
-                description = "Checks Entry interaction boundary hardening rules."
+                description = "Checks Entry and application Feature boundary hardening rules."
                 group = "verification"
                 repositoryRoot.set(layout.projectDirectory)
             }
+            val featureBoundaryCheck = tasks.register("checkFeatureArchitectureBoundaries") {
+                description = "Checks all Feature architecture boundary hardening rules."
+                group = "verification"
+                dependsOn(boundaryCheck)
+            }
 
             tasks.named("spotlessCheck") {
-                dependsOn(boundaryCheck)
+                dependsOn(featureBoundaryCheck)
             }
         }
     }

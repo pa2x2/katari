@@ -291,7 +291,7 @@ private fun FeatureBehaviorContract.fixtures(
     graph: FeatureGraph,
     subject: FeatureExecutionParticipantSubject,
 ): List<ContractFixture<*>> {
-    val supplied = graph.entryContentTypes.single { it.contentType == subject.entryContentType }.contractFixtures
+    val supplied = graph.subject(subject).contractFixtures
         .associateBy { it.definition.id }
     return fixtureRequirements.sortedBy { it.id.value }.mapNotNull { supplied[it.id] }
 }
@@ -304,7 +304,7 @@ private fun OwnedFeatureExecutionContractScenario.invalid(
 }
 
 private fun FeatureExecutionParticipantSubject.sortKey(): String {
-    return "${entryContentType.value}:${point.value}:${participant.value}"
+    return "${affectedSubject.id.stableValue}:${point.value}:${participant.value}"
 }
 
 private fun List<FeatureContractValidationObligation>.normalized(): List<FeatureContractValidationObligation> {

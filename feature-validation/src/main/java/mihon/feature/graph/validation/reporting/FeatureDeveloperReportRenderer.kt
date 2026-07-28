@@ -1,23 +1,45 @@
 package mihon.feature.graph.validation.reporting
 
-import mihon.feature.graph.validation.entryContentType
-
 fun renderFeatureDeveloperReport(report: FeatureDeveloperReport): String = buildString {
     appendLine("Katari feature developer report")
     appendLine("================================")
     appendLine(
-        "Content types: ${report.contentTypes.size}; features: ${report.features.size}; " +
+        "Application subject: ${if (report.application == null) 0 else 1}; " +
+            "content types: ${report.contentTypes.size}; features: ${report.features.size}; " +
             "execution points: ${report.executionPoints.size}; " +
             "evaluated integrations: ${report.integrations.size}; obligations: ${report.obligations.size}",
     )
     appendLine(
         "Contextual validation scenarios are samples of conditional relationships; " +
-            "they never establish type-wide support.",
+            "they never establish subject-wide support.",
     )
 
     appendLine()
-    appendLine("Content types")
-    appendLine("-------------")
+    appendLine("Application Features")
+    appendLine("--------------------")
+    val application = report.application
+    if (application == null) {
+        appendLine("- application subject not installed")
+    } else {
+        appendLine("- application (owner: ${application.owner})")
+        appendReferences("providers", application.providers)
+        appendReferences("specialized adapters", application.specializedAdapters)
+        appendReferences("contract fixtures", application.contractFixtures)
+    }
+    appendLine("  evaluated integrations:")
+    appendIntegrations(
+        report.integrations.filter { it.subject.scope == FeatureDeveloperSubjectScope.APPLICATION },
+        emptyIndent = "    ",
+    )
+    appendLine("  evaluated execution participants:")
+    appendExecutionParticipants(
+        report.executionParticipants.filter { it.subject.scope == FeatureDeveloperSubjectScope.APPLICATION },
+        emptyIndent = "    ",
+    )
+
+    appendLine()
+    appendLine("Entry content types")
+    appendLine("-------------------")
     report.contentTypes.forEach { contentType ->
         appendLine("- ${contentType.id} (owner: ${contentType.owner})")
         appendReferences("providers", contentType.providers)
@@ -47,45 +69,89 @@ fun renderFeatureDeveloperReport(report: FeatureDeveloperReport): String = build
     }
 
     appendLine()
-    appendLine("Evaluated execution participants")
-    appendLine("--------------------------------")
-    if (report.executionParticipants.isEmpty()) {
+    appendLine("Evaluated Entry execution participants")
+    appendLine("--------------------------------------")
+    appendExecutionParticipants(
+        report.executionParticipants.filter {
+            it.subject.scope == FeatureDeveloperSubjectScope.ENTRY_CONTENT_TYPE
+        },
+    )
+
+    appendLine()
+    appendLine("Evaluated Entry integrations")
+    appendLine("----------------------------")
+    appendIntegrations(
+        report.integrations.filter {
+            it.subject.scope == FeatureDeveloperSubjectScope.ENTRY_CONTENT_TYPE
+        },
+    )
+
+    appendLine()
+    appendLine("Obligations")
+    appendLine("-----------")
+    if (report.obligations.isEmpty()) {
         appendLine("- none")
     } else {
-        report.executionParticipants.forEach { participant ->
+        report.obligations.forEach { obligation ->
+            val subjects = obligation.subjects.joinToString { subject ->
+                "${subject.subject.id}:${subject.feature}:${subject.integration}"
+            }
             appendLine(
-                "- ${participant.contentType.id} -> ${participant.point.id}/${participant.participant.id} " +
-                    "[${participant.state.name.lowercase()}]",
+                "- ${obligation.category.name.lowercase()}: ${obligation.artifact}; " +
+                    "owner=${obligation.responsibleOwner}; subjects=$subjects",
             )
-            appendLine(
-                "  owners: type=${participant.contentType.owner}; point=${participant.point.owner}; " +
-                    "participant=${participant.participant.owner}",
-            )
-            appendLine("  prerequisites: ${participant.prerequisites.render()}")
-            appendReferences("context inputs", participant.contextInputs, indent = "  ")
-            if (participant.after.isNotEmpty()) appendLine("  after: ${participant.after.joinToString()}")
-            if (participant.before.isNotEmpty()) appendLine("  before: ${participant.before.joinToString()}")
-            if (participant.contracts.isNotEmpty()) {
-                appendLine("  contracts:")
-                participant.contracts.forEach { contract ->
-                    appendLine("    - ${contract.id}")
-                    contract.validations.forEach { validation ->
-                        appendContractValidation(validation, indent = "      ")
-                    }
+            appendLine("  ${obligation.details}")
+        }
+    }
+}.trimEnd() + "\n"
+
+private fun StringBuilder.appendExecutionParticipants(
+    participants: List<FeatureDeveloperExecutionParticipant>,
+    emptyIndent: String = "",
+) {
+    if (participants.isEmpty()) {
+        appendLine("$emptyIndent- none")
+        return
+    }
+    participants.forEach { participant ->
+        appendLine(
+            "- ${participant.subject.id} -> ${participant.point.id}/${participant.participant.id} " +
+                "[${participant.state.name.lowercase()}]",
+        )
+        appendLine(
+            "  owners: subject=${participant.subject.owner}; point=${participant.point.owner}; " +
+                "participant=${participant.participant.owner}",
+        )
+        appendLine("  prerequisites: ${participant.prerequisites.render()}")
+        appendReferences("context inputs", participant.contextInputs, indent = "  ")
+        if (participant.after.isNotEmpty()) appendLine("  after: ${participant.after.joinToString()}")
+        if (participant.before.isNotEmpty()) appendLine("  before: ${participant.before.joinToString()}")
+        if (participant.contracts.isNotEmpty()) {
+            appendLine("  contracts:")
+            participant.contracts.forEach { contract ->
+                appendLine("    - ${contract.id}")
+                contract.validations.forEach { validation ->
+                    appendContractValidation(validation, indent = "      ")
                 }
             }
         }
     }
+}
 
-    appendLine()
-    appendLine("Evaluated integrations")
-    appendLine("----------------------")
-    report.integrations.forEach { integration ->
+private fun StringBuilder.appendIntegrations(
+    integrations: List<FeatureDeveloperIntegration>,
+    emptyIndent: String = "",
+) {
+    if (integrations.isEmpty()) {
+        appendLine("$emptyIndent- none")
+        return
+    }
+    integrations.forEach { integration ->
         appendLine(
-            "- ${integration.contentType.id} -> ${integration.feature.id}/${integration.id} " +
+            "- ${integration.subject.id} -> ${integration.feature.id}/${integration.id} " +
                 "[${integration.state.name.lowercase()}]",
         )
-        appendLine("  owners: type=${integration.contentType.owner}; feature=${integration.feature.owner}")
+        appendLine("  owners: subject=${integration.subject.owner}; feature=${integration.feature.owner}")
         appendLine("  prerequisites: ${integration.prerequisites.render()}")
         appendReferences("matched providers", integration.matchedProviders, indent = "  ")
         appendRequirements("unmet prerequisites", integration.unmetPrerequisites)
@@ -129,25 +195,7 @@ fun renderFeatureDeveloperReport(report: FeatureDeveloperReport): String = build
             }
         }
     }
-
-    appendLine()
-    appendLine("Obligations")
-    appendLine("-----------")
-    if (report.obligations.isEmpty()) {
-        appendLine("- none")
-    } else {
-        report.obligations.forEach { obligation ->
-            val subjects = obligation.subjects.joinToString { subject ->
-                "${subject.contentType}:${subject.feature}:${subject.integration}"
-            }
-            appendLine(
-                "- ${obligation.category.name.lowercase()}: ${obligation.artifact}; " +
-                    "owner=${obligation.responsibleOwner}; subjects=$subjects",
-            )
-            appendLine("  ${obligation.details}")
-        }
-    }
-}.trimEnd() + "\n"
+}
 
 private fun StringBuilder.appendReferences(
     label: String,

@@ -42,8 +42,10 @@ import mihon.entry.interactions.host.tracking.EntryTrackingHost
 import mihon.entry.interactions.settings.EntryInteractionPreferences
 import mihon.entry.interactions.validateInstalledEntryFeatureRuntimeModules
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
+import mihon.feature.runtime.ApplicationFeatureRuntimeInstallationContext
 import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.createFeatureRuntimeComposition
+import mihon.feature.runtime.installApplicationFeatureRuntimeModules
 import nl.adaptivity.xmlutil.serialization.XML
 import okhttp3.OkHttpClient
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
@@ -126,8 +128,18 @@ class ProductionEntryInteractionValidationEnvironment(
                 trackingHost = mockk<EntryTrackingHost>(relaxed = true),
             ),
         )
+        val applicationRuntimeInstallation = installApplicationFeatureRuntimeModules(
+            registrar = Injekt,
+            modules = emptyList(),
+            context = ApplicationFeatureRuntimeInstallationContext(application),
+        )
         Injekt.addSingletonFactory<FeatureRuntimeComposition> {
-            createFeatureRuntimeComposition(listOf(runtimeInstallation.featureRuntimeInputs))
+            createFeatureRuntimeComposition(
+                listOf(
+                    runtimeInstallation.featureRuntimeInputs,
+                    applicationRuntimeInstallation.featureRuntimeInputs,
+                ),
+            )
         }
         val installation = Injekt.get<EntryFeatureRuntimeInstallation>()
         validateInstalledEntryFeatureRuntimeModules(installation.modules)
