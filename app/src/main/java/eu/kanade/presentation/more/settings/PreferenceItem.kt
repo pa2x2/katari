@@ -74,6 +74,8 @@ internal fun PreferenceItem(
                     icon = item.icon,
                     isProfileSpecific = showProfileChip && item.isProfileSpecific,
                     checked = value,
+                    enabled = item.isInteractive,
+                    onDisabledClick = item.onDisabledClick,
                     onCheckedChanged = { newValue ->
                         scope.launch {
                             if (item.onValueChanged(newValue)) {

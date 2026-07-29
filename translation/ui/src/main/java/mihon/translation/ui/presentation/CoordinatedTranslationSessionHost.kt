@@ -14,7 +14,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -174,15 +173,6 @@ private fun TranslationSessionPickerDialog(
                         TranslationSessionPicker.TargetLanguage,
                         -> {
                             val selected = coordinator.selectedLanguage(picker)
-                            if (
-                                picker == TranslationSessionPicker.TargetLanguage &&
-                                !coordinator.isEditingLanguagePair() &&
-                                coordinator.canUseCurrentTargetAsProfileDefault()
-                            ) {
-                                TextButton(onClick = coordinator::useCurrentTargetAsProfileDefault) {
-                                    Text(stringResource(MR.strings.translation_settings_use_target_as_default))
-                                }
-                            }
                             TranslationLanguageSupportPicker(
                                 state = languageSupport,
                                 engine = coordinator.activeEngine(),

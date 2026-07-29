@@ -17,7 +17,9 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
 import mihon.entry.interactions.EntryViewerSettingsFeature
 import mihon.entry.interactions.EntryViewerSettingsScreenProjection
+import mihon.entry.viewer.settings.ReaderSharedSettingAction
 import mihon.entry.viewer.settings.ReaderSharedSettingAvailability
+import mihon.entry.viewer.settings.ReaderSharedSettingText
 import mihon.entry.viewer.settings.ReaderSharedSettingsRegistry
 import mihon.entry.viewer.settings.ResolvedReaderSharedToggleSetting
 import mihon.entry.viewer.settings.ViewerSettingsCategory
@@ -103,16 +105,48 @@ private fun viewerProviderPreferences(category: ViewerSettingsCategory): List<Pr
 private fun ResolvedReaderSharedToggleSetting.toAppPreference(): Preference.PreferenceItem.SwitchPreference {
     val context = androidx.compose.ui.platform.LocalContext.current
     val availability = rememberReaderSharedSettingAvailability(this)
+    val presentation = readerSharedSettingAppPresentation(availability, summary)
     return Preference.PreferenceItem.SwitchPreference(
         preference = preference,
         title = title.resolve(context),
-        subtitle = when (availability) {
-            null,
-            ReaderSharedSettingAvailability.Available,
-            -> summary.resolve(context)
-            is ReaderSharedSettingAvailability.Disabled -> availability.reason.resolve(context)
+        subtitle = presentation.subtitle
+            .joinToString(separator = "\n") { text -> text.resolve(context) },
+        enabled = presentation.isVisible,
+        isInteractive = presentation.isInteractive,
+        onDisabledClick = presentation.disabledAction?.let { action ->
+            { action.perform(context) }
         },
-        enabled = availability == ReaderSharedSettingAvailability.Available,
+    )
+}
+
+internal data class ReaderSharedSettingAppPresentation(
+    val subtitle: List<ReaderSharedSettingText>,
+    val isVisible: Boolean,
+    val isInteractive: Boolean,
+    val disabledAction: ReaderSharedSettingAction?,
+)
+
+internal fun readerSharedSettingAppPresentation(
+    availability: ReaderSharedSettingAvailability?,
+    summary: ReaderSharedSettingText,
+): ReaderSharedSettingAppPresentation = when (availability) {
+    null -> ReaderSharedSettingAppPresentation(
+        subtitle = listOf(summary),
+        isVisible = true,
+        isInteractive = false,
+        disabledAction = null,
+    )
+    ReaderSharedSettingAvailability.Available -> ReaderSharedSettingAppPresentation(
+        subtitle = listOf(summary),
+        isVisible = true,
+        isInteractive = true,
+        disabledAction = null,
+    )
+    is ReaderSharedSettingAvailability.Disabled -> ReaderSharedSettingAppPresentation(
+        subtitle = listOfNotNull(availability.reason, availability.action?.label),
+        isVisible = true,
+        isInteractive = false,
+        disabledAction = availability.action,
     )
 }
 

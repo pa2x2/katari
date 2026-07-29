@@ -298,7 +298,6 @@
     <string name="translation_settings_from">From</string>
     <string name="translation_settings_to">To</string>
     <string name="translation_settings_swap_languages">Swap languages</string>
-    <string name="translation_settings_use_target_as_default">Use target as profile default</string>
     <string name="translation_settings_target_app_language">App language</string>
     <string name="translation_settings_follows_app_language">Follows Katari's app language</string>
     <string name="translation_engine_details">Details</string>

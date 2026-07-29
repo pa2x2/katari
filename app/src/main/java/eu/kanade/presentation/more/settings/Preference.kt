@@ -46,6 +46,9 @@ sealed class Preference {
             override val title: String,
             override val subtitle: String? = null,
             override val enabled: Boolean = true,
+            /** Whether the visible switch can change its value. */
+            val isInteractive: Boolean = true,
+            val onDisabledClick: (() -> Unit)? = null,
             override val onValueChanged: suspend (value: Boolean) -> Boolean = { true },
         ) : PreferenceItem<Boolean, Boolean>() {
             override val icon: ImageVector? = null

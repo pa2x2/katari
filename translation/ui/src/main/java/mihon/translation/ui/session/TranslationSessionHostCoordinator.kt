@@ -219,24 +219,6 @@ class TranslationSessionHostCoordinator(
         }
     }
 
-    fun useCurrentTargetAsProfileDefault() {
-        val source = mutableLanguagePair.value.source ?: return
-        val target = mutableLanguagePair.value.target ?: return
-        val available = languageSupport.value as? TranslationLanguageSupportState.Available
-            ?: return
-        if (available.engine != activeEngine() || !available.support.supportsPair(source, target)) return
-        hostActions.setDefaultTargetLanguage(target)
-        mutableResults.tryEmit(TranslationHostActionResult.Completed)
-    }
-
-    fun canUseCurrentTargetAsProfileDefault(): Boolean {
-        val source = mutableLanguagePair.value.source ?: return false
-        val target = mutableLanguagePair.value.target ?: return false
-        val available = languageSupport.value as? TranslationLanguageSupportState.Available
-            ?: return false
-        return available.engine == activeEngine() && available.support.supportsPair(source, target)
-    }
-
     fun selectedLanguage(picker: TranslationSessionPicker): TranslationLanguageTag? =
         when (picker) {
             TranslationSessionPicker.SourceLanguage -> mutableLanguagePair.value.source
