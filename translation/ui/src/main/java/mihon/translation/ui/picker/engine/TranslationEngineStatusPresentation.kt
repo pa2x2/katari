@@ -74,7 +74,7 @@ internal data class TranslationEnginePickerModel(
 
 internal fun projectTranslationEnginePicker(
     states: List<TranslationEngineState>,
-    selectedEngine: TranslationEngineId,
+    selectedEngine: TranslationEngineId?,
     density: TranslationEnginePickerDensity,
 ): TranslationEnginePickerModel {
     return TranslationEnginePickerModel(
@@ -85,12 +85,12 @@ internal fun projectTranslationEnginePicker(
 
 internal fun isTranslationEngineSelectionMissing(
     states: List<TranslationEngineState>,
-    selectedEngine: TranslationEngineId,
-): Boolean = states.none { it.engine.id == selectedEngine }
+    selectedEngine: TranslationEngineId?,
+): Boolean = selectedEngine != null && states.none { it.engine.id == selectedEngine }
 
 internal fun projectTranslationEngineCard(
     state: TranslationEngineState,
-    selectedEngine: TranslationEngineId,
+    selectedEngine: TranslationEngineId?,
 ): TranslationEngineCardModel {
     return TranslationEngineCardModel(
         state = state,

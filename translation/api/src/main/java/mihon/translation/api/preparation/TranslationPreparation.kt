@@ -82,6 +82,8 @@ sealed interface TranslationTargetChoiceReason {
 }
 
 sealed interface TranslationEngineChoiceReason {
+    data object NoEngineConfigured : TranslationEngineChoiceReason
+
     data class SelectedEngineUnavailable(
         val engine: TranslationEngineId,
     ) : TranslationEngineChoiceReason

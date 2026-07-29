@@ -12,8 +12,10 @@ import mihon.translation.api.KnownTranslationEngine
 import mihon.translation.api.TranslationDeviceAvailability
 import mihon.translation.api.TranslationEngineArtwork
 import mihon.translation.api.TranslationEngineBuildAvailability
+import mihon.translation.api.TranslationEngineChoiceReason
 import mihon.translation.api.TranslationEngineDetails
 import mihon.translation.api.TranslationEngineId
+import mihon.translation.api.TranslationEngineInspection
 import mihon.translation.api.TranslationEngineSelection
 import mihon.translation.api.TranslationEngineState
 import mihon.translation.api.TranslationEngineStatus
@@ -33,6 +35,7 @@ import mihon.translation.api.TranslationSetupDestination
 import mihon.translation.api.TranslationSourceLanguageSelection
 import mihon.translation.api.TranslationSystemSetupReason
 import mihon.translation.api.TranslationTargetLanguageSelection
+import mihon.translation.api.TranslationUnavailableReason
 import mihon.translation.ui.session.TranslationSessionState
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
@@ -78,7 +81,7 @@ class TranslationSettingsScreenModelTest {
         Dispatchers.setMain(dispatcher)
         val hostActions = FakeHostActions()
         hostActions.defaultTargetLanguage.set(TranslationTargetLanguageSelection.Explicit(ENGLISH))
-        val feature = SetupRequiredFeature()
+        val feature = SetupRequiredFeature(hostActions.knownEngines)
         val model = TranslationSettingsScreenModel(
             feature = feature,
             hostActions = hostActions,
@@ -118,6 +121,73 @@ class TranslationSettingsScreenModelTest {
             hostActions.defaultTargetLanguage.get() shouldBe
                 TranslationTargetLanguageSelection.Explicit(FRENCH)
             model.playground.value.hasUnsavedProfileChanges shouldBe false
+        } finally {
+            model.onDispose()
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun `target-only save does not persist the implicit engine`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+        val hostActions = FakeHostActions()
+        val model = TranslationSettingsScreenModel(
+            feature = SetupRequiredFeature(),
+            hostActions = hostActions,
+        )
+
+        try {
+            advanceUntilIdle()
+            model.playground.value.engine shouldBe ANDROID_ENGINE
+            hostActions.selectedEngine.isSet() shouldBe false
+
+            model.setTargetLanguage(FRENCH)
+            model.savePlaygroundDefaults()
+
+            hostActions.selectedEngine.isSet() shouldBe false
+            hostActions.defaultTargetLanguage.get() shouldBe
+                TranslationTargetLanguageSelection.Explicit(FRENCH)
+        } finally {
+            model.onDispose()
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun `unavailable implicit engine leaves the playground unconfigured`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+        val hostActions = FakeHostActions().apply {
+            inspectedSelection = null
+            states = states.map { state ->
+                if (state.engine.id == ANDROID_ENGINE) {
+                    state.copy(
+                        status = TranslationEngineStatus.Unavailable(TranslationUnavailableReason.ServiceMissing),
+                    )
+                } else {
+                    state
+                }
+            }
+        }
+        val feature = SetupRequiredFeature(hostActions.knownEngines)
+        val model = TranslationSettingsScreenModel(
+            feature = feature,
+            hostActions = hostActions,
+        )
+
+        try {
+            advanceUntilIdle()
+
+            model.playground.value.engine shouldBe null
+            model.playground.value.engineSelectionResolved shouldBe true
+            feature.lastRequest?.engine shouldBe TranslationEngineSelection.ProfileDefault
+            model.controller.state.value
+                .shouldBeInstanceOf<TranslationSessionState.PreparationRequired>()
+                .preparation shouldBe TranslationPreparation.EngineChoiceRequired(
+                reason = TranslationEngineChoiceReason.NoEngineConfigured,
+                engines = hostActions.knownEngines,
+            )
         } finally {
             model.onDispose()
             Dispatchers.resetMain()
@@ -201,6 +271,7 @@ class TranslationSettingsScreenModelTest {
                 status = TranslationEngineStatus.Ready,
             )
         }
+        var inspectedSelection: TranslationEngineId? = ANDROID_ENGINE
         var setupResult: TranslationHostActionResult = TranslationHostActionResult.SetupUnsupported
         override val selectedEngine = store.getObjectFromString(
             "engine",
@@ -227,7 +298,10 @@ class TranslationSettingsScreenModelTest {
 
         override suspend fun deviceAvailability() = TranslationDeviceAvailability.Available
 
-        override suspend fun inspectEngineStates() = states
+        override suspend fun inspectEngines() = TranslationEngineInspection(
+            engines = states,
+            selectedEngine = inspectedSelection,
+        )
 
         override suspend fun acknowledgeProviderDisclosure(
             engine: TranslationEngineId,
@@ -256,15 +330,22 @@ class TranslationSettingsScreenModelTest {
         }
     }
 
-    private class SetupRequiredFeature : TranslationFeature {
+    private class SetupRequiredFeature(
+        private val engines: List<KnownTranslationEngine> = emptyList(),
+    ) : TranslationFeature {
         var lastRequest: TranslationRequest? = null
         var requestCount = 0
 
         override suspend fun prepare(request: TranslationRequest): TranslationPreparation {
             requestCount += 1
             lastRequest = request
+            val engine = (request.engine as? TranslationEngineSelection.Explicit)?.engine
+                ?: return TranslationPreparation.EngineChoiceRequired(
+                    reason = TranslationEngineChoiceReason.NoEngineConfigured,
+                    engines = engines,
+                )
             return TranslationPreparation.SystemSetupRequired(
-                engine = (request.engine as TranslationEngineSelection.Explicit).engine,
+                engine = engine,
                 presentation = PRESENTATION,
                 reason = TranslationSystemSetupReason.LanguageModelsRequired,
             )

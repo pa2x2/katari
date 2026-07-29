@@ -38,8 +38,10 @@ class TranslationSessionHostCoordinator(
         },
     )
     val engineStates: StateFlow<List<TranslationEngineState>> = mutableEngineStates.asStateFlow()
-    val profileSelectedEngine: TranslationEngineId
-        get() = hostActions.selectedEngine.get()
+    private var resolvedProfileSelectedEngine =
+        hostActions.selectedEngine.get().takeIf { hostActions.selectedEngine.isSet() }
+    val profileSelectedEngine: TranslationEngineId?
+        get() = resolvedProfileSelectedEngine
 
     val controller = TranslationSessionController(
         feature = feature,
@@ -164,7 +166,9 @@ class TranslationSessionHostCoordinator(
 
     private fun refreshEngineStates() {
         scope.launch {
-            mutableEngineStates.value = hostActions.inspectEngineStates()
+            val inspection = hostActions.inspectEngines()
+            resolvedProfileSelectedEngine = inspection.selectedEngine
+            mutableEngineStates.value = inspection.engines
         }
     }
 }

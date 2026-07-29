@@ -188,7 +188,13 @@ private fun TranslationPlayground(
             }
             PlaygroundSelector(
                 label = stringResource(MR.strings.translation_settings_engine),
-                value = translationEngineLabel(state.engine, engines.map { it.engine }),
+                value = when {
+                    !state.engineSelectionResolved ->
+                        stringResource(MR.strings.translation_engine_status_checking)
+                    state.engine == null ->
+                        stringResource(MR.strings.translation_choose_engine)
+                    else -> translationEngineLabel(state.engine, engines.map { it.engine })
+                },
                 leadingIcon = {
                     Icon(Icons.Outlined.Settings, contentDescription = null)
                 },

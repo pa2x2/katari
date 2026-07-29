@@ -3,7 +3,9 @@
 Katari translates selected text through an explicitly selected translation
 engine. Translation engines are peers: Katari does not silently fall back to a
 different engine when the selected one is missing, unconfigured, or temporarily
-unavailable.
+unavailable. A profile without an explicit choice uses Android System
+Translation as an implicit default only while that service is available on the
+device. Otherwise, the profile remains unconfigured until you choose an engine.
 
 ## Engines
 
@@ -12,7 +14,10 @@ The list includes supported provider apps even when they are not installed.
 Each engine card keeps its selection, readiness, explanation, recovery action,
 and details together. Unavailable cards remain readable but cannot be selected;
 use their explicit **Install**, **Configure**, or **Manage** action to recover.
-Those actions never select the engine automatically.
+Those actions never select the engine automatically. An explicitly selected
+engine remains selected if it later becomes unavailable. An unavailable
+implicit Android default is not shown as selected because the profile has not
+configured an engine.
 
 Choose **Details** on any card to see where that engine processes text, its
 privacy behavior, current status, artwork attribution, and provider
@@ -21,11 +26,13 @@ a translation uses the same statuses and recovery actions.
 
 ### Android System Translation
 
-Android System Translation remains the default engine. It requires Android 12
-or newer and a compatible translation service supplied by the operating system
-or device manufacturer. A device without that service, including a GrapheneOS
-installation without a compatible provider, reports this engine as unavailable
-without hiding the other engines.
+Android System Translation is the implicit default for a profile without an
+explicit engine choice. It requires Android 12 or newer and a compatible
+translation service supplied by the operating system or device manufacturer.
+The implicit default becomes effective only when that service is available. A
+device without it, including a GrapheneOS installation without a compatible
+provider, reports Android System Translation as unavailable, leaves every
+engine unselected, and keeps the other engines visible.
 
 Android owns this engine's language files. Katari can show when setup is needed
 and open Android's translation settings when the device provides them, but it
@@ -95,9 +102,11 @@ readers that cannot provide stable selected text and an on-screen selection
 anchor. EPUB keeps Readium's standard selection handles and Copy/Share actions;
 Katari does not add a separate **Translate** selection-menu action.
 
-If the selected engine becomes unavailable, Katari preserves the enabled
-profile preference but disables its effective behavior and explains why in
-reader settings. Translation resumes when that same engine becomes available.
+If an explicitly selected engine becomes unavailable, Katari preserves the
+enabled profile preference but disables its effective behavior and explains why
+in reader settings. Translation resumes when that same engine becomes
+available. If the implicit Android default is unavailable, reader settings
+instead ask you to choose an engine.
 Request-specific setup, source detection, target choices, and language-data
 states continue in the translation session after a selection is made. Session
 content, including failures, stays anchored to a valid selection when it fits
@@ -126,10 +135,11 @@ LibreTranslate server operator manages the server's language catalog.
 
 ## Profiles
 
-The translation engine and default target language belong to the active
-[profile](./profiles.md). Switching profiles can therefore change the
-translation defaults and whether automatic selected-text translation is
-enabled.
+The explicit translation engine choice and default target language belong to
+the active [profile](./profiles.md). Switching profiles can therefore change
+the translation defaults and whether automatic selected-text translation is
+enabled. Profiles without an explicit engine choice independently evaluate the
+availability-dependent Android default.
 
 Text, results, and language changes made for one translation are temporary.
 They do not become profile defaults unless the user explicitly saves them.

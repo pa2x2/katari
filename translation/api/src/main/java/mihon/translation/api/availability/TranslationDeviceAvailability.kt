@@ -9,6 +9,8 @@ package mihon.translation.api
 sealed interface TranslationDeviceAvailability {
     data object Available : TranslationDeviceAvailability
 
+    data object EngineNotConfigured : TranslationDeviceAvailability
+
     data class SelectedEngineMissing(
         val engine: TranslationEngineId,
     ) : TranslationDeviceAvailability

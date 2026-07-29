@@ -11,6 +11,7 @@ import mihon.translation.api.TranslationEngineArtwork
 import mihon.translation.api.TranslationEngineBuildAvailability
 import mihon.translation.api.TranslationEngineDetails
 import mihon.translation.api.TranslationEngineId
+import mihon.translation.api.TranslationEngineInspection
 import mihon.translation.api.TranslationEngineSelection
 import mihon.translation.api.TranslationEngineState
 import mihon.translation.api.TranslationEngineStatus
@@ -101,6 +102,23 @@ class TranslationSessionHostCoordinatorTest {
     }
 
     @Test
+    fun `engine inspection can leave the implicit profile selection unconfigured`() = runTest {
+        val host = FakeHostActions().apply {
+            inspectedSelection = null
+        }
+        val coordinator = TranslationSessionHostCoordinator(
+            feature = RecordingFeature(),
+            hostActions = host,
+            scope = backgroundScope,
+        )
+
+        runCurrent()
+
+        coordinator.profileSelectedEngine shouldBe null
+        coordinator.close()
+    }
+
+    @Test
     fun `returning from either setup destination retries the session once`() = runTest {
         TranslationSetupDestination.entries.forEach { destination ->
             val host = FakeHostActions().apply {
@@ -156,14 +174,15 @@ class TranslationSessionHostCoordinatorTest {
             TranslationTargetLanguageSelection.Explicit(TARGET),
         )
         var inspectionCount = 0
+        var inspectedSelection: TranslationEngineId? = PROFILE_ENGINE.id
         var openedEngine: TranslationEngineId? = null
         var setupResult: TranslationHostActionResult = TranslationHostActionResult.Completed
 
         override suspend fun deviceAvailability() = TranslationDeviceAvailability.Available
 
-        override suspend fun inspectEngineStates(): List<TranslationEngineState> {
+        override suspend fun inspectEngines(): TranslationEngineInspection {
             inspectionCount += 1
-            return knownEngines.map { engine ->
+            val engines = knownEngines.map { engine ->
                 TranslationEngineState(
                     engine = engine,
                     presentation = null,
@@ -175,6 +194,7 @@ class TranslationSessionHostCoordinatorTest {
                     action = if (engine == BLOCKED_ENGINE) TranslationEngineAction.Install else null,
                 )
             }
+            return TranslationEngineInspection(engines, inspectedSelection)
         }
 
         override suspend fun acknowledgeProviderDisclosure(

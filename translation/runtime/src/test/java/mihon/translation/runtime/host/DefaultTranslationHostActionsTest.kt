@@ -19,6 +19,7 @@ import mihon.translation.api.TranslationProviderDisclosure
 import mihon.translation.api.TranslationProviderId
 import mihon.translation.api.TranslationProviderPresentation
 import mihon.translation.api.TranslationSetupDestination
+import mihon.translation.runtime.selection.ProfileTranslationEngineResolver
 import mihon.translation.spi.ReadyTranslationEngineRequest
 import mihon.translation.spi.TranslationEngine
 import mihon.translation.spi.TranslationEngineContribution
@@ -36,14 +37,14 @@ class DefaultTranslationHostActionsTest {
         val notInstalled = actions(
             engine = FakeEngine(TranslationEngineDeviceAvailability.NotInstalled),
             setups = listOf(FakeSetup(supportsSetup = true)),
-        ).inspectEngineStates().single()
+        ).inspectEngines().engines.single()
         notInstalled.status shouldBe TranslationEngineStatus.NotInstalled
         notInstalled.action shouldBe TranslationEngineAction.Install
 
         val configurationRequired = actions(
             engine = FakeEngine(TranslationEngineDeviceAvailability.ConfigurationRequired("Enable local API")),
             setups = listOf(FakeSetup(supportsSetup = true)),
-        ).inspectEngineStates().single()
+        ).inspectEngines().engines.single()
         configurationRequired.status shouldBe
             TranslationEngineStatus.ConfigurationRequired("Enable local API")
         configurationRequired.action shouldBe TranslationEngineAction.Configure
@@ -51,7 +52,7 @@ class DefaultTranslationHostActionsTest {
         val ready = actions(
             engine = FakeEngine(TranslationEngineDeviceAvailability.Available),
             setups = listOf(FakeSetup(supportsSetup = true)),
-        ).inspectEngineStates().single()
+        ).inspectEngines().engines.single()
         ready.status shouldBe TranslationEngineStatus.Ready
         ready.action shouldBe TranslationEngineAction.Setup
     }
@@ -83,6 +84,29 @@ class DefaultTranslationHostActionsTest {
             engine.inspectionCount shouldBe 1
             engine.preparationCount shouldBe 0
         }
+    }
+
+    @Test
+    fun `implicit default is selected only while it is available`() = runTest {
+        val available = actions(
+            engine = FakeEngine(TranslationEngineDeviceAvailability.Available),
+            explicitSelection = false,
+        )
+        available.inspectEngines().selectedEngine shouldBe ENGINE_ID
+        available.deviceAvailability() shouldBe TranslationDeviceAvailability.Available
+
+        val unavailable = actions(
+            engine = FakeEngine(TranslationEngineDeviceAvailability.ServiceMissing),
+            explicitSelection = false,
+        )
+        unavailable.inspectEngines().selectedEngine shouldBe null
+        unavailable.deviceAvailability() shouldBe TranslationDeviceAvailability.EngineNotConfigured
+
+        val explicitlySelected = actions(
+            engine = FakeEngine(TranslationEngineDeviceAvailability.ServiceMissing),
+        )
+        explicitlySelected.inspectEngines().selectedEngine shouldBe ENGINE_ID
+        explicitlySelected.deviceAvailability() shouldBe TranslationDeviceAvailability.TranslationServiceMissing
     }
 
     @Test
@@ -127,8 +151,10 @@ class DefaultTranslationHostActionsTest {
         engine: FakeEngine?,
         known: List<KnownTranslationEngine> = listOf(KNOWN_ENGINE),
         setups: List<TranslationEngineSetup> = emptyList(),
+        explicitSelection: Boolean = true,
     ): DefaultTranslationHostActions {
         val preferences = ProfileTranslationPreferences(InMemoryPreferenceStore(), ENGINE_ID)
+        if (explicitSelection) preferences.engine.set(ENGINE_ID)
         val registry = DefaultTranslationEngineRegistry(
             contributions = known.map { catalogEntry ->
                 TranslationEngineContribution(
@@ -143,6 +169,7 @@ class DefaultTranslationHostActionsTest {
             engineRegistry = registry,
             knownEngineCatalog = registry,
             setupRegistry = registry,
+            profileEngineResolver = ProfileTranslationEngineResolver(preferences, registry),
         )
     }
 

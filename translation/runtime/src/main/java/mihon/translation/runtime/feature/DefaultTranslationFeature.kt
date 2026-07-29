@@ -38,7 +38,7 @@ class DefaultTranslationFeature(
     private val knownEngineCatalog: KnownTranslationEngineCatalog,
     private val sourceLanguageDetectors: List<TranslationSourceLanguageDetector>,
     private val defaultTargetLanguageResolver: TranslationDefaultTargetLanguageResolver,
-    private val selectedEngine: () -> TranslationEngineId,
+    private val selectedEngine: suspend () -> TranslationEngineId?,
 ) : TranslationFeature {
     override suspend fun prepare(request: TranslationRequest): TranslationPreparation {
         if (request.text.isBlank()) {
@@ -70,6 +70,7 @@ class DefaultTranslationFeature(
 
         val engine = when (val selection = request.engine) {
             TranslationEngineSelection.ProfileDefault -> selectedEngine()
+                ?: return noEngineConfigured()
             is TranslationEngineSelection.Explicit -> selection.engine
         }
         return prepareExplicitly(
@@ -184,6 +185,13 @@ class DefaultTranslationFeature(
     private fun missingEngine(engine: TranslationEngineId): TranslationPreparation {
         return TranslationPreparation.EngineChoiceRequired(
             reason = TranslationEngineChoiceReason.SelectedEngineUnavailable(engine),
+            engines = knownEngineCatalog.knownEngines,
+        )
+    }
+
+    private fun noEngineConfigured(): TranslationPreparation {
+        return TranslationPreparation.EngineChoiceRequired(
+            reason = TranslationEngineChoiceReason.NoEngineConfigured,
             engines = knownEngineCatalog.knownEngines,
         )
     }

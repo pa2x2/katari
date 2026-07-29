@@ -17,7 +17,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 internal fun TranslationEnginePickerContent(
     engines: List<TranslationEngineState>,
-    selected: TranslationEngineId,
+    selected: TranslationEngineId?,
     onSelect: (TranslationEngineId) -> Unit,
     onOpenSetup: (TranslationEngineId) -> Unit,
     onOpenDocumentation: (String) -> Unit,

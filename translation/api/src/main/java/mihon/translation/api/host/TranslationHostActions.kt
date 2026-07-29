@@ -9,12 +9,16 @@ import tachiyomi.core.common.preference.Preference
  */
 interface TranslationHostActions {
     val knownEngines: List<KnownTranslationEngine>
+
+    /**
+     * Raw profile preference. [Preference.isSet] distinguishes an explicit choice from the implicit device default.
+     */
     val selectedEngine: Preference<TranslationEngineId>
     val defaultTargetLanguage: Preference<TranslationTargetLanguageSelection>
 
     suspend fun deviceAvailability(): TranslationDeviceAvailability
 
-    suspend fun inspectEngineStates(): List<TranslationEngineState>
+    suspend fun inspectEngines(): TranslationEngineInspection
 
     suspend fun acknowledgeProviderDisclosure(
         engine: TranslationEngineId,

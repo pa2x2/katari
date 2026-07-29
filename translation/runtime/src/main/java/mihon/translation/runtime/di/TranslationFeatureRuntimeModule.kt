@@ -6,6 +6,7 @@ import mihon.feature.runtime.ApplicationFeatureRuntimeModule
 import mihon.feature.runtime.applicationFeatureRuntimeBoundary
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.TranslationHostActions
+import mihon.translation.runtime.selection.ProfileTranslationEngineResolver
 import mihon.translation.runtime.system.AndroidSystemTranslationEngine
 import mihon.translation.runtime.system.createAndroidSystemTranslationContribution
 import mihon.translation.spi.KnownTranslationEngineCatalog
@@ -37,6 +38,10 @@ val translationFeatureRuntimeModule = ApplicationFeatureRuntimeModule(
         runtimeContributions.flatMapTo(this, TranslationRuntimeContribution::engineContributions)
     }
     val registry = DefaultTranslationEngineRegistry(contributions)
+    val profileEngineResolver = ProfileTranslationEngineResolver(
+        preferences = profilePreferences,
+        engineRegistry = registry,
+    )
     val feature = DefaultTranslationFeature(
         engineRegistry = registry,
         knownEngineCatalog = registry,
@@ -45,13 +50,14 @@ val translationFeatureRuntimeModule = ApplicationFeatureRuntimeModule(
             contributions = runtimeContributions,
         ),
         defaultTargetLanguageResolver = ProfileTranslationDefaultTargetLanguageResolver(profilePreferences),
-        selectedEngine = profilePreferences.engine::get,
+        selectedEngine = profileEngineResolver::resolve,
     )
     val hostActions = DefaultTranslationHostActions(
         preferences = profilePreferences,
         engineRegistry = registry,
         knownEngineCatalog = registry,
         setupRegistry = registry,
+        profileEngineResolver = profileEngineResolver,
     )
 
     addSingletonFactory { profilePreferences }

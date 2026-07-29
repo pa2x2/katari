@@ -9,6 +9,7 @@ import mihon.translation.api.KnownTranslationEngine
 import mihon.translation.api.ReadyTranslation
 import mihon.translation.api.TranslationDeviceAvailability
 import mihon.translation.api.TranslationEngineId
+import mihon.translation.api.TranslationEngineInspection
 import mihon.translation.api.TranslationEngineSelection
 import mihon.translation.api.TranslationEngineState
 import mihon.translation.api.TranslationExecution
@@ -143,7 +144,10 @@ class BookSelectionTranslationControllerTest {
 
         override suspend fun deviceAvailability() = availability
 
-        override suspend fun inspectEngineStates() = emptyList<TranslationEngineState>()
+        override suspend fun inspectEngines() = TranslationEngineInspection(
+            engines = emptyList<TranslationEngineState>(),
+            selectedEngine = selectedEngine.get(),
+        )
 
         override suspend fun acknowledgeProviderDisclosure(
             engine: TranslationEngineId,

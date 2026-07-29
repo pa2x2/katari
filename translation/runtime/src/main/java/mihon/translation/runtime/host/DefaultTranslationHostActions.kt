@@ -6,6 +6,7 @@ import mihon.translation.api.TranslationDeviceAvailability
 import mihon.translation.api.TranslationEngineAction
 import mihon.translation.api.TranslationEngineBuildAvailability
 import mihon.translation.api.TranslationEngineId
+import mihon.translation.api.TranslationEngineInspection
 import mihon.translation.api.TranslationEngineState
 import mihon.translation.api.TranslationEngineStatus
 import mihon.translation.api.TranslationHostActionResult
@@ -16,6 +17,7 @@ import mihon.translation.api.TranslationModelOperationResult
 import mihon.translation.api.TranslationProviderDisclosure
 import mihon.translation.api.TranslationTargetLanguageSelection
 import mihon.translation.api.TranslationUnavailableReason
+import mihon.translation.runtime.selection.ProfileTranslationEngineResolver
 import mihon.translation.spi.KnownTranslationEngineCatalog
 import mihon.translation.spi.TranslationEngineDeviceAvailability
 import mihon.translation.spi.TranslationEngineRegistry
@@ -23,17 +25,25 @@ import mihon.translation.spi.TranslationEngineSetupRegistry
 import mihon.translation.spi.TranslationSetupResult
 import tachiyomi.core.common.preference.Preference
 
-class DefaultTranslationHostActions(
+internal class DefaultTranslationHostActions(
     private val preferences: ProfileTranslationPreferences,
     private val engineRegistry: TranslationEngineRegistry,
     knownEngineCatalog: KnownTranslationEngineCatalog,
     private val setupRegistry: TranslationEngineSetupRegistry,
+    private val profileEngineResolver: ProfileTranslationEngineResolver,
 ) : TranslationHostActions {
     override val knownEngines: List<KnownTranslationEngine> = knownEngineCatalog.knownEngines
     override val selectedEngine: Preference<TranslationEngineId> = preferences.engine
     override val defaultTargetLanguage: Preference<TranslationTargetLanguageSelection> = preferences.targetLanguage
 
     override suspend fun deviceAvailability(): TranslationDeviceAvailability {
+        if (!profileEngineResolver.isExplicitlySelected()) {
+            return if (profileEngineResolver.resolve() != null) {
+                TranslationDeviceAvailability.Available
+            } else {
+                TranslationDeviceAvailability.EngineNotConfigured
+            }
+        }
         val selected = selectedEngine.get()
         val engine = engineRegistry.find(selected)
             ?: return if (knownEngines.any { it.id == selected }) {
@@ -70,8 +80,8 @@ class DefaultTranslationHostActions(
         }
     }
 
-    override suspend fun inspectEngineStates(): List<TranslationEngineState> {
-        return knownEngines.map { known ->
+    override suspend fun inspectEngines(): TranslationEngineInspection {
+        val engines = knownEngines.map { known ->
             val engine = engineRegistry.find(known.id)
             val buildAvailability = known.buildAvailability
             val status = when {
@@ -104,6 +114,10 @@ class DefaultTranslationHostActions(
                 },
             )
         }
+        return TranslationEngineInspection(
+            engines = engines,
+            selectedEngine = profileEngineResolver.resolve(engines),
+        )
     }
 
     override suspend fun acknowledgeProviderDisclosure(

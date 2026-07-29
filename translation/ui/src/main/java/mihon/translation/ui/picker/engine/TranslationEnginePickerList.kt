@@ -45,7 +45,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 fun TranslationEnginePickerList(
     engines: List<TranslationEngineState>,
-    selected: TranslationEngineId,
+    selected: TranslationEngineId?,
     density: TranslationEnginePickerDensity,
     onSelect: (TranslationEngineId) -> Unit,
     modifier: Modifier = Modifier,
@@ -73,7 +73,11 @@ fun TranslationEnginePickerList(
                     TranslationEnginePolicyBanner()
                 }
             }
-            if (showMissingSelectionNotice && isTranslationEngineSelectionMissing(engines, selected)) {
+            if (
+                showMissingSelectionNotice &&
+                selected != null &&
+                isTranslationEngineSelectionMissing(engines, selected)
+            ) {
                 item(key = "missing-selection") {
                     MissingTranslationEngineCard(selected)
                 }

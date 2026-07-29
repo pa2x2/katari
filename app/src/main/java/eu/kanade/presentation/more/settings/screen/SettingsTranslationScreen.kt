@@ -55,7 +55,14 @@ object SettingsTranslationScreen : SearchableSettings {
                 preferenceItems = listOf(
                     Preference.PreferenceItem.TextPreference(
                         title = stringResource(MR.strings.translation_settings_engine),
-                        subtitle = translationEngineLabel(engine, engines),
+                        subtitle = if (hostActions.selectedEngine.isSet()) {
+                            translationEngineLabel(engine, engines)
+                        } else {
+                            stringResource(
+                                MR.strings.translation_settings_engine_device_default,
+                                translationEngineLabel(engine, engines),
+                            )
+                        },
                         isProfileSpecific = true,
                     ),
                     Preference.PreferenceItem.TextPreference(
@@ -187,7 +194,7 @@ object SettingsTranslationScreen : SearchableSettings {
             },
             canOpenSetup = model.supportsSetup(playground.engine),
             onOpenSetup = {
-                model.openSetup(playground.engine, ::handleHostResult)
+                playground.engine?.let { model.openSetup(it, ::handleHostResult) }
             },
             onSave = {
                 model.savePlaygroundDefaults()

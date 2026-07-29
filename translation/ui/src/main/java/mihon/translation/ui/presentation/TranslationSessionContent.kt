@@ -38,6 +38,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import mihon.translation.api.KnownTranslationEngine
 import mihon.translation.api.TranslationEngineBuildAvailability
+import mihon.translation.api.TranslationEngineChoiceReason
 import mihon.translation.api.TranslationEngineSelection
 import mihon.translation.api.TranslationFailureReason
 import mihon.translation.api.TranslationInvocationPolicy
@@ -529,7 +530,14 @@ private fun PreparationContent(
         }
         is TranslationPreparation.EngineChoiceRequired -> {
             SessionMessage(
-                text = stringResource(MR.strings.translation_selected_engine_unavailable),
+                text = stringResource(
+                    when (preparation.reason) {
+                        TranslationEngineChoiceReason.NoEngineConfigured ->
+                            MR.strings.translation_engine_not_configured
+                        is TranslationEngineChoiceReason.SelectedEngineUnavailable ->
+                            MR.strings.translation_selected_engine_unavailable
+                    },
+                ),
                 compact = compact,
             )
             if (compact || useExternalEnginePicker) {

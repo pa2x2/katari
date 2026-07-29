@@ -91,6 +91,14 @@ class TranslationEngineStatusPresentationTest {
     }
 
     @Test
+    fun `unconfigured profile leaves every card unselected without a missing warning`() {
+        val state = state(TranslationEngineStatus.Unavailable(TranslationUnavailableReason.ServiceMissing))
+
+        projectTranslationEngineCard(state, selectedEngine = null).selected shouldBe false
+        isTranslationEngineSelectionMissing(listOf(state), selectedEngine = null) shouldBe false
+    }
+
+    @Test
     fun `provider reasons and recovery actions remain attached to their card`() {
         val reason = "Enable the local API"
         val model = card(
@@ -146,7 +154,7 @@ class TranslationEngineStatusPresentationTest {
 
     private fun card(
         status: TranslationEngineStatus,
-        selected: TranslationEngineId = TranslationEngineId("other"),
+        selected: TranslationEngineId? = TranslationEngineId("other"),
         action: TranslationEngineAction? = null,
     ) = projectTranslationEngineCard(state(status, action), selected)
 

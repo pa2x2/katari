@@ -255,6 +255,7 @@
     <string name="translation_target_required">Choose a target language for this translation.</string>
     <string name="translation_source_equals_target">Source and target languages are the same. Choose a different target.</string>
     <string name="translation_choose_target_language">Choose target language</string>
+    <string name="translation_engine_not_configured">Choose a translation engine to continue.</string>
     <string name="translation_selected_engine_unavailable">The selected translation engine is unavailable.</string>
     <string name="translation_choose_engine">Choose translation engine</string>
     <string name="translation_models_required">Language data is required before translation can continue.</string>
@@ -277,6 +278,7 @@
     <string name="translation_settings_summary">Translation playground, engine, and target language</string>
     <string name="translation_settings_engine">Translation engine</string>
     <string name="translation_settings_engine_unknown">Unavailable engine (%s)</string>
+    <string name="translation_settings_engine_device_default">%s when available</string>
     <string name="translation_settings_target">Target language</string>
     <string name="translation_settings_target_default">App language (%s)</string>
     <string name="translation_settings_test_input">Text to translate</string>

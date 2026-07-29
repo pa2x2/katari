@@ -55,6 +55,8 @@ internal class BookAutomaticTranslationSettingsProvider(
     private fun TranslationDeviceAvailability.toReaderAvailability(): ReaderSharedSettingAvailability {
         return when (this) {
             TranslationDeviceAvailability.Available -> ReaderSharedSettingAvailability.Available
+            TranslationDeviceAvailability.EngineNotConfigured ->
+                disabled(R.string.book_reader_translation_engine_not_configured)
             is TranslationDeviceAvailability.SelectedEngineMissing ->
                 disabled(R.string.book_reader_translation_engine_missing, engine.value)
             is TranslationDeviceAvailability.SelectedEngineUnavailable ->

@@ -181,6 +181,22 @@ class DefaultTranslationFeatureTest {
     }
 
     @Test
+    fun `profile request requires a choice when no engine is configured`() = runTest {
+        val registry = DefaultTranslationEngineRegistry(
+            listOf(TranslationEngineContribution(FakeTranslationEngine())),
+        )
+        val feature = feature(
+            registry = registry,
+            selectedEngine = { null },
+        )
+
+        feature.prepare(profileEngineRequest()) shouldBe TranslationPreparation.EngineChoiceRequired(
+            reason = TranslationEngineChoiceReason.NoEngineConfigured,
+            engines = registry.knownEngines,
+        )
+    }
+
+    @Test
     fun `explicit engine preparation never falls back`() = runTest {
         val selected = FakeTranslationEngine(
             catalogEntry = knownEngine("selected"),
@@ -293,7 +309,7 @@ class DefaultTranslationFeatureTest {
 
     private fun feature(
         registry: DefaultTranslationEngineRegistry,
-        selectedEngine: () -> TranslationEngineId = { ENGINE_ID },
+        selectedEngine: suspend () -> TranslationEngineId? = { ENGINE_ID },
         sourceLanguageDetectors: List<TranslationSourceLanguageDetector> = emptyList(),
     ): DefaultTranslationFeature {
         return DefaultTranslationFeature(
