@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.6.1] - 2026-07-29
+
+> Continuous serialized-prose reading is restored to its previous native behavior.
+
+### 🐛 Fixed
+
+- Restored the native renderer for continuous serialized-prose reading after regressions in the
+  WebView-based renderer.
+
 ## [1.6.0] - 2026-07-29
 
 > Translate selected book text with your choice of Android, offline, or self-hosted engines, and
@@ -297,7 +306,8 @@ Based on [Mihon v0.20.1](https://github.com/mihonapp/mihon/releases/tag/v0.20.1)
 - Rebranded the application as Katari with its own package identity, visual
   identity, release pipeline, and documentation.
 
-[Unreleased]: https://github.com/katariapp/katari/compare/v1.6.0...upcoming
+[Unreleased]: https://github.com/katariapp/katari/compare/v1.6.1...upcoming
+[1.6.1]: https://github.com/katariapp/katari/releases/tag/v1.6.1
 [1.6.0]: https://github.com/katariapp/katari/releases/tag/v1.6.0
 [1.5.1]: https://github.com/katariapp/katari/releases/tag/v1.5.1
 [1.5.0]: https://github.com/katariapp/katari/releases/tag/v1.5.0
