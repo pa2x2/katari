@@ -20,13 +20,21 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mihon.translation.api.KnownTranslationEngine
+import mihon.translation.api.TranslationEngineArtwork
+import mihon.translation.api.TranslationEngineBuildAvailability
+import mihon.translation.api.TranslationEngineChoiceReason
+import mihon.translation.api.TranslationEngineDetails
+import mihon.translation.api.TranslationEngineId
 import mihon.translation.api.TranslationInvocationPolicy
 import mihon.translation.api.TranslationLanguageTag
 import mihon.translation.api.TranslationPreparation
+import mihon.translation.api.TranslationProviderDisclosure
 import mihon.translation.api.TranslationProviderId
 import mihon.translation.api.TranslationProviderPresentation
 import mihon.translation.api.TranslationRequest
 import mihon.translation.api.TranslationResult
+import mihon.translation.api.TranslationResultAttribution
 import mihon.translation.api.TranslationSourceLanguageSelection
 import mihon.translation.api.TranslationTargetLanguageSelection
 import mihon.translation.ui.session.TranslationSelectionAnchor
@@ -51,11 +59,19 @@ class TranslationSessionOverlayTest {
         val state = success(
             translatedText = "Witaj świecie",
             anchor = TranslationSelectionAnchor(400f, 280f, 680f, 340f),
+            presentation = DOCUMENTED_PRESENTATION,
         )
 
         render(state)
 
         composeRule.onNodeWithText("Witaj świecie").assertIsDisplayed()
+        composeRule.onNodeWithText(DOCUMENTED_PRESENTATION.resultAttribution!!.label).assertIsDisplayed()
+        composeRule.onAllNodesWithText(
+            composeRule.activity.stringResource(MR.strings.action_learn_more),
+        ).assertCountEquals(0)
+        composeRule.onAllNodesWithContentDescription(
+            composeRule.activity.stringResource(MR.strings.action_learn_more),
+        ).assertCountEquals(0)
         composeRule.onNodeWithTag(TRANSLATION_SESSION_POPUP_TAG).assertIsDisplayed()
         composeRule.onAllNodesWithContentDescription(
             composeRule.activity.stringResource(MR.strings.action_expand),
@@ -95,6 +111,70 @@ class TranslationSessionOverlayTest {
         composeRule.onNodeWithText(
             composeRule.activity.stringResource(MR.strings.translation_failed),
         ).assertIsDisplayed()
+        composeRule.onNodeWithTag(TRANSLATION_SESSION_POPUP_TAG).assertIsDisplayed()
+        composeRule.onAllNodesWithTag(TRANSLATION_SESSION_SHEET_TAG).assertCountEquals(0)
+    }
+
+    @Test
+    fun documented_provider_disclosure_keeps_guidance_in_compact_chrome() {
+        val disclosure = TranslationProviderDisclosure(
+            title = "Use Offline Translator",
+            message = "Katari sends selected text to Offline Translator over 127.0.0.1. " +
+                "Translation remains on this device. Keep the provider HTTP API bound to localhost.",
+            confirmationLabel = "Allow on-device translation",
+            documentationUrl = DOCUMENTED_PRESENTATION.documentationUrl,
+        )
+        render(
+            TranslationSessionState.PreparationRequired(
+                input = input(
+                    anchor = TranslationSelectionAnchor(400f, 280f, 680f, 340f),
+                ),
+                preparation = TranslationPreparation.ProviderDisclosureRequired(
+                    engine = TranslationEngineId("offline-translator"),
+                    presentation = DOCUMENTED_PRESENTATION,
+                    disclosure = disclosure,
+                ),
+            ),
+        )
+
+        composeRule.onNodeWithText(disclosure.title).assertIsDisplayed()
+        composeRule.onNodeWithText(disclosure.confirmationLabel)
+            .assertIsDisplayed()
+            .assertHeightIsAtLeast(36.dp)
+        composeRule.onNodeWithContentDescription(
+            composeRule.activity.stringResource(MR.strings.action_learn_more),
+        ).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription(
+            composeRule.activity.stringResource(MR.strings.action_expand),
+        ).assertIsDisplayed()
+        composeRule.onAllNodesWithText(
+            composeRule.activity.stringResource(MR.strings.action_learn_more),
+        ).assertCountEquals(0)
+        composeRule.onNodeWithTag(TRANSLATION_SESSION_POPUP_TAG).assertIsDisplayed()
+        composeRule.onAllNodesWithTag(TRANSLATION_SESSION_SHEET_TAG).assertCountEquals(0)
+    }
+
+    @Test
+    fun compact_engine_recovery_delegates_the_unbounded_catalog_to_the_picker() {
+        val engines = List(6) { index -> engine(index) }
+        render(
+            TranslationSessionState.PreparationRequired(
+                input = input(
+                    anchor = TranslationSelectionAnchor(400f, 280f, 680f, 340f),
+                ),
+                preparation = TranslationPreparation.EngineChoiceRequired(
+                    reason = TranslationEngineChoiceReason.SelectedEngineUnavailable(
+                        TranslationEngineId("missing-engine"),
+                    ),
+                    engines = engines,
+                ),
+            ),
+        )
+
+        composeRule.onNodeWithText(
+            composeRule.activity.stringResource(MR.strings.translation_choose_engine),
+        ).assertIsDisplayed()
+        composeRule.onAllNodesWithText("Translation engine", substring = true).assertCountEquals(0)
         composeRule.onNodeWithTag(TRANSLATION_SESSION_POPUP_TAG).assertIsDisplayed()
         composeRule.onAllNodesWithTag(TRANSLATION_SESSION_SHEET_TAG).assertCountEquals(0)
     }
@@ -320,6 +400,28 @@ class TranslationSessionOverlayTest {
             engineName = "System on-device translation",
             invocationPolicy = TranslationInvocationPolicy.Immediate,
         )
+        val DOCUMENTED_PRESENTATION = TranslationProviderPresentation(
+            providerId = TranslationProviderId("offline-translator"),
+            providerName = "Offline Translator",
+            engineName = "Offline Translator",
+            invocationPolicy = TranslationInvocationPolicy.Immediate,
+            resultAttribution = TranslationResultAttribution("Offline Translator"),
+            documentationUrl = "https://example.com/offline-translator",
+        )
+
+        fun engine(index: Int) = KnownTranslationEngine(
+            id = TranslationEngineId("engine-$index"),
+            providerId = TranslationProviderId("provider-$index"),
+            providerName = "Provider $index",
+            engineName = "Translation engine $index",
+            buildAvailability = TranslationEngineBuildAvailability.Included,
+            artwork = TranslationEngineArtwork.Bundled(android.R.drawable.ic_menu_view),
+            details = TranslationEngineDetails(
+                description = "Description",
+                processingLocation = "This device",
+                privacyDescription = "Private",
+            ),
+        )
 
         fun input(anchor: TranslationSelectionAnchor?): TranslationSessionInput {
             return TranslationSessionInput(
@@ -335,6 +437,7 @@ class TranslationSessionOverlayTest {
         fun success(
             translatedText: String,
             anchor: TranslationSelectionAnchor?,
+            presentation: TranslationProviderPresentation = PRESENTATION,
         ): TranslationSessionState.Success {
             return TranslationSessionState.Success(
                 input = input(anchor),
@@ -342,7 +445,7 @@ class TranslationSessionOverlayTest {
                     translatedText = translatedText,
                     sourceLanguage = SOURCE,
                     targetLanguage = TARGET,
-                    presentation = PRESENTATION,
+                    presentation = presentation,
                 ),
             )
         }

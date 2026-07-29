@@ -2,12 +2,15 @@ package mihon.translation.ui.presentation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Language
@@ -96,10 +99,19 @@ internal fun TranslationSessionContent(
         }
         val compactResult = compact && displayedResult != null
         if (showHeader && !compactResult) {
+            val documentationUrl = state.contextualDocumentationUrl().takeIf { compact }
             TranslationSessionHeader(
                 title = stringResource(MR.strings.translation_title),
                 onDismiss = onDismiss,
                 compact = compact,
+                onExpand = onExpand.takeIf {
+                    compact && showExpand && state.hasExpandedCompactContent()
+                },
+                onDocumentation = documentationUrl?.let { url ->
+                    {
+                        onExternalAction(TranslationSessionExternalAction.OpenDocumentation(url))
+                    }
+                },
             )
             HorizontalDivider()
         }
@@ -130,7 +142,7 @@ internal fun TranslationSessionContent(
                     is TranslationSessionState.Translating,
                     is TranslationSessionState.Success,
                     -> Unit
-                    is TranslationSessionState.Ready -> ReadyContent(state, onExecute)
+                    is TranslationSessionState.Ready -> ReadyContent(state, onExecute, compact)
                     is TranslationSessionState.PreparationRequired -> PreparationContent(
                         preparation = state.preparation,
                         onRetry = onRetry,
@@ -138,14 +150,21 @@ internal fun TranslationSessionContent(
                         onSelectEngine = onSelectEngine,
                         useExternalEnginePicker = useExternalEnginePicker,
                         onExternalAction = onExternalAction,
+                        compact = compact,
                     )
-                    is TranslationSessionState.ProviderSurfaceOpened -> Text(
-                        stringResource(
+                    is TranslationSessionState.ProviderSurfaceOpened -> SessionMessage(
+                        text = stringResource(
                             MR.strings.translation_provider_surface_opened,
                             state.presentation.providerName,
                         ),
+                        compact = compact,
                     )
-                    is TranslationSessionState.Failed -> FailedContent(state, onRetry, onExternalAction)
+                    is TranslationSessionState.Failed -> FailedContent(
+                        state = state,
+                        onRetry = onRetry,
+                        onExternalAction = onExternalAction,
+                        compact = compact,
+                    )
                 }
             }
         }
@@ -158,6 +177,8 @@ internal fun TranslationSessionHeader(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     compact: Boolean = false,
+    onExpand: (() -> Unit)? = null,
+    onDocumentation: (() -> Unit)? = null,
 ) {
     Row(
         modifier = modifier
@@ -174,6 +195,20 @@ internal fun TranslationSessionHeader(
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.titleMedium,
         )
+        onDocumentation?.let {
+            TranslationCompactIconButton(
+                icon = Icons.AutoMirrored.Outlined.OpenInNew,
+                contentDescription = stringResource(MR.strings.action_learn_more),
+                onClick = it,
+            )
+        }
+        onExpand?.let {
+            TranslationCompactIconButton(
+                icon = Icons.Outlined.OpenInFull,
+                contentDescription = stringResource(MR.strings.action_expand),
+                onClick = it,
+            )
+        }
         if (compact) {
             TranslationCompactIconButton(
                 icon = Icons.Outlined.Close,
@@ -195,23 +230,24 @@ internal fun TranslationSessionHeader(
 private fun ReadyContent(
     state: TranslationSessionState.Ready,
     onExecute: () -> Unit,
+    compact: Boolean,
 ) {
     Text(
         text = state.preparation.presentation.engineName,
         style = MaterialTheme.typography.labelLarge,
+        maxLines = if (compact) 1 else Int.MAX_VALUE,
+        overflow = if (compact) TextOverflow.Ellipsis else TextOverflow.Clip,
     )
-    Button(
+    val policy = state.preparation.presentation.invocationPolicy
+    SessionActionButton(
+        label = when (policy) {
+            TranslationInvocationPolicy.Immediate -> stringResource(MR.strings.action_translate)
+            is TranslationInvocationPolicy.ExplicitAction -> policy.label
+        },
         onClick = onExecute,
         modifier = Modifier.fillMaxWidth(),
-    ) {
-        val policy = state.preparation.presentation.invocationPolicy
-        Text(
-            when (policy) {
-                TranslationInvocationPolicy.Immediate -> stringResource(MR.strings.action_translate)
-                is TranslationInvocationPolicy.ExplicitAction -> policy.label
-            },
-        )
-    }
+        compact = compact,
+    )
 }
 
 @Composable
@@ -305,6 +341,8 @@ private fun SuccessContent(
             text = attribution.label,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = if (compact) 1 else Int.MAX_VALUE,
+            overflow = if (compact) TextOverflow.Ellipsis else TextOverflow.Clip,
         )
     }
     if (!compact && (showCopy || showOverflowAction || showLanguageChange)) {
@@ -340,7 +378,6 @@ private fun SuccessContent(
             }
         }
     }
-    DocumentationAction(result.presentation.documentationUrl, onExternalAction)
 }
 
 private const val ANCHORED_RESULT_MAX_LINES = 5
@@ -373,12 +410,19 @@ private fun PreparationContent(
     onSelectEngine: (TranslationEngineSelection) -> Unit,
     useExternalEnginePicker: Boolean,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
+    compact: Boolean,
 ) {
     when (preparation) {
         is TranslationPreparation.ProviderDisclosureRequired -> {
-            Text(preparation.disclosure.title, style = MaterialTheme.typography.titleSmall)
-            Text(preparation.disclosure.message)
-            Button(
+            Text(
+                text = preparation.disclosure.title,
+                style = MaterialTheme.typography.titleSmall,
+                maxLines = if (compact) 1 else Int.MAX_VALUE,
+                overflow = if (compact) TextOverflow.Ellipsis else TextOverflow.Clip,
+            )
+            SessionMessage(preparation.disclosure.message, compact)
+            SessionActionButton(
+                label = preparation.disclosure.confirmationLabel,
                 onClick = {
                     onExternalAction(
                         TranslationSessionExternalAction.ConfirmProviderDisclosure(
@@ -388,20 +432,23 @@ private fun PreparationContent(
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(preparation.disclosure.confirmationLabel)
-            }
+                compact = compact,
+            )
             DocumentationAction(
                 preparation.disclosure.documentationUrl ?: preparation.presentation.documentationUrl,
                 onExternalAction,
+                compact,
             )
         }
         is TranslationPreparation.ModelDownloadRequired -> {
-            Text(stringResource(MR.strings.translation_models_required))
-            preparation.models.forEach { model ->
-                Text("• ${model.displayName}", style = MaterialTheme.typography.bodyMedium)
+            SessionMessage(stringResource(MR.strings.translation_models_required), compact)
+            if (!compact) {
+                preparation.models.forEach { model ->
+                    Text("• ${model.displayName}", style = MaterialTheme.typography.bodyMedium)
+                }
             }
-            Button(
+            SessionActionButton(
+                label = stringResource(MR.strings.action_download),
                 onClick = {
                     onExternalAction(
                         TranslationSessionExternalAction.DownloadModels(
@@ -411,25 +458,24 @@ private fun PreparationContent(
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(MR.strings.action_download))
-            }
-            DocumentationAction(preparation.presentation.documentationUrl, onExternalAction)
+                compact = compact,
+            )
+            DocumentationAction(preparation.presentation.documentationUrl, onExternalAction, compact)
         }
         is TranslationPreparation.SystemSetupRequired -> {
-            Text(preparation.reason.message())
-            Button(
+            SessionMessage(preparation.reason.message(), compact)
+            SessionActionButton(
+                label = stringResource(MR.strings.action_settings),
                 onClick = {
                     onExternalAction(TranslationSessionExternalAction.OpenSetup(preparation.engine))
                 },
                 modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(MR.strings.action_settings))
-            }
-            DocumentationAction(preparation.presentation.documentationUrl, onExternalAction)
+                compact = compact,
+            )
+            DocumentationAction(preparation.presentation.documentationUrl, onExternalAction, compact)
         }
         is TranslationPreparation.SetupInProgress -> {
-            Text(stringResource(MR.strings.translation_setup_in_progress))
+            SessionMessage(stringResource(MR.strings.translation_setup_in_progress), compact)
             val progress = preparation.progress
             val total = progress?.total
             if (progress != null && total != null && total > 0) {
@@ -442,55 +488,59 @@ private fun PreparationContent(
             }
         }
         is TranslationPreparation.SourceUndetermined -> {
-            Text(stringResource(MR.strings.translation_source_undetermined))
-            preparation.suggestedLanguages.forEach { language ->
-                TextButton(
-                    onClick = { onSelectSource(language) },
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(language.displayName())
+            SessionMessage(stringResource(MR.strings.translation_source_undetermined), compact)
+            if (!compact) {
+                preparation.suggestedLanguages.forEach { language ->
+                    TextButton(
+                        onClick = { onSelectSource(language) },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(language.displayName())
+                    }
                 }
             }
-            Button(
+            SessionActionButton(
+                label = stringResource(MR.strings.translation_choose_source_language),
                 onClick = {
                     onExternalAction(TranslationSessionExternalAction.ChooseSourceLanguage)
                 },
                 modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(MR.strings.translation_choose_source_language))
-            }
+                compact = compact,
+            )
         }
         is TranslationPreparation.TargetLanguageRequired -> {
-            Text(
-                when (preparation.reason) {
+            SessionMessage(
+                text = when (preparation.reason) {
                     TranslationTargetChoiceReason.NoDefaultTarget ->
                         stringResource(MR.strings.translation_target_required)
                     TranslationTargetChoiceReason.SourceEqualsTarget ->
                         stringResource(MR.strings.translation_source_equals_target)
                 },
+                compact = compact,
             )
-            Button(
+            SessionActionButton(
+                label = stringResource(MR.strings.translation_choose_target_language),
                 onClick = {
                     onExternalAction(TranslationSessionExternalAction.ChooseTargetLanguage)
                 },
                 modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(MR.strings.translation_choose_target_language))
-            }
+                compact = compact,
+            )
         }
         is TranslationPreparation.EngineChoiceRequired -> {
-            Text(
-                stringResource(MR.strings.translation_selected_engine_unavailable),
+            SessionMessage(
+                text = stringResource(MR.strings.translation_selected_engine_unavailable),
+                compact = compact,
             )
-            if (useExternalEnginePicker) {
-                Button(
+            if (compact || useExternalEnginePicker) {
+                SessionActionButton(
+                    label = stringResource(MR.strings.translation_choose_engine),
                     onClick = {
                         onExternalAction(TranslationSessionExternalAction.ChooseEngine)
                     },
                     modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(stringResource(MR.strings.translation_choose_engine))
-                }
+                    compact = compact,
+                )
             } else {
                 preparation.engines.forEach { engine ->
                     EngineChoice(engine, onSelectEngine)
@@ -498,13 +548,16 @@ private fun PreparationContent(
             }
         }
         is TranslationPreparation.Unavailable -> {
-            Text(preparation.reason.message())
-            Button(onClick = onRetry, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(MR.strings.action_retry))
-            }
+            SessionMessage(preparation.reason.message(), compact)
+            SessionActionButton(
+                label = stringResource(MR.strings.action_retry),
+                onClick = onRetry,
+                modifier = Modifier.fillMaxWidth(),
+                compact = compact,
+            )
         }
         is TranslationPreparation.Rejected -> {
-            Text(preparation.reason.message())
+            SessionMessage(preparation.reason.message(), compact)
         }
         is TranslationPreparation.Ready -> error("Ready preparation must use TranslationSessionState.Ready")
     }
@@ -541,9 +594,10 @@ private fun FailedContent(
     state: TranslationSessionState.Failed,
     onRetry: () -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
+    compact: Boolean,
 ) {
-    Text(
-        when (val failure = state.failure) {
+    SessionMessage(
+        text = when (val failure = state.failure) {
             TranslationSessionFailure.UnexpectedPreparationFailure,
             TranslationSessionFailure.UnexpectedExecutionFailure,
             -> stringResource(MR.strings.translation_failed)
@@ -561,19 +615,24 @@ private fun FailedContent(
                 }
             }
         },
+        compact = compact,
     )
-    Button(onClick = onRetry, modifier = Modifier.fillMaxWidth()) {
-        Text(stringResource(MR.strings.action_retry))
-    }
-    DocumentationAction(state.presentation?.documentationUrl, onExternalAction)
+    SessionActionButton(
+        label = stringResource(MR.strings.action_retry),
+        onClick = onRetry,
+        modifier = Modifier.fillMaxWidth(),
+        compact = compact,
+    )
+    DocumentationAction(state.presentation?.documentationUrl, onExternalAction, compact)
 }
 
 @Composable
 private fun DocumentationAction(
     url: String?,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
+    compact: Boolean = false,
 ) {
-    if (url == null) return
+    if (url == null || compact) return
     TextButton(
         onClick = {
             onExternalAction(TranslationSessionExternalAction.OpenDocumentation(url))
@@ -582,6 +641,98 @@ private fun DocumentationAction(
         Text(stringResource(MR.strings.action_learn_more))
     }
 }
+
+@Composable
+private fun SessionMessage(
+    text: String,
+    compact: Boolean,
+) {
+    Text(
+        text = text,
+        maxLines = if (compact) COMPACT_MESSAGE_MAX_LINES else Int.MAX_VALUE,
+        overflow = if (compact) TextOverflow.Ellipsis else TextOverflow.Clip,
+    )
+}
+
+@Composable
+private fun SessionActionButton(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier,
+    compact: Boolean,
+) {
+    if (compact) {
+        CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
+            Button(
+                onClick = onClick,
+                modifier = modifier.heightIn(min = COMPACT_ACTION_MINIMUM_HEIGHT),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+            ) {
+                Text(
+                    text = label,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    } else {
+        Button(
+            onClick = onClick,
+            modifier = modifier,
+        ) {
+            Text(label)
+        }
+    }
+}
+
+private fun TranslationSessionState.Active.contextualDocumentationUrl(): String? {
+    return when (this) {
+        is TranslationSessionState.PreparationRequired -> preparation.contextualDocumentationUrl()
+        is TranslationSessionState.Failed -> presentation?.documentationUrl
+        is TranslationSessionState.Settling,
+        is TranslationSessionState.Preparing,
+        is TranslationSessionState.Ready,
+        is TranslationSessionState.Translating,
+        is TranslationSessionState.Success,
+        is TranslationSessionState.ProviderSurfaceOpened,
+        -> null
+    }
+}
+
+private fun TranslationPreparation.contextualDocumentationUrl(): String? {
+    return when (this) {
+        is TranslationPreparation.ProviderDisclosureRequired ->
+            disclosure.documentationUrl ?: presentation.documentationUrl
+        is TranslationPreparation.ModelDownloadRequired -> presentation.documentationUrl
+        is TranslationPreparation.SystemSetupRequired -> presentation.documentationUrl
+        is TranslationPreparation.Ready,
+        is TranslationPreparation.SetupInProgress,
+        is TranslationPreparation.SourceUndetermined,
+        is TranslationPreparation.TargetLanguageRequired,
+        is TranslationPreparation.EngineChoiceRequired,
+        is TranslationPreparation.Unavailable,
+        is TranslationPreparation.Rejected,
+        -> null
+    }
+}
+
+private fun TranslationSessionState.Active.hasExpandedCompactContent(): Boolean {
+    return when (this) {
+        is TranslationSessionState.Ready,
+        is TranslationSessionState.PreparationRequired,
+        is TranslationSessionState.ProviderSurfaceOpened,
+        is TranslationSessionState.Failed,
+        -> true
+        is TranslationSessionState.Settling,
+        is TranslationSessionState.Preparing,
+        is TranslationSessionState.Translating,
+        is TranslationSessionState.Success,
+        -> false
+    }
+}
+
+private const val COMPACT_MESSAGE_MAX_LINES = 3
+private val COMPACT_ACTION_MINIMUM_HEIGHT = 36.dp
 
 @Composable
 private fun TranslationSystemSetupReason.message(): String {
