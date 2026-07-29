@@ -12,6 +12,7 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toast
 import mihon.translation.api.TranslationHostActionResult
+import mihon.translation.api.TranslationSetupDestination
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
 
@@ -41,8 +42,12 @@ internal class TranslationEnginePickerScreen : Screen() {
                             context.toast(MR.strings.translation_settings_models_ready)
                         is TranslationHostActionResult.ModelsFailed ->
                             context.toast(result.reason)
-                        TranslationHostActionResult.SetupOpened ->
-                            context.toast(MR.strings.translation_settings_setup_opened)
+                        is TranslationHostActionResult.SetupOpened ->
+                            when (result.destination) {
+                                TranslationSetupDestination.InApp -> Unit
+                                TranslationSetupDestination.External ->
+                                    context.toast(MR.strings.translation_settings_external_setup_opened)
+                            }
                         TranslationHostActionResult.SetupUnsupported ->
                             context.toast(MR.strings.translation_settings_setup_unsupported)
                         TranslationHostActionResult.ServiceMissing ->

@@ -15,6 +15,7 @@ import mihon.translation.api.TranslationModelOperationResult
 import mihon.translation.api.TranslationProviderDisclosure
 import mihon.translation.api.TranslationProviderId
 import mihon.translation.api.TranslationProviderPresentation
+import mihon.translation.api.TranslationSetupDestination
 import mihon.translation.spi.ReadyTranslationEngineRequest
 import mihon.translation.spi.TranslationEngine
 import mihon.translation.spi.TranslationEngineContribution
@@ -92,7 +93,8 @@ class DefaultTranslationEngineRegistryTest {
 
         override suspend fun acknowledge(disclosure: TranslationProviderDisclosure) = Unit
 
-        override suspend fun openSetup() = TranslationSetupResult.Opened
+        override suspend fun openSetup() =
+            TranslationSetupResult.Opened(TranslationSetupDestination.External)
 
         override suspend fun downloadModels(
             models: Set<TranslationModelId>,

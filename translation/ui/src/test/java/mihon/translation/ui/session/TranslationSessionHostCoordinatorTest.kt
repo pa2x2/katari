@@ -24,6 +24,7 @@ import mihon.translation.api.TranslationPreparation
 import mihon.translation.api.TranslationProviderDisclosure
 import mihon.translation.api.TranslationProviderId
 import mihon.translation.api.TranslationRequest
+import mihon.translation.api.TranslationSetupDestination
 import mihon.translation.api.TranslationSourceLanguageSelection
 import mihon.translation.api.TranslationTargetChoiceReason
 import mihon.translation.api.TranslationTargetLanguageSelection
@@ -100,20 +101,36 @@ class TranslationSessionHostCoordinatorTest {
     }
 
     @Test
-    fun `returning from provider setup refreshes engine state`() = runTest {
-        val host = FakeHostActions()
-        val coordinator = TranslationSessionHostCoordinator(
-            feature = RecordingFeature(),
-            hostActions = host,
-            scope = backgroundScope,
-        )
-        runCurrent()
-        val inspectionsBeforeResume = host.inspectionCount
+    fun `returning from either setup destination retries the session once`() = runTest {
+        TranslationSetupDestination.entries.forEach { destination ->
+            val host = FakeHostActions().apply {
+                setupResult = TranslationHostActionResult.SetupOpened(destination)
+            }
+            val feature = RecordingFeature()
+            val coordinator = TranslationSessionHostCoordinator(
+                feature = feature,
+                hostActions = host,
+                scope = backgroundScope,
+            )
+            runCurrent()
+            coordinator.controller.submit(input())
+            runCurrent()
+            val requestsBeforeSetup = feature.requests.size
 
-        coordinator.onResume()
-        runCurrent()
+            coordinator.openEngineSetup(BLOCKED_ENGINE.id)
+            runCurrent()
 
-        host.inspectionCount shouldBe inspectionsBeforeResume + 1
+            feature.requests.size shouldBe requestsBeforeSetup
+
+            coordinator.onResume()
+            runCurrent()
+            feature.requests.size shouldBe requestsBeforeSetup + 1
+
+            coordinator.onResume()
+            runCurrent()
+            feature.requests.size shouldBe requestsBeforeSetup + 1
+            coordinator.close()
+        }
     }
 
     private class RecordingFeature : TranslationFeature {
@@ -140,6 +157,7 @@ class TranslationSessionHostCoordinatorTest {
         )
         var inspectionCount = 0
         var openedEngine: TranslationEngineId? = null
+        var setupResult: TranslationHostActionResult = TranslationHostActionResult.Completed
 
         override suspend fun deviceAvailability() = TranslationDeviceAvailability.Available
 
@@ -174,7 +192,7 @@ class TranslationSessionHostCoordinatorTest {
 
         override suspend fun openSetup(engine: TranslationEngineId): TranslationHostActionResult {
             openedEngine = engine
-            return TranslationHostActionResult.Completed
+            return setupResult
         }
 
         override fun setSelectedEngine(engine: TranslationEngineId) {

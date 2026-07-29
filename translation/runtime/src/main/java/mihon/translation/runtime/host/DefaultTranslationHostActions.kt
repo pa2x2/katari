@@ -136,7 +136,8 @@ class DefaultTranslationHostActions(
     override suspend fun openSetup(engine: TranslationEngineId): TranslationHostActionResult =
         performSetup(engine) {
             when (val result = openSetup()) {
-                TranslationSetupResult.Opened -> TranslationHostActionResult.SetupOpened
+                is TranslationSetupResult.Opened ->
+                    TranslationHostActionResult.SetupOpened(result.destination)
                 TranslationSetupResult.Unsupported -> TranslationHostActionResult.SetupUnsupported
                 TranslationSetupResult.ServiceMissing -> TranslationHostActionResult.ServiceMissing
                 TranslationSetupResult.SettingsUnavailable -> TranslationHostActionResult.SettingsUnavailable

@@ -49,7 +49,9 @@ sealed interface TranslationHostActionResult {
         }
     }
 
-    data object SetupOpened : TranslationHostActionResult
+    data class SetupOpened(
+        val destination: TranslationSetupDestination,
+    ) : TranslationHostActionResult
 
     data object SetupUnsupported : TranslationHostActionResult
 
@@ -64,4 +66,9 @@ sealed interface TranslationHostActionResult {
             require(reason.isNotBlank())
         }
     }
+}
+
+enum class TranslationSetupDestination {
+    InApp,
+    External,
 }

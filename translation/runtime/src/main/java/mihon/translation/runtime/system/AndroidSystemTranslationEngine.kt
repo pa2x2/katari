@@ -11,6 +11,7 @@ import mihon.translation.api.TranslationModelId
 import mihon.translation.api.TranslationModelOperationResult
 import mihon.translation.api.TranslationProviderId
 import mihon.translation.api.TranslationProviderPresentation
+import mihon.translation.api.TranslationSetupDestination
 import mihon.translation.api.TranslationSystemSetupReason
 import mihon.translation.api.TranslationUnavailableReason
 import mihon.translation.runtime.R
@@ -112,7 +113,8 @@ internal class AndroidSystemTranslationEngine(
 
     override suspend fun openSetup(): TranslationSetupResult {
         return when (val result = platform.openSettings()) {
-            AndroidSystemPlatformSetup.Opened -> TranslationSetupResult.Opened
+            AndroidSystemPlatformSetup.Opened ->
+                TranslationSetupResult.Opened(TranslationSetupDestination.External)
             AndroidSystemPlatformSetup.ServiceMissing -> TranslationSetupResult.ServiceMissing
             AndroidSystemPlatformSetup.SettingsUnavailable -> TranslationSetupResult.SettingsUnavailable
             is AndroidSystemPlatformSetup.Failed -> TranslationSetupResult.Failed(result.reason)

@@ -5,6 +5,7 @@ import kotlinx.coroutines.test.runTest
 import mihon.translation.api.ResolvedTranslationRequest
 import mihon.translation.api.TranslationEngineId
 import mihon.translation.api.TranslationLanguageTag
+import mihon.translation.api.TranslationSetupDestination
 import mihon.translation.api.TranslationSystemSetupReason
 import mihon.translation.api.TranslationUnavailableReason
 import mihon.translation.spi.TranslationEngineDeviceAvailability
@@ -98,7 +99,8 @@ class AndroidSystemTranslationEngineTest {
             FakePlatform(onDevice(), setup = AndroidSystemPlatformSetup.SettingsUnavailable),
         )
 
-        opened.openSetup() shouldBe TranslationSetupResult.Opened
+        opened.openSetup() shouldBe
+            TranslationSetupResult.Opened(TranslationSetupDestination.External)
         missing.openSetup() shouldBe TranslationSetupResult.SettingsUnavailable
     }
 

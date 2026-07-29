@@ -29,6 +29,7 @@ import mihon.translation.api.TranslationProviderDisclosure
 import mihon.translation.api.TranslationProviderId
 import mihon.translation.api.TranslationProviderPresentation
 import mihon.translation.api.TranslationRequest
+import mihon.translation.api.TranslationSetupDestination
 import mihon.translation.api.TranslationSourceLanguageSelection
 import mihon.translation.api.TranslationSystemSetupReason
 import mihon.translation.api.TranslationTargetLanguageSelection
@@ -150,6 +151,46 @@ class TranslationSettingsScreenModelTest {
         }
     }
 
+    @Test
+    fun `returning from either setup destination retries the playground once`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+
+        try {
+            TranslationSetupDestination.entries.forEach { destination ->
+                val setupResult = TranslationHostActionResult.SetupOpened(destination)
+                val hostActions = FakeHostActions().apply {
+                    this.setupResult = setupResult
+                }
+                val feature = SetupRequiredFeature()
+                val model = TranslationSettingsScreenModel(
+                    feature = feature,
+                    hostActions = hostActions,
+                )
+                advanceUntilIdle()
+                val requestsBeforeSetup = feature.requestCount
+                var completedResult: TranslationHostActionResult? = null
+
+                model.openSetup(ANDROID_ENGINE) { completedResult = it }
+                advanceUntilIdle()
+
+                completedResult shouldBe setupResult
+                feature.requestCount shouldBe requestsBeforeSetup
+
+                model.onResume()
+                advanceUntilIdle()
+                feature.requestCount shouldBe requestsBeforeSetup + 1
+
+                model.onResume()
+                advanceUntilIdle()
+                feature.requestCount shouldBe requestsBeforeSetup + 1
+                model.onDispose()
+            }
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
     private class FakeHostActions : TranslationHostActions {
         private val store = InMemoryPreferenceStore()
         override val knownEngines = listOf(knownEngine(ANDROID_ENGINE), knownEngine(SECOND_ENGINE))
@@ -160,6 +201,7 @@ class TranslationSettingsScreenModelTest {
                 status = TranslationEngineStatus.Ready,
             )
         }
+        var setupResult: TranslationHostActionResult = TranslationHostActionResult.SetupUnsupported
         override val selectedEngine = store.getObjectFromString(
             "engine",
             ANDROID_ENGINE,
@@ -200,8 +242,7 @@ class TranslationSettingsScreenModelTest {
 
         override fun supportsSetup(engine: TranslationEngineId) = engine == ANDROID_ENGINE
 
-        override suspend fun openSetup(engine: TranslationEngineId) =
-            TranslationHostActionResult.SetupUnsupported
+        override suspend fun openSetup(engine: TranslationEngineId) = setupResult
 
         override fun setSelectedEngine(engine: TranslationEngineId) {
             selectedEngine.set(engine)
@@ -217,8 +258,10 @@ class TranslationSettingsScreenModelTest {
 
     private class SetupRequiredFeature : TranslationFeature {
         var lastRequest: TranslationRequest? = null
+        var requestCount = 0
 
         override suspend fun prepare(request: TranslationRequest): TranslationPreparation {
+            requestCount += 1
             lastRequest = request
             return TranslationPreparation.SystemSetupRequired(
                 engine = (request.engine as TranslationEngineSelection.Explicit).engine,

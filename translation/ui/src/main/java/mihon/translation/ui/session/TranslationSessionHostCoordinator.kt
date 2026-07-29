@@ -149,7 +149,7 @@ class TranslationSessionHostCoordinator(
                 TranslationHostActionResult.Completed,
                 TranslationHostActionResult.ModelsReady,
                 -> controller.retry()
-                TranslationHostActionResult.SetupOpened -> retryAfterResume = true
+                is TranslationHostActionResult.SetupOpened -> retryAfterResume = true
                 is TranslationHostActionResult.ModelsFailed,
                 TranslationHostActionResult.SetupUnsupported,
                 TranslationHostActionResult.ServiceMissing,

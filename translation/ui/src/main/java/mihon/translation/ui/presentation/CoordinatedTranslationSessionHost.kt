@@ -26,6 +26,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import mihon.translation.api.TranslationEngineSelection
 import mihon.translation.api.TranslationHostActionResult
+import mihon.translation.api.TranslationSetupDestination
 import mihon.translation.api.TranslationSourceLanguageSelection
 import mihon.translation.api.TranslationTargetLanguageSelection
 import mihon.translation.ui.picker.TranslationEnginePickerDensity
@@ -75,8 +76,12 @@ fun CoordinatedTranslationSessionHost(
         TranslationHostActionResult.ModelsReady ->
             stringResource(MR.strings.translation_settings_models_ready)
         is TranslationHostActionResult.ModelsFailed -> result.reason
-        TranslationHostActionResult.SetupOpened ->
-            stringResource(MR.strings.translation_settings_setup_opened)
+        is TranslationHostActionResult.SetupOpened ->
+            when (result.destination) {
+                TranslationSetupDestination.InApp -> null
+                TranslationSetupDestination.External ->
+                    stringResource(MR.strings.translation_settings_external_setup_opened)
+            }
         TranslationHostActionResult.SetupUnsupported ->
             stringResource(MR.strings.translation_settings_setup_unsupported)
         TranslationHostActionResult.ServiceMissing ->

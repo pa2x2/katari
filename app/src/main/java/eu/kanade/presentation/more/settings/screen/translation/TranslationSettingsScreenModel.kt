@@ -156,7 +156,7 @@ internal class TranslationSettingsScreenModel(
     ) {
         performHostAction(
             onComplete = { result ->
-                if (result == TranslationHostActionResult.SetupOpened) {
+                if (result is TranslationHostActionResult.SetupOpened) {
                     retryAfterSetupResume = true
                 }
                 onComplete(result)

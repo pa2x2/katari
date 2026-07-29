@@ -5,6 +5,7 @@ import android.content.Intent
 import mihon.translation.api.TranslationModelId
 import mihon.translation.api.TranslationModelOperationResult
 import mihon.translation.api.TranslationProviderDisclosure
+import mihon.translation.api.TranslationSetupDestination
 import mihon.translation.provider.libretranslate.server.setup.LibreTranslateServerSetupActivity
 import mihon.translation.spi.TranslationEngineSetup
 import mihon.translation.spi.TranslationSetupResult
@@ -12,6 +13,14 @@ import mihon.translation.spi.TranslationSetupResult
 internal class LibreTranslateServerSetup(
     private val context: Context,
     private val configuration: LibreTranslateServerConfiguration,
+    private val openInAppSetup: () -> Boolean = {
+        runCatching {
+            context.startActivity(
+                Intent(context, LibreTranslateServerSetupActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+        }.isSuccess
+    },
 ) : TranslationEngineSetup {
     override val engine = LibreTranslateServerEngine.ENGINE_ID
     override val supportsSetup = true
@@ -22,15 +31,8 @@ internal class LibreTranslateServerSetup(
     }
 
     override suspend fun openSetup(): TranslationSetupResult {
-        return if (
-            runCatching {
-                context.startActivity(
-                    Intent(context, LibreTranslateServerSetupActivity::class.java)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-                )
-            }.isSuccess
-        ) {
-            TranslationSetupResult.Opened
+        return if (openInAppSetup()) {
+            TranslationSetupResult.Opened(TranslationSetupDestination.InApp)
         } else {
             TranslationSetupResult.SettingsUnavailable
         }

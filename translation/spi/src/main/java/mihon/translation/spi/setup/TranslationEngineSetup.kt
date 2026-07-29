@@ -4,6 +4,7 @@ import mihon.translation.api.TranslationEngineId
 import mihon.translation.api.TranslationModelId
 import mihon.translation.api.TranslationModelOperationResult
 import mihon.translation.api.TranslationProviderDisclosure
+import mihon.translation.api.TranslationSetupDestination
 
 interface TranslationEngineSetup {
     val engine: TranslationEngineId
@@ -25,7 +26,9 @@ interface TranslationEngineSetupRegistry {
 }
 
 sealed interface TranslationSetupResult {
-    data object Opened : TranslationSetupResult
+    data class Opened(
+        val destination: TranslationSetupDestination,
+    ) : TranslationSetupResult
 
     data object Unsupported : TranslationSetupResult
 

@@ -11,12 +11,14 @@ import mihon.translation.api.TranslationEngineBuildAvailability
 import mihon.translation.api.TranslationEngineDetails
 import mihon.translation.api.TranslationEngineId
 import mihon.translation.api.TranslationEngineStatus
+import mihon.translation.api.TranslationHostActionResult
 import mihon.translation.api.TranslationInvocationPolicy
 import mihon.translation.api.TranslationModelId
 import mihon.translation.api.TranslationModelOperationResult
 import mihon.translation.api.TranslationProviderDisclosure
 import mihon.translation.api.TranslationProviderId
 import mihon.translation.api.TranslationProviderPresentation
+import mihon.translation.api.TranslationSetupDestination
 import mihon.translation.spi.ReadyTranslationEngineRequest
 import mihon.translation.spi.TranslationEngine
 import mihon.translation.spi.TranslationEngineContribution
@@ -104,6 +106,23 @@ class DefaultTranslationHostActionsTest {
         actions(engine = null).supportsSetup(ENGINE_ID) shouldBe false
     }
 
+    @Test
+    fun `setup destination is preserved for host presentation`() = runTest {
+        TranslationSetupDestination.entries.forEach { destination ->
+            val result = actions(
+                engine = FakeEngine(TranslationEngineDeviceAvailability.Available),
+                setups = listOf(
+                    FakeSetup(
+                        supportsSetup = true,
+                        destination = destination,
+                    ),
+                ),
+            ).openSetup(ENGINE_ID)
+
+            result shouldBe TranslationHostActionResult.SetupOpened(destination)
+        }
+    }
+
     private fun actions(
         engine: FakeEngine?,
         known: List<KnownTranslationEngine> = listOf(KNOWN_ENGINE),
@@ -129,12 +148,13 @@ class DefaultTranslationHostActionsTest {
 
     private class FakeSetup(
         override val supportsSetup: Boolean,
+        private val destination: TranslationSetupDestination = TranslationSetupDestination.External,
     ) : TranslationEngineSetup {
         override val engine = ENGINE_ID
 
         override suspend fun acknowledge(disclosure: TranslationProviderDisclosure) = Unit
 
-        override suspend fun openSetup() = TranslationSetupResult.Opened
+        override suspend fun openSetup() = TranslationSetupResult.Opened(destination)
 
         override suspend fun downloadModels(
             models: Set<TranslationModelId>,
