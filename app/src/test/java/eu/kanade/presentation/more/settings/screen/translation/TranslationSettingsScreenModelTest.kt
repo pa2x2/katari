@@ -24,6 +24,9 @@ import mihon.translation.api.TranslationFeature
 import mihon.translation.api.TranslationHostActionResult
 import mihon.translation.api.TranslationHostActions
 import mihon.translation.api.TranslationInvocationPolicy
+import mihon.translation.api.TranslationLanguagePair
+import mihon.translation.api.TranslationLanguageSupport
+import mihon.translation.api.TranslationLanguageSupportInspection
 import mihon.translation.api.TranslationLanguageTag
 import mihon.translation.api.TranslationModelDescriptor
 import mihon.translation.api.TranslationPreparation
@@ -142,12 +145,52 @@ class TranslationSettingsScreenModelTest {
             model.playground.value.engine shouldBe ANDROID_ENGINE
             hostActions.selectedEngine.isSet() shouldBe false
 
+            model.setSourceLanguage(ENGLISH)
             model.setTargetLanguage(FRENCH)
             model.savePlaygroundDefaults()
 
             hostActions.selectedEngine.isSet() shouldBe false
             hostActions.defaultTargetLanguage.get() shouldBe
                 TranslationTargetLanguageSelection.Explicit(FRENCH)
+        } finally {
+            model.onDispose()
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun `engine switch preserves an unsupported pair until the user chooses a valid pair`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+        val hostActions = FakeHostActions().apply {
+            defaultTargetLanguage.set(TranslationTargetLanguageSelection.Explicit(FRENCH))
+            languageSupportByEngine = mapOf(
+                ANDROID_ENGINE to exactSupport(ENGLISH, FRENCH),
+                SECOND_ENGINE to exactSupport(FRENCH, ENGLISH),
+            )
+        }
+        val model = TranslationSettingsScreenModel(
+            feature = SetupRequiredFeature(),
+            hostActions = hostActions,
+        )
+
+        try {
+            advanceUntilIdle()
+            model.setEngine(SECOND_ENGINE)
+            advanceUntilIdle()
+
+            model.playground.value.sourceLanguage shouldBe ENGLISH
+            model.playground.value.targetLanguage shouldBe FRENCH
+            model.savePlaygroundDefaults()
+            hostActions.selectedEngine.isSet() shouldBe false
+
+            model.setSourceLanguage(FRENCH)
+            model.setTargetLanguage(ENGLISH)
+            model.savePlaygroundDefaults()
+
+            hostActions.selectedEngine.get() shouldBe SECOND_ENGINE
+            hostActions.defaultTargetLanguage.get() shouldBe
+                TranslationTargetLanguageSelection.Explicit(ENGLISH)
         } finally {
             model.onDispose()
             Dispatchers.resetMain()
@@ -273,6 +316,12 @@ class TranslationSettingsScreenModelTest {
         }
         var inspectedSelection: TranslationEngineId? = ANDROID_ENGINE
         var setupResult: TranslationHostActionResult = TranslationHostActionResult.SetupUnsupported
+        var languageSupportByEngine: Map<TranslationEngineId, TranslationLanguageSupportInspection> =
+            knownEngines.associate { engine ->
+                engine.id to TranslationLanguageSupportInspection.Available(
+                    TranslationLanguageSupport.AnyLanguage,
+                )
+            }
         override val selectedEngine = store.getObjectFromString(
             "engine",
             ANDROID_ENGINE,
@@ -302,6 +351,9 @@ class TranslationSettingsScreenModelTest {
             engines = states,
             selectedEngine = inspectedSelection,
         )
+
+        override suspend fun inspectLanguageSupport(engine: TranslationEngineId) =
+            languageSupportByEngine.getValue(engine)
 
         override suspend fun acknowledgeProviderDisclosure(
             engine: TranslationEngineId,
@@ -359,6 +411,15 @@ class TranslationSettingsScreenModelTest {
     private companion object {
         val ANDROID_ENGINE = TranslationEngineId("android-system")
         val SECOND_ENGINE = TranslationEngineId("second")
+
+        fun exactSupport(
+            source: TranslationLanguageTag,
+            target: TranslationLanguageTag,
+        ) = TranslationLanguageSupportInspection.Available(
+            TranslationLanguageSupport.ExactPairs(
+                setOf(TranslationLanguagePair(source, target)),
+            ),
+        )
         val ENGLISH = TranslationLanguageTag.require("en")
         val FRENCH = TranslationLanguageTag.require("fr")
         val PRESENTATION = TranslationProviderPresentation(

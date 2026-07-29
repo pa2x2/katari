@@ -7,6 +7,7 @@ import mihon.translation.api.TranslationEngineBuildAvailability
 import mihon.translation.api.TranslationEngineDetails
 import mihon.translation.api.TranslationEngineId
 import mihon.translation.api.TranslationInvocationPolicy
+import mihon.translation.api.TranslationLanguageSupportInspection
 import mihon.translation.api.TranslationModelId
 import mihon.translation.api.TranslationModelOperationResult
 import mihon.translation.api.TranslationProviderId
@@ -63,6 +64,9 @@ internal class AndroidSystemTranslationEngine(
                 TranslationEngineDeviceAvailability.Failed(inspection.reason)
         }
     }
+
+    override suspend fun inspectLanguageSupport(): TranslationLanguageSupportInspection =
+        platform.inspectLanguageSupport()
 
     override suspend fun prepare(request: ResolvedTranslationRequest): TranslationEnginePreparation {
         val ready = AndroidSystemReadyRequest(

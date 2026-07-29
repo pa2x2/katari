@@ -13,6 +13,10 @@ import mihon.translation.api.TranslationEngineId
 import mihon.translation.api.TranslationEngineStatus
 import mihon.translation.api.TranslationHostActionResult
 import mihon.translation.api.TranslationInvocationPolicy
+import mihon.translation.api.TranslationLanguagePair
+import mihon.translation.api.TranslationLanguageSupport
+import mihon.translation.api.TranslationLanguageSupportInspection
+import mihon.translation.api.TranslationLanguageTag
 import mihon.translation.api.TranslationModelId
 import mihon.translation.api.TranslationModelOperationResult
 import mihon.translation.api.TranslationProviderDisclosure
@@ -84,6 +88,25 @@ class DefaultTranslationHostActionsTest {
             engine.inspectionCount shouldBe 1
             engine.preparationCount shouldBe 0
         }
+    }
+
+    @Test
+    fun `language support remains owned by the explicitly requested engine`() = runTest {
+        val support = TranslationLanguageSupport.ExactPairs(
+            setOf(TranslationLanguagePair(ENGLISH, POLISH)),
+        )
+        actions(
+            engine = FakeEngine(
+                availability = TranslationEngineDeviceAvailability.Available,
+                languageSupport = TranslationLanguageSupportInspection.Available(support),
+            ),
+        ).inspectLanguageSupport(ENGINE_ID) shouldBe
+            TranslationLanguageSupportInspection.Available(support)
+
+        actions(engine = null).inspectLanguageSupport(ENGINE_ID) shouldBe
+            TranslationLanguageSupportInspection.Unavailable(
+                "Translation engine is not available",
+            )
     }
 
     @Test
@@ -191,6 +214,8 @@ class DefaultTranslationHostActionsTest {
 
     private class FakeEngine(
         private val availability: TranslationEngineDeviceAvailability,
+        private val languageSupport: TranslationLanguageSupportInspection =
+            TranslationLanguageSupportInspection.Available(TranslationLanguageSupport.AnyLanguage),
     ) : TranslationEngine {
         override val catalogEntry = KNOWN_ENGINE
         override val presentation = PRESENTATION
@@ -202,6 +227,8 @@ class DefaultTranslationHostActionsTest {
             inspectionCount++
             return availability
         }
+
+        override suspend fun inspectLanguageSupport() = languageSupport
 
         override suspend fun prepare(request: ResolvedTranslationRequest): TranslationEnginePreparation {
             preparationCount++
@@ -217,6 +244,8 @@ class DefaultTranslationHostActionsTest {
 
     private companion object {
         val ENGINE_ID = TranslationEngineId("test-engine")
+        val ENGLISH = TranslationLanguageTag.require("en")
+        val POLISH = TranslationLanguageTag.require("pl")
         val PRESENTATION = TranslationProviderPresentation(
             providerId = TranslationProviderId("test"),
             providerName = "Test",

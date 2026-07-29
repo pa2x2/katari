@@ -3,12 +3,11 @@ package eu.kanade.presentation.more.settings.screen.translation.language
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.screen.rememberTranslationSettingsScreenModel
 import eu.kanade.presentation.util.Screen
-import mihon.translation.ui.picker.translationLanguageOptions
+import mihon.translation.ui.picker.TranslationLanguageRole
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -20,8 +19,8 @@ internal class TranslationLanguagePickerScreen(
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val model = rememberTranslationSettingsScreenModel()
-        val options = remember { translationLanguageOptions() }
         val playground by model.playground.collectAsState()
+        val support by model.languageSupport.collectAsState()
 
         TranslationLanguagePickerContent(
             title = stringResource(
@@ -32,12 +31,21 @@ internal class TranslationLanguagePickerScreen(
                         MR.strings.translation_choose_target_language
                 },
             ),
-            options = options,
+            support = support,
+            engine = playground.engine,
+            role = when (target) {
+                TranslationLanguagePickerTarget.PlaygroundSource -> TranslationLanguageRole.Source
+                TranslationLanguagePickerTarget.PlaygroundTarget -> TranslationLanguageRole.Target
+            },
+            counterpart = when (target) {
+                TranslationLanguagePickerTarget.PlaygroundSource -> playground.targetLanguage
+                TranslationLanguagePickerTarget.PlaygroundTarget -> playground.sourceLanguage
+            },
             selected = when (target) {
                 TranslationLanguagePickerTarget.PlaygroundSource -> playground.sourceLanguage
                 TranslationLanguagePickerTarget.PlaygroundTarget -> playground.targetLanguage
             },
-            includeAppLanguage = false,
+            onRetry = model::retryLanguageSupport,
             onSelect = { language ->
                 when (target) {
                     TranslationLanguagePickerTarget.PlaygroundSource ->

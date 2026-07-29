@@ -137,6 +137,11 @@ class AndroidSystemTranslationEngineTest {
             }
         }
 
+        override suspend fun inspectLanguageSupport() =
+            mihon.translation.api.TranslationLanguageSupportInspection.Available(
+                mihon.translation.api.TranslationLanguageSupport.AnyLanguage,
+            )
+
         override suspend fun inspect(
             pair: AndroidSystemTranslationPair,
         ): AndroidSystemTranslationInspection {

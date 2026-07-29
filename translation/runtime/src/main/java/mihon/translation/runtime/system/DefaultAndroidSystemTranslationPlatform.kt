@@ -6,6 +6,10 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.selects.select
+import mihon.translation.api.TranslationLanguagePair
+import mihon.translation.api.TranslationLanguageSupport
+import mihon.translation.api.TranslationLanguageSupportInspection
+import mihon.translation.api.TranslationLanguageTag
 import java.util.Locale
 
 internal class DefaultAndroidSystemTranslationPlatform(
@@ -16,6 +20,45 @@ internal class DefaultAndroidSystemTranslationPlatform(
         if (sdkInt < Build.VERSION_CODES.S) return AndroidSystemDeviceInspection.UnsupportedOs
         if (bridge == null) return AndroidSystemDeviceInspection.ServiceMissing
         return AndroidSystemDeviceInspection.Available
+    }
+
+    override suspend fun inspectLanguageSupport(): TranslationLanguageSupportInspection {
+        if (sdkInt < Build.VERSION_CODES.S) {
+            return TranslationLanguageSupportInspection.Unavailable(
+                "Android System Translation requires Android 12 or newer",
+            )
+        }
+        val manager = bridge ?: return TranslationLanguageSupportInspection.Unavailable(
+            "Android translation service is unavailable",
+        )
+        return try {
+            val pairs = manager.capabilities()
+                .asSequence()
+                .filter { it.state != AndroidSystemCapabilityState.Unavailable }
+                .mapNotNull { capability ->
+                    val source = TranslationLanguageTag.parse(capability.sourceLanguageTag)
+                        ?: return@mapNotNull null
+                    val target = TranslationLanguageTag.parse(capability.targetLanguageTag)
+                        ?: return@mapNotNull null
+                    if (source == target) null else TranslationLanguagePair(source, target)
+                }
+                .toSet()
+            if (pairs.isEmpty()) {
+                TranslationLanguageSupportInspection.Unavailable(
+                    "Android reported no supported translation language pairs",
+                )
+            } else {
+                TranslationLanguageSupportInspection.Available(
+                    TranslationLanguageSupport.ExactPairs(pairs),
+                )
+            }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: RuntimeException) {
+            TranslationLanguageSupportInspection.Unavailable(
+                "Android translation languages could not be read",
+            )
+        }
     }
 
     override suspend fun inspect(pair: AndroidSystemTranslationPair): AndroidSystemTranslationInspection {

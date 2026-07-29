@@ -92,6 +92,7 @@ object SettingsTranslationScreen : SearchableSettings {
         val model = rememberTranslationSettingsScreenModel()
         val playground by model.playground.collectAsState()
         val engines by model.engines.collectAsState()
+        val languageSupport by model.languageSupport.collectAsState()
         val searchHighlightKey = remember { SearchableSettings.highlightKey }
 
         RefreshTranslationSettingsOnResume(model)
@@ -165,6 +166,7 @@ object SettingsTranslationScreen : SearchableSettings {
         TranslationSettingsContent(
             playground = playground,
             engines = engines,
+            languageSupport = languageSupport,
             controller = model.controller,
             searchHighlightKey = searchHighlightKey,
             onSearchHighlightConsumed = { key ->

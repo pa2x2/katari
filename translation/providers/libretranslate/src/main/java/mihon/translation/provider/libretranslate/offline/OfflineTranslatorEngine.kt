@@ -8,6 +8,7 @@ import mihon.translation.api.TranslationEngineBuildAvailability
 import mihon.translation.api.TranslationEngineDetails
 import mihon.translation.api.TranslationEngineId
 import mihon.translation.api.TranslationInvocationPolicy
+import mihon.translation.api.TranslationLanguageSupportInspection
 import mihon.translation.api.TranslationProviderDisclosure
 import mihon.translation.api.TranslationProviderId
 import mihon.translation.api.TranslationProviderPresentation
@@ -72,6 +73,23 @@ internal class OfflineTranslatorEngine(
             throw error
         } catch (_: Exception) {
             TranslationEngineDeviceAvailability.ConfigurationRequired(SETUP_DESCRIPTION)
+        }
+    }
+
+    override suspend fun inspectLanguageSupport(): TranslationLanguageSupportInspection {
+        if (!application.isInstalled()) {
+            return TranslationLanguageSupportInspection.Unavailable(
+                "Offline Translator is not installed",
+            )
+        }
+        return try {
+            LibreTranslateLanguageResolver(service().languages()).languageSupport()
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Exception) {
+            TranslationLanguageSupportInspection.Unavailable(
+                "Offline Translator languages are unavailable",
+            )
         }
     }
 

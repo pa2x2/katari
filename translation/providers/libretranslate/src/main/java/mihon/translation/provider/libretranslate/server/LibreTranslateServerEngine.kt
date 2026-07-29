@@ -8,6 +8,7 @@ import mihon.translation.api.TranslationEngineBuildAvailability
 import mihon.translation.api.TranslationEngineDetails
 import mihon.translation.api.TranslationEngineId
 import mihon.translation.api.TranslationInvocationPolicy
+import mihon.translation.api.TranslationLanguageSupportInspection
 import mihon.translation.api.TranslationProviderDisclosure
 import mihon.translation.api.TranslationProviderId
 import mihon.translation.api.TranslationProviderPresentation
@@ -71,6 +72,23 @@ internal class LibreTranslateServerEngine(
             throw error
         } catch (_: Exception) {
             TranslationEngineDeviceAvailability.Unavailable("Configured server is unreachable")
+        }
+    }
+
+    override suspend fun inspectLanguageSupport(): TranslationLanguageSupportInspection {
+        if (!settings.isInitiallyVerified) {
+            return TranslationLanguageSupportInspection.Unavailable(CONFIGURATION_DESCRIPTION)
+        }
+        val service = serviceFactory()
+            ?: return TranslationLanguageSupportInspection.Unavailable(CONFIGURATION_DESCRIPTION)
+        return try {
+            LibreTranslateLanguageResolver(service.languages()).languageSupport()
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Exception) {
+            TranslationLanguageSupportInspection.Unavailable(
+                "Configured server languages are unavailable",
+            )
         }
     }
 

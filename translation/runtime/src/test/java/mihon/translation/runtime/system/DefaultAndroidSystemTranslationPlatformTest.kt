@@ -5,6 +5,9 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import mihon.translation.api.TranslationLanguagePair
+import mihon.translation.api.TranslationLanguageSupport
+import mihon.translation.api.TranslationLanguageSupportInspection
 import mihon.translation.api.TranslationLanguageTag
 import org.junit.jupiter.api.Test
 
@@ -17,6 +20,39 @@ class DefaultAndroidSystemTranslationPlatformTest {
             AndroidSystemDeviceInspection.UnsupportedOs
         DefaultAndroidSystemTranslationPlatform(31, null).inspectDevice() shouldBe
             AndroidSystemDeviceInspection.ServiceMissing
+    }
+
+    @Test
+    fun `language support includes usable and downloadable pairs only`() = runTest {
+        val platform = DefaultAndroidSystemTranslationPlatform(
+            31,
+            FakeBridge(
+                listOf(
+                    capability("en", "pl"),
+                    capability("de", "pl", AndroidSystemCapabilityState.AvailableToDownload),
+                    capability("fr", "pl", AndroidSystemCapabilityState.Downloading),
+                    capability("es", "pl", AndroidSystemCapabilityState.Unavailable),
+                    capability("und", "pl"),
+                    capability("pl", "pl"),
+                ),
+            ),
+        )
+
+        val inspection = platform.inspectLanguageSupport() as TranslationLanguageSupportInspection.Available
+        (inspection.support as TranslationLanguageSupport.ExactPairs).pairs shouldBe setOf(
+            TranslationLanguagePair(
+                TranslationLanguageTag.require("en"),
+                TranslationLanguageTag.require("pl"),
+            ),
+            TranslationLanguagePair(
+                TranslationLanguageTag.require("de"),
+                TranslationLanguageTag.require("pl"),
+            ),
+            TranslationLanguagePair(
+                TranslationLanguageTag.require("fr"),
+                TranslationLanguageTag.require("pl"),
+            ),
+        )
     }
 
     @Test

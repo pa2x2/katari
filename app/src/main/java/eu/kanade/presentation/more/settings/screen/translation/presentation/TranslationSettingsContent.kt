@@ -36,8 +36,10 @@ import eu.kanade.presentation.more.settings.widget.highlightBackground
 import kotlinx.coroutines.delay
 import mihon.translation.api.TranslationEngineState
 import mihon.translation.ui.picker.displayName
+import mihon.translation.ui.picker.supportsPair
 import mihon.translation.ui.presentation.TranslationSessionExternalAction
 import mihon.translation.ui.presentation.TranslationSessionPanel
+import mihon.translation.ui.session.TranslationLanguageSupportState
 import mihon.translation.ui.session.TranslationSessionController
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
@@ -50,6 +52,7 @@ import kotlin.time.Duration.Companion.milliseconds
 internal fun TranslationSettingsContent(
     playground: TranslationPlaygroundState,
     engines: List<TranslationEngineState>,
+    languageSupport: TranslationLanguageSupportState,
     controller: TranslationSessionController,
     searchHighlightKey: String?,
     onSearchHighlightConsumed: (String) -> Unit,
@@ -104,6 +107,7 @@ internal fun TranslationSettingsContent(
                 TranslationPlayground(
                     state = playground,
                     engines = engines,
+                    languageSupport = languageSupport,
                     controller = controller,
                     onTextChange = onTextChange,
                     onChooseSource = onChooseSource,
@@ -125,6 +129,7 @@ internal fun TranslationSettingsContent(
 private fun TranslationPlayground(
     state: TranslationPlaygroundState,
     engines: List<TranslationEngineState>,
+    languageSupport: TranslationLanguageSupportState,
     controller: TranslationSessionController,
     onTextChange: (String) -> Unit,
     onChooseSource: () -> Unit,
@@ -141,6 +146,17 @@ private fun TranslationPlayground(
         .firstOrNull { it.engine.id == state.engine }
         ?.engine
         ?.providerName
+    val availableLanguageSupport = (languageSupport as? TranslationLanguageSupportState.Available)
+        ?.takeIf { it.engine == state.engine }
+        ?.support
+    val hasSupportedPair = availableLanguageSupport?.supportsPair(
+        state.sourceLanguage,
+        state.targetLanguage,
+    ) == true
+    val canSwapLanguages = availableLanguageSupport?.supportsPair(
+        state.targetLanguage,
+        state.sourceLanguage,
+    ) == true
 
     ElevatedCard(
         modifier = Modifier
@@ -168,7 +184,10 @@ private fun TranslationPlayground(
                         .weight(1f)
                         .testTag(TRANSLATION_SOURCE_TAG),
                 )
-                IconButton(onClick = onSwapLanguages) {
+                IconButton(
+                    onClick = onSwapLanguages,
+                    enabled = canSwapLanguages,
+                ) {
                     Icon(
                         imageVector = Icons.Outlined.SwapHoriz,
                         contentDescription = stringResource(
@@ -220,9 +239,19 @@ private fun TranslationPlayground(
                 modifier = Modifier.testTag(TRANSLATION_OUTPUT_TAG),
                 showCopy = false,
             )
+            if (
+                languageSupport is TranslationLanguageSupportState.Available &&
+                !hasSupportedPair
+            ) {
+                Text(
+                    text = stringResource(MR.strings.translation_language_pair_required),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
             Button(
                 onClick = onSave,
-                enabled = state.hasUnsavedProfileChanges,
+                enabled = state.hasUnsavedProfileChanges && hasSupportedPair,
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag(TRANSLATION_SAVE_TAG),

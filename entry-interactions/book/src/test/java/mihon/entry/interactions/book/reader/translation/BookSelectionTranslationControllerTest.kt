@@ -149,6 +149,11 @@ class BookSelectionTranslationControllerTest {
             selectedEngine = selectedEngine.get(),
         )
 
+        override suspend fun inspectLanguageSupport(engine: TranslationEngineId) =
+            mihon.translation.api.TranslationLanguageSupportInspection.Available(
+                mihon.translation.api.TranslationLanguageSupport.AnyLanguage,
+            )
+
         override suspend fun acknowledgeProviderDisclosure(
             engine: TranslationEngineId,
             disclosure: TranslationProviderDisclosure,

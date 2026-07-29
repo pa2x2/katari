@@ -11,6 +11,7 @@ import mihon.translation.api.TranslationEngineState
 import mihon.translation.api.TranslationEngineStatus
 import mihon.translation.api.TranslationHostActionResult
 import mihon.translation.api.TranslationHostActions
+import mihon.translation.api.TranslationLanguageSupportInspection
 import mihon.translation.api.TranslationLanguageTag
 import mihon.translation.api.TranslationModelDescriptor
 import mihon.translation.api.TranslationModelOperationResult
@@ -118,6 +119,24 @@ internal class DefaultTranslationHostActions(
             engines = engines,
             selectedEngine = profileEngineResolver.resolve(engines),
         )
+    }
+
+    override suspend fun inspectLanguageSupport(
+        engine: TranslationEngineId,
+    ): TranslationLanguageSupportInspection {
+        val installed = engineRegistry.find(engine)
+            ?: return TranslationLanguageSupportInspection.Unavailable(
+                "Translation engine is not available",
+            )
+        return try {
+            installed.inspectLanguageSupport()
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Exception) {
+            TranslationLanguageSupportInspection.Unavailable(
+                "Translation languages could not be inspected",
+            )
+        }
     }
 
     override suspend fun acknowledgeProviderDisclosure(

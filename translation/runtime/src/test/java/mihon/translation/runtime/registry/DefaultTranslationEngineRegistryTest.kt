@@ -76,6 +76,11 @@ class DefaultTranslationEngineRegistryTest {
 
         override suspend fun inspectDevice() = TranslationEngineDeviceAvailability.Available
 
+        override suspend fun inspectLanguageSupport() =
+            mihon.translation.api.TranslationLanguageSupportInspection.Available(
+                mihon.translation.api.TranslationLanguageSupport.AnyLanguage,
+            )
+
         override suspend fun prepare(request: ResolvedTranslationRequest): TranslationEnginePreparation =
             error("Not used")
 

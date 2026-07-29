@@ -283,6 +283,8 @@
     <string name="translation_settings_target_default">App language (%s)</string>
     <string name="translation_settings_test_input">Text to translate</string>
     <string name="translation_settings_language_search">Search languages</string>
+    <string name="translation_languages_unavailable">Supported languages could not be loaded.</string>
+    <string name="translation_language_pair_required">Choose a language pair supported by the selected engine.</string>
     <string name="translation_settings_saved">Translation settings saved</string>
     <string name="translation_settings_open_provider_settings">Open %s translation settings</string>
     <string name="translation_settings_external_setup_opened">Complete setup in the provider, then return to Katari.</string>

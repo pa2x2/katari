@@ -24,15 +24,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import mihon.translation.api.TranslationEngineSelection
 import mihon.translation.api.TranslationHostActionResult
 import mihon.translation.api.TranslationSetupDestination
-import mihon.translation.api.TranslationSourceLanguageSelection
-import mihon.translation.api.TranslationTargetLanguageSelection
 import mihon.translation.ui.picker.TranslationEnginePickerDensity
 import mihon.translation.ui.picker.TranslationEnginePickerList
-import mihon.translation.ui.picker.TranslationLanguagePickerList
-import mihon.translation.ui.picker.translationLanguageOptions
+import mihon.translation.ui.picker.TranslationLanguageRole
+import mihon.translation.ui.picker.TranslationLanguageSupportPicker
 import mihon.translation.ui.session.TranslationSessionHostCoordinator
 import mihon.translation.ui.session.TranslationSessionPicker
 import mihon.translation.ui.session.TranslationSessionState
@@ -109,10 +106,8 @@ private fun TranslationSessionPickerDialog(
     isTabletUi: Boolean,
 ) {
     val context = LocalContext.current
-    val state by coordinator.controller.state.collectAsState()
     val engineStates by coordinator.engineStates.collectAsState()
-    val active = state as? TranslationSessionState.Active
-    val options = remember { translationLanguageOptions() }
+    val languageSupport by coordinator.languageSupport.collectAsState()
     Dialog(
         onDismissRequest = coordinator::dismissPicker,
         properties = translationSessionDialogProperties,
@@ -144,41 +139,36 @@ private fun TranslationSessionPickerDialog(
                         TranslationSessionPicker.SourceLanguage,
                         TranslationSessionPicker.TargetLanguage,
                         -> {
-                            val sourceSelection =
-                                active?.input?.request?.sourceLanguage as? TranslationSourceLanguageSelection.Explicit
-                            val targetSelection =
-                                active?.input?.request?.targetLanguage as? TranslationTargetLanguageSelection.Explicit
-                            val selected = when (picker) {
-                                TranslationSessionPicker.SourceLanguage -> sourceSelection?.language
-                                TranslationSessionPicker.TargetLanguage -> targetSelection?.language
-                                TranslationSessionPicker.Engine -> null
-                            }
-                            if (picker == TranslationSessionPicker.TargetLanguage && selected != null) {
+                            val selected = coordinator.selectedLanguage(picker)
+                            if (
+                                picker == TranslationSessionPicker.TargetLanguage &&
+                                coordinator.canUseCurrentTargetAsProfileDefault()
+                            ) {
                                 TextButton(onClick = coordinator::useCurrentTargetAsProfileDefault) {
                                     Text(stringResource(MR.strings.translation_settings_use_target_as_default))
                                 }
                             }
-                            TranslationLanguagePickerList(
-                                options = options,
+                            TranslationLanguageSupportPicker(
+                                state = languageSupport,
+                                engine = coordinator.activeEngine(),
+                                role = when (picker) {
+                                    TranslationSessionPicker.SourceLanguage -> TranslationLanguageRole.Source
+                                    TranslationSessionPicker.TargetLanguage -> TranslationLanguageRole.Target
+                                    TranslationSessionPicker.Engine -> error("Engine picker has no language role")
+                                },
+                                counterpart = coordinator.counterpartLanguage(picker),
                                 selected = selected,
                                 onSelect = coordinator::selectLanguage,
+                                onRetry = coordinator::retryLanguageSupport,
                                 modifier = Modifier
                                     .weight(1f)
                                     .padding(top = 8.dp),
                             )
                         }
                         TranslationSessionPicker.Engine -> {
-                            val selected = when (
-                                val selection = active?.input?.request?.engine
-                            ) {
-                                is TranslationEngineSelection.Explicit -> selection.engine
-                                TranslationEngineSelection.ProfileDefault,
-                                null,
-                                -> coordinator.profileSelectedEngine
-                            }
                             TranslationEnginePickerList(
                                 engines = engineStates,
-                                selected = selected,
+                                selected = coordinator.activeEngine(),
                                 density = TranslationEnginePickerDensity.Compact,
                                 onSelect = coordinator::selectEngine,
                                 onOpenSetup = coordinator::openEngineSetup,

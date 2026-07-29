@@ -1,5 +1,6 @@
 package mihon.translation.runtime.system
 
+import mihon.translation.api.TranslationLanguageSupportInspection
 import mihon.translation.api.TranslationLanguageTag
 
 internal data class AndroidSystemTranslationPair(
@@ -72,6 +73,8 @@ internal sealed interface AndroidSystemPlatformSetup {
 
 internal interface AndroidSystemTranslationPlatform {
     suspend fun inspectDevice(): AndroidSystemDeviceInspection
+
+    suspend fun inspectLanguageSupport(): TranslationLanguageSupportInspection
 
     suspend fun inspect(pair: AndroidSystemTranslationPair): AndroidSystemTranslationInspection
 

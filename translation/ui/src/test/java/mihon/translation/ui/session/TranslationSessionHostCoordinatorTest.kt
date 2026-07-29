@@ -19,6 +19,9 @@ import mihon.translation.api.TranslationExecution
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.TranslationHostActionResult
 import mihon.translation.api.TranslationHostActions
+import mihon.translation.api.TranslationLanguagePair
+import mihon.translation.api.TranslationLanguageSupport
+import mihon.translation.api.TranslationLanguageSupportInspection
 import mihon.translation.api.TranslationLanguageTag
 import mihon.translation.api.TranslationModelDescriptor
 import mihon.translation.api.TranslationPreparation
@@ -80,6 +83,41 @@ class TranslationSessionHostCoordinatorTest {
         feature.requests.size shouldBe requestCount
         coordinator.picker.value shouldBe TranslationSessionPicker.Engine
         host.selectedEngine.get() shouldBe PROFILE_ENGINE.id
+    }
+
+    @Test
+    fun `language selection rejects unsupported targets and accepts the provider pair`() = runTest {
+        val host = FakeHostActions().apply {
+            languageSupport = TranslationLanguageSupportInspection.Available(
+                TranslationLanguageSupport.ExactPairs(
+                    setOf(TranslationLanguagePair(SOURCE, FRENCH)),
+                ),
+            )
+        }
+        val feature = RecordingFeature()
+        val coordinator = TranslationSessionHostCoordinator(
+            feature = feature,
+            hostActions = host,
+            scope = backgroundScope,
+            selectionSettleDelayMillis = 0,
+        )
+        runCurrent()
+        coordinator.controller.submit(input())
+        runCurrent()
+        coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseTargetLanguage) {}
+        runCurrent()
+        val requestCount = feature.requests.size
+
+        coordinator.selectLanguage(TARGET)
+        runCurrent()
+        feature.requests.size shouldBe requestCount
+        coordinator.picker.value shouldBe TranslationSessionPicker.TargetLanguage
+
+        coordinator.selectLanguage(FRENCH)
+        runCurrent()
+        feature.requests.last().targetLanguage shouldBe
+            TranslationTargetLanguageSelection.Explicit(FRENCH)
+        coordinator.picker.value shouldBe null
     }
 
     @Test
@@ -177,6 +215,8 @@ class TranslationSessionHostCoordinatorTest {
         var inspectedSelection: TranslationEngineId? = PROFILE_ENGINE.id
         var openedEngine: TranslationEngineId? = null
         var setupResult: TranslationHostActionResult = TranslationHostActionResult.Completed
+        var languageSupport: TranslationLanguageSupportInspection =
+            TranslationLanguageSupportInspection.Available(TranslationLanguageSupport.AnyLanguage)
 
         override suspend fun deviceAvailability() = TranslationDeviceAvailability.Available
 
@@ -196,6 +236,9 @@ class TranslationSessionHostCoordinatorTest {
             }
             return TranslationEngineInspection(engines, inspectedSelection)
         }
+
+        override suspend fun inspectLanguageSupport(engine: TranslationEngineId) =
+            languageSupport
 
         override suspend fun acknowledgeProviderDisclosure(
             engine: TranslationEngineId,
@@ -225,6 +268,7 @@ class TranslationSessionHostCoordinatorTest {
     private companion object {
         val SOURCE = TranslationLanguageTag.require("en")
         val TARGET = TranslationLanguageTag.require("pl")
+        val FRENCH = TranslationLanguageTag.require("fr")
         val PROFILE_ENGINE = engine("profile")
         val READY_ENGINE = engine("ready")
         val BLOCKED_ENGINE = engine("blocked")

@@ -3,6 +3,7 @@ package mihon.translation.spi
 import mihon.translation.api.KnownTranslationEngine
 import mihon.translation.api.ResolvedTranslationRequest
 import mihon.translation.api.TranslationEngineId
+import mihon.translation.api.TranslationLanguageSupportInspection
 import mihon.translation.api.TranslationModelDescriptor
 import mihon.translation.api.TranslationOperationProgress
 import mihon.translation.api.TranslationProviderDisclosure
@@ -20,6 +21,9 @@ interface TranslationEngine {
 
     /** Request-independent device inspection. No text or language pair may be manufactured for this check. */
     suspend fun inspectDevice(): TranslationEngineDeviceAvailability
+
+    /** Provider-owned language support inspection. No sample text may be sent to the provider. */
+    suspend fun inspectLanguageSupport(): TranslationLanguageSupportInspection
 
     suspend fun prepare(request: ResolvedTranslationRequest): TranslationEnginePreparation
 

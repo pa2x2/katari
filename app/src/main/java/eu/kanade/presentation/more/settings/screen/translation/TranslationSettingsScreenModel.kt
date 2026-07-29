@@ -22,6 +22,11 @@ import mihon.translation.api.TranslationProviderDisclosure
 import mihon.translation.api.TranslationRequest
 import mihon.translation.api.TranslationSourceLanguageSelection
 import mihon.translation.api.TranslationTargetLanguageSelection
+import mihon.translation.ui.picker.TranslationLanguageRole
+import mihon.translation.ui.picker.supportsPair
+import mihon.translation.ui.picker.supportsSelection
+import mihon.translation.ui.session.TranslationLanguageSupportController
+import mihon.translation.ui.session.TranslationLanguageSupportState
 import mihon.translation.ui.session.TranslationSessionController
 import mihon.translation.ui.session.TranslationSessionExecutionMode
 import mihon.translation.ui.session.TranslationSessionInput
@@ -49,6 +54,11 @@ internal class TranslationSettingsScreenModel(
         executionMode = TranslationSessionExecutionMode.FollowProviderPolicy,
         selectionSettleDelayMillis = PLAYGROUND_DEBOUNCE_MILLIS,
     )
+    private val languageSupportController = TranslationLanguageSupportController(
+        hostActions = hostActions,
+        scope = screenModelScope,
+    )
+    val languageSupport = languageSupportController.state
     private var savedDefaults = initialPlaygroundDefaults()
     private var retryAfterSetupResume = false
     private val mutablePlayground = MutableStateFlow(initialPlaygroundState(savedDefaults))
@@ -64,14 +74,20 @@ internal class TranslationSettingsScreenModel(
     }
 
     fun setSourceLanguage(language: TranslationLanguageTag) {
+        val current = mutablePlayground.value
+        if (!isSelectable(TranslationLanguageRole.Source, language, current.targetLanguage)) return
         updatePlayground { it.copy(sourceLanguage = language) }
     }
 
     fun setTargetLanguage(language: TranslationLanguageTag) {
+        val current = mutablePlayground.value
+        if (!isSelectable(TranslationLanguageRole.Target, language, current.sourceLanguage)) return
         updatePlayground { it.copy(targetLanguage = language) }
     }
 
     fun swapLanguages() {
+        val current = mutablePlayground.value
+        if (!current.hasSupportedPair(current.targetLanguage, current.sourceLanguage)) return
         updatePlayground {
             it.copy(
                 sourceLanguage = it.targetLanguage,
@@ -85,6 +101,7 @@ internal class TranslationSettingsScreenModel(
             return
         }
         updatePlayground { it.copy(engine = engine) }
+        languageSupportController.load(engine)
     }
 
     fun refreshEngineStates() {
@@ -101,6 +118,7 @@ internal class TranslationSettingsScreenModel(
                     engineSelectionResolved = true,
                 ).withUnsavedState()
             }
+            languageSupportController.load(mutablePlayground.value.engine)
             submitPlayground()
         }
     }
@@ -118,7 +136,7 @@ internal class TranslationSettingsScreenModel(
 
     fun savePlaygroundDefaults() {
         val state = mutablePlayground.value
-        if (!state.hasUnsavedProfileChanges) return
+        if (!state.hasUnsavedProfileChanges || !state.hasSupportedPair()) return
         if (state.engine != savedDefaults.engine) {
             state.engine?.let(hostActions::setSelectedEngine)
         }
@@ -185,7 +203,12 @@ internal class TranslationSettingsScreenModel(
     }
 
     override fun onDispose() {
+        languageSupportController.clear()
         controller.close()
+    }
+
+    fun retryLanguageSupport() {
+        languageSupportController.retry()
     }
 
     private fun initialPlaygroundDefaults(): TranslationPlaygroundDefaults {
@@ -226,6 +249,26 @@ internal class TranslationSettingsScreenModel(
             engine != savedDefaults.engine ||
                 targetLanguage != savedDefaults.targetLanguage,
         )
+    }
+
+    private fun isSelectable(
+        role: TranslationLanguageRole,
+        language: TranslationLanguageTag,
+        counterpart: TranslationLanguageTag,
+    ): Boolean {
+        val available = languageSupport.value as? TranslationLanguageSupportState.Available
+            ?: return false
+        if (available.engine != mutablePlayground.value.engine) return false
+        return available.support.supportsSelection(role, language, counterpart)
+    }
+
+    private fun TranslationPlaygroundState.hasSupportedPair(
+        source: TranslationLanguageTag = sourceLanguage,
+        target: TranslationLanguageTag = targetLanguage,
+    ): Boolean {
+        val available = languageSupport.value as? TranslationLanguageSupportState.Available
+            ?: return false
+        return available.engine == engine && available.support.supportsPair(source, target)
     }
 
     private fun performHostAction(

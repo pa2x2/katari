@@ -1,5 +1,8 @@
 package mihon.translation.provider.libretranslate.protocol
 
+import mihon.translation.api.TranslationLanguagePair
+import mihon.translation.api.TranslationLanguageSupport
+import mihon.translation.api.TranslationLanguageSupportInspection
 import mihon.translation.api.TranslationLanguageTag
 import java.util.Locale
 
@@ -31,6 +34,31 @@ internal class LibreTranslateLanguageResolver(
                         TranslationLanguageTag.parse(candidate)?.value
                             ?.equals(targetTag, ignoreCase = true) == true
                     )
+        }
+    }
+
+    fun languageSupport(): TranslationLanguageSupportInspection {
+        val resolvable = languages.mapNotNull { language ->
+            val tag = TranslationLanguageTag.parse(language.code) ?: return@mapNotNull null
+            (language to tag).takeIf { resolve(tag) == language }
+        }
+        val pairs = resolvable.flatMapTo(mutableSetOf()) { (source, sourceTag) ->
+            resolvable.mapNotNull { (target, targetTag) ->
+                if (sourceTag == targetTag || !supportsTarget(source, target)) {
+                    null
+                } else {
+                    TranslationLanguagePair(sourceTag, targetTag)
+                }
+            }
+        }
+        return if (pairs.isEmpty()) {
+            TranslationLanguageSupportInspection.Unavailable(
+                "Provider reported no supported translation language pairs",
+            )
+        } else {
+            TranslationLanguageSupportInspection.Available(
+                TranslationLanguageSupport.ExactPairs(pairs),
+            )
         }
     }
 

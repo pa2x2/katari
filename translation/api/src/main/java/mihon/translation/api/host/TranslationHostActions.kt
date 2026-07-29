@@ -20,6 +20,10 @@ interface TranslationHostActions {
 
     suspend fun inspectEngines(): TranslationEngineInspection
 
+    suspend fun inspectLanguageSupport(
+        engine: TranslationEngineId,
+    ): TranslationLanguageSupportInspection
+
     suspend fun acknowledgeProviderDisclosure(
         engine: TranslationEngineId,
         disclosure: TranslationProviderDisclosure,

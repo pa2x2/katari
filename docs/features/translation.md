@@ -118,6 +118,20 @@ Translation support is specific to each engine and each source/target language
 pair. Katari queries provider capabilities rather than assuming that support
 for two languages means the pair is supported.
 
+Language pickers show capabilities reported by the selected engine. When an
+engine reports exact source/target pairs, the source picker shows its supported
+source languages and the target picker shows targets compatible with the
+staged or detected source. Engines that can report languages but not exact
+pairs filter source and target choices independently. The full device language
+list is used only when an engine explicitly declares that it accepts arbitrary
+language tags.
+
+If an engine's language capabilities cannot be loaded, its language picker
+stays unavailable and offers a retry instead of falling back to unrelated
+device languages. Switching engines never silently rewrites the staged source
+or target. An unsupported staged pair remains visible until a supported pair
+is chosen, and cannot be saved as the profile default.
+
 The default target language follows Katari's app language until another
 language is selected. Source and target languages can be changed for an
 individual translation without changing that default.
