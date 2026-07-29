@@ -2,7 +2,9 @@
 
 ## [1.6.1] - 2026-07-29
 
-> Continuous serialized-prose reading is restored to its previous native behavior.
+### 🌟 Highlights
+
+Continuous serialized-prose reading is restored to its previous native behavior.
 
 ### 🐛 Fixed
 
@@ -11,8 +13,10 @@
 
 ## [1.6.0] - 2026-07-29
 
-> Translate selected book text with your choice of Android, offline, or self-hosted engines, and
-> prepare upcoming chapters before you reach them.
+### 🌟 Highlights
+
+Translate selected book text with your choice of Android, offline, or self-hosted engines, and
+prepare upcoming chapters before you reach them.
 
 ### ✨ Added
 

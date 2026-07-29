@@ -78,10 +78,12 @@ Katari's changelog focused on behavior that differs from Mihon.
 ## Update the changelog
 
 1. Write a polished, Keep a Changelog-compatible section named `[X.Y.Z]` with the current
-   date. Follow the heading with a one-sentence blockquote that summarizes the release's most
-   meaningful verified user benefit. Make the summary specific to the release; do not use
-   generic filler such as "This release includes improvements and bug fixes." Use only the
-   applicable decorated headings from this mapping:
+   date. Follow the heading with a `🌟 Highlights` subsection containing one concise sentence
+   that summarizes the release's most meaningful verified user benefit. Write the sentence as
+   normal paragraph text, not a blockquote, list item, or GitHub alert. Make the highlight
+   specific to the release; do not use generic filler such as "This release includes
+   improvements and bug fixes." Use only the applicable decorated category headings from this
+   mapping:
 
    - `✨ Added`
    - `🔄 Changed`
@@ -95,7 +97,9 @@ Katari's changelog focused on behavior that differs from Mihon.
    ```markdown
    ## [X.Y.Z] - YYYY-MM-DD
 
-   > A concise, user-focused summary of the release.
+   ### 🌟 Highlights
+
+   A concise, user-focused highlight of the release.
 
    ### ✨ Added
 
