@@ -35,4 +35,4 @@
 - Briefly verify if applied changes require docs update. If changes required - ask user if docs should be updated
 
 ## Guidance
-- When asked to fix the issue - never simply apply the easiest fix without finding the reason of the issue. Band-aid solutions are not welcomed
+- When asked to fix the issue - never simply apply the easiest fix without finding the reason of the issue. Band-aid solutions are not welcomed. The goal is to fix the reason issue arised in the first place, not to merely fix the symptom
