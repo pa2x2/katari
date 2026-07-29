@@ -9,6 +9,19 @@ import mihon.entry.interactions.viewer.EntryChildWindow
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
+internal data class BookDocumentSection<T>(
+    val key: String,
+    val owner: T,
+    val document: PreparedBookDocument,
+    val initialPosition: BookDocumentPosition,
+    val resourceLoader: BookDocumentResourceLoader?,
+) {
+    init {
+        require(key.isNotBlank()) { "document section key must not be blank" }
+        require(document.document.contains(initialPosition)) { "initial position must belong to the section document" }
+    }
+}
+
 internal sealed interface BookDocumentViewerItem<T> {
     val key: String
 
