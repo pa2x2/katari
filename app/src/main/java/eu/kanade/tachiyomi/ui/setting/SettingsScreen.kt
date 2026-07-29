@@ -43,6 +43,7 @@ class SettingsScreen(
             Destination.About.id -> Destination.About
             Destination.DataAndStorage.id -> Destination.DataAndStorage
             Destination.Tracking.id -> Destination.Tracking
+            Destination.Translation.id -> Destination.Translation
             else -> null
         }.let {
             resolveSettingsStartScreen(
@@ -92,5 +93,6 @@ class SettingsScreen(
         data object About : Destination(0)
         data object DataAndStorage : Destination(1)
         data object Tracking : Destination(2)
+        data object Translation : Destination(3)
     }
 }

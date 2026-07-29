@@ -129,6 +129,7 @@ import mihon.feature.profiles.core.ProfilesPreferences
 import mihon.feature.profiles.ui.ProfilePickerScene
 import mihon.feature.profiles.ui.switchToProfile
 import mihon.feature.support.SupportUsScreen
+import mihon.translation.api.TranslationSettingsNavigation
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
@@ -741,6 +742,11 @@ class MainActivity : BaseActivity() {
             Intent.ACTION_APPLICATION_PREFERENCES -> {
                 navigator.popUntilRoot()
                 navigator.push(SettingsScreen())
+                null
+            }
+            TranslationSettingsNavigation.ACTION_OPEN_SETTINGS -> {
+                navigator.popUntilRoot()
+                navigator.push(SettingsScreen(SettingsScreen.Destination.Translation))
                 null
             }
             Intent.ACTION_SEARCH, Intent.ACTION_SEND, "com.google.android.gms.actions.SEARCH_ACTION" -> {

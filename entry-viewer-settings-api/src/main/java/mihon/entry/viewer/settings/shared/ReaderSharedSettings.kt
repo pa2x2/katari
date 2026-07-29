@@ -36,11 +36,21 @@ fun interface ReaderSharedSettingText {
     fun resolve(context: Context): String
 }
 
+class ReaderSharedSettingAction(
+    val label: ReaderSharedSettingText,
+    private val perform: (Context) -> Unit,
+) {
+    fun perform(context: Context) {
+        perform.invoke(context)
+    }
+}
+
 sealed interface ReaderSharedSettingAvailability {
     data object Available : ReaderSharedSettingAvailability
 
     data class Disabled(
         val reason: ReaderSharedSettingText,
+        val action: ReaderSharedSettingAction? = null,
     ) : ReaderSharedSettingAvailability
 }
 

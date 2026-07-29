@@ -73,10 +73,14 @@ private fun SharedReaderToggleRow(setting: ResolvedReaderSharedToggleSetting) {
     val checked by setting.preference.collectAsState()
     val availability = rememberSharedSettingAvailability(setting)
     val enabled = availability == ReaderSharedSettingAvailability.Available
+    val disabledAction = (availability as? ReaderSharedSettingAvailability.Disabled)?.action
     CheckboxItem(
         label = setting.title.resolve(context),
         subtitle = when (availability) {
-            is ReaderSharedSettingAvailability.Disabled -> availability.reason.resolve(context)
+            is ReaderSharedSettingAvailability.Disabled -> listOfNotNull(
+                availability.reason.resolve(context),
+                availability.action?.label?.resolve(context),
+            ).joinToString(separator = "\n")
             null,
             ReaderSharedSettingAvailability.Available,
             -> setting.summary.resolve(context)
@@ -85,6 +89,9 @@ private fun SharedReaderToggleRow(setting: ResolvedReaderSharedToggleSetting) {
         enabled = enabled,
         onClick = {
             setting.preference.set(!checked)
+        },
+        onDisabledClick = disabledAction?.let { action ->
+            { action.perform(context) }
         },
     )
 }

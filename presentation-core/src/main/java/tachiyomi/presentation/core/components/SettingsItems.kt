@@ -161,6 +161,7 @@ fun CheckboxItem(
     subtitle: String?,
     checked: Boolean,
     enabled: Boolean = true,
+    onDisabledClick: (() -> Unit)? = null,
     onClick: () -> Unit,
 ) {
     BaseSettingsItem(
@@ -173,8 +174,8 @@ fun CheckboxItem(
                 onCheckedChange = null,
             )
         },
-        enabled = enabled,
-        onClick = onClick,
+        enabled = enabled || onDisabledClick != null,
+        onClick = if (enabled) onClick else onDisabledClick ?: {},
     )
 }
 

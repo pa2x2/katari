@@ -42,6 +42,7 @@
     <string name="book_reader_general_settings">General</string>
     <string name="book_reader_automatic_translation">Translate selected text automatically</string>
     <string name="book_reader_automatic_translation_summary">Translation starts after text selection settles and uses this profile’s Translation engine and target language.</string>
+    <string name="book_reader_configure_translation">Configure translation</string>
     <string name="book_reader_translation_engine_not_configured">Choose a translation engine before enabling automatic translation.</string>
     <string name="book_reader_translation_engine_missing">The selected translation engine (%1$s) is not installed.</string>
     <string name="book_reader_translation_engine_unavailable">The selected translation engine (%1$s) is unavailable.</string>

@@ -1,6 +1,8 @@
 package mihon.entry.interactions.book
 
+import android.content.Intent
 import kotlinx.coroutines.flow.map
+import mihon.entry.viewer.settings.ReaderSharedSettingAction
 import mihon.entry.viewer.settings.ReaderSharedSettingAvailability
 import mihon.entry.viewer.settings.ReaderSharedSettingId
 import mihon.entry.viewer.settings.ReaderSharedSettingText
@@ -10,6 +12,7 @@ import mihon.entry.viewer.settings.ReaderSharedToggleSetting
 import mihon.entry.viewer.settings.StandardReaderCapabilities
 import mihon.translation.api.TranslationDeviceAvailability
 import mihon.translation.api.TranslationHostActions
+import mihon.translation.api.TranslationSettingsNavigation
 
 internal class BookAutomaticTranslationSettingsProvider(
     processorRegistry: BookProcessorRegistry,
@@ -80,7 +83,21 @@ internal class BookAutomaticTranslationSettingsProvider(
 
     private fun disabled(resource: Int, vararg arguments: Any): ReaderSharedSettingAvailability.Disabled {
         return ReaderSharedSettingAvailability.Disabled(
-            ReaderSharedSettingText { context -> context.getString(resource, *arguments) },
+            reason = ReaderSharedSettingText { context -> context.getString(resource, *arguments) },
+            action = ReaderSharedSettingAction(
+                label = ReaderSharedSettingText { context ->
+                    context.getString(R.string.book_reader_configure_translation)
+                },
+                perform = { context ->
+                    context.packageManager
+                        .getLaunchIntentForPackage(context.packageName)
+                        ?.apply {
+                            action = TranslationSettingsNavigation.ACTION_OPEN_SETTINGS
+                            addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                        }
+                        ?.let(context::startActivity)
+                },
+            ),
         )
     }
 

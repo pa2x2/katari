@@ -35,5 +35,15 @@ class SettingsProfileVisibilityTest {
             destination = SettingsScreen.Destination.Tracking,
             twoPane = true,
         ) shouldBe SettingsTrackingScreen
+
+        resolveSettingsStartScreen(
+            destination = SettingsScreen.Destination.Translation,
+            twoPane = false,
+        ) shouldBe SettingsTranslationScreen
+
+        resolveSettingsStartScreen(
+            destination = SettingsScreen.Destination.Translation,
+            twoPane = true,
+        ) shouldBe SettingsTranslationScreen
     }
 }
