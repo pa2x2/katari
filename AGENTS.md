@@ -23,7 +23,7 @@
 
 ## Toolchain
 - Android SDK/NDK and Java compatibility come from `gradle/mihon.versions.toml` plus build logic; do not hardcode them per module.
-- Do not run commands in a way that will result in the full output from gradlew to prevent context from being filled with unnecessary information. Use --quiet when actual command output is not needed
+- Do not use `--quiet` for compilation, tests, lint, or assembly because it suppresses warnings. Run Gradle with `--console=plain --warning-mode=all`, redirect the complete output to a unique file under `/tmp`, preserve the Gradle exit code, and inspect only diagnostic matches and nearby context (`w:`, `warning`, `e:`, `error`, `FAILURE`, `What went wrong`, and `Caused by`). If the build fails, inspect additional portions of the saved log selectively instead of printing the complete log. Use `--quiet` only for tasks whose diagnostic output is irrelevant.
 
 ## Validation
 - Run `./gradlew spotlessApply` from the repo root.
