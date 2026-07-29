@@ -4,14 +4,14 @@ Katari selects a reader from the publication format reported by the source. Form
 
 ## Built-in format support
 
-| Format | Built-in reader | Support |
-| ------ | --------------- | ------- |
-| Reflowable EPUB 2 | Readium EPUB reader | Supported |
-| Reflowable EPUB 3 | Readium EPUB reader | Supported |
-| Serialized HTML prose chapter | Prose chapter reader | Supported |
-| Fixed-layout EPUB | — | Not supported |
-| DRM-protected EPUB | — | Not supported |
-| PDF and other document formats | — | Not supported |
+| Format                         | Built-in reader      | Support       |
+| ------------------------------ | -------------------- | ------------- |
+| Reflowable EPUB 2              | Readium EPUB reader  | Supported     |
+| Reflowable EPUB 3              | Readium EPUB reader  | Supported     |
+| Serialized HTML prose chapter  | Prose chapter reader | Supported     |
+| Fixed-layout EPUB              | —                    | Not supported |
+| DRM-protected EPUB             | —                    | Not supported |
+| PDF and other document formats | —                    | Not supported |
 
 EPUB publications must be supplied as `application/epub+zip`. If a source does not declare a layout, Katari inspects the publication while opening it and accepts it only when it is reflowable.
 
@@ -46,13 +46,6 @@ engine if that provider is unavailable. Resetting a capable reader returns only
 that reader's toggle to its default of off.
 
 ## Selected-text translation
-
-The prose reader supports selection within one rendered text block in both scrolling and paginated layouts. Selection
-does not span separate blocks. Links retain their existing internal-note or external-browser behavior, and ordinary
-taps retain menu and page-navigation behavior.
-
-The reflowable EPUB reader uses Readium's selected-text and selection-rectangle APIs. Native selection handles,
-Copy/Share actions, links, and page gestures remain owned by Readium. Fixed-layout EPUB does not support this feature.
 
 Selected text, results, and setup state are temporary and are never added to reading progress, downloads, translation
 history, logging, or telemetry. See [Translation](./translation.md) for engine installation, availability, setup,
