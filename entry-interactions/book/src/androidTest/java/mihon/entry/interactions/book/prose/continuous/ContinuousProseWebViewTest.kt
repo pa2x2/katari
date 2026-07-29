@@ -60,7 +60,7 @@ class ContinuousProseWebViewTest {
                 controller = ContinuousProseWebViewController(activity)
                 controller.callbacks = {
                     ContinuousProseWebViewCallbacks(
-                        onEvent = { event, _ ->
+                        onEvent = { event, _, _ ->
                             if (event is ContinuousProseEvent.Prepared) prepared.countDown()
                             if (event is ContinuousProseEvent.Selection) selections += event
                         },
@@ -207,7 +207,7 @@ class ContinuousProseWebViewTest {
                 controller = ContinuousProseWebViewController(activity)
                 controller.callbacks = {
                     ContinuousProseWebViewCallbacks(
-                        onEvent = { event, _ ->
+                        onEvent = { event, _, _ ->
                             when (event) {
                                 is ContinuousProseEvent.Prepared -> when (event.generation) {
                                     10L -> firstPrepared.countDown()

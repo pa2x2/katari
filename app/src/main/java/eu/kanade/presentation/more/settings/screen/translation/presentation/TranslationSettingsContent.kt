@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.OpenInNew
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material3.Button
@@ -241,7 +241,7 @@ private fun TranslationPlayground(
                         .testTag(TRANSLATION_SYSTEM_SETUP_TAG),
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.OpenInNew,
+                        imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
                         contentDescription = null,
                     )
                     Text(

@@ -1199,7 +1199,7 @@ private fun ContinuousScrollingProseViewer(
             initialPosition = initialPosition,
             commandSink = commandSink,
             callbacks = ContinuousProseWebViewCallbacks(
-                onEvent = { event, webView ->
+                onEvent = { event, webView, pageScale ->
                     when (event) {
                         is ContinuousProseEvent.Ready -> Unit
                         is ContinuousProseEvent.Prepared -> onPrepared()
@@ -1248,12 +1248,11 @@ private fun ContinuousScrollingProseViewer(
                             }
                             val location = IntArray(2)
                             webView.getLocationInWindow(location)
-                            val scale = webView.scale
                             val bounds = RectF(event.boundsInWebView).apply {
-                                left = left * scale + location[0]
-                                right = right * scale + location[0]
-                                top = top * scale + location[1]
-                                bottom = bottom * scale + location[1]
+                                left = left * pageScale + location[0]
+                                right = right * pageScale + location[0]
+                                top = top * pageScale + location[1]
+                                bottom = bottom * pageScale + location[1]
                                 val rootPosition = currentInteraction.value.rootPositionInWindow
                                 offset(-rootPosition.x, -rootPosition.y)
                             }

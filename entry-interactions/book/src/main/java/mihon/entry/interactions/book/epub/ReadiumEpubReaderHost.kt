@@ -1,3 +1,5 @@
+@file:OptIn(org.readium.r2.shared.ExperimentalReadiumApi::class)
+
 package mihon.entry.interactions.book.epub
 
 import androidx.fragment.app.FragmentFactory

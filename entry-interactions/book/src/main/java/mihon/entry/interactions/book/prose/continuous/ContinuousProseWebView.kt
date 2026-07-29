@@ -29,7 +29,7 @@ import mihon.entry.interactions.book.document.reader.BookDocumentSection
 import tachiyomi.domain.entry.model.EntryChapter
 
 internal data class ContinuousProseWebViewCallbacks(
-    val onEvent: (ContinuousProseEvent, WebView) -> Unit,
+    val onEvent: (ContinuousProseEvent, WebView, Float) -> Unit,
     val onFailure: (String) -> Unit,
 )
 
@@ -114,8 +114,9 @@ internal class ContinuousProseWebViewController(context: Context) {
     private var renderedGeneration: Long? = null
     private var activeGeneration: Long = 0
     private var activeProjection: ContinuousProseProjection? = null
+    private var pageScale = 1f
     var callbacks: () -> ContinuousProseWebViewCallbacks = {
-        ContinuousProseWebViewCallbacks(onEvent = { _, _ -> }, onFailure = {})
+        ContinuousProseWebViewCallbacks(onEvent = { _, _, _ -> }, onFailure = {})
     }
 
     val webView: WebView = WebView(context).apply {
@@ -125,7 +126,6 @@ internal class ContinuousProseWebViewController(context: Context) {
         settings.apply {
             javaScriptEnabled = true
             domStorageEnabled = false
-            databaseEnabled = false
             allowFileAccess = false
             allowContentAccess = false
             blockNetworkLoads = true
@@ -188,7 +188,7 @@ internal class ContinuousProseWebViewController(context: Context) {
                         val projection = activeProjection ?: return
                         val event = validator.parse(message.data.orEmpty(), projection) ?: return
                         if (event is ContinuousProseEvent.Ready) flushPendingCommand()
-                        callbacks().onEvent(event, webView)
+                        callbacks().onEvent(event, webView, pageScale)
                     }
                 },
                 Handler(Looper.getMainLooper()),
@@ -208,6 +208,10 @@ internal class ContinuousProseWebViewController(context: Context) {
     }
 
     private inner class ReaderWebViewClient : WebViewClient() {
+        override fun onScaleChanged(view: WebView, oldScale: Float, newScale: Float) {
+            pageScale = newScale
+        }
+
         override fun onPageFinished(view: WebView, url: String) {
             if (url == "$CONTINUOUS_PROSE_ORIGIN/") {
                 connectBridge()

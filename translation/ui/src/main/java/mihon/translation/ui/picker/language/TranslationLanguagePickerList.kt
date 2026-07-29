@@ -93,7 +93,6 @@ private fun TranslationPickerRow(
     onClick: () -> Unit,
 ) {
     ListItem(
-        headlineContent = { Text(label) },
         supportingContent = { Text(supporting) },
         trailingContent = if (selected) {
             {
@@ -108,5 +107,6 @@ private fun TranslationPickerRow(
         },
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         modifier = Modifier.clickable(enabled = enabled, onClick = onClick),
+        content = { Text(label) },
     )
 }
