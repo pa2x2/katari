@@ -5,6 +5,7 @@ import androidx.core.os.LocaleListCompat
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -60,6 +61,7 @@ internal class TranslationSettingsScreenModel(
     )
     val languageSupport = languageSupportController.state
     private var savedDefaults = initialPlaygroundDefaults()
+    private var engineRefreshJob: Job? = null
     private var retryAfterSetupResume = false
     private val mutablePlayground = MutableStateFlow(initialPlaygroundState(savedDefaults))
     val playground = mutablePlayground.asStateFlow()
@@ -100,26 +102,38 @@ internal class TranslationSettingsScreenModel(
         if (mutableEngines.value.none { it.engine.id == engine && it.status == TranslationEngineStatus.Ready }) {
             return
         }
-        updatePlayground { it.copy(engine = engine) }
+        updatePlayground {
+            it.copy(
+                engine = engine,
+                engineSelectionResolved = true,
+            )
+        }
         languageSupportController.load(engine)
     }
 
     fun refreshEngineStates() {
-        screenModelScope.launch {
-            val inspection = hostActions.inspectEngines()
-            val current = mutablePlayground.value
-            val engineChanged = current.engineSelectionResolved &&
-                current.engine != savedDefaults.engine
-            mutableEngines.value = inspection.engines
-            savedDefaults = savedDefaults.copy(engine = inspection.selectedEngine)
-            mutablePlayground.update { state ->
-                state.copy(
-                    engine = if (engineChanged) state.engine else inspection.selectedEngine,
-                    engineSelectionResolved = true,
-                ).withUnsavedState()
+        engineRefreshJob?.cancel()
+        engineRefreshJob = screenModelScope.launch {
+            var selectionApplied = false
+            hostActions.inspectEngineStates().collect { inspection ->
+                mutableEngines.value = inspection.engines
+                if (selectionApplied || !inspection.selectionResolved) {
+                    return@collect
+                }
+                selectionApplied = true
+                val current = mutablePlayground.value
+                val engineChanged = current.engineSelectionResolved &&
+                    current.engine != savedDefaults.engine
+                savedDefaults = savedDefaults.copy(engine = inspection.selectedEngine)
+                mutablePlayground.update { state ->
+                    state.copy(
+                        engine = if (engineChanged) state.engine else inspection.selectedEngine,
+                        engineSelectionResolved = true,
+                    ).withUnsavedState()
+                }
+                languageSupportController.load(mutablePlayground.value.engine)
+                submitPlayground()
             }
-            languageSupportController.load(mutablePlayground.value.engine)
-            submitPlayground()
         }
     }
 
@@ -203,6 +217,7 @@ internal class TranslationSettingsScreenModel(
     }
 
     override fun onDispose() {
+        engineRefreshJob?.cancel()
         languageSupportController.clear()
         controller.close()
     }

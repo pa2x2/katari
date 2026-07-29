@@ -1,5 +1,7 @@
 package mihon.translation.api
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import tachiyomi.core.common.preference.Preference
 
 /**
@@ -19,6 +21,16 @@ interface TranslationHostActions {
     suspend fun deviceAvailability(): TranslationDeviceAvailability
 
     suspend fun inspectEngines(): TranslationEngineInspection
+
+    /**
+     * Emits inspection progress beginning with the engines that are still being checked.
+     *
+     * Hosts with independently inspectable providers should override this to publish each provider result as it
+     * arrives. The default preserves compatibility with hosts that only support an aggregate inspection.
+     */
+    fun inspectEngineStates(): Flow<TranslationEngineInspection> = flow {
+        emit(inspectEngines())
+    }
 
     suspend fun inspectLanguageSupport(
         engine: TranslationEngineId,

@@ -1,6 +1,13 @@
 package mihon.translation.runtime
 
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import mihon.translation.api.KnownTranslationEngine
 import mihon.translation.api.ResolvedTranslationRequest
@@ -23,6 +30,7 @@ import mihon.translation.api.TranslationProviderDisclosure
 import mihon.translation.api.TranslationProviderId
 import mihon.translation.api.TranslationProviderPresentation
 import mihon.translation.api.TranslationSetupDestination
+import mihon.translation.api.TranslationUnavailableReason
 import mihon.translation.runtime.selection.ProfileTranslationEngineResolver
 import mihon.translation.spi.ReadyTranslationEngineRequest
 import mihon.translation.spi.TranslationEngine
@@ -34,8 +42,85 @@ import mihon.translation.spi.TranslationEngineSetup
 import mihon.translation.spi.TranslationSetupResult
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
+import kotlin.coroutines.suspendCoroutine
 
 class DefaultTranslationHostActionsTest {
+    @Test
+    fun `engine inspection publishes provider results independently`() = runTest {
+        val preferredAvailability = CompletableDeferred<TranslationEngineDeviceAvailability>()
+        val preferredEngine = FakeEngine(
+            inspectAvailability = { preferredAvailability.await() },
+        )
+        val secondEngine = FakeEngine(
+            availability = TranslationEngineDeviceAvailability.Available,
+            catalogEntry = SECOND_KNOWN_ENGINE,
+        )
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val emissions = mutableListOf<mihon.translation.api.TranslationEngineInspection>()
+        val collection = backgroundScope.launch(dispatcher) {
+            actions(
+                engine = null,
+                known = listOf(KNOWN_ENGINE, SECOND_KNOWN_ENGINE),
+                registeredEngines = listOf(preferredEngine, secondEngine),
+                explicitSelection = false,
+                inspectionDispatcher = dispatcher,
+            ).inspectEngineStates().toList(emissions)
+        }
+
+        runCurrent()
+
+        emissions.first().engines.associate { it.engine.id to it.status } shouldBe mapOf(
+            ENGINE_ID to TranslationEngineStatus.Checking,
+            SECOND_ENGINE_ID to TranslationEngineStatus.Checking,
+        )
+        emissions.last().engines.associate { it.engine.id to it.status } shouldBe mapOf(
+            ENGINE_ID to TranslationEngineStatus.Checking,
+            SECOND_ENGINE_ID to TranslationEngineStatus.Ready,
+        )
+        emissions.last().selectionResolved shouldBe false
+        collection.isActive shouldBe true
+
+        preferredAvailability.complete(TranslationEngineDeviceAvailability.Available)
+        runCurrent()
+
+        emissions.last().engines.associate { it.engine.id to it.status } shouldBe mapOf(
+            ENGINE_ID to TranslationEngineStatus.Ready,
+            SECOND_ENGINE_ID to TranslationEngineStatus.Ready,
+        )
+        emissions.last().selectedEngine shouldBe ENGINE_ID
+        emissions.last().selectionResolved shouldBe true
+        collection.isCompleted shouldBe true
+    }
+
+    @Test
+    fun `engine inspection timeout resolves loading when provider does not return`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val emissions = mutableListOf<mihon.translation.api.TranslationEngineInspection>()
+        val collection = backgroundScope.launch(dispatcher) {
+            actions(
+                engine = FakeEngine(
+                    inspectAvailability = { suspendCoroutine { } },
+                ),
+                inspectionDispatcher = dispatcher,
+                inspectionTimeoutMillis = 100,
+            ).inspectEngineStates().toList(emissions)
+        }
+        runCurrent()
+
+        emissions.single().engines.single().status shouldBe TranslationEngineStatus.Checking
+
+        advanceTimeBy(100)
+        runCurrent()
+
+        emissions.last().engines.single().status shouldBe TranslationEngineStatus.Unavailable(
+            TranslationUnavailableReason.EngineUnavailable(
+                ENGINE_ID,
+                "Engine availability check timed out",
+            ),
+        )
+        collection.isCompleted shouldBe true
+    }
+
     @Test
     fun `engine inspection exposes typed readiness and generic recovery actions`() = runTest {
         val notInstalled = actions(
@@ -173,8 +258,11 @@ class DefaultTranslationHostActionsTest {
     private fun actions(
         engine: FakeEngine?,
         known: List<KnownTranslationEngine> = listOf(KNOWN_ENGINE),
+        registeredEngines: List<FakeEngine> = listOfNotNull(engine),
         setups: List<TranslationEngineSetup> = emptyList(),
         explicitSelection: Boolean = true,
+        inspectionDispatcher: CoroutineDispatcher? = null,
+        inspectionTimeoutMillis: Long = 10_000,
     ): DefaultTranslationHostActions {
         val preferences = ProfileTranslationPreferences(InMemoryPreferenceStore(), ENGINE_ID)
         if (explicitSelection) preferences.engine.set(ENGINE_ID)
@@ -182,7 +270,7 @@ class DefaultTranslationHostActionsTest {
             contributions = known.map { catalogEntry ->
                 TranslationEngineContribution(
                     catalogEntry = catalogEntry,
-                    engine = engine?.takeIf { it.catalogEntry.id == catalogEntry.id },
+                    engine = registeredEngines.firstOrNull { it.catalogEntry.id == catalogEntry.id },
                     setup = setups.firstOrNull { it.engine == catalogEntry.id },
                 )
             },
@@ -193,6 +281,8 @@ class DefaultTranslationHostActionsTest {
             knownEngineCatalog = registry,
             setupRegistry = registry,
             profileEngineResolver = ProfileTranslationEngineResolver(preferences, registry),
+            inspectionDispatcher = inspectionDispatcher ?: kotlinx.coroutines.Dispatchers.IO,
+            inspectionTimeoutMillis = inspectionTimeoutMillis,
         )
     }
 
@@ -213,19 +303,31 @@ class DefaultTranslationHostActionsTest {
     }
 
     private class FakeEngine(
-        private val availability: TranslationEngineDeviceAvailability,
+        private val inspectAvailability: suspend () -> TranslationEngineDeviceAvailability,
         private val languageSupport: TranslationLanguageSupportInspection =
             TranslationLanguageSupportInspection.Available(TranslationLanguageSupport.AnyLanguage),
+        override val catalogEntry: KnownTranslationEngine = KNOWN_ENGINE,
     ) : TranslationEngine {
-        override val catalogEntry = KNOWN_ENGINE
-        override val presentation = PRESENTATION
+        constructor(
+            availability: TranslationEngineDeviceAvailability,
+            languageSupport: TranslationLanguageSupportInspection =
+                TranslationLanguageSupportInspection.Available(TranslationLanguageSupport.AnyLanguage),
+            catalogEntry: KnownTranslationEngine = KNOWN_ENGINE,
+        ) : this({ availability }, languageSupport, catalogEntry)
+
+        override val presentation = TranslationProviderPresentation(
+            providerId = catalogEntry.providerId,
+            providerName = catalogEntry.providerName,
+            engineName = catalogEntry.engineName,
+            invocationPolicy = TranslationInvocationPolicy.Immediate,
+        )
         override val maximumInputCodePoints: Int? = null
         var inspectionCount = 0
         var preparationCount = 0
 
         override suspend fun inspectDevice(): TranslationEngineDeviceAvailability {
             inspectionCount++
-            return availability
+            return inspectAvailability()
         }
 
         override suspend fun inspectLanguageSupport() = languageSupport
@@ -244,6 +346,7 @@ class DefaultTranslationHostActionsTest {
 
     private companion object {
         val ENGINE_ID = TranslationEngineId("test-engine")
+        val SECOND_ENGINE_ID = TranslationEngineId("second-engine")
         val ENGLISH = TranslationLanguageTag.require("en")
         val POLISH = TranslationLanguageTag.require("pl")
         val PRESENTATION = TranslationProviderPresentation(
@@ -264,6 +367,10 @@ class DefaultTranslationHostActionsTest {
                 processingLocation = "Test processing location",
                 privacyDescription = "Test privacy description",
             ),
+        )
+        val SECOND_KNOWN_ENGINE = KNOWN_ENGINE.copy(
+            id = SECOND_ENGINE_ID,
+            engineName = "Second engine",
         )
     }
 }

@@ -3,9 +3,13 @@ package eu.kanade.presentation.more.settings.screen.translation
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import mihon.translation.api.KnownTranslationEngine
@@ -44,6 +48,63 @@ import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 
 class TranslationSettingsScreenModelTest {
+    @Test
+    fun `provider readiness updates incrementally without resolving selection early`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+        val inspections = MutableSharedFlow<TranslationEngineInspection>(extraBufferCapacity = 2)
+        val hostActions = FakeHostActions().apply {
+            inspectionStates = inspections
+        }
+        val model = TranslationSettingsScreenModel(
+            feature = SetupRequiredFeature(),
+            hostActions = hostActions,
+        )
+
+        try {
+            runCurrent()
+            val partialStates = hostActions.states.map { state ->
+                state.copy(
+                    status = if (state.engine.id == SECOND_ENGINE) {
+                        TranslationEngineStatus.Ready
+                    } else {
+                        TranslationEngineStatus.Checking
+                    },
+                )
+            }
+
+            inspections.emit(
+                TranslationEngineInspection(
+                    engines = partialStates,
+                    selectedEngine = null,
+                    selectionResolved = false,
+                ),
+            )
+            runCurrent()
+
+            model.engines.value shouldBe partialStates
+            model.playground.value.engineSelectionResolved shouldBe false
+            model.setEngine(SECOND_ENGINE)
+            model.playground.value.engine shouldBe SECOND_ENGINE
+            model.playground.value.engineSelectionResolved shouldBe true
+
+            inspections.emit(
+                TranslationEngineInspection(
+                    engines = hostActions.states,
+                    selectedEngine = ANDROID_ENGINE,
+                ),
+            )
+            runCurrent()
+
+            model.engines.value shouldBe hostActions.states
+            model.playground.value.engineSelectionResolved shouldBe true
+            model.playground.value.engine shouldBe SECOND_ENGINE
+        } finally {
+            model.onDispose()
+            Dispatchers.resetMain()
+        }
+    }
+
     @Test
     fun `engine cannot be selected before its readiness requirement is satisfied`() = runTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
@@ -315,6 +376,7 @@ class TranslationSettingsScreenModelTest {
             )
         }
         var inspectedSelection: TranslationEngineId? = ANDROID_ENGINE
+        var inspectionStates: Flow<TranslationEngineInspection>? = null
         var setupResult: TranslationHostActionResult = TranslationHostActionResult.SetupUnsupported
         var languageSupportByEngine: Map<TranslationEngineId, TranslationLanguageSupportInspection> =
             knownEngines.associate { engine ->
@@ -351,6 +413,9 @@ class TranslationSettingsScreenModelTest {
             engines = states,
             selectedEngine = inspectedSelection,
         )
+
+        override fun inspectEngineStates(): Flow<TranslationEngineInspection> =
+            inspectionStates ?: flow { emit(inspectEngines()) }
 
         override suspend fun inspectLanguageSupport(engine: TranslationEngineId) =
             languageSupportByEngine.getValue(engine)

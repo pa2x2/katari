@@ -68,6 +68,7 @@ class TranslationSessionHostCoordinator(
     val results: SharedFlow<TranslationHostActionResult> = mutableResults.asSharedFlow()
 
     private var actionJob: Job? = null
+    private var engineRefreshJob: Job? = null
     private var retryAfterResume = false
     private val mutableLanguagePair = MutableStateFlow(TranslationSessionLanguagePair())
     val languagePair: StateFlow<TranslationSessionLanguagePair> = mutableLanguagePair.asStateFlow()
@@ -287,6 +288,7 @@ class TranslationSessionHostCoordinator(
 
     fun close() {
         actionJob?.cancel()
+        engineRefreshJob?.cancel()
         editingLanguagePair = false
         mutablePicker.value = null
         languageSupportController.clear()
@@ -321,10 +323,16 @@ class TranslationSessionHostCoordinator(
     }
 
     private fun refreshEngineStates() {
-        scope.launch {
-            val inspection = hostActions.inspectEngines()
-            resolvedProfileSelectedEngine = inspection.selectedEngine
-            mutableEngineStates.value = inspection.engines
+        engineRefreshJob?.cancel()
+        engineRefreshJob = scope.launch {
+            var selectionApplied = false
+            hostActions.inspectEngineStates().collect { inspection ->
+                mutableEngineStates.value = inspection.engines
+                if (!selectionApplied && inspection.selectionResolved) {
+                    selectionApplied = true
+                    resolvedProfileSelectedEngine = inspection.selectedEngine
+                }
+            }
         }
     }
 

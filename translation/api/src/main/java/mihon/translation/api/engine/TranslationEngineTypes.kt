@@ -100,6 +100,7 @@ data class TranslationEngineState(
 data class TranslationEngineInspection(
     val engines: List<TranslationEngineState>,
     val selectedEngine: TranslationEngineId?,
+    val selectionResolved: Boolean = true,
 )
 
 sealed interface TranslationEngineStatus {
