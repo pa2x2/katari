@@ -24,6 +24,7 @@ import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
 import eu.kanade.tachiyomi.util.lang.byteSize
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -49,6 +50,8 @@ import mihon.entry.interactions.manga.download.DownloadProvider
 import mihon.entry.interactions.manga.download.model.MangaDownload
 import mihon.entry.interactions.manga.mangaProgressState
 import mihon.entry.interactions.manga.pageIndex
+import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPolicy
+import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPreferences
 import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import mihon.entry.interactions.reader.settings.ReaderOrientation
 import mihon.entry.interactions.reader.settings.ReadingMode
@@ -100,6 +103,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
     private val localCoverManager: LocalCoverManager = Injekt.get(),
     private val mediaSession: MangaMediaSessionProcessor = Injekt.get(),
+    private val chapterPreparationPreferences: ReaderChapterPreparationPreferences = Injekt.get(),
 ) : ViewModel() {
     private val downloadManager: DownloadManager = Injekt.get()
     private val downloadProvider: DownloadProvider = Injekt.get()
@@ -147,6 +151,8 @@ internal class ReaderViewModel @JvmOverloads constructor(
     private var chapterReadStartTime: Long? = null
 
     private var chapterToDownload: MangaDownload? = null
+    private var nextChapterPreparationJob: Job? = null
+    private var nextChapterPreparationId: Long? = null
     private var readingModeBinding: ViewerSettingBinding<Int>? = null
     private var orientationBinding: ViewerSettingBinding<Int>? = null
 
@@ -260,6 +266,15 @@ internal class ReaderViewModel @JvmOverloads constructor(
                     initialPageIndexPending = false
                 }
                 chapterId = currentChapter.chapter.id!!
+            }
+            .launchIn(viewModelScope)
+
+        chapterPreparationPreferences.prepareNextChapter.changes()
+            .filterNotNull()
+            .onEach { enabled ->
+                if (enabled) {
+                    prepareNextChapterIfNeeded(currentChapterProgression())
+                }
             }
             .launchIn(viewModelScope)
     }
@@ -410,8 +425,19 @@ internal class ReaderViewModel @JvmOverloads constructor(
     }
 
     /** Loads a destination after its chapter transition becomes active or its failure is retried. */
-    suspend fun loadChapterForTransition(chapter: ReaderChapter) {
-        if (chapter.state is ReaderChapter.State.Loaded || chapter.state == ReaderChapter.State.Loading) {
+    suspend fun loadChapterForTransition(
+        chapter: ReaderChapter,
+        preloadImages: Boolean = false,
+    ) {
+        if (chapter.state is ReaderChapter.State.Loaded) {
+            if (preloadImages) preloadFirstChapterImages(chapter)
+            return
+        }
+        if (chapter.state == ReaderChapter.State.Loading) {
+            if (preloadImages) {
+                chapter.stateFlow.first { it != ReaderChapter.State.Loading }
+                if (chapter.state is ReaderChapter.State.Loaded) preloadFirstChapterImages(chapter)
+            }
             return
         }
 
@@ -439,6 +465,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
         try {
             logcat { "Loading transition destination ${chapter.chapter.url}" }
             loader.loadChapter(chapter)
+            if (preloadImages) preloadFirstChapterImages(chapter)
         } catch (e: Throwable) {
             if (e is CancellationException) {
                 throw e
@@ -446,6 +473,14 @@ internal class ReaderViewModel @JvmOverloads constructor(
             return
         }
         eventChannel.trySend(Event.ReloadViewerChapters)
+    }
+
+    private fun preloadFirstChapterImages(chapter: ReaderChapter) {
+        if (chapter.firstPagesPreloaded) return
+        val firstPage = chapter.pages?.firstOrNull() ?: return
+        val pageLoader = chapter.pageLoader ?: return
+        pageLoader.preloadPage(firstPage)
+        chapter.firstPagesPreloaded = true
     }
 
     fun onViewerLoaded(viewer: Viewer?) {
@@ -473,12 +508,51 @@ internal class ReaderViewModel @JvmOverloads constructor(
             updateChapterProgress(selectedChapter, page)
         }
 
-        if (selectedChapter != getCurrentChapter()) {
+        if (selectedChapter == getCurrentChapter()) {
+            prepareNextChapterIfNeeded((page.index + 1).toDouble() / pages.size)
+        } else {
             logcat { "Setting ${selectedChapter.chapter.url} as active" }
             loadNewChapter(selectedChapter)
         }
 
         eventChannel.trySend(Event.PageChanged)
+    }
+
+    private fun currentChapterProgression(): Double {
+        val currentPage = state.value.currentPage
+        val totalPages = state.value.totalPages
+        return if (currentPage > 0 && totalPages > 0) {
+            currentPage.toDouble() / totalPages
+        } else {
+            0.0
+        }
+    }
+
+    private fun prepareNextChapterIfNeeded(progression: Double) {
+        if (
+            !ReaderChapterPreparationPolicy.shouldPrepare(
+                enabled = chapterPreparationPreferences.prepareNextChapter.get(),
+                progression = progression,
+            )
+        ) {
+            return
+        }
+        val nextChapter = state.value.viewerChapters?.next ?: return
+        val nextChapterId = nextChapter.chapter.id ?: return
+        if (nextChapter.firstPagesPreloaded) return
+        if (nextChapterPreparationId == nextChapterId && nextChapterPreparationJob?.isActive == true) return
+
+        nextChapterPreparationId = nextChapterId
+        nextChapterPreparationJob = viewModelScope.launchIO {
+            try {
+                loadChapterForTransition(nextChapter, preloadImages = true)
+            } finally {
+                if (nextChapterPreparationId == nextChapterId) {
+                    nextChapterPreparationId = null
+                    nextChapterPreparationJob = null
+                }
+            }
+        }
     }
 
     /**

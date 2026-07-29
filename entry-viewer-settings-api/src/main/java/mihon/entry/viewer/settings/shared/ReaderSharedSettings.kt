@@ -19,6 +19,7 @@ value class ReaderCapabilityId(
 object StandardReaderCapabilities {
     val StableTextSelection = ReaderCapabilityId("text-selection.stable")
     val SelectionAnchoring = ReaderCapabilityId("text-selection.anchor")
+    val NextChapterPreparation = ReaderCapabilityId("chapter.next-preparation")
 }
 
 @JvmInline

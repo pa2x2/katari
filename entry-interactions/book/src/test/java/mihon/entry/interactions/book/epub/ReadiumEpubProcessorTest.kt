@@ -27,6 +27,7 @@ import mihon.entry.interactions.book.download.BookDownloadManifest
 import mihon.entry.interactions.book.download.BookDownloadedResource
 import mihon.entry.interactions.book.download.DownloadedBookContentSession
 import mihon.entry.interactions.book.download.VerifiedBookDownloadPackage
+import mihon.entry.viewer.settings.StandardReaderCapabilities
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -55,6 +56,14 @@ class ReadiumEpubProcessorTest {
         assertFalse(processor.supports(BookContentDescriptor("application/epub+zip", profile = "fixed-layout")))
         assertFalse(processor.supports(BookContentDescriptor("application/epub+zip", protection = "drm")))
         assertFalse(processor.supports(BookContentDescriptor("text/html")))
+    }
+
+    @Test
+    fun `does not advertise adjacent chapter preparation`() {
+        assertFalse(
+            StandardReaderCapabilities.NextChapterPreparation in
+                ReadiumEpubProcessor().potentialReaderCapabilities,
+        )
     }
 
     @Test

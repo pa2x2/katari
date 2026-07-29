@@ -128,6 +128,11 @@ internal fun ColumnScope.GeneralPage(screenModel: ReaderSettingsScreenModel) {
     )
 
     CheckboxItem(
+        label = stringResource(MR.strings.pref_prepare_next_chapter),
+        pref = screenModel.chapterPreparationPreferences.prepareNextChapter,
+    )
+
+    CheckboxItem(
         label = stringResource(MR.strings.pref_page_transitions),
         pref = screenModel.preferences.pageTransitions,
     )

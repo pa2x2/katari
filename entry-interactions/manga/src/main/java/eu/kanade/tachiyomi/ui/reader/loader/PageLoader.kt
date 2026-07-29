@@ -30,6 +30,11 @@ internal abstract class PageLoader {
     open suspend fun loadPage(page: ReaderPage) {}
 
     /**
+     * Starts background preparation for [page] without attaching a viewer observer.
+     */
+    open fun preloadPage(page: ReaderPage) {}
+
+    /**
      * Retries the given [page] in case it failed to load. This method only makes sense when an
      * online source is used.
      */

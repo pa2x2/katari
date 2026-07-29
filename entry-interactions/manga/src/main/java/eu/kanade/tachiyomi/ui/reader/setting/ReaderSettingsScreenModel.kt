@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPreferences
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.resetSettings
 import uy.kohesive.injekt.Injekt
@@ -20,6 +21,7 @@ internal class ReaderSettingsScreenModel(
     val onChangeReadingMode: (ReadingMode) -> Unit,
     val onChangeOrientation: (ReaderOrientation) -> Unit,
     val preferences: MangaReaderSettingsProvider = Injekt.get(),
+    val chapterPreparationPreferences: ReaderChapterPreparationPreferences = Injekt.get(),
     private val settingBinder: ViewerSettingBinder = Injekt.get(),
 ) {
 
@@ -46,6 +48,7 @@ internal class ReaderSettingsScreenModel(
                 provider = preferences,
                 entryId = readerState.value.manga?.id,
             )
+            chapterPreparationPreferences.prepareNextChapter.delete()
         }
     }
 }

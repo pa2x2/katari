@@ -17,7 +17,6 @@ import mihon.entry.interactions.book.epub.ReadiumEpubProcessor
 import mihon.entry.interactions.book.prose.HtmlProseChapterProcessor
 import mihon.entry.interactions.settings.HtmlProseSettingsProvider
 import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
-import mihon.entry.viewer.settings.ReaderSharedSettingsRegistry
 import mihon.entry.viewer.settings.ViewerSettingsProvider
 import mihon.translation.api.TranslationHostActions
 import tachiyomi.core.common.preference.ProfilePreferenceKeyPattern
@@ -49,6 +48,10 @@ fun bookEntryTypeRuntimeModule(profilePreferenceOwners: ProfilePreferenceOwnerIn
                     type = EntryType.BOOK,
                     surfaces = runtime.viewerSettingsSurfaces,
                 ),
+            ),
+            potentialReaderCapabilitiesBySettingsSurface = runtime.potentialReaderCapabilitiesBySettingsSurface,
+            sharedReaderSettingsProviderFactories = listOf(
+                { get<BookAutomaticTranslationSettingsProvider>() },
             ),
         )
     }
@@ -121,11 +124,6 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
         )
     }
     addSingletonFactory {
-        ReaderSharedSettingsRegistry(
-            providers = listOf(get<BookAutomaticTranslationSettingsProvider>()),
-        )
-    }
-    addSingletonFactory {
         BookDownloader(
             application = app,
             provider = get(),
@@ -174,9 +172,12 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
     }
     return BookRuntimeArtifacts(
         viewerSettingsSurfaces = listOf(readiumSettingsProvider, proseSettingsProvider),
+        potentialReaderCapabilitiesBySettingsSurface =
+        processorRegistry.potentialReaderCapabilitiesBySettingsSurface(),
     )
 }
 
 private data class BookRuntimeArtifacts(
     val viewerSettingsSurfaces: List<ViewerSettingsProvider>,
+    val potentialReaderCapabilitiesBySettingsSurface: Map<String, Set<mihon.entry.viewer.settings.ReaderCapabilityId>>,
 )

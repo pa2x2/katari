@@ -43,6 +43,8 @@ import mihon.entry.interactions.book.document.location.locatorAt
 import mihon.entry.interactions.book.document.location.resolvePosition
 import mihon.entry.interactions.book.document.model.BookDocumentPosition
 import mihon.entry.interactions.launchEntryChildWebViewAction
+import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPolicy
+import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPreferences
 import mihon.entry.interactions.setEntryInteractionContent
 import mihon.entry.interactions.settings.HtmlProseSettingsProvider
 import mihon.entry.interactions.viewer.EntryChildWindow
@@ -76,6 +78,9 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
 
     private val windowInsetsController by lazy { WindowCompat.getInsetsController(window, window.decorView) }
     private val webViewFeature by lazy { Injekt.get<EntryWebViewFeature>() }
+    private val chapterPreparationPreferences by lazy {
+        Injekt.get<ReaderChapterPreparationPreferences>()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -127,6 +132,13 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
             }
         }
         lifecycleScope.launch { open() }
+        lifecycleScope.launch {
+            chapterPreparationPreferences.prepareNextChapter.changes().collect { enabled ->
+                if (enabled) {
+                    prepareNextChapterIfNeeded(latestLocator?.progression)
+                }
+            }
+        }
     }
 
     override fun onStart() {
@@ -273,6 +285,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
             surfaceState = ProseReaderSurfaceState.Ready
             setMenuVisibility(false)
             retainAdjacentSessions()
+            prepareNextChapterIfNeeded(locator.progression)
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
@@ -342,6 +355,19 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
             )
         latestLocator = locator
         retainedSession.updateLocation(locator)
+        prepareNextChapterIfNeeded(locator.progression)
+    }
+
+    private fun prepareNextChapterIfNeeded(progression: Double?) {
+        if (
+            !ReaderChapterPreparationPolicy.shouldPrepare(
+                enabled = chapterPreparationPreferences.prepareNextChapter.get(),
+                progression = progression ?: 0.0,
+            )
+        ) {
+            return
+        }
+        navigation?.next?.let { requestTransitionChapter(it, retry = false) }
     }
 
     private fun setMenuVisibility(visible: Boolean) {

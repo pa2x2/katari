@@ -111,11 +111,7 @@ internal class EntryPageLoader(
             page.status = Page.State.Queue
         }
 
-        val queuedPages = mutableListOf<PriorityPage>()
-        if (page.status == Page.State.Queue) {
-            queuedPages += PriorityPage(page, PriorityPage.DEFAULT).also { queue.offer(it) }
-        }
-        queuedPages += preloadNextPages(page, preloadSize)
+        val queuedPages = enqueuePageAndNextPages(page, PriorityPage.DEFAULT)
 
         suspendCancellableCoroutine<Nothing> { continuation ->
             continuation.invokeOnCancellation {
@@ -126,6 +122,13 @@ internal class EntryPageLoader(
                 }
             }
         }
+    }
+
+    override fun preloadPage(page: ReaderPage) {
+        if (page.status is Page.State.Error) {
+            page.status = Page.State.Queue
+        }
+        enqueuePageAndNextPages(page, PriorityPage.ADJACENT)
     }
 
     /**
@@ -179,6 +182,18 @@ internal class EntryPageLoader(
                     null
                 }
             }
+    }
+
+    private fun enqueuePageAndNextPages(
+        page: ReaderPage,
+        priority: Int,
+    ): List<PriorityPage> {
+        val queuedPages = mutableListOf<PriorityPage>()
+        if (page.status == Page.State.Queue) {
+            queuedPages += PriorityPage(page, priority).also(queue::offer)
+        }
+        queuedPages += preloadNextPages(page, preloadSize)
+        return queuedPages
     }
 
     /**

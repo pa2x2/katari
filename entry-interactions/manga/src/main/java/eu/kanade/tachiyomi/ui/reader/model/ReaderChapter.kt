@@ -26,6 +26,8 @@ internal data class ReaderChapter(
 
     var requestedPage: Int = 0
 
+    var firstPagesPreloaded: Boolean = false
+
     private var references = 0
 
     constructor(
@@ -45,6 +47,7 @@ internal data class ReaderChapter(
             }
             pageLoader?.recycle()
             pageLoader = null
+            firstPagesPreloaded = false
             state = State.Wait
         }
     }

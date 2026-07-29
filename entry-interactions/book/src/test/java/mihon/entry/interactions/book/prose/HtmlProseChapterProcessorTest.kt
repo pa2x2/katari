@@ -22,6 +22,7 @@ import mihon.entry.interactions.book.document.model.BookDocumentBorderStyle
 import mihon.entry.interactions.book.document.model.BookDocumentFontFamily
 import mihon.entry.interactions.book.document.resource.PROSE_FONT_RESOURCE_REQUIREMENT
 import mihon.entry.interactions.book.document.resource.PROSE_IMAGE_RESOURCE_REQUIREMENT
+import mihon.entry.viewer.settings.StandardReaderCapabilities
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -46,6 +47,13 @@ class HtmlProseChapterProcessorTest {
             processor.supports(
                 BookContentDescriptor("text/html", profile = "prose-chapter", protection = "vendor-drm"),
             ),
+        )
+    }
+
+    @Test
+    fun `advertises adjacent chapter preparation`() {
+        assertTrue(
+            StandardReaderCapabilities.NextChapterPreparation in processor.potentialReaderCapabilities,
         )
     }
 

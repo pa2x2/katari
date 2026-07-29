@@ -14,6 +14,7 @@ import mihon.entry.interactions.manga.download.DownloadProvider
 import mihon.entry.interactions.manga.reader.addMangaReaderImageComponents
 import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import mihon.entry.interactions.settings.EntryInteractionPreferences
+import mihon.entry.viewer.settings.StandardReaderCapabilities
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerGroupId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
@@ -57,6 +58,10 @@ fun mangaEntryTypeRuntimeModule(profilePreferenceOwners: ProfilePreferenceOwnerI
             ),
             warmups = listOf(warmup),
             imageComponentInstallers = listOf(EntryImageComponentInstaller(::addMangaReaderImageComponents)),
+            potentialReaderCapabilitiesBySettingsSurface = mapOf(
+                MangaReaderSettingsProvider.PROVIDER_ID to
+                    setOf(StandardReaderCapabilities.NextChapterPreparation),
+            ),
         )
     }
 }

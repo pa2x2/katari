@@ -10,8 +10,11 @@ import mihon.entry.interactions.host.EntryMigrationCustomCoverHost
 import mihon.entry.interactions.host.EntryMigrationExecutionHost
 import mihon.entry.interactions.host.EntryMigrationPreparationHost
 import mihon.entry.interactions.host.tracking.EntryTrackingHost
+import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPreferences
+import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationSettingsProvider
 import mihon.entry.interactions.reader.settings.ReaderBasePreferences
 import mihon.entry.interactions.settings.EntryInteractionPreferences
+import mihon.entry.viewer.settings.ReaderSharedSettingsRegistry
 import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.FeatureRuntimeInputs
 import tachiyomi.core.common.preference.PreferenceStore
@@ -73,6 +76,23 @@ fun InjektRegistrar.addEntryInteractionRuntime(
     ).map { module ->
         module.install(this, app).also { it.validate(module.type) }
     }
+    val potentialReaderCapabilitiesBySettingsSurface = typeRuntimeContributions
+        .flatMap { it.potentialReaderCapabilitiesBySettingsSurface.entries }
+        .groupBy({ it.key }, { it.value })
+        .mapValues { (_, capabilitySets) -> capabilitySets.flatten().toSet() }
+    val chapterPreparationSettingsProvider = ReaderChapterPreparationSettingsProvider(
+        preferences = get(),
+        potentialCapabilitiesBySettingsSurface = potentialReaderCapabilitiesBySettingsSurface,
+    )
+    addSingletonFactory { chapterPreparationSettingsProvider }
+    addSingletonFactory {
+        ReaderSharedSettingsRegistry(
+            providers = listOf(chapterPreparationSettingsProvider) +
+                typeRuntimeContributions
+                    .flatMap(EntryTypeRuntimeContribution::sharedReaderSettingsProviderFactories)
+                    .map { it() },
+        )
+    }
 
     addSingletonFactory { EntryFeatureRuntimeInstallation(installedFeatureModules) }
 
@@ -112,6 +132,11 @@ private fun InjektRegistrar.installEntryInteractionHostServices(
     addSingletonFactory<EntryMediaSessionIncognitoState> { dependencies.mediaSessionIncognitoState }
     addSingletonFactory<EntryChildGroupFilterDataSource> { dependencies.childGroupFilterDataSource }
     addSingletonFactory { ReaderBasePreferences(dependencies.basePreferenceStore) }
+    val chapterPreparationPreferencesOwner = dependencies.profilePreferenceOwners.register(
+        ProfilePreferenceOwnerId("entry-interactions.reader.chapter-preparation"),
+        factory = ::ReaderChapterPreparationPreferences,
+    )
+    addSingletonFactory { chapterPreparationPreferencesOwner.create() }
     val entryInteractionPreferencesOwner = dependencies.profilePreferenceOwners.register(
         ProfilePreferenceOwnerId("entry-interactions.preview"),
         factory = ::EntryInteractionPreferences,
