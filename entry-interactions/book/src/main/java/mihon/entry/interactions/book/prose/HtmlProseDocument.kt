@@ -25,6 +25,7 @@ import mihon.entry.interactions.book.document.model.BookDocumentPosition
 import mihon.entry.interactions.book.document.model.BookDocumentStyle
 import mihon.entry.interactions.book.document.model.BookDocumentWhiteSpace
 import mihon.entry.interactions.book.document.reader.BookDocumentSection
+import mihon.entry.interactions.book.document.reader.applyBookDocumentTextLayoutPolicy
 import mihon.entry.interactions.book.document.render.PreparedBookDocument
 import mihon.entry.interactions.book.document.render.PreparedBookDocumentBlock
 import org.jsoup.Jsoup
@@ -77,15 +78,17 @@ internal fun paginateProse(
     justificationMode: Int = Layout.JUSTIFICATION_MODE_NONE,
 ): List<HtmlProsePage> {
     if (text.isEmpty() || availableWidthPx <= 0 || availableHeightPx <= 0) return emptyList()
-    val builder = StaticLayout.Builder.obtain(text, 0, text.length, paint, availableWidthPx)
-        .setAlignment(alignment)
-        .setIncludePad(false)
-        .setLineSpacing(0f, lineSpacingMultiplier)
-    if (justificationMode != Layout.JUSTIFICATION_MODE_NONE) builder.setJustificationMode(justificationMode)
-    val layout = builder.build()
+    val layout = buildProseLayout(
+        text = text,
+        paint = paint,
+        availableWidthPx = availableWidthPx,
+        alignment = alignment,
+        lineSpacingMultiplier = lineSpacingMultiplier,
+        justificationMode = justificationMode,
+    )
     if (layout.lineCount == 0) return emptyList()
 
-    val ranges = buildList {
+    val slices = buildList {
         var firstLine = 0
         while (firstLine < layout.lineCount) {
             val pageBottom = layout.getLineTop(firstLine) + availableHeightPx
@@ -95,27 +98,76 @@ internal fun paginateProse(
                 lastLine--
             }
             val start = layout.getLineStart(firstLine)
-            val end = layout.getLineEnd(lastLine).coerceIn(start, text.length)
-            if (end > start) add(start until end)
+            var end = layout.getLineEnd(lastLine).coerceIn(start, text.length)
+            var pageText = text.pageSlice(start, end)
+            while (
+                lastLine > firstLine &&
+                buildProseLayout(
+                    text = pageText,
+                    paint = paint,
+                    availableWidthPx = availableWidthPx,
+                    alignment = alignment,
+                    lineSpacingMultiplier = lineSpacingMultiplier,
+                    justificationMode = justificationMode,
+                ).height > availableHeightPx
+            ) {
+                lastLine--
+                end = layout.getLineEnd(lastLine).coerceIn(start, text.length)
+                pageText = text.pageSlice(start, end)
+            }
+            if (end > start) {
+                add(
+                    ProsePageSlice(
+                        sourceRange = start until end,
+                        text = pageText,
+                    ),
+                )
+            }
             firstLine = lastLine + 1
         }
     }
-    return ranges.mapIndexed { index, range ->
+    return slices.mapIndexed { index, slice ->
         HtmlProsePage(
             chapter = chapter.owner,
             index = index,
-            total = ranges.size,
-            text = SpannableString(text.subSequence(range.first, range.last + 1)),
-            progression = if (index == ranges.lastIndex) {
+            total = slices.size,
+            text = slice.text,
+            progression = if (index == slices.lastIndex) {
                 1f
             } else {
-                range.first.toFloat().div(text.length.coerceAtLeast(1))
+                slice.sourceRange.first.toFloat().div(text.length.coerceAtLeast(1))
             },
-            sourceStart = range.first,
-            sourceEndExclusive = range.last + 1,
+            sourceStart = slice.sourceRange.first,
+            sourceEndExclusive = slice.sourceRange.last + 1,
         )
     }
 }
+
+private fun buildProseLayout(
+    text: Spanned,
+    paint: TextPaint,
+    availableWidthPx: Int,
+    alignment: Layout.Alignment,
+    lineSpacingMultiplier: Float,
+    justificationMode: Int,
+): StaticLayout {
+    val builder = StaticLayout.Builder.obtain(text, 0, text.length, paint, availableWidthPx)
+        .applyBookDocumentTextLayoutPolicy()
+        .setAlignment(alignment)
+        .setLineSpacing(0f, lineSpacingMultiplier)
+    if (justificationMode != Layout.JUSTIFICATION_MODE_NONE) {
+        builder.setJustificationMode(justificationMode)
+    }
+    return builder.build()
+}
+
+private fun Spanned.pageSlice(start: Int, endExclusive: Int): Spanned =
+    SpannableString(subSequence(start, endExclusive))
+
+private data class ProsePageSlice(
+    val sourceRange: IntRange,
+    val text: Spanned,
+)
 
 internal fun paginateStructuredProse(
     chapter: HtmlProseLoadedChapter,

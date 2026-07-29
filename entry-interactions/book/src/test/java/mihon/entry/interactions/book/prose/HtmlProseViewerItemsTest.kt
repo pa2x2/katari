@@ -1,6 +1,8 @@
 package mihon.entry.interactions.book.prose
 
 import android.text.SpannableString
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildWindow
 import org.junit.Test
@@ -12,6 +14,14 @@ import kotlin.test.assertIs
 
 @RunWith(RobolectricTestRunner::class)
 class HtmlProseViewerItemsTest {
+    @Test
+    fun `pagination uses the same independently rounded margins as the rendered page`() {
+        val density = Density(2.625f)
+        val containerWidth = with(density) { 1080.toDp() }
+
+        assertEquals(974, paginatedContentExtentPx(containerWidth, 20.dp, density))
+    }
+
     @Test
     fun `paginated window places transitions between chapter pages`() {
         val previous = chapter(1L)

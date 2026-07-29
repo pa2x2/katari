@@ -69,7 +69,6 @@ internal fun BookDocumentText(
         modifier = modifier,
         factory = { context ->
             BookDocumentTextView(context).apply {
-                includeFontPadding = false
                 setBackgroundColor(Color.TRANSPARENT)
                 movementMethod = LinkMovementMethod.getInstance()
                 applyVisibleSelectionHighlight()
@@ -110,6 +109,7 @@ internal class BookDocumentTextView(context: Context) : TextView(context) {
     internal var appliedStyle: BookDocumentTextStyle? = null
 
     init {
+        applyBookDocumentTextLayoutPolicy()
         setTextIsSelectable(true)
     }
 

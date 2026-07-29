@@ -3,7 +3,6 @@ package mihon.entry.interactions.book.prose
 import android.graphics.Typeface
 import android.text.Layout
 import android.text.SpannableString
-import android.text.StaticLayout
 import android.text.TextPaint
 import android.text.style.AlignmentSpan
 import android.text.style.ForegroundColorSpan
@@ -11,6 +10,9 @@ import android.text.style.RelativeSizeSpan
 import android.text.style.StyleSpan
 import android.text.style.TypefaceSpan
 import android.text.style.URLSpan
+import android.util.TypedValue
+import android.view.View.MeasureSpec
+import android.widget.TextView
 import mihon.entry.interactions.book.document.model.BookDocumentAlignment
 import mihon.entry.interactions.book.document.model.BookDocumentBlockContent
 import mihon.entry.interactions.book.document.model.BookDocumentBlockKind
@@ -19,9 +21,11 @@ import mihon.entry.interactions.book.document.model.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.model.BookDocumentWhiteSpace
 import mihon.entry.interactions.book.document.model.MAX_BOOK_DOCUMENT_TABLE_CELL_SPAN
 import mihon.entry.interactions.book.document.reader.BookDocumentSection
+import mihon.entry.interactions.book.document.reader.BookDocumentTextView
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import tachiyomi.domain.entry.model.EntryChapter
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -248,9 +252,14 @@ class HtmlProseDocumentTest {
     }
 
     @Test
-    fun `pagination excludes a line that does not fully fit`() {
+    fun `pagination produces pages that fit the rendered text viewport`() {
         val prepared = prepare(
-            List(30) { "<p>Line $it with enough prose to wrap across the page width.</p>" }.joinToString(""),
+            List(80) {
+                """
+                    <p>“Measured serif prose $it” fills a feature-length chapter with enough words to wrap close to
+                    the page edge. Its punctuation—and glyph overhangs—must not change the rendered page count.</p>
+                """.trimIndent()
+            }.joinToString(""),
         )
         val chapter = chapter()
         val section = BookDocumentSection(
@@ -260,9 +269,12 @@ class HtmlProseDocumentTest {
             initialPosition = prepared.document.positionAtProgression(0f),
             resourceLoader = null,
         )
-        val paint = TextPaint(TextPaint.ANTI_ALIAS_FLAG).apply { textSize = 20f }
-        val availableWidth = 320
-        val availableHeight = 97
+        val paint = TextPaint(TextPaint.ANTI_ALIAS_FLAG).apply {
+            textSize = 42f
+            typeface = Typeface.SERIF
+        }
+        val availableWidth = 974
+        val availableHeight = 2_074
 
         val pages = paginateProse(
             chapter = section,
@@ -271,16 +283,26 @@ class HtmlProseDocumentTest {
             availableWidthPx = availableWidth,
             availableHeightPx = availableHeight,
             alignment = Layout.Alignment.ALIGN_NORMAL,
-            lineSpacingMultiplier = 1.5f,
+            lineSpacingMultiplier = 1.7f,
         )
 
         assertTrue(pages.size > 1)
         pages.forEach { page ->
-            val layout = StaticLayout.Builder.obtain(page.text, 0, page.text.length, paint, availableWidth)
-                .setIncludePad(false)
-                .setLineSpacing(0f, 1.5f)
-                .build()
-            assertTrue(layout.height <= availableHeight, "Page ${page.index + 1} is ${layout.height}px tall")
+            val view = BookDocumentTextView(RuntimeEnvironment.getApplication()).apply {
+                setTextSize(TypedValue.COMPLEX_UNIT_PX, paint.textSize)
+                typeface = paint.typeface
+                setLineSpacing(0f, 1.7f)
+                setText(page.text, TextView.BufferType.SPANNABLE)
+                measure(
+                    MeasureSpec.makeMeasureSpec(availableWidth, MeasureSpec.EXACTLY),
+                    MeasureSpec.makeMeasureSpec(availableHeight, MeasureSpec.EXACTLY),
+                )
+                layout(0, 0, measuredWidth, measuredHeight)
+            }
+            assertTrue(
+                view.layout.height <= availableHeight,
+                "Page ${page.index + 1} renders at ${view.layout.height}px in a ${availableHeight}px viewport",
+            )
         }
     }
 

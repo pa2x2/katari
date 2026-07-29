@@ -74,6 +74,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.flow.StateFlow
@@ -511,8 +513,8 @@ private fun PaginatedProseViewer(
         val density = LocalDensity.current
         val horizontalMargin = 20.dp * pageMarginsPercent / 100
         val verticalMargin = 16.dp * pageMarginsPercent / 100
-        val widthPx = with(density) { (maxWidth - horizontalMargin * 2).roundToPx() }.coerceAtLeast(1)
-        val heightPx = with(density) { (maxHeight - verticalMargin * 2).roundToPx() }.coerceAtLeast(1)
+        val widthPx = paginatedContentExtentPx(maxWidth, horizontalMargin, density)
+        val heightPx = paginatedContentExtentPx(maxHeight, verticalMargin, density)
         val paint = remember(fontFamily, fontSizePercent, palette.foreground, density) {
             TextPaint(TextPaint.ANTI_ALIAS_FLAG).apply {
                 textSize = with(density) { (16.sp * fontSizePercent / 100).toPx() }
@@ -991,6 +993,14 @@ private fun PaginatedProseViewer(
             }
         }
     }
+}
+
+internal fun paginatedContentExtentPx(
+    containerExtent: Dp,
+    edgeMargin: Dp,
+    density: Density,
+): Int = with(density) {
+    (containerExtent.roundToPx() - edgeMargin.roundToPx() * 2).coerceAtLeast(1)
 }
 
 @Composable
