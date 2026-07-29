@@ -2,6 +2,8 @@ package mihon.translation.provider.libretranslate.protocol
 
 import eu.kanade.tachiyomi.network.await
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -71,7 +73,7 @@ internal class LibreTranslateHttpClient(
             ?: throw LibreTranslateException(LibreTranslateFailureKind.InvalidResponse)
     }
 
-    private suspend fun execute(request: Request): String {
+    private suspend fun execute(request: Request): String = withContext(Dispatchers.IO) {
         val response = try {
             httpClient.newCall(request).await()
         } catch (error: CancellationException) {
@@ -88,7 +90,7 @@ internal class LibreTranslateHttpClient(
                     },
                 )
             }
-            return it.body.string()
+            it.body.string()
         }
     }
 
