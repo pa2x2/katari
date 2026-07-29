@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import eu.kanade.presentation.more.settings.screen.RefreshTranslationSettingsOnResume
 import eu.kanade.presentation.more.settings.screen.rememberTranslationSettingsScreenModel
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.openInBrowser
@@ -24,6 +25,7 @@ internal class TranslationEnginePickerScreen : Screen() {
         val playground by model.playground.collectAsState()
         val engines by model.engines.collectAsState()
 
+        RefreshTranslationSettingsOnResume(model)
         TranslationEnginePickerContent(
             engines = engines,
             selected = playground.engine,
@@ -33,7 +35,6 @@ internal class TranslationEnginePickerScreen : Screen() {
             },
             onOpenSetup = { engine ->
                 model.openSetup(engine) { result ->
-                    model.refreshEngineStates()
                     when (result) {
                         TranslationHostActionResult.Completed -> Unit
                         TranslationHostActionResult.ModelsReady ->

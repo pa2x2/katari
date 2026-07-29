@@ -79,7 +79,6 @@ object SettingsTranslationScreen : SearchableSettings {
     @Composable
     override fun Content() {
         val context = LocalContext.current
-        val lifecycleOwner = LocalLifecycleOwner.current
         val backPress = LocalBackPress.current
         val navigator = LocalNavigator.currentOrThrow
         val model = rememberTranslationSettingsScreenModel()
@@ -87,21 +86,13 @@ object SettingsTranslationScreen : SearchableSettings {
         val engines by model.engines.collectAsState()
         val searchHighlightKey = remember { SearchableSettings.highlightKey }
 
+        RefreshTranslationSettingsOnResume(model)
         DisposableEffect(searchHighlightKey) {
             onDispose {
                 if (SearchableSettings.highlightKey == searchHighlightKey) {
                     SearchableSettings.highlightKey = null
                 }
             }
-        }
-        DisposableEffect(lifecycleOwner, model) {
-            val observer = LifecycleEventObserver { _, event ->
-                if (event == Lifecycle.Event.ON_RESUME) {
-                    model.onResume()
-                }
-            }
-            lifecycleOwner.lifecycle.addObserver(observer)
-            onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
         }
 
         fun handleHostResult(result: TranslationHostActionResult) {
@@ -205,3 +196,17 @@ object SettingsTranslationScreen : SearchableSettings {
 @Composable
 internal fun rememberTranslationSettingsScreenModel(): TranslationSettingsScreenModel =
     SettingsTranslationScreen.rememberScreenModel { TranslationSettingsScreenModel() }
+
+@Composable
+internal fun RefreshTranslationSettingsOnResume(model: TranslationSettingsScreenModel) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner, model) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                model.onResume()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+}
