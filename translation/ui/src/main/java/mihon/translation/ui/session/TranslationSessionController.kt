@@ -86,6 +86,18 @@ class TranslationSessionController(
         }
     }
 
+    fun selectLanguages(
+        source: TranslationLanguageTag,
+        target: TranslationLanguageTag,
+    ) {
+        updateRequest {
+            copy(
+                sourceLanguage = TranslationSourceLanguageSelection.Explicit(source),
+                targetLanguage = TranslationTargetLanguageSelection.Explicit(target),
+            )
+        }
+    }
+
     fun selectEngine(selection: TranslationEngineSelection) {
         updateRequest { copy(engine = selection) }
     }

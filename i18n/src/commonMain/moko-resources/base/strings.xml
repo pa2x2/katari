@@ -252,6 +252,7 @@
     <string name="translation_language_pair">%1$s → %2$s</string>
     <string name="translation_source_undetermined">The source language could not be determined.</string>
     <string name="translation_choose_source_language">Choose source language</string>
+    <string name="translation_change_languages">Change languages</string>
     <string name="translation_target_required">Choose a target language for this translation.</string>
     <string name="translation_source_equals_target">Source and target languages are the same. Choose a different target.</string>
     <string name="translation_choose_target_language">Choose target language</string>

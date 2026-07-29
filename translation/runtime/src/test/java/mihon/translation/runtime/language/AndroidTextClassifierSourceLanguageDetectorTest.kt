@@ -44,6 +44,18 @@ class AndroidTextClassifierSourceLanguageDetectorTest {
     }
 
     @Test
+    fun `low confidence platform candidate stays undetermined for user correction`() = runTest {
+        val detector = AndroidTextClassifierSourceLanguageDetector(
+            classify = {
+                AndroidTextClassifierSourceLanguageDetector.LanguageCandidate("fr", 0.49f)
+            },
+            workerDispatcher = StandardTestDispatcher(testScheduler),
+        )
+
+        detector.detect("Ambiguous text") shouldBe TranslationSourceLanguageDetection.Undetermined
+    }
+
+    @Test
     fun `cancellation is never converted into platform unavailability`() = runTest {
         val detector = AndroidTextClassifierSourceLanguageDetector(
             classify = { throw CancellationException() },

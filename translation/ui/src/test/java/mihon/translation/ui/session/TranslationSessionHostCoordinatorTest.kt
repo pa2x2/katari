@@ -121,6 +121,105 @@ class TranslationSessionHostCoordinatorTest {
     }
 
     @Test
+    fun `detected source and target are staged and applied together as a supported pair`() = runTest {
+        val host = FakeHostActions().apply {
+            languageSupport = TranslationLanguageSupportInspection.Available(
+                TranslationLanguageSupport.ExactPairs(
+                    setOf(
+                        TranslationLanguagePair(SOURCE, TARGET),
+                        TranslationLanguagePair(FRENCH, GERMAN),
+                    ),
+                ),
+            )
+        }
+        val feature = RecordingFeature()
+        val coordinator = TranslationSessionHostCoordinator(
+            feature = feature,
+            hostActions = host,
+            scope = backgroundScope,
+            selectionSettleDelayMillis = 0,
+        )
+        runCurrent()
+        coordinator.controller.submit(input())
+        runCurrent()
+        val requestCount = feature.requests.size
+
+        coordinator.handleExternalAction(
+            TranslationSessionExternalAction.ChangeLanguages(SOURCE, TARGET),
+        ) {}
+        runCurrent()
+        coordinator.picker.value shouldBe TranslationSessionPicker.LanguagePair
+
+        coordinator.editLanguagePairRole(TranslationSessionPicker.SourceLanguage)
+        coordinator.selectLanguage(FRENCH)
+        coordinator.picker.value shouldBe TranslationSessionPicker.LanguagePair
+        feature.requests.size shouldBe requestCount
+
+        coordinator.editLanguagePairRole(TranslationSessionPicker.TargetLanguage)
+        coordinator.selectLanguage(GERMAN)
+        coordinator.canApplyLanguagePair() shouldBe true
+        feature.requests.size shouldBe requestCount
+
+        coordinator.applyLanguagePair()
+        runCurrent()
+
+        feature.requests.size shouldBe requestCount + 1
+        feature.requests.last().sourceLanguage shouldBe
+            TranslationSourceLanguageSelection.Explicit(FRENCH)
+        feature.requests.last().targetLanguage shouldBe
+            TranslationTargetLanguageSelection.Explicit(GERMAN)
+        coordinator.picker.value shouldBe null
+    }
+
+    @Test
+    fun `language pair swap stays staged and requires provider support`() = runTest {
+        val host = FakeHostActions().apply {
+            languageSupport = TranslationLanguageSupportInspection.Available(
+                TranslationLanguageSupport.ExactPairs(
+                    setOf(
+                        TranslationLanguagePair(SOURCE, TARGET),
+                        TranslationLanguagePair(TARGET, SOURCE),
+                        TranslationLanguagePair(FRENCH, GERMAN),
+                    ),
+                ),
+            )
+        }
+        val feature = RecordingFeature()
+        val coordinator = TranslationSessionHostCoordinator(
+            feature = feature,
+            hostActions = host,
+            scope = backgroundScope,
+            selectionSettleDelayMillis = 0,
+        )
+        runCurrent()
+        coordinator.controller.submit(input())
+        runCurrent()
+        val requestCount = feature.requests.size
+
+        coordinator.handleExternalAction(
+            TranslationSessionExternalAction.ChangeLanguages(SOURCE, TARGET),
+        ) {}
+        runCurrent()
+
+        coordinator.canSwapLanguagePair() shouldBe true
+        coordinator.swapLanguagePair()
+
+        coordinator.languagePair.value shouldBe TranslationSessionLanguagePair(TARGET, SOURCE)
+        feature.requests.size shouldBe requestCount
+
+        coordinator.dismissPicker()
+        coordinator.handleExternalAction(
+            TranslationSessionExternalAction.ChangeLanguages(FRENCH, GERMAN),
+        ) {}
+        runCurrent()
+
+        coordinator.canSwapLanguagePair() shouldBe false
+        coordinator.swapLanguagePair()
+        coordinator.languagePair.value shouldBe TranslationSessionLanguagePair(FRENCH, GERMAN)
+        feature.requests.size shouldBe requestCount
+    }
+
+    @Test
     fun `setup refreshes state without selecting the engine`() = runTest {
         val host = FakeHostActions()
         val coordinator = TranslationSessionHostCoordinator(
@@ -269,6 +368,7 @@ class TranslationSessionHostCoordinatorTest {
         val SOURCE = TranslationLanguageTag.require("en")
         val TARGET = TranslationLanguageTag.require("pl")
         val FRENCH = TranslationLanguageTag.require("fr")
+        val GERMAN = TranslationLanguageTag.require("de")
         val PROFILE_ENGINE = engine("profile")
         val READY_ENGINE = engine("ready")
         val BLOCKED_ENGINE = engine("blocked")

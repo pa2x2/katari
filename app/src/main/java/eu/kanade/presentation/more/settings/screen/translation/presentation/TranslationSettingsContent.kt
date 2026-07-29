@@ -10,12 +10,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
@@ -35,6 +33,7 @@ import eu.kanade.presentation.more.settings.widget.ProfileSpecificChip
 import eu.kanade.presentation.more.settings.widget.highlightBackground
 import kotlinx.coroutines.delay
 import mihon.translation.api.TranslationEngineState
+import mihon.translation.ui.picker.TranslationLanguagePairSelector
 import mihon.translation.ui.picker.displayName
 import mihon.translation.ui.picker.supportsPair
 import mihon.translation.ui.presentation.TranslationSessionExternalAction
@@ -171,40 +170,16 @@ private fun TranslationPlayground(
                 .padding(MaterialTheme.padding.large),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                PlaygroundSelector(
-                    label = stringResource(MR.strings.translation_settings_from),
-                    value = state.sourceLanguage.displayName(),
-                    onClick = onChooseSource,
-                    modifier = Modifier
-                        .weight(1f)
-                        .testTag(TRANSLATION_SOURCE_TAG),
-                )
-                IconButton(
-                    onClick = onSwapLanguages,
-                    enabled = canSwapLanguages,
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.SwapHoriz,
-                        contentDescription = stringResource(
-                            MR.strings.translation_settings_swap_languages,
-                        ),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                PlaygroundSelector(
-                    label = stringResource(MR.strings.translation_settings_to),
-                    value = state.targetLanguage.displayName(),
-                    onClick = onChooseTarget,
-                    modifier = Modifier
-                        .weight(1f)
-                        .testTag(TRANSLATION_TARGET_TAG),
-                )
-            }
+            TranslationLanguagePairSelector(
+                source = state.sourceLanguage.displayName(),
+                target = state.targetLanguage.displayName(),
+                canSwap = canSwapLanguages,
+                onChooseSource = onChooseSource,
+                onChooseTarget = onChooseTarget,
+                onSwap = onSwapLanguages,
+                sourceModifier = Modifier.testTag(TRANSLATION_SOURCE_TAG),
+                targetModifier = Modifier.testTag(TRANSLATION_TARGET_TAG),
+            )
             PlaygroundSelector(
                 label = stringResource(MR.strings.translation_settings_engine),
                 value = when {

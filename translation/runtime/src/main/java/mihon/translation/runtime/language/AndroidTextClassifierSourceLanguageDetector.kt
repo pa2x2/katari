@@ -23,6 +23,9 @@ internal class AndroidTextClassifierSourceLanguageDetector(
         return try {
             val candidate = withContext(workerDispatcher) { classify(text) }
                 ?: return TranslationSourceLanguageDetection.Undetermined
+            if (candidate.confidence < MINIMUM_CONFIDENCE) {
+                return TranslationSourceLanguageDetection.Undetermined
+            }
             val language = TranslationLanguageTag.parse(candidate.languageTag)
                 ?: return TranslationSourceLanguageDetection.Undetermined
             TranslationSourceLanguageDetection.Detected(language, candidate.confidence)
@@ -37,6 +40,10 @@ internal class AndroidTextClassifierSourceLanguageDetector(
         val languageTag: String,
         val confidence: Float,
     )
+
+    private companion object {
+        const val MINIMUM_CONFIDENCE = 0.5f
+    }
 }
 
 internal fun androidTextClassifierSourceLanguageDetector(

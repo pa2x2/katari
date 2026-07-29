@@ -69,8 +69,9 @@ class TranslationSessionHostCoordinator(
 
     private var actionJob: Job? = null
     private var retryAfterResume = false
-    private var pickerSourceLanguage: TranslationLanguageTag? = null
-    private var pickerTargetLanguage: TranslationLanguageTag? = null
+    private val mutableLanguagePair = MutableStateFlow(TranslationSessionLanguagePair())
+    val languagePair: StateFlow<TranslationSessionLanguagePair> = mutableLanguagePair.asStateFlow()
+    private var editingLanguagePair = false
 
     init {
         refreshEngineStates()
@@ -88,12 +89,10 @@ class TranslationSessionHostCoordinator(
                 TranslationSessionPicker.TargetLanguage,
             )
             is TranslationSessionExternalAction.ChangeLanguages -> {
-                pickerSourceLanguage = action.source
-                pickerTargetLanguage = action.target
-                openLanguagePicker(
-                    picker = TranslationSessionPicker.TargetLanguage,
-                    retainLanguageContext = true,
-                )
+                mutableLanguagePair.value = TranslationSessionLanguagePair(action.source, action.target)
+                editingLanguagePair = true
+                languageSupportController.load(activeEngine())
+                mutablePicker.value = TranslationSessionPicker.LanguagePair
             }
             TranslationSessionExternalAction.ChooseEngine ->
                 mutablePicker.value = TranslationSessionPicker.Engine
@@ -116,33 +115,91 @@ class TranslationSessionHostCoordinator(
         if (available.engine != activeEngine()) return
         when (mutablePicker.value) {
             TranslationSessionPicker.SourceLanguage -> {
+                val currentPair = mutableLanguagePair.value
                 if (!available.support.supportsSelection(
                         TranslationLanguageRole.Source,
                         language,
-                        pickerTargetLanguage,
+                        currentPair.target,
                     )
                 ) {
                     return
                 }
-                pickerSourceLanguage = language
-                controller.selectSourceLanguage(language)
+                mutableLanguagePair.value = currentPair.copy(source = language)
+                if (!editingLanguagePair) {
+                    controller.selectSourceLanguage(language)
+                }
             }
             TranslationSessionPicker.TargetLanguage -> {
+                val currentPair = mutableLanguagePair.value
                 if (!available.support.supportsSelection(
                         TranslationLanguageRole.Target,
                         language,
-                        pickerSourceLanguage,
+                        currentPair.source,
                     )
                 ) {
                     return
                 }
-                pickerTargetLanguage = language
-                controller.selectTargetLanguage(language)
+                mutableLanguagePair.value = currentPair.copy(target = language)
+                if (!editingLanguagePair) {
+                    controller.selectTargetLanguage(language)
+                }
             }
+            TranslationSessionPicker.LanguagePair,
             TranslationSessionPicker.Engine,
             null,
             -> return
         }
+        mutablePicker.value = if (editingLanguagePair) {
+            TranslationSessionPicker.LanguagePair
+        } else {
+            null
+        }
+    }
+
+    fun editLanguagePairRole(picker: TranslationSessionPicker) {
+        if (!editingLanguagePair) return
+        if (
+            picker != TranslationSessionPicker.SourceLanguage &&
+            picker != TranslationSessionPicker.TargetLanguage
+        ) {
+            return
+        }
+        mutablePicker.value = picker
+    }
+
+    fun canApplyLanguagePair(): Boolean {
+        if (!editingLanguagePair) return false
+        val source = mutableLanguagePair.value.source ?: return false
+        val target = mutableLanguagePair.value.target ?: return false
+        val available = languageSupport.value as? TranslationLanguageSupportState.Available
+            ?: return false
+        return available.engine == activeEngine() && available.support.supportsPair(source, target)
+    }
+
+    fun canSwapLanguagePair(): Boolean {
+        if (!editingLanguagePair) return false
+        val source = mutableLanguagePair.value.source ?: return false
+        val target = mutableLanguagePair.value.target ?: return false
+        val available = languageSupport.value as? TranslationLanguageSupportState.Available
+            ?: return false
+        return available.engine == activeEngine() && available.support.supportsPair(target, source)
+    }
+
+    fun swapLanguagePair() {
+        if (!canSwapLanguagePair()) return
+        val currentPair = mutableLanguagePair.value
+        mutableLanguagePair.value = TranslationSessionLanguagePair(
+            source = checkNotNull(currentPair.target),
+            target = checkNotNull(currentPair.source),
+        )
+    }
+
+    fun applyLanguagePair() {
+        if (!canApplyLanguagePair()) return
+        val source = checkNotNull(mutableLanguagePair.value.source)
+        val target = checkNotNull(mutableLanguagePair.value.target)
+        controller.selectLanguages(source, target)
+        editingLanguagePair = false
         mutablePicker.value = null
     }
 
@@ -162,8 +219,8 @@ class TranslationSessionHostCoordinator(
     }
 
     fun useCurrentTargetAsProfileDefault() {
-        val source = pickerSourceLanguage ?: return
-        val target = pickerTargetLanguage ?: return
+        val source = mutableLanguagePair.value.source ?: return
+        val target = mutableLanguagePair.value.target ?: return
         val available = languageSupport.value as? TranslationLanguageSupportState.Available
             ?: return
         if (available.engine != activeEngine() || !available.support.supportsPair(source, target)) return
@@ -172,8 +229,8 @@ class TranslationSessionHostCoordinator(
     }
 
     fun canUseCurrentTargetAsProfileDefault(): Boolean {
-        val source = pickerSourceLanguage ?: return false
-        val target = pickerTargetLanguage ?: return false
+        val source = mutableLanguagePair.value.source ?: return false
+        val target = mutableLanguagePair.value.target ?: return false
         val available = languageSupport.value as? TranslationLanguageSupportState.Available
             ?: return false
         return available.engine == activeEngine() && available.support.supportsPair(source, target)
@@ -181,17 +238,23 @@ class TranslationSessionHostCoordinator(
 
     fun selectedLanguage(picker: TranslationSessionPicker): TranslationLanguageTag? =
         when (picker) {
-            TranslationSessionPicker.SourceLanguage -> pickerSourceLanguage
-            TranslationSessionPicker.TargetLanguage -> pickerTargetLanguage
-            TranslationSessionPicker.Engine -> null
+            TranslationSessionPicker.SourceLanguage -> mutableLanguagePair.value.source
+            TranslationSessionPicker.TargetLanguage -> mutableLanguagePair.value.target
+            TranslationSessionPicker.LanguagePair,
+            TranslationSessionPicker.Engine,
+            -> null
         }
 
     fun counterpartLanguage(picker: TranslationSessionPicker): TranslationLanguageTag? =
         when (picker) {
-            TranslationSessionPicker.SourceLanguage -> pickerTargetLanguage
-            TranslationSessionPicker.TargetLanguage -> pickerSourceLanguage
-            TranslationSessionPicker.Engine -> null
+            TranslationSessionPicker.SourceLanguage -> mutableLanguagePair.value.target
+            TranslationSessionPicker.TargetLanguage -> mutableLanguagePair.value.source
+            TranslationSessionPicker.LanguagePair,
+            TranslationSessionPicker.Engine,
+            -> null
         }
+
+    fun isEditingLanguagePair(): Boolean = editingLanguagePair
 
     fun activeEngine(): TranslationEngineId? {
         val active = controller.state.value as? TranslationSessionState.Active
@@ -208,6 +271,7 @@ class TranslationSessionHostCoordinator(
     }
 
     fun dismissPicker() {
+        editingLanguagePair = false
         mutablePicker.value = null
     }
 
@@ -223,6 +287,7 @@ class TranslationSessionHostCoordinator(
 
     fun close() {
         actionJob?.cancel()
+        editingLanguagePair = false
         mutablePicker.value = null
         languageSupportController.clear()
         controller.close()
@@ -263,15 +328,9 @@ class TranslationSessionHostCoordinator(
         }
     }
 
-    private fun openLanguagePicker(
-        picker: TranslationSessionPicker,
-        retainLanguageContext: Boolean = false,
-    ) {
-        if (!retainLanguageContext) {
-            val context = resolvedLanguageContext()
-            pickerSourceLanguage = context.first
-            pickerTargetLanguage = context.second
-        }
+    private fun openLanguagePicker(picker: TranslationSessionPicker) {
+        val context = resolvedLanguageContext()
+        mutableLanguagePair.value = TranslationSessionLanguagePair(context.first, context.second)
         languageSupportController.load(activeEngine())
         mutablePicker.value = picker
     }
@@ -314,7 +373,13 @@ class TranslationSessionHostCoordinator(
 }
 
 enum class TranslationSessionPicker {
+    LanguagePair,
     SourceLanguage,
     TargetLanguage,
     Engine,
 }
+
+data class TranslationSessionLanguagePair(
+    val source: TranslationLanguageTag? = null,
+    val target: TranslationLanguageTag? = null,
+)

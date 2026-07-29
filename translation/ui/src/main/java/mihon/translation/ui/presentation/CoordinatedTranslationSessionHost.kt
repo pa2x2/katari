@@ -2,6 +2,7 @@ package mihon.translation.ui.presentation
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -9,7 +10,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -28,8 +31,11 @@ import mihon.translation.api.TranslationHostActionResult
 import mihon.translation.api.TranslationSetupDestination
 import mihon.translation.ui.picker.TranslationEnginePickerDensity
 import mihon.translation.ui.picker.TranslationEnginePickerList
+import mihon.translation.ui.picker.TranslationLanguagePairSelector
 import mihon.translation.ui.picker.TranslationLanguageRole
 import mihon.translation.ui.picker.TranslationLanguageSupportPicker
+import mihon.translation.ui.picker.displayName
+import mihon.translation.ui.session.TranslationLanguageSupportState
 import mihon.translation.ui.session.TranslationSessionHostCoordinator
 import mihon.translation.ui.session.TranslationSessionPicker
 import mihon.translation.ui.session.TranslationSessionState
@@ -108,6 +114,7 @@ private fun TranslationSessionPickerDialog(
     val context = LocalContext.current
     val engineStates by coordinator.engineStates.collectAsState()
     val languageSupport by coordinator.languageSupport.collectAsState()
+    val languagePair by coordinator.languagePair.collectAsState()
     Dialog(
         onDismissRequest = coordinator::dismissPicker,
         properties = translationSessionDialogProperties,
@@ -125,6 +132,8 @@ private fun TranslationSessionPickerDialog(
                     TranslationSessionHeader(
                         title = stringResource(
                             when (picker) {
+                                TranslationSessionPicker.LanguagePair ->
+                                    MR.strings.translation_change_languages
                                 TranslationSessionPicker.SourceLanguage ->
                                     MR.strings.translation_choose_source_language
                                 TranslationSessionPicker.TargetLanguage ->
@@ -136,12 +145,38 @@ private fun TranslationSessionPickerDialog(
                     )
                     HorizontalDivider()
                     when (picker) {
+                        TranslationSessionPicker.LanguagePair -> {
+                            val canApply = coordinator.canApplyLanguagePair()
+                            val supportAvailable = languageSupport is TranslationLanguageSupportState.Available
+                            TranslationLanguagePairEditor(
+                                sourceLabel = languagePair.source?.displayName()
+                                    ?: stringResource(MR.strings.translation_choose_source_language),
+                                targetLabel = languagePair.target?.displayName()
+                                    ?: stringResource(MR.strings.translation_choose_target_language),
+                                canSwap = coordinator.canSwapLanguagePair(),
+                                canApply = canApply,
+                                showInvalidPair = supportAvailable && !canApply,
+                                onChooseSource = {
+                                    coordinator.editLanguagePairRole(
+                                        TranslationSessionPicker.SourceLanguage,
+                                    )
+                                },
+                                onChooseTarget = {
+                                    coordinator.editLanguagePairRole(
+                                        TranslationSessionPicker.TargetLanguage,
+                                    )
+                                },
+                                onSwap = coordinator::swapLanguagePair,
+                                onApply = coordinator::applyLanguagePair,
+                            )
+                        }
                         TranslationSessionPicker.SourceLanguage,
                         TranslationSessionPicker.TargetLanguage,
                         -> {
                             val selected = coordinator.selectedLanguage(picker)
                             if (
                                 picker == TranslationSessionPicker.TargetLanguage &&
+                                !coordinator.isEditingLanguagePair() &&
                                 coordinator.canUseCurrentTargetAsProfileDefault()
                             ) {
                                 TextButton(onClick = coordinator::useCurrentTargetAsProfileDefault) {
@@ -154,7 +189,9 @@ private fun TranslationSessionPickerDialog(
                                 role = when (picker) {
                                     TranslationSessionPicker.SourceLanguage -> TranslationLanguageRole.Source
                                     TranslationSessionPicker.TargetLanguage -> TranslationLanguageRole.Target
-                                    TranslationSessionPicker.Engine -> error("Engine picker has no language role")
+                                    TranslationSessionPicker.LanguagePair,
+                                    TranslationSessionPicker.Engine,
+                                    -> error("Engine picker has no language role")
                                 },
                                 counterpart = coordinator.counterpartLanguage(picker),
                                 selected = selected,
@@ -183,6 +220,49 @@ private fun TranslationSessionPickerDialog(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun TranslationLanguagePairEditor(
+    sourceLabel: String,
+    targetLabel: String,
+    canSwap: Boolean,
+    canApply: Boolean,
+    showInvalidPair: Boolean,
+    onChooseSource: () -> Unit,
+    onChooseTarget: () -> Unit,
+    onSwap: () -> Unit,
+    onApply: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        TranslationLanguagePairSelector(
+            source = sourceLabel,
+            target = targetLabel,
+            canSwap = canSwap,
+            onChooseSource = onChooseSource,
+            onChooseTarget = onChooseTarget,
+            onSwap = onSwap,
+        )
+        if (showInvalidPair) {
+            Text(
+                text = stringResource(MR.strings.translation_language_pair_required),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+        Button(
+            onClick = onApply,
+            enabled = canApply,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(MR.strings.action_apply))
         }
     }
 }
