@@ -3,6 +3,7 @@ package mihon.entry.interactions.book.document.reader
 import mihon.entry.interactions.book.document.model.BookDocumentPosition
 import mihon.entry.interactions.book.document.render.PreparedBookDocument
 import mihon.entry.interactions.book.document.render.PreparedBookDocumentBlock
+import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildTransition
 import mihon.entry.interactions.viewer.EntryChildWindow
 import kotlin.math.abs
@@ -117,6 +118,35 @@ internal fun <T> bookDocumentViewerLocation(
     viewportStartOffset: Int,
     viewportEndOffset: Int,
 ): BookDocumentViewerLocation<T>? {
+    val terminalChapter = visibleItems
+        .asReversed()
+        .firstNotNullOfOrNull { layout ->
+            if (
+                layout.offset >= viewportEndOffset ||
+                layout.offset + layout.size <= viewportStartOffset
+            ) {
+                return@firstNotNullOfOrNull null
+            }
+            (layout.resolveViewerItem(items) as? BookDocumentViewerItem.Transition)
+                ?.transition
+                ?.takeIf { it.direction == EntryChildDirection.NEXT && it.to == null }
+                ?.from
+        }
+    val terminalSection = terminalChapter?.let { chapter ->
+        items.firstNotNullOfOrNull { item ->
+            (item as? BookDocumentViewerItem.Block)
+                ?.section
+                ?.takeIf { it.owner == chapter }
+        }
+    }
+    if (terminalSection != null) {
+        val position = terminalSection.document.document.positionAtProgression(1f)
+        return BookDocumentViewerLocation(
+            section = terminalSection,
+            position = position,
+            progression = 1f,
+        )
+    }
     val topLayout = visibleItems.firstOrNull { it.offset == viewportStartOffset }
     val topItem = topLayout?.let { layout ->
         (

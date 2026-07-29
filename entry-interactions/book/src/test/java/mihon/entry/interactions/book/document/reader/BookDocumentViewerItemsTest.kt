@@ -17,6 +17,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class BookDocumentViewerItemsTest {
@@ -116,6 +117,55 @@ class BookDocumentViewerItemsTest {
         )
 
         assertEquals(null, location)
+    }
+
+    @Test
+    fun `partially visible terminal forward boundary reports exact chapter completion`() {
+        val section = section("current", listOf("Text"))
+        val block = BookDocumentViewerItem.Block(section, section.document.blocks.single())
+        val terminal = BookDocumentViewerItem.Transition(
+            EntryChildWindow("current", null, null).nextTransition(),
+            "terminal-boundary",
+        )
+
+        val location = bookDocumentViewerLocation(
+            items = listOf(block, terminal),
+            visibleItems = listOf(
+                BookDocumentVisibleItemLayout(index = 0, key = block.key, offset = -50, size = 700),
+                BookDocumentVisibleItemLayout(index = 1, key = terminal.key, offset = 650, size = 600),
+            ),
+            viewportStartOffset = 0,
+            viewportEndOffset = 800,
+        )
+
+        assertNotNull(location)
+        assertEquals("current", location.section.owner)
+        assertEquals(section.document.blocks.single().block.logicalLength, location.position.offsetWithinBlock)
+        assertEquals(1f, location.progression)
+    }
+
+    @Test
+    fun `visible terminal previous boundary does not complete the chapter`() {
+        val section = section("current", listOf("a".repeat(100)))
+        val block = BookDocumentViewerItem.Block(section, section.document.blocks.single())
+        val terminal = BookDocumentViewerItem.Transition(
+            EntryChildWindow("current", null, "next").previousTransition(),
+            "terminal-boundary",
+        )
+
+        val location = bookDocumentViewerLocation(
+            items = listOf(terminal, block),
+            visibleItems = listOf(
+                BookDocumentVisibleItemLayout(index = 0, key = terminal.key, offset = -100, size = 200),
+                BookDocumentVisibleItemLayout(index = 1, key = block.key, offset = 100, size = 700),
+            ),
+            viewportStartOffset = 0,
+            viewportEndOffset = 800,
+        )
+
+        assertNotNull(location)
+        assertEquals("current", location.section.owner)
+        assertTrue(location.progression < 1f)
     }
 
     @Test
