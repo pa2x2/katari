@@ -1,6 +1,12 @@
 package mihon.entry.interactions.book.prose.continuous
 
+import android.graphics.Typeface
 import android.net.Uri
+import android.text.style.BackgroundColorSpan
+import android.text.style.ForegroundColorSpan
+import android.text.style.RelativeSizeSpan
+import android.text.style.StyleSpan
+import android.text.style.TypefaceSpan
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -52,10 +58,19 @@ internal sealed interface ContinuousProseTransitionState {
     data class Failed(val message: String) : ContinuousProseTransitionState
 }
 
+internal data class ContinuousProseTransitionLabels(
+    val noPrevious: String,
+    val noNext: String,
+    val loading: String,
+    val retry: String,
+    val loadFailed: String,
+)
+
 internal fun buildContinuousProseProjection(
     generation: Long,
     window: EntryChildWindow<EntryChapter>,
     loaded: Map<Long, BookDocumentSection<EntryChapter>>,
+    labels: ContinuousProseTransitionLabels,
     transitionStates: Map<Long, ContinuousProseTransitionState> = emptyMap(),
 ): ContinuousProseProjection {
     val resources = linkedMapOf<String, ContinuousProseResourceSpec>()
@@ -63,9 +78,9 @@ internal fun buildContinuousProseProjection(
         window.previous?.let { chapter ->
             loaded[chapter.id]?.let { add(it.toJson(resources)) }
         }
-        add(window.previousTransition().toJson(transitionStates))
+        add(window.previousTransition().toJson(labels, transitionStates))
         add(requireNotNull(loaded[window.current.id]).toJson(resources))
-        add(window.nextTransition().toJson(transitionStates))
+        add(window.nextTransition().toJson(labels, transitionStates))
         window.next?.let { chapter ->
             loaded[chapter.id]?.let { add(it.toJson(resources)) }
         }
@@ -137,15 +152,17 @@ private fun BookDocumentSection<EntryChapter>.toJson(
 }
 
 private fun mihon.entry.interactions.viewer.EntryChildTransition<EntryChapter>.toJson(
+    labels: ContinuousProseTransitionLabels,
     transitionStates: Map<Long, ContinuousProseTransitionState>,
 ): JsonObject {
     val loadState = to?.id?.let(transitionStates::get) ?: ContinuousProseTransitionState.Idle
+    val transitionKey = to?.let { destination ->
+        "transition:${listOf(from.id, destination.id).sorted().joinToString(":")}"
+    } ?: "transition:${direction.name.lowercase()}:${from.id}:terminal"
     return JsonObject(
         mapOf(
             "type" to JsonPrimitive("transition"),
-            "key" to JsonPrimitive(
-                "transition:${direction.name.lowercase()}:${from.id}:${to?.id ?: "terminal"}",
-            ),
+            "key" to JsonPrimitive(transitionKey),
             "direction" to JsonPrimitive(direction.name.lowercase()),
             "fromKey" to JsonPrimitive(from.id.toString()),
             "fromTitle" to JsonPrimitive(from.name),
@@ -153,10 +170,13 @@ private fun mihon.entry.interactions.viewer.EntryChildTransition<EntryChapter>.t
             "toTitle" to to?.name.json(),
             "label" to JsonPrimitive(
                 when (direction) {
-                    EntryChildDirection.PREVIOUS -> to?.name ?: "No previous chapter"
-                    EntryChildDirection.NEXT -> to?.name ?: "No next chapter"
+                    EntryChildDirection.PREVIOUS -> to?.name ?: labels.noPrevious
+                    EntryChildDirection.NEXT -> to?.name ?: labels.noNext
                 },
             ),
+            "loadingLabel" to JsonPrimitive(labels.loading),
+            "retryLabel" to JsonPrimitive(labels.retry),
+            "loadFailedLabel" to JsonPrimitive(labels.loadFailed),
             "loadState" to JsonPrimitive(
                 when (loadState) {
                     ContinuousProseTransitionState.Idle -> "idle"
@@ -174,6 +194,7 @@ private fun PreparedBookDocumentBlock.toJson(
     resources: MutableMap<String, ContinuousProseResourceSpec>,
     locatorBlockId: String? = null,
     locatorOffsetBase: Int = 0,
+    locatorLogicalStart: Int? = null,
 ): JsonObject {
     val semantic = block.content
     val content = when (semantic) {
@@ -188,16 +209,11 @@ private fun PreparedBookDocumentBlock.toJson(
                 "kind" to JsonPrimitive("list"),
                 "ordered" to JsonPrimitive(semantic.ordered),
                 "start" to JsonPrimitive(semantic.start),
-                "items" to JsonArray(
-                    semantic.items.map { item ->
-                        JsonObject(
-                            mapOf(
-                                "text" to JsonPrimitive(item.text),
-                                "depth" to JsonPrimitive(item.depth),
-                                "marker" to item.marker.json(),
-                            ),
-                        )
-                    },
+                "items" to listItemsJson(
+                    semantic = semantic,
+                    displayText = displayText(),
+                    sectionKey = sectionKey,
+                    resources = resources,
                 ),
             ),
         )
@@ -249,7 +265,11 @@ private fun PreparedBookDocumentBlock.toJson(
                             sectionKey = sectionKey,
                             resources = resources,
                             locatorBlockId = block.id.value,
-                            locatorOffsetBase = (it.block.logicalStart - block.logicalStart).coerceAtLeast(0),
+                            locatorOffsetBase = locatorOffsetBase +
+                                semantic.summary.length +
+                                1 +
+                                it.block.logicalStart,
+                            locatorLogicalStart = locatorLogicalStart ?: block.logicalStart,
                         )
                     },
                 ),
@@ -274,21 +294,55 @@ private fun PreparedBookDocumentBlock.toJson(
             "logicalLength" to JsonPrimitive(block.logicalLength),
             "locatorBlockId" to JsonPrimitive(locatorBlockId ?: block.id.value),
             "locatorOffsetBase" to JsonPrimitive(locatorOffsetBase),
+            "locatorLogicalStart" to JsonPrimitive(locatorLogicalStart ?: block.logicalStart),
             "style" to block.style.toJson(sectionKey, resources),
             "links" to block.links.linksJson(),
             "inlineStyles" to JsonArray(
-                block.inlineStyles.map { range ->
-                    JsonObject(
-                        mapOf(
-                            "start" to JsonPrimitive(range.start),
-                            "end" to JsonPrimitive(range.endExclusive),
-                            "style" to range.style.toJson(sectionKey, resources),
-                        ),
-                    )
-                },
+                projectedInlineStylesJson(
+                    sectionKey = sectionKey,
+                    resources = resources,
+                    start = 0,
+                    endExclusive = displayText().length,
+                ),
             ),
             "content" to content,
         ),
+    )
+}
+
+private fun PreparedBookDocumentBlock.listItemsJson(
+    semantic: BookDocumentBlockContent.ListBlock,
+    displayText: String,
+    sectionKey: String,
+    resources: MutableMap<String, ContinuousProseResourceSpec>,
+): JsonArray {
+    var cursor = 0
+    return JsonArray(
+        semantic.items.map { item ->
+            val marker = item.marker ?: "•"
+            val prefixLength = item.depth * 2 + marker.length + 1
+            val itemStart = (cursor + prefixLength).coerceAtMost(displayText.length)
+            val itemEnd = (itemStart + item.text.length).coerceAtMost(displayText.length)
+            cursor = (itemEnd + 1).coerceAtMost(displayText.length)
+            JsonObject(
+                mapOf(
+                    "text" to JsonPrimitive(displayText.substring(itemStart, itemEnd)),
+                    "depth" to JsonPrimitive(item.depth),
+                    "marker" to JsonPrimitive(marker),
+                    "links" to block.links
+                        .linksWithin(itemStart, itemEnd)
+                        .linksJson(),
+                    "inlineStyles" to JsonArray(
+                        projectedInlineStylesJson(
+                            sectionKey = sectionKey,
+                            resources = resources,
+                            start = itemStart,
+                            endExclusive = itemEnd,
+                        ),
+                    ),
+                ),
+            )
+        },
     )
 }
 
@@ -298,6 +352,109 @@ private fun PreparedBookDocumentBlock.toJson(
  */
 internal fun PreparedBookDocumentBlock.displayText(): String =
     renderedText.toString().removeSuffix("\n\n")
+
+private fun PreparedBookDocumentBlock.projectedInlineStylesJson(
+    sectionKey: String,
+    resources: MutableMap<String, ContinuousProseResourceSpec>,
+    start: Int,
+    endExclusive: Int,
+): List<JsonObject> {
+    if (endExclusive <= start) return emptyList()
+    val boundaries = sortedSetOf(start, endExclusive)
+    block.inlineStyles.forEach { range ->
+        if (range.start < endExclusive && range.endExclusive > start) {
+            boundaries += range.start.coerceIn(start, endExclusive)
+            boundaries += range.endExclusive.coerceIn(start, endExclusive)
+        }
+    }
+    renderedText.getSpans(start, endExclusive, Any::class.java).forEach { span ->
+        val spanStart = renderedText.getSpanStart(span)
+        val spanEnd = renderedText.getSpanEnd(span)
+        if (spanStart < endExclusive && spanEnd > start) {
+            boundaries += spanStart.coerceIn(start, endExclusive)
+            boundaries += spanEnd.coerceIn(start, endExclusive)
+        }
+    }
+    return boundaries.zipWithNext().mapNotNull { (segmentStart, segmentEnd) ->
+        if (segmentEnd <= segmentStart) return@mapNotNull null
+        val style = ProjectedInlineStyle()
+        block.inlineStyles
+            .filter { it.start <= segmentStart && segmentStart < it.endExclusive }
+            .forEach { style.merge(it.style) }
+        renderedText.getSpans(segmentStart, segmentEnd, Any::class.java).forEach(style::merge)
+        if (style.isEmpty()) {
+            null
+        } else {
+            JsonObject(
+                mapOf(
+                    "start" to JsonPrimitive(segmentStart - start),
+                    "end" to JsonPrimitive(segmentEnd - start),
+                    "style" to style.toJson(sectionKey, resources),
+                ),
+            )
+        }
+    }
+}
+
+private data class ProjectedInlineStyle(
+    var foregroundArgb: Long? = null,
+    var backgroundArgb: Long? = null,
+    var fontFamily: BookDocumentFontFamily? = null,
+    var platformFontFamily: String? = null,
+    var fontSizeScale: Float? = null,
+    var bold: Boolean = false,
+    var italic: Boolean = false,
+) {
+    fun merge(style: BookDocumentInlineStyle) {
+        foregroundArgb = style.foregroundArgb ?: foregroundArgb
+        backgroundArgb = style.backgroundArgb ?: backgroundArgb
+        fontFamily = style.fontFamily ?: fontFamily
+        fontSizeScale = style.fontSizeScale ?: fontSizeScale
+        bold = bold || style.bold
+    }
+
+    fun merge(span: Any) {
+        when (span) {
+            is ForegroundColorSpan -> foregroundArgb = span.foregroundColor.toLong() and 0xffff_ffffL
+            is BackgroundColorSpan -> backgroundArgb = span.backgroundColor.toLong() and 0xffff_ffffL
+            is RelativeSizeSpan -> fontSizeScale = (fontSizeScale ?: 1f) * span.sizeChange
+            is TypefaceSpan -> platformFontFamily = span.family
+            is StyleSpan -> {
+                bold = bold || span.style == Typeface.BOLD || span.style == Typeface.BOLD_ITALIC
+                italic = italic || span.style == Typeface.ITALIC || span.style == Typeface.BOLD_ITALIC
+            }
+        }
+    }
+
+    fun isEmpty(): Boolean =
+        foregroundArgb == null &&
+            backgroundArgb == null &&
+            fontFamily == null &&
+            platformFontFamily == null &&
+            fontSizeScale == null &&
+            !bold &&
+            !italic
+
+    fun toJson(
+        sectionKey: String,
+        resources: MutableMap<String, ContinuousProseResourceSpec>,
+    ): JsonObject = JsonObject(
+        mapOf(
+            "foreground" to foregroundArgb.colorJson(),
+            "background" to backgroundArgb.colorJson(),
+            "fontSizeScale" to fontSizeScale.json(),
+            "bold" to JsonPrimitive(bold),
+            "italic" to JsonPrimitive(italic),
+            "fontFamily" to (
+                fontFamily?.toJson(sectionKey, resources)
+                    ?: platformFontFamily
+                        ?.takeIf { it in SUPPORTED_PLATFORM_FONT_FAMILIES }
+                        ?.let(::JsonPrimitive)
+                    ?: JsonNull
+                ),
+        ),
+    )
+}
 
 private fun BookDocumentStyle.toJson(
     sectionKey: String,
@@ -336,19 +493,6 @@ private fun BookDocumentStyle.toJson(
     ),
 )
 
-private fun BookDocumentInlineStyle.toJson(
-    sectionKey: String,
-    resources: MutableMap<String, ContinuousProseResourceSpec>,
-): JsonObject = JsonObject(
-    mapOf(
-        "foreground" to foregroundArgb.colorJson(),
-        "background" to backgroundArgb.colorJson(),
-        "fontSizeScale" to fontSizeScale.json(),
-        "bold" to JsonPrimitive(bold),
-        "fontFamily" to fontFamily.toJson(sectionKey, resources),
-    ),
-)
-
 private fun List<BookDocumentLink>.linksJson(): JsonArray = JsonArray(
     map { link ->
         JsonObject(
@@ -371,6 +515,22 @@ private fun List<BookDocumentLink>.linksJson(): JsonArray = JsonArray(
         )
     },
 )
+
+private fun List<BookDocumentLink>.linksWithin(
+    start: Int,
+    endExclusive: Int,
+): List<BookDocumentLink> = mapNotNull { link ->
+    val clippedStart = maxOf(link.start, start)
+    val clippedEnd = minOf(link.endExclusive, endExclusive)
+    if (clippedEnd <= clippedStart) {
+        null
+    } else {
+        link.copy(
+            start = clippedStart - start,
+            endExclusive = clippedEnd - start,
+        )
+    }
+}
 
 private fun BookDocumentFontFamily?.register(
     sectionKey: String,
@@ -427,3 +587,5 @@ private fun Any?.json(): JsonElement = when (this) {
     is Float -> JsonPrimitive(this)
     else -> error("Unsupported JSON primitive ${this::class}")
 }
+
+private val SUPPORTED_PLATFORM_FONT_FAMILIES = setOf("serif", "sans-serif", "monospace")

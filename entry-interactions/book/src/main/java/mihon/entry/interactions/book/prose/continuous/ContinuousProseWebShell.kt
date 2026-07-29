@@ -52,6 +52,8 @@ internal val CONTINUOUS_PROSE_WEB_SHELL: String = """
           line-height: 1.25;
           font-weight: 700;
         }
+        ol.block, ul.block { list-style: none; padding-inline-start: 0; }
+        .list-marker { display: inline-block; min-width: 1.5em; white-space: pre; }
         blockquote.block {
           border-inline-start: 0.2em solid color-mix(in srgb, currentColor 35%, transparent);
           padding-inline-start: 1em;
@@ -138,6 +140,7 @@ internal val CONTINUOUS_PROSE_WEB_SHELL: String = """
           if (Number.isFinite(style.paddingEm)) node.style.padding = Math.max(0, Math.min(4, style.paddingEm)) + 'em';
           if (Number.isFinite(style.fontSizeScale)) node.style.fontSize = Math.max(.75, Math.min(1.5, style.fontSizeScale)) + 'em';
           if (style.bold) node.style.fontWeight = '700';
+          if (style.italic) node.style.fontStyle = 'italic';
           applyFontFamily(node, style.fontFamily);
           if (style.border && Number.isFinite(style.border.width)) {
             const borderColor = cssColor(style.border.color) || 'currentColor';
@@ -199,10 +202,12 @@ internal val CONTINUOUS_PROSE_WEB_SHELL: String = """
             if (content.ordered && Number.isFinite(content.start)) node.start = content.start;
             (content.items || []).forEach((item) => {
               const listItem = element('li');
-              listItem.textContent = item.text;
-              if (Number.isFinite(item.depth) && item.depth > 0) {
-                listItem.style.marginInlineStart = Math.min(8, item.depth) + 'em';
-              }
+              const marker = element('span', 'list-marker');
+              const depth = Number.isFinite(item.depth) ? Math.max(0, Math.min(8, item.depth)) : 0;
+              marker.textContent =
+                '  '.repeat(depth) + (item.marker == null ? '•' : item.marker) + ' ';
+              listItem.appendChild(marker);
+              listItem.appendChild(richText(item.text, item.links, item.inlineStyles));
               node.appendChild(listItem);
             });
           } else if (content.kind === 'figure') {
@@ -241,6 +246,7 @@ internal val CONTINUOUS_PROSE_WEB_SHELL: String = """
           } else if (content.kind === 'disclosure') {
             node = element('details', 'block');
             node.open = !!content.expanded;
+            node.dataset.summaryLength = String(content.summary.length);
             const summary = element('summary');
             summary.textContent = content.summary;
             node.appendChild(summary);
@@ -258,6 +264,7 @@ internal val CONTINUOUS_PROSE_WEB_SHELL: String = """
           node.dataset.logicalLength = String(block.logicalLength);
           node.dataset.locatorBlockId = block.locatorBlockId;
           node.dataset.locatorOffsetBase = String(block.locatorOffsetBase || 0);
+          node.dataset.locatorLogicalStart = String(block.locatorLogicalStart);
           applyStyle(node, block.style);
           return node;
         };
@@ -275,23 +282,31 @@ internal val CONTINUOUS_PROSE_WEB_SHELL: String = """
           const transition = element('section', 'transition');
           transition.dataset.transitionKey = item.key;
           transition.dataset.itemKey = item.key;
-          transition.dataset.signature = item.loadState + ':' + (item.message || '');
+          transition.dataset.signature = [
+            item.direction,
+            item.label,
+            item.toKey || '',
+            item.loadState,
+            item.message || '',
+          ].join(':');
           transition.dataset.destinationSectionKey = item.toKey || '';
+          transition.dataset.fromSectionKey = item.fromKey;
+          transition.dataset.direction = item.direction;
           const label = element('div');
           label.textContent = item.label;
           transition.appendChild(label);
           if (item.loadState === 'loading') {
             const status = element('div');
-            status.textContent = 'Loading…';
+            status.textContent = item.loadingLabel;
             transition.appendChild(status);
           } else if (item.loadState === 'failed') {
             const status = element('div');
-            status.textContent = item.message || 'Unable to load chapter';
+            status.textContent = item.message || item.loadFailedLabel;
             transition.appendChild(status);
             if (item.toKey) {
               const retry = element('button');
               retry.type = 'button';
-              retry.textContent = 'Retry';
+              retry.textContent = item.retryLabel;
               retry.dataset.retrySectionKey = item.toKey;
               transition.appendChild(retry);
             }
@@ -339,9 +354,28 @@ internal val CONTINUOUS_PROSE_WEB_SHELL: String = """
         const seek = (sectionKey, blockId, offset, smooth, viewportOffset) => {
           const section = root.querySelector('.section[data-section-key="' + CSS.escape(sectionKey) + '"]');
           if (!section) return false;
-          const block = section.querySelector('.block[data-block-id="' + CSS.escape(blockId) + '"]') || section.firstElementChild;
+          const candidates = Array.from(
+            section.querySelectorAll('.block[data-locator-block-id="' + CSS.escape(blockId) + '"]'),
+          ).filter((candidate) => Number(candidate.dataset.locatorOffsetBase) <= offset);
+          const block = candidates.sort(
+            (first, second) =>
+              Number(second.dataset.locatorOffsetBase) - Number(first.dataset.locatorOffsetBase),
+          )[0] || section.querySelector('.block[data-block-id="' + CSS.escape(blockId) + '"]') ||
+            section.firstElementChild;
           if (!block) return false;
-          const caret = setCaret(block, offset);
+          const localOffset = Math.max(0, offset - (Number(block.dataset.locatorOffsetBase) || 0));
+          if (
+            block instanceof HTMLDetailsElement &&
+            localOffset > (Number(block.dataset.summaryLength) || 0)
+          ) {
+            block.open = true;
+          }
+          let disclosure = block.parentElement && block.parentElement.closest('details');
+          while (disclosure) {
+            disclosure.open = true;
+            disclosure = disclosure.parentElement && disclosure.parentElement.closest('details');
+          }
+          const caret = setCaret(block, localOffset);
           const range = document.createRange();
           range.setStart(caret.node, caret.offset);
           range.collapse(true);
@@ -373,7 +407,7 @@ internal val CONTINUOUS_PROSE_WEB_SHELL: String = """
           const logicalLength = Number(block.dataset.logicalLength) || 1;
           const locatorOffsetBase = Number(block.dataset.locatorOffsetBase) || 0;
           const logicalOffset = locatorOffsetBase + Math.max(0, Math.min(logicalLength, displayedOffset));
-          const logicalStart = Number(block.dataset.logicalStart) - locatorOffsetBase || 0;
+          const logicalStart = Number(block.dataset.locatorLogicalStart) || 0;
           const logicalExtent = Number(section.dataset.logicalExtent) || 1;
           return {
             section,
@@ -383,10 +417,52 @@ internal val CONTINUOUS_PROSE_WEB_SHELL: String = """
           };
         };
         const reportViewport = () => {
+          const atDocumentEnd =
+            window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 1;
+          const terminalTransition = atDocumentEnd
+            ? root.querySelector(
+              '.transition[data-direction="next"][data-destination-section-key=""]',
+            )
+            : null;
+          if (terminalTransition) {
+            const sectionKey = terminalTransition.dataset.fromSectionKey;
+            const section = (projection.items || []).find(
+              (item) => item.type === 'section' && item.key === sectionKey,
+            );
+            const block = section && section.blocks && section.blocks[section.blocks.length - 1];
+            if (block) {
+              send({
+                type: 'position',
+                sectionKey,
+                blockId: block.locatorBlockId,
+                offset: block.logicalLength,
+                progression: 1,
+              });
+            }
+          }
           const anchor = viewportAnchor();
           if (!anchor) return;
           if (anchor.transition) {
             const key = anchor.transition.dataset.transitionKey;
+            if (
+              anchor.transition.dataset.direction === 'next' &&
+              !anchor.transition.dataset.destinationSectionKey
+            ) {
+              const sectionKey = anchor.transition.dataset.fromSectionKey;
+              const section = (projection.items || []).find(
+                (item) => item.type === 'section' && item.key === sectionKey,
+              );
+              const block = section && section.blocks && section.blocks[section.blocks.length - 1];
+              if (block) {
+                send({
+                  type: 'position',
+                  sectionKey,
+                  blockId: block.locatorBlockId,
+                  offset: block.logicalLength,
+                  progression: 1,
+                });
+              }
+            }
             if (key !== lastTransitionKey && anchor.transition.dataset.destinationSectionKey) {
               lastTransitionKey = key;
               send({
@@ -444,9 +520,32 @@ internal val CONTINUOUS_PROSE_WEB_SHELL: String = """
             return;
           }
           const rect = activeRange.getBoundingClientRect();
+          const nodeAddress = (node) => {
+            const address = [];
+            let cursor = node;
+            while (cursor && cursor !== current) {
+              const parent = cursor.parentNode;
+              if (!parent) break;
+              address.push(Array.prototype.indexOf.call(parent.childNodes, cursor));
+              cursor = parent;
+            }
+            return address.reverse().join('.');
+          };
+          let textHash = 2166136261;
+          for (let index = 0; index < text.length; index += 1) {
+            textHash ^= text.charCodeAt(index);
+            textHash = Math.imul(textHash, 16777619);
+          }
           send({
             type: 'selection',
-            identity: currentSectionKey + ':' + activeRange.startOffset + ':' + activeRange.endOffset + ':' + text.length,
+            identity: [
+              currentSectionKey,
+              nodeAddress(activeRange.startContainer),
+              activeRange.startOffset,
+              nodeAddress(activeRange.endContainer),
+              activeRange.endOffset,
+              (textHash >>> 0).toString(16),
+            ].join(':'),
             text,
             left: rect.left,
             top: rect.top,
@@ -457,8 +556,10 @@ internal val CONTINUOUS_PROSE_WEB_SHELL: String = """
         const render = (command) => {
           const previousCurrentSectionKey = currentSectionKey;
           const previousAnchor = viewportAnchor();
-          const previousAnchorTop = previousAnchor && previousAnchor.block
-            ? previousAnchor.block.getBoundingClientRect().top
+          const previousAnchorElement = previousAnchor &&
+            (previousAnchor.block || previousAnchor.transition);
+          const previousAnchorTop = previousAnchorElement
+            ? previousAnchorElement.getBoundingClientRect().top
             : null;
           generation = command.generation;
           projection = command.projection;
@@ -471,11 +572,25 @@ internal val CONTINUOUS_PROSE_WEB_SHELL: String = """
             let node = existing.get(itemKey);
             if (item.type === 'section') {
               const signature = item.resourceId + ':' + item.signature;
-              if (!node || node.dataset.signature !== signature) node = renderSection(item);
+              if (node && node.dataset.signature !== signature) {
+                node.remove();
+                node = null;
+              }
+              if (!node) node = renderSection(item);
               node.classList.toggle('current', item.key === currentSectionKey);
             } else {
-              const signature = item.loadState + ':' + (item.message || '');
-              if (!node || node.dataset.signature !== signature) node = renderTransition(item);
+              const signature = [
+                item.direction,
+                item.label,
+                item.toKey || '',
+                item.loadState,
+                item.message || '',
+              ].join(':');
+              if (node && node.dataset.signature !== signature) {
+                node.remove();
+                node = null;
+              }
+              if (!node) node = renderTransition(item);
             }
             existing.delete(itemKey);
             root.appendChild(node);
@@ -488,18 +603,54 @@ internal val CONTINUOUS_PROSE_WEB_SHELL: String = """
           lastSectionKey = currentSectionKey;
           requestAnimationFrame(() => {
             if (
-              previousCurrentSectionKey === currentSectionKey &&
               previousAnchor &&
               previousAnchor.block &&
               Number.isFinite(previousAnchorTop)
             ) {
-              seek(
-                previousAnchor.section.dataset.sectionKey,
-                previousAnchor.block.dataset.locatorBlockId,
-                previousAnchor.offset,
-                false,
-                previousAnchorTop,
+              const section = root.querySelector(
+                '.section[data-section-key="' +
+                  CSS.escape(previousAnchor.section.dataset.sectionKey) +
+                  '"]',
               );
+              const block = section && section.querySelector(
+                '.block[data-block-id="' +
+                  CSS.escape(previousAnchor.block.dataset.blockId) +
+                  '"]',
+              );
+              if (block) {
+                const delta = block.getBoundingClientRect().top - previousAnchorTop;
+                if (Math.abs(delta) > .5) window.scrollBy(0, delta);
+              } else {
+                seek(
+                  command.initial.sectionKey,
+                  command.initial.blockId,
+                  command.initial.offset,
+                  false,
+                  command.initial.offset === 0 ? 0 : window.innerHeight / 2,
+                );
+              }
+            } else if (
+              previousAnchor &&
+              previousAnchor.transition &&
+              Number.isFinite(previousAnchorTop)
+            ) {
+              const transition = root.querySelector(
+                '.transition[data-item-key="' +
+                  CSS.escape(previousAnchor.transition.dataset.itemKey) +
+                  '"]',
+              );
+              if (transition) {
+                const delta = transition.getBoundingClientRect().top - previousAnchorTop;
+                if (Math.abs(delta) > .5) window.scrollBy(0, delta);
+              } else {
+                seek(
+                  command.initial.sectionKey,
+                  command.initial.blockId,
+                  command.initial.offset,
+                  false,
+                  command.initial.offset === 0 ? 0 : window.innerHeight / 2,
+                );
+              }
             } else {
               seek(
                 command.initial.sectionKey,

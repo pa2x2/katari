@@ -4,6 +4,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import mihon.entry.interactions.book.document.model.BookDocumentBlockContent
 import mihon.entry.interactions.book.document.model.BookDocumentPosition
 import mihon.entry.interactions.book.document.reader.BookDocumentSection
 import mihon.entry.interactions.book.prose.prepareHtmlBookDocument
@@ -37,6 +38,7 @@ class ContinuousProseDocumentProjectionTest {
             generation = 7,
             window = EntryChildWindow(section.owner, null, null),
             loaded = mapOf(section.owner.id to section),
+            labels = testTransitionLabels(),
         )
         val root = Json.parseToJsonElement(projection.json).jsonObject
         val current = root["items"]!!.jsonArray
@@ -140,9 +142,142 @@ class ContinuousProseDocumentProjectionTest {
         assertTrue(event.boundsInWebView.width() > 0)
     }
 
-    private fun section(html: String): BookDocumentSection<EntryChapter> {
-        val chapter = EntryChapter.create().copy(id = 1L, entryId = 2L, name = "Chapter 1")
-        val document = prepareHtmlBookDocument("chapter-1", "r1", html)
+    @Test
+    fun `chapter crossing keeps one stable localized transition identity`() {
+        val first = section("<p>First</p>", chapterId = 1)
+        val second = section("<p>Second</p>", chapterId = 2)
+        val loaded = mapOf(first.owner.id to first, second.owner.id to second)
+
+        val before = buildContinuousProseProjection(
+            generation = 1,
+            window = EntryChildWindow(first.owner, null, second.owner),
+            loaded = loaded,
+            labels = testTransitionLabels(),
+        )
+        val after = buildContinuousProseProjection(
+            generation = 2,
+            window = EntryChildWindow(second.owner, first.owner, null),
+            loaded = loaded,
+            labels = testTransitionLabels(),
+        )
+
+        assertEquals(
+            transitionBetween(before, "1", "2")["key"]!!.jsonPrimitive.content,
+            transitionBetween(after, "1", "2")["key"]!!.jsonPrimitive.content,
+        )
+        val terminal = projectionItems(after)
+            .single { it["type"]!!.jsonPrimitive.content == "transition" && it["toKey"].toString() == "null" }
+        assertEquals("No next", terminal["label"]!!.jsonPrimitive.content)
+        assertEquals("Loading", terminal["loadingLabel"]!!.jsonPrimitive.content)
+        assertEquals("Retry", terminal["retryLabel"]!!.jsonPrimitive.content)
+    }
+
+    @Test
+    fun `nested disclosure locators accumulate summary prefixes and body coordinates`() {
+        val section = section(
+            """
+                <details open>
+                    <summary>Outer</summary>
+                    <p>Before</p>
+                    <details open>
+                        <summary>Inner</summary>
+                        <p>Deep text</p>
+                    </details>
+                </details>
+            """.trimIndent(),
+        )
+        val projection = buildContinuousProseProjection(
+            generation = 3,
+            window = EntryChildWindow(section.owner, null, null),
+            loaded = mapOf(section.owner.id to section),
+            labels = testTransitionLabels(),
+        )
+        val outerPrepared = section.document.blocks.single()
+        val outerSemantic = assertIs<BookDocumentBlockContent.Disclosure>(outerPrepared.block.content)
+        val projectedOuter = projectionItems(projection)
+            .single { it["type"]!!.jsonPrimitive.content == "section" }["blocks"]!!
+            .jsonArray
+            .single()
+            .jsonObject
+        val projectedBody = projectedOuter["content"]!!.jsonObject["body"]!!.jsonArray
+            .map { it.jsonObject }
+        val innerPrepared = outerPrepared.disclosureBody
+            .single { it.block.content is BookDocumentBlockContent.Disclosure }
+        val innerSemantic = assertIs<BookDocumentBlockContent.Disclosure>(innerPrepared.block.content)
+        val projectedInner = projectedBody.single {
+            it["id"]!!.jsonPrimitive.content == innerPrepared.block.id.value
+        }
+        val projectedDeep = projectedInner["content"]!!.jsonObject["body"]!!.jsonArray
+            .single()
+            .jsonObject
+        val expectedInnerBase =
+            outerSemantic.summary.length + 1 + innerPrepared.block.logicalStart
+        val deepPrepared = innerPrepared.disclosureBody.single()
+        val expectedDeepBase =
+            expectedInnerBase + innerSemantic.summary.length + 1 + deepPrepared.block.logicalStart
+
+        assertEquals(expectedInnerBase, projectedInner["locatorOffsetBase"]!!.jsonPrimitive.content.toInt())
+        assertEquals(expectedDeepBase, projectedDeep["locatorOffsetBase"]!!.jsonPrimitive.content.toInt())
+        assertEquals(
+            outerPrepared.block.logicalStart,
+            projectedDeep["locatorLogicalStart"]!!.jsonPrimitive.content.toInt(),
+        )
+    }
+
+    @Test
+    fun `list items retain authored markers links and inline styles`() {
+        val section = section(
+            """
+                <ol start="3">
+                    <li><a href="https://example.test/"><strong>Linked item</strong></a></li>
+                </ol>
+            """.trimIndent(),
+        )
+        val projection = buildContinuousProseProjection(
+            generation = 4,
+            window = EntryChildWindow(section.owner, null, null),
+            loaded = mapOf(section.owner.id to section),
+            labels = testTransitionLabels(),
+        )
+        val list = projectionItems(projection)
+            .single { it["type"]!!.jsonPrimitive.content == "section" }["blocks"]!!
+            .jsonArray
+            .single()
+            .jsonObject["content"]!!
+            .jsonObject
+        val item = list["items"]!!.jsonArray.single().jsonObject
+
+        assertEquals("3.", item["marker"]!!.jsonPrimitive.content)
+        assertEquals("Linked item", item["text"]!!.jsonPrimitive.content)
+        assertTrue(item["links"]!!.jsonArray.isNotEmpty())
+        assertTrue(item["inlineStyles"]!!.jsonArray.isNotEmpty())
+    }
+
+    private fun transitionBetween(
+        projection: ContinuousProseProjection,
+        first: String,
+        second: String,
+    ) = projectionItems(projection).single {
+        it["type"]!!.jsonPrimitive.content == "transition" &&
+            setOf(
+                it["fromKey"]!!.jsonPrimitive.content,
+                it["toKey"]!!.jsonPrimitive.content,
+            ) == setOf(first, second)
+    }
+
+    private fun projectionItems(projection: ContinuousProseProjection) =
+        Json.parseToJsonElement(projection.json).jsonObject["items"]!!.jsonArray.map { it.jsonObject }
+
+    private fun section(
+        html: String,
+        chapterId: Long = 1,
+    ): BookDocumentSection<EntryChapter> {
+        val chapter = EntryChapter.create().copy(
+            id = chapterId,
+            entryId = 2L,
+            name = "Chapter $chapterId",
+        )
+        val document = prepareHtmlBookDocument("chapter-$chapterId", "r1", html)
         return BookDocumentSection(
             key = chapter.id.toString(),
             owner = chapter,
@@ -151,4 +286,12 @@ class ContinuousProseDocumentProjectionTest {
             resourceLoader = null,
         )
     }
+
+    private fun testTransitionLabels() = ContinuousProseTransitionLabels(
+        noPrevious = "No previous",
+        noNext = "No next",
+        loading = "Loading",
+        retry = "Retry",
+        loadFailed = "Failed",
+    )
 }

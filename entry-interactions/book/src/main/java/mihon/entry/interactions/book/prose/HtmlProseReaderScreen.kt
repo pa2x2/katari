@@ -120,6 +120,7 @@ import mihon.entry.interactions.book.document.reader.indexOfPosition
 import mihon.entry.interactions.book.prose.continuous.ContinuousProseCommandSink
 import mihon.entry.interactions.book.prose.continuous.ContinuousProseEvent
 import mihon.entry.interactions.book.prose.continuous.ContinuousProseRenderSettings
+import mihon.entry.interactions.book.prose.continuous.ContinuousProseTransitionLabels
 import mihon.entry.interactions.book.prose.continuous.ContinuousProseTransitionState
 import mihon.entry.interactions.book.prose.continuous.ContinuousProseWebView
 import mihon.entry.interactions.book.prose.continuous.ContinuousProseWebViewCallbacks
@@ -1076,10 +1077,18 @@ private fun ContinuousScrollingProseViewer(
     val initialPosition = initialDocumentPosition
         ?.takeIf(currentSection.document.document::contains)
         ?: currentSection.document.document.positionAtProgression(initialProgression)
+    val transitionLabels = ContinuousProseTransitionLabels(
+        noPrevious = i18nStringResource(MR.strings.transition_no_previous),
+        noNext = i18nStringResource(MR.strings.transition_no_next),
+        loading = i18nStringResource(MR.strings.loading),
+        retry = i18nStringResource(MR.strings.action_retry),
+        loadFailed = i18nStringResource(MR.strings.unknown_error),
+    )
     val generation = remember(
         state.window,
         state.loadedChapters,
         state.transitionLoadStates,
+        transitionLabels,
         preparationToken,
     ) {
         System.nanoTime()
@@ -1093,6 +1102,7 @@ private fun ContinuousScrollingProseViewer(
                 generation = generation,
                 window = state.window,
                 loaded = state.loadedChapters,
+                labels = transitionLabels,
                 transitionStates = state.transitionLoadStates.mapValues { (_, loadState) ->
                     when (loadState) {
                         HtmlProseChapterLoadState.Loading -> ContinuousProseTransitionState.Loading
