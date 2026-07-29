@@ -4,12 +4,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ContentCopy
@@ -33,10 +37,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import mihon.translation.api.KnownTranslationEngine
 import mihon.translation.api.TranslationEngineBuildAvailability
 import mihon.translation.api.TranslationEngineChoiceReason
@@ -287,8 +297,8 @@ private fun SuccessContent(
         onExternalAction(TranslationSessionExternalAction.ChooseEngine)
     }
     if (!compact) {
-        Text(
-            text = languagePair,
+        TranslationLanguagePair(
+            languagePair = languagePair,
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -297,8 +307,8 @@ private fun SuccessContent(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = languagePair,
+            TranslationLanguagePair(
+                languagePair = languagePair,
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -403,7 +413,56 @@ private fun SuccessContent(
     }
 }
 
+@Composable
+private fun TranslationLanguagePair(
+    languagePair: String,
+    modifier: Modifier = Modifier,
+    style: TextStyle,
+    color: Color,
+    maxLines: Int = Int.MAX_VALUE,
+    overflow: TextOverflow = TextOverflow.Clip,
+) {
+    val text = remember(languagePair) {
+        buildAnnotatedString {
+            val arrowIndex = languagePair.indexOf(LANGUAGE_PAIR_ARROW)
+            if (arrowIndex < 0) {
+                append(languagePair)
+            } else {
+                append(languagePair, 0, arrowIndex)
+                appendInlineContent(LANGUAGE_PAIR_ARROW_ID, LANGUAGE_PAIR_ARROW.toString())
+                append(languagePair, arrowIndex + 1, languagePair.length)
+            }
+        }
+    }
+    Text(
+        text = text,
+        inlineContent = mapOf(
+            LANGUAGE_PAIR_ARROW_ID to InlineTextContent(
+                Placeholder(
+                    width = 16.sp,
+                    height = 16.sp,
+                    placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter,
+                ),
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    tint = color,
+                )
+            },
+        ),
+        modifier = modifier,
+        style = style,
+        color = color,
+        maxLines = maxLines,
+        overflow = overflow,
+    )
+}
+
 private const val ANCHORED_RESULT_MAX_LINES = 5
+private const val LANGUAGE_PAIR_ARROW_ID = "language-pair-arrow"
+private const val LANGUAGE_PAIR_ARROW = '→'
 
 @Composable
 private fun TranslationCompactIconButton(
