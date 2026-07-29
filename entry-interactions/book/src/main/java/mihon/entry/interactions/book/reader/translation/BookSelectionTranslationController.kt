@@ -20,6 +20,7 @@ import mihon.translation.api.TranslationTargetLanguageSelection
 import mihon.translation.ui.session.TranslationSelectionAnchor
 import mihon.translation.ui.session.TranslationSessionHostCoordinator
 import mihon.translation.ui.session.TranslationSessionInput
+import mihon.translation.ui.session.TranslationSessionState
 import tachiyomi.core.common.preference.Preference
 
 internal data class BookReaderTextSelection(
@@ -131,6 +132,12 @@ internal class BookSelectionTranslationController(
     fun dismissTranslation() {
         dismissedSelectionIdentity = currentSelection?.identity
         hostCoordinator.controller.dismiss()
+    }
+
+    fun dismissTranslationOnReaderTap(): Boolean {
+        if (hostCoordinator.controller.state.value !is TranslationSessionState.Active) return false
+        dismissTranslation()
+        return true
     }
 
     override fun close() {

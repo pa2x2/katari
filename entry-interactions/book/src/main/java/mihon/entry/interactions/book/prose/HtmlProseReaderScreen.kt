@@ -244,7 +244,9 @@ internal fun HtmlProseReaderScreen(
                 }
             },
             onNonLinkTap = { x, width ->
-                viewerActions.onTapFraction(x / width.coerceAtLeast(1f))
+                if (translationController?.dismissTranslationOnReaderTap() != true) {
+                    viewerActions.onTapFraction(x / width.coerceAtLeast(1f))
+                }
             },
         ),
     ) {

@@ -90,6 +90,23 @@ class BookSelectionTranslationControllerTest {
         controller.close()
     }
 
+    @Test
+    fun `reader tap dismisses an active translation before reader interaction`() = runTest {
+        val feature = RecordingFeature()
+        val controller = controller(feature, FakeHostActions())
+        runCurrent()
+        val selection = selection("selected", 1)
+        controller.submitSelection(selection)
+
+        controller.dismissTranslationOnReaderTap() shouldBe true
+        controller.hostCoordinator.controller.state.value shouldBe TranslationSessionState.Hidden
+
+        controller.submitSelection(selection)
+        controller.hostCoordinator.controller.state.value shouldBe TranslationSessionState.Hidden
+        controller.dismissTranslationOnReaderTap() shouldBe false
+        controller.close()
+    }
+
     private fun kotlinx.coroutines.test.TestScope.controller(
         feature: RecordingFeature,
         host: FakeHostActions,

@@ -446,6 +446,9 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
     private fun createInputListener(readingDirection: BookReadingDirection?): InputListener {
         return object : InputListener {
             override fun onTap(event: TapEvent): Boolean {
+                if (translationController?.dismissTranslationOnReaderTap() == true) {
+                    return true
+                }
                 val fragment = navigator ?: return false
                 val readerSettings = settings ?: return false
                 val paginated = readerSettings.layoutMode.state.value.effectiveValue ==
