@@ -1,5 +1,6 @@
 package mihon.entry.interactions.book.prose
 
+import android.graphics.RectF
 import android.graphics.Typeface
 import android.text.Layout
 import android.text.TextPaint
@@ -36,6 +37,7 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.ViewCarousel
 import androidx.compose.material.icons.outlined.ViewStream
+import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -47,6 +49,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.State
@@ -78,12 +81,15 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import eu.kanade.tachiyomi.util.system.WebViewUtil
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mihon.entry.interactions.EntryChildWebViewAction
 import mihon.entry.interactions.EntryChildWebViewActionsMenu
 import mihon.entry.interactions.EntryChildWebViewResolution
@@ -111,6 +117,13 @@ import mihon.entry.interactions.book.document.reader.bookDocumentViewerLocation
 import mihon.entry.interactions.book.document.reader.bookDocumentViewerTransitionAtAnchor
 import mihon.entry.interactions.book.document.reader.buildBookDocumentViewerItems
 import mihon.entry.interactions.book.document.reader.indexOfPosition
+import mihon.entry.interactions.book.prose.continuous.ContinuousProseCommandSink
+import mihon.entry.interactions.book.prose.continuous.ContinuousProseEvent
+import mihon.entry.interactions.book.prose.continuous.ContinuousProseRenderSettings
+import mihon.entry.interactions.book.prose.continuous.ContinuousProseTransitionState
+import mihon.entry.interactions.book.prose.continuous.ContinuousProseWebView
+import mihon.entry.interactions.book.prose.continuous.ContinuousProseWebViewCallbacks
+import mihon.entry.interactions.book.prose.continuous.buildContinuousProseProjection
 import mihon.entry.interactions.settings.HtmlProseSettingsProvider
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildTransition
@@ -185,7 +198,11 @@ internal fun HtmlProseReaderScreen(
     val tapNavigation by settings.tapNavigation.state.collectEffectiveValue()
     val showProgress by settings.showProgress.state.collectEffectiveValue()
     val drawUnderCutout by settings.drawUnderCutout.state.collectEffectiveValue()
-    val paginated = layoutMode == HtmlProseSettingsProvider.LAYOUT_PAGINATED
+    var sessionPagedFallback by remember { mutableStateOf(false) }
+    var continuousFallbackOffered by remember { mutableStateOf(false) }
+    val paginated =
+        layoutMode == HtmlProseSettingsProvider.LAYOUT_PAGINATED ||
+            sessionPagedFallback
     val palette = prosePalette(theme, isSystemInDarkTheme())
     var position by remember(state.currentChapterId) {
         val loaded = state.loadedChapters[state.currentChapterId]
@@ -315,7 +332,7 @@ internal fun HtmlProseReaderScreen(
                                     onPrepared = onViewerPrepared,
                                 )
                             } else {
-                                ScrollingProseViewer(
+                                ContinuousScrollingProseViewer(
                                     state = state,
                                     initialProgression = position.progression,
                                     initialDocumentPosition = position.documentPosition,
@@ -337,7 +354,30 @@ internal fun HtmlProseReaderScreen(
                                     onExternalLinkClick = onExternalLinkClick,
                                     onActions = { viewerActions = it },
                                     onPrepared = onViewerPrepared,
+                                    onUnavailable = { continuousFallbackOffered = true },
                                 )
+                            }
+                        }
+                        if (!paginated && continuousFallbackOffered) {
+                            Surface(
+                                modifier = Modifier.align(Alignment.Center).padding(32.dp),
+                                shape = MaterialTheme.shapes.large,
+                                tonalElevation = 6.dp,
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(24.dp),
+                                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                                ) {
+                                    Text(stringResource(R.string.prose_reader_continuous_unavailable))
+                                    Button(
+                                        onClick = {
+                                            sessionPagedFallback = true
+                                            continuousFallbackOffered = false
+                                        },
+                                    ) {
+                                        Text(stringResource(R.string.prose_reader_use_paged_for_session))
+                                    }
+                                }
                             }
                         }
                     }
@@ -1001,6 +1041,234 @@ internal fun paginatedContentExtentPx(
     density: Density,
 ): Int = with(density) {
     (containerExtent.roundToPx() - edgeMargin.roundToPx() * 2).coerceAtLeast(1)
+}
+
+@Composable
+private fun ContinuousScrollingProseViewer(
+    state: HtmlProseReaderUiState,
+    initialProgression: Float,
+    initialDocumentPosition: BookDocumentPosition?,
+    palette: ProsePalette,
+    fontFamily: String,
+    fontSizePercent: Int,
+    lineHeightPercent: Int,
+    pageMarginsPercent: Int,
+    textAlignment: String,
+    preparationToken: Any,
+    onPosition: (ProseViewerPosition) -> Unit,
+    onChapterEntered: (EntryChapter) -> Unit,
+    onTransitionChapterRequested: (EntryChapter) -> Unit,
+    onTransitionChapterRetry: (EntryChapter) -> Unit,
+    onMenuToggle: () -> Unit,
+    onExternalLinkClick: (String) -> Unit,
+    onActions: (ProseViewerActions) -> Unit,
+    onPrepared: () -> Unit,
+    onUnavailable: () -> Unit,
+) {
+    val context = LocalContext.current
+    val webViewSupported = remember(context) { WebViewUtil.supportsWebView(context) }
+    if (!webViewSupported) {
+        LaunchedEffect(onUnavailable) { onUnavailable() }
+        return
+    }
+    val interaction = LocalBookDocumentTextInteraction.current
+    val currentSection = state.loadedChapters[state.currentChapterId] ?: return
+    val initialPosition = initialDocumentPosition
+        ?.takeIf(currentSection.document.document::contains)
+        ?: currentSection.document.document.positionAtProgression(initialProgression)
+    val generation = remember(
+        state.window,
+        state.loadedChapters,
+        state.transitionLoadStates,
+        preparationToken,
+    ) {
+        System.nanoTime()
+    }
+    var projection by remember {
+        mutableStateOf<mihon.entry.interactions.book.prose.continuous.ContinuousProseProjection?>(null)
+    }
+    LaunchedEffect(generation, state.window, state.loadedChapters, state.transitionLoadStates) {
+        projection = withContext(Dispatchers.Default) {
+            buildContinuousProseProjection(
+                generation = generation,
+                window = state.window,
+                loaded = state.loadedChapters,
+                transitionStates = state.transitionLoadStates.mapValues { (_, loadState) ->
+                    when (loadState) {
+                        HtmlProseChapterLoadState.Loading -> ContinuousProseTransitionState.Loading
+                        is HtmlProseChapterLoadState.Failed ->
+                            ContinuousProseTransitionState.Failed(loadState.message)
+                    }
+                },
+            )
+        }
+    }
+    val commandSink = remember { ContinuousProseCommandSink() }
+    val sections = remember(state.loadedChapters) {
+        state.loadedChapters.values.associateBy { it.key }
+    }
+    val selectionOwner = remember { "continuous-prose-${System.identityHashCode(commandSink)}" }
+    val currentOnMenuToggle = rememberUpdatedState(onMenuToggle)
+    val currentInteraction = rememberUpdatedState(interaction)
+    val currentState = rememberUpdatedState(state)
+    val currentGeneration = rememberUpdatedState(generation)
+    DisposableEffect(selectionOwner) {
+        onDispose {
+            currentInteraction.value.onSelection(
+                BookDocumentTextSelection.Cleared(selectionOwner),
+            )
+        }
+    }
+
+    LaunchedEffect(commandSink, state.currentChapterId, state.loadedChapters, generation) {
+        onActions(
+            ProseViewerActions(
+                seekProgress = seek@{ progression ->
+                    val section = currentState.value.loadedChapters[currentState.value.currentChapterId]
+                        ?: return@seek
+                    commandSink.seek(
+                        generation = currentGeneration.value,
+                        sectionKey = section.key,
+                        position = section.document.document.positionAtProgression(progression),
+                    )
+                },
+                previousSection = {
+                    val chapter = currentState.value.window.previous
+                    val section = chapter?.let { currentState.value.loadedChapters[it.id] }
+                    if (section != null) {
+                        commandSink.seek(
+                            currentGeneration.value,
+                            section.key,
+                            section.document.document.positionAtProgression(1f),
+                        )
+                    } else if (chapter != null) {
+                        onTransitionChapterRequested(chapter)
+                    }
+                },
+                nextSection = {
+                    val chapter = currentState.value.window.next
+                    val section = chapter?.let { currentState.value.loadedChapters[it.id] }
+                    if (section != null) {
+                        commandSink.seek(
+                            currentGeneration.value,
+                            section.key,
+                            section.document.document.positionAtProgression(0f),
+                        )
+                    } else if (chapter != null) {
+                        onTransitionChapterRequested(chapter)
+                    }
+                },
+                onTapFraction = { currentOnMenuToggle.value() },
+            ),
+        )
+    }
+
+    projection?.let { readyProjection ->
+        ContinuousProseWebView(
+            projection = readyProjection,
+            sections = sections,
+            settings = ContinuousProseRenderSettings(
+                backgroundCss = palette.background.toCssColor(),
+                foregroundCss = palette.foreground.toCssColor(),
+                fontFamilyCss = when (fontFamily) {
+                    HtmlProseSettingsProvider.FONT_SANS_SERIF -> "sans-serif"
+                    HtmlProseSettingsProvider.FONT_MONOSPACE -> "monospace"
+                    else -> "serif"
+                },
+                fontSizePercent = fontSizePercent,
+                lineHeightPercent = lineHeightPercent,
+                pageMarginsPercent = pageMarginsPercent,
+                textAlignmentCss = when (textAlignment) {
+                    HtmlProseSettingsProvider.ALIGN_JUSTIFY -> "justify"
+                    HtmlProseSettingsProvider.ALIGN_LEFT -> "left"
+                    HtmlProseSettingsProvider.ALIGN_RIGHT -> "right"
+                    else -> "start"
+                },
+            ),
+            initialSectionKey = currentSection.key,
+            initialPosition = initialPosition,
+            commandSink = commandSink,
+            callbacks = ContinuousProseWebViewCallbacks(
+                onEvent = { event, webView ->
+                    when (event) {
+                        is ContinuousProseEvent.Ready -> Unit
+                        is ContinuousProseEvent.Prepared -> onPrepared()
+                        is ContinuousProseEvent.Position -> {
+                            val section = sections[event.sectionKey] ?: return@ContinuousProseWebViewCallbacks
+                            val position = event.position.takeIf(section.document.document::contains)
+                                ?: return@ContinuousProseWebViewCallbacks
+                            onPosition(
+                                ProseViewerPosition(
+                                    chapterId = section.owner.id,
+                                    progression = section.document.document.progressionAt(position),
+                                    currentPage = 1,
+                                    totalPages = 1,
+                                    documentPosition = position,
+                                ),
+                            )
+                        }
+                        is ContinuousProseEvent.ChapterEntered -> {
+                            val section = sections[event.sectionKey] ?: return@ContinuousProseWebViewCallbacks
+                            if (section.owner.id != currentState.value.currentChapterId) {
+                                onChapterEntered(section.owner)
+                            }
+                        }
+                        is ContinuousProseEvent.TransitionReached -> {
+                            val chapter = currentState.value.chapters
+                                .firstOrNull { it.id.toString() == event.destinationSectionKey }
+                            if (chapter != null) onTransitionChapterRequested(chapter)
+                        }
+                        is ContinuousProseEvent.TransitionRetry -> {
+                            val chapter = currentState.value.chapters
+                                .firstOrNull { it.id.toString() == event.destinationSectionKey }
+                            if (chapter != null) onTransitionChapterRetry(chapter)
+                        }
+                        is ContinuousProseEvent.Tap -> {
+                            val activeInteraction = currentInteraction.value
+                            if (activeInteraction.isReaderTapBlocked()) {
+                                activeInteraction.onBlockedReaderTap()
+                            } else {
+                                currentOnMenuToggle.value()
+                            }
+                        }
+                        is ContinuousProseEvent.ExternalLink -> onExternalLinkClick(event.url)
+                        is ContinuousProseEvent.Selection -> {
+                            if (!currentInteraction.value.observeSelections) {
+                                return@ContinuousProseWebViewCallbacks
+                            }
+                            val location = IntArray(2)
+                            webView.getLocationInWindow(location)
+                            val scale = webView.scale
+                            val bounds = RectF(event.boundsInWebView).apply {
+                                left = left * scale + location[0]
+                                right = right * scale + location[0]
+                                top = top * scale + location[1]
+                                bottom = bottom * scale + location[1]
+                                val rootPosition = currentInteraction.value.rootPositionInWindow
+                                offset(-rootPosition.x, -rootPosition.y)
+                            }
+                            currentInteraction.value.onSelection(
+                                BookDocumentTextSelection.Changed(
+                                    ownerIdentity = selectionOwner,
+                                    identity = "$selectionOwner:${event.identity}",
+                                    text = event.text,
+                                    boundsInReaderRoot = bounds,
+                                ),
+                            )
+                        }
+                        is ContinuousProseEvent.SelectionCleared -> {
+                            currentInteraction.value.onSelection(
+                                BookDocumentTextSelection.Cleared(selectionOwner),
+                            )
+                        }
+                        is ContinuousProseEvent.Failure -> onUnavailable()
+                    }
+                },
+                onFailure = { onUnavailable() },
+            ),
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
 }
 
 @Composable
@@ -1753,6 +2021,13 @@ private fun Color.toArgbValue(): Int = android.graphics.Color.argb(
     (red * 255).toInt(),
     (green * 255).toInt(),
     (blue * 255).toInt(),
+)
+
+private fun Color.toCssColor(): String = "#%02x%02x%02x%02x".format(
+    (red * 255).roundToInt().coerceIn(0, 255),
+    (green * 255).roundToInt().coerceIn(0, 255),
+    (blue * 255).roundToInt().coerceIn(0, 255),
+    (alpha * 255).roundToInt().coerceIn(0, 255),
 )
 
 private fun EntryChapter.toTransitionItem() = ReaderEntryChildTransitionItem(name, scanlator)

@@ -39,6 +39,8 @@
     <string name="prose_reader_show_progress">Show reading progress</string>
     <string name="prose_reader_continue_chapter">Continue to chapter</string>
     <string name="prose_reader_transition_hint">Swipe or tap the outer edges to move across the chapter boundary.</string>
+    <string name="prose_reader_continuous_unavailable">Continuous reading is unavailable because Android System WebView could not start.</string>
+    <string name="prose_reader_use_paged_for_session">Use paged mode for this session</string>
     <string name="book_reader_general_settings">General</string>
     <string name="book_reader_automatic_translation">Translate selected text automatically</string>
     <string name="book_reader_automatic_translation_summary">Translation starts after text selection settles and uses this profile’s Translation engine and target language.</string>
