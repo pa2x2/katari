@@ -46,8 +46,13 @@ internal fun BookDocumentText(
     val interaction = LocalBookDocumentTextInteraction.current
     val currentAnchorClick by rememberUpdatedState(onAnchorClick)
     val currentExternalLinkClick by rememberUpdatedState(onExternalLinkClick)
-    val linkedText = remember(text) {
-        text.withDocumentLinkClicks(
+    val linkedText = remember(text, trimTerminalLine) {
+        val displayText = if (trimTerminalLine) {
+            text.withoutTerminalLayoutLine()
+        } else {
+            text
+        }
+        displayText.withDocumentLinkClicks(
             onAnchorClick = { anchorId, view -> currentAnchorClick(anchorId, view) },
             onExternalLinkClick = { url -> currentExternalLinkClick(url) },
         )
@@ -78,8 +83,8 @@ internal fun BookDocumentText(
                 view.text = linkedText
             }
             view.movementMethod = LinkMovementMethod.getInstance()
-            view.trimTerminalLine = trimTerminalLine
             view.applyStyle(style)
+            view.applyTerminalLineSpacing(trimTerminalLine)
             onViewChanged(view)
         },
         onRelease = { view ->
@@ -93,34 +98,30 @@ internal fun BookDocumentText(
 internal class BookDocumentTextView(context: Context) : TextView(context) {
     private val selectionOwnerIdentity = "text-view-${System.identityHashCode(this)}"
     private val tapTouchSlop = ViewConfiguration.get(context).scaledTouchSlop.toFloat()
+    private val basePaddingLeft = paddingLeft
+    private val basePaddingTop = paddingTop
+    private val basePaddingRight = paddingRight
+    private val basePaddingBottom = paddingBottom
     private var trackingNonLinkTap = false
     private var nonLinkTapDownX = 0f
     private var nonLinkTapDownY = 0f
     internal var selectionInteraction: BookDocumentTextInteraction? = null
     internal var appliedStyle: BookDocumentTextStyle? = null
-    internal var trimTerminalLine: Boolean = false
-        set(value) {
-            if (field == value) return
-            field = value
-            requestLayout()
-        }
 
     init {
         setTextIsSelectable(true)
     }
 
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        val currentLayout = layout
-        if (
-            trimTerminalLine &&
-            text.endsWith('\n') &&
-            currentLayout != null &&
-            currentLayout.lineCount > 1
-        ) {
-            val terminalLineHeight = currentLayout.height - currentLayout.getLineTop(currentLayout.lineCount - 1)
-            setMeasuredDimension(measuredWidth, (measuredHeight - terminalLineHeight).coerceAtLeast(0))
+    internal fun applyTerminalLineSpacing(trimTerminalLine: Boolean) {
+        val fontHeight = paint.getFontMetricsInt(null)
+        val terminalSpacing = if (trimTerminalLine) {
+            (lineHeight - fontHeight).coerceAtLeast(0)
+        } else {
+            0
         }
+        val targetBottomPadding = basePaddingBottom + terminalSpacing
+        if (paddingBottom == targetBottomPadding) return
+        setPadding(basePaddingLeft, basePaddingTop, basePaddingRight, targetBottomPadding)
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -296,6 +297,11 @@ private fun Spanned.clickableSpanAt(widget: TextView, event: MotionEvent): Click
 
 private const val SELECTION_HIGHLIGHT_ALPHA = 0x66
 private const val DEFAULT_SELECTION_ACCENT = 0xFF3F51B5.toInt()
+
+internal fun Spanned.withoutTerminalLayoutLine(): Spanned {
+    if (!endsWith('\n')) return this
+    return SpannableString(subSequence(0, length - 1))
+}
 
 internal fun Spanned.withDocumentAnchorClicks(
     onAnchorClick: (String, TextView) -> Unit,

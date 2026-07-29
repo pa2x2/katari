@@ -36,17 +36,42 @@ class BookDocumentTextViewTest {
     }
 
     @Test
+    fun `selecting a complete trimmed paragraph keeps its text visible`() {
+        val view = measuredTextView(
+            SpannableString("First line\nSecond line\n\n"),
+            trimTerminalLine = true,
+        )
+        view.layout(0, 0, view.measuredWidth, view.measuredHeight)
+        val text = view.text as Spannable
+
+        Selection.setSelection(text, 0, text.length)
+        view.bringPointIntoView(view.selectionEnd)
+
+        assertEquals("First line\nSecond line\n", text.toString())
+        assertEquals(0, view.selectionStart)
+        assertEquals(text.length, view.selectionEnd)
+        assertEquals(
+            view.height - view.compoundPaddingTop - view.compoundPaddingBottom,
+            view.layout.height,
+        )
+        assertEquals(0, view.scrollY)
+    }
+
+    @Test
     fun `same-document URL span dispatches its anchor instead of opening a URL`() {
-        val source = SpannableString("See note").apply {
-            setSpan(URLSpan("#note"), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        val source = SpannableString("See note\n\n").apply {
+            setSpan(URLSpan("#note"), 0, 8, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
         var clickedAnchor: String? = null
-        val linked = source.withDocumentAnchorClicks { anchor, _ -> clickedAnchor = anchor }
+        val linked = source
+            .withoutTerminalLayoutLine()
+            .withDocumentAnchorClicks { anchor, _ -> clickedAnchor = anchor }
         val span = linked.getSpans(0, linked.length, ClickableSpan::class.java).single()
 
         span.onClick(BookDocumentTextView(RuntimeEnvironment.getApplication()))
 
         assertEquals("note", clickedAnchor)
+        assertEquals("See note\n", linked.toString())
         assertTrue(linked.getSpans(0, linked.length, URLSpan::class.java).isEmpty())
     }
 
@@ -269,11 +294,15 @@ class BookDocumentTextViewTest {
         trimTerminalLine: Boolean = false,
     ): BookDocumentTextView {
         return BookDocumentTextView(RuntimeEnvironment.getApplication()).apply {
+            layoutParams = ViewGroup.LayoutParams(600, ViewGroup.LayoutParams.WRAP_CONTENT)
             includeFontPadding = false
             textSize = 24f
             setLineSpacing(0f, 1.5f)
-            setText(text, TextView.BufferType.SPANNABLE)
-            this.trimTerminalLine = trimTerminalLine
+            setText(
+                if (trimTerminalLine) text.withoutTerminalLayoutLine() else text,
+                TextView.BufferType.SPANNABLE,
+            )
+            applyTerminalLineSpacing(trimTerminalLine)
             measure(
                 MeasureSpec.makeMeasureSpec(600, MeasureSpec.EXACTLY),
                 MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED),
