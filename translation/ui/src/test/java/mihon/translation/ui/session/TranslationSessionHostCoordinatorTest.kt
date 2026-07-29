@@ -121,14 +121,11 @@ class TranslationSessionHostCoordinatorTest {
     }
 
     @Test
-    fun `detected source and target are staged and applied together as a supported pair`() = runTest {
+    fun `misdetected source correction is applied to the current request as an explicit pair`() = runTest {
         val host = FakeHostActions().apply {
             languageSupport = TranslationLanguageSupportInspection.Available(
                 TranslationLanguageSupport.ExactPairs(
-                    setOf(
-                        TranslationLanguagePair(SOURCE, TARGET),
-                        TranslationLanguagePair(FRENCH, GERMAN),
-                    ),
+                    setOf(TranslationLanguagePair(SOURCE, TARGET)),
                 ),
             )
         }
@@ -140,34 +137,38 @@ class TranslationSessionHostCoordinatorTest {
             selectionSettleDelayMillis = 0,
         )
         runCurrent()
-        coordinator.controller.submit(input())
+        coordinator.controller.submit(
+            input().copy(
+                request = input().request.copy(
+                    sourceLanguage = TranslationSourceLanguageSelection.Automatic,
+                ),
+            ),
+        )
         runCurrent()
         val requestCount = feature.requests.size
+        feature.requests.last().sourceLanguage shouldBe TranslationSourceLanguageSelection.Automatic
 
         coordinator.handleExternalAction(
-            TranslationSessionExternalAction.ChangeLanguages(SOURCE, TARGET),
+            TranslationSessionExternalAction.ChangeLanguages(CATALAN, TARGET),
         ) {}
         runCurrent()
         coordinator.picker.value shouldBe TranslationSessionPicker.LanguagePair
+        coordinator.languagePair.value shouldBe TranslationSessionLanguagePair(CATALAN, TARGET)
 
         coordinator.editLanguagePairRole(TranslationSessionPicker.SourceLanguage)
-        coordinator.selectLanguage(FRENCH)
+        coordinator.selectLanguage(SOURCE)
         coordinator.picker.value shouldBe TranslationSessionPicker.LanguagePair
         feature.requests.size shouldBe requestCount
-
-        coordinator.editLanguagePairRole(TranslationSessionPicker.TargetLanguage)
-        coordinator.selectLanguage(GERMAN)
         coordinator.canApplyLanguagePair() shouldBe true
-        feature.requests.size shouldBe requestCount
 
         coordinator.applyLanguagePair()
         runCurrent()
 
         feature.requests.size shouldBe requestCount + 1
         feature.requests.last().sourceLanguage shouldBe
-            TranslationSourceLanguageSelection.Explicit(FRENCH)
+            TranslationSourceLanguageSelection.Explicit(SOURCE)
         feature.requests.last().targetLanguage shouldBe
-            TranslationTargetLanguageSelection.Explicit(GERMAN)
+            TranslationTargetLanguageSelection.Explicit(TARGET)
         coordinator.picker.value shouldBe null
     }
 
@@ -369,6 +370,7 @@ class TranslationSessionHostCoordinatorTest {
         val TARGET = TranslationLanguageTag.require("pl")
         val FRENCH = TranslationLanguageTag.require("fr")
         val GERMAN = TranslationLanguageTag.require("de")
+        val CATALAN = TranslationLanguageTag.require("ca")
         val PROFILE_ENGINE = engine("profile")
         val READY_ENGINE = engine("ready")
         val BLOCKED_ENGINE = engine("blocked")

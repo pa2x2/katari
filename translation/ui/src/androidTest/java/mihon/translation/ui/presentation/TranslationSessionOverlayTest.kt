@@ -41,6 +41,7 @@ import mihon.translation.api.TranslationResult
 import mihon.translation.api.TranslationResultAttribution
 import mihon.translation.api.TranslationSourceLanguageSelection
 import mihon.translation.api.TranslationTargetLanguageSelection
+import mihon.translation.api.TranslationUnavailableReason
 import mihon.translation.ui.session.TranslationSelectionAnchor
 import mihon.translation.ui.session.TranslationSessionFailure
 import mihon.translation.ui.session.TranslationSessionInput
@@ -369,6 +370,58 @@ class TranslationSessionOverlayTest {
     }
 
     @Test
+    fun unsupported_language_pair_opens_existing_language_correction_instead_of_retrying() {
+        var externalAction: TranslationSessionExternalAction? = null
+        render(
+            state = TranslationSessionState.PreparationRequired(
+                input = input(
+                    anchor = TranslationSelectionAnchor(400f, 280f, 680f, 340f),
+                ),
+                preparation = TranslationPreparation.Unavailable(
+                    TranslationUnavailableReason.UnsupportedLanguagePair(CATALAN, TARGET),
+                ),
+            ),
+            onExternalAction = { externalAction = it },
+        )
+
+        composeRule.onAllNodesWithText(
+            composeRule.activity.stringResource(MR.strings.action_retry),
+        ).assertCountEquals(0)
+        composeRule.onNodeWithText(
+            composeRule.activity.stringResource(MR.strings.translation_change_languages),
+        )
+            .assertIsDisplayed()
+            .performClick()
+
+        composeRule.runOnIdle {
+            assertTrue(
+                externalAction == TranslationSessionExternalAction.ChangeLanguages(CATALAN, TARGET),
+            )
+        }
+    }
+
+    @Test
+    fun non_language_unavailability_retains_retry_recovery() {
+        render(
+            TranslationSessionState.PreparationRequired(
+                input = input(
+                    anchor = TranslationSelectionAnchor(400f, 280f, 680f, 340f),
+                ),
+                preparation = TranslationPreparation.Unavailable(
+                    TranslationUnavailableReason.ServiceMissing,
+                ),
+            ),
+        )
+
+        composeRule.onNodeWithText(
+            composeRule.activity.stringResource(MR.strings.action_retry),
+        ).assertIsDisplayed()
+        composeRule.onAllNodesWithText(
+            composeRule.activity.stringResource(MR.strings.translation_change_languages),
+        ).assertCountEquals(0)
+    }
+
+    @Test
     fun embedded_content_reuses_setup_renderer_without_overlay_chrome() {
         val state = TranslationSessionState.PreparationRequired(
             input = input(anchor = null),
@@ -489,6 +542,7 @@ class TranslationSessionOverlayTest {
     private companion object {
         val SOURCE = TranslationLanguageTag.require("en")
         val TARGET = TranslationLanguageTag.require("pl")
+        val CATALAN = TranslationLanguageTag.require("ca")
         val PROVIDER = TranslationProviderId("android")
         val PRESENTATION = TranslationProviderPresentation(
             providerId = PROVIDER,

@@ -117,11 +117,17 @@ internal class OfflineTranslatorEngine(
         val resolver = LibreTranslateLanguageResolver(languages)
         val source = resolver.resolve(request.sourceLanguage)
             ?: return TranslationEnginePreparation.Unavailable(
-                TranslationUnavailableReason.UnsupportedLanguage(request.sourceLanguage),
+                TranslationUnavailableReason.UnsupportedLanguagePair(
+                    request.sourceLanguage,
+                    request.targetLanguage,
+                ),
             )
         val target = resolver.resolve(request.targetLanguage)
             ?: return TranslationEnginePreparation.Unavailable(
-                TranslationUnavailableReason.UnsupportedLanguage(request.targetLanguage),
+                TranslationUnavailableReason.UnsupportedLanguagePair(
+                    request.sourceLanguage,
+                    request.targetLanguage,
+                ),
             )
         if (!resolver.supportsTarget(source, target)) {
             return TranslationEnginePreparation.Unavailable(

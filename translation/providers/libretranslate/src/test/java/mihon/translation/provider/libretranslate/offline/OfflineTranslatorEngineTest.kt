@@ -90,6 +90,28 @@ class OfflineTranslatorEngineTest {
         )
     }
 
+    @Test
+    fun `unsupported individual languages preserve the complete requested pair`() = runTest {
+        val engine = engine(
+            settings = FakeSettings(disclosureAccepted = true),
+            serviceFactory = {
+                FakeService(
+                    languages = listOf(
+                        language("en", setOf("fr")),
+                        language("fr", setOf("en")),
+                    ),
+                )
+            },
+        )
+
+        engine.prepare(request(source = CATALAN)) shouldBe TranslationEnginePreparation.Unavailable(
+            TranslationUnavailableReason.UnsupportedLanguagePair(CATALAN, FRENCH),
+        )
+        engine.prepare(request(target = GERMAN)) shouldBe TranslationEnginePreparation.Unavailable(
+            TranslationUnavailableReason.UnsupportedLanguagePair(ENGLISH, GERMAN),
+        )
+    }
+
     private fun engine(
         installed: Boolean = true,
         settings: FakeSettings = FakeSettings(),
@@ -102,10 +124,13 @@ class OfflineTranslatorEngineTest {
         )
     }
 
-    private fun request() = ResolvedTranslationRequest(
+    private fun request(
+        source: TranslationLanguageTag = ENGLISH,
+        target: TranslationLanguageTag = FRENCH,
+    ) = ResolvedTranslationRequest(
         text = "Hello",
-        sourceLanguage = ENGLISH,
-        targetLanguage = FRENCH,
+        sourceLanguage = source,
+        targetLanguage = target,
         engine = OfflineTranslatorEngine.ENGINE_ID,
     )
 
@@ -153,6 +178,8 @@ class OfflineTranslatorEngineTest {
     private companion object {
         val ENGLISH = TranslationLanguageTag.require("en")
         val FRENCH = TranslationLanguageTag.require("fr")
+        val CATALAN = TranslationLanguageTag.require("ca")
+        val GERMAN = TranslationLanguageTag.require("de")
 
         fun language(
             code: String,

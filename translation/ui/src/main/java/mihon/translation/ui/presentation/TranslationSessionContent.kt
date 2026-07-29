@@ -579,12 +579,29 @@ private fun PreparationContent(
         }
         is TranslationPreparation.Unavailable -> {
             SessionMessage(preparation.reason.message(), compact)
-            SessionActionButton(
-                label = stringResource(MR.strings.action_retry),
-                onClick = onRetry,
-                modifier = Modifier.fillMaxWidth(),
-                compact = compact,
-            )
+            val unsupportedPair = preparation.reason as? TranslationUnavailableReason.UnsupportedLanguagePair
+            if (unsupportedPair != null) {
+                SessionActionButton(
+                    label = stringResource(MR.strings.translation_change_languages),
+                    onClick = {
+                        onExternalAction(
+                            TranslationSessionExternalAction.ChangeLanguages(
+                                source = unsupportedPair.source,
+                                target = unsupportedPair.target,
+                            ),
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    compact = compact,
+                )
+            } else {
+                SessionActionButton(
+                    label = stringResource(MR.strings.action_retry),
+                    onClick = onRetry,
+                    modifier = Modifier.fillMaxWidth(),
+                    compact = compact,
+                )
+            }
         }
         is TranslationPreparation.Rejected -> {
             SessionMessage(preparation.reason.message(), compact)
