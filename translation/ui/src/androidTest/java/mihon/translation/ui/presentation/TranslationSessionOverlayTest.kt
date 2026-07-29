@@ -5,6 +5,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHeightIsAtLeast
@@ -122,6 +125,27 @@ class TranslationSessionOverlayTest {
 
         composeRule.onNodeWithTag(TRANSLATION_SESSION_PROGRESS_TAG).assertIsDisplayed()
         composeRule.onNodeWithTag(TRANSLATION_SESSION_POPUP_TAG).assertIsDisplayed()
+    }
+
+    @Test
+    fun anchored_popup_stays_visible_when_translation_state_changes() {
+        val anchor = TranslationSelectionAnchor(400f, 280f, 680f, 340f)
+        var state by mutableStateOf<TranslationSessionState>(
+            TranslationSessionState.Settling(input(anchor)),
+        )
+        render(stateProvider = { state })
+        composeRule.onNodeWithTag(TRANSLATION_SESSION_POPUP_TAG).assertIsDisplayed()
+
+        composeRule.runOnIdle {
+            state = success(
+                translatedText = "Witaj świecie",
+                anchor = anchor,
+            )
+        }
+
+        composeRule.onNodeWithText("Witaj świecie").assertIsDisplayed()
+        composeRule.onNodeWithTag(TRANSLATION_SESSION_POPUP_TAG).assertIsDisplayed()
+        composeRule.onAllNodesWithTag(TRANSLATION_SESSION_SHEET_TAG).assertCountEquals(0)
     }
 
     @Test
@@ -299,6 +323,37 @@ class TranslationSessionOverlayTest {
     }
 
     @Test
+    fun page_spanning_selection_uses_adaptive_sheet_without_leaving_a_popup() {
+        val displayMetrics = composeRule.activity.resources.displayMetrics
+        val anchorMargin = 160f
+        val anchor = TranslationSelectionAnchor(
+            left = anchorMargin,
+            top = anchorMargin,
+            right = displayMetrics.widthPixels - anchorMargin,
+            bottom = displayMetrics.heightPixels - anchorMargin,
+        )
+        var state by mutableStateOf<TranslationSessionState>(
+            TranslationSessionState.Settling(input(anchor)),
+        )
+
+        render(stateProvider = { state })
+
+        composeRule.onNodeWithTag(TRANSLATION_SESSION_SHEET_TAG).assertIsDisplayed()
+        composeRule.onAllNodesWithTag(TRANSLATION_SESSION_POPUP_TAG).assertCountEquals(0)
+
+        composeRule.runOnIdle {
+            state = success(
+                translatedText = "Witaj świecie",
+                anchor = anchor,
+            )
+        }
+
+        composeRule.onNodeWithText("Witaj świecie").assertIsDisplayed()
+        composeRule.onNodeWithTag(TRANSLATION_SESSION_SHEET_TAG).assertIsDisplayed()
+        composeRule.onAllNodesWithTag(TRANSLATION_SESSION_POPUP_TAG).assertCountEquals(0)
+    }
+
+    @Test
     fun missing_anchor_and_language_choice_use_adaptive_sheet() {
         val state = TranslationSessionState.PreparationRequired(
             input = input(anchor = null),
@@ -399,6 +454,13 @@ class TranslationSessionOverlayTest {
         state: TranslationSessionState,
         onExternalAction: (TranslationSessionExternalAction) -> Unit = {},
     ) {
+        render(stateProvider = { state }, onExternalAction = onExternalAction)
+    }
+
+    private fun render(
+        stateProvider: () -> TranslationSessionState,
+        onExternalAction: (TranslationSessionExternalAction) -> Unit = {},
+    ) {
         composeRule.setContent {
             MaterialTheme {
                 Box(
@@ -407,7 +469,7 @@ class TranslationSessionOverlayTest {
                         .background(MaterialTheme.colorScheme.background),
                 ) {
                     TranslationSessionOverlay(
-                        state = state,
+                        state = stateProvider(),
                         expanded = false,
                         isTabletUi = false,
                         onDismiss = {},

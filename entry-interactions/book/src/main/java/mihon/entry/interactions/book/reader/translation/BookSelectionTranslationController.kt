@@ -134,8 +134,12 @@ internal class BookSelectionTranslationController(
         hostCoordinator.controller.dismiss()
     }
 
+    fun isTranslationActive(): Boolean {
+        return hostCoordinator.controller.state.value is TranslationSessionState.Active
+    }
+
     fun dismissTranslationOnReaderTap(): Boolean {
-        if (hostCoordinator.controller.state.value !is TranslationSessionState.Active) return false
+        if (!isTranslationActive()) return false
         dismissTranslation()
         return true
     }

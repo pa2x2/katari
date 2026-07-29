@@ -103,6 +103,7 @@ internal class BookDocumentTextView(context: Context) : TextView(context) {
     private val basePaddingRight = paddingRight
     private val basePaddingBottom = paddingBottom
     private var trackingNonLinkTap = false
+    private var readerTapBlockedAtDown = false
     private var nonLinkTapDownX = 0f
     private var nonLinkTapDownY = 0f
     internal var selectionInteraction: BookDocumentTextInteraction? = null
@@ -130,6 +131,7 @@ internal class BookDocumentTextView(context: Context) : TextView(context) {
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 trackingNonLinkTap = buffer?.clickableSpanAt(this, event) == null
+                readerTapBlockedAtDown = interaction.isReaderTapBlocked()
                 nonLinkTapDownX = event.x
                 nonLinkTapDownY = event.y
             }
@@ -143,11 +145,19 @@ internal class BookDocumentTextView(context: Context) : TextView(context) {
                     isShortTap &&
                     buffer?.clickableSpanAt(this, event) == null
                 ) {
-                    interaction.onNonLinkTap(event.x, width.toFloat())
+                    if (readerTapBlockedAtDown) {
+                        interaction.onBlockedReaderTap()
+                    } else {
+                        interaction.onNonLinkTap(event.x, width.toFloat())
+                    }
                 }
                 trackingNonLinkTap = false
+                readerTapBlockedAtDown = false
             }
-            MotionEvent.ACTION_CANCEL -> trackingNonLinkTap = false
+            MotionEvent.ACTION_CANCEL -> {
+                trackingNonLinkTap = false
+                readerTapBlockedAtDown = false
+            }
         }
         return super.onTouchEvent(event)
     }
@@ -234,6 +244,8 @@ internal data class BookDocumentTextInteraction(
     val observeSelections: Boolean,
     val rootPositionInWindow: Offset,
     val onSelection: (BookDocumentTextSelection) -> Unit,
+    val isReaderTapBlocked: () -> Boolean,
+    val onBlockedReaderTap: () -> Unit,
     val onNonLinkTap: (x: Float, width: Float) -> Unit,
 ) {
     companion object {
@@ -241,6 +253,8 @@ internal data class BookDocumentTextInteraction(
             observeSelections = false,
             rootPositionInWindow = Offset.Zero,
             onSelection = {},
+            isReaderTapBlocked = { false },
+            onBlockedReaderTap = {},
             onNonLinkTap = { _, _ -> },
         )
     }

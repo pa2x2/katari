@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -43,6 +44,7 @@ import mihon.translation.ui.session.TranslationSessionState
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.AdaptiveSheet
 import tachiyomi.presentation.core.i18n.stringResource
+import kotlin.math.roundToInt
 
 /**
  * Full-viewport Translation overlay.
@@ -155,13 +157,15 @@ internal fun TranslationSessionOverlay(
             return@BoxWithConstraints
         }
 
-        var popupFits by remember(active, hostSize) { mutableStateOf<Boolean?>(null) }
+        val placementSession = active.input.request
+        var popupFits by remember(placementSession, hostSize) { mutableStateOf<Boolean?>(null) }
         if (popupFits == false) {
             Sheet()
             return@BoxWithConstraints
         }
 
         val positionProvider = remember(
+            placementSession,
             anchor,
             hostSize,
             leftInset,
@@ -198,6 +202,7 @@ internal fun TranslationSessionOverlay(
                 maximumWidth = with(density) {
                     minOf(popupMaximumWidth, safeWidth).toDp()
                 },
+                visible = popupFits == true,
                 onDismiss = onDismiss,
                 onExecute = onExecute,
                 onRetry = onRetry,
@@ -265,6 +270,7 @@ private fun TranslationSessionSheetDialog(
 private fun TranslationSessionPopup(
     state: TranslationSessionState.Active,
     maximumWidth: Dp,
+    visible: Boolean,
     onDismiss: () -> Unit,
     onExecute: () -> Unit,
     onRetry: () -> Unit,
@@ -275,7 +281,7 @@ private fun TranslationSessionPopup(
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
 ) {
     BackHandler(onBack = onDismiss)
-    Box {
+    Box(modifier = Modifier.alpha(if (visible) 1f else 0f)) {
         Surface(
             modifier = Modifier
                 .widthIn(max = maximumWidth)
@@ -361,11 +367,53 @@ internal class TranslationPopupPositionProvider(
         onPlacementAvailabilityChanged(placement != null)
         return placement?.let {
             IntOffset(rootLeft + it.x, rootTop + it.y)
-        } ?: IntOffset(
-            x = rootLeft - popupContentSize.width - 1,
-            y = rootTop - popupContentSize.height - 1,
+        } ?: calculateTranslationPopupFallbackPosition(
+            anchor = anchor,
+            popupContentSize = popupContentSize,
+            viewportLeft = viewportLeft,
+            viewportTop = viewportTop,
+            viewportRight = viewportRight,
+            viewportBottom = viewportBottom,
+            rootLeft = rootLeft,
+            rootTop = rootTop,
+            edgeMargin = edgeMargin,
+            anchorGap = anchorGap,
         )
     }
+}
+
+private fun calculateTranslationPopupFallbackPosition(
+    anchor: mihon.translation.ui.session.TranslationSelectionAnchor,
+    popupContentSize: IntSize,
+    viewportLeft: Int,
+    viewportTop: Int,
+    viewportRight: Int,
+    viewportBottom: Int,
+    rootLeft: Int,
+    rootTop: Int,
+    edgeMargin: Int,
+    anchorGap: Int,
+): IntOffset {
+    val safeLeft = (viewportLeft + edgeMargin).coerceAtMost(viewportRight)
+    val safeTop = (viewportTop + edgeMargin).coerceAtMost(viewportBottom)
+    val safeRight = (viewportRight - edgeMargin).coerceAtLeast(safeLeft)
+    val safeBottom = (viewportBottom - edgeMargin).coerceAtLeast(safeTop)
+    val maximumX = (safeRight - popupContentSize.width).coerceAtLeast(safeLeft)
+    val maximumY = (safeBottom - popupContentSize.height).coerceAtLeast(safeTop)
+    val anchorCenterX = ((anchor.left + anchor.right) / 2f)
+        .takeIf(Float::isFinite)
+        ?.roundToInt()
+        ?: safeLeft
+    val preferredX = anchorCenterX - popupContentSize.width / 2
+    val preferredY = anchor.top
+        .takeIf(Float::isFinite)
+        ?.roundToInt()
+        ?.minus(anchorGap + popupContentSize.height)
+        ?: safeTop
+    return IntOffset(
+        x = rootLeft + preferredX.coerceIn(safeLeft, maximumX),
+        y = rootTop + preferredY.coerceIn(safeTop, maximumY),
+    )
 }
 
 private val POPUP_EDGE_MARGIN = 16.dp

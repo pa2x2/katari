@@ -77,6 +77,14 @@ class TranslationSessionSurfaceTest {
     }
 
     @Test
+    fun `page-spanning selection promotes to sheet when popup fits neither side`() {
+        calculate(
+            anchor = TranslationSelectionAnchor(100f, 100f, 900f, 900f),
+            popup = TranslationPopupSize(300, 200),
+        ) shouldBe null
+    }
+
+    @Test
     fun `popup promotes to sheet for invalid or unsafe anchors`() {
         calculate(
             anchor = TranslationSelectionAnchor(Float.NaN, 200f, 600f, 240f),
@@ -111,7 +119,7 @@ class TranslationSessionSurfaceTest {
     }
 
     @Test
-    fun `platform popup reports measured overflow for sheet fallback`() {
+    fun `platform popup keeps measured overflow inside viewport during sheet fallback`() {
         var available: Boolean? = null
         val provider = TranslationPopupPositionProvider(
             anchor = TranslationSelectionAnchor(400f, 420f, 600f, 460f),
@@ -127,7 +135,7 @@ class TranslationSessionSurfaceTest {
             windowSize = IntSize(1200, 1300),
             layoutDirection = LayoutDirection.Ltr,
             popupContentSize = IntSize(400, 520),
-        ) shouldBe IntOffset(-351, -451)
+        ) shouldBe IntOffset(350, 86)
         available shouldBe false
     }
 

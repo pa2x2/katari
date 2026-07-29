@@ -243,6 +243,12 @@ internal fun HtmlProseReaderScreen(
                         translationController?.clearSelection(selection.ownerIdentity)
                 }
             },
+            isReaderTapBlocked = {
+                translationController?.isTranslationActive() == true
+            },
+            onBlockedReaderTap = {
+                translationController?.dismissTranslation()
+            },
             onNonLinkTap = { x, width ->
                 if (translationController?.dismissTranslationOnReaderTap() != true) {
                     viewerActions.onTapFraction(x / width.coerceAtLeast(1f))

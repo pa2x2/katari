@@ -134,6 +134,8 @@ class BookDocumentTextViewTest {
             observeSelections = false,
             rootPositionInWindow = Offset.Zero,
             onSelection = {},
+            isReaderTapBlocked = { false },
+            onBlockedReaderTap = {},
             onNonLinkTap = { x, width -> plainTapFraction = x / width },
         )
         val textY = (view.layout.getLineTop(0) + view.layout.getLineBottom(0)) / 2f
@@ -164,6 +166,8 @@ class BookDocumentTextViewTest {
             observeSelections = false,
             rootPositionInWindow = Offset.Zero,
             onSelection = { emitted = true },
+            isReaderTapBlocked = { false },
+            onBlockedReaderTap = {},
             onNonLinkTap = { _, _ -> },
         )
 
@@ -175,30 +179,32 @@ class BookDocumentTextViewTest {
     }
 
     @Test
-    fun `short prose tap reaches reader navigation while a selection is active`() {
+    fun `short prose tap preserves reader block captured at gesture start`() {
         val view = laidOutTextView(SpannableString("Selected prose remains tappable")) as BookDocumentTextView
-        var selectionWasActiveAtTap = false
+        var readerTapBlocked = true
+        var blockedTapCount = 0
+        var readerTapForwarded = false
         view.selectionInteraction = BookDocumentTextInteraction(
             observeSelections = false,
             rootPositionInWindow = Offset.Zero,
             onSelection = {},
-            onNonLinkTap = { _, _ ->
-                selectionWasActiveAtTap = view.selectionStart != view.selectionEnd
-            },
+            isReaderTapBlocked = { readerTapBlocked },
+            onBlockedReaderTap = { blockedTapCount += 1 },
+            onNonLinkTap = { _, _ -> readerTapForwarded = true },
         )
-        Selection.setSelection(view.text as Spannable, 0, 8)
         val x = view.layout.getPrimaryHorizontal(12)
         val y = (view.layout.getLineTop(0) + view.layout.getLineBottom(0)) / 2f
         val down = event(x, y, MotionEvent.ACTION_DOWN)
         val up = event(x, y, MotionEvent.ACTION_UP)
 
         view.dispatchTouchEvent(down)
-        Selection.setSelection(view.text as Spannable, 0, 8)
+        readerTapBlocked = false
         view.dispatchTouchEvent(up)
 
         down.recycle()
         up.recycle()
-        assertTrue(selectionWasActiveAtTap)
+        assertEquals(1, blockedTapCount)
+        assertFalse(readerTapForwarded)
     }
 
     @Test
@@ -209,6 +215,8 @@ class BookDocumentTextViewTest {
             observeSelections = false,
             rootPositionInWindow = Offset.Zero,
             onSelection = {},
+            isReaderTapBlocked = { false },
+            onBlockedReaderTap = {},
             onNonLinkTap = { _, _ -> tapForwarded = true },
         )
         val x = view.layout.getPrimaryHorizontal(5)
@@ -237,6 +245,8 @@ class BookDocumentTextViewTest {
             observeSelections = false,
             rootPositionInWindow = Offset.Zero,
             onSelection = {},
+            isReaderTapBlocked = { false },
+            onBlockedReaderTap = {},
             onNonLinkTap = { _, _ -> tapForwarded = true },
         )
         val x = view.layout.getPrimaryHorizontal(5)
@@ -262,6 +272,8 @@ class BookDocumentTextViewTest {
             observeSelections = true,
             rootPositionInWindow = Offset.Zero,
             onSelection = { emitted = it },
+            isReaderTapBlocked = { false },
+            onBlockedReaderTap = {},
             onNonLinkTap = { _, _ -> },
         )
         view.setTextIsSelectable(true)
