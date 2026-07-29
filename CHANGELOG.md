@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.6.0] - 2026-07-29
+
+> Translate selected book text with your choice of Android, offline, or self-hosted engines, and
+> prepare upcoming chapters before you reach them.
+
+### ✨ Added
+
+- Profile-specific translation settings with a playground, explicit engine and target-language
+  controls, and support for Android System Translation, Offline Translator, and configurable
+  LibreTranslate servers.
+- Automatic selected-text translation for serialized prose and reflowable EPUB readers, with
+  independent per-reader toggles and inline engine and language controls.
+- An optional **Prepare next chapter** setting that begins loading the next manga or
+  serialized-prose chapter at 75% progress and preloads the first manga images.
+
+### 🐛 Fixed
+
+- Kept paginated serialized prose within the visible page bounds.
+- Marked the final serialized-prose chapter complete after reaching its end.
+
 ## [1.5.1] - 2026-07-27
 
 ### Added
@@ -277,7 +297,8 @@ Based on [Mihon v0.20.1](https://github.com/mihonapp/mihon/releases/tag/v0.20.1)
 - Rebranded the application as Katari with its own package identity, visual
   identity, release pipeline, and documentation.
 
-[Unreleased]: https://github.com/katariapp/katari/compare/v1.5.1...upcoming
+[Unreleased]: https://github.com/katariapp/katari/compare/v1.6.0...upcoming
+[1.6.0]: https://github.com/katariapp/katari/releases/tag/v1.6.0
 [1.5.1]: https://github.com/katariapp/katari/releases/tag/v1.5.1
 [1.5.0]: https://github.com/katariapp/katari/releases/tag/v1.5.0
 [1.4.3]: https://github.com/katariapp/katari/releases/tag/v1.4.3
