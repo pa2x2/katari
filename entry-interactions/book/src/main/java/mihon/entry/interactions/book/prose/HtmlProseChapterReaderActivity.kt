@@ -272,6 +272,11 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
                 initialPosition = initialPosition,
                 resourceLoader = content.resourceLoader,
             )
+            if (uiState != null) {
+                // Release Android View focus before Compose removes outgoing lazy-list items.
+                // Otherwise focus reassignment can remeasure the list while changes are applying.
+                currentFocus?.clearFocus()
+            }
             uiState = HtmlProseReaderUiState(
                 entryTitle = session.entry.displayTitle,
                 currentChapterId = session.chapter.id,
