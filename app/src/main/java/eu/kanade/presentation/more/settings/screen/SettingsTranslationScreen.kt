@@ -82,7 +82,7 @@ object SettingsTranslationScreen : SearchableSettings {
         val lifecycleOwner = LocalLifecycleOwner.current
         val backPress = LocalBackPress.current
         val navigator = LocalNavigator.currentOrThrow
-        val model = rememberScreenModel { TranslationSettingsScreenModel() }
+        val model = rememberTranslationSettingsScreenModel()
         val playground by model.playground.collectAsState()
         val engines by model.engines.collectAsState()
         val searchHighlightKey = remember { SearchableSettings.highlightKey }
@@ -135,7 +135,6 @@ object SettingsTranslationScreen : SearchableSettings {
                     navigator.push(
                         TranslationLanguagePickerScreen(
                             TranslationLanguagePickerTarget.PlaygroundSource,
-                            model,
                         ),
                     )
                 TranslationSessionExternalAction.ChooseTargetLanguage,
@@ -143,12 +142,11 @@ object SettingsTranslationScreen : SearchableSettings {
                 -> navigator.push(
                     TranslationLanguagePickerScreen(
                         TranslationLanguagePickerTarget.PlaygroundTarget,
-                        model,
                     ),
                 )
                 TranslationSessionExternalAction.ChooseEngine ->
                     navigator.push(
-                        TranslationEnginePickerScreen(model),
+                        TranslationEnginePickerScreen(),
                     )
                 is TranslationSessionExternalAction.ConfirmProviderDisclosure ->
                     model.acknowledge(action.engine, action.disclosure, ::handleHostResult)
@@ -177,7 +175,6 @@ object SettingsTranslationScreen : SearchableSettings {
                 navigator.push(
                     TranslationLanguagePickerScreen(
                         TranslationLanguagePickerTarget.PlaygroundSource,
-                        model,
                     ),
                 )
             },
@@ -185,13 +182,12 @@ object SettingsTranslationScreen : SearchableSettings {
                 navigator.push(
                     TranslationLanguagePickerScreen(
                         TranslationLanguagePickerTarget.PlaygroundTarget,
-                        model,
                     ),
                 )
             },
             onSwapLanguages = model::swapLanguages,
             onChooseEngine = {
-                navigator.push(TranslationEnginePickerScreen(model))
+                navigator.push(TranslationEnginePickerScreen())
             },
             canOpenSetup = model.supportsSetup(playground.engine),
             onOpenSetup = {
@@ -205,3 +201,7 @@ object SettingsTranslationScreen : SearchableSettings {
         )
     }
 }
+
+@Composable
+internal fun rememberTranslationSettingsScreenModel(): TranslationSettingsScreenModel =
+    SettingsTranslationScreen.rememberScreenModel { TranslationSettingsScreenModel() }

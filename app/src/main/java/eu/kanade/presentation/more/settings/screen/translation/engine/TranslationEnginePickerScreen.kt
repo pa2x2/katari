@@ -6,7 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.presentation.more.settings.screen.translation.TranslationSettingsScreenModel
+import eu.kanade.presentation.more.settings.screen.rememberTranslationSettingsScreenModel
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toast
@@ -14,14 +14,13 @@ import mihon.translation.api.TranslationHostActionResult
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
 
-internal class TranslationEnginePickerScreen(
-    private val model: TranslationSettingsScreenModel,
-) : Screen() {
+internal class TranslationEnginePickerScreen : Screen() {
 
     @Composable
     override fun Content() {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
+        val model = rememberTranslationSettingsScreenModel()
         val playground by model.playground.collectAsState()
         val engines by model.engines.collectAsState()
 
