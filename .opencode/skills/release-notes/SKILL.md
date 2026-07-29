@@ -1,6 +1,6 @@
 ---
 name: release-notes
-description: Generate user-facing Katari release notes for a specified local semantic-version tag by comparing it with its previous local Katari release tag, then update CHANGELOG.md. Use when asked to run or implement the release-notes command or prepare a Katari release changelog.
+description: Generate user-facing Katari release notes for the configured app version by comparing the current branch against main, then update CHANGELOG.md. Use when asked to run or implement the release-notes command or prepare a Katari release changelog.
 ---
 
 # Katari release notes
@@ -10,22 +10,28 @@ Katari's changelog focused on behavior that differs from Mihon.
 
 ## Inspect the release
 
-1. Require exactly one stable semantic version. Normalize `1.1.0` to `v1.1.0`; reject
-   prereleases, ranges, branches, and arbitrary commits.
+1. Read `versionName` from `app/build.gradle.kts` as the release version. Require a stable
+   semantic version such as `1.1.0` and derive future tag `v1.1.0`; stop if the configured
+   version is missing or is not a stable semantic version. Do not require a version argument.
 2. Read `AGENTS.md`. Verify the repository root and worktree state. Preserve unrelated
    worktree changes.
-3. Use local tags only. Do not fetch, push, change branches, require GitHub authentication,
-   or inspect a GitHub release. Run:
+3. Compare the checked-out branch with the local `main` branch. Do not fetch, push, change
+   branches, require GitHub authentication, or inspect a GitHub release. Run:
 
    ```bash
-   python3 .opencode/skills/release-notes/scripts/inspect_release.py <version>
+   git branch --show-current
+   git rev-parse HEAD
+   git rev-parse --verify 'main^{commit}'
+   git merge-base main HEAD
    ```
 
-   Record the target tag, target SHA, previous local Katari release tag, comparison range,
-   and configured app version. Stop if the target tag does not exist locally, is not
-   descended from the previous local tag, or does not match the app version.
-4. Inspect `git log`, `git diff --stat`, and the full diff for the reported range. Use
-   `CHANGELOG.md`, pull-request references, tests, and commit messages as leads. Trace
+   Record the current branch, `HEAD` SHA, `main` SHA, merge base, comparison range
+   `main...HEAD`, and configured app version. Stop if `HEAD` is detached, local `main` is
+   unavailable, or the branch has no changes relative to `main`. Do not require the future
+   release tag to exist.
+4. Inspect `git log main..HEAD`, `git diff --stat main...HEAD`, and the full
+   `git diff main...HEAD`. Use `CHANGELOG.md`, pull-request references, tests, and commit
+   messages as leads. Trace
    representative runtime and presentation paths before claiming user-visible behavior.
    When local history identifies an associated pull request, record its number and URL for
    the corresponding outcome. Read the public pull-request metadata to verify the PR author's
@@ -125,6 +131,8 @@ Katari's changelog focused on behavior that differs from Mihon.
 
 ## Safety rules
 
-- Treat `/release-notes <version>` as a worktree-only changelog update. Do not modify files
-  other than `CHANGELOG.md`.
-- Never infer a release from `HEAD`; resolve both endpoints as exact `vX.Y.Z` tags.
+- Treat `/release-notes` as a worktree-only changelog update. Do not modify files other than
+  `CHANGELOG.md`.
+- Derive release-note content exclusively from the checked-out branch's changes relative to
+  local `main`. The configured app version's `vX.Y.Z` tag is a future release identifier for
+  changelog links, not a required comparison endpoint.

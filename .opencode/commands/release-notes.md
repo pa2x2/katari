@@ -1,7 +1,8 @@
 ---
-description: Generate Katari release notes and update a draft release
+description: Generate Katari release notes for the current branch and update a draft release
 ---
-Use the `release-notes` skill to prepare Katari release notes for version `$ARGUMENTS`.
+Use the `release-notes` skill to prepare Katari release notes for the app version configured
+on the current branch.
 
 Update `CHANGELOG.md` in the worktree, but do not commit it. Show the exact proposed
 GitHub release body and require explicit user confirmation before running any command
