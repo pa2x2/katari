@@ -48,6 +48,7 @@ fun TranslationSessionPanel(
             showHeader = false,
             showExpand = false,
             showLanguageChange = false,
+            showEngineChange = false,
             showCopy = showCopy,
             useExternalEnginePicker = true,
             onDismiss = controller::dismiss,

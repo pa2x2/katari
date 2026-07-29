@@ -18,6 +18,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mihon.translation.api.KnownTranslationEngine
@@ -81,6 +82,32 @@ class TranslationSessionOverlayTest {
         )
             .assertWidthIsEqualTo(36.dp)
             .assertHeightIsEqualTo(36.dp)
+        composeRule.onNodeWithContentDescription(
+            composeRule.activity.stringResource(MR.strings.translation_choose_engine),
+        )
+            .assertIsDisplayed()
+            .assertWidthIsEqualTo(36.dp)
+            .assertHeightIsEqualTo(36.dp)
+    }
+
+    @Test
+    fun successful_translation_opens_the_session_engine_chooser() {
+        var externalAction: TranslationSessionExternalAction? = null
+        render(
+            state = success(
+                translatedText = "Witaj świecie",
+                anchor = TranslationSelectionAnchor(400f, 280f, 680f, 340f),
+            ),
+            onExternalAction = { externalAction = it },
+        )
+
+        composeRule.onNodeWithContentDescription(
+            composeRule.activity.stringResource(MR.strings.translation_choose_engine),
+        ).performClick()
+
+        composeRule.runOnIdle {
+            assertTrue(externalAction == TranslationSessionExternalAction.ChooseEngine)
+        }
     }
 
     @Test
@@ -189,6 +216,7 @@ class TranslationSessionOverlayTest {
                     showHeader = false,
                     showExpand = false,
                     showLanguageChange = false,
+                    showEngineChange = false,
                     showCopy = true,
                     useExternalEnginePicker = true,
                     onDismiss = {},
@@ -227,6 +255,7 @@ class TranslationSessionOverlayTest {
                     showHeader = false,
                     showExpand = false,
                     showLanguageChange = false,
+                    showEngineChange = false,
                     showCopy = true,
                     useExternalEnginePicker = true,
                     onDismiss = {},
@@ -303,6 +332,7 @@ class TranslationSessionOverlayTest {
                     showHeader = false,
                     showExpand = false,
                     showLanguageChange = false,
+                    showEngineChange = false,
                     showCopy = true,
                     useExternalEnginePicker = true,
                     onDismiss = {},
@@ -342,6 +372,7 @@ class TranslationSessionOverlayTest {
                     showHeader = false,
                     showExpand = false,
                     showLanguageChange = false,
+                    showEngineChange = false,
                     showCopy = true,
                     useExternalEnginePicker = true,
                     onDismiss = {},
@@ -364,7 +395,10 @@ class TranslationSessionOverlayTest {
         ).assertCountEquals(0)
     }
 
-    private fun render(state: TranslationSessionState) {
+    private fun render(
+        state: TranslationSessionState,
+        onExternalAction: (TranslationSessionExternalAction) -> Unit = {},
+    ) {
         composeRule.setContent {
             MaterialTheme {
                 Box(
@@ -383,7 +417,7 @@ class TranslationSessionOverlayTest {
                         onExpand = {},
                         onSelectSource = {},
                         onSelectEngine = {},
-                        onExternalAction = {},
+                        onExternalAction = onExternalAction,
                     )
                 }
             }

@@ -96,6 +96,11 @@ leaving the selection settled briefly opens the existing translation popup.
 Moving the selection handles replaces an in-progress request, so only the
 latest settled selection is translated.
 
+The translation popup can switch the engine for the current selection alongside
+its existing copy and language controls. This session choice immediately
+retranslates the selected text but does not replace the profile's default
+engine.
+
 Automatic selection translation is available in the serialized HTML prose
 reader and for reflowable EPUB. It is not available for fixed-layout EPUB or
 readers that cannot provide stable selected text and an on-screen selection

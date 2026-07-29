@@ -15,6 +15,7 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.OpenInFull
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -62,6 +63,7 @@ internal fun TranslationSessionContent(
     showHeader: Boolean,
     showExpand: Boolean,
     showLanguageChange: Boolean,
+    showEngineChange: Boolean,
     showCopy: Boolean,
     useExternalEnginePicker: Boolean,
     onDismiss: () -> Unit,
@@ -130,6 +132,7 @@ internal fun TranslationSessionContent(
                     compact = compact,
                     showExpand = showExpand,
                     showLanguageChange = showLanguageChange,
+                    showEngineChange = showEngineChange,
                     showCopy = showCopy,
                     onDismiss = if (compactResult) onDismiss else null,
                     onCopy = onCopy,
@@ -258,6 +261,7 @@ private fun SuccessContent(
     compact: Boolean,
     showExpand: Boolean,
     showLanguageChange: Boolean,
+    showEngineChange: Boolean,
     showCopy: Boolean,
     onDismiss: (() -> Unit)?,
     onCopy: (String) -> Unit,
@@ -278,6 +282,9 @@ private fun SuccessContent(
                 target = result.targetLanguage,
             ),
         )
+    }
+    val changeEngine = {
+        onExternalAction(TranslationSessionExternalAction.ChooseEngine)
     }
     if (!compact) {
         Text(
@@ -319,6 +326,13 @@ private fun SuccessContent(
                     onClick = changeLanguages,
                 )
             }
+            if (showEngineChange) {
+                TranslationCompactIconButton(
+                    icon = Icons.Outlined.Settings,
+                    contentDescription = stringResource(MR.strings.translation_choose_engine),
+                    onClick = changeEngine,
+                )
+            }
             onDismiss?.let {
                 TranslationCompactIconButton(
                     icon = Icons.Outlined.Close,
@@ -346,7 +360,7 @@ private fun SuccessContent(
             overflow = if (compact) TextOverflow.Ellipsis else TextOverflow.Clip,
         )
     }
-    if (!compact && (showCopy || showOverflowAction || showLanguageChange)) {
+    if (!compact && (showCopy || showOverflowAction || showLanguageChange || showEngineChange)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End,
@@ -374,6 +388,14 @@ private fun SuccessContent(
                     Icon(
                         imageVector = Icons.Outlined.Language,
                         contentDescription = stringResource(MR.strings.action_change_language),
+                    )
+                }
+            }
+            if (showEngineChange) {
+                IconButton(onClick = changeEngine) {
+                    Icon(
+                        imageVector = Icons.Outlined.Settings,
+                        contentDescription = stringResource(MR.strings.translation_choose_engine),
                     )
                 }
             }
