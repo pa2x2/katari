@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
-import mihon.entry.interactions.reader.settings.BookReaderLayoutMode
+import kotlinx.coroutines.flow.map
 import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
 import mihon.entry.viewer.settings.ReaderCapabilityId
 import mihon.entry.viewer.settings.ViewerSettingBinder
@@ -20,7 +20,6 @@ import org.readium.r2.navigator.preferences.Theme
 internal class ReadiumEpubSettingsBinding(
     private val provider: ReadiumEpubSettingsProvider,
     private val binder: ViewerSettingBinder,
-    private val entryId: Long,
     val readerSettingsSurfaceId: String,
     val readerCapabilities: Set<ReaderCapabilityId> = emptySet(),
 ) {
@@ -31,7 +30,6 @@ internal class ReadiumEpubSettingsBinding(
     val pageMargins = binder.bind(provider.pageMarginsSetting)
     val publisherStyles = binder.bind(provider.publisherStylesSetting)
     val textAlignment = binder.bind(provider.textAlignmentSetting)
-    val layoutMode = binder.bind(provider.layoutModeSetting, entryId)
     val columnCount = binder.bind(provider.columnCountSetting)
     val textNormalization = binder.bind(provider.textNormalizationSetting)
     val tapNavigation = binder.bind(provider.tapNavigationSetting)
@@ -63,19 +61,16 @@ internal class ReadiumEpubSettingsBinding(
             textAlignment = textAlignment.effectiveValue,
         )
     }
-    private val pageLayout = combine(layoutMode.state, columnCount.state) { layoutMode, columnCount ->
-        PageLayoutValues(
-            layoutMode = layoutMode.effectiveValue,
-            columnCount = columnCount.effectiveValue,
-        )
+    private val pagination = columnCount.state.map { columnCount ->
+        PaginationValues(columnCount = columnCount.effectiveValue)
     }
 
-    val changes: Flow<EpubPreferences> = combine(appearance, textLayout, pageLayout, ::toReadiumPreferences)
+    val changes: Flow<EpubPreferences> = combine(appearance, textLayout, pagination, ::toReadiumPreferences)
         .drop(1)
         .distinctUntilChanged()
 
     suspend fun resetSettings() {
-        binder.resetSettings(provider, entryId)
+        binder.resetSettings(provider)
     }
 
     suspend fun initialPreferences(): EpubPreferences {
@@ -92,8 +87,7 @@ internal class ReadiumEpubSettingsBinding(
                 publisherStyles = binder.resolve(provider.publisherStylesSetting).effectiveValue,
                 textAlignment = binder.resolve(provider.textAlignmentSetting).effectiveValue,
             ),
-            PageLayoutValues(
-                layoutMode = binder.resolve(provider.layoutModeSetting, entryId).effectiveValue,
+            PaginationValues(
                 columnCount = binder.resolve(provider.columnCountSetting).effectiveValue,
             ),
         )
@@ -114,15 +108,14 @@ internal data class TextLayoutValues(
     val textAlignment: String,
 )
 
-internal data class PageLayoutValues(
-    val layoutMode: String,
+internal data class PaginationValues(
     val columnCount: String,
 )
 
 internal fun toReadiumPreferences(
     appearance: AppearanceValues,
     textLayout: TextLayoutValues,
-    pageLayout: PageLayoutValues,
+    pagination: PaginationValues,
 ): EpubPreferences = EpubPreferences(
     theme = when (appearance.theme) {
         ReadiumEpubSettingsProvider.THEME_DARK -> Theme.DARK
@@ -147,8 +140,8 @@ internal fun toReadiumPreferences(
         ReadiumEpubSettingsProvider.ALIGN_RIGHT -> TextAlign.RIGHT
         else -> null
     },
-    scroll = pageLayout.layoutMode == BookReaderLayoutMode.SCROLLING.serializedValue,
-    columnCount = when (pageLayout.columnCount) {
+    scroll = false,
+    columnCount = when (pagination.columnCount) {
         ReadiumEpubSettingsProvider.COLUMNS_ONE -> ColumnCount.ONE
         ReadiumEpubSettingsProvider.COLUMNS_TWO -> ColumnCount.TWO
         else -> ColumnCount.AUTO

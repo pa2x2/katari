@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.reader.settings.BookReaderLayoutMode
 import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
 import mihon.entry.viewer.settings.ResolvedViewerSetting
 import mihon.entry.viewer.settings.ViewerSettingBinder
@@ -49,8 +48,7 @@ class ReadiumEpubSettingsBindingTest {
                 publisherStyles = true,
                 textAlignment = ReadiumEpubSettingsProvider.ALIGN_PUBLISHER,
             ),
-            pageLayout = PageLayoutValues(
-                layoutMode = BookReaderLayoutMode.PAGINATED.serializedValue,
+            pagination = PaginationValues(
                 columnCount = ReadiumEpubSettingsProvider.COLUMNS_AUTO,
             ),
         )
@@ -85,8 +83,7 @@ class ReadiumEpubSettingsBindingTest {
                 publisherStyles = false,
                 textAlignment = ReadiumEpubSettingsProvider.ALIGN_JUSTIFY,
             ),
-            pageLayout = PageLayoutValues(
-                layoutMode = BookReaderLayoutMode.SCROLLING.serializedValue,
+            pagination = PaginationValues(
                 columnCount = ReadiumEpubSettingsProvider.COLUMNS_TWO,
             ),
         )
@@ -98,7 +95,7 @@ class ReadiumEpubSettingsBindingTest {
         assertEquals(2.5, preferences.pageMargins)
         assertEquals(false, preferences.publisherStyles)
         assertEquals(TextAlign.JUSTIFY, preferences.textAlign)
-        assertEquals(true, preferences.scroll)
+        assertEquals(false, preferences.scroll)
         assertEquals(ColumnCount.TWO, preferences.columnCount)
         assertEquals(true, preferences.textNormalization)
     }
@@ -110,7 +107,6 @@ class ReadiumEpubSettingsBindingTest {
         val settings = ReadiumEpubSettingsBinding(
             provider,
             binder,
-            entryId = 7L,
             readerSettingsSurfaceId = ReadiumEpubSettingsProvider.PROVIDER_ID,
         )
         val nextPreferences = async(start = CoroutineStart.UNDISPATCHED) {

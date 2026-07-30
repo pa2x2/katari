@@ -138,8 +138,6 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
                         },
                         onPageIndexPreview = navigationController::previewPageInSection,
                         onPageIndexChange = navigationController::finishPageInSection,
-                        onProgressPreview = navigationController::previewProgressInSection,
-                        onProgressChange = navigationController::finishProgressInSection,
                         onPreviousSection = { navigationController.goToAdjacentSection(-1) },
                         onNextSection = { navigationController.goToAdjacentSection(1) },
                         onNavigationItemClick = navigationController::goToNavigationItem,
@@ -196,7 +194,6 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
                         val readerSettings = ReadiumEpubSettingsBinding(
                             provider = Injekt.get<ReadiumEpubSettingsProvider>(),
                             binder = Injekt.get<ViewerSettingBinder>(),
-                            entryId = result.session.entry.id,
                             readerSettingsSurfaceId = settingsSurfaceId,
                             readerCapabilities = result.session.readerCapabilities,
                         )
@@ -355,7 +352,6 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
             bookTitle = publication.title ?: session.entry.displayTitle,
             sectionCount = navigation.size,
             readingDirection = navigationController.effectiveReadingDirection,
-            fixedLayout = host.isFixedLayout,
         )
         resolveChildWebView(session)
         inputListener = navigationController

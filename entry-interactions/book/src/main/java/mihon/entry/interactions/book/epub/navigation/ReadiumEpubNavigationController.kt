@@ -10,8 +10,6 @@ import kotlinx.coroutines.launch
 import mihon.book.api.BookLocator
 import mihon.book.api.BookNavigationItem
 import mihon.book.api.BookReadingDirection
-import mihon.entry.interactions.reader.settings.BookReaderLayoutMode
-import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
 import org.readium.r2.navigator.input.InputListener
 import org.readium.r2.navigator.input.TapEvent
 import org.readium.r2.shared.publication.Locator
@@ -27,14 +25,12 @@ internal class ReadiumEpubNavigationController(
     private var resourceCurrentPage = 1
     private var resourceTotalPages = 1
     private var sectionStartPageIndex = 0
-    private var sectionStartProgression = 0.0
-    private var sectionEndProgression = 1.0
     private var pendingNavigationIndex: Int? = null
     internal var effectiveReadingDirection = BookReadingDirection.LEFT_TO_RIGHT
-    private val seekDispatcher = ThrottledLatestDispatcher<ReaderSeekTarget>(
+    private val seekDispatcher = ThrottledLatestDispatcher<Int>(
         scope = activity.lifecycleScope,
         intervalMillis = SEEK_PREVIEW_INTERVAL_MILLIS,
-        dispatch = ::applySeekTarget,
+        dispatch = ::goToPageInSection,
     )
 
     private val retainedSession get() = activity.retainedSession
@@ -80,11 +76,6 @@ internal class ReadiumEpubNavigationController(
         navigationResolutionJob = null
     }
 
-    private sealed interface ReaderSeekTarget {
-        data class Page(val index: Int) : ReaderSeekTarget
-        data class Progress(val value: Float) : ReaderSeekTarget
-    }
-
     private companion object {
         const val TAP_PREVIOUS_END = 0.33f
         const val TAP_NEXT_START = 0.67f
@@ -109,12 +100,10 @@ internal class ReadiumEpubNavigationController(
                 }
                 val fragment = navigator ?: return false
                 val readerSettings = settings ?: return false
-                val paginated = readerSettings.layoutMode.state.value.effectiveValue ==
-                    BookReaderLayoutMode.PAGINATED.serializedValue
                 val tapNavigation = readerSettings.tapNavigation.resolveProfile().effectiveValue
                 val width = fragment.publicationView.width.takeIf { it > 0 } ?: return false
                 val x = event.point.x / width.toFloat()
-                if (!paginated || !tapNavigation || x in TAP_PREVIOUS_END..TAP_NEXT_START) {
+                if (!tapNavigation || x in TAP_PREVIOUS_END..TAP_NEXT_START) {
                     setMenuVisibility(!uiState.menuVisible)
                     return true
                 }
@@ -154,7 +143,6 @@ internal class ReadiumEpubNavigationController(
             uiState = uiState.copy(
                 currentSectionIndex = index,
                 sectionTitle = item.title,
-                sectionProgress = 0f,
                 currentPage = 1,
             )
         }
@@ -172,48 +160,20 @@ internal class ReadiumEpubNavigationController(
         readerHost?.goToPage(fragment, target, resourceTotalPages)
     }
 
-    internal fun goToProgressInSection(progress: Float) {
-        translationController?.clearSelection()
-        val fragment = navigator ?: return
-        val safeProgress = progress.coerceIn(0f, 1f)
-        val target = sectionStartProgression +
-            (sectionEndProgression - sectionStartProgression) * safeProgress
-        uiState = uiState.copy(sectionProgress = safeProgress)
-        readerHost?.goToProgression(fragment, target)
-    }
-
     internal fun previewPageInSection(pageIndex: Int) {
         uiState = uiState.copy(currentPage = pageIndex + 1)
-        seekDispatcher.preview(ReaderSeekTarget.Page(pageIndex))
+        seekDispatcher.preview(pageIndex)
     }
 
     internal fun finishPageInSection(pageIndex: Int) {
-        seekDispatcher.finish(ReaderSeekTarget.Page(pageIndex))
-    }
-
-    internal fun previewProgressInSection(progress: Float) {
-        val safeProgress = progress.coerceIn(0f, 1f)
-        uiState = uiState.copy(sectionProgress = safeProgress)
-        seekDispatcher.preview(ReaderSeekTarget.Progress(safeProgress))
-    }
-
-    internal fun finishProgressInSection(progress: Float) {
-        seekDispatcher.finish(ReaderSeekTarget.Progress(progress.coerceIn(0f, 1f)))
-    }
-
-    private fun applySeekTarget(target: ReaderSeekTarget) {
-        when (target) {
-            is ReaderSeekTarget.Page -> goToPageInSection(target.index)
-            is ReaderSeekTarget.Progress -> goToProgressInSection(target.value)
-        }
+        seekDispatcher.finish(pageIndex)
     }
 
     internal fun resolveCurrentNavigation() {
         val fragment = navigator ?: return
         val host = readerHost ?: return
         val locator = uiState.currentLocator ?: return
-        val paginated = isPaginated()
-        val key = "${locator.resourceId}|$paginated|$resourceTotalPages"
+        val key = "${locator.resourceId}|$resourceTotalPages"
         if (navigationResolutionKey == key) return
         navigationResolutionKey = key
         navigationResolutionJob?.cancel()
@@ -222,11 +182,10 @@ internal class ReadiumEpubNavigationController(
                 navigator = fragment,
                 navigation = navigation,
                 resourceId = locator.resourceId,
-                paginated = paginated,
                 totalPages = resourceTotalPages,
                 readingDirection = effectiveReadingDirection,
             )
-            if (uiState.currentLocator?.resourceId != locator.resourceId || isPaginated() != paginated) return@launch
+            if (uiState.currentLocator?.resourceId != locator.resourceId) return@launch
             resolvedNavigationPositions.putAll(positions)
             recalculateSectionMetrics()
         }
@@ -235,47 +194,20 @@ internal class ReadiumEpubNavigationController(
     internal fun recalculateSectionMetrics() {
         val locator = uiState.currentLocator ?: return
         val preferredIndex = pendingNavigationIndex ?: uiState.currentSectionIndex
-        val paginatedMetrics = if (isPaginated()) {
-            resolvePaginatedSectionMetrics(
-                navigation = navigation,
-                locator = locator,
-                resolvedPositions = resolvedNavigationPositions,
-                currentPageIndex = resourceCurrentPage - 1,
-                totalPages = resourceTotalPages,
-                preferredIndex = preferredIndex,
-            )
-        } else {
-            null
-        }
-        val scrollingMetrics = if (paginatedMetrics == null) {
-            resolveSectionMetrics(
-                navigation = navigation,
-                locator = locator,
-                resolvedPositions = resolvedNavigationPositions,
-                preferredIndex = preferredIndex,
-            )
-        } else {
-            null
-        }
+        val paginatedMetrics = resolvePaginatedSectionMetrics(
+            navigation = navigation,
+            locator = locator,
+            resolvedPositions = resolvedNavigationPositions,
+            currentPageIndex = resourceCurrentPage - 1,
+            totalPages = resourceTotalPages,
+            preferredIndex = preferredIndex,
+        )
         val fallbackIndex = preferredIndex
             .takeIf { it in navigation.indices && navigation[it].item.target.resourceId == locator.resourceId }
             ?: navigation.indexOfFirst { it.item.target.resourceId == locator.resourceId }
-        val sectionIndex = paginatedMetrics?.index ?: scrollingMetrics?.index ?: fallbackIndex
-        val sectionStart = paginatedMetrics?.startProgression ?: scrollingMetrics?.startProgression ?: 0.0
-        val sectionEnd = paginatedMetrics?.endProgression ?: scrollingMetrics?.endProgression ?: 1.0
-        sectionStartProgression = sectionStart
-        sectionEndProgression = sectionEnd
-
-        val currentProgression = locator.progression ?: sectionStart
-        val sectionProgress = if (sectionEnd - sectionStart > 0.0001) {
-            ((currentProgression - sectionStart) / (sectionEnd - sectionStart)).coerceIn(0.0, 1.0)
-        } else {
-            0.0
-        }
-        val startPageIndex = paginatedMetrics?.startPageIndex
-            ?: (sectionStart * resourceTotalPages).toInt().coerceIn(0, resourceTotalPages - 1)
-        val endPageIndex = paginatedMetrics?.endPageIndex
-            ?: (sectionEnd * resourceTotalPages).toInt().coerceIn(startPageIndex + 1, resourceTotalPages)
+        val sectionIndex = paginatedMetrics?.index ?: fallbackIndex
+        val startPageIndex = paginatedMetrics?.startPageIndex ?: 0
+        val endPageIndex = paginatedMetrics?.endPageIndex ?: resourceTotalPages
         sectionStartPageIndex = startPageIndex
         val totalPages = (endPageIndex - startPageIndex).coerceAtLeast(1)
         val currentPage = (resourceCurrentPage - startPageIndex).coerceIn(1, totalPages)
@@ -286,10 +218,6 @@ internal class ReadiumEpubNavigationController(
             currentSectionIndex = sectionIndex,
             currentPage = currentPage,
             totalPages = totalPages,
-            sectionProgress = sectionProgress.toFloat(),
         )
     }
-
-    internal fun isPaginated(): Boolean = uiState.fixedLayout ||
-        settings?.layoutMode?.state?.value?.effectiveValue == BookReaderLayoutMode.PAGINATED.serializedValue
 }

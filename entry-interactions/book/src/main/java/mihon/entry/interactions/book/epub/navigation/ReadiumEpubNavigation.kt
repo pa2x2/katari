@@ -11,16 +11,8 @@ internal data class ReadiumNavigationRow(
     val depth: Int,
 )
 
-internal data class ReadiumSectionMetrics(
-    val index: Int,
-    val startProgression: Double,
-    val endProgression: Double,
-)
-
 internal data class ReadiumPaginatedSectionMetrics(
     val index: Int,
-    val startProgression: Double,
-    val endProgression: Double,
     val startPageIndex: Int,
     val endPageIndex: Int,
 )
@@ -61,47 +53,6 @@ internal fun List<BookNavigationItem>.flattenNavigation(depth: Int = 0): List<Re
         listOf(ReadiumNavigationRow(item, depth)) + item.children.flattenNavigation(depth + 1)
     }
 
-internal fun resolveSectionMetrics(
-    navigation: List<ReadiumNavigationRow>,
-    locator: BookLocator,
-    resolvedPositions: Map<String, ReadiumNavigationPosition>,
-    preferredIndex: Int = -1,
-): ReadiumSectionMetrics? {
-    val progression = locator.progression ?: 0.0
-    val candidates = navigation.mapIndexedNotNull { index, row ->
-        if (row.item.target.resourceId != locator.resourceId) return@mapIndexedNotNull null
-        row.item.target.resolvedNavigationPosition(resolvedPositions)?.progression?.let { index to it }
-    }
-    if (candidates.isEmpty()) return null
-
-    val current = candidates
-        .filter { (_, start) -> start <= progression + PROGRESSION_EPSILON }
-        .maxWithOrNull(compareBy<Pair<Int, Double>> { it.second }.thenBy { it.first })
-        ?: candidates.first()
-    val selected = candidates.firstOrNull { it.first == preferredIndex }
-        ?.takeIf { (_, start) ->
-            progression + PROGRESSION_EPSILON >= start &&
-                candidates.none { (index, candidateStart) ->
-                    index > preferredIndex &&
-                        candidateStart > start &&
-                        candidateStart <= progression + PROGRESSION_EPSILON
-                }
-        }
-        ?: current
-    val end = candidates
-        .asSequence()
-        .filter { (index, start) -> index > selected.first && start > selected.second + PROGRESSION_EPSILON }
-        .minByOrNull { it.second }
-        ?.second
-        ?: 1.0
-
-    return ReadiumSectionMetrics(
-        index = selected.first,
-        startProgression = selected.second.coerceIn(0.0, 1.0),
-        endProgression = end.coerceIn(selected.second, 1.0),
-    )
-}
-
 internal fun resolvePaginatedSectionMetrics(
     navigation: List<ReadiumNavigationRow>,
     locator: BookLocator,
@@ -135,10 +86,6 @@ internal fun resolvePaginatedSectionMetrics(
                 }
         }
         ?: current
-    val next = candidates
-        .asSequence()
-        .filter { it.index > selected.index && it.progression > selected.progression + PROGRESSION_EPSILON }
-        .minByOrNull { it.progression }
     val endPageIndex = candidates
         .asSequence()
         .filter { it.index > selected.index && it.pageIndex > selected.pageIndex }
@@ -148,8 +95,6 @@ internal fun resolvePaginatedSectionMetrics(
 
     return ReadiumPaginatedSectionMetrics(
         index = selected.index,
-        startProgression = selected.progression.coerceIn(0.0, 1.0),
-        endProgression = (next?.progression ?: 1.0).coerceIn(selected.progression, 1.0),
         startPageIndex = selected.pageIndex.coerceIn(0, totalPages - 1),
         endPageIndex = endPageIndex.coerceIn(selected.pageIndex + 1, totalPages),
     )
@@ -172,5 +117,3 @@ private data class NavigationCandidate(
     val progression: Double,
     val pageIndex: Int,
 )
-
-private const val PROGRESSION_EPSILON = 0.0001

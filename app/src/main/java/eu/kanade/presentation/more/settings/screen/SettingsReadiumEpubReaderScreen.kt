@@ -5,7 +5,6 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import eu.kanade.presentation.more.settings.Preference
-import mihon.entry.interactions.reader.settings.BookReaderLayoutMode
 import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.asProfilePreference
@@ -38,7 +37,6 @@ object SettingsReadiumEpubReaderScreen : AppEntryViewerSettingsScreenProjection(
         val textAlignment = remember(provider, binder) {
             binder.bind(provider.textAlignmentSetting).asProfilePreference()
         }
-        val layoutMode = remember(provider, binder) { binder.bind(provider.layoutModeSetting).asProfilePreference() }
         val columnCount = remember(provider, binder) { binder.bind(provider.columnCountSetting).asProfilePreference() }
         val textNormalization = remember(provider, binder) {
             binder.bind(provider.textNormalizationSetting).asProfilePreference()
@@ -54,8 +52,6 @@ object SettingsReadiumEpubReaderScreen : AppEntryViewerSettingsScreenProjection(
         val lineHeightValue by lineHeight.collectAsState()
         val pageMarginsValue by pageMargins.collectAsState()
         val publisherStylesEnabled by publisherStyles.collectAsState()
-        val layoutModeValue by layoutMode.collectAsState()
-
         return listOf(
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.pref_category_display),
@@ -102,16 +98,6 @@ object SettingsReadiumEpubReaderScreen : AppEntryViewerSettingsScreenProjection(
                 title = stringResource(MR.strings.pref_epub_page_layout),
                 preferenceItems = listOf(
                     Preference.PreferenceItem.ListPreference(
-                        preference = layoutMode,
-                        entries = mapOf(
-                            BookReaderLayoutMode.PAGINATED.serializedValue to
-                                stringResource(BookReaderLayoutMode.PAGINATED.labelRes),
-                            BookReaderLayoutMode.SCROLLING.serializedValue to
-                                stringResource(BookReaderLayoutMode.SCROLLING.labelRes),
-                        ),
-                        title = stringResource(MR.strings.book_reader_layout),
-                    ),
-                    Preference.PreferenceItem.ListPreference(
                         preference = columnCount,
                         entries = mapOf(
                             ReadiumEpubSettingsProvider.COLUMNS_AUTO to
@@ -123,7 +109,6 @@ object SettingsReadiumEpubReaderScreen : AppEntryViewerSettingsScreenProjection(
                         ),
                         title = stringResource(MR.strings.pref_epub_column_count),
                         subtitle = stringResource(MR.strings.pref_epub_column_count_summary),
-                        enabled = layoutModeValue == BookReaderLayoutMode.PAGINATED.serializedValue,
                     ),
                     Preference.PreferenceItem.SliderPreference(
                         value = pageMarginsValue,

@@ -11,14 +11,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 import mihon.entry.interactions.book.BookReaderSettingsDialog
-import mihon.entry.interactions.reader.settings.BookReaderLayoutMode
 import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
 import mihon.entry.viewer.settings.ResolvedViewerSetting
 import tachiyomi.i18n.MR
@@ -93,8 +90,6 @@ internal fun ReadiumAppearanceSettings(settings: ReadiumEpubSettingsBinding) {
 
 @Composable
 internal fun ReadiumLayoutSettings(settings: ReadiumEpubSettingsBinding) {
-    val scope = rememberCoroutineScope()
-    val layoutMode by settings.layoutMode.state.collectEffectiveValue()
     val columnCount by settings.columnCount.state.collectEffectiveValue()
     val pageMargins by settings.pageMargins.state.collectEffectiveValue()
     val publisherStyles by settings.publisherStyles.state.collectEffectiveValue()
@@ -103,27 +98,16 @@ internal fun ReadiumLayoutSettings(settings: ReadiumEpubSettingsBinding) {
     val textNormalization by settings.textNormalization.state.collectEffectiveValue()
 
     SettingChips(
-        label = stringResource(MR.strings.book_reader_layout),
+        label = stringResource(MR.strings.pref_epub_column_count),
+        summary = stringResource(MR.strings.pref_epub_column_count_summary),
         values = listOf(
-            BookReaderLayoutMode.PAGINATED.serializedValue to stringResource(BookReaderLayoutMode.PAGINATED.labelRes),
-            BookReaderLayoutMode.SCROLLING.serializedValue to stringResource(BookReaderLayoutMode.SCROLLING.labelRes),
+            ReadiumEpubSettingsProvider.COLUMNS_AUTO to stringResource(MR.strings.pref_epub_columns_auto),
+            ReadiumEpubSettingsProvider.COLUMNS_ONE to stringResource(MR.strings.pref_epub_columns_one),
+            ReadiumEpubSettingsProvider.COLUMNS_TWO to stringResource(MR.strings.pref_epub_columns_two),
         ),
-        selected = layoutMode,
-        onSelect = { scope.launch { settings.layoutMode.setEntryOverride(it) } },
+        selected = columnCount,
+        onSelect = settings.columnCount::setProfileValue,
     )
-    if (layoutMode == BookReaderLayoutMode.PAGINATED.serializedValue) {
-        SettingChips(
-            label = stringResource(MR.strings.pref_epub_column_count),
-            summary = stringResource(MR.strings.pref_epub_column_count_summary),
-            values = listOf(
-                ReadiumEpubSettingsProvider.COLUMNS_AUTO to stringResource(MR.strings.pref_epub_columns_auto),
-                ReadiumEpubSettingsProvider.COLUMNS_ONE to stringResource(MR.strings.pref_epub_columns_one),
-                ReadiumEpubSettingsProvider.COLUMNS_TWO to stringResource(MR.strings.pref_epub_columns_two),
-            ),
-            selected = columnCount,
-            onSelect = settings.columnCount::setProfileValue,
-        )
-    }
     SliderItem(
         value = pageMargins,
         valueRange = ReadiumEpubSettingsProvider.PAGE_MARGINS_RANGE step 20,

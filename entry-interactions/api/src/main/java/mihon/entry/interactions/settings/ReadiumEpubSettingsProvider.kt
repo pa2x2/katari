@@ -1,6 +1,5 @@
 package mihon.entry.interactions.settings
 
-import mihon.entry.interactions.reader.settings.BookReaderLayoutMode
 import mihon.entry.viewer.settings.ViewerSettingCodecs
 import mihon.entry.viewer.settings.ViewerSettingDefinition
 import mihon.entry.viewer.settings.ViewerSettingId
@@ -24,10 +23,6 @@ class ReadiumEpubSettingsProvider(
     private val pageMargins = preferenceStore.getInt("book.epub.readium.page_margins_percent", 100)
     private val publisherStyles = preferenceStore.getBoolean("book.epub.readium.publisher_styles", true)
     private val textAlignment = preferenceStore.getString("book.epub.readium.text_alignment", ALIGN_PUBLISHER)
-    private val layoutMode = preferenceStore.getString(
-        "book.epub.readium.layout_mode",
-        BookReaderLayoutMode.PAGINATED.serializedValue,
-    )
     private val columnCount = preferenceStore.getString("book.epub.readium.column_count", COLUMNS_AUTO)
     private val textNormalization = preferenceStore.getBoolean("book.epub.readium.text_normalization", false)
     private val tapNavigation = preferenceStore.getBoolean("book.epub.readium.tap_navigation", false)
@@ -40,14 +35,6 @@ class ReadiumEpubSettingsProvider(
     val pageMarginsSetting = intSetting(PAGE_MARGINS_KEY, pageMargins, PAGE_MARGINS_RANGE)
     val publisherStylesSetting = booleanSetting(PUBLISHER_STYLES_KEY, publisherStyles)
     val textAlignmentSetting = stringSetting(TEXT_ALIGNMENT_KEY, textAlignment, SUPPORTED_TEXT_ALIGNMENTS)
-    val layoutModeSetting = ViewerSettingDefinition(
-        id = ViewerSettingId(PROVIDER_ID, LAYOUT_MODE_KEY),
-        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
-        processorDefault = BookReaderLayoutMode.PAGINATED.serializedValue,
-        profilePreference = layoutMode,
-        codec = ViewerSettingCodecs.String,
-        validate = BookReaderLayoutMode.supportedValues::contains,
-    )
     val columnCountSetting = stringSetting(COLUMN_COUNT_KEY, columnCount, SUPPORTED_COLUMN_COUNTS)
     val textNormalizationSetting = booleanSetting(TEXT_NORMALIZATION_KEY, textNormalization)
     val tapNavigationSetting = booleanSetting(TAP_NAVIGATION_KEY, tapNavigation)
@@ -61,7 +48,6 @@ class ReadiumEpubSettingsProvider(
         pageMarginsSetting,
         publisherStylesSetting,
         textAlignmentSetting,
-        layoutModeSetting,
         columnCountSetting,
         textNormalizationSetting,
         tapNavigationSetting,
@@ -108,7 +94,6 @@ class ReadiumEpubSettingsProvider(
         const val PAGE_MARGINS_KEY = "page_margins_percent"
         const val PUBLISHER_STYLES_KEY = "publisher_styles"
         const val TEXT_ALIGNMENT_KEY = "text_alignment"
-        const val LAYOUT_MODE_KEY = "layout_mode"
         const val COLUMN_COUNT_KEY = "column_count"
         const val TEXT_NORMALIZATION_KEY = "text_normalization"
         const val TAP_NAVIGATION_KEY = "tap_navigation"

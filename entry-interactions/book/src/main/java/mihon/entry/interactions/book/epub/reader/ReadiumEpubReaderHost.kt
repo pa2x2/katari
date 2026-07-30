@@ -71,16 +71,6 @@ internal class ReadiumEpubReaderHost(
         )
     }
 
-    fun goToProgression(
-        navigator: EpubNavigatorFragment,
-        progression: Double,
-    ): Boolean {
-        return navigator.go(
-            navigator.currentLocator.value.progressionOnly(progression),
-            animated = false,
-        )
-    }
-
     fun goToNavigationItem(
         navigator: EpubNavigatorFragment,
         item: BookNavigationItem,
@@ -94,7 +84,6 @@ internal class ReadiumEpubReaderHost(
         navigator: EpubNavigatorFragment,
         navigation: List<ReadiumNavigationRow>,
         resourceId: String,
-        paginated: Boolean,
         totalPages: Int,
         readingDirection: mihon.book.api.BookReadingDirection,
     ): Map<String, ReadiumNavigationPosition> {
@@ -113,7 +102,6 @@ internal class ReadiumEpubReaderHost(
             (function() {
                 var ids = $fragmentJson;
                 var root = document.scrollingElement || document.documentElement;
-                var horizontal = $paginated;
                 var rtl = $rtl;
                 var totalPages = ${totalPages.coerceAtLeast(1)};
                 return JSON.stringify(ids.map(function(rawId) {
@@ -122,23 +110,13 @@ internal class ReadiumEpubReaderHost(
                     var element = document.getElementById(id) || document.getElementsByName(id)[0];
                     if (!element) return null;
                     var rect = element.getBoundingClientRect();
-                    var progression;
-                    var pageIndex = null;
-                    if (horizontal) {
-                        var width = Math.max(root.scrollWidth, document.documentElement.scrollWidth, 1);
-                        var x = rect.left + (window.scrollX || root.scrollLeft || 0);
-                        var pageWidth = Math.max(Android.getViewportWidth() / window.devicePixelRatio, 1);
-                        var physicalPageIndex = Math.floor(Math.abs(x) / pageWidth + 0.0001);
-                        pageIndex = rtl ? totalPages - physicalPageIndex - 1 : physicalPageIndex;
-                        pageIndex = Math.max(0, Math.min(totalPages - 1, pageIndex));
-                        progression = pageIndex / totalPages;
-                    } else {
-                        var height = Math.max(root.scrollHeight, document.documentElement.scrollHeight, 1);
-                        var y = rect.top + (window.scrollY || root.scrollTop || 0);
-                        progression = y / height;
-                    }
+                    var x = rect.left + (window.scrollX || root.scrollLeft || 0);
+                    var pageWidth = Math.max(Android.getViewportWidth() / window.devicePixelRatio, 1);
+                    var physicalPageIndex = Math.floor(Math.abs(x) / pageWidth + 0.0001);
+                    var pageIndex = rtl ? totalPages - physicalPageIndex - 1 : physicalPageIndex;
+                    pageIndex = Math.max(0, Math.min(totalPages - 1, pageIndex));
                     return {
-                        progression: Math.max(0, Math.min(1, progression)),
+                        progression: pageIndex / totalPages,
                         pageIndex: pageIndex
                     };
                 }));

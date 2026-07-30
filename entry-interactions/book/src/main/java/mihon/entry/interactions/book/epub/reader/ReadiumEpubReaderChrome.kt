@@ -22,12 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import mihon.book.api.BookReadingDirection
 import mihon.entry.interactions.EntryChildWebViewAction
 import mihon.entry.interactions.EntryChildWebViewActionsMenu
 import mihon.entry.interactions.EntryChildWebViewResolution
-import mihon.entry.interactions.book.BookReaderLayoutButton
-import mihon.entry.interactions.reader.settings.BookReaderLayoutMode
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -73,11 +70,7 @@ internal fun ReadiumReaderTopBar(
 
 @Composable
 internal fun ReadiumReaderBottomBar(
-    layoutMode: BookReaderLayoutMode,
-    readingDirection: BookReadingDirection?,
-    showLayoutToggle: Boolean,
     onOpenToc: () -> Unit,
-    onToggleLayout: () -> Unit,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -89,13 +82,6 @@ internal fun ReadiumReaderBottomBar(
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (showLayoutToggle) {
-            BookReaderLayoutButton(
-                layoutMode = layoutMode,
-                readingDirection = readingDirection,
-                onClick = onToggleLayout,
-            )
-        }
         IconButton(onClick = onOpenSettings) {
             Icon(
                 imageVector = Icons.Outlined.Settings,
