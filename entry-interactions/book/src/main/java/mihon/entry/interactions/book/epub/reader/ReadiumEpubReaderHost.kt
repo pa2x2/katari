@@ -2,10 +2,13 @@
 
 package mihon.entry.interactions.book.epub
 
+import androidx.annotation.ColorInt
 import androidx.fragment.app.FragmentFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import mihon.book.api.BookLocator
 import mihon.book.api.BookNavigationItem
@@ -14,6 +17,7 @@ import org.json.JSONTokener
 import org.readium.r2.navigator.epub.EpubNavigatorFactory
 import org.readium.r2.navigator.epub.EpubNavigatorFragment
 import org.readium.r2.navigator.epub.EpubPreferences
+import org.readium.r2.navigator.epub.EpubSettings
 import org.readium.r2.shared.publication.Layout
 
 /** Compile proof for a processor-owned reader surface; never crosses the generic BOOK boundary. */
@@ -147,6 +151,20 @@ internal class ReadiumEpubReaderHost(
     fun readingDirection(navigator: EpubNavigatorFragment): mihon.book.api.BookReadingDirection =
         navigator.settings.value.readingProgression.toBookReadingDirection()
 
+    @ColorInt
+    fun backgroundColor(navigator: EpubNavigatorFragment): Int =
+        navigator.settings.value.effectiveBackgroundColor
+
+    fun observeBackgroundColor(
+        navigator: EpubNavigatorFragment,
+        scope: CoroutineScope,
+        onBackgroundColor: (Int) -> Unit,
+    ): Job = navigator.settings
+        .map { it.effectiveBackgroundColor }
+        .distinctUntilChanged()
+        .onEach(onBackgroundColor)
+        .launchIn(scope)
+
     fun observeSettings(
         navigator: EpubNavigatorFragment,
         settings: ReadiumEpubSettingsBinding,
@@ -155,3 +173,7 @@ internal class ReadiumEpubReaderHost(
         .onEach(navigator::submitPreferences)
         .launchIn(scope)
 }
+
+@get:ColorInt
+private val EpubSettings.effectiveBackgroundColor: Int
+    get() = backgroundColor?.int ?: theme.backgroundColor

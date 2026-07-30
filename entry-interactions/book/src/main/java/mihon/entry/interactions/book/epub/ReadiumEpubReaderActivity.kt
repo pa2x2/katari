@@ -352,6 +352,7 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
             bookTitle = publication.title ?: session.entry.displayTitle,
             sectionCount = navigation.size,
             readingDirection = navigationController.effectiveReadingDirection,
+            backgroundColor = host.backgroundColor(fragment),
         )
         resolveChildWebView(session)
         inputListener = navigationController
@@ -367,6 +368,9 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
             navigationController.updateBookLocation(locator)
         }
         host.observeSettings(fragment, readerSettings, lifecycleScope)
+        host.observeBackgroundColor(fragment, lifecycleScope) { backgroundColor ->
+            uiState = uiState.copy(backgroundColor = backgroundColor)
+        }
         activeSelectionCoordinator.installListener()
         readerContainer.visibility = View.VISIBLE
         surfaceState = ReaderSurfaceState.Ready

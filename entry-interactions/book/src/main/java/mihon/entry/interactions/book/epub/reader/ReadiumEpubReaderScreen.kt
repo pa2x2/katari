@@ -2,6 +2,7 @@ package mihon.entry.interactions.book.epub
 
 import android.view.View
 import androidx.activity.compose.BackHandler
+import androidx.annotation.ColorInt
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -25,7 +26,6 @@ import mihon.entry.interactions.book.BookReaderNavigationSheet
 import mihon.entry.interactions.book.BookReaderProgress
 import mihon.entry.interactions.book.BookReaderScaffold
 import mihon.entry.interactions.book.BookSelectionTranslationController
-import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.reader.ReaderChrome
 import tachiyomi.presentation.core.components.reader.ReaderPageNavigator
@@ -45,6 +45,8 @@ internal data class ReadiumEpubReaderUiState(
     val tocVisible: Boolean = false,
     val settingsVisible: Boolean = false,
     val childWebView: EntryChildWebViewResolution.Available? = null,
+    @ColorInt
+    val backgroundColor: Int = android.graphics.Color.WHITE,
 )
 
 @Composable
@@ -65,13 +67,7 @@ internal fun ReadiumEpubReaderScreen(
     translationController: BookSelectionTranslationController? = null,
     onReaderRootPositionInWindow: (Offset) -> Unit = {},
 ) {
-    val theme by settings.theme.state.collectEffectiveValue()
     val showPageNumber by settings.showPageNumber.state.collectEffectiveValue()
-    val footerColor = when (theme) {
-        ReadiumEpubSettingsProvider.THEME_DARK -> Color(0xFF121212)
-        ReadiumEpubSettingsProvider.THEME_SEPIA -> Color(0xFFF4ECD8)
-        else -> Color.White
-    }
 
     BookReaderScaffold(
         progress = if (!showPageNumber) {
@@ -80,7 +76,7 @@ internal fun ReadiumEpubReaderScreen(
             BookReaderProgress.Page(state.currentPage, state.totalPages)
         },
         progressVisible = !state.menuVisible,
-        footerColor = footerColor,
+        footerColor = Color(state.backgroundColor),
         modifier = Modifier.fillMaxSize(),
         nativeContentView = nativeContentView,
         translationController = translationController,
