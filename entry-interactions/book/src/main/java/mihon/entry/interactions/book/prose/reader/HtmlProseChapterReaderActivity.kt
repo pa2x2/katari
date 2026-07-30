@@ -227,7 +227,12 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
                     result.failure.message,
                 ),
             )
-            is BookReaderOpenResult.Success -> showSession(result.session, attach = retained == null)
+            is BookReaderOpenResult.Success -> {
+                if (retained == null) {
+                    retainedSession.attachInitial(result.session)
+                }
+                showSession(result.session)
+            }
         }
     }
 
@@ -261,10 +266,8 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
 
     internal suspend fun showSession(
         session: OpenedBookReaderSession,
-        attach: Boolean = false,
         resetViewer: Boolean = false,
     ) {
-        if (attach) retainedSession.attachInitial(session)
         val content = session.publicationSession as? HtmlProseChapterSession
         if (content == null) {
             translationController?.clearSelection()
