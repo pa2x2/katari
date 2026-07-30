@@ -9,10 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
-import mihon.book.api.BookContentResource
 import mihon.entry.interactions.book.AndroidBookExternalResourceResolver
-import mihon.entry.interactions.book.BookByteRange
-import mihon.entry.interactions.book.BookContentSession
 import mihon.entry.interactions.book.BookMaterializationStore
 import mihon.entry.interactions.book.BookOpenResult
 import mihon.entry.interactions.book.BookProcessorRegistry
@@ -20,7 +17,6 @@ import mihon.entry.interactions.book.BookPublicationResourceDependencies
 import mihon.entry.interactions.book.BookResourceMaterializationLimitException
 import mihon.entry.interactions.book.BookResourceRequirement
 import mihon.entry.interactions.book.MaterializedBookResource
-import mihon.entry.interactions.book.OpenedBookResource
 import mihon.entry.interactions.book.SourceBookContentSession
 import mihon.entry.interactions.book.document.resource.validateBookDocumentResource
 import mihon.entry.interactions.book.download.model.BookDownload
@@ -30,10 +26,7 @@ import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import java.io.FileInputStream
-import java.io.FilterInputStream
 import java.io.IOException
-import java.io.InputStream
 import java.security.MessageDigest
 
 internal class BookDownloader(
@@ -310,129 +303,3 @@ private data class ResolvedBookResourceDependencies(
     val resourceIds: Set<String> = emptySet(),
     val requirements: Map<String, BookResourceRequirement> = emptyMap(),
 )
-
-internal data class BookDownloadResourceBudget(
-    val maxResourceCount: Int = 128,
-    val maxEncodedBytes: Long = 256L * 1024L * 1024L,
-) {
-    init {
-        require(maxResourceCount > 0)
-        require(maxEncodedBytes > 0)
-    }
-
-    fun tracker() = BookDownloadResourceBudgetTracker(maxEncodedBytes)
-}
-
-internal class BookDownloadResourceBudgetTracker(
-    private val maxEncodedBytes: Long,
-) {
-    private var encodedBytes = 0L
-    val remainingEncodedBytes: Long
-        get() = maxEncodedBytes - encodedBytes
-
-    fun requireCanInclude(byteCount: Long, resourceId: String) {
-        require(byteCount >= 0L)
-        if (byteCount > maxEncodedBytes - encodedBytes) {
-            throw BookResourceBudgetException(
-                "BOOK resource $resourceId would exceed the $maxEncodedBytes-byte download limit.",
-            )
-        }
-    }
-
-    fun include(byteCount: Long, resourceId: String) {
-        requireCanInclude(byteCount, resourceId)
-        encodedBytes += byteCount
-    }
-}
-
-private class MaterializedPrimaryBookContentSession(
-    private val delegate: BookContentSession,
-    private val primaryResourceId: String,
-    private val primaryResource: MaterializedBookResource,
-) : BookContentSession by delegate {
-    override suspend fun getResource(resourceId: String) =
-        if (resourceId == primaryResourceId) {
-            Result.success(primaryResource.metadata)
-        } else {
-            delegate.getResource(resourceId)
-        }
-
-    override suspend fun openResource(
-        resourceId: String,
-        range: BookByteRange?,
-    ): Result<OpenedBookResource> {
-        if (resourceId != primaryResourceId) return delegate.openResource(resourceId, range)
-        return runCatching {
-            val fileLength = primaryResource.file.length()
-            val start = range?.startInclusive ?: 0L
-            val end = range?.endExclusive ?: fileLength
-            require(start in 0..fileLength && end in start..fileLength) {
-                "Requested BOOK range is outside the materialized primary resource"
-            }
-            val input = FileInputStream(primaryResource.file)
-            input.channel.position(start)
-            MaterializedPrimaryOpenedBookResource(
-                metadata = primaryResource.metadata,
-                stream = input.buffered().let { stream ->
-                    if (range == null) stream else stream.limitedTo(end - start)
-                },
-            )
-        }
-    }
-
-    override suspend fun materializeResource(resourceId: String): Result<MaterializedBookResource> =
-        if (resourceId == primaryResourceId) {
-            Result.success(BorrowedMaterializedBookResource(primaryResource))
-        } else {
-            delegate.materializeResource(resourceId)
-        }
-
-    override fun close() = Unit
-}
-
-private class MaterializedPrimaryOpenedBookResource(
-    override val metadata: BookContentResource,
-    override val stream: InputStream,
-) : OpenedBookResource {
-    override fun close() = stream.close()
-}
-
-private class BorrowedMaterializedBookResource(
-    private val delegate: MaterializedBookResource,
-) : MaterializedBookResource {
-    override val metadata
-        get() = delegate.metadata
-    override val file
-        get() = delegate.file
-
-    override fun invalidate() = delegate.invalidate()
-    override fun close() = Unit
-}
-
-private fun InputStream.limitedTo(byteCount: Long): InputStream =
-    LimitedPrimaryInputStream(this, byteCount)
-
-private class LimitedPrimaryInputStream(
-    delegate: InputStream,
-    private var remaining: Long,
-) : FilterInputStream(delegate) {
-    override fun read(): Int {
-        if (remaining <= 0L) return -1
-        return super.read().also { if (it >= 0) remaining-- }
-    }
-
-    override fun read(buffer: ByteArray, offset: Int, length: Int): Int {
-        if (remaining <= 0L) return -1
-        val read = super.read(buffer, offset, minOf(length.toLong(), remaining).toInt())
-        if (read > 0) remaining -= read
-        return read
-    }
-}
-
-private class BookPackageIntegrityException(message: String?, cause: Throwable) : IOException(message, cause)
-
-private class BookResourceValidationException(message: String?, cause: Throwable) : IOException(message, cause)
-
-private class BookResourceDownloadException(message: String?, cause: Throwable) : IOException(message, cause)
-
-private class BookResourceBudgetException(message: String) : IOException(message)

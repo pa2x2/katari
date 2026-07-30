@@ -5,19 +5,13 @@ import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.EntryHttpSource
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.CancellationException
-import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookFailure
 import mihon.book.api.BookFailureReason
-import mihon.book.api.BookLocator
-import mihon.entry.interactions.EntryMediaSessionActivity
-import mihon.entry.interactions.EntryMediaSessionEvent
 import mihon.entry.interactions.EntryMediaSessionProcessor
 import mihon.entry.interactions.book.download.BookDownloadCache
 import mihon.entry.interactions.book.download.BookDownloadPackageKey
 import mihon.entry.interactions.book.download.DownloadedBookContentSession
-import mihon.entry.interactions.book.download.VerifiedBookDownloadPackage
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -305,106 +299,4 @@ internal class BookReaderSessionFactory(
             cause?.addSuppressed(closeError)
         }
     }
-}
-
-internal data class PreparedBookReaderRequest(
-    val request: BookReaderRequest,
-    val visibleEntry: Entry,
-    val owner: Entry,
-    val chapter: EntryChapter,
-    val content: PreparedBookContent,
-)
-
-internal sealed interface PreparedBookContent {
-    val descriptor: BookContentDescriptor
-
-    fun progressIdentity(chapterId: Long): BookProgressIdentity
-
-    data class Source(
-        val source: UnifiedSource,
-        val media: EntryMedia.Book,
-    ) : PreparedBookContent {
-        override val descriptor: BookContentDescriptor = media.descriptor
-
-        override fun progressIdentity(chapterId: Long): BookProgressIdentity = media.progressIdentity(chapterId)
-    }
-
-    data class Downloaded(
-        val download: VerifiedBookDownloadPackage,
-    ) : PreparedBookContent {
-        override val descriptor: BookContentDescriptor = download.manifest.descriptor
-
-        override fun progressIdentity(chapterId: Long): BookProgressIdentity =
-            download.manifest.progressIdentity(chapterId)
-    }
-}
-
-internal sealed interface BookReaderPrepareResult {
-    data class Success(val request: PreparedBookReaderRequest) : BookReaderPrepareResult
-    data class Failure(val failure: BookFailure) : BookReaderPrepareResult
-}
-
-internal sealed interface BookReaderOpenResult {
-    data class Success(val session: OpenedBookReaderSession) : BookReaderOpenResult
-    data class Failure(val failure: BookFailure) : BookReaderOpenResult
-}
-
-internal class OpenedBookReaderSession(
-    val entry: Entry,
-    val owner: Entry,
-    val chapter: EntryChapter,
-    private val progressIdentity: BookProgressIdentity,
-    contentSession: BookContentSession,
-    val publicationSession: BookPublicationSession,
-    val initialLocator: BookLocator?,
-    private val mediaSession: EntryMediaSessionProcessor,
-    private val now: () -> Long,
-    val readerSettingsSurfaceId: String? = null,
-    val readerCapabilities: Set<mihon.entry.viewer.settings.ReaderCapabilityId> = emptySet(),
-) : AutoCloseable {
-    private val closeStack = BookSessionCloseStack().apply {
-        own(contentSession)
-        own(publicationSession)
-    }
-
-    suspend fun saveLocation(locator: BookLocator, completed: Boolean = false) {
-        val timestamp = now()
-        val shouldBeCompleted = chapter.read || completed
-        val progress = EntryProgressState(
-            entryId = chapter.entryId,
-            chapterId = chapter.id,
-            contentKey = progressIdentity.contentKey,
-            resourceKey = progressIdentity.resourceKey,
-            resourceRevision = progressIdentity.resourceRevision,
-            locator = BookProgressLocatorCodec.encode(locator),
-            locatorUpdatedAt = timestamp,
-            completed = shouldBeCompleted,
-            completionUpdatedAt = if (shouldBeCompleted) timestamp else 0L,
-        )
-        mediaSession.onEvent(
-            EntryMediaSessionEvent.Progressed(
-                visibleEntry = entry,
-                child = chapter,
-                progress = progress,
-                fraction = locator.totalProgression ?: locator.progression,
-                preserveLocatorExtensions = true,
-            ),
-        )
-    }
-
-    suspend fun recordHistory(sessionReadDuration: Long) {
-        if (sessionReadDuration <= 0L) return
-        mediaSession.onEvent(
-            EntryMediaSessionEvent.ActivityRecorded(
-                visibleEntry = entry,
-                child = chapter,
-                activity = EntryMediaSessionActivity(
-                    recordedAtEpochMillis = now(),
-                    durationMillis = sessionReadDuration,
-                ),
-            ),
-        )
-    }
-
-    override fun close() = closeStack.close()
 }

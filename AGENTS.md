@@ -6,10 +6,16 @@
 
 ## Source organization
 - A source directory must represent one cohesive responsibility. Group files by the feature, bounded context, or runtime layer that owns them; do not accumulate unrelated feature contracts, implementations, providers, and helpers in a module-root directory.
+- A handwritten source or test file must have one independently nameable responsibility. A shared feature or entry type is not, by itself, a sufficiently narrow file owner.
+- Keep activities and top-level UI surfaces focused on lifecycle and composition. Move independently testable navigation, session coordination, rendering modes, settings panels, parsing, and platform adaptation into ownership-named files.
+- Keep parser traversal and assembly separate from semantic block construction, inline rendering, style decoding, and format-specific helpers when those concerns can change independently.
+- Divide test files by durable behavior boundary. Put reused fixtures in explicitly named, owner-specific fixture files rather than allowing a test class to accumulate unrelated scenarios and setup.
+- File splits must be semantic. Do not create numbered `Part1`/`Part2` files, distribute private helpers arbitrarily, or use vague containers such as `common`, `misc`, or `utils` to make a file appear smaller.
+- When a change introduces or exposes a second responsibility in a file, extract that responsibility in the same change instead of postponing the cleanup.
 - Keep only genuine module-wide entry points and composition roots at the source root. When a module contains multiple responsibilities, create clearly named subdirectories for them as part of the same change that introduces or exposes the split.
 - Mirror the production directory structure in tests so behavior and its coverage remain discoverable together.
 - Avoid catch-all directories such as `common`, `misc`, or `utils`. Name structural groups after concrete ownership, and place narrowly shared helpers with the feature that owns their semantics.
-- Before finishing a change, inspect every touched source directory. If the new files make ownership harder to understand from the tree alone, reorganize that area before committing rather than leaving cleanup for a follow-up.
+- Before finishing a change, inspect every touched source file and directory. If responsibilities or ownership are not clear from the tree alone, reorganize that area before committing rather than leaving cleanup for a follow-up.
 
 ## Test quality
 - Every test must protect a distinct, durable behavior, compatibility guarantee, failure mode, or architectural invariant. Do not retain tests whose only purpose was to observe an implementation while it was being developed.

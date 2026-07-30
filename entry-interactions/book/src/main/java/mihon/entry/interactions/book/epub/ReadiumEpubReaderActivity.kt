@@ -24,20 +24,16 @@ import androidx.fragment.app.commitNow
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.withStarted
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import mihon.book.api.BookLocator
 import mihon.book.api.BookNavigationItem
-import mihon.book.api.BookReadingDirection
-import mihon.book.api.BookResource
 import mihon.entry.interactions.EntryChildWebViewAction
 import mihon.entry.interactions.EntryChildWebViewResolution
 import mihon.entry.interactions.EntryInteractionActivity
 import mihon.entry.interactions.EntryWebViewFeature
 import mihon.entry.interactions.book.BookAutomaticTranslationSettingsProvider
+import mihon.entry.interactions.book.BookChildWebViewResolver
 import mihon.entry.interactions.book.BookReaderErrorScreen
 import mihon.entry.interactions.book.BookReaderLoadingScreen
 import mihon.entry.interactions.book.BookReaderOpenResult
@@ -45,7 +41,6 @@ import mihon.entry.interactions.book.BookReaderRequest
 import mihon.entry.interactions.book.BookReaderSessionFactory
 import mihon.entry.interactions.book.BookReaderSessionRegistry
 import mihon.entry.interactions.book.BookReaderSessionViewModel
-import mihon.entry.interactions.book.BookReaderTextSelection
 import mihon.entry.interactions.book.BookSelectionTranslationController
 import mihon.entry.interactions.book.OpenedBookReaderSession
 import mihon.entry.interactions.book.R
@@ -59,7 +54,6 @@ import mihon.translation.api.TranslationHostActions
 import org.readium.r2.navigator.epub.EpubNavigatorFragment
 import org.readium.r2.navigator.epub.EpubPreferences
 import org.readium.r2.navigator.input.InputListener
-import org.readium.r2.navigator.input.TapEvent
 import org.readium.r2.shared.publication.Locator
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.system.logcat
@@ -68,49 +62,43 @@ import uy.kohesive.injekt.api.get
 
 /** Processor-owned EPUB reader surface. Generic BOOK code only launches this entry point. */
 internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
-    private val retainedSession by viewModels<BookReaderSessionViewModel>()
+    internal val retainedSession by viewModels<BookReaderSessionViewModel>()
     private val containerId = FrameLayout.generateViewId()
     private lateinit var readerContainer: FrameLayout
     private lateinit var composeOverlay: ComposeView
     private var openedSession: OpenedBookReaderSession? = null
-    private var readerHost: ReadiumEpubReaderHost? = null
-    private var navigator: EpubNavigatorFragment? = null
-    private var settings: ReadiumEpubSettingsBinding? = null
+    internal var readerHost: ReadiumEpubReaderHost? = null
+    internal var navigator: EpubNavigatorFragment? = null
+    internal var settings: ReadiumEpubSettingsBinding? = null
     private var inputListener: InputListener? = null
     private var readingStartedAt: Long? = null
     private var surfaceState by mutableStateOf<ReaderSurfaceState>(ReaderSurfaceState.Loading)
-    private var uiState by mutableStateOf(ReadiumEpubReaderUiState(bookTitle = ""))
-    private var navigation by mutableStateOf<List<ReadiumNavigationRow>>(emptyList())
-    private val resolvedNavigationPositions = mutableMapOf<String, ReadiumNavigationPosition>()
-    private var navigationResolutionJob: Job? = null
-    private var childWebViewResolutionJob: Job? = null
-    private var selectionResolutionJob: Job? = null
-    private var selectionListenerInstallationJob: Job? = null
-    private var navigationResolutionKey: String? = null
-    private var resourceCurrentPage = 1
-    private var resourceTotalPages = 1
-    private var sectionStartPageIndex = 0
-    private var sectionStartProgression = 0.0
-    private var sectionEndProgression = 1.0
-    private var pendingNavigationIndex: Int? = null
-    private var effectiveReadingDirection = BookReadingDirection.LEFT_TO_RIGHT
-    private lateinit var seekDispatcher: ThrottledLatestDispatcher<ReaderSeekTarget>
-    private var translationController: BookSelectionTranslationController? = null
+    internal var uiState by mutableStateOf(ReadiumEpubReaderUiState(bookTitle = ""))
+    internal var navigation by mutableStateOf<List<ReadiumNavigationRow>>(emptyList())
+    private lateinit var navigationController: ReadiumEpubNavigationController
+    private lateinit var childWebViewResolver: BookChildWebViewResolver
+    internal var translationController: BookSelectionTranslationController? = null
+    private var selectionCoordinator: ReadiumEpubSelectionCoordinator? = null
     private var readerRootPositionInWindow: Offset = Offset.Zero
 
     private val windowInsetsController by lazy { WindowCompat.getInsetsController(window, window.decorView) }
-    private val webViewFeature by lazy { Injekt.get<EntryWebViewFeature>() }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         // Reopen from persisted BOOK progress instead of restoring a Fragment whose Publication is process-scoped.
         super.onCreate(null)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         windowInsetsController.systemBarsBehavior =
             androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        seekDispatcher = ThrottledLatestDispatcher(
+        navigationController = ReadiumEpubNavigationController(this)
+        childWebViewResolver = BookChildWebViewResolver(
             scope = lifecycleScope,
-            intervalMillis = SEEK_PREVIEW_INTERVAL_MILLIS,
-            dispatch = ::applySeekTarget,
+            feature = Injekt.get<EntryWebViewFeature>(),
+            currentChapterId = { openedSession?.chapter?.id },
+            onResolution = { resolution ->
+                uiState = uiState.copy(childWebView = resolution)
+            },
+            onFailure = { error ->
+                logcat(LogPriority.ERROR, error) { "Failed to resolve BOOK child WebView URL" }
+            },
         )
 
         readerContainer = FrameLayout(this).apply {
@@ -148,13 +136,13 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
                         onSettingsVisibilityChange = { visible ->
                             uiState = uiState.copy(settingsVisible = visible)
                         },
-                        onPageIndexPreview = ::previewPageInSection,
-                        onPageIndexChange = ::finishPageInSection,
-                        onProgressPreview = ::previewProgressInSection,
-                        onProgressChange = ::finishProgressInSection,
-                        onPreviousSection = { goToAdjacentSection(-1) },
-                        onNextSection = { goToAdjacentSection(1) },
-                        onNavigationItemClick = ::goToNavigationItem,
+                        onPageIndexPreview = navigationController::previewPageInSection,
+                        onPageIndexChange = navigationController::finishPageInSection,
+                        onProgressPreview = navigationController::previewProgressInSection,
+                        onProgressChange = navigationController::finishProgressInSection,
+                        onPreviousSection = { navigationController.goToAdjacentSection(-1) },
+                        onNextSection = { navigationController.goToAdjacentSection(1) },
+                        onNavigationItemClick = navigationController::goToNavigationItem,
                         onChildWebViewAction = ::launchChildWebViewAction,
                         translationController = translationController,
                         onReaderRootPositionInWindow = { readerRootPositionInWindow = it },
@@ -279,15 +267,10 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
     }
 
     override fun onDestroy() {
-        seekDispatcher.cancel()
-        navigationResolutionJob?.cancel()
-        navigationResolutionJob = null
-        childWebViewResolutionJob?.cancel()
-        childWebViewResolutionJob = null
-        selectionResolutionJob?.cancel()
-        selectionResolutionJob = null
-        selectionListenerInstallationJob?.cancel()
-        selectionListenerInstallationJob = null
+        navigationController.close()
+        childWebViewResolver.close()
+        selectionCoordinator?.close()
+        selectionCoordinator = null
         translationController?.close()
         translationController = null
         inputListener?.let { listener -> navigator?.removeInputListener(listener) }
@@ -318,25 +301,24 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
             scope = lifecycleScope,
             initialCapabilities = session.readerCapabilities,
         ).also { translationController = it }
-        val selectionChangeBridge = ReadiumSelectionChangeBridge {
-            onReadiumSelectionChanged()
-        }
+        val activeSelectionCoordinator = ReadiumEpubSelectionCoordinator(
+            activity = this,
+            scope = lifecycleScope,
+            controller = activeTranslationController,
+            navigator = { navigator },
+            isFixedLayout = { readerHost?.isFixedLayout },
+            readerRootPositionInWindow = { readerRootPositionInWindow },
+        ).also { selectionCoordinator = it }
+        val selectionChangeBridge = activeSelectionCoordinator.changeBridge
         val paginationListener = object : EpubNavigatorFragment.PaginationListener {
             override fun onPageChanged(pageIndex: Int, totalPages: Int, locator: Locator) {
-                resourceTotalPages = totalPages.coerceAtLeast(1)
-                resourceCurrentPage = physicalPageIndexToLogical(
-                    pageIndex = pageIndex,
-                    totalPages = resourceTotalPages,
-                    readingDirection = effectiveReadingDirection,
-                ) + 1
-                updateLocation(locator)
+                navigationController.onPageChanged(pageIndex, totalPages, locator)
             }
 
             override fun onPageLoaded() {
-                activeTranslationController.clearSelection()
-                navigationResolutionKey = null
-                resolveCurrentNavigation()
-                installSelectionListener()
+                activeSelectionCoordinator.clearSelection()
+                navigationController.onPageLoaded()
+                activeSelectionCoordinator.installListener()
             }
         }
         val fragmentFactory = host.createFragmentFactory(
@@ -353,7 +335,7 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
         supportFragmentManager.commitNow {
             replace(containerId, fragment)
         }
-        effectiveReadingDirection = host.readingDirection(fragment)
+        navigationController.effectiveReadingDirection = host.readingDirection(fragment)
 
         val publication = publicationSession.publication
         title = publication.title ?: session.entry.displayTitle
@@ -372,11 +354,13 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
         uiState = ReadiumEpubReaderUiState(
             bookTitle = publication.title ?: session.entry.displayTitle,
             sectionCount = navigation.size,
-            readingDirection = effectiveReadingDirection,
+            readingDirection = navigationController.effectiveReadingDirection,
             fixedLayout = host.isFixedLayout,
         )
         resolveChildWebView(session)
-        inputListener = createInputListener(effectiveReadingDirection).also(fragment::addInputListener)
+        inputListener = navigationController
+            .createInputListener(navigationController.effectiveReadingDirection)
+            .also(fragment::addInputListener)
         readingStartedAt = SystemClock.elapsedRealtime()
         host.observeLocations(fragment, lifecycleScope) { locator ->
             retainedSession.updateLocation(locator)
@@ -384,14 +368,10 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
                 locator,
                 completed = isEpubPublicationComplete(locator, publication.readingOrder),
             )
-            uiState = uiState.copy(
-                currentLocator = locator,
-            )
-            recalculateSectionMetrics()
-            resolveCurrentNavigation()
+            navigationController.updateBookLocation(locator)
         }
         host.observeSettings(fragment, readerSettings, lifecycleScope)
-        installSelectionListener()
+        activeSelectionCoordinator.installListener()
         readerContainer.visibility = View.VISIBLE
         surfaceState = ReaderSurfaceState.Ready
         setMenuVisibility(false)
@@ -404,23 +384,7 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
     }
 
     private fun resolveChildWebView(session: OpenedBookReaderSession) {
-        childWebViewResolutionJob?.cancel()
-        uiState = uiState.copy(childWebView = null)
-        childWebViewResolutionJob = lifecycleScope.launch {
-            val resolution = withContext(Dispatchers.IO) {
-                webViewFeature.resolveChild(session.owner, session.chapter)
-            }
-            if (openedSession?.chapter?.id != session.chapter.id) return@launch
-            when (resolution) {
-                is EntryChildWebViewResolution.Available -> {
-                    uiState = uiState.copy(childWebView = resolution)
-                }
-                is EntryChildWebViewResolution.Failed -> {
-                    logcat(LogPriority.ERROR, resolution.cause) { "Failed to resolve BOOK child WebView URL" }
-                }
-                else -> Unit
-            }
-        }
+        childWebViewResolver.resolve(session)
     }
 
     private fun launchChildWebViewAction(
@@ -433,261 +397,7 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
             }
     }
 
-    private fun updateLocation(locator: Locator) {
-        val adapted = ReadiumLocatorAdapter.adapt(locator)
-        retainedSession.updateLocation(adapted)
-        uiState = uiState.copy(
-            currentLocator = adapted,
-        )
-        recalculateSectionMetrics()
-        resolveCurrentNavigation()
-    }
-
-    private fun createInputListener(readingDirection: BookReadingDirection?): InputListener {
-        return object : InputListener {
-            override fun onTap(event: TapEvent): Boolean {
-                if (translationController?.dismissTranslationOnReaderTap() == true) {
-                    return true
-                }
-                val fragment = navigator ?: return false
-                val readerSettings = settings ?: return false
-                val paginated = readerSettings.layoutMode.state.value.effectiveValue ==
-                    ReadiumEpubSettingsProvider.LAYOUT_PAGINATED
-                val tapNavigation = readerSettings.tapNavigation.resolveProfile().effectiveValue
-                val width = fragment.publicationView.width.takeIf { it > 0 } ?: return false
-                val x = event.point.x / width.toFloat()
-                if (!paginated || !tapNavigation || x in TAP_PREVIOUS_END..TAP_NEXT_START) {
-                    setMenuVisibility(!uiState.menuVisible)
-                    return true
-                }
-
-                val forward = when (readingDirection) {
-                    BookReadingDirection.RIGHT_TO_LEFT -> x < TAP_PREVIOUS_END
-                    else -> x > TAP_NEXT_START
-                }
-                if (forward) {
-                    readerHost?.goForward(fragment)
-                } else {
-                    readerHost?.goBackward(fragment)
-                }
-                setMenuVisibility(false)
-                return true
-            }
-        }
-    }
-
-    private fun goToAdjacentSection(direction: Int) {
-        val currentIndex = uiState.currentSectionIndex
-        if (currentIndex !in navigation.indices) return
-        val currentTarget = navigation[currentIndex].item.target.navigationKey()
-        val target = generateSequence(currentIndex + direction) { it + direction }
-            .takeWhile { it in navigation.indices }
-            .firstOrNull { navigation[it].item.target.navigationKey() != currentTarget }
-            ?: return
-        goToNavigationItem(navigation[target].item)
-    }
-
-    private fun goToNavigationItem(item: BookNavigationItem) {
-        translationController?.clearSelection()
-        val fragment = navigator ?: return
-        val index = navigation.indexOfFirst { it.item == item }
-        if (index >= 0) {
-            pendingNavigationIndex = index
-            uiState = uiState.copy(
-                currentSectionIndex = index,
-                sectionTitle = item.title,
-                sectionProgress = 0f,
-                currentPage = 1,
-            )
-        }
-        if (readerHost?.goToNavigationItem(fragment, item) != true) {
-            pendingNavigationIndex = null
-            recalculateSectionMetrics()
-        }
-    }
-
-    private fun goToPageInSection(pageIndex: Int) {
-        translationController?.clearSelection()
-        val fragment = navigator ?: return
-        val target = (sectionStartPageIndex + pageIndex).coerceIn(0, resourceTotalPages - 1)
-        uiState = uiState.copy(currentPage = pageIndex + 1)
-        readerHost?.goToPage(fragment, target, resourceTotalPages)
-    }
-
-    private fun goToProgressInSection(progress: Float) {
-        translationController?.clearSelection()
-        val fragment = navigator ?: return
-        val safeProgress = progress.coerceIn(0f, 1f)
-        val target = sectionStartProgression +
-            (sectionEndProgression - sectionStartProgression) * safeProgress
-        uiState = uiState.copy(sectionProgress = safeProgress)
-        readerHost?.goToProgression(fragment, target)
-    }
-
-    private fun previewPageInSection(pageIndex: Int) {
-        uiState = uiState.copy(currentPage = pageIndex + 1)
-        seekDispatcher.preview(ReaderSeekTarget.Page(pageIndex))
-    }
-
-    private fun finishPageInSection(pageIndex: Int) {
-        seekDispatcher.finish(ReaderSeekTarget.Page(pageIndex))
-    }
-
-    private fun previewProgressInSection(progress: Float) {
-        val safeProgress = progress.coerceIn(0f, 1f)
-        uiState = uiState.copy(sectionProgress = safeProgress)
-        seekDispatcher.preview(ReaderSeekTarget.Progress(safeProgress))
-    }
-
-    private fun finishProgressInSection(progress: Float) {
-        seekDispatcher.finish(ReaderSeekTarget.Progress(progress.coerceIn(0f, 1f)))
-    }
-
-    private fun applySeekTarget(target: ReaderSeekTarget) {
-        when (target) {
-            is ReaderSeekTarget.Page -> goToPageInSection(target.index)
-            is ReaderSeekTarget.Progress -> goToProgressInSection(target.value)
-        }
-    }
-
-    private fun resolveCurrentNavigation() {
-        val fragment = navigator ?: return
-        val host = readerHost ?: return
-        val locator = uiState.currentLocator ?: return
-        val paginated = isPaginated()
-        val key = "${locator.resourceId}|$paginated|$resourceTotalPages"
-        if (navigationResolutionKey == key) return
-        navigationResolutionKey = key
-        navigationResolutionJob?.cancel()
-        navigationResolutionJob = lifecycleScope.launch {
-            val positions = host.resolveNavigationProgressions(
-                navigator = fragment,
-                navigation = navigation,
-                resourceId = locator.resourceId,
-                paginated = paginated,
-                totalPages = resourceTotalPages,
-                readingDirection = effectiveReadingDirection,
-            )
-            if (uiState.currentLocator?.resourceId != locator.resourceId || isPaginated() != paginated) return@launch
-            resolvedNavigationPositions.putAll(positions)
-            recalculateSectionMetrics()
-        }
-    }
-
-    private fun recalculateSectionMetrics() {
-        val locator = uiState.currentLocator ?: return
-        val preferredIndex = pendingNavigationIndex ?: uiState.currentSectionIndex
-        val paginatedMetrics = if (isPaginated()) {
-            resolvePaginatedSectionMetrics(
-                navigation = navigation,
-                locator = locator,
-                resolvedPositions = resolvedNavigationPositions,
-                currentPageIndex = resourceCurrentPage - 1,
-                totalPages = resourceTotalPages,
-                preferredIndex = preferredIndex,
-            )
-        } else {
-            null
-        }
-        val scrollingMetrics = if (paginatedMetrics == null) {
-            resolveSectionMetrics(
-                navigation = navigation,
-                locator = locator,
-                resolvedPositions = resolvedNavigationPositions,
-                preferredIndex = preferredIndex,
-            )
-        } else {
-            null
-        }
-        val fallbackIndex = preferredIndex
-            .takeIf { it in navigation.indices && navigation[it].item.target.resourceId == locator.resourceId }
-            ?: navigation.indexOfFirst { it.item.target.resourceId == locator.resourceId }
-        val sectionIndex = paginatedMetrics?.index ?: scrollingMetrics?.index ?: fallbackIndex
-        val sectionStart = paginatedMetrics?.startProgression ?: scrollingMetrics?.startProgression ?: 0.0
-        val sectionEnd = paginatedMetrics?.endProgression ?: scrollingMetrics?.endProgression ?: 1.0
-        sectionStartProgression = sectionStart
-        sectionEndProgression = sectionEnd
-
-        val currentProgression = locator.progression ?: sectionStart
-        val sectionProgress = if (sectionEnd - sectionStart > 0.0001) {
-            ((currentProgression - sectionStart) / (sectionEnd - sectionStart)).coerceIn(0.0, 1.0)
-        } else {
-            0.0
-        }
-        val startPageIndex = paginatedMetrics?.startPageIndex
-            ?: (sectionStart * resourceTotalPages).toInt().coerceIn(0, resourceTotalPages - 1)
-        val endPageIndex = paginatedMetrics?.endPageIndex
-            ?: (sectionEnd * resourceTotalPages).toInt().coerceIn(startPageIndex + 1, resourceTotalPages)
-        sectionStartPageIndex = startPageIndex
-        val totalPages = (endPageIndex - startPageIndex).coerceAtLeast(1)
-        val currentPage = (resourceCurrentPage - startPageIndex).coerceIn(1, totalPages)
-
-        if (pendingNavigationIndex == sectionIndex) pendingNavigationIndex = null
-        uiState = uiState.copy(
-            sectionTitle = navigation.getOrNull(sectionIndex)?.item?.title,
-            currentSectionIndex = sectionIndex,
-            currentPage = currentPage,
-            totalPages = totalPages,
-            sectionProgress = sectionProgress.toFloat(),
-        )
-    }
-
-    private fun isPaginated(): Boolean = uiState.fixedLayout ||
-        settings?.layoutMode?.state?.value?.effectiveValue == ReadiumEpubSettingsProvider.LAYOUT_PAGINATED
-
-    private fun installSelectionListener() {
-        val fragment = navigator ?: return
-        if (readerHost?.isFixedLayout != false) return
-        selectionListenerInstallationJob?.cancel()
-        selectionListenerInstallationJob = lifecycleScope.launch {
-            fragment.evaluateJavascript(INSTALL_READIUM_SELECTION_LISTENER_SCRIPT)
-        }
-    }
-
-    private fun onReadiumSelectionChanged() {
-        runOnUiThread {
-            val controller = translationController ?: return@runOnUiThread
-            if (!controller.effectiveEnabled.value) return@runOnUiThread
-            val fragment = navigator ?: return@runOnUiThread
-            selectionResolutionJob?.cancel()
-            selectionResolutionJob = lifecycleScope.launch {
-                val selection = try {
-                    fragment.currentSelection()
-                } catch (error: CancellationException) {
-                    throw error
-                } catch (_: Exception) {
-                    null
-                }
-                val text = selection?.locator?.text?.highlight
-                if (selection == null || text.isNullOrBlank()) {
-                    controller.clearSelection()
-                    return@launch
-                }
-                val navigatorView = fragment.publicationView
-                val navigatorPosition = IntArray(2).also(navigatorView::getLocationInWindow)
-                val anchor = selection.rect?.toReaderRootAnchor(
-                    navigatorViewPositionInWindow = Offset(
-                        navigatorPosition[0].toFloat(),
-                        navigatorPosition[1].toFloat(),
-                    ),
-                    readerRootPositionInWindow = readerRootPositionInWindow,
-                    readiumContentTopInset = navigatorView.readiumSelectionContentTopInset(),
-                )
-                val resourceIdentity = selection.locator.href.toString()
-                val selectionIdentity = "$resourceIdentity:${selection.locator.text.hashCode()}"
-                controller.submitSelection(
-                    BookReaderTextSelection(
-                        ownerIdentity = resourceIdentity,
-                        identity = selectionIdentity,
-                        text = text,
-                        anchor = anchor,
-                    ),
-                )
-            }
-        }
-    }
-
-    private fun setMenuVisibility(visible: Boolean) {
+    internal fun setMenuVisibility(visible: Boolean) {
         uiState = uiState.copy(menuVisible = visible)
         if (visible) {
             windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
@@ -713,20 +423,11 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
         data class Error(val message: String) : ReaderSurfaceState
     }
 
-    private sealed interface ReaderSeekTarget {
-        data class Page(val index: Int) : ReaderSeekTarget
-        data class Progress(val value: Float) : ReaderSeekTarget
-    }
-
     companion object {
         private const val EXTRA_ENTRY_ID = "entry_id"
         private const val EXTRA_CHAPTER_ID = "chapter_id"
         private const val EXTRA_PROCESSOR_ID = "processor_id"
         private const val EXTRA_SESSION_TOKEN = "session_token"
-        private const val TAP_PREVIOUS_END = 0.33f
-        private const val TAP_NEXT_START = 0.67f
-        private const val SEEK_PREVIEW_INTERVAL_MILLIS = 75L
-
         fun newIntent(
             context: Context,
             request: BookReaderRequest,
@@ -740,12 +441,3 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
         }
     }
 }
-
-internal fun isEpubPublicationComplete(locator: BookLocator, readingOrder: List<BookResource>): Boolean {
-    locator.totalProgression?.let { return it >= EPUB_COMPLETION_THRESHOLD }
-    val lastResource = readingOrder.lastOrNull() ?: return false
-    return locator.resourceId == lastResource.id &&
-        locator.progression?.let { it >= EPUB_COMPLETION_THRESHOLD } == true
-}
-
-private const val EPUB_COMPLETION_THRESHOLD = 0.995
