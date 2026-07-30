@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.6.2] - 2026-07-30
+
+### 🌟 Highlights
+
+Selected-text translation follows your selection as you scroll, and the EPUB reader settles
+on a single, consistent paginated layout.
+
+### ⚡ Improved
+
+- Made reader and app icons clearer and more accessible, with reading-mode layout icons in
+  the prose reader and state announcements for reader and download controls.
+
+### 🗑️ Removed
+
+- The EPUB reader no longer offers a continuous-scrolling layout; reflowable EPUBs are now
+  always paginated.
+
+### 🐛 Fixed
+
+- Kept the selected-text translation popup anchored to the selection while scrolling in the
+  prose and EPUB readers.
+- Prevented a crash when moving between chapters in the serialized-prose reader.
+- Matched the EPUB reading-progress footer to the reader background.
+
 ## [1.6.1] - 2026-07-29
 
 ### 🌟 Highlights
@@ -310,7 +334,8 @@ Based on [Mihon v0.20.1](https://github.com/mihonapp/mihon/releases/tag/v0.20.1)
 - Rebranded the application as Katari with its own package identity, visual
   identity, release pipeline, and documentation.
 
-[Unreleased]: https://github.com/katariapp/katari/compare/v1.6.1...upcoming
+[Unreleased]: https://github.com/katariapp/katari/compare/v1.6.2...upcoming
+[1.6.2]: https://github.com/katariapp/katari/releases/tag/v1.6.2
 [1.6.1]: https://github.com/katariapp/katari/releases/tag/v1.6.1
 [1.6.0]: https://github.com/katariapp/katari/releases/tag/v1.6.0
 [1.5.1]: https://github.com/katariapp/katari/releases/tag/v1.5.1
