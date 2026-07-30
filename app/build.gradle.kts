@@ -35,8 +35,8 @@ android {
     defaultConfig {
         applicationId = "app.katari"
 
-        versionCode = 20
-        versionName = "1.6.2"
+        versionCode = 21
+        versionName = "1.6.3"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getLatestCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getLatestCommitSha()}\"")
