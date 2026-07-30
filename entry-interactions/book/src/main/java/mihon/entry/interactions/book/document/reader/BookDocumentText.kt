@@ -20,10 +20,13 @@ import android.widget.TextView
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.onLayoutRectChanged
 import androidx.compose.ui.viewinterop.AndroidView
 import mihon.entry.interactions.book.document.model.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.model.toBookDocumentLinkTarget
@@ -31,6 +34,7 @@ import mihon.entry.interactions.book.document.model.toBookDocumentLinkTarget
 @Composable
 internal fun BookDocumentText(
     text: Spanned,
+    documentTextIdentity: String,
     textColor: Int,
     textSizeSp: Float,
     typeface: Typeface,
@@ -44,6 +48,7 @@ internal fun BookDocumentText(
     modifier: Modifier = Modifier,
 ) {
     val interaction = LocalBookDocumentTextInteraction.current
+    val documentSectionKey = LocalBookDocumentSectionKey.current
     val currentAnchorClick by rememberUpdatedState(onAnchorClick)
     val currentExternalLinkClick by rememberUpdatedState(onExternalLinkClick)
     val linkedText = remember(text, trimTerminalLine) {
@@ -65,22 +70,35 @@ internal fun BookDocumentText(
         textAlignment = textAlignment,
         justificationMode = justificationMode,
     )
+    var textView by remember { mutableStateOf<BookDocumentTextView?>(null) }
     AndroidView(
-        modifier = modifier,
+        modifier = modifier.onLayoutRectChanged(
+            throttleMillis = SELECTION_ANCHOR_REFRESH_INTERVAL_MILLIS,
+            debounceMillis = 0,
+        ) {
+            textView?.refreshOwnedSelectionAnchor()
+        },
         factory = { context ->
             BookDocumentTextView(context).apply {
                 setBackgroundColor(Color.TRANSPARENT)
                 movementMethod = LinkMovementMethod.getInstance()
                 applyVisibleSelectionHighlight()
+                this.documentSectionKey = documentSectionKey
+                onDocumentAnchorClick = currentAnchorClick
+                onDocumentExternalLinkClick = currentExternalLinkClick
+                textView = this
                 onViewChanged(this)
             }
         },
         update = { view ->
             view.selectionInteraction = interaction
-            if (view.text !== linkedText) {
-                view.clearOwnedSelection()
-                view.text = linkedText
-            }
+            view.documentSectionKey = documentSectionKey
+            view.onDocumentAnchorClick = currentAnchorClick
+            view.onDocumentExternalLinkClick = currentExternalLinkClick
+            view.updateDocumentText(
+                identity = "$documentSectionKey:$documentTextIdentity",
+                linkedText = linkedText,
+            )
             view.movementMethod = LinkMovementMethod.getInstance()
             view.applyStyle(style)
             view.applyTerminalLineSpacing(trimTerminalLine)
@@ -88,6 +106,11 @@ internal fun BookDocumentText(
         },
         onRelease = { view ->
             view.clearOwnedSelection()
+            view.documentSectionKey = null
+            view.appliedDocumentTextIdentity = null
+            view.onDocumentAnchorClick = null
+            view.onDocumentExternalLinkClick = null
+            if (textView === view) textView = null
             onViewChanged(null)
             view.text = null
         },
@@ -107,6 +130,10 @@ internal class BookDocumentTextView(context: Context) : TextView(context) {
     private var nonLinkTapDownY = 0f
     internal var selectionInteraction: BookDocumentTextInteraction? = null
     internal var appliedStyle: BookDocumentTextStyle? = null
+    internal var documentSectionKey: String? = null
+    internal var appliedDocumentTextIdentity: String? = null
+    internal var onDocumentAnchorClick: ((String, TextView) -> Unit)? = null
+    internal var onDocumentExternalLinkClick: ((String) -> Unit)? = null
 
     init {
         applyBookDocumentTextLayoutPolicy()
@@ -173,15 +200,58 @@ internal class BookDocumentTextView(context: Context) : TextView(context) {
 
     override fun onSelectionChanged(selStart: Int, selEnd: Int) {
         super.onSelectionChanged(selStart, selEnd)
+        publishSelection(selStart, selEnd, clearWhenEmpty = true)
+    }
+
+    internal fun updateDocumentText(
+        identity: String,
+        linkedText: Spanned,
+    ) {
+        val sameContent = appliedDocumentTextIdentity == identity &&
+            text?.toString() == linkedText.toString()
+        if (sameContent) return
+        clearOwnedSelection()
+        text = linkedText
+        appliedDocumentTextIdentity = identity
+    }
+
+    internal fun dispatchDocumentLink(target: BookDocumentLinkTarget): Boolean {
+        return when (target) {
+            is BookDocumentLinkTarget.Anchor -> {
+                val callback = onDocumentAnchorClick ?: return false
+                callback(target.fragment, this)
+                true
+            }
+            is BookDocumentLinkTarget.External -> {
+                val callback = onDocumentExternalLinkClick ?: return false
+                callback(target.url)
+                true
+            }
+        }
+    }
+
+    internal fun refreshOwnedSelectionAnchor() {
+        publishSelection(selectionStart, selectionEnd, clearWhenEmpty = false)
+    }
+
+    private fun publishSelection(
+        selStart: Int,
+        selEnd: Int,
+        clearWhenEmpty: Boolean,
+    ) {
         val interaction = selectionInteraction ?: BookDocumentTextInteraction.Disabled
         if (!interaction.observeSelections) return
         if (selStart < 0 || selEnd <= selStart) {
-            interaction.onSelection(BookDocumentTextSelection.Cleared(selectionOwnerIdentity))
+            if (clearWhenEmpty) {
+                interaction.onSelection(BookDocumentTextSelection.Cleared(selectionOwnerIdentity))
+            }
             return
         }
-        val selectedText = text?.subSequence(selStart, selEnd)?.toString() ?: return
+        val selectedText = text?.toString()?.substring(selStart, selEnd) ?: return
         if (selectedText.isBlank()) {
-            interaction.onSelection(BookDocumentTextSelection.Cleared(selectionOwnerIdentity))
+            if (clearWhenEmpty) {
+                interaction.onSelection(BookDocumentTextSelection.Cleared(selectionOwnerIdentity))
+            }
             return
         }
         val layout = layout ?: return
@@ -276,6 +346,7 @@ internal sealed interface BookDocumentTextSelection {
 }
 
 internal val LocalBookDocumentTextInteraction = compositionLocalOf { BookDocumentTextInteraction.Disabled }
+internal val LocalBookDocumentSectionKey = compositionLocalOf<String?> { null }
 
 internal data class BookDocumentTextStyle(
     val textColor: Int,
@@ -311,6 +382,7 @@ private fun Spanned.clickableSpanAt(widget: TextView, event: MotionEvent): Click
 
 private const val SELECTION_HIGHLIGHT_ALPHA = 0x66
 private const val DEFAULT_SELECTION_ACCENT = 0xFF3F51B5.toInt()
+private const val SELECTION_ANCHOR_REFRESH_INTERVAL_MILLIS = 16L
 
 internal fun Spanned.withoutTerminalLayoutLine(): Spanned {
     if (!endsWith('\n')) return this
@@ -335,6 +407,9 @@ internal fun Spanned.withDocumentLinkClicks(
         spannable.setSpan(
             object : ClickableSpan() {
                 override fun onClick(widget: View) {
+                    if ((widget as? BookDocumentTextView)?.dispatchDocumentLink(target) == true) {
+                        return
+                    }
                     when (target) {
                         is BookDocumentLinkTarget.Anchor ->
                             (widget as? TextView)?.let { onAnchorClick(target.fragment, it) }

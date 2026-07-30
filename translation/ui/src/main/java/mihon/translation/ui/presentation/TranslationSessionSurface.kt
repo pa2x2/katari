@@ -88,11 +88,25 @@ internal fun calculateTranslationPopupPlacement(
     return TranslationPopupPlacement(x, y)
 }
 
-private fun TranslationSelectionAnchor.isUsable(): Boolean {
+internal fun TranslationSelectionAnchor.isUsable(): Boolean {
     return left.isFinite() &&
         top.isFinite() &&
         right.isFinite() &&
         bottom.isFinite() &&
         right > left &&
         bottom > top
+}
+
+internal fun TranslationSelectionAnchor.isInside(
+    viewport: TranslationViewportBounds,
+    edgeMargin: Int,
+): Boolean {
+    val safeLeft = viewport.left + edgeMargin
+    val safeTop = viewport.top + edgeMargin
+    val safeRight = viewport.right - edgeMargin
+    val safeBottom = viewport.bottom - edgeMargin
+    return left >= safeLeft &&
+        top >= safeTop &&
+        right <= safeRight &&
+        bottom <= safeBottom
 }

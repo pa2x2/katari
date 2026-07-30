@@ -156,16 +156,42 @@ internal fun TranslationSessionOverlay(
             Sheet()
             return@BoxWithConstraints
         }
-
-        val placementSession = active.input.request
-        var popupFits by remember(placementSession, hostSize) { mutableStateOf<Boolean?>(null) }
-        if (popupFits == false) {
-            Sheet()
+        val hostBounds = TranslationViewportBounds(
+            left = 0,
+            top = 0,
+            right = hostSize.width,
+            bottom = hostSize.height,
+        )
+        if (anchor.isUsable() && !anchor.isInside(hostBounds, edgeMargin = 0)) {
             return@BoxWithConstraints
         }
 
+        // Anchor coordinates change on every scroll frame. Keep placement visibility scoped to the
+        // translation request so repositioning cannot repeatedly hide and reveal the popup.
+        var placementAvailability by remember(
+            active.input.request,
+            hostSize,
+            leftInset,
+            topInset,
+            rightInset,
+            bottomInset,
+            edgeMargin,
+            anchorGap,
+        ) {
+            mutableStateOf<TranslationPopupPlacementAvailability?>(null)
+        }
+        when (placementAvailability) {
+            TranslationPopupPlacementAvailability.NeedsSheet -> {
+                Sheet()
+                return@BoxWithConstraints
+            }
+            TranslationPopupPlacementAvailability.AnchorOutsideViewport,
+            TranslationPopupPlacementAvailability.Fits,
+            null,
+            -> Unit
+        }
+
         val positionProvider = remember(
-            placementSession,
             anchor,
             hostSize,
             leftInset,
@@ -186,8 +212,10 @@ internal fun TranslationSessionOverlay(
                 ),
                 edgeMargin = edgeMargin,
                 anchorGap = anchorGap,
-                onPlacementAvailabilityChanged = { fits ->
-                    if (popupFits != fits) popupFits = fits
+                onPlacementAvailabilityChanged = { availability ->
+                    if (placementAvailability != availability) {
+                        placementAvailability = availability
+                    }
                 },
             )
         }
@@ -202,7 +230,7 @@ internal fun TranslationSessionOverlay(
                 maximumWidth = with(density) {
                     minOf(popupMaximumWidth, safeWidth).toDp()
                 },
-                visible = popupFits == true,
+                visible = placementAvailability == TranslationPopupPlacementAvailability.Fits,
                 onDismiss = onDismiss,
                 onExecute = onExecute,
                 onRetry = onRetry,
@@ -322,13 +350,19 @@ internal data class TranslationWindowInsets(
     val bottom: Int,
 )
 
+internal enum class TranslationPopupPlacementAvailability {
+    Fits,
+    AnchorOutsideViewport,
+    NeedsSheet,
+}
+
 internal class TranslationPopupPositionProvider(
     private val anchor: mihon.translation.ui.session.TranslationSelectionAnchor,
     private val hostSize: IntSize,
     private val windowInsets: TranslationWindowInsets,
     private val edgeMargin: Int,
     private val anchorGap: Int,
-    private val onPlacementAvailabilityChanged: (Boolean) -> Unit,
+    private val onPlacementAvailabilityChanged: (TranslationPopupPlacementAvailability) -> Unit,
 ) : PopupPositionProvider {
     override fun calculatePosition(
         anchorBounds: IntRect,
@@ -348,23 +382,35 @@ internal class TranslationPopupPositionProvider(
             hostSize.height,
             windowSize.height - rootTop - windowInsets.bottom,
         )
-        val placement = if (viewportRight > viewportLeft && viewportBottom > viewportTop) {
+        val viewport = if (viewportRight > viewportLeft && viewportBottom > viewportTop) {
+            TranslationViewportBounds(
+                left = viewportLeft,
+                top = viewportTop,
+                right = viewportRight,
+                bottom = viewportBottom,
+            )
+        } else {
+            null
+        }
+        val placement = if (viewport != null) {
             calculateTranslationPopupPlacement(
                 anchor = anchor,
                 popup = TranslationPopupSize(popupContentSize.width, popupContentSize.height),
-                viewport = TranslationViewportBounds(
-                    left = viewportLeft,
-                    top = viewportTop,
-                    right = viewportRight,
-                    bottom = viewportBottom,
-                ),
+                viewport = viewport,
                 edgeMargin = edgeMargin,
                 anchorGap = anchorGap,
             )
         } else {
             null
         }
-        onPlacementAvailabilityChanged(placement != null)
+        val availability = when {
+            placement != null -> TranslationPopupPlacementAvailability.Fits
+            viewport != null && anchor.isUsable() &&
+                !anchor.isInside(viewport, edgeMargin) ->
+                TranslationPopupPlacementAvailability.AnchorOutsideViewport
+            else -> TranslationPopupPlacementAvailability.NeedsSheet
+        }
+        onPlacementAvailabilityChanged(availability)
         return placement?.let {
             IntOffset(rootLeft + it.x, rootTop + it.y)
         } ?: calculateTranslationPopupFallbackPosition(

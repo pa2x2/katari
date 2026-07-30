@@ -674,13 +674,11 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
                     readiumContentTopInset = navigatorView.readiumSelectionContentTopInset(),
                 )
                 val resourceIdentity = selection.locator.href.toString()
-                val rectIdentity = selection.rect?.let {
-                    "${it.left}:${it.top}:${it.right}:${it.bottom}"
-                }.orEmpty()
+                val selectionIdentity = "$resourceIdentity:${selection.locator.text.hashCode()}"
                 controller.submitSelection(
                     BookReaderTextSelection(
                         ownerIdentity = resourceIdentity,
-                        identity = "$resourceIdentity:${text.hashCode()}:$rectIdentity",
+                        identity = selectionIdentity,
                         text = text,
                         anchor = anchor,
                     ),

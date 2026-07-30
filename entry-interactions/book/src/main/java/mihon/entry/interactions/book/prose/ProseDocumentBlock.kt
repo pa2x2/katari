@@ -193,6 +193,13 @@ internal fun ProseDocumentBlock(
         is BookDocumentBlockContent.ListBlock,
         -> BookDocumentText(
             text = styledRenderedText,
+            documentTextIdentity = buildString {
+                append(content.block.id.value)
+                append(':')
+                append(content.block.inlineStyles.hashCode())
+                append(':')
+                append(inlineTypefaces.keys.sorted().joinToString())
+            },
             textColor = blockForeground.toArgbValue(),
             textSizeSp = readerTextSizeSp * style.fontSizeScale,
             typeface = if (style.bold) Typeface.create(typeface, Typeface.BOLD) else typeface,
@@ -232,6 +239,7 @@ internal fun ProseDocumentBlock(
             onViewChanged(null)
             ProseTable(
                 semantic = semantic,
+                documentTextIdentityPrefix = content.block.id.value,
                 foreground = blockForeground,
                 background = blockBackground,
                 readerTypeface = typeface,
@@ -371,6 +379,7 @@ private fun ProseFigure(
 @Composable
 private fun ProseTable(
     semantic: BookDocumentBlockContent.Table,
+    documentTextIdentityPrefix: String,
     foreground: Color,
     background: Color,
     readerTypeface: Typeface,
@@ -396,6 +405,13 @@ private fun ProseTable(
                     inlineStyles = inlineStyles.within(0, caption.length),
                     inlineTypefaces = inlineTypefaces,
                 ),
+                documentTextIdentity = buildString {
+                    append(documentTextIdentityPrefix)
+                    append(":caption:")
+                    append(inlineStyles.hashCode())
+                    append(':')
+                    append(inlineTypefaces.keys.sorted().joinToString())
+                },
                 textColor = foreground.toArgbValue(),
                 textSizeSp = readerTextSizeSp,
                 typeface = Typeface.create(readerTypeface, Typeface.BOLD),
@@ -436,6 +452,17 @@ private fun ProseTable(
                                 ),
                                 inlineTypefaces = inlineTypefaces,
                             ),
+                            documentTextIdentity = buildString {
+                                append(documentTextIdentityPrefix)
+                                append(':')
+                                append(cell.logicalStart)
+                                append(':')
+                                append(cell.logicalEndExclusive)
+                                append(':')
+                                append(inlineStyles.hashCode())
+                                append(':')
+                                append(inlineTypefaces.keys.sorted().joinToString())
+                            },
                             modifier = Modifier
                                 .width(TABLE_COLUMN_WIDTH * cell.columnSpan)
                                 .background(cellBackground)
@@ -488,6 +515,7 @@ private fun ProseTable(
 @Composable
 private fun ProseTableText(
     text: Spanned,
+    documentTextIdentity: String,
     textColor: Int,
     textSizeSp: Float,
     typeface: Typeface,
@@ -513,6 +541,7 @@ private fun ProseTableText(
     }
     BookDocumentText(
         text = text,
+        documentTextIdentity = documentTextIdentity,
         modifier = modifier.then(
             if (anchorCharacterOffset != null) {
                 Modifier.onGloballyPositioned { coordinates = it }

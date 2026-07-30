@@ -150,6 +150,39 @@ class TranslationSessionOverlayTest {
     }
 
     @Test
+    fun anchored_popup_hides_offscreen_and_returns_with_its_selection() {
+        val visibleAnchor = TranslationSelectionAnchor(400f, 280f, 680f, 340f)
+        var state by mutableStateOf<TranslationSessionState>(
+            success(
+                translatedText = "Witaj świecie",
+                anchor = visibleAnchor,
+            ),
+        )
+        render(stateProvider = { state })
+        composeRule.onNodeWithTag(TRANSLATION_SESSION_POPUP_TAG).assertIsDisplayed()
+
+        composeRule.runOnIdle {
+            state = success(
+                translatedText = "Witaj świecie",
+                anchor = TranslationSelectionAnchor(400f, -100f, 680f, -40f),
+            )
+        }
+
+        composeRule.onAllNodesWithTag(TRANSLATION_SESSION_POPUP_TAG).assertCountEquals(0)
+        composeRule.onAllNodesWithTag(TRANSLATION_SESSION_SHEET_TAG).assertCountEquals(0)
+
+        composeRule.runOnIdle {
+            state = success(
+                translatedText = "Witaj świecie",
+                anchor = visibleAnchor,
+            )
+        }
+
+        composeRule.onNodeWithTag(TRANSLATION_SESSION_POPUP_TAG).assertIsDisplayed()
+        composeRule.onAllNodesWithTag(TRANSLATION_SESSION_SHEET_TAG).assertCountEquals(0)
+    }
+
+    @Test
     fun failed_translation_with_a_valid_anchor_uses_the_shared_popup_content() {
         render(
             TranslationSessionState.Failed(

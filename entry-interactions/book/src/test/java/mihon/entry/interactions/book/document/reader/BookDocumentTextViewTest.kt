@@ -179,6 +179,50 @@ class BookDocumentTextViewTest {
     }
 
     @Test
+    fun `equivalent updates preserve selection only for the same document text identity`() {
+        val view = BookDocumentTextView(RuntimeEnvironment.getApplication())
+        view.updateDocumentText("chapter:block", SpannableString("Stable selected text"))
+        Selection.setSelection(view.text as Spannable, 7, 15)
+
+        view.updateDocumentText("chapter:block", SpannableString("Stable selected text"))
+
+        assertEquals(7, view.selectionStart)
+        assertEquals(15, view.selectionEnd)
+
+        view.updateDocumentText("chapter:other-block", SpannableString("Stable selected text"))
+
+        assertEquals(view.selectionStart, view.selectionEnd)
+    }
+
+    @Test
+    fun `retained link spans dispatch through the latest view callbacks`() {
+        val source = SpannableString("See note").apply {
+            setSpan(URLSpan("#note"), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+        val view = BookDocumentTextView(RuntimeEnvironment.getApplication())
+        val linked = source.withDocumentLinkClicks(
+            onAnchorClick = { _, _ -> error("The view callback must own retained link dispatch") },
+            onExternalLinkClick = { error("The anchor must not dispatch externally") },
+        )
+        var dispatch = "initial"
+        view.onDocumentAnchorClick = { anchor, _ -> dispatch = "first:$anchor" }
+        view.updateDocumentText("chapter:block", linked)
+        val retainedSpan = (view.text as Spanned)
+            .getSpans(0, view.text.length, ClickableSpan::class.java)
+            .single()
+        retainedSpan.onClick(view)
+        view.onDocumentAnchorClick = { anchor, _ -> dispatch = "latest:$anchor" }
+        view.updateDocumentText(
+            "chapter:block",
+            source.withDocumentAnchorClicks { _, _ -> error("Equivalent text must not replace retained spans") },
+        )
+
+        retainedSpan.onClick(view)
+
+        assertEquals("latest:note", dispatch)
+    }
+
+    @Test
     fun `short prose tap preserves reader block captured at gesture start`() {
         val view = laidOutTextView(SpannableString("Selected prose remains tappable")) as BookDocumentTextView
         var readerTapBlocked = true
@@ -285,6 +329,42 @@ class BookDocumentTextViewTest {
         assertTrue(selection.boundsInReaderRoot.width() > 0f)
         assertTrue(selection.boundsInReaderRoot.height() > 0f)
     }
+
+    @Test
+    fun `selected text republishes stable identity with refreshed reader-root bounds`() {
+        val view = laidOutTextView(SpannableString("Selection follows scrolling")) as BookDocumentTextView
+        val emitted = mutableListOf<BookDocumentTextSelection>()
+        view.selectionInteraction = interaction(
+            rootPositionInWindow = Offset.Zero,
+            onSelection = emitted::add,
+        )
+        Selection.setSelection(view.text as Spannable, 0, 9)
+        val initial = emitted.last() as BookDocumentTextSelection.Changed
+
+        view.selectionInteraction = interaction(
+            rootPositionInWindow = Offset(0f, 24f),
+            onSelection = emitted::add,
+        )
+        view.refreshOwnedSelectionAnchor()
+
+        val refreshed = emitted.last() as BookDocumentTextSelection.Changed
+        assertEquals(initial.identity, refreshed.identity)
+        assertEquals(initial.text, refreshed.text)
+        assertEquals(initial.boundsInReaderRoot.top - 24f, refreshed.boundsInReaderRoot.top)
+        assertEquals(initial.boundsInReaderRoot.bottom - 24f, refreshed.boundsInReaderRoot.bottom)
+    }
+
+    private fun interaction(
+        rootPositionInWindow: Offset,
+        onSelection: (BookDocumentTextSelection) -> Unit,
+    ) = BookDocumentTextInteraction(
+        observeSelections = true,
+        rootPositionInWindow = rootPositionInWindow,
+        onSelection = onSelection,
+        isReaderTapBlocked = { false },
+        onBlockedReaderTap = {},
+        onNonLinkTap = { _, _ -> },
+    )
 
     private fun laidOutTextView(text: SpannableString): TextView {
         return BookDocumentTextView(RuntimeEnvironment.getApplication()).apply {

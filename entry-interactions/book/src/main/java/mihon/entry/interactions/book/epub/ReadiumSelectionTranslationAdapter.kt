@@ -56,9 +56,17 @@ internal val INSTALL_READIUM_SELECTION_LISTENER_SCRIPT = """
     (function() {
         if (window.__katariSelectionTranslationListenerInstalled) return true;
         window.__katariSelectionTranslationListenerInstalled = true;
-        document.addEventListener("selectionchange", function() {
-            KatariSelection.selectionChanged();
-        });
+        var pendingNotification = false;
+        function notifySelectionChanged() {
+            if (pendingNotification) return;
+            pendingNotification = true;
+            window.requestAnimationFrame(function() {
+                pendingNotification = false;
+                KatariSelection.selectionChanged();
+            });
+        }
+        document.addEventListener("selectionchange", notifySelectionChanged);
+        document.addEventListener("scroll", notifySelectionChanged, true);
         return true;
     })();
 """.trimIndent()

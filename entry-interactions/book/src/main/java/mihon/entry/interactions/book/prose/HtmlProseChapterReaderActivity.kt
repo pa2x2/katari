@@ -42,6 +42,7 @@ import mihon.entry.interactions.book.displayName
 import mihon.entry.interactions.book.document.location.locatorAt
 import mihon.entry.interactions.book.document.location.resolvePosition
 import mihon.entry.interactions.book.document.model.BookDocumentPosition
+import mihon.entry.interactions.book.document.reader.BookDocumentTextView
 import mihon.entry.interactions.launchEntryChildWebViewAction
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPolicy
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPreferences
@@ -221,10 +222,10 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
         attach: Boolean = false,
         resetViewer: Boolean = false,
     ) {
-        translationController?.clearSelection()
         if (attach) retainedSession.attachInitial(session)
         val content = session.publicationSession as? HtmlProseChapterSession
         if (content == null) {
+            translationController?.clearSelection()
             retainedSession.release()
             showError(getString(R.string.prose_reader_incompatible_session))
             return
@@ -248,6 +249,19 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
             }
             navigation = chapters.entryChildWindow(session.chapter.id, EntryChapter::id)
             val window = navigation ?: error("The selected prose chapter is missing from the reading order")
+            val focusedText = currentFocus as? BookDocumentTextView
+            val retainFocusedText = shouldRetainProseTextFocus(
+                focusedSectionKey = focusedText?.documentSectionKey,
+                retainedSectionKeys = listOfNotNull(
+                    window.previous?.id?.toString(),
+                    window.current.id.toString(),
+                    window.next?.id?.toString(),
+                ).toSet(),
+                resetViewer = resetViewer,
+            )
+            if (!retainFocusedText) {
+                activeTranslationController.clearSelection()
+            }
             if (settings == null) {
                 settings = HtmlProseSettingsBinding(
                     provider = Injekt.get<HtmlProseSettingsProvider>(),
@@ -272,7 +286,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
                 initialPosition = initialPosition,
                 resourceLoader = content.resourceLoader,
             )
-            if (uiState != null) {
+            if (uiState != null && !retainFocusedText) {
                 // Release Android View focus before Compose removes outgoing lazy-list items.
                 // Otherwise focus reassignment can remeasure the list while changes are applying.
                 currentFocus?.clearFocus()
@@ -294,6 +308,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
+            translationController?.clearSelection()
             retainedSession.release()
             showError(error.message ?: getString(R.string.prose_reader_incompatible_session))
         }
@@ -651,6 +666,16 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
             putExtra(EXTRA_SESSION_TOKEN, sessionToken)
         }
     }
+}
+
+internal fun shouldRetainProseTextFocus(
+    focusedSectionKey: String?,
+    retainedSectionKeys: Set<String>,
+    resetViewer: Boolean,
+): Boolean {
+    return !resetViewer &&
+        focusedSectionKey != null &&
+        focusedSectionKey in retainedSectionKeys
 }
 
 internal fun String.toValidatedProseExternalUri(): Uri {
