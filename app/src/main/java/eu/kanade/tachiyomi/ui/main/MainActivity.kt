@@ -35,8 +35,8 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
-import androidx.compose.material.icons.filled.VolunteerActivism
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import androidx.compose.material.icons.outlined.VolunteerActivism
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -599,7 +599,7 @@ class MainActivity : BaseActivity() {
                             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
                         ) {
                             Icon(
-                                imageVector = Icons.Default.VolunteerActivism,
+                                imageVector = Icons.Outlined.VolunteerActivism,
                                 contentDescription = null,
                             )
                             Text(
@@ -628,7 +628,7 @@ class MainActivity : BaseActivity() {
                                     text = stringResource(MR.strings.donationCampaign_contactPlatform),
                                 )
                                 Icon(
-                                    imageVector = Icons.AutoMirrored.Default.OpenInNew,
+                                    imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
                                     contentDescription = null,
                                 )
                             }

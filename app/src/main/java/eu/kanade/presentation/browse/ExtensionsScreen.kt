@@ -15,7 +15,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.GetApp
+import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.OpenInBrowser
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Settings
@@ -475,7 +476,7 @@ private fun ExtensionItemActions(
             installStep == InstallStep.RequiresUserAction -> {
                 IconButton(onClick = { onClickItemAction(extension) }) {
                     Icon(
-                        imageVector = Icons.Outlined.GetApp,
+                        imageVector = Icons.Outlined.Download,
                         contentDescription = stringResource(MR.strings.ext_update),
                     )
                 }
@@ -493,7 +494,7 @@ private fun ExtensionItemActions(
                         if (extension.hasUpdate) {
                             IconButton(onClick = { onClickItemAction(extension) }) {
                                 Icon(
-                                    imageVector = Icons.Outlined.GetApp,
+                                    imageVector = Icons.Outlined.Download,
                                     contentDescription = stringResource(MR.strings.ext_update),
                                 )
                             }
@@ -513,7 +514,7 @@ private fun ExtensionItemActions(
                                 onClick = { onClickItemSecondaryAction(extension) },
                             ) {
                                 Icon(
-                                    imageVector = Icons.Outlined.Public,
+                                    imageVector = Icons.Outlined.OpenInBrowser,
                                     contentDescription = stringResource(MR.strings.action_open_in_web_view),
                                 )
                             }
@@ -521,7 +522,7 @@ private fun ExtensionItemActions(
 
                         IconButton(onClick = { onClickItemAction(extension) }) {
                             Icon(
-                                imageVector = Icons.Outlined.GetApp,
+                                imageVector = Icons.Outlined.Download,
                                 contentDescription = stringResource(MR.strings.ext_install),
                             )
                         }

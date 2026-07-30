@@ -23,6 +23,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
+import androidx.compose.material.icons.outlined.OpenInBrowser
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.CircularProgressIndicator
@@ -213,7 +214,7 @@ fun CatalogFeedBrowseContent(
                     ),
                     EmptyScreenAction(
                         stringRes = MR.strings.action_open_in_web_view,
-                        icon = Icons.Outlined.Public,
+                        icon = Icons.Outlined.OpenInBrowser,
                         onClick = onWebViewClick,
                     ),
                     EmptyScreenAction(

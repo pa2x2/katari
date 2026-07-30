@@ -1,5 +1,6 @@
 package mihon.entry.interactions.settings
 
+import mihon.entry.interactions.reader.settings.BookReaderLayoutMode
 import mihon.entry.viewer.settings.ViewerSettingCodecs
 import mihon.entry.viewer.settings.ViewerSettingDefinition
 import mihon.entry.viewer.settings.ViewerSettingId
@@ -23,7 +24,10 @@ class ReadiumEpubSettingsProvider(
     private val pageMargins = preferenceStore.getInt("book.epub.readium.page_margins_percent", 100)
     private val publisherStyles = preferenceStore.getBoolean("book.epub.readium.publisher_styles", true)
     private val textAlignment = preferenceStore.getString("book.epub.readium.text_alignment", ALIGN_PUBLISHER)
-    private val layoutMode = preferenceStore.getString("book.epub.readium.layout_mode", LAYOUT_PAGINATED)
+    private val layoutMode = preferenceStore.getString(
+        "book.epub.readium.layout_mode",
+        BookReaderLayoutMode.PAGINATED.serializedValue,
+    )
     private val columnCount = preferenceStore.getString("book.epub.readium.column_count", COLUMNS_AUTO)
     private val textNormalization = preferenceStore.getBoolean("book.epub.readium.text_normalization", false)
     private val tapNavigation = preferenceStore.getBoolean("book.epub.readium.tap_navigation", false)
@@ -39,10 +43,10 @@ class ReadiumEpubSettingsProvider(
     val layoutModeSetting = ViewerSettingDefinition(
         id = ViewerSettingId(PROVIDER_ID, LAYOUT_MODE_KEY),
         scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
-        processorDefault = LAYOUT_PAGINATED,
+        processorDefault = BookReaderLayoutMode.PAGINATED.serializedValue,
         profilePreference = layoutMode,
         codec = ViewerSettingCodecs.String,
-        validate = SUPPORTED_LAYOUT_MODES::contains,
+        validate = BookReaderLayoutMode.supportedValues::contains,
     )
     val columnCountSetting = stringSetting(COLUMN_COUNT_KEY, columnCount, SUPPORTED_COLUMN_COUNTS)
     val textNormalizationSetting = booleanSetting(TEXT_NORMALIZATION_KEY, textNormalization)
@@ -140,10 +144,6 @@ class ReadiumEpubSettingsProvider(
             ALIGN_LEFT,
             ALIGN_RIGHT,
         )
-
-        const val LAYOUT_PAGINATED = "paginated"
-        const val LAYOUT_SCROLLING = "scrolling"
-        val SUPPORTED_LAYOUT_MODES = setOf(LAYOUT_PAGINATED, LAYOUT_SCROLLING)
 
         const val COLUMNS_AUTO = "auto"
         const val COLUMNS_ONE = "one"

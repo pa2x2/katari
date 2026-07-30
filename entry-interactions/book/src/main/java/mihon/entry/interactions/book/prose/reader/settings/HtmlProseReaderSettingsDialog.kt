@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.book.BookReaderSettingsDialog
 import mihon.entry.interactions.book.R
+import mihon.entry.interactions.reader.settings.BookReaderLayoutMode
 import mihon.entry.interactions.settings.HtmlProseSettingsProvider
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.CheckboxItem
@@ -99,10 +100,12 @@ internal fun ProseLayoutSettings(settings: HtmlProseSettingsBinding) {
     val margins by settings.pageMargins.state.collectEffectiveValue()
     val alignment by settings.textAlignment.state.collectEffectiveValue()
     ProseSettingChips(
-        stringResource(R.string.prose_reader_layout),
+        i18nStringResource(MR.strings.book_reader_layout),
         listOf(
-            HtmlProseSettingsProvider.LAYOUT_PAGINATED to stringResource(R.string.prose_reader_layout_paginated),
-            HtmlProseSettingsProvider.LAYOUT_SCROLLING to stringResource(R.string.prose_reader_layout_scrolling),
+            BookReaderLayoutMode.PAGINATED.serializedValue to
+                i18nStringResource(BookReaderLayoutMode.PAGINATED.labelRes),
+            BookReaderLayoutMode.SCROLLING.serializedValue to
+                i18nStringResource(BookReaderLayoutMode.SCROLLING.labelRes),
         ),
         layout,
         { scope.launch { settings.layoutMode.setEntryOverride(it) } },
@@ -139,7 +142,7 @@ internal fun ProseControlSettings(settings: HtmlProseSettingsBinding) {
     val layout by settings.layoutMode.state.collectEffectiveValue()
     val tapNavigation by settings.tapNavigation.state.collectEffectiveValue()
     val showProgress by settings.showProgress.state.collectEffectiveValue()
-    if (layout == HtmlProseSettingsProvider.LAYOUT_PAGINATED) {
+    if (layout == BookReaderLayoutMode.PAGINATED.serializedValue) {
         CheckboxItem(
             label = stringResource(R.string.prose_reader_tap_navigation),
             checked = tapNavigation,

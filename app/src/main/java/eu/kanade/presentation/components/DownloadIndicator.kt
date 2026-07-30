@@ -67,6 +67,9 @@ fun DownloadIndicator(
     downloadProgressProvider: () -> Int,
     startContentDescription: String,
     errorContentDescription: String,
+    queuedContentDescription: String,
+    downloadingContentDescription: String,
+    downloadedContentDescription: String,
     startNowText: String,
     cancelText: String,
     deleteText: String,
@@ -90,6 +93,8 @@ fun DownloadIndicator(
             modifier = modifier,
             downloadState = downloadState,
             downloadProgressProvider = downloadProgressProvider,
+            queuedContentDescription = queuedContentDescription,
+            downloadingContentDescription = downloadingContentDescription,
             startNowText = startNowText,
             cancelText = cancelText,
             onClick = onClick,
@@ -98,6 +103,7 @@ fun DownloadIndicator(
             enabled = enabled,
             modifier = modifier,
             deleteText = deleteText,
+            downloadedContentDescription = downloadedContentDescription,
             onClick = onClick,
         )
         DownloadIndicatorState.ERROR -> ErrorIndicator(
@@ -186,6 +192,8 @@ private fun DownloadingIndicator(
     enabled: Boolean,
     downloadState: DownloadIndicatorState,
     downloadProgressProvider: () -> Int,
+    queuedContentDescription: String,
+    downloadingContentDescription: String,
     startNowText: String,
     cancelText: String,
     onClick: (DownloadIndicatorAction) -> Unit,
@@ -256,7 +264,11 @@ private fun DownloadingIndicator(
         }
         Icon(
             imageVector = Icons.Outlined.ArrowDownward,
-            contentDescription = null,
+            contentDescription = if (downloadState == DownloadIndicatorState.QUEUE) {
+                queuedContentDescription
+            } else {
+                downloadingContentDescription
+            },
             modifier = ArrowModifier,
             tint = arrowColor,
         )
@@ -267,6 +279,7 @@ private fun DownloadingIndicator(
 private fun DownloadedIndicator(
     enabled: Boolean,
     deleteText: String,
+    downloadedContentDescription: String,
     onClick: (DownloadIndicatorAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -284,7 +297,7 @@ private fun DownloadedIndicator(
     ) {
         Icon(
             imageVector = Icons.Filled.CheckCircle,
-            contentDescription = null,
+            contentDescription = downloadedContentDescription,
             modifier = Modifier.size(IndicatorSize),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )

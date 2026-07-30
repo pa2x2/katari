@@ -18,7 +18,7 @@ import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -131,8 +131,8 @@ class SettingsSearchScreen : Screen() {
                             if (textFieldState.text.isNotEmpty()) {
                                 IconButton(onClick = { textFieldState.clearText() }) {
                                     Icon(
-                                        imageVector = Icons.Outlined.Close,
-                                        contentDescription = null,
+                                        imageVector = Icons.Outlined.Clear,
+                                        contentDescription = stringResource(MR.strings.action_reset),
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }

@@ -97,7 +97,7 @@ private fun TranslationPickerRow(
         trailingContent = if (selected) {
             {
                 Icon(
-                    imageVector = Icons.Default.Check,
+                    imageVector = Icons.Filled.Check,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                 )

@@ -13,8 +13,8 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -54,12 +54,16 @@ fun CalenderHeader(
         }
         Row {
             IconButton(onClick = onPreviousClick) {
-                @Suppress("DEPRECATION")
-                Icon(Icons.Default.KeyboardArrowLeft, stringResource(MR.strings.upcoming_calendar_prev))
+                Icon(
+                    Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
+                    stringResource(MR.strings.upcoming_calendar_prev),
+                )
             }
             IconButton(onClick = onNextClick) {
-                @Suppress("DEPRECATION")
-                Icon(Icons.Default.KeyboardArrowRight, stringResource(MR.strings.upcoming_calendar_next))
+                Icon(
+                    Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                    stringResource(MR.strings.upcoming_calendar_next),
+                )
             }
         }
     }

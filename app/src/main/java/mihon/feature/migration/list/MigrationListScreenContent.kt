@@ -273,7 +273,7 @@ fun MigrationListItemResult(
                 ) {
                     Image(
                         painter = rememberResourceBitmapPainter(id = R.drawable.cover_error),
-                        contentDescription = null,
+                        contentDescription = stringResource(MR.strings.label_more),
                         modifier = Modifier
                             .fillMaxWidth()
                             .aspectRatio(EntryCover.Book.ratio)
@@ -318,7 +318,7 @@ private fun MigrationListItemAction(
                 IconButton(onClick = onSkip) {
                     Icon(
                         imageVector = Icons.Outlined.Close,
-                        contentDescription = null,
+                        contentDescription = stringResource(MR.strings.migrationListScreen_skipActionLabel),
                     )
                 }
             }
@@ -326,7 +326,7 @@ private fun MigrationListItemAction(
                 IconButton(onClick = { menuExpanded = true }) {
                     Icon(
                         imageVector = Icons.Outlined.MoreVert,
-                        contentDescription = null,
+                        contentDescription = stringResource(MR.strings.label_more),
                     )
                 }
                 DropdownMenu(

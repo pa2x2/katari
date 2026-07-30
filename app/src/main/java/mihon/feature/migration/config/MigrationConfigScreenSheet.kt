@@ -11,8 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.Warning
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -100,7 +100,7 @@ fun MigrationConfigScreenSheet(
                                 leadingIcon = {
                                     if (selected) {
                                         Icon(
-                                            imageVector = Icons.Outlined.Check,
+                                            imageVector = Icons.Filled.Check,
                                             contentDescription = null,
                                         )
                                     }
@@ -228,7 +228,7 @@ private fun MigrationSheetWarningItem(
     ListItem(
         leadingContent = {
             Icon(
-                imageVector = Icons.Outlined.Warning,
+                imageVector = Icons.Filled.Warning,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.active,
             )

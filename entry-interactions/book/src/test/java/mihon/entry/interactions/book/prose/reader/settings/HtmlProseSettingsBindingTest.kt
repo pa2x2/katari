@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import mihon.entry.interactions.reader.settings.BookReaderLayoutMode
 import mihon.entry.interactions.settings.HtmlProseSettingsProvider
 import mihon.entry.viewer.settings.ResolvedViewerSetting
 import mihon.entry.viewer.settings.ViewerSettingBinder
@@ -25,7 +26,7 @@ class HtmlProseSettingsBindingTest {
         val provider = HtmlProseSettingsProvider(InMemoryPreferenceStore())
         val binder = DeferredLayoutBinder(
             layoutId = provider.layoutModeSetting.id,
-            resolvedLayout = HtmlProseSettingsProvider.LAYOUT_SCROLLING,
+            resolvedLayout = BookReaderLayoutMode.SCROLLING.serializedValue,
         )
         val settings = HtmlProseSettingsBinding(
             provider,

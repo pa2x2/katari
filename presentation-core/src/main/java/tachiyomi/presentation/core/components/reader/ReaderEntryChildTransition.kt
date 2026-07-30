@@ -12,8 +12,8 @@ import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -199,7 +199,7 @@ private fun DestinationLoadStatus(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(
-                            imageVector = Icons.Outlined.Warning,
+                            imageVector = Icons.Filled.Warning,
                             tint = warningColor,
                             contentDescription = null,
                         )
@@ -269,7 +269,7 @@ private fun ChildGapWarning(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                imageVector = Icons.Outlined.Warning,
+                imageVector = Icons.Filled.Warning,
                 tint = warningColor,
                 contentDescription = null,
             )

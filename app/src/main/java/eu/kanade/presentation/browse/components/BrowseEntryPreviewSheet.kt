@@ -20,10 +20,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.CallSplit
-import androidx.compose.material.icons.automirrored.outlined.OpenInNew
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
@@ -54,6 +50,7 @@ import cafe.adriel.voyager.core.screen.ScreenKey
 import eu.kanade.presentation.components.AdaptiveSheet
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppSnackbarHost
+import eu.kanade.presentation.entry.components.EntryActionIcons
 import eu.kanade.presentation.entry.components.PreviewContent
 import eu.kanade.presentation.entry.components.PreviewSizeUi
 import eu.kanade.tachiyomi.ui.entry.EntryScreenModel
@@ -331,7 +328,7 @@ private fun BrowseEntryPreviewBottomBar(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         PreviewBottomBarActionContent(
-                            icon = Icons.AutoMirrored.Outlined.OpenInNew,
+                            icon = EntryActionIcons.openFullEntry,
                             label = openLabel,
                         )
                     }
@@ -344,7 +341,7 @@ private fun BrowseEntryPreviewBottomBar(
                             modifier = Modifier.weight(1f),
                         ) {
                             PreviewBottomBarActionContent(
-                                icon = if (favorite) Icons.Outlined.Delete else Icons.Outlined.FavoriteBorder,
+                                icon = EntryActionIcons.library(favorite),
                                 label = libraryLabel,
                             )
                         }
@@ -353,7 +350,7 @@ private fun BrowseEntryPreviewBottomBar(
                             modifier = Modifier.weight(1f),
                         ) {
                             PreviewBottomBarActionContent(
-                                icon = Icons.AutoMirrored.Outlined.CallSplit,
+                                icon = EntryActionIcons.merge,
                                 label = mergeLabel,
                             )
                         }
@@ -369,7 +366,7 @@ private fun BrowseEntryPreviewBottomBar(
                         modifier = Modifier.weight(1f),
                     ) {
                         PreviewBottomBarActionContent(
-                            icon = Icons.AutoMirrored.Outlined.OpenInNew,
+                            icon = EntryActionIcons.openFullEntry,
                             label = openLabel,
                         )
                     }
@@ -378,7 +375,7 @@ private fun BrowseEntryPreviewBottomBar(
                         modifier = Modifier.weight(1f),
                     ) {
                         PreviewBottomBarActionContent(
-                            icon = if (favorite) Icons.Outlined.Delete else Icons.Outlined.FavoriteBorder,
+                            icon = EntryActionIcons.library(favorite),
                             label = libraryLabel,
                         )
                     }
@@ -387,7 +384,7 @@ private fun BrowseEntryPreviewBottomBar(
                         modifier = Modifier.weight(1f),
                     ) {
                         PreviewBottomBarActionContent(
-                            icon = Icons.AutoMirrored.Outlined.CallSplit,
+                            icon = EntryActionIcons.merge,
                             label = mergeLabel,
                         )
                     }

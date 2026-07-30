@@ -2,6 +2,7 @@ package mihon.entry.interactions.settings
 
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import mihon.entry.interactions.reader.settings.BookReaderLayoutMode
 import mihon.entry.viewer.settings.ViewerSettingScope
 import mihon.entry.viewer.settings.ViewerSettingsCategory
 import org.junit.jupiter.api.Test
@@ -22,14 +23,18 @@ class HtmlProseSettingsProviderTest {
 
     @Test
     fun `pagination is the default and only layout supports entry override`() {
-        provider.layoutModeSetting.processorDefault shouldBe HtmlProseSettingsProvider.LAYOUT_PAGINATED
+        provider.layoutModeSetting.processorDefault shouldBe BookReaderLayoutMode.PAGINATED.serializedValue
         provider.layoutModeSetting.scope shouldBe ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE
+        provider.layoutModeSetting.profilePreference.key() shouldBe "book.prose.html.layout_mode"
         provider.settings
             .filterNot { it.id.key == HtmlProseSettingsProvider.LAYOUT_MODE_KEY }
             .all { it.scope == ViewerSettingScope.PROFILE_ONLY } shouldBe true
         provider.tapNavigationSetting.processorDefault shouldBe false
         provider.showProgressSetting.processorDefault shouldBe true
         provider.drawUnderCutoutSetting.processorDefault shouldBe false
+        provider.layoutModeSetting.validate(BookReaderLayoutMode.PAGINATED.serializedValue) shouldBe true
+        provider.layoutModeSetting.validate(BookReaderLayoutMode.SCROLLING.serializedValue) shouldBe true
+        provider.layoutModeSetting.validate("unknown") shouldBe false
     }
 
     @Test

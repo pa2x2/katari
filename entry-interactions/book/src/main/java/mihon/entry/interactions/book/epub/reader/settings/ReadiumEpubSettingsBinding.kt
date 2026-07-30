@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
+import mihon.entry.interactions.reader.settings.BookReaderLayoutMode
 import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
 import mihon.entry.viewer.settings.ReaderCapabilityId
 import mihon.entry.viewer.settings.ViewerSettingBinder
@@ -146,7 +147,7 @@ internal fun toReadiumPreferences(
         ReadiumEpubSettingsProvider.ALIGN_RIGHT -> TextAlign.RIGHT
         else -> null
     },
-    scroll = pageLayout.layoutMode == ReadiumEpubSettingsProvider.LAYOUT_SCROLLING,
+    scroll = pageLayout.layoutMode == BookReaderLayoutMode.SCROLLING.serializedValue,
     columnCount = when (pageLayout.columnCount) {
         ReadiumEpubSettingsProvider.COLUMNS_ONE -> ColumnCount.ONE
         ReadiumEpubSettingsProvider.COLUMNS_TWO -> ColumnCount.TWO

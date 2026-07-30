@@ -5,6 +5,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import eu.kanade.presentation.more.settings.Preference
+import mihon.entry.interactions.reader.settings.BookReaderLayoutMode
 import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.asProfilePreference
@@ -103,12 +104,12 @@ object SettingsReadiumEpubReaderScreen : AppEntryViewerSettingsScreenProjection(
                     Preference.PreferenceItem.ListPreference(
                         preference = layoutMode,
                         entries = mapOf(
-                            ReadiumEpubSettingsProvider.LAYOUT_PAGINATED to
-                                stringResource(MR.strings.pref_epub_layout_paginated),
-                            ReadiumEpubSettingsProvider.LAYOUT_SCROLLING to
-                                stringResource(MR.strings.pref_epub_layout_scrolling),
+                            BookReaderLayoutMode.PAGINATED.serializedValue to
+                                stringResource(BookReaderLayoutMode.PAGINATED.labelRes),
+                            BookReaderLayoutMode.SCROLLING.serializedValue to
+                                stringResource(BookReaderLayoutMode.SCROLLING.labelRes),
                         ),
-                        title = stringResource(MR.strings.pref_epub_layout_mode),
+                        title = stringResource(MR.strings.book_reader_layout),
                     ),
                     Preference.PreferenceItem.ListPreference(
                         preference = columnCount,
@@ -122,7 +123,7 @@ object SettingsReadiumEpubReaderScreen : AppEntryViewerSettingsScreenProjection(
                         ),
                         title = stringResource(MR.strings.pref_epub_column_count),
                         subtitle = stringResource(MR.strings.pref_epub_column_count_summary),
-                        enabled = layoutModeValue == ReadiumEpubSettingsProvider.LAYOUT_PAGINATED,
+                        enabled = layoutModeValue == BookReaderLayoutMode.PAGINATED.serializedValue,
                     ),
                     Preference.PreferenceItem.SliderPreference(
                         value = pageMarginsValue,

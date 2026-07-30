@@ -9,14 +9,14 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ChromeReaderMode
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.CollectionsBookmark
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Explore
-import androidx.compose.material.icons.outlined.GetApp
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Storage
@@ -205,13 +205,13 @@ object SettingsMainScreen : Screen() {
         Item(
             titleRes = MR.strings.pref_category_players,
             subtitleRes = MR.strings.pref_player_summary,
-            icon = Icons.Filled.PlayArrow,
+            icon = Icons.Outlined.PlayCircle,
             screen = SettingsPlayerScreen,
         ),
         Item(
             titleRes = MR.strings.pref_category_downloads,
             subtitleRes = MR.strings.pref_downloads_summary,
-            icon = Icons.Outlined.GetApp,
+            icon = Icons.Outlined.Download,
             screen = SettingsDownloadScreen,
         ),
         Item(

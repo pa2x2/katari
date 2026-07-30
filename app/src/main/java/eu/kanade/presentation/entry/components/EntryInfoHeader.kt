@@ -32,24 +32,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.CallSplit
 import androidx.compose.material.icons.filled.BrokenImage
-import androidx.compose.material.icons.filled.Brush
-import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.PersonOutline
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.outlined.AttachMoney
-import androidx.compose.material.icons.outlined.Block
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Done
-import androidx.compose.material.icons.outlined.DoneAll
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.Pause
+import androidx.compose.material.icons.outlined.Brush
+import androidx.compose.material.icons.outlined.OpenInBrowser
+import androidx.compose.material.icons.outlined.PersonOutline
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
@@ -244,7 +236,7 @@ fun EntryActionRow(
             } else {
                 stringResource(MR.strings.add_to_library)
             },
-            icon = if (favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+            icon = EntryActionIcons.library(favorite),
             color = if (favorite) MaterialTheme.colorScheme.primary else defaultActionButtonColor,
             onClick = onAddToLibraryClicked,
             onLongClick = onEditCategory,
@@ -252,7 +244,7 @@ fun EntryActionRow(
         if (onAddToMergeClicked != null) {
             EntryActionButton(
                 title = stringResource(MR.strings.action_add_to_merge),
-                icon = Icons.AutoMirrored.Outlined.CallSplit,
+                icon = EntryActionIcons.merge,
                 color = defaultActionButtonColor,
                 onClick = onAddToMergeClicked,
             )
@@ -267,7 +259,7 @@ fun EntryActionRow(
                     nextUpdateDays,
                 )
             },
-            icon = Icons.Default.HourglassEmpty,
+            icon = Icons.Filled.HourglassEmpty,
             color = if (isUserIntervalMode) MaterialTheme.colorScheme.primary else defaultActionButtonColor,
             onClick = { onEditIntervalClicked?.invoke() },
         )
@@ -278,7 +270,7 @@ fun EntryActionRow(
                 } else {
                     pluralStringResource(MR.plurals.num_trackers, count = trackingCount, trackingCount)
                 },
-                icon = if (trackingCount == 0) Icons.Outlined.Sync else Icons.Outlined.Done,
+                icon = if (trackingCount == 0) Icons.Outlined.Sync else Icons.Filled.CheckCircle,
                 color = if (trackingCount == 0) defaultActionButtonColor else MaterialTheme.colorScheme.primary,
                 onClick = onTrackingClicked,
             )
@@ -286,7 +278,7 @@ fun EntryActionRow(
         if (onWebViewClicked != null) {
             EntryActionButton(
                 title = stringResource(MR.strings.action_web_view),
-                icon = Icons.Outlined.Public,
+                icon = Icons.Outlined.OpenInBrowser,
                 color = defaultActionButtonColor,
                 onClick = onWebViewClicked,
                 onLongClick = onWebViewLongClicked,
@@ -504,7 +496,7 @@ fun PreviewContent(
     centerStates: Boolean = false,
     loadingContent: @Composable BoxScope.() -> Unit = {
         PreviewMessage(
-            icon = Icons.Default.Image,
+            icon = Icons.Filled.Image,
             text = stringResource(MR.strings.transition_pages_loading),
             modifier = Modifier.align(Alignment.Center),
         )
@@ -528,7 +520,7 @@ fun PreviewContent(
             }
             state.pages.isEmpty() -> {
                 PreviewMessage(
-                    icon = Icons.Default.Warning,
+                    icon = Icons.Filled.Warning,
                     text = stringResource(MR.strings.manga_preview_empty),
                     modifier = if (centerStates) {
                         Modifier.align(Alignment.Center)
@@ -651,7 +643,7 @@ private fun EntryPreviewTile(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Icon(
-                            imageVector = Icons.Default.BrokenImage,
+                            imageVector = Icons.Filled.BrokenImage,
                             contentDescription = null,
                         )
                         Text(
@@ -701,7 +693,7 @@ fun PreviewError(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         PreviewMessage(
-            icon = Icons.Default.Warning,
+            icon = Icons.Filled.Warning,
             text = message,
             modifier = Modifier.weight(1f),
         )
@@ -829,6 +821,7 @@ private fun ColumnScope.EntryContentInfo(
     textAlign: TextAlign? = LocalTextStyle.current.textAlign,
 ) {
     val context = LocalContext.current
+    val statusPresentation = status.presentation()
     Text(
         text = title.ifBlank { stringResource(MR.strings.unknown_title) },
         style = MaterialTheme.typography.titleLarge,
@@ -866,7 +859,7 @@ private fun ColumnScope.EntryContentInfo(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            imageVector = Icons.Filled.PersonOutline,
+            imageVector = Icons.Outlined.PersonOutline,
             contentDescription = null,
             modifier = Modifier.size(16.dp),
         )
@@ -897,7 +890,7 @@ private fun ColumnScope.EntryContentInfo(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                imageVector = Icons.Filled.Brush,
+                imageVector = Icons.Outlined.Brush,
                 contentDescription = null,
                 modifier = Modifier.size(16.dp),
             )
@@ -921,15 +914,7 @@ private fun ColumnScope.EntryContentInfo(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            imageVector = when (status) {
-                EntryStatus.ONGOING -> Icons.Outlined.Schedule
-                EntryStatus.COMPLETED -> Icons.Outlined.DoneAll
-                EntryStatus.LICENSED -> Icons.Outlined.AttachMoney
-                EntryStatus.PUBLISHING_FINISHED -> Icons.Outlined.Done
-                EntryStatus.CANCELLED -> Icons.Outlined.Close
-                EntryStatus.ON_HIATUS -> Icons.Outlined.Pause
-                else -> Icons.Outlined.Block
-            },
+            imageVector = statusPresentation.icon,
             contentDescription = null,
             modifier = Modifier
                 .padding(end = 4.dp)
@@ -937,15 +922,7 @@ private fun ColumnScope.EntryContentInfo(
         )
         ProvideTextStyle(MaterialTheme.typography.bodyMedium) {
             Text(
-                text = when (status) {
-                    EntryStatus.ONGOING -> stringResource(MR.strings.ongoing)
-                    EntryStatus.COMPLETED -> stringResource(MR.strings.completed)
-                    EntryStatus.LICENSED -> stringResource(MR.strings.licensed)
-                    EntryStatus.PUBLISHING_FINISHED -> stringResource(MR.strings.publishing_finished)
-                    EntryStatus.CANCELLED -> stringResource(MR.strings.cancelled)
-                    EntryStatus.ON_HIATUS -> stringResource(MR.strings.on_hiatus)
-                    else -> stringResource(MR.strings.unknown)
-                },
+                text = statusPresentation.label,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
             )

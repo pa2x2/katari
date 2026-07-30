@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Sort
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -210,7 +210,7 @@ object DownloadQueueScreen : Screen() {
                     },
                     icon = {
                         val icon = if (isRunning) {
-                            Icons.Outlined.Pause
+                            Icons.Filled.Pause
                         } else {
                             Icons.Filled.PlayArrow
                         }

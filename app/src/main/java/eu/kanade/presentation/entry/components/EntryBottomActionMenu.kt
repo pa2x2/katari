@@ -29,10 +29,8 @@ import androidx.compose.material.icons.outlined.BookmarkRemove
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DoneAll
 import androidx.compose.material.icons.outlined.Download
-import androidx.compose.material.icons.outlined.GroupWork
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.RemoveDone
-import androidx.compose.material.icons.outlined.SwapCalls
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -299,7 +297,7 @@ fun LibraryBottomActionMenu(
                 if (onMergeClicked != null) {
                     Button(
                         title = stringResource(MR.strings.action_merge),
-                        icon = Icons.Outlined.GroupWork,
+                        icon = EntryActionIcons.merge,
                         toConfirm = confirm[1],
                         onLongClick = { onLongClickItem(1) },
                         onClick = onMergeClicked,
@@ -346,7 +344,7 @@ fun LibraryBottomActionMenu(
                     if (onMigrateClicked != null) {
                         Button(
                             title = stringResource(MR.strings.migrate),
-                            icon = Icons.Outlined.SwapCalls,
+                            icon = EntryActionIcons.migrate,
                             toConfirm = confirm[5],
                             onLongClick = { onLongClickItem(5) },
                             onClick = onMigrateClicked,

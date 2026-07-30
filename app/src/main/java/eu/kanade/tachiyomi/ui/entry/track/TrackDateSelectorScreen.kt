@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -150,7 +150,7 @@ private data class TrackDateRemoverScreen(
         val screenModel = rememberScreenModel { Model(entry, service, start) }
         AlertDialogContent(
             modifier = Modifier.windowInsetsPadding(WindowInsets.systemBars),
-            icon = { Icon(Icons.Default.Delete, contentDescription = null) },
+            icon = { Icon(Icons.Outlined.Delete, contentDescription = null) },
             title = {
                 Text(
                     text = stringResource(MR.strings.track_remove_date_conf_title),

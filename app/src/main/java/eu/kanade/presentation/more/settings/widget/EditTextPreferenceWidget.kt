@@ -2,8 +2,8 @@ package eu.kanade.presentation.more.settings.widget
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -62,7 +62,10 @@ fun EditTextPreferenceWidget(
                             Icon(imageVector = Icons.Filled.Error, contentDescription = null)
                         } else {
                             IconButton(onClick = { textFieldValue = TextFieldValue("") }) {
-                                Icon(imageVector = Icons.Filled.Cancel, contentDescription = null)
+                                Icon(
+                                    imageVector = Icons.Outlined.Clear,
+                                    contentDescription = stringResource(MR.strings.action_reset),
+                                )
                             }
                         }
                     },

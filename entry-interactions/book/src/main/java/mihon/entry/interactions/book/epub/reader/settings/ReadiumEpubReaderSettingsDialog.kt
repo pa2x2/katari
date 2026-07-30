@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.book.BookReaderSettingsDialog
+import mihon.entry.interactions.reader.settings.BookReaderLayoutMode
 import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
 import mihon.entry.viewer.settings.ResolvedViewerSetting
 import tachiyomi.i18n.MR
@@ -102,15 +103,15 @@ internal fun ReadiumLayoutSettings(settings: ReadiumEpubSettingsBinding) {
     val textNormalization by settings.textNormalization.state.collectEffectiveValue()
 
     SettingChips(
-        label = stringResource(MR.strings.pref_epub_layout_mode),
+        label = stringResource(MR.strings.book_reader_layout),
         values = listOf(
-            ReadiumEpubSettingsProvider.LAYOUT_PAGINATED to stringResource(MR.strings.pref_epub_layout_paginated),
-            ReadiumEpubSettingsProvider.LAYOUT_SCROLLING to stringResource(MR.strings.pref_epub_layout_scrolling),
+            BookReaderLayoutMode.PAGINATED.serializedValue to stringResource(BookReaderLayoutMode.PAGINATED.labelRes),
+            BookReaderLayoutMode.SCROLLING.serializedValue to stringResource(BookReaderLayoutMode.SCROLLING.labelRes),
         ),
         selected = layoutMode,
         onSelect = { scope.launch { settings.layoutMode.setEntryOverride(it) } },
     )
-    if (layoutMode == ReadiumEpubSettingsProvider.LAYOUT_PAGINATED) {
+    if (layoutMode == BookReaderLayoutMode.PAGINATED.serializedValue) {
         SettingChips(
             label = stringResource(MR.strings.pref_epub_column_count),
             summary = stringResource(MR.strings.pref_epub_column_count_summary),

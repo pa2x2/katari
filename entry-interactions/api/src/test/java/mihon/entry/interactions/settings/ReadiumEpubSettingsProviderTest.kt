@@ -2,6 +2,7 @@ package mihon.entry.interactions.settings
 
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import mihon.entry.interactions.reader.settings.BookReaderLayoutMode
 import mihon.entry.viewer.settings.ViewerSettingScope
 import mihon.entry.viewer.settings.ViewerSettingsCategory
 import org.junit.jupiter.api.Test
@@ -26,6 +27,11 @@ class ReadiumEpubSettingsProviderTest {
             .filterNot { it.id.key == ReadiumEpubSettingsProvider.LAYOUT_MODE_KEY }
             .all { it.scope == ViewerSettingScope.PROFILE_ONLY } shouldBe true
         provider.layoutModeSetting.scope shouldBe ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE
+        provider.layoutModeSetting.profilePreference.key() shouldBe "book.epub.readium.layout_mode"
+        provider.layoutModeSetting.processorDefault shouldBe BookReaderLayoutMode.PAGINATED.serializedValue
+        provider.layoutModeSetting.validate(BookReaderLayoutMode.PAGINATED.serializedValue) shouldBe true
+        provider.layoutModeSetting.validate(BookReaderLayoutMode.SCROLLING.serializedValue) shouldBe true
+        provider.layoutModeSetting.validate("unknown") shouldBe false
     }
 
     @Test

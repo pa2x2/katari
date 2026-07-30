@@ -17,20 +17,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.OpenInNew
-import androidx.compose.material.icons.filled.Brush
-import androidx.compose.material.icons.filled.PersonOutline
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.AttachMoney
-import androidx.compose.material.icons.outlined.Block
-import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Brush
 import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material.icons.outlined.Done
-import androidx.compose.material.icons.outlined.DoneAll
-import androidx.compose.material.icons.outlined.Pause
+import androidx.compose.material.icons.outlined.PersonOutline
 import androidx.compose.material.icons.outlined.Public
-import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
@@ -189,6 +181,7 @@ private fun DuplicateEntryListItem(
 ) {
     val sourceInfo = getSourceInfo()
     val entry = duplicate.entry
+    val statusPresentation = entry.status.presentation()
     val duplicatePreferences = remember { Injekt.get<DuplicatePreferences>() }
     val extendedEnabled by duplicatePreferences.extendedDuplicateDetectionEnabled.collectAsState()
 
@@ -264,15 +257,15 @@ private fun DuplicateEntryListItem(
                 )
 
                 DuplicateMetaRow(
-                    text = entry.statusLabel(),
-                    iconImageVector = entry.statusIcon(),
+                    text = statusPresentation.label,
+                    iconImageVector = statusPresentation.icon,
                 )
 
                 val author = entry.author
                 if (!author.isNullOrBlank()) {
                     DuplicateMetaRow(
                         text = author,
-                        iconImageVector = Icons.Filled.PersonOutline,
+                        iconImageVector = Icons.Outlined.PersonOutline,
                         maxLines = 2,
                     )
                 }
@@ -281,7 +274,7 @@ private fun DuplicateEntryListItem(
                 if (!artist.isNullOrBlank() && author != artist) {
                     DuplicateMetaRow(
                         text = artist,
-                        iconImageVector = Icons.Filled.Brush,
+                        iconImageVector = Icons.Outlined.Brush,
                         maxLines = 2,
                     )
                 }
@@ -332,7 +325,7 @@ private fun DuplicateEntryListItem(
                         modifier = Modifier.weight(1f),
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
+                            imageVector = EntryActionIcons.openFullEntry,
                             contentDescription = null,
                             modifier = Modifier.size(18.dp),
                         )
@@ -351,7 +344,7 @@ private fun DuplicateEntryListItem(
                             modifier = Modifier.weight(1f),
                         ) {
                             Icon(
-                                imageVector = Icons.Filled.Warning,
+                                imageVector = EntryActionIcons.migrate,
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp),
                             )
@@ -417,31 +410,6 @@ private fun DuplicateMatchReason.label(entryType: EntryType): String {
         DuplicateMatchReason.STATUS -> stringResource(MR.strings.possible_duplicates_reason_status)
         DuplicateMatchReason.GENRE -> stringResource(MR.strings.possible_duplicates_reason_genre)
         DuplicateMatchReason.CHAPTER_COUNT -> stringResource(entryType.entryTypePresentation().childCountReasonLabel)
-    }
-}
-
-@Composable
-private fun Entry.statusLabel(): String {
-    return when (status) {
-        EntryStatus.ONGOING -> stringResource(MR.strings.ongoing)
-        EntryStatus.COMPLETED -> stringResource(MR.strings.completed)
-        EntryStatus.LICENSED -> stringResource(MR.strings.licensed)
-        EntryStatus.PUBLISHING_FINISHED -> stringResource(MR.strings.publishing_finished)
-        EntryStatus.CANCELLED -> stringResource(MR.strings.cancelled)
-        EntryStatus.ON_HIATUS -> stringResource(MR.strings.on_hiatus)
-        else -> stringResource(MR.strings.unknown)
-    }
-}
-
-private fun Entry.statusIcon(): ImageVector {
-    return when (status) {
-        EntryStatus.ONGOING -> Icons.Outlined.Schedule
-        EntryStatus.COMPLETED -> Icons.Outlined.DoneAll
-        EntryStatus.LICENSED -> Icons.Outlined.AttachMoney
-        EntryStatus.PUBLISHING_FINISHED -> Icons.Outlined.Done
-        EntryStatus.CANCELLED -> Icons.Outlined.Close
-        EntryStatus.ON_HIATUS -> Icons.Outlined.Pause
-        else -> Icons.Outlined.Block
     }
 }
 

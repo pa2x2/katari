@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.SkipNext
 import androidx.compose.material.icons.outlined.SkipPrevious
 import androidx.compose.material3.CircularProgressIndicator
@@ -66,7 +66,7 @@ internal fun VideoPlayerCenterControls(
                     )
                 } else {
                     Icon(
-                        imageVector = if (isPlaying) Icons.Outlined.Pause else Icons.Filled.PlayArrow,
+                        imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                         modifier = Modifier.size(30.dp),
                         contentDescription = if (isPlaying) stringResource(MR.strings.action_pause) else "Play",
                         tint = Color.White,

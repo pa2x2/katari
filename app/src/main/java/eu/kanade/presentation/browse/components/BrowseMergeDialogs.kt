@@ -5,10 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.CallSplit
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Remove
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -17,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.AdaptiveSheet
+import eu.kanade.presentation.entry.components.EntryActionIcons
 import eu.kanade.presentation.entry.components.MergeEditorDialog
 import eu.kanade.presentation.entry.components.MergeEditorEntry
 import eu.kanade.presentation.entry.components.MergeTarget
@@ -56,7 +53,7 @@ fun BrowseLibraryActionDialog(
                 ActionButton(
                     modifier = Modifier.weight(1f),
                     title = stringResource(if (favorite) MR.strings.in_library else MR.strings.add_to_library),
-                    icon = if (favorite) Icons.Outlined.Remove else Icons.Outlined.Add,
+                    icon = EntryActionIcons.library(favorite),
                     onClick = {
                         onLibraryAction()
                     },
@@ -64,7 +61,7 @@ fun BrowseLibraryActionDialog(
                 ActionButton(
                     modifier = Modifier.weight(1f),
                     title = stringResource(MR.strings.action_merge_into_library),
-                    icon = Icons.AutoMirrored.Outlined.CallSplit,
+                    icon = EntryActionIcons.merge,
                     onClick = onMergeIntoLibrary,
                 )
             }

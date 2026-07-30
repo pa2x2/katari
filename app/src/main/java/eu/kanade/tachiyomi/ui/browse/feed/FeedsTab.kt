@@ -21,10 +21,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ViewModule
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ArrowDropDown
-import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DragHandle
 import androidx.compose.material.icons.outlined.Fullscreen
@@ -868,7 +868,7 @@ private fun FeedSelectorMenu(
                     trailingIcon = if (feed.id == selectedFeedId) {
                         {
                             Icon(
-                                imageVector = Icons.Outlined.Check,
+                                imageVector = Icons.Filled.Check,
                                 contentDescription = stringResource(MR.strings.selected),
                                 tint = MaterialTheme.colorScheme.primary,
                             )

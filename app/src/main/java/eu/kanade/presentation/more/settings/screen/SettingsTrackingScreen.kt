@@ -8,9 +8,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -251,11 +251,17 @@ object SettingsTrackingScreen : SearchableSettings {
                             IconButton(onClick = { hidePassword = !hidePassword }) {
                                 Icon(
                                     imageVector = if (hidePassword) {
-                                        Icons.Filled.Visibility
+                                        Icons.Outlined.Visibility
                                     } else {
-                                        Icons.Filled.VisibilityOff
+                                        Icons.Outlined.VisibilityOff
                                     },
-                                    contentDescription = null,
+                                    contentDescription = stringResource(
+                                        if (hidePassword) {
+                                            MR.strings.action_show_password
+                                        } else {
+                                            MR.strings.action_hide_password
+                                        },
+                                    ),
                                 )
                             }
                         },

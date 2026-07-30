@@ -5,6 +5,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import eu.kanade.presentation.more.settings.Preference
+import mihon.entry.interactions.reader.settings.BookReaderLayoutMode
 import mihon.entry.interactions.settings.HtmlProseSettingsProvider
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.asProfilePreference
@@ -102,12 +103,12 @@ object SettingsHtmlProseReaderScreen : AppEntryViewerSettingsScreenProjection() 
                     Preference.PreferenceItem.ListPreference(
                         preference = layoutMode,
                         entries = mapOf(
-                            HtmlProseSettingsProvider.LAYOUT_PAGINATED to
-                                stringResource(MR.strings.pref_epub_layout_paginated),
-                            HtmlProseSettingsProvider.LAYOUT_SCROLLING to
-                                stringResource(MR.strings.pref_epub_layout_scrolling),
+                            BookReaderLayoutMode.PAGINATED.serializedValue to
+                                stringResource(BookReaderLayoutMode.PAGINATED.labelRes),
+                            BookReaderLayoutMode.SCROLLING.serializedValue to
+                                stringResource(BookReaderLayoutMode.SCROLLING.labelRes),
                         ),
-                        title = stringResource(MR.strings.pref_epub_layout_mode),
+                        title = stringResource(MR.strings.book_reader_layout),
                     ),
                     Preference.PreferenceItem.SliderPreference(
                         value = pageMarginsValue,
@@ -152,7 +153,7 @@ object SettingsHtmlProseReaderScreen : AppEntryViewerSettingsScreenProjection() 
                     Preference.PreferenceItem.SwitchPreference(
                         preference = tapNavigation,
                         title = stringResource(MR.strings.pref_epub_tap_navigation),
-                        enabled = layoutModeValue == HtmlProseSettingsProvider.LAYOUT_PAGINATED,
+                        enabled = layoutModeValue == BookReaderLayoutMode.PAGINATED.serializedValue,
                     ),
                     Preference.PreferenceItem.SwitchPreference(
                         preference = showProgress,

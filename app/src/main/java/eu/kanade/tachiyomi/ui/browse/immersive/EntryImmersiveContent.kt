@@ -66,6 +66,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import coil3.compose.AsyncImage
 import eu.kanade.presentation.browse.immersive.EntryImmersivePositionState
+import eu.kanade.presentation.entry.components.EntryActionIcons
 import eu.kanade.presentation.entry.entryTypePresentation
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -469,7 +470,7 @@ private fun ImmersiveOverlay(
                         label = stringResource(
                             if (entry.favorite) MR.strings.remove_from_library else MR.strings.add_to_library,
                         ),
-                        icon = if (entry.favorite) Icons.Outlined.Delete else Icons.Outlined.FavoriteBorder,
+                        icon = EntryActionIcons.library(entry.favorite),
                         onClick = onLibraryAction,
                     )
                     ImmersiveActionButton(

@@ -3,8 +3,8 @@ package eu.kanade.presentation.reader.appbars
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.Pause
+import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -13,6 +13,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import mihon.entry.interactions.manga.R
 import mihon.entry.interactions.reader.settings.ReaderOrientation
 import mihon.entry.interactions.reader.settings.ReadingMode
@@ -39,14 +41,22 @@ fun ReaderBottomBar(
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(onClick = onClickReadingMode) {
+        val readingModeDescription = stringResource(readingMode.stringRes)
+        IconButton(
+            onClick = onClickReadingMode,
+            modifier = Modifier.semantics { stateDescription = readingModeDescription },
+        ) {
             Icon(
                 painter = painterResource(readingMode.iconRes),
                 contentDescription = stringResource(MR.strings.viewer),
             )
         }
 
-        IconButton(onClick = onClickOrientation) {
+        val orientationDescription = stringResource(orientation.stringRes)
+        IconButton(
+            onClick = onClickOrientation,
+            modifier = Modifier.semantics { stateDescription = orientationDescription },
+        ) {
             Icon(
                 imageVector = orientation.icon,
                 contentDescription = stringResource(MR.strings.rotation_type),
@@ -63,7 +73,7 @@ fun ReaderBottomBar(
         if (showAutoScrollToggle) {
             IconButton(onClick = onClickAutoScroll) {
                 Icon(
-                    imageVector = if (autoScrollActive) Icons.Outlined.Pause else Icons.Filled.PlayArrow,
+                    imageVector = if (autoScrollActive) Icons.Outlined.Pause else Icons.Outlined.PlayArrow,
                     contentDescription = stringResource(MR.strings.pref_auto_scroll),
                 )
             }

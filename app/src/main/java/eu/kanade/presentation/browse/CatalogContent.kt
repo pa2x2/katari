@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.OpenInBrowser
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Settings
@@ -112,7 +113,7 @@ fun CatalogContent(
                     add(
                         EmptyScreenAction(
                             stringRes = MR.strings.action_open_in_web_view,
-                            icon = Icons.Outlined.Public,
+                            icon = Icons.Outlined.OpenInBrowser,
                             onClick = it,
                         ),
                     )

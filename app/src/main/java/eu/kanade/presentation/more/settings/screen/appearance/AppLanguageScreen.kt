@@ -75,7 +75,7 @@ class AppLanguageScreen : Screen() {
                         trailingContent = {
                             if (currentLanguage == it.langTag) {
                                 Icon(
-                                    imageVector = Icons.Default.Check,
+                                    imageVector = Icons.Filled.Check,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primary,
                                 )

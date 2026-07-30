@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import mihon.entry.interactions.reader.settings.BookReaderLayoutMode
 import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
 import mihon.entry.viewer.settings.ResolvedViewerSetting
 import mihon.entry.viewer.settings.ViewerSettingBinder
@@ -49,7 +50,7 @@ class ReadiumEpubSettingsBindingTest {
                 textAlignment = ReadiumEpubSettingsProvider.ALIGN_PUBLISHER,
             ),
             pageLayout = PageLayoutValues(
-                layoutMode = ReadiumEpubSettingsProvider.LAYOUT_PAGINATED,
+                layoutMode = BookReaderLayoutMode.PAGINATED.serializedValue,
                 columnCount = ReadiumEpubSettingsProvider.COLUMNS_AUTO,
             ),
         )
@@ -85,7 +86,7 @@ class ReadiumEpubSettingsBindingTest {
                 textAlignment = ReadiumEpubSettingsProvider.ALIGN_JUSTIFY,
             ),
             pageLayout = PageLayoutValues(
-                layoutMode = ReadiumEpubSettingsProvider.LAYOUT_SCROLLING,
+                layoutMode = BookReaderLayoutMode.SCROLLING.serializedValue,
                 columnCount = ReadiumEpubSettingsProvider.COLUMNS_TWO,
             ),
         )

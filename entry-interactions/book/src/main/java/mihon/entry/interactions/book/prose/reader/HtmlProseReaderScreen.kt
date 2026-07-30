@@ -15,11 +15,9 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.ViewCarousel
-import androidx.compose.material.icons.outlined.ViewStream
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -49,6 +47,7 @@ import kotlinx.coroutines.launch
 import mihon.entry.interactions.EntryChildWebViewAction
 import mihon.entry.interactions.EntryChildWebViewActionsMenu
 import mihon.entry.interactions.EntryChildWebViewResolution
+import mihon.entry.interactions.book.BookReaderLayoutButton
 import mihon.entry.interactions.book.BookReaderLoadingScreen
 import mihon.entry.interactions.book.BookReaderNavigationRow
 import mihon.entry.interactions.book.BookReaderNavigationSheet
@@ -61,6 +60,7 @@ import mihon.entry.interactions.book.document.model.BookDocumentPosition
 import mihon.entry.interactions.book.document.reader.BookDocumentTextInteraction
 import mihon.entry.interactions.book.document.reader.BookDocumentTextSelection
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentTextInteraction
+import mihon.entry.interactions.reader.settings.BookReaderLayoutMode
 import mihon.entry.interactions.settings.HtmlProseSettingsProvider
 import mihon.entry.interactions.viewer.EntryChildWindow
 import mihon.translation.ui.session.TranslationSelectionAnchor
@@ -121,7 +121,8 @@ internal fun HtmlProseReaderScreen(
     val tapNavigation by settings.tapNavigation.state.collectEffectiveValue()
     val showProgress by settings.showProgress.state.collectEffectiveValue()
     val drawUnderCutout by settings.drawUnderCutout.state.collectEffectiveValue()
-    val paginated = layoutMode == HtmlProseSettingsProvider.LAYOUT_PAGINATED
+    val readerLayoutMode = BookReaderLayoutMode.fromSerializedValue(layoutMode)
+    val paginated = readerLayoutMode == BookReaderLayoutMode.PAGINATED
     val palette = prosePalette(theme, isSystemInDarkTheme())
     var position by remember(state.currentChapterId) {
         val loaded = state.loadedChapters[state.currentChapterId]
@@ -356,27 +357,25 @@ internal fun HtmlProseReaderScreen(
                                     horizontalArrangement = Arrangement.SpaceEvenly,
                                 ) {
                                     val scope = rememberCoroutineScope()
-                                    IconButton(
+                                    BookReaderLayoutButton(
+                                        layoutMode = readerLayoutMode,
                                         onClick = {
-                                            val target = if (paginated) {
-                                                HtmlProseSettingsProvider.LAYOUT_SCROLLING
+                                            val target = if (readerLayoutMode == BookReaderLayoutMode.PAGINATED) {
+                                                BookReaderLayoutMode.SCROLLING
                                             } else {
-                                                HtmlProseSettingsProvider.LAYOUT_PAGINATED
+                                                BookReaderLayoutMode.PAGINATED
                                             }
-                                            scope.launch { settings.layoutMode.setEntryOverride(target) }
+                                            scope.launch {
+                                                settings.layoutMode.setEntryOverride(target.serializedValue)
+                                            }
                                         },
-                                    ) {
-                                        Icon(
-                                            if (paginated) Icons.Outlined.ViewCarousel else Icons.Outlined.ViewStream,
-                                            stringResource(R.string.prose_reader_layout),
-                                        )
-                                    }
+                                    )
                                     IconButton(onClick = { onSettingsVisibilityChange(true) }) {
                                         Icon(Icons.Outlined.Settings, stringResource(R.string.prose_reader_settings))
                                     }
                                     IconButton(onClick = { onChapterListVisibilityChange(true) }) {
                                         Icon(
-                                            Icons.AutoMirrored.Filled.ViewList,
+                                            Icons.AutoMirrored.Outlined.ViewList,
                                             i18nStringResource(MR.strings.book_table_of_contents),
                                         )
                                     }

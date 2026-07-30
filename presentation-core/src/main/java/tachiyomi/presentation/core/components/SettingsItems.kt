@@ -16,8 +16,8 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.outlined.ArrowDownward
+import androidx.compose.material.icons.outlined.ArrowUpward
 import androidx.compose.material.icons.rounded.CheckBox
 import androidx.compose.material.icons.rounded.CheckBoxOutlineBlank
 import androidx.compose.material.icons.rounded.DisabledByDefault
@@ -104,8 +104,8 @@ fun IconItem(label: String, icon: ImageVector, onClick: () -> Unit) {
 @Composable
 fun SortItem(label: String, sortDescending: Boolean?, onClick: () -> Unit) {
     val arrowIcon = when (sortDescending) {
-        true -> Icons.Default.ArrowDownward
-        false -> Icons.Default.ArrowUpward
+        true -> Icons.Outlined.ArrowDownward
+        false -> Icons.Outlined.ArrowUpward
         null -> null
     }
 

@@ -27,6 +27,7 @@ import mihon.entry.interactions.book.BookReaderNavigationSheet
 import mihon.entry.interactions.book.BookReaderProgress
 import mihon.entry.interactions.book.BookReaderScaffold
 import mihon.entry.interactions.book.BookSelectionTranslationController
+import mihon.entry.interactions.reader.settings.BookReaderLayoutMode
 import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.reader.ReaderChrome
@@ -77,7 +78,8 @@ internal fun ReadiumEpubReaderScreen(
     val theme by settings.theme.state.collectEffectiveValue()
     val showPageNumber by settings.showPageNumber.state.collectEffectiveValue()
     val layoutMode by settings.layoutMode.state.collectEffectiveValue()
-    val paginated = state.fixedLayout || layoutMode == ReadiumEpubSettingsProvider.LAYOUT_PAGINATED
+    val readerLayoutMode = BookReaderLayoutMode.fromSerializedValue(layoutMode)
+    val paginated = state.fixedLayout || readerLayoutMode == BookReaderLayoutMode.PAGINATED
     val footerColor = when (theme) {
         ReadiumEpubSettingsProvider.THEME_DARK -> Color(0xFF121212)
         ReadiumEpubSettingsProvider.THEME_SEPIA -> Color(0xFFF4ECD8)
@@ -151,16 +153,19 @@ internal fun ReadiumEpubReaderScreen(
                             )
                         }
                         ReadiumReaderBottomBar(
-                            paginated = paginated,
+                            layoutMode = readerLayoutMode,
+                            readingDirection = state.readingDirection,
                             showLayoutToggle = !state.fixedLayout,
                             onOpenToc = { onTocVisibilityChange(true) },
                             onToggleLayout = {
-                                val target = if (paginated) {
-                                    ReadiumEpubSettingsProvider.LAYOUT_SCROLLING
+                                val target = if (readerLayoutMode == BookReaderLayoutMode.PAGINATED) {
+                                    BookReaderLayoutMode.SCROLLING
                                 } else {
-                                    ReadiumEpubSettingsProvider.LAYOUT_PAGINATED
+                                    BookReaderLayoutMode.PAGINATED
                                 }
-                                scope.launch { settings.layoutMode.setEntryOverride(target) }
+                                scope.launch {
+                                    settings.layoutMode.setEntryOverride(target.serializedValue)
+                                }
                             },
                             onOpenSettings = { onSettingsVisibilityChange(true) },
                             modifier = Modifier.background(backgroundColor),

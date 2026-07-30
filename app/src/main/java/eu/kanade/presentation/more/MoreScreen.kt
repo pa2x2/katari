@@ -4,15 +4,15 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.automirrored.outlined.Label
-import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.CloudOff
-import androidx.compose.material.icons.outlined.GetApp
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.QueryStats
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Sync
+import androidx.compose.material.icons.outlined.VolunteerActivism
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -110,7 +110,7 @@ fun MoreScreen(
                             pluralStringResource(MR.plurals.download_queue_summary, count = pending, pending)
                         }
                     },
-                    icon = Icons.Outlined.GetApp,
+                    icon = Icons.Outlined.Download,
                     onPreferenceClick = onClickDownloadQueue,
                 )
             }
@@ -164,7 +164,7 @@ fun MoreScreen(
             item {
                 TextPreferenceWidget(
                     title = stringResource(MR.strings.label_support_us),
-                    icon = Icons.Default.VolunteerActivism,
+                    icon = Icons.Outlined.VolunteerActivism,
                     onPreferenceClick = onClickSupport,
                 )
             }

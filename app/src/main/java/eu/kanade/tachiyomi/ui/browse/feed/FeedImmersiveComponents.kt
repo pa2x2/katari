@@ -12,8 +12,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.DragHandle
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Refresh
@@ -147,7 +147,7 @@ internal fun FeedPickerSheet(
                         }
                         if (selected) {
                             Icon(
-                                imageVector = Icons.Outlined.Check,
+                                imageVector = Icons.Filled.Check,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary,
                             )

@@ -1,9 +1,9 @@
 package eu.kanade.presentation.entry.components
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Deselect
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.FilterList
-import androidx.compose.material.icons.outlined.FlipToBack
 import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -96,7 +96,7 @@ fun EntryToolbar(
                         add(
                             AppBar.Action(
                                 title = stringResource(MR.strings.action_select_inverse),
-                                icon = Icons.Outlined.FlipToBack,
+                                icon = Icons.Outlined.Deselect,
                                 onClick = onInvertSelection,
                             ),
                         )

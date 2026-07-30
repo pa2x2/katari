@@ -7,11 +7,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.ViewCarousel
-import androidx.compose.material.icons.outlined.ViewStream
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -24,9 +22,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import mihon.book.api.BookReadingDirection
 import mihon.entry.interactions.EntryChildWebViewAction
 import mihon.entry.interactions.EntryChildWebViewActionsMenu
 import mihon.entry.interactions.EntryChildWebViewResolution
+import mihon.entry.interactions.book.BookReaderLayoutButton
+import mihon.entry.interactions.reader.settings.BookReaderLayoutMode
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -72,7 +73,8 @@ internal fun ReadiumReaderTopBar(
 
 @Composable
 internal fun ReadiumReaderBottomBar(
-    paginated: Boolean,
+    layoutMode: BookReaderLayoutMode,
+    readingDirection: BookReadingDirection?,
     showLayoutToggle: Boolean,
     onOpenToc: () -> Unit,
     onToggleLayout: () -> Unit,
@@ -88,12 +90,11 @@ internal fun ReadiumReaderBottomBar(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (showLayoutToggle) {
-            IconButton(onClick = onToggleLayout) {
-                Icon(
-                    imageVector = if (paginated) Icons.Outlined.ViewCarousel else Icons.Outlined.ViewStream,
-                    contentDescription = stringResource(MR.strings.pref_epub_layout_mode),
-                )
-            }
+            BookReaderLayoutButton(
+                layoutMode = layoutMode,
+                readingDirection = readingDirection,
+                onClick = onToggleLayout,
+            )
         }
         IconButton(onClick = onOpenSettings) {
             Icon(
@@ -103,7 +104,7 @@ internal fun ReadiumReaderBottomBar(
         }
         IconButton(onClick = onOpenToc) {
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.ViewList,
+                imageVector = Icons.AutoMirrored.Outlined.ViewList,
                 contentDescription = stringResource(MR.strings.book_table_of_contents),
             )
         }

@@ -1,5 +1,6 @@
 package mihon.entry.interactions.settings
 
+import mihon.entry.interactions.reader.settings.BookReaderLayoutMode
 import mihon.entry.viewer.settings.ViewerSettingCodecs
 import mihon.entry.viewer.settings.ViewerSettingDefinition
 import mihon.entry.viewer.settings.ViewerSettingId
@@ -22,7 +23,10 @@ class HtmlProseSettingsProvider(
     private val lineHeight = preferenceStore.getInt("book.prose.html.line_height_percent", 170)
     private val pageMargins = preferenceStore.getInt("book.prose.html.page_margins_percent", 100)
     private val textAlignment = preferenceStore.getString("book.prose.html.text_alignment", ALIGN_START)
-    private val layoutMode = preferenceStore.getString("book.prose.html.layout_mode", LAYOUT_PAGINATED)
+    private val layoutMode = preferenceStore.getString(
+        "book.prose.html.layout_mode",
+        BookReaderLayoutMode.PAGINATED.serializedValue,
+    )
     private val tapNavigation = preferenceStore.getBoolean("book.prose.html.tap_navigation", false)
     private val showProgress = preferenceStore.getBoolean("book.prose.html.show_progress", true)
     private val drawUnderCutout = preferenceStore.getBoolean("book.prose.html.draw_under_cutout", false)
@@ -36,10 +40,10 @@ class HtmlProseSettingsProvider(
     val layoutModeSetting = ViewerSettingDefinition(
         id = ViewerSettingId(PROVIDER_ID, LAYOUT_MODE_KEY),
         scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
-        processorDefault = LAYOUT_PAGINATED,
+        processorDefault = BookReaderLayoutMode.PAGINATED.serializedValue,
         profilePreference = layoutMode,
         codec = ViewerSettingCodecs.String,
-        validate = SUPPORTED_LAYOUT_MODES::contains,
+        validate = BookReaderLayoutMode.supportedValues::contains,
     )
     val tapNavigationSetting = booleanSetting(TAP_NAVIGATION_KEY, tapNavigation)
     val showProgressSetting = booleanSetting(SHOW_PROGRESS_KEY, showProgress)
@@ -119,10 +123,6 @@ class HtmlProseSettingsProvider(
         const val ALIGN_LEFT = "left"
         const val ALIGN_RIGHT = "right"
         val SUPPORTED_TEXT_ALIGNMENTS = setOf(ALIGN_START, ALIGN_JUSTIFY, ALIGN_LEFT, ALIGN_RIGHT)
-
-        const val LAYOUT_PAGINATED = "paginated"
-        const val LAYOUT_SCROLLING = "scrolling"
-        val SUPPORTED_LAYOUT_MODES = setOf(LAYOUT_PAGINATED, LAYOUT_SCROLLING)
 
         val FONT_SIZE_RANGE = 70..200
         val LINE_HEIGHT_RANGE = 100..220

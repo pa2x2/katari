@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import mihon.book.api.BookLocator
 import mihon.book.api.BookNavigationItem
 import mihon.book.api.BookReadingDirection
+import mihon.entry.interactions.reader.settings.BookReaderLayoutMode
 import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
 import org.readium.r2.navigator.input.InputListener
 import org.readium.r2.navigator.input.TapEvent
@@ -109,7 +110,7 @@ internal class ReadiumEpubNavigationController(
                 val fragment = navigator ?: return false
                 val readerSettings = settings ?: return false
                 val paginated = readerSettings.layoutMode.state.value.effectiveValue ==
-                    ReadiumEpubSettingsProvider.LAYOUT_PAGINATED
+                    BookReaderLayoutMode.PAGINATED.serializedValue
                 val tapNavigation = readerSettings.tapNavigation.resolveProfile().effectiveValue
                 val width = fragment.publicationView.width.takeIf { it > 0 } ?: return false
                 val x = event.point.x / width.toFloat()
@@ -290,5 +291,5 @@ internal class ReadiumEpubNavigationController(
     }
 
     internal fun isPaginated(): Boolean = uiState.fixedLayout ||
-        settings?.layoutMode?.state?.value?.effectiveValue == ReadiumEpubSettingsProvider.LAYOUT_PAGINATED
+        settings?.layoutMode?.state?.value?.effectiveValue == BookReaderLayoutMode.PAGINATED.serializedValue
 }

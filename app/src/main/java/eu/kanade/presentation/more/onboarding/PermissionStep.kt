@@ -176,7 +176,7 @@ internal class PermissionStep : OnboardingStep {
                 ) {
                     if (granted) {
                         Icon(
-                            imageVector = Icons.Default.Check,
+                            imageVector = Icons.Filled.Check,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
                         )

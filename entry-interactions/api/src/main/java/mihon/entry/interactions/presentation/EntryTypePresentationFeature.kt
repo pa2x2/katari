@@ -3,8 +3,8 @@
 package mihon.entry.interactions
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.OpenInFull
 import androidx.compose.ui.graphics.vector.ImageVector
 import dev.icerock.moko.resources.PluralsResource
 import dev.icerock.moko.resources.StringResource
@@ -134,7 +134,7 @@ val genericEntryTypePresentation = EntryTypePresentation(
     intervalExpectedUpdateLabel = MR.strings.item_interval_expected_update,
     intervalExpectedUpdateNullLabel = MR.strings.item_interval_expected_update_null,
     immersiveOpenLabel = MR.strings.action_open,
-    immersiveOpenIcon = Icons.AutoMirrored.Outlined.OpenInNew,
+    immersiveOpenIcon = Icons.Outlined.OpenInFull,
     historySubtitle = EntryHistorySubtitlePresentation.NameAndTimestamp,
     partialProgress = EntryPartialProgressPresentation.Fixed(MR.strings.label_started),
     updateNotification = EntryUpdateNotificationVocabulary(

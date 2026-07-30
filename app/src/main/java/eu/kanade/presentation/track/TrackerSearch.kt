@@ -33,8 +33,8 @@ import androidx.compose.foundation.text.input.clearText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -113,7 +113,7 @@ fun TrackerSearch(
                         IconButton(onClick = onDismissRequest) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                                contentDescription = null,
+                                contentDescription = stringResource(MR.strings.action_close),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
@@ -152,8 +152,8 @@ fun TrackerSearch(
                                 },
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = null,
+                                    imageVector = Icons.Outlined.Clear,
+                                    contentDescription = stringResource(MR.strings.action_reset),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }

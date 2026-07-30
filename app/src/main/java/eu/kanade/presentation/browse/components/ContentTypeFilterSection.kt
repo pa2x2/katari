@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -85,7 +85,7 @@ private fun ContentTypeFilterChip(
         leadingIcon = selected.takeIf { it }?.let {
             {
                 Icon(
-                    imageVector = Icons.Outlined.Check,
+                    imageVector = Icons.Filled.Check,
                     contentDescription = null,
                 )
             }

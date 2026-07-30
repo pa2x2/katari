@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.OpenInBrowser
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
@@ -95,7 +96,7 @@ private fun ExtensionStoresListItem(
         ) {
             IconButton(onClick = onOpenWebsite) {
                 Icon(
-                    imageVector = Icons.Outlined.Public,
+                    imageVector = Icons.Outlined.OpenInBrowser,
                     contentDescription = stringResource(MR.strings.action_open_in_browser),
                 )
             }
@@ -104,7 +105,7 @@ private fun ExtensionStoresListItem(
                 IconButton(onClick = onOpenDiscord) {
                     Icon(
                         imageVector = CustomIcons.Discord,
-                        contentDescription = null,
+                        contentDescription = stringResource(MR.strings.action_open_discord),
                     )
                 }
             }
