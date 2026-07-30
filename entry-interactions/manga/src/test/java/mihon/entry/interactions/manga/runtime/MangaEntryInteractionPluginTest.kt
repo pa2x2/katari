@@ -203,13 +203,29 @@ class MangaEntryInteractionPluginTest {
     }
 
     @Test
+    fun `manga continue starts at first unread chapter in reading order`() = runTest {
+        val first = chapter(id = 1L, sourceOrder = 1L, chapterNumber = 1.0)
+        val latest = chapter(id = 2L, sourceOrder = 0L, chapterNumber = 2.0)
+        val dependencies = dependencies(chapters = listOf(latest, first))
+        val processor = MangaContinueProcessor(
+            getEntryWithChapters = dependencies.getEntryWithChapters,
+            entryProgressRepository = dependencies.entryProgressRepository,
+            openProcessor = MangaOpenProcessor(),
+        )
+
+        val result = processor.findNext(entry(EntryType.MANGA, id = 1L))
+
+        result shouldBe first
+    }
+
+    @Test
     fun `manga continue selects next unread chapter`() = runTest {
-        val nextUnread = chapter(id = 3L, read = false, sourceOrder = 2L)
+        val nextUnread = chapter(id = 2L, read = false, sourceOrder = 1L, chapterNumber = 2.0)
         val dependencies = dependencies(
             chapters = listOf(
-                chapter(id = 1L, read = true, sourceOrder = 0L),
-                chapter(id = 2L, read = false, sourceOrder = 4L),
+                chapter(id = 3L, read = false, sourceOrder = 0L, chapterNumber = 3.0),
                 nextUnread,
+                chapter(id = 1L, read = true, sourceOrder = 2L, chapterNumber = 1.0),
             ),
         )
         val processor = MangaContinueProcessor(

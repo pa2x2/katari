@@ -8,6 +8,7 @@ import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryProgressRepository
+import tachiyomi.domain.entry.service.sortedForReading
 
 internal class MangaContinueProcessor(
     private val getEntryWithChapters: GetEntryWithChapters,
@@ -29,7 +30,7 @@ internal class MangaContinueProcessor(
             .sortedByDescending { it.lastReadAt }
             .mapNotNull { it.chapterId?.let(chapterById::get) }
             .firstOrNull()
-            ?: chapters.firstOrNull { !it.read }
+            ?: chapters.sortedForReading(entry).firstOrNull { !it.read }
     }
 
     override fun open(context: Context, entry: Entry, chapter: EntryChapter) {

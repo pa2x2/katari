@@ -9,6 +9,7 @@ import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryProgressRepository
+import tachiyomi.domain.entry.service.sortedForReading
 
 internal class AnimeContinueProcessor(
     private val getEntryWithChapters: GetEntryWithChapters,
@@ -37,7 +38,7 @@ internal class AnimeContinueProcessor(
                 state != null && state.positionMs > 0L && !state.completed
             }
             ?: chapters
-                .sortedBy { it.sourceOrder }
+                .sortedForReading(entry)
                 .firstOrNull { chapter ->
                     !chapter.read && stateByChapterId[chapter.id]?.completed != true
                 }
