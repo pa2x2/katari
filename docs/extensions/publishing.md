@@ -2,7 +2,7 @@
 
 An extension update must be recognizable as the same Android package, signed by the same publisher, and compatible with Katari's Entry API family. It should also preserve source and content identities so an upgrade does not duplicate a user's library or lose history.
 
-For extensions distributed through Katari's public repository, follow the contribution and release workflow in [`katari-extensions`](https://github.com/katariapp/katari-extensions).
+For extensions distributed through Katari's public repository, follow the contribution and release workflow in [`katari-extensions`](https://github.com/pa2x2/katari-extensions).
 
 ## Before the first release
 

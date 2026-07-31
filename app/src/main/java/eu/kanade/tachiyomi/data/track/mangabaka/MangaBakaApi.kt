@@ -54,7 +54,7 @@ class MangaBakaApi(
                 buildString {
                     append("${MR.strings.app_name}/v${BuildConfig.VERSION_NAME} ")
                     append("(${BuildConfig.APPLICATION_ID} ${BuildConfig.COMMIT_SHA}) ")
-                    append("(Android) (https://github.com/katariapp/katari)")
+                    append("(Android) (https://github.com/pa2x2/katari)")
                 },
             )
             .build()

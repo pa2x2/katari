@@ -8,11 +8,11 @@
 
 Read, watch, and explore in one familiar Android app—built to welcome new ways of enjoying stories.
 
-[Download](https://github.com/katariapp/katari/releases/latest) · [Documentation](https://katariapp.github.io/katari/)
+[Download](https://github.com/pa2x2/katari/releases/latest) · [Documentation](https://pa2x2.github.io/katari/)
 
-[![Latest release](https://img.shields.io/github/v/release/katariapp/katari?display_name=tag&sort=semver&label=release)](https://github.com/katariapp/katari/releases/latest)
+[![Latest release](https://img.shields.io/github/v/release/pa2x2/katari?display_name=tag&sort=semver&label=release)](https://github.com/pa2x2/katari/releases/latest)
 ![Android 8+](https://img.shields.io/badge/Android-8%2B-3DDC84?logo=android&logoColor=white)
-[![License](https://img.shields.io/github/license/katariapp/katari)](./LICENSE)
+[![License](https://img.shields.io/github/license/pa2x2/katari)](./LICENSE)
 
 </div>
 
@@ -36,7 +36,7 @@ Katari would not exist without [Mihon](https://github.com/mihonapp/mihon) and th
 
 ## Developers
 
-Katari provides an Entry SDK for building sources that can expose different content types and media experiences. See the [developer documentation](https://katariapp.github.io/katari/developers/) for extension guides, SDK concepts, compatibility rules, and the API reference.
+Katari provides an Entry SDK for building sources that can expose different content types and media experiences. See the [developer documentation](https://pa2x2.github.io/katari/developers/) for extension guides, SDK concepts, compatibility rules, and the API reference.
 
 For changes to Katari itself, see the [contribution guide](./CONTRIBUTING.md).
 

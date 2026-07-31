@@ -2,9 +2,9 @@
 
 Katari extensions connect the app to external catalogues. They provide metadata and tell Katari how to resolve something a person can read or watch. Extensions do not bundle or host the content itself.
 
-Katari uses [`entry-source-api`](https://github.com/katariapp/katari/tree/main/entry-source-api) for new extensions. It brings in the shared `book-api` contracts transitively for sources that expose books. Although Katari can still load compatible [Mihon](https://mihon.app/) extensions, new extensions should not depend on the legacy `source-api` module or use its `SManga`, `SChapter`, `MangasPage`, `Page`, or RxJava contracts.
+Katari uses [`entry-source-api`](https://github.com/pa2x2/katari/tree/main/entry-source-api) for new extensions. It brings in the shared `book-api` contracts transitively for sources that expose books. Although Katari can still load compatible [Mihon](https://mihon.app/) extensions, new extensions should not depend on the legacy `source-api` module or use its `SManga`, `SChapter`, `MangasPage`, `Page`, or RxJava contracts.
 
-The public [`katari-extensions`](https://github.com/katariapp/katari-extensions) repository contains Katari extensions and their contribution workflow. Use it as the starting point when adding or maintaining an extension intended for public distribution.
+The public [`katari-extensions`](https://github.com/pa2x2/katari-extensions) repository contains Katari extensions and their contribution workflow. Use it as the starting point when adding or maintaining an extension intended for public distribution.
 
 ## The model
 
@@ -38,4 +38,4 @@ The source is not permanently classified by content type. Each `SEntry` declares
 
 If you already maintain a Mihon source, follow the [migration guide](./migrating-from-mihon.md). Before selecting an SDK release, read [SDK compatibility and versioning](../developers/sdk/versioning.md).
 
-The [SDK documentation](../developers/sdk/) explains the public contracts and links to both generated API references. The Kotlin sources under [`entry-source-api`](https://github.com/katariapp/katari/tree/main/entry-source-api/src) and [`book-api`](https://github.com/katariapp/katari/tree/main/book-api/src) remain the source of truth for development snapshots.
+The [SDK documentation](../developers/sdk/) explains the public contracts and links to both generated API references. The Kotlin sources under [`entry-source-api`](https://github.com/pa2x2/katari/tree/main/entry-source-api/src) and [`book-api`](https://github.com/pa2x2/katari/tree/main/book-api/src) remain the source of truth for development snapshots.

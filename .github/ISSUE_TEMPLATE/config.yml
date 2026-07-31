@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: 📖 Katari documentation
-    url: https://katariapp.github.io/katari/
+    url: https://pa2x2.github.io/katari/
     about: Guides, migration information, extension documentation, and Katari-specific behavior
   - name: ⬇️ Katari releases
-    url: https://github.com/katariapp/katari/releases/latest
+    url: https://github.com/pa2x2/katari/releases/latest
     about: Download the latest standard or FOSS release before reporting an issue

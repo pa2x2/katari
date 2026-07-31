@@ -6,7 +6,7 @@ plugins {
     id("maven-publish")
 }
 
-group = "com.github.katariapp.katari"
+group = "com.github.pa2x2.katari"
 version = providers.gradleProperty("sourceApiVersion")
     .orElse(System.getenv("VERSION") ?: "local-SNAPSHOT")
     .get()

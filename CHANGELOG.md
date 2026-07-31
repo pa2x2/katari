@@ -146,7 +146,7 @@ prepare upcoming chapters before you reach them.
 - Added Reset controls to reader and player settings that clear active-profile values and
   current-entry overrides without affecting progress, bookmarks, or downloads.
 - Added merging for `BOOK` entries, including grouped library, update, history, and progress
-  handling. (by @pa2x2) ([#6](https://github.com/katariapp/katari/pull/6))
+  handling. (by @pa2x2) ([#6](https://github.com/pa2x2/katari/pull/6))
 
 ### Removed
 
@@ -186,10 +186,10 @@ prepare upcoming chapters before you reach them.
 
 - Added source-provided related entries to entry screens for compatible Entry Source and
   Keiyoushi manga extensions.
-  (by @pa2x2) ([#2](https://github.com/katariapp/katari/pull/2))
+  (by @pa2x2) ([#2](https://github.com/pa2x2/katari/pull/2))
 - Added individual, bulk, and automatic BOOK downloads with Downloads-screen management,
   offline reading, and post-read cleanup preferences.
-  (by @pa2x2) ([#3](https://github.com/katariapp/katari/pull/3))
+  (by @pa2x2) ([#3](https://github.com/pa2x2/katari/pull/3))
 
 ### Removed
 
@@ -201,13 +201,13 @@ prepare upcoming chapters before you reach them.
 - Prevented the final line of paginated web-novel pages from extending beyond the page.
 - Preserved selected library entries while bulk and profile actions were dispatched, and
   applied category state and changes to every merged member.
-  (by @pa2x2) ([#5](https://github.com/katariapp/katari/pull/5))
+  (by @pa2x2) ([#5](https://github.com/pa2x2/katari/pull/5))
 - Kept long anime download-option lists scrollable while leaving the dialog actions
   accessible.
 
 ### Other
 
-- Updated Entry SDK to 2.2.0 with the optional `RelatedEntriesSource` capability (by @pa2x2) ([#2](https://github.com/katariapp/katari/pull/2))
+- Updated Entry SDK to 2.2.0 with the optional `RelatedEntriesSource` capability (by @pa2x2) ([#2](https://github.com/pa2x2/katari/pull/2))
 
 ## [1.2.2] - 2026-07-16
 
@@ -334,23 +334,23 @@ Based on [Mihon v0.20.1](https://github.com/mihonapp/mihon/releases/tag/v0.20.1)
 - Rebranded the application as Katari with its own package identity, visual
   identity, release pipeline, and documentation.
 
-[Unreleased]: https://github.com/katariapp/katari/compare/v1.6.2...upcoming
-[1.6.2]: https://github.com/katariapp/katari/releases/tag/v1.6.2
-[1.6.1]: https://github.com/katariapp/katari/releases/tag/v1.6.1
-[1.6.0]: https://github.com/katariapp/katari/releases/tag/v1.6.0
-[1.5.1]: https://github.com/katariapp/katari/releases/tag/v1.5.1
-[1.5.0]: https://github.com/katariapp/katari/releases/tag/v1.5.0
-[1.4.3]: https://github.com/katariapp/katari/releases/tag/v1.4.3
-[1.4.2]: https://github.com/katariapp/katari/releases/tag/v1.4.2
-[1.4.1]: https://github.com/katariapp/katari/releases/tag/v1.4.1
-[1.4.0]: https://github.com/katariapp/katari/releases/tag/v1.4.0
-[1.3.2]: https://github.com/katariapp/katari/releases/tag/v1.3.2
-[1.3.1]: https://github.com/katariapp/katari/releases/tag/v1.3.1
-[1.3.0]: https://github.com/katariapp/katari/releases/tag/v1.3.0
-[1.2.2]: https://github.com/katariapp/katari/releases/tag/v1.2.2
-[1.2.1]: https://github.com/katariapp/katari/releases/tag/v1.2.1
-[1.2.0]: https://github.com/katariapp/katari/releases/tag/v1.2.0
-[1.1.0]: https://github.com/katariapp/katari/releases/tag/v1.1.0
-[1.0.2]: https://github.com/katariapp/katari/releases/tag/v1.0.2
-[1.0.1]: https://github.com/katariapp/katari/releases/tag/v1.0.1
-[1.0.0]: https://github.com/katariapp/katari/releases/tag/v1.0.0
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.6.2...upcoming
+[1.6.2]: https://github.com/pa2x2/katari/releases/tag/v1.6.2
+[1.6.1]: https://github.com/pa2x2/katari/releases/tag/v1.6.1
+[1.6.0]: https://github.com/pa2x2/katari/releases/tag/v1.6.0
+[1.5.1]: https://github.com/pa2x2/katari/releases/tag/v1.5.1
+[1.5.0]: https://github.com/pa2x2/katari/releases/tag/v1.5.0
+[1.4.3]: https://github.com/pa2x2/katari/releases/tag/v1.4.3
+[1.4.2]: https://github.com/pa2x2/katari/releases/tag/v1.4.2
+[1.4.1]: https://github.com/pa2x2/katari/releases/tag/v1.4.1
+[1.4.0]: https://github.com/pa2x2/katari/releases/tag/v1.4.0
+[1.3.2]: https://github.com/pa2x2/katari/releases/tag/v1.3.2
+[1.3.1]: https://github.com/pa2x2/katari/releases/tag/v1.3.1
+[1.3.0]: https://github.com/pa2x2/katari/releases/tag/v1.3.0
+[1.2.2]: https://github.com/pa2x2/katari/releases/tag/v1.2.2
+[1.2.1]: https://github.com/pa2x2/katari/releases/tag/v1.2.1
+[1.2.0]: https://github.com/pa2x2/katari/releases/tag/v1.2.0
+[1.1.0]: https://github.com/pa2x2/katari/releases/tag/v1.1.0
+[1.0.2]: https://github.com/pa2x2/katari/releases/tag/v1.0.2
+[1.0.1]: https://github.com/pa2x2/katari/releases/tag/v1.0.1
+[1.0.0]: https://github.com/pa2x2/katari/releases/tag/v1.0.0

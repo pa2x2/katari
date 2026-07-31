@@ -14,11 +14,11 @@ A problem is likely Katari-specific when it involves:
 
 For these problems:
 
-1. Update to the [latest Katari release](https://github.com/katariapp/katari/releases/latest) and try again.
+1. Update to the [latest Katari release](https://github.com/pa2x2/katari/releases/latest) and try again.
 2. Note the active profile, affected entry type, source, and extension version where applicable.
 3. Check whether the problem affects one entry or source, or every entry of that type.
 4. For a crash, open **More → Settings → Advanced**, select **Dump crash logs**, and review the file for private information before sharing it.
-5. Search [existing Katari issues](https://github.com/katariapp/katari/issues) before creating an [issue report](https://github.com/katariapp/katari/issues/new?template=2_report_issue.yml).
+5. Search [existing Katari issues](https://github.com/pa2x2/katari/issues) before creating an [issue report](https://github.com/pa2x2/katari/issues/new?template=2_report_issue.yml).
 
 Source-site or extension-content failures may need to be reported to the source or extension maintainer. Do not include credentials, tokens, cookies, or signed media URLs in an issue.
 

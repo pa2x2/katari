@@ -27,7 +27,7 @@ The interface may use a more specific term when the current entry type is known.
 
 ::: warning
 
-Do not ask Mihon's maintainers or support community to diagnose Katari-specific behavior. Report problems through [github issues](https://github.com/katariapp/katari/issues), especially when they involve:
+Do not ask Mihon's maintainers or support community to diagnose Katari-specific behavior. Report problems through [github issues](https://github.com/pa2x2/katari/issues), especially when they involve:
 
 - Profiles
 - Type-specific media and playback

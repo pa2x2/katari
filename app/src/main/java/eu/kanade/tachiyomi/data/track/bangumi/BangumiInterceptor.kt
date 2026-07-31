@@ -30,7 +30,7 @@ class BangumiInterceptor(private val bangumi: Bangumi) : Interceptor {
         return originalRequest.newBuilder()
             .header(
                 "User-Agent",
-                "katariapp/Katari/v${BuildConfig.VERSION_NAME} (Android) (https://github.com/katariapp/katari)",
+                "pa2x2/Katari/v${BuildConfig.VERSION_NAME} (Android) (https://github.com/pa2x2/katari)",
             )
             .apply {
                 addHeader("Authorization", "Bearer ${currAuth.accessToken}")

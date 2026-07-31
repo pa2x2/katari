@@ -41,7 +41,7 @@ class AppUpdateChecker {
 }
 
 val GITHUB_REPO: String by lazy {
-    "katariapp/katari"
+    "pa2x2/katari"
 }
 
 val RELEASE_TAG: String by lazy {

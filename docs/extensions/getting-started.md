@@ -22,11 +22,11 @@ Add the Entry SDK as a compile-only dependency in the extension module:
 val katariSdkTag = "sdk-2.3.0"
 
 dependencies {
-    compileOnly("com.github.katariapp.katari:entry-source-api:$katariSdkTag")
+    compileOnly("com.github.pa2x2.katari:entry-source-api:$katariSdkTag")
 }
 ```
 
-`sdk-2.3.0` is the current stable Entry SDK. Check [Katari tags](https://github.com/katariapp/katari/tags) and the [SDK changelog](../developers/sdk/changelog.md) before adopting a later release.
+`sdk-2.3.0` is the current stable Entry SDK. Check [Katari tags](https://github.com/pa2x2/katari/tags) and the [SDK changelog](../developers/sdk/changelog.md) before adopting a later release.
 
 `compileOnly` is intentional. Katari supplies the API and its runtime dependencies when it loads the extension; packaging another copy in the APK can cause incompatible classes to be loaded.
 

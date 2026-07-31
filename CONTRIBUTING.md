@@ -1,6 +1,6 @@
 # Contributing to Katari
 
-The public [developer documentation](https://katariapp.github.io/katari/developers/) explains how extension authors use the Entry SDK. This guide covers repository-specific work on the SDK and its documentation.
+The public [developer documentation](https://pa2x2.github.io/katari/developers/) explains how extension authors use the Entry SDK. This guide covers repository-specific work on the SDK and its documentation.
 
 ## Commit messages
 
@@ -82,7 +82,7 @@ SDK_DOC_VERSION=sdk-2.0.0 ./scripts/serve-docs.sh
 
 For a public API change:
 
-1. Classify it as patch, minor, or major according to the [SDK versioning policy](https://katariapp.github.io/katari/developers/sdk/versioning).
+1. Classify it as patch, minor, or major according to the [SDK versioning policy](https://pa2x2.github.io/katari/developers/sdk/versioning).
 2. Add KDoc for every new or changed public declaration and member.
 3. Update the relevant concept, content-type, or capability guide.
 4. Add focused SDK tests and app-side tests for host recognition and fallback behavior.

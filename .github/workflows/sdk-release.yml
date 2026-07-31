@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
-      JITPACK_BASE_URL: https://jitpack.io/com/github/katariapp/katari
+      JITPACK_BASE_URL: https://jitpack.io/com/github/pa2x2/katari
       TAG: ${{ github.ref_name }}
 
     steps:

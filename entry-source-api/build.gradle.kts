@@ -10,7 +10,7 @@ plugins {
     id("maven-publish")
 }
 
-group = "com.github.katariapp.katari"
+group = "com.github.pa2x2.katari"
 version = providers.gradleProperty("sourceApiVersion")
     .orElse(System.getenv("VERSION") ?: "local-SNAPSHOT")
     .get()
@@ -31,7 +31,7 @@ dokka {
         skipEmptyPackages.set(true)
         sourceLink {
             localDirectory.set(rootProject.projectDir)
-            remoteUrl.set(uri("https://github.com/katariapp/katari/blob/main"))
+            remoteUrl.set(uri("https://github.com/pa2x2/katari/blob/main"))
             remoteLineSuffix.set("#L")
         }
     }

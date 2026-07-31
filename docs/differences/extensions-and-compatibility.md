@@ -14,7 +14,7 @@ Katari treats extension signatures as trust identities. A first installation may
 
 ## Public extension repository
 
-Katari's public extensions and repository setup instructions are available in [`katari-extensions`](https://github.com/katariapp/katari-extensions). Extensions remain separate from the app and do not bundle or host content.
+Katari's public extensions and repository setup instructions are available in [`katari-extensions`](https://github.com/pa2x2/katari-extensions). Extensions remain separate from the app and do not bundle or host content.
 
 ## Entry-native extensions
 

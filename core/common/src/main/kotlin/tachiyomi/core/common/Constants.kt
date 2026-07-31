@@ -1,8 +1,8 @@
 package tachiyomi.core.common
 
 object Constants {
-    const val URL_REPOSITORY = "https://github.com/katariapp/katari"
-    const val URL_HELP = "https://katariapp.github.io/katari/troubleshooting"
+    const val URL_REPOSITORY = "https://github.com/pa2x2/katari"
+    const val URL_HELP = "https://pa2x2.github.io/katari/troubleshooting"
     const val URL_HELP_UPCOMING = "https://mihon.app/docs/faq/updates/upcoming"
     const val URL_DONATE_PATREON = "https://patreon.com/mihon/membership"
     const val URL_DONATE_OPENCOLLECTIVE = "https://opencollective.com/mihon/contribute"

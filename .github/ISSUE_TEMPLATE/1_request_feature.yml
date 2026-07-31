@@ -29,7 +29,7 @@ body:
           required: true
         - label: I have written a short, informative title.
           required: true
-        - label: I have checked the [latest Katari release](https://github.com/katariapp/katari/releases/latest) and the feature is not already available.
+        - label: I have checked the [latest Katari release](https://github.com/pa2x2/katari/releases/latest) and the feature is not already available.
           required: true
         - label: I have provided all information requested by this form.
           required: true

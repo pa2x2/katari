@@ -57,7 +57,7 @@ val katariSdkVersion = if (useMavenLocal) {
 }
 
 dependencies {
-    compileOnly("com.github.katariapp.katari:entry-source-api:$katariSdkVersion")
+    compileOnly("com.github.pa2x2.katari:entry-source-api:$katariSdkVersion")
 }
 ```
 
