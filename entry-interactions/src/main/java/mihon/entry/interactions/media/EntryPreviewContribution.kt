@@ -1,14 +1,9 @@
 package mihon.entry.interactions
 
-import eu.kanade.tachiyomi.source.entry.EntryPreviewSource
-import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceStatus
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
-import mihon.entry.interactions.documentation.source.entrySourceContextInputDefinition
+import mihon.entry.interactions.source.ENTRY_SOURCE_CONTEXT_OWNER
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -31,18 +26,6 @@ import mihon.feature.graph.featureContextRule
 
 internal val ENTRY_PREVIEW_FEATURE_ID = FeatureId("entry.preview")
 private val ENTRY_PREVIEW_FEATURE_OWNER = ContributionOwner("entry-preview")
-private val ENTRY_PREVIEW_REFERENCE = entryContentTypeReferenceContribution(
-    id = "preview",
-    owner = ENTRY_PREVIEW_FEATURE_OWNER,
-    section = EntryContentTypeReferenceSection.DISCOVERY_AND_INTEGRATIONS,
-    label = "Preview entries while browsing",
-    order = 100,
-) { input ->
-    when (input.requireMatchedProvider<EntryPreviewProcessor>().sourceRequirement) {
-        EntryPreviewSourceRequirement.NONE -> EntryContentTypeReferenceStatus.SUPPORTED
-        EntryPreviewSourceRequirement.PREVIEW_CAPABILITY -> EntryContentTypeReferenceStatus.SOURCE_DEPENDENT
-    }
-}
 internal val ENTRY_PREVIEW_PROVIDER_INTEGRATION_ID = FeatureIntegrationId("entry.preview.provider")
 internal val ENTRY_PREVIEW_CONTEXT_INTEGRATION_ID = FeatureIntegrationId("entry.preview.context")
 internal val ENTRY_PREVIEW_CONFIGURATION_INTEGRATION_ID = FeatureIntegrationId("entry.preview.configuration")
@@ -100,9 +83,9 @@ internal val ENTRY_PREVIEW_SOURCE_REQUIREMENT_CONTEXT = contextInputDefinition<E
     ContextInputId("entry.preview.source-requirement"),
     ContributionOwner("entry-preview-provider"),
 )
-internal val ENTRY_PREVIEW_SOURCE_SUPPORT_CONTEXT = entrySourceContextInputDefinition<Boolean>(
+internal val ENTRY_PREVIEW_SOURCE_SUPPORT_CONTEXT = contextInputDefinition<Boolean>(
     id = ContextInputId("entry.preview.source-support"),
-    contracts = setOf(EntryPreviewSource::class),
+    owner = ENTRY_SOURCE_CONTEXT_OWNER,
 )
 internal val ENTRY_PREVIEW_ENABLED_CONTEXT = contextInputDefinition<Boolean>(
     ContextInputId("entry.preview.enabled"),
@@ -131,8 +114,6 @@ internal object EntryPreviewFeatureContributor : FeatureGraphContributor {
                         prerequisites = CapabilityExpression.Provided(EntryPreviewCapability.definition),
                         behaviorProjections = listOf(EntryPreviewProviderDispatchBehavior),
                         behavioralContracts = listOf(EntryPreviewProviderBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_PREVIEW_REFERENCE.requirement),
-                        projections = listOf(ENTRY_PREVIEW_REFERENCE.projection),
                     ),
                     FeatureIntegration(
                         id = ENTRY_PREVIEW_CONTEXT_INTEGRATION_ID,

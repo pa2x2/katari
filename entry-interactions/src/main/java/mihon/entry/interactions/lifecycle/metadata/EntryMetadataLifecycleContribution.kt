@@ -1,7 +1,5 @@
 package mihon.entry.interactions
 
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
@@ -19,13 +17,6 @@ import mihon.feature.graph.afterCommitVolatileFeatureExecutionPointDefinition
 
 internal val ENTRY_METADATA_LIFECYCLE_OWNER = ContributionOwner("entry-metadata-lifecycle")
 private val ENTRY_METADATA_LIFECYCLE_FEATURE_ID = FeatureId("entry.metadata-lifecycle")
-private val ENTRY_METADATA_LIFECYCLE_REFERENCE = entryContentTypeReferenceContribution(
-    id = "metadata-lifecycle",
-    owner = ENTRY_METADATA_LIFECYCLE_OWNER,
-    section = EntryContentTypeReferenceSection.ENTRY_INTERACTIONS,
-    label = "Propagate persisted metadata changes",
-    order = 1700,
-)
 
 internal object EntryMetadataLifecycleBehaviorContract : FeatureBehaviorContract {
     override val id = FeatureArtifactId("entry.metadata-lifecycle.behavior")
@@ -56,8 +47,6 @@ internal object EntryMetadataLifecycleFeatureContributor : FeatureGraphContribut
                         prerequisites = CapabilityExpression.Always,
                         behaviorProjections = listOf(EntryMetadataLifecycleBehavior),
                         behavioralContracts = listOf(EntryMetadataLifecycleBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_METADATA_LIFECYCLE_REFERENCE.requirement),
-                        projections = listOf(ENTRY_METADATA_LIFECYCLE_REFERENCE.projection),
                     ),
                 ),
             ),

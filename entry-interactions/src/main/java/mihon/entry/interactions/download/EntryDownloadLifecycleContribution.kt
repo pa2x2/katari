@@ -1,8 +1,5 @@
 package mihon.entry.interactions
 
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
-import mihon.entry.interactions.documentation.entryContentTypeReferenceNoteContribution
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputDefinition
 import mihon.feature.graph.ContextInputId
@@ -27,21 +24,6 @@ import mihon.feature.graph.featureContextRule
 
 internal val ENTRY_DOWNLOAD_LIFECYCLE_FEATURE_ID = FeatureId("entry.download.lifecycle")
 private val FEATURE_OWNER = ContributionOwner("entry-download-lifecycle")
-private val ENTRY_DOWNLOAD_CONSUMED_CLEANUP_REFERENCE = entryContentTypeReferenceContribution(
-    id = "download-consumed-cleanup",
-    owner = FEATURE_OWNER,
-    section = EntryContentTypeReferenceSection.DOWNLOADS,
-    label = "Delete downloads after marking an item consumed",
-    order = 400,
-)
-private val ENTRY_DOWNLOAD_BOOKMARK_PROTECTION_REFERENCE = entryContentTypeReferenceNoteContribution(
-    id = "download-bookmark-cleanup-note",
-    owner = FEATURE_OWNER,
-    section = EntryContentTypeReferenceSection.DOWNLOADS,
-    text = "Bookmark-aware download cleanup is enabled automatically when the content type supports individual " +
-        "bookmarks.",
-    order = 600,
-)
 internal val ENTRY_DOWNLOAD_LIFECYCLE_PROVIDER_INTEGRATION = FeatureIntegrationId("entry.download.lifecycle.provider")
 internal val ENTRY_DOWNLOAD_MARKED_CONSUMED_INTEGRATION =
     FeatureIntegrationId("entry.download.lifecycle.marked-consumed")
@@ -202,8 +184,6 @@ internal object EntryDownloadLifecycleFeatureContributor : FeatureGraphContribut
                         prerequisites = download,
                         behaviorProjections = EntryDownloadLifecycleProviderBehavior.entries,
                         behavioralContracts = listOf(EntryDownloadLifecycleProviderBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_DOWNLOAD_CONSUMED_CLEANUP_REFERENCE.requirement),
-                        projections = listOf(ENTRY_DOWNLOAD_CONSUMED_CLEANUP_REFERENCE.projection),
                     ),
                     FeatureIntegration(
                         id = ENTRY_DOWNLOAD_MARKED_CONSUMED_INTEGRATION,
@@ -266,8 +246,6 @@ internal object EntryDownloadLifecycleFeatureContributor : FeatureGraphContribut
                         prerequisites = downloadAndBookmark,
                         behaviorProjections = listOf(EntryDownloadLifecycleBookmarkProtectionProviderBehavior),
                         behavioralContracts = listOf(EntryDownloadBookmarkProtectionProviderBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_DOWNLOAD_BOOKMARK_PROTECTION_REFERENCE.requirement),
-                        projections = listOf(ENTRY_DOWNLOAD_BOOKMARK_PROTECTION_REFERENCE.projection),
                     ),
                     FeatureIntegration(
                         id = ENTRY_DOWNLOAD_BOOKMARK_PROTECTION_CONTEXT_INTEGRATION,

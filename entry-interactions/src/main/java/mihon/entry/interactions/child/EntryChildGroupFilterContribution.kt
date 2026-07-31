@@ -1,7 +1,5 @@
 package mihon.entry.interactions
 
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
@@ -17,13 +15,6 @@ import mihon.feature.graph.FeatureIntegrationId
 
 internal val ENTRY_CHILD_GROUP_FILTER_FEATURE_ID = FeatureId("entry.child-group-filter")
 internal val ENTRY_CHILD_GROUP_FILTER_OWNER = ContributionOwner("entry-child-group-filter")
-private val ENTRY_CHILD_GROUP_FILTER_REFERENCE = entryContentTypeReferenceContribution(
-    id = "child-release-group-filter",
-    owner = ENTRY_CHILD_GROUP_FILTER_OWNER,
-    section = EntryContentTypeReferenceSection.ENTRY_INTERACTIONS,
-    label = "Filter child items by release group",
-    order = 800,
-)
 internal val ENTRY_CHILD_GROUP_FILTER_PROVIDER_INTEGRATION = FeatureIntegrationId("entry.child-group-filter.provider")
 
 internal object EntryChildGroupFilterBehaviorContract : FeatureBehaviorContract {
@@ -54,8 +45,6 @@ internal object EntryChildGroupFilterFeatureContributor : FeatureGraphContributo
                         prerequisites = CapabilityExpression.Provided(EntryChildGroupFilterCapability.definition),
                         behaviorProjections = EntryChildGroupFilterBehavior.entries,
                         behavioralContracts = listOf(EntryChildGroupFilterBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_CHILD_GROUP_FILTER_REFERENCE.requirement),
-                        projections = listOf(ENTRY_CHILD_GROUP_FILTER_REFERENCE.projection),
                     ),
                 ),
             ),

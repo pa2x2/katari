@@ -1,7 +1,5 @@
 package mihon.entry.interactions
 
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
@@ -21,14 +19,6 @@ import mihon.feature.graph.transactionalFeatureExecutionPointDefinition
 internal val ENTRY_LIBRARY_MEMBERSHIP_FEATURE_ID = FeatureId("entry.library-membership")
 internal val ENTRY_LIBRARY_MEMBERSHIP_OWNER = ContributionOwner("entry-library-membership")
 private val ENTRY_LIBRARY_MEMBERSHIP_INTEGRATION_ID = FeatureIntegrationId("entry.library-membership.workflow")
-
-private val ENTRY_LIBRARY_MEMBERSHIP_REFERENCE = entryContentTypeReferenceContribution(
-    id = "library-membership",
-    owner = ENTRY_LIBRARY_MEMBERSHIP_OWNER,
-    section = EntryContentTypeReferenceSection.LIBRARY_AND_UPDATES,
-    label = "Add to and remove from the Library",
-    order = 100,
-)
 
 internal object EntryLibraryMembershipBehaviorContract : FeatureBehaviorContract {
     override val id = FeatureArtifactId("entry.library-membership.behavior")
@@ -73,8 +63,6 @@ internal object EntryLibraryMembershipFeatureContributor : FeatureGraphContribut
                         prerequisites = CapabilityExpression.Always,
                         behaviorProjections = listOf(EntryLibraryMembershipBehavior),
                         behavioralContracts = listOf(EntryLibraryMembershipBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_LIBRARY_MEMBERSHIP_REFERENCE.requirement),
-                        projections = listOf(ENTRY_LIBRARY_MEMBERSHIP_REFERENCE.projection),
                     ),
                 ),
             ),

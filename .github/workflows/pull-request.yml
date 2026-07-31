@@ -18,7 +18,6 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       app: ${{ steps.filter.outputs.app }}
-      docs: ${{ steps.filter.outputs.docs }}
 
     steps:
       - name: Checkout
@@ -36,40 +35,14 @@ jobs:
           set -euo pipefail
 
           app=false
-          docs=false
 
           while IFS= read -r path; do
-            case "$path" in
-              CHANGELOG.md | \
-                docs/* | \
-                entry-source-api/src/* | \
-                entry-source-api/build.gradle.kts | \
-                book-api/src/* | \
-                book-api/build.gradle.kts | \
-                gradle/libs.versions.toml | \
-                .nvmrc | \
-                package.json | \
-                pnpm-lock.yaml | \
-                scripts/serve-docs.sh | \
-                scripts/generate-docs-redirects.mjs | \
-                .github/workflows/documentation.yml)
-                docs=true
-                ;;
-            esac
-
             case "$path" in
               i18n/src/commonMain/moko-resources/base/strings.xml | \
                 i18n/src/commonMain/moko-resources/base/plurals.xml)
                 app=true
                 ;;
               *.md | \
-                docs/* | \
-                .nvmrc | \
-                package.json | \
-                pnpm-lock.yaml | \
-                scripts/serve-docs.sh | \
-                scripts/generate-docs-redirects.mjs | \
-                .github/workflows/documentation.yml | \
                 i18n/src/commonMain/moko-resources/*/strings.xml | \
                 i18n/src/commonMain/moko-resources/*/plurals.xml)
                 ;;
@@ -80,7 +53,6 @@ jobs:
           done < <(git diff --name-only "$BASE_SHA...$HEAD_SHA")
 
           echo "app=$app" >> "$GITHUB_OUTPUT"
-          echo "docs=$docs" >> "$GITHUB_OUTPUT"
 
   app:
     name: App checks
@@ -88,20 +60,10 @@ jobs:
     needs: changes
     uses: ./.github/workflows/build.yml
 
-  docs:
-    name: Documentation checks
-    if: needs.changes.outputs.docs == 'true'
-    needs: changes
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    uses: ./.github/workflows/documentation.yml
-
   gate:
     name: PR checks
     if: always() && github.event.pull_request.draft == false
-    needs: [changes, app, docs]
+    needs: [changes, app]
     runs-on: ubuntu-24.04
 
     steps:
@@ -109,10 +71,8 @@ jobs:
         env:
           CHANGES_RESULT: ${{ needs.changes.result }}
           APP_RESULT: ${{ needs.app.result }}
-          DOCS_RESULT: ${{ needs.docs.result }}
         run: |
           set -euo pipefail
 
           [[ "$CHANGES_RESULT" == success ]]
           [[ "$APP_RESULT" == success || "$APP_RESULT" == skipped ]]
-          [[ "$DOCS_RESULT" == success || "$DOCS_RESULT" == skipped ]]

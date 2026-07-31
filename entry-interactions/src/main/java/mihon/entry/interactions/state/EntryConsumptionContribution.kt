@@ -1,8 +1,6 @@
 package mihon.entry.interactions
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -24,13 +22,6 @@ import mihon.feature.graph.featureContextRule
 
 internal val ENTRY_CONSUMPTION_FEATURE_ID = FeatureId("entry.consumption")
 private val FEATURE_OWNER = ContributionOwner("entry-consumption")
-private val ENTRY_CONSUMPTION_REFERENCE = entryContentTypeReferenceContribution(
-    id = "consumption",
-    owner = FEATURE_OWNER,
-    section = EntryContentTypeReferenceSection.ENTRY_INTERACTIONS,
-    label = "Mark individual child items consumed or unconsumed",
-    order = 200,
-)
 internal val ENTRY_CONSUMPTION_PROVIDER_INTEGRATION = FeatureIntegrationId("entry.consumption.provider")
 internal val ENTRY_CONSUMPTION_ELIGIBILITY_INTEGRATION = FeatureIntegrationId("entry.consumption.eligibility")
 internal val ENTRY_CONSUMPTION_MUTATION_RESULT_INTEGRATION =
@@ -119,8 +110,6 @@ internal object EntryConsumptionFeatureContributor : FeatureGraphContributor {
                         prerequisites = consumption,
                         behaviorProjections = EntryConsumptionProviderBehavior.entries,
                         behavioralContracts = listOf(EntryConsumptionProviderBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_CONSUMPTION_REFERENCE.requirement),
-                        projections = listOf(ENTRY_CONSUMPTION_REFERENCE.projection),
                     ),
                     FeatureIntegration(
                         id = ENTRY_CONSUMPTION_ELIGIBILITY_INTEGRATION,

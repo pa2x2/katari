@@ -1,16 +1,11 @@
 package mihon.entry.interactions
 
-import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.source.entry.SourceMetadata
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.entry.supportedEntryTypes
 import kotlinx.coroutines.CancellationException
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceStatus
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
-import mihon.entry.interactions.documentation.source.ENTRY_SOURCE_DESCRIPTION_CONTEXT_OWNER
-import mihon.entry.interactions.documentation.source.entrySourceContextInputDefinition
+import mihon.entry.interactions.source.ENTRY_SOURCE_CONTEXT_OWNER
+import mihon.entry.interactions.source.ENTRY_SOURCE_DESCRIPTION_CONTEXT_OWNER
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -34,14 +29,6 @@ import tachiyomi.domain.entry.model.Entry
 
 internal val ENTRY_IMMERSIVE_FEATURE_ID = FeatureId("entry.immersive")
 private val ENTRY_IMMERSIVE_FEATURE_OWNER = ContributionOwner("entry-immersive")
-private val ENTRY_IMMERSIVE_REFERENCE = entryContentTypeReferenceContribution(
-    id = "immersive-browsing",
-    owner = ENTRY_IMMERSIVE_FEATURE_OWNER,
-    section = EntryContentTypeReferenceSection.DISCOVERY_AND_INTEGRATIONS,
-    label = "Use immersive browsing",
-    order = 200,
-    project = { EntryContentTypeReferenceStatus.SOURCE_DEPENDENT },
-)
 internal val ENTRY_IMMERSIVE_PROVIDER_INTEGRATION_ID = FeatureIntegrationId("entry.immersive.provider")
 internal val ENTRY_IMMERSIVE_SOURCE_CONTEXT_INTEGRATION_ID = FeatureIntegrationId("entry.immersive.source-context")
 internal val ENTRY_IMMERSIVE_ENTRY_CONTEXT_INTEGRATION_ID = FeatureIntegrationId("entry.immersive.entry-context")
@@ -81,18 +68,17 @@ internal object EntryImmersiveProviderDispatchBehavior : FeatureBehaviorProjecti
     override val id = FeatureArtifactId("entry.immersive.provider-dispatch")
 }
 
-internal val ENTRY_IMMERSIVE_SOURCE_INSTALLED_CONTEXT = entrySourceContextInputDefinition<Boolean>(
+internal val ENTRY_IMMERSIVE_SOURCE_INSTALLED_CONTEXT = contextInputDefinition<Boolean>(
     id = ContextInputId("entry.immersive.source-installed"),
-    nonContractReason = "Source installation is runtime registration state, not a public SDK contract",
+    owner = ENTRY_SOURCE_CONTEXT_OWNER,
 )
-internal val ENTRY_IMMERSIVE_SOURCE_OPT_IN_CONTEXT = entrySourceContextInputDefinition<Boolean>(
+internal val ENTRY_IMMERSIVE_SOURCE_OPT_IN_CONTEXT = contextInputDefinition<Boolean>(
     id = ContextInputId("entry.immersive.source-opt-in"),
-    contracts = setOf(EntryCatalogueSource::class),
+    owner = ENTRY_SOURCE_CONTEXT_OWNER,
 )
-internal val ENTRY_IMMERSIVE_DECLARED_COMPATIBILITY_CONTEXT = entrySourceContextInputDefinition<Boolean>(
+internal val ENTRY_IMMERSIVE_DECLARED_COMPATIBILITY_CONTEXT = contextInputDefinition<Boolean>(
     id = ContextInputId("entry.immersive.declared-type-compatibility"),
     owner = ENTRY_SOURCE_DESCRIPTION_CONTEXT_OWNER,
-    contracts = setOf(SourceMetadata::class),
 )
 private val ENTRY_IMMERSIVE_SOURCE_UNAVAILABLE = FeatureContextBlocker(
     FeatureArtifactId("entry.immersive.source-unavailable"),
@@ -156,8 +142,6 @@ internal object EntryImmersiveFeatureContributor : FeatureGraphContributor {
                             EntryImmersiveBehavior.PRELOAD,
                         ),
                         behavioralContracts = listOf(EntryImmersiveProviderBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_IMMERSIVE_REFERENCE.requirement),
-                        projections = listOf(ENTRY_IMMERSIVE_REFERENCE.projection),
                     ),
                     FeatureIntegration(
                         id = ENTRY_IMMERSIVE_SOURCE_CONTEXT_INTEGRATION_ID,

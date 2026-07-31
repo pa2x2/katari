@@ -1,8 +1,6 @@
 package mihon.entry.interactions
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -26,13 +24,6 @@ import mihon.feature.graph.featureContextRule
 
 internal val ENTRY_AUTOMATIC_DOWNLOAD_FEATURE_ID = FeatureId("entry.download.automatic")
 private val FEATURE_OWNER = ContributionOwner("entry-automatic-download")
-private val ENTRY_AUTOMATIC_DOWNLOAD_REFERENCE = entryContentTypeReferenceContribution(
-    id = "download-automatic",
-    owner = FEATURE_OWNER,
-    section = EntryContentTypeReferenceSection.DOWNLOADS,
-    label = "Automatically download newly discovered child items",
-    order = 300,
-)
 internal val ENTRY_AUTOMATIC_DOWNLOAD_PROVIDER_INTEGRATION =
     FeatureIntegrationId("entry.download.automatic.provider")
 internal val ENTRY_AUTOMATIC_DOWNLOAD_CONTEXT_INTEGRATION = FeatureIntegrationId("entry.download.automatic.context")
@@ -142,8 +133,6 @@ internal object EntryAutomaticDownloadFeatureContributor : FeatureGraphContribut
                         prerequisites = download,
                         behaviorProjections = listOf(EntryAutomaticDownloadProviderBehavior),
                         behavioralContracts = listOf(EntryAutomaticDownloadProviderBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_AUTOMATIC_DOWNLOAD_REFERENCE.requirement),
-                        projections = listOf(ENTRY_AUTOMATIC_DOWNLOAD_REFERENCE.projection),
                     ),
                     FeatureIntegration(
                         id = ENTRY_AUTOMATIC_DOWNLOAD_CONTEXT_INTEGRATION,

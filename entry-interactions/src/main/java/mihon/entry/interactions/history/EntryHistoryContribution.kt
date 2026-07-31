@@ -1,7 +1,5 @@
 package mihon.entry.interactions
 
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -24,13 +22,6 @@ import mihon.feature.graph.featureContextRule
 internal val ENTRY_HISTORY_OWNER = ContributionOwner("entry-history")
 internal val ENTRY_HISTORY_FEATURE_ID = FeatureId("entry.history")
 internal val ENTRY_HISTORY_INTEGRATION_ID = FeatureIntegrationId("entry.history.media-session")
-private val ENTRY_HISTORY_REFERENCE = entryContentTypeReferenceContribution(
-    id = "history",
-    owner = ENTRY_HISTORY_OWNER,
-    section = EntryContentTypeReferenceSection.ENTRY_INTERACTIONS,
-    label = "Record reading and playback history",
-    order = 355,
-)
 
 internal val ENTRY_MEDIA_SESSION_HISTORY_ALLOWED = contextInputDefinition<Boolean>(
     ContextInputId("entry.media-session.history-allowed"),
@@ -80,8 +71,6 @@ internal object EntryHistoryFeatureContributor : FeatureGraphContributor {
                         prerequisites = CapabilityExpression.Provided(EntryMediaSessionCapability.definition),
                         behaviorProjections = listOf(EntryHistoryBehavior),
                         behavioralContracts = listOf(EntryHistoryBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_HISTORY_REFERENCE.requirement),
-                        projections = listOf(ENTRY_HISTORY_REFERENCE.projection),
                     ),
                 ),
             ),

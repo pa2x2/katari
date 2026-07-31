@@ -38,7 +38,6 @@
 - Never combine FOSS/unit/architecture tasks with `-Pinclude-telemetry` or `-Penable-updater` in the same Gradle invocation. Those project properties affect every configured variant and can make `processFossGoogleServices` reject the `app.katari.foss` application ID. Run FOSS checks without telemetry/updater properties, let that invocation finish, then run telemetry-enabled release compilation or assembly in a separate invocation.
 - Do not infer the installable variant for emulator/device validation from the `foss` unit-test buildType. Before installing, identify the package that is actually running and use the matching Gradle variant: `installDebug` installs `app.katari.dev`, while `installFoss` installs the separate `app.katari.foss` application. After installation, verify that the intended package was launched and that its process changed or restarted; installing a different application ID does not update the app under test.
 - After touching `data/src/main/sqldelight`, run `./gradlew verifySqlDelightMigration`.
-- Briefly verify if applied changes require docs update. If changes required - ask user if docs should be updated
 
 ## Guidance
 - When asked to fix the issue - never simply apply the easiest fix without finding the reason of the issue. Band-aid solutions are not welcomed. The goal is to fix the reason issue arised in the first place, not to merely fix the symptom

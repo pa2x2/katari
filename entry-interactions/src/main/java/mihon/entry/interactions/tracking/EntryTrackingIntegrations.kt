@@ -31,11 +31,8 @@ internal fun entryTrackingIntegrations(): List<FeatureIntegration> = listOf(
         contextBlockers = listOf(NO_REGISTERED_TRACKER),
         behaviorProjections = listOf(
             EntryTrackingBehavior.ENTRY_ACTION,
-            EntryTrackingBehavior.DOCUMENTATION,
         ),
         behavioralContracts = listOf(EntryTrackingBehaviorContract.AVAILABILITY),
-        projectionRequirements = listOf(ENTRY_TRACKING_REFERENCE.requirement),
-        projections = listOf(ENTRY_TRACKING_REFERENCE.projection),
     ),
     FeatureIntegration(
         id = EntryTrackingIntegration.SESSION.id,

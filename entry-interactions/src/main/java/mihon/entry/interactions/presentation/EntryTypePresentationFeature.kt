@@ -1,8 +1,6 @@
 package mihon.entry.interactions
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
@@ -18,13 +16,6 @@ import mihon.feature.graph.FeatureIntegrationId
 
 internal val ENTRY_TYPE_PRESENTATION_FEATURE_ID = FeatureId("entry.type-presentation")
 private val ENTRY_TYPE_PRESENTATION_FEATURE_OWNER = ContributionOwner("entry-type-presentation")
-private val ENTRY_TYPE_PRESENTATION_REFERENCE = entryContentTypeReferenceContribution(
-    id = "type-presentation",
-    owner = ENTRY_TYPE_PRESENTATION_FEATURE_OWNER,
-    section = EntryContentTypeReferenceSection.ENTRY_INTERACTIONS,
-    label = "Use media-specific terminology and presentation",
-    order = 1300,
-)
 internal val ENTRY_TYPE_PRESENTATION_INTEGRATION_ID = FeatureIntegrationId("entry.type-presentation.provider")
 private val ENTRY_TYPE_PRESENTATION_BEHAVIOR_ID = FeatureArtifactId("entry.type-presentation.vocabulary")
 
@@ -50,8 +41,6 @@ internal object EntryTypePresentationFeatureContributor : FeatureGraphContributo
                         prerequisites = CapabilityExpression.Provided(EntryTypePresentationCapability.definition),
                         behaviorProjections = listOf(EntryTypePresentationBehavior),
                         behavioralContracts = listOf(EntryTypePresentationBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_TYPE_PRESENTATION_REFERENCE.requirement),
-                        projections = listOf(ENTRY_TYPE_PRESENTATION_REFERENCE.projection),
                     ),
                 ),
             ),

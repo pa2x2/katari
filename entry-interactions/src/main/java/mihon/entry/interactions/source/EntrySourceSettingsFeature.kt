@@ -1,11 +1,7 @@
 package mihon.entry.interactions
 
 import eu.kanade.tachiyomi.source.entry.ConfigurableSource
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSelection
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceStatus
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
-import mihon.entry.interactions.documentation.source.entrySourceContextInputDefinition
+import mihon.entry.interactions.source.ENTRY_SOURCE_CONTEXT_OWNER
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -28,15 +24,6 @@ import tachiyomi.domain.source.service.SourceManager
 
 internal val SOURCE_SETTINGS_FEATURE_ID = FeatureId("entry.source-settings")
 private val SOURCE_SETTINGS_OWNER = ContributionOwner("entry-source-settings")
-private val SOURCE_SETTINGS_REFERENCE = entryContentTypeReferenceContribution(
-    id = "source-settings",
-    owner = SOURCE_SETTINGS_OWNER,
-    section = EntryContentTypeReferenceSection.DISCOVERY_AND_INTEGRATIONS,
-    label = "Configure source-specific settings",
-    order = 1000,
-    selection = EntryContentTypeReferenceSelection.CONDITIONAL_RELATIONSHIP,
-    project = { EntryContentTypeReferenceStatus.SOURCE_DEPENDENT },
-)
 internal val SOURCE_SETTINGS_INTEGRATION_ID = FeatureIntegrationId("entry.source-settings.access")
 
 internal object EntrySourceSettingsBehaviorContract : FeatureBehaviorContract {
@@ -45,9 +32,9 @@ internal object EntrySourceSettingsBehaviorContract : FeatureBehaviorContract {
 
 internal data class SourceSettingsContext(val installed: Boolean, val configurable: Boolean)
 
-internal val SOURCE_SETTINGS_CONTEXT = entrySourceContextInputDefinition<SourceSettingsContext>(
+internal val SOURCE_SETTINGS_CONTEXT = contextInputDefinition<SourceSettingsContext>(
     id = ContextInputId("entry.source-settings.context"),
-    contracts = setOf(ConfigurableSource::class),
+    owner = ENTRY_SOURCE_CONTEXT_OWNER,
 )
 private val SOURCE_SETTINGS_MISSING = FeatureContextBlocker(
     FeatureArtifactId("entry.source-settings.source-missing"),
@@ -91,8 +78,6 @@ internal object EntrySourceSettingsFeatureContributor : FeatureGraphContributor 
                         contextBlockers = listOf(SOURCE_SETTINGS_MISSING, SOURCE_SETTINGS_UNSUPPORTED),
                         behaviorProjections = SourceSettingsBehavior.entries,
                         behavioralContracts = listOf(EntrySourceSettingsBehaviorContract),
-                        projectionRequirements = listOf(SOURCE_SETTINGS_REFERENCE.requirement),
-                        projections = listOf(SOURCE_SETTINGS_REFERENCE.projection),
                     ),
                 ),
             ),

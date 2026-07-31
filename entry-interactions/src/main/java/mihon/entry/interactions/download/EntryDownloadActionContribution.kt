@@ -1,9 +1,6 @@
 package mihon.entry.interactions
 
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
-import mihon.entry.interactions.documentation.entryContentTypeReferenceNoteContribution
-import mihon.entry.interactions.documentation.source.entrySourceContextInputDefinition
+import mihon.entry.interactions.source.ENTRY_SOURCE_CONTEXT_OWNER
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -24,29 +21,6 @@ import mihon.feature.graph.featureContextRule
 
 internal val ENTRY_DOWNLOAD_ACTION_FEATURE_ID = FeatureId("entry.download.actions")
 private val FEATURE_OWNER = ContributionOwner("entry-download-actions")
-private val ENTRY_DOWNLOAD_INDIVIDUAL_REFERENCE = entryContentTypeReferenceContribution(
-    id = "download-individual",
-    owner = FEATURE_OWNER,
-    section = EntryContentTypeReferenceSection.DOWNLOADS,
-    label = "Download individual child items for offline use",
-    order = 100,
-)
-private val ENTRY_DOWNLOAD_BULK_REFERENCE = entryContentTypeReferenceContribution(
-    id = "download-bulk",
-    owner = FEATURE_OWNER,
-    section = EntryContentTypeReferenceSection.DOWNLOADS,
-    label = "Bulk-download child items",
-    order = 200,
-)
-private val ENTRY_DOWNLOAD_BOOKMARKED_BULK_REFERENCE = entryContentTypeReferenceNoteContribution(
-    id = "download-bookmarked-bulk-note",
-    owner = FEATURE_OWNER,
-    section = EntryContentTypeReferenceSection.DOWNLOADS,
-    text = "Bookmark-based bulk downloads are enabled automatically when the content type supports individual " +
-        "bookmarks.",
-    order = 500,
-)
-
 internal val ENTRY_DOWNLOAD_INDIVIDUAL_PROVIDER_INTEGRATION =
     FeatureIntegrationId("entry.download.actions.individual.provider")
 internal val ENTRY_DOWNLOAD_BULK_PROVIDER_INTEGRATION = FeatureIntegrationId("entry.download.actions.bulk.provider")
@@ -145,9 +119,9 @@ internal enum class EntryDownloadSelectionState {
     NOTIFICATION_LIMIT_EXCEEDED,
 }
 
-internal val ENTRY_DOWNLOAD_SOURCE_ACCESS_CONTEXT = entrySourceContextInputDefinition<EntryDownloadSourceAccess>(
+internal val ENTRY_DOWNLOAD_SOURCE_ACCESS_CONTEXT = contextInputDefinition<EntryDownloadSourceAccess>(
     id = ContextInputId("entry.download.actions.source-access"),
-    nonContractReason = "Remote, Local, and stub access is application source state, not a public SDK contract",
+    owner = ENTRY_SOURCE_CONTEXT_OWNER,
 )
 internal val ENTRY_DOWNLOAD_SELECTION_CONTEXT = contextInputDefinition<EntryDownloadSelectionState>(
     ContextInputId("entry.download.actions.selection"),
@@ -220,24 +194,18 @@ internal object EntryDownloadActionFeatureContributor : FeatureGraphContributor 
                         prerequisites = download,
                         behaviorProjections = listOf(EntryDownloadIndividualProviderBehavior),
                         behavioralContracts = listOf(EntryDownloadIndividualProviderBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_DOWNLOAD_INDIVIDUAL_REFERENCE.requirement),
-                        projections = listOf(ENTRY_DOWNLOAD_INDIVIDUAL_REFERENCE.projection),
                     ),
                     FeatureIntegration(
                         id = ENTRY_DOWNLOAD_BULK_PROVIDER_INTEGRATION,
                         prerequisites = bulk,
                         behaviorProjections = listOf(EntryDownloadBulkProviderBehavior),
                         behavioralContracts = listOf(EntryDownloadBulkProviderBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_DOWNLOAD_BULK_REFERENCE.requirement),
-                        projections = listOf(ENTRY_DOWNLOAD_BULK_REFERENCE.projection),
                     ),
                     FeatureIntegration(
                         id = ENTRY_DOWNLOAD_BOOKMARKED_BULK_PROVIDER_INTEGRATION,
                         prerequisites = bookmarkedBulk,
                         behaviorProjections = listOf(EntryDownloadBookmarkedBulkProviderBehavior),
                         behavioralContracts = listOf(EntryDownloadBookmarkedBulkProviderBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_DOWNLOAD_BOOKMARKED_BULK_REFERENCE.requirement),
-                        projections = listOf(ENTRY_DOWNLOAD_BOOKMARKED_BULK_REFERENCE.projection),
                     ),
                     FeatureIntegration(
                         id = ENTRY_DOWNLOAD_INDIVIDUAL_CONTEXT_INTEGRATION,

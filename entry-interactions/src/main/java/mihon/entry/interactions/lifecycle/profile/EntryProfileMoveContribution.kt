@@ -1,7 +1,5 @@
 package mihon.entry.interactions
 
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
@@ -20,13 +18,6 @@ import mihon.feature.graph.inlineFeatureExecutionPointDefinition
 import mihon.feature.graph.transactionalFeatureExecutionPointDefinition
 
 internal val ENTRY_PROFILE_MOVE_OWNER = ContributionOwner("entry-profile-move")
-private val ENTRY_PROFILE_MOVE_REFERENCE = entryContentTypeReferenceContribution(
-    id = "profile-move",
-    owner = ENTRY_PROFILE_MOVE_OWNER,
-    section = EntryContentTypeReferenceSection.LIBRARY_AND_UPDATES,
-    label = "Move Library entries between profiles",
-    order = 110,
-)
 
 internal object EntryProfileMoveBehaviorContract : FeatureBehaviorContract {
     override val id = FeatureArtifactId("entry.profile-move.behavior")
@@ -85,8 +76,6 @@ internal object EntryProfileMoveFeatureContributor : FeatureGraphContributor {
                         prerequisites = CapabilityExpression.Always,
                         behaviorProjections = listOf(EntryProfileMoveBehavior),
                         behavioralContracts = listOf(EntryProfileMoveBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_PROFILE_MOVE_REFERENCE.requirement),
-                        projections = listOf(ENTRY_PROFILE_MOVE_REFERENCE.projection),
                     ),
                 ),
             ),

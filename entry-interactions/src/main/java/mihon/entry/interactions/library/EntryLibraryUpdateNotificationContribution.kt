@@ -1,8 +1,6 @@
 package mihon.entry.interactions
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -24,13 +22,6 @@ import mihon.feature.graph.featureContextRule
 
 internal val ENTRY_LIBRARY_UPDATE_NOTIFICATION_FEATURE_ID = FeatureId("entry.library-update-notifications")
 private val ENTRY_LIBRARY_UPDATE_NOTIFICATION_FEATURE_OWNER = ContributionOwner("entry-library-update-notifications")
-private val ENTRY_LIBRARY_UPDATE_NOTIFICATION_REFERENCE = entryContentTypeReferenceContribution(
-    id = "library-update-notifications",
-    owner = ENTRY_LIBRARY_UPDATE_NOTIFICATION_FEATURE_OWNER,
-    section = EntryContentTypeReferenceSection.LIBRARY_AND_UPDATES,
-    label = "Receive library update notifications",
-    order = 300,
-)
 
 internal val ENTRY_LIBRARY_UPDATE_NOTIFICATION_BASE_INTEGRATION_ID =
     FeatureIntegrationId("entry.library-update-notifications.participation")
@@ -140,8 +131,6 @@ internal object EntryLibraryUpdateNotificationFeatureContributor : FeatureGraphC
                             NotificationBehavior(ENTRY_LIBRARY_UPDATE_NOTIFICATION_QUEUE_WARNING_BEHAVIOR_ID),
                         ),
                         behavioralContracts = listOf(EntryLibraryUpdateNotificationBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_LIBRARY_UPDATE_NOTIFICATION_REFERENCE.requirement),
-                        projections = listOf(ENTRY_LIBRARY_UPDATE_NOTIFICATION_REFERENCE.projection),
                     ),
                     FeatureIntegration(
                         id = ENTRY_LIBRARY_UPDATE_NOTIFICATION_PRESENTATION_INTEGRATION_ID,

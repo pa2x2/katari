@@ -36,7 +36,6 @@ plugins {
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.android.test) apply false
     alias(libs.plugins.androidx.baselineProfile) apply false
-    alias(libs.plugins.dokka) apply false
     alias(libs.plugins.firebase.crashlytics) apply false
     alias(libs.plugins.google.services) apply false
     alias(libs.plugins.kotlin.compose.compiler) apply false
@@ -240,24 +239,9 @@ tasks.register("publishEntrySdkToMavenLocal") {
     )
 }
 
-val verifyFeatureDocumentation = tasks.register("verifyFeatureDocumentation") {
-    group = "verification"
-    description = "Verifies checked-in Feature documentation against the production graph"
-    dependsOn(
-        ":app:verifyContentTypeReference",
-        ":app:verifySourceSdkConsumerCoverage",
-    )
-}
-
-tasks.register("verifyEntryFeatureDocumentation") {
-    group = "verification"
-    description = "Compatibility alias for verifyFeatureDocumentation"
-    dependsOn(verifyFeatureDocumentation)
-}
-
 val verifyFeatureArchitecture = tasks.register("verifyFeatureArchitecture") {
     group = "verification"
-    description = "Verifies application and Entry Feature boundaries, contracts, reporting, and documentation"
+    description = "Verifies application and Entry Feature boundaries, contracts, and reporting"
     dependsOn(
         "checkFeatureArchitectureBoundaries",
         ":feature-graph:testDebugUnitTest",
@@ -265,10 +249,8 @@ val verifyFeatureArchitecture = tasks.register("verifyFeatureArchitecture") {
         ":feature-validation:testDebugUnitTest",
         ":translation:api:testDebugUnitTest",
         ":translation:runtime:testDebugUnitTest",
-        ":entry-interactions:documentation:testDebugUnitTest",
         ":entry-interactions:testDebugUnitTest",
         ":app:generateFeatureReport",
-        verifyFeatureDocumentation,
     )
 }
 

@@ -1,13 +1,6 @@
 package mihon.entry.interactions
 
-import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
-import eu.kanade.tachiyomi.source.entry.EntryItemOrientationProvider
-import eu.kanade.tachiyomi.source.entry.SourceMetadata
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceContribution
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
-import mihon.entry.interactions.documentation.source.ENTRY_SOURCE_CONTEXT_OWNER
-import mihon.entry.interactions.documentation.source.entrySourceContextInputDefinition
+import mihon.entry.interactions.source.ENTRY_SOURCE_CONTEXT_OWNER
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -28,28 +21,10 @@ import tachiyomi.domain.source.model.EntrySourceDescription
 
 internal val ENTRY_CATALOGUE_FEATURE_ID = FeatureId("entry.catalogue")
 private val ENTRY_CATALOGUE_FEATURE_OWNER = ContributionOwner("entry-catalogue")
-private val SOURCE_CONTRACT_OWNER = ENTRY_SOURCE_CONTEXT_OWNER
 
 internal val SOURCE_DESCRIPTION_INTEGRATION_ID = FeatureIntegrationId("entry.catalogue.source-description")
 internal val CATALOGUE_AVAILABILITY_INTEGRATION_ID = FeatureIntegrationId("entry.catalogue.availability")
 internal val LATEST_AVAILABILITY_INTEGRATION_ID = FeatureIntegrationId("entry.catalogue.latest")
-internal val LOCAL_SOURCE_REFERENCE_INTEGRATION_ID = FeatureIntegrationId("entry.catalogue.local-source-reference")
-internal val LEGACY_SOURCE_REFERENCE_INTEGRATION_ID = FeatureIntegrationId("entry.catalogue.legacy-source-reference")
-
-private val LOCAL_SOURCE_REFERENCE = entryContentTypeReferenceContribution(
-    id = "local-source",
-    owner = ENTRY_CATALOGUE_FEATURE_OWNER,
-    section = EntryContentTypeReferenceSection.DISCOVERY_AND_INTEGRATIONS,
-    label = "Import content through the bundled Local source",
-    order = 300,
-)
-private val LEGACY_SOURCE_REFERENCE = entryContentTypeReferenceContribution(
-    id = "legacy-extensions",
-    owner = ENTRY_CATALOGUE_FEATURE_OWNER,
-    section = EntryContentTypeReferenceSection.DISCOVERY_AND_INTEGRATIONS,
-    label = "Use supported legacy Mihon extensions",
-    order = 400,
-)
 
 internal object EntrySourceDescriptionBehaviorContract : FeatureBehaviorContract {
     override val id = FeatureArtifactId("entry.catalogue.source-description.behavior")
@@ -67,26 +42,9 @@ internal data class SourceDescriptionEvidence(
     val description: EntrySourceDescription,
 )
 
-internal val SOURCE_DESCRIPTION_CONTEXT = entrySourceContextInputDefinition<SourceDescriptionEvidence>(
+internal val SOURCE_DESCRIPTION_CONTEXT = contextInputDefinition<SourceDescriptionEvidence>(
     id = ContextInputId("entry.source.description"),
-    owner = SOURCE_CONTRACT_OWNER,
-    contracts = setOf(
-        EntryCatalogueSource::class,
-        SourceMetadata::class,
-        EntryItemOrientationProvider::class,
-    ),
-    contractIntegrations = mapOf(
-        SourceMetadata::class to setOf(SOURCE_DESCRIPTION_INTEGRATION_ID),
-        EntryItemOrientationProvider::class to setOf(SOURCE_DESCRIPTION_INTEGRATION_ID),
-    ),
-)
-internal val LOCAL_SOURCE_REGISTERED_SUPPORT_CONTEXT = contextInputDefinition<Boolean>(
-    id = ContextInputId("entry.catalogue.local-source-registered-support"),
-    owner = ContributionOwner("source-local"),
-)
-internal val LEGACY_SOURCE_REGISTERED_SUPPORT_CONTEXT = contextInputDefinition<Boolean>(
-    id = ContextInputId("entry.catalogue.legacy-source-registered-support"),
-    owner = ContributionOwner("source-compat"),
+    owner = ENTRY_SOURCE_CONTEXT_OWNER,
 )
 
 private val CATALOGUE_UNAVAILABLE_BLOCKER = FeatureContextBlocker(
@@ -97,15 +55,6 @@ private val LATEST_UNAVAILABLE_BLOCKER = FeatureContextBlocker(
     id = FeatureArtifactId("entry.catalogue.latest.unavailable"),
     inputs = listOf(SOURCE_DESCRIPTION_CONTEXT),
 )
-private val LOCAL_SOURCE_UNAVAILABLE_BLOCKER = FeatureContextBlocker(
-    id = FeatureArtifactId("entry.catalogue.local-source-unavailable"),
-    inputs = listOf(LOCAL_SOURCE_REGISTERED_SUPPORT_CONTEXT),
-)
-private val LEGACY_SOURCE_UNAVAILABLE_BLOCKER = FeatureContextBlocker(
-    id = FeatureArtifactId("entry.catalogue.legacy-source-unavailable"),
-    inputs = listOf(LEGACY_SOURCE_REGISTERED_SUPPORT_CONTEXT),
-)
-
 internal enum class EntryCatalogueBehavior(
     override val id: FeatureArtifactId,
 ) : FeatureBehaviorProjection {
@@ -163,41 +112,8 @@ internal object EntryCatalogueFeatureContributor : FeatureGraphContributor {
                         behaviorProjections = listOf(EntryCatalogueBehavior.LATEST_AVAILABILITY),
                         behavioralContracts = listOf(EntryLatestAvailabilityBehaviorContract),
                     ),
-                    sourceReferenceIntegration(
-                        id = LOCAL_SOURCE_REFERENCE_INTEGRATION_ID,
-                        input = LOCAL_SOURCE_REGISTERED_SUPPORT_CONTEXT,
-                        blocker = LOCAL_SOURCE_UNAVAILABLE_BLOCKER,
-                        reference = LOCAL_SOURCE_REFERENCE,
-                    ),
-                    sourceReferenceIntegration(
-                        id = LEGACY_SOURCE_REFERENCE_INTEGRATION_ID,
-                        input = LEGACY_SOURCE_REGISTERED_SUPPORT_CONTEXT,
-                        blocker = LEGACY_SOURCE_UNAVAILABLE_BLOCKER,
-                        reference = LEGACY_SOURCE_REFERENCE,
-                    ),
                 ),
             ),
         )
     }
 }
-
-private fun sourceReferenceIntegration(
-    id: FeatureIntegrationId,
-    input: mihon.feature.graph.ContextInputDefinition<Boolean>,
-    blocker: FeatureContextBlocker,
-    reference: EntryContentTypeReferenceContribution,
-) = FeatureIntegration(
-    id = id,
-    prerequisites = CapabilityExpression.Always,
-    contextInputs = listOf(input),
-    contextRule = featureContextRule(ENTRY_CATALOGUE_FEATURE_OWNER) { evidence ->
-        if (evidence.value(input)) {
-            FeatureContextDecision.Applicable
-        } else {
-            FeatureContextDecision.Blocked(listOf(blocker))
-        }
-    },
-    contextBlockers = listOf(blocker),
-    projectionRequirements = listOf(reference.requirement),
-    projections = listOf(reference.projection),
-)

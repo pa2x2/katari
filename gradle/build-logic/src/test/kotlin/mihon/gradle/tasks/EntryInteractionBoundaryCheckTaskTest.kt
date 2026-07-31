@@ -1115,39 +1115,6 @@ class EntryInteractionBoundaryCheckTaskTest {
     }
 
     @Test
-    fun `documentation infrastructure may project the root interaction graph`() {
-        createBaseFixture(
-            additionalFiles = mapOf(
-                "entry-interactions/documentation/build.gradle.kts" to
-                    """
-                        dependencies {
-                            implementation(projects.entryInteractions)
-                        }
-                    """.trimIndent(),
-                "entry-interactions/documentation/src/main/java/mihon/entry/interactions/documentation/" +
-                    "EntryDocumentationProjection.kt" to
-                    """
-                        package mihon.entry.interactions.documentation
-
-                        class EntryDocumentationProjection
-                    """.trimIndent(),
-                "entry-interactions/src/main/java/mihon/entry/interactions/EntryDocumentationFeature.kt" to
-                    """
-                        package mihon.entry.interactions
-
-                        import mihon.entry.interactions.documentation.EntryDocumentationProjection
-
-                        internal class EntryDocumentationFeature(
-                            private val projection: EntryDocumentationProjection,
-                        )
-                    """.trimIndent(),
-            ),
-        )
-
-        runBoundaryCheck()
-    }
-
-    @Test
     fun `generic code cannot add exhaustive manga anime presentation mapping`() {
         createBaseFixture(
             appSource = """

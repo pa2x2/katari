@@ -1,7 +1,5 @@
 package mihon.entry.interactions
 
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
@@ -20,13 +18,6 @@ internal val ENTRY_MEDIA_SESSION_INCOGNITO_OWNER = ContributionOwner("entry-medi
 internal val ENTRY_MEDIA_SESSION_INCOGNITO_FEATURE_ID = FeatureId("entry.media-session.incognito")
 internal val ENTRY_MEDIA_SESSION_INCOGNITO_INTEGRATION_ID =
     FeatureIntegrationId("entry.media-session.incognito.policy")
-private val ENTRY_MEDIA_SESSION_INCOGNITO_REFERENCE = entryContentTypeReferenceContribution(
-    id = "media-session-incognito",
-    owner = ENTRY_MEDIA_SESSION_INCOGNITO_OWNER,
-    section = EntryContentTypeReferenceSection.ENTRY_INTERACTIONS,
-    label = "Respect incognito mode while viewing media",
-    order = 345,
-)
 
 internal object EntryMediaSessionIncognitoBehaviorContract : FeatureBehaviorContract {
     override val id = FeatureArtifactId("entry.media-session.incognito.behavior")
@@ -58,8 +49,6 @@ internal object EntryMediaSessionIncognitoContributor : FeatureGraphContributor 
                         prerequisites = CapabilityExpression.Provided(EntryMediaSessionCapability.definition),
                         behaviorProjections = listOf(EntryMediaSessionIncognitoBehavior),
                         behavioralContracts = listOf(EntryMediaSessionIncognitoBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_MEDIA_SESSION_INCOGNITO_REFERENCE.requirement),
-                        projections = listOf(ENTRY_MEDIA_SESSION_INCOGNITO_REFERENCE.projection),
                     ),
                 ),
             ),

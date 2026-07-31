@@ -4,11 +4,7 @@ import eu.kanade.tachiyomi.source.entry.EntryUriType
 import eu.kanade.tachiyomi.source.entry.ResolvableSource
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import kotlinx.coroutines.CancellationException
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSelection
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceStatus
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
-import mihon.entry.interactions.documentation.source.entrySourceContextInputDefinition
+import mihon.entry.interactions.source.ENTRY_SOURCE_CONTEXT_OWNER
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -38,15 +34,6 @@ import tachiyomi.domain.source.service.SourceManager
 
 internal val ENTRY_DEEP_LINK_FEATURE_ID = FeatureId("entry.deep-link")
 private val ENTRY_DEEP_LINK_OWNER = ContributionOwner("entry-deep-link")
-private val ENTRY_DEEP_LINK_REFERENCE = entryContentTypeReferenceContribution(
-    id = "deep-link",
-    owner = ENTRY_DEEP_LINK_OWNER,
-    section = EntryContentTypeReferenceSection.DISCOVERY_AND_INTEGRATIONS,
-    label = "Resolve supported links through installed sources",
-    order = 700,
-    selection = EntryContentTypeReferenceSelection.CONDITIONAL_RELATIONSHIP,
-    project = { EntryContentTypeReferenceStatus.SOURCE_DEPENDENT },
-)
 internal val ENTRY_DEEP_LINK_INTEGRATION_ID = FeatureIntegrationId("entry.deep-link.resolution")
 
 internal object EntryDeepLinkBehaviorContract : FeatureBehaviorContract {
@@ -64,9 +51,9 @@ internal data class EntryDeepLinkContext(
     val matchState: EntryDeepLinkMatchState,
 )
 
-internal val ENTRY_DEEP_LINK_CONTEXT = entrySourceContextInputDefinition<EntryDeepLinkContext>(
+internal val ENTRY_DEEP_LINK_CONTEXT = contextInputDefinition<EntryDeepLinkContext>(
     id = ContextInputId("entry.deep-link.context"),
-    contracts = setOf(ResolvableSource::class),
+    owner = ENTRY_SOURCE_CONTEXT_OWNER,
 )
 private val ENTRY_DEEP_LINK_NO_RESOLVER = FeatureContextBlocker(
     FeatureArtifactId("entry.deep-link.no-resolver"),
@@ -113,8 +100,6 @@ internal object EntryDeepLinkFeatureContributor : FeatureGraphContributor {
                         contextBlockers = listOf(ENTRY_DEEP_LINK_NO_RESOLVER, ENTRY_DEEP_LINK_NO_MATCH),
                         behaviorProjections = EntryDeepLinkBehavior.entries,
                         behavioralContracts = listOf(EntryDeepLinkBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_DEEP_LINK_REFERENCE.requirement),
-                        projections = listOf(ENTRY_DEEP_LINK_REFERENCE.projection),
                     ),
                 ),
             ),

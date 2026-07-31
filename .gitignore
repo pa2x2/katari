@@ -9,11 +9,6 @@ gradle/tmp
 .idea/*
 !.idea/icon.svg
 /captures
-/node_modules/
-/site/
-/docs/.vitepress/cache/
-/docs/.vitepress/dist/
-/docs/public/developers/sdk/api/
 /.codex/workspaces/
 
 # Configuration files

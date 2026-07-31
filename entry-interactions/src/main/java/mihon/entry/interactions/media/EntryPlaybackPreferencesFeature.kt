@@ -1,8 +1,6 @@
 package mihon.entry.interactions
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
@@ -20,13 +18,6 @@ import tachiyomi.domain.entry.model.Entry
 
 internal val ENTRY_PLAYBACK_PREFERENCES_FEATURE_ID = FeatureId("entry.playback-preferences-transfer")
 internal val ENTRY_PLAYBACK_PREFERENCES_FEATURE_OWNER = ContributionOwner("entry-playback-preferences-transfer")
-private val ENTRY_PLAYBACK_PREFERENCES_REFERENCE = entryContentTypeReferenceContribution(
-    id = "playback-preferences-transfer",
-    owner = ENTRY_PLAYBACK_PREFERENCES_FEATURE_OWNER,
-    section = EntryContentTypeReferenceSection.ENTRY_INTERACTIONS,
-    label = "Preserve playback preferences through backup and migration",
-    order = 1100,
-)
 internal val ENTRY_PLAYBACK_PREFERENCES_INTEGRATION_ID =
     FeatureIntegrationId("entry.playback-preferences-transfer.provider")
 private val ENTRY_PLAYBACK_PREFERENCES_MIGRATION_INTEGRATION_ID =
@@ -61,8 +52,6 @@ internal object EntryPlaybackPreferencesFeatureContributor : FeatureGraphContrib
                         prerequisites = CapabilityExpression.Provided(EntryPlaybackPreferencesCapability.definition),
                         behaviorProjections = EntryPlaybackPreferencesBehavior.entries,
                         behavioralContracts = listOf(EntryPlaybackPreferencesBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_PLAYBACK_PREFERENCES_REFERENCE.requirement),
-                        projections = listOf(ENTRY_PLAYBACK_PREFERENCES_REFERENCE.projection),
                     ),
                     FeatureIntegration(
                         id = ENTRY_PLAYBACK_PREFERENCES_MIGRATION_INTEGRATION_ID,

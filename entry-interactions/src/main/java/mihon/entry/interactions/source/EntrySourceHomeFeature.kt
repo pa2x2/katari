@@ -1,11 +1,7 @@
 package mihon.entry.interactions
 
 import eu.kanade.tachiyomi.source.entry.SourceHomePage
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSelection
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceStatus
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
-import mihon.entry.interactions.documentation.source.entrySourceContextInputDefinition
+import mihon.entry.interactions.source.ENTRY_SOURCE_CONTEXT_OWNER
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -28,15 +24,6 @@ import tachiyomi.domain.source.service.SourceManager
 
 internal val SOURCE_HOME_FEATURE_ID = FeatureId("entry.source-home")
 private val SOURCE_HOME_OWNER = ContributionOwner("entry-source-home")
-private val SOURCE_HOME_REFERENCE = entryContentTypeReferenceContribution(
-    id = "source-home",
-    owner = SOURCE_HOME_OWNER,
-    section = EntryContentTypeReferenceSection.DISCOVERY_AND_INTEGRATIONS,
-    label = "Open source home pages",
-    order = 800,
-    selection = EntryContentTypeReferenceSelection.CONDITIONAL_RELATIONSHIP,
-    project = { EntryContentTypeReferenceStatus.SOURCE_DEPENDENT },
-)
 internal val SOURCE_HOME_INTEGRATION_ID = FeatureIntegrationId("entry.source-home.navigation")
 
 internal object EntrySourceHomeBehaviorContract : FeatureBehaviorContract {
@@ -55,9 +42,9 @@ internal data class SourceHomeContext(
     val urlState: SourceHomeUrlState,
 )
 
-internal val SOURCE_HOME_CONTEXT = entrySourceContextInputDefinition<SourceHomeContext>(
+internal val SOURCE_HOME_CONTEXT = contextInputDefinition<SourceHomeContext>(
     id = ContextInputId("entry.source-home.context"),
-    contracts = setOf(SourceHomePage::class),
+    owner = ENTRY_SOURCE_CONTEXT_OWNER,
 )
 private val SOURCE_HOME_MISSING = FeatureContextBlocker(
     FeatureArtifactId("entry.source-home.source-missing"),
@@ -106,8 +93,6 @@ internal object EntrySourceHomeFeatureContributor : FeatureGraphContributor {
                         contextBlockers = listOf(SOURCE_HOME_MISSING, SOURCE_HOME_UNSUPPORTED, SOURCE_HOME_NO_URL),
                         behaviorProjections = SourceHomeBehavior.entries,
                         behavioralContracts = listOf(EntrySourceHomeBehaviorContract),
-                        projectionRequirements = listOf(SOURCE_HOME_REFERENCE.requirement),
-                        projections = listOf(SOURCE_HOME_REFERENCE.projection),
                     ),
                 ),
             ),

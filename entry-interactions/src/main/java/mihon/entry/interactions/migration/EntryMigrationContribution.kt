@@ -1,7 +1,5 @@
 package mihon.entry.interactions
 
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
@@ -24,13 +22,6 @@ internal val ENTRY_MIGRATION_CHILD_STATE_OPTION_INTEGRATION_ID =
     FeatureIntegrationId("entry.migration.child-state-option")
 
 internal val ENTRY_MIGRATION_FEATURE_OWNER = ContributionOwner("entry-migration")
-private val ENTRY_MIGRATION_REFERENCE = entryContentTypeReferenceContribution(
-    id = "migration",
-    owner = ENTRY_MIGRATION_FEATURE_OWNER,
-    section = EntryContentTypeReferenceSection.ENTRY_INTERACTIONS,
-    label = "Migrate an entry to another source",
-    order = 900,
-)
 
 internal enum class EntryMigrationBaseBehavior(
     override val id: FeatureArtifactId,
@@ -91,8 +82,6 @@ internal object EntryMigrationFeatureContributor : FeatureGraphContributor {
                         prerequisites = migration,
                         behaviorProjections = EntryMigrationBaseBehavior.entries,
                         behavioralContracts = listOf(EntryMigrationBehaviorContract.PROVIDER),
-                        projectionRequirements = listOf(ENTRY_MIGRATION_REFERENCE.requirement),
-                        projections = listOf(ENTRY_MIGRATION_REFERENCE.projection),
                     ),
                     entryMigrationSourceContextIntegration(owner, migration),
                     entryMigrationSelectionContextIntegration(owner, migration),

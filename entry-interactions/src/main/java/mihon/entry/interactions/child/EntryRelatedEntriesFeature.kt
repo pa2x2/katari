@@ -6,11 +6,7 @@ import eu.kanade.tachiyomi.source.entry.RelatedEntriesSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSelection
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceStatus
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
-import mihon.entry.interactions.documentation.source.entrySourceContextInputDefinition
+import mihon.entry.interactions.source.ENTRY_SOURCE_CONTEXT_OWNER
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -41,16 +37,6 @@ import tachiyomi.domain.source.service.SourceManager
 internal val ENTRY_RELATED_ENTRIES_FEATURE_ID = FeatureId("entry.related-entries")
 internal val ENTRY_RELATED_ENTRIES_INTEGRATION_ID = FeatureIntegrationId("entry.related-entries.source-context")
 private val ENTRY_RELATED_ENTRIES_FEATURE_OWNER = ContributionOwner("entry-related-entries")
-private val ENTRY_RELATED_ENTRIES_REFERENCE = entryContentTypeReferenceContribution(
-    id = "related-entries",
-    owner = ENTRY_RELATED_ENTRIES_FEATURE_OWNER,
-    section = EntryContentTypeReferenceSection.DISCOVERY_AND_INTEGRATIONS,
-    label = "Discover related entries from a source",
-    order = 250,
-    selection = EntryContentTypeReferenceSelection.CONDITIONAL_RELATIONSHIP,
-    project = { EntryContentTypeReferenceStatus.SOURCE_DEPENDENT },
-)
-
 private enum class EntryRelatedEntriesBehavior(
     override val id: FeatureArtifactId,
 ) : FeatureBehaviorProjection {
@@ -67,13 +53,13 @@ internal object EntryRelatedEntriesBehaviorContract : FeatureBehaviorContract {
     override val id = FeatureArtifactId("entry.related-entries.behavior")
 }
 
-internal val ENTRY_RELATED_ENTRIES_SOURCE_INSTALLED_CONTEXT = entrySourceContextInputDefinition<Boolean>(
+internal val ENTRY_RELATED_ENTRIES_SOURCE_INSTALLED_CONTEXT = contextInputDefinition<Boolean>(
     id = ContextInputId("entry.related-entries.source-installed"),
-    nonContractReason = "Source installation is runtime registration state, not a public SDK contract",
+    owner = ENTRY_SOURCE_CONTEXT_OWNER,
 )
-internal val ENTRY_RELATED_ENTRIES_SOURCE_SUPPORT_CONTEXT = entrySourceContextInputDefinition<Boolean>(
+internal val ENTRY_RELATED_ENTRIES_SOURCE_SUPPORT_CONTEXT = contextInputDefinition<Boolean>(
     id = ContextInputId("entry.related-entries.source-support"),
-    contracts = setOf(RelatedEntriesSource::class),
+    owner = ENTRY_SOURCE_CONTEXT_OWNER,
 )
 private val ENTRY_RELATED_ENTRIES_SOURCE_MISSING = FeatureContextBlocker(
     FeatureArtifactId("entry.related-entries.source-missing"),
@@ -115,8 +101,6 @@ internal object EntryRelatedEntriesFeatureContributor : FeatureGraphContributor 
                         ),
                         behaviorProjections = EntryRelatedEntriesBehavior.entries,
                         behavioralContracts = listOf(EntryRelatedEntriesBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_RELATED_ENTRIES_REFERENCE.requirement),
-                        projections = listOf(ENTRY_RELATED_ENTRIES_REFERENCE.projection),
                     ),
                 ),
             ),

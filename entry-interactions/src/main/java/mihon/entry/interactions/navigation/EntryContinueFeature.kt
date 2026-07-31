@@ -2,8 +2,6 @@ package mihon.entry.interactions
 
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
@@ -21,13 +19,6 @@ import tachiyomi.domain.entry.model.Entry
 internal val ENTRY_CONTINUE_FEATURE_ID = FeatureId("entry.continue")
 internal val ENTRY_CONTINUE_INTEGRATION_ID = FeatureIntegrationId("entry.continue.provider")
 private val ENTRY_CONTINUE_FEATURE_OWNER = ContributionOwner("entry-continue")
-private val ENTRY_CONTINUE_REFERENCE = entryContentTypeReferenceContribution(
-    id = "continue",
-    owner = ENTRY_CONTINUE_FEATURE_OWNER,
-    section = EntryContentTypeReferenceSection.ENTRY_INTERACTIONS,
-    label = "Continue from saved progress",
-    order = 100,
-)
 private val ENTRY_CONTINUE_DISPATCH_BEHAVIOR_ID = FeatureArtifactId("entry.continue.dispatch")
 private val ENTRY_CONTINUE_TARGET_BEHAVIOR_ID = FeatureArtifactId("entry.continue.next-target")
 
@@ -60,8 +51,6 @@ internal object EntryContinueFeatureContributor : FeatureGraphContributor {
                             EntryContinueTargetBehavior,
                         ),
                         behavioralContracts = listOf(EntryContinueBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_CONTINUE_REFERENCE.requirement),
-                        projections = listOf(ENTRY_CONTINUE_REFERENCE.projection),
                     ),
                 ),
             ),

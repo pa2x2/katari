@@ -1,7 +1,5 @@
 package mihon.entry.interactions
 
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureBehaviorContract
@@ -11,13 +9,6 @@ import mihon.feature.graph.FeatureIntegrationId
 
 internal val ENTRY_TRACKING_FEATURE_ID = FeatureId("entry.tracking")
 internal val ENTRY_TRACKING_OWNER = ContributionOwner("entry-tracking")
-internal val ENTRY_TRACKING_REFERENCE = entryContentTypeReferenceContribution(
-    id = "tracking",
-    owner = ENTRY_TRACKING_OWNER,
-    section = EntryContentTypeReferenceSection.DISCOVERY_AND_INTEGRATIONS,
-    label = "Connect entries to tracking services",
-    order = 500,
-)
 
 internal enum class EntryTrackingIntegration(
     val id: FeatureIntegrationId,
@@ -40,7 +31,6 @@ internal enum class EntryTrackingBehavior(
     ACCOUNT_SETTINGS(FeatureArtifactId("entry.tracking.account-settings")),
     BACKUP_DIAGNOSTICS(FeatureArtifactId("entry.tracking.backup-diagnostics")),
     ENTRY_ACTION(FeatureArtifactId("entry.tracking.entry-action")),
-    DOCUMENTATION(FeatureArtifactId("entry.tracking.documentation")),
     ENTRY_SESSION(FeatureArtifactId("entry.tracking.entry-session")),
     ENTRY_OPERATIONS(FeatureArtifactId("entry.tracking.entry-operations")),
     AUTOMATIC_BINDING(FeatureArtifactId("entry.tracking.automatic-binding")),

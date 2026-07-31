@@ -2,8 +2,6 @@ package mihon.entry.interactions
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.serialization.json.JsonObject
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -37,13 +35,6 @@ internal val ENTRY_PROGRESS_INTEGRATION_ID = FeatureIntegrationId("entry.progres
 private val ENTRY_PROGRESS_MIGRATION_INTEGRATION_ID = FeatureIntegrationId("entry.progress-transfer.migration")
 internal val ENTRY_PROGRESS_MEDIA_SESSION_INTEGRATION_ID = FeatureIntegrationId("entry.progress.media-session")
 internal val ENTRY_PROGRESS_FEATURE_OWNER = ContributionOwner("entry-progress-transfer")
-private val ENTRY_PROGRESS_REFERENCE = entryContentTypeReferenceContribution(
-    id = "progress-transfer",
-    owner = ENTRY_PROGRESS_FEATURE_OWNER,
-    section = EntryContentTypeReferenceSection.ENTRY_INTERACTIONS,
-    label = "Preserve progress through backup and migration",
-    order = 350,
-)
 
 internal enum class EntryProgressBehavior(
     override val id: FeatureArtifactId,
@@ -112,8 +103,6 @@ internal object EntryProgressFeatureContributor : FeatureGraphContributor {
                         prerequisites = CapabilityExpression.Provided(EntryProgressCapability.definition),
                         behaviorProjections = EntryProgressBehavior.entries,
                         behavioralContracts = listOf(EntryProgressBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_PROGRESS_REFERENCE.requirement),
-                        projections = listOf(ENTRY_PROGRESS_REFERENCE.projection),
                     ),
                     FeatureIntegration(
                         id = ENTRY_PROGRESS_MIGRATION_INTEGRATION_ID,

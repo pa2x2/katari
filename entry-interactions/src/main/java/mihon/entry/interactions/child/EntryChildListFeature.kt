@@ -1,8 +1,6 @@
 package mihon.entry.interactions
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
@@ -21,20 +19,6 @@ import tachiyomi.domain.entry.model.EntryChapter
 
 internal val ENTRY_CHILD_LIST_FEATURE_ID = FeatureId("entry.child-list")
 private val ENTRY_CHILD_LIST_FEATURE_OWNER = ContributionOwner("entry-child-list")
-private val ENTRY_CHILD_PROGRESS_REFERENCE = entryContentTypeReferenceContribution(
-    id = "partial-progress",
-    owner = ENTRY_CHILD_LIST_FEATURE_OWNER,
-    section = EntryContentTypeReferenceSection.ENTRY_INTERACTIONS,
-    label = "Show partial progress for individual child items",
-    order = 300,
-)
-private val ENTRY_MISSING_CHILD_GAP_REFERENCE = entryContentTypeReferenceContribution(
-    id = "missing-child-gaps",
-    owner = ENTRY_CHILD_LIST_FEATURE_OWNER,
-    section = EntryContentTypeReferenceSection.ENTRY_INTERACTIONS,
-    label = "Show gaps between missing child items",
-    order = 700,
-)
 internal val ENTRY_CHILD_LIST_INTEGRATION_ID = FeatureIntegrationId("entry.child-list.provider")
 private val ENTRY_CHILD_PROGRESS_INTEGRATION_ID = FeatureIntegrationId("entry.child-list.progress")
 private val ENTRY_MISSING_CHILD_GAP_INTEGRATION_ID = FeatureIntegrationId("entry.child-list.missing-gaps")
@@ -94,8 +78,6 @@ internal object EntryChildListFeatureContributor : FeatureGraphContributor {
                             CapabilityExpression.Provided(EntryChildProgressCapability.definition),
                         ),
                         behaviorProjections = listOf(EntryChildProgressBehavior),
-                        projectionRequirements = listOf(ENTRY_CHILD_PROGRESS_REFERENCE.requirement),
-                        projections = listOf(ENTRY_CHILD_PROGRESS_REFERENCE.projection),
                     ),
                     FeatureIntegration(
                         id = ENTRY_MISSING_CHILD_GAP_INTEGRATION_ID,
@@ -104,8 +86,6 @@ internal object EntryChildListFeatureContributor : FeatureGraphContributor {
                             CapabilityExpression.Provided(EntryMissingChildGapCapability.definition),
                         ),
                         behaviorProjections = listOf(EntryMissingChildGapBehavior),
-                        projectionRequirements = listOf(ENTRY_MISSING_CHILD_GAP_REFERENCE.requirement),
-                        projections = listOf(ENTRY_MISSING_CHILD_GAP_REFERENCE.projection),
                     ),
                 ),
             ),

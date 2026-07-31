@@ -7,13 +7,6 @@ on:
     paths:
       - '**'
       - '!**.md'
-      - '!docs/**'
-      - '!.nvmrc'
-      - '!package.json'
-      - '!pnpm-lock.yaml'
-      - '!scripts/serve-docs.sh'
-      - '!scripts/generate-docs-redirects.mjs'
-      - '!.github/workflows/documentation.yml'
       - '!i18n/src/commonMain/moko-resources/**/strings.xml'
       - '!i18n/src/commonMain/moko-resources/**/plurals.xml'
       - 'i18n/src/commonMain/moko-resources/base/strings.xml'

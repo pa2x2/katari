@@ -1,8 +1,6 @@
 package mihon.entry.interactions
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -24,13 +22,6 @@ import mihon.feature.graph.featureContextRule
 
 internal val ENTRY_BOOKMARK_FEATURE_ID = FeatureId("entry.bookmarking")
 private val FEATURE_OWNER = ContributionOwner("entry-bookmarking")
-private val ENTRY_BOOKMARK_REFERENCE = entryContentTypeReferenceContribution(
-    id = "bookmarking",
-    owner = FEATURE_OWNER,
-    section = EntryContentTypeReferenceSection.ENTRY_INTERACTIONS,
-    label = "Bookmark individual child items",
-    order = 600,
-)
 internal val ENTRY_BOOKMARK_PROVIDER_INTEGRATION = FeatureIntegrationId("entry.bookmarking.provider")
 internal val ENTRY_BOOKMARK_AVAILABILITY_INTEGRATION = FeatureIntegrationId("entry.bookmarking.availability")
 internal val ENTRY_BOOKMARK_MUTATION_INTEGRATION = FeatureIntegrationId("entry.bookmarking.mutation")
@@ -94,8 +85,6 @@ internal object EntryBookmarkFeatureContributor : FeatureGraphContributor {
                         prerequisites = bookmark,
                         behaviorProjections = EntryBookmarkProviderBehavior.entries,
                         behavioralContracts = listOf(EntryBookmarkProviderBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_BOOKMARK_REFERENCE.requirement),
-                        projections = listOf(ENTRY_BOOKMARK_REFERENCE.projection),
                     ),
                     FeatureIntegration(
                         id = ENTRY_BOOKMARK_AVAILABILITY_INTEGRATION,

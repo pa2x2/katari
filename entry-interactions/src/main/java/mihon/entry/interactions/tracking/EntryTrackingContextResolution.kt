@@ -15,7 +15,6 @@ internal fun FeatureGraphEvaluation.requireTrackingAvailability(
         integration = EntryTrackingIntegration.AVAILABILITY.id,
         behaviorProjections = listOf(
             EntryTrackingBehavior.ENTRY_ACTION.id,
-            EntryTrackingBehavior.DOCUMENTATION.id,
         ),
         evidence = listOf(contextEvidence(ENTRY_TRACKING_REGISTERED_SUPPORT, registered)),
         applicable = registered,

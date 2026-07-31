@@ -1,12 +1,7 @@
 package mihon.entry.interactions
 
-import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.CancellationException
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSelection
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceStatus
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
-import mihon.entry.interactions.documentation.source.entrySourceContextInputDefinition
+import mihon.entry.interactions.source.ENTRY_SOURCE_CONTEXT_OWNER
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -33,20 +28,11 @@ import tachiyomi.domain.source.service.SourceManager
 
 internal val ENTRY_SOURCE_REFRESH_FEATURE_ID = FeatureId("entry.source-refresh")
 internal val ENTRY_SOURCE_REFRESH_OWNER = ContributionOwner("entry-source-refresh")
-private val ENTRY_SOURCE_REFRESH_REFERENCE = entryContentTypeReferenceContribution(
-    id = "source-refresh",
-    owner = ENTRY_SOURCE_REFRESH_OWNER,
-    section = EntryContentTypeReferenceSection.DISCOVERY_AND_INTEGRATIONS,
-    label = "Refresh entry details and child items from a source",
-    order = 900,
-    selection = EntryContentTypeReferenceSelection.CONDITIONAL_RELATIONSHIP,
-    project = { EntryContentTypeReferenceStatus.SOURCE_DEPENDENT },
-)
 internal val ENTRY_SOURCE_REFRESH_INTEGRATION_ID = FeatureIntegrationId("entry.source-refresh.execution")
 
-internal val ENTRY_SOURCE_REFRESH_SOURCE_CONTEXT = entrySourceContextInputDefinition<Boolean>(
+internal val ENTRY_SOURCE_REFRESH_SOURCE_CONTEXT = contextInputDefinition<Boolean>(
     id = ContextInputId("entry.source-refresh.source-state"),
-    contracts = setOf(UnifiedSource::class),
+    owner = ENTRY_SOURCE_CONTEXT_OWNER,
 )
 private val ENTRY_SOURCE_REFRESH_SOURCE_MISSING = FeatureContextBlocker(
     FeatureArtifactId("entry.source-refresh.source-missing"),
@@ -89,8 +75,6 @@ internal object EntrySourceRefreshFeatureContributor : FeatureGraphContributor {
                         contextBlockers = listOf(ENTRY_SOURCE_REFRESH_SOURCE_MISSING),
                         behaviorProjections = EntrySourceRefreshBehavior.entries,
                         behavioralContracts = listOf(EntrySourceRefreshBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_SOURCE_REFRESH_REFERENCE.requirement),
-                        projections = listOf(ENTRY_SOURCE_REFRESH_REFERENCE.projection),
                     ),
                 ),
             ),

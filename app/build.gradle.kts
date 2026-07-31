@@ -5,7 +5,6 @@ import mihon.gradle.getLatestCommitSha
 import mihon.gradle.tasks.GenerateApplicationFeatureTopologyTask
 import mihon.gradle.tasks.ReplaceShortcutsPlaceholderTask
 import org.gradle.api.tasks.testing.Test
-import java.io.File
 import java.io.FileInputStream
 import java.util.Properties
 import kotlin.io.encoding.Base64
@@ -340,7 +339,6 @@ dependencies {
 
     // Tests
     testImplementation(libs.bundles.test)
-    testImplementation(projects.entryInteractions.documentation)
     testImplementation(projects.featureValidation)
     testImplementation(testFixtures(projects.entryInteractions))
     testImplementation(testFixtures(projects.translation.runtime))
@@ -380,84 +378,6 @@ val generateFeatureReport = tasks.register<Test>("generateFeatureReport") {
     )
     outputs.file(featureReportFile)
     testLogging.showStandardStreams = true
-}
-
-val contentTypeReferenceFile = rootProject.layout.projectDirectory.file("docs/features/content-type-reference.md")
-val contentTypeReferenceTestClass =
-    "eu.kanade.tachiyomi.documentation.ProductionEntryContentTypeReferenceDocumentationTest"
-
-fun Test.useProductionEntryDocumentation(
-    testClass: String,
-    propertyPrefix: String,
-    mode: String,
-    file: File,
-) {
-    testClassesDirs = files(
-        providers.provider { tasks.named<Test>("testFossUnitTest").get().testClassesDirs },
-    )
-    classpath = files(
-        providers.provider { tasks.named<Test>("testFossUnitTest").get().classpath },
-    )
-    filter.includeTestsMatching(testClass)
-    systemProperty("$propertyPrefix.mode", mode)
-    systemProperty("$propertyPrefix.file", file.absolutePath)
-    testLogging.showStandardStreams = true
-}
-
-val generateContentTypeReference = tasks.register<Test>("generateContentTypeReference") {
-    group = "documentation"
-    description = "Generates the capability tables in the content-type reference from the production Feature graph"
-    useProductionEntryDocumentation(
-        testClass = contentTypeReferenceTestClass,
-        propertyPrefix = "mihon.entry.contentTypeReference",
-        mode = "generate",
-        file = contentTypeReferenceFile.asFile,
-    )
-    outputs.file(contentTypeReferenceFile)
-    outputs.upToDateWhen { false }
-}
-
-tasks.register<Test>("verifyContentTypeReference") {
-    group = "verification"
-    description = "Verifies the content-type reference against the production Feature graph"
-    useProductionEntryDocumentation(
-        testClass = contentTypeReferenceTestClass,
-        propertyPrefix = "mihon.entry.contentTypeReference",
-        mode = "verify",
-        file = contentTypeReferenceFile.asFile,
-    )
-    inputs.file(contentTypeReferenceFile)
-    mustRunAfter(generateContentTypeReference)
-}
-
-val sourceSdkCapabilitiesFile = rootProject.layout.projectDirectory.file("docs/developers/sdk/capabilities.md")
-val sourceSdkConsumerCoverageTestClass =
-    "eu.kanade.tachiyomi.documentation.ProductionEntrySourceSdkConsumerCoverageDocumentationTest"
-
-val generateSourceSdkConsumerCoverage = tasks.register<Test>("generateSourceSdkConsumerCoverage") {
-    group = "documentation"
-    description = "Generates source SDK contextual consumer coverage from the production Feature graph"
-    useProductionEntryDocumentation(
-        testClass = sourceSdkConsumerCoverageTestClass,
-        propertyPrefix = "mihon.entry.sourceSdkConsumerCoverage",
-        mode = "generate",
-        file = sourceSdkCapabilitiesFile.asFile,
-    )
-    outputs.file(sourceSdkCapabilitiesFile)
-    outputs.upToDateWhen { false }
-}
-
-tasks.register<Test>("verifySourceSdkConsumerCoverage") {
-    group = "verification"
-    description = "Verifies source SDK contextual consumer coverage against the production Feature graph"
-    useProductionEntryDocumentation(
-        testClass = sourceSdkConsumerCoverageTestClass,
-        propertyPrefix = "mihon.entry.sourceSdkConsumerCoverage",
-        mode = "verify",
-        file = sourceSdkCapabilitiesFile.asFile,
-    )
-    inputs.file(sourceSdkCapabilitiesFile)
-    mustRunAfter(generateSourceSdkConsumerCoverage)
 }
 
 androidComponents {

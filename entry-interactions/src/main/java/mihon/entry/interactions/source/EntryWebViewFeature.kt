@@ -3,11 +3,7 @@ package mihon.entry.interactions
 import eu.kanade.tachiyomi.source.entry.ChapterWebViewSource
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.WebViewSource
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSelection
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceStatus
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
-import mihon.entry.interactions.documentation.source.entrySourceContextInputDefinition
+import mihon.entry.interactions.source.ENTRY_SOURCE_CONTEXT_OWNER
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -34,24 +30,6 @@ import tachiyomi.domain.source.service.SourceManager
 
 internal val ENTRY_WEB_VIEW_FEATURE_ID = FeatureId("entry.web-view")
 private val ENTRY_WEB_VIEW_OWNER = ContributionOwner("entry-web-view")
-private val ENTRY_WEB_VIEW_REFERENCE = entryContentTypeReferenceContribution(
-    id = "entry-web-view",
-    owner = ENTRY_WEB_VIEW_OWNER,
-    section = EntryContentTypeReferenceSection.DISCOVERY_AND_INTEGRATIONS,
-    label = "Open entries in a source WebView",
-    order = 1100,
-    selection = EntryContentTypeReferenceSelection.CONDITIONAL_RELATIONSHIP,
-    project = { EntryContentTypeReferenceStatus.SOURCE_DEPENDENT },
-)
-private val ENTRY_CHILD_WEB_VIEW_REFERENCE = entryContentTypeReferenceContribution(
-    id = "child-web-view",
-    owner = ENTRY_WEB_VIEW_OWNER,
-    section = EntryContentTypeReferenceSection.DISCOVERY_AND_INTEGRATIONS,
-    label = "Open child items in a source WebView",
-    order = 1200,
-    selection = EntryContentTypeReferenceSelection.CONDITIONAL_RELATIONSHIP,
-    project = { EntryContentTypeReferenceStatus.SOURCE_DEPENDENT },
-)
 internal val ENTRY_WEB_VIEW_INTEGRATION_ID = FeatureIntegrationId("entry.web-view.source")
 internal val ENTRY_CHILD_WEB_VIEW_INTEGRATION_ID = FeatureIntegrationId("entry.web-view.child-source")
 
@@ -65,9 +43,9 @@ internal object EntryChildWebViewBehaviorContract : FeatureBehaviorContract {
 
 internal data class EntryWebViewContext(val installed: Boolean, val supported: Boolean)
 
-internal val ENTRY_WEB_VIEW_CONTEXT = entrySourceContextInputDefinition<EntryWebViewContext>(
+internal val ENTRY_WEB_VIEW_CONTEXT = contextInputDefinition<EntryWebViewContext>(
     id = ContextInputId("entry.web-view.source-context"),
-    contracts = setOf(WebViewSource::class),
+    owner = ENTRY_SOURCE_CONTEXT_OWNER,
 )
 private val ENTRY_WEB_VIEW_MISSING = FeatureContextBlocker(
     FeatureArtifactId("entry.web-view.source-missing"),
@@ -79,9 +57,9 @@ private val ENTRY_WEB_VIEW_UNSUPPORTED = FeatureContextBlocker(
 )
 internal data class EntryChildWebViewContext(val installed: Boolean, val supported: Boolean)
 
-internal val ENTRY_CHILD_WEB_VIEW_CONTEXT = entrySourceContextInputDefinition<EntryChildWebViewContext>(
+internal val ENTRY_CHILD_WEB_VIEW_CONTEXT = contextInputDefinition<EntryChildWebViewContext>(
     id = ContextInputId("entry.web-view.child-source-context"),
-    contracts = setOf(ChapterWebViewSource::class),
+    owner = ENTRY_SOURCE_CONTEXT_OWNER,
 )
 private val ENTRY_CHILD_WEB_VIEW_MISSING = FeatureContextBlocker(
     FeatureArtifactId("entry.web-view.child-source-missing"),
@@ -136,8 +114,6 @@ internal object EntryWebViewFeatureContributor : FeatureGraphContributor {
                         contextBlockers = listOf(ENTRY_WEB_VIEW_MISSING, ENTRY_WEB_VIEW_UNSUPPORTED),
                         behaviorProjections = EntryWebViewBehavior.entries,
                         behavioralContracts = listOf(EntryWebViewBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_WEB_VIEW_REFERENCE.requirement),
-                        projections = listOf(ENTRY_WEB_VIEW_REFERENCE.projection),
                     ),
                     FeatureIntegration(
                         id = ENTRY_CHILD_WEB_VIEW_INTEGRATION_ID,
@@ -160,8 +136,6 @@ internal object EntryWebViewFeatureContributor : FeatureGraphContributor {
                         specializedPrerequisites = listOf(EntryChildWebViewHostContribution.definition),
                         behaviorProjections = EntryChildWebViewBehavior.entries,
                         behavioralContracts = listOf(EntryChildWebViewBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_CHILD_WEB_VIEW_REFERENCE.requirement),
-                        projections = listOf(ENTRY_CHILD_WEB_VIEW_REFERENCE.projection),
                     ),
                 ),
             ),

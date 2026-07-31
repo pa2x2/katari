@@ -1,7 +1,5 @@
 package mihon.entry.interactions
 
-import mihon.entry.interactions.documentation.EntryContentTypeReferenceSection
-import mihon.entry.interactions.documentation.entryContentTypeReferenceContribution
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureBehaviorContract
@@ -15,13 +13,6 @@ import mihon.feature.graph.FeatureIntegrationId
 
 internal val ENTRY_MEDIA_SESSION_FEATURE_ID = FeatureId("entry.media-session")
 internal val ENTRY_MEDIA_SESSION_INTEGRATION_ID = FeatureIntegrationId("entry.media-session.provider")
-private val ENTRY_MEDIA_SESSION_REFERENCE = entryContentTypeReferenceContribution(
-    id = "media-session",
-    owner = ENTRY_MEDIA_SESSION_OWNER,
-    section = EntryContentTypeReferenceSection.ENTRY_INTERACTIONS,
-    label = "Report viewing progress and activity",
-    order = 340,
-)
 
 internal object EntryMediaSessionBehaviorContract : FeatureBehaviorContract {
     override val id = FeatureArtifactId("entry.media-session.behavior")
@@ -49,8 +40,6 @@ internal object EntryMediaSessionFeatureContributor : FeatureGraphContributor {
                         prerequisites = CapabilityExpression.Provided(EntryMediaSessionCapability.definition),
                         behaviorProjections = EntryMediaSessionBehavior.entries,
                         behavioralContracts = listOf(EntryMediaSessionBehaviorContract),
-                        projectionRequirements = listOf(ENTRY_MEDIA_SESSION_REFERENCE.requirement),
-                        projections = listOf(ENTRY_MEDIA_SESSION_REFERENCE.projection),
                     ),
                 ),
             ),
