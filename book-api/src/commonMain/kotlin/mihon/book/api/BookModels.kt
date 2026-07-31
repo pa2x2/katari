@@ -140,7 +140,7 @@ enum class BookCatalogCoverage {
 }
 
 /**
- * Processor-normalized publication metadata used by Katari and processor-owned readers.
+ * Preparer-normalized publication metadata used by Katari and reader implementations.
  *
  * @property id stable normalized publication identity.
  * @property revision normalized publication revision.
