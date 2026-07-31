@@ -9,7 +9,7 @@ import tachiyomi.core.common.preference.InMemoryPreferenceStore
 
 class ReaderChapterPreparationSettingsProviderTest {
     private val mangaSurface = "builtin.manga"
-    private val proseSurface = "builtin.book.prose.html"
+    private val bookSurface = "builtin.book.document"
     private val unsupportedSurface = "builtin.book.fixed-layout"
 
     @Test
@@ -19,7 +19,7 @@ class ReaderChapterPreparationSettingsProviderTest {
             preferences = preferences,
             potentialCapabilitiesBySettingsSurface = mapOf(
                 mangaSurface to setOf(StandardReaderCapabilities.NextChapterPreparation),
-                proseSurface to setOf(StandardReaderCapabilities.NextChapterPreparation),
+                bookSurface to setOf(StandardReaderCapabilities.NextChapterPreparation),
                 unsupportedSurface to setOf(StandardReaderCapabilities.StableTextSelection),
             ),
         )
@@ -28,7 +28,7 @@ class ReaderChapterPreparationSettingsProviderTest {
         registry.rootSettings().map { it.id } shouldContainExactly
             listOf(ReaderChapterPreparationSettingsProvider.PREPARE_NEXT_CHAPTER_SETTING_ID)
         registry.settingsForSurface(mangaSurface).single().preference shouldBe preferences.prepareNextChapter
-        registry.settingsForSurface(proseSurface).single().preference shouldBe preferences.prepareNextChapter
+        registry.settingsForSurface(bookSurface).single().preference shouldBe preferences.prepareNextChapter
         registry.settingsForSurface(unsupportedSurface) shouldBe emptyList()
     }
 }

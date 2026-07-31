@@ -12,14 +12,14 @@ import kotlin.test.assertIs
 
 class BookReaderProcessorRegistryTest {
     private val alternateModel = BookPublicationModelDescriptor("book.alternate")
-    private val proseModel = BookPublicationModelDescriptor("book.document")
+    private val documentModel = BookPublicationModelDescriptor("book.document")
     private val alternate = FakeBookProcessor("alternate", "Alternate reader", alternateModel)
     private val secondAlternate = FakeBookProcessor("second-alternate", "Second alternate reader", alternateModel)
-    private val proseChapter = FakeBookProcessor("prose-chapter", "Prose chapter reader", proseModel)
+    private val documentChapter = FakeBookProcessor("document-chapter", "Document reader", documentModel)
 
     @Test
     fun `sole compatible processor is selected automatically`() {
-        val registry = BookReaderProcessorRegistry(listOf(alternate, proseChapter))
+        val registry = BookReaderProcessorRegistry(listOf(alternate, documentChapter))
 
         val selection = assertIs<BookReaderProcessorSelection.Selected>(
             registry.select(alternateModel),
@@ -44,12 +44,12 @@ class BookReaderProcessorRegistryTest {
 
     @Test
     fun `invalid remembered processor falls back to chooser`() {
-        val registry = BookReaderProcessorRegistry(listOf(alternate, secondAlternate, proseChapter))
+        val registry = BookReaderProcessorRegistry(listOf(alternate, secondAlternate, documentChapter))
 
         val selection = assertIs<BookReaderProcessorSelection.ChoiceRequired>(
             registry.select(
                 model = alternateModel,
-                rememberedProcessorId = proseChapter.id,
+                rememberedProcessorId = documentChapter.id,
             ),
         )
 
@@ -68,34 +68,34 @@ class BookReaderProcessorRegistryTest {
     @Test
     fun `duplicate processor IDs are rejected`() {
         assertFailsWith<IllegalArgumentException> {
-            BookReaderProcessorRegistry(listOf(alternate, FakeBookProcessor(alternate.id, "Duplicate", proseModel)))
+            BookReaderProcessorRegistry(listOf(alternate, FakeBookProcessor(alternate.id, "Duplicate", documentModel)))
         }
     }
 
     @Test
     fun `potential capabilities are associated with processor settings surfaces`() {
-        val prose = FakeBookProcessor(
-            id = "prose",
-            displayName = "Prose",
-            model = proseModel,
-            settingsSurfaceId = "builtin.book.prose",
+        val document = FakeBookProcessor(
+            id = "document",
+            displayName = "Document",
+            model = documentModel,
+            settingsSurfaceId = "builtin.book.document",
             capabilities = setOf(StandardReaderCapabilities.StableTextSelection),
         )
-        val alternateProse = FakeBookProcessor(
-            id = "alternate-prose",
-            displayName = "Alternate prose",
-            model = proseModel,
-            settingsSurfaceId = "builtin.book.prose",
+        val alternateDocument = FakeBookProcessor(
+            id = "alternate-document",
+            displayName = "Alternate document",
+            model = documentModel,
+            settingsSurfaceId = "builtin.book.document",
             capabilities = setOf(StandardReaderCapabilities.SelectionAnchoring),
         )
 
         val capabilitiesBySurface = BookReaderProcessorRegistry(
-            listOf(prose, alternateProse),
+            listOf(document, alternateDocument),
         ).potentialReaderCapabilitiesBySettingsSurface()
 
         assertEquals(
             mapOf(
-                "builtin.book.prose" to setOf(
+                "builtin.book.document" to setOf(
                     StandardReaderCapabilities.StableTextSelection,
                     StandardReaderCapabilities.SelectionAnchoring,
                 ),

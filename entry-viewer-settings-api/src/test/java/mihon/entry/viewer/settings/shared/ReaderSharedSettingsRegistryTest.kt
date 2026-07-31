@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 
 class ReaderSharedSettingsRegistryTest {
-    private val capableSurfaceId = "builtin.book.prose.html"
+    private val capableSurfaceId = "builtin.book.document"
     private val secondCapableSurfaceId = "builtin.book.alternate"
     private val unsupportedSurfaceId = "builtin.book.fixed-layout"
     private val preference = InMemoryPreferenceStore().getBoolean("automatic", false)

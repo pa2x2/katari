@@ -23,20 +23,20 @@ class BookAutomaticTranslationPreferencesTest {
             ),
         )
         val preferences = BookAutomaticTranslationPreferences(store)
-        val prose = preferences.automaticSelectionEnabled(PROSE_SURFACE)
+        val document = preferences.automaticSelectionEnabled(DOCUMENT_SURFACE)
         val alternate = preferences.automaticSelectionEnabled(ALTERNATE_SURFACE)
 
-        prose.get() shouldBe true
+        document.get() shouldBe true
         alternate.get() shouldBe true
 
-        prose.set(false)
+        document.set(false)
 
-        prose.get() shouldBe false
+        document.get() shouldBe false
         alternate.get() shouldBe true
 
-        prose.delete()
+        document.delete()
 
-        prose.get() shouldBe false
+        document.get() shouldBe false
         alternate.get() shouldBe true
     }
 
@@ -53,7 +53,7 @@ class BookAutomaticTranslationPreferencesTest {
 
         val ownership = registry.ownership(
             existingKeys = setOf(
-                "${BookAutomaticTranslationPreferences.SURFACE_KEY_PREFIX}$PROSE_SURFACE",
+                "${BookAutomaticTranslationPreferences.SURFACE_KEY_PREFIX}$DOCUMENT_SURFACE",
                 "${BookAutomaticTranslationPreferences.SURFACE_KEY_PREFIX}$ALTERNATE_SURFACE",
             ),
         )
@@ -62,13 +62,13 @@ class BookAutomaticTranslationPreferencesTest {
             BookAutomaticTranslationPreferences.LEGACY_GLOBAL_KEY,
             BookAutomaticTranslationPreferences.MIGRATED_SURFACES_KEY,
             "${BookAutomaticTranslationPreferences.SURFACE_KEY_PREFIX}$ALTERNATE_SURFACE",
-            "${BookAutomaticTranslationPreferences.SURFACE_KEY_PREFIX}$PROSE_SURFACE",
+            "${BookAutomaticTranslationPreferences.SURFACE_KEY_PREFIX}$DOCUMENT_SURFACE",
         ).sorted()
         ownership.appStateKeys shouldBe emptySet()
     }
 
     private companion object {
-        const val PROSE_SURFACE = "builtin.book.prose.html"
+        const val DOCUMENT_SURFACE = "builtin.book.document"
         const val ALTERNATE_SURFACE = "test.book.alternate"
     }
 }

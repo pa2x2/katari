@@ -40,7 +40,7 @@ class EntryViewerSettingsFeatureTest {
     fun `provider surfaces reach projections backup and reset without implying Migration`() = runTest {
         val repository = mockk<ViewerSettingOverrideRepository>(relaxed = true)
         val first = surface("book.epub", ViewerSettingsCategory.READER)
-        val second = surface("book.prose", ViewerSettingsCategory.READER)
+        val second = surface("book.document", ViewerSettingsCategory.READER)
         val stored = ViewerSettingOverride(entry.id, first.overrideSetting.id, "scroll", 1L)
         coEvery { repository.getByEntryId(entry.id) } returns listOf(stored)
         var legacyResetCount = 0
@@ -55,7 +55,7 @@ class EntryViewerSettingsFeatureTest {
         )
 
         feature.isApplicable(EntryType.BOOK) shouldBe true
-        feature.destinations.map { it.surfaceId } shouldContainExactly listOf("book.epub", "book.prose")
+        feature.destinations.map { it.surfaceId } shouldContainExactly listOf("book.epub", "book.document")
         feature.snapshot(entry) shouldBe EntryViewerSettingsSnapshotResult.Available(listOf(stored))
         feature.restore(target, listOf(stored)) shouldBe EntryViewerSettingsRestoreResult.Restored(1, emptySet())
         feature.copy(entry, target) shouldBe EntryViewerSettingsCopyResult.Inapplicable(entry.type, target.type)
@@ -63,7 +63,7 @@ class EntryViewerSettingsFeatureTest {
 
         coVerify(exactly = 1) { repository.upsert(stored.copy(entryId = target.id)) }
         coVerify { repository.deleteByProviderForProfile("book.epub", 9L) }
-        coVerify { repository.deleteByProviderForProfile("book.prose", 9L) }
+        coVerify { repository.deleteByProviderForProfile("book.document", 9L) }
         legacyResetCount shouldBe 1
     }
 

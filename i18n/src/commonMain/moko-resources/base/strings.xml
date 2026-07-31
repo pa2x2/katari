@@ -381,13 +381,10 @@
     <string name="pref_prepare_next_chapter">Prepare next chapter</string>
     <string name="pref_prepare_next_chapter_summary">At 75% progress, prepares the next chapter and preloads its first Manga images</string>
     <string name="pref_manga_reader">Manga reader</string>
-    <string name="pref_web_prose_reader">Web prose reader</string>
     <string name="pref_epub_color_theme">Color theme</string>
     <string name="pref_epub_theme_light">Light</string>
     <string name="pref_epub_theme_dark">Dark</string>
     <string name="pref_epub_theme_sepia">Sepia</string>
-    <string name="pref_prose_theme_system">System</string>
-    <string name="pref_prose_theme_black">Black</string>
     <string name="pref_epub_font_family">Font family</string>
     <string name="pref_epub_font_publisher">Book default</string>
     <string name="pref_epub_font_serif">Serif</string>
