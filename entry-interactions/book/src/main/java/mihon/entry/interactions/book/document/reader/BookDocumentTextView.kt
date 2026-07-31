@@ -11,7 +11,7 @@ import android.text.style.ClickableSpan
 import android.view.MotionEvent
 import android.view.ViewConfiguration
 import android.widget.TextView
-import mihon.entry.interactions.book.document.model.BookDocumentLinkTarget
+import mihon.book.api.document.BookDocumentLinkTarget
 
 internal class BookDocumentTextView(context: Context) : TextView(context) {
     private val selectionOwnerIdentity = "text-view-${System.identityHashCode(this)}"
@@ -30,6 +30,7 @@ internal class BookDocumentTextView(context: Context) : TextView(context) {
     internal var appliedDocumentTextIdentity: String? = null
     internal var onDocumentAnchorClick: ((String, TextView) -> Unit)? = null
     internal var onDocumentExternalLinkClick: ((String) -> Unit)? = null
+    internal var onDocumentNonLinkClick: (() -> Unit)? = null
 
     init {
         applyBookDocumentTextLayoutPolicy()
@@ -67,7 +68,8 @@ internal class BookDocumentTextView(context: Context) : TextView(context) {
                     if (readerTapBlockedAtDown) {
                         interaction.onBlockedReaderTap()
                     } else {
-                        interaction.onNonLinkTap(event.x, width.toFloat())
+                        onDocumentNonLinkClick?.invoke()
+                            ?: interaction.onNonLinkTap(event.x, width.toFloat())
                     }
                 }
                 trackingNonLinkTap = false

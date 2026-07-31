@@ -2,16 +2,18 @@ package mihon.entry.interactions.book.prose
 
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
-import mihon.entry.interactions.book.document.model.BookDocument
-import mihon.entry.interactions.book.document.model.BookDocumentBlock
-import mihon.entry.interactions.book.document.model.BookDocumentBlockContent
-import mihon.entry.interactions.book.document.model.BookDocumentBlockKind
-import mihon.entry.interactions.book.document.model.BookDocumentBlockRole
-import mihon.entry.interactions.book.document.model.BookDocumentFontFamily
-import mihon.entry.interactions.book.document.model.BookDocumentPosition
-import mihon.entry.interactions.book.document.model.BookDocumentStyle
+import mihon.book.api.document.BookDocument
+import mihon.book.api.document.BookDocumentBlock
+import mihon.book.api.document.BookDocumentBlockContent
+import mihon.book.api.document.BookDocumentBlockKind
+import mihon.book.api.document.BookDocumentBlockRole
+import mihon.book.api.document.BookDocumentContent
+import mihon.book.api.document.BookDocumentFontFamily
+import mihon.book.api.document.BookDocumentPosition
+import mihon.book.api.document.BookDocumentStyle
 import mihon.entry.interactions.book.document.render.PreparedBookDocument
 import mihon.entry.interactions.book.document.render.PreparedBookDocumentBlock
+import mihon.entry.interactions.book.document.render.toBookDocumentSpanned
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode
@@ -39,6 +41,7 @@ internal class StructuredHtmlProseParser(
         val preparedBlocks = mutableListOf<PreparedBookDocumentBlock>()
         val anchors = linkedMapOf<String, BookDocumentPosition>()
         val referencedResources = linkedSetOf<String>()
+        val usedFragments = mutableSetOf<String>()
 
         parsedBlocks.forEach { parsed ->
             val start = combined.length
@@ -47,15 +50,13 @@ internal class StructuredHtmlProseParser(
             if (end <= start) return@forEach
             val plainText = parsed.logicalPlainText
             val blockId = uniqueBlockId(parsed.explicitId, parsed.role, plainText, usedIds)
-            val links = parsed.renderedText.documentLinks()
+            val sourceFragments = parsed.fragments.filter(usedFragments::add)
             val block = BookDocumentBlock(
                 id = blockId,
                 role = parsed.role,
                 content = parsed.content,
                 plainText = plainText,
-                sourceFragments = parsed.fragments,
-                links = links,
-                inlineStyles = parsed.inlineStyles,
+                sourceFragments = sourceFragments,
                 style = parsed.style,
                 logicalStart = start,
                 logicalEndExclusive = end,
@@ -63,10 +64,10 @@ internal class StructuredHtmlProseParser(
             semanticBlocks += block
             preparedBlocks += PreparedBookDocumentBlock(
                 block = block,
-                renderedText = parsed.renderedText,
+                renderedText = parsed.renderedText.toString().toBookDocumentSpanned(block),
                 disclosureBody = parsed.disclosureBody,
             )
-            parsed.fragments.forEach { fragment ->
+            sourceFragments.forEach { fragment ->
                 anchors.putIfAbsent(fragment, BookDocumentPosition(blockId, parsed.anchorOffset(fragment)))
             }
             when (val content = parsed.content) {
@@ -77,7 +78,7 @@ internal class StructuredHtmlProseParser(
             (parsed.style.fontFamily as? BookDocumentFontFamily.Resource)
                 ?.resourceId
                 ?.let(referencedResources::add)
-            parsed.inlineStyles.mapNotNullTo(referencedResources) { inline ->
+            block.inlineStyles.mapNotNullTo(referencedResources) { inline ->
                 (inline.style.fontFamily as? BookDocumentFontFamily.Resource)?.resourceId
             }
         }
@@ -86,12 +87,17 @@ internal class StructuredHtmlProseParser(
         val document = BookDocument(
             resourceId = resourceId,
             revision = revision,
-            blocks = semanticBlocks,
-            anchors = anchors,
-            resourceIds = referencedResources,
-            logicalExtent = combined.length,
+            content = BookDocumentContent(
+                text = combined.toString(),
+                blocks = semanticBlocks,
+                anchors = anchors,
+                resourceIds = referencedResources,
+            ),
         )
-        return PreparedBookDocument(document, preparedBlocks, SpannableString(combined))
+        val projectedText = SpannableStringBuilder().apply {
+            preparedBlocks.forEach { append(it.renderedText) }
+        }
+        return PreparedBookDocument(document, preparedBlocks, SpannableString(projectedText))
     }
 
     internal fun collectChildren(

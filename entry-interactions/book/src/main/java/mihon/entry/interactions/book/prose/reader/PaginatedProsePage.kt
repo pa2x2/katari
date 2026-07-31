@@ -16,8 +16,8 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.book.document.model.BookDocumentBlockContent
-import mihon.entry.interactions.book.document.model.BookDocumentPosition
+import mihon.book.api.document.BookDocumentBlockContent
+import mihon.book.api.document.BookDocumentPosition
 import mihon.entry.interactions.book.document.reader.BookDocumentText
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentSectionKey
 import mihon.entry.interactions.book.document.render.PreparedBookDocument

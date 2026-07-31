@@ -1,8 +1,8 @@
 package mihon.entry.interactions.book.prose
 
-import mihon.entry.interactions.book.document.model.BookDocumentBlockKind
-import mihon.entry.interactions.book.document.model.BookDocumentBlockRole
-import mihon.entry.interactions.book.document.model.BookDocumentStyle
+import mihon.book.api.document.BookDocumentBlockKind
+import mihon.book.api.document.BookDocumentBlockRole
+import mihon.book.api.document.BookDocumentStyle
 import org.jsoup.nodes.Element
 
 internal fun StructuredHtmlProseParser.addBlockElement(

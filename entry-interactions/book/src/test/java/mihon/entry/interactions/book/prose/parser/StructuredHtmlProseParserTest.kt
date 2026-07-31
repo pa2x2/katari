@@ -1,9 +1,11 @@
 package mihon.entry.interactions.book.prose
 
 import android.graphics.Typeface
+import android.text.style.QuoteSpan
+import android.text.style.RelativeSizeSpan
 import android.text.style.StyleSpan
 import android.text.style.URLSpan
-import mihon.entry.interactions.book.document.model.BookDocumentBlockKind
+import mihon.book.api.document.BookDocumentBlockKind
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -31,6 +33,11 @@ internal class StructuredHtmlProseParserTest : HtmlProseDocumentFixture() {
         val recombined = prepared.blocks.joinToString(separator = "") { it.renderedText.toString() }
 
         assertEquals(prepared.combinedText.toString(), recombined)
+        assertEquals(prepared.document.content.text, prepared.combinedText.toString())
+        assertEquals(
+            prepared.document.blocks.map { it.id },
+            prepared.blocks.map { it.block.id },
+        )
         assertTrue(recombined.indexOf("Intro line") < recombined.indexOf("Heading"))
         assertTrue(recombined.indexOf("Heading") < recombined.indexOf("Paragraph one."))
         assertTrue(recombined.contains("3. Third item"))
@@ -76,6 +83,22 @@ internal class StructuredHtmlProseParserTest : HtmlProseDocumentFixture() {
             prepared.blocks[2].renderedText
                 .getSpans(0, prepared.blocks[2].renderedText.length, StyleSpan::class.java)
                 .any { it.style == Typeface.BOLD },
+        )
+        assertTrue(
+            prepared.blocks[1].renderedText
+                .getSpans(0, prepared.blocks[1].renderedText.length, StyleSpan::class.java)
+                .any { it.style == Typeface.BOLD },
+        )
+        assertEquals(
+            listOf(1.4f),
+            prepared.blocks[1].renderedText
+                .getSpans(0, prepared.blocks[1].renderedText.length, RelativeSizeSpan::class.java)
+                .map(RelativeSizeSpan::getSizeChange),
+        )
+        assertTrue(
+            prepared.blocks[4].renderedText
+                .getSpans(0, prepared.blocks[4].renderedText.length, QuoteSpan::class.java)
+                .isNotEmpty(),
         )
     }
 
@@ -136,6 +159,24 @@ internal class StructuredHtmlProseParserTest : HtmlProseDocumentFixture() {
         assertEquals(originalTarget, editedTarget)
         assertEquals(2, duplicateIds.distinct().size)
         assertNotEquals(duplicateIds[0], duplicateIds[1])
+    }
+
+    @Test
+    fun `duplicate provider fragments remain readable and resolve first occurrence`() {
+        val prepared = prepare(
+            """
+                <p id="duplicate">First target</p>
+                <p id="duplicate">Second target</p>
+            """.trimIndent(),
+        )
+
+        assertEquals(2, prepared.blocks.size)
+        assertEquals(listOf("duplicate"), prepared.document.blocks.first().sourceFragments)
+        assertTrue(prepared.document.blocks.last().sourceFragments.isEmpty())
+        assertEquals(
+            prepared.document.blocks.first().id,
+            requireNotNull(prepared.document.anchors["duplicate"]).blockId,
+        )
     }
 
     @Test

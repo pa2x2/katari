@@ -1,6 +1,14 @@
-package mihon.entry.interactions.book.document.model
+package mihon.book.api.document
 
-internal data class BookDocumentTableRow(
+import kotlinx.serialization.Serializable
+
+/**
+ * One semantic table row.
+ *
+ * @property cells cells in source order.
+ */
+@Serializable
+data class BookDocumentTableRow(
     val cells: List<BookDocumentTableCell>,
 ) {
     init {
@@ -8,13 +16,22 @@ internal data class BookDocumentTableRow(
     }
 }
 
-internal data class BookDocumentTableCell(
-    val text: String,
+/**
+ * One semantic table cell.
+ *
+ * @property content rich cell text mapped into the owning table block.
+ * @property header whether the cell is a header.
+ * @property scope optional accessibility header scope.
+ * @property columnSpan bounded column span.
+ * @property rowSpan bounded row span.
+ */
+@Serializable
+data class BookDocumentTableCell(
+    val content: BookDocumentRichText,
     val header: Boolean,
     val scope: BookDocumentTableCellScope?,
     val columnSpan: Int,
     val rowSpan: Int,
-    val links: List<BookDocumentLink>,
 ) {
     init {
         require(columnSpan in 1..MAX_BOOK_DOCUMENT_TABLE_CELL_SPAN) {
@@ -23,26 +40,59 @@ internal data class BookDocumentTableCell(
         require(rowSpan in 1..MAX_BOOK_DOCUMENT_TABLE_CELL_SPAN) {
             "document table row span is outside the supported range"
         }
-        require(links.fitInside(text)) { "document table cell links must fit inside the cell text" }
     }
+
+    /** Exact cell text. */
+    val text: String
+        get() = content.text
+
+    /** Cell-relative semantic links. */
+    val links: List<BookDocumentLink>
+        get() = content.links
 }
 
-internal data class BookDocumentTableLayout(
+/**
+ * Rowspan-aware table grid.
+ *
+ * @property columnCount total grid width.
+ * @property rows laid-out rows.
+ */
+@Serializable
+data class BookDocumentTableLayout(
     val columnCount: Int,
     val rows: List<BookDocumentTableLayoutRow>,
 )
 
-internal data class BookDocumentTableLayoutRow(
+/**
+ * One laid-out table row.
+ *
+ * @property carriedColumns columns occupied by a preceding rowspan.
+ * @property placements source cells placed in this row.
+ */
+@Serializable
+data class BookDocumentTableLayoutRow(
     val carriedColumns: Set<Int>,
     val placements: List<BookDocumentTableCellPlacement>,
 )
 
-internal data class BookDocumentTableCellPlacement(
+/**
+ * Grid placement of one source table cell.
+ *
+ * @property column zero-based starting column.
+ * @property cell source semantic cell.
+ */
+@Serializable
+data class BookDocumentTableCellPlacement(
     val column: Int,
     val cell: BookDocumentTableCell,
 )
 
-internal fun List<BookDocumentTableRow>.layoutBookDocumentTable(): BookDocumentTableLayout? {
+/**
+ * Produces a bounded rowspan-aware grid for semantic table rows.
+ *
+ * @return validated layout, or `null` when cells cannot fit within the supported grid.
+ */
+fun List<BookDocumentTableRow>.layoutBookDocumentTable(): BookDocumentTableLayout? {
     if (isEmpty()) return null
     var carried = IntArray(MAX_BOOK_DOCUMENT_TABLE_CELL_SPAN)
     val laidOutRows = mutableListOf<BookDocumentTableLayoutRow>()
@@ -61,7 +111,10 @@ internal fun List<BookDocumentTableRow>.layoutBookDocumentTable(): BookDocumentT
                 val occupiedColumn = column + offset
                 occupied[occupiedColumn] = true
                 if (cell.rowSpan > 1) {
-                    nextCarried[occupiedColumn] = maxOf(nextCarried[occupiedColumn], cell.rowSpan - 1)
+                    nextCarried[occupiedColumn] = maxOf(
+                        nextCarried[occupiedColumn],
+                        cell.rowSpan - 1,
+                    )
                 }
             }
             columnCount = maxOf(columnCount, column + cell.columnSpan)
@@ -79,9 +132,12 @@ private fun BooleanArray.firstAvailableRange(width: Int): Int? {
     return null
 }
 
-internal const val MAX_BOOK_DOCUMENT_TABLE_CELL_SPAN = 24
+/** Maximum supported table width and individual cell span. */
+const val MAX_BOOK_DOCUMENT_TABLE_CELL_SPAN = 24
 
-internal enum class BookDocumentTableCellScope {
+/** Accessibility scope of a semantic table header. */
+@Serializable
+enum class BookDocumentTableCellScope {
     ROW,
     COLUMN,
     ROW_GROUP,

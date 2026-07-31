@@ -1,15 +1,21 @@
 package mihon.entry.interactions.book.prose
 
 import android.graphics.Typeface
+import android.text.style.RelativeSizeSpan
+import android.text.style.StrikethroughSpan
 import android.text.style.StyleSpan
+import android.text.style.SubscriptSpan
+import android.text.style.SuperscriptSpan
+import android.text.style.TypefaceSpan
 import android.text.style.URLSpan
-import mihon.entry.interactions.book.document.model.BookDocumentAlignment
-import mihon.entry.interactions.book.document.model.BookDocumentBlockContent
-import mihon.entry.interactions.book.document.model.BookDocumentBlockKind
-import mihon.entry.interactions.book.document.model.BookDocumentFontFamily
-import mihon.entry.interactions.book.document.model.BookDocumentLinkTarget
-import mihon.entry.interactions.book.document.model.BookDocumentWhiteSpace
-import mihon.entry.interactions.book.document.model.MAX_BOOK_DOCUMENT_TABLE_CELL_SPAN
+import android.text.style.UnderlineSpan
+import mihon.book.api.document.BookDocumentAlignment
+import mihon.book.api.document.BookDocumentBlockContent
+import mihon.book.api.document.BookDocumentBlockKind
+import mihon.book.api.document.BookDocumentFontFamily
+import mihon.book.api.document.BookDocumentLinkTarget
+import mihon.book.api.document.BookDocumentWhiteSpace
+import mihon.book.api.document.MAX_BOOK_DOCUMENT_TABLE_CELL_SPAN
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -19,6 +25,97 @@ import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 internal class StructuredHtmlRichBlocksTest : HtmlProseDocumentFixture() {
+    @Test
+    fun `all admitted inline semantics are represented in rich text leaves`() {
+        val prepared = prepare(
+            """
+                <p>
+                    <strong>strong</strong> <em>emphasis</em> <u>underlined</u>
+                    <s>struck</s> <sub>below</sub> <sup>above</sup>
+                    <code>coded</code> <small>small</small>
+                    <span data-katari-font-scale="1.25">scaled</span>
+                </p>
+                <ul><li><a href="#target"><i>linked item</i></a></li></ul>
+                <p id="target">Target</p>
+            """.trimIndent(),
+        )
+
+        val paragraph = assertIs<BookDocumentBlockContent.Text>(prepared.document.blocks[0].content).value
+        fun styleFor(value: String) = paragraph.inlineStyles.single { style ->
+            paragraph.text.substring(style.start, style.endExclusive) == value
+        }.style
+
+        assertTrue(styleFor("strong").bold)
+        assertTrue(styleFor("emphasis").italic)
+        assertTrue(styleFor("underlined").underline)
+        assertTrue(styleFor("struck").strikethrough)
+        assertTrue(styleFor("below").subscript)
+        assertTrue(styleFor("above").superscript)
+        assertTrue(styleFor("coded").code)
+        assertTrue(styleFor("small").small)
+        assertEquals(1.25f, styleFor("scaled").fontSizeScale)
+
+        val renderedParagraph = prepared.blocks[0].renderedText
+        fun rangeOf(value: String): IntRange {
+            val start = renderedParagraph.toString().indexOf(value)
+            return start until start + value.length
+        }
+        fun <T> hasSpan(value: String, type: Class<T>, predicate: (T) -> Boolean = { true }): Boolean {
+            val range = rangeOf(value)
+            return renderedParagraph
+                .getSpans(range.first, range.last + 1, type)
+                .any(predicate)
+        }
+
+        assertTrue(hasSpan("strong", StyleSpan::class.java) { it.style == Typeface.BOLD })
+        assertTrue(hasSpan("emphasis", StyleSpan::class.java) { it.style == Typeface.ITALIC })
+        assertTrue(hasSpan("underlined", UnderlineSpan::class.java))
+        assertTrue(hasSpan("struck", StrikethroughSpan::class.java))
+        assertTrue(hasSpan("below", SubscriptSpan::class.java))
+        assertTrue(hasSpan("above", SuperscriptSpan::class.java))
+        assertTrue(hasSpan("coded", TypefaceSpan::class.java) { it.family == "monospace" })
+        assertEquals(
+            listOf(0.8f),
+            renderedParagraph
+                .getSpans(
+                    rangeOf("small").first,
+                    rangeOf("small").last + 1,
+                    RelativeSizeSpan::class.java,
+                )
+                .map(RelativeSizeSpan::getSizeChange),
+        )
+        assertEquals(
+            listOf(1.25f),
+            renderedParagraph
+                .getSpans(
+                    rangeOf("scaled").first,
+                    rangeOf("scaled").last + 1,
+                    RelativeSizeSpan::class.java,
+                )
+                .map(RelativeSizeSpan::getSizeChange),
+        )
+
+        val list = assertIs<BookDocumentBlockContent.ListBlock>(prepared.document.blocks[1].content)
+        val item = list.items.single().content
+        assertTrue(item.inlineStyles.single().style.italic)
+        assertEquals(
+            BookDocumentLinkTarget.Anchor("target"),
+            item.links.single().target,
+        )
+        assertTrue(
+            prepared.blocks[1].renderedText
+                .getSpans(0, prepared.blocks[1].renderedText.length, StyleSpan::class.java)
+                .any { it.style == Typeface.ITALIC },
+        )
+        assertEquals(
+            "#target",
+            prepared.blocks[1].renderedText
+                .getSpans(0, prepared.blocks[1].renderedText.length, URLSpan::class.java)
+                .single()
+                .url,
+        )
+    }
+
     @Test
     fun `semantic parser models rich structures and safe style tokens`() {
         val prepared = prepare(
@@ -62,15 +159,15 @@ internal class StructuredHtmlRichBlocksTest : HtmlProseDocumentFixture() {
         )
         val figure = assertIs<BookDocumentBlockContent.Figure>(prepared.document.blocks[2].content)
         assertEquals("image-1", figure.image.resourceId)
-        assertEquals("Blue seal", figure.image.alternativeText)
-        assertEquals("Archive seal", figure.caption)
+        assertEquals("Blue seal", figure.image.alternativeText?.text)
+        assertEquals("Archive seal", figure.caption?.text)
         val table = assertIs<BookDocumentBlockContent.Table>(prepared.document.blocks[3].content)
         assertEquals(2, table.columnCount)
         assertEquals(2, table.rows[1].cells[1].rowSpan)
         val disclosure = assertIs<BookDocumentBlockContent.Disclosure>(prepared.document.blocks[4].content)
         assertTrue(disclosure.initiallyExpanded)
-        assertEquals(listOf(BookDocumentBlockKind.PARAGRAPH), disclosure.body.map { it.role.kind })
-        assertEquals("Hidden body", disclosure.body.single().plainText)
+        assertEquals(listOf(BookDocumentBlockKind.PARAGRAPH), disclosure.body.blocks.map { it.role.kind })
+        assertEquals("Hidden body", disclosure.body.blocks.single().plainText)
         assertEquals(BookDocumentAlignment.END, prepared.document.blocks[5].style.alignment)
         assertEquals(
             BookDocumentFontFamily.Resource("font-1"),
@@ -99,7 +196,7 @@ internal class StructuredHtmlRichBlocksTest : HtmlProseDocumentFixture() {
 
         assertEquals(
             listOf(BookDocumentLinkTarget.Anchor("target")),
-            table.captionLinks.map { it.target },
+            requireNotNull(table.caption).links.map { it.target },
         )
         assertEquals(
             listOf(
@@ -110,12 +207,13 @@ internal class StructuredHtmlRichBlocksTest : HtmlProseDocumentFixture() {
         )
         assertEquals(
             "Caption link",
-            table.caption?.substring(
-                table.captionLinks.single().let {
-                    it.start until
-                        it.endExclusive
-                },
-            ),
+            requireNotNull(table.caption).let { caption ->
+                caption.text.substring(
+                    caption.links.single().let {
+                        it.start until it.endExclusive
+                    },
+                )
+            },
         )
         assertEquals(
             listOf("Cell link", "external link"),
@@ -158,10 +256,16 @@ internal class StructuredHtmlRichBlocksTest : HtmlProseDocumentFixture() {
                 BookDocumentBlockKind.LIST,
                 BookDocumentBlockKind.DISCLOSURE,
             ),
-            disclosure.body.map { it.role.kind },
+            disclosure.body.blocks.map { it.role.kind },
         )
-        assertEquals(disclosure.body, disclosureBlock.disclosureBody.map { it.block })
+        assertEquals(disclosure.body.blocks, disclosureBlock.disclosureBody.map { it.block })
         val richParagraph = disclosureBlock.disclosureBody.first()
+        val semanticParagraph = disclosure.body.blocks.first()
+        assertTrue(semanticParagraph.inlineStyles.single().style.italic)
+        assertEquals(
+            BookDocumentLinkTarget.External("https://example.invalid/"),
+            semanticParagraph.links.single().target,
+        )
         assertTrue(
             richParagraph.renderedText
                 .getSpans(0, richParagraph.renderedText.length, StyleSpan::class.java)
@@ -174,7 +278,7 @@ internal class StructuredHtmlRichBlocksTest : HtmlProseDocumentFixture() {
                 .single()
                 .url,
         )
-        assertEquals(0xFF112233, disclosure.body[1].style.backgroundArgb)
+        assertEquals(0xFF112233, disclosure.body.blocks[1].style.backgroundArgb)
         assertEquals(
             "Nested body",
             disclosureBlock.disclosureBody.last().disclosureBody.single().block.plainText,
@@ -279,7 +383,7 @@ internal class StructuredHtmlRichBlocksTest : HtmlProseDocumentFixture() {
         val anchor = requireNotNull(prepared.document.anchors["deep"])
         val outerTarget = requireNotNull(
             resolveProseDisclosureAnchorTarget(
-                summary = assertIs<BookDocumentBlockContent.Disclosure>(outer.block.content).summary,
+                semantic = assertIs<BookDocumentBlockContent.Disclosure>(outer.block.content),
                 body = outer.disclosureBody,
                 offsetWithinDisclosure = anchor.offsetWithinBlock,
             ),
@@ -287,7 +391,7 @@ internal class StructuredHtmlRichBlocksTest : HtmlProseDocumentFixture() {
         val nested = outerTarget.block
         val nestedTarget = requireNotNull(
             resolveProseDisclosureAnchorTarget(
-                summary = assertIs<BookDocumentBlockContent.Disclosure>(nested.block.content).summary,
+                semantic = assertIs<BookDocumentBlockContent.Disclosure>(nested.block.content),
                 body = nested.disclosureBody,
                 offsetWithinDisclosure = outerTarget.offsetWithinBlock,
             ),

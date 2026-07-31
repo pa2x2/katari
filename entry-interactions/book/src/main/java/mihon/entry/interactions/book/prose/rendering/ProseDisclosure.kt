@@ -1,10 +1,11 @@
 package mihon.entry.interactions.book.prose
 
 import android.graphics.Typeface
+import android.text.Layout
 import android.widget.TextView
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -19,11 +20,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.LayoutCoordinates
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import mihon.entry.interactions.book.document.model.BookDocumentBlockContent
+import mihon.book.api.document.BookDocumentBlockContent
 import mihon.entry.interactions.book.document.reader.BookDocumentResourceLoader
 import mihon.entry.interactions.book.document.render.PreparedBookDocumentBlock
 
@@ -54,29 +54,57 @@ internal fun ProseDisclosure(
         onHiddenContentChanged(hasHiddenContent)
     }
     val bodyTarget = anchorOffsetWithinBlock?.let { offset ->
-        resolveProseDisclosureAnchorTarget(semantic.summary, body, offset)
+        resolveProseDisclosureAnchorTarget(semantic, body, offset)
     }
     LaunchedEffect(anchorOffsetWithinBlock, bodyTarget) {
         if (bodyTarget != null) expanded = true
     }
+    val summaryTypefaces by rememberInlineProseTypefaces(
+        loader = resourceLoader,
+        styles = semantic.summary.inlineStyles,
+    )
+    val summaryText = remember(semantic.summary, summaryTypefaces) {
+        semantic.summary.toSpanned(summaryTypefaces)
+    }
+    val summaryAnchorOffset = anchorOffsetWithinBlock
+        ?.takeIf { bodyTarget == null }
+        ?.coerceIn(0, semantic.summary.text.length)
     Column(modifier = modifier.fillMaxWidth()) {
-        Text(
-            text = (if (expanded) "▾ " else "▸ ") + semantic.summary,
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { expanded = !expanded }
-                .padding(vertical = 10.dp)
-                .then(
-                    if (anchorOffsetWithinBlock != null && bodyTarget == null) {
-                        Modifier.onGloballyPositioned { onAnchorTargetPositioned(it, 0) }
-                    } else {
-                        Modifier
-                    },
-                ),
-            color = foreground,
-            fontWeight = FontWeight.Bold,
-            fontSize = readerTextSizeSp.sp,
-        )
+                .padding(vertical = 10.dp),
+        ) {
+            Text(
+                text = if (expanded) "▾ " else "▸ ",
+                modifier = Modifier.clickable { expanded = !expanded },
+                color = foreground,
+                fontWeight = FontWeight.Bold,
+                fontSize = readerTextSizeSp.sp,
+            )
+            ProseRichText(
+                text = summaryText,
+                documentTextIdentity = buildString {
+                    append(blockKey)
+                    append(":summary:")
+                    append(semantic.summary.inlineStyles.hashCode())
+                    append(':')
+                    append(summaryTypefaces.keys.sorted().joinToString())
+                },
+                textColor = foreground.toArgbValue(),
+                textSizeSp = readerTextSizeSp,
+                typeface = Typeface.create(readerTypeface, Typeface.BOLD),
+                lineSpacingMultiplier = lineSpacingMultiplier,
+                textAlignment = readerTextAlignment,
+                justificationMode = Layout.JUSTIFICATION_MODE_NONE,
+                onAnchorClick = onAnchorClick,
+                onExternalLinkClick = onExternalLinkClick,
+                onNonLinkClick = { expanded = !expanded },
+                anchorCharacterOffset = summaryAnchorOffset,
+                onAnchorTargetPositioned = onAnchorTargetPositioned,
+                modifier = Modifier.weight(1f),
+            )
+        }
         if (expanded) {
             body.forEachIndexed { index, content ->
                 ProseDocumentBlock(

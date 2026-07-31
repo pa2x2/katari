@@ -7,11 +7,11 @@ import android.text.Spanned
 import android.text.style.StyleSpan
 import android.text.style.URLSpan
 import androidx.core.text.HtmlCompat
-import mihon.entry.interactions.book.document.model.BookDocumentInlineStyle
-import mihon.entry.interactions.book.document.model.BookDocumentInlineStyleRange
-import mihon.entry.interactions.book.document.model.BookDocumentLink
-import mihon.entry.interactions.book.document.model.BookDocumentStyle
-import mihon.entry.interactions.book.document.model.toBookDocumentLinkTarget
+import mihon.book.api.document.BookDocumentInlineStyle
+import mihon.book.api.document.BookDocumentInlineStyleRange
+import mihon.book.api.document.BookDocumentLink
+import mihon.book.api.document.BookDocumentStyle
+import mihon.book.api.document.toBookDocumentLinkTarget
 import org.jsoup.nodes.Element
 
 internal data class AnchorMarker(

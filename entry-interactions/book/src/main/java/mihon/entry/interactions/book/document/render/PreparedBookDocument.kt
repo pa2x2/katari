@@ -1,15 +1,15 @@
 package mihon.entry.interactions.book.document.render
 
 import android.text.Spanned
-import mihon.entry.interactions.book.document.model.BookDocument
-import mihon.entry.interactions.book.document.model.BookDocumentBlock
-import mihon.entry.interactions.book.document.model.BookDocumentBlockContent
-import mihon.entry.interactions.book.document.model.BookDocumentBlockId
+import mihon.book.api.document.BookDocument
+import mihon.book.api.document.BookDocumentBlock
+import mihon.book.api.document.BookDocumentBlockContent
+import mihon.book.api.document.BookDocumentBlockId
 
 /**
  * Android rendering projection of the processor-neutral [BookDocument].
  *
- * Keeping prepared spans outside the semantic model preserves the model's intended future move to `book-api`.
+ * Prepared spans remain an Android-owned projection of the shared semantic document contract.
  */
 internal data class PreparedBookDocument(
     val document: BookDocument,
@@ -20,8 +20,8 @@ internal data class PreparedBookDocument(
         require(blocks.map { it.block.id } == document.blocks.map(BookDocumentBlock::id)) {
             "prepared blocks must match the semantic document"
         }
-        require(combinedText.length == document.logicalExtent) {
-            "prepared text length must match the semantic document extent"
+        require(combinedText.toString() == document.content.text) {
+            "prepared text must exactly match canonical semantic document text"
         }
     }
 
@@ -34,7 +34,7 @@ internal data class PreparedBookDocumentBlock(
     val disclosureBody: List<PreparedBookDocumentBlock> = emptyList(),
 ) {
     init {
-        val semanticBody = (block.content as? BookDocumentBlockContent.Disclosure)?.body.orEmpty()
+        val semanticBody = (block.content as? BookDocumentBlockContent.Disclosure)?.body?.blocks.orEmpty()
         require(disclosureBody.map(PreparedBookDocumentBlock::block) == semanticBody) {
             "prepared disclosure blocks must match the semantic disclosure body"
         }

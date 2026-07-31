@@ -8,9 +8,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.book.api.BookLocator
+import mihon.book.api.document.resolvePosition
 import mihon.entry.interactions.book.BookReaderOpenResult
 import mihon.entry.interactions.book.OpenedBookReaderSession
-import mihon.entry.interactions.book.document.location.resolvePosition
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPolicy
 import mihon.entry.interactions.viewer.EntryChildWindow
 import mihon.entry.interactions.viewer.entryChildWindow
@@ -261,7 +261,7 @@ internal class HtmlProseChapterCoordinator(
         val locator = retainedSession.locator(session.chapter.id)
             ?.takeIf(content::validate)
             ?: BookLocator(content.resourceId, progression = 0.0)
-        val initialPosition = content.document.resolvePosition(locator)
+        val initialPosition = content.document.document.resolvePosition(locator)
             ?: content.document.document.positionAtProgression((locator.progression ?: 0.0).toFloat())
         val loaded = HtmlProseLoadedChapter(
             key = session.chapter.id.toString(),

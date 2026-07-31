@@ -2,7 +2,6 @@ package mihon.entry.interactions.book.prose
 
 import android.graphics.Typeface
 import android.text.Layout
-import android.text.Spanned
 import android.widget.TextView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -16,26 +15,20 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.layout.LayoutCoordinates
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import mihon.entry.interactions.book.document.model.BookDocumentBlockContent
-import mihon.entry.interactions.book.document.model.BookDocumentInlineStyleRange
-import mihon.entry.interactions.book.document.model.BookDocumentLink
-import mihon.entry.interactions.book.document.model.BookDocumentTableCellScope
-import mihon.entry.interactions.book.document.model.layoutBookDocumentTable
-import mihon.entry.interactions.book.document.reader.BookDocumentText
+import mihon.book.api.document.BookDocumentBlockContent
+import mihon.book.api.document.BookDocumentInlineStyleRange
+import mihon.book.api.document.BookDocumentLink
+import mihon.book.api.document.BookDocumentTableCellScope
+import mihon.book.api.document.layoutBookDocumentTable
 
 @Composable
 internal fun ProseTable(
@@ -60,10 +53,10 @@ internal fun ProseTable(
     }
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         semantic.caption?.let { caption ->
-            ProseTableText(
-                text = caption.toSpanned(
-                    links = semantic.captionLinks,
-                    inlineStyles = inlineStyles.within(0, caption.length),
+            ProseRichText(
+                text = caption.text.toSpanned(
+                    links = caption.links,
+                    inlineStyles = caption.inlineStyles,
                     inlineTypefaces = inlineTypefaces,
                 ),
                 documentTextIdentity = buildString {
@@ -104,7 +97,7 @@ internal fun ProseTable(
                                 it.rowIndex == rowIndex &&
                                     it.cellIndex == cell.sourceCellIndex
                             }
-                        ProseTableText(
+                        ProseRichText(
                             text = cell.displayText.toSpanned(
                                 links = cell.links,
                                 inlineStyles = inlineStyles.within(
@@ -173,67 +166,10 @@ internal fun ProseTable(
     }
 }
 
-@Composable
-internal fun ProseTableText(
-    text: Spanned,
-    documentTextIdentity: String,
-    textColor: Int,
-    textSizeSp: Float,
-    typeface: Typeface,
-    lineSpacingMultiplier: Float,
-    textAlignment: Int,
-    justificationMode: Int,
-    onAnchorClick: (String, TextView) -> Unit,
-    onExternalLinkClick: (String) -> Unit,
-    anchorCharacterOffset: Int?,
-    onAnchorTargetPositioned: (LayoutCoordinates, Int) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    var textView by remember(text, anchorCharacterOffset) { mutableStateOf<TextView?>(null) }
-    var coordinates by remember(text, anchorCharacterOffset) { mutableStateOf<LayoutCoordinates?>(null) }
-    LaunchedEffect(textView, coordinates, anchorCharacterOffset, onAnchorTargetPositioned) {
-        val target = anchorCharacterOffset ?: return@LaunchedEffect
-        val view = textView ?: return@LaunchedEffect
-        val positioned = coordinates?.takeIf(LayoutCoordinates::isAttached) ?: return@LaunchedEffect
-        val layout = view.layout ?: return@LaunchedEffect
-        val boundedOffset = target.coerceIn(0, view.text.length)
-        val lineTop = layout.getLineTop(layout.getLineForOffset(boundedOffset))
-        onAnchorTargetPositioned(positioned, lineTop)
-    }
-    BookDocumentText(
-        text = text,
-        documentTextIdentity = documentTextIdentity,
-        modifier = modifier.then(
-            if (anchorCharacterOffset != null) {
-                Modifier.onGloballyPositioned { coordinates = it }
-            } else {
-                Modifier
-            },
-        ),
-        textColor = textColor,
-        textSizeSp = textSizeSp,
-        typeface = typeface,
-        lineSpacingMultiplier = lineSpacingMultiplier,
-        textAlignment = textAlignment,
-        justificationMode = justificationMode,
-        onAnchorClick = onAnchorClick,
-        onExternalLinkClick = onExternalLinkClick,
-        onViewChanged = { textView = it },
-    )
-}
-
 internal fun BookDocumentBlockContent.Table.toDisplayRows(): List<DisplayTableRow> {
     val layout = checkNotNull(rows.layoutBookDocumentTable())
     check(layout.columnCount == columnCount)
-    var logicalOffset = caption?.let { it.length + 1 } ?: 0
-    return layout.rows.mapIndexed { rowIndex, row ->
-        val modelRow = rows[rowIndex]
-        val logicalRanges = modelRow.cells.mapIndexed { cellIndex, cell ->
-            if (cellIndex > 0) logicalOffset++
-            val start = logicalOffset
-            logicalOffset += cell.text.length
-            start until logicalOffset
-        }
+    return layout.rows.map { row ->
         val placements = row.placements.mapIndexed { cellIndex, placement ->
             placement.column to (placement to cellIndex)
         }.toMap()
@@ -244,7 +180,6 @@ internal fun BookDocumentBlockContent.Table.toDisplayRows(): List<DisplayTableRo
             if (placed != null) {
                 val (placement, sourceCellIndex) = placed
                 val cell = placement.cell
-                val logicalRange = logicalRanges[sourceCellIndex]
                 displayed += DisplayTableCell(
                     displayText = cell.text.ifEmpty { " " },
                     header = cell.header,
@@ -252,8 +187,8 @@ internal fun BookDocumentBlockContent.Table.toDisplayRows(): List<DisplayTableRo
                     columnSpan = cell.columnSpan,
                     links = cell.links,
                     sourceCellIndex = sourceCellIndex,
-                    logicalStart = logicalRange.first,
-                    logicalEndExclusive = logicalRange.last + 1,
+                    logicalStart = cell.content.range.start,
+                    logicalEndExclusive = cell.content.range.endExclusive,
                 )
                 column += cell.columnSpan
                 continue
@@ -265,12 +200,11 @@ internal fun BookDocumentBlockContent.Table.toDisplayRows(): List<DisplayTableRo
                 columnSpan = 1,
                 links = emptyList(),
                 sourceCellIndex = -1,
-                logicalStart = logicalOffset,
-                logicalEndExclusive = logicalOffset,
+                logicalStart = 0,
+                logicalEndExclusive = 0,
             )
             column++
         }
-        logicalOffset++
         DisplayTableRow(displayed)
     }
 }

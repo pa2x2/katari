@@ -91,6 +91,34 @@ internal class BookDocumentTextGestureTest : BookDocumentTextViewFixture() {
     }
 
     @Test
+    fun `local non-link action takes precedence over reader navigation`() {
+        val view = laidOutTextView(SpannableString("Disclosure summary")) as BookDocumentTextView
+        var localClickCount = 0
+        var readerTapForwarded = false
+        view.onDocumentNonLinkClick = { localClickCount += 1 }
+        view.selectionInteraction = BookDocumentTextInteraction(
+            observeSelections = false,
+            rootPositionInWindow = Offset.Zero,
+            onSelection = {},
+            isReaderTapBlocked = { false },
+            onBlockedReaderTap = {},
+            onNonLinkTap = { _, _ -> readerTapForwarded = true },
+        )
+        val x = view.layout.getPrimaryHorizontal(5)
+        val y = (view.layout.getLineTop(0) + view.layout.getLineBottom(0)) / 2f
+        val down = event(x, y, MotionEvent.ACTION_DOWN)
+        val up = event(x, y, MotionEvent.ACTION_UP)
+
+        view.dispatchTouchEvent(down)
+        view.dispatchTouchEvent(up)
+
+        down.recycle()
+        up.recycle()
+        assertEquals(1, localClickCount)
+        assertFalse(readerTapForwarded)
+    }
+
+    @Test
     fun `long press is not forwarded as reader navigation`() {
         val view = laidOutTextView(SpannableString("Long press selection")) as BookDocumentTextView
         var tapForwarded = false

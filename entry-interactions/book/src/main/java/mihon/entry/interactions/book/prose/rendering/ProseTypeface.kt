@@ -10,8 +10,12 @@ import android.text.style.BackgroundColorSpan
 import android.text.style.ForegroundColorSpan
 import android.text.style.MetricAffectingSpan
 import android.text.style.RelativeSizeSpan
+import android.text.style.StrikethroughSpan
 import android.text.style.StyleSpan
+import android.text.style.SubscriptSpan
+import android.text.style.SuperscriptSpan
 import android.text.style.TypefaceSpan
+import android.text.style.UnderlineSpan
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -20,8 +24,8 @@ import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import mihon.entry.interactions.book.document.model.BookDocumentFontFamily
-import mihon.entry.interactions.book.document.model.BookDocumentInlineStyleRange
+import mihon.book.api.document.BookDocumentFontFamily
+import mihon.book.api.document.BookDocumentInlineStyleRange
 import mihon.entry.interactions.book.document.reader.BookDocumentResourceLoader
 import mihon.entry.interactions.book.document.resource.PROSE_FONT_RESOURCE_REQUIREMENT
 import mihon.entry.interactions.book.document.resource.createValidatedProseTypeface
@@ -92,6 +96,27 @@ internal fun Spanned.withInlineDocumentStyles(
             if (range.style.bold) {
                 setSpan(StyleSpan(Typeface.BOLD), start, end, spanFlags)
             }
+            if (range.style.italic) {
+                setSpan(StyleSpan(Typeface.ITALIC), start, end, spanFlags)
+            }
+            if (range.style.underline) {
+                setSpan(UnderlineSpan(), start, end, spanFlags)
+            }
+            if (range.style.strikethrough) {
+                setSpan(StrikethroughSpan(), start, end, spanFlags)
+            }
+            if (range.style.subscript) {
+                setSpan(SubscriptSpan(), start, end, spanFlags)
+            }
+            if (range.style.superscript) {
+                setSpan(SuperscriptSpan(), start, end, spanFlags)
+            }
+            if (range.style.small && range.style.fontSizeScale == null) {
+                setSpan(RelativeSizeSpan(SMALL_TEXT_SCALE), start, end, spanFlags)
+            }
+            if (range.style.code && range.style.fontFamily == null) {
+                setSpan(TypefaceSpan("monospace"), start, end, spanFlags)
+            }
             when (val family = range.style.fontFamily) {
                 is BookDocumentFontFamily.Generic -> {
                     val name = when (family.family) {
@@ -105,6 +130,30 @@ internal fun Spanned.withInlineDocumentStyles(
                     setSpan(ProseTypefaceSpan(typeface), start, end, spanFlags)
                 }
                 null -> Unit
+            }
+        }
+    }
+}
+
+internal fun Spanned.withInlineDocumentTypefaces(
+    styles: List<BookDocumentInlineStyleRange>,
+    inlineTypefaces: Map<String, Typeface>,
+): Spanned {
+    if (inlineTypefaces.isEmpty()) return this
+    return SpannableString(this).apply {
+        styles.forEach { range ->
+            val family = range.style.fontFamily as? BookDocumentFontFamily.Resource
+                ?: return@forEach
+            val typeface = inlineTypefaces[family.resourceId] ?: return@forEach
+            val start = range.start.coerceIn(0, length)
+            val end = range.endExclusive.coerceIn(start, length)
+            if (end > start) {
+                setSpan(
+                    ProseTypefaceSpan(typeface),
+                    start,
+                    end,
+                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE,
+                )
             }
         }
     }
@@ -124,6 +173,8 @@ private class ProseTypefaceSpan(
         typeface = newTypeface
     }
 }
+
+private const val SMALL_TEXT_SCALE = 0.8f
 
 internal suspend fun BookDocumentResourceLoader.loadProseTypeface(
     context: android.content.Context,

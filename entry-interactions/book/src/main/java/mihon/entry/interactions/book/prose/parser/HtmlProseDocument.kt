@@ -22,10 +22,10 @@ internal data class HtmlProsePage(
 )
 
 /**
- * Adapts HTML prose into the internal processor-neutral structured BOOK document.
+ * Adapts HTML prose into the processor-neutral structured BOOK document.
  *
- * HTML and Jsoup stay on this producer side of the boundary; the resulting semantic model is intentionally suitable
- * for eventual promotion to `book-api` after its contract has been validated by another structured BOOK processor.
+ * HTML and Jsoup stay on this producer side of the boundary; only the platform-neutral semantic model crosses into
+ * `book-api`.
  */
 internal fun prepareHtmlBookDocument(
     resourceId: String,

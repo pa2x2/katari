@@ -8,12 +8,12 @@ import kotlinx.coroutines.withContext
 import mihon.book.api.BookContentResource
 import mihon.book.api.BookResourceAvailability
 import mihon.book.api.BookResourceCapability
+import mihon.book.api.document.BookDocument
+import mihon.book.api.document.BookDocumentBlock
+import mihon.book.api.document.BookDocumentBlockContent
+import mihon.book.api.document.BookDocumentFontFamily
 import mihon.entry.interactions.book.BookContentSession
 import mihon.entry.interactions.book.BookResourceRequirement
-import mihon.entry.interactions.book.document.model.BookDocument
-import mihon.entry.interactions.book.document.model.BookDocumentBlock
-import mihon.entry.interactions.book.document.model.BookDocumentBlockContent
-import mihon.entry.interactions.book.document.model.BookDocumentFontFamily
 import mihon.entry.interactions.book.document.reader.BookDocumentBinaryResource
 import mihon.entry.interactions.book.document.reader.BookDocumentResourceLoader
 import mihon.entry.interactions.book.document.resource.PROSE_FONT_RESOURCE_REQUIREMENT
@@ -43,7 +43,7 @@ internal fun BookDocument.resourceRequirements(): Map<String, BookResourceRequir
             when (val content = block.content) {
                 is BookDocumentBlockContent.Figure ->
                     register(content.image.resourceId, PROSE_IMAGE_RESOURCE_REQUIREMENT)
-                is BookDocumentBlockContent.Disclosure -> collect(content.body)
+                is BookDocumentBlockContent.Disclosure -> collect(content.body.blocks)
                 else -> Unit
             }
         }

@@ -23,8 +23,8 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import mihon.entry.interactions.book.document.model.BookDocumentBlockContent
-import mihon.entry.interactions.book.document.model.BookDocumentFontFamily
+import mihon.book.api.document.BookDocumentBlockContent
+import mihon.book.api.document.BookDocumentFontFamily
 import mihon.entry.interactions.book.document.reader.BookDocumentResourceLoader
 import mihon.entry.interactions.book.document.reader.BookDocumentText
 import mihon.entry.interactions.book.document.render.PreparedBookDocumentBlock
@@ -74,7 +74,7 @@ internal fun ProseDocumentBlock(
         styles = content.block.inlineStyles,
     )
     val styledRenderedText = remember(content.renderedText, content.block.inlineStyles, inlineTypefaces) {
-        content.renderedText.withInlineDocumentStyles(content.block.inlineStyles, inlineTypefaces)
+        content.renderedText.withInlineDocumentTypefaces(content.block.inlineStyles, inlineTypefaces)
     }
     var anchorTextView by remember(content.block.id, anchorOffsetWithinBlock) {
         mutableStateOf<TextView?>(null)
@@ -169,6 +169,12 @@ internal fun ProseDocumentBlock(
                 resourceLoader = resourceLoader,
                 foreground = blockForeground,
                 background = blockBackground,
+                documentTextIdentityPrefix = content.block.id.value,
+                readerTypeface = typeface,
+                readerTextSizeSp = readerTextSizeSp * style.fontSizeScale,
+                lineSpacingMultiplier = lineSpacingMultiplier,
+                onAnchorClick = onAnchorClick,
+                onExternalLinkClick = onExternalLinkClick,
                 modifier = renderedModifier,
             )
         }

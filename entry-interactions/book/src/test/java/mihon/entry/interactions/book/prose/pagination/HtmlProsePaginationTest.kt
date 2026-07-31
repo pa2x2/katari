@@ -12,7 +12,7 @@ import android.text.style.TypefaceSpan
 import android.util.TypedValue
 import android.view.View.MeasureSpec
 import android.widget.TextView
-import mihon.entry.interactions.book.document.model.BookDocumentBlockKind
+import mihon.book.api.document.BookDocumentBlockKind
 import mihon.entry.interactions.book.document.reader.BookDocumentSection
 import mihon.entry.interactions.book.document.reader.BookDocumentTextView
 import org.junit.Test
@@ -183,5 +183,42 @@ internal class HtmlProsePaginationTest : HtmlProseDocumentFixture() {
                 .getSpans(0, pages.single().text.length, StyleSpan::class.java)
                 .any { it.style == Typeface.BOLD },
         )
+    }
+
+    @Test
+    fun `inline size semantics are applied exactly once during pagination`() {
+        val prepared = prepare(
+            """
+                <p>Before <span data-katari-font-scale="1.25">scaled</span>
+                    and <small>small</small> after.</p>
+            """.trimIndent(),
+        )
+        val chapter = chapter()
+        val section = BookDocumentSection(
+            key = chapter.id.toString(),
+            owner = chapter,
+            document = prepared,
+            initialPosition = prepared.document.positionAtProgression(0f),
+            resourceLoader = null,
+        )
+
+        val page = paginateStructuredProse(
+            chapter = section,
+            paint = TextPaint(TextPaint.ANTI_ALIAS_FLAG).apply { textSize = 20f },
+            availableWidthPx = 800,
+            availableHeightPx = 800,
+            alignment = Layout.Alignment.ALIGN_NORMAL,
+            lineSpacingMultiplier = 1.2f,
+        ).single()
+
+        fun sizeChanges(value: String): List<Float> {
+            val start = page.text.toString().indexOf(value)
+            return page.text
+                .getSpans(start, start + value.length, RelativeSizeSpan::class.java)
+                .map(RelativeSizeSpan::getSizeChange)
+        }
+
+        assertEquals(listOf(1.25f), sizeChanges("scaled"))
+        assertEquals(listOf(0.8f), sizeChanges("small"))
     }
 }

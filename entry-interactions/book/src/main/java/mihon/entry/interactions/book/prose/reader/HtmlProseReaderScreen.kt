@@ -44,6 +44,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import mihon.book.api.document.BookDocumentPosition
 import mihon.entry.interactions.EntryChildWebViewAction
 import mihon.entry.interactions.EntryChildWebViewActionsMenu
 import mihon.entry.interactions.EntryChildWebViewResolution
@@ -56,7 +57,6 @@ import mihon.entry.interactions.book.BookReaderScaffold
 import mihon.entry.interactions.book.BookReaderTextSelection
 import mihon.entry.interactions.book.BookSelectionTranslationController
 import mihon.entry.interactions.book.R
-import mihon.entry.interactions.book.document.model.BookDocumentPosition
 import mihon.entry.interactions.book.document.reader.BookDocumentTextInteraction
 import mihon.entry.interactions.book.document.reader.BookDocumentTextSelection
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentTextInteraction

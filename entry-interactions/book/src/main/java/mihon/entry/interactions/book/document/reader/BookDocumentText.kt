@@ -28,6 +28,7 @@ internal fun BookDocumentText(
     trimTerminalLine: Boolean = false,
     onAnchorClick: (String, TextView) -> Unit,
     onExternalLinkClick: (String) -> Unit = {},
+    onNonLinkClick: (() -> Unit)? = null,
     onViewChanged: (TextView?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -35,6 +36,7 @@ internal fun BookDocumentText(
     val documentSectionKey = LocalBookDocumentSectionKey.current
     val currentAnchorClick by rememberUpdatedState(onAnchorClick)
     val currentExternalLinkClick by rememberUpdatedState(onExternalLinkClick)
+    val currentNonLinkClick by rememberUpdatedState(onNonLinkClick)
     val linkedText = remember(text, trimTerminalLine) {
         val displayText = if (trimTerminalLine) {
             text.withoutTerminalLayoutLine()
@@ -70,6 +72,7 @@ internal fun BookDocumentText(
                 this.documentSectionKey = documentSectionKey
                 onDocumentAnchorClick = currentAnchorClick
                 onDocumentExternalLinkClick = currentExternalLinkClick
+                onDocumentNonLinkClick = currentNonLinkClick
                 textView = this
                 onViewChanged(this)
             }
@@ -79,6 +82,7 @@ internal fun BookDocumentText(
             view.documentSectionKey = documentSectionKey
             view.onDocumentAnchorClick = currentAnchorClick
             view.onDocumentExternalLinkClick = currentExternalLinkClick
+            view.onDocumentNonLinkClick = currentNonLinkClick
             view.updateDocumentText(
                 identity = "$documentSectionKey:$documentTextIdentity",
                 linkedText = linkedText,
@@ -94,6 +98,7 @@ internal fun BookDocumentText(
             view.appliedDocumentTextIdentity = null
             view.onDocumentAnchorClick = null
             view.onDocumentExternalLinkClick = null
+            view.onDocumentNonLinkClick = null
             if (textView === view) textView = null
             onViewChanged(null)
             view.text = null

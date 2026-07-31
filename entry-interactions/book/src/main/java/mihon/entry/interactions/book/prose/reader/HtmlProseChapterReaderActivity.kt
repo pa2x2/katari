@@ -20,6 +20,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.book.api.BookLocator
+import mihon.book.api.document.BookDocumentPosition
+import mihon.book.api.document.locatorAt
+import mihon.book.api.document.resolvePosition
 import mihon.entry.interactions.EntryChildWebViewAction
 import mihon.entry.interactions.EntryChildWebViewResolution
 import mihon.entry.interactions.EntryInteractionActivity
@@ -37,9 +40,6 @@ import mihon.entry.interactions.book.BookSelectionTranslationController
 import mihon.entry.interactions.book.OpenedBookReaderSession
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.displayName
-import mihon.entry.interactions.book.document.location.locatorAt
-import mihon.entry.interactions.book.document.location.resolvePosition
-import mihon.entry.interactions.book.document.model.BookDocumentPosition
 import mihon.entry.interactions.book.document.reader.BookDocumentTextView
 import mihon.entry.interactions.launchEntryChildWebViewAction
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPreferences
@@ -315,7 +315,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
             val locator = retainedSession.currentLocator
                 ?.takeIf(content::validate)
                 ?: BookLocator(content.resourceId, progression = 0.0)
-            val initialPosition = content.document.resolvePosition(locator)
+            val initialPosition = content.document.document.resolvePosition(locator)
                 ?: content.document.document.positionAtProgression((locator.progression ?: 0.0).toFloat())
             openedSession = session
             latestLocator = locator
@@ -392,7 +392,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
         pageLoaded = true
         val locator = position
             ?.takeIf(loaded.document.document::contains)
-            ?.let(loaded.document::locatorAt)
+            ?.let(loaded.document.document::locatorAt)
             ?: BookLocator(
                 resourceId = loaded.document.document.resourceId,
                 progression = progression.coerceIn(0f, 1f).toDouble(),

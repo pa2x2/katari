@@ -1,12 +1,16 @@
 package mihon.entry.interactions.book.document.reader
 
 import android.text.SpannableString
-import mihon.entry.interactions.book.document.model.BookDocument
-import mihon.entry.interactions.book.document.model.BookDocumentBlock
-import mihon.entry.interactions.book.document.model.BookDocumentBlockId
-import mihon.entry.interactions.book.document.model.BookDocumentBlockKind
-import mihon.entry.interactions.book.document.model.BookDocumentBlockRole
-import mihon.entry.interactions.book.document.model.BookDocumentPosition
+import mihon.book.api.document.BookDocument
+import mihon.book.api.document.BookDocumentBlock
+import mihon.book.api.document.BookDocumentBlockContent
+import mihon.book.api.document.BookDocumentBlockId
+import mihon.book.api.document.BookDocumentBlockKind
+import mihon.book.api.document.BookDocumentBlockRole
+import mihon.book.api.document.BookDocumentContent
+import mihon.book.api.document.BookDocumentPosition
+import mihon.book.api.document.BookDocumentRichText
+import mihon.book.api.document.BookDocumentTextRange
 import mihon.entry.interactions.book.document.render.PreparedBookDocument
 import mihon.entry.interactions.book.document.render.PreparedBookDocumentBlock
 import kotlin.test.assertEquals
@@ -53,6 +57,12 @@ internal abstract class BookDocumentViewerFixture {
             BookDocumentBlock(
                 id = BookDocumentBlockId("block-$index"),
                 role = BookDocumentBlockRole(BookDocumentBlockKind.PARAGRAPH),
+                content = BookDocumentBlockContent.Text(
+                    BookDocumentRichText(
+                        text = text,
+                        range = BookDocumentTextRange(0, text.length),
+                    ),
+                ),
                 plainText = text,
                 sourceFragments = emptyList(),
                 logicalStart = start,
@@ -62,9 +72,11 @@ internal abstract class BookDocumentViewerFixture {
         val document = BookDocument(
             resourceId = "shared-resource",
             revision = "r1",
-            blocks = blocks,
-            anchors = emptyMap(),
-            logicalExtent = offset,
+            content = BookDocumentContent(
+                text = texts.joinToString("\n\n"),
+                blocks = blocks,
+                anchors = emptyMap(),
+            ),
         )
         val prepared = PreparedBookDocument(
             document = document,

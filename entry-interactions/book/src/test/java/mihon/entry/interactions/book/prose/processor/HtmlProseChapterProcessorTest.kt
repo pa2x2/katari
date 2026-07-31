@@ -11,15 +11,15 @@ import mihon.book.api.BookFailureReason
 import mihon.book.api.BookLocator
 import mihon.book.api.BookResourceAvailability
 import mihon.book.api.BookResourceCapability
+import mihon.book.api.document.BookDocumentBlockContent
+import mihon.book.api.document.BookDocumentBlockKind
+import mihon.book.api.document.BookDocumentBorderStyle
+import mihon.book.api.document.BookDocumentFontFamily
 import mihon.entry.interactions.book.BookByteRange
 import mihon.entry.interactions.book.BookContentSession
 import mihon.entry.interactions.book.BookOpenResult
 import mihon.entry.interactions.book.MaterializedBookResource
 import mihon.entry.interactions.book.OpenedBookResource
-import mihon.entry.interactions.book.document.model.BookDocumentBlockContent
-import mihon.entry.interactions.book.document.model.BookDocumentBlockKind
-import mihon.entry.interactions.book.document.model.BookDocumentBorderStyle
-import mihon.entry.interactions.book.document.model.BookDocumentFontFamily
 import mihon.entry.interactions.book.document.resource.PROSE_FONT_RESOURCE_REQUIREMENT
 import mihon.entry.interactions.book.document.resource.PROSE_IMAGE_RESOURCE_REQUIREMENT
 import mihon.entry.viewer.settings.StandardReaderCapabilities
@@ -190,8 +190,8 @@ class HtmlProseChapterProcessorTest {
         assertEquals(0xFF111111, inlineRange.style.backgroundArgb)
         assertEquals(0.9f, inlineRange.style.fontSizeScale)
         assertEquals(BookDocumentFontFamily.Resource("inline-font"), inlineRange.style.fontFamily)
-        assertEquals("A readable seal", figure.image.alternativeText)
-        assertEquals("Seal caption", figure.caption)
+        assertEquals("A readable seal", figure.image.alternativeText?.text)
+        assertEquals("Seal caption", figure.caption?.text)
         assertEquals(setOf("fixture-image", "fixture-font", "inline-font"), session.requiredResourceIds)
         assertEquals(
             mapOf(

@@ -1,10 +1,10 @@
 package mihon.entry.interactions.book.prose
 
 import android.text.SpannableStringBuilder
-import mihon.entry.interactions.book.document.model.BookDocumentBlockId
-import mihon.entry.interactions.book.document.model.BookDocumentBlockRole
-import mihon.entry.interactions.book.document.model.BookDocumentListMarkerStyle
-import mihon.entry.interactions.book.document.model.BookDocumentTableCellScope
+import mihon.book.api.document.BookDocumentBlockId
+import mihon.book.api.document.BookDocumentBlockRole
+import mihon.book.api.document.BookDocumentListMarkerStyle
+import mihon.book.api.document.BookDocumentTableCellScope
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode

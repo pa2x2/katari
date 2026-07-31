@@ -1,6 +1,6 @@
 package mihon.entry.interactions.book.prose
 
-import mihon.entry.interactions.book.document.model.BookDocumentBlockContent
+import mihon.book.api.document.BookDocumentBlockContent
 import mihon.entry.interactions.book.document.render.PreparedBookDocumentBlock
 
 internal data class ProseDisclosureAnchorTarget(
@@ -9,11 +9,11 @@ internal data class ProseDisclosureAnchorTarget(
 )
 
 internal fun resolveProseDisclosureAnchorTarget(
-    summary: String,
+    semantic: BookDocumentBlockContent.Disclosure,
     body: List<PreparedBookDocumentBlock>,
     offsetWithinDisclosure: Int,
 ): ProseDisclosureAnchorTarget? {
-    val bodyOffset = offsetWithinDisclosure - summary.length - 1
+    val bodyOffset = offsetWithinDisclosure - semantic.bodyStartWithinBlock
     if (bodyOffset < 0) return null
     val block = body.firstOrNull { candidate ->
         bodyOffset >= candidate.block.logicalStart &&
@@ -47,17 +47,17 @@ internal fun BookDocumentBlockContent.Table.resolveProseTableAnchorTarget(
     val target = offsetWithinBlock.coerceAtLeast(0)
     var logicalOffset = 0
     caption?.let { value ->
-        if (target <= value.length) {
-            return ProseTableAnchorTarget.Caption(target.coerceIn(0, value.length))
+        if (target <= value.range.endExclusive) {
+            return ProseTableAnchorTarget.Caption(
+                (target - value.range.start).coerceIn(0, value.text.length),
+            )
         }
-        logicalOffset = value.length + 1
+        logicalOffset = value.range.endExclusive + 1
     }
     rows.forEachIndexed { rowIndex, row ->
         val cells = row.cells.mapIndexed { cellIndex, cell ->
-            if (cellIndex > 0) logicalOffset++
-            val start = logicalOffset
-            logicalOffset += cell.text.length
-            Triple(cellIndex, start, logicalOffset)
+            logicalOffset = cell.content.range.endExclusive
+            Triple(cellIndex, cell.content.range.start, cell.content.range.endExclusive)
         }
         if (target <= logicalOffset) {
             val selected = cells.lastOrNull { (_, start) -> target >= start } ?: cells.first()

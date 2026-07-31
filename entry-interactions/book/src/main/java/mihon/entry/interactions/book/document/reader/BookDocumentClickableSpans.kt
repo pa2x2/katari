@@ -7,8 +7,8 @@ import android.text.style.ClickableSpan
 import android.text.style.URLSpan
 import android.view.View
 import android.widget.TextView
-import mihon.entry.interactions.book.document.model.BookDocumentLinkTarget
-import mihon.entry.interactions.book.document.model.toBookDocumentLinkTarget
+import mihon.book.api.document.BookDocumentLinkTarget
+import mihon.book.api.document.toBookDocumentLinkTarget
 
 internal fun Spanned.withoutTerminalLayoutLine(): Spanned {
     if (!endsWith('\n')) return this

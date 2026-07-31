@@ -1,13 +1,13 @@
 package mihon.entry.interactions.book.prose
 
-import mihon.entry.interactions.book.document.model.BookDocumentAlignment
-import mihon.entry.interactions.book.document.model.BookDocumentBorder
-import mihon.entry.interactions.book.document.model.BookDocumentBorderStyle
-import mihon.entry.interactions.book.document.model.BookDocumentFontFamily
-import mihon.entry.interactions.book.document.model.BookDocumentInlineStyle
-import mihon.entry.interactions.book.document.model.BookDocumentInlineStyleRange
-import mihon.entry.interactions.book.document.model.BookDocumentStyle
-import mihon.entry.interactions.book.document.model.BookDocumentWhiteSpace
+import mihon.book.api.document.BookDocumentAlignment
+import mihon.book.api.document.BookDocumentBorder
+import mihon.book.api.document.BookDocumentBorderStyle
+import mihon.book.api.document.BookDocumentFontFamily
+import mihon.book.api.document.BookDocumentInlineStyle
+import mihon.book.api.document.BookDocumentInlineStyleRange
+import mihon.book.api.document.BookDocumentStyle
+import mihon.book.api.document.BookDocumentWhiteSpace
 import org.jsoup.nodes.Element
 
 internal fun Element.documentStyle(): BookDocumentStyle {
@@ -62,14 +62,35 @@ internal fun Element.documentStyle(): BookDocumentStyle {
 
 internal fun Element.documentInlineStyle(): BookDocumentInlineStyle? {
     val style = documentStyle()
+    val tag = tagName().lowercase()
     val foreground = style.foregroundArgb.takeIf { hasAttr("data-katari-color") }
     val background = style.backgroundArgb.takeIf { hasAttr("data-katari-background") }
     val fontFamily = style.fontFamily.takeIf {
         hasAttr("data-katari-font-resource") || hasAttr("data-katari-font-generic")
     }
     val fontSizeScale = style.fontSizeScale.takeIf { hasAttr("data-katari-font-scale") }
-    val bold = hasAttr("data-katari-bold") && style.bold
-    if (foreground == null && background == null && fontFamily == null && fontSizeScale == null && !bold) {
+    val bold = tag == "b" || tag == "strong" || (hasAttr("data-katari-bold") && style.bold)
+    val italic = tag == "em" || tag == "i" || tag == "cite"
+    val underline = tag == "u"
+    val strikethrough = tag == "s" || tag == "strike"
+    val subscript = tag == "sub"
+    val superscript = tag == "sup"
+    val code = tag == "code"
+    val small = tag == "small"
+    if (
+        foreground == null &&
+        background == null &&
+        fontFamily == null &&
+        fontSizeScale == null &&
+        !bold &&
+        !italic &&
+        !underline &&
+        !strikethrough &&
+        !subscript &&
+        !superscript &&
+        !code &&
+        !small
+    ) {
         return null
     }
     return BookDocumentInlineStyle(
@@ -78,6 +99,13 @@ internal fun Element.documentInlineStyle(): BookDocumentInlineStyle? {
         fontFamily = fontFamily,
         fontSizeScale = fontSizeScale,
         bold = bold,
+        italic = italic,
+        underline = underline,
+        strikethrough = strikethrough,
+        subscript = subscript,
+        superscript = superscript,
+        code = code,
+        small = small,
     )
 }
 

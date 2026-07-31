@@ -3,13 +3,14 @@ package mihon.entry.interactions.book.prose
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.Spanned
-import mihon.entry.interactions.book.document.model.BookDocumentBlockContent
-import mihon.entry.interactions.book.document.model.BookDocumentBlockRole
-import mihon.entry.interactions.book.document.model.BookDocumentInlineStyleRange
-import mihon.entry.interactions.book.document.model.BookDocumentListItem
-import mihon.entry.interactions.book.document.model.BookDocumentStyle
-import mihon.entry.interactions.book.document.model.BookDocumentTableCell
-import mihon.entry.interactions.book.document.model.BookDocumentTableRow
+import mihon.book.api.document.BookDocumentBlockContent
+import mihon.book.api.document.BookDocumentBlockRole
+import mihon.book.api.document.BookDocumentInlineStyleRange
+import mihon.book.api.document.BookDocumentRichText
+import mihon.book.api.document.BookDocumentStyle
+import mihon.book.api.document.BookDocumentTableCellScope
+import mihon.book.api.document.BookDocumentTableRow
+import mihon.book.api.document.BookDocumentTextRange
 import mihon.entry.interactions.book.document.render.PreparedBookDocumentBlock
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
@@ -23,7 +24,6 @@ internal data class ParsedBlock(
     val explicitId: String?,
     val fragments: List<String>,
     val localAnchorOffsets: Map<String, Int> = emptyMap(),
-    val inlineStyles: List<BookDocumentInlineStyleRange> = emptyList(),
     val disclosureBody: List<PreparedBookDocumentBlock> = emptyList(),
     val referencedResources: Set<String> = emptySet(),
 ) {
@@ -32,7 +32,8 @@ internal data class ParsedBlock(
 }
 
 internal data class ParsedListItem(
-    val model: BookDocumentListItem,
+    val depth: Int,
+    val marker: String?,
     val renderedText: Spanned,
     val anchorOffsets: Map<String, Int>,
     val inlineStyles: List<BookDocumentInlineStyleRange>,
@@ -45,7 +46,10 @@ internal data class ParsedTableRow(
 )
 
 internal data class ParsedTableCell(
-    val model: BookDocumentTableCell,
+    val header: Boolean,
+    val scope: BookDocumentTableCellScope?,
+    val columnSpan: Int,
+    val rowSpan: Int,
     val renderedText: Spanned,
     val anchorOffsets: Map<String, Int>,
     val inlineStyles: List<BookDocumentInlineStyleRange>,
@@ -109,6 +113,13 @@ internal data class RenderedFragment(
     val anchorOffsets: Map<String, Int>,
     val inlineStyles: List<BookDocumentInlineStyleRange> = emptyList(),
 ) {
+    fun toRichText(rangeStart: Int): BookDocumentRichText = BookDocumentRichText(
+        text = text.toString(),
+        range = BookDocumentTextRange(rangeStart, rangeStart + text.length),
+        links = text.documentLinks(),
+        inlineStyles = inlineStyles,
+    )
+
     fun trim(): RenderedFragment {
         val value = text.toString()
         val start = value.indexOfFirst { !it.isWhitespace() }.takeIf { it >= 0 } ?: value.length

@@ -2,12 +2,11 @@ package mihon.entry.interactions.book.prose
 
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
-import mihon.entry.interactions.book.document.model.BookDocumentBlockContent
-import mihon.entry.interactions.book.document.model.BookDocumentBlockKind
-import mihon.entry.interactions.book.document.model.BookDocumentBlockRole
-import mihon.entry.interactions.book.document.model.BookDocumentInlineStyleRange
-import mihon.entry.interactions.book.document.model.BookDocumentListItem
-import mihon.entry.interactions.book.document.model.BookDocumentStyle
+import mihon.book.api.document.BookDocumentBlockContent
+import mihon.book.api.document.BookDocumentBlockKind
+import mihon.book.api.document.BookDocumentBlockRole
+import mihon.book.api.document.BookDocumentListItem
+import mihon.book.api.document.BookDocumentStyle
 import org.jsoup.nodes.Element
 
 internal fun StructuredHtmlProseParser.addList(
@@ -24,19 +23,25 @@ internal fun StructuredHtmlProseParser.addList(
     val anchorOffsets = linkedMapOf<String, Int>().apply {
         element.ownFragments().forEach { put(it, 0) }
     }
-    val inlineStyles = mutableListOf<BookDocumentInlineStyleRange>()
+    val semanticItems = mutableListOf<BookDocumentListItem>()
     val text = SpannableStringBuilder().apply {
         items.forEach { item ->
-            repeat(item.model.depth) { append("  ") }
-            append(item.model.marker ?: "•")
+            repeat(item.depth) { append("  ") }
+            append(item.marker ?: "•")
             append(' ')
             val itemStart = length
             append(item.renderedText)
+            semanticItems += BookDocumentListItem(
+                content = RenderedFragment(
+                    text = item.renderedText,
+                    anchorOffsets = item.anchorOffsets,
+                    inlineStyles = item.inlineStyles,
+                ).toRichText(itemStart),
+                depth = item.depth,
+                marker = item.marker,
+            )
             item.anchorOffsets.forEach { (fragment, offset) ->
                 anchorOffsets.putIfAbsent(fragment, itemStart + offset)
-            }
-            item.inlineStyles.forEach { inline ->
-                inlineStyles += inline.shifted(itemStart)
             }
             append('\n')
         }
@@ -49,12 +54,11 @@ internal fun StructuredHtmlProseParser.addList(
             kind = BookDocumentBlockKind.LIST,
             ordered = ordered,
         ),
-        content = BookDocumentBlockContent.ListBlock(ordered, start, markerStyle, items.map(ParsedListItem::model)),
+        content = BookDocumentBlockContent.ListBlock(ordered, start, markerStyle, semanticItems),
         style = style,
         explicitId = element.id().ifBlank { null },
         fragments = (inheritedFragments + element.fragments()).distinct(),
         localAnchorOffsets = anchorOffsets,
-        inlineStyles = inlineStyles,
     )
 }
 
@@ -74,11 +78,8 @@ internal fun StructuredHtmlProseParser.collectListItems(
         val rendered = renderHtml(own).trim()
         if (rendered.text.any(Char::isReadableDocumentCharacter)) {
             destination += ParsedListItem(
-                model = BookDocumentListItem(
-                    text = rendered.text.toString(),
-                    depth = depth,
-                    marker = if (ordered) markerStyle.marker(index) else "•",
-                ),
+                depth = depth,
+                marker = if (ordered) markerStyle.marker(index) else "•",
                 renderedText = rendered.text,
                 anchorOffsets = rendered.anchorOffsets,
                 inlineStyles = rendered.inlineStyles,

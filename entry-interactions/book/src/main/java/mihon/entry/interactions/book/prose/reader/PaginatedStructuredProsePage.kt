@@ -27,8 +27,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.book.document.model.BookDocumentBlockContent
-import mihon.entry.interactions.book.document.model.BookDocumentPosition
+import mihon.book.api.document.BookDocumentBlockContent
+import mihon.book.api.document.BookDocumentPosition
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentSectionKey
 import mihon.entry.interactions.book.document.render.PreparedBookDocument
 import mihon.entry.interactions.book.document.render.PreparedBookDocumentBlock

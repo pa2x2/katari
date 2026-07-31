@@ -2,15 +2,15 @@ package mihon.entry.interactions.book.prose
 
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
-import mihon.entry.interactions.book.document.model.BookDocumentBlockContent
-import mihon.entry.interactions.book.document.model.BookDocumentBlockKind
-import mihon.entry.interactions.book.document.model.BookDocumentBlockRole
-import mihon.entry.interactions.book.document.model.BookDocumentInlineStyleRange
-import mihon.entry.interactions.book.document.model.BookDocumentStyle
-import mihon.entry.interactions.book.document.model.BookDocumentTableCell
-import mihon.entry.interactions.book.document.model.BookDocumentTableRow
-import mihon.entry.interactions.book.document.model.MAX_BOOK_DOCUMENT_TABLE_CELL_SPAN
-import mihon.entry.interactions.book.document.model.layoutBookDocumentTable
+import mihon.book.api.document.BookDocumentBlockContent
+import mihon.book.api.document.BookDocumentBlockKind
+import mihon.book.api.document.BookDocumentBlockRole
+import mihon.book.api.document.BookDocumentRichText
+import mihon.book.api.document.BookDocumentStyle
+import mihon.book.api.document.BookDocumentTableCell
+import mihon.book.api.document.BookDocumentTableRow
+import mihon.book.api.document.MAX_BOOK_DOCUMENT_TABLE_CELL_SPAN
+import mihon.book.api.document.layoutBookDocumentTable
 import org.jsoup.nodes.Element
 
 internal fun StructuredHtmlProseParser.addTable(
@@ -24,20 +24,15 @@ internal fun StructuredHtmlProseParser.addTable(
             .take(MAX_TABLE_CELLS_PER_ROW)
             .map { cell ->
                 val rendered = renderHtml(cell).trim()
-                val text = rendered.text.toString()
                 ParsedTableCell(
-                    model = BookDocumentTableCell(
-                        text = text,
-                        header = cell.tagName() == "th",
-                        scope = cell.attr("scope").toTableScope(),
-                        columnSpan = cell.attr("colspan").toIntOrNull()
-                            ?.coerceIn(1, MAX_BOOK_DOCUMENT_TABLE_CELL_SPAN)
-                            ?: 1,
-                        rowSpan = cell.attr("rowspan").toIntOrNull()
-                            ?.coerceIn(1, MAX_BOOK_DOCUMENT_TABLE_CELL_SPAN)
-                            ?: 1,
-                        links = rendered.text.documentLinks(),
-                    ),
+                    header = cell.tagName() == "th",
+                    scope = cell.attr("scope").toTableScope(),
+                    columnSpan = cell.attr("colspan").toIntOrNull()
+                        ?.coerceIn(1, MAX_BOOK_DOCUMENT_TABLE_CELL_SPAN)
+                        ?: 1,
+                    rowSpan = cell.attr("rowspan").toIntOrNull()
+                        ?.coerceIn(1, MAX_BOOK_DOCUMENT_TABLE_CELL_SPAN)
+                        ?: 1,
                     renderedText = rendered.text,
                     anchorOffsets = rendered.anchorOffsets,
                     inlineStyles = rendered.inlineStyles,
@@ -45,7 +40,21 @@ internal fun StructuredHtmlProseParser.addTable(
             }
         cells.takeIf(List<*>::isNotEmpty)?.let {
             ParsedTableRow(
-                model = BookDocumentTableRow(cells.map(ParsedTableCell::model)),
+                model = BookDocumentTableRow(
+                    cells.map { cell ->
+                        BookDocumentTableCell(
+                            content = RenderedFragment(
+                                text = cell.renderedText,
+                                anchorOffsets = cell.anchorOffsets,
+                                inlineStyles = cell.inlineStyles,
+                            ).toRichText(rangeStart = 0),
+                            header = cell.header,
+                            scope = cell.scope,
+                            columnSpan = cell.columnSpan,
+                            rowSpan = cell.rowSpan,
+                        )
+                    },
+                ),
                 cells = cells,
                 fragments = row.ownFragments(),
             )
@@ -69,39 +78,46 @@ internal fun StructuredHtmlProseParser.addTable(
     }
     val captionRendered = element.selectFirst("caption")?.let(::renderHtml)?.trim()
         ?.takeIf { it.text.any(Char::isReadableDocumentCharacter) }
-    val caption = captionRendered?.text?.toString()
     val anchorOffsets = linkedMapOf<String, Int>().apply {
         element.ownFragments().forEach { put(it, 0) }
     }
-    val inlineStyles = mutableListOf<BookDocumentInlineStyleRange>()
-    val text = SpannableStringBuilder().apply {
-        captionRendered?.let { rendered ->
-            val captionStart = length
-            append(rendered.text)
-            rendered.anchorOffsets.forEach { (fragment, offset) ->
-                anchorOffsets.putIfAbsent(fragment, captionStart + offset)
-            }
-            rendered.inlineStyles.forEach { inline ->
-                inlineStyles += inline.shifted(captionStart)
-            }
-            append('\n')
+    var semanticCaption: BookDocumentRichText? = null
+    val semanticRows = mutableListOf<BookDocumentTableRow>()
+    val text = SpannableStringBuilder()
+    captionRendered?.let { rendered ->
+        val captionStart = text.length
+        text.append(rendered.text)
+        semanticCaption = rendered.toRichText(captionStart)
+        rendered.anchorOffsets.forEach { (fragment, offset) ->
+            anchorOffsets.putIfAbsent(fragment, captionStart + offset)
         }
-        parsedRows.forEach { row ->
-            val rowStart = length
-            row.fragments.forEach { fragment -> anchorOffsets.putIfAbsent(fragment, rowStart) }
-            row.cells.forEachIndexed { index, cell ->
-                if (index > 0) append('\t')
-                val cellStart = length
-                append(cell.renderedText)
-                cell.anchorOffsets.forEach { (fragment, offset) ->
-                    anchorOffsets.putIfAbsent(fragment, cellStart + offset)
-                }
-                cell.inlineStyles.forEach { inline ->
-                    inlineStyles += inline.shifted(cellStart)
-                }
+        text.append('\n')
+    }
+    parsedRows.forEach { row ->
+        val rowStart = text.length
+        row.fragments.forEach { fragment -> anchorOffsets.putIfAbsent(fragment, rowStart) }
+        val semanticCells = mutableListOf<BookDocumentTableCell>()
+        row.cells.forEachIndexed { index, cell ->
+            if (index > 0) text.append('\t')
+            val cellStart = text.length
+            text.append(cell.renderedText)
+            semanticCells += BookDocumentTableCell(
+                content = RenderedFragment(
+                    text = cell.renderedText,
+                    anchorOffsets = cell.anchorOffsets,
+                    inlineStyles = cell.inlineStyles,
+                ).toRichText(cellStart),
+                header = cell.header,
+                scope = cell.scope,
+                columnSpan = cell.columnSpan,
+                rowSpan = cell.rowSpan,
+            )
+            cell.anchorOffsets.forEach { (fragment, offset) ->
+                anchorOffsets.putIfAbsent(fragment, cellStart + offset)
             }
-            append('\n')
         }
+        semanticRows += BookDocumentTableRow(semanticCells)
+        text.append('\n')
     }
     val rendered = RenderedFragment(SpannableString(text), anchorOffsets)
         .trimEnd()
@@ -111,15 +127,13 @@ internal fun StructuredHtmlProseParser.addTable(
         logicalPlainText = rendered.text.toString().trim(),
         role = BookDocumentBlockRole(BookDocumentBlockKind.TABLE),
         content = BookDocumentBlockContent.Table(
-            caption = caption,
-            captionLinks = captionRendered?.text?.documentLinks().orEmpty(),
-            rows = rows,
+            caption = semanticCaption,
+            rows = semanticRows,
             columnCount = columnCount,
         ),
         style = style,
         explicitId = element.id().ifBlank { null },
         fragments = (inheritedFragments + element.fragments()).distinct(),
         localAnchorOffsets = rendered.anchorOffsets,
-        inlineStyles = inlineStyles,
     )
 }

@@ -1,6 +1,6 @@
 package mihon.entry.interactions.book.document.reader
 
-import mihon.entry.interactions.book.document.model.BookDocumentPosition
+import mihon.book.api.document.BookDocumentPosition
 import mihon.entry.interactions.book.document.render.PreparedBookDocument
 import mihon.entry.interactions.book.document.render.PreparedBookDocumentBlock
 import mihon.entry.interactions.viewer.EntryChildDirection

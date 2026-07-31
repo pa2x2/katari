@@ -15,7 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.flow.StateFlow
-import mihon.entry.interactions.book.document.model.BookDocumentFontFamily
+import mihon.book.api.document.BookDocumentFontFamily
 import mihon.entry.interactions.settings.HtmlProseSettingsProvider
 import mihon.entry.interactions.viewer.EntryChildTransition
 import mihon.entry.viewer.settings.ResolvedViewerSetting

@@ -1,12 +1,12 @@
 package mihon.entry.interactions.book.prose
 
 import android.text.SpannableString
-import mihon.entry.interactions.book.document.model.BookDocumentBlockContent
-import mihon.entry.interactions.book.document.model.BookDocumentBlockKind
-import mihon.entry.interactions.book.document.model.BookDocumentBlockRole
-import mihon.entry.interactions.book.document.model.BookDocumentFontFamily
-import mihon.entry.interactions.book.document.model.BookDocumentStyle
-import mihon.entry.interactions.book.document.model.BookDocumentWhiteSpace
+import mihon.book.api.document.BookDocumentBlockContent
+import mihon.book.api.document.BookDocumentBlockKind
+import mihon.book.api.document.BookDocumentBlockRole
+import mihon.book.api.document.BookDocumentFontFamily
+import mihon.book.api.document.BookDocumentStyle
+import mihon.book.api.document.BookDocumentWhiteSpace
 import org.jsoup.nodes.Element
 
 internal fun StructuredHtmlProseParser.addParagraph(
@@ -78,13 +78,17 @@ internal fun StructuredHtmlProseParser.addTextBlock(
         logicalPlainText = styled.toString().trim(),
         role = role,
         content = BookDocumentBlockContent.Text(
+            value = RenderedFragment(
+                text = styled,
+                anchorOffsets = rendered.anchorOffsets,
+                inlineStyles = rendered.inlineStyles,
+            ).toRichText(rangeStart = 0),
             preformatted = style.whiteSpace != BookDocumentWhiteSpace.NORMAL,
         ),
         style = style,
         explicitId = element.id().ifBlank { null },
         fragments = (inheritedFragments + element.fragments()).distinct(),
         localAnchorOffsets = rendered.anchorOffsets,
-        inlineStyles = rendered.inlineStyles,
     )
 }
 
@@ -103,7 +107,10 @@ internal fun StructuredHtmlProseParser.addPreformatted(
         renderedText = rendered.text,
         logicalPlainText = rendered.text.toString().trim(),
         role = BookDocumentBlockRole(BookDocumentBlockKind.PREFORMATTED),
-        content = BookDocumentBlockContent.Text(preformatted = true),
+        content = BookDocumentBlockContent.Text(
+            value = rendered.toRichText(rangeStart = 0),
+            preformatted = true,
+        ),
         style = preStyle,
         explicitId = element.id().ifBlank { null },
         fragments = (inheritedFragments + element.fragments()).distinct(),

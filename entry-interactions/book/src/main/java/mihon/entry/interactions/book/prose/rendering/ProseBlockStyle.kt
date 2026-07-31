@@ -17,12 +17,21 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
-import mihon.entry.interactions.book.document.model.BookDocumentAlignment
-import mihon.entry.interactions.book.document.model.BookDocumentBorderStyle
-import mihon.entry.interactions.book.document.model.BookDocumentInlineStyleRange
-import mihon.entry.interactions.book.document.model.BookDocumentLink
-import mihon.entry.interactions.book.document.model.BookDocumentLinkTarget
-import mihon.entry.interactions.book.document.model.BookDocumentStyle
+import mihon.book.api.document.BookDocumentAlignment
+import mihon.book.api.document.BookDocumentBorderStyle
+import mihon.book.api.document.BookDocumentInlineStyleRange
+import mihon.book.api.document.BookDocumentLink
+import mihon.book.api.document.BookDocumentLinkTarget
+import mihon.book.api.document.BookDocumentRichText
+import mihon.book.api.document.BookDocumentStyle
+
+internal fun BookDocumentRichText.toSpanned(
+    inlineTypefaces: Map<String, Typeface>,
+): Spanned = text.toSpanned(
+    links = links,
+    inlineStyles = inlineStyles,
+    inlineTypefaces = inlineTypefaces,
+)
 
 internal fun String.toSpanned(
     links: List<BookDocumentLink>,

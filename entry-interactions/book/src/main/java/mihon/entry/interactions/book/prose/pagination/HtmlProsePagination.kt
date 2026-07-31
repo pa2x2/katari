@@ -14,16 +14,20 @@ import android.text.style.BackgroundColorSpan
 import android.text.style.ForegroundColorSpan
 import android.text.style.MetricAffectingSpan
 import android.text.style.RelativeSizeSpan
+import android.text.style.StrikethroughSpan
 import android.text.style.StyleSpan
+import android.text.style.SubscriptSpan
+import android.text.style.SuperscriptSpan
 import android.text.style.TypefaceSpan
-import mihon.entry.interactions.book.document.model.BookDocumentAlignment
-import mihon.entry.interactions.book.document.model.BookDocumentBlockContent
-import mihon.entry.interactions.book.document.model.BookDocumentFontFamily
-import mihon.entry.interactions.book.document.model.BookDocumentInlineStyle
-import mihon.entry.interactions.book.document.model.BookDocumentInlineStyleRange
-import mihon.entry.interactions.book.document.model.BookDocumentPosition
-import mihon.entry.interactions.book.document.model.BookDocumentStyle
-import mihon.entry.interactions.book.document.model.BookDocumentWhiteSpace
+import android.text.style.UnderlineSpan
+import mihon.book.api.document.BookDocumentAlignment
+import mihon.book.api.document.BookDocumentBlockContent
+import mihon.book.api.document.BookDocumentFontFamily
+import mihon.book.api.document.BookDocumentInlineStyle
+import mihon.book.api.document.BookDocumentInlineStyleRange
+import mihon.book.api.document.BookDocumentPosition
+import mihon.book.api.document.BookDocumentStyle
+import mihon.book.api.document.BookDocumentWhiteSpace
 import mihon.entry.interactions.book.document.reader.applyBookDocumentTextLayoutPolicy
 import mihon.entry.interactions.book.document.render.PreparedBookDocumentBlock
 
@@ -249,13 +253,31 @@ private fun Spanned.withPaginationStyles(
         )
     }
     inlineStyles.forEach { range ->
-        applyPaginationStyle(
+        applyPaginationResourceTypeface(
             start = range.start,
             endExclusive = range.endExclusive,
-            style = range.style,
+            family = range.style.fontFamily as? BookDocumentFontFamily.Resource,
             resourceTypefaces = resourceTypefaces,
         )
     }
+}
+
+private fun Spannable.applyPaginationResourceTypeface(
+    start: Int,
+    endExclusive: Int,
+    family: BookDocumentFontFamily.Resource?,
+    resourceTypefaces: Map<String, Typeface>,
+) {
+    val typeface = family?.resourceId?.let(resourceTypefaces::get) ?: return
+    val boundedStart = start.coerceIn(0, length)
+    val boundedEnd = endExclusive.coerceIn(boundedStart, length)
+    if (boundedEnd <= boundedStart) return
+    setSpan(
+        PaginationTypefaceSpan(typeface),
+        boundedStart,
+        boundedEnd,
+        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE,
+    )
 }
 
 private fun Spannable.applyPaginationStyle(
@@ -281,6 +303,27 @@ private fun Spannable.applyPaginationStyle(
     if (style.bold) {
         setSpan(StyleSpan(Typeface.BOLD), boundedStart, boundedEnd, flags)
     }
+    if (style.italic) {
+        setSpan(StyleSpan(Typeface.ITALIC), boundedStart, boundedEnd, flags)
+    }
+    if (style.underline) {
+        setSpan(UnderlineSpan(), boundedStart, boundedEnd, flags)
+    }
+    if (style.strikethrough) {
+        setSpan(StrikethroughSpan(), boundedStart, boundedEnd, flags)
+    }
+    if (style.subscript) {
+        setSpan(SubscriptSpan(), boundedStart, boundedEnd, flags)
+    }
+    if (style.superscript) {
+        setSpan(SuperscriptSpan(), boundedStart, boundedEnd, flags)
+    }
+    if (style.small && style.fontSizeScale == null) {
+        setSpan(RelativeSizeSpan(SMALL_TEXT_SCALE), boundedStart, boundedEnd, flags)
+    }
+    if (style.code && style.fontFamily == null) {
+        setSpan(TypefaceSpan("monospace"), boundedStart, boundedEnd, flags)
+    }
     when (val family = style.fontFamily) {
         is BookDocumentFontFamily.Generic -> {
             val name = when (family.family) {
@@ -299,6 +342,8 @@ private fun Spannable.applyPaginationStyle(
 
 private fun BookDocumentStyle.hasInlinePaginationStyle(): Boolean =
     foregroundArgb != null || fontFamily != null || fontSizeScale != 1f || bold
+
+private const val SMALL_TEXT_SCALE = 0.8f
 
 private fun BookDocumentAlignment.toLayoutAlignment(): Layout.Alignment = when (this) {
     BookDocumentAlignment.START -> Layout.Alignment.ALIGN_NORMAL
