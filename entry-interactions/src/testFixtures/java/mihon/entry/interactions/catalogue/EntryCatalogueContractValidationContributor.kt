@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.catalogue
 
 import androidx.paging.PagingSource
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
@@ -10,10 +10,19 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
+import mihon.entry.interactions.catalogue.host.EntryCatalogueHostSource
+import mihon.entry.interactions.catalogue.host.EntryCatalogueHostSourceResolution
+import mihon.entry.interactions.catalogue.host.EntryCatalogueProviderHost
+import mihon.entry.interactions.catalogue.runtime.DefaultEntryCatalogueFeature
+import mihon.entry.interactions.catalogue.runtime.EntryCatalogueGraphStateValidator
+import mihon.entry.interactions.entryContentType
+import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
+import mihon.feature.graph.FeatureBehaviorContract
 import mihon.feature.graph.FeatureContractScenarioId
+import mihon.feature.graph.FeatureIntegrationId
 import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.validation.FeatureContractReference
 import mihon.feature.graph.validation.FeatureContractScenario
@@ -58,7 +67,10 @@ class EntryCatalogueContractValidationContributor : FeatureValidationContributor
                                 false,
                             )
                         }
-                        val evaluation = productionSubjectEvaluation(type, EntryCatalogueFeatureContributor)
+                        val evaluation = productionSubjectEvaluation(
+                            type,
+                            EntryCatalogueFeatureContributor,
+                        )
                         val feature = DefaultEntryCatalogueFeature(
                             host,
                             EntryCatalogueGraphStateValidator(evaluation),
@@ -103,15 +115,20 @@ class EntryCatalogueContractValidationContributor : FeatureValidationContributor
                     reference,
                     contract.integration,
                 ) {
-                    listOf(contextEvidence(SOURCE_DESCRIPTION_CONTEXT, SourceDescriptionEvidence(description)))
+                    listOf(
+                        contextEvidence(
+                            SOURCE_DESCRIPTION_CONTEXT,
+                            SourceDescriptionEvidence(description),
+                        ),
+                    )
                 },
             )
         }
     }
 
     private data class Contract(
-        val integration: mihon.feature.graph.FeatureIntegrationId,
-        val contract: mihon.feature.graph.FeatureBehaviorContract,
+        val integration: FeatureIntegrationId,
+        val contract: FeatureBehaviorContract,
     )
 
     private companion object {
@@ -123,7 +140,10 @@ class EntryCatalogueContractValidationContributor : FeatureValidationContributor
         )
         val contracts = listOf(
             Contract(SOURCE_DESCRIPTION_INTEGRATION_ID, EntrySourceDescriptionBehaviorContract),
-            Contract(CATALOGUE_AVAILABILITY_INTEGRATION_ID, EntryCatalogueAvailabilityBehaviorContract),
+            Contract(
+                CATALOGUE_AVAILABILITY_INTEGRATION_ID,
+                EntryCatalogueAvailabilityBehaviorContract,
+            ),
             Contract(LATEST_AVAILABILITY_INTEGRATION_ID, EntryLatestAvailabilityBehaviorContract),
         )
     }

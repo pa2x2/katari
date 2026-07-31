@@ -1,8 +1,8 @@
-package mihon.translation.runtime
+package mihon.translation.runtime.preference
 
-import mihon.translation.api.TranslationEngineId
-import mihon.translation.api.TranslationLanguageTag
-import mihon.translation.api.TranslationTargetLanguageSelection
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.language.TranslationLanguageTag
+import mihon.translation.api.request.TranslationTargetLanguageSelection
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 

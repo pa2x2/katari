@@ -1,7 +1,12 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.history
 
 import io.mockk.coVerify
 import io.mockk.mockk
+import mihon.entry.interactions.media.EntryMediaSessionCapability
+import mihon.entry.interactions.media.session.EntryMediaSessionActivity
+import mihon.entry.interactions.media.session.EntryMediaSessionEvent
+import mihon.entry.interactions.media.session.EntryMediaSessionExecutionEvent
+import mihon.entry.interactions.media.session.mediaSessionContractEvent
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.verifyFeatureContract
 import mihon.feature.graph.FeatureContractScenarioId

@@ -1,14 +1,14 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.migration.consequence.cover
 
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
-import mihon.entry.interactions.host.EntryMigrationConsequenceHost
-import mihon.entry.interactions.host.EntryMigrationCustomCoverHost
-import mihon.entry.interactions.host.EntryMigrationCustomCoverPayload
-import mihon.entry.interactions.host.EntryMigrationPersistedPayload
+import mihon.entry.interactions.migration.host.EntryMigrationConsequenceHost
+import mihon.entry.interactions.migration.host.EntryMigrationCustomCoverHost
+import mihon.entry.interactions.migration.host.EntryMigrationCustomCoverPayload
+import mihon.entry.interactions.migration.host.EntryMigrationPersistedPayload
 import org.junit.jupiter.api.Test
 
 class EntryMigrationCustomCoverOrphanCleanupTest {

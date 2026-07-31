@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.library.membership
 
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entry.model.DuplicateEntryCandidate

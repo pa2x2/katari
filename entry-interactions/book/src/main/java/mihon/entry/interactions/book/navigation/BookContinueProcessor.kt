@@ -1,9 +1,10 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.navigation
 
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.EntryContinueProcessor
-import mihon.entry.interactions.EntryOpenOptions
+import mihon.entry.interactions.book.runtime.requireBook
+import mihon.entry.interactions.navigation.EntryContinueProcessor
+import mihon.entry.interactions.navigation.EntryOpenOptions
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter

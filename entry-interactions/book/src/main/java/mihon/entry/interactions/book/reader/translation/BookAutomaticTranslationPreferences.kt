@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.reader.translation
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow

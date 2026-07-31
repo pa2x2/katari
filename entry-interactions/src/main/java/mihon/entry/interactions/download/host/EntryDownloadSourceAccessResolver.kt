@@ -1,5 +1,6 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download.host
 
+import mihon.entry.interactions.download.runtime.EntryDownloadSourceAccess
 import tachiyomi.domain.source.model.UnifiedStubSource
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.source.local.LocalSource

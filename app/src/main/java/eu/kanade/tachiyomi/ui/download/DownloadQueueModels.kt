@@ -2,10 +2,10 @@ package eu.kanade.tachiyomi.ui.download
 
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.EntryDownloadPresentation
-import mihon.entry.interactions.EntryDownloadQueueItem
-import mihon.entry.interactions.description
-import mihon.entry.interactions.resolve
+import mihon.entry.interactions.download.EntryDownloadPresentation
+import mihon.entry.interactions.download.EntryDownloadQueueItem
+import mihon.entry.interactions.download.description
+import mihon.entry.interactions.download.resolve
 
 data class DownloadQueueHeaderModel(
     val id: Long,

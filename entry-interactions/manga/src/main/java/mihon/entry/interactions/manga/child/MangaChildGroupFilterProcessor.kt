@@ -1,7 +1,8 @@
-package mihon.entry.interactions.manga
+package mihon.entry.interactions.manga.child
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.EntryChildGroupFilterProcessor
+import mihon.entry.interactions.manga.runtime.requireManga
+import mihon.entry.interactions.runtime.EntryChildGroupFilterProcessor
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 

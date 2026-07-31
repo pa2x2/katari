@@ -1,7 +1,7 @@
 package mihon.translation.runtime.system
 
-import mihon.translation.api.TranslationLanguageSupportInspection
-import mihon.translation.api.TranslationLanguageTag
+import mihon.translation.api.language.TranslationLanguageSupportInspection
+import mihon.translation.api.language.TranslationLanguageTag
 
 internal data class AndroidSystemTranslationPair(
     val source: TranslationLanguageTag,

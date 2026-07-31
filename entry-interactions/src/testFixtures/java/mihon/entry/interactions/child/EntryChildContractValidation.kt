@@ -1,8 +1,18 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.child
 
 import io.mockk.mockk
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import mihon.entry.interactions.child.backup.ENTRY_CHILD_GROUP_FILTER_BACKUP_RESTORE_PARTICIPANT
+import mihon.entry.interactions.child.backup.ENTRY_CHILD_GROUP_FILTER_BACKUP_SNAPSHOT_PARTICIPANT
+import mihon.entry.interactions.child.backup.EntryChildGroupFilterBackupState
+import mihon.entry.interactions.child.lifecycle.ENTRY_CHILD_GROUP_FILTER_PROFILE_MOVE_PARTICIPANT
+import mihon.entry.interactions.child.lifecycle.EntryChildGroupFilterProfileMoveBehaviorContract
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveChildGroupFilterStateHost
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveStateRequest
+import mihon.entry.interactions.persistence.backup.addEntryBackupParticipationContract
+import mihon.entry.interactions.runtime.EntryChildGroupFilterCapability
+import mihon.entry.interactions.runtime.EntryChildListCapability
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
@@ -21,7 +31,10 @@ class EntryChildListContractValidationContributor : FeatureValidationContributor
     override fun contributeTo(sink: FeatureValidationContributionSink) {
         sink.add(
             FeatureContractVerifier(
-                FeatureContractReference(ENTRY_CHILD_LIST_FEATURE_ID, EntryChildListBehaviorContract),
+                FeatureContractReference(
+                    ENTRY_CHILD_LIST_FEATURE_ID,
+                    EntryChildListBehaviorContract,
+                ),
             ) { input ->
                 verifyFeatureContract {
                     val provider = input.provider(EntryChildListCapability.definition)
@@ -114,8 +127,11 @@ class EntryChildGroupFilterContractValidationContributor : FeatureValidationCont
                     val feature = DefaultEntryChildGroupFilterFeature(
                         evaluation = evaluation,
                         interaction = object : EntryChildGroupFilterInteraction {
-                            override fun groupFor(entry: Entry, chapter: EntryChapter): String? = chapter.scanlator
-                            override fun normalizeGroup(entry: Entry, group: String): String = group.lowercase()
+                            override fun groupFor(entry: Entry, chapter: EntryChapter): String? =
+                                chapter.scanlator
+
+                            override fun normalizeGroup(entry: Entry, group: String): String =
+                                group.lowercase()
                         },
                         dataSource = mockk(relaxed = true),
                     )
@@ -138,7 +154,8 @@ class EntryChildGroupFilterContractValidationContributor : FeatureValidationCont
             ) {
                 verifyFeatureContract {
                     var moved: EntryProfileMoveStateRequest? = null
-                    val host = EntryProfileMoveChildGroupFilterStateHost { request -> moved = request }
+                    val host =
+                        EntryProfileMoveChildGroupFilterStateHost { request -> moved = request }
                     val request = EntryProfileMoveStateRequest(1L, 2L, listOf(63L))
                     host.move(request)
                     contractExpectation(moved == request, "Profile movement must transfer child-group filter state")

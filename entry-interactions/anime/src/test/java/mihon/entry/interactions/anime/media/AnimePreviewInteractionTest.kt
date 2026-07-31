@@ -1,4 +1,4 @@
-package mihon.entry.interactions.anime
+package mihon.entry.interactions.anime.media
 
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryPreviewImage
@@ -11,12 +11,11 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.EntryPreviewPageStatus
+import mihon.entry.interactions.media.EntryPreviewPageStatus
 import mihon.entry.interactions.settings.EntryInteractionPreferences
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 import tachiyomi.domain.entry.model.Entry
-import tachiyomi.domain.entry.model.EntryChapter
 
 class AnimePreviewInteractionTest {
     private val context = mockk<Context>(relaxed = true)
@@ -29,7 +28,8 @@ class AnimePreviewInteractionTest {
                 EntryPreviewImage(index = 5, imageUrl = "https://example.org/five.jpg"),
             ),
         )
-        val interaction = AnimePreviewInteraction(EntryInteractionPreferences(InMemoryPreferenceStore()))
+        val interaction =
+            AnimePreviewInteraction(EntryInteractionPreferences(InMemoryPreferenceStore()))
         val entry = entry(title = "Requested anime")
         val handle = interaction.loadPreview(context, entry, chapter = null, source, pageCount = 1)
 

@@ -1,4 +1,4 @@
-package mihon.translation.runtime
+package mihon.translation.runtime.graph
 
 import mihon.feature.graph.CapabilityDefinition
 import mihon.feature.graph.CapabilityExpression
@@ -16,7 +16,7 @@ import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
 import mihon.feature.graph.FeatureSubjectScope
 import mihon.feature.graph.capabilityDefinition
-import mihon.translation.spi.TranslationEngineRegistry
+import mihon.translation.spi.engine.TranslationEngineRegistry
 
 internal val TRANSLATION_FEATURE_ID = FeatureId("translation")
 internal val TRANSLATION_ENGINE_REGISTRY_INTEGRATION_ID = FeatureIntegrationId("translation.engine-registry")

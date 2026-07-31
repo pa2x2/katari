@@ -9,7 +9,7 @@ import eu.kanade.tachiyomi.data.backup.models.LongPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringSetPreferenceValue
 import eu.kanade.tachiyomi.source.sourcePreferences
-import mihon.entry.interactions.EntrySourceSettingsFeature
+import mihon.entry.interactions.source.EntrySourceSettingsFeature
 import mihon.feature.profiles.core.ProfileAwarePreferenceStore
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.preference.Preference

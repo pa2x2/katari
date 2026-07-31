@@ -1,8 +1,19 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.library
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.mockk.every
 import io.mockk.mockk
+import mihon.entry.interactions.download.EntryDownloadActionAvailability
+import mihon.entry.interactions.download.EntryDownloadCapability
+import mihon.entry.interactions.entryContentType
+import mihon.entry.interactions.navigation.EntryOpenCapability
+import mihon.entry.interactions.presentation.EntryTypePresentationFeature
+import mihon.entry.interactions.presentation.EntryTypePresentationResult
+import mihon.entry.interactions.presentation.genericEntryTypePresentation
+import mihon.entry.interactions.runtime.EntryTypePresentationCapability
+import mihon.entry.interactions.runtime.EntryTypePresentationProvider
+import mihon.entry.interactions.runtime.toContentTypeId
+import mihon.entry.interactions.state.EntryConsumptionCapability
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
@@ -118,7 +129,12 @@ private suspend fun verifyLibraryUpdateNotification(
         openFeature = mockk { every { isApplicable(type) } returns true },
         consumptionFeature = mockk { every { isApplicable(type) } returns true },
         downloadActionFeature = mockk {
-            every { notificationAvailability(any(), any()) } returns EntryDownloadActionAvailability.Available
+            every {
+                notificationAvailability(
+                    any(),
+                    any(),
+                )
+            } returns EntryDownloadActionAvailability.Available
         },
         sourceManager = mockk<SourceManager>(relaxed = true),
         resolveVisibleEntry = { it },

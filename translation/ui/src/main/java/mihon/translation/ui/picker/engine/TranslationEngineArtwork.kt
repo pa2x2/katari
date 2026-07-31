@@ -1,4 +1,4 @@
-package mihon.translation.ui.picker
+package mihon.translation.ui.picker.engine
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import mihon.translation.api.TranslationEngineArtwork
+import mihon.translation.api.engine.TranslationEngineArtwork
 
 @Composable
 internal fun TranslationEngineArtwork(

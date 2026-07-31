@@ -1,6 +1,6 @@
-package mihon.translation.spi
+package mihon.translation.spi.language
 
-import mihon.translation.api.TranslationLanguageTag
+import mihon.translation.api.language.TranslationLanguageTag
 
 @JvmInline
 value class TranslationSourceLanguageDetectorId(

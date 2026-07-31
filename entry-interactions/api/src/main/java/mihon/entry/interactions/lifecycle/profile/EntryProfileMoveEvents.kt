@@ -1,6 +1,8 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.lifecycle.profile
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.download.EntryDownloadRemovalPlan
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveStateRequest
 import tachiyomi.domain.entry.model.Entry
 
 data class EntryProfileMovePreparingEvent(

@@ -1,7 +1,38 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download
 
-import mihon.feature.graph.FeatureExecutionHandler
-import mihon.feature.graph.FeatureExecutionParticipantBinding
+import mihon.entry.interactions.download.configuration.backup.DefaultEntryDownloadConfigurationBackupFeature
+import mihon.entry.interactions.download.configuration.backup.ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_RESTORE_PARTICIPANT
+import mihon.entry.interactions.download.configuration.backup.ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_SCHEMA_VERSION
+import mihon.entry.interactions.download.configuration.backup.ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_SNAPSHOT_PARTICIPANT
+import mihon.entry.interactions.download.configuration.backup.ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_STATE_ID
+import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfigurationBackupContributor
+import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfigurationBackupFeature
+import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfigurationBackupState
+import mihon.entry.interactions.download.host.EntryDownloadSourceAccessResolver
+import mihon.entry.interactions.download.host.SourceManagerEntryDownloadSourceAccessResolver
+import mihon.entry.interactions.download.maintenance.ENTRY_DOWNLOAD_DESTRUCTIVE_REMOVAL_PARTICIPANT
+import mihon.entry.interactions.download.maintenance.ENTRY_DOWNLOAD_DESTRUCTIVE_REMOVAL_PREPARATION_PARTICIPANT
+import mihon.entry.interactions.download.maintenance.ENTRY_DOWNLOAD_METADATA_CHANGE_PARTICIPANT
+import mihon.entry.interactions.download.maintenance.ENTRY_DOWNLOAD_PROFILE_MOVE_PARTICIPANT
+import mihon.entry.interactions.download.maintenance.ENTRY_DOWNLOAD_PROFILE_MOVE_PREPARATION_PARTICIPANT
+import mihon.entry.interactions.download.maintenance.EntryDownloadDestructiveRemovalContributor
+import mihon.entry.interactions.download.maintenance.EntryDownloadMetadataLifecycleContributor
+import mihon.entry.interactions.download.maintenance.EntryDownloadProfileMoveContributor
+import mihon.entry.interactions.download.maintenance.merge.EntryDownloadMergeContributor
+import mihon.entry.interactions.download.maintenance.merge.entryDownloadMergeBinding
+import mihon.entry.interactions.download.maintenance.migration.EntryDownloadMigrationContributor
+import mihon.entry.interactions.download.maintenance.migration.entryDownloadMigrationBinding
+import mihon.entry.interactions.download.maintenance.migration.entryDownloadMigrationOptionBinding
+import mihon.entry.interactions.media.session.EntryMediaSessionEvent
+import mihon.entry.interactions.merge.EntryMergeDownloadOwnershipProjection
+import mihon.entry.interactions.persistence.backup.decodeEntryBackupState
+import mihon.entry.interactions.persistence.backup.entryBackupStateEnvelope
+import mihon.entry.interactions.runtime.EntryInteractions
+import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeArtifacts
+import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeModule
+import mihon.entry.interactions.runtime.production.entryFeatureRuntimeBoundary
+import mihon.feature.graph.execution.FeatureExecutionHandler
+import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.addSingletonFactory
@@ -264,7 +295,10 @@ internal val EntryDownloadMaintenanceFeatureRuntimeModule = EntryFeatureRuntimeM
                 definition = ENTRY_DOWNLOAD_METADATA_CHANGE_PARTICIPANT,
                 handler = FeatureExecutionHandler { event ->
                     if (event.previous.title != event.current.title) {
-                        get<EntryDownloadMaintenanceFeature>().renameEntry(event.previous, event.current.title)
+                        get<EntryDownloadMaintenanceFeature>().renameEntry(
+                            event.previous,
+                            event.current.title,
+                        )
                     }
                 },
             ),
@@ -272,10 +306,14 @@ internal val EntryDownloadMaintenanceFeatureRuntimeModule = EntryFeatureRuntimeM
                 definition = ENTRY_DOWNLOAD_DESTRUCTIVE_REMOVAL_PREPARATION_PARTICIPANT,
                 handler = FeatureExecutionHandler { event ->
                     event.entries.forEach { entry ->
-                        when (val preparation = get<EntryDownloadMaintenanceFeature>().prepareRemoval(entry)) {
+                        when (
+                            val preparation =
+                                get<EntryDownloadMaintenanceFeature>().prepareRemoval(entry)
+                        ) {
                             is EntryDownloadRemovalPreparation.Prepared -> event.outcomes.addDownloadPlan(
                                 preparation.plan,
                             )
+
                             EntryDownloadRemovalPreparation.NothingToRemove,
                             is EntryDownloadRemovalPreparation.Inapplicable,
                             -> Unit
@@ -293,7 +331,9 @@ internal val EntryDownloadMaintenanceFeatureRuntimeModule = EntryFeatureRuntimeM
                         .distinctBy { owner -> owner.profileId to owner.id }
                     if (owners.isNotEmpty()) {
                         check(
-                            get<EntryDownloadMaintenanceFeature>().applyRemoval(EntryDownloadRemovalPlan(owners)) ==
+                            get<EntryDownloadMaintenanceFeature>().applyRemoval(
+                                EntryDownloadRemovalPlan(owners),
+                            ) ==
                                 EntryDownloadMaintenanceResult.Performed,
                         ) { "Download cleanup was incomplete after destructive Entry removal" }
                     }
@@ -303,10 +343,14 @@ internal val EntryDownloadMaintenanceFeatureRuntimeModule = EntryFeatureRuntimeM
                 definition = ENTRY_DOWNLOAD_PROFILE_MOVE_PREPARATION_PARTICIPANT,
                 handler = FeatureExecutionHandler { event ->
                     event.plan.removedEntries.forEach { entry ->
-                        when (val preparation = get<EntryDownloadMaintenanceFeature>().prepareRemoval(entry)) {
+                        when (
+                            val preparation =
+                                get<EntryDownloadMaintenanceFeature>().prepareRemoval(entry)
+                        ) {
                             is EntryDownloadRemovalPreparation.Prepared -> event.outcomes.addDownloadPlan(
                                 preparation.plan,
                             )
+
                             EntryDownloadRemovalPreparation.NothingToRemove,
                             is EntryDownloadRemovalPreparation.Inapplicable,
                             -> Unit
@@ -323,7 +367,9 @@ internal val EntryDownloadMaintenanceFeatureRuntimeModule = EntryFeatureRuntimeM
                         .distinctBy { owner -> owner.profileId to owner.id }
                     if (owners.isNotEmpty()) {
                         check(
-                            get<EntryDownloadMaintenanceFeature>().applyRemoval(EntryDownloadRemovalPlan(owners)) ==
+                            get<EntryDownloadMaintenanceFeature>().applyRemoval(
+                                EntryDownloadRemovalPlan(owners),
+                            ) ==
                                 EntryDownloadMaintenanceResult.Performed,
                         ) { "Download cleanup was incomplete after Profile movement" }
                     }

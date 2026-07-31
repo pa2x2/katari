@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
@@ -56,10 +55,10 @@ import eu.kanade.presentation.entry.components.PreviewSizeUi
 import eu.kanade.tachiyomi.ui.entry.EntryScreenModel
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.EntryOpenFeature
-import mihon.entry.interactions.EntryOpenOptions
-import mihon.entry.interactions.EntryPreviewOpenTargetResult
-import mihon.entry.interactions.EntryPreviewSize
+import mihon.entry.interactions.media.EntryPreviewOpenTargetResult
+import mihon.entry.interactions.media.EntryPreviewSize
+import mihon.entry.interactions.navigation.EntryOpenFeature
+import mihon.entry.interactions.navigation.EntryOpenOptions
 import mihon.feature.profiles.core.ProfileManager
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter

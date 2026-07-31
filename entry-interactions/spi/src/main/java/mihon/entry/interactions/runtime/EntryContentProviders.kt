@@ -1,8 +1,20 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.runtime
 
-import eu.kanade.tachiyomi.source.entry.EntryType
+import android.content.Context
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.flow.Flow
+import mihon.entry.interactions.child.EntryChildListDisplay
+import mihon.entry.interactions.child.EntryChildListRequest
+import mihon.entry.interactions.child.EntryChildProgressLabel
+import mihon.entry.interactions.child.EntryChildProgressRequest
+import mihon.entry.interactions.media.EntryImmersiveHandle
+import mihon.entry.interactions.media.EntryImmersiveProgress
+import mihon.entry.interactions.media.EntryImmersiveRenderer
+import mihon.entry.interactions.media.EntryPreviewConfig
+import mihon.entry.interactions.media.EntryPreviewHandle
+import mihon.entry.interactions.media.EntryPreviewSettings
+import mihon.entry.interactions.media.EntryPreviewSourceRequirement
+import mihon.entry.interactions.presentation.EntryTypePresentation
 import mihon.feature.graph.CapabilityId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -17,7 +29,7 @@ interface EntryImmersiveProcessor : EntryInteractionProvider {
     val preloadRadius: Int
 
     suspend fun load(
-        context: android.content.Context,
+        context: Context,
         entry: Entry,
         chapter: EntryChapter?,
         source: UnifiedSource,
@@ -71,9 +83,10 @@ val EntryChildGroupFilterCapability = entryInteractionCapability<EntryChildGroup
 
 interface EntryOutsideReleasePeriodFilterProvider : EntryInteractionProvider
 
-val EntryOutsideReleasePeriodFilterCapability = entryInteractionCapability<EntryOutsideReleasePeriodFilterProvider>(
-    id = CapabilityId("entry.outside-release-period-filter"),
-)
+val EntryOutsideReleasePeriodFilterCapability =
+    entryInteractionCapability<EntryOutsideReleasePeriodFilterProvider>(
+        id = CapabilityId("entry.outside-release-period-filter"),
+    )
 
 enum class EntryPreviewLoadMode {
     ENTRY,
@@ -86,7 +99,7 @@ interface EntryPreviewProcessor : EntryInteractionProvider {
         get() = EntryPreviewSourceRequirement.NONE
 
     suspend fun loadPreview(
-        context: android.content.Context,
+        context: Context,
         entry: Entry,
         chapter: EntryChapter?,
         source: UnifiedSource,
@@ -107,9 +120,10 @@ interface EntryPreviewConfigurationProvider : EntryInteractionProvider {
     fun configChanges(): Flow<EntryPreviewConfig>
 }
 
-val EntryPreviewConfigurationCapability = entryInteractionCapability<EntryPreviewConfigurationProvider>(
-    id = CapabilityId("entry.preview.configuration"),
-)
+val EntryPreviewConfigurationCapability =
+    entryInteractionCapability<EntryPreviewConfigurationProvider>(
+        id = CapabilityId("entry.preview.configuration"),
+    )
 
 interface EntryTypePresentationProvider : EntryInteractionProvider {
     val presentation: EntryTypePresentation

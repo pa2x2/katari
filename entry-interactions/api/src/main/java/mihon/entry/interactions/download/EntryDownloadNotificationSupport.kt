@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download
 
 import android.app.Notification
 import android.app.PendingIntent

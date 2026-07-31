@@ -1,9 +1,11 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.migration.consequence
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import mihon.entry.interactions.host.EntryMigrationConsequenceHost
+import mihon.entry.interactions.migration.EntryMigrationConsequenceStatus
+import mihon.entry.interactions.migration.EntryMigrationConsequenceStatusFeature
+import mihon.entry.interactions.migration.host.EntryMigrationConsequenceHost
 
 internal class EntryMigrationConsequenceStatusCoordinator(
     private val host: EntryMigrationConsequenceHost,
@@ -11,7 +13,11 @@ internal class EntryMigrationConsequenceStatusCoordinator(
 ) : EntryMigrationConsequenceStatusFeature {
     override fun observeStatus(): Flow<EntryMigrationConsequenceStatus> {
         return host.observeConsequenceStatus().map { status ->
-            EntryMigrationConsequenceStatus(status.pendingCount, status.failedCount, status.lastFailure)
+            EntryMigrationConsequenceStatus(
+                status.pendingCount,
+                status.failedCount,
+                status.lastFailure,
+            )
         }
     }
 
@@ -19,6 +25,10 @@ internal class EntryMigrationConsequenceStatusCoordinator(
         host.makeConsequencesRetryable()
         delivery.deliverPending()
         val status = host.observeConsequenceStatus().first()
-        return EntryMigrationConsequenceStatus(status.pendingCount, status.failedCount, status.lastFailure)
+        return EntryMigrationConsequenceStatus(
+            status.pendingCount,
+            status.failedCount,
+            status.lastFailure,
+        )
     }
 }

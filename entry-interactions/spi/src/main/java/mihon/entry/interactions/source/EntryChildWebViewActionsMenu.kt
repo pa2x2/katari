@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.source
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.MoreVert

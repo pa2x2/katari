@@ -1,10 +1,10 @@
-package mihon.translation.ui.picker
+package mihon.translation.ui.picker.language
 
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
-import mihon.translation.api.TranslationLanguagePair
-import mihon.translation.api.TranslationLanguageSupport
-import mihon.translation.api.TranslationLanguageTag
+import mihon.translation.api.language.TranslationLanguagePair
+import mihon.translation.api.language.TranslationLanguageSupport
+import mihon.translation.api.language.TranslationLanguageTag
 import org.junit.jupiter.api.Test
 import java.util.Locale
 

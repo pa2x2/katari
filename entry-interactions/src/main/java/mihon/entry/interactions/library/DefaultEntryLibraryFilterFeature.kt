@@ -1,6 +1,7 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.library
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.core.common.preference.TriState
 

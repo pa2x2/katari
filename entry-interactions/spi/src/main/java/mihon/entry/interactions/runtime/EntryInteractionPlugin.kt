@@ -1,6 +1,7 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.runtime
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.feature.graph.CapabilityDefinition
 import mihon.feature.graph.CapabilityId
 import mihon.feature.graph.CapabilityProvider
 import mihon.feature.graph.ContentTypeContribution
@@ -11,7 +12,6 @@ import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.SpecializedAdapter
 import mihon.feature.graph.capabilityDefinition
-import tachiyomi.domain.entry.model.Entry
 
 interface EntryInteractionSpecializedAdapter {
     val type: EntryType
@@ -22,7 +22,7 @@ interface EntryInteractionProvider {
 }
 
 open class EntryInteractionCapability<P : EntryInteractionProvider> internal constructor(
-    val definition: mihon.feature.graph.CapabilityDefinition<P>,
+    val definition: CapabilityDefinition<P>,
 ) {
     fun bind(implementation: P): EntryInteractionProviderBinding<P> {
         return EntryInteractionProviderBinding(this, implementation)

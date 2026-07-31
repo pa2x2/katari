@@ -1,4 +1,6 @@
-package mihon.translation.api
+package mihon.translation.api.model
+
+import mihon.translation.api.language.TranslationLanguageTag
 
 @JvmInline
 value class TranslationModelId(

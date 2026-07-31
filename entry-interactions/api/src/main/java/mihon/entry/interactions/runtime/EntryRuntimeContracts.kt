@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.runtime
 
 import android.app.Activity
 import kotlinx.coroutines.flow.Flow

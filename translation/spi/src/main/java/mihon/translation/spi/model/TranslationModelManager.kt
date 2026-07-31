@@ -1,10 +1,10 @@
-package mihon.translation.spi
+package mihon.translation.spi.model
 
 import kotlinx.coroutines.flow.Flow
-import mihon.translation.api.TranslationModelId
-import mihon.translation.api.TranslationModelInventoryItem
-import mihon.translation.api.TranslationModelOperationResult
-import mihon.translation.api.TranslationOperationProgress
+import mihon.translation.api.model.TranslationModelId
+import mihon.translation.api.model.TranslationModelInventoryItem
+import mihon.translation.api.model.TranslationModelOperationResult
+import mihon.translation.api.model.TranslationOperationProgress
 
 interface TranslationModelManager {
     suspend fun inventory(): List<TranslationModelInventoryItem>

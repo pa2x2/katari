@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.child
 
 import dev.icerock.moko.resources.StringResource
 import tachiyomi.domain.entry.model.Entry

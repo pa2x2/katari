@@ -1,9 +1,37 @@
-package mihon.feature.graph
+package mihon.feature.graph.execution
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import kotlinx.coroutines.test.runTest
+import mihon.feature.graph.CapabilityExpression
+import mihon.feature.graph.CapabilityId
+import mihon.feature.graph.CapabilityProvider
+import mihon.feature.graph.ContentTypeContribution
+import mihon.feature.graph.ContentTypeId
+import mihon.feature.graph.ContextInputDefinition
+import mihon.feature.graph.ContextInputId
+import mihon.feature.graph.ContributionOwner
+import mihon.feature.graph.FeatureArtifactId
+import mihon.feature.graph.FeatureBehaviorContract
+import mihon.feature.graph.FeatureContextBlocker
+import mihon.feature.graph.FeatureContextDecision
+import mihon.feature.graph.FeatureContextRule
+import mihon.feature.graph.FeatureExecutionParticipantId
+import mihon.feature.graph.FeatureExecutionPointId
+import mihon.feature.graph.FeatureGraph
+import mihon.feature.graph.FeatureSubjectId
+import mihon.feature.graph.SpecializedAdapterDefinition
+import mihon.feature.graph.SpecializedAdapterId
+import mihon.feature.graph.capabilityDefinition
+import mihon.feature.graph.contextEvidence
+import mihon.feature.graph.contextInputDefinition
+import mihon.feature.graph.discoverAndAssembleFeatureGraph
+import mihon.feature.graph.evaluateFeatureGraph
+import mihon.feature.graph.featureContextRule
+import mihon.feature.graph.featureGraphContributor
+import mihon.feature.graph.specializedAdapterDefinition
 import org.junit.jupiter.api.Test
 import java.util.concurrent.CancellationException
 
@@ -371,7 +399,8 @@ class FeatureExecutionRuntimeTest {
     private fun runtime(
         graph: FeatureGraph,
         vararg bindings: FeatureExecutionParticipantBinding<*>,
-    ): FeatureExecutionRuntime = FeatureExecutionRuntime(graph, evaluateFeatureGraph(graph), bindings.toList())
+    ): FeatureExecutionRuntime =
+        FeatureExecutionRuntime(graph, evaluateFeatureGraph(graph), bindings.toList())
 
     private fun binding(
         participant: FeatureExecutionParticipantDefinition<Event>,
@@ -384,7 +413,7 @@ class FeatureExecutionRuntimeTest {
     }
 
     private fun runSuspend(block: suspend () -> Unit) {
-        kotlinx.coroutines.test.runTest { block() }
+        runTest { block() }
     }
 
     private data class Event(

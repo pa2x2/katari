@@ -1,12 +1,12 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.merge
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.host.EntryMergeHostTransition
-import mihon.entry.interactions.host.EntryMergeMembershipSnapshot
+import mihon.entry.interactions.merge.host.EntryMergeHostTransition
+import mihon.entry.interactions.merge.host.EntryMergeMembershipSnapshot
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 
@@ -14,9 +14,13 @@ class EntryMergeBackupFeatureTest {
     @Test
     fun `backup snapshot exposes only stable target identity and member position`() = runTest {
         val entries = listOf(entry(1, 7, "/target"), entry(2, 7, "/member"))
-        val host = RecordingEntryMergeHost(entries, listOf(EntryMergeMembershipSnapshot(7, 1, listOf(1, 2))))
+        val host = RecordingEntryMergeHost(
+            entries,
+            listOf(EntryMergeMembershipSnapshot(7, 1, listOf(1, 2))),
+        )
 
-        EntryMergeBackupCoordinator(host).snapshotForBackup(EntryMergeSubject(7, 2)) shouldBe
+        EntryMergeBackupCoordinator(host)
+            .snapshotForBackup(EntryMergeSubject(7, 2)) shouldBe
             EntryMergeBackupMember(EntryMergeBackupIdentity(10, "/target", EntryType.BOOK), 1)
     }
 
@@ -26,7 +30,9 @@ class EntryMergeBackupFeatureTest {
         val host = RecordingEntryMergeHost(entries)
         val target = EntryMergeBackupIdentity(10, "/target", EntryType.BOOK)
 
-        val result = EntryMergeBackupCoordinator(host).restore(
+        val result = EntryMergeBackupCoordinator(
+            host,
+        ).restore(
             destinationProfileId = 9,
             groups = listOf(
                 EntryMergeBackupGroup(
@@ -51,7 +57,9 @@ class EntryMergeBackupFeatureTest {
         val target = EntryMergeBackupIdentity(10, "/target", EntryType.BOOK)
         val host = RecordingEntryMergeHost(emptyList())
 
-        val result = EntryMergeBackupCoordinator(host).restore(
+        val result = EntryMergeBackupCoordinator(
+            host,
+        ).restore(
             destinationProfileId = 9,
             groups = listOf(
                 EntryMergeBackupGroup(

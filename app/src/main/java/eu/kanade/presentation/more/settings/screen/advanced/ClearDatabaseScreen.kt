@@ -42,8 +42,8 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
-import mihon.entry.interactions.EntryDestructiveRemovalFeature
-import mihon.entry.interactions.EntryDestructiveRemovalResult
+import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalFeature
+import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalResult
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchUI
 import tachiyomi.core.common.util.lang.withNonCancellableContext

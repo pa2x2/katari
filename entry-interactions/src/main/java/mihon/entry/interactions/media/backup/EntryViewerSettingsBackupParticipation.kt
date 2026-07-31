@@ -1,10 +1,15 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media.backup
 
+import mihon.entry.interactions.media.ENTRY_VIEWER_SETTINGS_FEATURE_OWNER
+import mihon.entry.interactions.media.EntryViewerSettingsBehaviorContract
+import mihon.entry.interactions.media.EntryViewerSettingsCapability
+import mihon.entry.interactions.persistence.backup.ENTRY_BACKUP_RESTORE_EXECUTION_POINT
+import mihon.entry.interactions.persistence.backup.ENTRY_BACKUP_SNAPSHOT_EXECUTION_POINT
 import mihon.feature.graph.CapabilityExpression
-import mihon.feature.graph.FeatureExecutionParticipantDefinition
 import mihon.feature.graph.FeatureExecutionParticipantId
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
+import mihon.feature.graph.execution.FeatureExecutionParticipantDefinition
 
 internal val ENTRY_VIEWER_SETTINGS_BACKUP_SNAPSHOT_PARTICIPANT = FeatureExecutionParticipantDefinition(
     id = FeatureExecutionParticipantId("entry.viewer-settings.backup-snapshot"),

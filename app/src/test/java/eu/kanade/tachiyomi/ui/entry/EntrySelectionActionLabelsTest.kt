@@ -2,9 +2,9 @@ package eu.kanade.tachiyomi.ui.entry
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.shouldBe
-import mihon.entry.interactions.EntryTypePresentationFeature
-import mihon.entry.interactions.EntryTypePresentationResult
-import mihon.entry.interactions.genericEntryTypePresentation
+import mihon.entry.interactions.presentation.EntryTypePresentationFeature
+import mihon.entry.interactions.presentation.EntryTypePresentationResult
+import mihon.entry.interactions.presentation.genericEntryTypePresentation
 import org.junit.jupiter.api.Test
 import tachiyomi.i18n.MR
 

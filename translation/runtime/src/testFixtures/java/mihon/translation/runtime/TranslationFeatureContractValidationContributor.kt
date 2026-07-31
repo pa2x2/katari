@@ -6,14 +6,20 @@ import mihon.feature.graph.validation.FeatureContractVerificationResult
 import mihon.feature.graph.validation.FeatureContractVerifier
 import mihon.feature.graph.validation.FeatureValidationContributionSink
 import mihon.feature.graph.validation.FeatureValidationContributor
-import mihon.translation.api.TranslationEngineChoiceReason
-import mihon.translation.api.TranslationEngineId
-import mihon.translation.api.TranslationEngineSelection
-import mihon.translation.api.TranslationLanguageTag
-import mihon.translation.api.TranslationPreparation
-import mihon.translation.api.TranslationRequest
-import mihon.translation.api.TranslationSourceLanguageSelection
-import mihon.translation.api.TranslationTargetLanguageSelection
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.engine.TranslationEngineSelection
+import mihon.translation.api.language.TranslationLanguageTag
+import mihon.translation.api.preparation.TranslationEngineChoiceReason
+import mihon.translation.api.preparation.TranslationPreparation
+import mihon.translation.api.request.TranslationRequest
+import mihon.translation.api.request.TranslationSourceLanguageSelection
+import mihon.translation.api.request.TranslationTargetLanguageSelection
+import mihon.translation.runtime.feature.DefaultTranslationFeature
+import mihon.translation.runtime.feature.TranslationDefaultTargetLanguageResolver
+import mihon.translation.runtime.graph.TRANSLATION_FEATURE_ID
+import mihon.translation.runtime.graph.TranslationFeatureBehaviorContract
+import mihon.translation.runtime.graph.TranslationFeatureContributor
+import mihon.translation.runtime.registry.DefaultTranslationEngineRegistry
 
 class TranslationFeatureContractValidationContributor : FeatureValidationContributor {
     override val owner = TranslationFeatureContributor.owner

@@ -1,2 +1,2 @@
 id=entry.tracker-source-adapter
-module=mihon.entry.interactions.EntryTrackerSourceAdapterFeatureRuntimeModule
+module=mihon.entry.interactions.source.EntryTrackerSourceAdapterFeatureRuntimeModule

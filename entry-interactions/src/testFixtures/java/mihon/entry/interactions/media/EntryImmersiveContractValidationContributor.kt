@@ -1,11 +1,21 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media
 
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
+import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import mihon.entry.interactions.child.EntryChildListFeature
+import mihon.entry.interactions.child.EntryFirstChildResult
+import mihon.entry.interactions.navigation.EntryOpenCapability
+import mihon.entry.interactions.runtime.EntryChildListCapability
+import mihon.entry.interactions.runtime.EntryImmersiveCapability
+import mihon.entry.interactions.runtime.EntryImmersiveLoadMode
+import mihon.entry.interactions.runtime.EntryImmersiveProcessor
+import mihon.entry.interactions.source.EntrySourceRefreshFeature
+import mihon.entry.interactions.source.EntrySourceRefreshResult
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
@@ -68,8 +78,14 @@ private data class ImmersiveContract(
 )
 
 private val immersiveContracts = listOf(
-    ImmersiveContract(ENTRY_IMMERSIVE_PROVIDER_INTEGRATION_ID, EntryImmersiveProviderBehaviorContract),
-    ImmersiveContract(ENTRY_IMMERSIVE_SOURCE_CONTEXT_INTEGRATION_ID, EntryImmersiveSourceBehaviorContract),
+    ImmersiveContract(
+        ENTRY_IMMERSIVE_PROVIDER_INTEGRATION_ID,
+        EntryImmersiveProviderBehaviorContract,
+    ),
+    ImmersiveContract(
+        ENTRY_IMMERSIVE_SOURCE_CONTEXT_INTEGRATION_ID,
+        EntryImmersiveSourceBehaviorContract,
+    ),
     ImmersiveContract(ENTRY_IMMERSIVE_ENTRY_CONTEXT_INTEGRATION_ID, EntryImmersiveBehaviorContract),
     ImmersiveContract(ENTRY_IMMERSIVE_CHILD_INTEGRATION_ID, EntryImmersiveChildBehaviorContract),
     ImmersiveContract(ENTRY_IMMERSIVE_OPEN_INTEGRATION_ID, EntryImmersiveOpenBehaviorContract),
@@ -97,7 +113,7 @@ private suspend fun verifyImmersive(
     }
     val processor = RecordingContractImmersiveProcessor(selected.type, mode)
     val interaction = object : EntryImmersiveInteraction {
-        override fun processor(type: eu.kanade.tachiyomi.source.entry.EntryType) =
+        override fun processor(type: EntryType) =
             processor.takeIf { type == processor.type }
 
         override suspend fun load(context: Context, entry: Entry, chapter: EntryChapter?, source: UnifiedSource) =
@@ -158,7 +174,7 @@ private suspend fun verifyImmersive(
 }
 
 private class RecordingContractImmersiveProcessor(
-    override val type: eu.kanade.tachiyomi.source.entry.EntryType,
+    override val type: EntryType,
     override val loadMode: EntryImmersiveLoadMode,
 ) : EntryImmersiveProcessor {
     override val preloadRadius = 1

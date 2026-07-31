@@ -1,9 +1,15 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.source
 
 import eu.kanade.tachiyomi.source.entry.EntryImageSource
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.mockk.every
 import io.mockk.mockk
+import mihon.entry.interactions.entryContentType
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveCoverHashStateHost
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveStateRequest
+import mihon.entry.interactions.runtime.toContentTypeId
+import mihon.entry.interactions.source.lifecycle.ENTRY_COVER_HASH_PROFILE_MOVE_PARTICIPANT
+import mihon.entry.interactions.source.lifecycle.EntryCoverHashProfileMoveBehaviorContract
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
@@ -23,7 +29,10 @@ class EntryCoverNetworkContractValidationContributor : FeatureValidationContribu
     override val owner = EntryCoverNetworkFeatureContributor.owner
 
     override fun contributeTo(sink: FeatureValidationContributionSink) {
-        val reference = FeatureContractReference(ENTRY_COVER_NETWORK_FEATURE_ID, EntryCoverNetworkBehaviorContract)
+        val reference = FeatureContractReference(
+            ENTRY_COVER_NETWORK_FEATURE_ID,
+            EntryCoverNetworkBehaviorContract,
+        )
         sink.add(
             FeatureContractVerifier(reference) { input ->
                 verifyFeatureContract {

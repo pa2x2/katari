@@ -15,14 +15,15 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
-import mihon.entry.interactions.EntryViewerSettingsFeature
-import mihon.entry.interactions.EntryViewerSettingsScreenProjection
-import mihon.entry.viewer.settings.ReaderSharedSettingAction
-import mihon.entry.viewer.settings.ReaderSharedSettingAvailability
-import mihon.entry.viewer.settings.ReaderSharedSettingText
-import mihon.entry.viewer.settings.ReaderSharedSettingsRegistry
-import mihon.entry.viewer.settings.ResolvedReaderSharedToggleSetting
+import mihon.entry.interactions.media.EntryViewerSettingsDestination
+import mihon.entry.interactions.media.EntryViewerSettingsFeature
+import mihon.entry.interactions.media.EntryViewerSettingsScreenProjection
 import mihon.entry.viewer.settings.ViewerSettingsCategory
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingAction
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingAvailability
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingText
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
+import mihon.entry.viewer.settings.shared.ResolvedReaderSharedToggleSetting
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
@@ -182,5 +183,5 @@ internal fun viewerProviderSettingsScreens(
     .map { it.appScreen }
     .distinct()
 
-private val mihon.entry.interactions.EntryViewerSettingsDestination.appScreen: AppEntryViewerSettingsScreenProjection
+private val EntryViewerSettingsDestination.appScreen: AppEntryViewerSettingsScreenProjection
     get() = projection as AppEntryViewerSettingsScreenProjection

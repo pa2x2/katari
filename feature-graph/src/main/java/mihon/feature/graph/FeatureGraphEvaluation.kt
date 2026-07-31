@@ -1,5 +1,9 @@
 package mihon.feature.graph
 
+import mihon.feature.graph.execution.FeatureExecutionParticipantEvaluation
+import mihon.feature.graph.execution.IncompleteFeatureExecutionParticipant
+import mihon.feature.graph.execution.evaluateFeatureExecutionParticipants
+
 /** The stable subject of one feature integration evaluated for one installed Feature subject. */
 data class FeatureIntegrationSubject(
     val affectedSubject: FeatureSubjectReference,

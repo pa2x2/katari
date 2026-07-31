@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.source
 
 import okhttp3.Call
 import okhttp3.Headers

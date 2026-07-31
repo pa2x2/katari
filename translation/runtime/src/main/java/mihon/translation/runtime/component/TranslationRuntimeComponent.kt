@@ -1,9 +1,9 @@
-package mihon.translation.runtime
+package mihon.translation.runtime.component
 
 import android.app.Application
-import mihon.feature.runtime.ApplicationFeatureRuntimeComponent
-import mihon.translation.spi.TranslationEngineContribution
-import mihon.translation.spi.TranslationSourceLanguageDetector
+import mihon.feature.runtime.application.ApplicationFeatureRuntimeComponent
+import mihon.translation.spi.contribution.TranslationEngineContribution
+import mihon.translation.spi.language.TranslationSourceLanguageDetector
 
 /**
  * Variant-specific participation in the Translation runtime.

@@ -1,2 +1,2 @@
 id=entry.child-list
-module=mihon.entry.interactions.EntryChildListFeatureRuntimeModule
+module=mihon.entry.interactions.child.EntryChildListFeatureRuntimeModule

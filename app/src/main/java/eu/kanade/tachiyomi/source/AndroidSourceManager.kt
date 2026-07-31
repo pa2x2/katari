@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import mihon.entry.interactions.EntryDownloadMaintenanceFeature
+import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
 import tachiyomi.domain.source.model.SourceDisplayInfo
 import tachiyomi.domain.source.model.StubSource
 import tachiyomi.domain.source.model.UnifiedStubSource

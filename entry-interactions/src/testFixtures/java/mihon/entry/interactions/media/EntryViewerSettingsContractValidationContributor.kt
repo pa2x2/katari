@@ -1,8 +1,19 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media
 
+import eu.kanade.tachiyomi.source.entry.EntryType
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import mihon.entry.interactions.media.backup.ENTRY_VIEWER_SETTINGS_BACKUP_RESTORE_PARTICIPANT
+import mihon.entry.interactions.media.backup.ENTRY_VIEWER_SETTINGS_BACKUP_SNAPSHOT_PARTICIPANT
+import mihon.entry.interactions.media.backup.EntryViewerSettingBackupValue
+import mihon.entry.interactions.media.backup.EntryViewerSettingsBackupState
+import mihon.entry.interactions.media.migration.ENTRY_VIEWER_SETTINGS_MIGRATION_PARTICIPANT
+import mihon.entry.interactions.media.migration.EntryViewerSettingsMigrationDurableBehaviorContract
+import mihon.entry.interactions.media.migration.entryViewerSettingsMigrationBinding
+import mihon.entry.interactions.migration.consequence.EntryMigrationDurableEvent
+import mihon.entry.interactions.persistence.backup.addEntryBackupParticipationContract
+import mihon.entry.interactions.state.EntryMigrationCapability
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
@@ -49,7 +60,14 @@ class EntryViewerSettingsContractValidationContributor : FeatureValidationContri
                     }
                     val binding = entryViewerSettingsMigrationBinding { feature }
                     val prepared = binding.preparer.prepare(
-                        EntryMigrationDurableEvent("contract", source, target, emptySet(), emptyList(), emptyList()),
+                        EntryMigrationDurableEvent(
+                            "contract",
+                            source,
+                            target,
+                            emptySet(),
+                            emptyList(),
+                            emptyList(),
+                        ),
                     )
                     contractExpectation(
                         prepared != null,
@@ -99,7 +117,7 @@ private suspend fun verifyViewerSettings(input: FeatureContractExecutionInput) =
     val feature = DefaultEntryViewerSettingsFeature(
         evaluation = evaluation,
         interaction = object : EntryViewerSettingsInteraction {
-            override fun provider(type: eu.kanade.tachiyomi.source.entry.EntryType) =
+            override fun provider(type: EntryType) =
                 provider.takeIf { type == provider.type }
         },
         projectionResolver = EntryViewerSettingsScreenProjectionResolver {

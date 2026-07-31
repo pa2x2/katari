@@ -1,4 +1,4 @@
-package mihon.feature.runtime
+package mihon.feature.runtime.application
 
 import android.app.Application
 import io.kotest.assertions.throwables.shouldThrow
@@ -13,6 +13,7 @@ import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.capabilityDefinition
 import mihon.feature.graph.discoverFeatureGraphContributions
 import mihon.feature.graph.featureGraphContributor
+import mihon.feature.runtime.createFeatureRuntimeComposition
 import org.junit.jupiter.api.Test
 import uy.kohesive.injekt.api.InjektRegistrar
 
@@ -39,12 +40,22 @@ class ApplicationFeatureRuntimeModuleTest {
             modules = listOf(
                 module("example.first") {
                     ApplicationFeatureRuntimeArtifacts(
-                        capabilityProviders = listOf(CapabilityProvider(firstCapability, FirstProvider())),
+                        capabilityProviders = listOf(
+                            CapabilityProvider(
+                                firstCapability,
+                                FirstProvider(),
+                            ),
+                        ),
                     )
                 },
                 module("example.second") {
                     ApplicationFeatureRuntimeArtifacts(
-                        capabilityProviders = listOf(CapabilityProvider(secondCapability, SecondProvider())),
+                        capabilityProviders = listOf(
+                            CapabilityProvider(
+                                secondCapability,
+                                SecondProvider(),
+                            ),
+                        ),
                     )
                 },
             ),
@@ -87,12 +98,22 @@ class ApplicationFeatureRuntimeModuleTest {
                 modules = listOf(
                     module("example.first") {
                         ApplicationFeatureRuntimeArtifacts(
-                            capabilityProviders = listOf(CapabilityProvider(capability, FirstProvider())),
+                            capabilityProviders = listOf(
+                                CapabilityProvider(
+                                    capability,
+                                    FirstProvider(),
+                                ),
+                            ),
                         )
                     },
                     module("example.second") {
                         ApplicationFeatureRuntimeArtifacts(
-                            capabilityProviders = listOf(CapabilityProvider(capability, FirstProvider())),
+                            capabilityProviders = listOf(
+                                CapabilityProvider(
+                                    capability,
+                                    FirstProvider(),
+                                ),
+                            ),
                         )
                     },
                 ),
@@ -161,8 +182,14 @@ class ApplicationFeatureRuntimeModuleTest {
     fun `runtime components expose only requested typed participation`() {
         val components = ApplicationFeatureRuntimeComponents(
             listOf(
-                RegisteredApplicationFeatureRuntimeComponent("example.first", FirstRuntimeComponent()),
-                RegisteredApplicationFeatureRuntimeComponent("example.second", SecondRuntimeComponent()),
+                RegisteredApplicationFeatureRuntimeComponent(
+                    "example.first",
+                    FirstRuntimeComponent(),
+                ),
+                RegisteredApplicationFeatureRuntimeComponent(
+                    "example.second",
+                    SecondRuntimeComponent(),
+                ),
             ),
         )
 
@@ -176,8 +203,14 @@ class ApplicationFeatureRuntimeModuleTest {
         val error = shouldThrow<IllegalArgumentException> {
             ApplicationFeatureRuntimeComponents(
                 listOf(
-                    RegisteredApplicationFeatureRuntimeComponent("example.same", FirstRuntimeComponent()),
-                    RegisteredApplicationFeatureRuntimeComponent("example.same", SecondRuntimeComponent()),
+                    RegisteredApplicationFeatureRuntimeComponent(
+                        "example.same",
+                        FirstRuntimeComponent(),
+                    ),
+                    RegisteredApplicationFeatureRuntimeComponent(
+                        "example.same",
+                        SecondRuntimeComponent(),
+                    ),
                 ),
             )
         }

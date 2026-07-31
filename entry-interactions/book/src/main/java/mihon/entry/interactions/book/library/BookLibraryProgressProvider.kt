@@ -1,8 +1,9 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.library
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.EntryLibraryProgressEvidence
-import mihon.entry.interactions.EntryLibraryProgressProvider
+import mihon.entry.interactions.book.runtime.requireBook
+import mihon.entry.interactions.library.EntryLibraryProgressEvidence
+import mihon.entry.interactions.library.EntryLibraryProgressProvider
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryProgressRepository

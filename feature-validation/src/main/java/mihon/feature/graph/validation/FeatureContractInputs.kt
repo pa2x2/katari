@@ -7,10 +7,11 @@ import mihon.feature.graph.ContextEvidence
 import mihon.feature.graph.ContextInputDefinition
 import mihon.feature.graph.ContractFixture
 import mihon.feature.graph.ContractFixtureDefinition
-import mihon.feature.graph.FeatureExecutionParticipantSubject
 import mihon.feature.graph.FeatureIntegrationSubject
 import mihon.feature.graph.SpecializedAdapter
 import mihon.feature.graph.SpecializedAdapterDefinition
+import mihon.feature.graph.execution.FeatureExecutionParticipantSubject
+import mihon.feature.graph.validation.execution.FeatureExecutionBehavioralContractSelection
 
 /** Restricted typed inputs available while a feature creates contextual validation evidence. */
 class FeatureContractScenarioInput internal constructor(

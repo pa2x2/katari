@@ -1,9 +1,9 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.library
 
-import mihon.feature.graph.FeatureExecutionFailurePolicy
 import mihon.feature.graph.FeatureExecutionParticipantId
 import mihon.feature.graph.FeatureExecutionPointId
-import mihon.feature.graph.afterCommitVolatileFeatureExecutionPointDefinition
+import mihon.feature.graph.execution.FeatureExecutionFailurePolicy
+import mihon.feature.graph.execution.afterCommitVolatileFeatureExecutionPointDefinition
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import java.util.concurrent.ConcurrentHashMap

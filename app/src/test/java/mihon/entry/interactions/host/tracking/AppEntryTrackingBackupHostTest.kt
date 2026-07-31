@@ -1,7 +1,7 @@
 package mihon.entry.interactions.host.tracking
 
 import io.kotest.matchers.shouldBe
-import mihon.entry.interactions.EntryTrackingBackupRecord
+import mihon.entry.interactions.tracking.backup.EntryTrackingBackupRecord
 import org.junit.jupiter.api.Test
 
 class AppEntryTrackingBackupHostTest {

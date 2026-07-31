@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.processor
 
 import mihon.book.api.model.BookPublicationModelDescriptor
 import tachiyomi.core.common.preference.Preference

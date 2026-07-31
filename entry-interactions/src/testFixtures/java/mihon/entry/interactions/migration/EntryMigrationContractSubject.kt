@@ -1,10 +1,29 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.migration
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.mockk.coEvery
 import io.mockk.mockk
-import mihon.feature.graph.FeatureExecutionHandler
-import mihon.feature.graph.FeatureExecutionParticipantBinding
+import mihon.entry.interactions.download.maintenance.migration.ENTRY_DOWNLOAD_MIGRATION_OPTION_PARTICIPANT
+import mihon.entry.interactions.download.maintenance.migration.EntryDownloadMigrationContributor
+import mihon.entry.interactions.download.maintenance.migration.entryDownloadMigrationBinding
+import mihon.entry.interactions.merge.EntryMergeMigrationReplacementResult
+import mihon.entry.interactions.migration.consequence.EntryMigrationDurableConsequences
+import mihon.entry.interactions.migration.consequence.cover.EntryMigrationCustomCoverContributor
+import mihon.entry.interactions.migration.consequence.cover.entryMigrationCustomCoverBinding
+import mihon.entry.interactions.migration.options.EntryMigrationOptionDiscovery
+import mihon.entry.interactions.migration.preparation.EntryMigrationTransitionPreparation
+import mihon.entry.interactions.runtime.EntryInteractionPlugin
+import mihon.entry.interactions.runtime.createEntryInteractionComposition
+import mihon.entry.interactions.source.EntrySourceRefreshResult
+import mihon.entry.interactions.state.EntryBookmarkCapability
+import mihon.entry.interactions.state.EntryConsumptionCapability
+import mihon.entry.interactions.state.EntryMigrationCapability
+import mihon.entry.interactions.tracking.EntryTrackingMigrationPreparationResult
+import mihon.entry.interactions.tracking.migration.EntryTrackingMigrationContributor
+import mihon.entry.interactions.tracking.migration.entryTrackingMigrationBinding
+import mihon.feature.graph.ContributionOwner
+import mihon.feature.graph.execution.FeatureExecutionHandler
+import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.graph.validation.FeatureContractExecutionInput
 
 internal fun entryMigrationContractFeature(
@@ -21,7 +40,7 @@ internal fun entryMigrationContractFeature(
         plugins = listOf(
             object : EntryInteractionPlugin {
                 override val type = type
-                override val owner = mihon.feature.graph.ContributionOwner("migration-contract-type")
+                override val owner = ContributionOwner("migration-contract-type")
                 override val providerBindings = bindings
             },
         ),

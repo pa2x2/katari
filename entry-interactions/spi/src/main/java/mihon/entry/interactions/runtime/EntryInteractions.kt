@@ -1,4 +1,22 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.runtime
+
+import mihon.entry.interactions.child.EntryChildGroupFilterInteraction
+import mihon.entry.interactions.child.EntryChildListInteraction
+import mihon.entry.interactions.child.EntryChildProgressInteraction
+import mihon.entry.interactions.child.EntryMissingChildGapInteraction
+import mihon.entry.interactions.download.EntryDownloadInteraction
+import mihon.entry.interactions.library.EntryLibraryProgressInteraction
+import mihon.entry.interactions.media.EntryImmersiveInteraction
+import mihon.entry.interactions.media.EntryMediaCacheInteraction
+import mihon.entry.interactions.media.EntryPreviewInteraction
+import mihon.entry.interactions.media.EntryViewerSettingsInteraction
+import mihon.entry.interactions.navigation.EntryContinueInteraction
+import mihon.entry.interactions.navigation.EntryOpenInteraction
+import mihon.entry.interactions.presentation.EntryTypePresentationInteraction
+import mihon.entry.interactions.state.EntryBookmarkInteraction
+import mihon.entry.interactions.state.EntryConsumptionInteraction
+import mihon.entry.interactions.state.EntryPlaybackPreferencesInteraction
+import mihon.entry.interactions.state.EntryProgressInteraction
 
 /** Internal operational dispatch assembled from contributed type providers. */
 interface EntryInteractions {

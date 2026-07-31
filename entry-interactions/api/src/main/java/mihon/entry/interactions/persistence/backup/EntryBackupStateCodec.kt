@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.persistence.backup
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json

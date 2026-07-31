@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.library
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
@@ -9,6 +9,26 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import mihon.entry.interactions.download.EntryDownloadActionAvailability
+import mihon.entry.interactions.download.EntryDownloadActionBlocker
+import mihon.entry.interactions.download.EntryDownloadActionFeature
+import mihon.entry.interactions.download.EntryDownloadCapability
+import mihon.entry.interactions.download.EntryDownloadProcessor
+import mihon.entry.interactions.navigation.EntryOpenCapability
+import mihon.entry.interactions.navigation.EntryOpenFeature
+import mihon.entry.interactions.navigation.EntryOpenProcessor
+import mihon.entry.interactions.presentation.EntryTypePresentationFeature
+import mihon.entry.interactions.presentation.EntryTypePresentationResult
+import mihon.entry.interactions.presentation.genericEntryTypePresentation
+import mihon.entry.interactions.runtime.EntryInteractionPlugin
+import mihon.entry.interactions.runtime.EntryInteractionProvider
+import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
+import mihon.entry.interactions.runtime.EntryTypePresentationCapability
+import mihon.entry.interactions.runtime.EntryTypePresentationProvider
+import mihon.entry.interactions.runtime.createEntryInteractionComposition
+import mihon.entry.interactions.state.EntryConsumptionCapability
+import mihon.entry.interactions.state.EntryConsumptionFeature
+import mihon.entry.interactions.state.EntryConsumptionProcessor
 import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry

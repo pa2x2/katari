@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.merge.consequence
 
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
@@ -6,10 +6,13 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.host.EntryMergeHost
-import mihon.entry.interactions.host.EntryMergePendingConsequence
-import mihon.feature.graph.FeatureDurableExecutionEnvelope
+import mihon.entry.interactions.merge.EntryMergeFollowUp
+import mihon.entry.interactions.merge.consequence.legacy.EntryMergeLegacyConsequenceDelivery
+import mihon.entry.interactions.merge.host.EntryMergeHost
+import mihon.entry.interactions.merge.host.EntryMergePendingConsequence
+import mihon.entry.interactions.tracking.merge.ENTRY_TRACKING_MERGE_PARTICIPANT
 import mihon.feature.graph.FeatureExecutionParticipantId
+import mihon.feature.graph.execution.FeatureDurableExecutionEnvelope
 import org.junit.jupiter.api.Test
 
 class EntryMergeConsequenceDeliveryTest {

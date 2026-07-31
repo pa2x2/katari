@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.content
 
 import eu.kanade.tachiyomi.source.entry.BookResourceHierarchyNode
 import eu.kanade.tachiyomi.source.entry.BookResourceLocation

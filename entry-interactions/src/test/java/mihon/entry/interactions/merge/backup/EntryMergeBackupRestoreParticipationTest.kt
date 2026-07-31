@@ -1,9 +1,24 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.merge.backup
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
+import mihon.entry.interactions.merge.EntryMergeBackupFeature
+import mihon.entry.interactions.merge.EntryMergeBackupGroup
+import mihon.entry.interactions.merge.EntryMergeBackupGroupMember
+import mihon.entry.interactions.merge.EntryMergeBackupIdentity
+import mihon.entry.interactions.merge.EntryMergeBackupMember
+import mihon.entry.interactions.merge.EntryMergeBackupRestoreResult
+import mihon.entry.interactions.merge.EntryMergeSubject
+import mihon.entry.interactions.persistence.backup.EntryBackupRestoreEvent
+import mihon.entry.interactions.persistence.backup.EntryBackupRestoreFinalizingEvent
+import mihon.entry.interactions.persistence.backup.EntryBackupRestoreIssue
+import mihon.entry.interactions.persistence.backup.EntryBackupRestoreIssueSink
+import mihon.entry.interactions.persistence.backup.EntryBackupRestoreSession
+import mihon.entry.interactions.persistence.backup.EntryBackupRestoreSessionId
+import mihon.entry.interactions.persistence.backup.EntryBackupRestoreStateSource
+import mihon.entry.interactions.persistence.backup.EntryFeatureStateEnvelope
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 
@@ -12,7 +27,10 @@ class EntryMergeBackupRestoreParticipationTest {
     @Test
     fun `deferred groups belong to the restore session that captured them`() = runTest {
         val feature = RecordingMergeBackupFeature()
-        val participation = EntryMergeBackupRestoreParticipation(feature)
+        val participation =
+            EntryMergeBackupRestoreParticipation(
+                feature,
+            )
         val capturedSession = session("captured")
         val unrelatedSession = session("unrelated")
         val target = EntryMergeBackupIdentity(10, "/target", EntryType.BOOK)

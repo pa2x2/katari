@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.tracking
 
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner

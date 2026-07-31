@@ -2,7 +2,7 @@ package mihon.translation.runtime.system
 
 import android.app.Application
 import android.os.Build
-import mihon.translation.spi.TranslationEngineContribution
+import mihon.translation.spi.contribution.TranslationEngineContribution
 
 internal fun createAndroidSystemTranslationContribution(
     application: Application,

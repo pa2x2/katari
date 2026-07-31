@@ -1,5 +1,6 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media
 
+import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.flow.StateFlow
@@ -105,7 +106,7 @@ sealed interface EntryPreviewUnavailableReason {
 }
 
 data class EntryPreviewLoadRequest(
-    val context: android.content.Context,
+    val context: Context,
     val previewContext: EntryPreviewContext,
     val children: List<EntryPreviewChildCandidate>,
     val memberIds: List<Long>,

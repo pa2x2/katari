@@ -1,5 +1,9 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.lifecycle.profile.host
 
+import mihon.entry.interactions.lifecycle.profile.EntryProfileMoveConflict
+import mihon.entry.interactions.lifecycle.profile.EntryProfileMovePlan
+import mihon.entry.interactions.lifecycle.profile.EntryProfileMovePreview
+import mihon.entry.interactions.lifecycle.profile.EntryProfileMoveRequest
 import tachiyomi.domain.entry.model.Entry
 
 interface EntryProfileMoveHost {

@@ -1,7 +1,8 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.tracking
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.host.tracking.EntryTrackingHostService
+import mihon.entry.interactions.runtime.requireEntryContextState
+import mihon.entry.interactions.tracking.host.EntryTrackingHostService
 import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.contextEvidence
 
@@ -90,7 +91,12 @@ internal fun EntryTrackingHostService.toDescriptor(): EntryTrackingServiceDescri
         name = name,
         logoResource = logoResource,
         capabilities = EntryTrackingServiceCapabilities(
-            statuses = capabilities.statuses.map { status -> EntryTrackingStatus(status.value, status.label) },
+            statuses = capabilities.statuses.map { status ->
+                EntryTrackingStatus(
+                    status.value,
+                    status.label,
+                )
+            },
             scores = capabilities.scores,
             supportsReadingDates = capabilities.supportsReadingDates,
             supportsPrivateTracking = capabilities.supportsPrivateTracking,

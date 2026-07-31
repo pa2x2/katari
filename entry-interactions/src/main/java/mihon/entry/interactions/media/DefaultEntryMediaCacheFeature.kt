@@ -1,5 +1,6 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media
 
+import mihon.entry.interactions.runtime.applicableProviderTypes
 import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.core.common.preference.Preference

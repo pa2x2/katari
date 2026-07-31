@@ -1,17 +1,28 @@
-package mihon.translation.runtime
+package mihon.translation.runtime.di
 
-import mihon.feature.runtime.ApplicationFeatureRuntimeArtifacts
-import mihon.feature.runtime.ApplicationFeatureRuntimeGraphValidator
-import mihon.feature.runtime.ApplicationFeatureRuntimeModule
-import mihon.feature.runtime.applicationFeatureRuntimeBoundary
+import mihon.feature.runtime.application.ApplicationFeatureRuntimeArtifacts
+import mihon.feature.runtime.application.ApplicationFeatureRuntimeGraphValidator
+import mihon.feature.runtime.application.ApplicationFeatureRuntimeModule
+import mihon.feature.runtime.application.applicationFeatureRuntimeBoundary
 import mihon.translation.api.TranslationFeature
-import mihon.translation.api.TranslationHostActions
+import mihon.translation.api.host.TranslationHostActions
+import mihon.translation.runtime.component.TranslationRuntimeContribution
+import mihon.translation.runtime.feature.DefaultTranslationFeature
+import mihon.translation.runtime.graph.TranslationEngineRegistryCapability
+import mihon.translation.runtime.graph.TranslationFeatureContributor
+import mihon.translation.runtime.graph.TranslationFeatureGraphStateValidator
+import mihon.translation.runtime.host.DefaultTranslationHostActions
+import mihon.translation.runtime.language.ProfileTranslationDefaultTargetLanguageResolver
+import mihon.translation.runtime.language.createTranslationRuntimeContributions
+import mihon.translation.runtime.language.createTranslationSourceLanguageDetectors
+import mihon.translation.runtime.preference.ProfileTranslationPreferences
+import mihon.translation.runtime.registry.DefaultTranslationEngineRegistry
 import mihon.translation.runtime.selection.ProfileTranslationEngineResolver
 import mihon.translation.runtime.system.AndroidSystemTranslationEngine
 import mihon.translation.runtime.system.createAndroidSystemTranslationContribution
-import mihon.translation.spi.KnownTranslationEngineCatalog
-import mihon.translation.spi.TranslationEngineRegistry
-import mihon.translation.spi.TranslationEngineSetupRegistry
+import mihon.translation.spi.engine.KnownTranslationEngineCatalog
+import mihon.translation.spi.engine.TranslationEngineRegistry
+import mihon.translation.spi.setup.TranslationEngineSetupRegistry
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
 import uy.kohesive.injekt.api.addSingletonFactory
 
@@ -49,7 +60,9 @@ val translationFeatureRuntimeModule = ApplicationFeatureRuntimeModule(
             application = context.application,
             contributions = runtimeContributions,
         ),
-        defaultTargetLanguageResolver = ProfileTranslationDefaultTargetLanguageResolver(profilePreferences),
+        defaultTargetLanguageResolver = ProfileTranslationDefaultTargetLanguageResolver(
+            profilePreferences,
+        ),
         selectedEngine = profileEngineResolver::resolve,
     )
     val hostActions = DefaultTranslationHostActions(

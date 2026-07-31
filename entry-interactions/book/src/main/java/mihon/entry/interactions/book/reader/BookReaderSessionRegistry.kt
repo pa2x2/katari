@@ -1,5 +1,6 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.reader
 
+import mihon.entry.interactions.book.processor.BookReaderRequest
 import java.util.UUID
 
 /**

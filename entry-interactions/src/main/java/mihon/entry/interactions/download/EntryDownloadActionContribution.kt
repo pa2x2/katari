@@ -1,6 +1,8 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download
 
+import mihon.entry.interactions.download.runtime.EntryDownloadSourceAccess
 import mihon.entry.interactions.source.ENTRY_SOURCE_CONTEXT_OWNER
+import mihon.entry.interactions.state.EntryBookmarkCapability
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner

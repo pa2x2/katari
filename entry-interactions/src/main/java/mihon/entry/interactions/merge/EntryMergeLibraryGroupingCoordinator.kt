@@ -1,9 +1,9 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.merge
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import mihon.entry.interactions.host.EntryMergeHost
-import mihon.entry.interactions.host.EntryMergeMembershipSnapshot
+import mihon.entry.interactions.merge.host.EntryMergeHost
+import mihon.entry.interactions.merge.host.EntryMergeMembershipSnapshot
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.service.EntryLibraryGroupResolution
 import tachiyomi.domain.entry.service.EntryLibraryGroupingResolution
@@ -73,7 +73,12 @@ internal class EntryMergeLibraryGroupingCoordinator(
     private fun EntryLibraryGroupingResolution.toFeatureProjection(): EntryMergeLibraryGroupingProjection {
         return EntryMergeLibraryGroupingProjection(
             profileId = profileId,
-            groups = groups.map { group -> EntryMergeLibraryGroup(group.visibleEntry, group.orderedEntries) },
+            groups = groups.map { group ->
+                EntryMergeLibraryGroup(
+                    group.visibleEntry,
+                    group.orderedEntries,
+                )
+            },
         )
     }
 }

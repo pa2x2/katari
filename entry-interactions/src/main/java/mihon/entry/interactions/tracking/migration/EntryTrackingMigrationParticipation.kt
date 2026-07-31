@@ -1,14 +1,21 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.tracking.migration
 
+import mihon.entry.interactions.migration.preparation.ENTRY_MIGRATION_TRANSITION_PREPARING_POINT
+import mihon.entry.interactions.state.EntryMigrationCapability
+import mihon.entry.interactions.tracking.ENTRY_TRACKING_OWNER
+import mihon.entry.interactions.tracking.EntryTrackingFeature
+import mihon.entry.interactions.tracking.EntryTrackingMigrationPreparationResult
+import mihon.entry.interactions.tracking.toDomainTrack
+import mihon.entry.interactions.tracking.toTrackingRecord
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureBehaviorContract
-import mihon.feature.graph.FeatureExecutionHandler
-import mihon.feature.graph.FeatureExecutionParticipantBinding
-import mihon.feature.graph.FeatureExecutionParticipantDefinition
 import mihon.feature.graph.FeatureExecutionParticipantId
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
+import mihon.feature.graph.execution.FeatureExecutionHandler
+import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
+import mihon.feature.graph.execution.FeatureExecutionParticipantDefinition
 
 internal object EntryTrackingMigrationParticipationBehaviorContract : FeatureBehaviorContract {
     override val id = FeatureArtifactId("entry.tracking.migration-participation.behavior")

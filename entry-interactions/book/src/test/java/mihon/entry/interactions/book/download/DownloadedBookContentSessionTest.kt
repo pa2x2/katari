@@ -10,8 +10,8 @@ import mihon.book.api.BookCatalogCoverage
 import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookResourceCacheState
 import mihon.book.api.BookResourceCapability
-import mihon.entry.interactions.book.BookByteRange
-import mihon.entry.interactions.book.BookMaterializationCache
+import mihon.entry.interactions.book.content.BookByteRange
+import mihon.entry.interactions.book.content.BookMaterializationCache
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -21,7 +21,6 @@ import java.nio.file.Files
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
-import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)

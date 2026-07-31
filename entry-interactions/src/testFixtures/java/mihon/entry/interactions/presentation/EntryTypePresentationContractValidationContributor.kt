@@ -1,5 +1,7 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.presentation
 
+import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.runtime.EntryTypePresentationCapability
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
@@ -28,7 +30,7 @@ class EntryTypePresentationContractValidationContributor : FeatureValidationCont
                     val feature = DefaultEntryTypePresentationFeature(
                         evaluation = evaluation,
                         interaction = object : EntryTypePresentationInteraction {
-                            override fun presentation(type: eu.kanade.tachiyomi.source.entry.EntryType) =
+                            override fun presentation(type: EntryType) =
                                 provider.presentation.takeIf { type == provider.type }
                         },
                     )

@@ -1,14 +1,14 @@
 package mihon.feature.runtime
 
 import mihon.feature.graph.FeatureArtifactSelection
-import mihon.feature.graph.FeatureDurableExecutionParticipantBinding
-import mihon.feature.graph.FeatureExecutionParticipantBinding
-import mihon.feature.graph.FeatureExecutionRuntime
 import mihon.feature.graph.FeatureGraph
 import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.discoverAndAssembleFeatureGraph
 import mihon.feature.graph.evaluateFeatureGraph
+import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
+import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
+import mihon.feature.graph.execution.FeatureExecutionRuntime
 import mihon.feature.graph.selectFeatureArtifacts
 
 /** Independently installed contributions consumed by the single application Feature runtime. */

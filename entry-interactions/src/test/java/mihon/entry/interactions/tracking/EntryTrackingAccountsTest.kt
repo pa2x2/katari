@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.tracking
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.shouldBe
@@ -6,21 +6,23 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.host.tracking.EntryTrackingAccountHost
-import mihon.entry.interactions.host.tracking.EntryTrackingAutomationHost
-import mihon.entry.interactions.host.tracking.EntryTrackingBackupHost
-import mihon.entry.interactions.host.tracking.EntryTrackingCollectionHost
-import mihon.entry.interactions.host.tracking.EntryTrackingHost
-import mihon.entry.interactions.host.tracking.EntryTrackingHostAccount
-import mihon.entry.interactions.host.tracking.EntryTrackingHostCredentialIdentity
-import mihon.entry.interactions.host.tracking.EntryTrackingHostEntrySnapshot
-import mihon.entry.interactions.host.tracking.EntryTrackingHostLoginMethod
-import mihon.entry.interactions.host.tracking.EntryTrackingHostService
-import mihon.entry.interactions.host.tracking.EntryTrackingHostServiceCapabilities
-import mihon.entry.interactions.host.tracking.EntryTrackingHostStoredCredentials
-import mihon.entry.interactions.host.tracking.EntryTrackingOperationHost
+import mihon.entry.interactions.source.sourceFeatureEvaluation
+import mihon.entry.interactions.tracking.host.EntryTrackingAccountHost
+import mihon.entry.interactions.tracking.host.EntryTrackingAutomationHost
+import mihon.entry.interactions.tracking.host.EntryTrackingBackupHost
+import mihon.entry.interactions.tracking.host.EntryTrackingCollectionHost
+import mihon.entry.interactions.tracking.host.EntryTrackingHost
+import mihon.entry.interactions.tracking.host.EntryTrackingHostAccount
+import mihon.entry.interactions.tracking.host.EntryTrackingHostCredentialIdentity
+import mihon.entry.interactions.tracking.host.EntryTrackingHostEntrySnapshot
+import mihon.entry.interactions.tracking.host.EntryTrackingHostLoginMethod
+import mihon.entry.interactions.tracking.host.EntryTrackingHostService
+import mihon.entry.interactions.tracking.host.EntryTrackingHostServiceCapabilities
+import mihon.entry.interactions.tracking.host.EntryTrackingHostStoredCredentials
+import mihon.entry.interactions.tracking.host.EntryTrackingOperationHost
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 
@@ -88,8 +90,8 @@ class EntryTrackingAccountsTest {
             EntryTrackingStoredCredentials("mail", "secret")
         feature.storedCredentials(EntryTrackingServiceId(external.service.id)) shouldBe null
 
-        io.mockk.verify(exactly = 1) { accounts.storedCredentials(credentials.service.id) }
-        io.mockk.verify(exactly = 0) { accounts.storedCredentials(external.service.id) }
+        verify(exactly = 1) { accounts.storedCredentials(credentials.service.id) }
+        verify(exactly = 0) { accounts.storedCredentials(external.service.id) }
     }
 
     @Test

@@ -1,8 +1,17 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media
 
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import mihon.entry.interactions.media.backup.ENTRY_PLAYBACK_PREFERENCES_BACKUP_RESTORE_PARTICIPANT
+import mihon.entry.interactions.media.backup.ENTRY_PLAYBACK_PREFERENCES_BACKUP_SNAPSHOT_PARTICIPANT
+import mihon.entry.interactions.media.migration.ENTRY_PLAYBACK_PREFERENCES_MIGRATION_PARTICIPANT
+import mihon.entry.interactions.media.migration.EntryPlaybackPreferencesMigrationDurableBehaviorContract
+import mihon.entry.interactions.media.migration.entryPlaybackPreferencesMigrationBinding
+import mihon.entry.interactions.migration.consequence.EntryMigrationDurableEvent
+import mihon.entry.interactions.persistence.backup.addEntryBackupParticipationContract
+import mihon.entry.interactions.state.EntryPlaybackPreferencesCapability
+import mihon.entry.interactions.state.EntryPlaybackPreferencesInteraction
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
@@ -82,12 +91,20 @@ class EntryPlaybackPreferencesContractValidationContributor : FeatureValidationC
                     val feature = DefaultEntryPlaybackPreferencesFeature(
                         evaluation = evaluation,
                         interaction = object : EntryPlaybackPreferencesInteraction {
-                            override suspend fun snapshot(entry: Entry): EntryPlaybackPreferencesSnapshot = snapshot
-                            override suspend fun restore(entry: Entry, snapshot: EntryPlaybackPreferencesSnapshot) {
+                            override suspend fun snapshot(entry: Entry): EntryPlaybackPreferencesSnapshot =
+                                snapshot
+
+                            override suspend fun restore(
+                                entry: Entry,
+                                snapshot: EntryPlaybackPreferencesSnapshot,
+                            ) {
                                 restored += snapshot
                             }
 
-                            override suspend fun copy(sourceEntry: Entry, targetEntry: Entry): Boolean = true
+                            override suspend fun copy(
+                                sourceEntry: Entry,
+                                targetEntry: Entry,
+                            ): Boolean = true
                         },
                     )
 

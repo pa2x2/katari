@@ -1,2 +1,2 @@
 id=entry.cover-network
-module=mihon.entry.interactions.EntryCoverNetworkFeatureRuntimeModule
+module=mihon.entry.interactions.source.EntryCoverNetworkFeatureRuntimeModule

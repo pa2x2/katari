@@ -1,13 +1,13 @@
 package mihon.entry.interactions.reader.preparation
 
-import mihon.entry.viewer.settings.ReaderCapabilityId
-import mihon.entry.viewer.settings.ReaderSharedSettingAvailability
-import mihon.entry.viewer.settings.ReaderSharedSettingId
-import mihon.entry.viewer.settings.ReaderSharedSettingText
-import mihon.entry.viewer.settings.ReaderSharedSettingsProvider
-import mihon.entry.viewer.settings.ReaderSharedTogglePreferenceBinding
-import mihon.entry.viewer.settings.ReaderSharedToggleSetting
-import mihon.entry.viewer.settings.StandardReaderCapabilities
+import mihon.entry.viewer.settings.shared.ReaderCapabilityId
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingAvailability
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingId
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingText
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingsProvider
+import mihon.entry.viewer.settings.shared.ReaderSharedTogglePreferenceBinding
+import mihon.entry.viewer.settings.shared.ReaderSharedToggleSetting
+import mihon.entry.viewer.settings.shared.StandardReaderCapabilities
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
 

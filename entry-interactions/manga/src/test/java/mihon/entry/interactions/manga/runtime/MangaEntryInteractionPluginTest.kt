@@ -1,4 +1,4 @@
-package mihon.entry.interactions.manga
+package mihon.entry.interactions.manga.runtime
 
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
@@ -7,7 +7,6 @@ import eu.kanade.tachiyomi.source.model.Page
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -20,22 +19,35 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.EntryChildListRequest
-import mihon.entry.interactions.EntryChildListRow
-import mihon.entry.interactions.EntryChildProgressRequest
-import mihon.entry.interactions.EntryDownloadPhase
-import mihon.entry.interactions.EntryDownloadProgress
-import mihon.entry.interactions.EntryDownloadState
-import mihon.entry.interactions.EntryMediaSessionEventSink
-import mihon.entry.interactions.EntryMediaSessionResult
-import mihon.entry.interactions.EntryOpenOptions
-import mihon.entry.interactions.EntryPreviewSize
-import mihon.entry.interactions.EntryProgressResourceMapping
+import mihon.entry.interactions.child.EntryChildListRequest
+import mihon.entry.interactions.child.EntryChildListRow
+import mihon.entry.interactions.child.EntryChildProgressRequest
+import mihon.entry.interactions.download.EntryDownloadPhase
+import mihon.entry.interactions.download.EntryDownloadProgress
+import mihon.entry.interactions.download.EntryDownloadState
+import mihon.entry.interactions.manga.child.MangaChildGroupFilterProcessor
 import mihon.entry.interactions.manga.download.DownloadCache
 import mihon.entry.interactions.manga.download.DownloadManager
 import mihon.entry.interactions.manga.download.model.DownloadState
 import mihon.entry.interactions.manga.download.model.MangaDownload
+import mihon.entry.interactions.manga.download.toEntryDownloadQueueItem
+import mihon.entry.interactions.manga.download.toEntryDownloadState
+import mihon.entry.interactions.manga.download.toEntryDownloadStatus
+import mihon.entry.interactions.manga.download.toMangaEntryDownloadQueueGroups
+import mihon.entry.interactions.manga.library.MangaLibraryProgressProvider
+import mihon.entry.interactions.manga.media.session.MangaMediaSessionProcessor
+import mihon.entry.interactions.manga.navigation.MangaContinueProcessor
+import mihon.entry.interactions.manga.navigation.MangaOpenProcessor
+import mihon.entry.interactions.manga.state.MangaConsumptionProcessor
+import mihon.entry.interactions.manga.state.MangaProgressProcessor
+import mihon.entry.interactions.manga.state.lastReadAt
+import mihon.entry.interactions.manga.state.mangaProgressState
+import mihon.entry.interactions.manga.state.pageIndex
+import mihon.entry.interactions.media.EntryPreviewSize
+import mihon.entry.interactions.media.session.EntryMediaSessionEventSink
+import mihon.entry.interactions.media.session.EntryMediaSessionResult
 import mihon.entry.interactions.settings.EntryInteractionPreferences
+import mihon.entry.interactions.state.EntryProgressResourceMapping
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 import tachiyomi.core.common.preference.Preference
@@ -74,7 +86,14 @@ class MangaEntryInteractionPluginTest {
         val interactions = createEntryInteractions(
             listOf(
                 mangaEntryInteractionPlugin(
-                    dependencies(progressStates = listOf(pageProgress(chapterId = 7L, pageIndex = 4L))),
+                    dependencies(
+                        progressStates = listOf(
+                            pageProgress(
+                                chapterId = 7L,
+                                pageIndex = 4L,
+                            ),
+                        ),
+                    ),
                 ),
             ),
         )
@@ -116,7 +135,8 @@ class MangaEntryInteractionPluginTest {
 
     @Test
     fun `manga child list sorts chapter number descending with largest number first`() = runTest {
-        val interactions = createEntryInteractions(listOf(mangaEntryInteractionPlugin(dependencies())))
+        val interactions =
+            createEntryInteractions(listOf(mangaEntryInteractionPlugin(dependencies())))
         val entry = entry(EntryType.MANGA).copy(
             chapterFlags = Entry.CHAPTER_SORTING_NUMBER or Entry.CHAPTER_SORT_DESC,
         )
@@ -140,7 +160,14 @@ class MangaEntryInteractionPluginTest {
         val interactions = createEntryInteractions(
             listOf(
                 mangaEntryInteractionPlugin(
-                    dependencies(progressStates = listOf(pageProgress(chapterId = 7L, pageIndex = 4L))),
+                    dependencies(
+                        progressStates = listOf(
+                            pageProgress(
+                                chapterId = 7L,
+                                pageIndex = 4L,
+                            ),
+                        ),
+                    ),
                 ),
             ),
         )
@@ -162,7 +189,14 @@ class MangaEntryInteractionPluginTest {
         val interactions = createEntryInteractions(
             listOf(
                 mangaEntryInteractionPlugin(
-                    dependencies(progressStates = listOf(pageProgress(chapterId = 7L, pageIndex = 4L))),
+                    dependencies(
+                        progressStates = listOf(
+                            pageProgress(
+                                chapterId = 7L,
+                                pageIndex = 4L,
+                            ),
+                        ),
+                    ),
                 ),
             ),
         )

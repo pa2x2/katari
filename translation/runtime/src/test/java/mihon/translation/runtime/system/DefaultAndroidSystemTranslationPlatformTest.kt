@@ -2,15 +2,17 @@ package mihon.translation.runtime.system
 
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import mihon.translation.api.TranslationLanguagePair
-import mihon.translation.api.TranslationLanguageSupport
-import mihon.translation.api.TranslationLanguageSupportInspection
-import mihon.translation.api.TranslationLanguageTag
+import mihon.translation.api.language.TranslationLanguagePair
+import mihon.translation.api.language.TranslationLanguageSupport
+import mihon.translation.api.language.TranslationLanguageSupportInspection
+import mihon.translation.api.language.TranslationLanguageTag
 import org.junit.jupiter.api.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class DefaultAndroidSystemTranslationPlatformTest {
     @Test
     fun `device inspection only gates OS and service presence`() = runTest {

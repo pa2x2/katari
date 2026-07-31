@@ -1,5 +1,6 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.merge
 
+import mihon.entry.interactions.lifecycle.profile.EntryProfileMoveParticipantReference
 import tachiyomi.domain.entry.model.Entry
 
 interface EntryMergeProfileMoveFeature {

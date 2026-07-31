@@ -1,2 +1,2 @@
 id=entry.continue
-module=mihon.entry.interactions.EntryContinueFeatureRuntimeModule
+module=mihon.entry.interactions.navigation.EntryContinueFeatureRuntimeModule

@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.state
 
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
@@ -24,7 +24,10 @@ class EntryBookmarkContractValidationContributor : FeatureValidationContributor 
     override fun contributeTo(sink: FeatureValidationContributionSink) {
         sink.add(
             FeatureContractVerifier(
-                FeatureContractReference(ENTRY_BOOKMARK_FEATURE_ID, EntryBookmarkProviderBehaviorContract),
+                FeatureContractReference(
+                    ENTRY_BOOKMARK_FEATURE_ID,
+                    EntryBookmarkProviderBehaviorContract,
+                ),
             ) { input -> verifyBookmarkCoordinator(input) },
         )
         addContextContract(

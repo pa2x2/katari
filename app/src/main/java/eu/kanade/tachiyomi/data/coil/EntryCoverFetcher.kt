@@ -16,8 +16,8 @@ import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.coil.EntryCoverFetcher.Companion.USE_CUSTOM_COVER_KEY
 import eu.kanade.tachiyomi.network.await
 import logcat.LogPriority
-import mihon.entry.interactions.EntryCoverNetworkFeature
-import mihon.entry.interactions.EntryCoverNetworkResolution
+import mihon.entry.interactions.source.EntryCoverNetworkFeature
+import mihon.entry.interactions.source.EntryCoverNetworkResolution
 import okhttp3.CacheControl
 import okhttp3.Call
 import okhttp3.Request

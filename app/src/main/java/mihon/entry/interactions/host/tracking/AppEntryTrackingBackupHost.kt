@@ -1,6 +1,7 @@
 package mihon.entry.interactions.host.tracking
 
-import mihon.entry.interactions.EntryTrackingBackupRecord
+import mihon.entry.interactions.tracking.backup.EntryTrackingBackupRecord
+import mihon.entry.interactions.tracking.host.EntryTrackingBackupHost
 import tachiyomi.data.DatabaseHandler
 import kotlin.math.max
 

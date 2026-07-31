@@ -32,11 +32,10 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.EntryContinueFeature
-import mihon.entry.interactions.EntryContinueResult
+import mihon.entry.interactions.navigation.EntryContinueFeature
+import mihon.entry.interactions.navigation.EntryContinueResult
 import mihon.feature.migration.dialog.MigrateEntryDialog
 import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.domain.history.model.HistoryItem
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt

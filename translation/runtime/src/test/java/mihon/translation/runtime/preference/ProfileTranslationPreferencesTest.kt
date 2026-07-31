@@ -1,10 +1,10 @@
-package mihon.translation.runtime
+package mihon.translation.runtime.preference
 
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
-import mihon.translation.api.TranslationEngineId
-import mihon.translation.api.TranslationLanguageTag
-import mihon.translation.api.TranslationTargetLanguageSelection
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.language.TranslationLanguageTag
+import mihon.translation.api.request.TranslationTargetLanguageSelection
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerId

@@ -1,4 +1,4 @@
-package mihon.translation.ui.picker
+package mihon.translation.ui.picker.language
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -22,7 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import mihon.translation.api.TranslationLanguageTag
+import mihon.translation.api.language.TranslationLanguageTag
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 

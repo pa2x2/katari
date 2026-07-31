@@ -1,2 +1,2 @@
 id=entry.metadata-lifecycle
-module=mihon.entry.interactions.EntryMetadataLifecycleFeatureRuntimeModule
+module=mihon.entry.interactions.lifecycle.metadata.EntryMetadataLifecycleFeatureRuntimeModule

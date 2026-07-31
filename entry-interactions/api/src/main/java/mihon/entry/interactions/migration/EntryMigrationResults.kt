@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.migration
 
 sealed interface EntryMigrationAvailability {
     data object Available : EntryMigrationAvailability

@@ -1,2 +1,2 @@
 id=entry.viewer-settings
-module=mihon.entry.interactions.EntryViewerSettingsFeatureRuntimeModule
+module=mihon.entry.interactions.media.EntryViewerSettingsFeatureRuntimeModule

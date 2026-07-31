@@ -36,7 +36,7 @@ import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.AutocompleteFilterItem
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.SearchableFilterGroupContent
-import mihon.entry.interactions.EntryCatalogueFilterSuggestionsResult
+import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.CheckboxItem

@@ -28,8 +28,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.EntryDestructiveRemovalFeature
-import mihon.entry.interactions.EntryDestructiveRemovalResult
+import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalFeature
+import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalResult
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import tachiyomi.core.common.preference.Preference

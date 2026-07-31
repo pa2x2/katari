@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media.session
 
 /** Consequence families that independently contributed media-session policy may suppress. */
 enum class EntryMediaSessionConsequence {

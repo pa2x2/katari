@@ -17,11 +17,12 @@ import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import mihon.entry.interactions.EntryImmersiveAvailability
-import mihon.entry.interactions.EntryImmersiveChildRequirement
-import mihon.entry.interactions.EntryImmersiveFeature
-import mihon.entry.interactions.EntryImmersiveHandle
-import mihon.entry.interactions.EntryImmersiveLoadResult
+import mihon.entry.interactions.media.EntryImmersiveAvailability
+import mihon.entry.interactions.media.EntryImmersiveChildRequirement
+import mihon.entry.interactions.media.EntryImmersiveFeature
+import mihon.entry.interactions.media.EntryImmersiveHandle
+import mihon.entry.interactions.media.EntryImmersiveLoadRequest
+import mihon.entry.interactions.media.EntryImmersiveLoadResult
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -94,7 +95,7 @@ class EntryImmersiveScreenModelTest {
                 childRequirement = EntryImmersiveChildRequirement.FIRST_READING_CHILD,
             )
             coEvery { load(any()) } answers {
-                val request = firstArg<mihon.entry.interactions.EntryImmersiveLoadRequest>()
+                val request = firstArg<EntryImmersiveLoadRequest>()
                 val loadedEntry = request.entry
                 val ref = EntryImmersiveItemKey(loadedEntry.id, loadedEntry.type)
                 val handle = handles.getOrPut(ref) {

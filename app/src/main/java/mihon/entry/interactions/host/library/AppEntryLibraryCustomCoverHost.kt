@@ -2,7 +2,7 @@ package mihon.entry.interactions.host.library
 
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.util.removeCovers
-import mihon.entry.interactions.EntryLibraryCustomCoverHost
+import mihon.entry.interactions.library.membership.host.EntryLibraryCustomCoverHost
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.entry.model.Entry
 import java.time.Instant

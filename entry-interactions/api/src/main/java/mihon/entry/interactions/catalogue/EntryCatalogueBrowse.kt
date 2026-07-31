@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.catalogue
 
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 

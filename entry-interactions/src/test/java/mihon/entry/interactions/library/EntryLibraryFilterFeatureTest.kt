@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.library
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.assertions.throwables.shouldThrow
@@ -6,6 +6,14 @@ import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import mihon.entry.interactions.runtime.EntryInteractionComposition
+import mihon.entry.interactions.runtime.EntryInteractionPlugin
+import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
+import mihon.entry.interactions.runtime.EntryOutsideReleasePeriodFilterCapability
+import mihon.entry.interactions.runtime.EntryOutsideReleasePeriodFilterProvider
+import mihon.entry.interactions.runtime.createEntryInteractionComposition
+import mihon.entry.interactions.state.EntryBookmarkCapability
+import mihon.entry.interactions.state.EntryBookmarkProcessor
 import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.TriState

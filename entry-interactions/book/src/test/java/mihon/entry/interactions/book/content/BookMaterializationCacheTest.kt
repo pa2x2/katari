@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.content
 
 import android.app.Application
 import io.mockk.mockk
@@ -11,6 +11,7 @@ import kotlinx.coroutines.test.runTest
 import mihon.book.api.BookContentResource
 import mihon.book.api.BookResourceCacheState
 import org.junit.jupiter.api.Test
+import java.io.File
 import java.nio.file.Files
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
@@ -181,7 +182,7 @@ class BookMaterializationCacheTest {
     }
 
     private fun cache(
-        directory: java.io.File = Files.createTempDirectory("katari-book-cache").toFile(),
+        directory: File = Files.createTempDirectory("katari-book-cache").toFile(),
     ): BookMaterializationCache = BookMaterializationCache(
         application = mockk<Application>(relaxed = true),
         directory = directory,

@@ -1,6 +1,6 @@
 @file:JvmName("EntryTypePresentationModels")
 
-package mihon.entry.interactions
+package mihon.entry.interactions.presentation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info

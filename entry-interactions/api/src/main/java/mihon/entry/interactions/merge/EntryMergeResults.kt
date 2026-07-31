@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.merge
 
 sealed interface EntryMergePreparationResult {
     data class Ready(

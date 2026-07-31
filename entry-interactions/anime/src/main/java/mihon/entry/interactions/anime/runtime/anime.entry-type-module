@@ -1,2 +1,2 @@
 id=anime
-factory=mihon.entry.interactions.anime.animeEntryTypeRuntimeModule
+factory=mihon.entry.interactions.anime.runtime.animeEntryTypeRuntimeModule

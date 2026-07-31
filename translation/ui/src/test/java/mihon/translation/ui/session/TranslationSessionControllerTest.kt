@@ -10,27 +10,28 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
-import mihon.translation.api.ReadyTranslation
-import mihon.translation.api.ResolvedTranslationRequest
-import mihon.translation.api.TranslationEngineId
-import mihon.translation.api.TranslationExecution
 import mihon.translation.api.TranslationFeature
-import mihon.translation.api.TranslationInvocationPolicy
-import mihon.translation.api.TranslationLanguageTag
-import mihon.translation.api.TranslationPreparation
-import mihon.translation.api.TranslationProviderId
-import mihon.translation.api.TranslationProviderPresentation
-import mihon.translation.api.TranslationRequest
-import mihon.translation.api.TranslationResult
-import mihon.translation.api.TranslationSourceLanguageSelection
-import mihon.translation.api.TranslationTargetLanguageSelection
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.engine.TranslationProviderId
+import mihon.translation.api.language.TranslationLanguageTag
+import mihon.translation.api.preparation.ReadyTranslation
+import mihon.translation.api.preparation.TranslationPreparation
+import mihon.translation.api.provider.TranslationInvocationPolicy
+import mihon.translation.api.provider.TranslationProviderOutputMode
+import mihon.translation.api.provider.TranslationProviderPresentation
+import mihon.translation.api.request.ResolvedTranslationRequest
+import mihon.translation.api.request.TranslationRequest
+import mihon.translation.api.request.TranslationSourceLanguageSelection
+import mihon.translation.api.request.TranslationTargetLanguageSelection
+import mihon.translation.api.result.TranslationExecution
+import mihon.translation.api.result.TranslationResult
 import org.junit.jupiter.api.Test
 
 class TranslationSessionControllerTest {
     @Test
     fun `provider surface execution is represented without manufacturing an inline result`() = runTest {
         val surfacePresentation = PRESENTATION.copy(
-            outputMode = mihon.translation.api.TranslationProviderOutputMode.ProviderSurface,
+            outputMode = TranslationProviderOutputMode.ProviderSurface,
         )
         val feature = object : TranslationFeature {
             override suspend fun prepare(request: TranslationRequest): TranslationPreparation {

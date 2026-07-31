@@ -1,6 +1,7 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.content
 
 import mihon.book.api.BookContentResource
+import java.io.File
 import java.io.InputStream
 
 internal class SessionOpenedBookResource(
@@ -30,7 +31,7 @@ internal class SessionMaterializedBookResource(
 ) : MaterializedBookResource {
     override val metadata: BookContentResource
         get() = delegate.metadata
-    override val file: java.io.File
+    override val file: File
         get() = delegate.file
     private var closed = false
 

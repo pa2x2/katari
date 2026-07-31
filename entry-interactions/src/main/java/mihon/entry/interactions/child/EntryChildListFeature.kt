@@ -1,6 +1,13 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.child
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.runtime.EntryChildListCapability
+import mihon.entry.interactions.runtime.EntryChildListProcessor
+import mihon.entry.interactions.runtime.EntryChildProgressCapability
+import mihon.entry.interactions.runtime.EntryChildProgressProcessor
+import mihon.entry.interactions.runtime.EntryMissingChildGapCapability
+import mihon.entry.interactions.runtime.EntryMissingChildGapProcessor
+import mihon.entry.interactions.runtime.applicableProviderTypes
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId

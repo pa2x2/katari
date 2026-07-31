@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.reader
 
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton

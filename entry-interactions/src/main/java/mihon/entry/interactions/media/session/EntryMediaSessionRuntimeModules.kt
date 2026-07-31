@@ -1,7 +1,10 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media.session
 
-import mihon.feature.graph.FeatureExecutionHandler
-import mihon.feature.graph.FeatureExecutionParticipantBinding
+import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeArtifacts
+import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeModule
+import mihon.entry.interactions.runtime.production.entryFeatureRuntimeBoundary
+import mihon.feature.graph.execution.FeatureExecutionHandler
+import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
 import tachiyomi.domain.entry.repository.EntryRepository
 import uy.kohesive.injekt.Injekt
@@ -13,7 +16,9 @@ internal val EntryMediaSessionFeatureRuntimeModule = EntryFeatureRuntimeModule(
     contributor = EntryMediaSessionFeatureContributor,
 ) {
     addSingletonFactory<EntryMediaSessionEventSink> {
-        EntryMediaSessionEventSink { event -> Injekt.get<EntryMediaSessionFeature>().onEvent(event) }
+        EntryMediaSessionEventSink { event ->
+            Injekt.get<EntryMediaSessionFeature>().onEvent(event)
+        }
     }
     addSingletonFactory<EntryMediaSessionFeature> {
         val composition = get<FeatureRuntimeComposition>()

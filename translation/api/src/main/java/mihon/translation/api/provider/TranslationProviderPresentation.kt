@@ -1,4 +1,6 @@
-package mihon.translation.api
+package mihon.translation.api.provider
+
+import mihon.translation.api.engine.TranslationProviderId
 
 data class TranslationProviderPresentation(
     val providerId: TranslationProviderId,

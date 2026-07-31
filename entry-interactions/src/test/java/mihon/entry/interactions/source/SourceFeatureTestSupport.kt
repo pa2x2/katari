@@ -1,6 +1,9 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.source
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.runtime.EntryInteractionPlugin
+import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
+import mihon.entry.interactions.runtime.createEntryInteractionComposition
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.FeatureGraphEvaluation

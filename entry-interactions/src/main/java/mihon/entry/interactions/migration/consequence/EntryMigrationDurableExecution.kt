@@ -1,11 +1,15 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.migration.consequence
 
-import mihon.feature.graph.FeatureDurableExecutionEnvelope
-import mihon.feature.graph.FeatureDurableExecutionPreparationResult
-import mihon.feature.graph.FeatureExecutionFailurePolicy
+import mihon.entry.interactions.migration.ENTRY_MIGRATION_FEATURE_OWNER
+import mihon.entry.interactions.migration.EntryMigrationOption
+import mihon.entry.interactions.prepareDurable
+import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.feature.graph.FeatureExecutionPointId
-import mihon.feature.graph.FeatureExecutionRuntime
-import mihon.feature.graph.durableFeatureExecutionPointDefinition
+import mihon.feature.graph.execution.FeatureDurableExecutionEnvelope
+import mihon.feature.graph.execution.FeatureDurableExecutionPreparationResult
+import mihon.feature.graph.execution.FeatureExecutionFailurePolicy
+import mihon.feature.graph.execution.FeatureExecutionRuntime
+import mihon.feature.graph.execution.durableFeatureExecutionPointDefinition
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 

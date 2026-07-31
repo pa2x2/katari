@@ -1,10 +1,10 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.merge
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import mihon.entry.interactions.host.EntryMergeHost
+import mihon.entry.interactions.merge.host.EntryMergeHost
 import tachiyomi.domain.entry.model.DuplicateEntryCandidate
 import tachiyomi.domain.entry.model.Entry
 

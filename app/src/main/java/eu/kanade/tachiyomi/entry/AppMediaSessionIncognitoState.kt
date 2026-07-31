@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.entry
 
 import eu.kanade.domain.source.interactor.GetIncognitoState
-import mihon.entry.interactions.EntryMediaSessionIncognitoState
+import mihon.entry.interactions.media.session.EntryMediaSessionIncognitoState
 
 class AppMediaSessionIncognitoState(
     private val getIncognitoState: GetIncognitoState,

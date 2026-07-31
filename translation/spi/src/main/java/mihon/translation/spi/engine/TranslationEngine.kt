@@ -1,15 +1,15 @@
-package mihon.translation.spi
+package mihon.translation.spi.engine
 
-import mihon.translation.api.KnownTranslationEngine
-import mihon.translation.api.ResolvedTranslationRequest
-import mihon.translation.api.TranslationEngineId
-import mihon.translation.api.TranslationLanguageSupportInspection
-import mihon.translation.api.TranslationModelDescriptor
-import mihon.translation.api.TranslationOperationProgress
-import mihon.translation.api.TranslationProviderDisclosure
-import mihon.translation.api.TranslationProviderPresentation
-import mihon.translation.api.TranslationSystemSetupReason
-import mihon.translation.api.TranslationUnavailableReason
+import mihon.translation.api.engine.KnownTranslationEngine
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.language.TranslationLanguageSupportInspection
+import mihon.translation.api.model.TranslationModelDescriptor
+import mihon.translation.api.model.TranslationOperationProgress
+import mihon.translation.api.preparation.TranslationSystemSetupReason
+import mihon.translation.api.preparation.TranslationUnavailableReason
+import mihon.translation.api.provider.TranslationProviderDisclosure
+import mihon.translation.api.provider.TranslationProviderPresentation
+import mihon.translation.api.request.ResolvedTranslationRequest
 
 /**
  * Internal provider adapter. Platform and future engines implement this contract without becoming public API.

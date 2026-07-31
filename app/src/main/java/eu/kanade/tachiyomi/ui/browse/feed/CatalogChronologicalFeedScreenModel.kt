@@ -7,13 +7,12 @@ import eu.kanade.domain.source.model.catalogueListing
 import eu.kanade.domain.source.service.BrowseFeedService
 import eu.kanade.domain.source.service.ProfileSourcePreferences
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
-import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogFilterLoader
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import mihon.entry.interactions.EntryCatalogueBrowseRequest
-import mihon.entry.interactions.EntryCatalogueFeature
-import mihon.entry.interactions.EntryCatalogueSourceResolution
+import mihon.entry.interactions.catalogue.EntryCatalogueBrowseRequest
+import mihon.entry.interactions.catalogue.EntryCatalogueFeature
+import mihon.entry.interactions.catalogue.EntryCatalogueSourceResolution
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.source.model.CatalogListItem
 import uy.kohesive.injekt.Injekt

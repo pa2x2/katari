@@ -1,5 +1,8 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.state
 
+import mihon.entry.interactions.download.EntryDownloadLifecycleEvent
+import mihon.entry.interactions.download.EntryDownloadLifecycleEventSink
+import mihon.entry.interactions.download.EntryDownloadLifecycleResult
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
@@ -24,7 +27,10 @@ class EntryConsumptionContractValidationContributor : FeatureValidationContribut
     override fun contributeTo(sink: FeatureValidationContributionSink) {
         sink.add(
             FeatureContractVerifier(
-                FeatureContractReference(ENTRY_CONSUMPTION_FEATURE_ID, EntryConsumptionProviderBehaviorContract),
+                FeatureContractReference(
+                    ENTRY_CONSUMPTION_FEATURE_ID,
+                    EntryConsumptionProviderBehaviorContract,
+                ),
             ) { input -> verifyConsumptionCoordinator(input) },
         )
         addBooleanScenario(
@@ -43,7 +49,10 @@ class EntryConsumptionContractValidationContributor : FeatureValidationContribut
         )
         sink.add(
             FeatureContractVerifier(
-                FeatureContractReference(ENTRY_CONSUMPTION_FEATURE_ID, EntryConsumptionLifecycleBehaviorContract),
+                FeatureContractReference(
+                    ENTRY_CONSUMPTION_FEATURE_ID,
+                    EntryConsumptionLifecycleBehaviorContract,
+                ),
             ) { input -> verifyConsumptionCoordinator(input) },
         )
         sink.add(

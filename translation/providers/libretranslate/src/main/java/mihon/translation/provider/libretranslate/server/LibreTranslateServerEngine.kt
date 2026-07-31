@@ -1,30 +1,30 @@
 package mihon.translation.provider.libretranslate.server
 
 import kotlinx.coroutines.CancellationException
-import mihon.translation.api.KnownTranslationEngine
-import mihon.translation.api.ResolvedTranslationRequest
-import mihon.translation.api.TranslationEngineArtwork
-import mihon.translation.api.TranslationEngineBuildAvailability
-import mihon.translation.api.TranslationEngineDetails
-import mihon.translation.api.TranslationEngineId
-import mihon.translation.api.TranslationInvocationPolicy
-import mihon.translation.api.TranslationLanguageSupportInspection
-import mihon.translation.api.TranslationProviderDisclosure
-import mihon.translation.api.TranslationProviderId
-import mihon.translation.api.TranslationProviderPresentation
-import mihon.translation.api.TranslationResultAttribution
-import mihon.translation.api.TranslationSystemSetupReason
-import mihon.translation.api.TranslationUnavailableReason
+import mihon.translation.api.engine.KnownTranslationEngine
+import mihon.translation.api.engine.TranslationEngineArtwork
+import mihon.translation.api.engine.TranslationEngineBuildAvailability
+import mihon.translation.api.engine.TranslationEngineDetails
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.engine.TranslationProviderId
+import mihon.translation.api.language.TranslationLanguageSupportInspection
+import mihon.translation.api.preparation.TranslationSystemSetupReason
+import mihon.translation.api.preparation.TranslationUnavailableReason
+import mihon.translation.api.provider.TranslationInvocationPolicy
+import mihon.translation.api.provider.TranslationProviderDisclosure
+import mihon.translation.api.provider.TranslationProviderPresentation
+import mihon.translation.api.provider.TranslationResultAttribution
+import mihon.translation.api.request.ResolvedTranslationRequest
 import mihon.translation.provider.libretranslate.R
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateException
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateFailureKind
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateLanguageResolver
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateService
-import mihon.translation.spi.ReadyTranslationEngineRequest
-import mihon.translation.spi.TranslationEngine
-import mihon.translation.spi.TranslationEngineDeviceAvailability
-import mihon.translation.spi.TranslationEngineExecution
-import mihon.translation.spi.TranslationEnginePreparation
+import mihon.translation.spi.engine.ReadyTranslationEngineRequest
+import mihon.translation.spi.engine.TranslationEngine
+import mihon.translation.spi.engine.TranslationEngineDeviceAvailability
+import mihon.translation.spi.engine.TranslationEngineExecution
+import mihon.translation.spi.engine.TranslationEnginePreparation
 
 internal class LibreTranslateServerEngine(
     private val settings: LibreTranslateServerSettings,

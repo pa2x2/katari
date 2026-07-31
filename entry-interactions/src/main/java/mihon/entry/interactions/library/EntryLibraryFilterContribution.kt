@@ -1,6 +1,13 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.library
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.entryContentType
+import mihon.entry.interactions.runtime.EntryOutsideReleasePeriodFilterCapability
+import mihon.entry.interactions.runtime.EntryOutsideReleasePeriodFilterProvider
+import mihon.entry.interactions.runtime.applicableProviderTypes
+import mihon.entry.interactions.runtime.requireEntryContextState
+import mihon.entry.interactions.state.EntryBookmarkCapability
+import mihon.entry.interactions.state.EntryBookmarkProcessor
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContentTypeId
 import mihon.feature.graph.ContextInputId

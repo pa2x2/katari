@@ -10,15 +10,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import mihon.translation.api.TranslationEngineSelection
-import mihon.translation.api.TranslationExecution
 import mihon.translation.api.TranslationFeature
-import mihon.translation.api.TranslationInvocationPolicy
-import mihon.translation.api.TranslationLanguageTag
-import mihon.translation.api.TranslationPreparation
-import mihon.translation.api.TranslationResult
-import mihon.translation.api.TranslationSourceLanguageSelection
-import mihon.translation.api.TranslationTargetLanguageSelection
+import mihon.translation.api.engine.TranslationEngineSelection
+import mihon.translation.api.language.TranslationLanguageTag
+import mihon.translation.api.preparation.TranslationPreparation
+import mihon.translation.api.provider.TranslationInvocationPolicy
+import mihon.translation.api.request.TranslationRequest
+import mihon.translation.api.request.TranslationSourceLanguageSelection
+import mihon.translation.api.request.TranslationTargetLanguageSelection
+import mihon.translation.api.result.TranslationExecution
+import mihon.translation.api.result.TranslationResult
 
 class TranslationSessionController(
     private val feature: TranslationFeature,
@@ -139,7 +140,7 @@ class TranslationSessionController(
     }
 
     private fun updateRequest(
-        transform: mihon.translation.api.TranslationRequest.() -> mihon.translation.api.TranslationRequest,
+        transform: TranslationRequest.() -> TranslationRequest,
     ) {
         val current = currentInput ?: return
         startPreparation(current.copy(request = current.request.transform()), delayMillis = 0)

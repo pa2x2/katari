@@ -1,4 +1,4 @@
-package mihon.entry.interactions.host
+package mihon.entry.interactions.merge.host
 
 /** Authoritative profile-scoped membership visible only across the Merge coordinator/host boundary. */
 data class EntryMergeMembershipSnapshot(

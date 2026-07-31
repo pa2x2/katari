@@ -4,8 +4,8 @@ import android.content.Context
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import mihon.translation.api.TranslationSetupDestination
-import mihon.translation.spi.TranslationSetupResult
+import mihon.translation.api.host.TranslationSetupDestination
+import mihon.translation.spi.setup.TranslationSetupResult
 import org.junit.jupiter.api.Test
 
 class LibreTranslateServerSetupTest {

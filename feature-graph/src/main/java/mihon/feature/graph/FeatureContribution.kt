@@ -45,7 +45,7 @@ private fun requireTerms(label: String, terms: List<CapabilityExpression>) {
  *
  * This projection is reportable metadata for behavior the owning Feature coordinator already guarantees. Its id is not
  * a runtime dispatch key or implementation binding. Independently contributed executable work must be declared through
- * a [FeatureExecutionParticipantDefinition].
+ * a [mihon.feature.graph.execution.FeatureExecutionParticipantDefinition].
  */
 interface FeatureBehaviorProjection {
     val id: FeatureArtifactId

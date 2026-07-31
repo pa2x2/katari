@@ -1,5 +1,8 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.history
 
+import mihon.entry.interactions.media.EntryMediaSessionCapability
+import mihon.entry.interactions.media.session.ENTRY_MEDIA_SESSION_CONSEQUENCE_EXECUTION_POINT
+import mihon.entry.interactions.media.session.ENTRY_MEDIA_SESSION_INCOGNITO_OWNER
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -9,7 +12,6 @@ import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContextBlocker
 import mihon.feature.graph.FeatureContextDecision
 import mihon.feature.graph.FeatureContribution
-import mihon.feature.graph.FeatureExecutionParticipantDefinition
 import mihon.feature.graph.FeatureExecutionParticipantId
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
@@ -17,6 +19,7 @@ import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
 import mihon.feature.graph.contextInputDefinition
+import mihon.feature.graph.execution.FeatureExecutionParticipantDefinition
 import mihon.feature.graph.featureContextRule
 
 internal val ENTRY_HISTORY_OWNER = ContributionOwner("entry-history")

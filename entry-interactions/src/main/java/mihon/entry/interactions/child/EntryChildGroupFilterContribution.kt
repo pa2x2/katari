@@ -1,5 +1,8 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.child
 
+import mihon.entry.interactions.runtime.EntryChildGroupFilterCapability
+import mihon.entry.interactions.runtime.EntryChildGroupFilterProcessor
+import mihon.entry.interactions.runtime.applicableProviderTypes
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId

@@ -1,8 +1,15 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.catalogue.paging
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import kotlinx.coroutines.CancellationException
+import mihon.entry.interactions.catalogue.EntryCatalogueBrowseRequest
+import mihon.entry.interactions.catalogue.EntryCatalogueListing
+import mihon.entry.interactions.catalogue.EntryCatalogueNoResultsException
+import mihon.entry.interactions.catalogue.EntryCatalogueSourceResolution
+import mihon.entry.interactions.catalogue.EntryCatalogueUnavailableException
+import mihon.entry.interactions.catalogue.EntryCatalogueUnavailableReason
+import mihon.entry.interactions.catalogue.host.EntryCatalogueProviderHost
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.entry.adapter.toEntry
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry

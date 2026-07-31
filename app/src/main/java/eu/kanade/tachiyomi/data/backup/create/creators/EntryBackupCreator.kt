@@ -6,8 +6,8 @@ import eu.kanade.tachiyomi.data.backup.models.BackupHistory
 import eu.kanade.tachiyomi.data.backup.models.compatibility.applyLegacyFeatureStateProjection
 import eu.kanade.tachiyomi.data.backup.models.toBackupChapter
 import eu.kanade.tachiyomi.data.backup.models.toBackupEntry
-import mihon.entry.interactions.EntryBackupFeature
-import mihon.entry.interactions.EntryBackupSelection
+import mihon.entry.interactions.persistence.backup.EntryBackupFeature
+import mihon.entry.interactions.persistence.backup.EntryBackupSelection
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.category.model.Category

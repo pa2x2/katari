@@ -7,10 +7,10 @@ import eu.kanade.tachiyomi.data.backup.models.BackupHistory
 import eu.kanade.tachiyomi.data.backup.models.compatibility.featureStatesWithLegacyFallback
 import eu.kanade.tachiyomi.data.backup.models.compatibility.normalizeLegacyViewerFlags
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.EntryBackupFeature
-import mihon.entry.interactions.EntryBackupRestoreFinalization
-import mihon.entry.interactions.EntryBackupRestoreSession
-import mihon.entry.interactions.EntryBackupRestoreSessionId
+import mihon.entry.interactions.persistence.backup.EntryBackupFeature
+import mihon.entry.interactions.persistence.backup.EntryBackupRestoreFinalization
+import mihon.entry.interactions.persistence.backup.EntryBackupRestoreSession
+import mihon.entry.interactions.persistence.backup.EntryBackupRestoreSessionId
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.category.interactor.GetCategories

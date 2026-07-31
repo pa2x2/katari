@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.runtime
 
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryType
@@ -12,6 +12,22 @@ import kotlinx.coroutines.test.runTest
 import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookFailureReason
 import mihon.book.api.model.BookPublicationModelDescriptor
+import mihon.entry.interactions.book.navigation.BookContinueProcessor
+import mihon.entry.interactions.book.preparation.BookContentPreparer
+import mihon.entry.interactions.book.preparation.BookContentPreparerRegistry
+import mihon.entry.interactions.book.processor.BookReaderProcessorPreferences
+import mihon.entry.interactions.book.processor.BookReaderProcessorRegistry
+import mihon.entry.interactions.book.processor.BookReaderProcessorSelectionCoordinator
+import mihon.entry.interactions.book.processor.BookReaderRequest
+import mihon.entry.interactions.book.reader.BookReaderHostResolver
+import mihon.entry.interactions.book.reader.BookReaderHostState
+import mihon.entry.interactions.book.reader.BookReaderPrepareResult
+import mihon.entry.interactions.book.reader.BookReaderSessionFactory
+import mihon.entry.interactions.book.reader.PreparedBookContent
+import mihon.entry.interactions.book.reader.PreparedBookReaderRequest
+import mihon.entry.interactions.book.state.BOOK_PROGRESS_LOCATOR_KIND
+import mihon.entry.interactions.book.state.BookConsumptionProcessor
+import mihon.entry.interactions.book.state.BookProgressProcessor
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
@@ -21,7 +37,6 @@ import tachiyomi.domain.entry.model.EntryProgressLocator
 import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
-import tachiyomi.domain.entry.repository.EntryRepository
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue

@@ -1,6 +1,9 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.source
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.entryContentType
+import mihon.entry.interactions.resolveFeatureContext
+import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.feature.graph.ApplicableFeatureContext
 import mihon.feature.graph.BlockedFeatureContext
 import mihon.feature.graph.ContextEvidence

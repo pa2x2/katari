@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.state
 
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import mihon.entry.interactions.book.download.BookDownloadManifest

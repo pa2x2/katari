@@ -24,9 +24,9 @@ import mihon.core.common.CustomPreferences
 import mihon.core.common.HomeScreenTabs
 import mihon.core.common.defaultHomeScreenTabs
 import mihon.core.common.toHomeScreenTabPreferenceValue
-import mihon.entry.interactions.ENTRY_VIEWER_SETTINGS_LEGACY_PREFERENCE_OWNER_GROUP_ID
-import mihon.entry.interactions.EntryDestructiveRemovalFeature
-import mihon.entry.interactions.EntryDestructiveRemovalResult
+import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalFeature
+import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalResult
+import mihon.entry.interactions.media.ENTRY_VIEWER_SETTINGS_LEGACY_PREFERENCE_OWNER_GROUP_ID
 import mihon.entry.interactions.settings.EntryInteractionPreferences
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerGroupId

@@ -1,25 +1,15 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.runtime.applicableProviderTypes
+import mihon.entry.viewer.settings.ViewerSettingCodec
 import mihon.entry.viewer.settings.ViewerSettingDefinition
 import mihon.entry.viewer.settings.ViewerSettingId
 import mihon.entry.viewer.settings.ViewerSettingOverride
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import mihon.entry.viewer.settings.ViewerSettingScope
 import mihon.entry.viewer.settings.ViewerSettingsProvider
-import mihon.feature.graph.CapabilityExpression
-import mihon.feature.graph.ContributionOwner
-import mihon.feature.graph.FeatureArtifactId
-import mihon.feature.graph.FeatureBehaviorContract
-import mihon.feature.graph.FeatureBehaviorProjection
-import mihon.feature.graph.FeatureContribution
-import mihon.feature.graph.FeatureGraphContributionSink
-import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.FeatureGraphEvaluation
-import mihon.feature.graph.FeatureId
-import mihon.feature.graph.FeatureIntegration
-import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.allOf
 import tachiyomi.domain.entry.model.Entry
 
 internal fun interface EntryLegacyMangaViewerFlagsReset {
@@ -237,7 +227,7 @@ private fun ViewerSettingDefinition<*>.accepts(encodedValue: String): Boolean {
 
 @Suppress("UNCHECKED_CAST")
 private fun ViewerSettingDefinition<*>.decode(encodedValue: String): Any? =
-    (codec as mihon.entry.viewer.settings.ViewerSettingCodec<Any>).decode(encodedValue)
+    (codec as ViewerSettingCodec<Any>).decode(encodedValue)
 
 @Suppress("UNCHECKED_CAST")
 private fun ViewerSettingDefinition<*>.validateDecoded(value: Any): Boolean =

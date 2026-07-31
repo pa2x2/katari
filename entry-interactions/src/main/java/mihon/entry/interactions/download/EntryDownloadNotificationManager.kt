@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download
 
 import android.content.Context
 import kotlinx.coroutines.CoroutineScope
@@ -11,7 +11,10 @@ import mihon.entry.interactions.download.notification.EntryDownloadErrorNotifica
 import mihon.entry.interactions.download.notification.EntryDownloadNotificationPresenter
 import mihon.entry.interactions.download.notification.EntryDownloadProgressNotification
 import mihon.entry.interactions.download.notification.entryDownloadForegroundNotification
+import mihon.entry.interactions.merge.EntryMergeDownloadOwnershipProjection
+import mihon.entry.interactions.merge.EntryMergeSubject
 import tachiyomi.core.common.i18n.stringResource
+import tachiyomi.i18n.MR
 
 internal class EntryDownloadNotificationManager(
     private val context: Context,
@@ -65,7 +68,12 @@ internal class EntryDownloadNotificationManager(
     }
 
     private suspend fun showProgress(item: EntryDownloadQueueItem) {
-        val destination = ownership.resolveDownloadOwners(EntryMergeSubject(item.profileId, item.entryId))
+        val destination = ownership.resolveDownloadOwners(
+            EntryMergeSubject(
+                item.profileId,
+                item.entryId,
+            ),
+        )
         val progressText = item.presentation.description()?.let(messageResolver)
         val subtitle = listOfNotNull(item.subtitle.takeIf(String::isNotBlank), progressText)
             .joinToString(" • ")
@@ -105,7 +113,7 @@ internal class EntryDownloadNotificationManager(
                         title = listOfNotNull(event.title, event.subtitle)
                             .joinToString(": ")
                             .ifBlank {
-                                context.stringResource(tachiyomi.i18n.MR.strings.download_notifier_downloader_title)
+                                context.stringResource(MR.strings.download_notifier_downloader_title)
                             },
                         message = messageResolver(event.message),
                     ),

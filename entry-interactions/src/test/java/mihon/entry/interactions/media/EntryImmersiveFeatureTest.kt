@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media
 
 import android.app.PendingIntent
 import android.content.Context
@@ -12,6 +12,22 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import mihon.entry.interactions.child.DefaultEntryChildListFeature
+import mihon.entry.interactions.child.EntryChildListFeatureContributor
+import mihon.entry.interactions.navigation.EntryOpenCapability
+import mihon.entry.interactions.navigation.EntryOpenOptions
+import mihon.entry.interactions.navigation.EntryOpenProcessor
+import mihon.entry.interactions.runtime.EntryChildListCapability
+import mihon.entry.interactions.runtime.EntryChildListProcessor
+import mihon.entry.interactions.runtime.EntryImmersiveCapability
+import mihon.entry.interactions.runtime.EntryImmersiveLoadMode
+import mihon.entry.interactions.runtime.EntryImmersiveProcessor
+import mihon.entry.interactions.runtime.EntryInteractionPlugin
+import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
+import mihon.entry.interactions.runtime.createEntryInteractionComposition
+import mihon.entry.interactions.source.EntrySourceRefreshFailure
+import mihon.entry.interactions.source.EntrySourceRefreshFeature
+import mihon.entry.interactions.source.EntrySourceRefreshResult
 import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -191,7 +207,10 @@ class EntryImmersiveFeatureTest {
     ): EntryImmersiveFeature {
         val composition = createEntryInteractionComposition(
             plugins = listOf(plugin(*bindings)),
-            featureContributors = listOf(EntryImmersiveFeatureContributor, EntryChildListFeatureContributor),
+            featureContributors = listOf(
+                EntryImmersiveFeatureContributor,
+                EntryChildListFeatureContributor,
+            ),
         )
         val childList = DefaultEntryChildListFeature(
             evaluation = composition.featureGraphEvaluation,

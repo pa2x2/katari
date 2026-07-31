@@ -1,7 +1,7 @@
 package mihon.entry.interactions.host.lifecycle.profile
 
-import mihon.entry.interactions.EntryProfileMoveStateRequest
-import mihon.entry.interactions.EntryProfileMoveTrackingStateHost
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveStateRequest
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveTrackingStateHost
 import tachiyomi.data.DatabaseHandler
 
 class AppEntryProfileMoveTrackingStateHost(

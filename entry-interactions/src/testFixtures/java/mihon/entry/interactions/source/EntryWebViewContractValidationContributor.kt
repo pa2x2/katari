@@ -1,15 +1,18 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.source
 
 import eu.kanade.tachiyomi.source.entry.ChapterWebViewSource
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.WebViewSource
 import io.mockk.every
 import io.mockk.mockk
+import mihon.entry.interactions.entryContentType
+import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
 import mihon.feature.graph.FeatureContractScenarioId
 import mihon.feature.graph.contextEvidence
+import mihon.feature.graph.validation.FeatureContractExecutionInput
 import mihon.feature.graph.validation.FeatureContractReference
 import mihon.feature.graph.validation.FeatureContractScenario
 import mihon.feature.graph.validation.FeatureContractVerifier
@@ -43,7 +46,7 @@ class EntryWebViewContractValidationContributor : FeatureValidationContributor {
         )
     }
 
-    private suspend fun verifyEntry(input: mihon.feature.graph.validation.FeatureContractExecutionInput) =
+    private suspend fun verifyEntry(input: FeatureContractExecutionInput) =
         verifyFeatureContract {
             val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
             val source = mockk<WebViewSource> {
@@ -66,7 +69,7 @@ class EntryWebViewContractValidationContributor : FeatureValidationContributor {
             )
         }
 
-    private suspend fun verifyChild(input: mihon.feature.graph.validation.FeatureContractExecutionInput) =
+    private suspend fun verifyChild(input: FeatureContractExecutionInput) =
         verifyFeatureContract {
             val type = EntryType.entries.single { it.toContentTypeId() == input.subject.entryContentType }
             val source = mockk<ChapterWebViewSource> {

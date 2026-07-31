@@ -1,8 +1,10 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download
 
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.flow.Flow
+import mihon.entry.interactions.runtime.EntryInteractionProvider
+import mihon.entry.interactions.runtime.entryInteractionCapability
 import mihon.feature.graph.CapabilityId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -98,22 +100,27 @@ val EntryDownloadOptionsCapability = entryInteractionCapability<EntryDownloadOpt
     id = CapabilityId("entry.download.options"),
 )
 
-val EntryDownloadArchivePackagingCapability = entryInteractionCapability<EntryDownloadSettingProvider>(
-    id = CapabilityId("entry.download.setting.archive-packaging"),
-)
+val EntryDownloadArchivePackagingCapability =
+    entryInteractionCapability<EntryDownloadSettingProvider>(
+        id = CapabilityId("entry.download.setting.archive-packaging"),
+    )
 
-val EntryDownloadTallImageSplittingCapability = entryInteractionCapability<EntryDownloadSettingProvider>(
-    id = CapabilityId("entry.download.setting.tall-image-splitting"),
-)
+val EntryDownloadTallImageSplittingCapability =
+    entryInteractionCapability<EntryDownloadSettingProvider>(
+        id = CapabilityId("entry.download.setting.tall-image-splitting"),
+    )
 
-val EntryDownloadParallelSourceTransfersCapability = entryInteractionCapability<EntryDownloadSettingProvider>(
-    id = CapabilityId("entry.download.setting.parallel-source-transfers"),
-)
+val EntryDownloadParallelSourceTransfersCapability =
+    entryInteractionCapability<EntryDownloadSettingProvider>(
+        id = CapabilityId("entry.download.setting.parallel-source-transfers"),
+    )
 
-val EntryDownloadParallelItemTransfersCapability = entryInteractionCapability<EntryDownloadSettingProvider>(
-    id = CapabilityId("entry.download.setting.parallel-item-transfers"),
-)
+val EntryDownloadParallelItemTransfersCapability =
+    entryInteractionCapability<EntryDownloadSettingProvider>(
+        id = CapabilityId("entry.download.setting.parallel-item-transfers"),
+    )
 
-val EntryBulkDownloadCandidateCapability = entryInteractionCapability<EntryBulkDownloadCandidateProcessor>(
-    id = CapabilityId("entry.download.bulk-candidates"),
-)
+val EntryBulkDownloadCandidateCapability =
+    entryInteractionCapability<EntryBulkDownloadCandidateProcessor>(
+        id = CapabilityId("entry.download.bulk-candidates"),
+    )

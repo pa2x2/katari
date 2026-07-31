@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.child
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.shouldBe
@@ -6,6 +6,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import mihon.entry.interactions.runtime.EntryChildGroupFilterCapability
+import mihon.entry.interactions.runtime.EntryChildGroupFilterDataSource
+import mihon.entry.interactions.runtime.EntryChildGroupFilterProcessor
+import mihon.entry.interactions.runtime.EntryInteractionPlugin
+import mihon.entry.interactions.runtime.createEntryInteractionComposition
 import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry

@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.ui.video.player
 
 import androidx.compose.runtime.Immutable
-import mihon.entry.interactions.anime.lastWatchedAt
-import mihon.entry.interactions.anime.positionMs
+import mihon.entry.interactions.anime.state.lastWatchedAt
+import mihon.entry.interactions.anime.state.positionMs
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState

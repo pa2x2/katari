@@ -1,6 +1,9 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.state
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.media.EntryPlaybackPreferencesSnapshot
+import mihon.entry.interactions.runtime.requireMatchingEntryType
+import mihon.entry.interactions.runtime.requireProcessor
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 

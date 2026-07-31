@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media
 
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.source.entry.EntryType
@@ -7,6 +7,8 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.mockk
+import mihon.entry.interactions.runtime.EntryInteractionPlugin
+import mihon.entry.interactions.runtime.createEntryInteractionComposition
 import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
@@ -26,7 +28,9 @@ class EntryMediaCacheFeatureTest {
     fun `one provider activates every shared cache behavior`() {
         val artifact = TestArtifact(
             id = EntryMediaCacheId("future.cache"),
-            autoClearPreference = EntryMediaCacheAutoClearPreference("future_auto_clear"),
+            autoClearPreference = EntryMediaCacheAutoClearPreference(
+                "future_auto_clear",
+            ),
         )
         val feature = feature(plugin(provider(artifact)))
 
@@ -50,12 +54,16 @@ class EntryMediaCacheFeatureTest {
     fun `launch clear reports each failure without suppressing unrelated caches`() {
         val failed = TestArtifact(
             id = EntryMediaCacheId("future.failed"),
-            autoClearPreference = EntryMediaCacheAutoClearPreference("future_failed_auto_clear"),
+            autoClearPreference = EntryMediaCacheAutoClearPreference(
+                "future_failed_auto_clear",
+            ),
             clearAction = { error("cannot clear") },
         )
         val cleared = TestArtifact(
             id = EntryMediaCacheId("future.cleared"),
-            autoClearPreference = EntryMediaCacheAutoClearPreference("future_cleared_auto_clear"),
+            autoClearPreference = EntryMediaCacheAutoClearPreference(
+                "future_cleared_auto_clear",
+            ),
         )
         val feature = feature(plugin(provider(failed, cleared)))
         feature.settings().forEach { it.autoClearOnLaunch.set(true) }
@@ -104,8 +112,18 @@ class EntryMediaCacheFeatureTest {
             feature(
                 plugin(
                     provider(
-                        TestArtifact(duplicateId, EntryMediaCacheAutoClearPreference("first")),
-                        TestArtifact(duplicateId, EntryMediaCacheAutoClearPreference("second")),
+                        TestArtifact(
+                            duplicateId,
+                            EntryMediaCacheAutoClearPreference(
+                                "first",
+                            ),
+                        ),
+                        TestArtifact(
+                            duplicateId,
+                            EntryMediaCacheAutoClearPreference(
+                                "second",
+                            ),
+                        ),
                     ),
                 ),
             )

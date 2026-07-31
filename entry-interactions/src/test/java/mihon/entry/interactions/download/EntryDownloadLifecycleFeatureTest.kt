@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.shouldBe
@@ -10,6 +10,11 @@ import io.mockk.verify
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import mihon.entry.interactions.runtime.EntryInteractionPlugin
+import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
+import mihon.entry.interactions.runtime.createEntryInteractionComposition
+import mihon.entry.interactions.state.EntryBookmarkCapability
+import mihon.entry.interactions.state.EntryBookmarkProcessor
 import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore

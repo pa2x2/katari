@@ -1,4 +1,4 @@
-package mihon.translation.api
+package mihon.translation.api.language
 
 import io.kotest.assertions.throwables.shouldThrow
 import org.junit.jupiter.api.Test

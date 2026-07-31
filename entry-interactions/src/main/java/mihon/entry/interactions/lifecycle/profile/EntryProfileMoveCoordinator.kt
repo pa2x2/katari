@@ -1,13 +1,20 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.lifecycle.profile
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.feature.graph.FeatureCommitExecutionResult
-import mihon.feature.graph.FeatureExecutionResult
-import mihon.feature.graph.FeatureExecutionRuntime
-import mihon.feature.graph.FeatureTransactionalExecutionScope
-import mihon.feature.graph.InlineFeatureExecutionPointDefinition
-import mihon.feature.graph.TransactionalFeatureExecutionPointDefinition
-import mihon.feature.graph.coordinateFeatureCommit
+import mihon.entry.interactions.download.EntryDownloadRemovalPlan
+import mihon.entry.interactions.execute
+import mihon.entry.interactions.executeInline
+import mihon.entry.interactions.lifecycle.metadata.toLifecycleFailures
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveCommit
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveHost
+import mihon.entry.interactions.runtime.toContentTypeId
+import mihon.feature.graph.execution.FeatureCommitExecutionResult
+import mihon.feature.graph.execution.FeatureExecutionResult
+import mihon.feature.graph.execution.FeatureExecutionRuntime
+import mihon.feature.graph.execution.FeatureTransactionalExecutionScope
+import mihon.feature.graph.execution.InlineFeatureExecutionPointDefinition
+import mihon.feature.graph.execution.TransactionalFeatureExecutionPointDefinition
+import mihon.feature.graph.execution.coordinateFeatureCommit
 import tachiyomi.domain.entry.model.Entry
 
 internal class EntryProfileMoveCoordinator(
@@ -74,7 +81,12 @@ internal class EntryProfileMoveCoordinator(
                             executeOrThrow(
                                 point = ENTRY_PROFILE_MOVING_EXECUTION_POINT,
                                 type = type,
-                                event = EntryProfileMovingEvent(type, plan, preview.reference, outcomes),
+                                event = EntryProfileMovingEvent(
+                                    type,
+                                    plan,
+                                    preview.reference,
+                                    outcomes,
+                                ),
                             )
                         }
                     },
@@ -298,7 +310,15 @@ private class MutableEntryProfileMoveOutcomes : EntryProfileMoveOutcomeSink {
     fun snapshot(): EntryProfileMoveOutcomes {
         val owners = downloadOwners.values.toList()
         return EntryProfileMoveOutcomes(
-            downloadPlans = if (owners.isEmpty()) emptyList() else listOf(EntryDownloadRemovalPlan(owners)),
+            downloadPlans = if (owners.isEmpty()) {
+                emptyList()
+            } else {
+                listOf(
+                    EntryDownloadRemovalPlan(
+                        owners,
+                    ),
+                )
+            },
         )
     }
 }

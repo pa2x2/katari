@@ -2,16 +2,18 @@ package mihon.translation.runtime.system
 
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
-import mihon.translation.api.ResolvedTranslationRequest
-import mihon.translation.api.TranslationEngineId
-import mihon.translation.api.TranslationLanguageTag
-import mihon.translation.api.TranslationSetupDestination
-import mihon.translation.api.TranslationSystemSetupReason
-import mihon.translation.api.TranslationUnavailableReason
-import mihon.translation.spi.TranslationEngineDeviceAvailability
-import mihon.translation.spi.TranslationEngineExecution
-import mihon.translation.spi.TranslationEnginePreparation
-import mihon.translation.spi.TranslationSetupResult
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.host.TranslationSetupDestination
+import mihon.translation.api.language.TranslationLanguageSupport
+import mihon.translation.api.language.TranslationLanguageSupportInspection
+import mihon.translation.api.language.TranslationLanguageTag
+import mihon.translation.api.preparation.TranslationSystemSetupReason
+import mihon.translation.api.preparation.TranslationUnavailableReason
+import mihon.translation.api.request.ResolvedTranslationRequest
+import mihon.translation.spi.engine.TranslationEngineDeviceAvailability
+import mihon.translation.spi.engine.TranslationEngineExecution
+import mihon.translation.spi.engine.TranslationEnginePreparation
+import mihon.translation.spi.setup.TranslationSetupResult
 import org.junit.jupiter.api.Test
 
 class AndroidSystemTranslationEngineTest {
@@ -138,8 +140,8 @@ class AndroidSystemTranslationEngineTest {
         }
 
         override suspend fun inspectLanguageSupport() =
-            mihon.translation.api.TranslationLanguageSupportInspection.Available(
-                mihon.translation.api.TranslationLanguageSupport.AnyLanguage,
+            TranslationLanguageSupportInspection.Available(
+                TranslationLanguageSupport.AnyLanguage,
             )
 
         override suspend fun inspect(

@@ -1,2 +1,2 @@
 id=entry.media-session
-module=mihon.entry.interactions.EntryMediaSessionFeatureRuntimeModule
+module=mihon.entry.interactions.media.session.EntryMediaSessionFeatureRuntimeModule

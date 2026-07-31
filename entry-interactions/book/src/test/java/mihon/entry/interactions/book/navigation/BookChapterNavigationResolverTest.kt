@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.navigation
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.mockk.coEvery

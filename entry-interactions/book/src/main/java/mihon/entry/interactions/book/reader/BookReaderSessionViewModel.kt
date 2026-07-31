@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.reader
 
 import androidx.lifecycle.ViewModel
 import mihon.book.api.BookLocator

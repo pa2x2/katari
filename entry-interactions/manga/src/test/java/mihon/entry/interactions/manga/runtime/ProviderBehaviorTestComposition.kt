@@ -1,7 +1,8 @@
-package mihon.entry.interactions.manga
+package mihon.entry.interactions.manga.runtime
 
-import mihon.entry.interactions.EntryInteractionPlugin
-import mihon.entry.interactions.EntryInteractions
+import mihon.entry.interactions.runtime.EntryInteractionPlugin
+import mihon.entry.interactions.runtime.EntryInteractions
+import mihon.entry.interactions.runtime.createEntryInteractions
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
@@ -13,7 +14,7 @@ import mihon.feature.graph.FeatureIntegrationId
 import mihon.feature.graph.featureGraphContributor
 
 internal fun createEntryInteractions(plugins: List<EntryInteractionPlugin>): EntryInteractions {
-    return mihon.entry.interactions.createEntryInteractions(
+    return createEntryInteractions(
         plugins = plugins,
         featureContributors = plugins
             .flatMap(EntryInteractionPlugin::providerBindings)
@@ -33,7 +34,8 @@ internal fun createEntryInteractions(plugins: List<EntryInteractionPlugin>): Ent
                                     prerequisites = CapabilityExpression.Provided(capability),
                                     behaviorProjections = listOf(
                                         object : FeatureBehaviorProjection {
-                                            override val id = FeatureArtifactId("test.$suffix.behavior")
+                                            override val id =
+                                                FeatureArtifactId("test.$suffix.behavior")
                                         },
                                     ),
                                 ),
@@ -59,7 +61,8 @@ internal fun createEntryInteractions(plugins: List<EntryInteractionPlugin>): Ent
                                     specializedPrerequisites = listOf(definition),
                                     behaviorProjections = listOf(
                                         object : FeatureBehaviorProjection {
-                                            override val id = FeatureArtifactId("test.$suffix.behavior")
+                                            override val id =
+                                                FeatureArtifactId("test.$suffix.behavior")
                                         },
                                     ),
                                 ),

@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.reader
 
 import android.content.Context
 import eu.kanade.tachiyomi.network.NetworkHelper
@@ -8,10 +8,25 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CancellationException
 import mihon.book.api.BookFailure
 import mihon.book.api.BookFailureReason
-import mihon.entry.interactions.EntryMediaSessionProcessor
+import mihon.entry.interactions.book.content.AndroidBookExternalResourceResolver
+import mihon.entry.interactions.book.content.BookContentSession
+import mihon.entry.interactions.book.content.BookMaterializationStore
+import mihon.entry.interactions.book.content.SourceBookContentSession
 import mihon.entry.interactions.book.download.BookDownloadCache
 import mihon.entry.interactions.book.download.BookDownloadPackageKey
 import mihon.entry.interactions.book.download.DownloadedBookContentSession
+import mihon.entry.interactions.book.migration.isPendingBookMigration
+import mihon.entry.interactions.book.preparation.BookContentPreparerRegistry
+import mihon.entry.interactions.book.preparation.BookContentPreparerSelection
+import mihon.entry.interactions.book.preparation.BookPreparationResult
+import mihon.entry.interactions.book.preparation.PreparedBookPublication
+import mihon.entry.interactions.book.processor.BookReaderProcessorRegistry
+import mihon.entry.interactions.book.processor.BookReaderRequest
+import mihon.entry.interactions.book.state.BOOK_PROGRESS_LOCATOR_KIND
+import mihon.entry.interactions.book.state.BookProgressIdentity
+import mihon.entry.interactions.book.state.BookProgressLocatorCodec
+import mihon.entry.interactions.book.state.hasPartialBookProgress
+import mihon.entry.interactions.media.EntryMediaSessionProcessor
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter

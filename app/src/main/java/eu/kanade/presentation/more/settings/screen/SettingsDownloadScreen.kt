@@ -12,8 +12,8 @@ import androidx.compose.ui.util.fastMap
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TriStateListDialog
-import mihon.entry.interactions.EntryDownloadSetting
-import mihon.entry.interactions.EntryDownloadSettingsFeature
+import mihon.entry.interactions.download.EntryDownloadSetting
+import mihon.entry.interactions.download.EntryDownloadSettingsFeature
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.download.service.DownloadPreferences

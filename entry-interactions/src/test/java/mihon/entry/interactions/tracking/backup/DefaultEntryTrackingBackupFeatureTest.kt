@@ -1,8 +1,8 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.tracking.backup
 
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.host.tracking.EntryTrackingBackupHost
+import mihon.entry.interactions.tracking.host.EntryTrackingBackupHost
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 

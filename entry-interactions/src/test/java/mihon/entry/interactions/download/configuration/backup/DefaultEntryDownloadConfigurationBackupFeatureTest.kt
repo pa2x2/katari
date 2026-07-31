@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download.configuration.backup
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.shouldBe
@@ -7,6 +7,9 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import mihon.entry.interactions.download.EntryDownloadConfigurationFeatureContributor
+import mihon.entry.interactions.download.EntryDownloadOptionsCapability
+import mihon.entry.interactions.download.EntryDownloadOptionsProcessor
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.DownloadPreferences

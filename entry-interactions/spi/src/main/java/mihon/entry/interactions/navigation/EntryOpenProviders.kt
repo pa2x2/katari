@@ -1,7 +1,9 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.navigation
 
 import android.app.PendingIntent
 import android.content.Context
+import mihon.entry.interactions.runtime.EntryInteractionProvider
+import mihon.entry.interactions.runtime.entryInteractionCapability
 import mihon.feature.graph.CapabilityId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter

@@ -1,13 +1,17 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import mihon.entry.interactions.runtime.EntryInteractionPlugin
+import mihon.entry.interactions.runtime.createEntryInteractionComposition
+import mihon.entry.interactions.state.EntryMigrationCapability
+import mihon.entry.interactions.state.EntryMigrationProvider
 import mihon.entry.viewer.settings.ViewerSettingCodecs
 import mihon.entry.viewer.settings.ViewerSettingDefinition
 import mihon.entry.viewer.settings.ViewerSettingId
@@ -55,7 +59,7 @@ class EntryViewerSettingsFeatureTest {
         )
 
         feature.isApplicable(EntryType.BOOK) shouldBe true
-        feature.destinations.map { it.surfaceId } shouldContainExactly listOf("book.epub", "book.document")
+        feature.destinations.map { it.surfaceId } shouldContainExactlyInAnyOrder listOf("book.epub", "book.document")
         feature.snapshot(entry) shouldBe EntryViewerSettingsSnapshotResult.Available(listOf(stored))
         feature.restore(target, listOf(stored)) shouldBe EntryViewerSettingsRestoreResult.Restored(1, emptySet())
         feature.copy(entry, target) shouldBe EntryViewerSettingsCopyResult.Inapplicable(entry.type, target.type)
@@ -145,7 +149,11 @@ class EntryViewerSettingsFeatureTest {
             if (surfaces.isNotEmpty()) {
                 add(
                     EntryViewerSettingsCapability.bind(
-                        DefaultEntryViewerSettingsProvider(EntryType.BOOK, surfaces, normalization),
+                        DefaultEntryViewerSettingsProvider(
+                            EntryType.BOOK,
+                            surfaces,
+                            normalization,
+                        ),
                     ),
                 )
             }

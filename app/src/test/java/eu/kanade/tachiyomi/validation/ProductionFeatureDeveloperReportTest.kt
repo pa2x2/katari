@@ -40,7 +40,7 @@ class ProductionFeatureDeveloperReportTest {
 
         System.getProperty(REPORT_OUTPUT_PROPERTY)?.let { path ->
             val output = File(path)
-            output.parentFile.mkdirs()
+            output.parentFile?.mkdirs()
             output.writeText(rendered)
         }
         println(rendered)

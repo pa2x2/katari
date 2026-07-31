@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.core.model.rememberScreenModel
@@ -16,9 +15,8 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.migration.search.MigrateSearchScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.util.system.toast
-import kotlinx.coroutines.launch
-import mihon.entry.interactions.EntryMigrationOption
-import mihon.entry.interactions.EntryMigrationSubject
+import mihon.entry.interactions.migration.EntryMigrationOption
+import mihon.entry.interactions.migration.EntryMigrationSubject
 import mihon.feature.migration.list.components.MigrationEntryDialog
 import mihon.feature.migration.list.components.MigrationExitDialog
 import mihon.feature.migration.list.components.MigrationProgressDialog

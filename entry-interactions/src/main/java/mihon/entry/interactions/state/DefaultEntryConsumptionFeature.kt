@@ -1,6 +1,8 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.state
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.download.EntryDownloadLifecycleEvent
+import mihon.entry.interactions.download.EntryDownloadLifecycleEventSink
 import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter

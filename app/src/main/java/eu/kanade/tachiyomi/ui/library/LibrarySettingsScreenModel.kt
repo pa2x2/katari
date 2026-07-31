@@ -5,8 +5,8 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import mihon.entry.interactions.EntryTrackingAccount
-import mihon.entry.interactions.EntryTrackingFeature
+import mihon.entry.interactions.tracking.EntryTrackingAccount
+import mihon.entry.interactions.tracking.EntryTrackingFeature
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.preference.getAndSet

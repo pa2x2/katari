@@ -1,16 +1,33 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.migration
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
-import mihon.entry.interactions.host.EntryMigrationExecutionHost
-import mihon.entry.interactions.host.EntryMigrationExecutionInspectionResult
-import mihon.entry.interactions.host.EntryMigrationHostInspectionResult
-import mihon.entry.interactions.host.EntryMigrationHostOperation
-import mihon.entry.interactions.host.EntryMigrationHostReplayResult
-import mihon.entry.interactions.host.EntryMigrationHostTransition
-import mihon.entry.interactions.host.EntryMigrationHostTransitionResult
-import mihon.entry.interactions.host.EntryMigrationPreparationHost
+import mihon.entry.interactions.merge.EntryMergeMigrationFeature
+import mihon.entry.interactions.merge.EntryMergeMigrationReplacementIntent
+import mihon.entry.interactions.migration.consequence.EntryMigrationConsequenceDelivery
+import mihon.entry.interactions.migration.consequence.EntryMigrationDurableConsequences
+import mihon.entry.interactions.migration.consequence.EntryMigrationDurableEvent
+import mihon.entry.interactions.migration.host.EntryMigrationConsequenceRequest
+import mihon.entry.interactions.migration.host.EntryMigrationExecutionHost
+import mihon.entry.interactions.migration.host.EntryMigrationExecutionInspectionResult
+import mihon.entry.interactions.migration.host.EntryMigrationHostInspectionResult
+import mihon.entry.interactions.migration.host.EntryMigrationHostOperation
+import mihon.entry.interactions.migration.host.EntryMigrationHostReplayResult
+import mihon.entry.interactions.migration.host.EntryMigrationHostTransition
+import mihon.entry.interactions.migration.host.EntryMigrationHostTransitionResult
+import mihon.entry.interactions.migration.host.EntryMigrationPreparationHost
+import mihon.entry.interactions.migration.options.EntryMigrationOptionDiscovery
+import mihon.entry.interactions.migration.preparation.EntryMigrationTransitionPreparation
+import mihon.entry.interactions.migration.preparation.EntryMigrationTransitionPreparationResult
+import mihon.entry.interactions.runtime.applicableProviderTypes
+import mihon.entry.interactions.source.EntrySourceRefreshFailure
+import mihon.entry.interactions.source.EntrySourceRefreshFeature
+import mihon.entry.interactions.source.EntrySourceRefreshRequest
+import mihon.entry.interactions.source.EntrySourceRefreshResult
+import mihon.entry.interactions.state.EntryBookmarkProcessor
+import mihon.entry.interactions.state.EntryConsumptionProcessor
+import mihon.entry.interactions.state.EntryMigrationProvider
 import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 
@@ -346,7 +363,7 @@ internal class DefaultEntryMigrationFeature(
             return EntryMigrationExecutionResult.OperationalFailure(retryable = true)
         }
         val consequenceRequests = preparedConsequences.envelopes.map { envelope ->
-            mihon.entry.interactions.host.EntryMigrationConsequenceRequest(
+            EntryMigrationConsequenceRequest(
                 participantId = envelope.participant.value,
                 schemaVersion = envelope.schemaVersion,
                 payload = envelope.payload,

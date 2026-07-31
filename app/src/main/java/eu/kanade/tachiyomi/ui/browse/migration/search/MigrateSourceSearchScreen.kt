@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.ui.browse.migration.search
 
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material3.Icon
@@ -34,11 +33,11 @@ import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.EntryMigrationFeature
-import mihon.entry.interactions.EntryMigrationPreparationResult
-import mihon.entry.interactions.EntryMigrationPrepareIntent
-import mihon.entry.interactions.EntrySourceHomeFeature
-import mihon.entry.interactions.EntrySourceHomeResolution
+import mihon.entry.interactions.migration.EntryMigrationFeature
+import mihon.entry.interactions.migration.EntryMigrationPreparationResult
+import mihon.entry.interactions.migration.EntryMigrationPrepareIntent
+import mihon.entry.interactions.source.EntrySourceHomeFeature
+import mihon.entry.interactions.source.EntrySourceHomeResolution
 import mihon.feature.migration.dialog.MigrateEntryDialog
 import mihon.feature.migration.list.MigrationListScreen
 import mihon.presentation.core.util.collectAsLazyPagingItems
@@ -49,7 +48,6 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.LoadingScreen
-import tachiyomi.source.local.LocalSource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 

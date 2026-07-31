@@ -1,2 +1,2 @@
 id=entry.library-update-notifications
-module=mihon.entry.interactions.EntryLibraryUpdateNotificationFeatureRuntimeModule
+module=mihon.entry.interactions.library.EntryLibraryUpdateNotificationFeatureRuntimeModule

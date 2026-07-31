@@ -8,7 +8,7 @@ import androidx.media3.database.StandaloneDatabaseProvider
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
 import eu.kanade.tachiyomi.util.storage.DiskUtil
-import mihon.entry.interactions.EntryPlayerCache
+import mihon.entry.interactions.runtime.EntryPlayerCache
 import java.io.File
 
 @OptIn(markerClass = [UnstableApi::class])

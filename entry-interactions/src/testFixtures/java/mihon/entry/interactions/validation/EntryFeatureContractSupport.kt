@@ -1,19 +1,19 @@
 package mihon.entry.interactions.validation
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.EntryInteractionPlugin
-import mihon.entry.interactions.EntryInteractionProviderBinding
-import mihon.entry.interactions.createEntryInteractionComposition
+import mihon.entry.interactions.runtime.EntryInteractionPlugin
+import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
+import mihon.entry.interactions.runtime.createEntryInteractionComposition
 import mihon.feature.graph.ContributionOwner
-import mihon.feature.graph.FeatureDurableExecutionParticipantBinding
-import mihon.feature.graph.FeatureExecutionHandler
-import mihon.feature.graph.FeatureExecutionParticipantBinding
-import mihon.feature.graph.FeatureExecutionParticipantDefinition
-import mihon.feature.graph.FeatureExecutionPhase
 import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.SpecializedAdapter
 import mihon.feature.graph.discoverFeatureGraphContributions
+import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
+import mihon.feature.graph.execution.FeatureExecutionHandler
+import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
+import mihon.feature.graph.execution.FeatureExecutionParticipantDefinition
+import mihon.feature.graph.execution.FeatureExecutionPhase
 import mihon.feature.graph.featureGraphContributor
 import mihon.feature.graph.validation.FeatureContractFailure
 import mihon.feature.graph.validation.FeatureContractVerificationResult
@@ -106,9 +106,9 @@ private fun validationContributors(
 
 @Suppress("UNCHECKED_CAST")
 private fun noOpBinding(
-    definition: mihon.feature.graph.FeatureExecutionParticipantDefinition<*>,
+    definition: FeatureExecutionParticipantDefinition<*>,
 ): FeatureExecutionParticipantBinding<*> {
-    val typed = definition as mihon.feature.graph.FeatureExecutionParticipantDefinition<Any>
+    val typed = definition as FeatureExecutionParticipantDefinition<Any>
     return FeatureExecutionParticipantBinding(typed, FeatureExecutionHandler { })
 }
 

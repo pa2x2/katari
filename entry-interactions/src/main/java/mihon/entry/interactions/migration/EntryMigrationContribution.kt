@@ -1,5 +1,11 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.migration
 
+import mihon.entry.interactions.migration.consequence.ENTRY_MIGRATION_DURABLE_EXECUTION_POINT
+import mihon.entry.interactions.migration.options.ENTRY_MIGRATION_OPTION_DISCOVERY_POINT
+import mihon.entry.interactions.migration.preparation.ENTRY_MIGRATION_TRANSITION_PREPARING_POINT
+import mihon.entry.interactions.state.EntryBookmarkCapability
+import mihon.entry.interactions.state.EntryConsumptionCapability
+import mihon.entry.interactions.state.EntryMigrationCapability
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId

@@ -1,12 +1,12 @@
-package mihon.translation.ui.picker
+package mihon.translation.ui.picker.engine
 
-import mihon.translation.api.TranslationEngineAction
-import mihon.translation.api.TranslationEngineBuildAvailability
-import mihon.translation.api.TranslationEngineId
-import mihon.translation.api.TranslationEngineState
-import mihon.translation.api.TranslationEngineStatus
-import mihon.translation.api.TranslationSystemSetupReason
-import mihon.translation.api.TranslationUnavailableReason
+import mihon.translation.api.engine.TranslationEngineAction
+import mihon.translation.api.engine.TranslationEngineBuildAvailability
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.engine.TranslationEngineState
+import mihon.translation.api.engine.TranslationEngineStatus
+import mihon.translation.api.preparation.TranslationSystemSetupReason
+import mihon.translation.api.preparation.TranslationUnavailableReason
 
 enum class TranslationEnginePickerDensity {
     Full,

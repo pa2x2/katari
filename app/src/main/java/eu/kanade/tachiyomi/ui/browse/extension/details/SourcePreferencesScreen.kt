@@ -37,9 +37,9 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.preference.SharedPreferencesDataStore
 import eu.kanade.tachiyomi.widget.TachiyomiTextInputEditText.Companion.setIncognito
 import logcat.LogPriority
-import mihon.entry.interactions.EntrySourceSettingsFeature
-import mihon.entry.interactions.EntrySourceSettingsPopulateResult
-import mihon.entry.interactions.EntrySourceSettingsResolution
+import mihon.entry.interactions.source.EntrySourceSettingsFeature
+import mihon.entry.interactions.source.EntrySourceSettingsPopulateResult
+import mihon.entry.interactions.source.EntrySourceSettingsResolution
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.presentation.core.components.material.Scaffold

@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.reader
 
 internal class BookSessionCloseStack : AutoCloseable {
     private var closed = false

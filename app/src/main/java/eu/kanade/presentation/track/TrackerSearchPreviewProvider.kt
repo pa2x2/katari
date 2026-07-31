@@ -4,8 +4,8 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
-import mihon.entry.interactions.EntryTrackingSearchCandidate
-import mihon.entry.interactions.EntryTrackingServiceId
+import mihon.entry.interactions.tracking.EntryTrackingSearchCandidate
+import mihon.entry.interactions.tracking.EntryTrackingServiceId
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.temporal.ChronoUnit

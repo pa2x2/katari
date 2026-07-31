@@ -3,11 +3,11 @@ package eu.kanade.presentation.track
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import eu.kanade.tachiyomi.R
-import mihon.entry.interactions.EntryTrackingRecord
-import mihon.entry.interactions.EntryTrackingServiceCapabilities
-import mihon.entry.interactions.EntryTrackingServiceDescriptor
-import mihon.entry.interactions.EntryTrackingServiceId
-import mihon.entry.interactions.EntryTrackingSessionService
+import mihon.entry.interactions.tracking.EntryTrackingRecord
+import mihon.entry.interactions.tracking.EntryTrackingServiceCapabilities
+import mihon.entry.interactions.tracking.EntryTrackingServiceDescriptor
+import mihon.entry.interactions.tracking.EntryTrackingServiceId
+import mihon.entry.interactions.tracking.EntryTrackingSessionService
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 

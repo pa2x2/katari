@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.navigation
 
 data class EntryOpenOptions(
     val ownerEntryId: Long? = null,

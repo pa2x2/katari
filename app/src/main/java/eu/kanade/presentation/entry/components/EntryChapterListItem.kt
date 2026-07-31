@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.dp
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.components.DotSeparatorText
 import me.saket.swipe.SwipeableActionsBox
-import mihon.entry.interactions.EntryDownloadState
+import mihon.entry.interactions.download.EntryDownloadState
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.DISABLED_ALPHA

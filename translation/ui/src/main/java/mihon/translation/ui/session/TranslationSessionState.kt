@@ -1,10 +1,10 @@
 package mihon.translation.ui.session
 
-import mihon.translation.api.TranslationExecution
-import mihon.translation.api.TranslationPreparation
-import mihon.translation.api.TranslationProviderPresentation
-import mihon.translation.api.TranslationRequest
-import mihon.translation.api.TranslationResult
+import mihon.translation.api.preparation.TranslationPreparation
+import mihon.translation.api.provider.TranslationProviderPresentation
+import mihon.translation.api.request.TranslationRequest
+import mihon.translation.api.result.TranslationExecution
+import mihon.translation.api.result.TranslationResult
 
 data class TranslationSelectionAnchor(
     val left: Float,

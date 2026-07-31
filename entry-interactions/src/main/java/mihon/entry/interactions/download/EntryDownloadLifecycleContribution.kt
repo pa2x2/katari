@@ -1,5 +1,9 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download
 
+import mihon.entry.interactions.media.EntryMediaSessionCapability
+import mihon.entry.interactions.media.session.ENTRY_MEDIA_SESSION_CONSEQUENCE_EXECUTION_POINT
+import mihon.entry.interactions.state.ENTRY_PROGRESS_MEDIA_SESSION_PARTICIPANT
+import mihon.entry.interactions.state.EntryBookmarkCapability
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputDefinition
 import mihon.feature.graph.ContextInputId
@@ -10,8 +14,6 @@ import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContextBlocker
 import mihon.feature.graph.FeatureContextDecision
 import mihon.feature.graph.FeatureContribution
-import mihon.feature.graph.FeatureExecutionOrder
-import mihon.feature.graph.FeatureExecutionParticipantDefinition
 import mihon.feature.graph.FeatureExecutionParticipantId
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
@@ -20,6 +22,8 @@ import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
 import mihon.feature.graph.allOf
 import mihon.feature.graph.contextInputDefinition
+import mihon.feature.graph.execution.FeatureExecutionOrder
+import mihon.feature.graph.execution.FeatureExecutionParticipantDefinition
 import mihon.feature.graph.featureContextRule
 
 internal val ENTRY_DOWNLOAD_LIFECYCLE_FEATURE_ID = FeatureId("entry.download.lifecycle")

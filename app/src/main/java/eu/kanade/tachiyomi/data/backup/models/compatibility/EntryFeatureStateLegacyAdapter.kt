@@ -11,38 +11,39 @@ import eu.kanade.tachiyomi.data.backup.models.BackupViewerSettingOverride
 import eu.kanade.tachiyomi.data.backup.models.toBackupEntryProgressState
 import eu.kanade.tachiyomi.data.backup.models.toEntryProgressStateSnapshot
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.ENTRY_CHILD_GROUP_FILTER_BACKUP_SCHEMA_VERSION
-import mihon.entry.interactions.ENTRY_CHILD_GROUP_FILTER_BACKUP_STATE_ID
-import mihon.entry.interactions.ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_SCHEMA_VERSION
-import mihon.entry.interactions.ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_STATE_ID
-import mihon.entry.interactions.ENTRY_MERGE_BACKUP_SCHEMA_VERSION
-import mihon.entry.interactions.ENTRY_MERGE_BACKUP_STATE_ID
-import mihon.entry.interactions.ENTRY_PLAYBACK_PREFERENCES_BACKUP_SCHEMA_VERSION
-import mihon.entry.interactions.ENTRY_PLAYBACK_PREFERENCES_BACKUP_STATE_ID
-import mihon.entry.interactions.ENTRY_PROGRESS_BACKUP_SCHEMA_VERSION
-import mihon.entry.interactions.ENTRY_PROGRESS_BACKUP_STATE_ID
-import mihon.entry.interactions.ENTRY_TRACKING_BACKUP_SCHEMA_VERSION
-import mihon.entry.interactions.ENTRY_TRACKING_BACKUP_STATE_ID
-import mihon.entry.interactions.ENTRY_VIEWER_SETTINGS_BACKUP_SCHEMA_VERSION
-import mihon.entry.interactions.ENTRY_VIEWER_SETTINGS_BACKUP_STATE_ID
-import mihon.entry.interactions.EntryBackupStateCodec
-import mihon.entry.interactions.EntryChildGroupFilterBackupState
-import mihon.entry.interactions.EntryDownloadConfigurationBackupState
-import mihon.entry.interactions.EntryDownloadConfigurationQualityMode
-import mihon.entry.interactions.EntryFeatureStateEnvelope
-import mihon.entry.interactions.EntryMergeBackupIdentity
-import mihon.entry.interactions.EntryMergeBackupMember
-import mihon.entry.interactions.EntryPlaybackPreferencesSnapshot
-import mihon.entry.interactions.EntryPlaybackQualityMode
-import mihon.entry.interactions.EntryProgressSnapshot
-import mihon.entry.interactions.EntryProgressStateSnapshot
-import mihon.entry.interactions.EntryTrackingBackupRecord
-import mihon.entry.interactions.EntryTrackingBackupState
-import mihon.entry.interactions.EntryViewerSettingBackupValue
-import mihon.entry.interactions.EntryViewerSettingsBackupState
+import kotlinx.serialization.serializer
+import mihon.entry.interactions.child.backup.ENTRY_CHILD_GROUP_FILTER_BACKUP_SCHEMA_VERSION
+import mihon.entry.interactions.child.backup.ENTRY_CHILD_GROUP_FILTER_BACKUP_STATE_ID
+import mihon.entry.interactions.child.backup.EntryChildGroupFilterBackupState
+import mihon.entry.interactions.download.configuration.backup.ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_SCHEMA_VERSION
+import mihon.entry.interactions.download.configuration.backup.ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_STATE_ID
+import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfigurationBackupState
+import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfigurationQualityMode
+import mihon.entry.interactions.media.EntryPlaybackPreferencesSnapshot
+import mihon.entry.interactions.media.EntryPlaybackQualityMode
+import mihon.entry.interactions.media.backup.ENTRY_PLAYBACK_PREFERENCES_BACKUP_SCHEMA_VERSION
+import mihon.entry.interactions.media.backup.ENTRY_PLAYBACK_PREFERENCES_BACKUP_STATE_ID
+import mihon.entry.interactions.media.backup.ENTRY_VIEWER_SETTINGS_BACKUP_SCHEMA_VERSION
+import mihon.entry.interactions.media.backup.ENTRY_VIEWER_SETTINGS_BACKUP_STATE_ID
+import mihon.entry.interactions.media.backup.EntryViewerSettingBackupValue
+import mihon.entry.interactions.media.backup.EntryViewerSettingsBackupState
+import mihon.entry.interactions.merge.ENTRY_MERGE_BACKUP_SCHEMA_VERSION
+import mihon.entry.interactions.merge.ENTRY_MERGE_BACKUP_STATE_ID
+import mihon.entry.interactions.merge.EntryMergeBackupIdentity
+import mihon.entry.interactions.merge.EntryMergeBackupMember
+import mihon.entry.interactions.persistence.backup.EntryBackupStateCodec
+import mihon.entry.interactions.persistence.backup.EntryFeatureStateEnvelope
 import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import mihon.entry.interactions.reader.settings.ReaderOrientation
 import mihon.entry.interactions.reader.settings.ReadingMode
+import mihon.entry.interactions.state.EntryProgressSnapshot
+import mihon.entry.interactions.state.EntryProgressStateSnapshot
+import mihon.entry.interactions.state.backup.ENTRY_PROGRESS_BACKUP_SCHEMA_VERSION
+import mihon.entry.interactions.state.backup.ENTRY_PROGRESS_BACKUP_STATE_ID
+import mihon.entry.interactions.tracking.backup.ENTRY_TRACKING_BACKUP_SCHEMA_VERSION
+import mihon.entry.interactions.tracking.backup.ENTRY_TRACKING_BACKUP_STATE_ID
+import mihon.entry.interactions.tracking.backup.EntryTrackingBackupRecord
+import mihon.entry.interactions.tracking.backup.EntryTrackingBackupState
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryProgressLocator
 
@@ -141,14 +142,14 @@ internal fun BackupEntry.normalizeLegacyViewerFlags(entry: Entry): Entry {
 }
 
 private inline fun <reified T> EntryFeatureStateEnvelope.decode(): T {
-    return EntryBackupStateCodec.decode(kotlinx.serialization.serializer(), payload)
+    return EntryBackupStateCodec.decode(serializer(), payload)
 }
 
 private inline fun <reified T> T.envelope(participantId: String, schemaVersion: Int): EntryFeatureStateEnvelope {
     return EntryFeatureStateEnvelope(
         participantId = participantId,
         schemaVersion = schemaVersion,
-        payload = EntryBackupStateCodec.encode(kotlinx.serialization.serializer(), this),
+        payload = EntryBackupStateCodec.encode(serializer(), this),
     )
 }
 

@@ -1,12 +1,6 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media
 
-import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.viewer.settings.ViewerSettingDefinition
-import mihon.entry.viewer.settings.ViewerSettingId
-import mihon.entry.viewer.settings.ViewerSettingOverride
-import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
-import mihon.entry.viewer.settings.ViewerSettingScope
-import mihon.entry.viewer.settings.ViewerSettingsProvider
+import mihon.entry.interactions.state.EntryMigrationCapability
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
@@ -15,12 +9,10 @@ import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
 import mihon.feature.graph.allOf
-import tachiyomi.domain.entry.model.Entry
 
 internal val ENTRY_VIEWER_SETTINGS_FEATURE_ID = FeatureId("entry.viewer-settings")
 internal val ENTRY_VIEWER_SETTINGS_FEATURE_OWNER = ContributionOwner("entry-viewer-settings")

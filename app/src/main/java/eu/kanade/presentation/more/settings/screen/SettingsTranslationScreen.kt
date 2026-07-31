@@ -23,11 +23,11 @@ import eu.kanade.presentation.more.settings.screen.translation.presentation.Tran
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toast
-import mihon.translation.api.TranslationHostActionResult
-import mihon.translation.api.TranslationHostActions
-import mihon.translation.api.TranslationSetupDestination
-import mihon.translation.api.TranslationTargetLanguageSelection
-import mihon.translation.ui.picker.displayName
+import mihon.translation.api.host.TranslationHostActionResult
+import mihon.translation.api.host.TranslationHostActions
+import mihon.translation.api.host.TranslationSetupDestination
+import mihon.translation.api.request.TranslationTargetLanguageSelection
+import mihon.translation.ui.picker.language.displayName
 import mihon.translation.ui.presentation.TranslationSessionExternalAction
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR

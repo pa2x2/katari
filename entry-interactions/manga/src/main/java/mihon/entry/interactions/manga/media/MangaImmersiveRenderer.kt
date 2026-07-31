@@ -1,4 +1,4 @@
-package mihon.entry.interactions.manga
+package mihon.entry.interactions.manga.media
 
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
@@ -44,8 +44,8 @@ import coil3.size.Size
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
-import mihon.entry.interactions.EntryImmersiveProgress
-import mihon.entry.interactions.EntryImmersiveRenderer
+import mihon.entry.interactions.media.EntryImmersiveProgress
+import mihon.entry.interactions.media.EntryImmersiveRenderer
 import okhttp3.Headers
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter

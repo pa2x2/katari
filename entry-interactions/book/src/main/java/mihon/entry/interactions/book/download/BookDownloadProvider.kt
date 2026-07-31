@@ -3,9 +3,9 @@ package mihon.entry.interactions.book.download
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.util.lang.Hash
 import eu.kanade.tachiyomi.util.storage.DiskUtil
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import mihon.entry.interactions.book.fileSuffix
+import mihon.book.api.BookContentResource
+import mihon.entry.interactions.book.content.fileSuffix
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.storage.service.StorageManager
@@ -281,7 +281,7 @@ internal data class BookDownloadPackageScan(
 
 private fun resourceFileSuffix(mediaType: String?): String = when (mediaType) {
     null -> ".bin"
-    else -> mihon.book.api.BookContentResource(id = "resource", mediaType = mediaType).fileSuffix()
+    else -> BookContentResource(id = "resource", mediaType = mediaType).fileSuffix()
 }
 
 private fun InputStream.sha256(): String {

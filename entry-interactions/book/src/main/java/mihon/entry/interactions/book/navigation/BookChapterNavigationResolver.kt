@@ -1,5 +1,6 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.navigation
 
+import mihon.entry.interactions.book.runtime.requireBook
 import mihon.entry.interactions.viewer.EntryChildWindow
 import mihon.entry.interactions.viewer.entryChildWindow
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters

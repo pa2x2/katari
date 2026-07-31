@@ -1,4 +1,4 @@
-package mihon.translation.runtime
+package mihon.translation.runtime.graph
 
 import mihon.feature.graph.ApplicableFeatureIntegration
 import mihon.feature.graph.FeatureGraphEvaluation

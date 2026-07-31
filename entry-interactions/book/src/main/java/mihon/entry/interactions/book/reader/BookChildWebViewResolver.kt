@@ -1,12 +1,12 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.reader
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import mihon.entry.interactions.EntryChildWebViewResolution
-import mihon.entry.interactions.EntryWebViewFeature
+import mihon.entry.interactions.source.EntryChildWebViewResolution
+import mihon.entry.interactions.source.EntryWebViewFeature
 
 internal class BookChildWebViewResolver(
     private val scope: CoroutineScope,

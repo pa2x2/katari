@@ -3,6 +3,7 @@ package eu.kanade.presentation.more.settings.screen.translation
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
@@ -12,41 +13,43 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import mihon.translation.api.KnownTranslationEngine
-import mihon.translation.api.TranslationDeviceAvailability
-import mihon.translation.api.TranslationEngineArtwork
-import mihon.translation.api.TranslationEngineBuildAvailability
-import mihon.translation.api.TranslationEngineChoiceReason
-import mihon.translation.api.TranslationEngineDetails
-import mihon.translation.api.TranslationEngineId
-import mihon.translation.api.TranslationEngineInspection
-import mihon.translation.api.TranslationEngineSelection
-import mihon.translation.api.TranslationEngineState
-import mihon.translation.api.TranslationEngineStatus
-import mihon.translation.api.TranslationExecution
 import mihon.translation.api.TranslationFeature
-import mihon.translation.api.TranslationHostActionResult
-import mihon.translation.api.TranslationHostActions
-import mihon.translation.api.TranslationInvocationPolicy
-import mihon.translation.api.TranslationLanguagePair
-import mihon.translation.api.TranslationLanguageSupport
-import mihon.translation.api.TranslationLanguageSupportInspection
-import mihon.translation.api.TranslationLanguageTag
-import mihon.translation.api.TranslationModelDescriptor
-import mihon.translation.api.TranslationPreparation
-import mihon.translation.api.TranslationProviderDisclosure
-import mihon.translation.api.TranslationProviderId
-import mihon.translation.api.TranslationProviderPresentation
-import mihon.translation.api.TranslationRequest
-import mihon.translation.api.TranslationSetupDestination
-import mihon.translation.api.TranslationSourceLanguageSelection
-import mihon.translation.api.TranslationSystemSetupReason
-import mihon.translation.api.TranslationTargetLanguageSelection
-import mihon.translation.api.TranslationUnavailableReason
+import mihon.translation.api.availability.TranslationDeviceAvailability
+import mihon.translation.api.engine.KnownTranslationEngine
+import mihon.translation.api.engine.TranslationEngineArtwork
+import mihon.translation.api.engine.TranslationEngineBuildAvailability
+import mihon.translation.api.engine.TranslationEngineDetails
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.engine.TranslationEngineInspection
+import mihon.translation.api.engine.TranslationEngineSelection
+import mihon.translation.api.engine.TranslationEngineState
+import mihon.translation.api.engine.TranslationEngineStatus
+import mihon.translation.api.engine.TranslationProviderId
+import mihon.translation.api.host.TranslationHostActionResult
+import mihon.translation.api.host.TranslationHostActions
+import mihon.translation.api.host.TranslationSetupDestination
+import mihon.translation.api.language.TranslationLanguagePair
+import mihon.translation.api.language.TranslationLanguageSupport
+import mihon.translation.api.language.TranslationLanguageSupportInspection
+import mihon.translation.api.language.TranslationLanguageTag
+import mihon.translation.api.model.TranslationModelDescriptor
+import mihon.translation.api.preparation.ReadyTranslation
+import mihon.translation.api.preparation.TranslationEngineChoiceReason
+import mihon.translation.api.preparation.TranslationPreparation
+import mihon.translation.api.preparation.TranslationSystemSetupReason
+import mihon.translation.api.preparation.TranslationUnavailableReason
+import mihon.translation.api.provider.TranslationInvocationPolicy
+import mihon.translation.api.provider.TranslationProviderDisclosure
+import mihon.translation.api.provider.TranslationProviderPresentation
+import mihon.translation.api.request.TranslationRequest
+import mihon.translation.api.request.TranslationSourceLanguageSelection
+import mihon.translation.api.request.TranslationTargetLanguageSelection
+import mihon.translation.api.result.TranslationExecution
 import mihon.translation.ui.session.TranslationSessionState
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class TranslationSettingsScreenModelTest {
     @Test
     fun `provider readiness updates incrementally without resolving selection early`() = runTest {
@@ -468,9 +471,8 @@ class TranslationSettingsScreenModelTest {
             )
         }
 
-        override suspend fun translate(
-            ready: mihon.translation.api.ReadyTranslation,
-        ): TranslationExecution = error("Playground must not execute before the user action")
+        override suspend fun translate(ready: ReadyTranslation): TranslationExecution =
+            error("Playground must not execute before the user action")
     }
 
     private companion object {

@@ -1,18 +1,21 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.tracking
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import mihon.entry.interactions.host.tracking.EntryTrackingHost
-import mihon.entry.interactions.host.tracking.EntryTrackingHostEntrySnapshot
+import mihon.entry.interactions.tracking.host.EntryTrackingHost
+import mihon.entry.interactions.tracking.host.EntryTrackingHostEntrySnapshot
 import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 
 internal class DefaultEntryTrackingFeature(
     private val evaluation: FeatureGraphEvaluation,
     private val host: EntryTrackingHost,
-    private val automation: DefaultEntryTrackingAutomation = DefaultEntryTrackingAutomation(evaluation, host),
+    private val automation: DefaultEntryTrackingAutomation = DefaultEntryTrackingAutomation(
+        evaluation,
+        host,
+    ),
 ) : EntryTrackingFeature,
     EntryTrackingOperations by DefaultEntryTrackingOperations(evaluation, host, automation),
     EntryTrackingAutomation by automation,

@@ -1,6 +1,14 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.lifecycle.profile
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.entryContentType
+import mihon.entry.interactions.lifecycle.lifecycleContractComposition
+import mihon.entry.interactions.lifecycle.profile.consequence.ENTRY_PROFILE_MOVE_SOURCE_VISIBILITY_PARTICIPANT
+import mihon.entry.interactions.lifecycle.profile.consequence.EntryProfileMoveSourceVisibilityBehaviorContract
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveCommit
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveHost
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveSourceVisibilityHost
+import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.verifyFeatureContract
 import mihon.feature.graph.FeatureId

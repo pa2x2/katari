@@ -4,8 +4,8 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.ui.entry.EntryScreenModel
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.flow.MutableStateFlow
-import mihon.entry.interactions.EntryPreviewPage
-import mihon.entry.interactions.EntryPreviewPageStatus
+import mihon.entry.interactions.media.EntryPreviewPage
+import mihon.entry.interactions.media.EntryPreviewPageStatus
 import org.junit.jupiter.api.Test
 
 class EntryPreviewLayoutTest {

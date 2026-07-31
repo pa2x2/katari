@@ -21,11 +21,11 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import logcat.LogPriority
-import mihon.entry.interactions.EntryMergeMetadataRefreshFeature
-import mihon.entry.interactions.EntrySourceRefreshFailure
-import mihon.entry.interactions.EntrySourceRefreshFeature
-import mihon.entry.interactions.EntrySourceRefreshRequest
-import mihon.entry.interactions.EntrySourceRefreshResult
+import mihon.entry.interactions.merge.EntryMergeMetadataRefreshFeature
+import mihon.entry.interactions.source.EntrySourceRefreshFailure
+import mihon.entry.interactions.source.EntrySourceRefreshFeature
+import mihon.entry.interactions.source.EntrySourceRefreshRequest
+import mihon.entry.interactions.source.EntrySourceRefreshResult
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.interactor.GetLibraryEntries

@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download
 
 data class EntryDownloadOption(
     val key: String,

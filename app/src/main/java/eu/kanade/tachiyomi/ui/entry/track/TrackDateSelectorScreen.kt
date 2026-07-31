@@ -29,10 +29,10 @@ import eu.kanade.presentation.track.TrackDateSelector
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.lang.convertEpochMillisZone
 import eu.kanade.tachiyomi.util.lang.toLocalDate
-import mihon.entry.interactions.EntryTrackingFeature
-import mihon.entry.interactions.EntryTrackingMutation
-import mihon.entry.interactions.EntryTrackingRecord
-import mihon.entry.interactions.EntryTrackingServiceDescriptor
+import mihon.entry.interactions.tracking.EntryTrackingFeature
+import mihon.entry.interactions.tracking.EntryTrackingMutation
+import mihon.entry.interactions.tracking.EntryTrackingRecord
+import mihon.entry.interactions.tracking.EntryTrackingServiceDescriptor
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.MR

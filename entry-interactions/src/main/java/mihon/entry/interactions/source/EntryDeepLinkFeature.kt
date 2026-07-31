@@ -1,10 +1,9 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.source
 
 import eu.kanade.tachiyomi.source.entry.EntryUriType
 import eu.kanade.tachiyomi.source.entry.ResolvableSource
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import kotlinx.coroutines.CancellationException
-import mihon.entry.interactions.source.ENTRY_SOURCE_CONTEXT_OWNER
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -175,7 +174,14 @@ internal class DefaultEntryDeepLinkFeature(
 
     private suspend fun getChapter(sourceChild: SEntryChapter, entry: Entry): EntryChapter? {
         return entryChapterRepository.getChapterByUrlAndEntryId(sourceChild.url, entry.id)
-            ?: when (val refresh = sourceRefresh.refresh(EntrySourceRefreshRequest(entry, manual = false))) {
+            ?: when (
+                val refresh = sourceRefresh.refresh(
+                    EntrySourceRefreshRequest(
+                        entry,
+                        manual = false,
+                    ),
+                )
+            ) {
                 is EntrySourceRefreshResult.Refreshed -> {
                     refresh.insertedChildren.find { it.url == sourceChild.url }
                 }

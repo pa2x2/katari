@@ -1,14 +1,18 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.state
 
+import mihon.entry.interactions.media.EntryPlaybackPreferencesSnapshot
+import mihon.entry.interactions.runtime.EntryInteractionProvider
+import mihon.entry.interactions.runtime.entryInteractionCapability
 import mihon.feature.graph.CapabilityId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
 interface EntryMigrationProvider : EntryInteractionProvider
 
-val EntryMigrationCapability = entryInteractionCapability<EntryMigrationProvider>(
-    id = CapabilityId("entry.migration"),
-)
+val EntryMigrationCapability =
+    entryInteractionCapability<EntryMigrationProvider>(
+        id = CapabilityId("entry.migration"),
+    )
 
 interface EntryConsumptionProcessor : EntryInteractionProvider {
     /** Returns exactly the children whose persisted consumed state changed. */
@@ -26,17 +30,19 @@ fun shouldChangeConsumption(status: EntryConsumptionStatus, consumed: Boolean): 
     }
 }
 
-val EntryConsumptionCapability = entryInteractionCapability<EntryConsumptionProcessor>(
-    id = CapabilityId("entry.consumption"),
-)
+val EntryConsumptionCapability =
+    entryInteractionCapability<EntryConsumptionProcessor>(
+        id = CapabilityId("entry.consumption"),
+    )
 
 interface EntryBookmarkProcessor : EntryInteractionProvider {
     suspend fun setBookmarked(entry: Entry, chapters: List<EntryChapter>, bookmarked: Boolean)
 }
 
-val EntryBookmarkCapability = entryInteractionCapability<EntryBookmarkProcessor>(
-    id = CapabilityId("entry.bookmarking"),
-)
+val EntryBookmarkCapability =
+    entryInteractionCapability<EntryBookmarkProcessor>(
+        id = CapabilityId("entry.bookmarking"),
+    )
 
 interface EntryProgressProcessor : EntryInteractionProvider {
     suspend fun snapshot(entry: Entry): EntryProgressSnapshot
@@ -71,9 +77,10 @@ interface EntryProgressProcessor : EntryInteractionProvider {
     }
 }
 
-val EntryProgressCapability = entryInteractionCapability<EntryProgressProcessor>(
-    id = CapabilityId("entry.progress-transfer"),
-)
+val EntryProgressCapability =
+    entryInteractionCapability<EntryProgressProcessor>(
+        id = CapabilityId("entry.progress-transfer"),
+    )
 
 interface EntryPlaybackPreferencesProcessor : EntryInteractionProvider {
     suspend fun snapshot(entry: Entry): EntryPlaybackPreferencesSnapshot?
@@ -83,6 +90,7 @@ interface EntryPlaybackPreferencesProcessor : EntryInteractionProvider {
     suspend fun copy(sourceEntry: Entry, targetEntry: Entry): Boolean
 }
 
-val EntryPlaybackPreferencesCapability = entryInteractionCapability<EntryPlaybackPreferencesProcessor>(
-    id = CapabilityId("entry.playback-preferences-transfer"),
-)
+val EntryPlaybackPreferencesCapability =
+    entryInteractionCapability<EntryPlaybackPreferencesProcessor>(
+        id = CapabilityId("entry.playback-preferences-transfer"),
+    )

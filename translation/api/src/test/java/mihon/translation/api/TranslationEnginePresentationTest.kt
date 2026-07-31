@@ -1,6 +1,8 @@
 package mihon.translation.api
 
 import io.kotest.assertions.throwables.shouldThrow
+import mihon.translation.api.engine.TranslationEngineArtwork
+import mihon.translation.api.engine.TranslationEngineDetails
 import org.junit.jupiter.api.Test
 
 class TranslationEnginePresentationTest {

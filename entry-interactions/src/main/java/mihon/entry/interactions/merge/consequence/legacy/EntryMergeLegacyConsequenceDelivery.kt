@@ -1,7 +1,13 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.merge.consequence.legacy
 
-import mihon.entry.interactions.host.EntryMergeHost
-import mihon.entry.interactions.host.EntryMergePendingConsequence
+import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
+import mihon.entry.interactions.download.EntryDownloadMaintenanceResult
+import mihon.entry.interactions.download.maintenance.merge.ENTRY_DOWNLOAD_MERGE_PARTICIPANT
+import mihon.entry.interactions.merge.consequence.cover.ENTRY_MERGE_CUSTOM_COVER_PARTICIPANT
+import mihon.entry.interactions.merge.host.EntryMergeHost
+import mihon.entry.interactions.merge.host.EntryMergePendingConsequence
+import mihon.entry.interactions.tracking.EntryTrackingFeature
+import mihon.entry.interactions.tracking.merge.ENTRY_TRACKING_MERGE_PARTICIPANT
 import tachiyomi.domain.entry.model.Entry
 
 /**

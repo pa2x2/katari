@@ -28,8 +28,8 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.entry.interactions.EntrySourceHomeFeature
-import mihon.entry.interactions.EntrySourceHomeResolution
+import mihon.entry.interactions.source.EntrySourceHomeFeature
+import mihon.entry.interactions.source.EntrySourceHomeResolution
 import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat

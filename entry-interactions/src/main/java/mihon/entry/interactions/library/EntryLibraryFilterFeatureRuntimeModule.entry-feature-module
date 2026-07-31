@@ -1,2 +1,2 @@
 id=entry.library-filtering
-module=mihon.entry.interactions.EntryLibraryFilterFeatureRuntimeModule
+module=mihon.entry.interactions.library.EntryLibraryFilterFeatureRuntimeModule

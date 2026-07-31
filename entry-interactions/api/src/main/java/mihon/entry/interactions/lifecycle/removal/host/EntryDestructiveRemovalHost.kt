@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.lifecycle.removal.host
 
 import tachiyomi.domain.entry.model.Entry
 

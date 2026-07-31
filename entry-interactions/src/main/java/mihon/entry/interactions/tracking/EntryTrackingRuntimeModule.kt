@@ -1,10 +1,33 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.tracking
 
-import mihon.feature.graph.FeatureExecutionContextResolver
-import mihon.feature.graph.FeatureExecutionHandler
-import mihon.feature.graph.FeatureExecutionParticipantBinding
+import mihon.entry.interactions.lifecycle.profile.stateRequest
+import mihon.entry.interactions.media.session.EntryMediaSessionConsequence
+import mihon.entry.interactions.media.session.EntryMediaSessionEvent
+import mihon.entry.interactions.persistence.backup.decodeEntryBackupState
+import mihon.entry.interactions.persistence.backup.entryBackupStateEnvelope
+import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeArtifacts
+import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeModule
+import mihon.entry.interactions.runtime.production.entryFeatureRuntimeBoundary
+import mihon.entry.interactions.tracking.backup.DefaultEntryTrackingBackupFeature
+import mihon.entry.interactions.tracking.backup.ENTRY_TRACKING_BACKUP_RESTORE_PARTICIPANT
+import mihon.entry.interactions.tracking.backup.ENTRY_TRACKING_BACKUP_SCHEMA_VERSION
+import mihon.entry.interactions.tracking.backup.ENTRY_TRACKING_BACKUP_SNAPSHOT_PARTICIPANT
+import mihon.entry.interactions.tracking.backup.ENTRY_TRACKING_BACKUP_STATE_ID
+import mihon.entry.interactions.tracking.backup.EntryTrackingBackupContributor
+import mihon.entry.interactions.tracking.backup.EntryTrackingBackupFeature
+import mihon.entry.interactions.tracking.backup.EntryTrackingBackupState
+import mihon.entry.interactions.tracking.lifecycle.ENTRY_TRACKING_PROFILE_MOVE_PARTICIPANT
+import mihon.entry.interactions.tracking.lifecycle.EntryTrackingProfileMoveContributor
+import mihon.entry.interactions.tracking.merge.EntryTrackingMergeContributor
+import mihon.entry.interactions.tracking.merge.entryTrackingMergeBinding
+import mihon.entry.interactions.tracking.migration.EntryTrackingMigrationContributor
+import mihon.entry.interactions.tracking.migration.entryTrackingMigrationBinding
 import mihon.feature.graph.contextEvidence
+import mihon.feature.graph.execution.FeatureExecutionContextResolver
+import mihon.feature.graph.execution.FeatureExecutionHandler
+import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
+import tachiyomi.domain.entry.model.Entry
 import uy.kohesive.injekt.api.addSingletonFactory
 import uy.kohesive.injekt.api.get
 
@@ -34,7 +57,7 @@ internal val EntryTrackingFeatureRuntimeModule = EntryFeatureRuntimeModule(
             entryTrackingMergeBinding(
                 resolveEntry = { profileId, type, sourceId, url ->
                     context.dependencies.mergeHost.profile(profileId).resolveEntryIdentity(
-                        tachiyomi.domain.entry.model.Entry.create().copy(
+                        Entry.create().copy(
                             profileId = profileId,
                             type = type,
                             source = sourceId,
@@ -57,8 +80,9 @@ internal val EntryTrackingFeatureRuntimeModule = EntryFeatureRuntimeModule(
                 definition = ENTRY_TRACKING_BACKUP_SNAPSHOT_PARTICIPANT,
                 handler = FeatureExecutionHandler { event ->
                     if (!event.selection.includeTrackingState) return@FeatureExecutionHandler
-                    val state = get<EntryTrackingBackupFeature>().snapshot(event.profileId, event.entry)
-                        ?: return@FeatureExecutionHandler
+                    val state =
+                        get<EntryTrackingBackupFeature>().snapshot(event.profileId, event.entry)
+                            ?: return@FeatureExecutionHandler
                     event.contributions.add(
                         entryBackupStateEnvelope(
                             ENTRY_TRACKING_BACKUP_STATE_ID,

@@ -1,4 +1,24 @@
-package mihon.feature.graph
+package mihon.feature.graph.execution
+
+import mihon.feature.graph.CapabilityExpression
+import mihon.feature.graph.CapabilityProvider
+import mihon.feature.graph.ContextEvidence
+import mihon.feature.graph.ContextInputDefinition
+import mihon.feature.graph.ContributionOwner
+import mihon.feature.graph.FeatureContextBlocker
+import mihon.feature.graph.FeatureContextDecision
+import mihon.feature.graph.FeatureContextEvidence
+import mihon.feature.graph.FeatureExecutionParticipantId
+import mihon.feature.graph.FeatureExecutionPointId
+import mihon.feature.graph.FeatureGraph
+import mihon.feature.graph.FeatureSubjectContribution
+import mihon.feature.graph.FeatureSubjectReference
+import mihon.feature.graph.SpecializedAdapter
+import mihon.feature.graph.SpecializedAdapterDefinition
+import mihon.feature.graph.SpecializedExecutionParticipantObligation
+import mihon.feature.graph.evaluateAgainst
+import mihon.feature.graph.reference
+import mihon.feature.graph.requireUnique
 
 /** One participant evaluated for one installed Feature subject. */
 data class FeatureExecutionParticipantSubject(
@@ -48,12 +68,6 @@ data class ApplicableFeatureExecutionParticipant internal constructor(
     val matchedProviders: List<CapabilityProvider<*>>,
     val suppliedAdapters: List<SpecializedAdapter<*>>,
 ) : FeatureExecutionParticipantEvaluation
-
-data class SpecializedExecutionParticipantObligation(
-    override val responsibleOwner: ContributionOwner,
-    val subject: FeatureExecutionParticipantSubject,
-    val requirement: SpecializedAdapterDefinition<*>,
-) : FeatureObligation
 
 internal fun evaluateFeatureExecutionParticipants(
     graph: FeatureGraph,

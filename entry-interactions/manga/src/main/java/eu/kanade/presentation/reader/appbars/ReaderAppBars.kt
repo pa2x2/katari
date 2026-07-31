@@ -34,10 +34,10 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.reader.components.ChapterNavigator
 import eu.kanade.presentation.reader.components.ChapterNavigatorType
-import mihon.entry.interactions.EntryChildWebViewAction
-import mihon.entry.interactions.EntryChildWebViewResolution
 import mihon.entry.interactions.reader.settings.ReaderOrientation
 import mihon.entry.interactions.reader.settings.ReadingMode
+import mihon.entry.interactions.source.EntryChildWebViewAction
+import mihon.entry.interactions.source.EntryChildWebViewResolution
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.reader.ReaderChrome
 

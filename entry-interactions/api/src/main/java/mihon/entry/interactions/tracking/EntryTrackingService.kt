@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.tracking
 
 import dev.icerock.moko.resources.StringResource
 

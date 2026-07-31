@@ -8,7 +8,6 @@ import eu.kanade.domain.source.interactor.ToggleIncognito
 import eu.kanade.domain.source.interactor.ToggleSource
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.extension.ExtensionManager
-import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import kotlinx.collections.immutable.persistentListOf
@@ -23,12 +22,12 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.entry.interactions.EntryCatalogueFeature
-import mihon.entry.interactions.EntryCatalogueSourceResolution
-import mihon.entry.interactions.EntrySourceHomeFeature
-import mihon.entry.interactions.EntrySourceHomeResolution
-import mihon.entry.interactions.EntrySourceSettingsFeature
-import mihon.entry.interactions.EntrySourceSettingsResolution
+import mihon.entry.interactions.catalogue.EntryCatalogueFeature
+import mihon.entry.interactions.catalogue.EntryCatalogueSourceResolution
+import mihon.entry.interactions.source.EntrySourceHomeFeature
+import mihon.entry.interactions.source.EntrySourceHomeResolution
+import mihon.entry.interactions.source.EntrySourceSettingsFeature
+import mihon.entry.interactions.source.EntrySourceSettingsResolution
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import tachiyomi.core.common.util.system.logcat
 import uy.kohesive.injekt.Injekt

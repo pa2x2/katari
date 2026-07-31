@@ -1,6 +1,6 @@
 package mihon.entry.interactions.settings
 
-import mihon.entry.interactions.EntryPreviewSize
+import mihon.entry.interactions.media.EntryPreviewSize
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.coerceIn

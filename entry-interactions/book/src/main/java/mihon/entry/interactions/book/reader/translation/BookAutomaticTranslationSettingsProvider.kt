@@ -1,18 +1,20 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.reader.translation
 
 import android.content.Intent
 import kotlinx.coroutines.flow.map
-import mihon.entry.viewer.settings.ReaderSharedSettingAction
-import mihon.entry.viewer.settings.ReaderSharedSettingAvailability
-import mihon.entry.viewer.settings.ReaderSharedSettingId
-import mihon.entry.viewer.settings.ReaderSharedSettingText
-import mihon.entry.viewer.settings.ReaderSharedSettingsProvider
-import mihon.entry.viewer.settings.ReaderSharedTogglePreferenceBinding
-import mihon.entry.viewer.settings.ReaderSharedToggleSetting
-import mihon.entry.viewer.settings.StandardReaderCapabilities
-import mihon.translation.api.TranslationDeviceAvailability
-import mihon.translation.api.TranslationHostActions
-import mihon.translation.api.TranslationSettingsNavigation
+import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.processor.BookReaderProcessorRegistry
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingAction
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingAvailability
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingId
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingText
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingsProvider
+import mihon.entry.viewer.settings.shared.ReaderSharedTogglePreferenceBinding
+import mihon.entry.viewer.settings.shared.ReaderSharedToggleSetting
+import mihon.entry.viewer.settings.shared.StandardReaderCapabilities
+import mihon.translation.api.availability.TranslationDeviceAvailability
+import mihon.translation.api.host.TranslationHostActions
+import mihon.translation.api.host.TranslationSettingsNavigation
 
 internal class BookAutomaticTranslationSettingsProvider(
     processorRegistry: BookReaderProcessorRegistry,

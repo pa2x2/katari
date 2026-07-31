@@ -32,10 +32,10 @@ import eu.kanade.presentation.more.settings.screen.translation.engine.translatio
 import eu.kanade.presentation.more.settings.widget.ProfileSpecificChip
 import eu.kanade.presentation.more.settings.widget.highlightBackground
 import kotlinx.coroutines.delay
-import mihon.translation.api.TranslationEngineState
-import mihon.translation.ui.picker.TranslationLanguagePairSelector
-import mihon.translation.ui.picker.displayName
-import mihon.translation.ui.picker.supportsPair
+import mihon.translation.api.engine.TranslationEngineState
+import mihon.translation.ui.picker.language.TranslationLanguagePairSelector
+import mihon.translation.ui.picker.language.displayName
+import mihon.translation.ui.picker.language.supportsPair
 import mihon.translation.ui.presentation.TranslationSessionExternalAction
 import mihon.translation.ui.presentation.TranslationSessionPanel
 import mihon.translation.ui.session.TranslationLanguageSupportState

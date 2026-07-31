@@ -13,7 +13,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.EntryCatalogueFilterSuggestionsResult
+import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 
 internal class FilterAutocompleteController(
     private val filter: EntryFilter.Autocomplete,

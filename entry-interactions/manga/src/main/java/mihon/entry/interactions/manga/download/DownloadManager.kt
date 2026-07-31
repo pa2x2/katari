@@ -13,8 +13,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
 import logcat.LogPriority
-import mihon.entry.interactions.EntryDownloadQueuePolicy
-import mihon.entry.interactions.EntryDownloadWorkController
+import mihon.entry.interactions.download.EntryDownloadQueuePolicy
+import mihon.entry.interactions.download.EntryDownloadWorkController
 import mihon.entry.interactions.manga.download.model.DownloadState
 import mihon.entry.interactions.manga.download.model.MangaDownload
 import tachiyomi.core.common.i18n.stringResource

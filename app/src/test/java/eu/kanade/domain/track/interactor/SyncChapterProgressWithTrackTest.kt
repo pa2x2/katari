@@ -11,8 +11,8 @@ import io.mockk.coVerify
 import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.EntryConsumptionFeature
-import mihon.entry.interactions.EntryConsumptionResult
+import mihon.entry.interactions.state.EntryConsumptionFeature
+import mihon.entry.interactions.state.EntryConsumptionResult
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter

@@ -11,7 +11,7 @@ import androidx.work.WorkerParameters
 import eu.kanade.domain.track.store.DelayedTrackingStore
 import eu.kanade.tachiyomi.util.system.workManager
 import logcat.LogPriority
-import mihon.entry.interactions.EntryTrackingFeature
+import mihon.entry.interactions.tracking.EntryTrackingFeature
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.interactor.GetEntry

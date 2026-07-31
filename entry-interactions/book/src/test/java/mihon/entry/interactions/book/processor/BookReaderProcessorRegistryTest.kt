@@ -1,10 +1,10 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.processor
 
 import android.content.Context
 import android.content.Intent
 import mihon.book.api.model.BookPublicationModelDescriptor
-import mihon.entry.viewer.settings.ReaderCapabilityId
-import mihon.entry.viewer.settings.StandardReaderCapabilities
+import mihon.entry.viewer.settings.shared.ReaderCapabilityId
+import mihon.entry.viewer.settings.shared.StandardReaderCapabilities
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

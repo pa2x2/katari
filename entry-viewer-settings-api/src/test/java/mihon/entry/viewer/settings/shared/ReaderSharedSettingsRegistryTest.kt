@@ -1,7 +1,8 @@
-package mihon.entry.viewer.settings
+package mihon.entry.viewer.settings.shared
 
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 
@@ -90,7 +91,7 @@ class ReaderSharedSettingsRegistryTest {
     }
 
     @Test
-    fun `availability does not overwrite a stored enabled value`() = kotlinx.coroutines.test.runTest {
+    fun `availability does not overwrite a stored enabled value`() = runTest {
         preference.set(true)
         val unavailableSetting = ReaderSharedToggleSetting(
             id = ReaderSharedSettingId("translation.unavailable-test"),

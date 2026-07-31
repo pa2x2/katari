@@ -1,14 +1,17 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
+import mihon.entry.interactions.library.membership.ENTRY_LIBRARY_REMOVED_EXECUTION_POINT
+import mihon.entry.interactions.merge.EntryMergeDownloadOwnershipProjection
+import mihon.entry.interactions.merge.EntryMergeSubject
+import mihon.entry.interactions.runtime.applicableProviderTypes
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureBehaviorContract
 import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContribution
-import mihon.feature.graph.FeatureExecutionParticipantDefinition
 import mihon.feature.graph.FeatureExecutionParticipantId
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
@@ -16,6 +19,7 @@ import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
+import mihon.feature.graph.execution.FeatureExecutionParticipantDefinition
 import tachiyomi.domain.entry.model.Entry
 
 internal val ENTRY_DOWNLOAD_MAINTENANCE_FEATURE_ID = FeatureId("entry.download.maintenance")

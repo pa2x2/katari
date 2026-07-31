@@ -13,10 +13,10 @@ import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.track.TrackStatusSelector
 import eu.kanade.presentation.util.Screen
 import kotlinx.coroutines.flow.update
-import mihon.entry.interactions.EntryTrackingFeature
-import mihon.entry.interactions.EntryTrackingMutation
-import mihon.entry.interactions.EntryTrackingRecord
-import mihon.entry.interactions.EntryTrackingServiceDescriptor
+import mihon.entry.interactions.tracking.EntryTrackingFeature
+import mihon.entry.interactions.tracking.EntryTrackingMutation
+import mihon.entry.interactions.tracking.EntryTrackingRecord
+import mihon.entry.interactions.tracking.EntryTrackingServiceDescriptor
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.domain.entry.model.Entry
 import uy.kohesive.injekt.Injekt

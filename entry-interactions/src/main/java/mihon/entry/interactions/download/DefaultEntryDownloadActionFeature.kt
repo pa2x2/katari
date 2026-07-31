@@ -1,6 +1,9 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.download.host.EntryDownloadSourceAccessResolver
+import mihon.entry.interactions.download.runtime.EntryDownloadActionTarget
+import mihon.entry.interactions.download.runtime.EntryDownloadSourceAccess
 import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter

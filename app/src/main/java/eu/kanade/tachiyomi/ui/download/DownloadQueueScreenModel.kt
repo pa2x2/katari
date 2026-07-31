@@ -12,8 +12,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.EntryDownloadQueueItem
-import mihon.entry.interactions.EntryDownloadRuntimeFeature
+import mihon.entry.interactions.download.EntryDownloadQueueItem
+import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 

@@ -1,4 +1,4 @@
-package mihon.entry.interactions.host
+package mihon.entry.interactions.merge.host
 
 data class EntryMergePendingConsequence(
     val id: String,

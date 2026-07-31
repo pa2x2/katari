@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.persistence.backup
 
 @JvmInline
 value class EntryBackupRestoreSessionId(val value: String) {

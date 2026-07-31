@@ -7,9 +7,9 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import mihon.entry.interactions.EntryDownloadEntryIdentity
-import mihon.entry.interactions.EntryDownloadNotificationActions
-import mihon.entry.interactions.EntryDownloadNotifications
+import mihon.entry.interactions.download.EntryDownloadEntryIdentity
+import mihon.entry.interactions.download.EntryDownloadNotificationActions
+import mihon.entry.interactions.download.EntryDownloadNotifications
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith

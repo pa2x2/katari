@@ -5,13 +5,11 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.util.fastAny
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import eu.kanade.core.preference.asState
 import eu.kanade.core.util.addOrRemove
 import eu.kanade.domain.entry.model.chaptersFiltered
 import eu.kanade.domain.track.model.AutoTrackState
@@ -52,82 +50,84 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.entry.interactions.EntryBookmarkFeature
-import mihon.entry.interactions.EntryBulkDownloadAction
-import mihon.entry.interactions.EntryBulkDownloadRequest
-import mihon.entry.interactions.EntryBulkDownloadResolutionResult
-import mihon.entry.interactions.EntryChildGroupFilterFeature
-import mihon.entry.interactions.EntryChildGroupFilterObservationResult
-import mihon.entry.interactions.EntryChildGroupFilterResult
-import mihon.entry.interactions.EntryChildGroupFilterScope
-import mihon.entry.interactions.EntryChildGroupFilterStateResult
-import mihon.entry.interactions.EntryChildListFeature
-import mihon.entry.interactions.EntryChildListRequest
-import mihon.entry.interactions.EntryChildListResult
-import mihon.entry.interactions.EntryChildListRow
-import mihon.entry.interactions.EntryChildOrderResult
-import mihon.entry.interactions.EntryChildProgressLabel
-import mihon.entry.interactions.EntryChildProgressRequest
-import mihon.entry.interactions.EntryChildProgressResult
-import mihon.entry.interactions.EntryConsumptionFeature
-import mihon.entry.interactions.EntryContinueFeature
-import mihon.entry.interactions.EntryDownloadActionFeature
-import mihon.entry.interactions.EntryDownloadActionRequest
-import mihon.entry.interactions.EntryDownloadMaintenanceFeature
-import mihon.entry.interactions.EntryDownloadOptionSelection
-import mihon.entry.interactions.EntryDownloadOptions
-import mihon.entry.interactions.EntryDownloadOptionsFeature
-import mihon.entry.interactions.EntryDownloadOptionsResolution
-import mihon.entry.interactions.EntryDownloadRuntimeFeature
-import mihon.entry.interactions.EntryDownloadState
-import mihon.entry.interactions.EntryDownloadStatus
-import mihon.entry.interactions.EntryLibraryAddRequest
-import mihon.entry.interactions.EntryLibraryAddResult
-import mihon.entry.interactions.EntryLibraryCategorySelection
-import mihon.entry.interactions.EntryLibraryDuplicatePolicy
-import mihon.entry.interactions.EntryLibraryMembershipFeature
-import mihon.entry.interactions.EntryLibraryRemovalResult
-import mihon.entry.interactions.EntryMergeCandidateFeature
-import mihon.entry.interactions.EntryMergeCommitIntent
-import mihon.entry.interactions.EntryMergeDissolveIntent
-import mihon.entry.interactions.EntryMergeEditReference
-import mihon.entry.interactions.EntryMergeEditorEntry
-import mihon.entry.interactions.EntryMergeEditorEntryReference
-import mihon.entry.interactions.EntryMergeEditorProjection
-import mihon.entry.interactions.EntryMergeExecutionResult
-import mihon.entry.interactions.EntryMergeFeature
-import mihon.entry.interactions.EntryMergeMemberPreparationIntent
-import mihon.entry.interactions.EntryMergeMetadataRefreshFeature
-import mihon.entry.interactions.EntryMergeNavigationFeature
-import mihon.entry.interactions.EntryMergePreparationResult
-import mihon.entry.interactions.EntryMergePrepareIntent
-import mihon.entry.interactions.EntryMergeRemoveEntriesIntent
-import mihon.entry.interactions.EntryMergeSubject
-import mihon.entry.interactions.EntryMigrationAvailability
-import mihon.entry.interactions.EntryMigrationFeature
-import mihon.entry.interactions.EntryMigrationSelectionResult
-import mihon.entry.interactions.EntryMigrationSubject
-import mihon.entry.interactions.EntryPreviewAvailability
-import mihon.entry.interactions.EntryPreviewChildCandidate
-import mihon.entry.interactions.EntryPreviewConfig
-import mihon.entry.interactions.EntryPreviewContext
-import mihon.entry.interactions.EntryPreviewFeature
-import mihon.entry.interactions.EntryPreviewHandle
-import mihon.entry.interactions.EntryPreviewLoadRequest
-import mihon.entry.interactions.EntryPreviewLoadResult
-import mihon.entry.interactions.EntryPreviewOpenTargetResult
-import mihon.entry.interactions.EntryPreviewPage
-import mihon.entry.interactions.EntryPreviewPageStatus
-import mihon.entry.interactions.EntrySourceRefreshFailure
-import mihon.entry.interactions.EntrySourceRefreshFeature
-import mihon.entry.interactions.EntrySourceRefreshRequest
-import mihon.entry.interactions.EntrySourceRefreshResult
-import mihon.entry.interactions.EntryTrackingAvailability
-import mihon.entry.interactions.EntryTrackingFeature
-import mihon.entry.interactions.EntryTrackingProgressInspection
-import mihon.entry.interactions.EntryTrackingProgressSynchronizationResult
-import mihon.entry.interactions.EntryTrackingRefreshResult
-import mihon.entry.interactions.EntryTrackingSession
+import mihon.entry.interactions.child.EntryChildGroupFilterFeature
+import mihon.entry.interactions.child.EntryChildGroupFilterObservationResult
+import mihon.entry.interactions.child.EntryChildGroupFilterResult
+import mihon.entry.interactions.child.EntryChildGroupFilterScope
+import mihon.entry.interactions.child.EntryChildGroupFilterStateResult
+import mihon.entry.interactions.child.EntryChildListFeature
+import mihon.entry.interactions.child.EntryChildListRequest
+import mihon.entry.interactions.child.EntryChildListResult
+import mihon.entry.interactions.child.EntryChildListRow
+import mihon.entry.interactions.child.EntryChildOrderResult
+import mihon.entry.interactions.child.EntryChildProgressLabel
+import mihon.entry.interactions.child.EntryChildProgressRequest
+import mihon.entry.interactions.child.EntryChildProgressResult
+import mihon.entry.interactions.download.EntryBulkDownloadAction
+import mihon.entry.interactions.download.EntryBulkDownloadRequest
+import mihon.entry.interactions.download.EntryBulkDownloadResolutionResult
+import mihon.entry.interactions.download.EntryDownloadActionFeature
+import mihon.entry.interactions.download.EntryDownloadActionRequest
+import mihon.entry.interactions.download.EntryDownloadCancellationResult
+import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
+import mihon.entry.interactions.download.EntryDownloadOptionSelection
+import mihon.entry.interactions.download.EntryDownloadOptions
+import mihon.entry.interactions.download.EntryDownloadOptionsFeature
+import mihon.entry.interactions.download.EntryDownloadOptionsResolution
+import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
+import mihon.entry.interactions.download.EntryDownloadState
+import mihon.entry.interactions.download.EntryDownloadStatus
+import mihon.entry.interactions.library.membership.EntryLibraryAddRequest
+import mihon.entry.interactions.library.membership.EntryLibraryAddResult
+import mihon.entry.interactions.library.membership.EntryLibraryCategorySelection
+import mihon.entry.interactions.library.membership.EntryLibraryDuplicatePolicy
+import mihon.entry.interactions.library.membership.EntryLibraryMembershipFeature
+import mihon.entry.interactions.library.membership.EntryLibraryRemovalResult
+import mihon.entry.interactions.media.EntryPreviewAvailability
+import mihon.entry.interactions.media.EntryPreviewChildCandidate
+import mihon.entry.interactions.media.EntryPreviewConfig
+import mihon.entry.interactions.media.EntryPreviewContext
+import mihon.entry.interactions.media.EntryPreviewFeature
+import mihon.entry.interactions.media.EntryPreviewHandle
+import mihon.entry.interactions.media.EntryPreviewLoadRequest
+import mihon.entry.interactions.media.EntryPreviewLoadResult
+import mihon.entry.interactions.media.EntryPreviewOpenTargetResult
+import mihon.entry.interactions.media.EntryPreviewPage
+import mihon.entry.interactions.media.EntryPreviewPageStatus
+import mihon.entry.interactions.merge.EntryMergeCandidateFeature
+import mihon.entry.interactions.merge.EntryMergeCommitIntent
+import mihon.entry.interactions.merge.EntryMergeDissolveIntent
+import mihon.entry.interactions.merge.EntryMergeEditReference
+import mihon.entry.interactions.merge.EntryMergeEditorEntry
+import mihon.entry.interactions.merge.EntryMergeEditorEntryOrigin
+import mihon.entry.interactions.merge.EntryMergeEditorEntryReference
+import mihon.entry.interactions.merge.EntryMergeEditorProjection
+import mihon.entry.interactions.merge.EntryMergeExecutionResult
+import mihon.entry.interactions.merge.EntryMergeFeature
+import mihon.entry.interactions.merge.EntryMergeMemberPreparationIntent
+import mihon.entry.interactions.merge.EntryMergeMetadataRefreshFeature
+import mihon.entry.interactions.merge.EntryMergeNavigationFeature
+import mihon.entry.interactions.merge.EntryMergePreparationResult
+import mihon.entry.interactions.merge.EntryMergePrepareIntent
+import mihon.entry.interactions.merge.EntryMergeRemoveEntriesIntent
+import mihon.entry.interactions.merge.EntryMergeSubject
+import mihon.entry.interactions.migration.EntryMigrationAvailability
+import mihon.entry.interactions.migration.EntryMigrationFeature
+import mihon.entry.interactions.migration.EntryMigrationSelectionResult
+import mihon.entry.interactions.migration.EntryMigrationSubject
+import mihon.entry.interactions.navigation.EntryContinueFeature
+import mihon.entry.interactions.source.EntrySourceRefreshFailure
+import mihon.entry.interactions.source.EntrySourceRefreshFeature
+import mihon.entry.interactions.source.EntrySourceRefreshRequest
+import mihon.entry.interactions.source.EntrySourceRefreshResult
+import mihon.entry.interactions.state.EntryBookmarkFeature
+import mihon.entry.interactions.state.EntryConsumptionFeature
+import mihon.entry.interactions.tracking.EntryTrackingAvailability
+import mihon.entry.interactions.tracking.EntryTrackingFeature
+import mihon.entry.interactions.tracking.EntryTrackingProgressInspection
+import mihon.entry.interactions.tracking.EntryTrackingProgressSynchronizationResult
+import mihon.entry.interactions.tracking.EntryTrackingRefreshResult
+import mihon.entry.interactions.tracking.EntryTrackingSession
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.TriState
@@ -1223,7 +1223,7 @@ class EntryScreenModel(
             EntryDownloadActionRequest.forEntry(chapterItem.entry),
             chapterId,
         )
-        if (result is mihon.entry.interactions.EntryDownloadCancellationResult.Cancelled) {
+        if (result is EntryDownloadCancellationResult.Cancelled) {
             updateDownloadState(result.status)
         }
     }
@@ -2182,7 +2182,7 @@ class EntryScreenModel(
     }
 
     private fun toMergeEditorEntry(editorEntry: EntryMergeEditorEntry): MergeEditorEntry {
-        val isExisting = editorEntry.origin == mihon.entry.interactions.EntryMergeEditorEntryOrigin.EXISTING_MEMBER
+        val isExisting = editorEntry.origin == EntryMergeEditorEntryOrigin.EXISTING_MEMBER
         return MergeEditorEntry(
             id = editorEntry.entry.id,
             entry = editorEntry.entry,

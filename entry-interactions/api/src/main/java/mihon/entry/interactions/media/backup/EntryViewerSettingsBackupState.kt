@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media.backup
 
 import kotlinx.serialization.Serializable
 

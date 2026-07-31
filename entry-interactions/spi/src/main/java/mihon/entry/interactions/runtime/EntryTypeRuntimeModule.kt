@@ -1,10 +1,10 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.runtime
 
 import android.app.Application
 import coil3.ComponentRegistry
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.viewer.settings.ReaderCapabilityId
-import mihon.entry.viewer.settings.ReaderSharedSettingsProvider
+import mihon.entry.viewer.settings.shared.ReaderCapabilityId
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingsProvider
 import uy.kohesive.injekt.api.InjektRegistrar
 
 class EntryTypeRuntimeModule(

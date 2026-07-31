@@ -1,10 +1,10 @@
 package mihon.entry.interactions.book.download
 
 import mihon.book.api.BookContentResource
-import mihon.entry.interactions.book.BookByteRange
-import mihon.entry.interactions.book.BookContentSession
-import mihon.entry.interactions.book.MaterializedBookResource
-import mihon.entry.interactions.book.OpenedBookResource
+import mihon.entry.interactions.book.content.BookByteRange
+import mihon.entry.interactions.book.content.BookContentSession
+import mihon.entry.interactions.book.content.MaterializedBookResource
+import mihon.entry.interactions.book.content.OpenedBookResource
 import java.io.FileInputStream
 import java.io.FilterInputStream
 import java.io.InputStream

@@ -21,9 +21,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import mihon.entry.interactions.EntryChildWebViewAction
-import mihon.entry.interactions.EntryChildWebViewActionsMenu
-import mihon.entry.interactions.EntryChildWebViewResolution
+import mihon.entry.interactions.source.EntryChildWebViewAction
+import mihon.entry.interactions.source.EntryChildWebViewActionsMenu
+import mihon.entry.interactions.source.EntryChildWebViewResolution
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 

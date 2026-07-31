@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.content
 
 import android.content.Context
 import android.net.Uri

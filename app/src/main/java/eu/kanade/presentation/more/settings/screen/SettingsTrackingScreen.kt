@@ -47,11 +47,11 @@ import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toast
-import mihon.entry.interactions.EntryTrackingAccount
-import mihon.entry.interactions.EntryTrackingAccountOperationResult
-import mihon.entry.interactions.EntryTrackingCredentialIdentity
-import mihon.entry.interactions.EntryTrackingFeature
-import mihon.entry.interactions.EntryTrackingLoginMethod
+import mihon.entry.interactions.tracking.EntryTrackingAccount
+import mihon.entry.interactions.tracking.EntryTrackingAccountOperationResult
+import mihon.entry.interactions.tracking.EntryTrackingCredentialIdentity
+import mihon.entry.interactions.tracking.EntryTrackingFeature
+import mihon.entry.interactions.tracking.EntryTrackingLoginMethod
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.i18n.MR

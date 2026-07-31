@@ -1,32 +1,36 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.reader.translation
 
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import mihon.entry.viewer.settings.StandardReaderCapabilities
-import mihon.translation.api.KnownTranslationEngine
-import mihon.translation.api.ReadyTranslation
-import mihon.translation.api.TranslationDeviceAvailability
-import mihon.translation.api.TranslationEngineId
-import mihon.translation.api.TranslationEngineInspection
-import mihon.translation.api.TranslationEngineSelection
-import mihon.translation.api.TranslationEngineState
-import mihon.translation.api.TranslationExecution
+import mihon.entry.viewer.settings.shared.StandardReaderCapabilities
 import mihon.translation.api.TranslationFeature
-import mihon.translation.api.TranslationHostActionResult
-import mihon.translation.api.TranslationHostActions
-import mihon.translation.api.TranslationLanguageTag
-import mihon.translation.api.TranslationModelDescriptor
-import mihon.translation.api.TranslationPreparation
-import mihon.translation.api.TranslationProviderDisclosure
-import mihon.translation.api.TranslationRequest
-import mihon.translation.api.TranslationTargetLanguageSelection
+import mihon.translation.api.availability.TranslationDeviceAvailability
+import mihon.translation.api.engine.KnownTranslationEngine
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.engine.TranslationEngineInspection
+import mihon.translation.api.engine.TranslationEngineSelection
+import mihon.translation.api.engine.TranslationEngineState
+import mihon.translation.api.host.TranslationHostActionResult
+import mihon.translation.api.host.TranslationHostActions
+import mihon.translation.api.language.TranslationLanguageSupport
+import mihon.translation.api.language.TranslationLanguageSupportInspection
+import mihon.translation.api.language.TranslationLanguageTag
+import mihon.translation.api.model.TranslationModelDescriptor
+import mihon.translation.api.preparation.ReadyTranslation
+import mihon.translation.api.preparation.TranslationPreparation
+import mihon.translation.api.provider.TranslationProviderDisclosure
+import mihon.translation.api.request.TranslationRequest
+import mihon.translation.api.request.TranslationTargetLanguageSelection
+import mihon.translation.api.result.TranslationExecution
 import mihon.translation.ui.session.TranslationSelectionAnchor
 import mihon.translation.ui.session.TranslationSessionState
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
+import tachiyomi.core.common.preference.Preference
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class BookSelectionTranslationControllerTest {
@@ -109,7 +113,7 @@ class BookSelectionTranslationControllerTest {
         controller.close()
     }
 
-    private fun kotlinx.coroutines.test.TestScope.controller(
+    private fun TestScope.controller(
         feature: RecordingFeature,
         host: FakeHostActions,
     ) = BookSelectionTranslationController(
@@ -151,7 +155,7 @@ class BookSelectionTranslationControllerTest {
             ::TranslationEngineId,
         )
         override val defaultTargetLanguage:
-            tachiyomi.core.common.preference.Preference<TranslationTargetLanguageSelection> =
+            Preference<TranslationTargetLanguageSelection> =
             store.getObjectFromString(
                 "target",
                 TranslationTargetLanguageSelection.Default,
@@ -169,8 +173,8 @@ class BookSelectionTranslationControllerTest {
         )
 
         override suspend fun inspectLanguageSupport(engine: TranslationEngineId) =
-            mihon.translation.api.TranslationLanguageSupportInspection.Available(
-                mihon.translation.api.TranslationLanguageSupport.AnyLanguage,
+            TranslationLanguageSupportInspection.Available(
+                TranslationLanguageSupport.AnyLanguage,
             )
 
         override suspend fun acknowledgeProviderDisclosure(

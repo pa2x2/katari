@@ -1,7 +1,11 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.library
 
 import io.mockk.coEvery
 import io.mockk.mockk
+import mihon.entry.interactions.navigation.EntryContinueCapability
+import mihon.entry.interactions.navigation.EntryContinueFeature
+import mihon.entry.interactions.navigation.EntryContinueTargetResult
+import mihon.entry.interactions.state.EntryBookmarkCapability
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
@@ -56,7 +60,12 @@ private suspend fun verifyLibraryProgress(input: FeatureContractExecutionInput) 
     val chapter = EntryChapter.create().copy(id = 83L, entryId = entry.id, bookmark = true)
     val next = EntryChapter.create().copy(id = 84L, entryId = entry.id)
     val interaction = mockk<EntryLibraryProgressInteraction> {
-        coEvery { evidence(entry, listOf(chapter)) } returns EntryLibraryProgressEvidence(true, chapter.id, 0.5f, 10L)
+        coEvery { evidence(entry, listOf(chapter)) } returns EntryLibraryProgressEvidence(
+            true,
+            chapter.id,
+            0.5f,
+            10L,
+        )
     }
     val continueFeature = mockk<EntryContinueFeature> {
         coEvery { nextTarget(entry) } returns EntryContinueTargetResult.Available(next)

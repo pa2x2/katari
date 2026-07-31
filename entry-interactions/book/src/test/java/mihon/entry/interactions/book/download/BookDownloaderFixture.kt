@@ -11,22 +11,22 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import mihon.book.api.BookContentDescriptor
+import mihon.book.api.BookLocator
 import mihon.book.api.BookPublication
 import mihon.book.api.model.BookPublicationModel
 import mihon.book.api.model.BookPublicationModelDescriptor
-import mihon.entry.interactions.book.BookContentPreparer
-import mihon.entry.interactions.book.BookContentPreparerRegistry
-import mihon.entry.interactions.book.BookContentSession
-import mihon.entry.interactions.book.BookContentSessionResourceLoader
-import mihon.entry.interactions.book.BookMaterializationCache
-import mihon.entry.interactions.book.BookPreparationResult
-import mihon.entry.interactions.book.BookPublicationResourceDependencies
-import mihon.entry.interactions.book.BookResourceRequirement
-import mihon.entry.interactions.book.PreparedBookPublication
+import mihon.entry.interactions.book.content.BookContentSession
+import mihon.entry.interactions.book.content.BookContentSessionResourceLoader
+import mihon.entry.interactions.book.content.BookMaterializationCache
 import mihon.entry.interactions.book.download.model.BookDownload
 import mihon.entry.interactions.book.download.model.BookDownloadFailure
+import mihon.entry.interactions.book.preparation.BookContentPreparer
+import mihon.entry.interactions.book.preparation.BookContentPreparerRegistry
+import mihon.entry.interactions.book.preparation.BookPreparationResult
+import mihon.entry.interactions.book.preparation.BookPublicationResourceDependencies
+import mihon.entry.interactions.book.preparation.BookResourceRequirement
+import mihon.entry.interactions.book.preparation.PreparedBookPublication
 import okhttp3.OkHttpClient
-import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
@@ -156,7 +156,7 @@ internal class ValidatingPreparer(
                     navigation = emptyList(),
                 )
 
-                override fun validate(locator: mihon.book.api.BookLocator) = true
+                override fun validate(locator: BookLocator) = true
                 override fun close() = Unit
             },
         )

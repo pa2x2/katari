@@ -1,5 +1,7 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.history
 
+import mihon.entry.interactions.media.session.EntryMediaSessionActivity
+import mihon.entry.interactions.media.session.EntryMediaSessionEvent
 import tachiyomi.domain.history.model.HistoryUpdate
 import tachiyomi.domain.history.repository.HistoryRepository
 import java.util.Date

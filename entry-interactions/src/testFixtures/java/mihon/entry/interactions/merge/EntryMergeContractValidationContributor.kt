@@ -1,13 +1,35 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.merge
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.mockk.coEvery
 import io.mockk.mockk
-import mihon.entry.interactions.host.EntryMergeMembershipSnapshot
+import mihon.entry.interactions.download.EntryDownloadCapability
+import mihon.entry.interactions.download.maintenance.merge.EntryDownloadMergeContributor
+import mihon.entry.interactions.entryContentType
+import mihon.entry.interactions.merge.backup.ENTRY_MERGE_BACKUP_FINALIZE_PARTICIPANT
+import mihon.entry.interactions.merge.backup.ENTRY_MERGE_BACKUP_RESTORE_PARTICIPANT
+import mihon.entry.interactions.merge.backup.ENTRY_MERGE_BACKUP_SNAPSHOT_PARTICIPANT
+import mihon.entry.interactions.merge.consequence.EntryMergeConsequenceDelivery
+import mihon.entry.interactions.merge.consequence.EntryMergeDurableConsequences
+import mihon.entry.interactions.merge.consequence.EntryMergeDurablePreparationResult
+import mihon.entry.interactions.merge.consequence.cover.EntryMergeCustomCoverContributor
+import mihon.entry.interactions.merge.host.EntryMergeMembershipSnapshot
+import mihon.entry.interactions.merge.lifecycle.ENTRY_MERGE_DESTRUCTIVE_REMOVAL_PARTICIPANT
+import mihon.entry.interactions.merge.lifecycle.ENTRY_MERGE_PROFILE_MOVE_DESTINATION_PARTICIPANT
+import mihon.entry.interactions.merge.lifecycle.ENTRY_MERGE_PROFILE_MOVE_PREPARATION_PARTICIPANT
+import mihon.entry.interactions.merge.lifecycle.ENTRY_MERGE_PROFILE_MOVING_PARTICIPANT
+import mihon.entry.interactions.merge.lifecycle.ENTRY_MERGE_PROFILE_STATE_MOVED_PARTICIPANT
+import mihon.entry.interactions.persistence.backup.addEntryBackupParticipationContractForSubject
+import mihon.entry.interactions.runtime.toContentTypeId
+import mihon.entry.interactions.state.EntryMigrationCapability
+import mihon.entry.interactions.tracking.merge.EntryTrackingMergeContributor
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
+import mihon.feature.graph.ContentTypeId
+import mihon.feature.graph.ContextEvidence
 import mihon.feature.graph.FeatureContractScenarioId
+import mihon.feature.graph.FeatureIntegrationId
 import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.validation.FeatureContractExecutionInput
 import mihon.feature.graph.validation.FeatureContractReference
@@ -163,7 +185,12 @@ class EntryMergeContractValidationContributor : FeatureValidationContributor {
             EntryMergeBehaviorContract.EXISTING_GROUP -> {
                 val host = RecordingEntryMergeHost(entries, listOf(membership))
                 val result = workflow(type, host).execute(
-                    EntryMergeRemoveEntriesIntent(EntryMergeSubject(7L, 1L), setOf(2L), false, false),
+                    EntryMergeRemoveEntriesIntent(
+                        EntryMergeSubject(7L, 1L),
+                        setOf(2L),
+                        false,
+                        false,
+                    ),
                 )
                 contractExpectation(result is EntryMergeExecutionResult.Applied, "Merge must mutate an existing group")
             }
@@ -213,9 +240,9 @@ class EntryMergeContractValidationContributor : FeatureValidationContributor {
     )
 
     private data class Contract(
-        val integration: mihon.feature.graph.FeatureIntegrationId,
+        val integration: FeatureIntegrationId,
         val contract: EntryMergeBehaviorContract,
-        val scenario: (() -> List<mihon.feature.graph.ContextEvidence<*>>)? = null,
+        val scenario: (() -> List<ContextEvidence<*>>)? = null,
     )
 
     private companion object {
@@ -253,7 +280,7 @@ class EntryMergeContractValidationContributor : FeatureValidationContributor {
     }
 }
 
-private fun backupMemberExample(contentType: mihon.feature.graph.ContentTypeId) = EntryMergeBackupMember(
+private fun backupMemberExample(contentType: ContentTypeId) = EntryMergeBackupMember(
     target = EntryMergeBackupIdentity(
         1,
         "/target",

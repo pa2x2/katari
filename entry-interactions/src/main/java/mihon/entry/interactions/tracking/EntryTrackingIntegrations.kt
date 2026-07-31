@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.tracking
 
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.FeatureContextDecision

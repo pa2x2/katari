@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.child
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
+import mihon.entry.interactions.runtime.EntryChildGroupFilterDataSource
 import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter

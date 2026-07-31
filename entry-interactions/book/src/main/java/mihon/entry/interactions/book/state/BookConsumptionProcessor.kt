@@ -1,9 +1,10 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.state
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.EntryConsumptionProcessor
-import mihon.entry.interactions.consumptionStatus
-import mihon.entry.interactions.shouldChangeConsumption
+import mihon.entry.interactions.book.runtime.requireBook
+import mihon.entry.interactions.state.EntryConsumptionProcessor
+import mihon.entry.interactions.state.consumptionStatus
+import mihon.entry.interactions.state.shouldChangeConsumption
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressLocator

@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.source
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.EntryUriType
@@ -7,6 +7,8 @@ import eu.kanade.tachiyomi.source.entry.SEntry
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import mihon.entry.interactions.entryContentType
+import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
@@ -24,7 +26,10 @@ class EntryDeepLinkContractValidationContributor : FeatureValidationContributor 
     override val owner = EntryDeepLinkFeatureContributor.owner
 
     override fun contributeTo(sink: FeatureValidationContributionSink) {
-        val reference = FeatureContractReference(ENTRY_DEEP_LINK_FEATURE_ID, EntryDeepLinkBehaviorContract)
+        val reference = FeatureContractReference(
+            ENTRY_DEEP_LINK_FEATURE_ID,
+            EntryDeepLinkBehaviorContract,
+        )
         sink.add(
             FeatureContractVerifier(reference) { input ->
                 verifyFeatureContract {

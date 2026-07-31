@@ -1,4 +1,4 @@
-package mihon.translation.api
+package mihon.translation.api.language
 
 import java.util.Locale
 

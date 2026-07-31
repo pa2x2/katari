@@ -1,9 +1,14 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.history
 
-import mihon.feature.graph.FeatureExecutionContextResolver
-import mihon.feature.graph.FeatureExecutionHandler
-import mihon.feature.graph.FeatureExecutionParticipantBinding
+import mihon.entry.interactions.media.session.EntryMediaSessionConsequence
+import mihon.entry.interactions.media.session.EntryMediaSessionEvent
+import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeArtifacts
+import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeModule
+import mihon.entry.interactions.runtime.production.entryFeatureRuntimeBoundary
 import mihon.feature.graph.contextEvidence
+import mihon.feature.graph.execution.FeatureExecutionContextResolver
+import mihon.feature.graph.execution.FeatureExecutionHandler
+import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import uy.kohesive.injekt.api.addSingletonFactory
 import uy.kohesive.injekt.api.get
 

@@ -1,6 +1,8 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.runtime.EntryInteractionProvider
+import mihon.entry.interactions.runtime.entryInteractionCapability
 import mihon.entry.viewer.settings.ViewerSettingsProvider
 import mihon.feature.graph.CapabilityId
 
@@ -43,9 +45,10 @@ class DefaultEntryViewerSettingsProvider(
     override fun normalizeLegacyViewerFlags(flags: Long): Long = legacyViewerFlagsNormalization(flags)
 }
 
-val EntryViewerSettingsCapability = entryInteractionCapability<EntryViewerSettingsProvider>(
-    id = CapabilityId("entry.viewer-settings"),
-)
+val EntryViewerSettingsCapability =
+    entryInteractionCapability<EntryViewerSettingsProvider>(
+        id = CapabilityId("entry.viewer-settings"),
+    )
 
 interface EntryViewerSettingsInteraction {
     fun provider(type: EntryType): EntryViewerSettingsProvider?

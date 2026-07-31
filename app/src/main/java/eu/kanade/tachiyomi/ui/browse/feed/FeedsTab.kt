@@ -57,7 +57,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
@@ -93,7 +92,6 @@ import eu.kanade.presentation.more.settings.screen.BrowseLongPressActionsScreen
 import eu.kanade.presentation.util.animateItemFastScroll
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.ui.browse.catalog.BrowseLongPressOutcome
-import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreenModel
 import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveScreenModel
 import eu.kanade.tachiyomi.ui.browse.immersive.ImmersiveSystemBarsEffect
@@ -103,12 +101,12 @@ import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.EntryCatalogueFeature
-import mihon.entry.interactions.EntryCatalogueSourceResolution
-import mihon.entry.interactions.EntryImmersiveFeature
-import mihon.entry.interactions.EntryImmersiveSourceAvailability
-import mihon.entry.interactions.EntrySourceHomeFeature
-import mihon.entry.interactions.EntrySourceHomeResolution
+import mihon.entry.interactions.catalogue.EntryCatalogueFeature
+import mihon.entry.interactions.catalogue.EntryCatalogueSourceResolution
+import mihon.entry.interactions.media.EntryImmersiveFeature
+import mihon.entry.interactions.media.EntryImmersiveSourceAvailability
+import mihon.entry.interactions.source.EntrySourceHomeFeature
+import mihon.entry.interactions.source.EntrySourceHomeResolution
 import mihon.feature.migration.dialog.MigrateEntryDialog
 import mihon.feature.profiles.core.ProfileManager
 import sh.calvin.reorderable.ReorderableItem

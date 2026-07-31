@@ -1,2 +1,2 @@
 id=entry.history
-module=mihon.entry.interactions.EntryHistoryFeatureRuntimeModule
+module=mihon.entry.interactions.history.EntryHistoryFeatureRuntimeModule

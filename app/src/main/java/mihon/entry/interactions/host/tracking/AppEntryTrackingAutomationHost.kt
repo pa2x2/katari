@@ -9,6 +9,9 @@ import eu.kanade.tachiyomi.data.track.EnhancedTracker
 import eu.kanade.tachiyomi.data.track.EntryTrackingSource
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import kotlinx.coroutines.CancellationException
+import mihon.entry.interactions.tracking.host.EntryTrackingAutomationHost
+import mihon.entry.interactions.tracking.host.EntryTrackingHostBindingOutcome
+import mihon.entry.interactions.tracking.host.EntryTrackingHostServiceFailure
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.track.model.EntryTrack

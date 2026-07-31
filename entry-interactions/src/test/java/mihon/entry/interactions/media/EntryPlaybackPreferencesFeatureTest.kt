@@ -1,8 +1,16 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
+import mihon.entry.interactions.runtime.EntryInteractionComposition
+import mihon.entry.interactions.runtime.EntryInteractionPlugin
+import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
+import mihon.entry.interactions.runtime.createEntryInteractionComposition
+import mihon.entry.interactions.state.EntryMigrationCapability
+import mihon.entry.interactions.state.EntryMigrationProvider
+import mihon.entry.interactions.state.EntryPlaybackPreferencesCapability
+import mihon.entry.interactions.state.EntryPlaybackPreferencesProcessor
 import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry

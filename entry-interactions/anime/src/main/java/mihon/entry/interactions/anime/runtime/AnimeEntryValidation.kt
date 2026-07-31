@@ -1,9 +1,9 @@
-package mihon.entry.interactions.anime
+package mihon.entry.interactions.anime.runtime
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.EntryDownloadQueueGroup
-import mihon.entry.interactions.EntryDownloadQueueItem
-import mihon.entry.interactions.EntryDownloadStatus
+import mihon.entry.interactions.download.EntryDownloadQueueGroup
+import mihon.entry.interactions.download.EntryDownloadQueueItem
+import mihon.entry.interactions.download.EntryDownloadStatus
 import tachiyomi.domain.entry.model.Entry
 
 internal fun Entry.requireAnime() {

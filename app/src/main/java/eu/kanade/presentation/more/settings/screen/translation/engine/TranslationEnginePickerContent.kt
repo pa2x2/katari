@@ -5,11 +5,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import eu.kanade.presentation.components.AppBar
-import mihon.translation.api.KnownTranslationEngine
-import mihon.translation.api.TranslationEngineId
-import mihon.translation.api.TranslationEngineState
-import mihon.translation.ui.picker.TranslationEnginePickerDensity
-import mihon.translation.ui.picker.TranslationEnginePickerList
+import mihon.translation.api.engine.KnownTranslationEngine
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.engine.TranslationEngineState
+import mihon.translation.ui.picker.engine.TranslationEnginePickerDensity
+import mihon.translation.ui.picker.engine.TranslationEnginePickerList
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource

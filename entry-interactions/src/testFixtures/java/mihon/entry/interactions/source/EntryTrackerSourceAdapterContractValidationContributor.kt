@@ -1,10 +1,12 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.source
 
 import android.content.SharedPreferences
 import eu.kanade.tachiyomi.source.entry.EntryImageSource
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.mockk.every
 import io.mockk.mockk
+import mihon.entry.interactions.entryContentType
+import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
@@ -39,7 +41,10 @@ class EntryTrackerSourceAdapterContractValidationContributor : FeatureValidation
                         every { resolve(7L) } returns EntrySourceHomeResolution.Available(7L, "Source", "https://home")
                     }
                     val feature = DefaultEntryTrackerSourceAdapterFeature(
-                        productionSubjectEvaluation(type, EntryTrackerSourceAdapterFeatureContributor),
+                        productionSubjectEvaluation(
+                            type,
+                            EntryTrackerSourceAdapterFeatureContributor,
+                        ),
                         mockk { every { get(7L) } returns source },
                         settings,
                         home,

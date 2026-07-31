@@ -1,17 +1,17 @@
-package mihon.entry.interactions.anime
+package mihon.entry.interactions.anime.download
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.EntryDownloadIdentity
-import mihon.entry.interactions.EntryDownloadMessage
-import mihon.entry.interactions.EntryDownloadPhase
-import mihon.entry.interactions.EntryDownloadPresentation
-import mihon.entry.interactions.EntryDownloadProgress
-import mihon.entry.interactions.EntryDownloadQueueGroup
-import mihon.entry.interactions.EntryDownloadQueueItem
-import mihon.entry.interactions.EntryDownloadState
-import mihon.entry.interactions.EntryDownloadStatus
 import mihon.entry.interactions.anime.download.model.AnimeDownload
 import mihon.entry.interactions.anime.download.model.AnimeDownloadFailure
+import mihon.entry.interactions.download.EntryDownloadIdentity
+import mihon.entry.interactions.download.EntryDownloadMessage
+import mihon.entry.interactions.download.EntryDownloadPhase
+import mihon.entry.interactions.download.EntryDownloadPresentation
+import mihon.entry.interactions.download.EntryDownloadProgress
+import mihon.entry.interactions.download.EntryDownloadQueueGroup
+import mihon.entry.interactions.download.EntryDownloadQueueItem
+import mihon.entry.interactions.download.EntryDownloadState
+import mihon.entry.interactions.download.EntryDownloadStatus
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.MR
 

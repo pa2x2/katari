@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.library.membership
 
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
@@ -6,15 +6,15 @@ import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureBehaviorContract
 import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContribution
-import mihon.feature.graph.FeatureExecutionFailurePolicy
 import mihon.feature.graph.FeatureExecutionPointId
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.afterCommitVolatileFeatureExecutionPointDefinition
-import mihon.feature.graph.transactionalFeatureExecutionPointDefinition
+import mihon.feature.graph.execution.FeatureExecutionFailurePolicy
+import mihon.feature.graph.execution.afterCommitVolatileFeatureExecutionPointDefinition
+import mihon.feature.graph.execution.transactionalFeatureExecutionPointDefinition
 
 internal val ENTRY_LIBRARY_MEMBERSHIP_FEATURE_ID = FeatureId("entry.library-membership")
 internal val ENTRY_LIBRARY_MEMBERSHIP_OWNER = ContributionOwner("entry-library-membership")

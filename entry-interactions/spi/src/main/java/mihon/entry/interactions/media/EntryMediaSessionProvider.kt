@@ -1,5 +1,8 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media
 
+import mihon.entry.interactions.media.session.EntryMediaSessionEventSink
+import mihon.entry.interactions.runtime.EntryInteractionProvider
+import mihon.entry.interactions.runtime.entryInteractionCapability
 import mihon.feature.graph.CapabilityId
 
 /**
@@ -12,6 +15,7 @@ interface EntryMediaSessionProcessor :
     EntryInteractionProvider,
     EntryMediaSessionEventSink
 
-val EntryMediaSessionCapability = entryInteractionCapability<EntryMediaSessionProcessor>(
-    id = CapabilityId("entry.media-session"),
-)
+val EntryMediaSessionCapability =
+    entryInteractionCapability<EntryMediaSessionProcessor>(
+        id = CapabilityId("entry.media-session"),
+    )

@@ -6,11 +6,11 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.presentation.more.stats.StatsScreenState
 import eu.kanade.presentation.more.stats.data.StatsData
 import kotlinx.coroutines.flow.update
-import mihon.entry.interactions.EntryDownloadRuntimeFeature
-import mihon.entry.interactions.EntryTrackingFeature
-import mihon.entry.interactions.EntryUpdateEligibility
-import mihon.entry.interactions.EntryUpdateEligibilityFeature
-import mihon.entry.interactions.EntryUpdateEligibilityRequest
+import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
+import mihon.entry.interactions.state.EntryUpdateEligibility
+import mihon.entry.interactions.state.EntryUpdateEligibilityFeature
+import mihon.entry.interactions.state.EntryUpdateEligibilityRequest
+import mihon.entry.interactions.tracking.EntryTrackingFeature
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.entry.interactor.GetLibraryEntries
 import tachiyomi.domain.entry.model.EntryStatus

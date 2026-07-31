@@ -1,6 +1,6 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.migration
 
-import mihon.entry.interactions.host.EntryMigrationHostChildUpdate
+import mihon.entry.interactions.migration.host.EntryMigrationHostChildUpdate
 import tachiyomi.domain.entry.model.EntryChapter
 
 internal fun prepareMigrationChildUpdates(

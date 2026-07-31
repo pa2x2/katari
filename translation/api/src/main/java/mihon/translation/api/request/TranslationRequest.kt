@@ -1,4 +1,8 @@
-package mihon.translation.api
+package mihon.translation.api.request
+
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.engine.TranslationEngineSelection
+import mihon.translation.api.language.TranslationLanguageTag
 
 data class TranslationRequest(
     val text: String,

@@ -1,4 +1,4 @@
-package mihon.entry.interactions.manga
+package mihon.entry.interactions.manga.media
 
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryImagePage
@@ -8,15 +8,18 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.EntryImmersiveHandle
-import mihon.entry.interactions.EntryImmersiveProgress
-import mihon.entry.interactions.EntryMediaSessionEvent
-import mihon.entry.interactions.EntryMediaSessionEventSink
-import mihon.entry.interactions.EntryMediaSessionResult
+import mihon.entry.interactions.manga.media.session.MangaMediaSessionProcessor
+import mihon.entry.interactions.manga.state.mangaProgressState
+import mihon.entry.interactions.manga.state.pageIndex
+import mihon.entry.interactions.media.EntryImmersiveHandle
+import mihon.entry.interactions.media.EntryImmersiveProgress
+import mihon.entry.interactions.media.session.EntryMediaSessionEvent
+import mihon.entry.interactions.media.session.EntryMediaSessionEventSink
+import mihon.entry.interactions.media.session.EntryMediaSessionResult
+import okhttp3.Headers
 import okhttp3.Request
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
@@ -160,7 +163,7 @@ class MangaImmersiveProcessorTest {
                     MangaImmersivePage(
                         0,
                         "https://example.invalid/page.jpg",
-                        okhttp3.Headers.Builder().build(),
+                        Headers.Builder().build(),
                     ),
                 ),
                 initialPageIndex = 0,

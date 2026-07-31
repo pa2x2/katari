@@ -6,37 +6,45 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.test.runTest
-import mihon.translation.api.KnownTranslationEngine
-import mihon.translation.api.ReadyTranslation
-import mihon.translation.api.ResolvedTranslationRequest
-import mihon.translation.api.TranslationEngineArtwork
-import mihon.translation.api.TranslationEngineBuildAvailability
-import mihon.translation.api.TranslationEngineChoiceReason
-import mihon.translation.api.TranslationEngineDetails
-import mihon.translation.api.TranslationEngineId
-import mihon.translation.api.TranslationEngineSelection
-import mihon.translation.api.TranslationExecution
-import mihon.translation.api.TranslationFailureReason
-import mihon.translation.api.TranslationInvocationPolicy
-import mihon.translation.api.TranslationLanguageTag
-import mihon.translation.api.TranslationPreparation
-import mihon.translation.api.TranslationProviderId
-import mihon.translation.api.TranslationProviderOutputMode
-import mihon.translation.api.TranslationProviderPresentation
-import mihon.translation.api.TranslationRejectionReason
-import mihon.translation.api.TranslationRequest
-import mihon.translation.api.TranslationResult
-import mihon.translation.api.TranslationSourceLanguageSelection
-import mihon.translation.api.TranslationTargetLanguageSelection
-import mihon.translation.spi.ReadyTranslationEngineRequest
-import mihon.translation.spi.TranslationEngine
-import mihon.translation.spi.TranslationEngineContribution
-import mihon.translation.spi.TranslationEngineDeviceAvailability
-import mihon.translation.spi.TranslationEngineExecution
-import mihon.translation.spi.TranslationEnginePreparation
-import mihon.translation.spi.TranslationSourceLanguageDetection
-import mihon.translation.spi.TranslationSourceLanguageDetector
-import mihon.translation.spi.TranslationSourceLanguageDetectorId
+import mihon.translation.api.engine.KnownTranslationEngine
+import mihon.translation.api.engine.TranslationEngineArtwork
+import mihon.translation.api.engine.TranslationEngineBuildAvailability
+import mihon.translation.api.engine.TranslationEngineDetails
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.engine.TranslationEngineSelection
+import mihon.translation.api.engine.TranslationProviderId
+import mihon.translation.api.language.TranslationLanguageSupport
+import mihon.translation.api.language.TranslationLanguageSupportInspection
+import mihon.translation.api.language.TranslationLanguageTag
+import mihon.translation.api.preparation.ReadyTranslation
+import mihon.translation.api.preparation.TranslationEngineChoiceReason
+import mihon.translation.api.preparation.TranslationPreparation
+import mihon.translation.api.preparation.TranslationRejectionReason
+import mihon.translation.api.preparation.TranslationSystemSetupReason
+import mihon.translation.api.preparation.TranslationTargetChoiceReason
+import mihon.translation.api.preparation.TranslationUnavailableReason
+import mihon.translation.api.provider.TranslationInvocationPolicy
+import mihon.translation.api.provider.TranslationProviderOutputMode
+import mihon.translation.api.provider.TranslationProviderPresentation
+import mihon.translation.api.request.ResolvedTranslationRequest
+import mihon.translation.api.request.TranslationRequest
+import mihon.translation.api.request.TranslationSourceLanguageSelection
+import mihon.translation.api.request.TranslationTargetLanguageSelection
+import mihon.translation.api.result.TranslationExecution
+import mihon.translation.api.result.TranslationFailureReason
+import mihon.translation.api.result.TranslationResult
+import mihon.translation.runtime.feature.DefaultTranslationFeature
+import mihon.translation.runtime.feature.TranslationDefaultTargetLanguageResolver
+import mihon.translation.runtime.registry.DefaultTranslationEngineRegistry
+import mihon.translation.spi.contribution.TranslationEngineContribution
+import mihon.translation.spi.engine.ReadyTranslationEngineRequest
+import mihon.translation.spi.engine.TranslationEngine
+import mihon.translation.spi.engine.TranslationEngineDeviceAvailability
+import mihon.translation.spi.engine.TranslationEngineExecution
+import mihon.translation.spi.engine.TranslationEnginePreparation
+import mihon.translation.spi.language.TranslationSourceLanguageDetection
+import mihon.translation.spi.language.TranslationSourceLanguageDetector
+import mihon.translation.spi.language.TranslationSourceLanguageDetectorId
 import org.junit.jupiter.api.Test
 
 class DefaultTranslationFeatureTest {
@@ -98,21 +106,22 @@ class DefaultTranslationFeatureTest {
     fun `provider preparation changes are returned as typed API states`() = runTest {
         val engine = FakeTranslationEngine(
             preparation = TranslationEnginePreparation.SystemSetupRequired(
-                mihon.translation.api.TranslationSystemSetupReason.ServiceDisabled,
+                TranslationSystemSetupReason.ServiceDisabled,
             ),
         )
 
         feature(engine).prepare(explicitRequest()) shouldBe TranslationPreparation.SystemSetupRequired(
             engine = ENGINE_ID,
             presentation = PRESENTATION,
-            reason = mihon.translation.api.TranslationSystemSetupReason.ServiceDisabled,
+            reason = TranslationSystemSetupReason.ServiceDisabled,
         )
     }
 
     @Test
     fun `ready handles are process local and revalidate engine registration`() = runTest {
         val engine = FakeTranslationEngine()
-        val registry = DefaultTranslationEngineRegistry(listOf(TranslationEngineContribution(engine)))
+        val registry =
+            DefaultTranslationEngineRegistry(listOf(TranslationEngineContribution(engine)))
         val feature = feature(registry)
         val ready = (feature.prepare(explicitRequest()) as TranslationPreparation.Ready).translation
 
@@ -201,7 +210,7 @@ class DefaultTranslationFeatureTest {
         val selected = FakeTranslationEngine(
             catalogEntry = knownEngine("selected"),
             preparation = TranslationEnginePreparation.Unavailable(
-                mihon.translation.api.TranslationUnavailableReason.ServiceMissing,
+                TranslationUnavailableReason.ServiceMissing,
             ),
         )
         val fallback = FakeTranslationEngine(catalogEntry = knownEngine("fallback"))
@@ -218,7 +227,7 @@ class DefaultTranslationFeatureTest {
         )
 
         feature.prepare(request) shouldBe TranslationPreparation.Unavailable(
-            mihon.translation.api.TranslationUnavailableReason.ServiceMissing,
+            TranslationUnavailableReason.ServiceMissing,
         )
         fallback.preparationCount shouldBe 0
     }
@@ -231,7 +240,7 @@ class DefaultTranslationFeatureTest {
 
         feature(FakeTranslationEngine()).prepare(request) shouldBe TranslationPreparation.TargetLanguageRequired(
             sourceLanguage = ENGLISH,
-            reason = mihon.translation.api.TranslationTargetChoiceReason.SourceEqualsTarget,
+            reason = TranslationTargetChoiceReason.SourceEqualsTarget,
         )
     }
 
@@ -239,7 +248,7 @@ class DefaultTranslationFeatureTest {
     fun `execution revalidates preparation and never runs a stale provider handle`() = runTest {
         val engine = FakeTranslationEngine(
             revalidation = TranslationEnginePreparation.SystemSetupRequired(
-                mihon.translation.api.TranslationSystemSetupReason.ServiceDisabled,
+                TranslationSystemSetupReason.ServiceDisabled,
             ),
         )
         val feature = feature(engine)
@@ -249,7 +258,7 @@ class DefaultTranslationFeatureTest {
             TranslationPreparation.SystemSetupRequired(
                 engine = ENGINE_ID,
                 presentation = PRESENTATION,
-                reason = mihon.translation.api.TranslationSystemSetupReason.ServiceDisabled,
+                reason = TranslationSystemSetupReason.ServiceDisabled,
             ),
         )
         engine.translationCount shouldBe 0
@@ -321,7 +330,8 @@ class DefaultTranslationFeatureTest {
         )
     }
 
-    private fun emptyRegistry() = DefaultTranslationEngineRegistry(emptyList<TranslationEngineContribution>())
+    private fun emptyRegistry() =
+        DefaultTranslationEngineRegistry(emptyList<TranslationEngineContribution>())
 
     private fun explicitRequest(text: String = "Hello") = TranslationRequest(
         text = text,
@@ -350,8 +360,8 @@ class DefaultTranslationFeatureTest {
         override suspend fun inspectDevice() = TranslationEngineDeviceAvailability.Available
 
         override suspend fun inspectLanguageSupport() =
-            mihon.translation.api.TranslationLanguageSupportInspection.Available(
-                mihon.translation.api.TranslationLanguageSupport.AnyLanguage,
+            TranslationLanguageSupportInspection.Available(
+                TranslationLanguageSupport.AnyLanguage,
             )
 
         override suspend fun prepare(request: ResolvedTranslationRequest): TranslationEnginePreparation {

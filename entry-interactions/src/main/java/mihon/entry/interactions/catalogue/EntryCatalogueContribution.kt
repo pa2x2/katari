@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.catalogue
 
 import mihon.entry.interactions.source.ENTRY_SOURCE_CONTEXT_OWNER
 import mihon.feature.graph.CapabilityExpression

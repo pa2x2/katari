@@ -1,24 +1,24 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.download
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
-import mihon.entry.interactions.EntryBulkDownloadCandidateProcessor
-import mihon.entry.interactions.EntryDownloadOwnerResolver
-import mihon.entry.interactions.EntryDownloadProcessor
-import mihon.entry.interactions.EntryDownloadQueueGroup
-import mihon.entry.interactions.EntryDownloadQueueItem
-import mihon.entry.interactions.EntryDownloadState
-import mihon.entry.interactions.EntryDownloadStatus
-import mihon.entry.interactions.book.download.BookDownloadCache
-import mihon.entry.interactions.book.download.BookDownloadManager
-import mihon.entry.interactions.book.download.BookDownloadPackageKey
 import mihon.entry.interactions.book.download.model.BookDownload
+import mihon.entry.interactions.book.runtime.requireBook
+import mihon.entry.interactions.download.EntryBulkDownloadCandidateProcessor
+import mihon.entry.interactions.download.EntryDownloadOwnerResolver
+import mihon.entry.interactions.download.EntryDownloadProcessor
+import mihon.entry.interactions.download.EntryDownloadQueueGroup
+import mihon.entry.interactions.download.EntryDownloadQueueItem
+import mihon.entry.interactions.download.EntryDownloadState
+import mihon.entry.interactions.download.EntryDownloadStatus
+import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.source.service.SourceManager
 
 internal class BookDownloadProcessor(
     private val dependencies: BookDownloadProcessorDependencies,
@@ -186,7 +186,7 @@ internal class BookDownloadProcessor(
 internal data class BookDownloadProcessorDependencies(
     val manager: BookDownloadManager,
     val cache: BookDownloadCache,
-    val sourceManager: tachiyomi.domain.source.service.SourceManager,
+    val sourceManager: SourceManager,
     val entryRepository: EntryRepository,
-    val getEntryWithChapters: tachiyomi.domain.entry.interactor.GetEntryWithChapters,
+    val getEntryWithChapters: GetEntryWithChapters,
 )

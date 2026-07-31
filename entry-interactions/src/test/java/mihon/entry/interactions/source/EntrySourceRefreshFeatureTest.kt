@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.source
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
@@ -11,7 +11,9 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import mihon.entry.interactions.refresh.refreshFeatureTestComposition
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import tachiyomi.domain.chapter.model.NoChaptersException
@@ -114,7 +116,7 @@ class EntrySourceRefreshFeatureTest {
         val feature = feature(sourceManager(mockk<UnifiedSource>()), mockk()) { true }
 
         assertThrows<IllegalArgumentException> {
-            kotlinx.coroutines.runBlocking {
+            runBlocking {
                 feature.refresh(
                     EntrySourceRefreshRequest(
                         entry,

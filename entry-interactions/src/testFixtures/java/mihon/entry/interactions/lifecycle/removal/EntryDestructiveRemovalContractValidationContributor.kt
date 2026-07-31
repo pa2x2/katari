@@ -1,6 +1,11 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.lifecycle.removal
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.entryContentType
+import mihon.entry.interactions.lifecycle.lifecycleContractComposition
+import mihon.entry.interactions.lifecycle.removal.host.EntryDestructiveRemovalCommit
+import mihon.entry.interactions.lifecycle.removal.host.EntryDestructiveRemovalHost
+import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.verifyFeatureContract
 import mihon.feature.graph.FeatureId
@@ -43,7 +48,10 @@ class EntryDestructiveRemovalContractValidationContributor : FeatureValidationCo
                             ENTRY_DESTRUCTIVE_REMOVED_EXECUTION_POINT,
                         ),
                     )
-                    val result = EntryDestructiveRemovalCoordinator(host, composition.featureExecutions)
+                    val result = EntryDestructiveRemovalCoordinator(
+                        host,
+                        composition.featureExecutions,
+                    )
                         .remove(listOf(entry))
                     contractExpectation(
                         committed && result is EntryDestructiveRemovalResult.Removed,

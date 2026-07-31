@@ -1,13 +1,70 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.runtime
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.feature.graph.FeatureDurableExecutionParticipantBinding
-import mihon.feature.graph.FeatureExecutionParticipantBinding
+import mihon.entry.interactions.child.EntryChildGroupFilterInteraction
+import mihon.entry.interactions.child.EntryChildListInteraction
+import mihon.entry.interactions.child.EntryChildProgressInteraction
+import mihon.entry.interactions.child.EntryMissingChildGapInteraction
+import mihon.entry.interactions.child.ProviderBackedEntryChildGroupFilterInteraction
+import mihon.entry.interactions.child.ProviderBackedEntryChildListInteraction
+import mihon.entry.interactions.child.ProviderBackedEntryChildProgressInteraction
+import mihon.entry.interactions.child.ProviderBackedEntryMissingChildGapInteraction
+import mihon.entry.interactions.download.EntryBulkDownloadCandidateCapability
+import mihon.entry.interactions.download.EntryBulkDownloadCandidateProcessor
+import mihon.entry.interactions.download.EntryDownloadCapability
+import mihon.entry.interactions.download.EntryDownloadInteraction
+import mihon.entry.interactions.download.EntryDownloadInteractionDispatch
+import mihon.entry.interactions.download.EntryDownloadOptionsCapability
+import mihon.entry.interactions.download.EntryDownloadOptionsProcessor
+import mihon.entry.interactions.download.EntryDownloadProcessor
+import mihon.entry.interactions.library.EntryLibraryProgressCapability
+import mihon.entry.interactions.library.EntryLibraryProgressInteraction
+import mihon.entry.interactions.library.EntryLibraryProgressProvider
+import mihon.entry.interactions.library.ProviderBackedEntryLibraryProgressInteraction
+import mihon.entry.interactions.media.EntryImmersiveInteraction
+import mihon.entry.interactions.media.EntryMediaCacheCapability
+import mihon.entry.interactions.media.EntryMediaCacheInteraction
+import mihon.entry.interactions.media.EntryMediaCacheProvider
+import mihon.entry.interactions.media.EntryPreviewInteraction
+import mihon.entry.interactions.media.EntryViewerSettingsCapability
+import mihon.entry.interactions.media.EntryViewerSettingsInteraction
+import mihon.entry.interactions.media.EntryViewerSettingsProvider
+import mihon.entry.interactions.media.ProviderBackedEntryImmersiveInteraction
+import mihon.entry.interactions.media.ProviderBackedEntryMediaCacheInteraction
+import mihon.entry.interactions.media.ProviderBackedEntryPreviewInteraction
+import mihon.entry.interactions.media.ProviderBackedEntryViewerSettingsInteraction
+import mihon.entry.interactions.navigation.EntryContinueCapability
+import mihon.entry.interactions.navigation.EntryContinueInteraction
+import mihon.entry.interactions.navigation.EntryContinueProcessor
+import mihon.entry.interactions.navigation.EntryOpenCapability
+import mihon.entry.interactions.navigation.EntryOpenInteraction
+import mihon.entry.interactions.navigation.EntryOpenProcessor
+import mihon.entry.interactions.navigation.ProviderBackedEntryContinueInteraction
+import mihon.entry.interactions.navigation.ProviderBackedEntryOpenInteraction
+import mihon.entry.interactions.presentation.EntryTypePresentationInteraction
+import mihon.entry.interactions.presentation.ProviderBackedEntryTypePresentationInteraction
+import mihon.entry.interactions.state.EntryBookmarkCapability
+import mihon.entry.interactions.state.EntryBookmarkInteraction
+import mihon.entry.interactions.state.EntryBookmarkProcessor
+import mihon.entry.interactions.state.EntryConsumptionCapability
+import mihon.entry.interactions.state.EntryConsumptionInteraction
+import mihon.entry.interactions.state.EntryConsumptionProcessor
+import mihon.entry.interactions.state.EntryPlaybackPreferencesCapability
+import mihon.entry.interactions.state.EntryPlaybackPreferencesInteraction
+import mihon.entry.interactions.state.EntryPlaybackPreferencesProcessor
+import mihon.entry.interactions.state.EntryProgressCapability
+import mihon.entry.interactions.state.EntryProgressInteraction
+import mihon.entry.interactions.state.EntryProgressProcessor
+import mihon.entry.interactions.state.ProviderBackedEntryBookmarkInteraction
+import mihon.entry.interactions.state.ProviderBackedEntryConsumptionInteraction
+import mihon.entry.interactions.state.ProviderBackedEntryPlaybackPreferencesInteraction
+import mihon.entry.interactions.state.ProviderBackedEntryProgressInteraction
 import mihon.feature.graph.FeatureGraphContributor
+import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
+import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.FeatureRuntimeInputs
 import mihon.feature.runtime.createFeatureRuntimeComposition
-import tachiyomi.domain.entry.model.Entry
 
 fun createEntryInteractions(
     plugins: List<EntryInteractionPlugin>,
@@ -158,7 +215,8 @@ private class DefaultEntryInteractions(
     mediaCacheProviders: Map<EntryType, EntryMediaCacheProvider>,
 ) : EntryInteractions {
     override val open: EntryOpenInteraction = ProviderBackedEntryOpenInteraction(openProcessors)
-    override val continueEntry: EntryContinueInteraction = ProviderBackedEntryContinueInteraction(continueProcessors)
+    override val continueEntry: EntryContinueInteraction =
+        ProviderBackedEntryContinueInteraction(continueProcessors)
     override val download: EntryDownloadInteraction =
         EntryDownloadInteractionDispatch(
             processors = downloadProcessors,

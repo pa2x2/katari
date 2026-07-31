@@ -1,4 +1,4 @@
-package mihon.entry.interactions.host
+package mihon.entry.interactions.merge.host
 
 import kotlinx.coroutines.flow.Flow
 import tachiyomi.domain.entry.model.DuplicateEntryCandidate

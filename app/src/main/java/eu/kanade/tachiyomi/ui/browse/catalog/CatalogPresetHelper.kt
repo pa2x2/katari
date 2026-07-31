@@ -6,8 +6,8 @@ import eu.kanade.domain.source.model.SourceFeedPreset
 import eu.kanade.domain.source.model.latestFeedPreset
 import eu.kanade.domain.source.model.popularFeedPreset
 import eu.kanade.domain.source.service.BrowseFeedService
-import mihon.entry.interactions.EntryCatalogueFeature
-import mihon.entry.interactions.EntryCatalogueSourceResolution
+import mihon.entry.interactions.catalogue.EntryCatalogueFeature
+import mihon.entry.interactions.catalogue.EntryCatalogueSourceResolution
 
 /**
  * Helpers for feed presets in the unified catalog screen.

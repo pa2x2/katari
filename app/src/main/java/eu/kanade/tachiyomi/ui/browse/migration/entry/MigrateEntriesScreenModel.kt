@@ -14,10 +14,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.core.common.utils.mutate
-import mihon.entry.interactions.EntryMigrationAvailability
-import mihon.entry.interactions.EntryMigrationFeature
-import mihon.entry.interactions.EntryMigrationSelectionResult
-import mihon.entry.interactions.EntryMigrationSubject
+import mihon.entry.interactions.migration.EntryMigrationAvailability
+import mihon.entry.interactions.migration.EntryMigrationFeature
+import mihon.entry.interactions.migration.EntryMigrationSelectionResult
+import mihon.entry.interactions.migration.EntryMigrationSubject
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryRepository

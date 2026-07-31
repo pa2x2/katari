@@ -1,22 +1,33 @@
-package mihon.feature.graph.validation
+package mihon.feature.graph.validation.execution
 
-import mihon.feature.graph.ApplicableFeatureExecutionContext
-import mihon.feature.graph.ApplicableFeatureExecutionParticipant
-import mihon.feature.graph.BlockedFeatureExecutionContext
 import mihon.feature.graph.CapabilityProvider
-import mihon.feature.graph.ConditionalFeatureExecutionParticipant
 import mihon.feature.graph.ContextEvidence
 import mihon.feature.graph.ContractFixture
 import mihon.feature.graph.ContractFixtureDefinition
 import mihon.feature.graph.FeatureBehaviorContract
-import mihon.feature.graph.FeatureExecutionParticipantSubject
 import mihon.feature.graph.FeatureGraph
 import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureObligation
-import mihon.feature.graph.IncompleteFeatureExecutionContext
-import mihon.feature.graph.MissingFeatureExecutionContextEvidence
 import mihon.feature.graph.SpecializedAdapter
-import mihon.feature.graph.resolveFeatureExecutionContext
+import mihon.feature.graph.execution.ApplicableFeatureExecutionContext
+import mihon.feature.graph.execution.ApplicableFeatureExecutionParticipant
+import mihon.feature.graph.execution.BlockedFeatureExecutionContext
+import mihon.feature.graph.execution.ConditionalFeatureExecutionParticipant
+import mihon.feature.graph.execution.FeatureExecutionParticipantSubject
+import mihon.feature.graph.execution.IncompleteFeatureExecutionContext
+import mihon.feature.graph.execution.MissingFeatureExecutionContextEvidence
+import mihon.feature.graph.execution.resolveFeatureExecutionContext
+import mihon.feature.graph.validation.DiscoveredFeatureValidationContributions
+import mihon.feature.graph.validation.FeatureContractScenarioInput
+import mihon.feature.graph.validation.FeatureContractValidationObligation
+import mihon.feature.graph.validation.FeatureExecutionContractReference
+import mihon.feature.graph.validation.InvalidFeatureExecutionContractScenarioObligation
+import mihon.feature.graph.validation.MissingFeatureExecutionContractFixtureObligation
+import mihon.feature.graph.validation.MissingFeatureExecutionContractScenarioObligation
+import mihon.feature.graph.validation.MissingFeatureExecutionContractVerifierObligation
+import mihon.feature.graph.validation.OwnedFeatureExecutionContractScenario
+import mihon.feature.graph.validation.OwnedFeatureExecutionContractVerifier
+import mihon.feature.graph.validation.subject
 
 data class FeatureExecutionBehavioralContractSelection(
     val subject: FeatureExecutionParticipantSubject,
@@ -32,32 +43,6 @@ data class FeatureExecutionContractExecutionSelection(
     val scenario: OwnedFeatureExecutionContractScenario?,
     val verifier: OwnedFeatureExecutionContractVerifier,
 )
-
-data class MissingFeatureExecutionContractVerifierObligation(
-    override val responsibleOwner: mihon.feature.graph.ContributionOwner,
-    val contract: FeatureExecutionContractReference,
-    val affectedSubjects: List<FeatureExecutionParticipantSubject>,
-) : FeatureContractValidationObligation
-
-data class MissingFeatureExecutionContractScenarioObligation(
-    override val responsibleOwner: mihon.feature.graph.ContributionOwner,
-    val contract: FeatureExecutionContractReference,
-    val affectedSubjects: List<FeatureExecutionParticipantSubject>,
-) : FeatureContractValidationObligation
-
-data class InvalidFeatureExecutionContractScenarioObligation(
-    override val responsibleOwner: mihon.feature.graph.ContributionOwner,
-    val subject: FeatureExecutionParticipantSubject,
-    val scenario: OwnedFeatureExecutionContractScenario,
-    val reason: String,
-) : FeatureContractValidationObligation
-
-data class MissingFeatureExecutionContractFixtureObligation(
-    override val responsibleOwner: mihon.feature.graph.ContributionOwner,
-    val subject: FeatureExecutionParticipantSubject,
-    val requirement: ContractFixtureDefinition<*>,
-    val affectedContracts: List<FeatureBehaviorContract>,
-) : FeatureContractValidationObligation
 
 internal data class FeatureExecutionContractValidationPlanPart(
     val executions: List<FeatureExecutionContractExecutionSelection>,

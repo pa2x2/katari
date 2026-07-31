@@ -1,5 +1,13 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.source
 
+import mihon.entry.interactions.lifecycle.profile.stateRequest
+import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeArtifacts
+import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeModule
+import mihon.entry.interactions.runtime.production.entryFeatureRuntimeBoundary
+import mihon.entry.interactions.source.lifecycle.ENTRY_COVER_HASH_PROFILE_MOVE_PARTICIPANT
+import mihon.entry.interactions.source.lifecycle.EntryCoverHashProfileMoveContributor
+import mihon.feature.graph.execution.FeatureExecutionHandler
+import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
 import uy.kohesive.injekt.api.addSingletonFactory
 import uy.kohesive.injekt.api.get
@@ -47,9 +55,9 @@ internal val EntryCoverNetworkFeatureRuntimeModule = EntryFeatureRuntimeModule(
     }
     EntryFeatureRuntimeArtifacts(
         executionBindings = listOf(
-            mihon.feature.graph.FeatureExecutionParticipantBinding(
+            FeatureExecutionParticipantBinding(
                 definition = ENTRY_COVER_HASH_PROFILE_MOVE_PARTICIPANT,
-                handler = mihon.feature.graph.FeatureExecutionHandler { event ->
+                handler = FeatureExecutionHandler { event ->
                     context.dependencies.profileMoveCoverHashStateHost.move(event.plan.stateRequest())
                 },
             ),

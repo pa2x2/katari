@@ -1,13 +1,15 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.merge.consequence
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import mihon.entry.interactions.host.EntryMergeHost
-import mihon.entry.interactions.host.EntryMergePendingConsequence
-import mihon.feature.graph.FeatureDurableExecutionEnvelope
+import mihon.entry.interactions.merge.EntryMergeFollowUp
+import mihon.entry.interactions.merge.consequence.legacy.EntryMergeLegacyConsequenceDelivery
+import mihon.entry.interactions.merge.host.EntryMergeHost
+import mihon.entry.interactions.merge.host.EntryMergePendingConsequence
 import mihon.feature.graph.FeatureExecutionParticipantId
+import mihon.feature.graph.execution.FeatureDurableExecutionEnvelope
 
 internal class EntryMergeConsequenceDelivery(
     private val host: EntryMergeHost,

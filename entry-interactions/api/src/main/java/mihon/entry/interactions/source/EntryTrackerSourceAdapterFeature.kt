@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.source
 
 import android.content.SharedPreferences
 import okhttp3.OkHttpClient

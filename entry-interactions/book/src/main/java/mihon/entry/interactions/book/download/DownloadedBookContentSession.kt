@@ -6,12 +6,12 @@ import mihon.book.api.BookContentResourcePage
 import mihon.book.api.BookResourceAvailability
 import mihon.book.api.BookResourceCacheState
 import mihon.book.api.BookResourceCapability
-import mihon.entry.interactions.book.BookByteRange
-import mihon.entry.interactions.book.BookContentSession
-import mihon.entry.interactions.book.BookMaterializationKey
-import mihon.entry.interactions.book.BookMaterializationStore
-import mihon.entry.interactions.book.MaterializedBookResource
-import mihon.entry.interactions.book.OpenedBookResource
+import mihon.entry.interactions.book.content.BookByteRange
+import mihon.entry.interactions.book.content.BookContentSession
+import mihon.entry.interactions.book.content.BookMaterializationKey
+import mihon.entry.interactions.book.content.BookMaterializationStore
+import mihon.entry.interactions.book.content.MaterializedBookResource
+import mihon.entry.interactions.book.content.OpenedBookResource
 import java.io.FilterInputStream
 import java.io.InputStream
 

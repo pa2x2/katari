@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.content
 
 import eu.kanade.tachiyomi.source.entry.BookResourceHierarchyNode
 import eu.kanade.tachiyomi.source.entry.BookResourceLocation
@@ -14,8 +14,10 @@ import mihon.book.api.BookContentResource
 import mihon.book.api.BookContentResourcePage
 import mihon.book.api.BookResourceAvailability
 import mihon.book.api.BookResourceCacheState
+import mihon.entry.interactions.book.runtime.requireBook
 import tachiyomi.domain.entry.model.Entry
 import java.io.ByteArrayInputStream
+import java.io.File
 import java.io.IOException
 import java.io.InputStream
 
@@ -263,7 +265,7 @@ internal class SourceBookContentSession(
 
     private suspend fun copyToMaterialization(
         input: InputStream,
-        output: java.io.File,
+        output: File,
         maxBytes: Long,
     ) = withContext(Dispatchers.IO) {
         output.outputStream().buffered().use { target ->

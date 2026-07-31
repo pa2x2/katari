@@ -1,7 +1,8 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.reader
 
 import kotlinx.coroutines.CancellationException
 import mihon.book.api.BookLocator
+import mihon.entry.interactions.book.preparation.PreparedBookPublication
 
 /** Restores optional persisted position without making otherwise valid prepared content unavailable. */
 internal suspend fun PreparedBookPublication.restoreLocator(locator: BookLocator?): BookLocator? {

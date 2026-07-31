@@ -1,12 +1,12 @@
 package mihon.translation.runtime.selection
 
 import kotlinx.coroutines.CancellationException
-import mihon.translation.api.TranslationEngineId
-import mihon.translation.api.TranslationEngineState
-import mihon.translation.api.TranslationEngineStatus
-import mihon.translation.runtime.ProfileTranslationPreferences
-import mihon.translation.spi.TranslationEngineDeviceAvailability
-import mihon.translation.spi.TranslationEngineRegistry
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.engine.TranslationEngineState
+import mihon.translation.api.engine.TranslationEngineStatus
+import mihon.translation.runtime.preference.ProfileTranslationPreferences
+import mihon.translation.spi.engine.TranslationEngineDeviceAvailability
+import mihon.translation.spi.engine.TranslationEngineRegistry
 
 internal class ProfileTranslationEngineResolver(
     private val preferences: ProfileTranslationPreferences,

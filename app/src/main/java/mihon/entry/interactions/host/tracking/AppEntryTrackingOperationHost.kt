@@ -6,9 +6,12 @@ import eu.kanade.tachiyomi.data.track.DeletableTracker
 import eu.kanade.tachiyomi.data.track.EnhancedTracker
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
-import mihon.entry.interactions.EntryTrackingMutation
-import mihon.entry.interactions.EntryTrackingSearchCandidate
-import mihon.entry.interactions.EntryTrackingServiceId
+import mihon.entry.interactions.tracking.EntryTrackingMutation
+import mihon.entry.interactions.tracking.EntryTrackingSearchCandidate
+import mihon.entry.interactions.tracking.EntryTrackingServiceId
+import mihon.entry.interactions.tracking.host.EntryTrackingHostRefreshFailure
+import mihon.entry.interactions.tracking.host.EntryTrackingHostRefreshResult
+import mihon.entry.interactions.tracking.host.EntryTrackingOperationHost
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.track.interactor.DeleteTrack
 import tachiyomi.domain.track.interactor.GetTracks

@@ -41,13 +41,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import logcat.LogPriority
 import mihon.core.archive.ZipWriter
-import mihon.entry.interactions.EntryDownloadEntryIdentity
-import mihon.entry.interactions.EntryDownloadEvent
-import mihon.entry.interactions.EntryDownloadMessage
-import mihon.entry.interactions.EntryDownloadQueuePolicy
-import mihon.entry.interactions.EntryPageImageCache
+import mihon.entry.interactions.download.EntryDownloadEntryIdentity
+import mihon.entry.interactions.download.EntryDownloadEvent
+import mihon.entry.interactions.download.EntryDownloadMessage
+import mihon.entry.interactions.download.EntryDownloadQueuePolicy
 import mihon.entry.interactions.manga.download.model.DownloadState
 import mihon.entry.interactions.manga.download.model.MangaDownload
+import mihon.entry.interactions.runtime.EntryPageImageCache
 import nl.adaptivity.xmlutil.serialization.XML
 import okhttp3.Response
 import okio.buffer
@@ -61,7 +61,6 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.core.metadata.comicinfo.COMIC_INFO_FILE
 import tachiyomi.core.metadata.comicinfo.ComicInfo
 import tachiyomi.domain.category.interactor.GetCategories
-import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.Entry

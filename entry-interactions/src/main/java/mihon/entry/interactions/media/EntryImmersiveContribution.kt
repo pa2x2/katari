@@ -1,9 +1,8 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media
 
-import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.source.entry.UnifiedSource
-import eu.kanade.tachiyomi.source.entry.supportedEntryTypes
-import kotlinx.coroutines.CancellationException
+import mihon.entry.interactions.navigation.EntryOpenCapability
+import mihon.entry.interactions.runtime.EntryChildListCapability
+import mihon.entry.interactions.runtime.EntryImmersiveCapability
 import mihon.entry.interactions.source.ENTRY_SOURCE_CONTEXT_OWNER
 import mihon.entry.interactions.source.ENTRY_SOURCE_DESCRIPTION_CONTEXT_OWNER
 import mihon.feature.graph.CapabilityExpression
@@ -17,15 +16,12 @@ import mihon.feature.graph.FeatureContextDecision
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
-import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
 import mihon.feature.graph.allOf
-import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.contextInputDefinition
 import mihon.feature.graph.featureContextRule
-import tachiyomi.domain.entry.model.Entry
 
 internal val ENTRY_IMMERSIVE_FEATURE_ID = FeatureId("entry.immersive")
 private val ENTRY_IMMERSIVE_FEATURE_OWNER = ContributionOwner("entry-immersive")

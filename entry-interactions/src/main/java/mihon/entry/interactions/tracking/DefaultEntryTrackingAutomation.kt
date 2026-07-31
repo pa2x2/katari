@@ -1,10 +1,10 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.tracking
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
-import mihon.entry.interactions.host.tracking.EntryTrackingHost
-import mihon.entry.interactions.host.tracking.EntryTrackingHostBindingOutcome
-import mihon.entry.interactions.host.tracking.EntryTrackingHostEntryService
+import mihon.entry.interactions.tracking.host.EntryTrackingHost
+import mihon.entry.interactions.tracking.host.EntryTrackingHostBindingOutcome
+import mihon.entry.interactions.tracking.host.EntryTrackingHostEntryService
 import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.track.model.EntryTrack
@@ -92,7 +92,13 @@ internal class DefaultEntryTrackingAutomation(
     ): EntryTrackingMigrationPreparationResult {
         return try {
             EntryTrackingMigrationPreparationResult.Prepared(
-                host.automation.prepareMigrationTracks(source, target, tracks.map(EntryTrackingRecord::toDomainTrack))
+                host.automation.prepareMigrationTracks(
+                    source,
+                    target,
+                    tracks.map(
+                        EntryTrackingRecord::toDomainTrack,
+                    ),
+                )
                     .map { it.toTrackingRecord() },
             )
         } catch (error: Throwable) {

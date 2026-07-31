@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.persistence.backup
 
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
@@ -6,14 +6,14 @@ import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureBehaviorContract
 import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContribution
-import mihon.feature.graph.FeatureExecutionFailurePolicy
 import mihon.feature.graph.FeatureExecutionPointId
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.inlineFeatureExecutionPointDefinition
+import mihon.feature.graph.execution.FeatureExecutionFailurePolicy
+import mihon.feature.graph.execution.inlineFeatureExecutionPointDefinition
 
 internal val ENTRY_BACKUP_OWNER = ContributionOwner("entry-backup")
 private val ENTRY_BACKUP_FEATURE_ID = FeatureId("entry.backup")

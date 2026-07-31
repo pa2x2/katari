@@ -1,8 +1,10 @@
-package mihon.entry.interactions.host
+package mihon.entry.interactions.host.migration
 
 import android.content.Context
 import android.system.Os
 import eu.kanade.tachiyomi.data.cache.CoverCache
+import mihon.entry.interactions.migration.host.EntryMigrationCustomCoverHost
+import mihon.entry.interactions.migration.host.EntryMigrationCustomCoverPayload
 import tachiyomi.domain.entry.model.Entry
 import java.io.File
 

@@ -1,9 +1,20 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.merge.lifecycle
 
-import mihon.feature.graph.FeatureExecutionParticipantDefinition
+import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.lifecycle.profile.ENTRY_PROFILE_MOVE_DESTINATION_INSPECTING_EXECUTION_POINT
+import mihon.entry.interactions.lifecycle.profile.ENTRY_PROFILE_MOVE_PREPARING_EXECUTION_POINT
+import mihon.entry.interactions.lifecycle.profile.ENTRY_PROFILE_MOVING_EXECUTION_POINT
+import mihon.entry.interactions.lifecycle.profile.ENTRY_PROFILE_STATE_MOVED_EXECUTION_POINT
+import mihon.entry.interactions.lifecycle.profile.EntryProfileMovePlan
+import mihon.entry.interactions.lifecycle.profile.EntryProfileMoveReference
+import mihon.entry.interactions.merge.ENTRY_MERGE_FEATURE_OWNER
+import mihon.entry.interactions.merge.EntryMergeBehaviorContract
+import mihon.entry.interactions.merge.EntryMergeProfileMoveIntent
+import mihon.entry.interactions.merge.EntryMergeProfileMoveReference
 import mihon.feature.graph.FeatureExecutionParticipantId
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
+import mihon.feature.graph.execution.FeatureExecutionParticipantDefinition
 
 internal const val ENTRY_MERGE_PROFILE_MOVE_PARTICIPANT_ID = "entry.merge.profile-move"
 
@@ -46,7 +57,7 @@ internal object EntryMergeProfileMoveContributor : FeatureGraphContributor {
     }
 }
 
-internal fun EntryProfileMoveReference.mergeReference(type: eu.kanade.tachiyomi.source.entry.EntryType) =
+internal fun EntryProfileMoveReference.mergeReference(type: EntryType) =
     participantReference(ENTRY_MERGE_PROFILE_MOVE_PARTICIPANT_ID, type) as? EntryMergeProfileMoveReference
 
 internal fun EntryProfileMovePlan.toMergeIntent(

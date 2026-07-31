@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.state
 
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement

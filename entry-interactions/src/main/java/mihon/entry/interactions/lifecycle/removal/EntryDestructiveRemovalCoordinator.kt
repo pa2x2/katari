@@ -1,9 +1,15 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.lifecycle.removal
 
 import kotlinx.coroutines.CancellationException
-import mihon.feature.graph.FeatureCommitExecutionResult
-import mihon.feature.graph.FeatureExecutionRuntime
-import mihon.feature.graph.coordinateFeatureCommit
+import mihon.entry.interactions.download.EntryDownloadRemovalPlan
+import mihon.entry.interactions.execute
+import mihon.entry.interactions.lifecycle.metadata.toLifecycleFailures
+import mihon.entry.interactions.lifecycle.removal.host.EntryDestructiveRemovalCommit
+import mihon.entry.interactions.lifecycle.removal.host.EntryDestructiveRemovalHost
+import mihon.entry.interactions.runtime.toContentTypeId
+import mihon.feature.graph.execution.FeatureCommitExecutionResult
+import mihon.feature.graph.execution.FeatureExecutionRuntime
+import mihon.feature.graph.execution.coordinateFeatureCommit
 import tachiyomi.domain.entry.model.Entry
 
 internal class EntryDestructiveRemovalCoordinator(
@@ -77,7 +83,15 @@ private class MutableEntryDestructiveRemovalOutcomes : EntryDestructiveRemovalOu
     fun snapshot(): EntryDestructiveRemovalOutcomes {
         val owners = downloadOwners.values.toList()
         return EntryDestructiveRemovalOutcomes(
-            downloadPlans = if (owners.isEmpty()) emptyList() else listOf(EntryDownloadRemovalPlan(owners)),
+            downloadPlans = if (owners.isEmpty()) {
+                emptyList()
+            } else {
+                listOf(
+                    EntryDownloadRemovalPlan(
+                        owners,
+                    ),
+                )
+            },
         )
     }
 }

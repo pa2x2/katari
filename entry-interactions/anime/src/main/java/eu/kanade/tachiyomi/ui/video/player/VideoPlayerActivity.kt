@@ -92,11 +92,11 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.entry.interactions.EntryChildWebViewAction
-import mihon.entry.interactions.EntryChildWebViewResolution
 import mihon.entry.interactions.anime.R
-import mihon.entry.interactions.launchEntryChildWebViewAction
 import mihon.entry.interactions.settings.AnimePlayerPreferences
+import mihon.entry.interactions.source.EntryChildWebViewAction
+import mihon.entry.interactions.source.EntryChildWebViewResolution
+import mihon.entry.interactions.source.launchEntryChildWebViewAction
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat

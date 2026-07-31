@@ -1,9 +1,13 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.state
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import mihon.entry.interactions.runtime.EntryInteractionComposition
+import mihon.entry.interactions.runtime.EntryInteractionPlugin
+import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
+import mihon.entry.interactions.runtime.createEntryInteractionComposition
 import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry

@@ -49,9 +49,9 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.migration.search.MigrateSearchScreen
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import kotlinx.coroutines.flow.update
-import mihon.entry.interactions.EntryCatalogueFeature
-import mihon.entry.interactions.EntryMigrationOption
-import mihon.entry.interactions.EntryMigrationSubject
+import mihon.entry.interactions.catalogue.EntryCatalogueFeature
+import mihon.entry.interactions.migration.EntryMigrationOption
+import mihon.entry.interactions.migration.EntryMigrationSubject
 import mihon.feature.migration.list.MigrationListScreen
 import sh.calvin.reorderable.ReorderableCollectionItemScope
 import sh.calvin.reorderable.ReorderableItem

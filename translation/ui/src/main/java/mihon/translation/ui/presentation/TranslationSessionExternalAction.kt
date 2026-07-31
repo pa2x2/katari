@@ -1,9 +1,9 @@
 package mihon.translation.ui.presentation
 
-import mihon.translation.api.TranslationEngineId
-import mihon.translation.api.TranslationLanguageTag
-import mihon.translation.api.TranslationModelDescriptor
-import mihon.translation.api.TranslationProviderDisclosure
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.language.TranslationLanguageTag
+import mihon.translation.api.model.TranslationModelDescriptor
+import mihon.translation.api.provider.TranslationProviderDisclosure
 
 sealed interface TranslationSessionExternalAction {
     data object ChooseSourceLanguage : TranslationSessionExternalAction

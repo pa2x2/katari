@@ -4,7 +4,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.VideoRequest
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import io.kotest.matchers.shouldBe
-import mihon.entry.interactions.EntryImmersiveHandle
+import mihon.entry.interactions.media.EntryImmersiveHandle
 import org.junit.jupiter.api.Test
 
 class EntryImmersiveContentTest {

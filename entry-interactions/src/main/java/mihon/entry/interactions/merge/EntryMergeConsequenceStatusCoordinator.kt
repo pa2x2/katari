@@ -1,9 +1,10 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.merge
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import mihon.entry.interactions.host.EntryMergeHost
+import mihon.entry.interactions.merge.consequence.EntryMergeConsequenceDelivery
+import mihon.entry.interactions.merge.host.EntryMergeHost
 
 internal class EntryMergeConsequenceStatusCoordinator(
     private val host: EntryMergeHost,
@@ -19,6 +20,10 @@ internal class EntryMergeConsequenceStatusCoordinator(
         host.makeConsequencesRetryable()
         delivery.deliverPending()
         val status = host.observeConsequenceStatus().first()
-        return EntryMergeConsequenceStatus(status.pendingCount, status.failedCount, status.lastFailure)
+        return EntryMergeConsequenceStatus(
+            status.pendingCount,
+            status.failedCount,
+            status.lastFailure,
+        )
     }
 }

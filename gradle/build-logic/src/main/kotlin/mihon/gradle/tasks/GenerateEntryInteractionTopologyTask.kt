@@ -71,6 +71,8 @@ internal fun generateEntryInteractionProductionTopology(
     return buildString {
         appendLine("package mihon.entry.interactions")
         appendLine()
+        appendLine("import mihon.entry.interactions.runtime.EntryTypeRuntimeModule")
+        appendLine("import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeModule")
         appendLine("import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller")
         appendLine()
         appendLine("// Generated from owner-local runtime-module descriptors for variant $variantName.")

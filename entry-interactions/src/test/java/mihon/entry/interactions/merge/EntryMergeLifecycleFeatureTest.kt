@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.merge
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.collections.shouldContainExactly
@@ -7,9 +7,10 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.mockk
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.host.EntryMergeConsequenceStatusSnapshot
-import mihon.entry.interactions.host.EntryMergeHostTransition
-import mihon.entry.interactions.host.EntryMergeMembershipSnapshot
+import mihon.entry.interactions.merge.consequence.EntryMergeConsequenceDelivery
+import mihon.entry.interactions.merge.host.EntryMergeConsequenceStatusSnapshot
+import mihon.entry.interactions.merge.host.EntryMergeHostTransition
+import mihon.entry.interactions.merge.host.EntryMergeMembershipSnapshot
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 
@@ -17,7 +18,10 @@ class EntryMergeLifecycleFeatureTest {
     @Test
     fun `library removal groups selected members and dissolves a depleted membership`() = runTest {
         val entries = listOf(entry(1), entry(2), entry(3))
-        val host = RecordingEntryMergeHost(entries, listOf(EntryMergeMembershipSnapshot(7, 1, listOf(1, 2, 3))))
+        val host = RecordingEntryMergeHost(
+            entries,
+            listOf(EntryMergeMembershipSnapshot(7, 1, listOf(1, 2, 3))),
+        )
 
         EntryMergeLibraryLifecycleCoordinator(host).entriesRemovedFromLibrary(listOf(entries[0], entries[2])) shouldBe
             EntryMergeLibraryRemovalResult(changedGroupCount = 1, unresolvedGroupCount = 0)
@@ -30,7 +34,10 @@ class EntryMergeLifecycleFeatureTest {
     @Test
     fun `metadata refresh receives ordered concrete owners without using the editor`() = runTest {
         val entries = listOf(entry(1), entry(2), entry(3))
-        val host = RecordingEntryMergeHost(entries, listOf(EntryMergeMembershipSnapshot(7, 2, listOf(2, 1, 3))))
+        val host = RecordingEntryMergeHost(
+            entries,
+            listOf(EntryMergeMembershipSnapshot(7, 2, listOf(2, 1, 3))),
+        )
 
         EntryMergeMetadataRefreshCoordinator(host).resolveOwners(entries.first()).run {
             visibleEntryId shouldBe 2
@@ -47,7 +54,11 @@ class EntryMergeLifecycleFeatureTest {
         val delivery = EntryMergeConsequenceDelivery(host, mockk(relaxed = true))
         val feature = EntryMergeConsequenceStatusCoordinator(host, delivery)
 
-        feature.observeStatus().first() shouldBe EntryMergeConsequenceStatus(3, 2, "disk unavailable")
+        feature.observeStatus().first() shouldBe EntryMergeConsequenceStatus(
+            3,
+            2,
+            "disk unavailable",
+        )
         feature.retryPending() shouldBe EntryMergeConsequenceStatus(3, 2, "disk unavailable")
         host.madeRetryable shouldBe true
     }

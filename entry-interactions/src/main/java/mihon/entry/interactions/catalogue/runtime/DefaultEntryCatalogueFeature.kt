@@ -1,8 +1,22 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.catalogue.runtime
 
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import kotlinx.coroutines.CancellationException
+import mihon.entry.interactions.catalogue.EntryCatalogueBrowseRequest
+import mihon.entry.interactions.catalogue.EntryCatalogueFeature
+import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
+import mihon.entry.interactions.catalogue.EntryCatalogueFiltersResult
+import mihon.entry.interactions.catalogue.EntryCatalogueListing
+import mihon.entry.interactions.catalogue.EntryCatalogueSearchRequest
+import mihon.entry.interactions.catalogue.EntryCatalogueSearchResult
+import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
+import mihon.entry.interactions.catalogue.EntryCatalogueSourceResolution
+import mihon.entry.interactions.catalogue.EntryCatalogueUnavailableReason
+import mihon.entry.interactions.catalogue.host.EntryCatalogueHostSource
+import mihon.entry.interactions.catalogue.host.EntryCatalogueHostSourceResolution
+import mihon.entry.interactions.catalogue.host.EntryCatalogueProviderHost
+import mihon.entry.interactions.catalogue.paging.EntryCataloguePagingSource
 import tachiyomi.domain.entry.adapter.toEntry
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.entry.model.identity

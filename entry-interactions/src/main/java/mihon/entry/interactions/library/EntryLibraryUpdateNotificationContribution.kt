@@ -1,6 +1,13 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.library
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.download.EntryDownloadCapability
+import mihon.entry.interactions.entryContentType
+import mihon.entry.interactions.navigation.EntryOpenCapability
+import mihon.entry.interactions.runtime.EntryTypePresentationCapability
+import mihon.entry.interactions.runtime.requireEntryContextState
+import mihon.entry.interactions.runtime.toContentTypeId
+import mihon.entry.interactions.state.EntryConsumptionCapability
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner

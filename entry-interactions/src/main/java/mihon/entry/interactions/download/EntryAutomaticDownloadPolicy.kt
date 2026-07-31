@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download
 
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.download.service.DownloadPreferences

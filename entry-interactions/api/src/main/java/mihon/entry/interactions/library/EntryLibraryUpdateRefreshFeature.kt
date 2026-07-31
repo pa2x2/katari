@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.library
 
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter

@@ -4,9 +4,7 @@ import androidx.annotation.IntRange
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.ImmutableMap
-import mihon.entry.interactions.EntryTrackingAccount
+import mihon.entry.interactions.tracking.EntryTrackingAccount
 import mihon.feature.profiles.core.ProfileAwarePreferenceStore
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource

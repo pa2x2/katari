@@ -7,8 +7,8 @@ import androidx.core.app.NotificationManagerCompat.IMPORTANCE_HIGH
 import androidx.core.app.NotificationManagerCompat.IMPORTANCE_LOW
 import eu.kanade.tachiyomi.util.system.buildNotificationChannel
 import eu.kanade.tachiyomi.util.system.buildNotificationChannelGroup
-import mihon.entry.interactions.EntryDownloadNotifications
-import mihon.entry.interactions.EntryLibraryUpdateNotificationRoute
+import mihon.entry.interactions.download.EntryDownloadNotifications
+import mihon.entry.interactions.library.EntryLibraryUpdateNotificationRoute
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
 

@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.child
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.shouldBe
@@ -6,6 +6,15 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import mihon.entry.interactions.runtime.EntryChildListCapability
+import mihon.entry.interactions.runtime.EntryChildListProcessor
+import mihon.entry.interactions.runtime.EntryChildProgressCapability
+import mihon.entry.interactions.runtime.EntryChildProgressProcessor
+import mihon.entry.interactions.runtime.EntryInteractionPlugin
+import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
+import mihon.entry.interactions.runtime.EntryMissingChildGapCapability
+import mihon.entry.interactions.runtime.EntryMissingChildGapProcessor
+import mihon.entry.interactions.runtime.createEntryInteractionComposition
 import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
@@ -132,7 +141,9 @@ class EntryChildListFeatureTest {
         ): List<EntryChapter> = chapters
     }
 
-    private class RecordingMissingGapProcessor : EntryChildListProcessor, EntryMissingChildGapProcessor {
+    private class RecordingMissingGapProcessor :
+        EntryChildListProcessor,
+        EntryMissingChildGapProcessor {
         override val type = EntryType.BOOK
 
         override fun sortedForReading(

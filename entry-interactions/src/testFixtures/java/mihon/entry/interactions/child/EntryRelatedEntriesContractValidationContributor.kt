@@ -1,10 +1,12 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.child
 
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.RelatedEntriesSource
 import io.mockk.every
 import io.mockk.mockk
+import mihon.entry.interactions.entryContentType
+import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
@@ -15,6 +17,7 @@ import mihon.feature.graph.validation.FeatureContractScenario
 import mihon.feature.graph.validation.FeatureContractVerifier
 import mihon.feature.graph.validation.FeatureValidationContributionSink
 import mihon.feature.graph.validation.FeatureValidationContributor
+import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.source.model.EntrySourceDescription
 import tachiyomi.domain.source.service.EntrySourceDescriptionResolutionPort
 
@@ -22,7 +25,10 @@ class EntryRelatedEntriesContractValidationContributor : FeatureValidationContri
     override val owner = EntryRelatedEntriesFeatureContributor.owner
 
     override fun contributeTo(sink: FeatureValidationContributionSink) {
-        val reference = FeatureContractReference(ENTRY_RELATED_ENTRIES_FEATURE_ID, EntryRelatedEntriesBehaviorContract)
+        val reference = FeatureContractReference(
+            ENTRY_RELATED_ENTRIES_FEATURE_ID,
+            EntryRelatedEntriesBehaviorContract,
+        )
         sink.add(
             FeatureContractVerifier(reference) { input ->
                 verifyFeatureContract {
@@ -37,7 +43,7 @@ class EntryRelatedEntriesContractValidationContributor : FeatureValidationContri
                             EntrySourceDescription("", null, EntryItemOrientation.HORIZONTAL, null)
                         },
                     )
-                    val entry = tachiyomi.domain.entry.model.Entry.create().copy(source = 9L, type = type)
+                    val entry = Entry.create().copy(source = 9L, type = type)
                     contractExpectation(
                         feature.availability(EntryRelatedEntriesContext(entry, source)) ==
                             EntryRelatedEntriesAvailability.Available(EntryItemOrientation.HORIZONTAL),

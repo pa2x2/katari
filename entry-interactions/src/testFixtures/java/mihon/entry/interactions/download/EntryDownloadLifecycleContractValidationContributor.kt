@@ -1,11 +1,17 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download
 
+import eu.kanade.tachiyomi.source.entry.EntryType
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import mihon.entry.interactions.media.session.EntryMediaSessionExecutionEvent
+import mihon.entry.interactions.media.session.mediaSessionContractEvent
+import mihon.entry.interactions.state.EntryBookmarkCapability
+import mihon.entry.interactions.state.EntryProgressRecordingResult
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
+import mihon.feature.graph.ContextEvidence
 import mihon.feature.graph.FeatureBehaviorContract
 import mihon.feature.graph.FeatureContractScenarioId
 import mihon.feature.graph.FeatureIntegrationId
@@ -57,7 +63,7 @@ class EntryDownloadLifecycleContractValidationContributor : FeatureValidationCon
                     )
                     val received = mutableListOf<EntryDownloadLifecycleEvent>()
                     val feature = object : EntryDownloadLifecycleFeature {
-                        override fun isApplicable(type: eu.kanade.tachiyomi.source.entry.EntryType) = true
+                        override fun isApplicable(type: EntryType) = true
 
                         override suspend fun onEvent(
                             event: EntryDownloadLifecycleEvent,
@@ -88,7 +94,7 @@ class EntryDownloadLifecycleContractValidationContributor : FeatureValidationCon
 private data class DownloadLifecycleContract(
     val integration: FeatureIntegrationId,
     val contract: FeatureBehaviorContract,
-    val scenarioEvidence: (() -> List<mihon.feature.graph.ContextEvidence<*>>)? = null,
+    val scenarioEvidence: (() -> List<ContextEvidence<*>>)? = null,
 )
 
 private val lifecycleContracts = listOf(

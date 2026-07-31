@@ -1,2 +1,2 @@
 id=entry.progress-transfer
-module=mihon.entry.interactions.EntryProgressFeatureRuntimeModule
+module=mihon.entry.interactions.state.EntryProgressFeatureRuntimeModule

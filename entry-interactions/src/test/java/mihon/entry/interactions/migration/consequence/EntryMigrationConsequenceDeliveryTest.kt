@@ -1,14 +1,15 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.migration.consequence
 
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.host.EntryMigrationConsequenceHost
-import mihon.entry.interactions.host.EntryMigrationPendingConsequence
-import mihon.feature.graph.FeatureDurableExecutionEnvelope
+import mihon.entry.interactions.migration.EntryMigrationFollowUp
+import mihon.entry.interactions.migration.host.EntryMigrationConsequenceHost
+import mihon.entry.interactions.migration.host.EntryMigrationPendingConsequence
 import mihon.feature.graph.FeatureExecutionParticipantId
+import mihon.feature.graph.execution.FeatureDurableExecutionEnvelope
 import org.junit.jupiter.api.Test
 
 class EntryMigrationConsequenceDeliveryTest {

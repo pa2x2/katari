@@ -4,6 +4,9 @@ import eu.kanade.tachiyomi.data.track.Tracker
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import mihon.entry.interactions.tracking.host.EntryTrackingCollectionHost
+import mihon.entry.interactions.tracking.host.EntryTrackingHostCollectionSnapshot
+import mihon.entry.interactions.tracking.host.EntryTrackingHostCollectionTrack
 import tachiyomi.domain.track.interactor.GetTracksPerEntry
 
 internal class AppEntryTrackingCollectionHost(

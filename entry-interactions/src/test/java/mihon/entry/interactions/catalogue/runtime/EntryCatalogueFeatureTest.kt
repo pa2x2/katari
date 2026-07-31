@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.catalogue.runtime
 
 import androidx.paging.PagingSource
 import eu.kanade.tachiyomi.source.entry.EntryFilter
@@ -20,8 +20,23 @@ import io.mockk.mockk
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
+import mihon.entry.interactions.catalogue.EntryCatalogueBrowseRequest
+import mihon.entry.interactions.catalogue.EntryCatalogueFeature
+import mihon.entry.interactions.catalogue.EntryCatalogueFeatureContributor
+import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
+import mihon.entry.interactions.catalogue.EntryCatalogueFiltersResult
+import mihon.entry.interactions.catalogue.EntryCatalogueListing
+import mihon.entry.interactions.catalogue.EntryCatalogueSearchRequest
+import mihon.entry.interactions.catalogue.EntryCatalogueSearchResult
+import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
+import mihon.entry.interactions.catalogue.EntryCatalogueSourceResolution
+import mihon.entry.interactions.catalogue.EntryCatalogueUnavailableReason
+import mihon.entry.interactions.catalogue.host.EntryCatalogueHostSource
+import mihon.entry.interactions.catalogue.host.EntryCatalogueHostSourceResolution
+import mihon.entry.interactions.catalogue.host.EntryCatalogueProviderHost
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.source.model.CatalogListItem
@@ -116,7 +131,7 @@ class EntryCatalogueFeatureTest {
 
         feature.filterSuggestions(7L, filter, input) shouldBe
             EntryCatalogueFilterSuggestionsResult.Failed(failure)
-        org.junit.jupiter.api.assertThrows<CancellationException> {
+        assertThrows<CancellationException> {
             feature.filterSuggestions(7L, filter, input)
         }
     }
@@ -139,7 +154,7 @@ class EntryCatalogueFeatureTest {
         )
 
         result.shouldBeInstanceOf<EntryCatalogueSearchResult.Success>().entries.map { it.url } shouldBe listOf("/same")
-        io.mockk.coVerify(exactly = 0) { networkToLocal.invoke(any<List<Entry>>()) }
+        coVerify(exactly = 0) { networkToLocal.invoke(any<List<Entry>>()) }
     }
 
     @Test
@@ -172,7 +187,7 @@ class EntryCatalogueFeatureTest {
         every { host.backgroundFilters(7L) } returns EntryFilterList()
         coEvery { host.page(any(), any(), any()) } throws CancellationException()
 
-        org.junit.jupiter.api.assertThrows<CancellationException> {
+        assertThrows<CancellationException> {
             feature(host).search(EntryCatalogueSearchRequest(7L, "query"))
         }
     }
@@ -181,7 +196,10 @@ class EntryCatalogueFeatureTest {
         host: EntryCatalogueProviderHost,
         networkToLocalEntry: NetworkToLocalEntry = mockk(),
     ): EntryCatalogueFeature {
-        val evaluation = productionSubjectEvaluation(EntryType.BOOK, EntryCatalogueFeatureContributor)
+        val evaluation = productionSubjectEvaluation(
+            EntryType.BOOK,
+            EntryCatalogueFeatureContributor,
+        )
         return DefaultEntryCatalogueFeature(
             host = host,
             graphStateValidator = EntryCatalogueGraphStateValidator(evaluation),

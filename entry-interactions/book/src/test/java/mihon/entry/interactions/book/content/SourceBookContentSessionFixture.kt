@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.content
 
 import android.app.Application
 import eu.kanade.tachiyomi.source.entry.BookResourceCatalog
@@ -25,7 +25,10 @@ internal abstract class SourceBookContentSessionFixture {
         source: UnifiedSource = source(),
         resolver: BookExternalResourceResolver = FakeExternalResolver(emptyMap()),
         directory: File = Files.createTempDirectory("katari-book-materialized").toFile(),
-        materializationStore: BookMaterializationStore = BookMaterializationCache(application(), directory),
+        materializationStore: BookMaterializationStore = BookMaterializationCache(
+            application(),
+            directory,
+        ),
     ): SourceBookContentSession {
         return SourceBookContentSession(
             source = source,

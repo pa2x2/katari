@@ -1,6 +1,11 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.runtime.applicableProviderTypes
+import mihon.entry.interactions.state.EntryMigrationCapability
+import mihon.entry.interactions.state.EntryPlaybackPreferencesCapability
+import mihon.entry.interactions.state.EntryPlaybackPreferencesInteraction
+import mihon.entry.interactions.state.EntryPlaybackPreferencesProcessor
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId

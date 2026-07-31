@@ -1,5 +1,6 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.lifecycle.removal
 
+import mihon.entry.interactions.download.EntryDownloadRemovalPlan
 import tachiyomi.domain.entry.model.Entry
 
 data class EntryDestructiveRemovingEvent(

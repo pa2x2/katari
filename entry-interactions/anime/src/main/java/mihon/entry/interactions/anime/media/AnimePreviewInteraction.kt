@@ -1,4 +1,4 @@
-package mihon.entry.interactions.anime
+package mihon.entry.interactions.anime.media
 
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryPreviewSource
@@ -8,15 +8,16 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import mihon.entry.interactions.EntryPreviewConfig
-import mihon.entry.interactions.EntryPreviewConfigurationProvider
-import mihon.entry.interactions.EntryPreviewHandle
-import mihon.entry.interactions.EntryPreviewLoadMode
-import mihon.entry.interactions.EntryPreviewPage
-import mihon.entry.interactions.EntryPreviewPageStatus
-import mihon.entry.interactions.EntryPreviewProcessor
-import mihon.entry.interactions.EntryPreviewSettings
-import mihon.entry.interactions.EntryPreviewSourceRequirement
+import mihon.entry.interactions.anime.runtime.requireAnime
+import mihon.entry.interactions.media.EntryPreviewConfig
+import mihon.entry.interactions.media.EntryPreviewHandle
+import mihon.entry.interactions.media.EntryPreviewPage
+import mihon.entry.interactions.media.EntryPreviewPageStatus
+import mihon.entry.interactions.media.EntryPreviewSettings
+import mihon.entry.interactions.media.EntryPreviewSourceRequirement
+import mihon.entry.interactions.runtime.EntryPreviewConfigurationProvider
+import mihon.entry.interactions.runtime.EntryPreviewLoadMode
+import mihon.entry.interactions.runtime.EntryPreviewProcessor
 import mihon.entry.interactions.settings.EntryInteractionPreferences
 import tachiyomi.domain.entry.adapter.toSEntry
 import tachiyomi.domain.entry.model.Entry

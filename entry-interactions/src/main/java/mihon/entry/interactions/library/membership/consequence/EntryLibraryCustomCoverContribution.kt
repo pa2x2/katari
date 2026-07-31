@@ -1,12 +1,13 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.library.membership.consequence
 
+import mihon.entry.interactions.library.membership.ENTRY_LIBRARY_REMOVED_EXECUTION_POINT
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureBehaviorContract
-import mihon.feature.graph.FeatureExecutionParticipantDefinition
 import mihon.feature.graph.FeatureExecutionParticipantId
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
+import mihon.feature.graph.execution.FeatureExecutionParticipantDefinition
 
 internal val ENTRY_LIBRARY_CUSTOM_COVER_OWNER = ContributionOwner("entry-library-custom-cover-host")
 

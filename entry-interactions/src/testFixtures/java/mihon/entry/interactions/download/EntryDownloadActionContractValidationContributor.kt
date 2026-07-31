@@ -1,11 +1,14 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download
 
-import eu.kanade.tachiyomi.source.entry.EntryType
 import io.mockk.coEvery
 import io.mockk.every
+import mihon.entry.interactions.download.host.EntryDownloadSourceAccessResolver
+import mihon.entry.interactions.download.runtime.EntryDownloadSourceAccess
+import mihon.entry.interactions.state.EntryBookmarkCapability
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
+import mihon.feature.graph.ContextEvidence
 import mihon.feature.graph.FeatureBehaviorContract
 import mihon.feature.graph.FeatureContractScenarioId
 import mihon.feature.graph.FeatureIntegrationId
@@ -43,7 +46,7 @@ class EntryDownloadActionContractValidationContributor : FeatureValidationContri
 private data class DownloadActionContract(
     val integration: FeatureIntegrationId,
     val contract: FeatureBehaviorContract,
-    val scenarioEvidence: (() -> List<mihon.feature.graph.ContextEvidence<*>>)? = null,
+    val scenarioEvidence: (() -> List<ContextEvidence<*>>)? = null,
 )
 
 private val remoteEvidence = {
@@ -145,7 +148,12 @@ private suspend fun verifyDownloadAction(
         ENTRY_DOWNLOAD_BULK_PROVIDER_INTEGRATION,
         ENTRY_DOWNLOAD_BULK_CONTEXT_INTEGRATION,
         -> contractExpectation(
-            feature.resolveBulkDownloadCandidates(EntryBulkDownloadRequest(entry, EntryBulkDownloadAction.unread)) ==
+            feature.resolveBulkDownloadCandidates(
+                EntryBulkDownloadRequest(
+                    entry,
+                    EntryBulkDownloadAction.unread,
+                ),
+            ) ==
                 EntryBulkDownloadResolutionResult.Candidates(listOf(chapter)),
             "Download Actions must resolve shared bulk candidates",
         )

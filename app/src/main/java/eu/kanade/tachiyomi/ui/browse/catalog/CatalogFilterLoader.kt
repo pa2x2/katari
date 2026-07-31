@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.ui.browse.catalog
 
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
-import mihon.entry.interactions.EntryCatalogueFeature
-import mihon.entry.interactions.EntryCatalogueFiltersResult
+import mihon.entry.interactions.catalogue.EntryCatalogueFeature
+import mihon.entry.interactions.catalogue.EntryCatalogueFiltersResult
 
 /**
  * Loads and resolves filter lists for catalogue sources.

@@ -1,7 +1,18 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.library
 
-import mihon.feature.graph.FeatureExecutionHandler
-import mihon.feature.graph.FeatureExecutionParticipantBinding
+import mihon.entry.interactions.library.membership.EntryLibraryMembershipCoordinator
+import mihon.entry.interactions.library.membership.EntryLibraryMembershipFeature
+import mihon.entry.interactions.library.membership.EntryLibraryMembershipFeatureContributor
+import mihon.entry.interactions.library.membership.consequence.ENTRY_LIBRARY_CUSTOM_COVER_REMOVAL_PARTICIPANT
+import mihon.entry.interactions.library.membership.consequence.EntryLibraryCustomCoverContributor
+import mihon.entry.interactions.merge.EntryMergeNavigationFeature
+import mihon.entry.interactions.merge.EntryMergeSubject
+import mihon.entry.interactions.runtime.EntryInteractions
+import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeArtifacts
+import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeModule
+import mihon.entry.interactions.runtime.production.entryFeatureRuntimeBoundary
+import mihon.feature.graph.execution.FeatureExecutionHandler
+import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.service.EntryLibraryProgressResolutionPort

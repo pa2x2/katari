@@ -1,4 +1,4 @@
-package mihon.entry.interactions.anime
+package mihon.entry.interactions.anime.media
 
 import android.content.Context
 import android.database.ContentObserver
@@ -45,6 +45,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.input.pointer.pointerInput
@@ -78,9 +79,9 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.EntryImmersiveHandle
-import mihon.entry.interactions.EntryImmersiveProgress
-import mihon.entry.interactions.EntryImmersiveRenderer
+import mihon.entry.interactions.media.EntryImmersiveHandle
+import mihon.entry.interactions.media.EntryImmersiveProgress
+import mihon.entry.interactions.media.EntryImmersiveRenderer
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
@@ -570,22 +571,22 @@ private fun AnimeImmersiveTimeline(
                 val trackStroke = if (isScrubbing) 5.dp.toPx() else 3.dp.toPx()
                 drawLine(
                     color = Color.White.copy(alpha = 0.28f),
-                    start = androidx.compose.ui.geometry.Offset(0f, centerY),
-                    end = androidx.compose.ui.geometry.Offset(size.width, centerY),
+                    start = Offset(0f, centerY),
+                    end = Offset(size.width, centerY),
                     strokeWidth = trackStroke,
                     cap = StrokeCap.Round,
                 )
                 drawLine(
                     color = Color.White.copy(alpha = 0.42f),
-                    start = androidx.compose.ui.geometry.Offset(0f, centerY),
-                    end = androidx.compose.ui.geometry.Offset(size.width * bufferedFraction.coerceIn(0f, 1f), centerY),
+                    start = Offset(0f, centerY),
+                    end = Offset(size.width * bufferedFraction.coerceIn(0f, 1f), centerY),
                     strokeWidth = trackStroke,
                     cap = StrokeCap.Round,
                 )
                 drawLine(
                     color = Color.White,
-                    start = androidx.compose.ui.geometry.Offset(0f, centerY),
-                    end = androidx.compose.ui.geometry.Offset(size.width * playedFraction.coerceIn(0f, 1f), centerY),
+                    start = Offset(0f, centerY),
+                    end = Offset(size.width * playedFraction.coerceIn(0f, 1f), centerY),
                     strokeWidth = trackStroke,
                     cap = StrokeCap.Round,
                 )
@@ -593,7 +594,7 @@ private fun AnimeImmersiveTimeline(
                     drawCircle(
                         color = Color.White,
                         radius = 6.dp.toPx(),
-                        center = androidx.compose.ui.geometry.Offset(
+                        center = Offset(
                             x = size.width * playedFraction.coerceIn(0f, 1f),
                             y = centerY,
                         ),

@@ -1,22 +1,51 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.library.membership
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import mihon.entry.interactions.host.EntryMigrationCustomCoverHost
-import mihon.entry.interactions.host.EntryMigrationCustomCoverPayload
+import mihon.entry.interactions.entryContentType
+import mihon.entry.interactions.library.membership.consequence.ENTRY_LIBRARY_CUSTOM_COVER_REMOVAL_PARTICIPANT
+import mihon.entry.interactions.library.membership.consequence.EntryLibraryCustomCoverBehaviorContract
+import mihon.entry.interactions.library.membership.consequence.EntryLibraryCustomCoverContributor
+import mihon.entry.interactions.library.membership.host.EntryLibraryCustomCoverHost
+import mihon.entry.interactions.library.membership.host.EntryLibraryMembershipCommit
+import mihon.entry.interactions.library.membership.host.EntryLibraryMembershipHost
+import mihon.entry.interactions.library.membership.host.EntryLibraryMembershipPreparation
+import mihon.entry.interactions.lifecycle.profile.consequence.ENTRY_PROFILE_MOVE_CUSTOM_COVER_PARTICIPANT
+import mihon.entry.interactions.lifecycle.profile.consequence.EntryProfileMoveCustomCoverBehaviorContract
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveCustomCoverHost
+import mihon.entry.interactions.lifecycle.removal.consequence.ENTRY_CUSTOM_COVER_DESTRUCTIVE_REMOVAL_PARTICIPANT
+import mihon.entry.interactions.lifecycle.removal.consequence.EntryDestructiveRemovalCustomCoverBehaviorContract
+import mihon.entry.interactions.lifecycle.removal.host.EntryDestructiveRemovalCustomCoverHost
+import mihon.entry.interactions.merge.RecordingEntryMergeHost
+import mihon.entry.interactions.merge.consequence.EntryMergeDurableChange
+import mihon.entry.interactions.merge.consequence.EntryMergeDurableEvent
+import mihon.entry.interactions.merge.consequence.cover.ENTRY_MERGE_CUSTOM_COVER_PARTICIPANT
+import mihon.entry.interactions.merge.consequence.cover.EntryMergeCustomCoverDurableBehaviorContract
+import mihon.entry.interactions.merge.consequence.cover.entryMergeCustomCoverBinding
+import mihon.entry.interactions.migration.EntryMigrationOption
+import mihon.entry.interactions.migration.consequence.EntryMigrationDurableEvent
+import mihon.entry.interactions.migration.consequence.cover.ENTRY_MIGRATION_CUSTOM_COVER_PARTICIPANT
+import mihon.entry.interactions.migration.consequence.cover.EntryMigrationCustomCoverDurableBehaviorContract
+import mihon.entry.interactions.migration.consequence.cover.entryMigrationCustomCoverBinding
+import mihon.entry.interactions.migration.host.EntryMigrationCustomCoverHost
+import mihon.entry.interactions.migration.host.EntryMigrationCustomCoverPayload
+import mihon.entry.interactions.runtime.EntryInteractionPlugin
+import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
+import mihon.entry.interactions.runtime.createEntryInteractionComposition
+import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.verifyFeatureContract
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureBehaviorContract
-import mihon.feature.graph.FeatureExecutionHandler
-import mihon.feature.graph.FeatureExecutionParticipantBinding
-import mihon.feature.graph.FeatureExecutionParticipantDefinition
 import mihon.feature.graph.FeatureExecutionParticipantId
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
+import mihon.feature.graph.execution.FeatureExecutionHandler
+import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
+import mihon.feature.graph.execution.FeatureExecutionParticipantDefinition
 import mihon.feature.graph.validation.FeatureContractReference
 import mihon.feature.graph.validation.FeatureContractVerifier
 import mihon.feature.graph.validation.FeatureExecutionContractReference
@@ -177,7 +206,8 @@ class EntryLibraryCustomCoverContractValidationContributor : FeatureValidationCo
             ) {
                 verifyFeatureContract {
                     val cleaned = mutableListOf<Long>()
-                    val host = EntryDestructiveRemovalCustomCoverHost { entry -> cleaned += entry.id }
+                    val host =
+                        EntryDestructiveRemovalCustomCoverHost { entry -> cleaned += entry.id }
                     host.removeCustomCover(Entry.create().copy(id = 93L))
                     contractExpectation(
                         cleaned == listOf(93L),
@@ -195,7 +225,8 @@ class EntryLibraryCustomCoverContractValidationContributor : FeatureValidationCo
             ) {
                 verifyFeatureContract {
                     val cleaned = mutableListOf<Long>()
-                    val host = EntryProfileMoveCustomCoverHost { entries -> cleaned += entries.map(Entry::id) }
+                    val host =
+                        EntryProfileMoveCustomCoverHost { entries -> cleaned += entries.map(Entry::id) }
                     host.removeCustomCovers(listOf(Entry.create().copy(id = 94L)))
                     contractExpectation(cleaned == listOf(94L), "Profile movement must clean removed custom covers")
                 }

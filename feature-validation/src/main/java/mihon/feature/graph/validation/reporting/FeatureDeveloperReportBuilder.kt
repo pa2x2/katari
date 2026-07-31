@@ -1,11 +1,9 @@
 package mihon.feature.graph.validation.reporting
 
-import mihon.feature.graph.ApplicableFeatureExecutionParticipant
 import mihon.feature.graph.ApplicableFeatureIntegration
 import mihon.feature.graph.ApplicationSubjectContribution
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.CapabilityProvider
-import mihon.feature.graph.ConditionalFeatureExecutionParticipant
 import mihon.feature.graph.ConditionalFeatureIntegration
 import mihon.feature.graph.FeatureArtifactObligation
 import mihon.feature.graph.FeatureGraph
@@ -14,9 +12,7 @@ import mihon.feature.graph.FeatureIntegrationEvaluation
 import mihon.feature.graph.FeatureIntegrationSubject
 import mihon.feature.graph.FeatureSubjectId
 import mihon.feature.graph.FeatureSubjectReference
-import mihon.feature.graph.InapplicableFeatureExecutionParticipant
 import mihon.feature.graph.InapplicableFeatureIntegration
-import mihon.feature.graph.IncompleteFeatureExecutionParticipant
 import mihon.feature.graph.IncompleteFeatureIntegration
 import mihon.feature.graph.MissingContractFixtureObligation
 import mihon.feature.graph.MissingFeatureProjectionObligation
@@ -24,6 +20,11 @@ import mihon.feature.graph.SpecializedAdapter
 import mihon.feature.graph.SpecializedAdapterDefinition
 import mihon.feature.graph.SpecializedExecutionParticipantObligation
 import mihon.feature.graph.SpecializedFeatureObligation
+import mihon.feature.graph.execution.ApplicableFeatureExecutionParticipant
+import mihon.feature.graph.execution.ConditionalFeatureExecutionParticipant
+import mihon.feature.graph.execution.FeatureExecutionParticipantSubject
+import mihon.feature.graph.execution.InapplicableFeatureExecutionParticipant
+import mihon.feature.graph.execution.IncompleteFeatureExecutionParticipant
 import mihon.feature.graph.validation.CompletedFeatureContractExecution
 import mihon.feature.graph.validation.CompletedFeatureExecutionContractExecution
 import mihon.feature.graph.validation.CrashedFeatureContractExecution
@@ -509,7 +510,7 @@ private fun FeatureIntegrationSubject.report(): FeatureDeveloperEvaluationSubjec
     )
 }
 
-private fun mihon.feature.graph.FeatureExecutionParticipantSubject.report(): FeatureDeveloperEvaluationSubject {
+private fun FeatureExecutionParticipantSubject.report(): FeatureDeveloperEvaluationSubject {
     return FeatureDeveloperEvaluationSubject(
         subject = affectedSubject.report(),
         feature = "execution.${point.value}",
@@ -542,6 +543,6 @@ private data class ContractKey(
 )
 
 private data class ExecutionContractKey(
-    val subject: mihon.feature.graph.FeatureExecutionParticipantSubject,
+    val subject: FeatureExecutionParticipantSubject,
     val contract: String,
 )

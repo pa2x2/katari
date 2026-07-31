@@ -28,8 +28,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerEpisodeListEntry
-import mihon.entry.interactions.anime.durationMs
-import mihon.entry.interactions.anime.positionMs
+import mihon.entry.interactions.anime.state.durationMs
+import mihon.entry.interactions.anime.state.positionMs
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState

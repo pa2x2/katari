@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download
 
 import android.content.Context
 import dev.icerock.moko.resources.StringResource

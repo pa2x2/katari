@@ -1,20 +1,28 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.merge
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.withContext
-import mihon.entry.interactions.host.EntryMergeConsequenceRequest
-import mihon.entry.interactions.host.EntryMergeHost
-import mihon.entry.interactions.host.EntryMergeHostExpectation
-import mihon.entry.interactions.host.EntryMergeHostExpectedEntry
-import mihon.entry.interactions.host.EntryMergeHostMemberKey
-import mihon.entry.interactions.host.EntryMergeHostPreparation
-import mihon.entry.interactions.host.EntryMergeHostTransition
-import mihon.entry.interactions.host.EntryMergeHostTransitionResult
-import mihon.entry.interactions.host.EntryMergeMembershipSnapshot
+import mihon.entry.interactions.merge.consequence.EntryMergeConsequenceDelivery
+import mihon.entry.interactions.merge.consequence.EntryMergeConsequenceTarget
+import mihon.entry.interactions.merge.consequence.EntryMergeDurableChange
+import mihon.entry.interactions.merge.consequence.EntryMergeDurableEvent
+import mihon.entry.interactions.merge.consequence.EntryMergeDurablePreparation
+import mihon.entry.interactions.merge.consequence.EntryMergeDurablePreparationGateway
+import mihon.entry.interactions.merge.consequence.EntryMergeDurablePreparationResult
+import mihon.entry.interactions.merge.host.EntryMergeConsequenceRequest
+import mihon.entry.interactions.merge.host.EntryMergeHost
+import mihon.entry.interactions.merge.host.EntryMergeHostExpectation
+import mihon.entry.interactions.merge.host.EntryMergeHostExpectedEntry
+import mihon.entry.interactions.merge.host.EntryMergeHostMemberKey
+import mihon.entry.interactions.merge.host.EntryMergeHostPreparation
+import mihon.entry.interactions.merge.host.EntryMergeHostTransition
+import mihon.entry.interactions.merge.host.EntryMergeHostTransitionResult
+import mihon.entry.interactions.merge.host.EntryMergeMembershipSnapshot
 import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 import java.util.UUID
@@ -185,7 +193,7 @@ internal class EntryMergeWorkflowCoordinator(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun observeExisting(entry: Entry): Flow<EntryMergeEditorProjection?> {
-        if (entry.id <= 0L) return kotlinx.coroutines.flow.flowOf(null)
+        if (entry.id <= 0L) return flowOf(null)
         return host.profile(entry.profileId).observeMembership(entry.id).mapLatest { membership ->
             if (membership == null) {
                 null

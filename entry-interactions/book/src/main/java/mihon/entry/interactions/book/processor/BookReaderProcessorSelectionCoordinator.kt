@@ -1,6 +1,7 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.processor
 
 import mihon.book.api.model.BookPublicationModelDescriptor
+
 internal class BookReaderProcessorSelectionCoordinator(
     private val registry: BookReaderProcessorRegistry,
     private val preferences: BookReaderProcessorPreferences,

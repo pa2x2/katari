@@ -7,12 +7,12 @@ import eu.kanade.tachiyomi.data.backup.models.BackupViewerSettingOverride
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
-import mihon.entry.interactions.ENTRY_PROGRESS_BACKUP_STATE_ID
-import mihon.entry.interactions.ENTRY_VIEWER_SETTINGS_BACKUP_STATE_ID
-import mihon.entry.interactions.EntryBackupStateCodec
-import mihon.entry.interactions.EntryProgressSnapshot
-import mihon.entry.interactions.EntryViewerSettingsBackupState
+import mihon.entry.interactions.media.backup.ENTRY_VIEWER_SETTINGS_BACKUP_STATE_ID
+import mihon.entry.interactions.media.backup.EntryViewerSettingsBackupState
+import mihon.entry.interactions.persistence.backup.EntryBackupStateCodec
 import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
+import mihon.entry.interactions.state.EntryProgressSnapshot
+import mihon.entry.interactions.state.backup.ENTRY_PROGRESS_BACKUP_STATE_ID
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 

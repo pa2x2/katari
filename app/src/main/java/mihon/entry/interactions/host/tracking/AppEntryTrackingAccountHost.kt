@@ -8,6 +8,11 @@ import eu.kanade.tachiyomi.data.track.TrackerLogin
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import mihon.entry.interactions.tracking.host.EntryTrackingAccountHost
+import mihon.entry.interactions.tracking.host.EntryTrackingHostAccount
+import mihon.entry.interactions.tracking.host.EntryTrackingHostCredentialIdentity
+import mihon.entry.interactions.tracking.host.EntryTrackingHostLoginMethod
+import mihon.entry.interactions.tracking.host.EntryTrackingHostStoredCredentials
 import tachiyomi.domain.source.service.SourceManager
 
 internal class AppEntryTrackingAccountHost(
@@ -72,6 +77,7 @@ internal class AppEntryTrackingAccountHost(
                         TrackerCredentialIdentity.EMAIL -> EntryTrackingHostCredentialIdentity.EMAIL
                     },
                 )
+
                 TrackerLogin.Passive -> EntryTrackingHostLoginMethod.Passive
             },
             isLoggedIn = isLoggedIn,

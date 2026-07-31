@@ -1,7 +1,7 @@
-package mihon.entry.interactions.host
+package mihon.entry.interactions.migration.host
 
-import mihon.entry.interactions.EntryMergeMigrationReplacementResult
-import mihon.entry.interactions.EntryMigrationMode
+import mihon.entry.interactions.merge.EntryMergeMigrationReplacementResult
+import mihon.entry.interactions.migration.EntryMigrationMode
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.track.model.EntryTrack

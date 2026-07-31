@@ -1,10 +1,11 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.navigation
 
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.nulls.shouldBeNull
 import io.mockk.mockk
+import mihon.entry.interactions.runtime.createEntryInteractionComposition
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter

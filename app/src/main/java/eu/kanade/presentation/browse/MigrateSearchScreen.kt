@@ -14,7 +14,7 @@ import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchItemResult
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchScreenModel
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SourceFilter
 import eu.kanade.tachiyomi.util.system.LocaleHelper
-import mihon.entry.interactions.EntryCatalogueSourceInfo
+import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.presentation.core.components.material.Scaffold
 

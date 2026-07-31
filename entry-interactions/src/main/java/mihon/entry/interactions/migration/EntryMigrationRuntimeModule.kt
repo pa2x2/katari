@@ -1,9 +1,20 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.migration
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import mihon.entry.interactions.migration.consequence.EntryMigrationConsequenceDelivery
+import mihon.entry.interactions.migration.consequence.EntryMigrationConsequenceStatusCoordinator
+import mihon.entry.interactions.migration.consequence.EntryMigrationDurableConsequences
+import mihon.entry.interactions.migration.consequence.cover.EntryMigrationCustomCoverContributor
+import mihon.entry.interactions.migration.consequence.cover.EntryMigrationCustomCoverOrphanCleanup
+import mihon.entry.interactions.migration.consequence.cover.entryMigrationCustomCoverBinding
+import mihon.entry.interactions.migration.options.EntryMigrationOptionDiscovery
+import mihon.entry.interactions.migration.preparation.EntryMigrationTransitionPreparation
+import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeArtifacts
+import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeModule
+import mihon.entry.interactions.runtime.production.entryFeatureRuntimeBoundary
 import mihon.feature.runtime.FeatureRuntimeComposition
 import uy.kohesive.injekt.api.addSingletonFactory
 import uy.kohesive.injekt.api.get

@@ -1,9 +1,9 @@
 package eu.kanade.presentation.more.settings.screen
 
 import io.kotest.matchers.shouldBe
-import mihon.entry.viewer.settings.ReaderSharedSettingAction
-import mihon.entry.viewer.settings.ReaderSharedSettingAvailability
-import mihon.entry.viewer.settings.ReaderSharedSettingText
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingAction
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingAvailability
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingText
 import org.junit.jupiter.api.Test
 
 class SettingsViewerHubScreensTest {

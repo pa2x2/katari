@@ -5,8 +5,8 @@ import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
-import mihon.entry.interactions.EntryDeepLinkFeature
-import mihon.entry.interactions.EntryDeepLinkResolution
+import mihon.entry.interactions.source.EntryDeepLinkFeature
+import mihon.entry.interactions.source.EntryDeepLinkResolution
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry

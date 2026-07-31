@@ -9,9 +9,9 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.PermissionChecker
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
-import mihon.entry.interactions.EntryDownloadEntryIdentity
-import mihon.entry.interactions.EntryDownloadNotificationActions
-import mihon.entry.interactions.EntryDownloadNotifications
+import mihon.entry.interactions.download.EntryDownloadEntryIdentity
+import mihon.entry.interactions.download.EntryDownloadNotificationActions
+import mihon.entry.interactions.download.EntryDownloadNotifications
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt

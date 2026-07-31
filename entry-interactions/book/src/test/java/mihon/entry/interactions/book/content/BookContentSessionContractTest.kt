@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.content
 
 import kotlinx.coroutines.test.runTest
 import mihon.book.api.BookCatalogCoverage

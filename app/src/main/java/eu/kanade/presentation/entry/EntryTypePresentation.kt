@@ -15,9 +15,9 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.util.lang.toTimestampString
-import mihon.entry.interactions.EntryHistorySubtitlePresentation
-import mihon.entry.interactions.EntryPartialProgressPresentation
-import mihon.entry.interactions.EntryTypePresentationFeature
+import mihon.entry.interactions.presentation.EntryHistorySubtitlePresentation
+import mihon.entry.interactions.presentation.EntryPartialProgressPresentation
+import mihon.entry.interactions.presentation.EntryTypePresentationFeature
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
 import tachiyomi.presentation.core.i18n.stringResource
@@ -27,7 +27,7 @@ import java.util.Date
 import kotlin.time.Duration.Companion.milliseconds
 import eu.kanade.presentation.util.toDurationString as durationToString
 
-typealias EntryTypePresentation = mihon.entry.interactions.EntryTypePresentation
+typealias EntryTypePresentation = mihon.entry.interactions.presentation.EntryTypePresentation
 
 object EntryTypeIconDefaults {
     val InlineSize = 16.dp

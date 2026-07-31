@@ -1,7 +1,8 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download
 
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.runtime.applicableProviderTypes
 import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter

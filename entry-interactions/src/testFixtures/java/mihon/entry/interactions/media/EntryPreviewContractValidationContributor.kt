@@ -1,10 +1,19 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media
 
 import android.content.Context
+import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
+import mihon.entry.interactions.child.EntryChildListFeature
+import mihon.entry.interactions.child.EntryFirstChildResult
+import mihon.entry.interactions.navigation.EntryOpenCapability
+import mihon.entry.interactions.runtime.EntryChildListCapability
+import mihon.entry.interactions.runtime.EntryPreviewCapability
+import mihon.entry.interactions.runtime.EntryPreviewConfigurationCapability
+import mihon.entry.interactions.runtime.EntryPreviewLoadMode
+import mihon.entry.interactions.runtime.EntryPreviewProcessor
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
@@ -59,7 +68,10 @@ private data class PreviewContract(
 private val previewContracts = listOf(
     PreviewContract(ENTRY_PREVIEW_PROVIDER_INTEGRATION_ID, EntryPreviewProviderBehaviorContract),
     PreviewContract(ENTRY_PREVIEW_CONTEXT_INTEGRATION_ID, EntryPreviewBehaviorContract),
-    PreviewContract(ENTRY_PREVIEW_CONFIGURATION_INTEGRATION_ID, EntryPreviewConfigurationBehaviorContract),
+    PreviewContract(
+        ENTRY_PREVIEW_CONFIGURATION_INTEGRATION_ID,
+        EntryPreviewConfigurationBehaviorContract,
+    ),
     PreviewContract(ENTRY_PREVIEW_CHILD_INTEGRATION_ID, EntryPreviewChildBehaviorContract),
     PreviewContract(ENTRY_PREVIEW_OPEN_INTEGRATION_ID, EntryPreviewOpenBehaviorContract),
 )
@@ -96,10 +108,10 @@ private suspend fun verifyPreview(
         defaultChapterId = 91L.takeIf { integration == ENTRY_PREVIEW_OPEN_INTEGRATION_ID },
     )
     val interaction = object : EntryPreviewInteraction {
-        override fun processor(type: eu.kanade.tachiyomi.source.entry.EntryType) =
+        override fun processor(type: EntryType) =
             processor.takeIf { type == processor.type }
 
-        override fun configuration(type: eu.kanade.tachiyomi.source.entry.EntryType) =
+        override fun configuration(type: EntryType) =
             configuration?.takeIf { type == configuration.type }
 
         override suspend fun loadPreview(
@@ -155,7 +167,7 @@ private suspend fun verifyPreview(
 }
 
 private class RecordingContractPreviewProcessor(
-    override val type: eu.kanade.tachiyomi.source.entry.EntryType,
+    override val type: EntryType,
     override val loadMode: EntryPreviewLoadMode,
     private val defaultChapterId: Long?,
 ) : EntryPreviewProcessor {

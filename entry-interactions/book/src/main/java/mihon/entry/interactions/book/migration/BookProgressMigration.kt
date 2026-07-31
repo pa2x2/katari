@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.migration
 
 import tachiyomi.domain.entry.model.EntryProgressState
 

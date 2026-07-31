@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.entry
 
-import mihon.entry.interactions.EntryMetadataLifecycleFeature
+import mihon.entry.interactions.lifecycle.metadata.EntryMetadataLifecycleFeature
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
 

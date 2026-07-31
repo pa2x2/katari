@@ -1,9 +1,10 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.runtime.production
 
 import android.app.Application
-import mihon.feature.graph.FeatureDurableExecutionParticipantBinding
-import mihon.feature.graph.FeatureExecutionParticipantBinding
+import mihon.entry.interactions.runtime.EntryInteractionRuntimeDependencies
 import mihon.feature.graph.FeatureGraphContributor
+import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
+import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import uy.kohesive.injekt.api.InjektRegistrar
 import kotlin.reflect.KClass
 

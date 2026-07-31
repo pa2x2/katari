@@ -1,5 +1,7 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.library
 
+import mihon.entry.interactions.presentation.EntryNotificationChildNumberPolicy
+import mihon.entry.interactions.presentation.EntryUpdateNotificationVocabulary
 import tachiyomi.domain.entry.model.EntryChapter
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols

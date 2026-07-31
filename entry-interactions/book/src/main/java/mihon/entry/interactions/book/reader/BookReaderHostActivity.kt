@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.reader
 
 import android.content.Context
 import android.content.Intent
@@ -34,8 +34,11 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mihon.book.api.BookFailure
-import mihon.entry.interactions.EntryInteractionActivity
-import mihon.entry.interactions.setEntryInteractionContent
+import mihon.book.api.BookFailureReason
+import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.runtime.requireBook
+import mihon.entry.interactions.runtime.EntryInteractionActivity
+import mihon.entry.interactions.runtime.setEntryInteractionContent
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import uy.kohesive.injekt.Injekt
@@ -63,7 +66,7 @@ internal class BookReaderHostActivity : EntryInteractionActivity() {
             val state = if (entryId < 0L || chapterId < 0L) {
                 BookReaderHostState.Unavailable(
                     BookFailure(
-                        reason = mihon.book.api.BookFailureReason.CONTENT_UNAVAILABLE,
+                        reason = BookFailureReason.CONTENT_UNAVAILABLE,
                         message = getString(R.string.book_reader_invalid_request),
                     ),
                 )
@@ -127,7 +130,7 @@ internal class BookReaderHostActivity : EntryInteractionActivity() {
                         registry.discard(token)
                         hostState = BookReaderHostState.Unavailable(
                             failure = BookFailure(
-                                reason = mihon.book.api.BookFailureReason.PROCESSOR_UNAVAILABLE,
+                                reason = BookFailureReason.PROCESSOR_UNAVAILABLE,
                                 message = error.message ?: "The selected book reader could not be started.",
                             ),
                             descriptor = state.descriptor,
@@ -254,6 +257,6 @@ private fun BookProcessorChooserDialog(
     }
 }
 
-internal fun mihon.book.api.BookFailureReason.displayName(): String {
+internal fun BookFailureReason.displayName(): String {
     return name.lowercase().replace('_', ' ').replaceFirstChar(Char::uppercase)
 }

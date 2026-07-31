@@ -1,4 +1,4 @@
-package mihon.translation.ui.picker
+package mihon.translation.ui.picker.language
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.runtime
 
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent

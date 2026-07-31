@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.tracking
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.mockk.coEvery
@@ -6,22 +6,46 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
-import mihon.entry.interactions.host.tracking.EntryTrackingAccountHost
-import mihon.entry.interactions.host.tracking.EntryTrackingAutomationHost
-import mihon.entry.interactions.host.tracking.EntryTrackingBackupHost
-import mihon.entry.interactions.host.tracking.EntryTrackingCollectionHost
-import mihon.entry.interactions.host.tracking.EntryTrackingHost
-import mihon.entry.interactions.host.tracking.EntryTrackingHostBindingOutcome
-import mihon.entry.interactions.host.tracking.EntryTrackingHostCollectionSnapshot
-import mihon.entry.interactions.host.tracking.EntryTrackingHostCollectionTrack
-import mihon.entry.interactions.host.tracking.EntryTrackingHostEntryService
-import mihon.entry.interactions.host.tracking.EntryTrackingHostEntrySnapshot
-import mihon.entry.interactions.host.tracking.EntryTrackingHostService
-import mihon.entry.interactions.host.tracking.EntryTrackingHostServiceCapabilities
-import mihon.entry.interactions.host.tracking.EntryTrackingOperationHost
+import mihon.entry.interactions.entryContentType
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveStateRequest
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveTrackingStateHost
+import mihon.entry.interactions.media.session.EntryMediaSessionExecutionEvent
+import mihon.entry.interactions.media.session.mediaSessionContractEvent
+import mihon.entry.interactions.merge.consequence.EntryMergeDurableChange
+import mihon.entry.interactions.merge.consequence.EntryMergeDurableEvent
+import mihon.entry.interactions.migration.preparation.EntryMigrationTransitionPreparingEvent
+import mihon.entry.interactions.persistence.backup.addEntryBackupParticipationContract
+import mihon.entry.interactions.runtime.toContentTypeId
+import mihon.entry.interactions.state.EntryProgressCapability
+import mihon.entry.interactions.state.EntryProgressRecordingResult
+import mihon.entry.interactions.tracking.backup.ENTRY_TRACKING_BACKUP_RESTORE_PARTICIPANT
+import mihon.entry.interactions.tracking.backup.ENTRY_TRACKING_BACKUP_SNAPSHOT_PARTICIPANT
+import mihon.entry.interactions.tracking.backup.EntryTrackingBackupState
+import mihon.entry.interactions.tracking.host.EntryTrackingAccountHost
+import mihon.entry.interactions.tracking.host.EntryTrackingAutomationHost
+import mihon.entry.interactions.tracking.host.EntryTrackingBackupHost
+import mihon.entry.interactions.tracking.host.EntryTrackingCollectionHost
+import mihon.entry.interactions.tracking.host.EntryTrackingHost
+import mihon.entry.interactions.tracking.host.EntryTrackingHostBindingOutcome
+import mihon.entry.interactions.tracking.host.EntryTrackingHostCollectionSnapshot
+import mihon.entry.interactions.tracking.host.EntryTrackingHostCollectionTrack
+import mihon.entry.interactions.tracking.host.EntryTrackingHostEntryService
+import mihon.entry.interactions.tracking.host.EntryTrackingHostEntrySnapshot
+import mihon.entry.interactions.tracking.host.EntryTrackingHostService
+import mihon.entry.interactions.tracking.host.EntryTrackingHostServiceCapabilities
+import mihon.entry.interactions.tracking.host.EntryTrackingOperationHost
+import mihon.entry.interactions.tracking.lifecycle.ENTRY_TRACKING_PROFILE_MOVE_PARTICIPANT
+import mihon.entry.interactions.tracking.lifecycle.EntryTrackingProfileMoveBehaviorContract
+import mihon.entry.interactions.tracking.merge.ENTRY_TRACKING_MERGE_PARTICIPANT
+import mihon.entry.interactions.tracking.merge.EntryTrackingMergeDurableBehaviorContract
+import mihon.entry.interactions.tracking.merge.entryTrackingMergeBinding
+import mihon.entry.interactions.tracking.migration.ENTRY_TRACKING_MIGRATION_PARTICIPANT
+import mihon.entry.interactions.tracking.migration.EntryTrackingMigrationParticipationBehaviorContract
+import mihon.entry.interactions.tracking.migration.entryTrackingMigrationBinding
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
+import mihon.feature.graph.ContextEvidence
 import mihon.feature.graph.FeatureContractScenarioId
 import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.validation.FeatureContractExecutionInput
@@ -333,7 +357,7 @@ class EntryTrackingContractValidationContributor : FeatureValidationContributor 
 
 private fun trackingScenario(
     integration: EntryTrackingIntegration,
-): List<mihon.feature.graph.ContextEvidence<*>>? = when (integration) {
+): List<ContextEvidence<*>>? = when (integration) {
     EntryTrackingIntegration.REGISTRY,
     EntryTrackingIntegration.MIGRATION_PREPARATION,
     -> null

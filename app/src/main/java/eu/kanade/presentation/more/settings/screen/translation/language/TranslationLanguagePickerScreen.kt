@@ -7,7 +7,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.screen.rememberTranslationSettingsScreenModel
 import eu.kanade.presentation.util.Screen
-import mihon.translation.ui.picker.TranslationLanguageRole
+import mihon.translation.ui.picker.language.TranslationLanguageRole
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 

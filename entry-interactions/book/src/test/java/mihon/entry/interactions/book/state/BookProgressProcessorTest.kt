@@ -1,13 +1,15 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.state
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.EntryProgressResourceMapping
-import mihon.entry.interactions.EntryProgressSnapshot
-import mihon.entry.interactions.EntryProgressStateSnapshot
+import mihon.entry.interactions.book.migration.BOOK_PENDING_MIGRATION_CONTENT_KEY
+import mihon.entry.interactions.book.migration.bookPendingMigrationResourceKey
+import mihon.entry.interactions.state.EntryProgressResourceMapping
+import mihon.entry.interactions.state.EntryProgressSnapshot
+import mihon.entry.interactions.state.EntryProgressStateSnapshot
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter

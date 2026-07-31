@@ -1,7 +1,9 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.source
 
 import kotlinx.coroutines.CancellationException
-import mihon.entry.interactions.source.ENTRY_SOURCE_CONTEXT_OWNER
+import mihon.entry.interactions.execute
+import mihon.entry.interactions.runtime.throwFirstFailure
+import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -11,16 +13,16 @@ import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContextBlocker
 import mihon.feature.graph.FeatureContextDecision
 import mihon.feature.graph.FeatureContribution
-import mihon.feature.graph.FeatureExecutionRuntime
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.afterFeatureCommitVolatile
 import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.contextInputDefinition
+import mihon.feature.graph.execution.FeatureExecutionRuntime
+import mihon.feature.graph.execution.afterFeatureCommitVolatile
 import mihon.feature.graph.featureContextRule
 import tachiyomi.domain.chapter.model.NoChaptersException
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
@@ -115,7 +117,10 @@ internal class DefaultEntrySourceRefreshFeature(
                     execute(
                         point = ENTRY_SOURCE_REFRESH_NEW_CHILDREN_EXECUTION_POINT,
                         contentType = request.entry.type.toContentTypeId(),
-                        event = EntrySourceRefreshNewChildrenEvent(request.entry, result.insertedChildren),
+                        event = EntrySourceRefreshNewChildrenEvent(
+                            request.entry,
+                            result.insertedChildren,
+                        ),
                     ).throwFirstFailure()
                 }
             }

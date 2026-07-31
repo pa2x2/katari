@@ -12,11 +12,11 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import mihon.book.api.BookContentDescriptor
-import mihon.entry.interactions.book.BookContentPreparerRegistry
-import mihon.entry.interactions.book.BookMaterializationCache
+import mihon.entry.interactions.book.content.BookMaterializationCache
 import mihon.entry.interactions.book.document.resource.PROSE_IMAGE_RESOURCE_REQUIREMENT
 import mihon.entry.interactions.book.download.model.BookDownload
 import mihon.entry.interactions.book.download.model.BookDownloadFailure
+import mihon.entry.interactions.book.preparation.BookContentPreparerRegistry
 import okhttp3.OkHttpClient
 import org.junit.Test
 import org.junit.runner.RunWith

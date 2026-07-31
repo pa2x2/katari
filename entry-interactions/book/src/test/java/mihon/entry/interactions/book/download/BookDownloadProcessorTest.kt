@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.download
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.mockk.coEvery
@@ -9,22 +9,19 @@ import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.EntryDownloadMessage
-import mihon.entry.interactions.EntryDownloadPhase
-import mihon.entry.interactions.EntryDownloadProgress
-import mihon.entry.interactions.book.download.BookDownloadCache
-import mihon.entry.interactions.book.download.BookDownloadManager
-import mihon.entry.interactions.book.download.BookDownloadPackageKey
 import mihon.entry.interactions.book.download.model.BookDownload
 import mihon.entry.interactions.book.download.model.BookDownloadFailure
+import mihon.entry.interactions.download.EntryDownloadMessage
+import mihon.entry.interactions.download.EntryDownloadPhase
+import mihon.entry.interactions.download.EntryDownloadProgress
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.i18n.MR
 import kotlin.test.assertEquals
-import kotlin.test.assertIs
 
 class BookDownloadProcessorTest {
     @Test
@@ -42,7 +39,7 @@ class BookDownloadProcessorTest {
         assertEquals(EntryDownloadProgress.Percent(35), transferring.presentation.progress)
         assertEquals(EntryDownloadPhase.FAILED, failed.presentation.phase)
         assertEquals(
-            EntryDownloadMessage.Resource(tachiyomi.i18n.MR.strings.download_notifier_book_network_error),
+            EntryDownloadMessage.Resource(MR.strings.download_notifier_book_network_error),
             failed.presentation.failure,
         )
     }

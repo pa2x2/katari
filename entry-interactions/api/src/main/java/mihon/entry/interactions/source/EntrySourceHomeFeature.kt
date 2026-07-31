@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.source
 
 interface EntrySourceHomeFeature {
     fun resolve(sourceId: Long): EntrySourceHomeResolution

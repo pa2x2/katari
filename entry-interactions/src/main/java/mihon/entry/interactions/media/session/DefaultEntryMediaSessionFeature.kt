@@ -1,8 +1,14 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media.session
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.feature.graph.FeatureExecutionRuntime
+import mihon.entry.interactions.executeInline
+import mihon.entry.interactions.media.EntryMediaSessionProcessor
+import mihon.entry.interactions.runtime.applicableProviderTypes
+import mihon.entry.interactions.runtime.throwFirstFailure
+import mihon.entry.interactions.runtime.toContentTypeId
+import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureGraphEvaluation
+import mihon.feature.graph.execution.FeatureExecutionRuntime
 
 internal class DefaultEntryMediaSessionFeature(
     evaluation: FeatureGraphEvaluation,
@@ -11,7 +17,7 @@ internal class DefaultEntryMediaSessionFeature(
     private val applicableTypes = evaluation.applicableProviderTypes<EntryMediaSessionProcessor>(
         feature = ENTRY_MEDIA_SESSION_FEATURE_ID,
         integration = ENTRY_MEDIA_SESSION_INTEGRATION_ID,
-        behaviorProjection = mihon.feature.graph.FeatureArtifactId("entry.media-session.event-emission"),
+        behaviorProjection = FeatureArtifactId("entry.media-session.event-emission"),
     )
 
     override fun isApplicable(type: EntryType): Boolean = type in applicableTypes

@@ -1,4 +1,4 @@
-package mihon.entry.interactions.manga
+package mihon.entry.interactions.manga.download
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
@@ -6,15 +6,17 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
-import mihon.entry.interactions.EntryBulkDownloadCandidateProcessor
-import mihon.entry.interactions.EntryDownloadOwnerResolver
-import mihon.entry.interactions.EntryDownloadProcessor
-import mihon.entry.interactions.EntryDownloadQueueGroup
-import mihon.entry.interactions.EntryDownloadQueueItem
-import mihon.entry.interactions.EntryDownloadSettingProvider
-import mihon.entry.interactions.EntryDownloadState
-import mihon.entry.interactions.EntryDownloadStatus
+import mihon.entry.interactions.download.EntryBulkDownloadCandidateProcessor
+import mihon.entry.interactions.download.EntryDownloadOwnerResolver
+import mihon.entry.interactions.download.EntryDownloadProcessor
+import mihon.entry.interactions.download.EntryDownloadQueueGroup
+import mihon.entry.interactions.download.EntryDownloadQueueItem
+import mihon.entry.interactions.download.EntryDownloadSettingProvider
+import mihon.entry.interactions.download.EntryDownloadState
+import mihon.entry.interactions.download.EntryDownloadStatus
 import mihon.entry.interactions.manga.download.model.DownloadState
+import mihon.entry.interactions.manga.runtime.MangaEntryInteractionRuntimeDependencies
+import mihon.entry.interactions.manga.runtime.requireManga
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 

@@ -1,4 +1,4 @@
-package mihon.entry.interactions.manga
+package mihon.entry.interactions.manga.media
 
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryImageSource
@@ -7,14 +7,16 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import mihon.entry.interactions.EntryImmersiveHandle
-import mihon.entry.interactions.EntryImmersiveLoadMode
-import mihon.entry.interactions.EntryImmersiveProcessor
-import mihon.entry.interactions.EntryImmersiveProgress
-import mihon.entry.interactions.EntryImmersiveRenderer
-import mihon.entry.interactions.EntryMediaSessionActivity
-import mihon.entry.interactions.EntryMediaSessionEvent
-import mihon.entry.interactions.EntryMediaSessionProcessor
+import mihon.entry.interactions.manga.state.mangaProgressState
+import mihon.entry.interactions.manga.state.pageIndex
+import mihon.entry.interactions.media.EntryImmersiveHandle
+import mihon.entry.interactions.media.EntryImmersiveProgress
+import mihon.entry.interactions.media.EntryImmersiveRenderer
+import mihon.entry.interactions.media.EntryMediaSessionProcessor
+import mihon.entry.interactions.media.session.EntryMediaSessionActivity
+import mihon.entry.interactions.media.session.EntryMediaSessionEvent
+import mihon.entry.interactions.runtime.EntryImmersiveLoadMode
+import mihon.entry.interactions.runtime.EntryImmersiveProcessor
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter

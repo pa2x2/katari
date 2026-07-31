@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.reader
 
 import android.content.ContentResolver
 import android.content.Context
@@ -16,9 +16,15 @@ import kotlinx.coroutines.test.runTest
 import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookLocator
 import mihon.book.api.BookResource
-import mihon.entry.interactions.EntryMediaSessionEvent
-import mihon.entry.interactions.EntryMediaSessionEventSink
-import mihon.entry.interactions.EntryMediaSessionResult
+import mihon.entry.interactions.book.media.session.BookMediaSessionProcessor
+import mihon.entry.interactions.book.preparation.BookContentPreparerRegistry
+import mihon.entry.interactions.book.processor.BookReaderProcessorRegistry
+import mihon.entry.interactions.book.processor.BookReaderRequest
+import mihon.entry.interactions.book.state.BOOK_PROGRESS_LOCATOR_KIND
+import mihon.entry.interactions.book.state.BookProgressLocatorCodec
+import mihon.entry.interactions.media.session.EntryMediaSessionEvent
+import mihon.entry.interactions.media.session.EntryMediaSessionEventSink
+import mihon.entry.interactions.media.session.EntryMediaSessionResult
 import okhttp3.OkHttpClient
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.EntryProgressLocator

@@ -1,6 +1,7 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.state
 
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
+import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.EntryStatus
 

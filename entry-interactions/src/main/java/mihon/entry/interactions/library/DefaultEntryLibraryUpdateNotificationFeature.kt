@@ -1,7 +1,14 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.library
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnmeteredSource
+import mihon.entry.interactions.download.EntryDownloadActionAvailability
+import mihon.entry.interactions.download.EntryDownloadActionFeature
+import mihon.entry.interactions.navigation.EntryOpenFeature
+import mihon.entry.interactions.presentation.EntryTypePresentationFeature
+import mihon.entry.interactions.presentation.EntryTypePresentationResult
+import mihon.entry.interactions.runtime.toContentTypeId
+import mihon.entry.interactions.state.EntryConsumptionFeature
 import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.source.service.SourceManager
@@ -146,6 +153,7 @@ internal class DefaultEntryLibraryUpdateNotificationFeature(
                                 EntryDownloadActionAvailability.Available -> {
                                     add(EntryLibraryUpdateNotificationAction.DOWNLOAD)
                                 }
+
                                 is EntryDownloadActionAvailability.Blocked -> Unit
                                 is EntryDownloadActionAvailability.Inapplicable -> error(
                                     "Library-update notifications selected Download for ${update.entry.type}, " +

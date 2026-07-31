@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download
 
 /** Feature-owned boundary for specialized downloader settings exposed by contributed providers. */
 interface EntryDownloadSettingsFeature {

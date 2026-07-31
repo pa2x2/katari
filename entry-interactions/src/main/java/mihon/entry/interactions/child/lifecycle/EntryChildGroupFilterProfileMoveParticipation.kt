@@ -1,12 +1,15 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.child.lifecycle
 
+import mihon.entry.interactions.child.ENTRY_CHILD_GROUP_FILTER_OWNER
+import mihon.entry.interactions.lifecycle.profile.ENTRY_PROFILE_STATE_MOVED_EXECUTION_POINT
+import mihon.entry.interactions.runtime.EntryChildGroupFilterCapability
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureBehaviorContract
-import mihon.feature.graph.FeatureExecutionParticipantDefinition
 import mihon.feature.graph.FeatureExecutionParticipantId
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
+import mihon.feature.graph.execution.FeatureExecutionParticipantDefinition
 
 internal object EntryChildGroupFilterProfileMoveBehaviorContract : FeatureBehaviorContract {
     override val id = FeatureArtifactId("entry.child-group-filter.profile-move.behavior")

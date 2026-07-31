@@ -2,11 +2,11 @@ package mihon.feature.graph.validation
 
 import mihon.feature.graph.ContentTypeContribution
 import mihon.feature.graph.ContentTypeId
-import mihon.feature.graph.FeatureExecutionParticipantSubject
 import mihon.feature.graph.FeatureGraph
 import mihon.feature.graph.FeatureIntegrationSubject
 import mihon.feature.graph.FeatureSubjectContribution
 import mihon.feature.graph.FeatureSubjectId
+import mihon.feature.graph.execution.FeatureExecutionParticipantSubject
 
 internal val FeatureGraph.entryContentTypes: List<ContentTypeContribution>
     get() = subjects.filterIsInstance<ContentTypeContribution>()

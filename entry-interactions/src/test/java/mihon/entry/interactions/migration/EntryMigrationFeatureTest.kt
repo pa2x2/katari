@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.migration
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.assertions.throwables.shouldThrow
@@ -12,19 +12,64 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.host.EntryMigrationExecutionHost
-import mihon.entry.interactions.host.EntryMigrationExecutionInspectionResult
-import mihon.entry.interactions.host.EntryMigrationExecutionProfileHost
-import mihon.entry.interactions.host.EntryMigrationHostInspectionResult
-import mihon.entry.interactions.host.EntryMigrationHostOperation
-import mihon.entry.interactions.host.EntryMigrationHostReplayResult
-import mihon.entry.interactions.host.EntryMigrationHostTransition
-import mihon.entry.interactions.host.EntryMigrationHostTransitionResult
-import mihon.entry.interactions.host.EntryMigrationPreparationHost
-import mihon.entry.interactions.host.EntryMigrationPreparationProfileHost
+import mihon.entry.interactions.download.EntryDownloadCapability
+import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
+import mihon.entry.interactions.download.EntryDownloadMaintenanceInspection
+import mihon.entry.interactions.download.EntryDownloadProcessor
+import mihon.entry.interactions.download.EntryDownloadRemovalPreparation
+import mihon.entry.interactions.download.maintenance.migration.ENTRY_DOWNLOAD_MIGRATION_OPTION_PARTICIPANT
+import mihon.entry.interactions.download.maintenance.migration.EntryDownloadMigrationContributor
+import mihon.entry.interactions.download.maintenance.migration.entryDownloadMigrationBinding
+import mihon.entry.interactions.merge.EntryMergeMigrationFeature
+import mihon.entry.interactions.merge.EntryMergeMigrationReplacementIntent
+import mihon.entry.interactions.merge.EntryMergeMigrationReplacementResult
+import mihon.entry.interactions.migration.consequence.EntryMigrationConsequenceDelivery
+import mihon.entry.interactions.migration.consequence.EntryMigrationDurableConsequences
+import mihon.entry.interactions.migration.consequence.cover.EntryMigrationCustomCoverContributor
+import mihon.entry.interactions.migration.consequence.cover.entryMigrationCustomCoverBinding
+import mihon.entry.interactions.migration.host.EntryMigrationCustomCoverHost
+import mihon.entry.interactions.migration.host.EntryMigrationExecutionHost
+import mihon.entry.interactions.migration.host.EntryMigrationExecutionInspectionResult
+import mihon.entry.interactions.migration.host.EntryMigrationExecutionProfileHost
+import mihon.entry.interactions.migration.host.EntryMigrationHostInspectionResult
+import mihon.entry.interactions.migration.host.EntryMigrationHostOperation
+import mihon.entry.interactions.migration.host.EntryMigrationHostReplayResult
+import mihon.entry.interactions.migration.host.EntryMigrationHostTransition
+import mihon.entry.interactions.migration.host.EntryMigrationHostTransitionResult
+import mihon.entry.interactions.migration.host.EntryMigrationPreparationHost
+import mihon.entry.interactions.migration.host.EntryMigrationPreparationProfileHost
+import mihon.entry.interactions.migration.options.EntryMigrationOptionDiscovery
+import mihon.entry.interactions.migration.preparation.EntryMigrationTransitionPreparation
+import mihon.entry.interactions.runtime.EntryInteractionPlugin
+import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
+import mihon.entry.interactions.runtime.createEntryInteractionComposition
+import mihon.entry.interactions.source.EntrySourceRefreshFailure
+import mihon.entry.interactions.source.EntrySourceRefreshFeature
+import mihon.entry.interactions.source.EntrySourceRefreshResult
+import mihon.entry.interactions.state.ENTRY_PROGRESS_FEATURE_OWNER
+import mihon.entry.interactions.state.EntryBookmarkCapability
+import mihon.entry.interactions.state.EntryBookmarkProcessor
+import mihon.entry.interactions.state.EntryConsumptionCapability
+import mihon.entry.interactions.state.EntryConsumptionProcessor
+import mihon.entry.interactions.state.EntryMigrationCapability
+import mihon.entry.interactions.state.EntryMigrationProvider
+import mihon.entry.interactions.state.EntryProgressCapability
+import mihon.entry.interactions.state.EntryProgressFeature
+import mihon.entry.interactions.state.EntryProgressMigrationPayload
+import mihon.entry.interactions.state.EntryProgressMigrationPreparation
+import mihon.entry.interactions.state.EntryProgressProcessor
+import mihon.entry.interactions.state.EntryProgressResourceMapping
+import mihon.entry.interactions.state.EntryProgressSnapshot
+import mihon.entry.interactions.state.migration.ENTRY_PROGRESS_MIGRATION_PARTICIPANT
+import mihon.entry.interactions.state.migration.entryProgressMigrationBinding
+import mihon.entry.interactions.tracking.EntryTrackingFeature
+import mihon.entry.interactions.tracking.EntryTrackingMigrationPreparationResult
+import mihon.entry.interactions.tracking.EntryTrackingRecord
+import mihon.entry.interactions.tracking.migration.EntryTrackingMigrationContributor
+import mihon.entry.interactions.tracking.migration.entryTrackingMigrationBinding
 import mihon.feature.graph.ContributionOwner
-import mihon.feature.graph.FeatureExecutionHandler
-import mihon.feature.graph.FeatureExecutionParticipantBinding
+import mihon.feature.graph.execution.FeatureExecutionHandler
+import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.graph.featureGraphContributor
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
@@ -181,7 +226,11 @@ class EntryMigrationFeatureTest {
             EntryMigrationExecuteIntent(
                 preparation.reference,
                 EntryMigrationMode.REPLACE,
-                setOf(EntryMigrationOption.CHILD_STATE, EntryMigrationOption.CATEGORIES, EntryMigrationOption.NOTES),
+                setOf(
+                    EntryMigrationOption.CHILD_STATE,
+                    EntryMigrationOption.CATEGORIES,
+                    EntryMigrationOption.NOTES,
+                ),
             ),
         ).shouldBeInstanceOf<EntryMigrationExecutionResult.Applied>()
 
@@ -236,7 +285,11 @@ class EntryMigrationFeatureTest {
         host.preparationSource = source.copy(favorite = false)
 
         val result = feature.execute(
-            EntryMigrationExecuteIntent(preparation.reference, EntryMigrationMode.REPLACE, emptySet()),
+            EntryMigrationExecuteIntent(
+                preparation.reference,
+                EntryMigrationMode.REPLACE,
+                emptySet(),
+            ),
         ).shouldBeInstanceOf<EntryMigrationExecutionResult.Applied>()
 
         result.outcome.followUp shouldBe EntryMigrationFollowUp.INCOMPLETE
@@ -254,7 +307,11 @@ class EntryMigrationFeatureTest {
         host.preparationSource = source.copy(favorite = false)
 
         feature.execute(
-            EntryMigrationExecuteIntent(preparation.reference, EntryMigrationMode.REPLACE, emptySet()),
+            EntryMigrationExecuteIntent(
+                preparation.reference,
+                EntryMigrationMode.REPLACE,
+                emptySet(),
+            ),
         ) shouldBe EntryMigrationExecutionResult.Conflict
 
         coVerify(exactly = 0) { sourceRefresh.refresh(any()) }
@@ -308,7 +365,11 @@ class EntryMigrationFeatureTest {
 
         shouldThrow<CancellationException> {
             feature.execute(
-                EntryMigrationExecuteIntent(preparation.reference, EntryMigrationMode.COPY, emptySet()),
+                EntryMigrationExecuteIntent(
+                    preparation.reference,
+                    EntryMigrationMode.COPY,
+                    emptySet(),
+                ),
             )
         }
     }
@@ -397,7 +458,7 @@ class EntryMigrationFeatureTest {
             coEvery { it.prepareRemoval(any()) } returns
                 EntryDownloadRemovalPreparation.Inapplicable(EntryType.BOOK)
         }
-        val customCoverHost = mockk<mihon.entry.interactions.host.EntryMigrationCustomCoverHost>(relaxed = true)
+        val customCoverHost = mockk<EntryMigrationCustomCoverHost>(relaxed = true)
         val trackingFeature = tracking ?: mockk<EntryTrackingFeature>().also {
             coEvery { it.prepareMigrationTracks(any(), any(), any()) } answers {
                 val target = args[1] as Entry

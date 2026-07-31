@@ -1,9 +1,22 @@
-package mihon.feature.graph
+package mihon.feature.graph.execution
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import kotlinx.coroutines.test.runTest
+import mihon.feature.graph.ContentTypeContribution
+import mihon.feature.graph.ContentTypeId
+import mihon.feature.graph.ContributionOwner
+import mihon.feature.graph.FeatureArtifactId
+import mihon.feature.graph.FeatureBehaviorContract
+import mihon.feature.graph.FeatureExecutionParticipantId
+import mihon.feature.graph.FeatureExecutionPointId
+import mihon.feature.graph.FeatureGraph
+import mihon.feature.graph.FeatureSubjectId
+import mihon.feature.graph.discoverAndAssembleFeatureGraph
+import mihon.feature.graph.evaluateFeatureGraph
+import mihon.feature.graph.featureGraphContributor
 import org.junit.jupiter.api.Test
 
 class FeatureDurableExecutionRuntimeTest {
@@ -127,11 +140,12 @@ class FeatureDurableExecutionRuntimeTest {
         }.message shouldContain "No durable execution participant binding for example.future"
     }
 
-    private fun point(): DurableFeatureExecutionPointDefinition<Event> = durableFeatureExecutionPointDefinition(
-        id = FeatureExecutionPointId("example.durable-point"),
-        owner = pointOwner,
-        failurePolicy = FeatureExecutionFailurePolicy.FAIL_FAST,
-    )
+    private fun point(): DurableFeatureExecutionPointDefinition<Event> =
+        durableFeatureExecutionPointDefinition(
+            id = FeatureExecutionPointId("example.durable-point"),
+            owner = pointOwner,
+            failurePolicy = FeatureExecutionFailurePolicy.FAIL_FAST,
+        )
 
     private fun participant(
         id: String,
@@ -182,7 +196,7 @@ class FeatureDurableExecutionRuntimeTest {
     )
 
     private fun runSuspend(block: suspend () -> Unit) {
-        kotlinx.coroutines.test.runTest { block() }
+        runTest { block() }
     }
 
     private data class Event(val value: String)

@@ -1,10 +1,11 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.migration
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.entryContentType
+import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.verifyFeatureContract
 import mihon.feature.graph.FeatureContractScenarioId
-import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.validation.FeatureContractExecutionInput
 import mihon.feature.graph.validation.FeatureContractReference
 import mihon.feature.graph.validation.FeatureContractScenario

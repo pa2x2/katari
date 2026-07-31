@@ -1,4 +1,4 @@
-package mihon.entry.interactions.anime
+package mihon.entry.interactions.anime.media
 
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test

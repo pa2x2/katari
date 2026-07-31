@@ -58,8 +58,8 @@ import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.entry.interactions.EntryMediaCacheClearResult
-import mihon.entry.interactions.EntryMediaCacheFeature
+import mihon.entry.interactions.media.EntryMediaCacheClearResult
+import mihon.entry.interactions.media.EntryMediaCacheFeature
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.storage.displayablePath
 import tachiyomi.core.common.util.lang.launchNonCancellable

@@ -1,14 +1,17 @@
-package mihon.entry.interactions.anime
+package mihon.entry.interactions.anime.child
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.video.player.formatPlaybackTimestamp
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
-import mihon.entry.interactions.EntryChildListProcessor
-import mihon.entry.interactions.EntryChildProgressLabel
-import mihon.entry.interactions.EntryChildProgressProcessor
-import mihon.entry.interactions.EntryChildProgressRequest
+import mihon.entry.interactions.anime.state.durationMs
+import mihon.entry.interactions.anime.state.hasPartialAnimeProgress
+import mihon.entry.interactions.anime.state.positionMs
+import mihon.entry.interactions.child.EntryChildProgressLabel
+import mihon.entry.interactions.child.EntryChildProgressRequest
+import mihon.entry.interactions.runtime.EntryChildListProcessor
+import mihon.entry.interactions.runtime.EntryChildProgressProcessor
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryProgressRepository

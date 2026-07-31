@@ -1,4 +1,4 @@
-package mihon.translation.runtime
+package mihon.translation.runtime.host
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -12,29 +12,32 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.launch
-import mihon.translation.api.KnownTranslationEngine
-import mihon.translation.api.TranslationDeviceAvailability
-import mihon.translation.api.TranslationEngineAction
-import mihon.translation.api.TranslationEngineBuildAvailability
-import mihon.translation.api.TranslationEngineId
-import mihon.translation.api.TranslationEngineInspection
-import mihon.translation.api.TranslationEngineState
-import mihon.translation.api.TranslationEngineStatus
-import mihon.translation.api.TranslationHostActionResult
-import mihon.translation.api.TranslationHostActions
-import mihon.translation.api.TranslationLanguageSupportInspection
-import mihon.translation.api.TranslationLanguageTag
-import mihon.translation.api.TranslationModelDescriptor
-import mihon.translation.api.TranslationModelOperationResult
-import mihon.translation.api.TranslationProviderDisclosure
-import mihon.translation.api.TranslationTargetLanguageSelection
-import mihon.translation.api.TranslationUnavailableReason
+import mihon.translation.api.availability.TranslationDeviceAvailability
+import mihon.translation.api.engine.KnownTranslationEngine
+import mihon.translation.api.engine.TranslationEngineAction
+import mihon.translation.api.engine.TranslationEngineBuildAvailability
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.engine.TranslationEngineInspection
+import mihon.translation.api.engine.TranslationEngineState
+import mihon.translation.api.engine.TranslationEngineStatus
+import mihon.translation.api.host.TranslationHostActionResult
+import mihon.translation.api.host.TranslationHostActions
+import mihon.translation.api.language.TranslationLanguageSupportInspection
+import mihon.translation.api.language.TranslationLanguageTag
+import mihon.translation.api.model.TranslationModelDescriptor
+import mihon.translation.api.model.TranslationModelOperationResult
+import mihon.translation.api.preparation.TranslationUnavailableReason
+import mihon.translation.api.provider.TranslationProviderDisclosure
+import mihon.translation.api.request.TranslationTargetLanguageSelection
+import mihon.translation.runtime.preference.ProfileTranslationPreferences
 import mihon.translation.runtime.selection.ProfileTranslationEngineResolver
-import mihon.translation.spi.KnownTranslationEngineCatalog
-import mihon.translation.spi.TranslationEngineDeviceAvailability
-import mihon.translation.spi.TranslationEngineRegistry
-import mihon.translation.spi.TranslationEngineSetupRegistry
-import mihon.translation.spi.TranslationSetupResult
+import mihon.translation.spi.engine.KnownTranslationEngineCatalog
+import mihon.translation.spi.engine.TranslationEngine
+import mihon.translation.spi.engine.TranslationEngineDeviceAvailability
+import mihon.translation.spi.engine.TranslationEngineRegistry
+import mihon.translation.spi.setup.TranslationEngineSetup
+import mihon.translation.spi.setup.TranslationEngineSetupRegistry
+import mihon.translation.spi.setup.TranslationSetupResult
 import tachiyomi.core.common.preference.Preference
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -221,7 +224,7 @@ internal class DefaultTranslationHostActions(
 
     private suspend fun performSetup(
         engine: TranslationEngineId,
-        action: suspend mihon.translation.spi.TranslationEngineSetup.() -> TranslationHostActionResult,
+        action: suspend TranslationEngineSetup.() -> TranslationHostActionResult,
     ): TranslationHostActionResult {
         val setup = setupRegistry.findSetup(engine) ?: return TranslationHostActionResult.SetupUnsupported
         return try {
@@ -234,7 +237,7 @@ internal class DefaultTranslationHostActions(
     }
 
     private suspend fun inspectEngineState(
-        engine: mihon.translation.spi.TranslationEngine,
+        engine: TranslationEngine,
     ): TranslationEngineStatus {
         return try {
             when (val availability = engine.inspectDevice()) {
@@ -300,7 +303,7 @@ internal class DefaultTranslationHostActions(
     }
 
     private suspend fun inspectedEngineState(
-        engine: mihon.translation.spi.TranslationEngine,
+        engine: TranslationEngine,
     ): TranslationEngineState = engineState(
         known = engine.catalogEntry,
         engine = engine,
@@ -308,7 +311,7 @@ internal class DefaultTranslationHostActions(
     )
 
     private fun timedOutEngineState(
-        engine: mihon.translation.spi.TranslationEngine,
+        engine: TranslationEngine,
     ): TranslationEngineState = engineState(
         known = engine.catalogEntry,
         engine = engine,
@@ -322,7 +325,7 @@ internal class DefaultTranslationHostActions(
 
     private fun engineState(
         known: KnownTranslationEngine,
-        engine: mihon.translation.spi.TranslationEngine?,
+        engine: TranslationEngine?,
         status: TranslationEngineStatus,
     ): TranslationEngineState {
         val supportsSetup = setupRegistry.findSetup(known.id)?.supportsSetup == true
@@ -353,7 +356,7 @@ internal class DefaultTranslationHostActions(
 
     private data class PendingEngineInspection(
         val index: Int,
-        val engine: mihon.translation.spi.TranslationEngine,
+        val engine: TranslationEngine,
     )
 
     private companion object {

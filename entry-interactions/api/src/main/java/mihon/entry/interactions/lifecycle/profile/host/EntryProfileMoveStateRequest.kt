@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.lifecycle.profile.host
 
 data class EntryProfileMoveStateRequest(
     val sourceProfileId: Long,

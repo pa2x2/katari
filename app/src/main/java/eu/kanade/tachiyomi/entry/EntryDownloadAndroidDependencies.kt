@@ -5,8 +5,8 @@ import android.content.Context
 import eu.kanade.tachiyomi.data.cache.MangaPageCache
 import eu.kanade.tachiyomi.data.notification.NotificationHandler
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
-import mihon.entry.interactions.EntryDownloadNotificationActions
-import mihon.entry.interactions.EntryPageImageCache
+import mihon.entry.interactions.download.EntryDownloadNotificationActions
+import mihon.entry.interactions.runtime.EntryPageImageCache
 import java.io.File
 
 class AppEntryDownloadNotificationActions : EntryDownloadNotificationActions {

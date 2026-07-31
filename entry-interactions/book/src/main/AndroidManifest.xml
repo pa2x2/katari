@@ -3,7 +3,7 @@
 
     <application>
         <activity
-            android:name="mihon.entry.interactions.book.BookReaderHostActivity"
+            android:name="mihon.entry.interactions.book.reader.BookReaderHostActivity"
             android:exported="false" />
     </application>
 

@@ -1,6 +1,8 @@
-package mihon.translation.spi
+package mihon.translation.spi.contribution
 
-import mihon.translation.api.KnownTranslationEngine
+import mihon.translation.api.engine.KnownTranslationEngine
+import mihon.translation.spi.engine.TranslationEngine
+import mihon.translation.spi.setup.TranslationEngineSetup
 
 /**
  * One independently owned Translation engine contribution.

@@ -2,13 +2,13 @@ package mihon.translation.provider.libretranslate.offline
 
 import android.content.Context
 import android.content.Intent
-import mihon.translation.api.TranslationModelId
-import mihon.translation.api.TranslationModelOperationResult
-import mihon.translation.api.TranslationProviderDisclosure
-import mihon.translation.api.TranslationSetupDestination
+import mihon.translation.api.host.TranslationSetupDestination
+import mihon.translation.api.model.TranslationModelId
+import mihon.translation.api.model.TranslationModelOperationResult
+import mihon.translation.api.provider.TranslationProviderDisclosure
 import mihon.translation.provider.libretranslate.offline.setup.OfflineTranslatorSetupActivity
-import mihon.translation.spi.TranslationEngineSetup
-import mihon.translation.spi.TranslationSetupResult
+import mihon.translation.spi.setup.TranslationEngineSetup
+import mihon.translation.spi.setup.TranslationSetupResult
 
 internal class OfflineTranslatorSetup(
     private val context: Context,

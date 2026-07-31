@@ -1,6 +1,10 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download
 
 import io.mockk.coEvery
+import mihon.entry.interactions.download.configuration.backup.ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_RESTORE_PARTICIPANT
+import mihon.entry.interactions.download.configuration.backup.ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_SNAPSHOT_PARTICIPANT
+import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfigurationBackupState
+import mihon.entry.interactions.persistence.backup.addEntryBackupParticipationContract
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
@@ -47,7 +51,10 @@ private data class DownloadConfigurationContract(
 )
 
 private val configurations = listOf(
-    DownloadConfigurationContract(ENTRY_DOWNLOAD_OPTIONS_INTEGRATION_ID, EntryDownloadOptionsBehaviorContract),
+    DownloadConfigurationContract(
+        ENTRY_DOWNLOAD_OPTIONS_INTEGRATION_ID,
+        EntryDownloadOptionsBehaviorContract,
+    ),
     DownloadConfigurationContract(
         ENTRY_DOWNLOAD_ARCHIVE_PACKAGING_INTEGRATION_ID,
         EntryDownloadArchivePackagingBehaviorContract,

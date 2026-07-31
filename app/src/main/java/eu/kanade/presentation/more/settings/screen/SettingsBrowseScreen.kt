@@ -16,10 +16,10 @@ import eu.kanade.tachiyomi.util.system.AuthenticatorUtil.authenticate
 import kotlinx.collections.immutable.toImmutableMap
 import mihon.core.common.CustomPreferences
 import mihon.domain.extension.interactor.GetExtensionStoreCountAsFlow
-import mihon.entry.interactions.EntryPreviewFeature
-import mihon.entry.interactions.EntryPreviewSettings
-import mihon.entry.interactions.EntryPreviewSize
-import mihon.entry.interactions.EntryPreviewSourceRequirement
+import mihon.entry.interactions.media.EntryPreviewFeature
+import mihon.entry.interactions.media.EntryPreviewSettings
+import mihon.entry.interactions.media.EntryPreviewSize
+import mihon.entry.interactions.media.EntryPreviewSourceRequirement
 import mihon.entry.interactions.settings.EntryInteractionPreferences
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR

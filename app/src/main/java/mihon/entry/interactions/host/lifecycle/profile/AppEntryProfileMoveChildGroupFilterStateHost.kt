@@ -1,7 +1,7 @@
 package mihon.entry.interactions.host.lifecycle.profile
 
-import mihon.entry.interactions.EntryProfileMoveChildGroupFilterStateHost
-import mihon.entry.interactions.EntryProfileMoveStateRequest
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveChildGroupFilterStateHost
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveStateRequest
 import tachiyomi.data.DatabaseHandler
 
 class AppEntryProfileMoveChildGroupFilterStateHost(

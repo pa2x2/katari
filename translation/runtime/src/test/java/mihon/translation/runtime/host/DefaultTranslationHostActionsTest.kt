@@ -1,49 +1,55 @@
-package mihon.translation.runtime
+package mihon.translation.runtime.host
 
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import mihon.translation.api.KnownTranslationEngine
-import mihon.translation.api.ResolvedTranslationRequest
-import mihon.translation.api.TranslationDeviceAvailability
-import mihon.translation.api.TranslationEngineAction
-import mihon.translation.api.TranslationEngineArtwork
-import mihon.translation.api.TranslationEngineBuildAvailability
-import mihon.translation.api.TranslationEngineDetails
-import mihon.translation.api.TranslationEngineId
-import mihon.translation.api.TranslationEngineStatus
-import mihon.translation.api.TranslationHostActionResult
-import mihon.translation.api.TranslationInvocationPolicy
-import mihon.translation.api.TranslationLanguagePair
-import mihon.translation.api.TranslationLanguageSupport
-import mihon.translation.api.TranslationLanguageSupportInspection
-import mihon.translation.api.TranslationLanguageTag
-import mihon.translation.api.TranslationModelId
-import mihon.translation.api.TranslationModelOperationResult
-import mihon.translation.api.TranslationProviderDisclosure
-import mihon.translation.api.TranslationProviderId
-import mihon.translation.api.TranslationProviderPresentation
-import mihon.translation.api.TranslationSetupDestination
-import mihon.translation.api.TranslationUnavailableReason
+import mihon.translation.api.availability.TranslationDeviceAvailability
+import mihon.translation.api.engine.KnownTranslationEngine
+import mihon.translation.api.engine.TranslationEngineAction
+import mihon.translation.api.engine.TranslationEngineArtwork
+import mihon.translation.api.engine.TranslationEngineBuildAvailability
+import mihon.translation.api.engine.TranslationEngineDetails
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.engine.TranslationEngineInspection
+import mihon.translation.api.engine.TranslationEngineStatus
+import mihon.translation.api.engine.TranslationProviderId
+import mihon.translation.api.host.TranslationHostActionResult
+import mihon.translation.api.host.TranslationSetupDestination
+import mihon.translation.api.language.TranslationLanguagePair
+import mihon.translation.api.language.TranslationLanguageSupport
+import mihon.translation.api.language.TranslationLanguageSupportInspection
+import mihon.translation.api.language.TranslationLanguageTag
+import mihon.translation.api.model.TranslationModelId
+import mihon.translation.api.model.TranslationModelOperationResult
+import mihon.translation.api.preparation.TranslationUnavailableReason
+import mihon.translation.api.provider.TranslationInvocationPolicy
+import mihon.translation.api.provider.TranslationProviderDisclosure
+import mihon.translation.api.provider.TranslationProviderPresentation
+import mihon.translation.api.request.ResolvedTranslationRequest
+import mihon.translation.runtime.preference.ProfileTranslationPreferences
+import mihon.translation.runtime.registry.DefaultTranslationEngineRegistry
 import mihon.translation.runtime.selection.ProfileTranslationEngineResolver
-import mihon.translation.spi.ReadyTranslationEngineRequest
-import mihon.translation.spi.TranslationEngine
-import mihon.translation.spi.TranslationEngineContribution
-import mihon.translation.spi.TranslationEngineDeviceAvailability
-import mihon.translation.spi.TranslationEngineExecution
-import mihon.translation.spi.TranslationEnginePreparation
-import mihon.translation.spi.TranslationEngineSetup
-import mihon.translation.spi.TranslationSetupResult
+import mihon.translation.spi.contribution.TranslationEngineContribution
+import mihon.translation.spi.engine.ReadyTranslationEngineRequest
+import mihon.translation.spi.engine.TranslationEngine
+import mihon.translation.spi.engine.TranslationEngineDeviceAvailability
+import mihon.translation.spi.engine.TranslationEngineExecution
+import mihon.translation.spi.engine.TranslationEnginePreparation
+import mihon.translation.spi.setup.TranslationEngineSetup
+import mihon.translation.spi.setup.TranslationSetupResult
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 import kotlin.coroutines.suspendCoroutine
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class DefaultTranslationHostActionsTest {
     @Test
     fun `engine inspection publishes provider results independently`() = runTest {
@@ -56,7 +62,7 @@ class DefaultTranslationHostActionsTest {
             catalogEntry = SECOND_KNOWN_ENGINE,
         )
         val dispatcher = StandardTestDispatcher(testScheduler)
-        val emissions = mutableListOf<mihon.translation.api.TranslationEngineInspection>()
+        val emissions = mutableListOf<TranslationEngineInspection>()
         val collection = backgroundScope.launch(dispatcher) {
             actions(
                 engine = null,
@@ -95,7 +101,7 @@ class DefaultTranslationHostActionsTest {
     @Test
     fun `engine inspection timeout resolves loading when provider does not return`() = runTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
-        val emissions = mutableListOf<mihon.translation.api.TranslationEngineInspection>()
+        val emissions = mutableListOf<TranslationEngineInspection>()
         val collection = backgroundScope.launch(dispatcher) {
             actions(
                 engine = FakeEngine(
@@ -281,7 +287,7 @@ class DefaultTranslationHostActionsTest {
             knownEngineCatalog = registry,
             setupRegistry = registry,
             profileEngineResolver = ProfileTranslationEngineResolver(preferences, registry),
-            inspectionDispatcher = inspectionDispatcher ?: kotlinx.coroutines.Dispatchers.IO,
+            inspectionDispatcher = inspectionDispatcher ?: Dispatchers.IO,
             inspectionTimeoutMillis = inspectionTimeoutMillis,
         )
     }

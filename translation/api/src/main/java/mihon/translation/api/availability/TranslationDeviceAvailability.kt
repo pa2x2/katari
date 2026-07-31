@@ -1,10 +1,12 @@
-package mihon.translation.api
+package mihon.translation.api.availability
+
+import mihon.translation.api.engine.TranslationEngineId
 
 /**
  * Request-independent availability of the profile-selected Translation engine.
  *
  * Language detection, language-pair support, and model readiness are intentionally excluded. They can only be
- * inspected authoritatively after a real [TranslationRequest] exists.
+ * inspected authoritatively after a real [mihon.translation.api.request.TranslationRequest] exists.
  */
 sealed interface TranslationDeviceAvailability {
     data object Available : TranslationDeviceAvailability

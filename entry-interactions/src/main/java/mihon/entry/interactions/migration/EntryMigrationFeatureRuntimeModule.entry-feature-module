@@ -1,2 +1,2 @@
 id=entry.migration
-module=mihon.entry.interactions.EntryMigrationFeatureRuntimeModule
+module=mihon.entry.interactions.migration.EntryMigrationFeatureRuntimeModule

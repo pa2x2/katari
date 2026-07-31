@@ -15,7 +15,7 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
-import mihon.entry.interactions.EntryOpenFeature
+import mihon.entry.interactions.navigation.EntryOpenFeature
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold

@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.tracking
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.shouldBe
@@ -7,16 +7,17 @@ import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.host.tracking.EntryTrackingAccountHost
-import mihon.entry.interactions.host.tracking.EntryTrackingAutomationHost
-import mihon.entry.interactions.host.tracking.EntryTrackingBackupHost
-import mihon.entry.interactions.host.tracking.EntryTrackingCollectionHost
-import mihon.entry.interactions.host.tracking.EntryTrackingHost
-import mihon.entry.interactions.host.tracking.EntryTrackingHostEntryService
-import mihon.entry.interactions.host.tracking.EntryTrackingHostEntrySnapshot
-import mihon.entry.interactions.host.tracking.EntryTrackingHostService
-import mihon.entry.interactions.host.tracking.EntryTrackingHostServiceCapabilities
-import mihon.entry.interactions.host.tracking.EntryTrackingOperationHost
+import mihon.entry.interactions.source.sourceFeatureEvaluation
+import mihon.entry.interactions.tracking.host.EntryTrackingAccountHost
+import mihon.entry.interactions.tracking.host.EntryTrackingAutomationHost
+import mihon.entry.interactions.tracking.host.EntryTrackingBackupHost
+import mihon.entry.interactions.tracking.host.EntryTrackingCollectionHost
+import mihon.entry.interactions.tracking.host.EntryTrackingHost
+import mihon.entry.interactions.tracking.host.EntryTrackingHostEntryService
+import mihon.entry.interactions.tracking.host.EntryTrackingHostEntrySnapshot
+import mihon.entry.interactions.tracking.host.EntryTrackingHostService
+import mihon.entry.interactions.tracking.host.EntryTrackingHostServiceCapabilities
+import mihon.entry.interactions.tracking.host.EntryTrackingOperationHost
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.track.model.EntryTrack

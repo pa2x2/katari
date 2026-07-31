@@ -1,28 +1,28 @@
 package mihon.entry.interactions.validation
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.ENTRY_BACKUP_RESTORE_EXECUTION_POINT
-import mihon.entry.interactions.ENTRY_BACKUP_RESTORE_FINALIZING_EXECUTION_POINT
-import mihon.entry.interactions.ENTRY_BACKUP_SNAPSHOT_EXECUTION_POINT
-import mihon.entry.interactions.EntryBackupCoordinator
-import mihon.entry.interactions.EntryBackupFeature
-import mihon.entry.interactions.EntryBackupFeatureContributor
-import mihon.entry.interactions.EntryBackupRestoreEvent
-import mihon.entry.interactions.EntryBackupRestoreFinalizingEvent
-import mihon.entry.interactions.EntryBackupSnapshotEvent
-import mihon.entry.interactions.EntryFeatureStateEnvelope
-import mihon.entry.interactions.EntryInteractionPlugin
-import mihon.entry.interactions.EntryInteractionProviderBinding
-import mihon.entry.interactions.createEntryInteractionComposition
+import mihon.entry.interactions.persistence.backup.ENTRY_BACKUP_RESTORE_EXECUTION_POINT
+import mihon.entry.interactions.persistence.backup.ENTRY_BACKUP_RESTORE_FINALIZING_EXECUTION_POINT
+import mihon.entry.interactions.persistence.backup.ENTRY_BACKUP_SNAPSHOT_EXECUTION_POINT
+import mihon.entry.interactions.persistence.backup.EntryBackupCoordinator
+import mihon.entry.interactions.persistence.backup.EntryBackupFeature
+import mihon.entry.interactions.persistence.backup.EntryBackupFeatureContributor
+import mihon.entry.interactions.persistence.backup.EntryBackupRestoreEvent
+import mihon.entry.interactions.persistence.backup.EntryBackupRestoreFinalizingEvent
+import mihon.entry.interactions.persistence.backup.EntryBackupSnapshotEvent
+import mihon.entry.interactions.persistence.backup.EntryFeatureStateEnvelope
+import mihon.entry.interactions.runtime.EntryInteractionPlugin
+import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
+import mihon.entry.interactions.runtime.createEntryInteractionComposition
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureBehaviorContract
-import mihon.feature.graph.FeatureExecutionHandler
-import mihon.feature.graph.FeatureExecutionParticipantBinding
-import mihon.feature.graph.FeatureExecutionParticipantDefinition
 import mihon.feature.graph.FeatureExecutionParticipantId
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
+import mihon.feature.graph.execution.FeatureExecutionHandler
+import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
+import mihon.feature.graph.execution.FeatureExecutionParticipantDefinition
 
 data class EntryBackupTestRuntime(
     val feature: EntryBackupFeature,

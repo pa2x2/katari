@@ -1,8 +1,11 @@
-package mihon.entry.interactions.manga
+package mihon.entry.interactions.manga.library
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.EntryLibraryProgressEvidence
-import mihon.entry.interactions.EntryLibraryProgressProvider
+import mihon.entry.interactions.library.EntryLibraryProgressEvidence
+import mihon.entry.interactions.library.EntryLibraryProgressProvider
+import mihon.entry.interactions.manga.runtime.requireManga
+import mihon.entry.interactions.manga.state.lastReadAt
+import mihon.entry.interactions.manga.state.pageIndex
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryProgressRepository

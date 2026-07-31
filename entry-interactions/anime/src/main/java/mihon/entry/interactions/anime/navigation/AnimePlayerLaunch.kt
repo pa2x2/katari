@@ -1,10 +1,11 @@
-package mihon.entry.interactions.anime
+package mihon.entry.interactions.anime.navigation
 
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerActivity
-import mihon.entry.interactions.EntryOpenOptions
+import mihon.entry.interactions.anime.runtime.requireAnime
+import mihon.entry.interactions.navigation.EntryOpenOptions
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 

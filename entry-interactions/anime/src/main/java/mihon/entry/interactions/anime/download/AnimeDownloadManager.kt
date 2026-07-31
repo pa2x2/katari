@@ -25,19 +25,19 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.EntryDownloadEntryIdentity
-import mihon.entry.interactions.EntryDownloadEvent
-import mihon.entry.interactions.EntryDownloadMessage
-import mihon.entry.interactions.EntryDownloadQueuePolicy
-import mihon.entry.interactions.EntryDownloadWorkController
 import mihon.entry.interactions.anime.download.model.AnimeDownload
 import mihon.entry.interactions.anime.download.model.AnimeDownloadFailure
-import mihon.entry.interactions.anime.toEntryDownloadMessage
+import mihon.entry.interactions.download.EntryDownloadEntryIdentity
+import mihon.entry.interactions.download.EntryDownloadEvent
+import mihon.entry.interactions.download.EntryDownloadMessage
+import mihon.entry.interactions.download.EntryDownloadQueuePolicy
+import mihon.entry.interactions.download.EntryDownloadWorkController
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.entry.model.DownloadPreferences
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -395,7 +395,7 @@ internal class AnimeDownloadManager(
                 title = download.anime.title,
                 subtitle = download.episode.name,
                 message = download.failure?.toEntryDownloadMessage()
-                    ?: EntryDownloadMessage.Resource(tachiyomi.i18n.MR.strings.download_notifier_unknown_error),
+                    ?: EntryDownloadMessage.Resource(MR.strings.download_notifier_unknown_error),
             ),
         )
     }

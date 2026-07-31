@@ -1,4 +1,4 @@
-package mihon.entry.interactions.host.tracking
+package mihon.entry.interactions.tracking.host
 
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.source.entry.EntryType

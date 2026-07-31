@@ -2,7 +2,7 @@ package mihon.entry.interactions.host.lifecycle.profile
 
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.util.removeCovers
-import mihon.entry.interactions.EntryProfileMoveCustomCoverHost
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveCustomCoverHost
 import tachiyomi.domain.entry.model.Entry
 
 class AppEntryProfileMoveCustomCoverHost(

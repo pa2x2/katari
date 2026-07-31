@@ -1,6 +1,15 @@
-package mihon.translation.api
+package mihon.translation.api.preparation
 
-/** Opaque, process-local execution authority returned only by [TranslationFeature.prepare]. */
+import mihon.translation.api.engine.KnownTranslationEngine
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.language.TranslationLanguageTag
+import mihon.translation.api.model.TranslationModelDescriptor
+import mihon.translation.api.model.TranslationOperationProgress
+import mihon.translation.api.provider.TranslationProviderDisclosure
+import mihon.translation.api.provider.TranslationProviderPresentation
+import mihon.translation.api.request.ResolvedTranslationRequest
+
+/** Opaque, process-local execution authority returned only by [mihon.translation.api.TranslationFeature.prepare]. */
 interface ReadyTranslation
 
 sealed interface TranslationPreparation {

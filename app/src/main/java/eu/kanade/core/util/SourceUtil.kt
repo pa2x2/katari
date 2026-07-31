@@ -3,7 +3,7 @@ package eu.kanade.core.util
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
-import mihon.entry.interactions.EntryCatalogueFeature
+import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get

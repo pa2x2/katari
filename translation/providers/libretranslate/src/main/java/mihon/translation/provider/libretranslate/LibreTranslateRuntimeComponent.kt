@@ -1,7 +1,7 @@
 package mihon.translation.provider.libretranslate
 
 import android.app.Application
-import mihon.feature.runtime.ApplicationFeatureRuntimeComponent
+import mihon.feature.runtime.application.ApplicationFeatureRuntimeComponent
 import mihon.translation.provider.libretranslate.offline.OfflineTranslatorApplication
 import mihon.translation.provider.libretranslate.offline.OfflineTranslatorConfiguration
 import mihon.translation.provider.libretranslate.offline.OfflineTranslatorEngine
@@ -12,9 +12,9 @@ import mihon.translation.provider.libretranslate.server.LibreTranslateServerConf
 import mihon.translation.provider.libretranslate.server.LibreTranslateServerEngine
 import mihon.translation.provider.libretranslate.server.LibreTranslateServerNetwork
 import mihon.translation.provider.libretranslate.server.LibreTranslateServerSetup
-import mihon.translation.runtime.TranslationRuntimeComponent
-import mihon.translation.runtime.TranslationRuntimeContribution
-import mihon.translation.spi.TranslationEngineContribution
+import mihon.translation.runtime.component.TranslationRuntimeComponent
+import mihon.translation.runtime.component.TranslationRuntimeContribution
+import mihon.translation.spi.contribution.TranslationEngineContribution
 
 val libreTranslateRuntimeComponent: ApplicationFeatureRuntimeComponent =
     object : TranslationRuntimeComponent {

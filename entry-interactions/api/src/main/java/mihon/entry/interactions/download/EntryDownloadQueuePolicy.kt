@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download
 
 /** Shared ordering rules for entry download queues. */
 object EntryDownloadQueuePolicy {

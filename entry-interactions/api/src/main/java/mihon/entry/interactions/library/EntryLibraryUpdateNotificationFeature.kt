@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.library
 
 import dev.icerock.moko.resources.PluralsResource
 import dev.icerock.moko.resources.StringResource

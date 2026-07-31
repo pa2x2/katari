@@ -1,11 +1,11 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.navigation
 
 import android.content.Context
 import android.content.Intent
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.mockk.mockk
 import io.mockk.verify
-import mihon.entry.interactions.EntryOpenOptions
+import mihon.entry.interactions.navigation.EntryOpenOptions
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner

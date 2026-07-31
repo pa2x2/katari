@@ -10,8 +10,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.AbstractComposeView
 import eu.kanade.presentation.reader.ChapterTransition
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
-import mihon.entry.interactions.EntryInteractionTheme
 import mihon.entry.interactions.manga.download.DownloadManager
+import mihon.entry.interactions.runtime.EntryInteractionTheme
 import mihon.entry.interactions.viewer.EntryChildTransition
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransitionLoadState

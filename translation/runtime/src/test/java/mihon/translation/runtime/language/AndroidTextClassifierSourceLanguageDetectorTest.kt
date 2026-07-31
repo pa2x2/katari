@@ -1,12 +1,12 @@
-package mihon.translation.runtime
+package mihon.translation.runtime.language
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
-import mihon.translation.api.TranslationLanguageTag
-import mihon.translation.spi.TranslationSourceLanguageDetection
+import mihon.translation.api.language.TranslationLanguageTag
+import mihon.translation.spi.language.TranslationSourceLanguageDetection
 import org.junit.jupiter.api.Test
 
 class AndroidTextClassifierSourceLanguageDetectorTest {

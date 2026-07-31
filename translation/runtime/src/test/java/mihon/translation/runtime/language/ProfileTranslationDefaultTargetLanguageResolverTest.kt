@@ -1,8 +1,10 @@
-package mihon.translation.runtime
+package mihon.translation.runtime.language
 
 import io.kotest.matchers.shouldBe
-import mihon.translation.api.TranslationLanguageTag
-import mihon.translation.api.TranslationTargetLanguageSelection
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.language.TranslationLanguageTag
+import mihon.translation.api.request.TranslationTargetLanguageSelection
+import mihon.translation.runtime.preference.ProfileTranslationPreferences
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 import java.util.Locale
@@ -34,6 +36,6 @@ class ProfileTranslationDefaultTargetLanguageResolverTest {
     }
 
     private companion object {
-        val DEFAULT_ENGINE = mihon.translation.api.TranslationEngineId("android-system")
+        val DEFAULT_ENGINE = TranslationEngineId("android-system")
     }
 }

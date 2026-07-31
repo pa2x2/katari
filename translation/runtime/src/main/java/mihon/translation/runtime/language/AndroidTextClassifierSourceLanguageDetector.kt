@@ -1,4 +1,4 @@
-package mihon.translation.runtime
+package mihon.translation.runtime.language
 
 import android.app.Application
 import android.os.Build
@@ -8,10 +8,10 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import mihon.translation.api.TranslationLanguageTag
-import mihon.translation.spi.TranslationSourceLanguageDetection
-import mihon.translation.spi.TranslationSourceLanguageDetector
-import mihon.translation.spi.TranslationSourceLanguageDetectorId
+import mihon.translation.api.language.TranslationLanguageTag
+import mihon.translation.spi.language.TranslationSourceLanguageDetection
+import mihon.translation.spi.language.TranslationSourceLanguageDetector
+import mihon.translation.spi.language.TranslationSourceLanguageDetectorId
 
 internal class AndroidTextClassifierSourceLanguageDetector(
     private val classify: (String) -> LanguageCandidate?,

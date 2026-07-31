@@ -56,8 +56,8 @@ import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.presentation.track.components.TrackLogoIcon
 import eu.kanade.tachiyomi.util.lang.toLocalDate
 import eu.kanade.tachiyomi.util.system.copyToClipboard
-import mihon.entry.interactions.EntryTrackingServiceDescriptor
-import mihon.entry.interactions.EntryTrackingSessionService
+import mihon.entry.interactions.tracking.EntryTrackingServiceDescriptor
+import mihon.entry.interactions.tracking.EntryTrackingSessionService
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import java.time.format.DateTimeFormatter

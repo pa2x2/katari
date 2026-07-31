@@ -1,5 +1,14 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.catalogue.runtime
 
+import mihon.entry.interactions.catalogue.CATALOGUE_AVAILABILITY_INTEGRATION_ID
+import mihon.entry.interactions.catalogue.ENTRY_CATALOGUE_FEATURE_ID
+import mihon.entry.interactions.catalogue.EntryCatalogueBehavior
+import mihon.entry.interactions.catalogue.LATEST_AVAILABILITY_INTEGRATION_ID
+import mihon.entry.interactions.catalogue.SOURCE_DESCRIPTION_CONTEXT
+import mihon.entry.interactions.catalogue.SOURCE_DESCRIPTION_INTEGRATION_ID
+import mihon.entry.interactions.catalogue.SourceDescriptionEvidence
+import mihon.entry.interactions.entryContentType
+import mihon.entry.interactions.resolveFeatureContext
 import mihon.feature.graph.ApplicableFeatureContext
 import mihon.feature.graph.BlockedFeatureContext
 import mihon.feature.graph.ContextEvidence
@@ -12,7 +21,10 @@ internal class EntryCatalogueGraphStateValidator(
     private val evaluation: FeatureGraphEvaluation,
 ) {
     fun validate(description: EntrySourceDescription) {
-        val evidence = contextEvidence(SOURCE_DESCRIPTION_CONTEXT, SourceDescriptionEvidence(description))
+        val evidence = contextEvidence(
+            SOURCE_DESCRIPTION_CONTEXT,
+            SourceDescriptionEvidence(description),
+        )
         requireUniformState(
             SOURCE_DESCRIPTION_INTEGRATION_ID,
             EntryCatalogueBehavior.SOURCE_DESCRIPTION,

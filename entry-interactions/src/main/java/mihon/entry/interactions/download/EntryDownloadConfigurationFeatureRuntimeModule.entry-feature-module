@@ -1,2 +1,2 @@
 id=entry.download.configuration
-module=mihon.entry.interactions.EntryDownloadConfigurationFeatureRuntimeModule
+module=mihon.entry.interactions.download.EntryDownloadConfigurationFeatureRuntimeModule

@@ -54,8 +54,8 @@ import logcat.LogPriority
 import logcat.LogcatLogger
 import mihon.core.migration.Migrator
 import mihon.core.migration.migrations.migrations
-import mihon.entry.interactions.EntryLibraryUpdateNotificationFeature
-import mihon.entry.interactions.addEntryInteractionImageComponents
+import mihon.entry.interactions.library.EntryLibraryUpdateNotificationFeature
+import mihon.entry.interactions.runtime.addEntryInteractionImageComponents
 import mihon.telemetry.TelemetryConfig
 import org.conscrypt.Conscrypt
 import tachiyomi.core.common.i18n.stringResource

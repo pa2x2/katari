@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.reader
 
 import android.content.Context
 import com.hippo.unifile.UniFile
@@ -15,13 +15,23 @@ import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookLocator
 import mihon.book.api.BookPublication
 import mihon.book.api.BookResource
-import mihon.entry.interactions.EntryMediaSessionEventSink
-import mihon.entry.interactions.EntryMediaSessionResult
+import mihon.book.api.model.BookPublicationModel
+import mihon.entry.interactions.book.content.BookContentSession
+import mihon.entry.interactions.book.content.BookContentSessionResourceLoader
 import mihon.entry.interactions.book.download.BookDownloadCache
 import mihon.entry.interactions.book.download.BookDownloadManifest
 import mihon.entry.interactions.book.download.BookDownloadPackageKey
 import mihon.entry.interactions.book.download.BookDownloadedResource
 import mihon.entry.interactions.book.download.VerifiedBookDownloadPackage
+import mihon.entry.interactions.book.media.session.BookMediaSessionProcessor
+import mihon.entry.interactions.book.preparation.BookContentPreparer
+import mihon.entry.interactions.book.preparation.BookContentPreparerRegistry
+import mihon.entry.interactions.book.preparation.BookPreparationResult
+import mihon.entry.interactions.book.preparation.PreparedBookPublication
+import mihon.entry.interactions.book.processor.BookReaderProcessorRegistry
+import mihon.entry.interactions.book.processor.BookReaderRequest
+import mihon.entry.interactions.media.session.EntryMediaSessionEventSink
+import mihon.entry.interactions.media.session.EntryMediaSessionResult
 import okhttp3.OkHttpClient
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
@@ -161,7 +171,7 @@ private class DownloadedContentRecordingPreparer : BookContentPreparer {
         openedContent = content.openResource(resourceId).getOrThrow().use { it.stream.reader().readText() }
         return BookPreparationResult.Success(
             object : PreparedBookPublication {
-                override val model = object : mihon.book.api.model.BookPublicationModel {
+                override val model = object : BookPublicationModel {
                     override val descriptor = TEST_BOOK_MODEL_DESCRIPTOR
                 }
                 override val resourceLoader = BookContentSessionResourceLoader(content)

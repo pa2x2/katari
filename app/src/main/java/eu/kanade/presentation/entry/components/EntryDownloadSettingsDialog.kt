@@ -22,9 +22,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.AdaptiveSheet
-import mihon.entry.interactions.EntryDownloadOptionGroup
-import mihon.entry.interactions.EntryDownloadOptionSelection
-import mihon.entry.interactions.EntryDownloadOptions
+import mihon.entry.interactions.download.EntryDownloadOptionGroup
+import mihon.entry.interactions.download.EntryDownloadOptionSelection
+import mihon.entry.interactions.download.EntryDownloadOptions
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 

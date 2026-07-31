@@ -17,7 +17,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Brush
 import androidx.compose.material.icons.outlined.Description
@@ -52,12 +51,11 @@ import eu.kanade.presentation.more.settings.LocalPreferenceMinHeight
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.sourceNotInstalledName
-import mihon.entry.interactions.EntryMigrationAvailability
-import mihon.entry.interactions.EntryMigrationFeature
+import mihon.entry.interactions.migration.EntryMigrationAvailability
+import mihon.entry.interactions.migration.EntryMigrationFeature
 import tachiyomi.domain.entry.model.DuplicateEntryCandidate
 import tachiyomi.domain.entry.model.DuplicateMatchReason
 import tachiyomi.domain.entry.model.Entry
-import tachiyomi.domain.entry.model.EntryStatus
 import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.domain.source.model.SourceDisplayInfo
 import tachiyomi.domain.source.service.SourceManager

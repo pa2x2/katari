@@ -1,9 +1,11 @@
-package mihon.translation.runtime
+package mihon.translation.runtime.language
 
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
-import mihon.translation.api.TranslationLanguageTag
-import mihon.translation.api.TranslationTargetLanguageSelection
+import mihon.translation.api.language.TranslationLanguageTag
+import mihon.translation.api.request.TranslationTargetLanguageSelection
+import mihon.translation.runtime.feature.TranslationDefaultTargetLanguageResolver
+import mihon.translation.runtime.preference.ProfileTranslationPreferences
 import java.util.Locale
 
 internal class ProfileTranslationDefaultTargetLanguageResolver(

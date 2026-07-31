@@ -3,11 +3,9 @@ package eu.kanade.tachiyomi.data.backup.models
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.protobuf.ProtoNumber
-import mihon.core.common.extensions.EMPTY
 import mihon.core.common.extensions.JsonObjectEmptyBytes
-import mihon.entry.interactions.EntryProgressStateSnapshot
+import mihon.entry.interactions.state.EntryProgressStateSnapshot
 import mihon.entry.viewer.settings.ViewerSettingOverride
 import tachiyomi.data.MemoColumnAdapter
 import tachiyomi.domain.entry.model.Entry

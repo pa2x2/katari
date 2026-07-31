@@ -1,5 +1,10 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download.configuration.backup
 
+import mihon.entry.interactions.download.ENTRY_DOWNLOAD_CONFIGURATION_FEATURE_ID
+import mihon.entry.interactions.download.ENTRY_DOWNLOAD_OPTIONS_BEHAVIOR_ID
+import mihon.entry.interactions.download.ENTRY_DOWNLOAD_OPTIONS_INTEGRATION_ID
+import mihon.entry.interactions.download.EntryDownloadOptionsProcessor
+import mihon.entry.interactions.runtime.applicableProviderTypes
 import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.DownloadPreferences
 import tachiyomi.domain.entry.model.Entry

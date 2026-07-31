@@ -1,10 +1,10 @@
-package mihon.entry.interactions.anime
+package mihon.entry.interactions.anime.media.session
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.EntryMediaSessionEvent
-import mihon.entry.interactions.EntryMediaSessionEventSink
-import mihon.entry.interactions.EntryMediaSessionProcessor
-import mihon.entry.interactions.EntryMediaSessionResult
+import mihon.entry.interactions.media.EntryMediaSessionProcessor
+import mihon.entry.interactions.media.session.EntryMediaSessionEvent
+import mihon.entry.interactions.media.session.EntryMediaSessionEventSink
+import mihon.entry.interactions.media.session.EntryMediaSessionResult
 
 internal class AnimeMediaSessionProcessor(
     private val sink: EntryMediaSessionEventSink,

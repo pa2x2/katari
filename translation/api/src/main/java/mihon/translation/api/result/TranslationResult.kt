@@ -1,4 +1,9 @@
-package mihon.translation.api
+package mihon.translation.api.result
+
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.language.TranslationLanguageTag
+import mihon.translation.api.preparation.TranslationPreparation
+import mihon.translation.api.provider.TranslationProviderPresentation
 
 data class TranslationResult(
     val translatedText: String,

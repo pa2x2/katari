@@ -5,7 +5,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import mihon.entry.interactions.EntryDownloadRuntimeFeature
+import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.service.EntryLibraryProgressResolution

@@ -1,15 +1,16 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.migration
 
-import mihon.entry.interactions.host.EntryMigrationExecutionHost
-import mihon.entry.interactions.host.EntryMigrationExecutionInspectionResult
-import mihon.entry.interactions.host.EntryMigrationExecutionProfileHost
-import mihon.entry.interactions.host.EntryMigrationHostInspectionResult
-import mihon.entry.interactions.host.EntryMigrationHostOperation
-import mihon.entry.interactions.host.EntryMigrationHostReplayResult
-import mihon.entry.interactions.host.EntryMigrationHostTransition
-import mihon.entry.interactions.host.EntryMigrationHostTransitionResult
-import mihon.entry.interactions.host.EntryMigrationPreparationHost
-import mihon.entry.interactions.host.EntryMigrationPreparationProfileHost
+import mihon.entry.interactions.merge.EntryMergeMigrationReplacementResult
+import mihon.entry.interactions.migration.host.EntryMigrationExecutionHost
+import mihon.entry.interactions.migration.host.EntryMigrationExecutionInspectionResult
+import mihon.entry.interactions.migration.host.EntryMigrationExecutionProfileHost
+import mihon.entry.interactions.migration.host.EntryMigrationHostInspectionResult
+import mihon.entry.interactions.migration.host.EntryMigrationHostOperation
+import mihon.entry.interactions.migration.host.EntryMigrationHostReplayResult
+import mihon.entry.interactions.migration.host.EntryMigrationHostTransition
+import mihon.entry.interactions.migration.host.EntryMigrationHostTransitionResult
+import mihon.entry.interactions.migration.host.EntryMigrationPreparationHost
+import mihon.entry.interactions.migration.host.EntryMigrationPreparationProfileHost
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 

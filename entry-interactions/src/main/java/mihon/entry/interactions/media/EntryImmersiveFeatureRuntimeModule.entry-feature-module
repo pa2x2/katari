@@ -1,2 +1,2 @@
 id=entry.immersive
-module=mihon.entry.interactions.EntryImmersiveFeatureRuntimeModule
+module=mihon.entry.interactions.media.EntryImmersiveFeatureRuntimeModule

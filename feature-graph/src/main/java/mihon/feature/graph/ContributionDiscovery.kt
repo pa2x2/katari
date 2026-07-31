@@ -1,5 +1,8 @@
 package mihon.feature.graph
 
+import mihon.feature.graph.execution.FeatureExecutionParticipantDefinition
+import mihon.feature.graph.execution.FeatureExecutionPointDefinition
+
 /**
  * Owning composition boundary for one or more subject or feature contributions.
  *

@@ -1,29 +1,24 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media
 
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.entry.supportedEntryTypes
 import kotlinx.coroutines.CancellationException
-import mihon.feature.graph.CapabilityExpression
-import mihon.feature.graph.ContextInputId
-import mihon.feature.graph.ContributionOwner
-import mihon.feature.graph.FeatureArtifactId
-import mihon.feature.graph.FeatureBehaviorContract
-import mihon.feature.graph.FeatureBehaviorProjection
-import mihon.feature.graph.FeatureContextBlocker
-import mihon.feature.graph.FeatureContextDecision
-import mihon.feature.graph.FeatureContribution
-import mihon.feature.graph.FeatureGraphContributionSink
-import mihon.feature.graph.FeatureGraphContributor
+import mihon.entry.interactions.child.EntryChildListFeature
+import mihon.entry.interactions.child.EntryFirstChildResult
+import mihon.entry.interactions.navigation.EntryOpenProcessor
+import mihon.entry.interactions.runtime.EntryChildListProcessor
+import mihon.entry.interactions.runtime.EntryImmersiveLoadMode
+import mihon.entry.interactions.runtime.EntryImmersiveProcessor
+import mihon.entry.interactions.runtime.applicableProviderTypes
+import mihon.entry.interactions.runtime.requireEntryContextState
+import mihon.entry.interactions.source.EntrySourceRefreshFailure
+import mihon.entry.interactions.source.EntrySourceRefreshFeature
+import mihon.entry.interactions.source.EntrySourceRefreshRequest
+import mihon.entry.interactions.source.EntrySourceRefreshResult
 import mihon.feature.graph.FeatureGraphEvaluation
-import mihon.feature.graph.FeatureId
-import mihon.feature.graph.FeatureIntegration
-import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.allOf
 import mihon.feature.graph.contextEvidence
-import mihon.feature.graph.contextInputDefinition
-import mihon.feature.graph.featureContextRule
 import tachiyomi.domain.entry.model.Entry
 
 internal class DefaultEntryImmersiveFeature(

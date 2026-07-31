@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.persistence.backup
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.assertions.throwables.shouldThrow
@@ -7,6 +7,7 @@ import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.validation.entryBackupTestRuntime
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
+import kotlin.collections.plus
 
 class EntryBackupFeatureTest {
 

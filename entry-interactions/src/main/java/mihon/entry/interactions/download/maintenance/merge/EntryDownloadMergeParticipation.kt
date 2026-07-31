@@ -1,15 +1,24 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download.maintenance.merge
 
 import kotlinx.serialization.json.Json
+import mihon.entry.interactions.download.ENTRY_DOWNLOAD_MAINTENANCE_FEATURE_OWNER
+import mihon.entry.interactions.download.EntryDownloadCapability
+import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
+import mihon.entry.interactions.download.EntryDownloadMaintenanceResult
+import mihon.entry.interactions.download.EntryDownloadRemovalPlan
+import mihon.entry.interactions.download.EntryDownloadRemovalPreparation
+import mihon.entry.interactions.merge.consequence.ENTRY_MERGE_DURABLE_EXECUTION_POINT
+import mihon.entry.interactions.merge.consequence.EntryMergeDurableChange
+import mihon.entry.interactions.merge.consequence.EntryMergeDurableEvent
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureBehaviorContract
-import mihon.feature.graph.FeatureDurableExecutionParticipantBinding
-import mihon.feature.graph.FeatureDurableExecutionPayload
-import mihon.feature.graph.FeatureExecutionParticipantDefinition
 import mihon.feature.graph.FeatureExecutionParticipantId
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
+import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
+import mihon.feature.graph.execution.FeatureDurableExecutionPayload
+import mihon.feature.graph.execution.FeatureExecutionParticipantDefinition
 
 internal object EntryDownloadMergeDurableBehaviorContract : FeatureBehaviorContract {
     override val id = FeatureArtifactId("entry.download.maintenance.merge-removal.behavior")

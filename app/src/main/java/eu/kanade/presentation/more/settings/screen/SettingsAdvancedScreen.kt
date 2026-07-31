@@ -27,7 +27,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.extension.interactor.TrustExtension
-import eu.kanade.domain.source.service.GlobalSourcePreferences
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.advanced.ClearDatabaseScreen
 import eu.kanade.presentation.more.settings.screen.debug.DebugInfoScreen
@@ -57,11 +56,11 @@ import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.core.common.GlobalCustomPreferences
-import mihon.entry.interactions.EntryDownloadMaintenanceFeature
-import mihon.entry.interactions.EntryMergeConsequenceStatus
-import mihon.entry.interactions.EntryMergeConsequenceStatusFeature
-import mihon.entry.interactions.EntryViewerSettingsFeature
-import mihon.entry.interactions.EntryViewerSettingsResetResult
+import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
+import mihon.entry.interactions.media.EntryViewerSettingsFeature
+import mihon.entry.interactions.media.EntryViewerSettingsResetResult
+import mihon.entry.interactions.merge.EntryMergeConsequenceStatus
+import mihon.entry.interactions.merge.EntryMergeConsequenceStatusFeature
 import okhttp3.Headers
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withUIContext

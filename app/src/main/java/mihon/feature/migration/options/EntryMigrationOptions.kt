@@ -1,7 +1,7 @@
 package mihon.feature.migration.options
 
 import mihon.domain.migration.models.MigrationFlag
-import mihon.entry.interactions.EntryMigrationOption
+import mihon.entry.interactions.migration.EntryMigrationOption
 
 internal fun MigrationFlag.toEntryMigrationOption(): EntryMigrationOption {
     return when (this) {

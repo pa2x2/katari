@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.reader
 
 import android.content.ContentResolver
 import android.content.Context
@@ -18,12 +18,24 @@ import mihon.book.api.BookPublication
 import mihon.book.api.BookResource
 import mihon.book.api.model.BookPublicationModel
 import mihon.book.api.model.BookPublicationModelDescriptor
+import mihon.entry.interactions.book.content.BookContentSession
 import mihon.entry.interactions.book.download.BookDownloadCache
+import mihon.entry.interactions.book.preparation.BookContentPreparer
+import mihon.entry.interactions.book.preparation.BookContentPreparerRegistry
+import mihon.entry.interactions.book.preparation.BookPreparationResult
+import mihon.entry.interactions.book.preparation.BookPublicationResource
+import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
+import mihon.entry.interactions.book.preparation.PreparedBookPublication
+import mihon.entry.interactions.book.processor.BookReaderProcessor
+import mihon.entry.interactions.book.processor.BookReaderProcessorRegistry
+import mihon.entry.interactions.book.processor.BookReaderRequest
+import mihon.entry.interactions.book.state.BookProgressLocatorCodec
+import mihon.entry.viewer.settings.shared.ReaderCapabilityId
 import okhttp3.OkHttpClient
-import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
+import java.io.IOException
 import java.nio.file.Files
 import kotlin.test.assertIs
 
@@ -128,7 +140,7 @@ internal abstract class BookReaderSessionFixture {
     }
 
     protected fun failingDownloadCache(): BookDownloadCache = mockk {
-        coEvery { getVerified(any()) } throws java.io.IOException("storage unavailable")
+        coEvery { getVerified(any()) } throws IOException("storage unavailable")
     }
 }
 internal class SessionFactoryTestPreparer(
@@ -160,7 +172,7 @@ internal class SessionFactoryTestReaderProcessor : BookReaderProcessor {
         sessionToken: String,
     ): Intent = Intent()
 
-    override fun readerCapabilities(model: BookPublicationModel): Set<mihon.entry.viewer.settings.ReaderCapabilityId> {
+    override fun readerCapabilities(model: BookPublicationModel): Set<ReaderCapabilityId> {
         receivedModel = model
         return emptySet()
     }

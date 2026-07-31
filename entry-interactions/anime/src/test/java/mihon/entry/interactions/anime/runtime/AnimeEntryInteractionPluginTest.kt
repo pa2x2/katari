@@ -1,4 +1,4 @@
-package mihon.entry.interactions.anime
+package mihon.entry.interactions.anime.runtime
 
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryMedia
@@ -14,9 +14,7 @@ import eu.kanade.tachiyomi.source.entry.VideoSubtitle
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -27,23 +25,31 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.EntryChildListRequest
-import mihon.entry.interactions.EntryChildListRow
-import mihon.entry.interactions.EntryChildProgressRequest
-import mihon.entry.interactions.EntryDownloadOptionSelection
-import mihon.entry.interactions.EntryDownloadPhase
-import mihon.entry.interactions.EntryDownloadProgress
-import mihon.entry.interactions.EntryDownloadState
-import mihon.entry.interactions.EntryMediaSessionEventSink
-import mihon.entry.interactions.EntryMediaSessionResult
-import mihon.entry.interactions.EntryOpenOptions
-import mihon.entry.interactions.EntryProgressResourceMapping
-import mihon.entry.interactions.EntryProgressSnapshot
-import mihon.entry.interactions.EntryProgressStateSnapshot
 import mihon.entry.interactions.anime.download.AnimeDownloadCache
 import mihon.entry.interactions.anime.download.AnimeDownloadManager
 import mihon.entry.interactions.anime.download.model.AnimeDownload
+import mihon.entry.interactions.anime.download.toAnimeEntryDownloadQueueGroups
+import mihon.entry.interactions.anime.download.toEntryDownloadQueueItem
+import mihon.entry.interactions.anime.download.toEntryDownloadState
+import mihon.entry.interactions.anime.download.toEntryDownloadStatus
+import mihon.entry.interactions.anime.library.AnimeLibraryProgressProvider
+import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
+import mihon.entry.interactions.anime.navigation.AnimeContinueProcessor
+import mihon.entry.interactions.anime.navigation.AnimeOpenProcessor
+import mihon.entry.interactions.anime.state.AnimeConsumptionProcessor
+import mihon.entry.interactions.anime.state.AnimeProgressProcessor
+import mihon.entry.interactions.anime.state.animeProgressState
+import mihon.entry.interactions.child.EntryChildProgressRequest
+import mihon.entry.interactions.download.EntryDownloadOptionSelection
+import mihon.entry.interactions.download.EntryDownloadPhase
+import mihon.entry.interactions.download.EntryDownloadProgress
+import mihon.entry.interactions.download.EntryDownloadState
+import mihon.entry.interactions.media.session.EntryMediaSessionEventSink
+import mihon.entry.interactions.media.session.EntryMediaSessionResult
 import mihon.entry.interactions.settings.EntryInteractionPreferences
+import mihon.entry.interactions.state.EntryProgressResourceMapping
+import mihon.entry.interactions.state.EntryProgressSnapshot
+import mihon.entry.interactions.state.EntryProgressStateSnapshot
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
@@ -242,7 +248,8 @@ class AnimeEntryInteractionPluginTest {
 
     @Test
     fun `anime child list defaults to chapter number descending without missing chapter ranges`() = runTest {
-        val interactions = createEntryInteractions(listOf(animeEntryInteractionPlugin(dependencies())))
+        val interactions =
+            createEntryInteractions(listOf(animeEntryInteractionPlugin(dependencies())))
         val entry = entry(EntryType.ANIME)
         val rows = interactions.childList.sortedForDisplay(
             entry = entry,
@@ -266,7 +273,11 @@ class AnimeEntryInteractionPluginTest {
                 animeEntryInteractionPlugin(
                     dependencies(
                         playbackStates = listOf(
-                            playbackState(chapterId = 7L, positionMs = 65_000L, durationMs = 3_665_000L),
+                            playbackState(
+                                chapterId = 7L,
+                                positionMs = 65_000L,
+                                durationMs = 3_665_000L,
+                            ),
                         ),
                     ),
                 ),
@@ -417,7 +428,14 @@ class AnimeEntryInteractionPluginTest {
         val progressRepository = FakeEntryProgressRepository(emptyList())
         val progressProcessor = AnimeProgressProcessor(
             entryProgressRepository = progressRepository,
-            entryChapterRepository = FakeEntryChapterRepository(listOf(chapter(id = 20L, entryId = 2L))),
+            entryChapterRepository = FakeEntryChapterRepository(
+                listOf(
+                    chapter(
+                        id = 20L,
+                        entryId = 2L,
+                    ),
+                ),
+            ),
         )
 
         progressProcessor.restore(
@@ -456,7 +474,8 @@ class AnimeEntryInteractionPluginTest {
                 playbackState(entryId = 1L, chapterId = 11L, positionMs = 4_000L, completed = true),
             ),
         )
-        val progressProcessor = AnimeProgressProcessor(progressRepository, FakeEntryChapterRepository(emptyList()))
+        val progressProcessor =
+            AnimeProgressProcessor(progressRepository, FakeEntryChapterRepository(emptyList()))
 
         progressProcessor.copy(
             sourceEntry = entry(EntryType.ANIME, id = 1L),
@@ -778,7 +797,9 @@ class AnimeEntryInteractionPluginTest {
             ),
             entryProgressRepository = FakeEntryProgressRepository(playbackStates),
             playbackPreferencesRepository = mockk(relaxed = true),
-            animeDownloadManager = animeDownloadManager ?: mockAnimeDownloadManager(episodeDownloaded),
+            animeDownloadManager = animeDownloadManager ?: mockAnimeDownloadManager(
+                episodeDownloaded,
+            ),
             animeDownloadCache = mockAnimeDownloadCache(),
             downloadPreferences = automaticDownloadPreferences,
             downloadPreferencesRepository = downloadPreferencesRepository,

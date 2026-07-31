@@ -1,17 +1,22 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.migration.consequence.cover
 
 import kotlinx.serialization.json.Json
-import mihon.entry.interactions.host.EntryMigrationCustomCoverHost
-import mihon.entry.interactions.host.EntryMigrationCustomCoverPayload
+import mihon.entry.interactions.library.membership.consequence.ENTRY_LIBRARY_CUSTOM_COVER_OWNER
+import mihon.entry.interactions.migration.EntryMigrationOption
+import mihon.entry.interactions.migration.consequence.ENTRY_MIGRATION_DURABLE_EXECUTION_POINT
+import mihon.entry.interactions.migration.consequence.EntryMigrationDurableEvent
+import mihon.entry.interactions.migration.host.EntryMigrationCustomCoverHost
+import mihon.entry.interactions.migration.host.EntryMigrationCustomCoverPayload
+import mihon.entry.interactions.state.EntryMigrationCapability
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureBehaviorContract
-import mihon.feature.graph.FeatureDurableExecutionParticipantBinding
-import mihon.feature.graph.FeatureDurableExecutionPayload
-import mihon.feature.graph.FeatureExecutionParticipantDefinition
 import mihon.feature.graph.FeatureExecutionParticipantId
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
+import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
+import mihon.feature.graph.execution.FeatureDurableExecutionPayload
+import mihon.feature.graph.execution.FeatureExecutionParticipantDefinition
 
 internal object EntryMigrationCustomCoverDurableBehaviorContract : FeatureBehaviorContract {
     override val id = FeatureArtifactId("entry.custom-cover.migration-durable.behavior")

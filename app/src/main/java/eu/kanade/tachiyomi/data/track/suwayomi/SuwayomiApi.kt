@@ -13,8 +13,8 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
-import mihon.entry.interactions.EntryTrackerSourceAdapterFeature
-import mihon.entry.interactions.EntryTrackerSourceAdapterResolution
+import mihon.entry.interactions.source.EntryTrackerSourceAdapterFeature
+import mihon.entry.interactions.source.EntryTrackerSourceAdapterResolution
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
 import tachiyomi.core.common.util.lang.withIOContext

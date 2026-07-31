@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.merge
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.domain.entry.model.Entry

@@ -1,2 +1,2 @@
 id=book
-factory=mihon.entry.interactions.book.bookEntryTypeRuntimeModule
+factory=mihon.entry.interactions.book.runtime.bookEntryTypeRuntimeModule

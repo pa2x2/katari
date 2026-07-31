@@ -1,7 +1,8 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.navigation
 
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.runtime.applicableProviderTypes
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId

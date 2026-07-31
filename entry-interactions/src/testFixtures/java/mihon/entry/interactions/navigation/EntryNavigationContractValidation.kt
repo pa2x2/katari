@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.navigation
 
 import android.app.PendingIntent
 import android.content.Context
@@ -87,7 +87,10 @@ class EntryContinueContractValidationContributor : FeatureValidationContributor 
                     val feature = DefaultEntryContinueFeature(
                         evaluation = evaluation,
                         interaction = object : EntryContinueInteraction {
-                            override suspend fun continueEntry(context: Context, entry: Entry): EntryChapter {
+                            override suspend fun continueEntry(
+                                context: Context,
+                                entry: Entry,
+                            ): EntryChapter {
                                 opened += entry.id
                                 return next
                             }

@@ -40,7 +40,6 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Brush
 import androidx.compose.material.icons.outlined.OpenInBrowser
 import androidx.compose.material.icons.outlined.PersonOutline
-import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material3.CircularProgressIndicator
@@ -56,7 +55,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -88,7 +86,6 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import coil3.compose.AsyncImage
 import coil3.request.CachePolicy
 import coil3.request.ImageRequest
@@ -104,14 +101,12 @@ import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.components.MARKDOWN_INLINE_IMAGE_TAG
 import eu.kanade.presentation.components.MarkdownRender
 import eu.kanade.presentation.components.getMarkdownLinkStyle
-import eu.kanade.presentation.entry.components.EntryNotesSection
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.entry.EntryScreenModel
 import eu.kanade.tachiyomi.util.system.copyToClipboard
-import kotlinx.coroutines.flow.collectLatest
-import mihon.entry.interactions.EntryCatalogueFeature
-import mihon.entry.interactions.EntryPreviewPage
-import mihon.entry.interactions.EntryPreviewPageStatus
+import mihon.entry.interactions.catalogue.EntryCatalogueFeature
+import mihon.entry.interactions.media.EntryPreviewPage
+import mihon.entry.interactions.media.EntryPreviewPageStatus
 import org.intellij.markdown.MarkdownElementTypes
 import org.intellij.markdown.MarkdownTokenTypes
 import org.intellij.markdown.ast.findChildOfType

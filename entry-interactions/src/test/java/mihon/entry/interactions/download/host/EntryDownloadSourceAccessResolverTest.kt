@@ -1,9 +1,10 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download.host
 
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import mihon.entry.interactions.download.runtime.EntryDownloadSourceAccess
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.source.model.UnifiedStubSource
 import tachiyomi.domain.source.service.SourceManager

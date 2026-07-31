@@ -1,7 +1,8 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.preparation
 
 import mihon.book.api.BookContentDescriptor
 import mihon.book.api.model.BookPublicationModelDescriptor
+import mihon.entry.interactions.book.content.BookContentSession
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -16,7 +17,11 @@ class BookContentPreparerRegistryTest {
         val preparer = FakePreparer("html", descriptor, model)
 
         val selected = assertIs<BookContentPreparerSelection.Selected>(
-            BookContentPreparerRegistry(listOf(preparer)).resolve(descriptor),
+            BookContentPreparerRegistry(
+                listOf(
+                    preparer,
+                ),
+            ).resolve(descriptor),
         )
 
         assertEquals(model, selected.preparer.outputModel)
@@ -39,7 +44,8 @@ class BookContentPreparerRegistryTest {
     @Test
     fun `unsupported descriptors and duplicate identities fail explicitly`() {
         assertIs<BookContentPreparerSelection.Unsupported>(
-            BookContentPreparerRegistry(emptyList()).resolve(descriptor),
+            BookContentPreparerRegistry(emptyList())
+                .resolve(descriptor),
         )
         assertFailsWith<IllegalArgumentException> {
             BookContentPreparerRegistry(

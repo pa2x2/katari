@@ -1,11 +1,11 @@
-package mihon.entry.interactions.anime
+package mihon.entry.interactions.anime.runtime
 
 import android.app.Application
 import eu.kanade.tachiyomi.ui.video.player.AnimePlayerBasePreferences
 import eu.kanade.tachiyomi.ui.video.player.ResolveVideoStream
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerMediaCache
 import eu.kanade.tachiyomi.ui.video.player.VideoStreamResolver
-import mihon.entry.interactions.EntryPlayerCache
+import mihon.entry.interactions.runtime.EntryPlayerCache
 import tachiyomi.core.common.preference.PreferenceStore
 import uy.kohesive.injekt.api.InjektRegistrar
 import uy.kohesive.injekt.api.addSingletonFactory

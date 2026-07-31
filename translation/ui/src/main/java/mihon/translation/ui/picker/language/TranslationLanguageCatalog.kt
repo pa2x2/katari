@@ -1,7 +1,7 @@
-package mihon.translation.ui.picker
+package mihon.translation.ui.picker.language
 
-import mihon.translation.api.TranslationLanguageSupport
-import mihon.translation.api.TranslationLanguageTag
+import mihon.translation.api.language.TranslationLanguageSupport
+import mihon.translation.api.language.TranslationLanguageTag
 import java.text.Collator
 import java.util.Locale
 

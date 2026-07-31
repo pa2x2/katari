@@ -1,11 +1,13 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.migration
 
+import mihon.feature.graph.ContextEvidence
+import mihon.feature.graph.FeatureIntegrationId
 import mihon.feature.graph.contextEvidence
 
 internal data class EntryMigrationContract(
-    val integration: mihon.feature.graph.FeatureIntegrationId,
+    val integration: FeatureIntegrationId,
     val contract: EntryMigrationBehaviorContract,
-    val scenario: (() -> List<mihon.feature.graph.ContextEvidence<*>>)? = null,
+    val scenario: (() -> List<ContextEvidence<*>>)? = null,
 )
 
 internal val EntryMigrationBehaviorContract.requiresExecution: Boolean

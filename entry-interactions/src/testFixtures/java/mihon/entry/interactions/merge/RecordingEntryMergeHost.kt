@@ -1,17 +1,17 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.merge
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
-import mihon.entry.interactions.host.EntryMergeConsequenceStatusSnapshot
-import mihon.entry.interactions.host.EntryMergeHost
-import mihon.entry.interactions.host.EntryMergeHostTransition
-import mihon.entry.interactions.host.EntryMergeHostTransitionResult
-import mihon.entry.interactions.host.EntryMergeMembershipSnapshot
-import mihon.entry.interactions.host.EntryMergePendingConsequence
-import mihon.entry.interactions.host.EntryMergeProfileHost
-import mihon.entry.interactions.host.EntryMergeProfileMoveHostTransition
+import mihon.entry.interactions.merge.host.EntryMergeConsequenceStatusSnapshot
+import mihon.entry.interactions.merge.host.EntryMergeHost
+import mihon.entry.interactions.merge.host.EntryMergeHostTransition
+import mihon.entry.interactions.merge.host.EntryMergeHostTransitionResult
+import mihon.entry.interactions.merge.host.EntryMergeMembershipSnapshot
+import mihon.entry.interactions.merge.host.EntryMergePendingConsequence
+import mihon.entry.interactions.merge.host.EntryMergeProfileHost
+import mihon.entry.interactions.merge.host.EntryMergeProfileMoveHostTransition
 import tachiyomi.domain.entry.model.DuplicateEntryCandidate
 import tachiyomi.domain.entry.model.Entry
 

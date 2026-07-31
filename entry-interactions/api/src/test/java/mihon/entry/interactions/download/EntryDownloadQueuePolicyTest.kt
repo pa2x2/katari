@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download
 
 import io.kotest.matchers.collections.shouldContainExactly
 import org.junit.jupiter.api.Test

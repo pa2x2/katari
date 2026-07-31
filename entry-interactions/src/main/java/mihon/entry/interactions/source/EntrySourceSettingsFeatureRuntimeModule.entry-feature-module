@@ -1,2 +1,2 @@
 id=entry.source-settings
-module=mihon.entry.interactions.EntrySourceSettingsFeatureRuntimeModule
+module=mihon.entry.interactions.source.EntrySourceSettingsFeatureRuntimeModule

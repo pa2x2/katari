@@ -1,4 +1,4 @@
-package mihon.entry.interactions.host.tracking
+package mihon.entry.interactions.tracking.host
 
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.track.model.EntryTrack

@@ -1,19 +1,21 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.tracking
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import mihon.entry.interactions.host.tracking.EntryTrackingHost
-import mihon.entry.interactions.host.tracking.EntryTrackingHostAccount
-import mihon.entry.interactions.host.tracking.EntryTrackingHostCredentialIdentity
-import mihon.entry.interactions.host.tracking.EntryTrackingHostLoginMethod
+import mihon.entry.interactions.tracking.host.EntryTrackingHost
+import mihon.entry.interactions.tracking.host.EntryTrackingHostAccount
+import mihon.entry.interactions.tracking.host.EntryTrackingHostCredentialIdentity
+import mihon.entry.interactions.tracking.host.EntryTrackingHostLoginMethod
 
 internal class DefaultEntryTrackingAccounts(
     private val host: EntryTrackingHost,
 ) : EntryTrackingAccounts {
     override fun currentAccounts(): EntryTrackingAccountSnapshot {
-        return EntryTrackingAccountSnapshot(host.accounts.currentAccounts().map(EntryTrackingHostAccount::toAccount))
+        return EntryTrackingAccountSnapshot(
+            host.accounts.currentAccounts().map(EntryTrackingHostAccount::toAccount),
+        )
     }
 
     override fun observeAccounts(): Flow<EntryTrackingAccountSnapshot> {
@@ -90,6 +92,7 @@ private fun EntryTrackingHostAccount.toAccount() = EntryTrackingAccount(
                 EntryTrackingHostCredentialIdentity.EMAIL -> EntryTrackingCredentialIdentity.EMAIL
             },
         )
+
         EntryTrackingHostLoginMethod.Passive -> EntryTrackingLoginMethod.Passive
     },
     isLoggedIn = isLoggedIn,

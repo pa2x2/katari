@@ -2,17 +2,17 @@ package mihon.translation.provider.libretranslate.server
 
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
-import mihon.translation.api.ResolvedTranslationRequest
-import mihon.translation.api.TranslationLanguageTag
-import mihon.translation.api.TranslationSystemSetupReason
-import mihon.translation.api.TranslationUnavailableReason
+import mihon.translation.api.language.TranslationLanguageTag
+import mihon.translation.api.preparation.TranslationSystemSetupReason
+import mihon.translation.api.preparation.TranslationUnavailableReason
+import mihon.translation.api.request.ResolvedTranslationRequest
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateException
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateFailureKind
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateLanguage
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateService
-import mihon.translation.spi.TranslationEngineDeviceAvailability
-import mihon.translation.spi.TranslationEngineExecution
-import mihon.translation.spi.TranslationEnginePreparation
+import mihon.translation.spi.engine.TranslationEngineDeviceAvailability
+import mihon.translation.spi.engine.TranslationEngineExecution
+import mihon.translation.spi.engine.TranslationEnginePreparation
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.junit.jupiter.api.Test

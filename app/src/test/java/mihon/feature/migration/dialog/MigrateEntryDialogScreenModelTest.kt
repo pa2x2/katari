@@ -7,11 +7,11 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
-import mihon.entry.interactions.EntryMigrationFeature
-import mihon.entry.interactions.EntryMigrationOption
-import mihon.entry.interactions.EntryMigrationPreparationResult
-import mihon.entry.interactions.EntryMigrationReference
-import mihon.entry.interactions.EntryMigrationSubject
+import mihon.entry.interactions.migration.EntryMigrationFeature
+import mihon.entry.interactions.migration.EntryMigrationOption
+import mihon.entry.interactions.migration.EntryMigrationPreparationResult
+import mihon.entry.interactions.migration.EntryMigrationReference
+import mihon.entry.interactions.migration.EntryMigrationSubject
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 import tachiyomi.domain.entry.model.Entry

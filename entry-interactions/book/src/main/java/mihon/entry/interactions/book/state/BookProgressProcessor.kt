@@ -1,10 +1,13 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.state
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.EntryProgressProcessor
-import mihon.entry.interactions.EntryProgressResourceMapping
-import mihon.entry.interactions.EntryProgressSnapshot
-import mihon.entry.interactions.EntryProgressStateSnapshot
+import mihon.entry.interactions.book.migration.BOOK_PENDING_MIGRATION_CONTENT_KEY
+import mihon.entry.interactions.book.migration.bookPendingMigrationResourceKey
+import mihon.entry.interactions.book.runtime.requireBook
+import mihon.entry.interactions.state.EntryProgressProcessor
+import mihon.entry.interactions.state.EntryProgressResourceMapping
+import mihon.entry.interactions.state.EntryProgressSnapshot
+import mihon.entry.interactions.state.EntryProgressStateSnapshot
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.model.progressResourceKey

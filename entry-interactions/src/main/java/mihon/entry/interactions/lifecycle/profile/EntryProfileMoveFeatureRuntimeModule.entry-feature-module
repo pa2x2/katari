@@ -1,2 +1,2 @@
 id=entry.profile-move
-module=mihon.entry.interactions.EntryProfileMoveFeatureRuntimeModule
+module=mihon.entry.interactions.lifecycle.profile.EntryProfileMoveFeatureRuntimeModule

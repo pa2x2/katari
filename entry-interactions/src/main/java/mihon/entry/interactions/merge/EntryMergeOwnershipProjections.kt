@@ -1,8 +1,8 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.merge
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import mihon.entry.interactions.host.EntryMergeHost
+import mihon.entry.interactions.merge.host.EntryMergeHost
 import tachiyomi.domain.entry.service.EntryChildOwnershipResolution
 
 internal class EntryMergeChildOwnershipCoordinator(

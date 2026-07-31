@@ -1,6 +1,6 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.merge
 
-import mihon.entry.interactions.host.EntryMergeHost
+import mihon.entry.interactions.merge.host.EntryMergeHost
 import tachiyomi.domain.entry.model.Entry
 
 internal class EntryMergeMetadataRefreshCoordinator(

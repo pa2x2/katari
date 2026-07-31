@@ -1,15 +1,19 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download
 
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import mihon.entry.interactions.library.EntryLibraryUpdateExecutionSession
+import mihon.entry.interactions.library.EntryLibraryUpdateNewChildrenEvent
+import mihon.entry.interactions.source.EntrySourceRefreshNewChildrenEvent
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
 import mihon.feature.graph.FeatureContractScenarioId
 import mihon.feature.graph.contextEvidence
+import mihon.feature.graph.validation.FeatureContractExecutionInput
 import mihon.feature.graph.validation.FeatureContractReference
 import mihon.feature.graph.validation.FeatureContractScenario
 import mihon.feature.graph.validation.FeatureContractVerifier
@@ -112,7 +116,7 @@ class EntryAutomaticDownloadContractValidationContributor : FeatureValidationCon
     }
 }
 
-private suspend fun verifyAutomaticDownload(input: mihon.feature.graph.validation.FeatureContractExecutionInput) =
+private suspend fun verifyAutomaticDownload(input: FeatureContractExecutionInput) =
     verifyFeatureContract {
         val provider = input.provider(EntryDownloadCapability.definition)
         val evaluation = productionSubjectEvaluation(

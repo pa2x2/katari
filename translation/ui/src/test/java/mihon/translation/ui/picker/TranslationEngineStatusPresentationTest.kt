@@ -1,21 +1,27 @@
 package mihon.translation.ui.picker
 
 import io.kotest.matchers.shouldBe
-import mihon.translation.api.KnownTranslationEngine
-import mihon.translation.api.TranslationEngineAction
-import mihon.translation.api.TranslationEngineArtwork
-import mihon.translation.api.TranslationEngineBuildAvailability
-import mihon.translation.api.TranslationEngineDetails
-import mihon.translation.api.TranslationEngineId
-import mihon.translation.api.TranslationEngineState
-import mihon.translation.api.TranslationEngineStatus
-import mihon.translation.api.TranslationLanguageTag
-import mihon.translation.api.TranslationModelDescriptor
-import mihon.translation.api.TranslationModelId
-import mihon.translation.api.TranslationProviderDisclosure
-import mihon.translation.api.TranslationProviderId
-import mihon.translation.api.TranslationSystemSetupReason
-import mihon.translation.api.TranslationUnavailableReason
+import mihon.translation.api.engine.KnownTranslationEngine
+import mihon.translation.api.engine.TranslationEngineAction
+import mihon.translation.api.engine.TranslationEngineArtwork
+import mihon.translation.api.engine.TranslationEngineBuildAvailability
+import mihon.translation.api.engine.TranslationEngineDetails
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.engine.TranslationEngineState
+import mihon.translation.api.engine.TranslationEngineStatus
+import mihon.translation.api.engine.TranslationProviderId
+import mihon.translation.api.language.TranslationLanguageTag
+import mihon.translation.api.model.TranslationModelDescriptor
+import mihon.translation.api.model.TranslationModelId
+import mihon.translation.api.preparation.TranslationSystemSetupReason
+import mihon.translation.api.preparation.TranslationUnavailableReason
+import mihon.translation.api.provider.TranslationProviderDisclosure
+import mihon.translation.ui.picker.engine.TranslationEnginePickerDensity
+import mihon.translation.ui.picker.engine.TranslationEngineStatusExplanation
+import mihon.translation.ui.picker.engine.TranslationEngineStatusLabel
+import mihon.translation.ui.picker.engine.isTranslationEngineSelectionMissing
+import mihon.translation.ui.picker.engine.projectTranslationEngineCard
+import mihon.translation.ui.picker.engine.projectTranslationEnginePicker
 import org.junit.jupiter.api.Test
 
 class TranslationEngineStatusPresentationTest {

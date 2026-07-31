@@ -1,2 +1,2 @@
 id=entry.type-presentation
-module=mihon.entry.interactions.EntryTypePresentationFeatureRuntimeModule
+module=mihon.entry.interactions.presentation.EntryTypePresentationFeatureRuntimeModule

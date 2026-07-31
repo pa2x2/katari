@@ -1,6 +1,9 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.library
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.navigation.EntryContinueCapability
+import mihon.entry.interactions.runtime.applicableProviderTypes
+import mihon.entry.interactions.state.EntryBookmarkCapability
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId

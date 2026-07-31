@@ -1,6 +1,10 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.library
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.entryContentType
+import mihon.entry.interactions.runtime.EntryOutsideReleasePeriodFilterCapability
+import mihon.entry.interactions.runtime.toContentTypeId
+import mihon.entry.interactions.state.EntryBookmarkCapability
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
@@ -49,10 +53,22 @@ private data class LibraryFilterContract(
 )
 
 private val libraryFilterContracts = listOf(
-    LibraryFilterContract(ENTRY_LIBRARY_FILTER_PARTICIPATION_INTEGRATION, EntryLibraryFilterBehaviorContract),
-    LibraryFilterContract(ENTRY_LIBRARY_FILTER_CONTEXT_INTEGRATION, EntryLibraryFilterContextBehaviorContract),
-    LibraryFilterContract(ENTRY_LIBRARY_FILTER_PROGRESS_INTEGRATION, EntryLibraryFilterProgressBehaviorContract),
-    LibraryFilterContract(ENTRY_LIBRARY_FILTER_BOOKMARK_INTEGRATION, EntryLibraryFilterBookmarkBehaviorContract),
+    LibraryFilterContract(
+        ENTRY_LIBRARY_FILTER_PARTICIPATION_INTEGRATION,
+        EntryLibraryFilterBehaviorContract,
+    ),
+    LibraryFilterContract(
+        ENTRY_LIBRARY_FILTER_CONTEXT_INTEGRATION,
+        EntryLibraryFilterContextBehaviorContract,
+    ),
+    LibraryFilterContract(
+        ENTRY_LIBRARY_FILTER_PROGRESS_INTEGRATION,
+        EntryLibraryFilterProgressBehaviorContract,
+    ),
+    LibraryFilterContract(
+        ENTRY_LIBRARY_FILTER_BOOKMARK_INTEGRATION,
+        EntryLibraryFilterBookmarkBehaviorContract,
+    ),
     LibraryFilterContract(
         ENTRY_LIBRARY_FILTER_RELEASE_PERIOD_INTEGRATION,
         EntryLibraryFilterReleasePeriodBehaviorContract,
@@ -122,5 +138,6 @@ private val neutralLibraryFilterPolicy = EntryLibraryFilterPolicy(
     outsideReleasePeriodEnabled = false,
     tracking = emptyMap(),
 )
-private val neutralLibraryFilterState = EntryLibraryFilterStateContext(1, false, false, false, false)
+private val neutralLibraryFilterState =
+    EntryLibraryFilterStateContext(1, false, false, false, false)
 private val neutralLibraryTrackingState = EntryLibraryTrackingFilterContext(emptySet(), emptySet())

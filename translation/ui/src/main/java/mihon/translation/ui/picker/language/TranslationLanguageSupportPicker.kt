@@ -1,4 +1,4 @@
-package mihon.translation.ui.picker
+package mihon.translation.ui.picker.language
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,8 +13,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import mihon.translation.api.TranslationEngineId
-import mihon.translation.api.TranslationLanguageTag
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.ui.session.TranslationLanguageSupportState
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource

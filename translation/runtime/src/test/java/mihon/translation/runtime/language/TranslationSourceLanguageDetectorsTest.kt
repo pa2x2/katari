@@ -1,15 +1,17 @@
-package mihon.translation.runtime
+package mihon.translation.runtime.language
 
 import android.app.Application
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.string.shouldContain
 import io.mockk.mockk
-import mihon.feature.runtime.ApplicationFeatureRuntimeComponents
-import mihon.feature.runtime.RegisteredApplicationFeatureRuntimeComponent
-import mihon.translation.spi.TranslationSourceLanguageDetection
-import mihon.translation.spi.TranslationSourceLanguageDetector
-import mihon.translation.spi.TranslationSourceLanguageDetectorId
+import mihon.feature.runtime.application.ApplicationFeatureRuntimeComponents
+import mihon.feature.runtime.application.RegisteredApplicationFeatureRuntimeComponent
+import mihon.translation.runtime.component.TranslationRuntimeComponent
+import mihon.translation.runtime.component.TranslationRuntimeContribution
+import mihon.translation.spi.language.TranslationSourceLanguageDetection
+import mihon.translation.spi.language.TranslationSourceLanguageDetector
+import mihon.translation.spi.language.TranslationSourceLanguageDetectorId
 import org.junit.jupiter.api.Test
 
 class TranslationSourceLanguageDetectorsTest {

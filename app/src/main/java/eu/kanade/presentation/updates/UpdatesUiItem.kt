@@ -45,7 +45,7 @@ import eu.kanade.presentation.entry.partialProgressLabel
 import eu.kanade.presentation.util.animateItemFastScroll
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.ui.updates.UpdatesItem
-import mihon.entry.interactions.EntryDownloadState
+import mihon.entry.interactions.download.EntryDownloadState
 import tachiyomi.domain.updates.model.UpdateItem
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.ListGroupHeader

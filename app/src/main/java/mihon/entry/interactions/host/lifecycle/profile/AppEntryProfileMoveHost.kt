@@ -1,12 +1,12 @@
 package mihon.entry.interactions.host.lifecycle.profile
 
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
-import mihon.entry.interactions.EntryProfileMoveCommit
-import mihon.entry.interactions.EntryProfileMoveConflict
-import mihon.entry.interactions.EntryProfileMoveHost
-import mihon.entry.interactions.EntryProfileMovePlan
-import mihon.entry.interactions.EntryProfileMovePreview
-import mihon.entry.interactions.EntryProfileMoveRequest
+import mihon.entry.interactions.lifecycle.profile.EntryProfileMoveConflict
+import mihon.entry.interactions.lifecycle.profile.EntryProfileMovePlan
+import mihon.entry.interactions.lifecycle.profile.EntryProfileMovePreview
+import mihon.entry.interactions.lifecycle.profile.EntryProfileMoveRequest
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveCommit
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveHost
 import tachiyomi.data.Database
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.data.entry.EntryMapper

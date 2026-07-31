@@ -1,13 +1,13 @@
-package mihon.translation.runtime
+package mihon.translation.runtime.registry
 
-import mihon.translation.api.KnownTranslationEngine
-import mihon.translation.api.TranslationEngineId
-import mihon.translation.spi.KnownTranslationEngineCatalog
-import mihon.translation.spi.TranslationEngine
-import mihon.translation.spi.TranslationEngineContribution
-import mihon.translation.spi.TranslationEngineRegistry
-import mihon.translation.spi.TranslationEngineSetup
-import mihon.translation.spi.TranslationEngineSetupRegistry
+import mihon.translation.api.engine.KnownTranslationEngine
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.spi.contribution.TranslationEngineContribution
+import mihon.translation.spi.engine.KnownTranslationEngineCatalog
+import mihon.translation.spi.engine.TranslationEngine
+import mihon.translation.spi.engine.TranslationEngineRegistry
+import mihon.translation.spi.setup.TranslationEngineSetup
+import mihon.translation.spi.setup.TranslationEngineSetupRegistry
 
 class DefaultTranslationEngineRegistry(
     contributions: List<TranslationEngineContribution>,

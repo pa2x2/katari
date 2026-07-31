@@ -1,7 +1,8 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.state
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.serialization.Serializable
+import mihon.entry.interactions.media.session.EntryMediaSessionEvent
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryProgressState
 

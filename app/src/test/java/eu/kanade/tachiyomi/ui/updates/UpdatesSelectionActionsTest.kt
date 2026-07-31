@@ -4,9 +4,9 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import mihon.entry.interactions.EntryConsumptionFeature
-import mihon.entry.interactions.EntryConsumptionStatus
-import mihon.entry.interactions.EntryDownloadState
+import mihon.entry.interactions.download.EntryDownloadState
+import mihon.entry.interactions.state.EntryConsumptionFeature
+import mihon.entry.interactions.state.EntryConsumptionStatus
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.EntryCover
 import tachiyomi.domain.updates.model.UpdateItem

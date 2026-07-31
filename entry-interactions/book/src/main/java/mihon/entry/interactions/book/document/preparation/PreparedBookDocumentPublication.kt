@@ -7,10 +7,10 @@ import mihon.book.api.BookPublication
 import mihon.book.api.BookReadingDirection
 import mihon.book.api.BookResource
 import mihon.book.api.document.BookDocumentPublicationModel
-import mihon.entry.interactions.book.BookPublicationResourceDependencies
-import mihon.entry.interactions.book.BookPublicationResourceLoader
-import mihon.entry.interactions.book.BookResourceRequirement
-import mihon.entry.interactions.book.PreparedBookPublication
+import mihon.entry.interactions.book.preparation.BookPublicationResourceDependencies
+import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
+import mihon.entry.interactions.book.preparation.BookResourceRequirement
+import mihon.entry.interactions.book.preparation.PreparedBookPublication
 
 /** Runtime owner for a canonical document model and its protected subordinate-resource access. */
 internal class PreparedBookDocumentPublication(

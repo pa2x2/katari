@@ -1,6 +1,7 @@
 package mihon.translation.api
 
 import io.kotest.matchers.shouldBe
+import mihon.translation.api.language.TranslationLanguageTag
 import org.junit.jupiter.api.Test
 
 class TranslationLanguageTagTest {

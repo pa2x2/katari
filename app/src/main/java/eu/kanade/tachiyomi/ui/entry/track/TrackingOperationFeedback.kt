@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.ui.entry.track
 
 import logcat.LogPriority
-import mihon.entry.interactions.EntryTrackingOperationResult
-import mihon.entry.interactions.EntryTrackingRemovalResult
+import mihon.entry.interactions.tracking.EntryTrackingOperationResult
+import mihon.entry.interactions.tracking.EntryTrackingRemovalResult
 import tachiyomi.core.common.util.system.logcat
 
 internal fun EntryTrackingOperationResult.logFailure(operation: String) {

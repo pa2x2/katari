@@ -1,6 +1,9 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.runtime.applicableProviderTypes
+import mihon.entry.interactions.runtime.requireEntryContextState
+import mihon.entry.interactions.state.EntryBookmarkProcessor
 import mihon.feature.graph.ContextEvidence
 import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureGraphEvaluation

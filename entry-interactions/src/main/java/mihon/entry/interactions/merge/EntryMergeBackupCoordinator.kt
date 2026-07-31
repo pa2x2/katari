@@ -1,9 +1,9 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.merge
 
-import mihon.entry.interactions.host.EntryMergeHost
-import mihon.entry.interactions.host.EntryMergeHostTransition
-import mihon.entry.interactions.host.EntryMergeHostTransitionResult
-import mihon.entry.interactions.host.EntryMergeMembershipSnapshot
+import mihon.entry.interactions.merge.host.EntryMergeHost
+import mihon.entry.interactions.merge.host.EntryMergeHostTransition
+import mihon.entry.interactions.merge.host.EntryMergeHostTransitionResult
+import mihon.entry.interactions.merge.host.EntryMergeMembershipSnapshot
 import tachiyomi.domain.entry.model.Entry
 
 internal class EntryMergeBackupCoordinator(
@@ -14,7 +14,10 @@ internal class EntryMergeBackupCoordinator(
         val membership = profile.membership(subject.entryId) ?: return null
         val target = profile.entries(listOf(membership.targetEntryId)).singleOrNull() ?: return null
         val position = membership.orderedEntryIds.indexOf(subject.entryId).takeIf { it >= 0 } ?: return null
-        return EntryMergeBackupMember(target.backupIdentity(), position)
+        return EntryMergeBackupMember(
+            target.backupIdentity(),
+            position,
+        )
     }
 
     override suspend fun restore(
@@ -29,7 +32,10 @@ internal class EntryMergeBackupCoordinator(
             val normalized = normalize(group)
             val invalidReason = normalized.invalidReason
             if (invalidReason != null) {
-                skipped += EntryMergeBackupSkippedGroup(group.target, invalidReason)
+                skipped += EntryMergeBackupSkippedGroup(
+                    group.target,
+                    invalidReason,
+                )
                 return@forEach
             }
 
@@ -38,12 +44,18 @@ internal class EntryMergeBackupCoordinator(
             }
             val target = resolved.singleOrNull { it.first.identity == normalized.target }?.second
             if (target == null) {
-                skipped += EntryMergeBackupSkippedGroup(group.target, EntryMergeBackupSkipReason.MISSING_TARGET)
+                skipped += EntryMergeBackupSkippedGroup(
+                    group.target,
+                    EntryMergeBackupSkipReason.MISSING_TARGET,
+                )
                 return@forEach
             }
             val orderedEntries = resolved.sortedBy { it.first.position }.map { it.second }.distinctBy(Entry::id)
             if (orderedEntries.size < 2) {
-                skipped += EntryMergeBackupSkippedGroup(group.target, EntryMergeBackupSkipReason.INSUFFICIENT_MEMBERS)
+                skipped += EntryMergeBackupSkippedGroup(
+                    group.target,
+                    EntryMergeBackupSkipReason.INSUFFICIENT_MEMBERS,
+                )
                 return@forEach
             }
             val expectedGroups = orderedEntries.mapNotNull { profile.membership(it.id) }
@@ -62,14 +74,23 @@ internal class EntryMergeBackupCoordinator(
                 is EntryMergeHostTransitionResult.Applied -> applied++
                 EntryMergeHostTransitionResult.Conflict ->
                     skipped +=
-                        EntryMergeBackupSkippedGroup(group.target, EntryMergeBackupSkipReason.CONFLICT)
+                        EntryMergeBackupSkippedGroup(
+                            group.target,
+                            EntryMergeBackupSkipReason.CONFLICT,
+                        )
                 is EntryMergeHostTransitionResult.OperationalFailure ->
                     skipped +=
-                        EntryMergeBackupSkippedGroup(group.target, EntryMergeBackupSkipReason.OPERATIONAL_FAILURE)
+                        EntryMergeBackupSkippedGroup(
+                            group.target,
+                            EntryMergeBackupSkipReason.OPERATIONAL_FAILURE,
+                        )
             }
         }
 
-        return EntryMergeBackupRestoreResult(appliedGroupCount = applied, skippedGroups = skipped)
+        return EntryMergeBackupRestoreResult(
+            appliedGroupCount = applied,
+            skippedGroups = skipped,
+        )
     }
 }
 
@@ -80,7 +101,12 @@ private data class NormalizedBackupGroup(
 )
 
 private fun normalize(group: EntryMergeBackupGroup): NormalizedBackupGroup {
-    val members = (group.members + EntryMergeBackupGroupMember(group.target, Int.MIN_VALUE))
+    val members = (
+        group.members + EntryMergeBackupGroupMember(
+            group.target,
+            Int.MIN_VALUE,
+        )
+        )
         .distinctBy(EntryMergeBackupGroupMember::identity)
     val types = members.map { it.identity.type }.distinct()
     return NormalizedBackupGroup(
@@ -92,7 +118,8 @@ private fun normalize(group: EntryMergeBackupGroup): NormalizedBackupGroup {
     )
 }
 
-private fun Entry.backupIdentity() = EntryMergeBackupIdentity(source, url, type)
+private fun Entry.backupIdentity() =
+    EntryMergeBackupIdentity(source, url, type)
 
 private fun EntryMergeBackupIdentity.asEntry(profileId: Long): Entry {
     return Entry.create().copy(

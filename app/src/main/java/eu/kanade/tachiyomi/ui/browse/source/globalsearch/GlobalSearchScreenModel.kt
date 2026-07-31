@@ -17,10 +17,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import mihon.entry.interactions.EntryCatalogueFeature
-import mihon.entry.interactions.EntryCatalogueSearchRequest
-import mihon.entry.interactions.EntryCatalogueSearchResult
-import mihon.entry.interactions.EntryCatalogueSourceInfo
+import mihon.entry.interactions.catalogue.EntryCatalogueFeature
+import mihon.entry.interactions.catalogue.EntryCatalogueSearchRequest
+import mihon.entry.interactions.catalogue.EntryCatalogueSearchResult
+import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
 import tachiyomi.core.common.preference.toggle
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry

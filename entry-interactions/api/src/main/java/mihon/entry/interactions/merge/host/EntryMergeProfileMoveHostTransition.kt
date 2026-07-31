@@ -1,4 +1,4 @@
-package mihon.entry.interactions.host
+package mihon.entry.interactions.merge.host
 
 import tachiyomi.domain.entry.model.Entry
 

@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.content
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -8,6 +8,8 @@ import kotlinx.coroutines.withContext
 import mihon.book.api.BookContentResource
 import mihon.book.api.BookResourceAvailability
 import mihon.book.api.BookResourceCapability
+import mihon.entry.interactions.book.preparation.BookPublicationResource
+import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 

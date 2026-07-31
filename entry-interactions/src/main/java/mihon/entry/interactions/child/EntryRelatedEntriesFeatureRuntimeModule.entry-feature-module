@@ -1,2 +1,2 @@
 id=entry.related-entries
-module=mihon.entry.interactions.EntryRelatedEntriesFeatureRuntimeModule
+module=mihon.entry.interactions.child.EntryRelatedEntriesFeatureRuntimeModule

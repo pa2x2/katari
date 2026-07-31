@@ -1,17 +1,31 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.runtime
 
 import android.app.Application
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.EntryMediaSessionEventSink
-import mihon.entry.interactions.EntryTypeRuntimeContribution
-import mihon.entry.interactions.EntryTypeRuntimeModule
+import mihon.entry.interactions.book.content.BookMaterializationCache
+import mihon.entry.interactions.book.content.BookMaterializationStore
 import mihon.entry.interactions.book.download.BookDownloadCache
 import mihon.entry.interactions.book.download.BookDownloadIndexStore
 import mihon.entry.interactions.book.download.BookDownloadManager
 import mihon.entry.interactions.book.download.BookDownloadProvider
 import mihon.entry.interactions.book.download.BookDownloadStore
 import mihon.entry.interactions.book.download.BookDownloader
-import mihon.translation.api.TranslationHostActions
+import mihon.entry.interactions.book.media.session.BookMediaSessionProcessor
+import mihon.entry.interactions.book.navigation.BookChapterNavigationResolver
+import mihon.entry.interactions.book.preparation.BookContentPreparerRegistry
+import mihon.entry.interactions.book.processor.BookReaderProcessorPreferences
+import mihon.entry.interactions.book.processor.BookReaderProcessorRegistry
+import mihon.entry.interactions.book.processor.BookReaderProcessorSelectionCoordinator
+import mihon.entry.interactions.book.reader.BookReaderHostResolver
+import mihon.entry.interactions.book.reader.BookReaderSessionFactory
+import mihon.entry.interactions.book.reader.BookReaderSessionRegistry
+import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationPreferences
+import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationSettingsProvider
+import mihon.entry.interactions.media.session.EntryMediaSessionEventSink
+import mihon.entry.interactions.runtime.EntryTypeRuntimeContribution
+import mihon.entry.interactions.runtime.EntryTypeRuntimeModule
+import mihon.entry.viewer.settings.shared.ReaderCapabilityId
+import mihon.translation.api.host.TranslationHostActions
 import tachiyomi.core.common.preference.ProfilePreferenceKeyPattern
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
@@ -146,5 +160,5 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
 }
 
 private data class BookRuntimeArtifacts(
-    val potentialReaderCapabilitiesBySettingsSurface: Map<String, Set<mihon.entry.viewer.settings.ReaderCapabilityId>>,
+    val potentialReaderCapabilitiesBySettingsSurface: Map<String, Set<ReaderCapabilityId>>,
 )

@@ -8,10 +8,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import mihon.translation.api.TranslationEngineId
-import mihon.translation.api.TranslationHostActions
-import mihon.translation.api.TranslationLanguageSupport
-import mihon.translation.api.TranslationLanguageSupportInspection
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.host.TranslationHostActions
+import mihon.translation.api.language.TranslationLanguageSupport
+import mihon.translation.api.language.TranslationLanguageSupportInspection
 
 class TranslationLanguageSupportController(
     private val hostActions: TranslationHostActions,

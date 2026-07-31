@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media
 
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner

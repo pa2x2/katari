@@ -2,9 +2,9 @@ package mihon.entry.interactions.host.library
 
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
-import mihon.entry.interactions.EntryLibraryMembershipCommit
-import mihon.entry.interactions.EntryLibraryMembershipHost
-import mihon.entry.interactions.EntryLibraryMembershipPreparation
+import mihon.entry.interactions.library.membership.host.EntryLibraryMembershipCommit
+import mihon.entry.interactions.library.membership.host.EntryLibraryMembershipHost
+import mihon.entry.interactions.library.membership.host.EntryLibraryMembershipPreparation
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.data.entry.EntryMapper

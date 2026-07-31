@@ -1,5 +1,7 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.lifecycle.profile
 
+import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.lifecycle.metadata.EntryLifecycleConsequenceFailure
 import tachiyomi.domain.entry.model.Entry
 
 interface EntryProfileMoveFeature {
@@ -54,6 +56,6 @@ interface EntryProfileMoveParticipantReference
 interface EntryProfileMoveReference {
     fun participantReference(
         participantId: String,
-        type: eu.kanade.tachiyomi.source.entry.EntryType,
+        type: EntryType,
     ): EntryProfileMoveParticipantReference?
 }

@@ -1,10 +1,13 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.reader
 
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookFailure
 import mihon.entry.interactions.book.download.VerifiedBookDownloadPackage
+import mihon.entry.interactions.book.processor.BookReaderRequest
+import mihon.entry.interactions.book.state.BookProgressIdentity
+import mihon.entry.interactions.book.state.progressIdentity
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 

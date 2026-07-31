@@ -13,9 +13,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.EntryRelatedEntriesFeature
-import mihon.entry.interactions.EntryRelatedEntriesLoadResult
-import mihon.entry.interactions.EntryRelatedEntriesUnavailableReason
+import mihon.entry.interactions.child.EntryRelatedEntriesFeature
+import mihon.entry.interactions.child.EntryRelatedEntriesLoadResult
+import mihon.entry.interactions.child.EntryRelatedEntriesUnavailableReason
 import tachiyomi.domain.entry.model.Entry
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get

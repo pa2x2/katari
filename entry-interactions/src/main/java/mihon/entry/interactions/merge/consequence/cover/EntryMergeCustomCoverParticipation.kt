@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.merge.consequence.cover
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -7,15 +7,19 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
 import kotlinx.serialization.json.put
-import mihon.entry.interactions.host.EntryMergeHost
+import mihon.entry.interactions.library.membership.consequence.ENTRY_LIBRARY_CUSTOM_COVER_OWNER
+import mihon.entry.interactions.merge.consequence.ENTRY_MERGE_DURABLE_EXECUTION_POINT
+import mihon.entry.interactions.merge.consequence.EntryMergeDurableChange
+import mihon.entry.interactions.merge.consequence.EntryMergeDurableEvent
+import mihon.entry.interactions.merge.host.EntryMergeHost
 import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureBehaviorContract
-import mihon.feature.graph.FeatureDurableExecutionParticipantBinding
-import mihon.feature.graph.FeatureDurableExecutionPayload
-import mihon.feature.graph.FeatureExecutionParticipantDefinition
 import mihon.feature.graph.FeatureExecutionParticipantId
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
+import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
+import mihon.feature.graph.execution.FeatureDurableExecutionPayload
+import mihon.feature.graph.execution.FeatureExecutionParticipantDefinition
 import tachiyomi.domain.entry.model.Entry
 
 internal object EntryMergeCustomCoverDurableBehaviorContract : FeatureBehaviorContract {

@@ -1,10 +1,10 @@
-package mihon.translation.spi
+package mihon.translation.spi.setup
 
-import mihon.translation.api.TranslationEngineId
-import mihon.translation.api.TranslationModelId
-import mihon.translation.api.TranslationModelOperationResult
-import mihon.translation.api.TranslationProviderDisclosure
-import mihon.translation.api.TranslationSetupDestination
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.host.TranslationSetupDestination
+import mihon.translation.api.model.TranslationModelId
+import mihon.translation.api.model.TranslationModelOperationResult
+import mihon.translation.api.provider.TranslationProviderDisclosure
 
 interface TranslationEngineSetup {
     val engine: TranslationEngineId

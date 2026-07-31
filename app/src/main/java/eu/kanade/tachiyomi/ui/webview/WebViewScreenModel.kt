@@ -9,8 +9,8 @@ import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toShareIntent
 import eu.kanade.tachiyomi.util.system.toast
 import logcat.LogPriority
-import mihon.entry.interactions.EntryWebViewFeature
-import mihon.entry.interactions.EntryWebViewHeadersResolution
+import mihon.entry.interactions.source.EntryWebViewFeature
+import mihon.entry.interactions.source.EntryWebViewHeadersResolution
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import tachiyomi.core.common.util.system.logcat
 import uy.kohesive.injekt.Injekt

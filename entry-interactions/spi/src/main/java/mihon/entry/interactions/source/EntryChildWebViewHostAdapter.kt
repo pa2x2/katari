@@ -1,6 +1,7 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.source
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.runtime.EntryInteractionSpecializedAdapter
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.SpecializedAdapter
 import mihon.feature.graph.SpecializedAdapterId

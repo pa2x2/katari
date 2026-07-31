@@ -6,10 +6,10 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.selects.select
-import mihon.translation.api.TranslationLanguagePair
-import mihon.translation.api.TranslationLanguageSupport
-import mihon.translation.api.TranslationLanguageSupportInspection
-import mihon.translation.api.TranslationLanguageTag
+import mihon.translation.api.language.TranslationLanguagePair
+import mihon.translation.api.language.TranslationLanguageSupport
+import mihon.translation.api.language.TranslationLanguageSupportInspection
+import mihon.translation.api.language.TranslationLanguageTag
 import java.util.Locale
 
 internal class DefaultAndroidSystemTranslationPlatform(

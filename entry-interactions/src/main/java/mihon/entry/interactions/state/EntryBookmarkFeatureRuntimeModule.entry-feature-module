@@ -1,2 +1,2 @@
 id=entry.bookmarking
-module=mihon.entry.interactions.EntryBookmarkFeatureRuntimeModule
+module=mihon.entry.interactions.state.EntryBookmarkFeatureRuntimeModule

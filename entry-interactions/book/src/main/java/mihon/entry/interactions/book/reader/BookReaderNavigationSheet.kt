@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.reader
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

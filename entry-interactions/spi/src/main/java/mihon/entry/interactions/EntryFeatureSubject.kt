@@ -1,25 +1,25 @@
 package mihon.entry.interactions
 
-import mihon.feature.graph.AfterCommitVolatileFeatureExecutionPointDefinition
 import mihon.feature.graph.ContentTypeContribution
 import mihon.feature.graph.ContentTypeId
 import mihon.feature.graph.ContextEvidence
-import mihon.feature.graph.DurableFeatureExecutionPointDefinition
-import mihon.feature.graph.FeatureAfterCommitVolatileExecutionScope
 import mihon.feature.graph.FeatureContextEvaluation
-import mihon.feature.graph.FeatureDurableExecutionPreparationResult
-import mihon.feature.graph.FeatureExecutionParticipantSubject
-import mihon.feature.graph.FeatureExecutionResult
-import mihon.feature.graph.FeatureExecutionRuntime
 import mihon.feature.graph.FeatureGraph
 import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegrationId
 import mihon.feature.graph.FeatureIntegrationSubject
 import mihon.feature.graph.FeatureSubjectId
-import mihon.feature.graph.FeatureTransactionalExecutionScope
-import mihon.feature.graph.InlineFeatureExecutionPointDefinition
-import mihon.feature.graph.TransactionalFeatureExecutionPointDefinition
+import mihon.feature.graph.execution.AfterCommitVolatileFeatureExecutionPointDefinition
+import mihon.feature.graph.execution.DurableFeatureExecutionPointDefinition
+import mihon.feature.graph.execution.FeatureAfterCommitVolatileExecutionScope
+import mihon.feature.graph.execution.FeatureDurableExecutionPreparationResult
+import mihon.feature.graph.execution.FeatureExecutionParticipantSubject
+import mihon.feature.graph.execution.FeatureExecutionResult
+import mihon.feature.graph.execution.FeatureExecutionRuntime
+import mihon.feature.graph.execution.FeatureTransactionalExecutionScope
+import mihon.feature.graph.execution.InlineFeatureExecutionPointDefinition
+import mihon.feature.graph.execution.TransactionalFeatureExecutionPointDefinition
 import mihon.feature.graph.resolveFeatureContext as resolveSubjectFeatureContext
 
 /** Entry-boundary projection of a generic Feature integration subject. */

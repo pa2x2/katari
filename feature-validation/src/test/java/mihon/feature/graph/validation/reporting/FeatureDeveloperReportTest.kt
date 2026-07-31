@@ -21,8 +21,6 @@ import mihon.feature.graph.FeatureContextBlocker
 import mihon.feature.graph.FeatureContextDecision
 import mihon.feature.graph.FeatureContractScenarioId
 import mihon.feature.graph.FeatureContribution
-import mihon.feature.graph.FeatureExecutionFailurePolicy
-import mihon.feature.graph.FeatureExecutionParticipantDefinition
 import mihon.feature.graph.FeatureExecutionParticipantId
 import mihon.feature.graph.FeatureExecutionPointId
 import mihon.feature.graph.FeatureId
@@ -31,13 +29,15 @@ import mihon.feature.graph.FeatureIntegrationId
 import mihon.feature.graph.FeatureProjection
 import mihon.feature.graph.FeatureSubjectId
 import mihon.feature.graph.FeatureSubjectScope
-import mihon.feature.graph.afterCommitVolatileFeatureExecutionPointDefinition
 import mihon.feature.graph.assembleFeatureGraph
 import mihon.feature.graph.capabilityDefinition
 import mihon.feature.graph.contextEvidence
 import mihon.feature.graph.contextInputDefinition
 import mihon.feature.graph.contractFixtureDefinition
 import mihon.feature.graph.evaluateFeatureGraph
+import mihon.feature.graph.execution.FeatureExecutionFailurePolicy
+import mihon.feature.graph.execution.FeatureExecutionParticipantDefinition
+import mihon.feature.graph.execution.afterCommitVolatileFeatureExecutionPointDefinition
 import mihon.feature.graph.featureContextRule
 import mihon.feature.graph.featureProjectionDefinition
 import mihon.feature.graph.validation.FeatureContractFailure

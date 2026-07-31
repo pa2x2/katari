@@ -1,2 +1,2 @@
 id=entry.tracking
-module=mihon.entry.interactions.EntryTrackingFeatureRuntimeModule
+module=mihon.entry.interactions.tracking.EntryTrackingFeatureRuntimeModule

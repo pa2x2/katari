@@ -1,8 +1,10 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.lifecycle.metadata
 
-import mihon.feature.graph.FeatureExecutionResult
-import mihon.feature.graph.FeatureExecutionRuntime
-import mihon.feature.graph.afterFeatureCommitVolatile
+import mihon.entry.interactions.execute
+import mihon.entry.interactions.runtime.toContentTypeId
+import mihon.feature.graph.execution.FeatureExecutionResult
+import mihon.feature.graph.execution.FeatureExecutionRuntime
+import mihon.feature.graph.execution.afterFeatureCommitVolatile
 import tachiyomi.domain.entry.model.Entry
 
 internal class EntryMetadataLifecycleCoordinator(

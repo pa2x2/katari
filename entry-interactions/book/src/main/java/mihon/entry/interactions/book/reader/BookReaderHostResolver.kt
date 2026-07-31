@@ -1,9 +1,15 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.reader
 
 import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookFailure
 import mihon.book.api.BookFailureReason
 import mihon.book.api.model.BookPublicationModelDescriptor
+import mihon.entry.interactions.book.preparation.BookContentPreparerRegistry
+import mihon.entry.interactions.book.preparation.BookContentPreparerSelection
+import mihon.entry.interactions.book.processor.BookReaderProcessor
+import mihon.entry.interactions.book.processor.BookReaderProcessorSelection
+import mihon.entry.interactions.book.processor.BookReaderProcessorSelectionCoordinator
+import mihon.entry.interactions.book.processor.BookReaderRequest
 
 internal class BookReaderHostResolver(
     private val sessionFactory: BookReaderSessionFactory,

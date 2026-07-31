@@ -1,4 +1,4 @@
-package mihon.entry.viewer.settings
+package mihon.entry.viewer.settings.shared
 
 import android.content.Context
 import kotlinx.coroutines.flow.Flow

@@ -1,8 +1,8 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.tracking
 
 import kotlinx.coroutines.flow.first
-import mihon.entry.interactions.host.tracking.EntryTrackingHost
-import mihon.entry.interactions.host.tracking.EntryTrackingHostEntryService
+import mihon.entry.interactions.tracking.host.EntryTrackingHost
+import mihon.entry.interactions.tracking.host.EntryTrackingHostEntryService
 import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 

@@ -1,7 +1,12 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.lifecycle.removal
 
-import mihon.feature.graph.FeatureExecutionHandler
-import mihon.feature.graph.FeatureExecutionParticipantBinding
+import mihon.entry.interactions.lifecycle.removal.consequence.ENTRY_CUSTOM_COVER_DESTRUCTIVE_REMOVAL_PARTICIPANT
+import mihon.entry.interactions.lifecycle.removal.consequence.EntryDestructiveRemovalCustomCoverContributor
+import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeArtifacts
+import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeModule
+import mihon.entry.interactions.runtime.production.entryFeatureRuntimeBoundary
+import mihon.feature.graph.execution.FeatureExecutionHandler
+import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
 import uy.kohesive.injekt.api.addSingletonFactory
 import uy.kohesive.injekt.api.get
@@ -23,7 +28,9 @@ internal val EntryDestructiveRemovalFeatureRuntimeModule = EntryFeatureRuntimeMo
                 definition = ENTRY_CUSTOM_COVER_DESTRUCTIVE_REMOVAL_PARTICIPANT,
                 handler = FeatureExecutionHandler { event ->
                     event.entries.forEach { entry ->
-                        context.dependencies.destructiveRemovalCustomCoverHost.removeCustomCover(entry)
+                        context.dependencies.destructiveRemovalCustomCoverHost.removeCustomCover(
+                            entry,
+                        )
                     }
                 },
             ),

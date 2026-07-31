@@ -1,14 +1,14 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.presentation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Book
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.EntryHistorySubtitlePresentation
-import mihon.entry.interactions.EntryNotificationChildNumberPolicy
-import mihon.entry.interactions.EntryPartialProgressPresentation
-import mihon.entry.interactions.EntryTypePresentation
-import mihon.entry.interactions.EntryTypePresentationProvider
-import mihon.entry.interactions.EntryUpdateNotificationVocabulary
+import mihon.entry.interactions.presentation.EntryHistorySubtitlePresentation
+import mihon.entry.interactions.presentation.EntryNotificationChildNumberPolicy
+import mihon.entry.interactions.presentation.EntryPartialProgressPresentation
+import mihon.entry.interactions.presentation.EntryTypePresentation
+import mihon.entry.interactions.presentation.EntryUpdateNotificationVocabulary
+import mihon.entry.interactions.runtime.EntryTypePresentationProvider
 import tachiyomi.i18n.MR
 
 internal object BookEntryTypePresentationProvider : EntryTypePresentationProvider {

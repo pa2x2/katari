@@ -1,9 +1,12 @@
-package mihon.entry.interactions.manga
+package mihon.entry.interactions.manga.navigation
 
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.EntryContinueProcessor
-import mihon.entry.interactions.EntryOpenOptions
+import mihon.entry.interactions.manga.runtime.requireManga
+import mihon.entry.interactions.manga.state.lastReadAt
+import mihon.entry.interactions.manga.state.pageIndex
+import mihon.entry.interactions.navigation.EntryContinueProcessor
+import mihon.entry.interactions.navigation.EntryOpenOptions
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter

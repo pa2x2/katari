@@ -67,8 +67,8 @@ import eu.kanade.tachiyomi.ui.entry.EntryChapterList
 import eu.kanade.tachiyomi.ui.entry.EntryScreenModel
 import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
 import eu.kanade.tachiyomi.util.system.copyToClipboard
-import mihon.entry.interactions.EntryChildProgressLabel
-import mihon.entry.interactions.EntryDownloadState
+import mihon.entry.interactions.child.EntryChildProgressLabel
+import mihon.entry.interactions.download.EntryDownloadState
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -80,7 +80,6 @@ import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.shouldExpandFAB
-import tachiyomi.source.local.LocalSource
 import java.time.Instant
 
 @Composable

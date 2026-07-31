@@ -13,10 +13,10 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.track.TrackChapterSelector
 import eu.kanade.presentation.util.Screen
 import kotlinx.coroutines.flow.update
-import mihon.entry.interactions.EntryTrackingFeature
-import mihon.entry.interactions.EntryTrackingMutation
-import mihon.entry.interactions.EntryTrackingRecord
-import mihon.entry.interactions.EntryTrackingServiceId
+import mihon.entry.interactions.tracking.EntryTrackingFeature
+import mihon.entry.interactions.tracking.EntryTrackingMutation
+import mihon.entry.interactions.tracking.EntryTrackingRecord
+import mihon.entry.interactions.tracking.EntryTrackingServiceId
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.domain.entry.model.Entry
 import uy.kohesive.injekt.Injekt

@@ -1,7 +1,7 @@
-package mihon.entry.interactions.host.tracking
+package mihon.entry.interactions.tracking.host
 
-import mihon.entry.interactions.EntryTrackingMutation
-import mihon.entry.interactions.EntryTrackingSearchCandidate
+import mihon.entry.interactions.tracking.EntryTrackingMutation
+import mihon.entry.interactions.tracking.EntryTrackingSearchCandidate
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.track.model.EntryTrack
 

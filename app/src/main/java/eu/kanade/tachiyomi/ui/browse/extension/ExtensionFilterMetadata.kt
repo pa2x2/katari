@@ -4,7 +4,7 @@ import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.ui.browse.ContentTypeFilter
-import mihon.entry.interactions.EntryCatalogueFeature
+import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 

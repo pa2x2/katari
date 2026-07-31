@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media
 
 import dev.icerock.moko.resources.StringResource
 import tachiyomi.core.common.preference.Preference

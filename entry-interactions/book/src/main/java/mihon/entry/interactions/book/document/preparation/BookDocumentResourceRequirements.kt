@@ -4,9 +4,9 @@ import mihon.book.api.document.BookDocument
 import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentBlockContent
 import mihon.book.api.document.BookDocumentFontFamily
-import mihon.entry.interactions.book.BookResourceRequirement
 import mihon.entry.interactions.book.document.resource.PROSE_FONT_RESOURCE_REQUIREMENT
 import mihon.entry.interactions.book.document.resource.PROSE_IMAGE_RESOURCE_REQUIREMENT
+import mihon.entry.interactions.book.preparation.BookResourceRequirement
 
 /** Derives offline validation constraints from resources referenced by a canonical document. */
 internal fun BookDocument.resourceRequirements(): Map<String, BookResourceRequirement> = buildMap {

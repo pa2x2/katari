@@ -1,2 +1,2 @@
 id=entry.media-session.incognito
-module=mihon.entry.interactions.EntryMediaSessionIncognitoFeatureRuntimeModule
+module=mihon.entry.interactions.media.session.EntryMediaSessionIncognitoFeatureRuntimeModule

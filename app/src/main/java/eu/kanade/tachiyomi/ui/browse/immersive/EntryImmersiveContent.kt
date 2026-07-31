@@ -27,8 +27,6 @@ import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.FullscreenExit
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
@@ -71,11 +69,13 @@ import eu.kanade.presentation.entry.entryTypePresentation
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.EntryImmersiveHandle
-import mihon.entry.interactions.EntryImmersiveOpenTargetResult
-import mihon.entry.interactions.EntryImmersivePreloadRadiusResult
-import mihon.entry.interactions.EntryImmersiveRendererResult
-import mihon.entry.interactions.EntryImmersiveUnavailableReason
+import mihon.entry.interactions.media.EntryImmersiveFeature
+import mihon.entry.interactions.media.EntryImmersiveHandle
+import mihon.entry.interactions.media.EntryImmersiveOpenTargetResult
+import mihon.entry.interactions.media.EntryImmersivePreloadRadiusResult
+import mihon.entry.interactions.media.EntryImmersiveRendererResult
+import mihon.entry.interactions.media.EntryImmersiveUnavailableReason
+import mihon.entry.interactions.navigation.EntryOpenFeature
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.asEntryCover
 import tachiyomi.i18n.MR
@@ -111,8 +111,8 @@ internal fun EntryImmersiveContent(
     val initialPageInBounds = positionState.itemIndex.coerceIn(0, (itemCount - 1).coerceAtLeast(0))
     val pagerState = rememberPagerState(initialPage = initialPageInBounds) { itemCount }
     val scope = rememberCoroutineScope()
-    val entryOpenFeature = remember { Injekt.get<mihon.entry.interactions.EntryOpenFeature>() }
-    val immersiveFeature = remember { Injekt.get<mihon.entry.interactions.EntryImmersiveFeature>() }
+    val entryOpenFeature = remember { Injekt.get<EntryOpenFeature>() }
+    val immersiveFeature = remember { Injekt.get<EntryImmersiveFeature>() }
     val currentOnPageSettled by rememberUpdatedState(onPageSettled)
     val currentOnNearEnd by rememberUpdatedState(onNearEnd)
     var isZoomed by remember { mutableStateOf(false) }

@@ -23,7 +23,7 @@ import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import mihon.entry.interactions.setEntryInteractionContent
+import mihon.entry.interactions.runtime.setEntryInteractionContent
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import uy.kohesive.injekt.Injekt

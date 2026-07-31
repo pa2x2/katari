@@ -1,7 +1,7 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.processor
 
 import mihon.book.api.model.BookPublicationModelDescriptor
-import mihon.entry.viewer.settings.ReaderCapabilityId
+import mihon.entry.viewer.settings.shared.ReaderCapabilityId
 
 internal class BookReaderProcessorRegistry(
     processors: Collection<BookReaderProcessor>,

@@ -1,8 +1,18 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.state
 
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import mihon.entry.interactions.media.EntryMediaSessionCapability
+import mihon.entry.interactions.media.session.EntryMediaSessionExecutionEvent
+import mihon.entry.interactions.media.session.mediaSessionContractEvent
+import mihon.entry.interactions.migration.consequence.EntryMigrationDurableEvent
+import mihon.entry.interactions.persistence.backup.addEntryBackupParticipationContract
+import mihon.entry.interactions.state.backup.ENTRY_PROGRESS_BACKUP_RESTORE_PARTICIPANT
+import mihon.entry.interactions.state.backup.ENTRY_PROGRESS_BACKUP_SNAPSHOT_PARTICIPANT
+import mihon.entry.interactions.state.migration.ENTRY_PROGRESS_MIGRATION_PARTICIPANT
+import mihon.entry.interactions.state.migration.EntryProgressMigrationDurableBehaviorContract
+import mihon.entry.interactions.state.migration.entryProgressMigrationBinding
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
@@ -47,7 +57,14 @@ class EntryProgressContractValidationContributor : FeatureValidationContributor 
                     }
                     val binding = entryProgressMigrationBinding { feature }
                     val prepared = binding.preparer.prepare(
-                        EntryMigrationDurableEvent("contract", source, target, emptySet(), emptyList(), emptyList()),
+                        EntryMigrationDurableEvent(
+                            "contract",
+                            source,
+                            target,
+                            emptySet(),
+                            emptyList(),
+                            emptyList(),
+                        ),
                     )
                     contractExpectation(prepared != null, "Progress must prepare a durable Migration payload")
                     binding.deliveryHandler.deliver(requireNotNull(prepared))

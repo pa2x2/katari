@@ -1,10 +1,11 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.media
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.EntryMediaCacheArtifact
-import mihon.entry.interactions.EntryMediaCacheAutoClearPreference
-import mihon.entry.interactions.EntryMediaCacheId
-import mihon.entry.interactions.EntryMediaCacheProvider
+import mihon.entry.interactions.book.content.BookMaterializationCache
+import mihon.entry.interactions.media.EntryMediaCacheArtifact
+import mihon.entry.interactions.media.EntryMediaCacheAutoClearPreference
+import mihon.entry.interactions.media.EntryMediaCacheId
+import mihon.entry.interactions.media.EntryMediaCacheProvider
 import tachiyomi.i18n.MR
 
 internal class BookMediaCacheProvider(

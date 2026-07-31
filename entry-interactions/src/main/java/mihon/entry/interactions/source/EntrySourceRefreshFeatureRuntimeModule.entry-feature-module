@@ -1,2 +1,2 @@
 id=entry.source-refresh
-module=mihon.entry.interactions.EntrySourceRefreshFeatureRuntimeModule
+module=mihon.entry.interactions.source.EntrySourceRefreshFeatureRuntimeModule

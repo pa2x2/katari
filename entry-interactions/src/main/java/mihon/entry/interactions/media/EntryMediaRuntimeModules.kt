@@ -1,15 +1,37 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import mihon.entry.interactions.media.backup.ENTRY_PLAYBACK_PREFERENCES_BACKUP_RESTORE_PARTICIPANT
+import mihon.entry.interactions.media.backup.ENTRY_PLAYBACK_PREFERENCES_BACKUP_SCHEMA_VERSION
+import mihon.entry.interactions.media.backup.ENTRY_PLAYBACK_PREFERENCES_BACKUP_SNAPSHOT_PARTICIPANT
+import mihon.entry.interactions.media.backup.ENTRY_PLAYBACK_PREFERENCES_BACKUP_STATE_ID
+import mihon.entry.interactions.media.backup.ENTRY_VIEWER_SETTINGS_BACKUP_RESTORE_PARTICIPANT
+import mihon.entry.interactions.media.backup.ENTRY_VIEWER_SETTINGS_BACKUP_SCHEMA_VERSION
+import mihon.entry.interactions.media.backup.ENTRY_VIEWER_SETTINGS_BACKUP_SNAPSHOT_PARTICIPANT
+import mihon.entry.interactions.media.backup.ENTRY_VIEWER_SETTINGS_BACKUP_STATE_ID
+import mihon.entry.interactions.media.backup.EntryPlaybackPreferencesBackupContributor
+import mihon.entry.interactions.media.backup.EntryViewerSettingBackupValue
+import mihon.entry.interactions.media.backup.EntryViewerSettingsBackupContributor
+import mihon.entry.interactions.media.backup.EntryViewerSettingsBackupState
+import mihon.entry.interactions.media.migration.EntryPlaybackPreferencesMigrationContributor
+import mihon.entry.interactions.media.migration.EntryViewerSettingsMigrationContributor
+import mihon.entry.interactions.media.migration.entryPlaybackPreferencesMigrationBinding
+import mihon.entry.interactions.media.migration.entryViewerSettingsMigrationBinding
+import mihon.entry.interactions.persistence.backup.decodeEntryBackupState
+import mihon.entry.interactions.persistence.backup.entryBackupStateEnvelope
+import mihon.entry.interactions.runtime.EntryInteractions
+import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeArtifacts
+import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeModule
+import mihon.entry.interactions.runtime.production.entryFeatureRuntimeBoundary
 import mihon.entry.interactions.settings.DefaultViewerSettingBinder
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.ViewerSettingId
 import mihon.entry.viewer.settings.ViewerSettingOverride
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
-import mihon.feature.graph.FeatureExecutionHandler
-import mihon.feature.graph.FeatureExecutionParticipantBinding
+import mihon.feature.graph.execution.FeatureExecutionHandler
+import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
 import tachiyomi.domain.entry.repository.EntryRepository
 import uy.kohesive.injekt.api.addSingletonFactory
@@ -38,7 +60,10 @@ internal val EntryPlaybackPreferencesFeatureRuntimeModule = EntryFeatureRuntimeM
             FeatureExecutionParticipantBinding(
                 definition = ENTRY_PLAYBACK_PREFERENCES_BACKUP_SNAPSHOT_PARTICIPANT,
                 handler = FeatureExecutionHandler { event ->
-                    when (val result = get<EntryPlaybackPreferencesFeature>().snapshot(event.entry)) {
+                    when (
+                        val result =
+                            get<EntryPlaybackPreferencesFeature>().snapshot(event.entry)
+                    ) {
                         is EntryPlaybackPreferencesSnapshotResult.Captured -> event.contributions.add(
                             entryBackupStateEnvelope(
                                 ENTRY_PLAYBACK_PREFERENCES_BACKUP_STATE_ID,
@@ -47,6 +72,7 @@ internal val EntryPlaybackPreferencesFeatureRuntimeModule = EntryFeatureRuntimeM
                                 result.snapshot,
                             ),
                         )
+
                         is EntryPlaybackPreferencesSnapshotResult.Inapplicable,
                         EntryPlaybackPreferencesSnapshotResult.NoPreferences,
                         -> Unit
@@ -107,7 +133,10 @@ internal val EntryImmersiveFeatureRuntimeModule = EntryFeatureRuntimeModule(
 internal val EntryViewerSettingsFeatureRuntimeModule = EntryFeatureRuntimeModule(
     id = "entry.viewer-settings",
     contributor = EntryViewerSettingsFeatureContributor,
-    additionalContributors = listOf(EntryViewerSettingsBackupContributor, EntryViewerSettingsMigrationContributor),
+    additionalContributors = listOf(
+        EntryViewerSettingsBackupContributor,
+        EntryViewerSettingsMigrationContributor,
+    ),
 ) { context ->
     addSingletonFactory<ViewerSettingBinder> {
         DefaultViewerSettingBinder(
@@ -128,7 +157,12 @@ internal val EntryViewerSettingsFeatureRuntimeModule = EntryFeatureRuntimeModule
             migrationStore = EntryViewerFlagsMigrationStore { entryId, profileId, viewerFlags ->
                 val repository = get<EntryRepository>()
                 repository.getEntryById(entryId, profileId)
-                    ?.let { current -> repository.update(current.copy(viewerFlags = viewerFlags), profileId) }
+                    ?.let { current ->
+                        repository.update(
+                            current.copy(viewerFlags = viewerFlags),
+                            profileId,
+                        )
+                    }
                     ?: false
             },
         )

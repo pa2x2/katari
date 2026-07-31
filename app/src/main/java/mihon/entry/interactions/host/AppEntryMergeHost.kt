@@ -6,6 +6,17 @@ import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import mihon.entry.interactions.merge.host.EntryMergeConsequenceStatusSnapshot
+import mihon.entry.interactions.merge.host.EntryMergeHost
+import mihon.entry.interactions.merge.host.EntryMergeHostExpectedEntry
+import mihon.entry.interactions.merge.host.EntryMergeHostMemberKey
+import mihon.entry.interactions.merge.host.EntryMergeHostPreparation
+import mihon.entry.interactions.merge.host.EntryMergeHostTransition
+import mihon.entry.interactions.merge.host.EntryMergeHostTransitionResult
+import mihon.entry.interactions.merge.host.EntryMergeMembershipSnapshot
+import mihon.entry.interactions.merge.host.EntryMergePendingConsequence
+import mihon.entry.interactions.merge.host.EntryMergeProfileHost
+import mihon.entry.interactions.merge.host.EntryMergeProfileMoveHostTransition
 import tachiyomi.data.Database
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.data.entry.EntryMapper

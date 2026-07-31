@@ -1,10 +1,10 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.processor
 
 import android.content.Context
 import android.content.Intent
 import mihon.book.api.model.BookPublicationModel
 import mihon.book.api.model.BookPublicationModelDescriptor
-import mihon.entry.viewer.settings.ReaderCapabilityId
+import mihon.entry.viewer.settings.shared.ReaderCapabilityId
 
 /** Selects and launches a reader for an already prepared publication model. */
 internal interface BookReaderProcessor {

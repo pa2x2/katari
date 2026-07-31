@@ -1,9 +1,10 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media.session
 
+import mihon.entry.interactions.state.EntryProgressRecordingResult
 import mihon.feature.graph.ContributionOwner
-import mihon.feature.graph.FeatureExecutionFailurePolicy
 import mihon.feature.graph.FeatureExecutionPointId
-import mihon.feature.graph.inlineFeatureExecutionPointDefinition
+import mihon.feature.graph.execution.FeatureExecutionFailurePolicy
+import mihon.feature.graph.execution.inlineFeatureExecutionPointDefinition
 
 internal val ENTRY_MEDIA_SESSION_OWNER = ContributionOwner("entry-media-session")
 

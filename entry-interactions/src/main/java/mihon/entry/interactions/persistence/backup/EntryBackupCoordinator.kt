@@ -1,7 +1,10 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.persistence.backup
 
-import mihon.feature.graph.FeatureExecutionResult
-import mihon.feature.graph.FeatureExecutionRuntime
+import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.executeInline
+import mihon.entry.interactions.runtime.toContentTypeId
+import mihon.feature.graph.execution.FeatureExecutionResult
+import mihon.feature.graph.execution.FeatureExecutionRuntime
 import tachiyomi.domain.entry.model.Entry
 
 internal class EntryBackupCoordinator(
@@ -38,7 +41,7 @@ internal class EntryBackupCoordinator(
     override suspend fun finalizeRestore(
         session: EntryBackupRestoreSession,
         profileId: Long,
-        restoredTypes: Set<eu.kanade.tachiyomi.source.entry.EntryType>,
+        restoredTypes: Set<EntryType>,
     ): EntryBackupRestoreFinalization {
         val issues = MutableEntryBackupRestoreIssues()
         // Execute only for types actually restored in this session/profile. This remains open to future Entry types.

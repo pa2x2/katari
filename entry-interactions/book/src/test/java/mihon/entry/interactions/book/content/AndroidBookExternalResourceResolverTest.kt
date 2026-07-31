@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.content
 
 import android.content.ContentResolver
 import android.content.Context
@@ -16,6 +16,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.io.ByteArrayInputStream
+import java.io.IOException
 import java.io.InputStream
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
@@ -90,7 +91,7 @@ class AndroidBookExternalResourceResolverTest {
             .build()
         val resolver = AndroidBookExternalResourceResolver(context(), client)
 
-        assertFailsWith<java.io.IOException> {
+        assertFailsWith<IOException> {
             resolver.open(
                 BookResourceLocation.RemoteRequest("https://example.invalid/book"),
                 BookByteRange(2, 5),
@@ -119,7 +120,7 @@ class AndroidBookExternalResourceResolverTest {
             .build()
         val resolver = AndroidBookExternalResourceResolver(context(), client)
 
-        assertFailsWith<java.io.IOException> {
+        assertFailsWith<IOException> {
             resolver.open(
                 BookResourceLocation.RemoteRequest(
                     "https://example.invalid/book",
@@ -250,7 +251,10 @@ class AndroidBookExternalResourceResolverTest {
         )
 
         assertEquals(true, resolver.canResolveAppReferences)
-        resolver.open(BookResourceLocation.AppReference("download:42"), BookByteRange(0, 3)).use { opened ->
+        resolver.open(
+            BookResourceLocation.AppReference("download:42"),
+            BookByteRange(0, 3),
+        ).use { opened ->
             assertEquals("app", opened.stream.bufferedReader().readText())
         }
     }

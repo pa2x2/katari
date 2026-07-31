@@ -1,9 +1,6 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.source
 
 import eu.kanade.tachiyomi.source.entry.EntryImageSource
-import mihon.entry.interactions.source.ENTRY_SOURCE_CONTEXT_OWNER
-import mihon.entry.interactions.source.ENTRY_SOURCE_HOME_CONTEXT_OWNER
-import mihon.entry.interactions.source.ENTRY_SOURCE_SETTINGS_CONTEXT_OWNER
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner

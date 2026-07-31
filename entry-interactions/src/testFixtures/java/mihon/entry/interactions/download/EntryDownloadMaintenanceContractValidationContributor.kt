@@ -1,9 +1,33 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download
 
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import mihon.entry.interactions.download.maintenance.ENTRY_DOWNLOAD_DESTRUCTIVE_REMOVAL_PARTICIPANT
+import mihon.entry.interactions.download.maintenance.ENTRY_DOWNLOAD_DESTRUCTIVE_REMOVAL_PREPARATION_PARTICIPANT
+import mihon.entry.interactions.download.maintenance.ENTRY_DOWNLOAD_METADATA_CHANGE_PARTICIPANT
+import mihon.entry.interactions.download.maintenance.ENTRY_DOWNLOAD_PROFILE_MOVE_PARTICIPANT
+import mihon.entry.interactions.download.maintenance.ENTRY_DOWNLOAD_PROFILE_MOVE_PREPARATION_PARTICIPANT
+import mihon.entry.interactions.download.maintenance.EntryDownloadDestructiveRemovalBehaviorContract
+import mihon.entry.interactions.download.maintenance.EntryDownloadMetadataChangeBehaviorContract
+import mihon.entry.interactions.download.maintenance.EntryDownloadProfileMoveBehaviorContract
+import mihon.entry.interactions.download.maintenance.merge.ENTRY_DOWNLOAD_MERGE_PARTICIPANT
+import mihon.entry.interactions.download.maintenance.merge.EntryDownloadMergeDurableBehaviorContract
+import mihon.entry.interactions.download.maintenance.merge.entryDownloadMergeBinding
+import mihon.entry.interactions.download.maintenance.migration.ENTRY_DOWNLOAD_MIGRATION_OPTION_PARTICIPANT
+import mihon.entry.interactions.download.maintenance.migration.ENTRY_DOWNLOAD_MIGRATION_PARTICIPANT
+import mihon.entry.interactions.download.maintenance.migration.EntryDownloadMigrationDurableBehaviorContract
+import mihon.entry.interactions.download.maintenance.migration.EntryDownloadMigrationOptionBehaviorContract
+import mihon.entry.interactions.download.maintenance.migration.entryDownloadMigrationBinding
+import mihon.entry.interactions.download.maintenance.migration.entryDownloadMigrationOptionBinding
+import mihon.entry.interactions.merge.EntryMergeDownloadOwners
+import mihon.entry.interactions.merge.EntryMergeDownloadOwnershipProjection
+import mihon.entry.interactions.merge.consequence.EntryMergeDurableChange
+import mihon.entry.interactions.merge.consequence.EntryMergeDurableEvent
+import mihon.entry.interactions.migration.EntryMigrationOption
+import mihon.entry.interactions.migration.consequence.EntryMigrationDurableEvent
+import mihon.entry.interactions.migration.options.EntryMigrationOptionDiscoveryEvent
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
@@ -44,7 +68,8 @@ class EntryDownloadMaintenanceContractValidationContributor : FeatureValidationC
                             orderedOwners = listOf(entry),
                         )
                     }
-                    val feature = DefaultEntryDownloadMaintenanceFeature(evaluation, interaction, ownership)
+                    val feature =
+                        DefaultEntryDownloadMaintenanceFeature(evaluation, interaction, ownership)
 
                     contractExpectation(
                         feature.invalidateCaches() == EntryDownloadMaintenanceResult.Performed,
@@ -182,7 +207,10 @@ class EntryDownloadMaintenanceContractValidationContributor : FeatureValidationC
         ).forEach { participant ->
             sink.add(
                 FeatureExecutionContractVerifier(
-                    FeatureExecutionContractReference(participant.id, EntryDownloadProfileMoveBehaviorContract),
+                    FeatureExecutionContractReference(
+                        participant.id,
+                        EntryDownloadProfileMoveBehaviorContract,
+                    ),
                     verification = ::verifyRemovalLifecycle,
                 ),
             )

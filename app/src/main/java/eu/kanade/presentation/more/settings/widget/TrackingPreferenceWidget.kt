@@ -21,7 +21,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.settings.LocalPreferenceHighlighted
 import eu.kanade.presentation.track.components.TrackLogoIcon
-import mihon.entry.interactions.EntryTrackingServiceDescriptor
+import mihon.entry.interactions.tracking.EntryTrackingServiceDescriptor
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 

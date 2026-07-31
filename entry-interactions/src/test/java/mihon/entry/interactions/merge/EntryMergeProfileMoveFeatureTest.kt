@@ -1,11 +1,11 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.merge
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.host.EntryMergeMembershipSnapshot
+import mihon.entry.interactions.merge.host.EntryMergeMembershipSnapshot
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 
@@ -78,7 +78,8 @@ class EntryMergeProfileMoveFeatureTest {
         val inspected = feature.inspectDestination(prepared.reference, 9, emptyList())
             .shouldBeInstanceOf<EntryMergeProfileMoveDestinationResult.Ready>()
 
-        val intent = EntryMergeProfileMoveIntent(inspected.reference, 9, mapOf(3L to 3L), emptySet())
+        val intent =
+            EntryMergeProfileMoveIntent(inspected.reference, 9, mapOf(3L to 3L), emptySet())
         feature.begin(intent) shouldBe EntryMergeProfileMoveExecutionResult.Applied
         feature.complete(intent) shouldBe EntryMergeProfileMoveExecutionResult.Applied
 

@@ -16,8 +16,8 @@ import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import mihon.entry.interactions.EntryRelatedEntriesFeature
-import mihon.entry.interactions.EntryRelatedEntriesLoadResult
+import mihon.entry.interactions.child.EntryRelatedEntriesFeature
+import mihon.entry.interactions.child.EntryRelatedEntriesLoadResult
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test

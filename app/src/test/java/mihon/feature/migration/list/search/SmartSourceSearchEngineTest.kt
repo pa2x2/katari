@@ -6,10 +6,10 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.EntryCatalogueFeature
-import mihon.entry.interactions.EntryCatalogueSearchRequest
-import mihon.entry.interactions.EntryCatalogueSearchResult
-import mihon.entry.interactions.EntryCatalogueSourceInfo
+import mihon.entry.interactions.catalogue.EntryCatalogueFeature
+import mihon.entry.interactions.catalogue.EntryCatalogueSearchRequest
+import mihon.entry.interactions.catalogue.EntryCatalogueSearchResult
+import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 

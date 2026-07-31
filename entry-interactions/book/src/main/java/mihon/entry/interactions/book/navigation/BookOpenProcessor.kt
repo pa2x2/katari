@@ -1,11 +1,13 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.navigation
 
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.EntryOpenOptions
-import mihon.entry.interactions.EntryOpenProcessor
+import mihon.entry.interactions.book.reader.BookReaderHostActivity
+import mihon.entry.interactions.book.runtime.requireBook
+import mihon.entry.interactions.navigation.EntryOpenOptions
+import mihon.entry.interactions.navigation.EntryOpenProcessor
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 

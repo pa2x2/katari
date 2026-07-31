@@ -15,8 +15,8 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
-import mihon.entry.interactions.EntryMigrationAvailability
-import mihon.entry.interactions.EntryMigrationFeature
+import mihon.entry.interactions.migration.EntryMigrationAvailability
+import mihon.entry.interactions.migration.EntryMigrationFeature
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.repository.EntryRepository

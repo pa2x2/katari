@@ -1,6 +1,6 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.tracking.backup
 
-import mihon.entry.interactions.host.tracking.EntryTrackingBackupHost
+import mihon.entry.interactions.tracking.host.EntryTrackingBackupHost
 import tachiyomi.domain.entry.model.Entry
 
 internal class DefaultEntryTrackingBackupFeature(

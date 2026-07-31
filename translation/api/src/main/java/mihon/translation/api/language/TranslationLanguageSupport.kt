@@ -1,4 +1,4 @@
-package mihon.translation.api
+package mihon.translation.api.language
 
 data class TranslationLanguagePair(
     val source: TranslationLanguageTag,

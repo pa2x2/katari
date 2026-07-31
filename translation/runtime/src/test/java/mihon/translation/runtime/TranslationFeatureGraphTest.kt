@@ -4,11 +4,13 @@ import android.app.Application
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.mockk
 import mihon.feature.graph.ApplicableFeatureIntegration
-import mihon.feature.runtime.ApplicationFeatureRuntimeDependencies
-import mihon.feature.runtime.ApplicationFeatureRuntimeInstallationContext
+import mihon.feature.runtime.application.ApplicationFeatureRuntimeDependencies
+import mihon.feature.runtime.application.ApplicationFeatureRuntimeInstallationContext
+import mihon.feature.runtime.application.installApplicationFeatureRuntimeModules
+import mihon.feature.runtime.application.validateInstalledApplicationFeatureRuntimeModules
 import mihon.feature.runtime.createFeatureRuntimeComposition
-import mihon.feature.runtime.installApplicationFeatureRuntimeModules
-import mihon.feature.runtime.validateInstalledApplicationFeatureRuntimeModules
+import mihon.translation.runtime.di.translationFeatureRuntimeModule
+import mihon.translation.runtime.graph.TranslationFeatureGraphStateValidator
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller

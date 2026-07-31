@@ -1,10 +1,23 @@
-package mihon.feature.graph
+package mihon.feature.graph.execution
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.test.runTest
+import mihon.feature.graph.ApplicationSubjectContribution
+import mihon.feature.graph.ContentTypeId
+import mihon.feature.graph.ContributionOwner
+import mihon.feature.graph.FeatureArtifactId
+import mihon.feature.graph.FeatureBehaviorContract
+import mihon.feature.graph.FeatureExecutionParticipantId
+import mihon.feature.graph.FeatureExecutionPointId
+import mihon.feature.graph.FeatureGraph
+import mihon.feature.graph.FeatureSubjectId
+import mihon.feature.graph.FeatureSubjectScope
+import mihon.feature.graph.discoverAndAssembleFeatureGraph
+import mihon.feature.graph.evaluateFeatureGraph
+import mihon.feature.graph.featureGraphContributor
 import org.junit.jupiter.api.Test
 
 class ApplicationFeatureExecutionTest {

@@ -1,17 +1,18 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.catalogue.host
 
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryFilterSuggestion
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
-import eu.kanade.tachiyomi.source.entry.EntryItemOrientationProvider
 import eu.kanade.tachiyomi.source.entry.EntryPageResult
 import eu.kanade.tachiyomi.source.entry.SEntry
-import eu.kanade.tachiyomi.source.entry.SourceMetadata
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.entry.entryItemOrientation
 import eu.kanade.tachiyomi.source.entry.supportedEntryTypes
+import mihon.entry.interactions.catalogue.EntryCatalogueListing
+import mihon.entry.interactions.catalogue.EntryCatalogueUnavailableException
+import mihon.entry.interactions.catalogue.EntryCatalogueUnavailableReason
 import tachiyomi.domain.source.model.EntryCatalogueDescription
 import tachiyomi.domain.source.model.EntrySourceDescription
 import tachiyomi.domain.source.model.UnifiedStubSource

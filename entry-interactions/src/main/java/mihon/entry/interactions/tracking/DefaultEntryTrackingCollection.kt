@@ -1,9 +1,9 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.tracking
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import mihon.entry.interactions.host.tracking.EntryTrackingHost
+import mihon.entry.interactions.tracking.host.EntryTrackingHost
 
 internal class DefaultEntryTrackingCollection(
     private val host: EntryTrackingHost,

@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.library.membership
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.collections.shouldContainExactly
@@ -6,9 +6,23 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import mihon.entry.interactions.download.ENTRY_DOWNLOAD_LIBRARY_REMOVAL_PARTICIPANT
+import mihon.entry.interactions.download.EntryDownloadLibraryMembershipContributor
+import mihon.entry.interactions.library.membership.consequence.ENTRY_LIBRARY_CUSTOM_COVER_REMOVAL_PARTICIPANT
+import mihon.entry.interactions.library.membership.consequence.EntryLibraryCustomCoverContributor
+import mihon.entry.interactions.library.membership.host.EntryLibraryMembershipCommit
+import mihon.entry.interactions.library.membership.host.EntryLibraryMembershipHost
+import mihon.entry.interactions.library.membership.host.EntryLibraryMembershipPreparation
+import mihon.entry.interactions.merge.ENTRY_MERGE_LIBRARY_REMOVAL_PARTICIPANT
+import mihon.entry.interactions.merge.EntryMergeLibraryMembershipContributor
+import mihon.entry.interactions.runtime.EntryInteractionPlugin
+import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
+import mihon.entry.interactions.runtime.createEntryInteractionComposition
+import mihon.entry.interactions.tracking.ENTRY_TRACKING_LIBRARY_ADDITION_PARTICIPANT
+import mihon.entry.interactions.tracking.EntryTrackingLibraryMembershipContributor
 import mihon.feature.graph.ContributionOwner
-import mihon.feature.graph.FeatureExecutionHandler
-import mihon.feature.graph.FeatureExecutionParticipantBinding
+import mihon.feature.graph.execution.FeatureExecutionHandler
+import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entry.model.Entry

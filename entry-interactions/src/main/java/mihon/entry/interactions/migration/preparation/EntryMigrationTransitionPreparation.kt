@@ -1,9 +1,12 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.migration.preparation
 
-import mihon.feature.graph.FeatureExecutionFailurePolicy
+import mihon.entry.interactions.executeInline
+import mihon.entry.interactions.migration.ENTRY_MIGRATION_FEATURE_OWNER
+import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.feature.graph.FeatureExecutionPointId
-import mihon.feature.graph.FeatureExecutionRuntime
-import mihon.feature.graph.inlineFeatureExecutionPointDefinition
+import mihon.feature.graph.execution.FeatureExecutionFailurePolicy
+import mihon.feature.graph.execution.FeatureExecutionRuntime
+import mihon.feature.graph.execution.inlineFeatureExecutionPointDefinition
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.track.model.EntryTrack
 

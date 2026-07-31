@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.video.player
 
-import mihon.entry.interactions.anime.animeProgressState
-import mihon.entry.interactions.anime.positionMs
+import mihon.entry.interactions.anime.state.animeProgressState
+import mihon.entry.interactions.anime.state.positionMs
 import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.history.model.HistoryUpdate
 import java.util.Date

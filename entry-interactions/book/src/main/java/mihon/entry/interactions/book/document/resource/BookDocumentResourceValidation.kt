@@ -3,8 +3,8 @@ package mihon.entry.interactions.book.document.resource
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Typeface
-import mihon.entry.interactions.book.BookResourceContentKind
-import mihon.entry.interactions.book.BookResourceRequirement
+import mihon.entry.interactions.book.preparation.BookResourceContentKind
+import mihon.entry.interactions.book.preparation.BookResourceRequirement
 import java.io.File
 import kotlin.math.ceil
 import kotlin.math.sqrt

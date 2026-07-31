@@ -1,10 +1,14 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.reader
 
 import mihon.book.api.BookLocator
-import mihon.entry.interactions.EntryMediaSessionActivity
-import mihon.entry.interactions.EntryMediaSessionEvent
-import mihon.entry.interactions.EntryMediaSessionProcessor
-import mihon.entry.viewer.settings.ReaderCapabilityId
+import mihon.entry.interactions.book.content.BookContentSession
+import mihon.entry.interactions.book.preparation.PreparedBookPublication
+import mihon.entry.interactions.book.state.BookProgressIdentity
+import mihon.entry.interactions.book.state.BookProgressLocatorCodec
+import mihon.entry.interactions.media.EntryMediaSessionProcessor
+import mihon.entry.interactions.media.session.EntryMediaSessionActivity
+import mihon.entry.interactions.media.session.EntryMediaSessionEvent
+import mihon.entry.viewer.settings.shared.ReaderCapabilityId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState

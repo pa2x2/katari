@@ -1,5 +1,14 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.library
 
+import mihon.entry.interactions.entryContentType
+import mihon.entry.interactions.execute
+import mihon.entry.interactions.runtime.throwFirstFailure
+import mihon.entry.interactions.runtime.toContentTypeId
+import mihon.entry.interactions.source.EntrySourceRefreshFailure
+import mihon.entry.interactions.source.EntrySourceRefreshFeature
+import mihon.entry.interactions.source.EntrySourceRefreshRequest
+import mihon.entry.interactions.source.EntrySourceRefreshResult
+import mihon.entry.interactions.source.EntrySourceRefreshWindow
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContentTypeId
 import mihon.feature.graph.ContributionOwner
@@ -7,14 +16,14 @@ import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureBehaviorContract
 import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContribution
-import mihon.feature.graph.FeatureExecutionRuntime
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
-import mihon.feature.graph.afterFeatureCommitVolatile
+import mihon.feature.graph.execution.FeatureExecutionRuntime
+import mihon.feature.graph.execution.afterFeatureCommitVolatile
 
 internal val ENTRY_LIBRARY_UPDATE_REFRESH_FEATURE_ID = FeatureId("entry.library-update-refresh")
 internal val ENTRY_LIBRARY_UPDATE_REFRESH_OWNER = ContributionOwner("entry-library-update")
@@ -93,7 +102,11 @@ internal class DefaultEntryLibraryUpdateRefreshFeature(
                         execute(
                             point = ENTRY_LIBRARY_UPDATE_NEW_CHILDREN_EXECUTION_POINT,
                             contentType = request.entry.type.toContentTypeId(),
-                            event = EntryLibraryUpdateNewChildrenEvent(request.entry, newChildren, session),
+                            event = EntryLibraryUpdateNewChildrenEvent(
+                                request.entry,
+                                newChildren,
+                                session,
+                            ),
                         ).throwFirstFailure()
                     }
                 }

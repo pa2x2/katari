@@ -1,5 +1,6 @@
-package mihon.translation.ui.picker
+package mihon.translation.ui.picker.engine
 
+import android.R
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,15 +31,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
-import mihon.translation.api.KnownTranslationEngine
-import mihon.translation.api.TranslationEngineAction
-import mihon.translation.api.TranslationEngineArtwork
-import mihon.translation.api.TranslationEngineBuildAvailability
-import mihon.translation.api.TranslationEngineDetails
-import mihon.translation.api.TranslationEngineId
-import mihon.translation.api.TranslationEngineState
-import mihon.translation.api.TranslationEngineStatus
-import mihon.translation.api.TranslationProviderId
+import mihon.translation.api.engine.KnownTranslationEngine
+import mihon.translation.api.engine.TranslationEngineAction
+import mihon.translation.api.engine.TranslationEngineArtwork
+import mihon.translation.api.engine.TranslationEngineBuildAvailability
+import mihon.translation.api.engine.TranslationEngineDetails
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.engine.TranslationEngineState
+import mihon.translation.api.engine.TranslationEngineStatus
+import mihon.translation.api.engine.TranslationProviderId
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -227,7 +228,7 @@ private fun previewEngineStates() = listOf(
     ),
 )
 
-private val PREVIEW_ARTWORK = TranslationEngineArtwork.Bundled(android.R.drawable.ic_dialog_info)
+private val PREVIEW_ARTWORK = TranslationEngineArtwork.Bundled(R.drawable.ic_dialog_info)
 private val PREVIEW_DETAILS = TranslationEngineDetails(
     description = "Translation through a provider-owned engine.",
     processingLocation = "The configured translation provider.",

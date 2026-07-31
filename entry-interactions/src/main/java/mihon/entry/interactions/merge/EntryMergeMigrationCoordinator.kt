@@ -1,9 +1,9 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.merge
 
-import mihon.entry.interactions.host.EntryMergeHost
-import mihon.entry.interactions.host.EntryMergeHostTransition
-import mihon.entry.interactions.host.EntryMergeHostTransitionResult
-import mihon.entry.interactions.host.EntryMergeMembershipSnapshot
+import mihon.entry.interactions.merge.host.EntryMergeHost
+import mihon.entry.interactions.merge.host.EntryMergeHostTransition
+import mihon.entry.interactions.merge.host.EntryMergeHostTransitionResult
+import mihon.entry.interactions.merge.host.EntryMergeMembershipSnapshot
 import java.util.UUID
 
 internal class EntryMergeMigrationCoordinator(

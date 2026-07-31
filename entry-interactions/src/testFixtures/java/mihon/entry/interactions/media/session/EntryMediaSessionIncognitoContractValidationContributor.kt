@@ -1,8 +1,9 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media.session
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.mockk.coEvery
 import io.mockk.mockk
+import mihon.entry.interactions.media.EntryMediaSessionCapability
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.verifyFeatureContract
 import mihon.feature.graph.validation.FeatureContractReference

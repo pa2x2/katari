@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.merge
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -11,14 +11,23 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.host.EntryMergeConsequenceStatusSnapshot
-import mihon.entry.interactions.host.EntryMergeHost
-import mihon.entry.interactions.host.EntryMergeHostTransition
-import mihon.entry.interactions.host.EntryMergeHostTransitionResult
-import mihon.entry.interactions.host.EntryMergeMembershipSnapshot
-import mihon.entry.interactions.host.EntryMergePendingConsequence
-import mihon.entry.interactions.host.EntryMergeProfileHost
-import mihon.entry.interactions.host.EntryMergeProfileMoveHostTransition
+import mihon.entry.interactions.download.maintenance.merge.EntryDownloadMergeContributor
+import mihon.entry.interactions.merge.consequence.EntryMergeConsequenceDelivery
+import mihon.entry.interactions.merge.consequence.EntryMergeConsequenceTarget
+import mihon.entry.interactions.merge.consequence.EntryMergeDurablePreparation
+import mihon.entry.interactions.merge.consequence.EntryMergeDurablePreparationGateway
+import mihon.entry.interactions.merge.consequence.EntryMergeDurablePreparationResult
+import mihon.entry.interactions.merge.consequence.cover.EntryMergeCustomCoverContributor
+import mihon.entry.interactions.merge.host.EntryMergeConsequenceRequest
+import mihon.entry.interactions.merge.host.EntryMergeConsequenceStatusSnapshot
+import mihon.entry.interactions.merge.host.EntryMergeHost
+import mihon.entry.interactions.merge.host.EntryMergeHostTransition
+import mihon.entry.interactions.merge.host.EntryMergeHostTransitionResult
+import mihon.entry.interactions.merge.host.EntryMergeMembershipSnapshot
+import mihon.entry.interactions.merge.host.EntryMergePendingConsequence
+import mihon.entry.interactions.merge.host.EntryMergeProfileHost
+import mihon.entry.interactions.merge.host.EntryMergeProfileMoveHostTransition
+import mihon.entry.interactions.tracking.merge.EntryTrackingMergeContributor
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.DuplicateEntryCandidate
@@ -29,7 +38,8 @@ class EntryMergeFeatureTest {
     fun `download ownership projection returns ordered concrete owners for the explicit profile`() = runTest {
         val entries = listOf(entry(1L, "one"), entry(2L, "two"))
         val membership = EntryMergeMembershipSnapshot(7L, 1L, entries.map(Entry::id))
-        val projection = EntryMergeDownloadOwnershipCoordinator(FakeEntryMergeHost(entries, listOf(membership)))
+        val projection =
+            EntryMergeDownloadOwnershipCoordinator(FakeEntryMergeHost(entries, listOf(membership)))
 
         projection.resolveDownloadOwners(EntryMergeSubject(7L, 2L)) shouldBe EntryMergeDownloadOwners(
             profileId = 7L,
@@ -375,7 +385,7 @@ private class RecordingMergeDurableGateway : EntryMergeDurablePreparationGateway
         return EntryMergeDurablePreparationResult.Prepared(
             preparations.map { preparation ->
                 val target = preparation.target
-                mihon.entry.interactions.host.EntryMergeConsequenceRequest(
+                EntryMergeConsequenceRequest(
                     memberKey = (target as? EntryMergeConsequenceTarget.EditorMember)?.key,
                     entryId = (target as? EntryMergeConsequenceTarget.PersistedEntry)?.id,
                     participantId = "test.merge-durable",
@@ -387,5 +397,5 @@ private class RecordingMergeDurableGateway : EntryMergeDurablePreparationGateway
         )
     }
 
-    override suspend fun discard(requests: List<mihon.entry.interactions.host.EntryMergeConsequenceRequest>) = Unit
+    override suspend fun discard(requests: List<EntryMergeConsequenceRequest>) = Unit
 }

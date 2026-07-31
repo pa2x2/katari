@@ -2,8 +2,8 @@ package mihon.entry.interactions.reader.preparation
 
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
-import mihon.entry.viewer.settings.ReaderSharedSettingsRegistry
-import mihon.entry.viewer.settings.StandardReaderCapabilities
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
+import mihon.entry.viewer.settings.shared.StandardReaderCapabilities
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 

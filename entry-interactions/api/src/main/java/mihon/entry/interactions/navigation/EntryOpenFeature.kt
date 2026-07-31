@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.navigation
 
 import android.app.PendingIntent
 import android.content.Context

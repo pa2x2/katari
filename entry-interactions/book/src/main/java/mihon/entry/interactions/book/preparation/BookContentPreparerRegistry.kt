@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.preparation
 
 import mihon.book.api.BookContentDescriptor
 

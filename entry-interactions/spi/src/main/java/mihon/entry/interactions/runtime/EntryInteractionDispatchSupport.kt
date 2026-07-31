@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.runtime
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.Flow
@@ -7,6 +7,14 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
+import mihon.entry.interactions.download.EntryDownloadProcessor
+import mihon.entry.interactions.download.EntryDownloadQueueGroup
+import mihon.entry.interactions.navigation.EntryContinueProcessor
+import mihon.entry.interactions.navigation.EntryOpenProcessor
+import mihon.entry.interactions.state.EntryBookmarkProcessor
+import mihon.entry.interactions.state.EntryConsumptionProcessor
+import mihon.entry.interactions.state.EntryPlaybackPreferencesProcessor
+import mihon.entry.interactions.state.EntryProgressProcessor
 import tachiyomi.domain.entry.model.Entry
 
 internal fun <T> Map<EntryType, T>.requireProcessor(category: String, type: EntryType): T {

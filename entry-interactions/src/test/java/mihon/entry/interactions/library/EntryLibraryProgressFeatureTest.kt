@@ -1,10 +1,19 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.library
 
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.test.runTest
+import mihon.entry.interactions.navigation.DefaultEntryContinueFeature
+import mihon.entry.interactions.navigation.EntryContinueCapability
+import mihon.entry.interactions.navigation.EntryContinueFeatureContributor
+import mihon.entry.interactions.navigation.EntryContinueProcessor
+import mihon.entry.interactions.runtime.EntryInteractionPlugin
+import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
+import mihon.entry.interactions.runtime.createEntryInteractionComposition
+import mihon.entry.interactions.state.EntryBookmarkCapability
+import mihon.entry.interactions.state.EntryBookmarkProcessor
 import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
@@ -119,7 +128,12 @@ class EntryLibraryProgressFeatureTest {
     }
 
     private class EvidenceProvider(
-        private val evidence: EntryLibraryProgressEvidence = EntryLibraryProgressEvidence(false, null, null, 0L),
+        private val evidence: EntryLibraryProgressEvidence = EntryLibraryProgressEvidence(
+            false,
+            null,
+            null,
+            0L,
+        ),
     ) : EntryLibraryProgressProvider {
         override val type = EntryType.BOOK
         override suspend fun evidence(entry: Entry, chapters: List<EntryChapter>) = evidence

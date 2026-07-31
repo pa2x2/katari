@@ -1,6 +1,8 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.state
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.entryContentType
+import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
@@ -92,10 +94,11 @@ class EntryUpdateEligibilityContractValidationContributor : FeatureValidationCon
         currentPolicy = { policy },
     )
 
-    private fun unrestrictedRequest(type: EntryType): EntryUpdateEligibilityRequest = EntryUpdateEligibilityRequest(
-        entry = Entry.create().copy(type = type),
-        totalCount = null,
-        unconsumedCount = null,
-        hasStarted = null,
-    )
+    private fun unrestrictedRequest(type: EntryType): EntryUpdateEligibilityRequest =
+        EntryUpdateEligibilityRequest(
+            entry = Entry.create().copy(type = type),
+            totalCount = null,
+            unconsumedCount = null,
+            hasStarted = null,
+        )
 }

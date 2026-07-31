@@ -5,7 +5,7 @@ import eu.kanade.tachiyomi.data.track.EnhancedTracker
 import eu.kanade.tachiyomi.data.track.Tracker
 import eu.kanade.tachiyomi.data.track.supportsEntryType
 import logcat.LogPriority
-import mihon.entry.interactions.EntryConsumptionFeature
+import mihon.entry.interactions.state.EntryConsumptionFeature
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryChapterRepository

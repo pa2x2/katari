@@ -1,28 +1,29 @@
 package mihon.translation.runtime.system
 
-import mihon.translation.api.KnownTranslationEngine
-import mihon.translation.api.ResolvedTranslationRequest
-import mihon.translation.api.TranslationEngineArtwork
-import mihon.translation.api.TranslationEngineBuildAvailability
-import mihon.translation.api.TranslationEngineDetails
-import mihon.translation.api.TranslationEngineId
-import mihon.translation.api.TranslationInvocationPolicy
-import mihon.translation.api.TranslationLanguageSupportInspection
-import mihon.translation.api.TranslationModelId
-import mihon.translation.api.TranslationModelOperationResult
-import mihon.translation.api.TranslationProviderId
-import mihon.translation.api.TranslationProviderPresentation
-import mihon.translation.api.TranslationSetupDestination
-import mihon.translation.api.TranslationSystemSetupReason
-import mihon.translation.api.TranslationUnavailableReason
+import mihon.translation.api.engine.KnownTranslationEngine
+import mihon.translation.api.engine.TranslationEngineArtwork
+import mihon.translation.api.engine.TranslationEngineBuildAvailability
+import mihon.translation.api.engine.TranslationEngineDetails
+import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.engine.TranslationProviderId
+import mihon.translation.api.host.TranslationSetupDestination
+import mihon.translation.api.language.TranslationLanguageSupportInspection
+import mihon.translation.api.model.TranslationModelId
+import mihon.translation.api.model.TranslationModelOperationResult
+import mihon.translation.api.preparation.TranslationSystemSetupReason
+import mihon.translation.api.preparation.TranslationUnavailableReason
+import mihon.translation.api.provider.TranslationInvocationPolicy
+import mihon.translation.api.provider.TranslationProviderDisclosure
+import mihon.translation.api.provider.TranslationProviderPresentation
+import mihon.translation.api.request.ResolvedTranslationRequest
 import mihon.translation.runtime.R
-import mihon.translation.spi.ReadyTranslationEngineRequest
-import mihon.translation.spi.TranslationEngine
-import mihon.translation.spi.TranslationEngineDeviceAvailability
-import mihon.translation.spi.TranslationEngineExecution
-import mihon.translation.spi.TranslationEnginePreparation
-import mihon.translation.spi.TranslationEngineSetup
-import mihon.translation.spi.TranslationSetupResult
+import mihon.translation.spi.engine.ReadyTranslationEngineRequest
+import mihon.translation.spi.engine.TranslationEngine
+import mihon.translation.spi.engine.TranslationEngineDeviceAvailability
+import mihon.translation.spi.engine.TranslationEngineExecution
+import mihon.translation.spi.engine.TranslationEnginePreparation
+import mihon.translation.spi.setup.TranslationEngineSetup
+import mihon.translation.spi.setup.TranslationSetupResult
 
 internal class AndroidSystemTranslationEngine(
     private val platform: AndroidSystemTranslationPlatform,
@@ -113,7 +114,7 @@ internal class AndroidSystemTranslationEngine(
         }
     }
 
-    override suspend fun acknowledge(disclosure: mihon.translation.api.TranslationProviderDisclosure) = Unit
+    override suspend fun acknowledge(disclosure: TranslationProviderDisclosure) = Unit
 
     override suspend fun openSetup(): TranslationSetupResult {
         return when (val result = platform.openSettings()) {

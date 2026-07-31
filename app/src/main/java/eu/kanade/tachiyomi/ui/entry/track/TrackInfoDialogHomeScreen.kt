@@ -23,12 +23,13 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.entry.interactions.EntryTrackingAutomaticRegistrationResult
-import mihon.entry.interactions.EntryTrackingFeature
-import mihon.entry.interactions.EntryTrackingMutation
-import mihon.entry.interactions.EntryTrackingRefreshResult
-import mihon.entry.interactions.EntryTrackingSession
-import mihon.entry.interactions.EntryTrackingSessionService
+import mihon.entry.interactions.tracking.EntryTrackingAutomaticRegistrationResult
+import mihon.entry.interactions.tracking.EntryTrackingFeature
+import mihon.entry.interactions.tracking.EntryTrackingMutation
+import mihon.entry.interactions.tracking.EntryTrackingRefreshFailure
+import mihon.entry.interactions.tracking.EntryTrackingRefreshResult
+import mihon.entry.interactions.tracking.EntryTrackingSession
+import mihon.entry.interactions.tracking.EntryTrackingSessionService
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withUIContext
@@ -148,7 +149,7 @@ data class TrackInfoDialogHomeScreen(
             }
         }
 
-        private suspend fun reportRefreshFailure(failure: mihon.entry.interactions.EntryTrackingRefreshFailure) {
+        private suspend fun reportRefreshFailure(failure: EntryTrackingRefreshFailure) {
             logcat(LogPriority.ERROR, failure.cause) {
                 "Failed to refresh track data entryId=${entry.id} for service ${failure.serviceId.value}"
             }

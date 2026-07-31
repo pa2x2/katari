@@ -34,7 +34,7 @@ import eu.kanade.core.util.fastFilterNot
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.components.AdaptiveSheet
 import mihon.domain.migration.models.MigrationFlag
-import mihon.entry.interactions.EntryMigrationOption
+import mihon.entry.interactions.migration.EntryMigrationOption
 import mihon.feature.migration.options.getLabel
 import mihon.feature.migration.options.toEntryMigrationOptions
 import tachiyomi.core.common.preference.Preference

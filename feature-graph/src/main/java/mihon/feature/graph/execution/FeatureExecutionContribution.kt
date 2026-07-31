@@ -1,5 +1,16 @@
-package mihon.feature.graph
+package mihon.feature.graph.execution
 
+import mihon.feature.graph.CapabilityExpression
+import mihon.feature.graph.ContextInputDefinition
+import mihon.feature.graph.ContributionOwner
+import mihon.feature.graph.FeatureBehaviorContract
+import mihon.feature.graph.FeatureContextBlocker
+import mihon.feature.graph.FeatureContextRule
+import mihon.feature.graph.FeatureExecutionParticipantId
+import mihon.feature.graph.FeatureExecutionPointId
+import mihon.feature.graph.FeatureSubjectScope
+import mihon.feature.graph.SpecializedAdapterDefinition
+import mihon.feature.graph.requireUnique
 import kotlin.reflect.KClass
 
 /** When one coordinator guarantees that contributed work executes relative to its core state change. */
@@ -178,8 +189,14 @@ data class FeatureExecutionParticipantDefinition<E : Any>(
                 "Execution participant $id cannot use context rule owned by ${rule.owner}"
             }
         }
-        requireUnique("Context inputs for execution participant $id", contextInputs.map { it.id.value })
-        requireUnique("Context blockers for execution participant $id", contextBlockers.map { it.id.value })
+        requireUnique(
+            "Context inputs for execution participant $id",
+            contextInputs.map { it.id.value },
+        )
+        requireUnique(
+            "Context blockers for execution participant $id",
+            contextBlockers.map { it.id.value },
+        )
         val declaredContextInputs = contextInputs.toSet()
         contextBlockers.forEach { blocker ->
             blocker.inputs.forEach { input ->

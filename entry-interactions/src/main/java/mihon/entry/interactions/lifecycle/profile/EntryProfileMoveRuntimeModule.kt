@@ -1,7 +1,14 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.lifecycle.profile
 
-import mihon.feature.graph.FeatureExecutionHandler
-import mihon.feature.graph.FeatureExecutionParticipantBinding
+import mihon.entry.interactions.lifecycle.profile.consequence.ENTRY_PROFILE_MOVE_CUSTOM_COVER_PARTICIPANT
+import mihon.entry.interactions.lifecycle.profile.consequence.ENTRY_PROFILE_MOVE_SOURCE_VISIBILITY_PARTICIPANT
+import mihon.entry.interactions.lifecycle.profile.consequence.EntryProfileMoveCustomCoverContributor
+import mihon.entry.interactions.lifecycle.profile.consequence.EntryProfileMoveHostContributor
+import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeArtifacts
+import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeModule
+import mihon.entry.interactions.runtime.production.entryFeatureRuntimeBoundary
+import mihon.feature.graph.execution.FeatureExecutionHandler
+import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
 import uy.kohesive.injekt.api.addSingletonFactory
 import uy.kohesive.injekt.api.get

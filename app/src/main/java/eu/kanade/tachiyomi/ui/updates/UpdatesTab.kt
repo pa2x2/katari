@@ -34,8 +34,8 @@ import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.updates.UpdatesScreenModel.Event
 import kotlinx.coroutines.flow.collectLatest
-import mihon.entry.interactions.EntryDownloadState
-import mihon.entry.interactions.EntryOpenFeature
+import mihon.entry.interactions.download.EntryDownloadState
+import mihon.entry.interactions.navigation.EntryOpenFeature
 import mihon.feature.upcoming.UpcomingScreen
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO

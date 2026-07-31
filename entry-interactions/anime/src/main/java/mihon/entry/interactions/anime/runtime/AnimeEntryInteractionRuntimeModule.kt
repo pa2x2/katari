@@ -1,16 +1,17 @@
-package mihon.entry.interactions.anime
+package mihon.entry.interactions.anime.runtime
 
 import android.app.Application
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.DefaultEntryViewerSettingsProvider
-import mihon.entry.interactions.ENTRY_VIEWER_SETTINGS_LEGACY_PREFERENCE_OWNER_GROUP_ID
-import mihon.entry.interactions.EntryMediaSessionEventSink
-import mihon.entry.interactions.EntryTypeRuntimeContribution
-import mihon.entry.interactions.EntryTypeRuntimeModule
 import mihon.entry.interactions.anime.download.AnimeDownloadCache
 import mihon.entry.interactions.anime.download.AnimeDownloadManager
 import mihon.entry.interactions.anime.download.AnimeDownloadProvider
 import mihon.entry.interactions.anime.download.AnimeDownloader
+import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
+import mihon.entry.interactions.media.DefaultEntryViewerSettingsProvider
+import mihon.entry.interactions.media.ENTRY_VIEWER_SETTINGS_LEGACY_PREFERENCE_OWNER_GROUP_ID
+import mihon.entry.interactions.media.session.EntryMediaSessionEventSink
+import mihon.entry.interactions.runtime.EntryTypeRuntimeContribution
+import mihon.entry.interactions.runtime.EntryTypeRuntimeModule
 import mihon.entry.interactions.settings.AnimePlayerPreferences
 import mihon.entry.interactions.settings.EntryInteractionPreferences
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerGroupId

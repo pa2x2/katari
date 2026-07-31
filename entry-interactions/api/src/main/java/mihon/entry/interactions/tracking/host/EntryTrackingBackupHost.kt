@@ -1,6 +1,6 @@
-package mihon.entry.interactions.host.tracking
+package mihon.entry.interactions.tracking.host
 
-import mihon.entry.interactions.EntryTrackingBackupRecord
+import mihon.entry.interactions.tracking.backup.EntryTrackingBackupRecord
 
 interface EntryTrackingBackupHost {
     suspend fun snapshot(profileId: Long, entryId: Long): List<EntryTrackingBackupRecord>

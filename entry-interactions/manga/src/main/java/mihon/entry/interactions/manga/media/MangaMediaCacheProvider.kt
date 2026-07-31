@@ -1,11 +1,11 @@
-package mihon.entry.interactions.manga
+package mihon.entry.interactions.manga.media
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.EntryMediaCacheArtifact
-import mihon.entry.interactions.EntryMediaCacheAutoClearPreference
-import mihon.entry.interactions.EntryMediaCacheId
-import mihon.entry.interactions.EntryMediaCacheProvider
-import mihon.entry.interactions.EntryPageImageCache
+import mihon.entry.interactions.media.EntryMediaCacheArtifact
+import mihon.entry.interactions.media.EntryMediaCacheAutoClearPreference
+import mihon.entry.interactions.media.EntryMediaCacheId
+import mihon.entry.interactions.media.EntryMediaCacheProvider
+import mihon.entry.interactions.runtime.EntryPageImageCache
 import tachiyomi.i18n.MR
 
 internal class MangaMediaCacheProvider(

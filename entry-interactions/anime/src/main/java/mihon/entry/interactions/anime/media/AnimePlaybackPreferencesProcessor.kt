@@ -1,9 +1,10 @@
-package mihon.entry.interactions.anime
+package mihon.entry.interactions.anime.media
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.EntryPlaybackPreferencesProcessor
-import mihon.entry.interactions.EntryPlaybackPreferencesSnapshot
-import mihon.entry.interactions.EntryPlaybackQualityMode
+import mihon.entry.interactions.anime.runtime.requireAnime
+import mihon.entry.interactions.media.EntryPlaybackPreferencesSnapshot
+import mihon.entry.interactions.media.EntryPlaybackQualityMode
+import mihon.entry.interactions.state.EntryPlaybackPreferencesProcessor
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.PlaybackPreferences
 import tachiyomi.domain.entry.model.PlayerQualityMode

@@ -11,8 +11,8 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.EntryDownloadWorkController
 import mihon.entry.interactions.book.download.model.BookDownload
+import mihon.entry.interactions.download.EntryDownloadWorkController
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter

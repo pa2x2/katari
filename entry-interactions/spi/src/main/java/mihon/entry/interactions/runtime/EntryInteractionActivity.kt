@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.runtime
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity

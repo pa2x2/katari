@@ -1,9 +1,9 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.merge
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.host.EntryMergeHostExpectation
-import mihon.entry.interactions.host.EntryMergeHostMemberKey
-import mihon.entry.interactions.host.EntryMergeHostPreparation
+import mihon.entry.interactions.merge.host.EntryMergeHostExpectation
+import mihon.entry.interactions.merge.host.EntryMergeHostMemberKey
+import mihon.entry.interactions.merge.host.EntryMergeHostPreparation
 import java.util.UUID
 
 internal data class FeatureEntryMergeEditReference(

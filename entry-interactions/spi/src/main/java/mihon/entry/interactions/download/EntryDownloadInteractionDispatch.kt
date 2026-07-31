@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download
 
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
@@ -9,6 +9,11 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import mihon.entry.interactions.runtime.combinedAny
+import mihon.entry.interactions.runtime.combinedFlatten
+import mihon.entry.interactions.runtime.merged
+import mihon.entry.interactions.runtime.requireMatchingEntryType
+import mihon.entry.interactions.runtime.requireProcessor
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 

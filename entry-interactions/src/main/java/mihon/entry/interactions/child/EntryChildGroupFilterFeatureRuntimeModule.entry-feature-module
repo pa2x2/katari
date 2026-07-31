@@ -1,2 +1,2 @@
 id=entry.child-group-filter
-module=mihon.entry.interactions.EntryChildGroupFilterFeatureRuntimeModule
+module=mihon.entry.interactions.child.EntryChildGroupFilterFeatureRuntimeModule

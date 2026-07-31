@@ -1,7 +1,7 @@
 package mihon.entry.interactions.host.lifecycle.profile
 
 import eu.kanade.domain.source.service.SourcePreferences
-import mihon.entry.interactions.EntryProfileMoveSourceVisibilityHost
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveSourceVisibilityHost
 import mihon.feature.profiles.core.ProfileStore
 
 class AppEntryProfileMoveSourceVisibilityHost(

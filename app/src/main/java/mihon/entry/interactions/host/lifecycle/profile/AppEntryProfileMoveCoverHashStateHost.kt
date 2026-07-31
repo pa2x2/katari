@@ -1,7 +1,7 @@
 package mihon.entry.interactions.host.lifecycle.profile
 
-import mihon.entry.interactions.EntryProfileMoveCoverHashStateHost
-import mihon.entry.interactions.EntryProfileMoveStateRequest
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveCoverHashStateHost
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveStateRequest
 import tachiyomi.data.DatabaseHandler
 
 class AppEntryProfileMoveCoverHashStateHost(

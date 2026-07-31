@@ -10,7 +10,7 @@ import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.EntryCatalogueFilterSuggestionsResult
+import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 import org.junit.jupiter.api.Test
 
 class FilterAutocompleteControllerTest {

@@ -1,8 +1,13 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.library
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.mockk.coEvery
 import io.mockk.mockk
+import mihon.entry.interactions.entryContentType
+import mihon.entry.interactions.refresh.refreshFeatureTestComposition
+import mihon.entry.interactions.runtime.toContentTypeId
+import mihon.entry.interactions.source.EntrySourceRefreshFeature
+import mihon.entry.interactions.source.EntrySourceRefreshResult
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.verifyFeatureContract
 import mihon.feature.graph.validation.FeatureContractReference
@@ -45,7 +50,14 @@ class EntryLibraryUpdateRefreshContractValidationContributor : FeatureValidation
                     )
 
                     contractExpectation(
-                        feature.newSession().refresh(EntryLibraryUpdateRefreshRequest(entry, true, 0L, 0L)) ==
+                        feature.newSession().refresh(
+                            EntryLibraryUpdateRefreshRequest(
+                                entry,
+                                true,
+                                0L,
+                                0L,
+                            ),
+                        ) ==
                             EntryLibraryUpdateRefreshResult.Updated(listOf(later, earlier)),
                         "Library Update Refresh must hand ordered inserted children to its caller",
                     )

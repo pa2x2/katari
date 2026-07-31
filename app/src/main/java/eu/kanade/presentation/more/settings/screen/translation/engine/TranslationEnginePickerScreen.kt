@@ -11,8 +11,8 @@ import eu.kanade.presentation.more.settings.screen.rememberTranslationSettingsSc
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toast
-import mihon.translation.api.TranslationHostActionResult
-import mihon.translation.api.TranslationSetupDestination
+import mihon.translation.api.host.TranslationHostActionResult
+import mihon.translation.api.host.TranslationSetupDestination
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
 

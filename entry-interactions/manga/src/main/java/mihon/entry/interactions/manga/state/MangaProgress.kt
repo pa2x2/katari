@@ -1,4 +1,4 @@
-package mihon.entry.interactions.manga
+package mihon.entry.interactions.manga.state
 
 import kotlinx.serialization.json.JsonObject
 import tachiyomi.domain.entry.model.EntryProgressLocator

@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.reader.translation
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -8,15 +8,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import mihon.entry.viewer.settings.ReaderCapabilityId
-import mihon.entry.viewer.settings.StandardReaderCapabilities
-import mihon.translation.api.TranslationDeviceAvailability
-import mihon.translation.api.TranslationEngineSelection
+import mihon.entry.viewer.settings.shared.ReaderCapabilityId
+import mihon.entry.viewer.settings.shared.StandardReaderCapabilities
 import mihon.translation.api.TranslationFeature
-import mihon.translation.api.TranslationHostActions
-import mihon.translation.api.TranslationRequest
-import mihon.translation.api.TranslationSourceLanguageSelection
-import mihon.translation.api.TranslationTargetLanguageSelection
+import mihon.translation.api.availability.TranslationDeviceAvailability
+import mihon.translation.api.engine.TranslationEngineSelection
+import mihon.translation.api.host.TranslationHostActions
+import mihon.translation.api.request.TranslationRequest
+import mihon.translation.api.request.TranslationSourceLanguageSelection
+import mihon.translation.api.request.TranslationTargetLanguageSelection
 import mihon.translation.ui.session.TranslationSelectionAnchor
 import mihon.translation.ui.session.TranslationSessionHostCoordinator
 import mihon.translation.ui.session.TranslationSessionInput

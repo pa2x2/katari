@@ -1,2 +1,2 @@
 id=entry.consumption
-module=mihon.entry.interactions.EntryConsumptionFeatureRuntimeModule
+module=mihon.entry.interactions.state.EntryConsumptionFeatureRuntimeModule

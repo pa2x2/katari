@@ -3,7 +3,7 @@ package eu.kanade.tachiyomi.ui.entry
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.entry.selectionEntryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.EntryTypePresentationFeature
+import mihon.entry.interactions.presentation.EntryTypePresentationFeature
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 

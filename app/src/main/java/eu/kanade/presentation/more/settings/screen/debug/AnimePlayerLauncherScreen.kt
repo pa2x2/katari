@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
-import mihon.entry.interactions.EntryOpenFeature
+import mihon.entry.interactions.navigation.EntryOpenFeature
 import mihon.feature.profiles.core.ProfileManager
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository

@@ -1,10 +1,13 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.source
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import mihon.entry.interactions.entryContentType
+import mihon.entry.interactions.refresh.refreshFeatureTestComposition
+import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.verifyFeatureContract
 import mihon.feature.graph.FeatureContractScenarioId
@@ -22,7 +25,10 @@ class EntrySourceRefreshContractValidationContributor : FeatureValidationContrib
     override val owner = EntrySourceRefreshFeatureContributor.owner
 
     override fun contributeTo(sink: FeatureValidationContributionSink) {
-        val reference = FeatureContractReference(ENTRY_SOURCE_REFRESH_FEATURE_ID, EntrySourceRefreshBehaviorContract)
+        val reference = FeatureContractReference(
+            ENTRY_SOURCE_REFRESH_FEATURE_ID,
+            EntrySourceRefreshBehaviorContract,
+        )
         sink.add(
             FeatureContractVerifier(reference) { input ->
                 verifyFeatureContract {

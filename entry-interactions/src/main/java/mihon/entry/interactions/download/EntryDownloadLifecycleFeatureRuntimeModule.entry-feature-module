@@ -1,2 +1,2 @@
 id=entry.download.lifecycle
-module=mihon.entry.interactions.EntryDownloadLifecycleFeatureRuntimeModule
+module=mihon.entry.interactions.download.EntryDownloadLifecycleFeatureRuntimeModule

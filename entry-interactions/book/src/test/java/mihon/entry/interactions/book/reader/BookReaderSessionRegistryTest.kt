@@ -1,9 +1,10 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.reader
 
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import mihon.book.api.BookLocator
+import mihon.entry.interactions.book.processor.BookReaderRequest
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter

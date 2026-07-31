@@ -11,8 +11,8 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.EntryDownloadWorkController
 import mihon.entry.interactions.anime.download.model.AnimeDownload
+import mihon.entry.interactions.download.EntryDownloadWorkController
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.DownloadPreferences
 import tachiyomi.domain.entry.model.Entry

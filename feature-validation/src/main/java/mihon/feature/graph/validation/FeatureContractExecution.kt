@@ -1,6 +1,7 @@
 package mihon.feature.graph.validation
 
 import mihon.feature.graph.BehavioralContractSelection
+import mihon.feature.graph.validation.execution.FeatureExecutionContractExecutionSelection
 
 sealed interface FeatureContractVerificationResult {
     data object Passed : FeatureContractVerificationResult

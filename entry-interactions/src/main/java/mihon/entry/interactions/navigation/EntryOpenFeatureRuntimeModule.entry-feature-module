@@ -1,2 +1,2 @@
 id=entry.open
-module=mihon.entry.interactions.EntryOpenFeatureRuntimeModule
+module=mihon.entry.interactions.navigation.EntryOpenFeatureRuntimeModule

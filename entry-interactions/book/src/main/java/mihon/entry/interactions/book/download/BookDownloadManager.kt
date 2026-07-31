@@ -27,17 +27,17 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
-import mihon.entry.interactions.EntryDownloadEntryIdentity
-import mihon.entry.interactions.EntryDownloadEvent
-import mihon.entry.interactions.EntryDownloadMessage
-import mihon.entry.interactions.EntryDownloadQueuePolicy
-import mihon.entry.interactions.EntryDownloadWorkController
 import mihon.entry.interactions.book.download.model.BookDownload
 import mihon.entry.interactions.book.download.model.BookDownloadFailure
-import mihon.entry.interactions.book.toEntryDownloadMessage
+import mihon.entry.interactions.download.EntryDownloadEntryIdentity
+import mihon.entry.interactions.download.EntryDownloadEvent
+import mihon.entry.interactions.download.EntryDownloadMessage
+import mihon.entry.interactions.download.EntryDownloadQueuePolicy
+import mihon.entry.interactions.download.EntryDownloadWorkController
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -243,7 +243,7 @@ internal class BookDownloadManager(
                 title = download.entry.title,
                 subtitle = download.chapter.name,
                 message = download.failure?.toEntryDownloadMessage()
-                    ?: EntryDownloadMessage.Resource(tachiyomi.i18n.MR.strings.download_notifier_unknown_error),
+                    ?: EntryDownloadMessage.Resource(MR.strings.download_notifier_unknown_error),
             ),
         )
     }

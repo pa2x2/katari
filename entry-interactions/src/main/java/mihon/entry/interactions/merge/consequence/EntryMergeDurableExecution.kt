@@ -1,15 +1,19 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.merge.consequence
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
-import mihon.entry.interactions.host.EntryMergeConsequenceRequest
-import mihon.entry.interactions.host.EntryMergeHostMemberKey
-import mihon.feature.graph.FeatureDurableExecutionEnvelope
-import mihon.feature.graph.FeatureExecutionFailurePolicy
+import mihon.entry.interactions.merge.ENTRY_MERGE_FEATURE_OWNER
+import mihon.entry.interactions.merge.host.EntryMergeConsequenceRequest
+import mihon.entry.interactions.merge.host.EntryMergeHostMemberKey
+import mihon.entry.interactions.prepareDurable
+import mihon.entry.interactions.runtime.toContentTypeId
+import mihon.feature.graph.FeatureExecutionParticipantId
 import mihon.feature.graph.FeatureExecutionPointId
-import mihon.feature.graph.FeatureExecutionRuntime
-import mihon.feature.graph.durableFeatureExecutionPointDefinition
+import mihon.feature.graph.execution.FeatureDurableExecutionEnvelope
+import mihon.feature.graph.execution.FeatureExecutionFailurePolicy
+import mihon.feature.graph.execution.FeatureExecutionRuntime
+import mihon.feature.graph.execution.durableFeatureExecutionPointDefinition
 import tachiyomi.domain.entry.model.Entry
 
 internal enum class EntryMergeDurableChange {
@@ -119,7 +123,7 @@ private fun FeatureDurableExecutionEnvelope.toRequest(
 )
 
 private fun EntryMergeConsequenceRequest.envelope() = FeatureDurableExecutionEnvelope(
-    participant = mihon.feature.graph.FeatureExecutionParticipantId(participantId),
+    participant = FeatureExecutionParticipantId(participantId),
     schemaVersion = schemaVersion,
     payload = payload,
 )

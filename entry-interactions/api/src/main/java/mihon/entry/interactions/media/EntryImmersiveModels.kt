@@ -1,5 +1,6 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media
 
+import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
@@ -99,7 +100,7 @@ sealed interface EntryImmersivePreloadRadiusResult {
 }
 
 data class EntryImmersiveLoadRequest(
-    val context: android.content.Context,
+    val context: Context,
     val entry: Entry,
     val source: UnifiedSource?,
     val children: List<EntryChapter>,

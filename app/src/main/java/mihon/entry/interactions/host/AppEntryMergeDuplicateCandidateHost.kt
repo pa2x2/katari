@@ -4,6 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.withContext
+import mihon.entry.interactions.merge.host.EntryMergeMembershipSnapshot
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.data.entry.EntryMapper
 import tachiyomi.data.track.TrackMapper

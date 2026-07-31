@@ -1,8 +1,13 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media
 
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
+import mihon.entry.interactions.runtime.EntryImmersiveProcessor
+import mihon.entry.interactions.runtime.EntryPreviewConfigurationProvider
+import mihon.entry.interactions.runtime.EntryPreviewProcessor
+import mihon.entry.interactions.runtime.requireMatchingEntryType
+import mihon.entry.interactions.runtime.requireProcessor
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 

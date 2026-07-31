@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.runtime
 
 import android.app.PendingIntent
 import android.content.Context
@@ -9,6 +9,13 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.string.shouldContain
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import mihon.entry.interactions.navigation.EntryContinueCapability
+import mihon.entry.interactions.navigation.EntryContinueProcessor
+import mihon.entry.interactions.navigation.EntryOpenCapability
+import mihon.entry.interactions.navigation.EntryOpenOptions
+import mihon.entry.interactions.navigation.EntryOpenProcessor
+import mihon.entry.interactions.source.EntryChildWebViewHostAdapter
+import mihon.entry.interactions.source.EntryChildWebViewHostContribution
 import mihon.feature.graph.CapabilityDefinition
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContributionOwner

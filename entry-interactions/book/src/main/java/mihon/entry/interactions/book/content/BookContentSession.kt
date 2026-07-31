@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.content
 
 import mihon.book.api.BookCatalogCoverage
 import mihon.book.api.BookContentDescriptor

@@ -58,7 +58,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.EntryContinueFeature
+import mihon.entry.interactions.navigation.EntryContinueFeature
 import mihon.feature.migration.config.MigrationConfigScreen
 import mihon.feature.profiles.core.ProfileManager
 import tachiyomi.core.common.i18n.stringResource

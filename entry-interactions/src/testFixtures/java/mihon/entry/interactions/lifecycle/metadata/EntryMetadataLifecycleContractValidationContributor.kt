@@ -1,6 +1,9 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.lifecycle.metadata
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.entryContentType
+import mihon.entry.interactions.lifecycle.lifecycleContractComposition
+import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.verifyFeatureContract
 import mihon.feature.graph.FeatureId

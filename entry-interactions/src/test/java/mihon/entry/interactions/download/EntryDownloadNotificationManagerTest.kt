@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.download
 
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
@@ -10,6 +10,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runCurrent
@@ -17,8 +18,13 @@ import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.download.notification.EntryDownloadErrorNotification
 import mihon.entry.interactions.download.notification.EntryDownloadNotificationPresenter
 import mihon.entry.interactions.download.notification.EntryDownloadProgressNotification
+import mihon.entry.interactions.merge.EntryMergeDownloadOwners
+import mihon.entry.interactions.merge.EntryMergeDownloadOwnershipProjection
+import mihon.entry.interactions.merge.EntryMergeSubject
 import org.junit.jupiter.api.Test
+import tachiyomi.i18n.MR
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class EntryDownloadNotificationManagerTest {
     @Test
     fun `unified queue drives progress and paused notification states`() = runTest {
@@ -28,7 +34,8 @@ class EntryDownloadNotificationManagerTest {
         fixture.manager.start()
         runCurrent()
 
-        fixture.state.value = EntryDownloadRuntimeState(queue = listOf(group(item())), isRunning = true)
+        fixture.state.value =
+            EntryDownloadRuntimeState(queue = listOf(group(item())), isRunning = true)
         runCurrent()
 
         progress.captured.destination shouldBe EntryDownloadEntryIdentity(1L, EntryType.BOOK, 42L)
@@ -101,7 +108,7 @@ class EntryDownloadNotificationManagerTest {
                     when (message) {
                         is EntryDownloadMessage.Text -> message.value
                         is EntryDownloadMessage.Resource -> when (message.resource) {
-                            tachiyomi.i18n.MR.strings.download_progress_percent -> "${message.args.single()}%"
+                            MR.strings.download_progress_percent -> "${message.args.single()}%"
                             else -> message.resource.resourceId.toString()
                         }
                     }

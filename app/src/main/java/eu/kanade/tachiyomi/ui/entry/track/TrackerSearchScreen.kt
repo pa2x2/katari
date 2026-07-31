@@ -14,10 +14,10 @@ import eu.kanade.presentation.track.TrackerSearch
 import eu.kanade.presentation.util.Screen
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.EntryTrackingFeature
-import mihon.entry.interactions.EntryTrackingSearchCandidate
-import mihon.entry.interactions.EntryTrackingSearchResult
-import mihon.entry.interactions.EntryTrackingServiceDescriptor
+import mihon.entry.interactions.tracking.EntryTrackingFeature
+import mihon.entry.interactions.tracking.EntryTrackingSearchCandidate
+import mihon.entry.interactions.tracking.EntryTrackingSearchResult
+import mihon.entry.interactions.tracking.EntryTrackingServiceDescriptor
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.entry.model.Entry

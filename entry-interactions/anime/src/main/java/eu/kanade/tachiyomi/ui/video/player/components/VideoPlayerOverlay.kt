@@ -31,8 +31,8 @@ import eu.kanade.tachiyomi.ui.video.player.VideoPlayerEpisodeListEntry
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekFeedbackState
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekPreviewState
-import mihon.entry.interactions.EntryChildWebViewAction
-import mihon.entry.interactions.EntryChildWebViewResolution
+import mihon.entry.interactions.source.EntryChildWebViewAction
+import mihon.entry.interactions.source.EntryChildWebViewResolution
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState

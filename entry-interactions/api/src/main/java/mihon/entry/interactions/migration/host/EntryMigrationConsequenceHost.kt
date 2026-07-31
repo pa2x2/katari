@@ -1,4 +1,4 @@
-package mihon.entry.interactions.host
+package mihon.entry.interactions.migration.host
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable

@@ -1,9 +1,9 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.migration.consequence.cover
 
 import kotlinx.serialization.json.Json
-import mihon.entry.interactions.host.EntryMigrationConsequenceHost
-import mihon.entry.interactions.host.EntryMigrationCustomCoverHost
-import mihon.feature.graph.FeatureDurableExecutionPayload
+import mihon.entry.interactions.migration.host.EntryMigrationConsequenceHost
+import mihon.entry.interactions.migration.host.EntryMigrationCustomCoverHost
+import mihon.feature.graph.execution.FeatureDurableExecutionPayload
 
 internal class EntryMigrationCustomCoverOrphanCleanup(
     private val consequenceHost: EntryMigrationConsequenceHost,

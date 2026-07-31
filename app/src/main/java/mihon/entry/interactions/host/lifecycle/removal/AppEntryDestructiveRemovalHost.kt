@@ -1,8 +1,8 @@
 package mihon.entry.interactions.host.lifecycle.removal
 
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
-import mihon.entry.interactions.EntryDestructiveRemovalCommit
-import mihon.entry.interactions.EntryDestructiveRemovalHost
+import mihon.entry.interactions.lifecycle.removal.host.EntryDestructiveRemovalCommit
+import mihon.entry.interactions.lifecycle.removal.host.EntryDestructiveRemovalHost
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.data.entry.EntryMapper
 import tachiyomi.domain.entry.model.Entry

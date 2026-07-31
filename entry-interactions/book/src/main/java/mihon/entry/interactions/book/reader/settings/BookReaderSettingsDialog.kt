@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book
+package mihon.entry.interactions.book.reader.settings
 
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.runtime.Composable
@@ -15,10 +15,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.coroutines.launch
-import mihon.entry.viewer.settings.ReaderCapabilityId
-import mihon.entry.viewer.settings.ReaderSharedSettingAvailability
-import mihon.entry.viewer.settings.ReaderSharedSettingsRegistry
-import mihon.entry.viewer.settings.ResolvedReaderSharedToggleSetting
+import mihon.entry.interactions.book.R
+import mihon.entry.viewer.settings.shared.ReaderCapabilityId
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingAvailability
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
+import mihon.entry.viewer.settings.shared.ResolvedReaderSharedToggleSetting
 import tachiyomi.presentation.core.components.CheckboxItem
 import tachiyomi.presentation.core.components.ViewerSettingsTabbedDialog
 import tachiyomi.presentation.core.util.collectAsState

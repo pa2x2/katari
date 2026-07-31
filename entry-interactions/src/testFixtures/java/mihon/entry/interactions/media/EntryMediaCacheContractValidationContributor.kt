@@ -1,6 +1,7 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media
 
 import dev.icerock.moko.resources.StringResource
+import eu.kanade.tachiyomi.source.entry.EntryType
 import io.mockk.mockk
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
@@ -33,7 +34,7 @@ class EntryMediaCacheContractValidationContributor : FeatureValidationContributo
                     val feature = DefaultEntryMediaCacheFeature(
                         evaluation,
                         object : EntryMediaCacheInteraction {
-                            override fun provider(type: eu.kanade.tachiyomi.source.entry.EntryType) =
+                            override fun provider(type: EntryType) =
                                 provider.takeIf { type == provider.type }
                         },
                         InMemoryPreferenceStore(),
@@ -53,12 +54,14 @@ class EntryMediaCacheContractValidationContributor : FeatureValidationContributo
     }
 }
 
-private class RecordingContractMediaCacheArtifact : EntryMediaCacheArtifact {
+private class RecordingContractMediaCacheArtifact :
+    EntryMediaCacheArtifact {
     override val id = EntryMediaCacheId("contract.cache")
     override val clearLabel: StringResource = mockk()
     override val autoClearLabel: StringResource = mockk()
     override val readableSize = "0 B"
-    override val autoClearPreference = EntryMediaCacheAutoClearPreference("contract_cache_auto_clear")
+    override val autoClearPreference =
+        EntryMediaCacheAutoClearPreference("contract_cache_auto_clear")
     var clearCount = 0
 
     override fun clear(): Int {

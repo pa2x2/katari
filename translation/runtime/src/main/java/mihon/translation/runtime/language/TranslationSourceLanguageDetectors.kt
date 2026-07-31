@@ -1,9 +1,11 @@
-package mihon.translation.runtime
+package mihon.translation.runtime.language
 
 import android.app.Application
-import mihon.feature.runtime.ApplicationFeatureRuntimeComponents
-import mihon.feature.runtime.instances
-import mihon.translation.spi.TranslationSourceLanguageDetector
+import mihon.feature.runtime.application.ApplicationFeatureRuntimeComponents
+import mihon.feature.runtime.application.instances
+import mihon.translation.runtime.component.TranslationRuntimeComponent
+import mihon.translation.runtime.component.TranslationRuntimeContribution
+import mihon.translation.spi.language.TranslationSourceLanguageDetector
 
 internal fun createTranslationSourceLanguageDetectors(
     application: Application,

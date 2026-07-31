@@ -1,2 +1,2 @@
 id=manga
-factory=mihon.entry.interactions.manga.mangaEntryTypeRuntimeModule
+factory=mihon.entry.interactions.manga.runtime.mangaEntryTypeRuntimeModule

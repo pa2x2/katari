@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.runtime
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.feature.graph.ApplicableFeatureIntegration

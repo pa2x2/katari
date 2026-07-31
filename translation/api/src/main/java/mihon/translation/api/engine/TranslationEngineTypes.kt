@@ -1,6 +1,12 @@
-package mihon.translation.api
+package mihon.translation.api.engine
 
 import androidx.annotation.DrawableRes
+import mihon.translation.api.model.TranslationModelDescriptor
+import mihon.translation.api.model.TranslationOperationProgress
+import mihon.translation.api.preparation.TranslationSystemSetupReason
+import mihon.translation.api.preparation.TranslationUnavailableReason
+import mihon.translation.api.provider.TranslationProviderDisclosure
+import mihon.translation.api.provider.TranslationProviderPresentation
 
 @JvmInline
 value class TranslationEngineId(

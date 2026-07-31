@@ -1,11 +1,36 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.merge
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import mihon.feature.graph.FeatureExecutionHandler
-import mihon.feature.graph.FeatureExecutionParticipantBinding
+import mihon.entry.interactions.merge.backup.ENTRY_MERGE_BACKUP_FINALIZE_PARTICIPANT
+import mihon.entry.interactions.merge.backup.ENTRY_MERGE_BACKUP_RESTORE_PARTICIPANT
+import mihon.entry.interactions.merge.backup.ENTRY_MERGE_BACKUP_SNAPSHOT_PARTICIPANT
+import mihon.entry.interactions.merge.backup.EntryMergeBackupContributor
+import mihon.entry.interactions.merge.backup.EntryMergeBackupRestoreParticipation
+import mihon.entry.interactions.merge.consequence.EntryMergeConsequenceDelivery
+import mihon.entry.interactions.merge.consequence.EntryMergeDurableConsequences
+import mihon.entry.interactions.merge.consequence.cover.EntryMergeCustomCoverContributor
+import mihon.entry.interactions.merge.consequence.cover.entryMergeCustomCoverBinding
+import mihon.entry.interactions.merge.consequence.legacy.EntryMergeLegacyConsequenceDelivery
+import mihon.entry.interactions.merge.lifecycle.ENTRY_MERGE_DESTRUCTIVE_REMOVAL_PARTICIPANT
+import mihon.entry.interactions.merge.lifecycle.ENTRY_MERGE_PROFILE_MOVE_DESTINATION_PARTICIPANT
+import mihon.entry.interactions.merge.lifecycle.ENTRY_MERGE_PROFILE_MOVE_PARTICIPANT_ID
+import mihon.entry.interactions.merge.lifecycle.ENTRY_MERGE_PROFILE_MOVE_PREPARATION_PARTICIPANT
+import mihon.entry.interactions.merge.lifecycle.ENTRY_MERGE_PROFILE_MOVING_PARTICIPANT
+import mihon.entry.interactions.merge.lifecycle.ENTRY_MERGE_PROFILE_STATE_MOVED_PARTICIPANT
+import mihon.entry.interactions.merge.lifecycle.EntryMergeDestructiveRemovalContributor
+import mihon.entry.interactions.merge.lifecycle.EntryMergeProfileMoveContributor
+import mihon.entry.interactions.merge.lifecycle.mergeReference
+import mihon.entry.interactions.merge.lifecycle.toMergeIntent
+import mihon.entry.interactions.persistence.backup.decodeEntryBackupState
+import mihon.entry.interactions.persistence.backup.entryBackupStateEnvelope
+import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeArtifacts
+import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeModule
+import mihon.entry.interactions.runtime.production.entryFeatureRuntimeBoundary
+import mihon.feature.graph.execution.FeatureExecutionHandler
+import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
 import mihon.feature.runtime.FeatureRuntimeComposition
 import tachiyomi.domain.entry.service.EntryChildOwnershipResolutionPort
 import tachiyomi.domain.entry.service.EntryLibraryGroupingResolutionPort
@@ -63,7 +88,11 @@ internal val EntryMergeFeatureRuntimeModule = EntryFeatureRuntimeModule(
     addSingletonFactory<EntryMergeMetadataRefreshFeature> {
         EntryMergeMetadataRefreshCoordinator(dependencies.mergeHost)
     }
-    addSingletonFactory<EntryMergeProfileMoveFeature> { EntryMergeProfileMoveCoordinator(dependencies.mergeHost) }
+    addSingletonFactory<EntryMergeProfileMoveFeature> {
+        EntryMergeProfileMoveCoordinator(
+            dependencies.mergeHost,
+        )
+    }
     addSingletonFactory<EntryMergeConsequenceStatusFeature> {
         EntryMergeConsequenceStatusCoordinator(dependencies.mergeHost, get())
     }
@@ -148,6 +177,7 @@ internal val EntryMergeFeatureRuntimeModule = EntryFeatureRuntimeModule(
                                 result.reference,
                             )
                         }
+
                         EntryMergeProfileMovePreparationResult.Empty -> Unit
                     }
                 },
@@ -174,6 +204,7 @@ internal val EntryMergeFeatureRuntimeModule = EntryFeatureRuntimeModule(
                             )
                             event.contributions.markDestinationAffected(result.mergeAffectedEntryIds)
                         }
+
                         EntryMergeProfileMoveDestinationResult.InvalidReference -> {
                             error("Merge Profile-move destination changed during preparation")
                         }

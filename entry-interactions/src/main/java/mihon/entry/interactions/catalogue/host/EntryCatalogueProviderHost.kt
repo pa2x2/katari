@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.catalogue.host
 
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
@@ -8,6 +8,7 @@ import eu.kanade.tachiyomi.source.entry.EntryPageResult
 import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.flow.StateFlow
+import mihon.entry.interactions.catalogue.EntryCatalogueListing
 import tachiyomi.domain.source.model.EntrySourceDescription
 
 internal interface EntryCatalogueProviderHost {

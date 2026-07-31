@@ -1,11 +1,14 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.lifecycle.profile.consequence
 
+import mihon.entry.interactions.library.membership.consequence.ENTRY_LIBRARY_CUSTOM_COVER_OWNER
+import mihon.entry.interactions.lifecycle.profile.ENTRY_PROFILE_MOVED_EXECUTION_POINT
+import mihon.entry.interactions.lifecycle.profile.ENTRY_PROFILE_MOVE_OWNER
 import mihon.feature.graph.FeatureArtifactId
 import mihon.feature.graph.FeatureBehaviorContract
-import mihon.feature.graph.FeatureExecutionParticipantDefinition
 import mihon.feature.graph.FeatureExecutionParticipantId
 import mihon.feature.graph.FeatureGraphContributionSink
 import mihon.feature.graph.FeatureGraphContributor
+import mihon.feature.graph.execution.FeatureExecutionParticipantDefinition
 
 internal object EntryProfileMoveSourceVisibilityBehaviorContract : FeatureBehaviorContract {
     override val id = FeatureArtifactId("entry.profile-move.source-visibility.behavior")

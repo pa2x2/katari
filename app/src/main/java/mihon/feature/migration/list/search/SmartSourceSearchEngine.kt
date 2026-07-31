@@ -1,10 +1,10 @@
 package mihon.feature.migration.list.search
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.EntryCatalogueFeature
-import mihon.entry.interactions.EntryCatalogueSearchRequest
-import mihon.entry.interactions.EntryCatalogueSearchResult
-import mihon.entry.interactions.EntryCatalogueSourceInfo
+import mihon.entry.interactions.catalogue.EntryCatalogueFeature
+import mihon.entry.interactions.catalogue.EntryCatalogueSearchRequest
+import mihon.entry.interactions.catalogue.EntryCatalogueSearchResult
+import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
 import tachiyomi.domain.entry.model.Entry
 
 class SmartSourceSearchEngine(

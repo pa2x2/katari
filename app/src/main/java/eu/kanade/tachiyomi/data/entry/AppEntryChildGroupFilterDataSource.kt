@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
-import mihon.entry.interactions.EntryChildGroupFilterDataSource
+import mihon.entry.interactions.runtime.EntryChildGroupFilterDataSource
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.entry.model.EntryChapter

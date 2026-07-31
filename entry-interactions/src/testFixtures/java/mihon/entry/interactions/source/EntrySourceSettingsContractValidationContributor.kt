@@ -1,10 +1,12 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.source
 
 import android.content.SharedPreferences
 import eu.kanade.tachiyomi.source.entry.ConfigurableSource
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.mockk.every
 import io.mockk.mockk
+import mihon.entry.interactions.entryContentType
+import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
@@ -20,7 +22,10 @@ class EntrySourceSettingsContractValidationContributor : FeatureValidationContri
     override val owner = EntrySourceSettingsFeatureContributor.owner
 
     override fun contributeTo(sink: FeatureValidationContributionSink) {
-        val reference = FeatureContractReference(SOURCE_SETTINGS_FEATURE_ID, EntrySourceSettingsBehaviorContract)
+        val reference = FeatureContractReference(
+            SOURCE_SETTINGS_FEATURE_ID,
+            EntrySourceSettingsBehaviorContract,
+        )
         sink.add(
             FeatureContractVerifier(reference) { input ->
                 verifyFeatureContract {

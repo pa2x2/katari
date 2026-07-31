@@ -1,10 +1,10 @@
 package mihon.translation.provider.libretranslate.protocol
 
 import io.kotest.matchers.shouldBe
-import mihon.translation.api.TranslationLanguagePair
-import mihon.translation.api.TranslationLanguageSupport
-import mihon.translation.api.TranslationLanguageSupportInspection
-import mihon.translation.api.TranslationLanguageTag
+import mihon.translation.api.language.TranslationLanguagePair
+import mihon.translation.api.language.TranslationLanguageSupport
+import mihon.translation.api.language.TranslationLanguageSupportInspection
+import mihon.translation.api.language.TranslationLanguageTag
 import org.junit.jupiter.api.Test
 
 class LibreTranslateLanguageResolverTest {

@@ -1,4 +1,4 @@
-package mihon.entry.interactions
+package mihon.entry.interactions.media
 
 import android.app.PendingIntent
 import android.content.Context
@@ -13,6 +13,21 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import mihon.entry.interactions.child.DefaultEntryChildListFeature
+import mihon.entry.interactions.child.EntryChildListFeatureContributor
+import mihon.entry.interactions.navigation.EntryOpenCapability
+import mihon.entry.interactions.navigation.EntryOpenOptions
+import mihon.entry.interactions.navigation.EntryOpenProcessor
+import mihon.entry.interactions.runtime.EntryChildListCapability
+import mihon.entry.interactions.runtime.EntryChildListProcessor
+import mihon.entry.interactions.runtime.EntryInteractionPlugin
+import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
+import mihon.entry.interactions.runtime.EntryPreviewCapability
+import mihon.entry.interactions.runtime.EntryPreviewConfigurationCapability
+import mihon.entry.interactions.runtime.EntryPreviewConfigurationProvider
+import mihon.entry.interactions.runtime.EntryPreviewLoadMode
+import mihon.entry.interactions.runtime.EntryPreviewProcessor
+import mihon.entry.interactions.runtime.createEntryInteractionComposition
 import mihon.entry.interactions.settings.EntryInteractionPreferences
 import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
@@ -126,7 +141,10 @@ class EntryPreviewFeatureTest {
     ): EntryPreviewFeature {
         val composition = createEntryInteractionComposition(
             plugins = listOf(plugin(*bindings)),
-            featureContributors = listOf(EntryPreviewFeatureContributor, EntryChildListFeatureContributor),
+            featureContributors = listOf(
+                EntryPreviewFeatureContributor,
+                EntryChildListFeatureContributor,
+            ),
         )
         val childList = DefaultEntryChildListFeature(
             evaluation = composition.featureGraphEvaluation,
@@ -194,7 +212,8 @@ class EntryPreviewFeatureTest {
         }
     }
 
-    private class RecordingConfigurationProvider(enabled: Boolean) : EntryPreviewConfigurationProvider {
+    private class RecordingConfigurationProvider(enabled: Boolean) :
+        EntryPreviewConfigurationProvider {
         override val type = EntryType.BOOK
         private val preferences = EntryInteractionPreferences(InMemoryPreferenceStore()).apply {
             enableMangaPreview.set(enabled)

@@ -8,7 +8,6 @@ import mihon.feature.graph.ContractFixture
 import mihon.feature.graph.ContractFixtureDefinition
 import mihon.feature.graph.FeatureArtifactObligation
 import mihon.feature.graph.FeatureBehaviorContract
-import mihon.feature.graph.FeatureContextEvaluation
 import mihon.feature.graph.FeatureGraph
 import mihon.feature.graph.FeatureGraphEvaluation
 import mihon.feature.graph.FeatureIntegrationSubject
@@ -17,10 +16,11 @@ import mihon.feature.graph.IncompleteFeatureContext
 import mihon.feature.graph.MissingContractFixtureObligation
 import mihon.feature.graph.MissingFeatureContextEvidence
 import mihon.feature.graph.MissingFeatureProjectionObligation
-import mihon.feature.graph.SpecializedFeatureObligation
 import mihon.feature.graph.resolveFeatureContext
 import mihon.feature.graph.selectContextualFeatureArtifacts
 import mihon.feature.graph.selectFeatureArtifacts
+import mihon.feature.graph.validation.execution.FeatureExecutionContractExecutionSelection
+import mihon.feature.graph.validation.execution.planFeatureExecutionContractValidation
 
 data class FeatureContractValidationPlan(
     val executions: List<FeatureContractExecutionSelection>,
