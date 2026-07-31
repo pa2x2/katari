@@ -34,7 +34,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mihon.book.api.document.BookDocumentBlockContent
-import mihon.entry.interactions.book.document.reader.BookDocumentResourceLoader
+import mihon.entry.interactions.book.BookPublicationResourceLoader
 import mihon.entry.interactions.book.document.resource.PROSE_IMAGE_RESOURCE_REQUIREMENT
 import mihon.entry.interactions.book.document.resource.decodeValidatedProseImage
 import kotlin.math.roundToInt
@@ -42,7 +42,7 @@ import kotlin.math.roundToInt
 @Composable
 internal fun ProseFigure(
     semantic: BookDocumentBlockContent.Figure,
-    resourceLoader: BookDocumentResourceLoader?,
+    resourceLoader: BookPublicationResourceLoader?,
     foreground: Color,
     background: Color,
     documentTextIdentityPrefix: String,
@@ -152,7 +152,7 @@ internal sealed interface LoadedProseImage {
     data object Failure : LoadedProseImage
 }
 
-private suspend fun BookDocumentResourceLoader.loadProseImage(
+private suspend fun BookPublicationResourceLoader.loadProseImage(
     resourceId: String,
     targetWidthPx: Int,
     targetHeightPx: Int,

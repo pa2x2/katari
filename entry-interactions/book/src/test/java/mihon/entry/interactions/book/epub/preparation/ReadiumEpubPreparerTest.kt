@@ -14,7 +14,7 @@ import mihon.book.api.BookReadingDirection
 import mihon.book.api.BookResourceCapability
 import mihon.book.api.BookTextContext
 import mihon.entry.interactions.book.BookMaterializationCache
-import mihon.entry.interactions.book.BookOpenResult
+import mihon.entry.interactions.book.BookPreparationResult
 import mihon.entry.interactions.book.download.BookDownloadManifest
 import mihon.entry.interactions.book.download.BookDownloadedResource
 import mihon.entry.interactions.book.download.DownloadedBookContentSession
@@ -31,11 +31,11 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
-class ReadiumEpubProcessorTest {
+class ReadiumEpubPreparerTest {
 
     @Test
     fun `supports only unprotected reflowable EPUB descriptors`() {
-        val processor = ReadiumEpubProcessor()
+        val processor = ReadiumEpubPreparer()
 
         assertTrue(processor.supports(BookContentDescriptor("application/epub+zip")))
         assertTrue(processor.supports(BookContentDescriptor("application/epub+zip", profile = "reflowable")))
@@ -48,7 +48,7 @@ class ReadiumEpubProcessorTest {
     fun `does not advertise adjacent chapter preparation`() {
         assertFalse(
             StandardReaderCapabilities.NextChapterPreparation in
-                ReadiumEpubProcessor().potentialReaderCapabilities,
+                ReadiumEpubReaderProcessor().potentialReaderCapabilities,
         )
     }
 
@@ -57,9 +57,9 @@ class ReadiumEpubProcessorTest {
         val fixture = EpubFixture.write(temporaryDirectory().resolve("epub2.epub"), version = 2)
         val content = TestContentSession(fixture, publicationId = "book:epub2", revision = "v1")
 
-        val result = ReadiumEpubProcessor().open(content)
+        val result = ReadiumEpubPreparer().prepare(content)
 
-        val session = assertIs<BookOpenResult.Success>(result, result.toString()).session
+        val session = assertIs<BookPreparationResult.Success>(result, result.toString()).publication
         assertEquals("book:epub2", session.publication.id)
         assertEquals("v1", session.publication.revision)
         assertEquals(2, session.publication.readingOrder.size)
@@ -115,11 +115,11 @@ class ReadiumEpubProcessorTest {
         )
         val content = DownloadedBookContentSession(downloaded, materializationCache)
 
-        val result = assertIs<BookOpenResult.Success>(ReadiumEpubProcessor().open(content))
+        val result = assertIs<BookPreparationResult.Success>(ReadiumEpubPreparer().prepare(content))
 
-        assertEquals("book:downloaded", result.session.publication.id)
-        assertEquals(2, result.session.publication.readingOrder.size)
-        result.session.close()
+        assertEquals("book:downloaded", result.publication.publication.id)
+        assertEquals(2, result.publication.publication.readingOrder.size)
+        result.publication.close()
         content.close()
     }
 
@@ -128,8 +128,11 @@ class ReadiumEpubProcessorTest {
         val fixture = EpubFixture.write(temporaryDirectory().resolve("epub3.epub"), version = 3, rtl = true)
         val content = TestContentSession(fixture, publicationId = "book:epub3", revision = "v2")
 
-        val result = ReadiumEpubProcessor().open(content)
-        val session = assertIs<BookOpenResult.Success>(result, result.toString()).session as ReadiumPublicationSession
+        val result = ReadiumEpubPreparer().prepare(content)
+        val session = assertIs<BookPreparationResult.Success>(
+            result,
+            result.toString(),
+        ).publication as ReadiumPreparedPublication
         val publication = session.publication
 
         assertEquals(BookReadingDirection.RIGHT_TO_LEFT, publication.readingDirection)
@@ -152,7 +155,7 @@ class ReadiumEpubProcessorTest {
             ),
             extensions = mapOf("org.readium.locations" to JsonPrimitive("extension")),
         )
-        val readiumLocator = checkNotNull(ReadiumLocatorAdapter.restore(locator, session.readiumPublication()))
+        val readiumLocator = checkNotNull(ReadiumLocatorAdapter.restore(locator, session.model.publication))
         val restored = ReadiumLocatorAdapter.adapt(readiumLocator)
         assertEquals(locator.copy(extensions = emptyMap()), restored.copy(extensions = emptyMap()))
         assertTrue(session.validate(locator))
@@ -174,7 +177,7 @@ class ReadiumEpubProcessorTest {
         }
         val content = TestContentSession(malformed, publicationId = "book:bad", revision = "v1")
 
-        val result = assertIs<BookOpenResult.Failure>(ReadiumEpubProcessor().open(content))
+        val result = assertIs<BookPreparationResult.Failure>(ReadiumEpubPreparer().prepare(content))
 
         assertEquals(BookFailureReason.MALFORMED_CONTENT, result.failure.reason)
         assertEquals(1, content.leaseCloseCount.get())
@@ -191,7 +194,7 @@ class ReadiumEpubProcessorTest {
         )
         val content = TestContentSession(fixture, publicationId = "book:fixed", revision = "v1")
 
-        val result = assertIs<BookOpenResult.Failure>(ReadiumEpubProcessor().open(content))
+        val result = assertIs<BookPreparationResult.Failure>(ReadiumEpubPreparer().prepare(content))
 
         assertEquals(BookFailureReason.FORMAT_UNSUPPORTED, result.failure.reason)
         assertEquals(1, content.leaseCloseCount.get())
@@ -208,7 +211,7 @@ class ReadiumEpubProcessorTest {
             capabilities = setOf(BookResourceCapability.STREAM),
         )
 
-        val result = assertIs<BookOpenResult.Failure>(ReadiumEpubProcessor().open(content))
+        val result = assertIs<BookPreparationResult.Failure>(ReadiumEpubPreparer().prepare(content))
 
         assertEquals(BookFailureReason.CONTENT_UNAVAILABLE, result.failure.reason)
         assertEquals(0, content.leaseCloseCount.get())

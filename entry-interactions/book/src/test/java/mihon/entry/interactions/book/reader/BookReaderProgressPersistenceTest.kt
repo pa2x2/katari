@@ -54,6 +54,50 @@ internal class BookReaderProgressPersistenceTest : BookReaderSessionFixture() {
     }
 
     @Test
+    fun `current saved locator is reconciled against the prepared model`() = runTest {
+        val sourceLocator = BookLocator("old-chapter.xhtml", progression = 0.4, totalProgression = 0.3)
+        val targetLocator = BookLocator("new-chapter.xhtml", progression = 0.45, totalProgression = 0.3)
+        val session = openWithProgress(
+            chapter = chapter(),
+            progress = bookProgress(sourceLocator, completed = false),
+            preparedPublication = MigratingPublicationSession(targetLocator),
+        )
+
+        assertEquals(targetLocator, session.initialLocator)
+        session.close()
+    }
+
+    @Test
+    fun `failed saved locator reconciliation does not prevent content from opening`() = runTest {
+        val sourceLocator = BookLocator("old-chapter.xhtml", progression = 0.4)
+        val session = openWithProgress(
+            chapter = chapter(),
+            progress = bookProgress(sourceLocator, completed = false),
+            preparedPublication = LocatorRestorationPublicationSession("chapter.xhtml") {
+                error("reconciliation unavailable")
+            },
+        )
+
+        assertNull(session.initialLocator)
+        session.close()
+    }
+
+    @Test
+    fun `invalid reconciled saved locator is discarded`() = runTest {
+        val sourceLocator = BookLocator("old-chapter.xhtml", progression = 0.4)
+        val session = openWithProgress(
+            chapter = chapter(),
+            progress = bookProgress(sourceLocator, completed = false),
+            preparedPublication = LocatorRestorationPublicationSession("chapter.xhtml") {
+                BookLocator("still-stale.xhtml", progression = 0.4)
+            },
+        )
+
+        assertNull(session.initialLocator)
+        session.close()
+    }
+
+    @Test
     fun `first target open reconciles and rekeys pending migrated progress`() = runTest {
         val entry = entry()
         val chapter = chapter()
@@ -95,8 +139,9 @@ internal class BookReaderProgressPersistenceTest : BookReaderSessionFixture() {
                 initialResourceId = "publication.epub",
             )
         }
-        val publicationSession = MigratingPublicationSession(targetLocator)
-        val processor = SessionFactoryTestProcessor(publicationSession)
+        val preparedPublication = MigratingPublicationSession(targetLocator)
+        val preparer = SessionFactoryTestPreparer(preparedPublication)
+        val reader = SessionFactoryTestReaderProcessor()
         val context = mockk<Context> {
             every { applicationContext } returns this@mockk
             every { contentResolver } returns mockk<ContentResolver>()
@@ -113,7 +158,8 @@ internal class BookReaderProgressPersistenceTest : BookReaderSessionFixture() {
             sourceManager = mockk {
                 every { get(entry.source) } returns source
             },
-            processorRegistry = BookProcessorRegistry(listOf(processor)),
+            preparerRegistry = BookContentPreparerRegistry(listOf(preparer)),
+            readerProcessorRegistry = BookReaderProcessorRegistry(listOf(reader)),
             networkHelper = mockk {
                 every { client } returns mockk<OkHttpClient>()
             },
@@ -123,7 +169,7 @@ internal class BookReaderProgressPersistenceTest : BookReaderSessionFixture() {
         )
 
         val session = assertIs<BookReaderOpenResult.Success>(
-            factory.open(context, BookReaderRequest(entry.id, chapter.id), processor.id),
+            factory.open(context, BookReaderRequest(entry.id, chapter.id), reader.id),
         ).session
 
         assertEquals(targetLocator, session.initialLocator)
@@ -151,7 +197,7 @@ internal class BookReaderProgressPersistenceTest : BookReaderSessionFixture() {
             chapter = chapter,
             progressIdentity = BookProgressIdentity("", "publication.epub", null),
             contentSession = mockk(relaxed = true),
-            publicationSession = TestPublicationSession(),
+            preparedPublication = TestPublicationSession(),
             initialLocator = null,
             mediaSession = BookMediaSessionProcessor(
                 EntryMediaSessionEventSink {

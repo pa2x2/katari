@@ -67,6 +67,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
     internal var readingStartedAt: Long? = null
     private var pageLoaded = false
     private var translationController: BookSelectionTranslationController? = null
+    private val chapterProjector = HtmlProseChapterProjector()
 
     private val windowInsetsController by lazy { WindowCompat.getInsetsController(window, window.decorView) }
     internal val chapterPreparationPreferences by lazy {
@@ -104,6 +105,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
             beforeSwitch = ::persistBeforeChapterSwitch,
             onSessionActivated = ::showSession,
             incompatibleSessionMessage = { getString(R.string.prose_reader_incompatible_session) },
+            chapterProjector = chapterProjector,
         )
         setEntryInteractionContent {
             when (val state = surfaceState) {
@@ -268,13 +270,6 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
         session: OpenedBookReaderSession,
         resetViewer: Boolean = false,
     ) {
-        val content = session.publicationSession as? HtmlProseChapterSession
-        if (content == null) {
-            translationController?.clearSelection()
-            retainedSession.release()
-            showError(getString(R.string.prose_reader_incompatible_session))
-            return
-        }
         try {
             val settingsSurfaceId = requireNotNull(session.readerSettingsSurfaceId) {
                 "The prose reader session has no viewer settings surface"
@@ -290,9 +285,37 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
             ).also { translationController = it }
             activeTranslationController.updateCapabilities(session.readerCapabilities)
             val window = chapterCoordinator.resolveWindow(session)
-            val focusedText = currentFocus as? BookDocumentTextView
+            if (settings == null) {
+                settings = HtmlProseSettingsBinding(
+                    provider = Injekt.get<HtmlProseSettingsProvider>(),
+                    binder = Injekt.get<ViewerSettingBinder>(),
+                    entryId = session.entry.id,
+                    readerSettingsSurfaceId = settingsSurfaceId,
+                    readerCapabilities = session.readerCapabilities,
+                ).also { it.awaitInitialLayoutMode() }
+            }
+            val retainedLoadedChapter = uiState
+                ?.loadedChapters
+                ?.get(session.chapter.id)
+            val projection = chapterProjector.project(
+                owner = session.chapter,
+                publication = session.preparedPublication,
+                locator = retainedSession.currentLocator,
+                reusableDocument = retainedLoadedChapter?.document,
+            ) ?: run {
+                translationController?.clearSelection()
+                retainedSession.release()
+                showError(getString(R.string.prose_reader_incompatible_session))
+                return
+            }
+            openedSession = session
+            latestLocator = projection.locator
+            pageLoaded = false
+            val loadedChapter = projection.chapter
+            // Read focus only after all suspending render work. The decision must describe the
+            // exact Android View hierarchy which the following state publication will replace.
             val retainFocusedText = shouldRetainProseTextFocus(
-                focusedSectionKey = focusedText?.documentSectionKey,
+                focusedSectionKey = (currentFocus as? BookDocumentTextView)?.documentSectionKey,
                 retainedSectionKeys = listOfNotNull(
                     window.previous?.id?.toString(),
                     window.current.id.toString(),
@@ -303,30 +326,6 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
             if (!retainFocusedText) {
                 activeTranslationController.clearSelection()
             }
-            if (settings == null) {
-                settings = HtmlProseSettingsBinding(
-                    provider = Injekt.get<HtmlProseSettingsProvider>(),
-                    binder = Injekt.get<ViewerSettingBinder>(),
-                    entryId = session.entry.id,
-                    readerSettingsSurfaceId = settingsSurfaceId,
-                    readerCapabilities = session.readerCapabilities,
-                ).also { it.awaitInitialLayoutMode() }
-            }
-            val locator = retainedSession.currentLocator
-                ?.takeIf(content::validate)
-                ?: BookLocator(content.resourceId, progression = 0.0)
-            val initialPosition = content.document.document.resolvePosition(locator)
-                ?: content.document.document.positionAtProgression((locator.progression ?: 0.0).toFloat())
-            openedSession = session
-            latestLocator = locator
-            pageLoaded = false
-            val loadedChapter = HtmlProseLoadedChapter(
-                key = session.chapter.id.toString(),
-                owner = session.chapter,
-                document = content.document,
-                initialPosition = initialPosition,
-                resourceLoader = content.resourceLoader,
-            )
             if (uiState != null && !retainFocusedText) {
                 // Release Android View focus before Compose removes outgoing lazy-list items.
                 // Otherwise focus reassignment can remeasure the list while changes are applying.
@@ -344,7 +343,7 @@ internal class HtmlProseChapterReaderActivity : EntryInteractionActivity() {
             readingStartedAt = SystemClock.elapsedRealtime()
             surfaceState = ProseReaderSurfaceState.Ready
             setMenuVisibility(false)
-            chapterCoordinator.onSessionShown(locator.progression)
+            chapterCoordinator.onSessionShown(projection.locator.progression)
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {

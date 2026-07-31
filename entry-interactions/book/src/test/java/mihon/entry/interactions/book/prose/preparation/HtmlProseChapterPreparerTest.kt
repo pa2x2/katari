@@ -17,9 +17,11 @@ import mihon.book.api.document.BookDocumentBorderStyle
 import mihon.book.api.document.BookDocumentFontFamily
 import mihon.entry.interactions.book.BookByteRange
 import mihon.entry.interactions.book.BookContentSession
-import mihon.entry.interactions.book.BookOpenResult
+import mihon.entry.interactions.book.BookPreparationResult
 import mihon.entry.interactions.book.MaterializedBookResource
 import mihon.entry.interactions.book.OpenedBookResource
+import mihon.entry.interactions.book.document.preparation.PreparedBookDocumentPublication
+import mihon.entry.interactions.book.document.render.toPreparedBookDocument
 import mihon.entry.interactions.book.document.resource.PROSE_FONT_RESOURCE_REQUIREMENT
 import mihon.entry.interactions.book.document.resource.PROSE_IMAGE_RESOURCE_REQUIREMENT
 import mihon.entry.viewer.settings.StandardReaderCapabilities
@@ -35,16 +37,16 @@ import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
-class HtmlProseChapterProcessorTest {
-    private val processor = HtmlProseChapterProcessor()
+class HtmlProseChapterPreparerTest {
+    private val preparer = HtmlProseChapterPreparer()
 
     @Test
     fun `supports only unprotected prose chapter html`() {
-        assertTrue(processor.supports(BookContentDescriptor("text/html", profile = "prose-chapter")))
-        assertFalse(processor.supports(BookContentDescriptor("text/html")))
-        assertFalse(processor.supports(BookContentDescriptor("text/html", profile = "web-novel")))
+        assertTrue(preparer.supports(BookContentDescriptor("text/html", profile = "prose-chapter")))
+        assertFalse(preparer.supports(BookContentDescriptor("text/html")))
+        assertFalse(preparer.supports(BookContentDescriptor("text/html", profile = "web-novel")))
         assertFalse(
-            processor.supports(
+            preparer.supports(
                 BookContentDescriptor("text/html", profile = "prose-chapter", protection = "vendor-drm"),
             ),
         )
@@ -53,7 +55,8 @@ class HtmlProseChapterProcessorTest {
     @Test
     fun `advertises adjacent chapter preparation`() {
         assertTrue(
-            StandardReaderCapabilities.NextChapterPreparation in processor.potentialReaderCapabilities,
+            StandardReaderCapabilities.NextChapterPreparation in
+                NativeHtmlProseReaderProcessor().potentialReaderCapabilities,
         )
     }
 
@@ -71,9 +74,9 @@ class HtmlProseChapterProcessorTest {
             """.trimIndent(),
         )
 
-        val result = assertIs<BookOpenResult.Success>(processor.open(content))
-        val session = assertIs<HtmlProseChapterSession>(result.session)
-        val text = session.document.combinedText
+        val result = assertIs<BookPreparationResult.Success>(preparer.prepare(content))
+        val session = assertIs<PreparedBookDocumentPublication>(result.publication)
+        val text = session.document.toPreparedBookDocument().combinedText
         val urls = text.getSpans(0, text.length, URLSpan::class.java).map(URLSpan::getURL)
 
         assertEquals(listOf("chapter-7"), session.publication.readingOrder.map { it.id })
@@ -81,7 +84,7 @@ class HtmlProseChapterProcessorTest {
         assertTrue(text.contains("Footnote"))
         assertFalse(text.contains("steal"))
         assertEquals(listOf("https://example.com", "#note"), urls)
-        assertTrue("note" in session.document.document.anchors)
+        assertTrue("note" in session.document.anchors)
         assertEquals(1, content.openCount)
     }
 
@@ -106,20 +109,25 @@ class HtmlProseChapterProcessorTest {
             """.trimIndent(),
         )
 
-        val result = assertIs<BookOpenResult.Success>(processor.open(content))
-        val session = assertIs<HtmlProseChapterSession>(result.session)
-        val unsupported = session.document.document.blocks.filter {
+        val result = assertIs<BookPreparationResult.Success>(preparer.prepare(content))
+        val session = assertIs<PreparedBookDocumentPublication>(result.publication)
+        val unsupported = session.document.blocks.filter {
             it.role.kind == BookDocumentBlockKind.UNSUPPORTED
         }
 
         assertEquals(9, unsupported.size)
         assertTrue(unsupported.all { it.plainText == UNSUPPORTED_CONTENT_BLOCK_TEXT })
         assertTrue(unsupported.all { it.content is BookDocumentBlockContent.Unsupported })
-        assertEquals(9, session.document.combinedText.toString().windowedCount(UNSUPPORTED_CONTENT_BLOCK_TEXT))
-        assertTrue(session.document.combinedText.contains("harmless wrapper"))
-        assertFalse(session.document.combinedText.contains("active"))
-        assertFalse(session.document.combinedText.contains("tracking"))
-        assertFalse(session.document.combinedText.contains("Ad"))
+        assertEquals(
+            9,
+            session.document.toPreparedBookDocument().combinedText.toString().windowedCount(
+                UNSUPPORTED_CONTENT_BLOCK_TEXT,
+            ),
+        )
+        assertTrue(session.document.toPreparedBookDocument().combinedText.contains("harmless wrapper"))
+        assertFalse(session.document.toPreparedBookDocument().combinedText.contains("active"))
+        assertFalse(session.document.toPreparedBookDocument().combinedText.contains("tracking"))
+        assertFalse(session.document.toPreparedBookDocument().combinedText.contains("Ad"))
         assertTrue(session.requiredResourceIds.isEmpty())
         assertEquals(1, content.openCount)
     }
@@ -168,12 +176,12 @@ class HtmlProseChapterProcessorTest {
             ),
         )
 
-        val session = assertIs<HtmlProseChapterSession>(
-            assertIs<BookOpenResult.Success>(processor.open(content)).session,
+        val session = assertIs<PreparedBookDocumentPublication>(
+            assertIs<BookPreparationResult.Success>(preparer.prepare(content)).publication,
         )
-        val styled = session.document.document.blocks.single { it.plainText == "Styled status" }
+        val styled = session.document.blocks.single { it.plainText == "Styled status" }
         val figure = assertIs<BookDocumentBlockContent.Figure>(
-            session.document.document.blocks.single {
+            session.document.blocks.single {
                 it.content is BookDocumentBlockContent.Figure
             }.content,
         )
@@ -183,7 +191,7 @@ class HtmlProseChapterProcessorTest {
         assertEquals(1f, styled.style.paddingEm)
         assertEquals(1.25f, styled.style.fontSizeScale)
         assertIs<BookDocumentFontFamily.Resource>(styled.style.fontFamily)
-        val inlineStyled = session.document.document.blocks.single { it.plainText.contains("inline secret") }
+        val inlineStyled = session.document.blocks.single { it.plainText.contains("inline secret") }
         val inlineRange = inlineStyled.inlineStyles.single()
         assertEquals("inline secret", inlineStyled.plainText.substring(inlineRange.start, inlineRange.endExclusive))
         assertEquals(0xFF111111, inlineRange.style.foregroundArgb)
@@ -214,10 +222,10 @@ class HtmlProseChapterProcessorTest {
 
     @Test
     fun `migration maps portable progression onto the target prose resource`() = runTest {
-        val result = assertIs<BookOpenResult.Success>(
-            processor.open(TestProseContentSession(html = "<p>Target chapter</p>")),
+        val result = assertIs<BookPreparationResult.Success>(
+            preparer.prepare(TestProseContentSession(html = "<p>Target chapter</p>")),
         )
-        val session = assertIs<HtmlProseChapterSession>(result.session)
+        val session = assertIs<PreparedBookDocumentPublication>(result.publication)
 
         val reconciled = session.reconcileMigratedLocator(
             BookLocator(
@@ -245,7 +253,7 @@ class HtmlProseChapterProcessorTest {
             primaryResourceIds = listOf("chapter-7", "chapter-8"),
         )
 
-        val result = assertIs<BookOpenResult.Failure>(processor.open(content))
+        val result = assertIs<BookPreparationResult.Failure>(preparer.prepare(content))
 
         assertEquals(BookFailureReason.CONTENT_UNAVAILABLE, result.failure.reason)
         assertEquals(0, content.openCount)
@@ -255,7 +263,7 @@ class HtmlProseChapterProcessorTest {
     fun `rejects a chapter with no readable prose after sanitizing`() = runTest {
         val content = TestProseContentSession(html = "<script>onlyActiveContent()</script>")
 
-        val result = assertIs<BookOpenResult.Failure>(processor.open(content))
+        val result = assertIs<BookPreparationResult.Failure>(preparer.prepare(content))
 
         assertEquals(BookFailureReason.MALFORMED_CONTENT, result.failure.reason)
     }
@@ -267,7 +275,7 @@ class HtmlProseChapterProcessorTest {
             availability = BookResourceAvailability.PURCHASE_REQUIRED,
         )
 
-        val result = assertIs<BookOpenResult.Failure>(processor.open(content))
+        val result = assertIs<BookPreparationResult.Failure>(preparer.prepare(content))
 
         assertEquals(BookFailureReason.CONTENT_UNAVAILABLE, result.failure.reason)
         assertEquals(0, content.openCount)

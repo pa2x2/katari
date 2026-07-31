@@ -72,7 +72,7 @@ internal class BookReaderSessionOpeningTest : BookReaderSessionFixture() {
             ),
             initialResourceId = "publication.epub",
         )
-        val publicationSession = TestPublicationSession(
+        val preparedPublication = TestPublicationSession(
             readingOrder = listOf(
                 BookResource(
                     id = initialLocator.resourceId,
@@ -81,7 +81,8 @@ internal class BookReaderSessionOpeningTest : BookReaderSessionFixture() {
                 ),
             ),
         )
-        val processor = SessionFactoryTestProcessor(publicationSession)
+        val preparer = SessionFactoryTestPreparer(preparedPublication)
+        val reader = SessionFactoryTestReaderProcessor()
         val context = mockk<Context> {
             every { applicationContext } returns this@mockk
             every { contentResolver } returns mockk<ContentResolver>()
@@ -98,7 +99,8 @@ internal class BookReaderSessionOpeningTest : BookReaderSessionFixture() {
             sourceManager = mockk<SourceManager> {
                 every { get(entry.source) } returns source
             },
-            processorRegistry = BookProcessorRegistry(listOf(processor)),
+            preparerRegistry = BookContentPreparerRegistry(listOf(preparer)),
+            readerProcessorRegistry = BookReaderProcessorRegistry(listOf(reader)),
             networkHelper = mockk<NetworkHelper> {
                 every { client } returns mockk<OkHttpClient>()
             },
@@ -117,12 +119,13 @@ internal class BookReaderSessionOpeningTest : BookReaderSessionFixture() {
             factory.prepare(BookReaderRequest(entry.id, chapter.id)),
         )
         val result = assertIs<BookReaderOpenResult.Success>(
-            factory.openPrepared(context, prepared.request, processor.id),
+            factory.openPrepared(context, prepared.request, reader.id),
         )
         val session = result.session
 
         coVerify(exactly = 1) { source.getMedia(any(), any()) }
 
+        assertEquals(preparedPublication.model, reader.receivedModel)
         assertEquals(initialLocator, session.initialLocator)
         val latestLocator = BookLocator("chapter-2.xhtml", progression = 0.5, totalProgression = 0.6)
         session.saveLocation(latestLocator, completed = true)
@@ -138,7 +141,7 @@ internal class BookReaderSessionOpeningTest : BookReaderSessionFixture() {
         assertEquals(500L, activityEvent.activity.durationMillis)
 
         session.close()
-        assertEquals(1, publicationSession.closeCount)
-        assertTrue(checkNotNull(processor.contentSession).getResource("publication.epub").isFailure)
+        assertEquals(1, preparedPublication.closeCount)
+        assertTrue(checkNotNull(preparer.contentSession).getResource("publication.epub").isFailure)
     }
 }

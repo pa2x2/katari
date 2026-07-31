@@ -15,7 +15,7 @@ internal class OpenedBookReaderSession(
     val chapter: EntryChapter,
     private val progressIdentity: BookProgressIdentity,
     contentSession: BookContentSession,
-    val publicationSession: BookPublicationSession,
+    val preparedPublication: PreparedBookPublication,
     val initialLocator: BookLocator?,
     private val mediaSession: EntryMediaSessionProcessor,
     private val now: () -> Long,
@@ -24,7 +24,7 @@ internal class OpenedBookReaderSession(
 ) : AutoCloseable {
     private val closeStack = BookSessionCloseStack().apply {
         own(contentSession)
-        own(publicationSession)
+        own(preparedPublication)
     }
 
     suspend fun saveLocation(locator: BookLocator, completed: Boolean = false) {

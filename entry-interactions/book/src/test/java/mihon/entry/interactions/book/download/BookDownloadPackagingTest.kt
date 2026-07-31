@@ -14,8 +14,8 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import mihon.book.api.BookContentDescriptor
+import mihon.entry.interactions.book.BookContentPreparerRegistry
 import mihon.entry.interactions.book.BookMaterializationCache
-import mihon.entry.interactions.book.BookProcessorRegistry
 import mihon.entry.interactions.book.download.model.BookDownload
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
@@ -102,8 +102,8 @@ internal class BookDownloadPackagingTest : BookDownloaderFixture() {
             sourceManager = sourceManager,
             networkHelper = networkHelper,
             materializationStore = materializationCache,
-            processorRegistry = BookProcessorRegistry(
-                listOf(ValidatingProcessor(descriptor, requiredResourceIds = setOf("figure"))),
+            preparerRegistry = BookContentPreparerRegistry(
+                listOf(ValidatingPreparer(descriptor, requiredResourceIds = setOf("figure"))),
             ),
             now = { 123L },
         )
@@ -215,8 +215,8 @@ internal class BookDownloadPackagingTest : BookDownloaderFixture() {
                 every { client } returns globalClient
             },
             materializationStore = materializationCache,
-            processorRegistry = BookProcessorRegistry(
-                listOf(ValidatingProcessor(descriptor, "<p>Authenticated A</p>")),
+            preparerRegistry = BookContentPreparerRegistry(
+                listOf(ValidatingPreparer(descriptor, "<p>Authenticated A</p>")),
             ),
         )
 

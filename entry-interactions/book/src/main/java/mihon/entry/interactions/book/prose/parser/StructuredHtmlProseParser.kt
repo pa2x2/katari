@@ -1,6 +1,5 @@
 package mihon.entry.interactions.book.prose
 
-import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import mihon.book.api.document.BookDocument
 import mihon.book.api.document.BookDocumentBlock
@@ -12,8 +11,7 @@ import mihon.book.api.document.BookDocumentFontFamily
 import mihon.book.api.document.BookDocumentPosition
 import mihon.book.api.document.BookDocumentStyle
 import mihon.entry.interactions.book.document.render.PreparedBookDocument
-import mihon.entry.interactions.book.document.render.PreparedBookDocumentBlock
-import mihon.entry.interactions.book.document.render.toBookDocumentSpanned
+import mihon.entry.interactions.book.document.render.toPreparedBookDocument
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode
@@ -22,7 +20,13 @@ internal fun prepareStructuredHtmlBookDocument(
     resourceId: String,
     revision: String?,
     body: Element,
-): PreparedBookDocument = StructuredHtmlProseParser(resourceId, revision, body).parse()
+): PreparedBookDocument = parseStructuredHtmlBookDocument(resourceId, revision, body).toPreparedBookDocument()
+
+internal fun parseStructuredHtmlBookDocument(
+    resourceId: String,
+    revision: String?,
+    body: Element,
+): BookDocument = StructuredHtmlProseParser(resourceId, revision, body).parse()
 
 internal class StructuredHtmlProseParser(
     internal val resourceId: String,
@@ -32,13 +36,12 @@ internal class StructuredHtmlProseParser(
     internal val parsedBlocks = mutableListOf<ParsedBlock>()
     private val usedIds = mutableMapOf<String, Int>()
 
-    fun parse(): PreparedBookDocument {
+    fun parse(): BookDocument {
         collectChildren(body, BookDocumentStyle(), noteContext = false)
         require(parsedBlocks.isNotEmpty()) { "The prose chapter contains no readable document blocks" }
 
         val combined = SpannableStringBuilder()
         val semanticBlocks = mutableListOf<BookDocumentBlock>()
-        val preparedBlocks = mutableListOf<PreparedBookDocumentBlock>()
         val anchors = linkedMapOf<String, BookDocumentPosition>()
         val referencedResources = linkedSetOf<String>()
         val usedFragments = mutableSetOf<String>()
@@ -62,11 +65,6 @@ internal class StructuredHtmlProseParser(
                 logicalEndExclusive = end,
             )
             semanticBlocks += block
-            preparedBlocks += PreparedBookDocumentBlock(
-                block = block,
-                renderedText = parsed.renderedText.toString().toBookDocumentSpanned(block),
-                disclosureBody = parsed.disclosureBody,
-            )
             sourceFragments.forEach { fragment ->
                 anchors.putIfAbsent(fragment, BookDocumentPosition(blockId, parsed.anchorOffset(fragment)))
             }
@@ -84,7 +82,7 @@ internal class StructuredHtmlProseParser(
         }
         require(semanticBlocks.isNotEmpty()) { "The prose chapter contains no readable document blocks" }
 
-        val document = BookDocument(
+        return BookDocument(
             resourceId = resourceId,
             revision = revision,
             content = BookDocumentContent(
@@ -94,10 +92,6 @@ internal class StructuredHtmlProseParser(
                 resourceIds = referencedResources,
             ),
         )
-        val projectedText = SpannableStringBuilder().apply {
-            preparedBlocks.forEach { append(it.renderedText) }
-        }
-        return PreparedBookDocument(document, preparedBlocks, SpannableString(projectedText))
     }
 
     internal fun collectChildren(

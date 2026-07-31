@@ -15,7 +15,7 @@ import mihon.translation.api.TranslationHostActions
 import mihon.translation.api.TranslationSettingsNavigation
 
 internal class BookAutomaticTranslationSettingsProvider(
-    processorRegistry: BookProcessorRegistry,
+    processorRegistry: BookReaderProcessorRegistry,
     private val preferences: BookAutomaticTranslationPreferences,
     private val translationHostActions: TranslationHostActions,
 ) : ReaderSharedSettingsProvider {

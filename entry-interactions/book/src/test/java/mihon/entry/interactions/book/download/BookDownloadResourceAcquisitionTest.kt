@@ -12,8 +12,8 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import mihon.book.api.BookContentDescriptor
+import mihon.entry.interactions.book.BookContentPreparerRegistry
 import mihon.entry.interactions.book.BookMaterializationCache
-import mihon.entry.interactions.book.BookProcessorRegistry
 import mihon.entry.interactions.book.document.resource.PROSE_IMAGE_RESOURCE_REQUIREMENT
 import mihon.entry.interactions.book.download.model.BookDownload
 import mihon.entry.interactions.book.download.model.BookDownloadFailure
@@ -85,8 +85,8 @@ internal class BookDownloadResourceAcquisitionTest : BookDownloaderFixture() {
                 application,
                 Files.createTempDirectory("book-materialization").toFile(),
             ),
-            processorRegistry = BookProcessorRegistry(
-                listOf(ValidatingProcessor(descriptor, requiredResourceIds = setOf("missing-figure"))),
+            preparerRegistry = BookContentPreparerRegistry(
+                listOf(ValidatingPreparer(descriptor, requiredResourceIds = setOf("missing-figure"))),
             ),
         )
 
@@ -158,9 +158,9 @@ internal class BookDownloadResourceAcquisitionTest : BookDownloaderFixture() {
                 application,
                 Files.createTempDirectory("book-materialization").toFile(),
             ),
-            processorRegistry = BookProcessorRegistry(
+            preparerRegistry = BookContentPreparerRegistry(
                 listOf(
-                    ValidatingProcessor(
+                    ValidatingPreparer(
                         descriptor = descriptor,
                         requiredResourceIds = setOf("figure"),
                         resourceRequirements = mapOf(

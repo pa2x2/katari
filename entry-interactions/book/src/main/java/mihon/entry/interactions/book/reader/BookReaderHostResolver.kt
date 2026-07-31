@@ -3,10 +3,12 @@ package mihon.entry.interactions.book
 import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookFailure
 import mihon.book.api.BookFailureReason
+import mihon.book.api.model.BookPublicationModelDescriptor
 
 internal class BookReaderHostResolver(
     private val sessionFactory: BookReaderSessionFactory,
-    private val selectionCoordinator: BookProcessorSelectionCoordinator,
+    private val preparerRegistry: BookContentPreparerRegistry,
+    private val selectionCoordinator: BookReaderProcessorSelectionCoordinator,
 ) {
     suspend fun resolve(entryId: Long, chapterId: Long): BookReaderHostState {
         val request = BookReaderRequest(entryId, chapterId)
@@ -15,21 +17,44 @@ internal class BookReaderHostResolver(
             is BookReaderPrepareResult.Success -> result.request
         }
         val descriptor = prepared.content.descriptor
+        val model = when (val preparation = preparerRegistry.resolve(descriptor)) {
+            BookContentPreparerSelection.Unsupported -> {
+                return BookReaderHostState.Unavailable(
+                    failure = BookFailure(
+                        reason = BookFailureReason.PROCESSOR_UNAVAILABLE,
+                        message = descriptor.unsupportedMessage("No compatible content preparer is installed for"),
+                    ),
+                    descriptor = descriptor,
+                )
+            }
+            is BookContentPreparerSelection.Ambiguous -> {
+                return BookReaderHostState.Unavailable(
+                    failure = BookFailure(
+                        reason = BookFailureReason.PROCESSOR_UNAVAILABLE,
+                        message = "Multiple content preparers claim this publication: " +
+                            preparation.preparers.joinToString { it.id },
+                    ),
+                    descriptor = descriptor,
+                )
+            }
+            is BookContentPreparerSelection.Selected -> preparation.preparer.outputModel
+        }
 
-        return when (val selection = selectionCoordinator.resolve(descriptor)) {
-            BookProcessorSelection.Unsupported -> BookReaderHostState.Unavailable(
+        return when (val selection = selectionCoordinator.resolve(model)) {
+            BookReaderProcessorSelection.Unsupported -> BookReaderHostState.Unavailable(
                 failure = BookFailure(
                     reason = BookFailureReason.PROCESSOR_UNAVAILABLE,
-                    message = descriptor.unsupportedMessage(),
+                    message = descriptor.unsupportedMessage("No compatible reader is installed for"),
                 ),
                 descriptor = descriptor,
             )
-            is BookProcessorSelection.ChoiceRequired -> BookReaderHostState.ChoiceRequired(
+            is BookReaderProcessorSelection.ChoiceRequired -> BookReaderHostState.ChoiceRequired(
                 descriptor = descriptor,
+                model = model,
                 choices = selection.processors.map { BookProcessorChoice(it.id, it.displayName) },
                 prepared = prepared,
             )
-            is BookProcessorSelection.Selected -> BookReaderHostState.ReaderSelected(
+            is BookReaderProcessorSelection.Selected -> BookReaderHostState.ReaderSelected(
                 descriptor = descriptor,
                 processor = selection.processor,
                 prepared = prepared,
@@ -42,7 +67,7 @@ internal class BookReaderHostResolver(
         processorId: String,
         remember: Boolean,
     ): BookReaderHostState.ReaderSelected {
-        val selected = selectionCoordinator.choose(state.descriptor, processorId, remember)
+        val selected = selectionCoordinator.choose(state.model, processorId, remember)
         return BookReaderHostState.ReaderSelected(
             descriptor = state.descriptor,
             processor = selected.processor,
@@ -59,21 +84,23 @@ internal sealed interface BookReaderHostState {
 
     data class ChoiceRequired(
         val descriptor: BookContentDescriptor,
+        val model: BookPublicationModelDescriptor,
         val choices: List<BookProcessorChoice>,
         val prepared: PreparedBookReaderRequest,
     ) : BookReaderHostState
 
     data class ReaderSelected(
         val descriptor: BookContentDescriptor,
-        val processor: BookProcessor,
+        val processor: BookReaderProcessor,
         val prepared: PreparedBookReaderRequest,
     ) : BookReaderHostState
 }
 
 internal data class BookProcessorChoice(val id: String, val displayName: String)
 
-private fun BookContentDescriptor.unsupportedMessage(): String = buildString {
-    append("No compatible reader is installed for format ")
+private fun BookContentDescriptor.unsupportedMessage(prefix: String): String = buildString {
+    append(prefix)
+    append(" format ")
     append(format)
     profile?.let { append(" (profile: $it)") }
     if (protection != "none") append(" with protection $protection")

@@ -27,7 +27,8 @@ internal class BookReaderSessionFactory(
     private val entryChapterRepository: EntryChapterRepository,
     private val entryProgressRepository: EntryProgressRepository,
     private val sourceManager: SourceManager,
-    private val processorRegistry: BookProcessorRegistry,
+    private val preparerRegistry: BookContentPreparerRegistry,
+    private val readerProcessorRegistry: BookReaderProcessorRegistry,
     private val networkHelper: NetworkHelper,
     private val materializationStore: BookMaterializationStore,
     private val downloadCache: BookDownloadCache,
@@ -90,14 +91,26 @@ internal class BookReaderSessionFactory(
         prepared: PreparedBookReaderRequest,
         processorId: String,
     ): BookReaderOpenResult {
-        val processor = processorRegistry.get(processorId)
+        val readerProcessor = readerProcessorRegistry.get(processorId)
             ?: return failure(BookFailureReason.PROCESSOR_UNAVAILABLE, "The selected book reader is unavailable.")
         val visibleEntry = prepared.visibleEntry
         val owner = prepared.owner
         val chapter = prepared.chapter
         val content = prepared.content
-        if (!processor.supports(content.descriptor)) {
-            return failure(BookFailureReason.FORMAT_UNSUPPORTED, "The selected reader does not support this content.")
+        val preparer = when (val selection = preparerRegistry.resolve(content.descriptor)) {
+            BookContentPreparerSelection.Unsupported -> {
+                return failure(BookFailureReason.FORMAT_UNSUPPORTED, "No preparer supports this book content.")
+            }
+            is BookContentPreparerSelection.Ambiguous -> {
+                return failure(
+                    BookFailureReason.PROCESSOR_UNAVAILABLE,
+                    "Multiple preparers claim this book content: ${selection.preparers.joinToString { it.id }}",
+                )
+            }
+            is BookContentPreparerSelection.Selected -> selection.preparer
+        }
+        if (!readerProcessor.supports(preparer.outputModel)) {
+            return failure(BookFailureReason.FORMAT_UNSUPPORTED, "The selected reader does not support this model.")
         }
 
         val progressIdentity = try {
@@ -106,8 +119,8 @@ internal class BookReaderSessionFactory(
             return failure(BookFailureReason.MALFORMED_CONTENT, error.message ?: "The book resource is ambiguous.")
         }
         val contentSession = content.createSession(context, owner)
-        val opened = try {
-            processor.open(contentSession)
+        val preparedPublication = try {
+            preparer.prepare(contentSession)
         } catch (error: CancellationException) {
             closeAfterFailure(contentSession, cause = error)
             throw error
@@ -115,31 +128,39 @@ internal class BookReaderSessionFactory(
             closeAfterFailure(contentSession, cause = error)
             return failure(
                 BookFailureReason.MALFORMED_CONTENT,
-                error.message ?: "The book reader could not open this content.",
+                error.message ?: "The book content could not be prepared.",
             )
         }
-        return when (opened) {
-            is BookOpenResult.Failure -> {
+        return when (preparedPublication) {
+            is BookPreparationResult.Failure -> {
                 closeAfterFailure(contentSession)
-                BookReaderOpenResult.Failure(opened.failure)
+                BookReaderOpenResult.Failure(preparedPublication.failure)
             }
-            is BookOpenResult.Success -> {
+            is BookPreparationResult.Success -> {
+                val publication = preparedPublication.publication
                 try {
+                    check(publication.model.descriptor == preparer.outputModel) {
+                        "BOOK preparer ${preparer.id} produced ${publication.model.descriptor} instead of " +
+                            preparer.outputModel
+                    }
+                    check(readerProcessor.supports(publication.model.descriptor)) {
+                        "The selected reader no longer supports the prepared publication model"
+                    }
                     val progress = resolveProgress(
                         chapter = chapter,
                         progressIdentity = progressIdentity,
-                        publicationSession = opened.session,
+                        preparedPublication = publication,
                     )
-                    val initialLocator = progress
+                    val decodedLocator = progress
                         ?.takeIf { !chapter.read && it.hasPartialBookProgress }
                         ?.locator
                         ?.let { locator ->
                             BookProgressLocatorCodec.decode(
                                 locator = locator,
-                                fallbackResourceId = opened.session.publication.readingOrder.singleOrNull()?.id,
+                                fallbackResourceId = publication.publication.readingOrder.singleOrNull()?.id,
                             )
                         }
-                        ?.takeIf(opened.session::validate)
+                    val initialLocator = publication.restoreLocator(decodedLocator)
                     BookReaderOpenResult.Success(
                         OpenedBookReaderSession(
                             entry = visibleEntry,
@@ -147,19 +168,19 @@ internal class BookReaderSessionFactory(
                             chapter = chapter,
                             progressIdentity = progressIdentity,
                             contentSession = contentSession,
-                            publicationSession = opened.session,
+                            preparedPublication = publication,
                             initialLocator = initialLocator,
                             mediaSession = mediaSession,
                             now = now,
-                            readerSettingsSurfaceId = processor.viewerSettingsSurfaceId,
-                            readerCapabilities = processor.readerCapabilities(opened.session),
+                            readerSettingsSurfaceId = readerProcessor.viewerSettingsSurfaceId,
+                            readerCapabilities = readerProcessor.readerCapabilities(publication.model),
                         ),
                     )
                 } catch (error: CancellationException) {
-                    closeAfterFailure(contentSession, opened.session, error)
+                    closeAfterFailure(contentSession, publication, error)
                     throw error
                 } catch (error: Exception) {
-                    closeAfterFailure(contentSession, opened.session, error)
+                    closeAfterFailure(contentSession, publication, error)
                     failure(
                         BookFailureReason.CONTENT_UNAVAILABLE,
                         error.message ?: "The saved book position could not be restored.",
@@ -172,7 +193,7 @@ internal class BookReaderSessionFactory(
     private suspend fun resolveProgress(
         chapter: EntryChapter,
         progressIdentity: BookProgressIdentity,
-        publicationSession: BookPublicationSession,
+        preparedPublication: PreparedBookPublication,
     ): EntryProgressState? {
         var current = entryProgressRepository.get(
             chapter.entryId,
@@ -188,11 +209,13 @@ internal class BookReaderSessionFactory(
             val currentLocator = current
                 ?.locator
                 ?.let(BookProgressLocatorCodec::decode)
-                ?.takeIf(publicationSession::validate)
+                ?.takeIf(preparedPublication::validate)
             val migratedLocator = if (currentLocator == null) {
                 val sourceLocator = BookProgressLocatorCodec.decode(pending.locator)
                 try {
-                    sourceLocator?.let { publicationSession.reconcileMigratedLocator(it) }
+                    sourceLocator
+                        ?.let { preparedPublication.reconcileMigratedLocator(it) }
+                        ?.takeIf(preparedPublication::validate)
                 } catch (error: CancellationException) {
                     throw error
                 } catch (_: Exception) {
@@ -288,12 +311,12 @@ internal class BookReaderSessionFactory(
 
     private fun closeAfterFailure(
         contentSession: BookContentSession,
-        publicationSession: BookPublicationSession? = null,
+        preparedPublication: PreparedBookPublication? = null,
         cause: Throwable? = null,
     ) {
         val closeStack = BookSessionCloseStack().apply {
             own(contentSession)
-            publicationSession?.let(::own)
+            preparedPublication?.let(::own)
         }
         runCatching(closeStack::close).exceptionOrNull()?.let { closeError ->
             cause?.addSuppressed(closeError)

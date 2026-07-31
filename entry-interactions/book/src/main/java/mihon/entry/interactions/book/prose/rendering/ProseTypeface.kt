@@ -26,7 +26,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mihon.book.api.document.BookDocumentFontFamily
 import mihon.book.api.document.BookDocumentInlineStyleRange
-import mihon.entry.interactions.book.document.reader.BookDocumentResourceLoader
+import mihon.entry.interactions.book.BookPublicationResourceLoader
 import mihon.entry.interactions.book.document.resource.PROSE_FONT_RESOURCE_REQUIREMENT
 import mihon.entry.interactions.book.document.resource.createValidatedProseTypeface
 import java.io.File
@@ -34,7 +34,7 @@ import java.security.MessageDigest
 
 @Composable
 internal fun rememberProseTypeface(
-    loader: BookDocumentResourceLoader?,
+    loader: BookPublicationResourceLoader?,
     family: BookDocumentFontFamily.Resource?,
 ): androidx.compose.runtime.State<Typeface?> {
     val context = LocalContext.current
@@ -50,7 +50,7 @@ internal fun rememberProseTypeface(
 
 @Composable
 internal fun rememberInlineProseTypefaces(
-    loader: BookDocumentResourceLoader?,
+    loader: BookPublicationResourceLoader?,
     styles: List<BookDocumentInlineStyleRange>,
 ): androidx.compose.runtime.State<Map<String, Typeface>> {
     val context = LocalContext.current
@@ -176,7 +176,7 @@ private class ProseTypefaceSpan(
 
 private const val SMALL_TEXT_SCALE = 0.8f
 
-internal suspend fun BookDocumentResourceLoader.loadProseTypeface(
+internal suspend fun BookPublicationResourceLoader.loadProseTypeface(
     context: android.content.Context,
     resourceId: String,
 ): Result<Typeface> {

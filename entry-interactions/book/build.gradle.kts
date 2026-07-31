@@ -44,3 +44,8 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
     testRuntimeOnly(libs.junit.vintage)
 }
+
+tasks.withType<Test>().configureEach {
+    // MockK/Byte Buddy instruments the test JVM, which is incompatible with class-data sharing.
+    jvmArgs("-XX:+EnableDynamicAgentLoading", "-Xshare:off")
+}

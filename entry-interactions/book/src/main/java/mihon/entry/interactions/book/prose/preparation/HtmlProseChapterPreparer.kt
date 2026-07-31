@@ -1,40 +1,31 @@
 package mihon.entry.interactions.book.prose
 
-import android.content.Context
-import android.content.Intent
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookFailure
 import mihon.book.api.BookFailureReason
+import mihon.book.api.document.BookDocumentPublicationModel
+import mihon.entry.interactions.book.BookContentPreparer
 import mihon.entry.interactions.book.BookContentSession
-import mihon.entry.interactions.book.BookOpenResult
-import mihon.entry.interactions.book.BookProcessor
-import mihon.entry.interactions.book.BookPublicationSession
-import mihon.entry.interactions.book.BookReaderRequest
-import mihon.entry.interactions.settings.HtmlProseSettingsProvider
-import mihon.entry.viewer.settings.StandardReaderCapabilities
+import mihon.entry.interactions.book.BookContentSessionResourceLoader
+import mihon.entry.interactions.book.BookPreparationResult
+import mihon.entry.interactions.book.document.preparation.PreparedBookDocumentPublication
+import mihon.entry.interactions.book.isReadableBookResource
+import mihon.entry.interactions.book.readBoundedBookResource
 
-/** Built-in reader processor for one source-normalized prose chapter. */
-internal class HtmlProseChapterProcessor : BookProcessor {
+/** App-owned preparation of source-normalized HTML into the canonical structured-prose model. */
+internal class HtmlProseChapterPreparer : BookContentPreparer {
     override val id: String = "builtin.html.prose-chapter"
-    override val displayName: String = "Prose chapter reader"
-    override val viewerSettingsSurfaceId = HtmlProseSettingsProvider.PROVIDER_ID
-    override val potentialReaderCapabilities = PROSE_READER_CAPABILITIES
+    override val outputModel = BookDocumentPublicationModel.DESCRIPTOR
 
     override fun supports(descriptor: BookContentDescriptor): Boolean =
         descriptor.format == HTML_MEDIA_TYPE &&
             descriptor.profile == PROSE_CHAPTER_PROFILE &&
             descriptor.protection == "none"
 
-    override fun createReaderIntent(
-        context: Context,
-        request: BookReaderRequest,
-        sessionToken: String,
-    ): Intent = HtmlProseChapterReaderActivity.newIntent(context, request, id, sessionToken)
-
-    override suspend fun open(content: BookContentSession): BookOpenResult {
+    override suspend fun prepare(content: BookContentSession): BookPreparationResult {
         if (!supports(content.descriptor)) {
             return failure(BookFailureReason.FORMAT_UNSUPPORTED, "Unsupported prose chapter descriptor")
         }
@@ -47,7 +38,7 @@ internal class HtmlProseChapterProcessor : BookProcessor {
         if (!metadata.isHtmlResource()) {
             return failure(BookFailureReason.FORMAT_UNSUPPORTED, "The selected prose chapter is not HTML")
         }
-        if (!metadata.isReadable()) {
+        if (!metadata.isReadableBookResource()) {
             return contentFailure("The selected prose chapter is not currently readable (${metadata.availability})")
         }
         metadata.size?.let {
@@ -59,23 +50,23 @@ internal class HtmlProseChapterProcessor : BookProcessor {
                 return contentFailure(it.message ?: "Unable to open the prose chapter")
             }.use { opened ->
                 withContext(Dispatchers.IO) {
-                    opened.stream.readBounded(MAX_HTML_RESOURCE_BYTES)
+                    opened.stream.readBoundedBookResource(MAX_HTML_RESOURCE_BYTES)
                 }
             }
             val document = withContext(Dispatchers.Default) {
-                prepareHtmlBookDocument(
+                parseHtmlBookDocument(
                     resourceId = resourceId,
                     revision = metadata.revision ?: content.revision,
                     body = sanitizeProseDocument(bytes),
                 )
             }
-            BookOpenResult.Success(
-                HtmlProseChapterSession(
+            BookPreparationResult.Success(
+                PreparedBookDocumentPublication(
                     publicationId = content.publicationId,
                     revision = metadata.revision ?: content.revision,
                     resource = metadata,
-                    document = document,
-                    content = content,
+                    model = BookDocumentPublicationModel(listOf(document)),
+                    resourceLoader = BookContentSessionResourceLoader(content),
                 ),
             )
         } catch (error: CancellationException) {
@@ -88,21 +79,13 @@ internal class HtmlProseChapterProcessor : BookProcessor {
         }
     }
 
-    override fun readerCapabilities(session: BookPublicationSession) =
-        if (session is HtmlProseChapterSession) PROSE_READER_CAPABILITIES else emptySet()
+    private fun failure(reason: BookFailureReason, message: String): BookPreparationResult.Failure =
+        BookPreparationResult.Failure(BookFailure(reason, message))
 
-    private fun failure(reason: BookFailureReason, message: String): BookOpenResult.Failure =
-        BookOpenResult.Failure(BookFailure(reason, message))
-
-    private fun contentFailure(message: String): BookOpenResult.Failure =
+    private fun contentFailure(message: String): BookPreparationResult.Failure =
         failure(BookFailureReason.CONTENT_UNAVAILABLE, message)
 
     private companion object {
         const val MAX_HTML_RESOURCE_BYTES = 4 * 1024 * 1024
-        val PROSE_READER_CAPABILITIES = setOf(
-            StandardReaderCapabilities.StableTextSelection,
-            StandardReaderCapabilities.SelectionAnchoring,
-            StandardReaderCapabilities.NextChapterPreparation,
-        )
     }
 }

@@ -1,6 +1,7 @@
 package mihon.entry.interactions.book
 
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -27,6 +28,7 @@ import mihon.translation.ui.session.TranslationSessionState
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class BookSelectionTranslationControllerTest {
     @Test
     fun `settling prepares only the latest selected text`() = runTest {

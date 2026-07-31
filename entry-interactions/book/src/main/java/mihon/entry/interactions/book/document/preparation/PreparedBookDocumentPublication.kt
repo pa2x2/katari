@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book.prose
+package mihon.entry.interactions.book.document.preparation
 
 import mihon.book.api.BookContentResource
 import mihon.book.api.BookLocator
@@ -6,26 +6,25 @@ import mihon.book.api.BookNavigationItem
 import mihon.book.api.BookPublication
 import mihon.book.api.BookReadingDirection
 import mihon.book.api.BookResource
-import mihon.entry.interactions.book.BookContentSession
+import mihon.book.api.document.BookDocumentPublicationModel
 import mihon.entry.interactions.book.BookPublicationResourceDependencies
-import mihon.entry.interactions.book.BookPublicationSession
+import mihon.entry.interactions.book.BookPublicationResourceLoader
 import mihon.entry.interactions.book.BookResourceRequirement
-import mihon.entry.interactions.book.document.reader.BookDocumentResourceLoader
-import mihon.entry.interactions.book.document.render.PreparedBookDocument
+import mihon.entry.interactions.book.PreparedBookPublication
 
-/** Built-in reader processor for one source-normalized prose chapter. */
-internal class HtmlProseChapterSession(
+/** Runtime owner for a canonical document model and its protected subordinate-resource access. */
+internal class PreparedBookDocumentPublication(
     publicationId: String,
     revision: String,
     resource: BookContentResource,
-    val document: PreparedBookDocument,
-    content: BookContentSession,
-) : BookPublicationSession, BookPublicationResourceDependencies {
+    override val model: BookDocumentPublicationModel,
+    override val resourceLoader: BookPublicationResourceLoader,
+) : PreparedBookPublication, BookPublicationResourceDependencies {
     val resourceId: String = resource.id
-    val resourceLoader: BookDocumentResourceLoader = HtmlProseResourceLoader(content)
-    override val requiredResourceIds: Set<String> = document.document.resourceIds
+    val document get() = checkNotNull(model.document(resourceId))
+    override val requiredResourceIds: Set<String> = document.resourceIds
     override val resourceRequirements: Map<String, BookResourceRequirement> =
-        document.document.resourceRequirements().also { requirements ->
+        document.resourceRequirements().also { requirements ->
             require(requirements.keys == requiredResourceIds) {
                 "Every required prose resource must declare offline validation constraints"
             }

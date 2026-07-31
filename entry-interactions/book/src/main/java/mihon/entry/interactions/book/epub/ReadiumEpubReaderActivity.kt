@@ -246,7 +246,7 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
                         locator,
                         completed = isEpubPublicationComplete(
                             locator,
-                            session.publicationSession.publication.readingOrder,
+                            session.preparedPublication.publication.readingOrder,
                         ),
                     )
                 }
@@ -284,12 +284,12 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
         readerSettings: ReadiumEpubSettingsBinding,
         initialPreferences: EpubPreferences,
     ): Boolean {
-        val publicationSession = session.publicationSession as? ReadiumPublicationSession
+        val model = session.preparedPublication.model as? ReadiumEpubPublicationModel
             ?: run {
                 showError(getString(R.string.book_reader_incompatible_session))
                 return false
             }
-        val host = ReadiumEpubReaderHost(publicationSession)
+        val host = ReadiumEpubReaderHost(model)
         val activeTranslationController = BookSelectionTranslationController(
             feature = Injekt.get<TranslationFeature>(),
             hostActions = Injekt.get<TranslationHostActions>(),
@@ -334,7 +334,7 @@ internal class ReadiumEpubReaderActivity : EntryInteractionActivity() {
         }
         navigationController.effectiveReadingDirection = host.readingDirection(fragment)
 
-        val publication = publicationSession.publication
+        val publication = session.preparedPublication.publication
         title = publication.title ?: session.entry.displayTitle
         openedSession = session
         readerHost = host

@@ -10,9 +10,10 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import mihon.entry.interactions.book.AndroidBookExternalResourceResolver
+import mihon.entry.interactions.book.BookContentPreparerRegistry
+import mihon.entry.interactions.book.BookContentPreparerSelection
 import mihon.entry.interactions.book.BookMaterializationStore
-import mihon.entry.interactions.book.BookOpenResult
-import mihon.entry.interactions.book.BookProcessorRegistry
+import mihon.entry.interactions.book.BookPreparationResult
 import mihon.entry.interactions.book.BookPublicationResourceDependencies
 import mihon.entry.interactions.book.BookResourceMaterializationLimitException
 import mihon.entry.interactions.book.BookResourceRequirement
@@ -36,7 +37,7 @@ internal class BookDownloader(
     private val sourceManager: SourceManager = Injekt.get(),
     private val networkHelper: NetworkHelper = Injekt.get(),
     private val materializationStore: BookMaterializationStore = Injekt.get(),
-    private val processorRegistry: BookProcessorRegistry = Injekt.get(),
+    private val preparerRegistry: BookContentPreparerRegistry = Injekt.get(),
     private val resourceBudget: BookDownloadResourceBudget = BookDownloadResourceBudget(),
     private val now: () -> Long = System::currentTimeMillis,
 ) {
@@ -61,10 +62,18 @@ internal class BookDownloader(
                 BookDownloadFailure.Reason.AMBIGUOUS_RESOURCE,
                 "The BOOK item does not identify exactly one primary resource.",
             )
-        val processor = processorRegistry.compatibleProcessors(media.descriptor)
-            .sortedBy { it.id }
-            .firstOrNull()
-            ?: return failure(BookDownloadFailure.Reason.UNSUPPORTED_FORMAT)
+        val preparer = when (val selection = preparerRegistry.resolve(media.descriptor)) {
+            BookContentPreparerSelection.Unsupported -> {
+                return failure(BookDownloadFailure.Reason.UNSUPPORTED_FORMAT)
+            }
+            is BookContentPreparerSelection.Ambiguous -> {
+                return failure(
+                    BookDownloadFailure.Reason.UNSUPPORTED_FORMAT,
+                    "Multiple BOOK preparers claim this content: ${selection.preparers.joinToString { it.id }}",
+                )
+            }
+            is BookContentPreparerSelection.Selected -> selection.preparer
+        }
         val session = SourceBookContentSession(
             source = source,
             entry = download.entry,
@@ -96,20 +105,20 @@ internal class BookDownloader(
                     primaryResourceId = primaryResourceId,
                     primaryResource = primaryResource,
                 )
-                val dependencies = when (val opened = processor.open(processingContent)) {
-                    is BookOpenResult.Failure -> return failure(
+                val dependencies = when (val prepared = preparer.prepare(processingContent)) {
+                    is BookPreparationResult.Failure -> return failure(
                         BookDownloadFailure.Reason.CONTENT_UNAVAILABLE,
-                        opened.failure.message,
+                        prepared.failure.message,
                     )
-                    is BookOpenResult.Success -> try {
-                        (opened.session as? BookPublicationResourceDependencies)?.let { resources ->
+                    is BookPreparationResult.Success -> try {
+                        (prepared.publication as? BookPublicationResourceDependencies)?.let { resources ->
                             ResolvedBookResourceDependencies(
                                 resourceIds = resources.requiredResourceIds,
                                 requirements = resources.resourceRequirements,
                             )
                         } ?: ResolvedBookResourceDependencies()
                     } finally {
-                        opened.session.close()
+                        prepared.publication.close()
                     }
                 }
                 val resourceIds = (listOf(primaryResourceId) + dependencies.resourceIds)

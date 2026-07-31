@@ -12,9 +12,9 @@ import mihon.book.api.BookResourceCacheState
 import mihon.book.api.BookResourceCapability
 import mihon.entry.interactions.book.BookByteRange
 import mihon.entry.interactions.book.BookMaterializationCache
-import mihon.entry.interactions.book.BookOpenResult
-import mihon.entry.interactions.book.prose.HtmlProseChapterProcessor
-import mihon.entry.interactions.book.prose.HtmlProseChapterSession
+import mihon.entry.interactions.book.BookPreparationResult
+import mihon.entry.interactions.book.document.preparation.PreparedBookDocumentPublication
+import mihon.entry.interactions.book.prose.HtmlProseChapterPreparer
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -30,7 +30,7 @@ import kotlin.test.assertTrue
 @RunWith(RobolectricTestRunner::class)
 class DownloadedBookContentSessionTest {
     @Test
-    fun `built in prose processor opens a downloaded chapter`() = runTest {
+    fun `built in prose preparer opens a downloaded chapter`() = runTest {
         val packageFixture = downloadedPackage("<h1>Downloaded</h1><p>Readable prose.</p>")
         val cache = BookMaterializationCache(
             application = mockk<Application>(relaxed = true),
@@ -38,19 +38,19 @@ class DownloadedBookContentSessionTest {
         )
         val content = DownloadedBookContentSession(packageFixture, cache)
 
-        val result = assertIs<BookOpenResult.Success>(HtmlProseChapterProcessor().open(content))
-        val session = assertIs<HtmlProseChapterSession>(result.session)
+        val result = assertIs<BookPreparationResult.Success>(HtmlProseChapterPreparer().prepare(content))
+        val session = assertIs<PreparedBookDocumentPublication>(result.publication)
 
         assertEquals(
             listOf("Downloaded", "Readable prose."),
-            session.document.document.blocks.map { it.plainText },
+            session.document.blocks.map { it.plainText },
         )
         session.close()
         content.close()
     }
 
     @Test
-    fun `verified package exposes processor metadata streams and durable materialization`() = runTest {
+    fun `verified package exposes preparer metadata streams and durable materialization`() = runTest {
         val packageFixture = downloadedPackage("downloaded chapter")
         val materializationDirectory = Files.createTempDirectory("katari-book-download-session").toFile()
         val materializationCache = BookMaterializationCache(

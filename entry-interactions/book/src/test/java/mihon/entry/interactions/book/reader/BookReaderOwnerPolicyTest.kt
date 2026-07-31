@@ -50,7 +50,8 @@ internal class BookReaderOwnerPolicyTest : BookReaderSessionFixture() {
             coEvery { getByEntryId(owner.id) } returns emptyList()
         }
         val events = mutableListOf<EntryMediaSessionEvent>()
-        val processor = SessionFactoryTestProcessor(TestPublicationSession())
+        val preparer = SessionFactoryTestPreparer(TestPublicationSession())
+        val reader = SessionFactoryTestReaderProcessor()
         val context = mockk<Context> {
             every { applicationContext } returns this@mockk
             every { contentResolver } returns mockk<ContentResolver>()
@@ -68,7 +69,8 @@ internal class BookReaderOwnerPolicyTest : BookReaderSessionFixture() {
             sourceManager = mockk {
                 every { get(owner.source) } returns source
             },
-            processorRegistry = BookProcessorRegistry(listOf(processor)),
+            preparerRegistry = BookContentPreparerRegistry(listOf(preparer)),
+            readerProcessorRegistry = BookReaderProcessorRegistry(listOf(reader)),
             networkHelper = mockk {
                 every { client } returns mockk<OkHttpClient>()
             },
@@ -83,7 +85,7 @@ internal class BookReaderOwnerPolicyTest : BookReaderSessionFixture() {
         )
 
         val session = assertIs<BookReaderOpenResult.Success>(
-            factory.open(context, BookReaderRequest(visible.id, chapter.id), processor.id),
+            factory.open(context, BookReaderRequest(visible.id, chapter.id), reader.id),
         ).session
         assertEquals(owner, session.owner)
         session.saveLocation(BookLocator("chapter-1.xhtml", progression = 0.5))

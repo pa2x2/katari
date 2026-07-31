@@ -1,6 +1,7 @@
 package mihon.entry.interactions.book.document.reader
 
 import mihon.book.api.document.BookDocumentPosition
+import mihon.entry.interactions.book.BookPublicationResourceLoader
 import mihon.entry.interactions.book.document.render.PreparedBookDocument
 import mihon.entry.interactions.book.document.render.PreparedBookDocumentBlock
 import mihon.entry.interactions.viewer.EntryChildDirection
@@ -14,7 +15,7 @@ internal data class BookDocumentSection<T>(
     val owner: T,
     val document: PreparedBookDocument,
     val initialPosition: BookDocumentPosition,
-    val resourceLoader: BookDocumentResourceLoader?,
+    val resourceLoader: BookPublicationResourceLoader?,
 ) {
     init {
         require(key.isNotBlank()) { "document section key must not be blank" }

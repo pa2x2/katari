@@ -1,6 +1,7 @@
 package mihon.entry.interactions.book.prose
 
 import android.text.Spanned
+import mihon.book.api.document.BookDocument
 import mihon.entry.interactions.book.document.reader.BookDocumentSection
 import mihon.entry.interactions.book.document.render.PreparedBookDocument
 import mihon.entry.interactions.book.document.render.PreparedBookDocumentBlock
@@ -42,3 +43,9 @@ internal fun prepareHtmlBookDocument(
     revision: String?,
     body: Element,
 ): PreparedBookDocument = prepareStructuredHtmlBookDocument(resourceId, revision, body)
+
+internal fun parseHtmlBookDocument(
+    resourceId: String,
+    revision: String?,
+    body: Element,
+): BookDocument = parseStructuredHtmlBookDocument(resourceId, revision, body)

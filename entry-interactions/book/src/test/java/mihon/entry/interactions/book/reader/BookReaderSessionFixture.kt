@@ -16,6 +16,8 @@ import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookLocator
 import mihon.book.api.BookPublication
 import mihon.book.api.BookResource
+import mihon.book.api.model.BookPublicationModel
+import mihon.book.api.model.BookPublicationModelDescriptor
 import mihon.entry.interactions.book.download.BookDownloadCache
 import okhttp3.OkHttpClient
 import org.junit.jupiter.api.Test
@@ -56,6 +58,15 @@ internal abstract class BookReaderSessionFixture {
     protected suspend fun openWithProgress(
         chapter: EntryChapter,
         progress: EntryProgressState,
+        preparedPublication: PreparedBookPublication = TestPublicationSession(
+            readingOrder = listOf(
+                BookResource(
+                    id = "chapter-1.xhtml",
+                    mediaType = "application/xhtml+xml",
+                    title = null,
+                ),
+            ),
+        ),
     ): OpenedBookReaderSession {
         val entry = entry()
         val source = mockk<UnifiedSource> {
@@ -74,17 +85,8 @@ internal abstract class BookReaderSessionFixture {
                 initialResourceId = "publication.epub",
             )
         }
-        val processor = SessionFactoryTestProcessor(
-            TestPublicationSession(
-                readingOrder = listOf(
-                    BookResource(
-                        id = "chapter-1.xhtml",
-                        mediaType = "application/xhtml+xml",
-                        title = null,
-                    ),
-                ),
-            ),
-        )
+        val preparer = SessionFactoryTestPreparer(preparedPublication)
+        val reader = SessionFactoryTestReaderProcessor()
         val context = mockk<Context> {
             every { applicationContext } returns this@mockk
             every { contentResolver } returns mockk<ContentResolver>()
@@ -104,7 +106,8 @@ internal abstract class BookReaderSessionFixture {
             sourceManager = mockk {
                 every { get(entry.source) } returns source
             },
-            processorRegistry = BookProcessorRegistry(listOf(processor)),
+            preparerRegistry = BookContentPreparerRegistry(listOf(preparer)),
+            readerProcessorRegistry = BookReaderProcessorRegistry(listOf(reader)),
             networkHelper = mockk {
                 every { client } returns mockk<OkHttpClient>()
             },
@@ -114,7 +117,7 @@ internal abstract class BookReaderSessionFixture {
         )
 
         return assertIs<BookReaderOpenResult.Success>(
-            factory.open(context, BookReaderRequest(entry.id, chapter.id), processor.id),
+            factory.open(context, BookReaderRequest(entry.id, chapter.id), reader.id),
         ).session
     }
 
@@ -128,15 +131,28 @@ internal abstract class BookReaderSessionFixture {
         coEvery { getVerified(any()) } throws java.io.IOException("storage unavailable")
     }
 }
-internal class SessionFactoryTestProcessor(
-    private val publicationSession: BookPublicationSession,
-) : BookProcessor {
-    override val id = "test.epub"
-    override val displayName = "Test EPUB"
+internal class SessionFactoryTestPreparer(
+    private val preparedPublication: PreparedBookPublication,
+) : BookContentPreparer {
+    override val id = "test.epub-preparer"
+    override val outputModel = TEST_BOOK_MODEL_DESCRIPTOR
     var contentSession: BookContentSession? = null
 
     override fun supports(descriptor: BookContentDescriptor): Boolean =
         descriptor.format == "application/epub+zip"
+
+    override suspend fun prepare(content: BookContentSession): BookPreparationResult {
+        contentSession = content
+        return BookPreparationResult.Success(preparedPublication)
+    }
+}
+
+internal class SessionFactoryTestReaderProcessor : BookReaderProcessor {
+    override val id = "test.epub-reader"
+    override val displayName = "Test EPUB"
+    var receivedModel: BookPublicationModel? = null
+
+    override fun supports(model: BookPublicationModelDescriptor): Boolean = model == TEST_BOOK_MODEL_DESCRIPTOR
 
     override fun createReaderIntent(
         context: Context,
@@ -144,15 +160,17 @@ internal class SessionFactoryTestProcessor(
         sessionToken: String,
     ): Intent = Intent()
 
-    override suspend fun open(content: BookContentSession): BookOpenResult {
-        contentSession = content
-        return BookOpenResult.Success(publicationSession)
+    override fun readerCapabilities(model: BookPublicationModel): Set<mihon.entry.viewer.settings.ReaderCapabilityId> {
+        receivedModel = model
+        return emptySet()
     }
 }
 
 internal class TestPublicationSession(
     readingOrder: List<BookResource> = emptyList(),
-) : BookPublicationSession {
+) : PreparedBookPublication {
+    override val model = TestBookPublicationModel
+    override val resourceLoader = TestBookPublicationResourceLoader
     override val publication = BookPublication(
         id = "book",
         revision = "1",
@@ -173,7 +191,9 @@ internal class TestPublicationSession(
 
 internal class MigratingPublicationSession(
     private val targetLocator: BookLocator,
-) : BookPublicationSession {
+) : PreparedBookPublication {
+    override val model = TestBookPublicationModel
+    override val resourceLoader = TestBookPublicationResourceLoader
     override val publication = BookPublication(
         id = "target-book",
         revision = "1",
@@ -189,4 +209,43 @@ internal class MigratingPublicationSession(
     override suspend fun reconcileMigratedLocator(locator: BookLocator): BookLocator = targetLocator
 
     override fun close() = Unit
+}
+
+internal class LocatorRestorationPublicationSession(
+    private val validResourceId: String,
+    private val reconcile: suspend (BookLocator) -> BookLocator?,
+) : PreparedBookPublication {
+    override val model = TestBookPublicationModel
+    override val resourceLoader = TestBookPublicationResourceLoader
+    override val publication = BookPublication(
+        id = "locator-restoration-book",
+        revision = "1",
+        title = "Locator Restoration Book",
+        languages = emptyList(),
+        readingDirection = null,
+        readingOrder = listOf(BookResource(validResourceId, "application/xhtml+xml", null)),
+        navigation = emptyList(),
+    )
+
+    override fun validate(locator: BookLocator): Boolean = locator.resourceId == validResourceId
+
+    override suspend fun reconcileMigratedLocator(locator: BookLocator): BookLocator? = reconcile(locator)
+
+    override fun close() = Unit
+}
+
+internal val TEST_BOOK_MODEL_DESCRIPTOR = BookPublicationModelDescriptor("test.book")
+
+internal object TestBookPublicationModel : BookPublicationModel {
+    override val descriptor = TEST_BOOK_MODEL_DESCRIPTOR
+}
+
+internal object TestBookPublicationResourceLoader : BookPublicationResourceLoader {
+    override suspend fun load(
+        resourceId: String,
+        acceptedMediaTypes: Set<String>,
+        maxBytes: Int,
+    ): Result<BookPublicationResource> = Result.failure(
+        IllegalArgumentException("No test BOOK resource $resourceId"),
+    )
 }

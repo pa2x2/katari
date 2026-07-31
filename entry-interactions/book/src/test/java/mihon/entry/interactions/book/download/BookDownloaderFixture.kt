@@ -1,7 +1,5 @@
 package mihon.entry.interactions.book.download
 
-import android.content.Context
-import android.content.Intent
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.source.entry.BookResourceCatalog
 import eu.kanade.tachiyomi.source.entry.BookResourceLocation
@@ -14,15 +12,17 @@ import io.mockk.every
 import io.mockk.mockk
 import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookPublication
+import mihon.book.api.model.BookPublicationModel
+import mihon.book.api.model.BookPublicationModelDescriptor
+import mihon.entry.interactions.book.BookContentPreparer
+import mihon.entry.interactions.book.BookContentPreparerRegistry
 import mihon.entry.interactions.book.BookContentSession
+import mihon.entry.interactions.book.BookContentSessionResourceLoader
 import mihon.entry.interactions.book.BookMaterializationCache
-import mihon.entry.interactions.book.BookOpenResult
-import mihon.entry.interactions.book.BookProcessor
-import mihon.entry.interactions.book.BookProcessorRegistry
+import mihon.entry.interactions.book.BookPreparationResult
 import mihon.entry.interactions.book.BookPublicationResourceDependencies
-import mihon.entry.interactions.book.BookPublicationSession
-import mihon.entry.interactions.book.BookReaderRequest
 import mihon.entry.interactions.book.BookResourceRequirement
+import mihon.entry.interactions.book.PreparedBookPublication
 import mihon.entry.interactions.book.download.model.BookDownload
 import mihon.entry.interactions.book.download.model.BookDownloadFailure
 import okhttp3.OkHttpClient
@@ -101,9 +101,9 @@ internal abstract class BookDownloaderFixture {
                 application,
                 Files.createTempDirectory("book-budget-materialization").toFile(),
             ),
-            processorRegistry = BookProcessorRegistry(
+            preparerRegistry = BookContentPreparerRegistry(
                 listOf(
-                    ValidatingProcessor(
+                    ValidatingPreparer(
                         descriptor = descriptor,
                         expectedContent = primaryBytes.decodeToString(),
                         requiredResourceIds = setOf("asset"),
@@ -125,28 +125,27 @@ internal data class BudgetDownloadResult(
     val completedPackage: VerifiedBookDownloadPackage?,
 )
 
-internal class ValidatingProcessor(
+internal class ValidatingPreparer(
     private val descriptor: BookContentDescriptor,
     private val expectedContent: String = "<p>Offline</p>",
     private val requiredResourceIds: Set<String> = emptySet(),
     private val resourceRequirements: Map<String, BookResourceRequirement> = emptyMap(),
-) : BookProcessor {
+) : BookContentPreparer {
     override val id = "validating"
-    override val displayName = "Validating"
+    override val outputModel = ValidatingPublicationModel.descriptor
 
     override fun supports(descriptor: BookContentDescriptor): Boolean = descriptor == this.descriptor
 
-    override fun createReaderIntent(context: Context, request: BookReaderRequest, sessionToken: String): Intent =
-        Intent()
-
-    override suspend fun open(content: BookContentSession): BookOpenResult {
+    override suspend fun prepare(content: BookContentSession): BookPreparationResult {
         content.openResource("chapter").getOrThrow().use { resource ->
             check(resource.stream.reader().readText() == expectedContent)
         }
-        return BookOpenResult.Success(
-            object : BookPublicationSession, BookPublicationResourceDependencies {
-                override val requiredResourceIds = this@ValidatingProcessor.requiredResourceIds
-                override val resourceRequirements = this@ValidatingProcessor.resourceRequirements
+        return BookPreparationResult.Success(
+            object : PreparedBookPublication, BookPublicationResourceDependencies {
+                override val model = ValidatingPublicationModel
+                override val resourceLoader = BookContentSessionResourceLoader(content)
+                override val requiredResourceIds = this@ValidatingPreparer.requiredResourceIds
+                override val resourceRequirements = this@ValidatingPreparer.resourceRequirements
                 override val publication = BookPublication(
                     id = content.publicationId,
                     revision = content.revision,
@@ -162,4 +161,8 @@ internal class ValidatingProcessor(
             },
         )
     }
+}
+
+private object ValidatingPublicationModel : BookPublicationModel {
+    override val descriptor = BookPublicationModelDescriptor("test.validating")
 }

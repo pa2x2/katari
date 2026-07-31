@@ -7,8 +7,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.book.api.BookLocator
-import mihon.book.api.document.resolvePosition
 import mihon.entry.interactions.book.BookReaderOpenResult
 import mihon.entry.interactions.book.OpenedBookReaderSession
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPolicy
@@ -30,6 +28,7 @@ internal class HtmlProseChapterCoordinator(
     private val beforeSwitch: suspend (completed: Boolean) -> Unit,
     private val onSessionActivated: suspend (OpenedBookReaderSession, resetViewer: Boolean) -> Unit,
     private val incompatibleSessionMessage: () -> String,
+    private val chapterProjector: HtmlProseChapterProjector,
 ) : AutoCloseable {
     internal var navigation: EntryChildWindow<EntryChapter>? = null
     internal var chapters: List<EntryChapter> = emptyList()
@@ -182,7 +181,7 @@ internal class HtmlProseChapterCoordinator(
         )
         adjacent.forEach { chapter ->
             retainedSession.cached(chapter.id)?.let { cached ->
-                addLoadedChapter(cached)
+                scheduleLoadedChapter(cached)
             }
         }
     }
@@ -194,7 +193,7 @@ internal class HtmlProseChapterCoordinator(
         val adjacent = isAdjacent(chapter.id)
         if (!adjacent) return
         retainedSession.cached(chapter.id)?.let {
-            addLoadedChapter(it)
+            scheduleLoadedChapter(it)
             return
         }
         val loadActive = chapterLoadJobs[chapter.id]?.isActive == true
@@ -256,28 +255,47 @@ internal class HtmlProseChapterCoordinator(
         uiState = uiState?.copy(transitionLoadStates = states)
     }
 
-    internal fun addLoadedChapter(session: OpenedBookReaderSession) {
-        val content = session.publicationSession as? HtmlProseChapterSession ?: return
-        val locator = retainedSession.locator(session.chapter.id)
-            ?.takeIf(content::validate)
-            ?: BookLocator(content.resourceId, progression = 0.0)
-        val initialPosition = content.document.document.resolvePosition(locator)
-            ?: content.document.document.positionAtProgression((locator.progression ?: 0.0).toFloat())
-        val loaded = HtmlProseLoadedChapter(
-            key = session.chapter.id.toString(),
+    internal suspend fun addLoadedChapter(session: OpenedBookReaderSession) {
+        val retainedDocument = uiState?.loadedChapters?.get(session.chapter.id)?.document
+        val projection = chapterProjector.project(
             owner = session.chapter,
-            document = content.document,
-            initialPosition = initialPosition,
-            resourceLoader = content.resourceLoader,
-        )
+            publication = session.preparedPublication,
+            locator = retainedSession.locator(session.chapter.id),
+            reusableDocument = retainedDocument,
+        ) ?: return
+        if (session.chapter.id != openedSession?.chapter?.id && !isAdjacent(session.chapter.id)) return
         uiState = uiState?.copy(
-            loadedChapters = uiState?.loadedChapters.orEmpty() + (session.chapter.id to loaded),
+            loadedChapters = uiState?.loadedChapters.orEmpty() + (session.chapter.id to projection.chapter),
             loadingChapterId = null,
             transitionLoadStates = uiState
                 ?.transitionLoadStates
                 .orEmpty()
                 .minus(session.chapter.id),
         )
+    }
+
+    private fun scheduleLoadedChapter(session: OpenedBookReaderSession) {
+        val chapterId = session.chapter.id
+        if (uiState?.loadedChapters?.containsKey(chapterId) == true) return
+        if (chapterLoadJobs[chapterId]?.isActive == true) return
+        setTransitionLoadState(chapterId, HtmlProseChapterLoadState.Loading)
+        chapterLoadJobs[chapterId] = scope.launch {
+            try {
+                addLoadedChapter(session)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                logcat(LogPriority.ERROR, error) { "Failed to project prose transition destination" }
+                if (isAdjacent(chapterId)) {
+                    setTransitionLoadState(
+                        chapterId,
+                        HtmlProseChapterLoadState.Failed(error.message ?: incompatibleMessage()),
+                    )
+                }
+            } finally {
+                chapterLoadJobs.remove(chapterId)
+            }
+        }
     }
 
     internal suspend fun openChapter(chapter: EntryChapter): BookReaderOpenResult {

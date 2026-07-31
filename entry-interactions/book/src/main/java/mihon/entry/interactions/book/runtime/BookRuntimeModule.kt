@@ -13,8 +13,10 @@ import mihon.entry.interactions.book.download.BookDownloadManager
 import mihon.entry.interactions.book.download.BookDownloadProvider
 import mihon.entry.interactions.book.download.BookDownloadStore
 import mihon.entry.interactions.book.download.BookDownloader
-import mihon.entry.interactions.book.epub.ReadiumEpubProcessor
-import mihon.entry.interactions.book.prose.HtmlProseChapterProcessor
+import mihon.entry.interactions.book.epub.ReadiumEpubPreparer
+import mihon.entry.interactions.book.epub.ReadiumEpubReaderProcessor
+import mihon.entry.interactions.book.prose.HtmlProseChapterPreparer
+import mihon.entry.interactions.book.prose.NativeHtmlProseReaderProcessor
 import mihon.entry.interactions.settings.HtmlProseSettingsProvider
 import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
 import mihon.entry.viewer.settings.ViewerSettingsProvider
@@ -57,7 +59,7 @@ fun bookEntryTypeRuntimeModule(profilePreferenceOwners: ProfilePreferenceOwnerIn
     }
 }
 
-/** Installs generic BOOK host services. Built-in format processors are registered here when ready. */
+/** Installs generic BOOK host services and composes built-in preparers with reader implementations. */
 private fun InjektRegistrar.addBookEntryInteractionRuntime(
     app: Application,
     profilePreferenceOwners: ProfilePreferenceOwnerInstaller,
@@ -79,8 +81,8 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
     )
     val processorPreferencesOwner = profilePreferenceOwners.register(
         id = ProfilePreferenceOwnerId("entry-interactions.book.processor-selection"),
-        keyPatterns = BookProcessorPreferences.profileKeyPatterns,
-        factory = ::BookProcessorPreferences,
+        keyPatterns = BookReaderProcessorPreferences.profileKeyPatterns,
+        factory = ::BookReaderProcessorPreferences,
     )
     val automaticTranslationPreferencesOwner = profilePreferenceOwners.register(
         id = ProfilePreferenceOwnerId("entry-interactions.book.automatic-translation"),
@@ -92,10 +94,16 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
     val readiumSettingsProvider = readiumSettingsOwner.create()
     val proseSettingsProvider = proseSettingsOwner.create()
     val automaticTranslationPreferences = automaticTranslationPreferencesOwner.create()
-    val processorRegistry = BookProcessorRegistry(
+    val preparerRegistry = BookContentPreparerRegistry(
+        preparers = listOf(
+            ReadiumEpubPreparer(),
+            HtmlProseChapterPreparer(),
+        ),
+    )
+    val readerProcessorRegistry = BookReaderProcessorRegistry(
         processors = listOf(
-            ReadiumEpubProcessor(),
-            HtmlProseChapterProcessor(),
+            ReadiumEpubReaderProcessor(),
+            NativeHtmlProseReaderProcessor(),
         ),
     )
     addSingletonFactory { materializationCache }
@@ -115,10 +123,11 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
     addSingletonFactory { readiumSettingsProvider }
     addSingletonFactory { proseSettingsProvider }
     addSingletonFactory { automaticTranslationPreferences }
-    addSingletonFactory { processorRegistry }
+    addSingletonFactory { preparerRegistry }
+    addSingletonFactory { readerProcessorRegistry }
     addSingletonFactory {
         BookAutomaticTranslationSettingsProvider(
-            processorRegistry = processorRegistry,
+            processorRegistry = readerProcessorRegistry,
             preferences = automaticTranslationPreferences,
             translationHostActions = get<TranslationHostActions>(),
         )
@@ -131,7 +140,7 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
             sourceManager = get(),
             networkHelper = get(),
             materializationStore = get(),
-            processorRegistry = get(),
+            preparerRegistry = get(),
         )
     }
     addSingletonFactory {
@@ -146,7 +155,7 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
     }
     addSingletonFactory { processorPreferencesOwner.create() }
     addSingletonFactory {
-        BookProcessorSelectionCoordinator(
+        BookReaderProcessorSelectionCoordinator(
             registry = get(),
             preferences = get(),
         )
@@ -154,6 +163,7 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
     addSingletonFactory {
         BookReaderHostResolver(
             sessionFactory = get(),
+            preparerRegistry = get(),
             selectionCoordinator = get(),
         )
     }
@@ -163,7 +173,8 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
             entryChapterRepository = get(),
             entryProgressRepository = get(),
             sourceManager = get(),
-            processorRegistry = get(),
+            preparerRegistry = get(),
+            readerProcessorRegistry = get(),
             networkHelper = get(),
             materializationStore = get(),
             downloadCache = get(),
@@ -173,7 +184,7 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
     return BookRuntimeArtifacts(
         viewerSettingsSurfaces = listOf(readiumSettingsProvider, proseSettingsProvider),
         potentialReaderCapabilitiesBySettingsSurface =
-        processorRegistry.potentialReaderCapabilitiesBySettingsSurface(),
+        readerProcessorRegistry.potentialReaderCapabilitiesBySettingsSurface(),
     )
 }
 

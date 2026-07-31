@@ -24,7 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mihon.book.api.document.BookDocumentBlockContent
-import mihon.entry.interactions.book.document.reader.BookDocumentResourceLoader
+import mihon.entry.interactions.book.BookPublicationResourceLoader
 import mihon.entry.interactions.book.document.render.PreparedBookDocumentBlock
 
 @Composable
@@ -32,7 +32,7 @@ internal fun ProseDisclosure(
     blockKey: String,
     semantic: BookDocumentBlockContent.Disclosure,
     body: List<PreparedBookDocumentBlock>,
-    resourceLoader: BookDocumentResourceLoader?,
+    resourceLoader: BookPublicationResourceLoader?,
     foreground: Color,
     background: Color,
     readerTypeface: Typeface,

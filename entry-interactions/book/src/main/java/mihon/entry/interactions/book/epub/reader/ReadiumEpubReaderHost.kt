@@ -20,9 +20,9 @@ import org.readium.r2.navigator.epub.EpubPreferences
 import org.readium.r2.navigator.epub.EpubSettings
 import org.readium.r2.shared.publication.Layout
 
-/** Compile proof for a processor-owned reader surface; never crosses the generic BOOK boundary. */
+/** Readium-owned rendering surface for an already prepared Readium publication model. */
 internal class ReadiumEpubReaderHost(
-    private val publicationSession: ReadiumPublicationSession,
+    private val model: ReadiumEpubPublicationModel,
 ) {
     fun createFragmentFactory(
         initialLocator: BookLocator?,
@@ -30,7 +30,7 @@ internal class ReadiumEpubReaderHost(
         paginationListener: EpubNavigatorFragment.PaginationListener? = null,
         selectionChangeBridge: ReadiumSelectionChangeBridge? = null,
     ): FragmentFactory {
-        val publication = publicationSession.readiumPublication()
+        val publication = model.publication
         val configuration = EpubNavigatorFragment.Configuration().apply {
             if (!isFixedLayout && selectionChangeBridge != null) {
                 registerJavascriptInterface(READIUM_SELECTION_JAVASCRIPT_INTERFACE) {
@@ -79,7 +79,7 @@ internal class ReadiumEpubReaderHost(
         navigator: EpubNavigatorFragment,
         item: BookNavigationItem,
     ): Boolean {
-        val publication = publicationSession.readiumPublication()
+        val publication = model.publication
         val locator = ReadiumLocatorAdapter.restore(item.target, publication) ?: return false
         return navigator.go(locator, animated = false)
     }
@@ -146,7 +146,7 @@ internal class ReadiumEpubReaderHost(
     }
 
     val isFixedLayout: Boolean
-        get() = publicationSession.readiumPublication().metadata.layout == Layout.FIXED
+        get() = model.publication.metadata.layout == Layout.FIXED
 
     fun readingDirection(navigator: EpubNavigatorFragment): mihon.book.api.BookReadingDirection =
         navigator.settings.value.readingProgression.toBookReadingDirection()

@@ -25,14 +25,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mihon.book.api.document.BookDocumentBlockContent
 import mihon.book.api.document.BookDocumentFontFamily
-import mihon.entry.interactions.book.document.reader.BookDocumentResourceLoader
+import mihon.entry.interactions.book.BookPublicationResourceLoader
 import mihon.entry.interactions.book.document.reader.BookDocumentText
 import mihon.entry.interactions.book.document.render.PreparedBookDocumentBlock
 
 @Composable
 internal fun ProseDocumentBlock(
     content: PreparedBookDocumentBlock,
-    resourceLoader: BookDocumentResourceLoader?,
+    resourceLoader: BookPublicationResourceLoader?,
     readerForeground: Color,
     readerBackground: Color,
     readerTypeface: Typeface,

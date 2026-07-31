@@ -5,11 +5,13 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookFailureReason
+import mihon.book.api.model.BookPublicationModelDescriptor
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
@@ -206,9 +208,16 @@ class BookEntryInteractionPluginTest {
             profile = "fixed-layout",
             protection = "none",
         )
-        val coordinator = BookProcessorSelectionCoordinator(
-            registry = BookProcessorRegistry(emptyList()),
-            preferences = BookProcessorPreferences(InMemoryPreferenceStore()),
+        val model = BookPublicationModelDescriptor("test.fixed-page")
+        val preparer = mockk<BookContentPreparer> {
+            every { id } returns "test.preparer"
+            every { outputModel } returns model
+            every { supports(descriptor) } returns true
+        }
+        val preparerRegistry = BookContentPreparerRegistry(listOf(preparer))
+        val coordinator = BookReaderProcessorSelectionCoordinator(
+            registry = BookReaderProcessorRegistry(emptyList()),
+            preferences = BookReaderProcessorPreferences(InMemoryPreferenceStore()),
         )
         val sessionFactory = mockk<BookReaderSessionFactory>()
         coEvery { sessionFactory.prepare(BookReaderRequest(entry.id, chapter.id)) } returns
@@ -221,7 +230,7 @@ class BookEntryInteractionPluginTest {
                     content = PreparedBookContent.Source(source, EntryMedia.Book(descriptor)),
                 ),
             )
-        val resolver = BookReaderHostResolver(sessionFactory, coordinator)
+        val resolver = BookReaderHostResolver(sessionFactory, preparerRegistry, coordinator)
 
         val state = resolver.resolve(entry.id, chapter.id) as BookReaderHostState.Unavailable
 

@@ -44,15 +44,15 @@ internal fun StructuredHtmlProseParser.addDisclosure(
     }
     val rendered = SpannableStringBuilder(summaryRendered.text).append('\n')
     val bodyStartWithinBlock = rendered.length
-    rendered.append(body.combinedText)
+    rendered.append(body.content.text)
     if (!rendered.endsWith("\n\n")) rendered.append("\n\n")
     val localAnchors = buildMap {
         element.ownFragments().forEach { put(it, 0) }
         summaryRendered.anchorOffsets.forEach { (fragment, offset) ->
             putIfAbsent(fragment, offset)
         }
-        body.document.anchors.forEach { (fragment, position) ->
-            val bodyOffset = body.document.logicalOffset(position) ?: return@forEach
+        body.anchors.forEach { (fragment, position) ->
+            val bodyOffset = body.logicalOffset(position) ?: return@forEach
             putIfAbsent(fragment, bodyStartWithinBlock + bodyOffset)
         }
     }
@@ -62,7 +62,7 @@ internal fun StructuredHtmlProseParser.addDisclosure(
         role = BookDocumentBlockRole(BookDocumentBlockKind.DISCLOSURE),
         content = BookDocumentBlockContent.Disclosure(
             summary = summaryRendered.toRichText(rangeStart = 0),
-            body = body.document.content,
+            body = body.content,
             bodyStartWithinBlock = bodyStartWithinBlock,
             initiallyExpanded = element.hasAttr("open"),
         ),
@@ -70,7 +70,6 @@ internal fun StructuredHtmlProseParser.addDisclosure(
         explicitId = element.id().ifBlank { null },
         fragments = (inheritedFragments + element.fragments()).distinct(),
         localAnchorOffsets = localAnchors,
-        disclosureBody = body.blocks,
-        referencedResources = body.document.resourceIds,
+        referencedResources = body.resourceIds,
     )
 }

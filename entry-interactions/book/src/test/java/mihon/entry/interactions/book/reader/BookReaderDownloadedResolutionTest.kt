@@ -1,7 +1,6 @@
 package mihon.entry.interactions.book
 
 import android.content.Context
-import android.content.Intent
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.EntryType
@@ -56,7 +55,8 @@ class BookReaderDownloadedResolutionTest {
             coEvery { get(owner.id, "volume-1", "chapter") } returns null
             coEvery { getByEntryId(owner.id) } returns emptyList()
         }
-        val processor = DownloadedContentRecordingProcessor()
+        val preparer = DownloadedContentRecordingPreparer()
+        val reader = SessionFactoryTestReaderProcessor()
         val factory = BookReaderSessionFactory(
             entryRepository = mockk<EntryRepository> {
                 coEvery { getEntryById(visible.id) } returns visible
@@ -67,7 +67,8 @@ class BookReaderDownloadedResolutionTest {
             },
             entryProgressRepository = progressRepository,
             sourceManager = sourceManager,
-            processorRegistry = BookProcessorRegistry(listOf(processor)),
+            preparerRegistry = BookContentPreparerRegistry(listOf(preparer)),
+            readerProcessorRegistry = BookReaderProcessorRegistry(listOf(reader)),
             networkHelper = mockk<NetworkHelper> {
                 every { client } returns mockk<OkHttpClient>()
             },
@@ -81,11 +82,11 @@ class BookReaderDownloadedResolutionTest {
         ).request
         assertIs<PreparedBookContent.Downloaded>(prepared.content)
         val opened = assertIs<BookReaderOpenResult.Success>(
-            factory.openPrepared(mockk<Context>(relaxed = true), prepared, processor.id),
+            factory.openPrepared(mockk<Context>(relaxed = true), prepared, reader.id),
         ).session
 
         assertEquals(visible, opened.entry)
-        assertEquals(bytes.decodeToString(), processor.openedContent)
+        assertEquals(bytes.decodeToString(), preparer.openedContent)
         verify(exactly = 0) { sourceManager.get(any()) }
         coVerify(exactly = 1) { progressRepository.get(owner.id, "volume-1", "chapter") }
         opened.close()
@@ -147,25 +148,23 @@ class BookReaderDownloadedResolutionTest {
     }
 }
 
-private class DownloadedContentRecordingProcessor : BookProcessor {
+private class DownloadedContentRecordingPreparer : BookContentPreparer {
     override val id = "test.downloaded.prose"
-    override val displayName = "Downloaded prose test"
+    override val outputModel = TEST_BOOK_MODEL_DESCRIPTOR
     var openedContent: String? = null
 
     override fun supports(descriptor: BookContentDescriptor): Boolean =
         descriptor.format == "text/html" && descriptor.profile == "prose-chapter"
 
-    override fun createReaderIntent(
-        context: Context,
-        request: BookReaderRequest,
-        sessionToken: String,
-    ): Intent = Intent()
-
-    override suspend fun open(content: BookContentSession): BookOpenResult {
+    override suspend fun prepare(content: BookContentSession): BookPreparationResult {
         val resourceId = content.primaryResourceIds.single()
         openedContent = content.openResource(resourceId).getOrThrow().use { it.stream.reader().readText() }
-        return BookOpenResult.Success(
-            object : BookPublicationSession {
+        return BookPreparationResult.Success(
+            object : PreparedBookPublication {
+                override val model = object : mihon.book.api.model.BookPublicationModel {
+                    override val descriptor = TEST_BOOK_MODEL_DESCRIPTOR
+                }
+                override val resourceLoader = BookContentSessionResourceLoader(content)
                 override val publication = BookPublication(
                     id = content.publicationId,
                     revision = content.revision,

@@ -1,26 +1,17 @@
 package mihon.entry.interactions.book.epub
 
-import android.content.Context
-import android.content.Intent
 import kotlinx.coroutines.CancellationException
 import mihon.book.api.BookContentDescriptor
 import mihon.book.api.BookFailure
 import mihon.book.api.BookFailureReason
-import mihon.book.api.BookLocator
-import mihon.book.api.BookPublication
 import mihon.book.api.BookResourceCapability
+import mihon.entry.interactions.book.BookContentPreparer
 import mihon.entry.interactions.book.BookContentSession
-import mihon.entry.interactions.book.BookOpenResult
-import mihon.entry.interactions.book.BookProcessor
-import mihon.entry.interactions.book.BookPublicationSession
-import mihon.entry.interactions.book.BookReaderRequest
-import mihon.entry.interactions.book.BookSessionCloseStack
+import mihon.entry.interactions.book.BookContentSessionResourceLoader
+import mihon.entry.interactions.book.BookPreparationResult
 import mihon.entry.interactions.book.MaterializedBookResource
-import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
-import mihon.entry.viewer.settings.StandardReaderCapabilities
 import org.readium.r2.shared.publication.Layout
 import org.readium.r2.shared.publication.Publication
-import org.readium.r2.shared.publication.services.positions
 import org.readium.r2.shared.util.AbsoluteUrl
 import org.readium.r2.shared.util.Try
 import org.readium.r2.shared.util.asset.Asset
@@ -32,15 +23,12 @@ import org.readium.r2.shared.util.resource.Resource
 import org.readium.r2.shared.util.resource.ResourceFactory
 import org.readium.r2.streamer.PublicationOpener
 import org.readium.r2.streamer.parser.epub.EpubParser
-import kotlin.math.abs
 
-internal class ReadiumEpubProcessor(
+internal class ReadiumEpubPreparer(
     private val archiveValidator: EpubArchiveValidator = EpubArchiveValidator(),
-) : BookProcessor {
+) : BookContentPreparer {
     override val id: String = "builtin.readium.epub"
-    override val displayName: String = "EPUB reader"
-    override val viewerSettingsSurfaceId = ReadiumEpubSettingsProvider.PROVIDER_ID
-    override val potentialReaderCapabilities = TEXT_SELECTION_CAPABILITIES
+    override val outputModel = ReadiumEpubPublicationModel.DESCRIPTOR
 
     private val httpClient = DefaultHttpClient()
     private val assetRetriever = AssetRetriever(
@@ -55,17 +43,9 @@ internal class ReadiumEpubProcessor(
             descriptor.protection == "none" &&
             (descriptor.profile == null || descriptor.profile == REFLOWABLE_PROFILE)
 
-    override fun createReaderIntent(
-        context: Context,
-        request: BookReaderRequest,
-        sessionToken: String,
-    ): Intent {
-        return ReadiumEpubReaderActivity.newIntent(context, request, id, sessionToken)
-    }
-
-    override suspend fun open(content: BookContentSession): BookOpenResult {
+    override suspend fun prepare(content: BookContentSession): BookPreparationResult {
         if (!supports(content.descriptor)) {
-            return BookOpenResult.Failure(
+            return BookPreparationResult.Failure(
                 BookFailure(BookFailureReason.FORMAT_UNSUPPORTED, "Unsupported EPUB descriptor"),
             )
         }
@@ -80,7 +60,7 @@ internal class ReadiumEpubProcessor(
         }
 
         val lease = content.materializeResource(primaryResourceId).getOrElse {
-            return BookOpenResult.Failure(
+            return BookPreparationResult.Failure(
                 BookFailure(BookFailureReason.CONTENT_UNAVAILABLE, it.message ?: "Unable to materialize EPUB"),
             )
         }
@@ -91,7 +71,7 @@ internal class ReadiumEpubProcessor(
         archiveValidator.validate(lease.file)?.let { failure ->
             lease.invalidate()
             lease.close()
-            return BookOpenResult.Failure(failure)
+            return BookPreparationResult.Failure(failure)
         }
 
         var asset: Asset? = null
@@ -133,12 +113,13 @@ internal class ReadiumEpubProcessor(
                     "EPUB publication has no readable content",
                 )
             }
-            return BookOpenResult.Success(
-                ReadiumPublicationSession(
+            return BookPreparationResult.Success(
+                ReadiumPreparedPublication(
                     enginePublication = publication,
                     lease = lease,
                     publicationId = content.publicationId,
                     revision = content.revision,
+                    resourceLoader = BookContentSessionResourceLoader(content),
                 ),
             ).also {
                 publication = null
@@ -158,70 +139,23 @@ internal class ReadiumEpubProcessor(
         }
     }
 
-    override fun readerCapabilities(session: BookPublicationSession) =
-        if (session is ReadiumPublicationSession && !session.isFixedLayout) {
-            TEXT_SELECTION_CAPABILITIES
-        } else {
-            emptySet()
-        }
-
     private fun failureAndClose(
         lease: MaterializedBookResource,
         reason: BookFailureReason,
         message: String,
-    ): BookOpenResult.Failure {
+    ): BookPreparationResult.Failure {
         if (reason == BookFailureReason.MALFORMED_CONTENT) lease.invalidate()
         lease.close()
-        return BookOpenResult.Failure(BookFailure(reason, message))
+        return BookPreparationResult.Failure(BookFailure(reason, message))
     }
 
-    private fun contentFailure(message: String): BookOpenResult.Failure =
-        BookOpenResult.Failure(BookFailure(BookFailureReason.CONTENT_UNAVAILABLE, message))
+    private fun contentFailure(message: String): BookPreparationResult.Failure =
+        BookPreparationResult.Failure(BookFailure(BookFailureReason.CONTENT_UNAVAILABLE, message))
 
     private companion object {
         const val EPUB_MEDIA_TYPE = "application/epub+zip"
         const val REFLOWABLE_PROFILE = "reflowable"
-        val TEXT_SELECTION_CAPABILITIES = setOf(
-            StandardReaderCapabilities.StableTextSelection,
-            StandardReaderCapabilities.SelectionAnchoring,
-        )
     }
-}
-
-internal class ReadiumPublicationSession(
-    private val enginePublication: Publication,
-    private val lease: MaterializedBookResource,
-    publicationId: String,
-    revision: String,
-) : BookPublicationSession {
-    val isFixedLayout: Boolean
-        get() = enginePublication.metadata.layout == Layout.FIXED
-    private val closeStack = BookSessionCloseStack().apply {
-        own(lease)
-        own(AutoCloseable(enginePublication::close))
-    }
-
-    override val publication: BookPublication = ReadiumPublicationAdapter.adapt(
-        publication = enginePublication,
-        publicationId = publicationId,
-        revision = revision,
-    )
-
-    override fun validate(locator: BookLocator): Boolean =
-        ReadiumLocatorAdapter.restore(locator, enginePublication) != null
-
-    override suspend fun reconcileMigratedLocator(locator: BookLocator): BookLocator? {
-        if (validate(locator)) return locator
-        val totalProgression = locator.totalProgression ?: return null
-        return enginePublication.positions()
-            .filter { it.locations.totalProgression != null }
-            .minByOrNull { abs(checkNotNull(it.locations.totalProgression) - totalProgression) }
-            ?.let(ReadiumLocatorAdapter::adapt)
-    }
-
-    fun readiumPublication(): Publication = enginePublication
-
-    override fun close() = closeStack.close()
 }
 
 private object MaterializedFileOnlyResourceFactory : ResourceFactory {

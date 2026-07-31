@@ -11,7 +11,6 @@ import mihon.book.api.document.BookDocumentStyle
 import mihon.book.api.document.BookDocumentTableCellScope
 import mihon.book.api.document.BookDocumentTableRow
 import mihon.book.api.document.BookDocumentTextRange
-import mihon.entry.interactions.book.document.render.PreparedBookDocumentBlock
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 
@@ -24,7 +23,6 @@ internal data class ParsedBlock(
     val explicitId: String?,
     val fragments: List<String>,
     val localAnchorOffsets: Map<String, Int> = emptyMap(),
-    val disclosureBody: List<PreparedBookDocumentBlock> = emptyList(),
     val referencedResources: Set<String> = emptySet(),
 ) {
     fun anchorOffset(fragment: String): Int =

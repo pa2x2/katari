@@ -2,20 +2,20 @@ package mihon.entry.interactions.book
 
 import android.content.Context
 import android.content.Intent
-import mihon.book.api.BookContentDescriptor
+import mihon.book.api.model.BookPublicationModelDescriptor
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 
-class BookProcessorSelectionCoordinatorTest {
-    private val descriptor = BookContentDescriptor("application/epub+zip", profile = "reflowable")
-    private val otherProfile = descriptor.copy(profile = "fixed-layout")
+class BookReaderProcessorSelectionCoordinatorTest {
+    private val descriptor = BookPublicationModelDescriptor("book.epub")
+    private val otherProfile = BookPublicationModelDescriptor("book.fixed-page")
     private val first = SelectionFakeProcessor("first")
     private val second = SelectionFakeProcessor("second")
     private val preferenceStore = InMemoryPreferenceStore()
-    private val preferences = BookProcessorPreferences(preferenceStore)
+    private val preferences = BookReaderProcessorPreferences(preferenceStore)
 
     @Test
     fun `remembered chooser selection is reused only for the same descriptor`() {
@@ -23,8 +23,11 @@ class BookProcessorSelectionCoordinatorTest {
 
         coordinator.choose(descriptor, second.id, remember = true)
 
-        assertEquals(second.id, assertIs<BookProcessorSelection.Selected>(coordinator.resolve(descriptor)).processor.id)
-        assertIs<BookProcessorSelection.ChoiceRequired>(coordinator.resolve(otherProfile))
+        assertEquals(
+            second.id,
+            assertIs<BookReaderProcessorSelection.Selected>(coordinator.resolve(descriptor)).processor.id,
+        )
+        assertIs<BookReaderProcessorSelection.ChoiceRequired>(coordinator.resolve(otherProfile))
     }
 
     @Test
@@ -33,7 +36,7 @@ class BookProcessorSelectionCoordinatorTest {
 
         coordinator.choose(descriptor, second.id, remember = false)
 
-        assertIs<BookProcessorSelection.ChoiceRequired>(coordinator.resolve(descriptor))
+        assertIs<BookReaderProcessorSelection.ChoiceRequired>(coordinator.resolve(descriptor))
     }
 
     @Test
@@ -41,7 +44,7 @@ class BookProcessorSelectionCoordinatorTest {
         preferences.remember(descriptor, "uninstalled")
         val coordinator = coordinator(first, second)
 
-        assertIs<BookProcessorSelection.ChoiceRequired>(coordinator.resolve(descriptor))
+        assertIs<BookReaderProcessorSelection.ChoiceRequired>(coordinator.resolve(descriptor))
         assertEquals(null, preferences.rememberedProcessorId(descriptor))
     }
 
@@ -50,7 +53,10 @@ class BookProcessorSelectionCoordinatorTest {
         preferences.remember(descriptor, "uninstalled")
         val coordinator = coordinator(first)
 
-        assertEquals(first.id, assertIs<BookProcessorSelection.Selected>(coordinator.resolve(descriptor)).processor.id)
+        assertEquals(
+            first.id,
+            assertIs<BookReaderProcessorSelection.Selected>(coordinator.resolve(descriptor)).processor.id,
+        )
         assertEquals(null, preferences.rememberedProcessorId(descriptor))
     }
 
@@ -63,9 +69,9 @@ class BookProcessorSelectionCoordinatorTest {
         }
     }
 
-    private fun coordinator(vararg processors: BookProcessor): BookProcessorSelectionCoordinator {
-        return BookProcessorSelectionCoordinator(
-            registry = BookProcessorRegistry(processors.toList()),
+    private fun coordinator(vararg processors: BookReaderProcessor): BookReaderProcessorSelectionCoordinator {
+        return BookReaderProcessorSelectionCoordinator(
+            registry = BookReaderProcessorRegistry(processors.toList()),
             preferences = preferences,
         )
     }
@@ -73,16 +79,14 @@ class BookProcessorSelectionCoordinatorTest {
 
 private class SelectionFakeProcessor(
     override val id: String,
-) : BookProcessor {
+) : BookReaderProcessor {
     override val displayName: String = id
 
-    override fun supports(descriptor: BookContentDescriptor): Boolean = true
+    override fun supports(model: BookPublicationModelDescriptor): Boolean = true
 
     override fun createReaderIntent(
         context: Context,
         request: BookReaderRequest,
         sessionToken: String,
     ): Intent = Intent()
-
-    override suspend fun open(content: BookContentSession): BookOpenResult = error("Not used")
 }

@@ -20,7 +20,7 @@ import java.io.IOException
 import java.io.InputStream
 
 /**
- * Katari-owned adapter between source BOOK media and format processors.
+ * Katari-owned adapter between source BOOK media and content preparers.
  *
  * Processors only receive this session and scoped resource handles. Source
  * instances, request headers, content URIs, and app references remain on this
