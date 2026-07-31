@@ -204,7 +204,7 @@ class BookEntryInteractionPluginTest {
         val chapter = chapter()
         val source = mockk<UnifiedSource>()
         val descriptor = BookContentDescriptor(
-            format = "application/epub+zip",
+            format = "application/x-test-book",
             profile = "fixed-layout",
             protection = "none",
         )

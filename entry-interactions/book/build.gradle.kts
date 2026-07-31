@@ -32,10 +32,6 @@ dependencies {
     implementation(libs.jsoup)
     implementation(libs.unifile)
 
-    implementation(libs.readium.navigator)
-    implementation(libs.readium.shared)
-    implementation(libs.readium.streamer)
-
     testImplementation(libs.bundles.test)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(kotlin("test"))

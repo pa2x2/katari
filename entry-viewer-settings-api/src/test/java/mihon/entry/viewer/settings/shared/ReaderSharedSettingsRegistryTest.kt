@@ -7,10 +7,10 @@ import tachiyomi.core.common.preference.InMemoryPreferenceStore
 
 class ReaderSharedSettingsRegistryTest {
     private val capableSurfaceId = "builtin.book.prose.html"
-    private val secondCapableSurfaceId = "builtin.book.epub.readium"
+    private val secondCapableSurfaceId = "builtin.book.alternate"
     private val unsupportedSurfaceId = "builtin.book.fixed-layout"
     private val preference = InMemoryPreferenceStore().getBoolean("automatic", false)
-    private val secondPreference = InMemoryPreferenceStore().getBoolean("automatic-epub", false)
+    private val secondPreference = InMemoryPreferenceStore().getBoolean("automatic-alternate", false)
     private val setting = ReaderSharedToggleSetting(
         id = ReaderSharedSettingId("translation.automatic-selection"),
         title = ReaderSharedSettingText { "Translate selected text automatically" },

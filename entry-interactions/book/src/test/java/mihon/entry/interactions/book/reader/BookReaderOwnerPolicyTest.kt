@@ -33,16 +33,16 @@ internal class BookReaderOwnerPolicyTest : BookReaderSessionFixture() {
         val source = mockk<UnifiedSource> {
             every { id } returns owner.source
             coEvery { getMedia(any(), any()) } returns EntryMedia.Book(
-                descriptor = BookContentDescriptor("application/epub+zip"),
+                descriptor = BookContentDescriptor("text/html"),
                 catalog = BookResourceCatalog(
                     resources = listOf(
                         BookSourceResource(
-                            id = "publication.epub",
+                            id = "chapter.html",
                             location = BookResourceLocation.InlineBytes(byteArrayOf(1)),
                         ),
                     ),
                 ),
-                initialResourceId = "publication.epub",
+                initialResourceId = "chapter.html",
             )
         }
         val progressRepository = mockk<EntryProgressRepository> {

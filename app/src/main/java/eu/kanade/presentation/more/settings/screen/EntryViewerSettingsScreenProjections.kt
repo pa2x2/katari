@@ -8,7 +8,6 @@ internal fun productionEntryViewerSettingsScreenProjectionResolver(): EntryViewe
         listOf(
             SettingsMangaReaderScreen,
             SettingsAnimePlayerScreen,
-            SettingsReadiumEpubReaderScreen,
             SettingsHtmlProseReaderScreen,
         )
     }

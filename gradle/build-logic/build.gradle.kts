@@ -79,10 +79,6 @@ gradlePlugin {
             id = mihonx.plugins.kotlin.multiplatform.get().pluginId
             implementationClass = "PluginKotlinMultiplatform"
         }
-        register("readium-navigator") {
-            id = mihonx.plugins.readium.navigator.get().pluginId
-            implementationClass = "PluginReadiumNavigator"
-        }
         register("spotless") {
             id = mihonx.plugins.spotless.get().pluginId
             implementationClass = "PluginSpotless"

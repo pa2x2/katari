@@ -13,12 +13,9 @@ import mihon.entry.interactions.book.download.BookDownloadManager
 import mihon.entry.interactions.book.download.BookDownloadProvider
 import mihon.entry.interactions.book.download.BookDownloadStore
 import mihon.entry.interactions.book.download.BookDownloader
-import mihon.entry.interactions.book.epub.ReadiumEpubPreparer
-import mihon.entry.interactions.book.epub.ReadiumEpubReaderProcessor
 import mihon.entry.interactions.book.prose.HtmlProseChapterPreparer
 import mihon.entry.interactions.book.prose.NativeHtmlProseReaderProcessor
 import mihon.entry.interactions.settings.HtmlProseSettingsProvider
-import mihon.entry.interactions.settings.ReadiumEpubSettingsProvider
 import mihon.entry.viewer.settings.ViewerSettingsProvider
 import mihon.translation.api.TranslationHostActions
 import tachiyomi.core.common.preference.ProfilePreferenceKeyPattern
@@ -65,13 +62,6 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
     profilePreferenceOwners: ProfilePreferenceOwnerInstaller,
 ): BookRuntimeArtifacts {
     val materializationCache = BookMaterializationCache(app)
-    val readiumSettingsOwner = profilePreferenceOwners.register(
-        id = ProfilePreferenceOwnerId("entry-interactions.book.readium-settings"),
-        groups = setOf(
-            ProfilePreferenceOwnerGroupId(ENTRY_VIEWER_SETTINGS_LEGACY_PREFERENCE_OWNER_GROUP_ID),
-        ),
-        factory = ::ReadiumEpubSettingsProvider,
-    )
     val proseSettingsOwner = profilePreferenceOwners.register(
         id = ProfilePreferenceOwnerId("entry-interactions.book.prose-settings"),
         groups = setOf(
@@ -91,18 +81,15 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
         ),
         factory = ::BookAutomaticTranslationPreferences,
     )
-    val readiumSettingsProvider = readiumSettingsOwner.create()
     val proseSettingsProvider = proseSettingsOwner.create()
     val automaticTranslationPreferences = automaticTranslationPreferencesOwner.create()
     val preparerRegistry = BookContentPreparerRegistry(
         preparers = listOf(
-            ReadiumEpubPreparer(),
             HtmlProseChapterPreparer(),
         ),
     )
     val readerProcessorRegistry = BookReaderProcessorRegistry(
         processors = listOf(
-            ReadiumEpubReaderProcessor(),
             NativeHtmlProseReaderProcessor(),
         ),
     )
@@ -120,7 +107,6 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
     addSingletonFactory { BookDownloadStore(app) }
     addSingletonFactory { BookReaderSessionRegistry() }
     addSingletonFactory { BookChapterNavigationResolver(get()) }
-    addSingletonFactory { readiumSettingsProvider }
     addSingletonFactory { proseSettingsProvider }
     addSingletonFactory { automaticTranslationPreferences }
     addSingletonFactory { preparerRegistry }
@@ -182,7 +168,7 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
         )
     }
     return BookRuntimeArtifacts(
-        viewerSettingsSurfaces = listOf(readiumSettingsProvider, proseSettingsProvider),
+        viewerSettingsSurfaces = listOf(proseSettingsProvider),
         potentialReaderCapabilitiesBySettingsSurface =
         readerProcessorRegistry.potentialReaderCapabilitiesBySettingsSurface(),
     )

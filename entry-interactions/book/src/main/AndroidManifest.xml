@@ -6,9 +6,6 @@
             android:name="mihon.entry.interactions.book.BookReaderHostActivity"
             android:exported="false" />
         <activity
-            android:name="mihon.entry.interactions.book.epub.ReadiumEpubReaderActivity"
-            android:exported="false" />
-        <activity
             android:name="mihon.entry.interactions.book.prose.HtmlProseChapterReaderActivity"
             android:exported="false" />
     </application>

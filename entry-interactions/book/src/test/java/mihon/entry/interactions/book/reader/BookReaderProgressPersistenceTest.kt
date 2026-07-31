@@ -113,12 +113,12 @@ internal class BookReaderProgressPersistenceTest : BookReaderSessionFixture() {
         )
         val resolved = pending.copy(
             contentKey = "volume-1",
-            resourceKey = "publication.epub",
+            resourceKey = "chapter.html",
             locator = BookProgressLocatorCodec.encode(targetLocator),
         )
         val promoted = slot<EntryProgressState>()
         val progressRepository = mockk<EntryProgressRepository> {
-            coEvery { get(entry.id, "volume-1", "publication.epub") } returnsMany listOf(null, resolved)
+            coEvery { get(entry.id, "volume-1", "chapter.html") } returnsMany listOf(null, resolved)
             coEvery { getByEntryId(entry.id) } returns listOf(pending)
             coEvery { upsert(capture(promoted)) } returns Unit
             coEvery { rekey(any(), any(), any(), any(), any(), any()) } returns Unit
@@ -126,17 +126,17 @@ internal class BookReaderProgressPersistenceTest : BookReaderSessionFixture() {
         val source = mockk<UnifiedSource> {
             every { id } returns entry.source
             coEvery { getMedia(any(), any()) } returns EntryMedia.Book(
-                descriptor = BookContentDescriptor("application/epub+zip"),
+                descriptor = BookContentDescriptor("text/html"),
                 publicationKeyOverride = "volume-1",
                 catalog = BookResourceCatalog(
                     resources = listOf(
                         BookSourceResource(
-                            id = "publication.epub",
+                            id = "chapter.html",
                             location = BookResourceLocation.InlineBytes(byteArrayOf(1, 2, 3)),
                         ),
                     ),
                 ),
-                initialResourceId = "publication.epub",
+                initialResourceId = "chapter.html",
             )
         }
         val preparedPublication = MigratingPublicationSession(targetLocator)
@@ -181,7 +181,7 @@ internal class BookReaderProgressPersistenceTest : BookReaderSessionFixture() {
                 BOOK_PENDING_MIGRATION_CONTENT_KEY,
                 bookPendingMigrationResourceKey(chapter.id),
                 "volume-1",
-                "publication.epub",
+                "chapter.html",
             )
         }
         session.close()
@@ -195,7 +195,7 @@ internal class BookReaderProgressPersistenceTest : BookReaderSessionFixture() {
             entry = entry(),
             owner = entry(),
             chapter = chapter,
-            progressIdentity = BookProgressIdentity("", "publication.epub", null),
+            progressIdentity = BookProgressIdentity("", "chapter.html", null),
             contentSession = mockk(relaxed = true),
             preparedPublication = TestPublicationSession(),
             initialLocator = null,

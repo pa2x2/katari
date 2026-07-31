@@ -39,8 +39,8 @@ internal abstract class BookReaderSessionFixture {
     protected fun chapter(): EntryChapter = EntryChapter.create().copy(
         id = 10L,
         entryId = 1L,
-        url = "/publication.epub",
-        name = "EPUB",
+        url = "/chapter.html",
+        name = "Chapter",
     )
 
     protected fun bookProgress(
@@ -50,7 +50,7 @@ internal abstract class BookReaderSessionFixture {
         entryId = entry().id,
         chapterId = chapter().id,
         contentKey = "volume-1",
-        resourceKey = "publication.epub",
+        resourceKey = "chapter.html",
         locator = BookProgressLocatorCodec.encode(locator),
         completed = completed,
     )
@@ -72,17 +72,17 @@ internal abstract class BookReaderSessionFixture {
         val source = mockk<UnifiedSource> {
             every { id } returns entry.source
             coEvery { getMedia(any(), any()) } returns EntryMedia.Book(
-                descriptor = BookContentDescriptor("application/epub+zip"),
+                descriptor = BookContentDescriptor("text/html"),
                 publicationKeyOverride = "volume-1",
                 catalog = BookResourceCatalog(
                     resources = listOf(
                         BookSourceResource(
-                            id = "publication.epub",
+                            id = "chapter.html",
                             location = BookResourceLocation.InlineBytes(byteArrayOf(1)),
                         ),
                     ),
                 ),
-                initialResourceId = "publication.epub",
+                initialResourceId = "chapter.html",
             )
         }
         val preparer = SessionFactoryTestPreparer(preparedPublication)
@@ -100,7 +100,7 @@ internal abstract class BookReaderSessionFixture {
                 coEvery { getChapterById(chapter.id) } returns chapter
             },
             entryProgressRepository = mockk {
-                coEvery { get(entry.id, "volume-1", "publication.epub") } returns progress
+                coEvery { get(entry.id, "volume-1", "chapter.html") } returns progress
                 coEvery { getByEntryId(entry.id) } returns emptyList()
             },
             sourceManager = mockk {
@@ -134,12 +134,12 @@ internal abstract class BookReaderSessionFixture {
 internal class SessionFactoryTestPreparer(
     private val preparedPublication: PreparedBookPublication,
 ) : BookContentPreparer {
-    override val id = "test.epub-preparer"
+    override val id = "test.prose-preparer"
     override val outputModel = TEST_BOOK_MODEL_DESCRIPTOR
     var contentSession: BookContentSession? = null
 
     override fun supports(descriptor: BookContentDescriptor): Boolean =
-        descriptor.format == "application/epub+zip"
+        descriptor.format == "text/html"
 
     override suspend fun prepare(content: BookContentSession): BookPreparationResult {
         contentSession = content
@@ -148,8 +148,8 @@ internal class SessionFactoryTestPreparer(
 }
 
 internal class SessionFactoryTestReaderProcessor : BookReaderProcessor {
-    override val id = "test.epub-reader"
-    override val displayName = "Test EPUB"
+    override val id = "test.prose-reader"
+    override val displayName = "Test prose"
     var receivedModel: BookPublicationModel? = null
 
     override fun supports(model: BookPublicationModelDescriptor): Boolean = model == TEST_BOOK_MODEL_DESCRIPTOR

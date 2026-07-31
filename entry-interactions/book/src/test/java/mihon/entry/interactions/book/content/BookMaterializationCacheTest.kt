@@ -191,11 +191,11 @@ class BookMaterializationCacheTest {
         publicationId = "source:42:entry:/book",
         resourceId = "publication",
         revision = revision,
-        mediaType = "application/epub+zip",
+        mediaType = "text/html",
     )
 
     private fun metadata(): BookContentResource = BookContentResource(
         id = "publication",
-        mediaType = "application/epub+zip",
+        mediaType = "text/html",
     )
 }

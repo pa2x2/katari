@@ -21,7 +21,7 @@ class BookProgressLocatorCodecTest {
             fragments = listOf("paragraph-3"),
             textContext = BookTextContext(before = "before", highlight = "text", after = "after"),
             extensions = mapOf(
-                "org.readium.locations" to JsonObject(mapOf("cssSelector" to JsonPrimitive("p:nth-child(3)"))),
+                "org.example.locations" to JsonObject(mapOf("cssSelector" to JsonPrimitive("p:nth-child(3)"))),
             ),
         )
 

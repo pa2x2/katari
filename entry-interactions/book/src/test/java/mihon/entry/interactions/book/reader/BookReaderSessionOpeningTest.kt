@@ -42,7 +42,7 @@ internal class BookReaderSessionOpeningTest : BookReaderSessionFixture() {
             entryId = entry.id,
             chapterId = chapter.id,
             contentKey = "volume-1",
-            resourceKey = "publication.epub",
+            resourceKey = "chapter.html",
             locator = EntryProgressLocator(
                 kind = BOOK_PROGRESS_LOCATOR_KIND,
                 progression = initialLocator.progression,
@@ -52,7 +52,7 @@ internal class BookReaderSessionOpeningTest : BookReaderSessionFixture() {
             completionUpdatedAt = 0L,
         )
         val progressRepository = mockk<EntryProgressRepository> {
-            coEvery { get(entry.id, "volume-1", "publication.epub") } returns currentProgress
+            coEvery { get(entry.id, "volume-1", "chapter.html") } returns currentProgress
             coEvery { getByEntryId(entry.id) } returns emptyList()
         }
         val events = mutableListOf<EntryMediaSessionEvent>()
@@ -60,17 +60,17 @@ internal class BookReaderSessionOpeningTest : BookReaderSessionFixture() {
             every { id } returns entry.source
         }
         coEvery { source.getMedia(any(), any()) } returns EntryMedia.Book(
-            descriptor = BookContentDescriptor("application/epub+zip"),
+            descriptor = BookContentDescriptor("text/html"),
             publicationKeyOverride = "volume-1",
             catalog = BookResourceCatalog(
                 resources = listOf(
                     BookSourceResource(
-                        id = "publication.epub",
+                        id = "chapter.html",
                         location = BookResourceLocation.InlineBytes(byteArrayOf(1, 2, 3)),
                     ),
                 ),
             ),
-            initialResourceId = "publication.epub",
+            initialResourceId = "chapter.html",
         )
         val preparedPublication = TestPublicationSession(
             readingOrder = listOf(
@@ -142,6 +142,6 @@ internal class BookReaderSessionOpeningTest : BookReaderSessionFixture() {
 
         session.close()
         assertEquals(1, preparedPublication.closeCount)
-        assertTrue(checkNotNull(preparer.contentSession).getResource("publication.epub").isFailure)
+        assertTrue(checkNotNull(preparer.contentSession).getResource("chapter.html").isFailure)
     }
 }

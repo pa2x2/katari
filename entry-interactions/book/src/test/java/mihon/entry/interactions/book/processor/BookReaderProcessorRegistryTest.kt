@@ -11,54 +11,54 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 
 class BookReaderProcessorRegistryTest {
-    private val epubModel = BookPublicationModelDescriptor("book.epub")
+    private val alternateModel = BookPublicationModelDescriptor("book.alternate")
     private val proseModel = BookPublicationModelDescriptor("book.document")
-    private val epub = FakeBookProcessor("epub", "EPUB reader", epubModel)
-    private val alternateEpub = FakeBookProcessor("alternate-epub", "Alternate EPUB reader", epubModel)
+    private val alternate = FakeBookProcessor("alternate", "Alternate reader", alternateModel)
+    private val secondAlternate = FakeBookProcessor("second-alternate", "Second alternate reader", alternateModel)
     private val proseChapter = FakeBookProcessor("prose-chapter", "Prose chapter reader", proseModel)
 
     @Test
     fun `sole compatible processor is selected automatically`() {
-        val registry = BookReaderProcessorRegistry(listOf(epub, proseChapter))
+        val registry = BookReaderProcessorRegistry(listOf(alternate, proseChapter))
 
         val selection = assertIs<BookReaderProcessorSelection.Selected>(
-            registry.select(epubModel),
+            registry.select(alternateModel),
         )
 
-        assertEquals(epub.id, selection.processor.id)
+        assertEquals(alternate.id, selection.processor.id)
     }
 
     @Test
     fun `valid remembered processor wins when multiple processors are compatible`() {
-        val registry = BookReaderProcessorRegistry(listOf(epub, alternateEpub))
+        val registry = BookReaderProcessorRegistry(listOf(alternate, secondAlternate))
 
         val selection = assertIs<BookReaderProcessorSelection.Selected>(
             registry.select(
-                model = epubModel,
-                rememberedProcessorId = alternateEpub.id,
+                model = alternateModel,
+                rememberedProcessorId = secondAlternate.id,
             ),
         )
 
-        assertEquals(alternateEpub.id, selection.processor.id)
+        assertEquals(secondAlternate.id, selection.processor.id)
     }
 
     @Test
     fun `invalid remembered processor falls back to chooser`() {
-        val registry = BookReaderProcessorRegistry(listOf(epub, alternateEpub, proseChapter))
+        val registry = BookReaderProcessorRegistry(listOf(alternate, secondAlternate, proseChapter))
 
         val selection = assertIs<BookReaderProcessorSelection.ChoiceRequired>(
             registry.select(
-                model = epubModel,
+                model = alternateModel,
                 rememberedProcessorId = proseChapter.id,
             ),
         )
 
-        assertEquals(listOf(epub.id, alternateEpub.id), selection.processors.map(BookReaderProcessor::id))
+        assertEquals(listOf(alternate.id, secondAlternate.id), selection.processors.map(BookReaderProcessor::id))
     }
 
     @Test
     fun `missing compatibility returns unsupported selection`() {
-        val registry = BookReaderProcessorRegistry(listOf(epub))
+        val registry = BookReaderProcessorRegistry(listOf(alternate))
 
         assertIs<BookReaderProcessorSelection.Unsupported>(
             registry.select(BookPublicationModelDescriptor("book.unknown")),
@@ -68,7 +68,7 @@ class BookReaderProcessorRegistryTest {
     @Test
     fun `duplicate processor IDs are rejected`() {
         assertFailsWith<IllegalArgumentException> {
-            BookReaderProcessorRegistry(listOf(epub, FakeBookProcessor(epub.id, "Duplicate", proseModel)))
+            BookReaderProcessorRegistry(listOf(alternate, FakeBookProcessor(alternate.id, "Duplicate", proseModel)))
         }
     }
 

@@ -12,7 +12,6 @@ import kotlin.io.encoding.Base64
 plugins {
     alias(mihonx.plugins.android.application)
     alias(mihonx.plugins.artifact.sanitizer)
-    alias(mihonx.plugins.readium.navigator)
     alias(mihonx.plugins.compose)
     alias(mihonx.plugins.spotless)
 

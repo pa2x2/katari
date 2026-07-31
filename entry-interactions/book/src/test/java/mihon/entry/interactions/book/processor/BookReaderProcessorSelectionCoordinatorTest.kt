@@ -10,7 +10,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 
 class BookReaderProcessorSelectionCoordinatorTest {
-    private val descriptor = BookPublicationModelDescriptor("book.epub")
+    private val descriptor = BookPublicationModelDescriptor("book.alternate")
     private val otherProfile = BookPublicationModelDescriptor("book.fixed-page")
     private val first = SelectionFakeProcessor("first")
     private val second = SelectionFakeProcessor("second")

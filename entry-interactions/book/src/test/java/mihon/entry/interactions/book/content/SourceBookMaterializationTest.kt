@@ -21,32 +21,32 @@ internal class SourceBookMaterializationTest : SourceBookContentSessionFixture()
             media = bookMedia(
                 resources = listOf(
                     resource(
-                        "epub",
-                        mediaType = "application/epub+zip",
-                        location = BookResourceLocation.InlineBytes("epub-content".encodeToByteArray()),
+                        "chapter",
+                        mediaType = "text/html",
+                        location = BookResourceLocation.InlineBytes("chapter-content".encodeToByteArray()),
                     ),
                 ),
-                initialResourceId = "epub",
-                initialLocation = BookResourceLocation.InlineBytes("epub-content".encodeToByteArray()),
+                initialResourceId = "chapter",
+                initialLocation = BookResourceLocation.InlineBytes("chapter-content".encodeToByteArray()),
             ),
             materializationStore = cache,
         )
 
-        val materialized = session.materializeResource("epub").getOrThrow()
+        val materialized = session.materializeResource("chapter").getOrThrow()
         assertTrue(materialized.file.exists())
-        assertTrue(materialized.file.name.endsWith(".epub"))
-        assertEquals("epub-content", materialized.file.readText())
+        assertTrue(materialized.file.name.endsWith(".html"))
+        assertEquals("chapter-content", materialized.file.readText())
 
         materialized.close()
         assertTrue(materialized.file.exists())
 
-        val outstanding = session.materializeResource("epub").getOrThrow()
+        val outstanding = session.materializeResource("chapter").getOrThrow()
         assertEquals(materialized.file, outstanding.file)
         session.close()
         assertTrue(outstanding.file.exists())
         assertEquals(1, cache.clear())
         assertFalse(outstanding.file.exists())
-        assertTrue(session.getResource("epub").isFailure)
+        assertTrue(session.getResource("chapter").isFailure)
     }
 
     @Test

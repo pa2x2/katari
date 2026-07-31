@@ -24,20 +24,20 @@ class BookAutomaticTranslationPreferencesTest {
         )
         val preferences = BookAutomaticTranslationPreferences(store)
         val prose = preferences.automaticSelectionEnabled(PROSE_SURFACE)
-        val epub = preferences.automaticSelectionEnabled(EPUB_SURFACE)
+        val alternate = preferences.automaticSelectionEnabled(ALTERNATE_SURFACE)
 
         prose.get() shouldBe true
-        epub.get() shouldBe true
+        alternate.get() shouldBe true
 
         prose.set(false)
 
         prose.get() shouldBe false
-        epub.get() shouldBe true
+        alternate.get() shouldBe true
 
         prose.delete()
 
         prose.get() shouldBe false
-        epub.get() shouldBe true
+        alternate.get() shouldBe true
     }
 
     @Test
@@ -54,14 +54,14 @@ class BookAutomaticTranslationPreferencesTest {
         val ownership = registry.ownership(
             existingKeys = setOf(
                 "${BookAutomaticTranslationPreferences.SURFACE_KEY_PREFIX}$PROSE_SURFACE",
-                "${BookAutomaticTranslationPreferences.SURFACE_KEY_PREFIX}$EPUB_SURFACE",
+                "${BookAutomaticTranslationPreferences.SURFACE_KEY_PREFIX}$ALTERNATE_SURFACE",
             ),
         )
 
         ownership.profileKeys.sorted() shouldContainExactly listOf(
             BookAutomaticTranslationPreferences.LEGACY_GLOBAL_KEY,
             BookAutomaticTranslationPreferences.MIGRATED_SURFACES_KEY,
-            "${BookAutomaticTranslationPreferences.SURFACE_KEY_PREFIX}$EPUB_SURFACE",
+            "${BookAutomaticTranslationPreferences.SURFACE_KEY_PREFIX}$ALTERNATE_SURFACE",
             "${BookAutomaticTranslationPreferences.SURFACE_KEY_PREFIX}$PROSE_SURFACE",
         ).sorted()
         ownership.appStateKeys shouldBe emptySet()
@@ -69,6 +69,6 @@ class BookAutomaticTranslationPreferencesTest {
 
     private companion object {
         const val PROSE_SURFACE = "builtin.book.prose.html"
-        const val EPUB_SURFACE = "builtin.book.epub.readium"
+        const val ALTERNATE_SURFACE = "test.book.alternate"
     }
 }

@@ -10,7 +10,7 @@ import tachiyomi.core.common.preference.InMemoryPreferenceStore
 class ReaderChapterPreparationSettingsProviderTest {
     private val mangaSurface = "builtin.manga"
     private val proseSurface = "builtin.book.prose.html"
-    private val epubSurface = "builtin.book.epub.readium"
+    private val unsupportedSurface = "builtin.book.fixed-layout"
 
     @Test
     fun `one profile preference is projected only to readers that prepare adjacent chapters`() {
@@ -20,7 +20,7 @@ class ReaderChapterPreparationSettingsProviderTest {
             potentialCapabilitiesBySettingsSurface = mapOf(
                 mangaSurface to setOf(StandardReaderCapabilities.NextChapterPreparation),
                 proseSurface to setOf(StandardReaderCapabilities.NextChapterPreparation),
-                epubSurface to setOf(StandardReaderCapabilities.StableTextSelection),
+                unsupportedSurface to setOf(StandardReaderCapabilities.StableTextSelection),
             ),
         )
         val registry = ReaderSharedSettingsRegistry(listOf(provider))
@@ -29,6 +29,6 @@ class ReaderChapterPreparationSettingsProviderTest {
             listOf(ReaderChapterPreparationSettingsProvider.PREPARE_NEXT_CHAPTER_SETTING_ID)
         registry.settingsForSurface(mangaSurface).single().preference shouldBe preferences.prepareNextChapter
         registry.settingsForSurface(proseSurface).single().preference shouldBe preferences.prepareNextChapter
-        registry.settingsForSurface(epubSurface) shouldBe emptyList()
+        registry.settingsForSurface(unsupportedSurface) shouldBe emptyList()
     }
 }
