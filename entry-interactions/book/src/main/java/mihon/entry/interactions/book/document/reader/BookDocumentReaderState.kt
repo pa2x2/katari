@@ -16,6 +16,7 @@ internal data class BookDocumentReaderState(
     val navigationVisible: Boolean = false,
     val settingsVisible: Boolean = false,
     val childWebView: EntryChildWebViewResolution.Available? = null,
+    val navigationRequest: BookDocumentNavigationRequest? = null,
 )
 
 internal sealed interface BookDocumentChapterLoadState {

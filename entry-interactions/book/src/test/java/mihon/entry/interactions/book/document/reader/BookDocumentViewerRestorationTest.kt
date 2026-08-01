@@ -61,4 +61,15 @@ internal class BookDocumentViewerRestorationTest : BookDocumentViewerFixture() {
         assertEquals(afterLoading.indexOfFirst { it.key == transition.key }, anchor.index)
         assertEquals(-300, anchor.scrollOffset)
     }
+
+    @Test
+    fun `explicit chapter navigation discards a retained position and targets the beginning`() {
+        val restored = section("selected", listOf("First", "Second", "Third")).let { section ->
+            section.copy(initialPosition = section.document.document.positionAtProgression(0.9f))
+        }
+
+        val selected = restored.fromBeginningForExplicitNavigation()
+
+        assertEquals(0, selected.document.document.logicalOffset(selected.initialPosition))
+    }
 }

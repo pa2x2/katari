@@ -53,8 +53,11 @@ internal fun BookDocumentEndlessViewer(
     var observedKeys by remember(listState) { mutableStateOf(items.map { it.key }) }
     var initialPositionRestored by remember(listState) { mutableStateOf(false) }
 
-    suspend fun scrollToSectionPosition(section: BookDocumentSection<EntryChapter>) {
-        val index = items.indexOfPosition(section.key, section.initialPosition)
+    suspend fun scrollToSectionPosition(
+        section: BookDocumentSection<EntryChapter>,
+        position: mihon.book.api.document.BookDocumentPosition = section.initialPosition,
+    ) {
+        val index = items.indexOfPosition(section.key, position)
         if (index < 0) return
         listState.scrollToItem(index)
         val layout = snapshotFlow {
@@ -67,7 +70,7 @@ internal fun BookDocumentEndlessViewer(
             index,
             bookDocumentScrollOffset(
                 document = section.document,
-                position = section.initialPosition,
+                position = position,
                 itemSize = layout.first,
                 viewportStartOffset = layout.second,
                 viewportEndOffset = layout.third,
@@ -77,7 +80,7 @@ internal fun BookDocumentEndlessViewer(
 
     SideEffect {
         val keys = items.map { it.key }
-        if (keys != observedKeys && !listState.isScrollInProgress) {
+        if (keys != observedKeys && !listState.isScrollInProgress && state.navigationRequest == null) {
             val info = listState.layoutInfo
             bookDocumentViewerDatasetAnchor(
                 items = items,
@@ -97,6 +100,7 @@ internal fun BookDocumentEndlessViewer(
 
     LaunchedEffect(state.currentChapterId, items, initialPositionRestored) {
         if (!initialPositionRestored) return@LaunchedEffect
+        if (state.navigationRequest != null) return@LaunchedEffect
         val section = state.loadedSections[state.currentChapterId] ?: return@LaunchedEffect
         val visibleChapterIds = listState.layoutInfo.visibleItemsInfo.mapNotNull { layout ->
             (items.resolve(layout.index, layout.key) as? BookDocumentViewerItem.Block)?.section?.owner?.id
@@ -105,6 +109,12 @@ internal fun BookDocumentEndlessViewer(
             val index = items.indexOfPosition(section.key, section.initialPosition)
             if (index >= 0) scrollToSectionPosition(section)
         }
+    }
+
+    LaunchedEffect(state.navigationRequest) {
+        val request = state.navigationRequest ?: return@LaunchedEffect
+        val section = state.loadedSections[request.chapterId] ?: return@LaunchedEffect
+        scrollToSectionPosition(section, request.position)
     }
 
     LaunchedEffect(listState, items) {

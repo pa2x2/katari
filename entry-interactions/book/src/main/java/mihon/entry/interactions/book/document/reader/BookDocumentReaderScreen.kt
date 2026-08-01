@@ -15,14 +15,17 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalFocusManager
 import mihon.entry.interactions.book.reader.BookReaderNavigationRow
 import mihon.entry.interactions.book.reader.BookReaderNavigationSheet
 import mihon.entry.interactions.book.reader.BookReaderProgress
@@ -59,8 +62,11 @@ internal fun BookDocumentReaderScreen(
     onClose: () -> Unit,
 ) {
     val readerBackground = MaterialTheme.colorScheme.background
+    val focusManager = LocalFocusManager.current
     var rootPosition by remember { mutableStateOf(Offset.Zero) }
+    var pendingChapterSelection by remember { mutableStateOf<EntryChapter?>(null) }
     val currentOnChromeToggle by rememberUpdatedState(onChromeToggle)
+    val currentOnChapterSelected by rememberUpdatedState(onChapterSelected)
     val automaticTranslationEnabled = translationController?.effectiveEnabled?.collectAsState()?.value == true
     val textInteraction = remember(translationController, automaticTranslationEnabled, rootPosition) {
         BookDocumentTextInteraction(
@@ -161,11 +167,21 @@ internal fun BookDocumentReaderScreen(
         )
     }
 
+    LaunchedEffect(state.navigationVisible, pendingChapterSelection) {
+        val chapter = pendingChapterSelection ?: return@LaunchedEffect
+        if (state.navigationVisible) return@LaunchedEffect
+        withFrameNanos { }
+        focusManager.clearFocus(force = true)
+        withFrameNanos { }
+        pendingChapterSelection = null
+        currentOnChapterSelected(chapter)
+    }
+
     BookReaderNavigationSheet(
         visible = state.navigationVisible,
         rows = state.chapters.map { BookReaderNavigationRow(it, it.name) },
         selectedIndex = state.chapters.indexOfFirst { it.id == state.currentChapterId },
-        onItemClick = onChapterSelected,
+        onItemClick = { pendingChapterSelection = it },
         onDismissRequest = { onNavigationVisibilityChange(false) },
     )
     if (state.settingsVisible) {

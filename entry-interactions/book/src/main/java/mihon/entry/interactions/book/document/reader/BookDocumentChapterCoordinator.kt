@@ -34,8 +34,10 @@ internal class BookDocumentChapterCoordinator(
 ) : AutoCloseable {
     private val chapterLoadJobs = mutableMapOf<Long, Job>()
     private val completionTracker = BookDocumentCompletionTracker<Long>()
+    private val chapterSelectionRequests = mutableSetOf<Long>()
     private var persistLocationJob: Job? = null
     private var readingStartedAt: Long? = null
+    private var navigationRequestId = 0L
 
     fun startReading() {
         if (retainedSessions.currentSession() != null && readingStartedAt == null) {
@@ -77,18 +79,25 @@ internal class BookDocumentChapterCoordinator(
                         BookDocumentReaderProcessor.PROCESSOR_ID,
                     )
                 ) {
-                    is BookReaderOpenResult.Failure -> setLoadState(
-                        chapter.id,
-                        BookDocumentChapterLoadState.Failed(result.failure.message),
-                    )
+                    is BookReaderOpenResult.Failure -> {
+                        chapterSelectionRequests.remove(chapter.id)
+                        setLoadState(
+                            chapter.id,
+                            BookDocumentChapterLoadState.Failed(result.failure.message),
+                        )
+                    }
                     is BookReaderOpenResult.Success -> {
                         if (!retainedSessions.cache(result.session)) result.session.close()
-                        addLoadedSession(retainedSessions.session(chapter.id) ?: return@launch, activate)
+                        addLoadedSession(
+                            retainedSessions.session(chapter.id) ?: return@launch,
+                            activate || chapter.id in chapterSelectionRequests,
+                        )
                     }
                 }
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
+                chapterSelectionRequests.remove(chapter.id)
                 logcat(LogPriority.ERROR, error) { "Failed to load adjacent BOOK chapter" }
                 setLoadState(
                     chapter.id,
@@ -102,17 +111,32 @@ internal class BookDocumentChapterCoordinator(
         }
     }
 
+    fun selectChapter(chapter: EntryChapter, retry: Boolean) {
+        chapterSelectionRequests += chapter.id
+        loadChapter(chapter, activate = true, retry = retry)
+    }
+
     fun onLocation(location: BookDocumentViewerLocation<EntryChapter>) {
         val state = currentState() ?: return
         val chapterId = location.section.owner.id
+        val navigationRequest = state.navigationRequest
+        if (!navigationRequest.acceptsLocation(chapterId, location.position)) return
         if (chapterId != state.currentChapterId) activateChapter(chapterId, completeForwardCrossing = true)
         val session = retainedSessions.session(chapterId) ?: return
         val total = totalBookProgression(state.chapters, chapterId, location.progression)
         val locator = location.section.document.document.locatorAt(location.position).copy(totalProgression = total)
         retainedSessions.updateLocation(chapterId, locator)
-        currentState()?.copy(
-            chapterProgression = location.progression,
-        )?.let(updateState)
+        currentState()?.let { current ->
+            updateState(
+                current.copy(
+                    chapterProgression = location.progression,
+                    navigationRequest = current.navigationRequest.afterAcceptedLocation(
+                        observedRequest = navigationRequest,
+                        chapterId = chapterId,
+                    ),
+                ),
+            )
+        }
         persistLocationJob?.cancel()
         persistLocationJob = scope.launch {
             delay(LOCATION_PERSIST_DEBOUNCE_MILLIS)
@@ -155,16 +179,23 @@ internal class BookDocumentChapterCoordinator(
     override fun close() {
         chapterLoadJobs.values.forEach(Job::cancel)
         chapterLoadJobs.clear()
+        chapterSelectionRequests.clear()
         persistLocationJob?.cancel()
     }
 
     private fun addLoadedSession(session: OpenedBookReaderSession, activate: Boolean) {
-        val section = session.toDocumentSection(retainedSessions.locator(session.chapter.id)) ?: run {
+        val explicitSelection = chapterSelectionRequests.remove(session.chapter.id)
+        val restoredSection = session.toDocumentSection(retainedSessions.locator(session.chapter.id)) ?: run {
             setLoadState(
                 session.chapter.id,
                 BookDocumentChapterLoadState.Failed(context.getString(R.string.book_document_incompatible)),
             )
             return
+        }
+        val section = if (explicitSelection) {
+            restoredSection.fromBeginningForExplicitNavigation()
+        } else {
+            restoredSection
         }
         val state = currentState() ?: return
         updateState(
@@ -174,6 +205,29 @@ internal class BookDocumentChapterCoordinator(
             ),
         )
         if (activate) activateChapter(session.chapter.id, completeForwardCrossing = false)
+        if (explicitSelection) requestNavigation(section)
+    }
+
+    private fun requestNavigation(section: BookDocumentSection<EntryChapter>) {
+        val state = currentState() ?: return
+        val position = section.initialPosition
+        val progression = section.document.document.progressionAt(position)
+        val total = totalBookProgression(state.chapters, section.owner.id, progression)
+        retainedSessions.updateLocation(
+            section.owner.id,
+            section.document.document.locatorAt(position).copy(totalProgression = total),
+        )
+        navigationRequestId += 1
+        updateState(
+            state.copy(
+                chapterProgression = progression,
+                navigationRequest = BookDocumentNavigationRequest(
+                    id = navigationRequestId,
+                    chapterId = section.owner.id,
+                    position = position,
+                ),
+            ),
+        )
     }
 
     private fun activateChapter(chapterId: Long, completeForwardCrossing: Boolean) {
@@ -193,6 +247,7 @@ internal class BookDocumentChapterCoordinator(
         chapterLoadJobs.keys.toList().filterNot(retainedIds::contains).forEach { id ->
             chapterLoadJobs.remove(id)?.cancel()
         }
+        chapterSelectionRequests.retainAll(retainedIds)
         val section = currentState()?.loadedSections?.get(chapterId) ?: return
         val current = currentState() ?: return
         updateState(

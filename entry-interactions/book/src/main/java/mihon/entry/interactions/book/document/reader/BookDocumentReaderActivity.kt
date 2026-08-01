@@ -102,7 +102,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                         onLocation = chapterCoordinator::onLocation,
                         onTransitionReached = { chapterCoordinator.loadChapter(it, activate = false, retry = true) },
                         onTerminalObservation = chapterCoordinator::onTerminalObservation,
-                        onChapterSelected = { chapterCoordinator.loadChapter(it, activate = true, retry = true) },
+                        onChapterSelected = ::selectChapterFromNavigation,
                         onChromeToggle = ::toggleChrome,
                         onChromeHide = { setChromeVisible(false) },
                         onNavigationVisibilityChange = { visible ->
@@ -244,6 +244,11 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         }.onFailure { error ->
             logcat(LogPriority.ERROR, error) { "Failed to launch prose external link" }
         }
+    }
+
+    private fun selectChapterFromNavigation(chapter: EntryChapter) {
+        window.decorView.findFocus()?.clearFocus()
+        chapterCoordinator.selectChapter(chapter, retry = true)
     }
 
     private fun setChromeVisible(visible: Boolean) {
