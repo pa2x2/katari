@@ -14,6 +14,9 @@ internal class BookContentPreparerRegistry(
         require(this.preparers.keys.none(String::isBlank)) { "BOOK preparer IDs must not be blank" }
     }
 
+    val canPrepareContent: Boolean
+        get() = preparers.isNotEmpty()
+
     fun resolve(descriptor: BookContentDescriptor): BookContentPreparerSelection {
         val compatible = preparers.values.filter { it.supports(descriptor) }
         return when (compatible.size) {
