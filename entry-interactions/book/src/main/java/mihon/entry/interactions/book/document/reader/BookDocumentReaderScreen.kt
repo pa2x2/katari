@@ -3,7 +3,13 @@
 package mihon.entry.interactions.book.document.reader
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ViewList
@@ -55,6 +61,7 @@ internal fun BookDocumentReaderScreen(
     onExternalLinkClick: (String) -> Unit,
     onClose: () -> Unit,
 ) {
+    val readerBackground = MaterialTheme.colorScheme.background
     var rootPosition by remember { mutableStateOf(Offset.Zero) }
     val automaticTranslationEnabled = translationController?.effectiveEnabled?.collectAsState()?.value == true
     val textInteraction = remember(translationController, automaticTranslationEnabled, rootPosition) {
@@ -92,10 +99,12 @@ internal fun BookDocumentReaderScreen(
         BookReaderScaffold(
             progress = BookReaderProgress.Percentage((state.totalProgression * 100).toInt().coerceIn(0, 100)),
             progressVisible = state.chromeVisible,
-            footerColor = MaterialTheme.colorScheme.surface,
+            footerColor = readerBackground,
             translationController = translationController,
             onRootPositionInWindow = { rootPosition = it },
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(readerBackground),
             content = {
                 BookDocumentEndlessViewer(
                     state = state,
@@ -108,6 +117,13 @@ internal fun BookDocumentReaderScreen(
                             onChromeVisibilityChange(!state.chromeVisible)
                         }
                     },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .windowInsetsPadding(
+                            WindowInsets.safeDrawing.only(
+                                WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
+                            ),
+                        ),
                 )
             },
             overlay = {

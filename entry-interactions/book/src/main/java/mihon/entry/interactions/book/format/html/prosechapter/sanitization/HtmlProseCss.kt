@@ -51,7 +51,7 @@ internal class HtmlProseCss private constructor(
     companion object {
         fun parse(styleSheets: List<String>): HtmlProseCss {
             val rules = mutableListOf<Rule>()
-            val rulePattern = Regex("([^{}]+)\\{([^{}]*)}")
+            val rulePattern = Regex("([^{}]+)\\{([^{}]*)\\}")
             styleSheets.forEach { css ->
                 val withoutComments = css.replace(Regex("/\\*.*?\\*/", RegexOption.DOT_MATCHES_ALL), "")
                 rulePattern.findAll(withoutComments).forEach { match ->

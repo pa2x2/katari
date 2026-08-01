@@ -4,8 +4,6 @@ import android.graphics.Typeface
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.Spanned
-import android.text.style.BackgroundColorSpan
-import android.text.style.ForegroundColorSpan
 import android.text.style.QuoteSpan
 import android.text.style.RelativeSizeSpan
 import android.text.style.StrikethroughSpan
@@ -91,12 +89,6 @@ private fun String.toBookDocumentSpanned(
         if (end <= start) return@forEach
         val flags = Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
         val style = range.style
-        style.foregroundArgb?.let {
-            setSpan(ForegroundColorSpan(it.toInt()), start, end, flags)
-        }
-        style.backgroundArgb?.let {
-            setSpan(BackgroundColorSpan(it.toInt()), start, end, flags)
-        }
         style.fontSizeScale?.let {
             setSpan(RelativeSizeSpan(it), start, end, flags)
         }

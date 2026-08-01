@@ -3,7 +3,6 @@ package mihon.entry.interactions.book.document.reader
 import android.graphics.Typeface
 import android.text.Layout
 import android.view.View
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,7 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import mihon.book.api.document.BookDocumentAlignment
@@ -45,12 +44,9 @@ internal fun BookDocumentBlockRenderer(
     val blockText = remember(block, owningContent.text) {
         owningContent.text.substring(block.logicalStart, block.logicalEndExclusive)
     }
-    val background = block.style.backgroundArgb?.let(::Color) ?: Color.Transparent
     val padding = (block.style.paddingEm * 16).dp
     Column(
-        modifier = modifier
-            .background(background)
-            .padding(padding),
+        modifier = modifier.padding(padding),
     ) {
         when (val content = block.content) {
             is BookDocumentBlockContent.Text -> DocumentText(
@@ -127,8 +123,7 @@ private fun DocumentText(
     onReaderTap: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val color = block.style.foregroundArgb?.toInt()
-        ?: MaterialTheme.colorScheme.onSurface.toArgbValue()
+    val color = MaterialTheme.colorScheme.onBackground.toArgb()
     val typeface = when ((block.style.fontFamily as? BookDocumentFontFamily.Generic)?.family) {
         BookDocumentFontFamily.GenericFamily.SERIF -> Typeface.SERIF
         BookDocumentFontFamily.GenericFamily.MONOSPACE -> Typeface.MONOSPACE
@@ -176,9 +171,3 @@ internal fun BookDocumentRichTextRenderer(
         modifier = modifier,
     )
 }
-
-private fun Color.toArgbValue(): Int =
-    ((alpha * 255).toInt() shl 24) or
-        ((red * 255).toInt() shl 16) or
-        ((green * 255).toInt() shl 8) or
-        (blue * 255).toInt()

@@ -1,7 +1,6 @@
 package mihon.entry.interactions.book.document.reader
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -37,6 +36,7 @@ internal fun BookDocumentEndlessViewer(
     onAnchorMissing: (String) -> Unit = {},
     onExternalLinkClick: (String) -> Unit,
     onReaderTap: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val items = remember(state.window, state.loadedSections) {
         buildBookDocumentViewerItems(state.window, state.loadedSections, EntryChapter::id)
@@ -172,7 +172,7 @@ internal fun BookDocumentEndlessViewer(
         }
     }
 
-    LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
+    LazyColumn(state = listState, modifier = modifier) {
         items(items, key = { it.key }) { item ->
             when (item) {
                 is BookDocumentViewerItem.Block -> CompositionLocalProvider(
