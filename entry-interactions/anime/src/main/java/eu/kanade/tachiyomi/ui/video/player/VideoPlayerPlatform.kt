@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
-import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.annotation.ColorInt
 import androidx.annotation.IntRange
@@ -18,11 +17,7 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.core.content.getSystemService
-import androidx.lifecycle.lifecycleScope
-import eu.kanade.tachiyomi.core.security.SecurityPreferences
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import mihon.entry.interactions.runtime.registerEntryInteractionSecureScreen
 import mihon.entry.interactions.runtime.setEntryInteractionContent
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
@@ -40,24 +35,7 @@ internal class AnimePlayerBasePreferences(
 }
 
 internal fun AppCompatActivity.registerAnimePlayerSecureScreen() {
-    val preferences = Injekt.get<AnimePlayerBasePreferences>()
-    val securityPreferences = Injekt.get<SecurityPreferences>()
-
-    combine(
-        securityPreferences.secureScreen.changes(),
-        preferences.incognitoMode.changes(),
-    ) { secureScreen, incognitoMode ->
-        secureScreen == SecurityPreferences.SecureScreenMode.ALWAYS ||
-            (secureScreen == SecurityPreferences.SecureScreenMode.INCOGNITO && incognitoMode)
-    }
-        .onEach { enabled ->
-            if (enabled) {
-                window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
-            } else {
-                window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-            }
-        }
-        .launchIn(lifecycleScope)
+    registerEntryInteractionSecureScreen()
 }
 
 internal inline fun ComponentActivity.setPlayerComposeContent(

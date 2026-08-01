@@ -25,7 +25,7 @@ internal class BookDocumentViewerLocationTest : BookDocumentViewerFixture() {
         )
 
         assertNotNull(location)
-        assertEquals(section.document.blocks[1].block.id, location.position.blockId)
+        assertEquals(section.document.blocks[1].id, location.position.blockId)
         assertEquals(50, location.position.offsetWithinBlock)
         assertEquals(152f / 202f, location.progression)
     }
@@ -46,7 +46,7 @@ internal class BookDocumentViewerLocationTest : BookDocumentViewerFixture() {
         )
 
         assertNotNull(location)
-        assertEquals(section.document.blocks[0].block.id, location.position.blockId)
+        assertEquals(section.document.blocks[0].id, location.position.blockId)
     }
 
     @Test

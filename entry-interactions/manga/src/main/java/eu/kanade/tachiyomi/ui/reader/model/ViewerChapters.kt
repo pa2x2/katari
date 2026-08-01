@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.reader.model
 
 import mihon.entry.interactions.viewer.EntryChildTransition
 import mihon.entry.interactions.viewer.EntryChildWindow
+import mihon.entry.interactions.viewer.entryChildTransitionItemAtAnchor
 
 internal typealias ViewerChapters = EntryChildWindow<ReaderChapter>
 
@@ -26,21 +27,15 @@ internal fun automaticTransitionLoadItemAtAnchor(
     canScrollBackward: Boolean,
     canScrollForward: Boolean,
 ): ReaderViewerItem.Transition? {
-    val centeredTransition = centeredItem as? ReaderViewerItem.Transition
-    if (centeredTransition != null && (canScrollBackward || canScrollForward)) {
-        return centeredTransition.takeIf { it.automaticTransitionLoadDestination() != null }
-    }
-
-    val boundaryItems = when {
-        !canScrollBackward && !canScrollForward -> listOf(firstVisibleItem, lastVisibleItem)
-        !canScrollBackward -> listOf(firstVisibleItem)
-        !canScrollForward -> listOf(lastVisibleItem)
-        else -> emptyList()
-    }
-    return boundaryItems.firstNotNullOfOrNull { item ->
-        (item as? ReaderViewerItem.Transition)
-            ?.takeIf { it.automaticTransitionLoadDestination() != null }
-    } ?: centeredTransition?.takeIf { it.automaticTransitionLoadDestination() != null }
+    return entryChildTransitionItemAtAnchor(
+        centeredItem = centeredItem,
+        firstVisibleItem = firstVisibleItem,
+        lastVisibleItem = lastVisibleItem,
+        canScrollBackward = canScrollBackward,
+        canScrollForward = canScrollForward,
+        transitionOf = { (it as? ReaderViewerItem.Transition)?.transition },
+        isActionable = { item, _ -> item.automaticTransitionLoadDestination() != null },
+    ) as? ReaderViewerItem.Transition
 }
 
 internal fun MutableList<ReaderViewerItem>.addPages(pages: List<ReaderPage>?) {

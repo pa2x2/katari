@@ -1,0 +1,102 @@
+package mihon.entry.interactions.book.document.reader
+
+import android.graphics.Bitmap
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import mihon.book.api.document.BookDocumentBlock
+import mihon.book.api.document.BookDocumentBlockContent
+import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.document.resource.PROSE_IMAGE_RESOURCE_REQUIREMENT
+import mihon.entry.interactions.book.document.resource.decodeValidatedProseImage
+import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
+
+/** Bounded, composition-scoped figure resource renderer. */
+@Composable
+internal fun BookDocumentFigureRenderer(
+    content: BookDocumentBlockContent.Figure,
+    block: BookDocumentBlock,
+    resourceLoader: BookPublicationResourceLoader?,
+    onAnchorClick: (String) -> Unit,
+    onExternalLinkClick: (String) -> Unit,
+    onReaderTap: () -> Unit,
+) {
+    var retryGeneration by remember(content.image.resourceId) { mutableIntStateOf(0) }
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val density = LocalDensity.current
+        val targetWidth = with(density) { maxWidth.roundToPx() }.coerceAtLeast(1)
+        val bitmapResult by produceState<Result<Bitmap>?>(
+            initialValue = null,
+            content.image.resourceId,
+            resourceLoader,
+            targetWidth,
+            retryGeneration,
+        ) {
+            value = if (resourceLoader == null) {
+                Result.failure(IllegalStateException("Image resource unavailable"))
+            } else {
+                runCatching {
+                    val resource = resourceLoader.load(
+                        resourceId = content.image.resourceId,
+                        acceptedMediaTypes = PROSE_IMAGE_RESOURCE_REQUIREMENT.acceptedMediaTypes,
+                        maxBytes = PROSE_IMAGE_RESOURCE_REQUIREMENT.maxBytes,
+                    ).getOrThrow()
+                    withContext(Dispatchers.Default) {
+                        decodeValidatedProseImage(resource.bytes, targetWidth, targetWidth * 2)
+                    }
+                }
+            }
+        }
+        val bitmap = bitmapResult?.getOrNull()
+        DisposableEffect(bitmap) { onDispose { bitmap?.recycle() } }
+        when {
+            bitmap != null -> Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = content.image.alternativeText?.text,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .sizeIn(maxHeight = maxWidth * 2)
+                    .clickable(onClick = onReaderTap),
+            )
+            bitmapResult == null -> Text(stringResource(R.string.book_document_image_loading))
+            else -> Text(
+                text = content.image.alternativeText?.text
+                    ?: stringResource(R.string.book_document_image_unavailable),
+                modifier = Modifier.clickable { retryGeneration++ },
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+    content.caption?.let {
+        BookDocumentRichTextRenderer(
+            value = it,
+            identity = "${block.id.value}:caption",
+            block = block,
+            onAnchorClick = onAnchorClick,
+            onExternalLinkClick = onExternalLinkClick,
+            onReaderTap = onReaderTap,
+            modifier = Modifier.padding(top = 8.dp),
+        )
+    }
+}

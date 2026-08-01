@@ -4,12 +4,14 @@ import android.app.Application
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.book.content.BookMaterializationCache
 import mihon.entry.interactions.book.content.BookMaterializationStore
+import mihon.entry.interactions.book.document.reader.BookDocumentReaderProcessor
 import mihon.entry.interactions.book.download.BookDownloadCache
 import mihon.entry.interactions.book.download.BookDownloadIndexStore
 import mihon.entry.interactions.book.download.BookDownloadManager
 import mihon.entry.interactions.book.download.BookDownloadProvider
 import mihon.entry.interactions.book.download.BookDownloadStore
 import mihon.entry.interactions.book.download.BookDownloader
+import mihon.entry.interactions.book.format.html.prosechapter.preparation.HtmlProseChapterPreparer
 import mihon.entry.interactions.book.media.session.BookMediaSessionProcessor
 import mihon.entry.interactions.book.navigation.BookChapterNavigationResolver
 import mihon.entry.interactions.book.preparation.BookContentPreparerRegistry
@@ -82,8 +84,12 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
         factory = ::BookAutomaticTranslationPreferences,
     )
     val automaticTranslationPreferences = automaticTranslationPreferencesOwner.create()
-    val preparerRegistry = BookContentPreparerRegistry(preparers = emptyList())
-    val readerProcessorRegistry = BookReaderProcessorRegistry(processors = emptyList())
+    val preparerRegistry = BookContentPreparerRegistry(
+        preparers = listOf(HtmlProseChapterPreparer()),
+    )
+    val readerProcessorRegistry = BookReaderProcessorRegistry(
+        processors = listOf(BookDocumentReaderProcessor()),
+    )
     addSingletonFactory { materializationCache }
     addSingletonFactory<BookMaterializationStore> { get<BookMaterializationCache>() }
     addSingletonFactory { BookDownloadProvider(get<StorageManager>()) }

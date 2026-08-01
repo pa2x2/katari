@@ -1,6 +1,5 @@
 package mihon.entry.interactions.book.document.reader
 
-import android.text.SpannableString
 import mihon.book.api.document.BookDocument
 import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentBlockContent
@@ -12,7 +11,6 @@ import mihon.book.api.document.BookDocumentPosition
 import mihon.book.api.document.BookDocumentRichText
 import mihon.book.api.document.BookDocumentTextRange
 import mihon.entry.interactions.book.document.render.PreparedBookDocument
-import mihon.entry.interactions.book.document.render.PreparedBookDocumentBlock
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 internal abstract class BookDocumentViewerFixture {
@@ -24,7 +22,7 @@ internal abstract class BookDocumentViewerFixture {
         val itemSize = 1_000
         val scrollOffset = bookDocumentScrollOffset(
             document = section.document,
-            position = BookDocumentPosition(item.content.block.id, offsetWithinBlock),
+            position = BookDocumentPosition(item.content.id, offsetWithinBlock),
             itemSize = itemSize,
             viewportStartOffset = viewportStartOffset,
             viewportEndOffset = viewportEndOffset,
@@ -78,11 +76,7 @@ internal abstract class BookDocumentViewerFixture {
                 anchors = emptyMap(),
             ),
         )
-        val prepared = PreparedBookDocument(
-            document = document,
-            blocks = blocks.map { PreparedBookDocumentBlock(it, SpannableString(it.plainText)) },
-            combinedText = SpannableString(texts.joinToString("\n\n")),
-        )
+        val prepared = PreparedBookDocument(document)
         return BookDocumentSection(
             key = owner,
             owner = owner,

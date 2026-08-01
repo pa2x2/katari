@@ -62,7 +62,7 @@ internal class BookDocumentViewerDatasetTest : BookDocumentViewerFixture() {
     }
 
     @Test
-    fun `partially visible terminal forward boundary reports exact chapter completion`() {
+    fun `partially visible terminal forward boundary does not manufacture content completion`() {
         val section = section("current", listOf("Text"))
         val block = BookDocumentViewerItem.Block(section, section.document.blocks.single())
         val terminal = BookDocumentViewerItem.Transition(
@@ -82,8 +82,7 @@ internal class BookDocumentViewerDatasetTest : BookDocumentViewerFixture() {
 
         assertNotNull(location)
         assertEquals("current", location.section.owner)
-        assertEquals(section.document.blocks.single().block.logicalLength, location.position.offsetWithinBlock)
-        assertEquals(1f, location.progression)
+        assertTrue(location.progression < 1f)
     }
 
     @Test

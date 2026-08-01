@@ -5,6 +5,9 @@
         <activity
             android:name="mihon.entry.interactions.book.reader.BookReaderHostActivity"
             android:exported="false" />
+        <activity
+            android:name="mihon.entry.interactions.book.document.reader.BookDocumentReaderActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

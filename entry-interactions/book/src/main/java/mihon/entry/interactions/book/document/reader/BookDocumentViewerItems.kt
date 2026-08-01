@@ -2,11 +2,10 @@ package mihon.entry.interactions.book.document.reader
 
 import mihon.book.api.document.BookDocumentPosition
 import mihon.entry.interactions.book.document.render.PreparedBookDocument
-import mihon.entry.interactions.book.document.render.PreparedBookDocumentBlock
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
-import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildTransition
 import mihon.entry.interactions.viewer.EntryChildWindow
+import mihon.entry.interactions.viewer.entryChildTransitionItemAtAnchor
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -28,9 +27,9 @@ internal sealed interface BookDocumentViewerItem<T> {
 
     data class Block<T>(
         val section: BookDocumentSection<T>,
-        val content: PreparedBookDocumentBlock,
+        val content: mihon.book.api.document.BookDocumentBlock,
     ) : BookDocumentViewerItem<T> {
-        override val key = "document:${section.key}:${section.document.document.resourceId}:${content.block.id.value}"
+        override val key = "document:${section.key}:${section.document.document.resourceId}:${content.id.value}"
     }
 
     data class Transition<T>(
@@ -119,35 +118,6 @@ internal fun <T> bookDocumentViewerLocation(
     viewportStartOffset: Int,
     viewportEndOffset: Int,
 ): BookDocumentViewerLocation<T>? {
-    val terminalChapter = visibleItems
-        .asReversed()
-        .firstNotNullOfOrNull { layout ->
-            if (
-                layout.offset >= viewportEndOffset ||
-                layout.offset + layout.size <= viewportStartOffset
-            ) {
-                return@firstNotNullOfOrNull null
-            }
-            (layout.resolveViewerItem(items) as? BookDocumentViewerItem.Transition)
-                ?.transition
-                ?.takeIf { it.direction == EntryChildDirection.NEXT && it.to == null }
-                ?.from
-        }
-    val terminalSection = terminalChapter?.let { chapter ->
-        items.firstNotNullOfOrNull { item ->
-            (item as? BookDocumentViewerItem.Block)
-                ?.section
-                ?.takeIf { it.owner == chapter }
-        }
-    }
-    if (terminalSection != null) {
-        val position = terminalSection.document.document.positionAtProgression(1f)
-        return BookDocumentViewerLocation(
-            section = terminalSection,
-            position = position,
-            progression = 1f,
-        )
-    }
     val topLayout = visibleItems.firstOrNull { it.offset == viewportStartOffset }
     val topItem = topLayout?.let { layout ->
         (
@@ -157,9 +127,9 @@ internal fun <T> bookDocumentViewerLocation(
     }
     if (
         topItem != null &&
-        topItem.content.block.id == topItem.section.document.document.blocks.firstOrNull()?.id
+        topItem.content.id == topItem.section.document.document.blocks.firstOrNull()?.id
     ) {
-        val position = BookDocumentPosition(topItem.content.block.id, 0)
+        val position = BookDocumentPosition(topItem.content.id, 0)
         return BookDocumentViewerLocation(
             section = topItem.section,
             position = position,
@@ -183,8 +153,8 @@ internal fun <T> bookDocumentViewerLocation(
         .div(layout.size.coerceAtLeast(1))
         .coerceIn(0f, 1f)
     val position = BookDocumentPosition(
-        blockId = item.content.block.id,
-        offsetWithinBlock = (item.content.block.logicalLength * fraction).roundToInt(),
+        blockId = item.content.id,
+        offsetWithinBlock = (item.content.logicalLength * fraction).roundToInt(),
     )
     return BookDocumentViewerLocation(
         section = item.section,
@@ -205,29 +175,24 @@ internal fun <T> bookDocumentViewerTransitionAtAnchor(
     val centeredLayout = visibleItems.firstOrNull {
         viewportAnchor >= it.offset && viewportAnchor < it.offset + it.size
     }
-    val centeredTransition = centeredLayout?.resolveViewerItem(items)
-        ?.let { it as? BookDocumentViewerItem.Transition }
-        ?.transition
-    if (centeredTransition != null && (canScrollBackward || canScrollForward)) {
-        return centeredTransition
-    }
-
-    val boundaryLayout = when {
-        !canScrollBackward && !canScrollForward -> visibleItems.firstOrNull { layout ->
-            val transition = (layout.resolveViewerItem(items) as? BookDocumentViewerItem.Transition)?.transition
-            transition?.to != null && items.none { item ->
+    val centeredItem = centeredLayout?.resolveViewerItem(items)
+    val firstVisibleItem = visibleItems.firstOrNull()?.resolveViewerItem(items)
+    val lastVisibleItem = visibleItems.lastOrNull()?.resolveViewerItem(items)
+    return entryChildTransitionItemAtAnchor(
+        centeredItem = centeredItem,
+        firstVisibleItem = firstVisibleItem,
+        lastVisibleItem = lastVisibleItem,
+        canScrollBackward = canScrollBackward,
+        canScrollForward = canScrollForward,
+        transitionOf = { (it as? BookDocumentViewerItem.Transition)?.transition },
+        isActionable = { _, transition ->
+            transition.to == null || items.none { item ->
                 item is BookDocumentViewerItem.Block && item.section.owner == transition.to
             }
-        }
-        !canScrollBackward && canScrollForward -> visibleItems.firstOrNull()
-        !canScrollForward && canScrollBackward -> visibleItems.lastOrNull()
-        else -> null
-    }
-    return boundaryLayout
-        ?.resolveViewerItem(items)
+        },
+    )
         ?.let { it as? BookDocumentViewerItem.Transition }
         ?.transition
-        ?: centeredTransition
 }
 
 private fun <T> BookDocumentVisibleItemLayout.resolveViewerItem(
@@ -242,7 +207,7 @@ internal fun <T> List<BookDocumentViewerItem<T>>.indexOfPosition(
 ): Int = indexOfFirst { item ->
     item is BookDocumentViewerItem.Block &&
         item.section.key == sectionKey &&
-        item.content.block.id == position.blockId
+        item.content.id == position.blockId
 }
 
 internal fun blockScrollOffset(
@@ -267,7 +232,7 @@ internal fun bookDocumentScrollOffset(
     viewportEndOffset: Int,
 ): Int {
     if (document.document.logicalOffset(position) == 0) return 0
-    val block = document.block(position.blockId)?.block ?: return 0
+    val block = document.block(position.blockId) ?: return 0
     return blockScrollOffset(
         itemSize = itemSize,
         blockLength = block.logicalLength,

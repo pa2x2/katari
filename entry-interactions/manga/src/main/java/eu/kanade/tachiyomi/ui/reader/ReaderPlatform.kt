@@ -12,7 +12,6 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.view.View
-import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.compose.runtime.Composable
@@ -21,16 +20,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.net.toUri
-import androidx.lifecycle.lifecycleScope
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.ThemeMode
-import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.util.system.toast
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
-import mihon.entry.interactions.reader.settings.ReaderBasePreferences
+import mihon.entry.interactions.runtime.registerEntryInteractionSecureScreen
 import mihon.entry.interactions.runtime.setEntryInteractionContent
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.domain.source.service.SourceManager
@@ -52,24 +46,7 @@ fun ifSourcesLoaded(): Boolean {
 }
 
 fun AppCompatActivity.registerReaderSecureScreen() {
-    val preferences = Injekt.get<ReaderBasePreferences>()
-    val securityPreferences = Injekt.get<SecurityPreferences>()
-
-    combine(
-        securityPreferences.secureScreen.changes(),
-        preferences.incognitoMode.changes(),
-    ) { secureScreen, incognitoMode ->
-        secureScreen == SecurityPreferences.SecureScreenMode.ALWAYS ||
-            (secureScreen == SecurityPreferences.SecureScreenMode.INCOGNITO && incognitoMode)
-    }
-        .onEach { enabled ->
-            if (enabled) {
-                window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
-            } else {
-                window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-            }
-        }
-        .launchIn(lifecycleScope)
+    registerEntryInteractionSecureScreen()
 }
 
 fun Context.mangaEntryIntent(entryId: Long): Intent {
