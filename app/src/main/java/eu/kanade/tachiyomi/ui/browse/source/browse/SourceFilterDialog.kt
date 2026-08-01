@@ -77,7 +77,6 @@ fun SourceFilterDialog(
     val updateFilters = { onUpdate(filters) }
     val rootListState = rememberLazyListState()
     var route by remember { mutableStateOf<SourceFilterRoute>(SourceFilterRoute.Root) }
-    val hasPagedGroups = filters.any { it.containsPagedGroup() }
     val isError = errorMessage != null
     val slideDistance = rememberSlideDistance()
     val leavePagedGroup = { route = SourceFilterRoute.Root }
@@ -98,7 +97,7 @@ fun SourceFilterDialog(
     AdaptiveSheet(
         onDismissRequest = dismissOrLeavePagedGroup,
         enableImplicitDismiss = route is SourceFilterRoute.Root,
-        modifier = if (hasPagedGroups) Modifier.fillMaxHeight(0.9f) else Modifier,
+        modifier = if (route is SourceFilterRoute.PagedGroup) Modifier.fillMaxHeight(0.9f) else Modifier,
     ) {
         AnimatedContent(
             targetState = route,
@@ -108,7 +107,7 @@ fun SourceFilterDialog(
                     slideDistance = slideDistance,
                 )
             },
-            modifier = if (hasPagedGroups) Modifier.fillMaxSize() else Modifier,
+            modifier = if (route is SourceFilterRoute.PagedGroup) Modifier.fillMaxSize() else Modifier,
             label = "sourceFilterRoute",
         ) { currentRoute ->
             when (currentRoute) {
@@ -189,12 +188,4 @@ private sealed interface SourceFilterRoute {
     data object Root : SourceFilterRoute
 
     data class PagedGroup(val filter: EntryFilter.PagedGroup<*>) : SourceFilterRoute
-}
-
-private fun EntryFilter<*>.containsPagedGroup(): Boolean {
-    return when (this) {
-        is EntryFilter.PagedGroup<*> -> true
-        is EntryFilter.Group<*> -> state.any { (it as? EntryFilter<*>)?.containsPagedGroup() == true }
-        else -> false
-    }
 }
