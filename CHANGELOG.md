@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.7.0] - 2026-08-01
+
+### 🌟 Highlights
+
+A rebuilt native document reader provides continuous, selectable HTML book reading with
+configurable themes, while migrations and source filtering handle larger collections better.
+
+### ✨ Added
+
+- Sources can provide paged, searchable filter groups with optional jump navigation for very
+  long filter lists.
+- Migrate individual entries or whole groups from merged library entries, and open a specific
+  source member directly for inspection.
+- Open the default manga or document-reader settings directly from an active reader.
+
+### 🔄 Changed
+
+- Compatible HTML book chapters now use a native document reader with continuous chapter
+  reading, table-of-contents navigation, selected-text translation, and a per-book black theme.
+
+### 🗑️ Removed
+
+- EPUB reader support; compatible book sources must provide semantic BOOK documents to remain
+  readable in Katari.
+
+### 🐛 Fixed
+
+- Kept library membership and the original added date intact when an entry is refreshed from its
+  source.
+- Kept next-chapter preparation and automatic selected-text translation settings independent for
+  manga and the document reader, including per-entry overrides.
+
 ## [1.6.2] - 2026-07-30
 
 ### 🌟 Highlights
@@ -334,7 +366,8 @@ Based on [Mihon v0.20.1](https://github.com/mihonapp/mihon/releases/tag/v0.20.1)
 - Rebranded the application as Katari with its own package identity, visual
   identity, release pipeline, and documentation.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.6.2...upcoming
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.7.0...upcoming
+[1.7.0]: https://github.com/pa2x2/katari/releases/tag/v1.7.0
 [1.6.2]: https://github.com/pa2x2/katari/releases/tag/v1.6.2
 [1.6.1]: https://github.com/pa2x2/katari/releases/tag/v1.6.1
 [1.6.0]: https://github.com/pa2x2/katari/releases/tag/v1.6.0
