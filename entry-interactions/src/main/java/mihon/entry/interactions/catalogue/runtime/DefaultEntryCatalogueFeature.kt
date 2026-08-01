@@ -1,6 +1,8 @@
 package mihon.entry.interactions.catalogue.runtime
 
+import androidx.paging.PagingSource
 import eu.kanade.tachiyomi.source.entry.EntryFilter
+import eu.kanade.tachiyomi.source.entry.EntryFilterPageItem
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import kotlinx.coroutines.CancellationException
 import mihon.entry.interactions.catalogue.EntryCatalogueBrowseRequest
@@ -8,6 +10,7 @@ import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 import mihon.entry.interactions.catalogue.EntryCatalogueFiltersResult
 import mihon.entry.interactions.catalogue.EntryCatalogueListing
+import mihon.entry.interactions.catalogue.EntryCataloguePagedFilterRequest
 import mihon.entry.interactions.catalogue.EntryCatalogueSearchRequest
 import mihon.entry.interactions.catalogue.EntryCatalogueSearchResult
 import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
@@ -16,6 +19,7 @@ import mihon.entry.interactions.catalogue.EntryCatalogueUnavailableReason
 import mihon.entry.interactions.catalogue.host.EntryCatalogueHostSource
 import mihon.entry.interactions.catalogue.host.EntryCatalogueHostSourceResolution
 import mihon.entry.interactions.catalogue.host.EntryCatalogueProviderHost
+import mihon.entry.interactions.catalogue.paging.EntryCatalogueFilterPagingSource
 import mihon.entry.interactions.catalogue.paging.EntryCataloguePagingSource
 import tachiyomi.domain.entry.adapter.toEntry
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
@@ -106,6 +110,16 @@ internal class DefaultEntryCatalogueFeature(
         } catch (error: Exception) {
             EntryCatalogueFilterSuggestionsResult.Failed(error)
         }
+    }
+
+    override fun filterItems(
+        request: EntryCataloguePagedFilterRequest,
+    ): PagingSource<String, EntryFilterPageItem> {
+        return EntryCatalogueFilterPagingSource(
+            request = request,
+            host = host,
+            sourceResolution = source(request.sourceId),
+        )
     }
 
     override fun paging(request: EntryCatalogueBrowseRequest) = EntryCataloguePagingSource(

@@ -75,6 +75,79 @@ sealed class EntryFilter<T>(val name: String, var state: T) {
         ): EntryFilterTextEdit
     }
 
+    /**
+     * Lazily loaded collection of source-defined filter controls.
+     *
+     * [state] is the only durable truth. Loaded page items and their projected controls are disposable views of that
+     * state and must not be used by implementations to retain selections. The host owns paging, search scheduling,
+     * cancellation, refresh presentation, and failure handling.
+     *
+     * Implementations must use an immutable [S]. [encodeState] and [decodeState] allow the host to persist that typed
+     * state without knowing its representation.
+     */
+    abstract class PagedGroup<S>(
+        name: String,
+        initialState: S,
+        val options: EntryFilterPagingOptions = EntryFilterPagingOptions(),
+    ) : EntryFilter<S>(name, initialState) {
+        private val initialState = initialState
+
+        /** Loads one source-ordered page for the requested scope and optional search query. */
+        abstract suspend fun getPage(request: EntryFilterPageRequest): EntryFilterPage
+
+        /**
+         * Projects [item] into an interactive leaf filter.
+         *
+         * [previous] is the prior projection for the same stable item ID when one remains visible. Implementations may
+         * update and return it to preserve editing/focus state, or return a replacement control.
+         */
+        abstract fun projectItem(
+            item: EntryFilterPageItem,
+            previous: EntryFilter<*>?,
+        ): EntryFilter<*>
+
+        /** Folds an updated projected control back into a new immutable durable state. */
+        abstract fun reduceItemUpdate(
+            item: EntryFilterPageItem,
+            updatedFilter: EntryFilter<*>,
+        ): S
+
+        /** Applies one projected control update without exposing [S] to a star-projected host caller. */
+        fun applyItemUpdate(
+            item: EntryFilterPageItem,
+            updatedFilter: EntryFilter<*>,
+        ) {
+            state = reduceItemUpdate(item, updatedFilter)
+        }
+
+        /** Returns the number of source-defined active items represented by [state]. */
+        abstract fun selectedItemCount(state: S): Int
+
+        /** Returns the active-item count for the current durable state. */
+        fun currentSelectedItemCount(): Int = selectedItemCount(state)
+
+        /** Encodes [state] for app-owned filter preset persistence. This must be deterministic and side-effect free. */
+        abstract fun encodeState(state: S): String
+
+        /** Decodes persisted state, or returns `null` when it is unknown or invalid. */
+        abstract fun decodeState(value: String): S?
+
+        /** Encodes the current durable state without exposing [S] to a star-projected host caller. */
+        fun encodeCurrentState(): String = encodeState(state)
+
+        /** Restores encoded state and reports whether decoding succeeded. */
+        fun restoreEncodedState(value: String): Boolean {
+            val decoded = decodeState(value) ?: return false
+            state = decoded
+            return true
+        }
+
+        /** Restores the source-defined initial state without retaining loaded page controls. */
+        fun resetState() {
+            state = initialState
+        }
+    }
+
     /** Boolean filter rendered as a check box. */
     abstract class CheckBox(name: String, state: Boolean = false) : EntryFilter<Boolean>(name, state)
 

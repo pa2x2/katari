@@ -88,4 +88,5 @@ private fun EntryFilter<*>.toLegacyFilter(): Filter<*> = when (this) {
         values,
         state?.let { Filter.Sort.Selection(it.index, it.ascending) },
     ) {}
+    is EntryFilter.PagedGroup<*> -> error("Paged Entry filters cannot be converted to the legacy source API")
 }

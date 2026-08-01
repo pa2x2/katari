@@ -345,6 +345,7 @@ data class CatalogScreen(
                     onFilter = { screenModel.search(filters = state.filters) },
                     onUpdate = screenModel::setFilters,
                     onRequestSuggestions = screenModel::filterSuggestions,
+                    onRequestPagedFilterItems = screenModel::pagedFilterItems,
                     onRetry = screenModel::retryFilterLoad,
                 )
             }

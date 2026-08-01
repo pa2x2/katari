@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
+import androidx.paging.PagingSource
 import androidx.paging.cachedIn
 import androidx.paging.filter
 import androidx.paging.map
@@ -32,6 +33,9 @@ import eu.kanade.presentation.entry.components.buildMergeTargets
 import eu.kanade.presentation.entry.components.rankMergeTargets
 import eu.kanade.presentation.util.ioCoroutineScope
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
+import eu.kanade.tachiyomi.source.entry.EntryFilterPageItem
+import eu.kanade.tachiyomi.source.entry.EntryFilterPageLoadReason
+import eu.kanade.tachiyomi.source.entry.EntryFilterPageScope
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
@@ -52,6 +56,7 @@ import mihon.entry.interactions.catalogue.EntryCatalogueBrowseRequest
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 import mihon.entry.interactions.catalogue.EntryCatalogueListing
+import mihon.entry.interactions.catalogue.EntryCataloguePagedFilterRequest
 import mihon.entry.interactions.catalogue.EntryCatalogueSourceResolution
 import mihon.entry.interactions.library.membership.EntryLibraryAddRequest
 import mihon.entry.interactions.library.membership.EntryLibraryAddResult
@@ -270,6 +275,23 @@ class CatalogScreenModel(
                 input = input,
             )
         }
+    }
+
+    fun pagedFilterItems(
+        filter: SourceModelFilter.PagedGroup<*>,
+        scope: EntryFilterPageScope,
+        query: String?,
+        initialLoadReason: EntryFilterPageLoadReason,
+    ): PagingSource<String, EntryFilterPageItem> {
+        return entryCatalogueFeature.filterItems(
+            EntryCataloguePagedFilterRequest(
+                sourceId = sourceId,
+                filter = filter,
+                scope = scope,
+                query = query,
+                initialLoadReason = initialLoadReason,
+            ),
+        )
     }
 
     fun search(query: String? = null, filters: EntryFilterList? = null) {

@@ -4,6 +4,11 @@ import androidx.paging.PagingSource
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterAutocompleteOptions
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
+import eu.kanade.tachiyomi.source.entry.EntryFilterPage
+import eu.kanade.tachiyomi.source.entry.EntryFilterPageItem
+import eu.kanade.tachiyomi.source.entry.EntryFilterPageLoadReason
+import eu.kanade.tachiyomi.source.entry.EntryFilterPageRequest
+import eu.kanade.tachiyomi.source.entry.EntryFilterPageScope
 import eu.kanade.tachiyomi.source.entry.EntryFilterSuggestion
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextEdit
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
@@ -26,6 +31,7 @@ import mihon.entry.interactions.catalogue.EntryCatalogueFeatureContributor
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 import mihon.entry.interactions.catalogue.EntryCatalogueFiltersResult
 import mihon.entry.interactions.catalogue.EntryCatalogueListing
+import mihon.entry.interactions.catalogue.EntryCataloguePagedFilterRequest
 import mihon.entry.interactions.catalogue.EntryCatalogueSearchRequest
 import mihon.entry.interactions.catalogue.EntryCatalogueSearchResult
 import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
@@ -137,6 +143,42 @@ class EntryCatalogueFeatureTest {
     }
 
     @Test
+    fun `paged filter items retain opaque continuation and source ordering`() = runTest {
+        val filter = pagedGroup()
+        val first = EntryFilterPageItem("first", "First")
+        val second = EntryFilterPageItem("second", "Second")
+        val host = host()
+        every { host.source(7L) } returns EntryCatalogueHostSourceResolution.Available(source)
+        coEvery {
+            host.filterPage(
+                7L,
+                filter,
+                EntryFilterPageRequest(
+                    EntryFilterPageScope.AVAILABLE,
+                    null,
+                    null,
+                    50,
+                    EntryFilterPageLoadReason.INITIAL,
+                ),
+            )
+        } returns EntryFilterPage(listOf(first, second), "next")
+
+        val result = feature(host).filterItems(
+            EntryCataloguePagedFilterRequest(
+                sourceId = 7L,
+                filter = filter,
+                scope = EntryFilterPageScope.AVAILABLE,
+                query = null,
+            ),
+        ).load(PagingSource.LoadParams.Refresh(null, 50, false))
+
+        result.shouldBeInstanceOf<PagingSource.LoadResult.Page<String, EntryFilterPageItem>>().run {
+            data shouldBe listOf(first, second)
+            nextKey shouldBe "next"
+        }
+    }
+
+    @Test
     fun `background search filters provider results by type without persisting candidates`() = runTest {
         val filters = EntryFilterList()
         val manga = sourceEntry("/same", EntryType.MANGA)
@@ -240,5 +282,21 @@ class EntryCatalogueFeatureTest {
             input: EntryFilterTextInput,
             suggestion: EntryFilterSuggestion,
         ): EntryFilterTextEdit = EntryFilterTextEdit(suggestion.value, suggestion.value.length)
+    }
+
+    private fun pagedGroup() = object : EntryFilter.PagedGroup<String>("Options", "") {
+        override suspend fun getPage(request: EntryFilterPageRequest): EntryFilterPage =
+            error("Host executes pages")
+
+        override fun projectItem(item: EntryFilterPageItem, previous: EntryFilter<*>?): EntryFilter<*> =
+            object : EntryFilter.CheckBox(item.label) {}
+
+        override fun reduceItemUpdate(item: EntryFilterPageItem, updatedFilter: EntryFilter<*>): String = item.id
+
+        override fun selectedItemCount(state: String): Int = state.count()
+
+        override fun encodeState(state: String): String = state
+
+        override fun decodeState(value: String): String = value
     }
 }

@@ -2,6 +2,7 @@ package mihon.entry.interactions.catalogue
 
 import androidx.paging.PagingSource
 import eu.kanade.tachiyomi.source.entry.EntryFilter
+import eu.kanade.tachiyomi.source.entry.EntryFilterPageItem
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import kotlinx.coroutines.flow.StateFlow
 import tachiyomi.domain.source.model.CatalogListItem
@@ -24,6 +25,8 @@ interface EntryCatalogueFeature {
         filter: EntryFilter.Autocomplete,
         input: EntryFilterTextInput,
     ): EntryCatalogueFilterSuggestionsResult
+
+    fun filterItems(request: EntryCataloguePagedFilterRequest): PagingSource<String, EntryFilterPageItem>
 
     fun paging(request: EntryCatalogueBrowseRequest): PagingSource<Long, CatalogListItem>
 

@@ -6,6 +6,7 @@
     <string name="on">On</string>
     <string name="off">Off</string>
     <string name="selected">Selected</string>
+    <string name="action_back">Back</string>
     <string name="not_selected">Not selected</string>
     <string name="action_menu_overflow_description">More options</string>
     <string name="action_bar_up_description">Navigate up</string>
@@ -1126,6 +1127,10 @@
     <string name="browse_feed_loading_newer_items">Loading newer items…</string>
     <string name="browse_feed_preset_exists">A preset with this name already exists</string>
     <string name="browse_filter_presets">Filter presets</string>
+    <string name="browse_filter_available">Available</string>
+    <string name="browse_filter_selected_count">%1$d selected</string>
+    <string name="browse_filter_type_more_characters">Type at least %1$d characters</string>
+    <string name="browse_filter_no_selected">No selected options</string>
     <string name="browse_delete_preset_confirmation">Delete preset "%1$s"? Feeds using it will also be removed.</string>
     <string name="has_results">Has results</string>
     <string name="local_source_help_guide">Local source guide</string>

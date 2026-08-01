@@ -54,6 +54,27 @@ class EntryFilterListTest {
         }
     }
 
+    @Test
+    fun `paged group policies and page requests reject invalid bounds`() {
+        assertEquals(50, EntryFilterPagingOptions().pageSize)
+        assertEquals(300L, EntryFilterPagingOptions().search?.debounceMillis)
+
+        assertFailsWith<IllegalArgumentException> { EntryFilterPagingOptions(pageSize = 0) }
+        assertFailsWith<IllegalArgumentException> { EntryFilterPagingOptions(pageSize = 201) }
+        assertFailsWith<IllegalArgumentException> {
+            EntryFilterPagingSearchOptions(minimumQueryLength = 0)
+        }
+        assertFailsWith<IllegalArgumentException> {
+            EntryFilterPageRequest(
+                scope = EntryFilterPageScope.AVAILABLE,
+                query = null,
+                continuationToken = "next",
+                requestedSize = 50,
+                reason = EntryFilterPageLoadReason.INITIAL,
+            )
+        }
+    }
+
     private fun interactiveFilters(): List<EntryFilter<*>> = listOf(
         textFilter(),
         autocompleteFilter(),
@@ -86,6 +107,7 @@ class EntryFilterListTest {
             is EntryFilter.TriState -> filter.state = EntryFilter.TriState.STATE_INCLUDE
             is EntryFilter.Select<*> -> filter.state = 1
             is EntryFilter.Sort -> filter.state = EntryFilter.Sort.Selection(index = 0, ascending = true)
+            is EntryFilter.PagedGroup<*> -> error("Paged groups are covered separately")
             else -> error("Unsupported interactive filter: ${filter::class.simpleName}")
         }
     }

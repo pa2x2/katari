@@ -241,6 +241,13 @@ sealed interface FilterStateNode {
         override val name: String,
         val state: List<FilterStateNode>,
     ) : FilterStateNode
+
+    @Serializable
+    @SerialName("paged_group")
+    data class PagedGroup(
+        override val name: String,
+        val state: String,
+    ) : FilterStateNode
 }
 
 fun SourceFeedPreset.toListing(): FeedSavedListing {
@@ -299,6 +306,9 @@ private fun applyNodes(filters: List<EntryFilter<*>>, nodes: List<FilterStateNod
                     )
                 }
             }
+            filter is EntryFilter.PagedGroup<*> && node is FilterStateNode.PagedGroup -> {
+                runCatching { filter.restoreEncodedState(node.state) }
+            }
             filter is EntryFilter.Group<*> && node is FilterStateNode.Group -> {
                 applyNodes(filter.state.filterIsInstance<EntryFilter<*>>(), node.state)
             }
@@ -315,6 +325,7 @@ private fun EntryFilter<*>.toNode(): FilterStateNode {
         is EntryFilter.CheckBox -> FilterStateNode.CheckBox(name, state)
         is EntryFilter.TriState -> FilterStateNode.TriState(name, state)
         is EntryFilter.Sort -> FilterStateNode.Sort(name, state?.index, state?.ascending)
+        is EntryFilter.PagedGroup<*> -> FilterStateNode.PagedGroup(name, encodeCurrentState())
         is EntryFilter.Group<*> -> FilterStateNode.Group(
             name = name,
             state = state.filterIsInstance<EntryFilter<*>>().map(EntryFilter<*>::toNode),

@@ -3,6 +3,8 @@ package mihon.entry.interactions.catalogue.host
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
+import eu.kanade.tachiyomi.source.entry.EntryFilterPage
+import eu.kanade.tachiyomi.source.entry.EntryFilterPageRequest
 import eu.kanade.tachiyomi.source.entry.EntryFilterSuggestion
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.source.entry.EntryPageResult
@@ -60,6 +62,15 @@ internal class SourceManagerEntryCatalogueProviderHost(
     ): List<EntryFilterSuggestion> {
         catalogueProvider(sourceId)
         return filter.getSuggestions(input, query)
+    }
+
+    override suspend fun filterPage(
+        sourceId: Long,
+        filter: EntryFilter.PagedGroup<*>,
+        request: EntryFilterPageRequest,
+    ): EntryFilterPage {
+        catalogueProvider(sourceId)
+        return filter.getPage(request)
     }
 
     override fun backgroundFilters(sourceId: Long): EntryFilterList {

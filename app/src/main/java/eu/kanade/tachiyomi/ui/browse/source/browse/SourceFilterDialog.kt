@@ -1,26 +1,15 @@
 package eu.kanade.tachiyomi.ui.browse.source.browse
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowDropDown
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.Save
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,24 +17,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.paging.PagingSource
 import eu.kanade.domain.source.model.SourceFeedPreset
 import eu.kanade.presentation.components.AdaptiveSheet
-import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
+import eu.kanade.tachiyomi.source.entry.EntryFilterPageItem
+import eu.kanade.tachiyomi.source.entry.EntryFilterPageLoadReason
+import eu.kanade.tachiyomi.source.entry.EntryFilterPageScope
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.AutocompleteFilterItem
-import eu.kanade.tachiyomi.ui.browse.source.browse.filter.SearchableFilterGroupContent
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.FilterItem
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.PagedGroupFilterContent
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
-import tachiyomi.core.common.preference.TriState
+import soup.compose.material.motion.animation.materialSharedAxisX
+import soup.compose.material.motion.animation.rememberSlideDistance
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.CheckboxItem
-import tachiyomi.presentation.core.components.CollapsibleBox
 import tachiyomi.presentation.core.components.HeadingItem
-import tachiyomi.presentation.core.components.SelectItem
-import tachiyomi.presentation.core.components.SortItem
-import tachiyomi.presentation.core.components.TextItem
-import tachiyomi.presentation.core.components.TriStateItem
 import tachiyomi.presentation.core.components.material.Button
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -70,270 +57,108 @@ fun SourceFilterDialog(
         EntryFilter.Autocomplete,
         EntryFilterTextInput,
     ) -> EntryCatalogueFilterSuggestionsResult,
+    onRequestPagedFilterItems: (
+        EntryFilter.PagedGroup<*>,
+        EntryFilterPageScope,
+        String?,
+        EntryFilterPageLoadReason,
+    ) -> PagingSource<String, EntryFilterPageItem>,
     onRetry: (() -> Unit)? = null,
 ) {
     val updateFilters = { onUpdate(filters) }
-    var presetMenuExpanded by remember { mutableStateOf(false) }
-    var saveMenuExpanded by remember { mutableStateOf(false) }
+    val rootListState = rememberLazyListState()
+    var route by remember { mutableStateOf<SourceFilterRoute>(SourceFilterRoute.Root) }
+    val hasPagedGroups = filters.any { it.containsPagedGroup() }
     val isError = errorMessage != null
+    val slideDistance = rememberSlideDistance()
+    val leavePagedGroup = { route = SourceFilterRoute.Root }
+    val dismissOrLeavePagedGroup = {
+        if (route is SourceFilterRoute.PagedGroup) {
+            leavePagedGroup()
+        } else {
+            onDismissRequest()
+        }
+    }
+    val filterAndDismiss = {
+        onFilter()
+        onDismissRequest()
+    }
 
-    AdaptiveSheet(onDismissRequest = onDismissRequest) {
-        LazyColumn {
-            stickyHeader {
-                Row(
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.background)
-                        .padding(8.dp),
-                ) {
-                    TextButton(onClick = onReset, enabled = !isLoading) {
-                        Text(
-                            text = stringResource(MR.strings.action_reset),
-                            style = LocalTextStyle.current.copy(
-                                color = MaterialTheme.colorScheme.primary,
-                            ),
-                        )
-                    }
+    BackHandler(enabled = route is SourceFilterRoute.PagedGroup, onBack = leavePagedGroup)
 
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    if (presets.isNotEmpty()) {
-                        Box {
-                            IconButton(onClick = { presetMenuExpanded = true }) {
-                                Icon(
-                                    imageVector = Icons.Outlined.ArrowDropDown,
-                                    contentDescription = stringResource(MR.strings.browse_filter_presets),
-                                )
-                            }
-
-                            DropdownMenu(
-                                expanded = presetMenuExpanded,
-                                onDismissRequest = { presetMenuExpanded = false },
-                            ) {
-                                presets.forEach { preset ->
-                                    DropdownMenuItem(
-                                        text = { Text(text = preset.name) },
-                                        trailingIcon = {
-                                            if (canDeletePreset(preset.id)) {
-                                                Row {
-                                                    IconButton(
-                                                        onClick = {
-                                                            presetMenuExpanded = false
-                                                            onEditPreset(preset.id)
-                                                        },
-                                                    ) {
-                                                        Icon(
-                                                            imageVector = Icons.Outlined.Edit,
-                                                            contentDescription = stringResource(MR.strings.action_edit),
-                                                        )
-                                                    }
-                                                    IconButton(
-                                                        onClick = {
-                                                            presetMenuExpanded = false
-                                                            onDeletePreset(preset.id)
-                                                        },
-                                                    ) {
-                                                        Icon(
-                                                            imageVector = Icons.Outlined.Delete,
-                                                            contentDescription = stringResource(
-                                                                MR.strings.action_delete,
-                                                            ),
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        onClick = {
-                                            presetMenuExpanded = false
-                                            onApplyPreset(preset.id)
-                                        },
-                                    )
-                                }
-                            }
+    AdaptiveSheet(
+        onDismissRequest = dismissOrLeavePagedGroup,
+        enableImplicitDismiss = route is SourceFilterRoute.Root,
+        modifier = if (hasPagedGroups) Modifier.fillMaxHeight(0.9f) else Modifier,
+    ) {
+        AnimatedContent(
+            targetState = route,
+            transitionSpec = {
+                materialSharedAxisX(
+                    forward = targetState is SourceFilterRoute.PagedGroup,
+                    slideDistance = slideDistance,
+                )
+            },
+            modifier = if (hasPagedGroups) Modifier.fillMaxSize() else Modifier,
+            label = "sourceFilterRoute",
+        ) { currentRoute ->
+            when (currentRoute) {
+                SourceFilterRoute.Root -> {
+                    LazyColumn(state = rootListState) {
+                        stickyHeader {
+                            SourceFilterRootHeader(
+                                presets = presets,
+                                onReset = onReset,
+                                onApplyPreset = onApplyPreset,
+                                onEditPreset = onEditPreset,
+                                onDeletePreset = onDeletePreset,
+                                canDeletePreset = canDeletePreset,
+                                onSaveAsNewPreset = onSaveAsNewPreset,
+                                currentPresetName = currentPresetName,
+                                onUpdateCurrentPreset = onUpdateCurrentPreset,
+                                onFilter = filterAndDismiss,
+                                resetEnabled = !isLoading,
+                                filterEnabled = !isLoading && !isError,
+                            )
                         }
-                    }
 
-                    if (onSaveAsNewPreset != null) {
-                        if (currentPresetName != null && onUpdateCurrentPreset != null) {
-                            Box {
-                                IconButton(onClick = { saveMenuExpanded = true }) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Save,
-                                        contentDescription = stringResource(MR.strings.action_save),
-                                    )
-                                }
-
-                                DropdownMenu(
-                                    expanded = saveMenuExpanded,
-                                    onDismissRequest = { saveMenuExpanded = false },
-                                ) {
-                                    DropdownMenuItem(
-                                        text = {
-                                            Text(text = stringResource(MR.strings.browse_feed_save_as_new_preset))
-                                        },
-                                        onClick = {
-                                            saveMenuExpanded = false
-                                            onSaveAsNewPreset()
-                                        },
-                                    )
-                                    DropdownMenuItem(
-                                        text = {
-                                            Text(
-                                                text = stringResource(
-                                                    MR.strings.browse_feed_update_current_preset,
-                                                    currentPresetName,
-                                                ),
-                                            )
-                                        },
-                                        onClick = {
-                                            saveMenuExpanded = false
-                                            onUpdateCurrentPreset()
-                                        },
-                                    )
+                        if (isLoading) {
+                            item {
+                                HeadingItem(stringResource(MR.strings.loading))
+                            }
+                        } else if (isError) {
+                            item {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Text(text = errorMessage)
+                                    if (onRetry != null) {
+                                        Button(onClick = onRetry, modifier = Modifier.padding(top = 12.dp)) {
+                                            Text(stringResource(MR.strings.action_retry))
+                                        }
+                                    }
                                 }
                             }
                         } else {
-                            IconButton(onClick = onSaveAsNewPreset) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Save,
-                                    contentDescription = stringResource(MR.strings.action_save),
+                            items(filters) { filter ->
+                                FilterItem(
+                                    filter = filter,
+                                    onUpdate = updateFilters,
+                                    onOpenPagedGroup = { route = SourceFilterRoute.PagedGroup(it) },
+                                    onRequestSuggestions = onRequestSuggestions,
                                 )
                             }
                         }
                     }
-
-                    Button(onClick = {
-                        onFilter()
-                        onDismissRequest()
-                    }, enabled = !isLoading && !isError) {
-                        Text(stringResource(MR.strings.action_filter))
-                    }
                 }
-                HorizontalDivider()
-            }
-
-            if (isLoading) {
-                item {
-                    HeadingItem(stringResource(MR.strings.loading))
-                }
-            } else if (isError) {
-                item {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                    ) {
-                        Text(text = errorMessage)
-                        if (onRetry != null) {
-                            Button(onClick = onRetry, modifier = Modifier.padding(top = 12.dp)) {
-                                Text(stringResource(MR.strings.action_retry))
-                            }
-                        }
-                    }
-                }
-            } else {
-                items(filters) {
-                    FilterItem(it, updateFilters, onRequestSuggestions)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun FilterItem(
-    filter: EntryFilter<*>,
-    onUpdate: () -> Unit,
-    onRequestSuggestions: suspend (
-        EntryFilter.Autocomplete,
-        EntryFilterTextInput,
-    ) -> EntryCatalogueFilterSuggestionsResult,
-) {
-    when (filter) {
-        is EntryFilter.Header -> {
-            HeadingItem(filter.name)
-        }
-        is EntryFilter.Separator -> {
-            HorizontalDivider()
-        }
-        is EntryFilter.CheckBox -> {
-            CheckboxItem(
-                label = filter.name,
-                checked = filter.state,
-            ) {
-                filter.state = !filter.state
-                onUpdate()
-            }
-        }
-        is EntryFilter.TriState -> {
-            TriStateItem(
-                label = filter.name,
-                state = filter.state.toTriStateFilter(),
-            ) {
-                filter.state = filter.state.toTriStateFilter().next().toTriStateInt()
-                onUpdate()
-            }
-        }
-        is EntryFilter.Autocomplete -> {
-            AutocompleteFilterItem(
-                filter = filter,
-                onUpdate = onUpdate,
-                onRequestSuggestions = onRequestSuggestions,
-            )
-        }
-        is EntryFilter.Text -> {
-            TextItem(
-                label = filter.name,
-                value = filter.state,
-            ) {
-                filter.state = it
-                onUpdate()
-            }
-        }
-        is EntryFilter.Select<*> -> {
-            SelectItem(
-                label = filter.name,
-                options = filter.values,
-                selectedIndex = filter.state,
-            ) {
-                filter.state = it
-                onUpdate()
-            }
-        }
-        is EntryFilter.Sort -> {
-            CollapsibleBox(
-                heading = filter.name,
-            ) {
-                Column {
-                    filter.values.mapIndexed { index, item ->
-                        val sortAscending = filter.state?.ascending
-                            ?.takeIf { index == filter.state?.index }
-                        SortItem(
-                            label = item,
-                            sortDescending = if (sortAscending != null) !sortAscending else null,
-                            onClick = {
-                                val ascending = if (index == filter.state?.index) {
-                                    !filter.state!!.ascending
-                                } else {
-                                    filter.state?.ascending ?: true
-                                }
-                                filter.state = EntryFilter.Sort.Selection(
-                                    index = index,
-                                    ascending = ascending,
-                                )
-                                onUpdate()
-                            },
-                        )
-                    }
-                }
-            }
-        }
-        is EntryFilter.Group<*> -> {
-            CollapsibleBox(
-                heading = filter.name,
-            ) {
-                SearchableFilterGroupContent(group = filter) {
-                    FilterItem(
-                        filter = it,
-                        onUpdate = onUpdate,
+                is SourceFilterRoute.PagedGroup -> {
+                    PagedGroupFilterContent(
+                        filter = currentRoute.filter,
+                        onBack = leavePagedGroup,
+                        onFilter = filterAndDismiss,
+                        onUpdate = updateFilters,
                         onRequestSuggestions = onRequestSuggestions,
+                        pagingSourceFactory = { scope, query, reason ->
+                            onRequestPagedFilterItems(currentRoute.filter, scope, query, reason)
+                        },
                     )
                 }
             }
@@ -341,19 +166,16 @@ private fun FilterItem(
     }
 }
 
-private fun Int.toTriStateFilter(): TriState {
-    return when (this) {
-        EntryFilter.TriState.STATE_IGNORE -> TriState.DISABLED
-        EntryFilter.TriState.STATE_INCLUDE -> TriState.ENABLED_IS
-        EntryFilter.TriState.STATE_EXCLUDE -> TriState.ENABLED_NOT
-        else -> throw IllegalStateException("Unknown TriState state: $this")
-    }
+private sealed interface SourceFilterRoute {
+    data object Root : SourceFilterRoute
+
+    data class PagedGroup(val filter: EntryFilter.PagedGroup<*>) : SourceFilterRoute
 }
 
-private fun TriState.toTriStateInt(): Int {
+private fun EntryFilter<*>.containsPagedGroup(): Boolean {
     return when (this) {
-        TriState.DISABLED -> EntryFilter.TriState.STATE_IGNORE
-        TriState.ENABLED_IS -> EntryFilter.TriState.STATE_INCLUDE
-        TriState.ENABLED_NOT -> EntryFilter.TriState.STATE_EXCLUDE
+        is EntryFilter.PagedGroup<*> -> true
+        is EntryFilter.Group<*> -> state.any { (it as? EntryFilter<*>)?.containsPagedGroup() == true }
+        else -> false
     }
 }
