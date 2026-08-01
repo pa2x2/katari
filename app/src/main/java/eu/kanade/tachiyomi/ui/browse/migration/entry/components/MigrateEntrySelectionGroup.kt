@@ -17,7 +17,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.state.ToggleableState
@@ -87,6 +86,10 @@ fun MigrateEntrySelectionGroup(
         )
     }
     val connectorColor = MaterialTheme.colorScheme.outlineVariant
+    val rootCoverHalfHeight = when (itemOrientation) {
+        EntryItemOrientation.VERTICAL -> 40.dp
+        EntryItemOrientation.HORIZONTAL -> 20.dp
+    }
 
     Column(modifier = modifier) {
         MigrateEntrySelectionItem(
@@ -105,10 +108,10 @@ fun MigrateEntrySelectionGroup(
             modifier = if (expanded) {
                 Modifier.drawWithContent {
                     drawContent()
-                    val connectorX = 26.dp.toPx()
+                    val connectorX = 52.dp.toPx()
                     drawLine(
                         color = connectorColor,
-                        start = Offset(connectorX, size.height / 2 + 10.dp.toPx()),
+                        start = Offset(connectorX, size.height / 2 + rootCoverHalfHeight.toPx()),
                         end = Offset(connectorX, size.height),
                         strokeWidth = 1.dp.toPx(),
                     )
@@ -167,9 +170,10 @@ private fun MigrationEntryTreeChild(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .drawBehind {
-                val branchX = 26.dp.toPx()
-                val branchEndX = 52.dp.toPx()
+            .drawWithContent {
+                drawContent()
+                val branchX = 52.dp.toPx()
+                val branchEndX = 68.dp.toPx()
                 val branchY = size.height / 2
                 val strokeWidth = 1.dp.toPx()
                 drawLine(
