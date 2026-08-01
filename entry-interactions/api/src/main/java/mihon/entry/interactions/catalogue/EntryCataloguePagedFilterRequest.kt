@@ -11,10 +11,12 @@ data class EntryCataloguePagedFilterRequest(
     val scope: EntryFilterPageScope,
     val query: String?,
     val initialLoadReason: EntryFilterPageLoadReason = EntryFilterPageLoadReason.INITIAL,
+    val initialAnchor: String? = null,
 ) {
     init {
-        require(initialLoadReason != EntryFilterPageLoadReason.APPEND) {
+        require(initialLoadReason != EntryFilterPageLoadReason.PAGINATION) {
             "initialLoadReason must start a paging generation"
         }
+        require(initialAnchor == null || initialAnchor.isNotEmpty()) { "initialAnchor must not be empty" }
     }
 }

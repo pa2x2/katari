@@ -3,6 +3,7 @@ package mihon.entry.interactions.catalogue.paging
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageItem
+import eu.kanade.tachiyomi.source.entry.EntryFilterPageLoadDirection
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageLoadReason
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageRequest
 import kotlinx.coroutines.CancellationException
@@ -21,7 +22,6 @@ internal class EntryCatalogueFilterPagingSource(
     private val seenItemIds = hashSetOf<String>()
 
     override suspend fun load(params: LoadParams<String>): LoadResult<String, EntryFilterPageItem> {
-        val continuationToken = params.key
         return try {
             when (sourceResolution) {
                 is EntryCatalogueSourceResolution.Available -> Unit
@@ -35,16 +35,24 @@ internal class EntryCatalogueFilterPagingSource(
                 )
             }
             val requestedSize = request.filter.options.pageSize
+            val direction = when (params) {
+                is LoadParams.Refresh -> EntryFilterPageLoadDirection.INITIAL
+                is LoadParams.Prepend -> EntryFilterPageLoadDirection.BEFORE
+                is LoadParams.Append -> EntryFilterPageLoadDirection.AFTER
+            }
+            val continuationToken = params.key.takeUnless { direction == EntryFilterPageLoadDirection.INITIAL }
             val pageRequest = EntryFilterPageRequest(
                 scope = request.scope,
                 query = request.query,
                 continuationToken = continuationToken,
                 requestedSize = requestedSize,
-                reason = if (continuationToken == null) {
+                reason = if (direction == EntryFilterPageLoadDirection.INITIAL) {
                     request.initialLoadReason
                 } else {
-                    EntryFilterPageLoadReason.APPEND
+                    EntryFilterPageLoadReason.PAGINATION
                 },
+                initialAnchor = request.initialAnchor.takeIf { direction == EntryFilterPageLoadDirection.INITIAL },
+                direction = direction,
             )
             val page = withIOContext {
                 host.filterPage(request.sourceId, request.filter, pageRequest)
@@ -55,13 +63,24 @@ internal class EntryCatalogueFilterPagingSource(
             check(page.items.distinctBy(EntryFilterPageItem::id).size == page.items.size) {
                 "Paged filter returned duplicate item IDs within one page"
             }
-            check(page.nextContinuationToken == null || page.nextContinuationToken != continuationToken) {
-                "Paged filter returned the same continuation token"
+            check(
+                direction != EntryFilterPageLoadDirection.BEFORE ||
+                    page.previousContinuationToken == null ||
+                    page.previousContinuationToken != continuationToken,
+            ) {
+                "Paged filter returned the same previous continuation token"
+            }
+            check(
+                direction != EntryFilterPageLoadDirection.AFTER ||
+                    page.nextContinuationToken == null ||
+                    page.nextContinuationToken != continuationToken,
+            ) {
+                "Paged filter returned the same next continuation token"
             }
 
             LoadResult.Page(
                 data = page.items.filter { seenItemIds.add(it.id) },
-                prevKey = null,
+                prevKey = page.previousContinuationToken,
                 nextKey = page.nextContinuationToken,
             )
         } catch (error: CancellationException) {

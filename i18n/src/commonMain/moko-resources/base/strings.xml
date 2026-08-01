@@ -1130,6 +1130,7 @@
     <string name="browse_filter_available">Available</string>
     <string name="browse_filter_selected_count">%1$d selected</string>
     <string name="browse_filter_type_more_characters">Type at least %1$d characters</string>
+    <string name="browse_filter_jump_to">Jump to</string>
     <string name="browse_filter_no_selected">No selected options</string>
     <string name="browse_delete_preset_confirmation">Delete preset "%1$s"? Feeds using it will also be removed.</string>
     <string name="has_results">Has results</string>

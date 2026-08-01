@@ -96,6 +96,16 @@ sealed class EntryFilter<T>(val name: String, var state: T) {
         abstract suspend fun getPage(request: EntryFilterPageRequest): EntryFilterPage
 
         /**
+         * Returns optional source-defined navigation targets for the requested collection view.
+         *
+         * Target IDs and labels are presentation metadata. Anchors are opaque, transient values which the host may
+         * return in an initial page request; they must not be persisted as filter state.
+         */
+        open suspend fun getNavigation(request: EntryFilterNavigationRequest): EntryFilterNavigation {
+            return EntryFilterNavigation()
+        }
+
+        /**
          * Projects [item] into an interactive leaf filter.
          *
          * [previous] is the prior projection for the same stable item ID when one remains visible. Implementations may

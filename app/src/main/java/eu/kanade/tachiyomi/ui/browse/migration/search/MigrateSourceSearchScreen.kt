@@ -185,6 +185,8 @@ data class MigrateSourceSearchScreen(
                     onUpdate = screenModel::setFilters,
                     onRequestSuggestions = screenModel::filterSuggestions,
                     onRequestPagedFilterItems = screenModel::pagedFilterItems,
+                    onRequestPagedFilterNavigation = screenModel::pagedFilterNavigation,
+                    pagedFilterBrowseSession = screenModel::pagedFilterBrowseSession,
                     onRetry = screenModel::retryFilterLoad,
                 )
             }

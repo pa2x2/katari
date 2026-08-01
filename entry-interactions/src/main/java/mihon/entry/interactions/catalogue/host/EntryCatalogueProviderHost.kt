@@ -2,6 +2,8 @@ package mihon.entry.interactions.catalogue.host
 
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
+import eu.kanade.tachiyomi.source.entry.EntryFilterNavigation
+import eu.kanade.tachiyomi.source.entry.EntryFilterNavigationRequest
 import eu.kanade.tachiyomi.source.entry.EntryFilterPage
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageRequest
 import eu.kanade.tachiyomi.source.entry.EntryFilterSuggestion
@@ -38,6 +40,14 @@ internal interface EntryCatalogueProviderHost {
         filter: EntryFilter.PagedGroup<*>,
         request: EntryFilterPageRequest,
     ): EntryFilterPage
+
+    suspend fun filterNavigation(
+        sourceId: Long,
+        filter: EntryFilter.PagedGroup<*>,
+        request: EntryFilterNavigationRequest,
+    ): EntryFilterNavigation {
+        return filter.getNavigation(request)
+    }
 
     fun backgroundFilters(sourceId: Long): EntryFilterList
 

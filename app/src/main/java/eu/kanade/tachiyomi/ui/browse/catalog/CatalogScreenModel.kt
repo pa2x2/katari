@@ -33,6 +33,7 @@ import eu.kanade.presentation.entry.components.buildMergeTargets
 import eu.kanade.presentation.entry.components.rankMergeTargets
 import eu.kanade.presentation.util.ioCoroutineScope
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
+import eu.kanade.tachiyomi.source.entry.EntryFilterNavigationRequest
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageItem
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageLoadReason
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageScope
@@ -40,6 +41,8 @@ import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.sourceNotInstalledName
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.PagedFilterBrowseSession
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.PagedFilterBrowseSessionStore
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.SharingStarted
@@ -54,6 +57,7 @@ import mihon.core.common.browseLongPressActionPriorityForSource
 import mihon.core.common.sanitizeBrowseLongPressActionPriority
 import mihon.entry.interactions.catalogue.EntryCatalogueBrowseRequest
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
+import mihon.entry.interactions.catalogue.EntryCatalogueFilterNavigationResult
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 import mihon.entry.interactions.catalogue.EntryCatalogueListing
 import mihon.entry.interactions.catalogue.EntryCataloguePagedFilterRequest
@@ -153,6 +157,7 @@ class CatalogScreenModel(
 
     private val filterLoader = CatalogFilterLoader(entryCatalogueFeature)
     private val presetHelper = CatalogPresetHelper(sourceId, browseFeedService, entryCatalogueFeature)
+    private val pagedFilterBrowseSessions = PagedFilterBrowseSessionStore(screenModelScope)
 
     val catalogSource =
         (entryCatalogueFeature.source(sourceId) as? EntryCatalogueSourceResolution.Available)?.source
@@ -261,6 +266,7 @@ class CatalogScreenModel(
     }
 
     fun setFilters(filters: EntryFilterList) {
+        pagedFilterBrowseSessions.retain(filters)
         mutableState.update { it.copy(filters = filters) }
     }
 
@@ -282,6 +288,7 @@ class CatalogScreenModel(
         scope: EntryFilterPageScope,
         query: String?,
         initialLoadReason: EntryFilterPageLoadReason,
+        initialAnchor: String?,
     ): PagingSource<String, EntryFilterPageItem> {
         return entryCatalogueFeature.filterItems(
             EntryCataloguePagedFilterRequest(
@@ -290,8 +297,27 @@ class CatalogScreenModel(
                 scope = scope,
                 query = query,
                 initialLoadReason = initialLoadReason,
+                initialAnchor = initialAnchor,
             ),
         )
+    }
+
+    suspend fun pagedFilterNavigation(
+        filter: SourceModelFilter.PagedGroup<*>,
+        scope: EntryFilterPageScope,
+        query: String?,
+    ): EntryCatalogueFilterNavigationResult {
+        return withIOContext {
+            entryCatalogueFeature.filterNavigation(
+                sourceId = sourceId,
+                filter = filter,
+                request = EntryFilterNavigationRequest(scope, query),
+            )
+        }
+    }
+
+    fun pagedFilterBrowseSession(filter: SourceModelFilter.PagedGroup<*>): PagedFilterBrowseSession {
+        return pagedFilterBrowseSessions.session(filter)
     }
 
     fun search(query: String? = null, filters: EntryFilterList? = null) {
@@ -314,6 +340,7 @@ class CatalogScreenModel(
 
         screenModelScope.launchIO {
             val defaultFilters = freshResolvedFilters() ?: return@launchIO
+            pagedFilterBrowseSessions.retain(defaultFilters)
             var genreExists = false
 
             filter@ for (sourceFilter in defaultFilters) {
@@ -380,6 +407,7 @@ class CatalogScreenModel(
         runCatching {
             filterLoader.load(sourceId)
         }.onSuccess { sourceFilters ->
+            pagedFilterBrowseSessions.retain(sourceFilters)
             mutableState.update {
                 it.initializeForSource(
                     sourceFilters = sourceFilters,
@@ -829,6 +857,7 @@ class CatalogScreenModel(
             FeedListingMode.Search -> {
                 screenModelScope.launchIO {
                     val filters = freshResolvedFilters()?.applySnapshot(preset.filters) ?: return@launchIO
+                    pagedFilterBrowseSessions.retain(filters)
                     mutableState.update {
                         it.copy(
                             filters = filters,

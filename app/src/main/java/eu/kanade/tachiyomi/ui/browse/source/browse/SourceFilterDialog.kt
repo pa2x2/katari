@@ -27,7 +27,9 @@ import eu.kanade.tachiyomi.source.entry.EntryFilterPageLoadReason
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageScope
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.FilterItem
+import eu.kanade.tachiyomi.ui.browse.source.browse.filter.PagedFilterBrowseSession
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.PagedGroupFilterContent
+import mihon.entry.interactions.catalogue.EntryCatalogueFilterNavigationResult
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 import soup.compose.material.motion.animation.materialSharedAxisX
 import soup.compose.material.motion.animation.rememberSlideDistance
@@ -62,7 +64,14 @@ fun SourceFilterDialog(
         EntryFilterPageScope,
         String?,
         EntryFilterPageLoadReason,
+        String?,
     ) -> PagingSource<String, EntryFilterPageItem>,
+    onRequestPagedFilterNavigation: suspend (
+        EntryFilter.PagedGroup<*>,
+        EntryFilterPageScope,
+        String?,
+    ) -> EntryCatalogueFilterNavigationResult,
+    pagedFilterBrowseSession: (EntryFilter.PagedGroup<*>) -> PagedFilterBrowseSession,
     onRetry: (() -> Unit)? = null,
 ) {
     val updateFilters = { onUpdate(filters) }
@@ -156,8 +165,18 @@ fun SourceFilterDialog(
                         onFilter = filterAndDismiss,
                         onUpdate = updateFilters,
                         onRequestSuggestions = onRequestSuggestions,
-                        pagingSourceFactory = { scope, query, reason ->
-                            onRequestPagedFilterItems(currentRoute.filter, scope, query, reason)
+                        onRequestNavigation = { scope, query ->
+                            onRequestPagedFilterNavigation(currentRoute.filter, scope, query)
+                        },
+                        browseSession = pagedFilterBrowseSession(currentRoute.filter),
+                        pagingSourceFactory = { scope, query, reason, initialAnchor ->
+                            onRequestPagedFilterItems(
+                                currentRoute.filter,
+                                scope,
+                                query,
+                                reason,
+                                initialAnchor,
+                            )
                         },
                     )
                 }

@@ -2,11 +2,13 @@ package mihon.entry.interactions.catalogue.runtime
 
 import androidx.paging.PagingSource
 import eu.kanade.tachiyomi.source.entry.EntryFilter
+import eu.kanade.tachiyomi.source.entry.EntryFilterNavigationRequest
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageItem
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import kotlinx.coroutines.CancellationException
 import mihon.entry.interactions.catalogue.EntryCatalogueBrowseRequest
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
+import mihon.entry.interactions.catalogue.EntryCatalogueFilterNavigationResult
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 import mihon.entry.interactions.catalogue.EntryCatalogueFiltersResult
 import mihon.entry.interactions.catalogue.EntryCatalogueListing
@@ -109,6 +111,35 @@ internal class DefaultEntryCatalogueFeature(
             throw error
         } catch (error: Exception) {
             EntryCatalogueFilterSuggestionsResult.Failed(error)
+        }
+    }
+
+    override suspend fun filterNavigation(
+        sourceId: Long,
+        filter: EntryFilter.PagedGroup<*>,
+        request: EntryFilterNavigationRequest,
+    ): EntryCatalogueFilterNavigationResult {
+        val source = when (val resolution = source(sourceId)) {
+            is EntryCatalogueSourceResolution.Available -> resolution.source
+            is EntryCatalogueSourceResolution.Missing -> {
+                return EntryCatalogueFilterNavigationResult.Unavailable(
+                    EntryCatalogueUnavailableReason.SOURCE_MISSING,
+                )
+            }
+            is EntryCatalogueSourceResolution.Unsupported -> {
+                return EntryCatalogueFilterNavigationResult.Unavailable(
+                    EntryCatalogueUnavailableReason.CATALOGUE_UNSUPPORTED,
+                )
+            }
+        }
+        return try {
+            EntryCatalogueFilterNavigationResult.Available(
+                host.filterNavigation(source.id, filter, request),
+            )
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            EntryCatalogueFilterNavigationResult.Failed(error)
         }
     }
 
