@@ -3,24 +3,24 @@ package mihon.entry.interactions.book.document.reader.settings
 import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationPreferences
 import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationSettingsProvider
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPreferences
+import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
 import mihon.entry.viewer.settings.ViewerSettingCodecs
 import mihon.entry.viewer.settings.ViewerSettingDefinition
 import mihon.entry.viewer.settings.ViewerSettingId
 import mihon.entry.viewer.settings.ViewerSettingScope
 import mihon.entry.viewer.settings.ViewerSettingsCategory
-import mihon.entry.viewer.settings.ViewerSettingsProvider
 import mihon.entry.viewer.settings.shared.StandardReaderSharedSettingIds
 
-class BookDocumentReaderSettingsProvider internal constructor(
+internal class BookDocumentReaderSettingsProvider(
     preferences: BookDocumentReaderPreferences,
     chapterPreparationPreferences: ReaderChapterPreparationPreferences,
     automaticTranslationPreferences: BookAutomaticTranslationPreferences,
-) : ViewerSettingsProvider {
-    override val id = PROVIDER_ID
+) : BookDocumentReaderSettings {
+    override val id = BookDocumentReaderSettings.SURFACE_ID
     override val category = ViewerSettingsCategory.READER
     override val displayName = "Book reader"
 
-    val themeModeSetting = ViewerSettingDefinition(
+    override val themeModeSetting = ViewerSettingDefinition(
         id = ViewerSettingId(id, BookDocumentReaderPreferences.THEME_MODE_KEY),
         scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
         processorDefault = BookDocumentReaderThemeMode.APP,
@@ -59,6 +59,6 @@ class BookDocumentReaderSettingsProvider internal constructor(
     )
 
     companion object {
-        const val PROVIDER_ID = "builtin.book.document"
+        const val PROVIDER_ID = BookDocumentReaderSettings.SURFACE_ID
     }
 }

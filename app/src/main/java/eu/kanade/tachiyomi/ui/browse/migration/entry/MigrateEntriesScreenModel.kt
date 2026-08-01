@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.core.common.utils.mutate
+import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.merge.EntryMergeLibraryGroup
 import mihon.entry.interactions.merge.EntryMergeLibraryGroupingFeature
 import mihon.entry.interactions.migration.EntryMigrationAvailability
@@ -31,7 +32,6 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
-import tachiyomi.domain.source.service.EntrySourceDescriptionResolutionPort
 import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -41,7 +41,7 @@ class MigrateEntriesScreenModel(
     private val sourceManager: SourceManager = Injekt.get(),
     private val entryRepository: EntryRepository = Injekt.get(),
     private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
-    private val sourceDescription: EntrySourceDescriptionResolutionPort = Injekt.get(),
+    private val catalogue: EntryCatalogueFeature = Injekt.get(),
     private val migration: EntryMigrationFeature = Injekt.get(),
     private val mergeGrouping: EntryMergeLibraryGroupingFeature = Injekt.get(),
 ) : StateScreenModel<MigrateEntriesScreenModel.State>(State()) {
@@ -55,7 +55,7 @@ class MigrateEntriesScreenModel(
             mutableState.update { state ->
                 state.copy(
                     source = source,
-                    itemOrientation = sourceDescription.describe(source).itemOrientation,
+                    itemOrientation = catalogue.description(source.id).itemOrientation,
                 )
             }
 

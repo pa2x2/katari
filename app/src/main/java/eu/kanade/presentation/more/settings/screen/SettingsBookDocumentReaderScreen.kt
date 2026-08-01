@@ -4,8 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import eu.kanade.presentation.more.settings.Preference
-import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingsProvider
-import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeMode
+import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
+import mihon.entry.interactions.reader.settings.BookDocumentReaderThemeMode
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.asProfilePreference
 import tachiyomi.i18n.MR
@@ -14,7 +14,7 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection() {
-    override val surfaceId = BookDocumentReaderSettingsProvider.PROVIDER_ID
+    override val surfaceId = BookDocumentReaderSettings.SURFACE_ID
 
     @ReadOnlyComposable
     @Composable
@@ -22,7 +22,7 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
 
     @Composable
     override fun getSurfacePreferences(): List<Preference> {
-        val provider = remember { Injekt.get<BookDocumentReaderSettingsProvider>() }
+        val provider = remember { Injekt.get<BookDocumentReaderSettings>() }
         val binder = remember { Injekt.get<ViewerSettingBinder>() }
         val theme = remember(provider, binder) {
             binder.bind(provider.themeModeSetting).asProfilePreference()

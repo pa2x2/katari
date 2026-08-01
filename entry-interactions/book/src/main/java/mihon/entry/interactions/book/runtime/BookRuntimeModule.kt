@@ -27,6 +27,7 @@ import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslation
 import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationSettingsProvider
 import mihon.entry.interactions.media.DefaultEntryViewerSettingsProvider
 import mihon.entry.interactions.media.session.EntryMediaSessionEventSink
+import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
 import mihon.entry.interactions.runtime.EntryTypeRuntimeContribution
 import mihon.entry.interactions.runtime.EntryTypeRuntimeModule
 import mihon.entry.viewer.settings.shared.ReaderCapabilityId
@@ -129,6 +130,7 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
     addSingletonFactory { automaticTranslationPreferences }
     addSingletonFactory { documentReaderPreferences }
     addSingletonFactory { documentReaderSettingsProvider }
+    addSingletonFactory<BookDocumentReaderSettings> { get<BookDocumentReaderSettingsProvider>() }
     addSingletonFactory { preparerRegistry }
     addSingletonFactory { readerProcessorRegistry }
     addSingletonFactory {
