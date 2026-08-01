@@ -123,6 +123,7 @@ import mihon.entry.interactions.download.EntryDownloadRuntimeState
 import mihon.entry.interactions.media.EntryMediaCacheClearResult
 import mihon.entry.interactions.media.EntryMediaCacheFeature
 import mihon.entry.interactions.merge.EntryMergeNavigationFeature
+import mihon.entry.viewer.settings.navigation.ViewerSettingsNavigation
 import mihon.feature.profiles.core.Profile
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.core.ProfilesPreferences
@@ -746,6 +747,18 @@ class MainActivity : BaseActivity() {
             TranslationSettingsNavigation.ACTION_OPEN_SETTINGS -> {
                 navigator.popUntilRoot()
                 navigator.push(SettingsScreen(SettingsScreen.Destination.Translation))
+                null
+            }
+            ViewerSettingsNavigation.ACTION_OPEN_SETTINGS -> {
+                navigator.popUntilRoot()
+                navigator.push(
+                    SettingsScreen(
+                        destination = SettingsScreen.Destination.Readers,
+                        viewerSettingsSurfaceId = intent.getStringExtra(
+                            ViewerSettingsNavigation.EXTRA_SURFACE_ID,
+                        ),
+                    ),
+                )
                 null
             }
             Intent.ACTION_SEARCH, Intent.ACTION_SEND, "com.google.android.gms.actions.SEARCH_ACTION" -> {

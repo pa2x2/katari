@@ -13,6 +13,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 internal fun ReaderSettingsDialog(
     onDismissRequest: () -> Unit,
+    onOpenDefaultSettings: () -> Unit,
     onShowMenus: () -> Unit,
     onHideMenus: () -> Unit,
     screenModel: ReaderSettingsScreenModel,
@@ -32,6 +33,12 @@ internal fun ReaderSettingsDialog(
         onResetSettings = screenModel::resetSettings,
         tabTitles = tabTitles,
         pagerState = pagerState,
+        onOpenDefaultSettings = {
+            onDismissRequest()
+            onShowMenus()
+            onOpenDefaultSettings()
+        },
+        openDefaultSettingsLabel = stringResource(MR.strings.action_open_default_reader_settings),
     ) { page ->
         val window = (LocalView.current.parent as? DialogWindowProvider)?.window
 

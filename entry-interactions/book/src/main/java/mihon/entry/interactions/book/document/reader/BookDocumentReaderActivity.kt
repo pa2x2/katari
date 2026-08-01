@@ -39,6 +39,7 @@ import mihon.entry.interactions.source.EntryWebViewFeature
 import mihon.entry.interactions.source.launchEntryChildWebViewAction
 import mihon.entry.interactions.viewer.entryChildWindow
 import mihon.entry.viewer.settings.ViewerSettingBinder
+import mihon.entry.viewer.settings.navigation.openViewerSettings
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.host.TranslationHostActions
 import tachiyomi.core.common.util.system.logcat
@@ -116,6 +117,9 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                         },
                         onSettingsVisibilityChange = { visible ->
                             readerState = readerState?.copy(settingsVisible = visible)
+                        },
+                        onOpenDefaultSettings = {
+                            openViewerSettings(BookDocumentReaderSettingsProvider.PROVIDER_ID)
                         },
                         onChildWebViewAction = ::launchChildWebViewAction,
                         onExternalLinkClick = ::launchExternalLink,

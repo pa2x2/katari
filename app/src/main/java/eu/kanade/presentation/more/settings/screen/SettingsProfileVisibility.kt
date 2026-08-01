@@ -11,12 +11,14 @@ internal fun isSettingsScreenVisible(
 internal fun resolveSettingsStartScreen(
     destination: SettingsScreen.Destination?,
     twoPane: Boolean,
+    viewerSettingsScreen: Screen? = null,
 ): Screen {
     val requestedScreen = when (destination) {
         SettingsScreen.Destination.About -> AboutScreen
         SettingsScreen.Destination.DataAndStorage -> SettingsDataScreen
         SettingsScreen.Destination.Tracking -> SettingsTrackingScreen
         SettingsScreen.Destination.Translation -> SettingsTranslationScreen
+        SettingsScreen.Destination.Readers -> viewerSettingsScreen ?: SettingsReaderScreen
         null -> if (twoPane) SettingsAppearanceScreen else SettingsMainScreen
     }
 

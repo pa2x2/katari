@@ -207,6 +207,7 @@
     <string name="action_save">Save</string>
     <string name="action_set_as_root">Set as root</string>
     <string name="action_reset">Reset</string>
+    <string name="action_open_default_reader_settings">Default reader settings</string>
     <string name="action_show_password">Show password</string>
     <string name="action_hide_password">Hide password</string>
     <string name="action_open_discord">Open Discord</string>

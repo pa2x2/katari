@@ -25,30 +25,51 @@ import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
+import mihon.entry.interactions.media.EntryViewerSettingsFeature
+import mihon.entry.viewer.settings.ViewerSettingsCategory
 import tachiyomi.presentation.core.components.TwoPanelBox
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
 
 class SettingsScreen(
     private val destination: Int? = null,
+    private val viewerSettingsSurfaceId: String? = null,
 ) : Screen() {
 
     constructor(destination: Destination) : this(destination.id)
+    constructor(destination: Destination, viewerSettingsSurfaceId: String?) :
+        this(destination.id, viewerSettingsSurfaceId)
 
     @Composable
     override fun Content() {
         val parentNavigator = LocalNavigator.currentOrThrow
         val twoPane = isTabletUi()
+        val viewerSettingsScreen = remember(destination, viewerSettingsSurfaceId) {
+            if (destination != Destination.Readers.id || viewerSettingsSurfaceId == null) {
+                null
+            } else {
+                Injekt.get<EntryViewerSettingsFeature>()
+                    .destinations
+                    .firstOrNull {
+                        it.category == ViewerSettingsCategory.READER &&
+                            it.surfaceId == viewerSettingsSurfaceId
+                    }
+                    ?.projection as? VoyagerScreen
+            }
+        }
         val initialScreen = when (destination) {
             Destination.About.id -> Destination.About
             Destination.DataAndStorage.id -> Destination.DataAndStorage
             Destination.Tracking.id -> Destination.Tracking
             Destination.Translation.id -> Destination.Translation
+            Destination.Readers.id -> Destination.Readers
             else -> null
         }.let {
             resolveSettingsStartScreen(
                 destination = it,
                 twoPane = twoPane,
+                viewerSettingsScreen = viewerSettingsScreen,
             )
         }
 
@@ -94,5 +115,6 @@ class SettingsScreen(
         data object DataAndStorage : Destination(1)
         data object Tracking : Destination(2)
         data object Translation : Destination(3)
+        data object Readers : Destination(4)
     }
 }

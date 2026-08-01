@@ -89,6 +89,7 @@ import mihon.entry.interactions.runtime.EntryInteractionActivity
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.source.launchEntryChildWebViewAction
+import mihon.entry.viewer.settings.navigation.openViewerSettings
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
@@ -327,6 +328,9 @@ class ReaderActivity : EntryInteractionActivity() {
             is ReaderViewModel.Dialog.Settings -> {
                 ReaderSettingsDialog(
                     onDismissRequest = onDismissRequest,
+                    onOpenDefaultSettings = {
+                        openViewerSettings(MangaReaderSettingsProvider.PROVIDER_ID)
+                    },
                     onShowMenus = { setMenuVisibility(true) },
                     onHideMenus = { setMenuVisibility(false) },
                     screenModel = settingsScreenModel,

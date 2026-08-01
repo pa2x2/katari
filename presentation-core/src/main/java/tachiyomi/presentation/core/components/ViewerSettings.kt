@@ -65,6 +65,8 @@ fun ViewerSettingsTabbedDialog(
     tabTitles: List<String>,
     modifier: Modifier = Modifier,
     pagerState: PagerState = rememberPagerState { tabTitles.size },
+    onOpenDefaultSettings: (() -> Unit)? = null,
+    openDefaultSettingsLabel: String? = null,
     content: @Composable ColumnScope.(Int) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
@@ -101,7 +103,11 @@ fun ViewerSettingsTabbedDialog(
                                 )
                             }
                         }
-                        ViewerSettingsResetMenu(onResetSettings)
+                        ViewerSettingsMenu(
+                            onOpenDefaultSettings = onOpenDefaultSettings,
+                            openDefaultSettingsLabel = openDefaultSettingsLabel,
+                            onResetSettings = onResetSettings,
+                        )
                     }
                     HorizontalDivider()
                     HorizontalPager(
@@ -158,7 +164,11 @@ fun ViewerSettingsSheet(
                         .padding(horizontal = 24.dp),
                     style = MaterialTheme.typography.titleLarge,
                 )
-                ViewerSettingsResetMenu(onResetSettings)
+                ViewerSettingsMenu(
+                    onOpenDefaultSettings = null,
+                    openDefaultSettingsLabel = null,
+                    onResetSettings = onResetSettings,
+                )
             }
             HorizontalDivider()
             content()
@@ -167,7 +177,11 @@ fun ViewerSettingsSheet(
 }
 
 @Composable
-private fun ViewerSettingsResetMenu(onResetSettings: () -> Unit) {
+private fun ViewerSettingsMenu(
+    onOpenDefaultSettings: (() -> Unit)?,
+    openDefaultSettingsLabel: String?,
+    onResetSettings: () -> Unit,
+) {
     var expanded by remember { mutableStateOf(false) }
     Box(modifier = Modifier.wrapContentSize(Alignment.TopStart)) {
         IconButton(onClick = { expanded = true }) {
@@ -180,6 +194,15 @@ private fun ViewerSettingsResetMenu(onResetSettings: () -> Unit) {
             expanded = expanded,
             onDismissRequest = { expanded = false },
         ) {
+            if (onOpenDefaultSettings != null && openDefaultSettingsLabel != null) {
+                DropdownMenuItem(
+                    text = { Text(openDefaultSettingsLabel) },
+                    onClick = {
+                        expanded = false
+                        onOpenDefaultSettings()
+                    },
+                )
+            }
             DropdownMenuItem(
                 text = { Text(stringResource(MR.strings.action_reset)) },
                 onClick = {

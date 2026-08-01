@@ -114,7 +114,14 @@ object SettingsMainScreen : Screen() {
             content = { contentPadding ->
                 val state = rememberLazyListState()
                 val indexSelected = if (twoPane) {
-                    items.indexOfFirst { it.screen::class == navigator.items.first()::class }
+                    val selectedScreen = navigator.items.first()
+                    items.indexOfFirst { item ->
+                        item.screen::class == selectedScreen::class ||
+                            (
+                                item.screen == SettingsReaderScreen &&
+                                    selectedScreen is AppEntryViewerSettingsScreenProjection
+                                )
+                    }
                         .also {
                             LaunchedEffect(Unit) {
                                 if (it >= 0) {

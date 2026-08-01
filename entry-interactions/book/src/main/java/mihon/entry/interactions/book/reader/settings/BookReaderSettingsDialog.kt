@@ -23,8 +23,10 @@ import mihon.entry.viewer.settings.shared.ReaderSharedSettingAvailability
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingId
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
 import mihon.entry.viewer.settings.shared.ResolvedReaderSharedToggleSetting
+import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.CheckboxItem
 import tachiyomi.presentation.core.components.ViewerSettingsTabbedDialog
+import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -38,6 +40,7 @@ internal fun BookReaderSettingsDialog(
     capabilities: Set<ReaderCapabilityId>,
     sharedSettingBindings: Map<ReaderSharedSettingId, ViewerSettingBinding<Boolean>>,
     onDismissRequest: () -> Unit,
+    onOpenDefaultSettings: () -> Unit,
     onResetProcessorSettings: suspend () -> Unit,
     processorTabTitles: List<String>,
     content: @Composable ColumnScope.(Int) -> Unit,
@@ -64,6 +67,11 @@ internal fun BookReaderSettingsDialog(
             }
         },
         tabTitles = tabTitles,
+        onOpenDefaultSettings = {
+            onDismissRequest()
+            onOpenDefaultSettings()
+        },
+        openDefaultSettingsLabel = stringResource(MR.strings.action_open_default_reader_settings),
     ) { page ->
         if (sharedSettings.isNotEmpty() && page == 0) {
             sharedSettings.forEach { setting ->
