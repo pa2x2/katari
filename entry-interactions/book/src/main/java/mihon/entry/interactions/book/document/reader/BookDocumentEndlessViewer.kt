@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import mihon.entry.interactions.viewer.EntryChildDirection
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.presentation.core.util.clickableNoIndication
 
 /** Stable-key, adjacent-session vertical document stream. */
 @Composable
@@ -35,6 +36,7 @@ internal fun BookDocumentEndlessViewer(
     onTerminalObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
     onAnchorMissing: (String) -> Unit = {},
     onExternalLinkClick: (String) -> Unit,
+    onScrollStarted: () -> Unit,
     onReaderTap: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -47,6 +49,7 @@ internal fun BookDocumentEndlessViewer(
     } ?: 0
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
     val currentItems by rememberUpdatedState(items)
+    val currentOnScrollStarted by rememberUpdatedState(onScrollStarted)
     var observedKeys by remember(listState) { mutableStateOf(items.map { it.key }) }
     var initialPositionRestored by remember(listState) { mutableStateOf(false) }
 
@@ -115,6 +118,12 @@ internal fun BookDocumentEndlessViewer(
             )
         }.filterNotNull().distinctUntilChanged().collect(onLocation)
     }
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.isScrollInProgress }
+            .distinctUntilChanged()
+            .filter { it }
+            .collect { currentOnScrollStarted() }
+    }
     LaunchedEffect(listState, items) {
         snapshotFlow {
             val info = listState.layoutInfo
@@ -172,7 +181,10 @@ internal fun BookDocumentEndlessViewer(
         }
     }
 
-    LazyColumn(state = listState, modifier = modifier) {
+    LazyColumn(
+        state = listState,
+        modifier = modifier.clickableNoIndication(onClick = onReaderTap),
+    ) {
         items(items, key = { it.key }) { item ->
             when (item) {
                 is BookDocumentViewerItem.Block -> CompositionLocalProvider(

@@ -110,7 +110,9 @@ internal class BookDocumentChapterCoordinator(
         val total = totalBookProgression(state.chapters, chapterId, location.progression)
         val locator = location.section.document.document.locatorAt(location.position).copy(totalProgression = total)
         retainedSessions.updateLocation(chapterId, locator)
-        currentState()?.copy(totalProgression = total)?.let(updateState)
+        currentState()?.copy(
+            chapterProgression = location.progression,
+        )?.let(updateState)
         persistLocationJob?.cancel()
         persistLocationJob = scope.launch {
             delay(LOCATION_PERSIST_DEBOUNCE_MILLIS)
@@ -199,11 +201,7 @@ internal class BookDocumentChapterCoordinator(
                 window = window,
                 loadedSections = current.loadedSections.filterKeys(retainedIds::contains),
                 loadStates = current.loadStates.filterKeys(retainedIds::contains),
-                totalProgression = totalBookProgression(
-                    state.chapters,
-                    chapterId,
-                    section.document.document.progressionAt(section.initialPosition),
-                ),
+                chapterProgression = section.document.document.progressionAt(section.initialPosition),
                 childWebView = null,
             ),
         )

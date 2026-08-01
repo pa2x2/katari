@@ -29,7 +29,7 @@ internal class BookLibraryProgressProvider(
             hasMediaProgress = states.any { !it.locator.isEmpty },
             inProgressItemId = inProgress?.chapterId,
             inProgressFraction = inProgress?.locator?.let { locator ->
-                (locator.totalProgression ?: locator.progression)?.toFloat()
+                (locator.progression ?: locator.totalProgression)?.toFloat()
             },
             lastActivityAt = states.maxOfOrNull { it.locatorUpdatedAt } ?: 0L,
         )

@@ -1,7 +1,5 @@
 package eu.kanade.presentation.reader.appbars
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
@@ -9,9 +7,7 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -19,6 +15,7 @@ import mihon.entry.interactions.manga.R
 import mihon.entry.interactions.reader.settings.ReaderOrientation
 import mihon.entry.interactions.reader.settings.ReadingMode
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.components.reader.ReaderChromeBottomBar
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -35,12 +32,7 @@ fun ReaderBottomBar(
     onClickSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier
-            .pointerInput(Unit) {},
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+    ReaderChromeBottomBar(modifier = modifier) {
         val readingModeDescription = stringResource(readingMode.stringRes)
         IconButton(
             onClick = onClickReadingMode,

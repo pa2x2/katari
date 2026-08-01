@@ -11,7 +11,7 @@ internal data class BookDocumentReaderState(
     val window: EntryChildWindow<EntryChapter>,
     val loadedSections: Map<Long, BookDocumentSection<EntryChapter>>,
     val loadStates: Map<Long, BookDocumentChapterLoadState> = emptyMap(),
-    val totalProgression: Double = 0.0,
+    val chapterProgression: Float = 0f,
     val chromeVisible: Boolean = false,
     val navigationVisible: Boolean = false,
     val settingsVisible: Boolean = false,

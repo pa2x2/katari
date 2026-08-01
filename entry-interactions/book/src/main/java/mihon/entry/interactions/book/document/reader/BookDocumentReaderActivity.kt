@@ -103,7 +103,8 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                         onTransitionReached = { chapterCoordinator.loadChapter(it, activate = false, retry = true) },
                         onTerminalObservation = chapterCoordinator::onTerminalObservation,
                         onChapterSelected = { chapterCoordinator.loadChapter(it, activate = true, retry = true) },
-                        onChromeVisibilityChange = ::setChromeVisible,
+                        onChromeToggle = ::toggleChrome,
+                        onChromeHide = { setChromeVisible(false) },
                         onNavigationVisibilityChange = { visible ->
                             readerState = readerState?.copy(navigationVisible = visible)
                         },
@@ -203,7 +204,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             currentChapterId = session.chapter.id,
             window = window,
             loadedSections = mapOf(session.chapter.id to section),
-            totalProgression = totalBookProgression(chapters, session.chapter.id, progression),
+            chapterProgression = progression,
         )
         childWebViewResolver.resolve(session)
         surfaceState = BookDocumentReaderSurfaceState.Ready
@@ -246,8 +247,14 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     }
 
     private fun setChromeVisible(visible: Boolean) {
-        readerState = readerState?.copy(chromeVisible = visible)
+        if (readerState?.chromeVisible != visible) {
+            readerState = readerState?.copy(chromeVisible = visible)
+        }
         setSystemBarsVisible(visible)
+    }
+
+    private fun toggleChrome() {
+        setChromeVisible(readerState?.chromeVisible != true)
     }
 
     private fun setSystemBarsVisible(visible: Boolean) {
