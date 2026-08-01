@@ -1593,6 +1593,14 @@
     <string name="migrationConfigScreen.deepSearchModeSubtitle">Breaks down the title into keywords for a wider search</string>
     <string name="migrationConfigScreen.prioritizeByChaptersTitle">Match based on item number</string>
     <string name="migrationConfigScreen.prioritizeByChaptersSubtitle">If enabled, chooses the match furthest ahead. Otherwise, picks the first match by source priority.</string>
+    <string name="migrationEntriesScreen.title">Select items to migrate</string>
+    <string name="migrationEntriesScreen.selectedCount">%1$d of %2$d selected</string>
+    <string name="migrationEntriesScreen.deselectAll">Deselect all</string>
+    <string name="migrationEntriesScreen.selectAllResults">Select all results</string>
+    <string name="migrationEntriesScreen.deselectAllResults">Deselect all results</string>
+    <string name="migrationEntriesScreen.sourceTitle">Source title: %1$s</string>
+    <string name="migrationEntriesScreen.progress">Progress: %1$d/%2$d</string>
+    <string name="migrationEntriesScreen.inspectEntry">Inspect %1$s</string>
     <string name="migrationListScreenTitle">Migration</string>
     <string name="migrationListScreenTitleWithProgress">Migration (%1$d/%2$d)</string>
     <string name="migrationListScreen.copyActionLabel">Copy</string>
