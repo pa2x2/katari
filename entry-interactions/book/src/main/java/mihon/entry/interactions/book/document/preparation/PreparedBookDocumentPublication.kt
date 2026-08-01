@@ -1,11 +1,7 @@
 package mihon.entry.interactions.book.document.preparation
 
-import mihon.book.api.BookContentResource
 import mihon.book.api.BookLocator
-import mihon.book.api.BookNavigationItem
 import mihon.book.api.BookPublication
-import mihon.book.api.BookReadingDirection
-import mihon.book.api.BookResource
 import mihon.book.api.document.BookDocumentPublicationModel
 import mihon.entry.interactions.book.preparation.BookPublicationResourceDependencies
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
@@ -14,13 +10,20 @@ import mihon.entry.interactions.book.preparation.PreparedBookPublication
 
 /** Runtime owner for a canonical document model and its protected subordinate-resource access. */
 internal class PreparedBookDocumentPublication(
-    publicationId: String,
-    revision: String,
-    resource: BookContentResource,
+    override val publication: BookPublication,
     override val model: BookDocumentPublicationModel,
     override val resourceLoader: BookPublicationResourceLoader,
 ) : PreparedBookPublication, BookPublicationResourceDependencies {
-    val resourceId: String = resource.id
+    init {
+        require(publication.readingOrder.size == 1) {
+            "A prepared single-document publication must have exactly one reading-order resource"
+        }
+        require(model.documents.singleOrNull()?.resourceId == publication.readingOrder.single().id) {
+            "The prepared document model must match its publication reading order"
+        }
+    }
+
+    val resourceId: String = publication.readingOrder.single().id
     val document get() = checkNotNull(model.document(resourceId))
     override val requiredResourceIds: Set<String> = document.resourceIds
     override val resourceRequirements: Map<String, BookResourceRequirement> =
@@ -29,27 +32,6 @@ internal class PreparedBookDocumentPublication(
                 "Every required prose resource must declare offline validation constraints"
             }
         }
-
-    override val publication = BookPublication(
-        id = publicationId,
-        revision = revision,
-        title = resource.title,
-        languages = emptyList(),
-        readingDirection = BookReadingDirection.LEFT_TO_RIGHT,
-        readingOrder = listOf(
-            BookResource(
-                id = resource.id,
-                mediaType = resource.mediaType,
-                title = resource.title,
-            ),
-        ),
-        navigation = listOf(
-            BookNavigationItem(
-                title = resource.title,
-                target = BookLocator(resourceId = resource.id, progression = 0.0),
-            ),
-        ),
-    )
 
     override fun validate(locator: BookLocator): Boolean =
         locator.resourceId == resourceId &&
