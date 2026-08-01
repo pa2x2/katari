@@ -103,7 +103,7 @@ internal fun BookDocumentReaderScreen(
             progress = BookReaderProgress.Percentage(
                 (state.chapterProgression * 100).roundToInt().coerceIn(0, 100),
             ),
-            progressVisible = state.chromeVisible,
+            progressVisible = !state.chromeVisible,
             footerColor = readerBackground,
             translationController = translationController,
             onRootPositionInWindow = { rootPosition = it },

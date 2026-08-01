@@ -35,7 +35,7 @@ internal class BookDocumentTextLayoutTest : BookDocumentTextViewFixture() {
         Selection.setSelection(text, 0, text.length)
         view.bringPointIntoView(view.selectionEnd)
 
-        assertEquals("First line\nSecond line\n", text.toString())
+        assertEquals("First line\nSecond line", text.toString())
         assertEquals(0, view.selectionStart)
         assertEquals(text.length, view.selectionEnd)
         assertEquals(
@@ -43,5 +43,15 @@ internal class BookDocumentTextLayoutTest : BookDocumentTextViewFixture() {
             view.layout.height,
         )
         assertEquals(0, view.scrollY)
+    }
+
+    @Test
+    fun `terminal trimming does not add spacing when rich text has no separator`() {
+        val source = SpannableString("Inline content")
+
+        assertEquals(
+            measuredTextView(source).measuredHeight,
+            measuredTextView(source, trimTerminalLine = true).measuredHeight,
+        )
     }
 }

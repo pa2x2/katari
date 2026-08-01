@@ -142,6 +142,7 @@ private fun DocumentText(
             else -> View.TEXT_ALIGNMENT_VIEW_START
         },
         justificationMode = Layout.JUSTIFICATION_MODE_NONE,
+        trimTerminalLine = true,
         onAnchorClick = { anchor, _ -> onAnchorClick(anchor) },
         onExternalLinkClick = onExternalLinkClick,
         onNonLinkClick = onReaderTap,

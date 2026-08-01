@@ -11,8 +11,9 @@ import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.book.api.document.toBookDocumentLinkTarget
 
 internal fun Spanned.withoutTerminalLayoutLine(): Spanned {
-    if (!endsWith('\n')) return this
-    return SpannableString(subSequence(0, length - 1))
+    val displayEnd = indexOfLast { it != '\n' } + 1
+    if (displayEnd == length) return this
+    return SpannableString(subSequence(0, displayEnd))
 }
 
 internal fun Spanned.withDocumentAnchorClicks(

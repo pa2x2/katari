@@ -44,11 +44,12 @@ internal abstract class BookDocumentTextViewFixture {
             includeFontPadding = false
             textSize = 24f
             setLineSpacing(0f, 1.5f)
+            val displayText = if (trimTerminalLine) text.withoutTerminalLayoutLine() else text
             setText(
-                if (trimTerminalLine) text.withoutTerminalLayoutLine() else text,
+                displayText,
                 TextView.BufferType.SPANNABLE,
             )
-            applyTerminalLineSpacing(trimTerminalLine)
+            applyTerminalLineSpacing(text.length - displayText.length)
             measure(
                 MeasureSpec.makeMeasureSpec(600, MeasureSpec.EXACTLY),
                 MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED),

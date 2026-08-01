@@ -37,12 +37,14 @@ internal fun BookDocumentText(
     val currentAnchorClick by rememberUpdatedState(onAnchorClick)
     val currentExternalLinkClick by rememberUpdatedState(onExternalLinkClick)
     val currentNonLinkClick by rememberUpdatedState(onNonLinkClick)
-    val linkedText = remember(text, trimTerminalLine) {
-        val displayText = if (trimTerminalLine) {
+    val displayText = remember(text, trimTerminalLine) {
+        if (trimTerminalLine) {
             text.withoutTerminalLayoutLine()
         } else {
             text
         }
+    }
+    val linkedText = remember(displayText) {
         displayText.withDocumentLinkClicks(
             onAnchorClick = { anchorId, view -> currentAnchorClick(anchorId, view) },
             onExternalLinkClick = { url -> currentExternalLinkClick(url) },
@@ -89,7 +91,7 @@ internal fun BookDocumentText(
             )
             view.movementMethod = LinkMovementMethod.getInstance()
             view.applyStyle(style)
-            view.applyTerminalLineSpacing(trimTerminalLine)
+            view.applyTerminalLineSpacing(text.length - displayText.length)
             onViewChanged(view)
         },
         onRelease = { view ->

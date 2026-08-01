@@ -37,10 +37,11 @@ internal class BookDocumentTextView(context: Context) : TextView(context) {
         setTextIsSelectable(true)
     }
 
-    internal fun applyTerminalLineSpacing(trimTerminalLine: Boolean) {
+    internal fun applyTerminalLineSpacing(trimmedTerminalLineBreaks: Int) {
         val fontHeight = paint.getFontMetricsInt(null)
-        val terminalSpacing = if (trimTerminalLine) {
-            (lineHeight - fontHeight).coerceAtLeast(0)
+        val lineSpacing = (lineHeight - fontHeight).coerceAtLeast(0)
+        val terminalSpacing = if (trimmedTerminalLineBreaks > 0) {
+            fontHeight * (trimmedTerminalLineBreaks - 1) + lineSpacing
         } else {
             0
         }

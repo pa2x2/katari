@@ -27,7 +27,7 @@ internal class BookDocumentTextLinkDispatchTest : BookDocumentTextViewFixture() 
         span.onClick(BookDocumentTextView(RuntimeEnvironment.getApplication()))
 
         assertEquals("note", clickedAnchor)
-        assertEquals("See note\n", linked.toString())
+        assertEquals("See note", linked.toString())
         assertTrue(linked.getSpans(0, linked.length, URLSpan::class.java).isEmpty())
     }
 
