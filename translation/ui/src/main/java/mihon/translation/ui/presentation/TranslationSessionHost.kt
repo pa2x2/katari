@@ -194,6 +194,7 @@ internal fun TranslationSessionOverlay(
         }
 
         val positionProvider = remember(
+            active.input.request,
             anchor,
             hostSize,
             leftInset,
