@@ -15,6 +15,7 @@ import tachiyomi.domain.entry.model.progressResourceKey
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.entry.repository.EntrySourceSyncRepository
 import tachiyomi.domain.entry.service.ChapterRecognition
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
 import tachiyomi.domain.entry.service.FetchInterval
@@ -118,8 +119,14 @@ class SyncEntryWithSource(
         }
 
         val hasMetadataChanges = updatedEntry != entry
-        if (hasMetadataChanges && !entryRepository.updateForSync(updatedEntry, explicitProfileId)) {
-            error("Failed to update entry ${entry.id}")
+        val entryAfterMetadataSync = if (hasMetadataChanges) {
+            entryRepository.updateForSync(
+                entry = updatedEntry,
+                explicitProfileId = explicitProfileId,
+                updateDateAdded = false,
+            ) ?: error("Failed to update entry ${entry.id}")
+        } else {
+            entry
         }
         if (hasMetadataChanges) {
             metadataChangeNotifier.changed(entry, updatedEntry)
@@ -135,11 +142,11 @@ class SyncEntryWithSource(
         }
 
         val existingChapters = entryChapterRepository.getChaptersByEntryIdAwait(entry.id)
-        val isInitialLibraryChapterSync = entry.favorite &&
-            entry.dateAdded > 0L &&
-            entry.fetchInterval == 0 &&
+        val isInitialLibraryChapterSync = entryAfterMetadataSync.favorite &&
+            entryAfterMetadataSync.dateAdded > 0L &&
+            entryAfterMetadataSync.fetchInterval == 0 &&
             existingChapters.isEmpty()
-        val sourceEntry = updatedEntry.toSEntry()
+        val sourceEntry = entryAfterMetadataSync.toSEntry()
         val rawSourceChapters = if (source is IncrementalChapterSource) {
             source.getChapterList(sourceEntry, existingChapters.map(EntryChapter::toSEntryChapter))
         } else {
@@ -157,7 +164,7 @@ class SyncEntryWithSource(
                     resolvedName = sourceChapter.name.ifBlank { sourceChapter.url },
                     chapterNumber = if (source is ChapterNumberRecognitionSource) {
                         ChapterRecognition.parseChapterNumber(
-                            updatedEntry.title,
+                            entryAfterMetadataSync.title,
                             sourceChapter.name,
                             sourceChapter.chapterNumber,
                         )
@@ -330,15 +337,15 @@ class SyncEntryWithSource(
         val hasChapterChanges =
             insertedChapters.isNotEmpty() || chaptersToUpdate.isNotEmpty() || chaptersToRemove.isNotEmpty()
         var entryAfterChapterSync = if (hasChapterChanges) {
-            updatedEntry.copy(
+            entryAfterMetadataSync.copy(
                 lastUpdate = now(),
-                dateAdded = if (isInitialLibraryChapterSync) now else updatedEntry.dateAdded,
+                dateAdded = if (isInitialLibraryChapterSync) now else entryAfterMetadataSync.dateAdded,
             )
         } else {
-            updatedEntry
+            entryAfterMetadataSync
         }
-        val shouldUpdateFetchInterval = hasChapterChanges || manualFetch || updatedEntry.fetchInterval == 0 ||
-            (fetchWindow.first != 0L && updatedEntry.nextUpdate < fetchWindow.first)
+        val shouldUpdateFetchInterval = hasChapterChanges || manualFetch || entryAfterMetadataSync.fetchInterval == 0 ||
+            (fetchWindow.first != 0L && entryAfterMetadataSync.nextUpdate < fetchWindow.first)
         if (shouldUpdateFetchInterval) {
             entryAfterChapterSync = fetchInterval.update(
                 entry = entryAfterChapterSync,
@@ -346,10 +353,12 @@ class SyncEntryWithSource(
                 window = fetchWindow,
             )
         }
-        if (entryAfterChapterSync != updatedEntry) {
-            if (!entryRepository.updateForSync(entryAfterChapterSync, explicitProfileId)) {
-                error("Failed to update entry ${entry.id}")
-            }
+        if (entryAfterChapterSync != entryAfterMetadataSync) {
+            entryRepository.updateForSync(
+                entry = entryAfterChapterSync,
+                explicitProfileId = explicitProfileId,
+                updateDateAdded = isInitialLibraryChapterSync,
+            ) ?: error("Failed to update entry ${entry.id}")
         }
 
         val visibleChapterIds = if (insertedChapters.isEmpty()) {
@@ -369,8 +378,22 @@ class SyncEntryWithSource(
         )
     }
 
-    private suspend fun EntryRepository.updateForSync(entry: Entry, explicitProfileId: Long?): Boolean {
-        return if (explicitProfileId == null) update(entry) else update(entry, explicitProfileId)
+    private suspend fun EntryRepository.updateForSync(
+        entry: Entry,
+        explicitProfileId: Long?,
+        updateDateAdded: Boolean,
+    ): Entry? {
+        val sourceSyncRepository = this as? EntrySourceSyncRepository
+        if (sourceSyncRepository != null) {
+            return sourceSyncRepository.updateFromSourceSync(
+                entry = entry,
+                profileId = explicitProfileId ?: entry.profileId,
+                updateDateAdded = updateDateAdded,
+            )
+        }
+
+        val updated = if (explicitProfileId == null) update(entry) else update(entry, explicitProfileId)
+        return entry.takeIf { updated }
     }
 
     private fun stateRank(chapter: EntryChapter, progressRank: Int): Int {

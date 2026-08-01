@@ -304,6 +304,35 @@ UPDATE entries SET
 WHERE _id = :entryId
 AND profile_id = :profileId;
 
+updateFromSourceSync {
+    UPDATE entries SET
+        title = :title,
+        artist = :artist,
+        author = :author,
+        description = :description,
+        genre = :genre,
+        status = :status,
+        thumbnail_url = :thumbnailUrl,
+        last_update = :lastUpdate,
+        next_update = :nextUpdate,
+        initialized = :initialized,
+        cover_last_modified = :coverLastModified,
+        date_added = CASE
+            WHEN :updateDateAdded AND favorite = 1 THEN :dateAdded
+            ELSE date_added
+        END,
+        update_strategy = :updateStrategy,
+        calculate_interval = :calculateInterval,
+        memo = :memo
+    WHERE _id = :entryId
+    AND profile_id = :profileId;
+
+    SELECT *
+    FROM entries
+    WHERE _id = :entryId
+    AND profile_id = :profileId;
+}
+
 updateDisplayName:
 UPDATE entries SET
     display_name = :displayName

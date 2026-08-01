@@ -2,6 +2,7 @@ package tachiyomi.data.entry
 
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOne
+import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -18,6 +19,7 @@ import tachiyomi.data.StringListColumnAdapter
 import tachiyomi.data.UpdateStrategyColumnAdapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.entry.repository.EntrySourceSyncRepository
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -25,7 +27,7 @@ import java.time.ZoneId
 class EntryRepositoryImpl(
     private val handler: DatabaseHandler,
     private val profileProvider: ActiveProfileProvider,
-) : EntryRepository {
+) : EntryRepository, EntrySourceSyncRepository {
 
     override suspend fun getEntryById(id: Long): Entry? {
         return handler.awaitOneOrNull {
@@ -339,6 +341,36 @@ class EntryRepositoryImpl(
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e)
             false
+        }
+    }
+
+    override suspend fun updateFromSourceSync(
+        entry: Entry,
+        profileId: Long,
+        updateDateAdded: Boolean,
+    ): Entry? {
+        return handler.await(inTransaction = true) {
+            entriesQueries.updateFromSourceSync(
+                title = entry.title,
+                artist = entry.artist,
+                author = entry.author,
+                description = entry.description,
+                genre = entry.genre,
+                status = entry.status.value.toLong(),
+                thumbnailUrl = entry.thumbnailUrl,
+                lastUpdate = entry.lastUpdate,
+                nextUpdate = entry.nextUpdate,
+                initialized = entry.initialized,
+                coverLastModified = entry.coverLastModified,
+                updateDateAdded = updateDateAdded.toLong(),
+                dateAdded = entry.dateAdded,
+                updateStrategy = entry.updateStrategy,
+                calculateInterval = entry.fetchInterval.toLong(),
+                memo = entry.memo,
+                entryId = entry.id,
+                profileId = profileId,
+                mapper = EntryMapper::mapEntry,
+            ).awaitAsOneOrNull()
         }
     }
 
