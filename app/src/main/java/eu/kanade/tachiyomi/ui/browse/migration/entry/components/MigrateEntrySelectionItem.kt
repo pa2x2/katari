@@ -9,10 +9,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Checkbox
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ExpandLess
+import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,29 +44,50 @@ fun MigrateEntrySelectionItem(
     itemOrientation: EntryItemOrientation,
     consumedCount: Int,
     totalCount: Int,
+    mergeRole: String? = null,
+    isSelectable: Boolean = true,
     isSelected: Boolean,
+    selectionState: ToggleableState? = null,
     onToggleSelection: () -> Unit,
-    onLongClick: () -> Unit,
+    onLongClick: (() -> Unit)?,
     onInspect: () -> Unit,
+    expanded: Boolean? = null,
+    onToggleExpanded: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
+    val handlesExpansion = expanded != null && onToggleExpanded != null
+    val resolvedSelectionState = selectionState ?: if (isSelected) ToggleableState.On else ToggleableState.Off
     Row(
         modifier = modifier
-            .selectedBackground(isSelected)
+            .selectedBackground(isSelectable && resolvedSelectionState != ToggleableState.Off)
             .fillMaxWidth()
             .heightIn(min = 96.dp)
-            .semantics {
-                toggleableState = if (isSelected) ToggleableState.On else ToggleableState.Off
-            }
+            .then(
+                if (isSelectable && !handlesExpansion) {
+                    Modifier.semantics {
+                        toggleableState = resolvedSelectionState
+                    }
+                } else {
+                    Modifier
+                },
+            )
             .combinedClickable(
-                role = Role.Checkbox,
-                onClick = onToggleSelection,
-                onLongClick = onLongClick,
+                role = if (handlesExpansion) Role.Button else Role.Checkbox,
+                onClick = onToggleExpanded ?: onToggleSelection,
+                onLongClick = onLongClick?.takeIf { isSelectable },
             )
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        if (handlesExpansion) {
+            Icon(
+                imageVector = if (expanded == true) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+
         val coverType = when (itemOrientation) {
             EntryItemOrientation.VERTICAL -> EntryCover.Book
             EntryItemOrientation.HORIZONTAL -> EntryCover.Wide
@@ -122,6 +148,7 @@ fun MigrateEntrySelectionItem(
 
             val typePresentation = entry.type.entryTypePresentation()
             val metadata = buildList {
+                mergeRole?.let(::add)
                 add(stringResource(typePresentation.displayNameLabel))
                 add(entry.status.presentation().label)
                 add(pluralStringResource(typePresentation.childCountPlural, totalCount, totalCount))
@@ -138,10 +165,12 @@ fun MigrateEntrySelectionItem(
             )
         }
 
-        Checkbox(
-            checked = isSelected,
-            onCheckedChange = null,
-            modifier = Modifier.clearAndSetSemantics {},
-        )
+        if (isSelectable) {
+            TriStateCheckbox(
+                state = resolvedSelectionState,
+                onClick = onToggleSelection,
+                modifier = if (handlesExpansion) Modifier else Modifier.clearAndSetSemantics {},
+            )
+        }
     }
 }

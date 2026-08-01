@@ -77,8 +77,8 @@ class MigrationListScreen(
                 navigator push MigrateSearchScreen(migrationItem.subject)
             },
             onSkip = { screenModel.removeEntry(it) },
-            onMigrate = { screenModel.migrateNow(entryId = it, replace = true) },
-            onCopy = { screenModel.migrateNow(entryId = it, replace = false) },
+            onMigrate = { screenModel.showMigrateDialog(entryId = it, copy = false) },
+            onCopy = { screenModel.showMigrateDialog(entryId = it, copy = true) },
             openMigrationDialog = screenModel::showMigrateDialog,
         )
 
@@ -89,13 +89,8 @@ class MigrationListScreen(
                     copy = dialog.copy,
                     totalCount = dialog.totalCount,
                     skippedCount = dialog.skippedCount,
-                    onMigrate = {
-                        if (dialog.copy) {
-                            screenModel.copyEntries()
-                        } else {
-                            screenModel.migrateEntries()
-                        }
-                    },
+                    mergeImpact = dialog.mergeImpact,
+                    onMigrate = { screenModel.confirmMigration(dialog) },
                 )
             }
             is MigrationListScreenModel.Dialog.Progress -> {

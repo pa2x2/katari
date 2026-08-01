@@ -5,6 +5,10 @@ import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
+import eu.kanade.tachiyomi.ui.browse.migration.entry.models.MigrationEntrySelectionAvailability
+import eu.kanade.tachiyomi.ui.browse.migration.entry.models.MigrationEntrySelectionGroup
+import eu.kanade.tachiyomi.ui.browse.migration.entry.models.MigrationEntrySelectionMember
+import eu.kanade.tachiyomi.ui.browse.migration.entry.models.MigrationEntrySelectionProgress
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -17,6 +21,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.core.common.utils.mutate
+import mihon.entry.interactions.merge.EntryMergeLibraryGroup
+import mihon.entry.interactions.merge.EntryMergeLibraryGroupingFeature
 import mihon.entry.interactions.migration.EntryMigrationAvailability
 import mihon.entry.interactions.migration.EntryMigrationFeature
 import mihon.entry.interactions.migration.EntryMigrationSelectionResult
@@ -37,6 +43,7 @@ class MigrateEntriesScreenModel(
     private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
     private val sourceDescription: EntrySourceDescriptionResolutionPort = Injekt.get(),
     private val migration: EntryMigrationFeature = Injekt.get(),
+    private val mergeGrouping: EntryMergeLibraryGroupingFeature = Injekt.get(),
 ) : StateScreenModel<MigrateEntriesScreenModel.State>(State()) {
 
     private val _events: Channel<MigrationEntriesEvent> = Channel()
@@ -52,51 +59,89 @@ class MigrateEntriesScreenModel(
                 )
             }
 
-            entryRepository.getFavoritesBySourceId(sourceId)
-                .map { entries ->
-                    entries
-                        .filter { migration.availability(it) is EntryMigrationAvailability.Available }
-                        .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.displayTitle })
-                }
+            entryRepository.getLibraryEntriesAsFlow()
                 .flatMapLatest { entries ->
                     if (entries.isEmpty()) {
                         flowOf(emptyList())
                     } else {
-                        entryChapterRepository.getChaptersByEntryIds(entries.map(Entry::id))
-                            .map { chapters ->
-                                val progressByEntryId = chapters
-                                    .groupBy { it.entryId }
-                                    .mapValues { (_, entryChapters) ->
-                                        EntryProgress(
-                                            consumedCount = entryChapters.count { it.read },
-                                            totalCount = entryChapters.size,
-                                        )
-                                    }
-                                entries.map { entry ->
-                                    SelectionItem(
-                                        entry = entry,
-                                        progress = progressByEntryId[entry.id] ?: EntryProgress(),
+                        mergeGrouping.observeLibraryGroups(entries.first().profileId, flowOf(entries))
+                            .map { projection ->
+                                projection.groups
+                                    .mapNotNull(::selectionGroup)
+                                    .sortedWith(
+                                        compareBy(String.CASE_INSENSITIVE_ORDER) {
+                                            it.visibleEntry.displayTitle
+                                        },
                                     )
-                                }
                             }
                     }
                 }
+                .flatMapLatest(::withProgress)
                 .catch {
                     logcat(LogPriority.ERROR, it)
                     _events.send(MigrationEntriesEvent.FailedFetchingFavorites)
                     mutableState.update { state ->
-                        state.copy(itemList = emptyList())
+                        state.copy(groupList = emptyList())
                     }
                 }
-                .collectLatest { list ->
+                .collectLatest { groups ->
                     mutableState.update { state ->
-                        val orderedEntryIds = list.map { it.entry.id }
+                        val availableEntryIds = groups
+                            .flatMap(MigrationEntrySelectionGroup::eligibleMembers)
+                            .mapTo(mutableSetOf()) { it.entry.id }
                         state.copy(
-                            itemList = list,
-                            selection = state.selection.intersect(orderedEntryIds.toSet()),
+                            groupList = groups,
+                            selection = state.selection.intersect(availableEntryIds),
                         )
                     }
                 }
+        }
+    }
+
+    private fun selectionGroup(group: EntryMergeLibraryGroup): MigrationEntrySelectionGroup? {
+        val members = group.orderedEntries.map { entry ->
+            MigrationEntrySelectionMember(
+                entry = entry,
+                sourceName = sourceManager.getDisplayInfo(entry.source).name,
+                availability = when {
+                    entry.source != sourceId -> MigrationEntrySelectionAvailability.OTHER_SOURCE
+                    migration.availability(entry) is EntryMigrationAvailability.Available -> {
+                        MigrationEntrySelectionAvailability.ELIGIBLE
+                    }
+                    else -> MigrationEntrySelectionAvailability.UNAVAILABLE
+                },
+            )
+        }
+        if (members.none { it.availability == MigrationEntrySelectionAvailability.ELIGIBLE }) return null
+        return MigrationEntrySelectionGroup(group.visibleEntry, members)
+    }
+
+    private fun withProgress(
+        groups: List<MigrationEntrySelectionGroup>,
+    ): Flow<List<MigrationEntrySelectionGroup>> {
+        val entryIds = groups
+            .flatMap(MigrationEntrySelectionGroup::members)
+            .map { it.entry.id }
+        if (entryIds.isEmpty()) return flowOf(groups)
+        return entryChapterRepository.getChaptersByEntryIds(entryIds).map { chapters ->
+            val progressByEntryId = chapters
+                .groupBy { it.entryId }
+                .mapValues { (_, entryChapters) ->
+                    MigrationEntrySelectionProgress(
+                        consumedCount = entryChapters.count { it.read },
+                        totalCount = entryChapters.size,
+                    )
+                }
+            groups.map { group ->
+                group.copy(
+                    members = group.members.map { member ->
+                        member.copy(
+                            progress = progressByEntryId[member.entry.id]
+                                ?: MigrationEntrySelectionProgress(),
+                        )
+                    },
+                )
+            }
         }
     }
 
@@ -110,6 +155,17 @@ class MigrateEntriesScreenModel(
         mutableState.update { state ->
             val selection = state.selection.mutate { list ->
                 if (!list.remove(itemId)) list.add(itemId)
+            }
+            state.copy(selection = selection)
+        }
+    }
+
+    fun toggleGroupSelection(itemIds: Set<Long>) {
+        mutableState.update { state ->
+            val selection = if (state.selection.containsAll(itemIds)) {
+                state.selection - itemIds
+            } else {
+                state.selection + itemIds
             }
             state.copy(selection = selection)
         }
@@ -157,7 +213,9 @@ class MigrateEntriesScreenModel(
 
     fun migrationSelection(): List<EntryMigrationSubject> {
         val state = state.value
-        val entries = state.items.map(SelectionItem::entry).filter { it.id in state.selection }
+        val entries = state.items
+            .map(MigrationEntrySelectionMember::entry)
+            .filter { it.id in state.selection }
         return (migration.prepareSelection(entries) as? EntryMigrationSelectionResult.Ready)?.subjects.orEmpty()
     }
 
@@ -167,28 +225,29 @@ class MigrateEntriesScreenModel(
         val itemOrientation: EntryItemOrientation = EntryItemOrientation.VERTICAL,
         val searchQuery: String? = null,
         val selection: Set<Long> = emptySet(),
-        private val itemList: List<SelectionItem>? = null,
+        private val groupList: List<MigrationEntrySelectionGroup>? = null,
     ) {
 
-        val items: List<SelectionItem>
-            get() = itemList.orEmpty()
+        val groups: List<MigrationEntrySelectionGroup>
+            get() = groupList.orEmpty()
 
-        val visibleItems: List<SelectionItem>
+        val items: List<MigrationEntrySelectionMember>
+            get() = groups.flatMap(MigrationEntrySelectionGroup::eligibleMembers)
+
+        val visibleGroups: List<MigrationEntrySelectionGroup>
             get() {
                 val query = searchQuery?.trim().orEmpty()
-                if (query.isEmpty()) return items
-                return items.filter { item ->
-                    with(item.entry) {
-                        displayTitle.contains(query, ignoreCase = true) ||
-                            title.contains(query, ignoreCase = true) ||
-                            author?.contains(query, ignoreCase = true) == true ||
-                            artist?.contains(query, ignoreCase = true) == true
-                    }
+                if (query.isEmpty()) return groups
+                return groups.filter { group ->
+                    group.eligibleMembers.any { member -> member.entry.matchesMigrationQuery(query) }
                 }
             }
 
+        val visibleItems: List<MigrationEntrySelectionMember>
+            get() = visibleGroups.flatMap(MigrationEntrySelectionGroup::eligibleMembers)
+
         val isLoading: Boolean
-            get() = source == null || itemList == null
+            get() = source == null || groupList == null
 
         val isEmpty: Boolean
             get() = items.isEmpty()
@@ -207,18 +266,13 @@ class MigrateEntriesScreenModel(
 
         val selectionMode = selection.isNotEmpty()
     }
+}
 
-    @Immutable
-    data class SelectionItem(
-        val entry: Entry,
-        val progress: EntryProgress,
-    )
-
-    @Immutable
-    data class EntryProgress(
-        val consumedCount: Int = 0,
-        val totalCount: Int = 0,
-    )
+private fun Entry.matchesMigrationQuery(query: String): Boolean {
+    return displayTitle.contains(query, ignoreCase = true) ||
+        title.contains(query, ignoreCase = true) ||
+        author?.contains(query, ignoreCase = true) == true ||
+        artist?.contains(query, ignoreCase = true) == true
 }
 
 sealed interface MigrationEntriesEvent {

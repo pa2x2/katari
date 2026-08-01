@@ -31,8 +31,12 @@ import mihon.entry.interactions.migration.EntryMigrationSelectionResult
 import mihon.entry.interactions.migration.EntryMigrationSubject
 import mihon.entry.interactions.migration.EntryMigrationTargetRefreshIntent
 import mihon.entry.interactions.migration.EntryMigrationTargetRefreshResult
+import mihon.feature.migration.list.merge.MigrationMergeContextResolver
 import mihon.feature.migration.list.models.MigratingEntry
 import mihon.feature.migration.list.models.MigratingEntry.SearchResult
+import mihon.feature.migration.list.models.MigrationMergeContext
+import mihon.feature.migration.list.models.MigrationMergeImpactSummary
+import mihon.feature.migration.list.models.migrationMergeImpactSummary
 import mihon.feature.migration.list.search.SmartSourceSearchEngine
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withUIContext
@@ -56,6 +60,10 @@ class MigrationListScreenModel(
     private val entryRepository: EntryRepository = Injekt.get(),
     private val migration: EntryMigrationFeature = Injekt.get(),
     private val catalogueFeature: EntryCatalogueFeature = Injekt.get(),
+    private val mergeContextResolver: MigrationMergeContextResolver = MigrationMergeContextResolver(
+        Injekt.get(),
+        entryRepository,
+    ),
 ) : StateScreenModel<MigrationListScreenModel.State>(State()) {
 
     private val smartSearchEngine = SmartSourceSearchEngine(extraSearchQuery, catalogueFeature)
@@ -73,9 +81,13 @@ class MigrationListScreenModel(
     val migrationFailureEvent = migrationFailureChannel.receiveAsFlow()
 
     private var migrateJob: Job? = null
+    private var mergeContextsByEntryId: Map<Long, MigrationMergeContext> = emptyMap()
 
     init {
         screenModelScope.launchIO {
+            subjects.firstOrNull()?.profileId?.let { profileId ->
+                mergeContextsByEntryId = mergeContextResolver.resolve(profileId)
+            }
             val entries = subjects
                 .map { subject ->
                     async {
@@ -88,6 +100,7 @@ class MigrationListScreenModel(
                             chapterCount = chapterInfo.chapterCount,
                             latestChapter = chapterInfo.latestChapter,
                             source = sourceManager.getDisplayInfo(entry.source).name,
+                            mergeContext = mergeContextsByEntryId[entry.id],
                             parentContext = screenModelScope.coroutineContext,
                         )
                     }
@@ -124,6 +137,7 @@ class MigrationListScreenModel(
             chapterCount = chapterInfo.chapterCount,
             latestChapter = chapterInfo.latestChapter,
             source = source,
+            mergeContext = mergeContextsByEntryId[id],
         )
     }
 
@@ -360,7 +374,7 @@ class MigrationListScreenModel(
         navigateBackChannel.send(Unit)
     }
 
-    fun migrateNow(entryId: Long, replace: Boolean) {
+    private fun migrateNow(entryId: Long, replace: Boolean) {
         screenModelScope.launchIO {
             val entry = items.find { it.entry.id == entryId } ?: return@launchIO
             val target = (entry.searchResult.value as? SearchResult.Success)?.entry ?: return@launchIO
@@ -411,14 +425,39 @@ class MigrationListScreenModel(
     }
 
     fun showMigrateDialog(copy: Boolean) {
+        showMigrateDialog(copy, items)
+    }
+
+    fun showMigrateDialog(entryId: Long, copy: Boolean) {
+        val item = items.find { it.entry.id == entryId } ?: return
+        showMigrateDialog(copy, listOf(item), entryId)
+    }
+
+    private fun showMigrateDialog(
+        copy: Boolean,
+        selectedItems: List<MigratingEntry>,
+        entryId: Long? = null,
+    ) {
         mutableState.update { state ->
             state.copy(
                 dialog = Dialog.Migrate(
                     copy = copy,
-                    totalCount = items.size,
-                    skippedCount = items.count { it.searchResult.value == SearchResult.NotFound },
+                    totalCount = selectedItems.size,
+                    skippedCount = selectedItems.count { it.searchResult.value == SearchResult.NotFound },
+                    entryId = entryId,
+                    mergeImpact = selectedItems.migrationMergeImpactSummary(),
                 ),
             )
+        }
+    }
+
+    fun confirmMigration(dialog: Dialog.Migrate) {
+        dismissDialog()
+        val entryId = dialog.entryId
+        if (entryId == null) {
+            if (dialog.copy) copyEntries() else migrateEntries()
+        } else {
+            migrateNow(entryId, replace = !dialog.copy)
         }
     }
 
@@ -438,7 +477,13 @@ class MigrationListScreenModel(
     )
 
     sealed interface Dialog {
-        data class Migrate(val copy: Boolean, val totalCount: Int, val skippedCount: Int) : Dialog
+        data class Migrate(
+            val copy: Boolean,
+            val totalCount: Int,
+            val skippedCount: Int,
+            val entryId: Long?,
+            val mergeImpact: MigrationMergeImpactSummary,
+        ) : Dialog
         data class Progress(@FloatRange(0.0, 1.0) val progress: Float) : Dialog
         data object Exit : Dialog
     }

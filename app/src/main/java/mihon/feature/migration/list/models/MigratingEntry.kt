@@ -14,6 +14,7 @@ class MigratingEntry(
     val chapterCount: Int,
     val latestChapter: Double?,
     val source: String,
+    val mergeContext: MigrationMergeContext?,
     parentContext: CoroutineContext,
 ) {
     val migrationScope = CoroutineScope(parentContext + SupervisorJob() + Dispatchers.Default)
@@ -28,6 +29,7 @@ class MigratingEntry(
             val chapterCount: Int,
             val latestChapter: Double?,
             val source: String,
+            val mergeContext: MigrationMergeContext?,
         ) : SearchResult
     }
 }
