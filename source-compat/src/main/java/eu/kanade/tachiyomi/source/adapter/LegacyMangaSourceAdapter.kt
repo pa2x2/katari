@@ -13,7 +13,6 @@ import eu.kanade.tachiyomi.source.entry.ConfigurableSource
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryImagePage
-import eu.kanade.tachiyomi.source.entry.EntryImageSource
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientationProvider
 import eu.kanade.tachiyomi.source.entry.EntryMedia
@@ -23,6 +22,7 @@ import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import eu.kanade.tachiyomi.source.entry.IncrementalChapterSource
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.RelatedEntriesSource
+import eu.kanade.tachiyomi.source.entry.ResumableEntryImageSource
 import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.SourceHomePage
@@ -175,7 +175,7 @@ internal open class LegacyMangaRelatedCatalogueSourceAdapter(
  */
 open class LegacyMangaWebViewCatalogueSourceAdapter(
     source: HttpSource,
-) : LegacyMangaCatalogueSourceAdapter(source), EntryImageSource, ChapterWebViewSource, SourceHomePage {
+) : LegacyMangaCatalogueSourceAdapter(source), ResumableEntryImageSource, ChapterWebViewSource, SourceHomePage {
 
     private val httpSource: HttpSource get() = source as HttpSource
 
@@ -202,6 +202,12 @@ open class LegacyMangaWebViewCatalogueSourceAdapter(
 
     override suspend fun getImage(page: EntryImagePage, progress: ProgressListener?): Response =
         httpSource.getImage(page.toLegacyPage(progress))
+
+    override suspend fun getImage(
+        page: EntryImagePage,
+        progress: ProgressListener?,
+        existingSize: Long,
+    ): Response = httpSource.getImage(page.toLegacyPage(progress), existingSize)
 }
 
 internal open class LegacyMangaRelatedWebViewCatalogueSourceAdapter(
@@ -260,7 +266,12 @@ internal open class LegacyMangaRelatedConfigurableCatalogueSourceAdapter(
  */
 open class LegacyMangaWebViewConfigurableCatalogueSourceAdapter(
     source: HttpSource,
-) : LegacyMangaConfigurableCatalogueSourceAdapter(source), EntryImageSource, ChapterWebViewSource, SourceHomePage {
+) : LegacyMangaConfigurableCatalogueSourceAdapter(
+    source,
+),
+    ResumableEntryImageSource,
+    ChapterWebViewSource,
+    SourceHomePage {
 
     private val httpSource: HttpSource get() = source as HttpSource
 
@@ -287,6 +298,12 @@ open class LegacyMangaWebViewConfigurableCatalogueSourceAdapter(
 
     override suspend fun getImage(page: EntryImagePage, progress: ProgressListener?): Response =
         httpSource.getImage(page.toLegacyPage(progress))
+
+    override suspend fun getImage(
+        page: EntryImagePage,
+        progress: ProgressListener?,
+        existingSize: Long,
+    ): Response = httpSource.getImage(page.toLegacyPage(progress), existingSize)
 }
 
 internal open class LegacyMangaRelatedWebViewConfigurableCatalogueSourceAdapter(

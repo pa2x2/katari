@@ -34,6 +34,7 @@ internal fun ChapterNavigator(
     currentPage: Int,
     totalPages: Int,
     onPageIndexChange: (Int) -> Unit,
+    onPageIndexChangeFinished: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     ReaderPageNavigator(
@@ -45,6 +46,7 @@ internal fun ChapterNavigator(
         currentPage = currentPage,
         totalPages = totalPages,
         onPageIndexChange = onPageIndexChange,
+        onPageIndexChangeFinished = { onPageIndexChangeFinished() },
         previousSectionDescription = stringResource(MR.strings.action_previous_chapter),
         nextSectionDescription = stringResource(MR.strings.action_next_chapter),
         modifier = modifier,

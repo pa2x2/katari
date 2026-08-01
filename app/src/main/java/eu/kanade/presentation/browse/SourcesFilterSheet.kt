@@ -10,7 +10,6 @@ import eu.kanade.presentation.browse.components.BaseSourceItem
 import eu.kanade.presentation.browse.components.BrowseFilterSheet
 import eu.kanade.presentation.browse.components.ContentTypeFilterSection
 import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
-import eu.kanade.presentation.util.animateItemFastScroll
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.browse.source.SourcesFilterState
 import eu.kanade.tachiyomi.util.system.LocaleHelper
@@ -53,7 +52,7 @@ fun SourcesFilterSheet(
                     contentType = "source-filter-header",
                 ) {
                     SourcesFilterHeader(
-                        modifier = Modifier.animateItemFastScroll(),
+                        modifier = Modifier.animateItem(),
                         language = language,
                         enabled = enabled,
                         onClickItem = onClickLanguage,
@@ -66,7 +65,7 @@ fun SourcesFilterSheet(
                         contentType = { "source-filter-item" },
                     ) { source ->
                         SourcesFilterItem(
-                            modifier = Modifier.animateItemFastScroll(),
+                            modifier = Modifier.animateItem(),
                             source = source,
                             enabled = "${source.id}" !in state.disabledSources,
                             onClickItem = onClickSource,

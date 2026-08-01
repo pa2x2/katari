@@ -7,12 +7,14 @@ import eu.kanade.domain.source.service.GlobalSourcePreferences
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.extension.api.ExtensionApi
 import eu.kanade.tachiyomi.extension.api.ExtensionUpdateNotifier
+import eu.kanade.tachiyomi.extension.installer.ExtensionInstallOperation
+import eu.kanade.tachiyomi.extension.installer.ExtensionInstallRouting
+import eu.kanade.tachiyomi.extension.installer.routing
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.extension.model.LoadResult
 import eu.kanade.tachiyomi.extension.util.ExtensionInstallReceiver
 import eu.kanade.tachiyomi.extension.util.ExtensionInstaller
-import eu.kanade.tachiyomi.extension.util.ExtensionInstaller.UserActionBehavior
 import eu.kanade.tachiyomi.extension.util.ExtensionLoader
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.CoroutineScope
@@ -260,19 +262,14 @@ class ExtensionManager(
      * @param extension The extension to be installed.
      */
     fun installExtension(extension: Extension.Available): Flow<InstallStep> {
-        return installer.downloadAndInstall(
-            extension.apkUrl,
-            extension,
-            UserActionBehavior.LaunchPrompt,
-        )
+        return installExtension(extension, ExtensionInstallOperation.NewInstall.routing())
     }
 
-    internal fun installExtensionForAutoUpdate(extension: Extension.Available): Flow<InstallStep> {
-        return installer.downloadAndInstall(
-            extension.apkUrl,
-            extension,
-            UserActionBehavior.MarkAsRequiresUserAction,
-        )
+    internal fun installExtensionForAutoUpdate(
+        installed: Extension.Installed,
+        available: Extension.Available,
+    ): Flow<InstallStep> {
+        return installExtension(available, ExtensionInstallOperation.AutomaticUpdate(installed).routing())
     }
 
     /**
@@ -284,7 +281,19 @@ class ExtensionManager(
      */
     fun updateExtension(extension: Extension.Installed): Flow<InstallStep> {
         val availableExt = availableExtensionMapFlow.value[extension.pkgName] ?: return emptyFlow()
-        return installExtension(availableExt)
+        return installExtension(availableExt, ExtensionInstallOperation.ManualUpdate(extension).routing())
+    }
+
+    private fun installExtension(
+        extension: Extension.Available,
+        routing: ExtensionInstallRouting,
+    ): Flow<InstallStep> {
+        return installer.downloadAndInstall(
+            extension.apkUrl,
+            extension,
+            routing.userActionBehavior,
+            routing.installRoute,
+        )
     }
 
     fun cancelInstallUpdateExtension(extension: Extension) {

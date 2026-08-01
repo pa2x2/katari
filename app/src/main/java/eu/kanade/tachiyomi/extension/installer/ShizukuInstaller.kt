@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.extension.installer
 
+import android.app.PendingIntent
 import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.ComponentName
@@ -36,6 +37,7 @@ internal class ShizukuInstaller(
             .processNameSuffix("shizuku_service")
             .debuggable(BuildConfig.DEBUG)
             .daemon(false)
+            .version(2)
     }
 
     private val connection = object : ServiceConnection {
@@ -49,6 +51,13 @@ internal class ShizukuInstaller(
             shellInterface = null
         }
     }
+
+    private val statusIntent = PendingIntent.getBroadcast(
+        service.applicationContext,
+        0,
+        Intent(ACTION_INSTALL_RESULT).setPackage(BuildConfig.APPLICATION_ID),
+        PendingIntent.FLAG_MUTABLE,
+    )
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -112,7 +121,7 @@ internal class ShizukuInstaller(
         super.processEntry(entry)
         try {
             service.contentResolver.openAssetFileDescriptor(entry.uri, "r").use {
-                shellInterface?.install(it)
+                shellInterface?.install(it, statusIntent.intentSender)
             }
             service.contentResolver.delete(entry.uri, null, null)
         } catch (e: Exception) {

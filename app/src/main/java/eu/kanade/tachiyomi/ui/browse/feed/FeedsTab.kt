@@ -89,7 +89,6 @@ import eu.kanade.presentation.components.RadioMenuItem
 import eu.kanade.presentation.components.TabContent
 import eu.kanade.presentation.entry.components.DuplicateEntryDialog
 import eu.kanade.presentation.more.settings.screen.BrowseLongPressActionsScreen
-import eu.kanade.presentation.util.animateItemFastScroll
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.ui.browse.catalog.BrowseLongPressOutcome
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreenModel
@@ -968,7 +967,7 @@ private fun FeedSourcePickerDialog(
                     BaseSourceItem(
                         source = source,
                         modifier = Modifier
-                            .animateItemFastScroll()
+                            .animateItem()
                             .padding(vertical = MaterialTheme.padding.small),
                         onClickItem = { onSelectSource(source) },
                     )

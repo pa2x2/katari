@@ -18,7 +18,6 @@ import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.history.components.HistoryListItem
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
-import eu.kanade.presentation.util.animateItemFastScroll
 import eu.kanade.tachiyomi.ui.history.HistoryScreenModel
 import tachiyomi.domain.history.model.HistoryItem
 import tachiyomi.i18n.MR
@@ -120,13 +119,13 @@ private fun HistoryScreenContent(
             when (item) {
                 is HistoryUiModel.Header -> {
                     ListGroupHeader(
-                        modifier = Modifier.animateItemFastScroll(),
+                        modifier = Modifier.animateItem(),
                         text = relativeDateText(item.date),
                     )
                 }
                 is HistoryUiModel.Item -> {
                     HistoryListItem(
-                        modifier = Modifier.animateItemFastScroll(),
+                        modifier = Modifier.animateItem(),
                         item = item.item,
                         onClickCover = { onClickCover(item.item) },
                         onClickResume = if (canResume(item.item)) {

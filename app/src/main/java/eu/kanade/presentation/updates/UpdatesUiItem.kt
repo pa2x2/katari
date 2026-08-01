@@ -42,7 +42,6 @@ import eu.kanade.presentation.entry.components.EntryChapterDownloadIndicator
 import eu.kanade.presentation.entry.components.EntryCover
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.entry.partialProgressLabel
-import eu.kanade.presentation.util.animateItemFastScroll
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.ui.updates.UpdatesItem
 import mihon.entry.interactions.download.EntryDownloadState
@@ -95,7 +94,7 @@ internal fun <T> LazyListScope.updatesUiItems(
         when (item) {
             is UpdatesUiModel.Header -> {
                 ListGroupHeader(
-                    modifier = Modifier.animateItemFastScroll(),
+                    modifier = Modifier.animateItem(),
                     text = relativeDateText(item.date),
                 )
             }
@@ -119,7 +118,7 @@ internal fun LazyListScope.unifiedUpdatesUiItems(
         itemKey = { "updates-${it.update.key.type.name}-${it.update.key.id}" },
     ) { updatesItem ->
         UnifiedUpdatesUiItem(
-            modifier = Modifier.animateItemFastScroll(),
+            modifier = Modifier.animateItem(),
             item = updatesItem,
             selectionMode = selectionMode,
             onUpdateSelected = onUpdateSelected,

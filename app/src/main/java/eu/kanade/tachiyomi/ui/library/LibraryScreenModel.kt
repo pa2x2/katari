@@ -69,6 +69,7 @@ import mihon.entry.interactions.state.EntryConsumptionFeature
 import mihon.entry.interactions.tracking.EntryTrackingAccount
 import mihon.entry.interactions.tracking.EntryTrackingCollectionTrack
 import mihon.entry.interactions.tracking.EntryTrackingFeature
+import mihon.feature.library.search.LibrarySearchMatcher
 import mihon.feature.profiles.core.Profile
 import mihon.feature.profiles.core.ProfileAwareStore
 import mihon.feature.profiles.core.ProfileDatabase
@@ -157,15 +158,23 @@ class LibraryScreenModel(
                 ) { searchQuery, categories, favorites, (tracking, trackingFilters), itemPreferences ->
                     val showSystemCategory = favorites.any { it.categories.contains(0L) }
                     val categoryNamesById = categories.associate { it.id to it.name }
+                    val searchMatcher = searchQuery?.let { query ->
+                        LibrarySearchMatcher(
+                            query = query,
+                            categoryNamesById = categoryNamesById,
+                            sourceDisplayName = { item -> item.getSourceDisplayName(sourceManager) },
+                            sourceNames = { item ->
+                                item.sourceIds.map { sourceId -> sourceManager.getDisplayInfo(sourceId).name }
+                            },
+                        )
+                    }
                     val filterResult = favorites.applyFilters(tracking.entries, trackingFilters, itemPreferences)
                     val filteredFavorites = filterResult.items
                         .let {
-                            if (searchQuery ==
-                                null
-                            ) {
+                            if (searchMatcher == null) {
                                 it
                             } else {
-                                it.filter { item -> item.matches(searchQuery, sourceManager, categoryNamesById) }
+                                it.filter(searchMatcher::matches)
                             }
                         }
 
@@ -1451,62 +1460,10 @@ private fun DownloadAction.toEntryBulkDownloadAction(): EntryBulkDownloadAction 
     }
 }
 
-private const val LOCAL_SOURCE_ID_ALIAS = "local"
-private const val MULTI_SOURCE_ID_ALIAS = "multi"
-
-private fun LibraryItem.matches(
-    query: String,
-    sourceManager: SourceManager,
-    categoryNamesById: Map<Long, String>,
-): Boolean {
-    if (query.startsWith("id:", true)) {
-        return entry.id == query.substringAfter("id:").toLongOrNull()
-    }
-    if (query.startsWith("src:", true)) {
-        val querySource = query.substringAfter("src:")
-        return when {
-            querySource.equals(LOCAL_SOURCE_ID_ALIAS, ignoreCase = true) ->
-                displaySourceId == LocalSource.ID
-            querySource.equals(MULTI_SOURCE_ID_ALIAS, ignoreCase = true) ->
-                displaySourceId == LibraryItem.MULTI_SOURCE_ID
-            else -> querySource.toLongOrNull() in sourceIds
-        }
-    }
-
-    val sourceDisplayName by lazy { getSourceDisplayName(sourceManager) }
-    val categoryNames by lazy { categories.mapNotNull(categoryNamesById::get) }
-    return query.split(",").map { it.trim() }.all { subconstraint ->
-        checkNegatableConstraint(subconstraint) { constraint ->
-            listOfNotNull(
-                entry.title,
-                entry.displayName,
-                entry.author,
-                entry.artist,
-                entry.description,
-                sourceDisplayName,
-                *entry.genre.orEmpty().toTypedArray(),
-                *categoryNames.toTypedArray(),
-            ).any { it.contains(constraint, ignoreCase = true) } ||
-                entry.genre.orEmpty().any { genre -> genre.equals(constraint, ignoreCase = true) }
-        }
-    }
-}
-
 private fun LibraryItem.getSourceDisplayName(sourceManager: SourceManager): String {
     return when {
         sourceName.isNotBlank() -> sourceName
         displaySourceId == LibraryItem.MULTI_SOURCE_ID -> ""
         else -> sourceManager.getDisplayInfo(displaySourceId).name
-    }
-}
-
-private fun checkNegatableConstraint(
-    constraint: String,
-    predicate: (String) -> Boolean,
-): Boolean {
-    return if (constraint.startsWith("-")) {
-        !predicate(constraint.substringAfter("-").trimStart())
-    } else {
-        predicate(constraint)
     }
 }

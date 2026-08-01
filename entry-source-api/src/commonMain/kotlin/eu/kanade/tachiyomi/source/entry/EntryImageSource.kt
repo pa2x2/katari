@@ -45,3 +45,25 @@ interface EntryImageSource : UnifiedSource {
         return client.newCachelessCallWithProgress(request, listener).awaitSuccess()
     }
 }
+
+/**
+ * Optional capability for image sources that can resume a partial download.
+ */
+interface ResumableEntryImageSource : EntryImageSource {
+
+    /**
+     * Downloads the image for [page], requesting bytes after [existingSize] when possible.
+     */
+    suspend fun getImage(
+        page: EntryImagePage,
+        progress: ProgressListener?,
+        existingSize: Long,
+    ): Response {
+        val imageUrl = page.imageUrl ?: getImageUrl(page)
+        val request = imageRequest(page, imageUrl)
+        val listener = progress ?: object : ProgressListener {
+            override fun update(bytesRead: Long, contentLength: Long, done: Boolean) = Unit
+        }
+        return client.newCachelessCallWithProgress(request, listener, existingSize).awaitSuccess()
+    }
+}

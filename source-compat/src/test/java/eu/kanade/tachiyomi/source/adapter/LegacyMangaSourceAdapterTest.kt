@@ -4,6 +4,7 @@ import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.SourceFactory
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
+import eu.kanade.tachiyomi.source.entry.EntryImagePage
 import eu.kanade.tachiyomi.source.entry.EntryImageSource
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientationProvider
@@ -12,6 +13,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.IncrementalChapterSource
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.RelatedEntriesSource
+import eu.kanade.tachiyomi.source.entry.ResumableEntryImageSource
 import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.supportedEntryTypes
@@ -25,6 +27,10 @@ import eu.kanade.tachiyomi.source.online.HttpSource
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
+import mockwebserver3.MockResponse
+import mockwebserver3.MockWebServer
+import okhttp3.Headers
+import okhttp3.OkHttpClient
 import org.junit.jupiter.api.Test
 import rx.Observable
 import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
@@ -177,6 +183,32 @@ class LegacyMangaSourceAdapterTest {
         source.receivedChapters.single().url shouldBe "/existing"
         source.receivedChapters.single().chapter_number shouldBe 1.0f
     }
+
+    @Test
+    fun `legacy image adapter forwards partial file size`() = runTest {
+        MockWebServer().use { server ->
+            server.enqueue(
+                MockResponse.Builder()
+                    .code(206)
+                    .body("remaining")
+                    .build(),
+            )
+            server.start()
+            val adapted = ResumableLegacyHttpSource(server.url("/").toString()).asUnifiedSource()
+                as ResumableEntryImageSource
+
+            adapted.getImage(
+                page = EntryImagePage(
+                    index = 0,
+                    imageUrl = server.url("/page.jpg").toString(),
+                ),
+                progress = null,
+                existingSize = 23L,
+            ).close()
+
+            server.takeRequest().headers["Range"] shouldBe "bytes=23-"
+        }
+    }
 }
 
 private suspend fun invokeLegacyBridge(instance: Any, methodName: String): Any? =
@@ -277,4 +309,12 @@ private class LegacyUnmeteredHttpSource : InheritedRelatedHttpSource(), LegacyUn
 
 private class DisabledRelatedHttpSource : DirectRelatedHttpSource() {
     override val disableRelatedMangas = true
+}
+
+private class ResumableLegacyHttpSource(
+    override val baseUrl: String,
+) : InheritedRelatedHttpSource() {
+    override val client = OkHttpClient()
+
+    override fun headersBuilder(): Headers.Builder = Headers.Builder()
 }

@@ -10,24 +10,15 @@ import kotlinx.coroutines.flow.first
 import mihon.core.common.GlobalCustomPreferences
 import mihon.domain.extension.interactor.UpdateExtensionStores
 import mihon.domain.extension.repository.ExtensionStoreRepository
-import tachiyomi.core.common.preference.Preference
-import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.util.lang.withIOContext
 import uy.kohesive.injekt.injectLazy
-import java.time.Instant
-import kotlin.time.Duration.Companion.days
 
 internal class ExtensionApi {
 
     private val repository: ExtensionStoreRepository by injectLazy()
-    private val preferenceStore: PreferenceStore by injectLazy()
     private val updateExtensionStores: UpdateExtensionStores by injectLazy()
     private val extensionManager: ExtensionManager by injectLazy()
     private val customPreferences: GlobalCustomPreferences by injectLazy()
-
-    private val lastExtCheck: Preference<Long> by lazy {
-        preferenceStore.getLong(Preference.appStateKey("last_ext_check"), 0)
-    }
 
     private data class UpdateCandidate(
         val installed: Extension.Installed,
@@ -45,19 +36,12 @@ internal class ExtensionApi {
         context: Context,
         fromAvailableExtensionList: Boolean = false,
     ): List<Extension.Installed>? {
-        // Limit checks to once a day at most
-        if (!fromAvailableExtensionList &&
-            Instant.now().toEpochMilli() < lastExtCheck.get() + 1.days.inWholeMilliseconds
-        ) {
-            return null
-        }
-
         updateExtensionStores()
 
         val extensions = if (fromAvailableExtensionList) {
             extensionManager.availableExtensionsFlow.value
         } else {
-            findExtensions().also { lastExtCheck.set(Instant.now().toEpochMilli()) }
+            findExtensions()
         }
 
         extensionManager.isInitialized.first { it }
@@ -109,7 +93,7 @@ internal class ExtensionApi {
         extensionManager.runAutoUpdateSession {
             updateCandidates.forEach { candidate ->
                 val finalStep = runCatching {
-                    extensionManager.installExtensionForAutoUpdate(candidate.available)
+                    extensionManager.installExtensionForAutoUpdate(candidate.installed, candidate.available)
                         .first { it.isCompleted() }
                 }.getOrElse { InstallStep.Error }
 

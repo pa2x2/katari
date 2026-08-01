@@ -140,7 +140,7 @@ class DomainModule : InjektModule {
         addFactory { SetEntryViewerFlags(get()) }
         addFactory { UpdateEntry(get(), get()) }
         addSingletonFactory<ReleaseService> { ReleaseServiceImpl(get(), get()) }
-        addFactory { GetApplicationRelease(get(), get()) }
+        addFactory { GetApplicationRelease(get()) }
 
         addSingletonFactory<TrackRepository> { TrackRepositoryImpl(get(), get()) }
         addFactory { TrackChapter(get(), get(), get(), get()) }

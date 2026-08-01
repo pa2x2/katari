@@ -11,6 +11,7 @@ import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.models.BackupExtensionStore
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
+import eu.kanade.tachiyomi.data.backup.restore.entries.EntryRestoreCoordinator
 import eu.kanade.tachiyomi.data.backup.restore.restorers.CategoriesRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.EntryRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.ExtensionStoreRestorer
@@ -65,6 +66,7 @@ class BackupRestorer(
     private var restoreAmount = 0
     private val restoreProgress = AtomicInt(0)
     private val errors = CopyOnWriteArrayList<Pair<Date, String>>()
+    private val entryRestoreCoordinator = EntryRestoreCoordinator(database, entryRestorer)
 
     /**
      * Mapping of source ID to source name from backup data
@@ -339,30 +341,23 @@ class BackupRestorer(
         backupEntries: List<BackupEntry>,
         backupCategories: List<BackupCategory>,
     ) = launch {
-        entryRestorer.sortByNew(backupEntries)
-            .chunked(100)
-            .forEach { chunk ->
-                database.transaction {
-                    chunk.forEach {
-                        ensureActive()
-
-                        try {
-                            entryRestorer.restore(
-                                it,
-                                backupCategories,
-                            )
-                        } catch (e: Exception) {
-                            val sourceName = sourceMapping[it.source] ?: it.source.toString()
-                            errors.add(Date() to "${it.title} [$sourceName]: ${e.message}")
-                        }
-
-                        restoreProgress.incrementAndFetch()
-                    }
-                }
-                notifier.showRestoreProgress(chunk.last().title, restoreProgress.load(), restoreAmount, isSync)
-            }
-
-        entryRestorer.finalizeFeatureRestore(destinationProfileId).issues.forEach { issue ->
+        val finalization = entryRestoreCoordinator.restoreEntries(
+            destinationProfileId = destinationProfileId,
+            backupEntries = backupEntries,
+            backupCategories = backupCategories,
+            onBatchFailure = { error ->
+                logcat(LogPriority.WARN, error) { "Batch restore failed, retrying entry by entry" }
+            },
+            onEntryFailure = { entry, error ->
+                val sourceName = sourceMapping[entry.source] ?: entry.source.toString()
+                errors.add(Date() to "${entry.title} [$sourceName]: ${error.message}")
+            },
+            onProgress = { lastEntry, restoredCount ->
+                val progress = restoreProgress.addAndFetch(restoredCount)
+                notifier.showRestoreProgress(lastEntry.title, progress, restoreAmount, isSync)
+            },
+        )
+        finalization.issues.forEach { issue ->
             errors.add(Date() to issue.description)
         }
     }

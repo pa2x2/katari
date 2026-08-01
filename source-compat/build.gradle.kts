@@ -31,6 +31,7 @@ dependencies {
 
     testImplementation(libs.bundles.test)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.okhttp.mockwebserver3)
     testRuntimeOnly(libs.junit.platform.launcher)
     testRuntimeOnly(files(legacy14FixtureJar))
 }

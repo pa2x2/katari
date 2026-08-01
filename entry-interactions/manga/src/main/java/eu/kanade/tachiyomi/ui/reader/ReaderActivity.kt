@@ -190,7 +190,7 @@ class ReaderActivity : EntryInteractionActivity() {
             }
             dismissNewChaptersNotification(this, manga.hashCode())
 
-            lifecycleScope.launchNonCancellable {
+            lifecycleScope.launch {
                 val initResult = viewModel.init(manga, chapter, pageIndex)
                 if (!initResult.getOrDefault(false)) {
                     val exception = initResult.exceptionOrNull() ?: IllegalStateException("Unknown err")
@@ -540,6 +540,9 @@ class ReaderActivity : EntryInteractionActivity() {
             onPageIndexChange = {
                 isScrollingThroughPages = true
                 moveToPageIndex(it)
+            },
+            onPageIndexChangeFinished = {
+                isScrollingThroughPages = false
             },
 
             readingMode = ReadingMode.fromPreference(

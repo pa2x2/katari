@@ -3,10 +3,12 @@ package mihon.entry.interactions.manga.download
 import android.content.Context
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.network.HttpException
+import eu.kanade.tachiyomi.network.ProgressListener
 import eu.kanade.tachiyomi.source.entry.EntryImagePage
 import eu.kanade.tachiyomi.source.entry.EntryImageSource
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryType
+import eu.kanade.tachiyomi.source.entry.ResumableEntryImageSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.entry.UnmeteredSource
 import eu.kanade.tachiyomi.source.model.Page
@@ -525,17 +527,19 @@ internal class Downloader(
                 ?: tmpDir.createFile("$filename.tmp")!!
 
             try {
-                source.getImage(page.toEntryImagePage(), page).use { response ->
-                    file.openOutputStream(response.code == 206).use { output ->
-                        output.sink().buffer().use { sink ->
-                            response.body.source().use { source ->
-                                sink.writeAll(source)
-                                sink.flush()
+                source.getImageForDownload(page.toEntryImagePage(), page, file).let { download ->
+                    download.response.use { response ->
+                        file.openOutputStream(download.appendToExistingFile).use { output ->
+                            output.sink().buffer().use { sink ->
+                                response.body.source().use { source ->
+                                    sink.writeAll(source)
+                                    sink.flush()
+                                }
                             }
                         }
+                        val extension = getImageExtension(response, file)
+                        file.renameTo("$filename.$extension")
                     }
-                    val extension = getImageExtension(response, file)
-                    file.renameTo("$filename.$extension")
                 }
             } catch (e: HttpException) {
                 if (e.code == 416) {
@@ -852,6 +856,28 @@ internal class Downloader(
             "https://mihon.app/docs/faq/library#why-am-i-warned-about-large-bulk-updates-and-downloads"
         private const val DOWNLOADS_QUEUED_WARNING_THRESHOLD = 30
     }
+}
+
+internal class ImageDownloadResponse(
+    val response: Response,
+    val appendToExistingFile: Boolean,
+)
+
+internal suspend fun EntryImageSource.getImageForDownload(
+    page: EntryImagePage,
+    progress: ProgressListener,
+    partialFile: UniFile,
+): ImageDownloadResponse {
+    val resumableSource = this as? ResumableEntryImageSource
+    val response = if (resumableSource != null) {
+        resumableSource.getImage(page, progress, partialFile.length())
+    } else {
+        getImage(page, progress)
+    }
+    return ImageDownloadResponse(
+        response = response,
+        appendToExistingFile = resumableSource != null && response.code == 206,
+    )
 }
 
 // Arbitrary minimum required space to start a download: 200 MB
