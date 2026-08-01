@@ -73,7 +73,7 @@ fun MigrationListScreenContent(
     items: List<MigratingEntry>,
     migrationComplete: Boolean,
     finishedCount: Int,
-    onItemClick: (Entry) -> Unit,
+    onItemClick: (Entry, MigrationMergeContext?) -> Unit,
     onSearchManually: (MigratingEntry) -> Unit,
     onSkip: (Long) -> Unit,
     onMigrate: (Long) -> Unit,
@@ -143,7 +143,7 @@ fun MigrationListScreenContent(
                             chapterCount = item.chapterCount,
                             latestChapter = item.latestChapter,
                             mergeContext = item.mergeContext,
-                            onClick = { onItemClick(item.entry) },
+                            onClick = { onItemClick(item.entry, item.mergeContext) },
                         )
 
                         Icon(
@@ -271,7 +271,7 @@ fun MigrationListItem(
 fun MigrationListItemResult(
     modifier: Modifier,
     result: MigratingEntry.SearchResult,
-    onItemClick: (Entry) -> Unit,
+    onItemClick: (Entry, MigrationMergeContext?) -> Unit,
 ) {
     Box(modifier.height(IntrinsicSize.Min)) {
         when (result) {
@@ -317,7 +317,7 @@ fun MigrationListItemResult(
                     chapterCount = result.chapterCount,
                     latestChapter = result.latestChapter,
                     mergeContext = result.mergeContext,
-                    onClick = { onItemClick(result.entry) },
+                    onClick = { onItemClick(result.entry, result.mergeContext) },
                 )
             }
         }

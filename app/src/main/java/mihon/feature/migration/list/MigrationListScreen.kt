@@ -70,8 +70,14 @@ class MigrationListScreen(
             items = state.items,
             migrationComplete = state.migrationComplete,
             finishedCount = state.finishedCount,
-            onItemClick = {
-                navigator.push(EntryScreen(it.id, fromSource = true))
+            onItemClick = { entry, mergeContext ->
+                navigator.push(
+                    EntryScreen(
+                        entry.id,
+                        fromSource = true,
+                        bypassMerge = mergeContext?.isRoot == false,
+                    ),
+                )
             },
             onSearchManually = { migrationItem ->
                 navigator push MigrateSearchScreen(migrationItem.subject)

@@ -177,7 +177,9 @@ data class MigrateEntriesScreen(
                             }
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         },
-                        onInspect = { navigator.push(EntryScreen(it)) },
+                        onInspect = { entryId, bypassMerge ->
+                            navigator.push(EntryScreen(entryId, bypassMerge = bypassMerge))
+                        },
                     )
                 }
             }
@@ -203,7 +205,7 @@ private fun MigrateEntriesContent(
     onToggleSelection: (Long) -> Unit,
     onToggleGroup: (Set<Long>) -> Unit,
     onLongClickItem: (Long) -> Unit,
-    onInspect: (Long) -> Unit,
+    onInspect: (Long, Boolean) -> Unit,
 ) {
     FastScrollLazyColumn(
         state = lazyListState,

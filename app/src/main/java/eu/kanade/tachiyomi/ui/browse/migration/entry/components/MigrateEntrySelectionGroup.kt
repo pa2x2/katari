@@ -39,7 +39,7 @@ fun MigrateEntrySelectionGroup(
     onToggleSelection: (Long) -> Unit,
     onToggleGroup: (Set<Long>) -> Unit,
     onLongClickItem: (Long) -> Unit,
-    onInspect: (Long) -> Unit,
+    onInspect: (Long, Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (!group.isMerged) {
@@ -52,7 +52,7 @@ fun MigrateEntrySelectionGroup(
             isSelected = member.entry.id in selection,
             onToggleSelection = { onToggleSelection(member.entry.id) },
             onLongClick = { onLongClickItem(member.entry.id) },
-            onInspect = { onInspect(member.entry.id) },
+            onInspect = { onInspect(member.entry.id, false) },
             modifier = modifier,
         )
         return
@@ -99,7 +99,7 @@ fun MigrateEntrySelectionGroup(
             selectionState = groupSelectionState,
             onToggleSelection = { onToggleGroup(group.eligibleEntryIds) },
             onLongClick = null,
-            onInspect = { onInspect(root.entry.id) },
+            onInspect = { onInspect(root.entry.id, false) },
             expanded = expanded,
             onToggleExpanded = { expanded = !expanded },
             modifier = if (expanded) {
@@ -133,7 +133,7 @@ fun MigrateEntrySelectionGroup(
                                     isSelected = member.entry.id in selection,
                                     onToggleSelection = { onToggleSelection(member.entry.id) },
                                     onLongClick = { onLongClickItem(member.entry.id) },
-                                    onInspect = { onInspect(member.entry.id) },
+                                    onInspect = { onInspect(member.entry.id, true) },
                                     modifier = childModifier,
                                 )
                             }
@@ -146,7 +146,7 @@ fun MigrateEntrySelectionGroup(
                                     mergeRole = stringResource(MR.strings.label_member),
                                     unavailable = member.availability ==
                                         MigrationEntrySelectionAvailability.UNAVAILABLE,
-                                    onInspect = { onInspect(member.entry.id) },
+                                    onInspect = { onInspect(member.entry.id, true) },
                                     modifier = childModifier,
                                 )
                             }
