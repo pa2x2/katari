@@ -52,9 +52,13 @@ fun bookEntryTypeRuntimeModule(profilePreferenceOwners: ProfilePreferenceOwnerIn
                 ),
             ),
             potentialReaderCapabilitiesBySettingsSurface = runtime.potentialReaderCapabilitiesBySettingsSurface,
-            sharedReaderSettingsProviderFactories = listOf(
-                { get<BookAutomaticTranslationSettingsProvider>() },
-            ),
+            sharedReaderSettingsProviderFactories = if (
+                runtime.potentialReaderCapabilitiesBySettingsSurface.isEmpty()
+            ) {
+                emptyList()
+            } else {
+                listOf({ get<BookAutomaticTranslationSettingsProvider>() })
+            },
         )
     }
 }
