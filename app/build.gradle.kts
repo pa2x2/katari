@@ -219,6 +219,7 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.core.common.path)))
     implementation(dependencies.project(mapOf("path" to projects.coreMetadata.path)))
     implementation(dependencies.project(mapOf("path" to projects.entryInteractions.path)))
+    implementation(projects.entryInteractions.book)
     implementation(dependencies.project(mapOf("path" to projects.entrySourceApi.path)))
     implementation(dependencies.project(mapOf("path" to projects.featureRuntime.path)))
     implementation(dependencies.project(mapOf("path" to projects.sourceApi.path)))

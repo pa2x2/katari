@@ -4,6 +4,7 @@ import android.graphics.Typeface
 
 internal data class BookDocumentTextStyle(
     val textColor: Int,
+    val linkTextColor: Int,
     val textSizeSp: Float,
     val typeface: Typeface,
     val lineSpacingMultiplier: Float,
@@ -14,6 +15,7 @@ internal data class BookDocumentTextStyle(
 internal fun BookDocumentTextView.applyStyle(style: BookDocumentTextStyle) {
     if (appliedStyle == style) return
     setTextColor(style.textColor)
+    setLinkTextColor(style.linkTextColor)
     textSize = style.textSizeSp
     typeface = style.typeface
     setLineSpacing(0f, style.lineSpacingMultiplier)

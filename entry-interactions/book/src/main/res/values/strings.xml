@@ -10,6 +10,10 @@
     <string name="book_reader_close">Close</string>
     <string name="book_reader_invalid_request">The selected book item is invalid.</string>
     <string name="book_reader_general_settings">General</string>
+    <string name="book_reader_appearance_settings">Appearance</string>
+    <string name="book_document_reader_theme">Theme</string>
+    <string name="book_document_reader_theme_app">App theme</string>
+    <string name="book_document_reader_theme_black">Black</string>
     <string name="book_reader_automatic_translation">Translate selected text automatically</string>
     <string name="book_reader_automatic_translation_summary">Translation starts after text selection settles and uses this profile’s Translation engine and target language.</string>
     <string name="book_reader_configure_translation">Configure translation</string>

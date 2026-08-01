@@ -20,6 +20,7 @@ internal fun BookDocumentText(
     text: Spanned,
     documentTextIdentity: String,
     textColor: Int,
+    linkTextColor: Int,
     textSizeSp: Float,
     typeface: Typeface,
     lineSpacingMultiplier: Float,
@@ -53,6 +54,7 @@ internal fun BookDocumentText(
     }
     val style = BookDocumentTextStyle(
         textColor = textColor,
+        linkTextColor = linkTextColor,
         textSizeSp = textSizeSp,
         typeface = typeface,
         lineSpacingMultiplier = lineSpacingMultiplier,

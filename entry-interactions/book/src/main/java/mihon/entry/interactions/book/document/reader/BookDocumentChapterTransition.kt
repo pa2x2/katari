@@ -2,6 +2,7 @@ package mihon.entry.interactions.book.document.reader
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildTransition
 import tachiyomi.domain.entry.model.EntryChapter
@@ -21,6 +22,7 @@ internal fun BookDocumentChapterTransition(
     onRetry: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
+    val palette = LocalBookDocumentReaderPalette.current
     val current = transition.from.toTransitionItem()
     val destination = transition.to?.toTransitionItem()
     val sharedLoadState = when (loadState) {
@@ -50,7 +52,15 @@ internal fun BookDocumentChapterTransition(
             destinationSlot = ReaderEntryChildTransitionDestinationSlot.BOTTOM,
         )
     }
-    ReaderEntryChildTransition(model = model, onRetry = onRetry, modifier = modifier)
+    ReaderEntryChildTransition(
+        model = model,
+        onRetry = onRetry,
+        modifier = modifier,
+        contentColor = palette.foreground,
+        accentColor = palette.accent,
+        warningColor = palette.warning,
+        outlineColor = palette.outline,
+    )
 }
 
 private fun EntryChapter.toTransitionItem() = ReaderEntryChildTransitionItem(

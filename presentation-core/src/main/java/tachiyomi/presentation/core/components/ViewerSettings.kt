@@ -38,6 +38,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.compose.ui.window.Dialog
@@ -89,9 +90,14 @@ fun ViewerSettingsTabbedDialog(
                         ) {
                             tabTitles.fastForEachIndexed { index, title ->
                                 Tab(
+                                    modifier = Modifier.focusProperties {
+                                        canFocus = pagerState.currentPage == index
+                                    },
                                     selected = pagerState.currentPage == index,
                                     onClick = { scope.launch { pagerState.scrollToPage(index) } },
                                     text = { TabText(title) },
+                                    selectedContentColor = MaterialTheme.colorScheme.primary,
+                                    unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
                         }

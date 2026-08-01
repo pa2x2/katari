@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -26,6 +25,7 @@ import mihon.book.api.document.BookDocumentContent
 import mihon.book.api.document.BookDocumentFontFamily
 import mihon.book.api.document.BookDocumentRichText
 import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.document.render.toBookDocumentSpanned
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
 
@@ -42,13 +42,12 @@ internal fun BookDocumentBlockRenderer(
     preserveTerminalSpacing: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
+    val palette = LocalBookDocumentReaderPalette.current
     val blockText = remember(block, owningContent.text) {
         owningContent.text.substring(block.logicalStart, block.logicalEndExclusive)
     }
     val padding = (block.style.paddingEm * 16).dp
-    Column(
-        modifier = modifier.padding(padding),
-    ) {
+    Column(modifier = modifier.padding(padding)) {
         when (val content = block.content) {
             is BookDocumentBlockContent.Text -> DocumentText(
                 text = remember(block, blockText) { blockText.toBookDocumentSpanned(block) },
@@ -65,6 +64,7 @@ internal fun BookDocumentBlockRenderer(
                         Text(
                             text = item.marker ?: if (content.ordered) "${content.start + index}." else "•",
                             modifier = Modifier.width(32.dp),
+                            color = palette.foreground,
                         )
                         BookDocumentRichTextRenderer(
                             value = item.content,
@@ -106,11 +106,12 @@ internal fun BookDocumentBlockRenderer(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable(onClick = onReaderTap),
+                color = palette.outline,
             )
             is BookDocumentBlockContent.Unsupported -> Text(
                 text = stringResource(R.string.book_document_unsupported, content.elementType),
                 modifier = Modifier.clickable(onClick = onReaderTap),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = palette.foreground.copy(alpha = 0.72f),
             )
         }
     }
@@ -127,7 +128,8 @@ private fun DocumentText(
     preserveTerminalSpacing: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
-    val color = MaterialTheme.colorScheme.onBackground.toArgb()
+    val palette = LocalBookDocumentReaderPalette.current
+    val color = palette.foreground.toArgb()
     val typeface = when ((block.style.fontFamily as? BookDocumentFontFamily.Generic)?.family) {
         BookDocumentFontFamily.GenericFamily.SERIF -> Typeface.SERIF
         BookDocumentFontFamily.GenericFamily.MONOSPACE -> Typeface.MONOSPACE
@@ -137,6 +139,7 @@ private fun DocumentText(
         text = text,
         documentTextIdentity = identity,
         textColor = color,
+        linkTextColor = palette.accent.toArgb(),
         textSizeSp = 16f * block.style.fontSizeScale,
         typeface = typeface,
         lineSpacingMultiplier = 1.25f,

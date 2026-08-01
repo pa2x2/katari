@@ -396,6 +396,10 @@
     <string name="book_reader_layout">Reading layout</string>
     <string name="book_reader_layout_paginated">Paginated</string>
     <string name="book_reader_layout_scrolling">Continuous scrolling</string>
+    <string name="pref_book_document_reader">Book reader</string>
+    <string name="pref_book_document_reader_theme">Theme</string>
+    <string name="book_document_reader_theme_app">App theme</string>
+    <string name="book_document_reader_theme_black">Black</string>
     <string name="pref_epub_column_count">Page spread</string>
     <string name="pref_epub_column_count_summary">Controls single- or two-page display on wide and landscape screens. Portrait phones always use one page.</string>
     <string name="pref_epub_columns_auto">Automatic</string>

@@ -5,6 +5,7 @@ import android.content.Intent
 import mihon.book.api.document.BookDocumentPublicationModel
 import mihon.book.api.model.BookPublicationModel
 import mihon.book.api.model.BookPublicationModelDescriptor
+import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingsProvider
 import mihon.entry.interactions.book.processor.BookReaderProcessor
 import mihon.entry.interactions.book.processor.BookReaderRequest
 import mihon.entry.viewer.settings.shared.StandardReaderCapabilities
@@ -30,7 +31,7 @@ internal class BookDocumentReaderProcessor : BookReaderProcessor {
 
     companion object {
         const val PROCESSOR_ID = "builtin.book.document"
-        const val SETTINGS_SURFACE_ID = "builtin.book.document"
+        const val SETTINGS_SURFACE_ID = BookDocumentReaderSettingsProvider.PROVIDER_ID
 
         internal val CAPABILITIES = setOf(
             StandardReaderCapabilities.StableTextSelection,

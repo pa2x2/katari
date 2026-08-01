@@ -7,12 +7,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentBlockContent
+import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 
 /** Selectable native-text projection of a bounded semantic table. */
 @Composable
@@ -23,6 +23,7 @@ internal fun BookDocumentTableRenderer(
     onExternalLinkClick: (String) -> Unit,
     onReaderTap: () -> Unit,
 ) {
+    val palette = LocalBookDocumentReaderPalette.current
     Column(modifier = Modifier.horizontalScroll(rememberScrollState())) {
         content.caption?.let {
             BookDocumentRichTextRenderer(
@@ -46,7 +47,7 @@ internal fun BookDocumentTableRenderer(
                         onReaderTap = onReaderTap,
                         modifier = Modifier
                             .width((120 * cell.columnSpan).dp)
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+                            .background(palette.surfaceVariant)
                             .padding(8.dp),
                     )
                 }

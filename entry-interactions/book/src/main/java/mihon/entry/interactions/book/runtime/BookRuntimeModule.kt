@@ -5,6 +5,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.book.content.BookMaterializationCache
 import mihon.entry.interactions.book.content.BookMaterializationStore
 import mihon.entry.interactions.book.document.reader.BookDocumentReaderProcessor
+import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingsProvider
 import mihon.entry.interactions.book.download.BookDownloadCache
 import mihon.entry.interactions.book.download.BookDownloadIndexStore
 import mihon.entry.interactions.book.download.BookDownloadManager
@@ -23,6 +24,7 @@ import mihon.entry.interactions.book.reader.BookReaderSessionFactory
 import mihon.entry.interactions.book.reader.BookReaderSessionRegistry
 import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationPreferences
 import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationSettingsProvider
+import mihon.entry.interactions.media.DefaultEntryViewerSettingsProvider
 import mihon.entry.interactions.media.session.EntryMediaSessionEventSink
 import mihon.entry.interactions.runtime.EntryTypeRuntimeContribution
 import mihon.entry.interactions.runtime.EntryTypeRuntimeModule
@@ -40,6 +42,11 @@ import uy.kohesive.injekt.api.get
 fun bookEntryTypeRuntimeModule(profilePreferenceOwners: ProfilePreferenceOwnerInstaller): EntryTypeRuntimeModule {
     return EntryTypeRuntimeModule(EntryType.BOOK) { app ->
         val runtime = addBookEntryInteractionRuntime(app, profilePreferenceOwners)
+        val viewerSettingsProvider = get<BookDocumentReaderSettingsProvider>()
+        val typeViewerSettingsProvider = DefaultEntryViewerSettingsProvider(
+            type = EntryType.BOOK,
+            surfaces = listOf(viewerSettingsProvider),
+        )
         val mediaSession = BookMediaSessionProcessor(get<EntryMediaSessionEventSink>())
         addSingletonFactory { mediaSession }
         val progressRepository = get<EntryProgressRepository>()
@@ -52,6 +59,7 @@ fun bookEntryTypeRuntimeModule(profilePreferenceOwners: ProfilePreferenceOwnerIn
                     downloadsEnabled = runtime.canPrepareContent,
                     mediaSession = mediaSession,
                 ),
+                viewerSettingsProvider = typeViewerSettingsProvider,
             ),
             potentialReaderCapabilitiesBySettingsSurface = runtime.potentialReaderCapabilitiesBySettingsSurface,
             sharedReaderSettingsProviderFactories = if (
@@ -83,6 +91,13 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
         ),
         factory = ::BookAutomaticTranslationPreferences,
     )
+    val documentReaderSettingsOwner = profilePreferenceOwners.register(
+        id = ProfilePreferenceOwnerId("entry-interactions.book.document-reader-settings"),
+        keyPatterns = setOf(
+            ProfilePreferenceKeyPattern.Prefix(BookDocumentReaderSettingsProvider.KEY_PREFIX),
+        ),
+        factory = ::BookDocumentReaderSettingsProvider,
+    )
     val automaticTranslationPreferences = automaticTranslationPreferencesOwner.create()
     val preparerRegistry = BookContentPreparerRegistry(
         preparers = listOf(HtmlProseChapterPreparer()),
@@ -105,6 +120,7 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
     addSingletonFactory { BookReaderSessionRegistry() }
     addSingletonFactory { BookChapterNavigationResolver(get()) }
     addSingletonFactory { automaticTranslationPreferences }
+    addSingletonFactory { documentReaderSettingsOwner.create() }
     addSingletonFactory { preparerRegistry }
     addSingletonFactory { readerProcessorRegistry }
     addSingletonFactory {

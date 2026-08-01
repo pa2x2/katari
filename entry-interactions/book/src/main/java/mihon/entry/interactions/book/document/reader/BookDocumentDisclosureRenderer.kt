@@ -13,6 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import mihon.book.api.document.BookDocumentBlockContent
+import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
 
 /** Expandable recursive semantic disclosure renderer. */
@@ -26,6 +27,7 @@ internal fun BookDocumentDisclosureRenderer(
     onReaderTap: () -> Unit,
     preserveTerminalSpacing: Boolean,
 ) {
+    val palette = LocalBookDocumentReaderPalette.current
     var expanded by remember(content) { mutableStateOf(content.initiallyExpanded) }
     Text(
         text = (if (expanded) "▾ " else "▸ ") + content.summary.text,
@@ -34,6 +36,7 @@ internal fun BookDocumentDisclosureRenderer(
             .clickable { expanded = !expanded }
             .padding(vertical = 8.dp),
         style = MaterialTheme.typography.titleSmall,
+        color = palette.foreground,
     )
     if (expanded) {
         content.body.blocks.forEachIndexed { index, nested ->

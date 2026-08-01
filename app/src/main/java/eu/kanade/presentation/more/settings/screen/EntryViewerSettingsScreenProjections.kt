@@ -7,6 +7,7 @@ internal fun productionEntryViewerSettingsScreenProjectionResolver(): EntryViewe
     return EntryViewerSettingsScreenProjectionResolver { _ ->
         listOf(
             SettingsMangaReaderScreen,
+            SettingsBookDocumentReaderScreen,
             SettingsAnimePlayerScreen,
         )
     }

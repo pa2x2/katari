@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -27,6 +26,7 @@ import kotlinx.coroutines.withContext
 import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentBlockContent
 import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.document.resource.PROSE_IMAGE_RESOURCE_REQUIREMENT
 import mihon.entry.interactions.book.document.resource.decodeValidatedProseImage
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
@@ -41,6 +41,7 @@ internal fun BookDocumentFigureRenderer(
     onExternalLinkClick: (String) -> Unit,
     onReaderTap: () -> Unit,
 ) {
+    val palette = LocalBookDocumentReaderPalette.current
     var retryGeneration by remember(content.image.resourceId) { mutableIntStateOf(0) }
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val density = LocalDensity.current
@@ -84,7 +85,7 @@ internal fun BookDocumentFigureRenderer(
                 text = content.image.alternativeText?.text
                     ?: stringResource(R.string.book_document_image_unavailable),
                 modifier = Modifier.clickable { retryGeneration++ },
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = palette.foreground.copy(alpha = 0.72f),
             )
         }
     }

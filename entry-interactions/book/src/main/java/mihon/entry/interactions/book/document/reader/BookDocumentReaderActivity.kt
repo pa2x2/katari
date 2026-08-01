@@ -16,6 +16,8 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingsProvider
+import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeMode
 import mihon.entry.interactions.book.navigation.BookChapterNavigationResolver
 import mihon.entry.interactions.book.processor.BookReaderRequest
 import mihon.entry.interactions.book.reader.BookChildWebViewResolver
@@ -36,6 +38,8 @@ import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.source.EntryWebViewFeature
 import mihon.entry.interactions.source.launchEntryChildWebViewAction
 import mihon.entry.interactions.viewer.entryChildWindow
+import mihon.entry.viewer.settings.ViewerSettingBinder
+import mihon.entry.viewer.settings.ViewerSettingBinding
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.host.TranslationHostActions
 import tachiyomi.core.common.util.system.logcat
@@ -49,6 +53,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     private var surfaceState by mutableStateOf<BookDocumentReaderSurfaceState>(BookDocumentReaderSurfaceState.Loading)
     private var readerState by mutableStateOf<BookDocumentReaderState?>(null)
     private var translationController: BookSelectionTranslationController? = null
+    private var themeBinding: ViewerSettingBinding<BookDocumentReaderThemeMode>? = null
     private lateinit var childWebViewResolver: BookChildWebViewResolver
     private lateinit var chapterCoordinator: BookDocumentChapterCoordinator
     private val preparationPreferences by lazy { Injekt.get<ReaderChapterPreparationPreferences>() }
@@ -98,6 +103,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                 BookDocumentReaderSurfaceState.Ready -> readerState?.let { state ->
                     BookDocumentReaderScreen(
                         state = state,
+                        themeBinding = requireNotNull(themeBinding),
                         translationController = translationController,
                         onLocation = chapterCoordinator::onLocation,
                         onTransitionReached = { chapterCoordinator.loadChapter(it, activate = false, retry = true) },
@@ -170,6 +176,10 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             showError(getString(R.string.book_reader_invalid_request))
             return
         }
+        themeBinding = Injekt.get<ViewerSettingBinder>().bind(
+            Injekt.get<BookDocumentReaderSettingsProvider>().themeModeSetting,
+            request.entryId,
+        )
         val retained = retainedSessions.currentSession()
         val token = intent.getStringExtra(EXTRA_SESSION_TOKEN)
         val handedOff = if (retained == null && !token.isNullOrBlank()) {

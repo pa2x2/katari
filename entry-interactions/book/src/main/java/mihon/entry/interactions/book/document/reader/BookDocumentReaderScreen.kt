@@ -12,7 +12,6 @@ import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -26,6 +25,11 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalFocusManager
+import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeMode
+import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeSettings
+import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
+import mihon.entry.interactions.book.document.reader.theme.bookDocumentReaderPalette
 import mihon.entry.interactions.book.reader.BookReaderNavigationRow
 import mihon.entry.interactions.book.reader.BookReaderNavigationSheet
 import mihon.entry.interactions.book.reader.BookReaderProgress
@@ -36,6 +40,7 @@ import mihon.entry.interactions.book.reader.translation.BookSelectionTranslation
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewActionsMenu
 import mihon.entry.interactions.source.EntryChildWebViewResolution
+import mihon.entry.viewer.settings.ViewerSettingBinding
 import mihon.translation.ui.session.TranslationSelectionAnchor
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.MR
@@ -44,10 +49,12 @@ import tachiyomi.presentation.core.components.reader.ReaderChromeBottomBar
 import tachiyomi.presentation.core.components.reader.ReaderChromeTopBar
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.math.roundToInt
+import androidx.compose.ui.res.stringResource as androidStringResource
 
 @Composable
 internal fun BookDocumentReaderScreen(
     state: BookDocumentReaderState,
+    themeBinding: ViewerSettingBinding<BookDocumentReaderThemeMode>,
     translationController: BookSelectionTranslationController?,
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
     onTransitionReached: (EntryChapter) -> Unit,
@@ -61,7 +68,8 @@ internal fun BookDocumentReaderScreen(
     onExternalLinkClick: (String) -> Unit,
     onClose: () -> Unit,
 ) {
-    val readerBackground = MaterialTheme.colorScheme.background
+    val themeSetting by themeBinding.state.collectAsState()
+    val readerPalette = bookDocumentReaderPalette(themeSetting.effectiveValue)
     val focusManager = LocalFocusManager.current
     var rootPosition by remember { mutableStateOf(Offset.Zero) }
     var pendingChapterSelection by remember { mutableStateOf<EntryChapter?>(null) }
@@ -98,18 +106,21 @@ internal fun BookDocumentReaderScreen(
         )
     }
 
-    CompositionLocalProvider(LocalBookDocumentTextInteraction provides textInteraction) {
+    CompositionLocalProvider(
+        LocalBookDocumentTextInteraction provides textInteraction,
+        LocalBookDocumentReaderPalette provides readerPalette,
+    ) {
         BookReaderScaffold(
             progress = BookReaderProgress.Percentage(
                 (state.chapterProgression * 100).roundToInt().coerceIn(0, 100),
             ),
             progressVisible = !state.chromeVisible,
-            footerColor = readerBackground,
+            footerColor = readerPalette.background,
             translationController = translationController,
             onRootPositionInWindow = { rootPosition = it },
             modifier = Modifier
                 .fillMaxSize()
-                .background(readerBackground),
+                .background(readerPalette.background),
             content = {
                 BookDocumentEndlessViewer(
                     state = state,
@@ -189,9 +200,9 @@ internal fun BookDocumentReaderScreen(
             settingsSurfaceId = BookDocumentReaderProcessor.SETTINGS_SURFACE_ID,
             capabilities = BookDocumentReaderProcessor.CAPABILITIES,
             onDismissRequest = { onSettingsVisibilityChange(false) },
-            onResetProcessorSettings = {},
-            processorTabTitles = emptyList(),
-            content = {},
+            onResetProcessorSettings = themeBinding::clearEntryOverride,
+            processorTabTitles = listOf(androidStringResource(R.string.book_reader_appearance_settings)),
+            content = { BookDocumentReaderThemeSettings(themeBinding) },
         )
     }
 }
