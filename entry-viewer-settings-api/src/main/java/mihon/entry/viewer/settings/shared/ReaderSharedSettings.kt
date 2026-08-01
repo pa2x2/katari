@@ -33,6 +33,10 @@ value class ReaderSharedSettingId(
     }
 }
 
+object StandardReaderSharedSettingIds {
+    val NextChapterPreparation = ReaderSharedSettingId("reader.prepare-next-chapter")
+}
+
 fun interface ReaderSharedSettingText {
     fun resolve(context: Context): String
 }

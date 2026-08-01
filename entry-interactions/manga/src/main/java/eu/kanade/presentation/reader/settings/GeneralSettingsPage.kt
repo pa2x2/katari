@@ -129,7 +129,7 @@ internal fun ColumnScope.GeneralPage(screenModel: ReaderSettingsScreenModel) {
 
     CheckboxItem(
         label = stringResource(MR.strings.pref_prepare_next_chapter),
-        pref = screenModel.chapterPreparationPreferences.prepareNextChapter,
+        pref = screenModel.prepareNextChapter,
     )
 
     CheckboxItem(

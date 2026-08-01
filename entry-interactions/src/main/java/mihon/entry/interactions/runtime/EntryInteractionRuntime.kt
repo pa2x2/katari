@@ -34,6 +34,7 @@ import mihon.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
 import mihon.feature.runtime.FeatureRuntimeComposition
 import mihon.feature.runtime.FeatureRuntimeInputs
 import tachiyomi.core.common.preference.PreferenceStore
+import tachiyomi.core.common.preference.ProfilePreferenceKeyPattern
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
 import tachiyomi.domain.entry.model.Entry
@@ -149,7 +150,10 @@ private fun InjektRegistrar.installEntryInteractionHostServices(
     addSingletonFactory<EntryChildGroupFilterDataSource> { dependencies.childGroupFilterDataSource }
     addSingletonFactory { ReaderBasePreferences(dependencies.basePreferenceStore) }
     val chapterPreparationPreferencesOwner = dependencies.profilePreferenceOwners.register(
-        ProfilePreferenceOwnerId("entry-interactions.reader.chapter-preparation"),
+        id = ProfilePreferenceOwnerId("entry-interactions.reader.chapter-preparation"),
+        keyPatterns = setOf(
+            ProfilePreferenceKeyPattern.Prefix(ReaderChapterPreparationPreferences.SURFACE_KEY_PREFIX),
+        ),
         factory = ::ReaderChapterPreparationPreferences,
     )
     addSingletonFactory { chapterPreparationPreferencesOwner.create() }

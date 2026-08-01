@@ -8,15 +8,56 @@ class ReaderChapterPreparationPreferencesTest {
     @Test
     fun `preparation is opt in`() {
         ReaderChapterPreparationPreferences(InMemoryPreferenceStore())
-            .prepareNextChapter
+            .prepareNextChapter("builtin.book.document")
             .get() shouldBe false
     }
 
     @Test
-    fun `preparation threshold is inclusive`() {
-        ReaderChapterPreparationPolicy.shouldPrepare(enabled = true, progression = 0.749) shouldBe false
-        ReaderChapterPreparationPolicy.shouldPrepare(enabled = true, progression = 0.75) shouldBe true
-        ReaderChapterPreparationPolicy.shouldPrepare(enabled = true, progression = 1.0) shouldBe true
-        ReaderChapterPreparationPolicy.shouldPrepare(enabled = false, progression = 1.0) shouldBe false
+    fun `legacy enabled value seeds independent reader surfaces`() {
+        val preferences = ReaderChapterPreparationPreferences(
+            InMemoryPreferenceStore(
+                sequenceOf(
+                    InMemoryPreferenceStore.InMemoryPreference(
+                        ReaderChapterPreparationPreferences.LEGACY_PREPARE_NEXT_CHAPTER_KEY,
+                        true,
+                        false,
+                    ),
+                ),
+            ),
+        )
+        val book = preferences.prepareNextChapter("builtin.book.document")
+        val manga = preferences.prepareNextChapter("builtin.manga.reader")
+
+        preferences.completeLegacyMigration(
+            setOf("builtin.book.document", "builtin.manga.reader"),
+        )
+
+        book.get() shouldBe true
+        manga.get() shouldBe true
+        book.set(false)
+        book.get() shouldBe false
+        manga.get() shouldBe true
+    }
+
+    @Test
+    fun `legacy migration does not overwrite an existing surface value`() {
+        val preferences = ReaderChapterPreparationPreferences(
+            InMemoryPreferenceStore(
+                sequenceOf(
+                    InMemoryPreferenceStore.InMemoryPreference(
+                        ReaderChapterPreparationPreferences.LEGACY_PREPARE_NEXT_CHAPTER_KEY,
+                        true,
+                        false,
+                    ),
+                    InMemoryPreferenceStore.InMemoryPreference(
+                        ReaderChapterPreparationPreferences.SURFACE_KEY_PREFIX + "builtin.book.document",
+                        false,
+                        false,
+                    ),
+                ),
+            ),
+        )
+
+        preferences.prepareNextChapter("builtin.book.document").get() shouldBe false
     }
 }

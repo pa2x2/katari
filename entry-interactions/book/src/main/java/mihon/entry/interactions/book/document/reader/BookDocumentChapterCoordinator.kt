@@ -15,7 +15,6 @@ import mihon.entry.interactions.book.reader.BookReaderOpenResult
 import mihon.entry.interactions.book.reader.BookReaderSessionFactory
 import mihon.entry.interactions.book.reader.OpenedBookReaderSession
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPolicy
-import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPreferences
 import mihon.entry.interactions.viewer.entryChildWindow
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.system.logcat
@@ -27,7 +26,7 @@ internal class BookDocumentChapterCoordinator(
     private val scope: CoroutineScope,
     private val retainedSessions: BookDocumentReaderSessionViewModel,
     private val sessionFactory: BookReaderSessionFactory,
-    private val preparationPreferences: ReaderChapterPreparationPreferences,
+    private val isNextChapterPreparationEnabled: () -> Boolean,
     private val currentState: () -> BookDocumentReaderState?,
     private val updateState: (BookDocumentReaderState) -> Unit,
     private val onSessionActivated: (OpenedBookReaderSession) -> Unit,
@@ -163,7 +162,7 @@ internal class BookDocumentChapterCoordinator(
     fun prepareNextChapterIfNeeded(progression: Double) {
         val state = currentState() ?: return
         if (ReaderChapterPreparationPolicy.shouldPrepare(
-                preparationPreferences.prepareNextChapter.get(),
+                isNextChapterPreparationEnabled(),
                 progression,
             )
         ) {

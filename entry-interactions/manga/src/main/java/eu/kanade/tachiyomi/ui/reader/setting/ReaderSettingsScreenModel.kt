@@ -24,11 +24,14 @@ internal class ReaderSettingsScreenModel(
     val onChangeReadingMode: (ReadingMode) -> Unit,
     val onChangeOrientation: (ReaderOrientation) -> Unit,
     val preferences: MangaReaderSettingsProvider = Injekt.get(),
-    val chapterPreparationPreferences: ReaderChapterPreparationPreferences = Injekt.get(),
+    chapterPreparationPreferences: ReaderChapterPreparationPreferences = Injekt.get(),
     private val settingBinder: ViewerSettingBinder = Injekt.get(),
 ) {
 
     private val ioCoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    val prepareNextChapter = chapterPreparationPreferences.prepareNextChapter(
+        MangaReaderSettingsProvider.PROVIDER_ID,
+    )
 
     val viewerFlow = readerState
         .map { it.viewer }
@@ -51,7 +54,7 @@ internal class ReaderSettingsScreenModel(
                 provider = preferences,
                 entryId = readerState.value.manga?.id,
             )
-            chapterPreparationPreferences.prepareNextChapter.delete()
+            prepareNextChapter.delete()
         }
     }
 }

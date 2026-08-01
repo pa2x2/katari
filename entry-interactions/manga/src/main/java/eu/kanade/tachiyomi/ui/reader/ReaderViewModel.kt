@@ -104,6 +104,10 @@ internal class ReaderViewModel @JvmOverloads constructor(
     private val mediaSession: MangaMediaSessionProcessor = Injekt.get(),
     private val chapterPreparationPreferences: ReaderChapterPreparationPreferences = Injekt.get(),
 ) : ViewModel() {
+
+    private val prepareNextChapter = chapterPreparationPreferences.prepareNextChapter(
+        MangaReaderSettingsProvider.PROVIDER_ID,
+    )
     private val downloadManager: DownloadManager = Injekt.get()
     private val downloadProvider: DownloadProvider = Injekt.get()
 
@@ -268,7 +272,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
             }
             .launchIn(viewModelScope)
 
-        chapterPreparationPreferences.prepareNextChapter.changes()
+        prepareNextChapter.changes()
             .filterNotNull()
             .onEach { enabled ->
                 if (enabled) {
@@ -530,7 +534,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
     private fun prepareNextChapterIfNeeded(progression: Double) {
         if (
             !ReaderChapterPreparationPolicy.shouldPrepare(
-                enabled = chapterPreparationPreferences.prepareNextChapter.get(),
+                enabled = prepareNextChapter.get(),
                 progression = progression,
             )
         ) {

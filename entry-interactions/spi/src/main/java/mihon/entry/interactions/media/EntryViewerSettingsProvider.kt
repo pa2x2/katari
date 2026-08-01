@@ -3,6 +3,7 @@ package mihon.entry.interactions.media
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.runtime.EntryInteractionProvider
 import mihon.entry.interactions.runtime.entryInteractionCapability
+import mihon.entry.viewer.settings.ViewerSettingScope
 import mihon.entry.viewer.settings.ViewerSettingsProvider
 import mihon.feature.graph.CapabilityId
 
@@ -37,6 +38,14 @@ class DefaultEntryViewerSettingsProvider(
             surface.settings.forEach { setting ->
                 require(setting.id.providerId == surface.id) {
                     "Viewer setting ${setting.id} must belong to surface ${surface.id}"
+                }
+            }
+            surface.sharedSettingDefinitions.forEach { (sharedSettingId, definition) ->
+                require(definition in surface.settings) {
+                    "Shared reader setting ${sharedSettingId.value} must be included in surface ${surface.id} settings"
+                }
+                require(definition.scope == ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE) {
+                    "Shared reader setting ${sharedSettingId.value} must support entry overrides"
                 }
             }
         }

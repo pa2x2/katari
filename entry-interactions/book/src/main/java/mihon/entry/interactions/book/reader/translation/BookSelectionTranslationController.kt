@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import mihon.entry.viewer.settings.ResolvedViewerSetting
 import mihon.entry.viewer.settings.shared.ReaderCapabilityId
 import mihon.entry.viewer.settings.shared.StandardReaderCapabilities
 import mihon.translation.api.TranslationFeature
@@ -21,7 +22,6 @@ import mihon.translation.ui.session.TranslationSelectionAnchor
 import mihon.translation.ui.session.TranslationSessionHostCoordinator
 import mihon.translation.ui.session.TranslationSessionInput
 import mihon.translation.ui.session.TranslationSessionState
-import tachiyomi.core.common.preference.Preference
 
 internal data class BookReaderTextSelection(
     val ownerIdentity: String,
@@ -39,7 +39,7 @@ internal data class BookReaderTextSelection(
 internal class BookSelectionTranslationController(
     feature: TranslationFeature,
     private val hostActions: TranslationHostActions,
-    private val automaticSelectionEnabled: Preference<Boolean>,
+    private val automaticSelectionSetting: StateFlow<ResolvedViewerSetting<Boolean>>,
     private val scope: CoroutineScope,
     initialCapabilities: Set<ReaderCapabilityId>,
 ) : AutoCloseable {
@@ -62,7 +62,7 @@ internal class BookSelectionTranslationController(
     private var dismissedSelectionIdentity: String? = null
     private var availabilityJob: Job? = null
     private val observerJobs = listOf(
-        automaticSelectionEnabled.changes()
+        automaticSelectionSetting
             .onEach {
                 clearSelection()
                 updateEffectiveState()
@@ -165,7 +165,7 @@ internal class BookSelectionTranslationController(
 
     private fun updateEffectiveState() {
         val capable = capabilities.containsAll(REQUIRED_CAPABILITIES)
-        val enabled = automaticSelectionEnabled.get() &&
+        val enabled = automaticSelectionSetting.value.effectiveValue &&
             capable &&
             mutableDeviceAvailability.value == TranslationDeviceAvailability.Available
         if (mutableEffectiveEnabled.value == enabled) return

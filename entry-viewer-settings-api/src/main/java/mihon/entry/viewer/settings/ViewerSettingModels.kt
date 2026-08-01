@@ -2,6 +2,7 @@ package mihon.entry.viewer.settings
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingId
 import tachiyomi.core.common.preference.Preference
 
 enum class ViewerSettingScope {
@@ -91,6 +92,8 @@ interface ViewerSettingsProvider {
     val origin: String?
         get() = null
     val settings: List<ViewerSettingDefinition<*>>
+    val sharedSettingDefinitions: Map<ReaderSharedSettingId, ViewerSettingDefinition<Boolean>>
+        get() = emptyMap()
 }
 
 data class ViewerSettingOverride(

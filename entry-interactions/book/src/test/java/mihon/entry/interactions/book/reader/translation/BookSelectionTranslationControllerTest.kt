@@ -2,10 +2,13 @@ package mihon.entry.interactions.book.reader.translation
 
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import mihon.entry.viewer.settings.ResolvedViewerSetting
+import mihon.entry.viewer.settings.ViewerSettingSource
 import mihon.entry.viewer.settings.shared.StandardReaderCapabilities
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.availability.TranslationDeviceAvailability
@@ -38,7 +41,8 @@ class BookSelectionTranslationControllerTest {
     fun `settling prepares only the latest selected text`() = runTest {
         val feature = RecordingFeature()
         val host = FakeHostActions()
-        val controller = controller(feature, host)
+        val automaticSelectionSetting = automaticSelectionSetting(enabled = true)
+        val controller = controller(feature, host, automaticSelectionSetting)
         runCurrent()
 
         controller.submitSelection(selection("first", 1))
@@ -56,7 +60,8 @@ class BookSelectionTranslationControllerTest {
     fun `availability loss preserves preference and clears the session`() = runTest {
         val feature = RecordingFeature()
         val host = FakeHostActions()
-        val controller = controller(feature, host)
+        val automaticSelectionSetting = automaticSelectionSetting(enabled = true)
+        val controller = controller(feature, host, automaticSelectionSetting)
         runCurrent()
         controller.submitSelection(selection("selected", 1))
         advanceTimeBy(250)
@@ -66,13 +71,28 @@ class BookSelectionTranslationControllerTest {
         controller.onResume()
         runCurrent()
 
-        host.automaticSelectionEnabled.get() shouldBe true
+        automaticSelectionSetting.value.effectiveValue shouldBe true
         controller.effectiveEnabled.value shouldBe false
         controller.hostCoordinator.controller.state.value shouldBe TranslationSessionState.Hidden
         controller.submitSelection(selection("ignored", 2))
         advanceTimeBy(250)
         runCurrent()
         feature.requests.map(TranslationRequest::text) shouldBe listOf("selected")
+        controller.close()
+    }
+
+    @Test
+    fun `entry setting change updates effective translation behavior`() = runTest {
+        val setting = automaticSelectionSetting(enabled = true)
+        val controller = controller(RecordingFeature(), FakeHostActions(), setting)
+        runCurrent()
+        controller.submitSelection(selection("selected", 1))
+
+        setting.value = setting.value.copy(effectiveValue = false, entryOverride = false)
+        runCurrent()
+
+        controller.effectiveEnabled.value shouldBe false
+        controller.hostCoordinator.controller.state.value shouldBe TranslationSessionState.Hidden
         controller.close()
     }
 
@@ -116,14 +136,26 @@ class BookSelectionTranslationControllerTest {
     private fun TestScope.controller(
         feature: RecordingFeature,
         host: FakeHostActions,
+        automaticSelectionSetting: MutableStateFlow<ResolvedViewerSetting<Boolean>> =
+            automaticSelectionSetting(enabled = true),
     ) = BookSelectionTranslationController(
         feature = feature,
         hostActions = host,
-        automaticSelectionEnabled = host.automaticSelectionEnabled,
+        automaticSelectionSetting = automaticSelectionSetting,
         scope = backgroundScope,
         initialCapabilities = setOf(
             StandardReaderCapabilities.StableTextSelection,
             StandardReaderCapabilities.SelectionAnchoring,
+        ),
+    )
+
+    private fun automaticSelectionSetting(enabled: Boolean) = MutableStateFlow(
+        ResolvedViewerSetting(
+            effectiveValue = enabled,
+            source = ViewerSettingSource.ENTRY,
+            processorDefault = false,
+            profileValue = false,
+            entryOverride = enabled,
         ),
     )
 
@@ -162,7 +194,6 @@ class BookSelectionTranslationControllerTest {
                 { "default" },
                 { TranslationTargetLanguageSelection.Default },
             )
-        val automaticSelectionEnabled = store.getBoolean("automatic", true)
         var availability: TranslationDeviceAvailability = TranslationDeviceAvailability.Available
 
         override suspend fun deviceAvailability() = availability

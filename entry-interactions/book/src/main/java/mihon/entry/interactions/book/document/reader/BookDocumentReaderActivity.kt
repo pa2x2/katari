@@ -13,11 +13,13 @@ import androidx.compose.runtime.setValue
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingsProvider
-import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeMode
 import mihon.entry.interactions.book.navigation.BookChapterNavigationResolver
 import mihon.entry.interactions.book.processor.BookReaderRequest
 import mihon.entry.interactions.book.reader.BookChildWebViewResolver
@@ -27,9 +29,7 @@ import mihon.entry.interactions.book.reader.BookReaderOpenResult
 import mihon.entry.interactions.book.reader.BookReaderSessionFactory
 import mihon.entry.interactions.book.reader.BookReaderSessionRegistry
 import mihon.entry.interactions.book.reader.OpenedBookReaderSession
-import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationSettingsProvider
 import mihon.entry.interactions.book.reader.translation.BookSelectionTranslationController
-import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPreferences
 import mihon.entry.interactions.runtime.EntryInteractionActivity
 import mihon.entry.interactions.runtime.registerEntryInteractionSecureScreen
 import mihon.entry.interactions.runtime.setEntryInteractionContent
@@ -39,7 +39,6 @@ import mihon.entry.interactions.source.EntryWebViewFeature
 import mihon.entry.interactions.source.launchEntryChildWebViewAction
 import mihon.entry.interactions.viewer.entryChildWindow
 import mihon.entry.viewer.settings.ViewerSettingBinder
-import mihon.entry.viewer.settings.ViewerSettingBinding
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.host.TranslationHostActions
 import tachiyomi.core.common.util.system.logcat
@@ -53,10 +52,9 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     private var surfaceState by mutableStateOf<BookDocumentReaderSurfaceState>(BookDocumentReaderSurfaceState.Loading)
     private var readerState by mutableStateOf<BookDocumentReaderState?>(null)
     private var translationController: BookSelectionTranslationController? = null
-    private var themeBinding: ViewerSettingBinding<BookDocumentReaderThemeMode>? = null
+    private var settingBindings: BookDocumentReaderSettingBindings? = null
     private lateinit var childWebViewResolver: BookChildWebViewResolver
     private lateinit var chapterCoordinator: BookDocumentChapterCoordinator
-    private val preparationPreferences by lazy { Injekt.get<ReaderChapterPreparationPreferences>() }
 
     private val windowInsetsController by lazy { WindowCompat.getInsetsController(window, window.decorView) }
 
@@ -81,7 +79,9 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             scope = lifecycleScope,
             retainedSessions = retainedSessions,
             sessionFactory = Injekt.get<BookReaderSessionFactory>(),
-            preparationPreferences = preparationPreferences,
+            isNextChapterPreparationEnabled = {
+                settingBindings?.prepareNextChapter?.state?.value?.effectiveValue == true
+            },
             currentState = { readerState },
             updateState = { readerState = it },
             onSessionActivated = { session ->
@@ -103,7 +103,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                 BookDocumentReaderSurfaceState.Ready -> readerState?.let { state ->
                     BookDocumentReaderScreen(
                         state = state,
-                        themeBinding = requireNotNull(themeBinding),
+                        settingBindings = requireNotNull(settingBindings),
                         translationController = translationController,
                         onLocation = chapterCoordinator::onLocation,
                         onTransitionReached = { chapterCoordinator.loadChapter(it, activate = false, retry = true) },
@@ -125,11 +125,6 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             }
         }
         lifecycleScope.launch { open() }
-        lifecycleScope.launch {
-            preparationPreferences.prepareNextChapter.changes().collect { enabled ->
-                if (enabled) chapterCoordinator.prepareCurrentNextChapterIfNeeded()
-            }
-        }
     }
 
     override fun onStart() {
@@ -176,10 +171,20 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             showError(getString(R.string.book_reader_invalid_request))
             return
         }
-        themeBinding = Injekt.get<ViewerSettingBinder>().bind(
-            Injekt.get<BookDocumentReaderSettingsProvider>().themeModeSetting,
-            request.entryId,
+        val bindings = BookDocumentReaderSettingBindings.create(
+            provider = Injekt.get<BookDocumentReaderSettingsProvider>(),
+            binder = Injekt.get<ViewerSettingBinder>(),
+            entryId = request.entryId,
         )
+        settingBindings = bindings
+        lifecycleScope.launch {
+            bindings.prepareNextChapter.state
+                .map { setting -> setting.effectiveValue }
+                .distinctUntilChanged()
+                .collect { enabled ->
+                    if (enabled) chapterCoordinator.prepareCurrentNextChapterIfNeeded()
+                }
+        }
         val retained = retainedSessions.currentSession()
         val token = intent.getStringExtra(EXTRA_SESSION_TOKEN)
         val handedOff = if (retained == null && !token.isNullOrBlank()) {
@@ -224,13 +229,12 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     }
 
     private fun ensureTranslationController(session: OpenedBookReaderSession) {
-        val settingsSurface = session.readerSettingsSurfaceId ?: return
-        val preference = Injekt.get<BookAutomaticTranslationSettingsProvider>()
-            .automaticSelectionEnabled(settingsSurface)
+        if (session.readerSettingsSurfaceId != BookDocumentReaderProcessor.SETTINGS_SURFACE_ID) return
+        val automaticTranslation = settingBindings?.automaticTranslation ?: return
         translationController = BookSelectionTranslationController(
             feature = Injekt.get<TranslationFeature>(),
             hostActions = Injekt.get<TranslationHostActions>(),
-            automaticSelectionEnabled = preference,
+            automaticSelectionSetting = automaticTranslation.state,
             scope = lifecycleScope,
             initialCapabilities = session.readerCapabilities,
         )

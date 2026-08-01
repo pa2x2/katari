@@ -5,6 +5,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.book.content.BookMaterializationCache
 import mihon.entry.interactions.book.content.BookMaterializationStore
 import mihon.entry.interactions.book.document.reader.BookDocumentReaderProcessor
+import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderPreferences
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingsProvider
 import mihon.entry.interactions.book.download.BookDownloadCache
 import mihon.entry.interactions.book.download.BookDownloadIndexStore
@@ -94,11 +95,17 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
     val documentReaderSettingsOwner = profilePreferenceOwners.register(
         id = ProfilePreferenceOwnerId("entry-interactions.book.document-reader-settings"),
         keyPatterns = setOf(
-            ProfilePreferenceKeyPattern.Prefix(BookDocumentReaderSettingsProvider.KEY_PREFIX),
+            ProfilePreferenceKeyPattern.Prefix(BookDocumentReaderPreferences.KEY_PREFIX),
         ),
-        factory = ::BookDocumentReaderSettingsProvider,
+        factory = ::BookDocumentReaderPreferences,
     )
     val automaticTranslationPreferences = automaticTranslationPreferencesOwner.create()
+    val documentReaderPreferences = documentReaderSettingsOwner.create()
+    val documentReaderSettingsProvider = BookDocumentReaderSettingsProvider(
+        preferences = documentReaderPreferences,
+        chapterPreparationPreferences = get(),
+        automaticTranslationPreferences = automaticTranslationPreferences,
+    )
     val preparerRegistry = BookContentPreparerRegistry(
         preparers = listOf(HtmlProseChapterPreparer()),
     )
@@ -120,7 +127,8 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
     addSingletonFactory { BookReaderSessionRegistry() }
     addSingletonFactory { BookChapterNavigationResolver(get()) }
     addSingletonFactory { automaticTranslationPreferences }
-    addSingletonFactory { documentReaderSettingsOwner.create() }
+    addSingletonFactory { documentReaderPreferences }
+    addSingletonFactory { documentReaderSettingsProvider }
     addSingletonFactory { preparerRegistry }
     addSingletonFactory { readerProcessorRegistry }
     addSingletonFactory {

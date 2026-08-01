@@ -1,6 +1,5 @@
 package mihon.entry.interactions.reader.preparation
 
-import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
 import mihon.entry.viewer.settings.shared.StandardReaderCapabilities
@@ -8,12 +7,12 @@ import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 
 class ReaderChapterPreparationSettingsProviderTest {
-    private val mangaSurface = "builtin.manga"
+    private val mangaSurface = "builtin.manga.reader"
     private val bookSurface = "builtin.book.document"
     private val unsupportedSurface = "builtin.book.fixed-layout"
 
     @Test
-    fun `one profile preference is projected only to readers that prepare adjacent chapters`() {
+    fun `independent profile preferences are projected only to readers that prepare adjacent chapters`() {
         val preferences = ReaderChapterPreparationPreferences(InMemoryPreferenceStore())
         val provider = ReaderChapterPreparationSettingsProvider(
             preferences = preferences,
@@ -25,10 +24,11 @@ class ReaderChapterPreparationSettingsProviderTest {
         )
         val registry = ReaderSharedSettingsRegistry(listOf(provider))
 
-        registry.rootSettings().map { it.id } shouldContainExactly
-            listOf(ReaderChapterPreparationSettingsProvider.PREPARE_NEXT_CHAPTER_SETTING_ID)
-        registry.settingsForSurface(mangaSurface).single().preference shouldBe preferences.prepareNextChapter
-        registry.settingsForSurface(bookSurface).single().preference shouldBe preferences.prepareNextChapter
+        registry.rootSettings() shouldBe emptyList()
+        registry.settingsForSurface(mangaSurface).single().preference shouldBe
+            preferences.prepareNextChapter(mangaSurface)
+        registry.settingsForSurface(bookSurface).single().preference shouldBe
+            preferences.prepareNextChapter(bookSurface)
         registry.settingsForSurface(unsupportedSurface) shouldBe emptyList()
     }
 }

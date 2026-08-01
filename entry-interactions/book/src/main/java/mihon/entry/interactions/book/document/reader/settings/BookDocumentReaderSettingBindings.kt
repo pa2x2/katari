@@ -1,0 +1,33 @@
+package mihon.entry.interactions.book.document.reader.settings
+
+import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationSettingsProvider
+import mihon.entry.viewer.settings.ViewerSettingBinder
+import mihon.entry.viewer.settings.ViewerSettingBinding
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingId
+import mihon.entry.viewer.settings.shared.StandardReaderSharedSettingIds
+
+internal class BookDocumentReaderSettingBindings private constructor(
+    val themeMode: ViewerSettingBinding<BookDocumentReaderThemeMode>,
+    val sharedSettings: Map<ReaderSharedSettingId, ViewerSettingBinding<Boolean>>,
+) {
+    val prepareNextChapter: ViewerSettingBinding<Boolean>
+        get() = sharedSettings.getValue(StandardReaderSharedSettingIds.NextChapterPreparation)
+
+    val automaticTranslation: ViewerSettingBinding<Boolean>
+        get() = sharedSettings.getValue(BookAutomaticTranslationSettingsProvider.AUTOMATIC_SELECTION_SETTING_ID)
+
+    companion object {
+        fun create(
+            provider: BookDocumentReaderSettingsProvider,
+            binder: ViewerSettingBinder,
+            entryId: Long,
+        ): BookDocumentReaderSettingBindings {
+            return BookDocumentReaderSettingBindings(
+                themeMode = binder.bind(provider.themeModeSetting, entryId),
+                sharedSettings = provider.sharedSettingDefinitions.mapValues { (_, definition) ->
+                    binder.bind(definition, entryId)
+                },
+            )
+        }
+    }
+}

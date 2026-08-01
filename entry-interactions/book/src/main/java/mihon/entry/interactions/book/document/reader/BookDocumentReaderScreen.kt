@@ -26,7 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalFocusManager
 import mihon.entry.interactions.book.R
-import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeMode
+import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeSettings
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.document.reader.theme.bookDocumentReaderPalette
@@ -40,7 +40,6 @@ import mihon.entry.interactions.book.reader.translation.BookSelectionTranslation
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewActionsMenu
 import mihon.entry.interactions.source.EntryChildWebViewResolution
-import mihon.entry.viewer.settings.ViewerSettingBinding
 import mihon.translation.ui.session.TranslationSelectionAnchor
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.MR
@@ -54,7 +53,7 @@ import androidx.compose.ui.res.stringResource as androidStringResource
 @Composable
 internal fun BookDocumentReaderScreen(
     state: BookDocumentReaderState,
-    themeBinding: ViewerSettingBinding<BookDocumentReaderThemeMode>,
+    settingBindings: BookDocumentReaderSettingBindings,
     translationController: BookSelectionTranslationController?,
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
     onTransitionReached: (EntryChapter) -> Unit,
@@ -68,7 +67,7 @@ internal fun BookDocumentReaderScreen(
     onExternalLinkClick: (String) -> Unit,
     onClose: () -> Unit,
 ) {
-    val themeSetting by themeBinding.state.collectAsState()
+    val themeSetting by settingBindings.themeMode.state.collectAsState()
     val readerPalette = bookDocumentReaderPalette(themeSetting.effectiveValue)
     val focusManager = LocalFocusManager.current
     var rootPosition by remember { mutableStateOf(Offset.Zero) }
@@ -199,10 +198,11 @@ internal fun BookDocumentReaderScreen(
         BookReaderSettingsDialog(
             settingsSurfaceId = BookDocumentReaderProcessor.SETTINGS_SURFACE_ID,
             capabilities = BookDocumentReaderProcessor.CAPABILITIES,
+            sharedSettingBindings = settingBindings.sharedSettings,
             onDismissRequest = { onSettingsVisibilityChange(false) },
-            onResetProcessorSettings = themeBinding::clearEntryOverride,
+            onResetProcessorSettings = settingBindings.themeMode::clearEntryOverride,
             processorTabTitles = listOf(androidStringResource(R.string.book_reader_appearance_settings)),
-            content = { BookDocumentReaderThemeSettings(themeBinding) },
+            content = { BookDocumentReaderThemeSettings(settingBindings.themeMode) },
         )
     }
 }
