@@ -1601,6 +1601,8 @@
     <string name="migrationEntriesScreen.sourceTitle">Source title: %1$s</string>
     <string name="migrationEntriesScreen.progress">Progress: %1$d/%2$d</string>
     <string name="migrationEntriesScreen.inspectEntry">Inspect %1$s</string>
+    <string name="migrationEntriesScreen.retainedMergedMember">%1$s • %2$s • retained</string>
+    <string name="migrationEntriesScreen.unavailableMergedMember">%1$s • %2$s • unavailable for migration</string>
     <string name="migrationListScreenTitle">Migration</string>
     <string name="migrationListScreenTitleWithProgress">Migration (%1$d/%2$d)</string>
     <string name="migrationListScreen.copyActionLabel">Copy</string>
@@ -1608,6 +1610,8 @@
     <string name="migrationListScreen.noMatchFoundText">No alternatives found</string>
     <string name="migrationListScreen.latestChapterLabel">Latest: %1$s</string>
     <string name="migrationListScreen.unknownLatestChapter">Unknown</string>
+    <string name="migrationListScreen.mergeRootLabel">Merged entry root</string>
+    <string name="migrationListScreen.mergeMemberLabel">Member of %1$s</string>
     <string name="migrationListScreen.searchManuallyActionLabel">Search manually</string>
     <string name="migrationListScreen.skipActionLabel">Don\'t migrate</string>
     <string name="migrationListScreen.migrateNowActionLabel">Migrate now</string>
@@ -1619,6 +1623,12 @@
     <string name="migrationListScreen.migrateDialog.copyLabel">Copy</string>
     <string name="migrationListScreen.migrateDialog.migrateLabel">Migrate</string>
     <string name="migrationListScreen.migrateDialog.cancelLabel">Cancel</string>
+    <string name="migrationListScreen.migrateDialog.copyMergedExplanation">Copying keeps selected members and matches in their current merged entries.</string>
+    <string name="migrationListScreen.migrateDialog.replaceRootExplanation">Each selected root is replaced by its match, which becomes the new root. Other members remain.</string>
+    <string name="migrationListScreen.migrateDialog.replaceMemberExplanation">Each selected member is replaced in place. Its root and the other members remain.</string>
+    <string name="migrationListScreen.migrateDialog.sameGroupTargetExplanation">A match already belongs to the same merged entry. Replacing it removes the selected duplicate and may dissolve a two-member group.</string>
+    <string name="migrationListScreen.migrateDialog.otherGroupTargetExplanation">A match belongs to another merged entry. It moves into the selected member’s group, and its previous group may be dissolved.</string>
+    <string name="migrationListScreen.migrateDialog.standaloneToMergedExplanation">A match for a standalone entry already belongs to a merged entry. It remains in that merged entry.</string>
     <string name="migrationListScreen.progressDialog.cancelLabel">Cancel</string>
     <string name="migrationListScreen.matchWithoutChapterToast">No items found, this entry cannot be used for migration</string>
 

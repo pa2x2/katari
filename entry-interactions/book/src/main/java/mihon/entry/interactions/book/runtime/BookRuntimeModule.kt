@@ -49,7 +49,7 @@ fun bookEntryTypeRuntimeModule(profilePreferenceOwners: ProfilePreferenceOwnerIn
                     getEntryWithChapters = get(),
                     entryChapterRepository = get(),
                     entryProgressRepository = progressRepository,
-                    downloadsEnabled = true,
+                    downloadsEnabled = runtime.canPrepareContent,
                     mediaSession = mediaSession,
                 ),
             ),
@@ -164,11 +164,13 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
         )
     }
     return BookRuntimeArtifacts(
+        canPrepareContent = preparerRegistry.canPrepareContent,
         potentialReaderCapabilitiesBySettingsSurface =
         readerProcessorRegistry.potentialReaderCapabilitiesBySettingsSurface(),
     )
 }
 
 private data class BookRuntimeArtifacts(
+    val canPrepareContent: Boolean,
     val potentialReaderCapabilitiesBySettingsSurface: Map<String, Set<ReaderCapabilityId>>,
 )

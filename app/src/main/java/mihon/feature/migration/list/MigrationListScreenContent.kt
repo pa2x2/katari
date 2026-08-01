@@ -56,6 +56,7 @@ import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.presentation.util.rememberResourceBitmapPainter
 import eu.kanade.tachiyomi.R
 import mihon.feature.migration.list.models.MigratingEntry
+import mihon.feature.migration.list.models.MigrationMergeContext
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.Badge
@@ -72,7 +73,7 @@ fun MigrationListScreenContent(
     items: List<MigratingEntry>,
     migrationComplete: Boolean,
     finishedCount: Int,
-    onItemClick: (Entry) -> Unit,
+    onItemClick: (Entry, MigrationMergeContext?) -> Unit,
     onSearchManually: (MigratingEntry) -> Unit,
     onSkip: (Long) -> Unit,
     onMigrate: (Long) -> Unit,
@@ -110,55 +111,66 @@ fun MigrationListScreenContent(
         },
     ) { contentPadding ->
         FastScrollLazyColumn(contentPadding = contentPadding + topSmallPaddingValues) {
-            items(items, key = { it.entry.id }) { item ->
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .animateItemFastScroll()
-                        .padding(
-                            start = MaterialTheme.padding.medium,
-                            end = MaterialTheme.padding.small,
+            val groupedItems = items.groupBy { item ->
+                item.mergeContext?.rootEntryId ?: -item.entry.id
+            }
+            groupedItems.values.forEach { groupItems ->
+                groupItems.first().mergeContext?.let { mergeContext ->
+                    item(key = "merge-${mergeContext.rootEntryId}") {
+                        MigrationProposalGroupHeader(mergeContext)
+                    }
+                }
+                items(groupItems, key = { it.entry.id }) { item ->
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .animateItemFastScroll()
+                            .padding(
+                                start = MaterialTheme.padding.medium,
+                                end = MaterialTheme.padding.small,
+                            )
+                            .height(IntrinsicSize.Min),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        MigrationListItem(
+                            modifier = Modifier
+                                .weight(1f)
+                                .align(Alignment.Top)
+                                .fillMaxHeight(),
+                            entry = item.entry,
+                            source = item.source,
+                            chapterCount = item.chapterCount,
+                            latestChapter = item.latestChapter,
+                            mergeContext = item.mergeContext,
+                            onClick = { onItemClick(item.entry, item.mergeContext) },
                         )
-                        .height(IntrinsicSize.Min),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    MigrationListItem(
-                        modifier = Modifier
-                            .weight(1f)
-                            .align(Alignment.Top)
-                            .fillMaxHeight(),
-                        entry = item.entry,
-                        source = item.source,
-                        chapterCount = item.chapterCount,
-                        latestChapter = item.latestChapter,
-                        onClick = { onItemClick(item.entry) },
-                    )
 
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
-                        contentDescription = null,
-                        modifier = Modifier.weight(0.2f),
-                    )
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
+                            contentDescription = null,
+                            modifier = Modifier.weight(0.2f),
+                        )
 
-                    val result by item.searchResult.collectAsState()
-                    MigrationListItemResult(
-                        modifier = Modifier
-                            .weight(1f)
-                            .align(Alignment.Top)
-                            .fillMaxHeight(),
-                        result = result,
-                        onItemClick = onItemClick,
-                    )
+                        val result by item.searchResult.collectAsState()
+                        MigrationListItemResult(
+                            modifier = Modifier
+                                .weight(1f)
+                                .align(Alignment.Top)
+                                .fillMaxHeight(),
+                            result = result,
+                            onItemClick = onItemClick,
+                        )
 
-                    MigrationListItemAction(
-                        modifier = Modifier.weight(0.2f),
-                        result = result,
-                        onSearchManually = { onSearchManually(item) },
-                        onSkip = { onSkip(item.entry.id) },
-                        onMigrate = { onMigrate(item.entry.id) },
-                        onCopy = { onCopy(item.entry.id) },
-                    )
+                        MigrationListItemAction(
+                            modifier = Modifier.weight(0.2f),
+                            result = result,
+                            onSearchManually = { onSearchManually(item) },
+                            onSkip = { onSkip(item.entry.id) },
+                            onMigrate = { onMigrate(item.entry.id) },
+                            onCopy = { onCopy(item.entry.id) },
+                        )
+                    }
                 }
             }
         }
@@ -172,6 +184,7 @@ fun MigrationListItem(
     source: String,
     chapterCount: Int,
     latestChapter: Double?,
+    mergeContext: MigrationMergeContext?,
     onClick: () -> Unit,
 ) {
     Column(
@@ -229,6 +242,15 @@ fun MigrationListItem(
                 maxLines = 1,
                 style = MaterialTheme.typography.titleSmall,
             )
+            mergeContext?.let {
+                Text(
+                    text = migrationMergeContextLabel(it),
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
             val formattedLatestChapters = remember(latestChapter) {
                 latestChapter?.let(::formatChapterNumber)
             }
@@ -249,7 +271,7 @@ fun MigrationListItem(
 fun MigrationListItemResult(
     modifier: Modifier,
     result: MigratingEntry.SearchResult,
-    onItemClick: (Entry) -> Unit,
+    onItemClick: (Entry, MigrationMergeContext?) -> Unit,
 ) {
     Box(modifier.height(IntrinsicSize.Min)) {
         when (result) {
@@ -294,10 +316,48 @@ fun MigrationListItemResult(
                     source = result.source,
                     chapterCount = result.chapterCount,
                     latestChapter = result.latestChapter,
-                    onClick = { onItemClick(result.entry) },
+                    mergeContext = result.mergeContext,
+                    onClick = { onItemClick(result.entry, result.mergeContext) },
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun MigrationProposalGroupHeader(context: MigrationMergeContext) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                horizontal = MaterialTheme.padding.medium,
+                vertical = MaterialTheme.padding.small,
+            ),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+    ) {
+        Text(
+            text = context.rootTitle,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Text(
+            text = stringResource(
+                MR.strings.merge_members_count,
+                context.memberCount,
+            ),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall,
+        )
+    }
+}
+
+@Composable
+private fun migrationMergeContextLabel(context: MigrationMergeContext): String {
+    return if (context.isRoot) {
+        stringResource(MR.strings.migrationListScreen_mergeRootLabel)
+    } else {
+        stringResource(MR.strings.migrationListScreen_mergeMemberLabel, context.rootTitle)
     }
 }
 

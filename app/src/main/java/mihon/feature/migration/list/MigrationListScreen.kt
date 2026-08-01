@@ -70,15 +70,21 @@ class MigrationListScreen(
             items = state.items,
             migrationComplete = state.migrationComplete,
             finishedCount = state.finishedCount,
-            onItemClick = {
-                navigator.push(EntryScreen(it.id, fromSource = true))
+            onItemClick = { entry, mergeContext ->
+                navigator.push(
+                    EntryScreen(
+                        entry.id,
+                        fromSource = true,
+                        bypassMerge = mergeContext?.isRoot == false,
+                    ),
+                )
             },
             onSearchManually = { migrationItem ->
                 navigator push MigrateSearchScreen(migrationItem.subject)
             },
             onSkip = { screenModel.removeEntry(it) },
-            onMigrate = { screenModel.migrateNow(entryId = it, replace = true) },
-            onCopy = { screenModel.migrateNow(entryId = it, replace = false) },
+            onMigrate = { screenModel.showMigrateDialog(entryId = it, copy = false) },
+            onCopy = { screenModel.showMigrateDialog(entryId = it, copy = true) },
             openMigrationDialog = screenModel::showMigrateDialog,
         )
 
@@ -89,13 +95,8 @@ class MigrationListScreen(
                     copy = dialog.copy,
                     totalCount = dialog.totalCount,
                     skippedCount = dialog.skippedCount,
-                    onMigrate = {
-                        if (dialog.copy) {
-                            screenModel.copyEntries()
-                        } else {
-                            screenModel.migrateEntries()
-                        }
-                    },
+                    mergeImpact = dialog.mergeImpact,
+                    onMigrate = { screenModel.confirmMigration(dialog) },
                 )
             }
             is MigrationListScreenModel.Dialog.Progress -> {

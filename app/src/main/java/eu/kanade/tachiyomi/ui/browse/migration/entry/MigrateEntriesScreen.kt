@@ -32,7 +32,7 @@ import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.components.SearchToolbar
 import eu.kanade.presentation.util.Screen
-import eu.kanade.tachiyomi.ui.browse.migration.entry.components.MigrateEntrySelectionItem
+import eu.kanade.tachiyomi.ui.browse.migration.entry.components.MigrateEntrySelectionGroup
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.flow.collectLatest
@@ -168,6 +168,7 @@ data class MigrateEntriesScreen(
                         contentPadding = contentPadding,
                         state = state,
                         onToggleSelection = screenModel::toggleSelection,
+                        onToggleGroup = screenModel::toggleGroupSelection,
                         onLongClickItem = { entryId ->
                             if (state.selectionMode) {
                                 screenModel.toggleRangeSelection(entryId)
@@ -176,7 +177,9 @@ data class MigrateEntriesScreen(
                             }
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         },
-                        onInspect = { navigator.push(EntryScreen(it)) },
+                        onInspect = { entryId, bypassMerge ->
+                            navigator.push(EntryScreen(entryId, bypassMerge = bypassMerge))
+                        },
                     )
                 }
             }
@@ -200,27 +203,31 @@ private fun MigrateEntriesContent(
     contentPadding: PaddingValues,
     state: MigrateEntriesScreenModel.State,
     onToggleSelection: (Long) -> Unit,
+    onToggleGroup: (Set<Long>) -> Unit,
     onLongClickItem: (Long) -> Unit,
-    onInspect: (Long) -> Unit,
+    onInspect: (Long, Boolean) -> Unit,
 ) {
     FastScrollLazyColumn(
         state = lazyListState,
         contentPadding = contentPadding + PaddingValues(vertical = MaterialTheme.padding.small),
     ) {
         items(
-            items = state.visibleItems,
-            key = { it.entry.id },
-            contentType = { "migration_entry_selection_item" },
-        ) { item ->
-            MigrateEntrySelectionItem(
-                entry = item.entry,
+            items = state.visibleGroups,
+            key = { it.key },
+            contentType = { if (it.isMerged) "migration_entry_selection_group" else "migration_entry_selection_item" },
+        ) { group ->
+            MigrateEntrySelectionGroup(
+                group = group,
                 itemOrientation = state.itemOrientation,
-                consumedCount = item.progress.consumedCount,
-                totalCount = item.progress.totalCount,
-                isSelected = item.entry.id in state.selection,
-                onToggleSelection = { onToggleSelection(item.entry.id) },
-                onLongClick = { onLongClickItem(item.entry.id) },
-                onInspect = { onInspect(item.entry.id) },
+                selection = state.selection,
+                onToggleSelection = onToggleSelection,
+                onToggleGroup = onToggleGroup,
+                onLongClickItem = onLongClickItem,
+                onInspect = onInspect,
+                modifier = Modifier.padding(
+                    horizontal = MaterialTheme.padding.small,
+                    vertical = MaterialTheme.padding.extraSmall,
+                ),
             )
         }
     }
