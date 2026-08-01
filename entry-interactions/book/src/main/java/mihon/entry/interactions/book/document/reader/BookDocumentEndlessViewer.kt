@@ -216,6 +216,7 @@ internal fun BookDocumentEndlessViewer(
                         },
                         onExternalLinkClick = onExternalLinkClick,
                         onReaderTap = onReaderTap,
+                        preserveTerminalSpacing = item.content.id != item.section.document.blocks.last().id,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 20.dp, vertical = 6.dp),

@@ -39,6 +39,7 @@ internal fun BookDocumentBlockRenderer(
     onAnchorClick: (String) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     onReaderTap: () -> Unit,
+    preserveTerminalSpacing: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     val blockText = remember(block, owningContent.text) {
@@ -56,6 +57,7 @@ internal fun BookDocumentBlockRenderer(
                 onAnchorClick = onAnchorClick,
                 onExternalLinkClick = onExternalLinkClick,
                 onReaderTap = onReaderTap,
+                preserveTerminalSpacing = preserveTerminalSpacing,
             )
             is BookDocumentBlockContent.ListBlock -> Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 content.items.forEachIndexed { index, item ->
@@ -98,6 +100,7 @@ internal fun BookDocumentBlockRenderer(
                 onAnchorClick = onAnchorClick,
                 onExternalLinkClick = onExternalLinkClick,
                 onReaderTap = onReaderTap,
+                preserveTerminalSpacing = preserveTerminalSpacing,
             )
             BookDocumentBlockContent.ThematicBreak -> HorizontalDivider(
                 modifier = Modifier
@@ -121,6 +124,7 @@ private fun DocumentText(
     onAnchorClick: (String) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     onReaderTap: () -> Unit,
+    preserveTerminalSpacing: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     val color = MaterialTheme.colorScheme.onBackground.toArgb()
@@ -143,6 +147,7 @@ private fun DocumentText(
         },
         justificationMode = Layout.JUSTIFICATION_MODE_NONE,
         trimTerminalLine = true,
+        preserveTerminalSpacing = preserveTerminalSpacing,
         onAnchorClick = { anchor, _ -> onAnchorClick(anchor) },
         onExternalLinkClick = onExternalLinkClick,
         onNonLinkClick = onReaderTap,

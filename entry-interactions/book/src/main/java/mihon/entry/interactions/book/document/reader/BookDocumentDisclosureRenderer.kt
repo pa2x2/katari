@@ -24,6 +24,7 @@ internal fun BookDocumentDisclosureRenderer(
     onAnchorClick: (String) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     onReaderTap: () -> Unit,
+    preserveTerminalSpacing: Boolean,
 ) {
     var expanded by remember(content) { mutableStateOf(content.initiallyExpanded) }
     Text(
@@ -35,7 +36,7 @@ internal fun BookDocumentDisclosureRenderer(
         style = MaterialTheme.typography.titleSmall,
     )
     if (expanded) {
-        content.body.blocks.forEach { nested ->
+        content.body.blocks.forEachIndexed { index, nested ->
             BookDocumentBlockRenderer(
                 block = nested,
                 owningContent = content.body,
@@ -44,6 +45,7 @@ internal fun BookDocumentDisclosureRenderer(
                 onAnchorClick = onAnchorClick,
                 onExternalLinkClick = onExternalLinkClick,
                 onReaderTap = onReaderTap,
+                preserveTerminalSpacing = index != content.body.blocks.lastIndex || preserveTerminalSpacing,
                 modifier = Modifier.padding(start = 12.dp),
             )
         }

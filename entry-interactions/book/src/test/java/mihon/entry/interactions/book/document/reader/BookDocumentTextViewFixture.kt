@@ -38,6 +38,7 @@ internal abstract class BookDocumentTextViewFixture {
     protected fun measuredTextView(
         text: SpannableString,
         trimTerminalLine: Boolean = false,
+        preserveTerminalSpacing: Boolean = true,
     ): BookDocumentTextView {
         return BookDocumentTextView(RuntimeEnvironment.getApplication()).apply {
             layoutParams = ViewGroup.LayoutParams(600, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -49,7 +50,9 @@ internal abstract class BookDocumentTextViewFixture {
                 displayText,
                 TextView.BufferType.SPANNABLE,
             )
-            applyTerminalLineSpacing(text.length - displayText.length)
+            applyTerminalLineSpacing(
+                if (preserveTerminalSpacing) text.length - displayText.length else 0,
+            )
             measure(
                 MeasureSpec.makeMeasureSpec(600, MeasureSpec.EXACTLY),
                 MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED),

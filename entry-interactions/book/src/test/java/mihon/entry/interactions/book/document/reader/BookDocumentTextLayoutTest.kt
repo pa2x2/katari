@@ -54,4 +54,16 @@ internal class BookDocumentTextLayoutTest : BookDocumentTextViewFixture() {
             measuredTextView(source, trimTerminalLine = true).measuredHeight,
         )
     }
+
+    @Test
+    fun `chapter terminal block leaves separator spacing to the transition`() {
+        assertEquals(
+            measuredTextView(SpannableString("Final paragraph")).measuredHeight,
+            measuredTextView(
+                SpannableString("Final paragraph\n\n"),
+                trimTerminalLine = true,
+                preserveTerminalSpacing = false,
+            ).measuredHeight,
+        )
+    }
 }

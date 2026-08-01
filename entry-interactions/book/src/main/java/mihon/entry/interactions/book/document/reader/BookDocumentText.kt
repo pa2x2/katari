@@ -26,6 +26,7 @@ internal fun BookDocumentText(
     textAlignment: Int,
     justificationMode: Int,
     trimTerminalLine: Boolean = false,
+    preserveTerminalSpacing: Boolean = true,
     onAnchorClick: (String, TextView) -> Unit,
     onExternalLinkClick: (String) -> Unit = {},
     onNonLinkClick: (() -> Unit)? = null,
@@ -91,7 +92,9 @@ internal fun BookDocumentText(
             )
             view.movementMethod = LinkMovementMethod.getInstance()
             view.applyStyle(style)
-            view.applyTerminalLineSpacing(text.length - displayText.length)
+            view.applyTerminalLineSpacing(
+                if (preserveTerminalSpacing) text.length - displayText.length else 0,
+            )
             onViewChanged(view)
         },
         onRelease = { view ->
