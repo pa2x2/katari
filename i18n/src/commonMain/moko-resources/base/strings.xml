@@ -1636,6 +1636,11 @@
     <string name="migrationListScreen.migrateDialog.standaloneToMergedExplanation">A match for a standalone entry already belongs to a merged entry. It remains in that merged entry.</string>
     <string name="migrationListScreen.progressDialog.cancelLabel">Cancel</string>
     <string name="migrationListScreen.matchWithoutChapterToast">No items found, this entry cannot be used for migration</string>
+    <string name="sourceMigration.notification.discoveryTitle">Finding replacements</string>
+    <string name="sourceMigration.notification.discoveryStarting">Preparing replacement search</string>
+    <string name="sourceMigration.notification.discoveryProgress">%1$d of %2$d entries checked</string>
+    <string name="sourceMigration.notification.reviewReadyTitle">Replacements ready to review</string>
+    <string name="sourceMigration.notification.reviewReadyText">Checked %1$d entries</string>
 
     <string name="supportUsScreen.perks">Patrons get access to exclusive channels, with more perks to come.</string>
     <string name="supportUsScreen.donationPlatform.patreon">Patreon (preferred)</string>
