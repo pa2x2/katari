@@ -1661,6 +1661,14 @@
     <string name="sourceMigrationReview.findingProgress">Finding replacements · %1$d of %2$d</string>
     <string name="sourceMigrationReview.migrationProgress">Migrating · %1$d of %2$d</string>
     <string name="sourceMigrationReview.migrateCount">Migrate %1$d</string>
+    <string name="sourceMigration.activeHeader">Active migrations</string>
+    <string name="sourceMigration.findingReplacements">Finding replacements</string>
+    <string name="sourceMigration.discoveryPaused">Discovery paused</string>
+    <string name="sourceMigration.readyToReview">Ready to review</string>
+    <string name="sourceMigration.migrating">Migrating</string>
+    <string name="sourceMigration.executionPaused">Migration paused</string>
+    <string name="sourceMigration.preparing">Preparing</string>
+    <string name="sourceMigration.failed">Failed</string>
     <string name="sourceMigration.notification.discoveryTitle">Finding replacements</string>
     <string name="sourceMigration.notification.discoveryStarting">Preparing replacement search</string>
     <string name="sourceMigration.notification.discoveryProgress">%1$d of %2$d entries checked</string>

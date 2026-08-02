@@ -175,6 +175,21 @@ FROM source_migration_sessions
 WHERE profile_id = :profileId
 ORDER BY updated_at DESC;
 
+activeSessionsByProfile:
+SELECT *
+FROM source_migration_sessions
+WHERE profile_id = :profileId
+AND stage IN (
+    'DISCOVERY_QUEUED',
+    'DISCOVERING',
+    'DISCOVERY_PAUSED',
+    'REVIEW_REQUIRED',
+    'EXECUTION_QUEUED',
+    'EXECUTING',
+    'EXECUTION_PAUSED'
+)
+ORDER BY updated_at DESC;
+
 targetSourcesBySession:
 SELECT source_id
 FROM source_migration_target_sources

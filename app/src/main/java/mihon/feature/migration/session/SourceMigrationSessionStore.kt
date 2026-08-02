@@ -14,6 +14,7 @@ import mihon.feature.migration.session.model.SourceMigrationSession
 import mihon.feature.migration.session.model.SourceMigrationSessionDraft
 import mihon.feature.migration.session.model.SourceMigrationSessionId
 import mihon.feature.migration.session.model.SourceMigrationSessionStage
+import mihon.feature.migration.session.model.SourceMigrationSessionSummary
 import tachiyomi.data.DatabaseHandler
 import java.util.UUID
 
@@ -110,6 +111,12 @@ class SourceMigrationSessionStore(
                 items = items.map { it.toDomain() },
             )
         }
+    }
+
+    fun observeActive(profileId: Long): Flow<List<SourceMigrationSessionSummary>> {
+        return handler.subscribeToList {
+            source_migration_sessionsQueries.activeSessionsByProfile(profileId)
+        }.map { sessions -> sessions.map { it.toSummary() } }
     }
 
     suspend fun get(sessionId: SourceMigrationSessionId): SourceMigrationSession? {

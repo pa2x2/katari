@@ -14,6 +14,7 @@ import mihon.feature.migration.session.model.SourceMigrationSessionGroupMember
 import mihon.feature.migration.session.model.SourceMigrationSessionId
 import mihon.feature.migration.session.model.SourceMigrationSessionItem
 import mihon.feature.migration.session.model.SourceMigrationSessionStage
+import mihon.feature.migration.session.model.SourceMigrationSessionSummary
 import tachiyomi.data.Source_migration_candidates
 import tachiyomi.data.Source_migration_discovery_failures
 import tachiyomi.data.Source_migration_group_members
@@ -41,6 +42,16 @@ internal fun Source_migration_sessions.toDomain(
         completedAt = completed_at,
         groups = groups,
         items = items,
+    )
+}
+
+internal fun Source_migration_sessions.toSummary(): SourceMigrationSessionSummary {
+    return SourceMigrationSessionSummary(
+        id = SourceMigrationSessionId(session_id),
+        profileId = profile_id,
+        originSourceId = origin_source_id,
+        stage = SourceMigrationSessionStage.valueOf(stage),
+        updatedAt = updated_at,
     )
 }
 
