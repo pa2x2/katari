@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import mihon.entry.interactions.migration.EntryMigrationOption
 import mihon.feature.migration.session.model.SourceMigrationCandidate
+import mihon.feature.migration.session.model.SourceMigrationDiscoveryDepth
 import mihon.feature.migration.session.model.SourceMigrationDiscoveryFailure
 import mihon.feature.migration.session.model.SourceMigrationItemState
 import mihon.feature.migration.session.model.SourceMigrationSession
@@ -207,6 +208,43 @@ class SourceMigrationSessionStore(
                 sessionId = sessionId.value,
                 sourceEntryId = sourceEntryId,
             )
+        }
+    }
+
+    suspend fun queueItemDiscovery(
+        sessionId: SourceMigrationSessionId,
+        sourceEntryId: Long,
+        depth: SourceMigrationDiscoveryDepth,
+    ): Boolean {
+        val now = clockMillis()
+        return handler.await(inTransaction = true) {
+            val session = source_migration_sessionsQueries.sessionById(sessionId.value).awaitAsOneOrNull()
+                ?: return@await false
+            if (session.stage != SourceMigrationSessionStage.REVIEW_REQUIRED.name) return@await false
+
+            source_migration_sessionsQueries.queueItemDiscovery(
+                searchDepth = depth.name,
+                updatedAt = now,
+                sessionId = sessionId.value,
+                sourceEntryId = sourceEntryId,
+            )
+            val queued = source_migration_sessionsQueries.itemsBySession(sessionId.value)
+                .awaitAsList()
+                .any { item ->
+                    item.source_entry_id == sourceEntryId &&
+                        item.state == SourceMigrationItemState.DISCOVERY_QUEUED.name
+                }
+            if (!queued) return@await false
+
+            source_migration_sessionsQueries.transitionStage(
+                newStage = SourceMigrationSessionStage.DISCOVERY_QUEUED.name,
+                updatedAt = now,
+                completedAt = null,
+                sessionId = sessionId.value,
+                expectedStage = SourceMigrationSessionStage.REVIEW_REQUIRED.name,
+            )
+            source_migration_sessionsQueries.sessionById(sessionId.value).awaitAsOneOrNull()
+                ?.stage == SourceMigrationSessionStage.DISCOVERY_QUEUED.name
         }
     }
 

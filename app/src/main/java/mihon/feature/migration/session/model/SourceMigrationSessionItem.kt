@@ -25,6 +25,11 @@ enum class SourceMigrationMatchKind {
     MANUAL,
 }
 
+enum class SourceMigrationDiscoveryDepth {
+    STANDARD,
+    BROAD,
+}
+
 data class SourceMigrationSessionItem(
     val sessionId: SourceMigrationSessionId,
     val sourceEntryId: Long,
@@ -34,6 +39,7 @@ data class SourceMigrationSessionItem(
     val sourceUrl: String,
     val sourceThumbnailUrl: String?,
     val state: SourceMigrationItemState,
+    val searchDepth: SourceMigrationDiscoveryDepth,
     val included: Boolean,
     val selectedTargetEntryId: Long?,
     val targetSourceId: Long?,

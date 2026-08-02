@@ -11,6 +11,7 @@ import eu.kanade.tachiyomi.util.system.workManager
 import mihon.feature.migration.execution.SourceMigrationExecutionPlanner
 import mihon.feature.migration.execution.model.SourceMigrationExecutionPlanResult
 import mihon.feature.migration.session.SourceMigrationSessionStore
+import mihon.feature.migration.session.model.SourceMigrationDiscoveryDepth
 import mihon.feature.migration.session.model.SourceMigrationSessionId
 import mihon.feature.migration.session.model.SourceMigrationSessionStage
 import java.util.concurrent.TimeUnit
@@ -68,6 +69,15 @@ class SourceMigrationWorkScheduler(
             store.transitionStage(sessionId, stage, SourceMigrationSessionStage.DISCOVERY_PAUSED)
         }
         context.workManager.cancelUniqueWork(discoveryWorkName(sessionId))
+    }
+
+    suspend fun restartItemDiscovery(
+        sessionId: SourceMigrationSessionId,
+        sourceEntryId: Long,
+        depth: SourceMigrationDiscoveryDepth,
+    ): Boolean {
+        if (!store.queueItemDiscovery(sessionId, sourceEntryId, depth)) return false
+        return startDiscovery(sessionId)
     }
 
     suspend fun startExecution(sessionId: SourceMigrationSessionId): SourceMigrationExecutionStartResult {

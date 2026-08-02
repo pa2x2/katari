@@ -3,6 +3,7 @@ package mihon.feature.migration.session
 import mihon.entry.interactions.migration.EntryMigrationOperationKey
 import mihon.entry.interactions.migration.EntryMigrationOption
 import mihon.feature.migration.session.model.SourceMigrationCandidate
+import mihon.feature.migration.session.model.SourceMigrationDiscoveryDepth
 import mihon.feature.migration.session.model.SourceMigrationDiscoveryFailure
 import mihon.feature.migration.session.model.SourceMigrationDiscoveryFailureReason
 import mihon.feature.migration.session.model.SourceMigrationItemState
@@ -78,6 +79,7 @@ internal fun Source_migration_items.toDomain(): SourceMigrationSessionItem {
         sourceUrl = source_url,
         sourceThumbnailUrl = source_thumbnail_url,
         state = SourceMigrationItemState.valueOf(state),
+        searchDepth = SourceMigrationDiscoveryDepth.valueOf(search_depth),
         included = included,
         selectedTargetEntryId = selected_target_entry_id,
         targetSourceId = target_source_id,

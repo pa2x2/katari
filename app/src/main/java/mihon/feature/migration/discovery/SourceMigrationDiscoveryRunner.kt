@@ -8,8 +8,10 @@ import mihon.entry.interactions.migration.EntryMigrationTargetRefreshIntent
 import mihon.entry.interactions.migration.EntryMigrationTargetRefreshResult
 import mihon.feature.migration.discovery.model.SourceMigrationDiscoveredCandidate
 import mihon.feature.migration.discovery.model.SourceMigrationDiscoveryRequest
+import mihon.feature.migration.discovery.model.SourceMigrationSearchDepth
 import mihon.feature.migration.session.SourceMigrationSessionStore
 import mihon.feature.migration.session.model.SourceMigrationCandidate
+import mihon.feature.migration.session.model.SourceMigrationDiscoveryDepth
 import mihon.feature.migration.session.model.SourceMigrationDiscoveryFailure
 import mihon.feature.migration.session.model.SourceMigrationItemState
 import mihon.feature.migration.session.model.SourceMigrationMatchKind
@@ -120,6 +122,10 @@ class SourceMigrationDiscoveryRunner(
                     sourceTitle = source.title,
                     entryType = source.type,
                     targetSourceIds = session.targetSourceIds,
+                    depth = when (item.searchDepth) {
+                        SourceMigrationDiscoveryDepth.STANDARD -> SourceMigrationSearchDepth.STANDARD
+                        SourceMigrationDiscoveryDepth.BROAD -> SourceMigrationSearchDepth.BROAD
+                    },
                 ),
             )
             val discoveredAt = clockMillis()

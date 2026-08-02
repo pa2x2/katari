@@ -1,0 +1,3 @@
+ALTER TABLE source_migration_items
+ADD COLUMN search_depth TEXT NOT NULL DEFAULT 'STANDARD'
+CHECK(search_depth IN ('STANDARD', 'BROAD'));

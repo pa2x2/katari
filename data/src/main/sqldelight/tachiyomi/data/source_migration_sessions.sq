@@ -80,6 +80,7 @@ CREATE TABLE source_migration_items(
     source_url TEXT NOT NULL,
     source_thumbnail_url TEXT,
     state TEXT NOT NULL,
+    search_depth TEXT NOT NULL DEFAULT 'STANDARD',
     included INTEGER AS Boolean NOT NULL DEFAULT 0,
     selected_target_entry_id INTEGER,
     target_source_id INTEGER,
@@ -115,7 +116,8 @@ CREATE TABLE source_migration_items(
         'EXECUTION_FAILED',
         'CANCELLED'
     )),
-    CHECK(match_kind IS NULL OR match_kind IN ('EXACT', 'SIMILAR', 'MANUAL'))
+    CHECK(match_kind IS NULL OR match_kind IN ('EXACT', 'SIMILAR', 'MANUAL')),
+    CHECK(search_depth IN ('STANDARD', 'BROAD'))
 );
 
 CREATE INDEX source_migration_items_session_state
@@ -403,6 +405,25 @@ SET state = :state,
 WHERE session_id = :sessionId
 AND source_entry_id = :sourceEntryId
 AND state IN ('DISCOVERY_QUEUED', 'DISCOVERING');
+
+queueItemDiscovery:
+UPDATE source_migration_items
+SET state = 'DISCOVERY_QUEUED',
+    search_depth = :searchDepth,
+    included = 0,
+    selected_target_entry_id = NULL,
+    target_source_id = NULL,
+    target_title = NULL,
+    target_url = NULL,
+    target_thumbnail_url = NULL,
+    match_kind = NULL,
+    available_options = '',
+    error_code = NULL,
+    error_message = NULL,
+    updated_at = :updatedAt
+WHERE session_id = :sessionId
+AND source_entry_id = :sourceEntryId
+AND state IN ('READY', 'NEEDS_REVIEW', 'NO_MATCH', 'DISCOVERY_FAILED', 'CONFLICT');
 
 recordItemDiscovery:
 UPDATE source_migration_items
