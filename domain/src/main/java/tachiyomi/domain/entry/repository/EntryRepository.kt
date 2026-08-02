@@ -83,6 +83,8 @@ interface EntryRepository {
 
     suspend fun insertOrUpdate(entry: Entry): Entry
 
+    suspend fun insertOrUpdate(entry: Entry, profileId: Long): Entry
+
     suspend fun update(entry: Entry): Boolean
 
     suspend fun update(entry: Entry, profileId: Long): Boolean

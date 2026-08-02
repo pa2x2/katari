@@ -29,10 +29,25 @@ internal abstract class PageLoader {
      */
     open suspend fun loadPage(page: ReaderPage) {}
 
+    /** Loads a visible page with a surface-specific number of following pages to enqueue. */
+    open suspend fun loadPage(page: ReaderPage, preloadCount: Int) {
+        loadPage(page)
+    }
+
     /**
      * Starts background preparation for [page] without attaching a viewer observer.
      */
     open fun preloadPage(page: ReaderPage) {}
+
+    /** Starts background preparation for exactly the supplied pages. */
+    open fun preloadPages(pages: List<ReaderPage>) {
+        pages.forEach(::preloadPage)
+    }
+
+    /** Replaces the current surface-owned preload window. */
+    open fun setPreloadPages(pages: List<ReaderPage>) {
+        preloadPages(pages)
+    }
 
     /**
      * Retries the given [page] in case it failed to load. This method only makes sense when an

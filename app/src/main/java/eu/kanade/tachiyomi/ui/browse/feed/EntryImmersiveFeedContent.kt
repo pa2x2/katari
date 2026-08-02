@@ -52,7 +52,7 @@ internal fun EntryImmersiveFeedContent(
     onExitImmersive: () -> Unit,
     onEntryClick: (Entry) -> Unit,
     onLibraryAction: (Entry) -> Unit,
-    onZoomStateChange: (Boolean) -> Unit,
+    onPagingBlockedChange: (Boolean) -> Unit,
     jumpToNewestRequest: Int,
     modifier: Modifier = Modifier,
 ) {
@@ -119,7 +119,7 @@ internal fun EntryImmersiveFeedContent(
         onExitImmersive = onExitImmersive,
         onEntryClick = onEntryClick,
         onLibraryAction = onLibraryAction,
-        onZoomStateChange = onZoomStateChange,
+        onPagingBlockedChange = onPagingBlockedChange,
         positionState = positionState,
         refreshing = timelineState.isRefreshing,
         onRefresh = { timelineModel.refresh(manual = true) },

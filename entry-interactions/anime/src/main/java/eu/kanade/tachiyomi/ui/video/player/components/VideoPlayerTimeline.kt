@@ -173,6 +173,62 @@ internal fun VideoPlayerTimeline(
 }
 
 @Composable
+internal fun VideoPlayerCompactTimeline(
+    positionMs: Long,
+    durationMs: Long,
+    bufferedPositionMs: Long,
+    onSeek: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val effectiveDurationMs = durationMs.coerceAtLeast(0L)
+    var isScrubbing by remember(effectiveDurationMs) { mutableStateOf(false) }
+    var scrubPositionMs by remember(effectiveDurationMs) { mutableStateOf(positionMs) }
+    val displayedPositionMs = if (isScrubbing) scrubPositionMs else positionMs
+    val playedFraction = if (effectiveDurationMs > 0L) {
+        displayedPositionMs.toFloat() / effectiveDurationMs
+    } else {
+        0f
+    }
+    val bufferedFraction = if (effectiveDurationMs > 0L) {
+        bufferedPositionMs.toFloat() / effectiveDurationMs
+    } else {
+        0f
+    }
+
+    Column(
+        modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        if (isScrubbing) {
+            Text(
+                text = "${formatPlaybackTimestamp(scrubPositionMs)} / " +
+                    formatPlaybackTimestamp(effectiveDurationMs),
+                color = Color.White,
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier
+                    .background(Color.Black.copy(alpha = 0.48f), CircleShape)
+                    .padding(horizontal = 10.dp, vertical = 4.dp),
+            )
+        }
+        VideoPlayerTimelineBar(
+            playedFraction = playedFraction,
+            bufferedFraction = bufferedFraction,
+            durationMs = effectiveDurationMs,
+            thumbSize = if (isScrubbing) 12.dp else 0.dp,
+            thumbHaloSize = 0.dp,
+            trackHeight = if (isScrubbing) 5.dp else 3.dp,
+            onScrubStarted = { isScrubbing = true },
+            onScrubPositionChange = { scrubPositionMs = it },
+            onScrubFinished = {
+                onSeek(scrubPositionMs)
+                isScrubbing = false
+            },
+            modifier = Modifier.fillMaxWidth().height(28.dp),
+        )
+    }
+}
+
+@Composable
 private fun VideoPlayerSeekPreview(
     positionMs: Long,
     previewFraction: Float,
@@ -320,7 +376,7 @@ internal fun fitVideoPreviewSize(
 }
 
 @Composable
-private fun VideoPlayerTimelineBar(
+internal fun VideoPlayerTimelineBar(
     playedFraction: Float,
     bufferedFraction: Float,
     durationMs: Long,

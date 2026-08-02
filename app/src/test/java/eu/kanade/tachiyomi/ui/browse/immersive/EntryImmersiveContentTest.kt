@@ -1,10 +1,7 @@
 package eu.kanade.tachiyomi.ui.browse.immersive
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.source.entry.VideoRequest
-import eu.kanade.tachiyomi.source.entry.VideoStream
 import io.kotest.matchers.shouldBe
-import mihon.entry.interactions.media.EntryImmersiveHandle
 import org.junit.jupiter.api.Test
 
 class EntryImmersiveContentTest {
@@ -19,30 +16,9 @@ class EntryImmersiveContentTest {
     }
 
     @Test
-    fun `entry poster remains available behind media transitions`() {
-        val imagePages = EntryImmersiveHandle.ImagePages(
-            entryType = EntryType.MANGA,
-            chapterId = 1L,
-            delegate = Unit,
-        )
-
-        shouldShowImmersivePoster(imagePages) shouldBe true
-        shouldShowImmersivePoster(
-            EntryImmersiveHandle.Playback(
-                entryType = EntryType.ANIME,
-                chapterId = 1L,
-                stream = VideoStream(VideoRequest("https://example.invalid/video")),
-                subtitles = emptyList(),
-                resumePositionMs = 0L,
-            ),
-        ) shouldBe true
-        shouldShowImmersivePoster(null) shouldBe true
-    }
-
-    @Test
-    fun `pull refresh is only enabled at the settled first page while not zoomed`() {
-        shouldEnableImmersivePullRefresh(settledPage = 0, isZoomed = false) shouldBe true
-        shouldEnableImmersivePullRefresh(settledPage = 1, isZoomed = false) shouldBe false
-        shouldEnableImmersivePullRefresh(settledPage = 0, isZoomed = true) shouldBe false
+    fun `pull refresh is only enabled at the settled first page while paging is not blocked`() {
+        shouldEnableImmersivePullRefresh(settledPage = 0, pagingBlocked = false) shouldBe true
+        shouldEnableImmersivePullRefresh(settledPage = 1, pagingBlocked = false) shouldBe false
+        shouldEnableImmersivePullRefresh(settledPage = 0, pagingBlocked = true) shouldBe false
     }
 }

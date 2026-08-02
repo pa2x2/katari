@@ -1,15 +1,18 @@
 package mihon.entry.interactions.manga.media
 
 import android.content.Context
-import eu.kanade.tachiyomi.source.entry.EntryImagePage
-import eu.kanade.tachiyomi.source.entry.EntryImageSource
-import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryType
+import eu.kanade.tachiyomi.source.entry.UnifiedSource
+import eu.kanade.tachiyomi.ui.reader.loader.PageLoader
+import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
+import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
+import eu.kanade.tachiyomi.ui.reader.model.toReaderChapter
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
-import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.manga.media.session.MangaMediaSessionProcessor
 import mihon.entry.interactions.manga.state.mangaProgressState
@@ -19,8 +22,6 @@ import mihon.entry.interactions.media.EntryImmersiveProgress
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
 import mihon.entry.interactions.media.session.EntryMediaSessionEventSink
 import mihon.entry.interactions.media.session.EntryMediaSessionResult
-import okhttp3.Headers
-import okhttp3.Request
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -28,46 +29,35 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 
 class MangaImmersiveProcessorTest {
     @Test
-    fun `loads direct image requests without reader preview cache`() = runTest {
-        val page = EntryImagePage(index = 7, url = "/page")
-        val source = mockk<EntryImageSource> {
-            every { id } returns 1L
-            every { name } returns "Source"
-            coEvery { getMedia(any(), any()) } returns EntryMedia.ImagePages(listOf(page))
-            coEvery { getImageUrl(page) } returns "https://example.invalid/page.jpg"
-            every { imageRequest(page, "https://example.invalid/page.jpg") } returns
-                Request.Builder()
-                    .url("https://example.invalid/page.jpg")
-                    .header("Referer", "https://example.invalid/")
-                    .build()
-        }
-        val handle = MangaImmersiveProcessor(mediaSession = noOpMediaSession()).load(
-            context = mockk<Context>(relaxed = true),
-            entry = Entry.create().copy(id = 10L, type = EntryType.MANGA),
-            chapter = EntryChapter.create().copy(id = 20L, entryId = 10L),
-            source = source,
-        ) as EntryImmersiveHandle.ImagePages
+    fun `load uses the shared reader page session`() = runTest {
+        val entry = Entry.create().copy(id = 10L, type = EntryType.MANGA)
+        val chapter = EntryChapter.create().copy(id = 20L, entryId = 10L)
+        val readerChapter = readerChapter(entry, chapter, pageCount = 1)
+        val context = mockk<Context>(relaxed = true)
+        val source = mockk<UnifiedSource>(relaxed = true)
+        var receivedRequest: Triple<Context, Entry, EntryChapter>? = null
+        val processor = MangaImmersiveProcessor(
+            mediaSession = noOpMediaSession(),
+            loadPageSession = { receivedContext, receivedEntry, receivedChapter ->
+                receivedRequest = Triple(receivedContext, receivedEntry, receivedChapter)
+                readerChapter
+            },
+        )
+
+        val handle = processor.load(context, entry, chapter, source) as EntryImmersiveHandle.ImagePages
         val media = handle.delegate as MangaImmersiveMedia
 
+        receivedRequest shouldBe Triple(context, entry, chapter)
+        media.readerChapter shouldBe readerChapter
         media.pages shouldHaveSize 1
         media.pages.single().index shouldBe 0
-        media.pages.single().imageUrl shouldBe "https://example.invalid/page.jpg"
-        media.pages.single().headers["Referer"] shouldBe "https://example.invalid/"
         media.initialPageIndex shouldBe 0
     }
 
     @Test
     fun `load restores generic page position`() = runTest {
-        val pages = (0..4).map { index -> EntryImagePage(index = index, url = "/page/$index") }
-        val source = mockk<EntryImageSource> {
-            every { id } returns 1L
-            every { name } returns "Source"
-            coEvery { getMedia(any(), any()) } returns EntryMedia.ImagePages(pages)
-            coEvery { getImageUrl(any()) } answers { "https://example.invalid/${firstArg<EntryImagePage>().index}" }
-            every { imageRequest(any(), any()) } answers {
-                Request.Builder().url(secondArg<String>()).build()
-            }
-        }
+        val entry = Entry.create().copy(id = 10L, type = EntryType.MANGA)
+        val chapter = EntryChapter.create().copy(id = 20L, entryId = 10L, url = "/chapter")
         val progressRepository = mockk<EntryProgressRepository> {
             coEvery { get(10L, "", "/chapter") } returns mangaProgressState(
                 entryId = 10L,
@@ -84,14 +74,50 @@ class MangaImmersiveProcessorTest {
         val handle = MangaImmersiveProcessor(
             entryProgressRepository = progressRepository,
             mediaSession = noOpMediaSession(),
+            loadPageSession = { _, _, _ -> readerChapter(entry, chapter, pageCount = 5) },
         ).load(
             context = mockk(relaxed = true),
-            entry = Entry.create().copy(id = 10L, type = EntryType.MANGA),
-            chapter = EntryChapter.create().copy(id = 20L, entryId = 10L, url = "/chapter"),
-            source = source,
+            entry = entry,
+            chapter = chapter,
+            source = mockk(relaxed = true),
         ) as EntryImmersiveHandle.ImagePages
 
         (handle.delegate as MangaImmersiveMedia).initialPageIndex shouldBe 3
+    }
+
+    @Test
+    fun `release recycles the shared reader page session`() {
+        val chapter = EntryChapter.create().copy(id = 20L, entryId = 10L)
+        val entry = Entry.create().copy(id = 10L, source = 1L, type = EntryType.MANGA)
+        val pageLoader = mockk<PageLoader>(relaxed = true)
+        val readerChapter = readerChapter(entry, chapter, pageCount = 1, pageLoader = pageLoader)
+        val processor = MangaImmersiveProcessor(mediaSession = noOpMediaSession())
+
+        processor.release(imageHandle(entry, chapter, readerChapter))
+
+        verify(exactly = 1) { pageLoader.recycle() }
+    }
+
+    @Test
+    fun `load failure after session creation recycles the session`() = runTest {
+        val chapter = EntryChapter.create().copy(id = 20L, entryId = 10L, url = "/chapter")
+        val entry = Entry.create().copy(id = 10L, source = 1L, type = EntryType.MANGA)
+        val pageLoader = mockk<PageLoader>(relaxed = true)
+        val readerChapter = readerChapter(entry, chapter, pageCount = 1, pageLoader = pageLoader)
+        val progressRepository = mockk<EntryProgressRepository> {
+            coEvery { get(any(), any(), any()) } throws IllegalStateException("progress unavailable")
+        }
+        val processor = MangaImmersiveProcessor(
+            entryProgressRepository = progressRepository,
+            mediaSession = noOpMediaSession(),
+            loadPageSession = { _, _, _ -> readerChapter },
+        )
+
+        shouldThrow<IllegalStateException> {
+            processor.load(mockk(relaxed = true), entry, chapter, mockk(relaxed = true))
+        }
+
+        verify(exactly = 1) { pageLoader.recycle() }
     }
 
     @Test
@@ -151,25 +177,40 @@ class MangaImmersiveProcessorTest {
         },
     )
 
-    private fun imageHandle(
-        child: EntryChapter,
-    ): EntryImmersiveHandle.ImagePages {
+    private fun imageHandle(child: EntryChapter): EntryImmersiveHandle.ImagePages {
         val entry = Entry.create().copy(id = 10L, source = 1L, type = EntryType.MANGA)
+        return imageHandle(entry, child, readerChapter(entry, child, pageCount = 1))
+    }
+
+    private fun imageHandle(
+        entry: Entry,
+        child: EntryChapter,
+        readerChapter: ReaderChapter,
+    ): EntryImmersiveHandle.ImagePages {
         return EntryImmersiveHandle.ImagePages(
             entryType = EntryType.MANGA,
             chapterId = child.id,
             delegate = MangaImmersiveMedia(
-                pages = listOf(
-                    MangaImmersivePage(
-                        0,
-                        "https://example.invalid/page.jpg",
-                        Headers.Builder().build(),
-                    ),
-                ),
+                readerChapter = readerChapter,
                 initialPageIndex = 0,
                 entry = entry,
                 child = child,
             ),
         )
+    }
+
+    private fun readerChapter(
+        entry: Entry,
+        child: EntryChapter,
+        pageCount: Int,
+        pageLoader: PageLoader = mockk(relaxed = true),
+    ): ReaderChapter {
+        return ReaderChapter(child.toReaderChapter(), entry).apply {
+            ref()
+            this.pageLoader = pageLoader
+            state = ReaderChapter.State.Loaded(
+                List(pageCount) { index -> ReaderPage(index).also { it.chapter = this } },
+            )
+        }
     }
 }

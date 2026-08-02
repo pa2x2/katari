@@ -75,30 +75,11 @@ fun MigrateEntrySelectionItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        val coverType = when (itemOrientation) {
-            EntryItemOrientation.VERTICAL -> EntryCover.Book
-            EntryItemOrientation.HORIZONTAL -> EntryCover.Wide
-        }
-        val coverHeight = when (itemOrientation) {
-            EntryItemOrientation.VERTICAL -> 80.dp
-            EntryItemOrientation.HORIZONTAL -> 40.dp
-        }
-        Box(
-            modifier = Modifier
-                .width(72.dp)
-                .height(80.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            coverType(
-                data = entry,
-                modifier = Modifier.height(coverHeight),
-                contentDescription = stringResource(
-                    MR.strings.migrationEntriesScreen_inspectEntry,
-                    entry.displayTitle,
-                ),
-                onClick = onInspect,
-            )
-        }
+        MigrateEntrySelectionCover(
+            entry = entry,
+            itemOrientation = itemOrientation,
+            onInspect = onInspect,
+        )
 
         Column(
             modifier = Modifier.weight(1f),
@@ -159,5 +140,37 @@ fun MigrateEntrySelectionItem(
                 modifier = if (handlesExpansion) Modifier else Modifier.clearAndSetSemantics {},
             )
         }
+    }
+}
+
+@Composable
+internal fun MigrateEntrySelectionCover(
+    entry: Entry,
+    itemOrientation: EntryItemOrientation,
+    onInspect: () -> Unit,
+) {
+    val coverType = when (itemOrientation) {
+        EntryItemOrientation.VERTICAL -> EntryCover.Book
+        EntryItemOrientation.HORIZONTAL -> EntryCover.Wide
+    }
+    val coverHeight = when (itemOrientation) {
+        EntryItemOrientation.VERTICAL -> 80.dp
+        EntryItemOrientation.HORIZONTAL -> 40.dp
+    }
+    Box(
+        modifier = Modifier
+            .width(72.dp)
+            .height(80.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        coverType(
+            data = entry,
+            modifier = Modifier.height(coverHeight),
+            contentDescription = stringResource(
+                MR.strings.migrationEntriesScreen_inspectEntry,
+                entry.displayTitle,
+            ),
+            onClick = onInspect,
+        )
     }
 }

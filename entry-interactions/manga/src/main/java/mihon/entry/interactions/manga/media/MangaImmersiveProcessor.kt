@@ -1,10 +1,10 @@
 package mihon.entry.interactions.manga.media
 
 import android.content.Context
-import eu.kanade.tachiyomi.source.entry.EntryImageSource
-import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
+import eu.kanade.tachiyomi.ui.reader.loader.ReaderPageSessionLoader
+import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import mihon.entry.interactions.manga.state.mangaProgressState
@@ -17,7 +17,6 @@ import mihon.entry.interactions.media.session.EntryMediaSessionActivity
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
 import mihon.entry.interactions.runtime.EntryImmersiveLoadMode
 import mihon.entry.interactions.runtime.EntryImmersiveProcessor
-import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.progressResourceKey
@@ -26,6 +25,9 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 internal class MangaImmersiveProcessor(
     private val entryProgressRepository: EntryProgressRepository? = null,
     private val mediaSession: EntryMediaSessionProcessor,
+    private val loadPageSession: suspend (Context, Entry, EntryChapter) -> ReaderChapter = { context, entry, chapter ->
+        ReaderPageSessionLoader(context).load(entry, chapter)
+    },
     private val now: () -> Long = System::currentTimeMillis,
 ) : EntryImmersiveProcessor {
     override val type: EntryType = EntryType.MANGA
@@ -40,32 +42,24 @@ internal class MangaImmersiveProcessor(
         source: UnifiedSource,
     ): EntryImmersiveHandle {
         requireNotNull(chapter) { "Manga immersive loading requires a reading child" }
-        val imageSource = source as? EntryImageSource
-            ?: error("Source ${source.name} does not support image pages")
-        val media = source.getMedia(chapter.toSEntryChapter()) as? EntryMedia.ImagePages
-            ?: error("Source ${source.name} did not return image pages")
-        val pages = media.pages.mapIndexed { index, page ->
-            val imageUrl = page.imageUrl ?: imageSource.getImageUrl(page)
-            MangaImmersivePage(
-                index = index,
-                imageUrl = imageUrl,
-                headers = imageSource.imageRequest(page, imageUrl).headers,
+        val readerChapter = loadPageSession(context, entry, chapter)
+        try {
+            val pages = requireNotNull(readerChapter.pages)
+            val progress = entryProgressRepository?.get(chapter.entryId, "", chapter.progressResourceKey)
+            return EntryImmersiveHandle.ImagePages(
+                entryType = type,
+                chapterId = chapter.id,
+                delegate = MangaImmersiveMedia(
+                    readerChapter = readerChapter,
+                    initialPageIndex = progress?.pageIndex?.toInt()?.coerceIn(0, pages.lastIndex) ?: 0,
+                    entry = entry,
+                    child = chapter,
+                ),
             )
+        } catch (e: Throwable) {
+            readerChapter.unref()
+            throw e
         }
-        if (pages.isEmpty() || pages.all { it.imageUrl.isBlank() }) {
-            error("No pages found")
-        }
-        val progress = entryProgressRepository?.get(chapter.entryId, "", chapter.progressResourceKey)
-        return EntryImmersiveHandle.ImagePages(
-            entryType = type,
-            chapterId = chapter.id,
-            delegate = MangaImmersiveMedia(
-                pages = pages,
-                initialPageIndex = progress?.pageIndex?.toInt()?.coerceIn(0, pages.lastIndex) ?: 0,
-                entry = entry,
-                child = chapter,
-            ),
-        )
     }
 
     override fun renderer(handle: EntryImmersiveHandle): EntryImmersiveRenderer {
@@ -116,5 +110,8 @@ internal class MangaImmersiveProcessor(
         }
     }
 
-    override fun release(handle: EntryImmersiveHandle) = Unit
+    override fun release(handle: EntryImmersiveHandle) {
+        val pages = handle as? EntryImmersiveHandle.ImagePages ?: return
+        (pages.delegate as? MangaImmersiveMedia)?.readerChapter?.unref()
+    }
 }

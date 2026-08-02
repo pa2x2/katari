@@ -37,6 +37,7 @@ import mihon.domain.migration.models.MigrationFlag
 import mihon.entry.interactions.migration.EntryMigrationOption
 import mihon.feature.migration.options.getLabel
 import mihon.feature.migration.options.toEntryMigrationOptions
+import mihon.feature.migration.session.model.SourceMigrationDiscoveryDepth
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.core.common.preference.toggle
@@ -51,10 +52,17 @@ import tachiyomi.presentation.core.util.collectAsState
 @Composable
 fun MigrationConfigScreenSheet(
     preferences: SourcePreferences,
+    showSearchOptions: Boolean = true,
+    showInitialAdvancedSearchOption: Boolean = false,
     onDismissRequest: () -> Unit,
-    onStartMigration: (extraSearchQuery: String?, selectedOptions: Set<EntryMigrationOption>) -> Unit,
+    onStartMigration: (
+        extraSearchQuery: String?,
+        selectedOptions: Set<EntryMigrationOption>,
+        initialDiscoveryDepth: SourceMigrationDiscoveryDepth,
+    ) -> Unit,
 ) {
     var extraSearchQuery by rememberSaveable { mutableStateOf("") }
+    var initialAdvancedSearch by rememberSaveable { mutableStateOf(false) }
     val migrationFlags by preferences.migrationFlags.collectAsState()
     AdaptiveSheet(onDismissRequest = onDismissRequest) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -123,50 +131,69 @@ fun MigrationConfigScreenSheet(
                         }
                     },
                 )
-                MigrationSheetDividerItem()
-                OutlinedTextField(
-                    value = extraSearchQuery,
-                    onValueChange = { extraSearchQuery = it },
-                    label = { Text(stringResource(MR.strings.migrationConfigScreen_additionalSearchQueryLabel)) },
-                    supportingText = {
-                        Text(stringResource(MR.strings.migrationConfigScreen_additionalSearchQuerySupportingText))
-                    },
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            horizontal = MaterialTheme.padding.medium,
-                            vertical = MaterialTheme.padding.extraSmall,
-                        ),
-                )
-                MigrationSheetSwitchItem(
-                    title = stringResource(MR.strings.migrationConfigScreen_hideUnmatchedTitle),
-                    subtitle = null,
-                    preference = preferences.migrationHideUnmatched,
-                )
-                MigrationSheetSwitchItem(
-                    title = stringResource(MR.strings.migrationConfigScreen_hideWithoutUpdatesTitle),
-                    subtitle = stringResource(MR.strings.migrationConfigScreen_hideWithoutUpdatesSubtitle),
-                    preference = preferences.migrationHideWithoutUpdates,
-                )
-                MigrationSheetDividerItem()
-                MigrationSheetWarningItem(stringResource(MR.strings.migrationConfigScreen_enhancedOptionsWarning))
-                MigrationSheetSwitchItem(
-                    title = stringResource(MR.strings.migrationConfigScreen_deepSearchModeTitle),
-                    subtitle = stringResource(MR.strings.migrationConfigScreen_deepSearchModeSubtitle),
-                    preference = preferences.migrationDeepSearchMode,
-                )
-                MigrationSheetSwitchItem(
-                    title = stringResource(MR.strings.migrationConfigScreen_prioritizeByChaptersTitle),
-                    subtitle = stringResource(MR.strings.migrationConfigScreen_prioritizeByChaptersSubtitle),
-                    preference = preferences.migrationPrioritizeByChapters,
-                )
+                if (showInitialAdvancedSearchOption) {
+                    MigrationSheetDividerItem()
+                    MigrationSheetSwitchItem(
+                        title = stringResource(MR.strings.migrationConfigScreen_deepSearchModeTitle),
+                        subtitle = stringResource(MR.strings.migrationConfigScreen_deepSearchModeSubtitle),
+                        checked = initialAdvancedSearch,
+                        onClick = { initialAdvancedSearch = !initialAdvancedSearch },
+                    )
+                }
+                if (showSearchOptions) {
+                    MigrationSheetDividerItem()
+                    OutlinedTextField(
+                        value = extraSearchQuery,
+                        onValueChange = { extraSearchQuery = it },
+                        label = { Text(stringResource(MR.strings.migrationConfigScreen_additionalSearchQueryLabel)) },
+                        supportingText = {
+                            Text(stringResource(MR.strings.migrationConfigScreen_additionalSearchQuerySupportingText))
+                        },
+                        singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                horizontal = MaterialTheme.padding.medium,
+                                vertical = MaterialTheme.padding.extraSmall,
+                            ),
+                    )
+                    MigrationSheetSwitchItem(
+                        title = stringResource(MR.strings.migrationConfigScreen_hideUnmatchedTitle),
+                        subtitle = null,
+                        preference = preferences.migrationHideUnmatched,
+                    )
+                    MigrationSheetSwitchItem(
+                        title = stringResource(MR.strings.migrationConfigScreen_hideWithoutUpdatesTitle),
+                        subtitle = stringResource(MR.strings.migrationConfigScreen_hideWithoutUpdatesSubtitle),
+                        preference = preferences.migrationHideWithoutUpdates,
+                    )
+                    MigrationSheetDividerItem()
+                    MigrationSheetWarningItem(stringResource(MR.strings.migrationConfigScreen_enhancedOptionsWarning))
+                    MigrationSheetSwitchItem(
+                        title = stringResource(MR.strings.migrationConfigScreen_deepSearchModeTitle),
+                        subtitle = stringResource(MR.strings.migrationConfigScreen_deepSearchModeSubtitle),
+                        preference = preferences.migrationDeepSearchMode,
+                    )
+                    MigrationSheetSwitchItem(
+                        title = stringResource(MR.strings.migrationConfigScreen_prioritizeByChaptersTitle),
+                        subtitle = stringResource(MR.strings.migrationConfigScreen_prioritizeByChaptersSubtitle),
+                        preference = preferences.migrationPrioritizeByChapters,
+                    )
+                }
             }
             HorizontalDivider()
             Button(
                 onClick = {
                     val cleanedExtraSearchQuery = extraSearchQuery.trim().ifBlank { null }
-                    onStartMigration(cleanedExtraSearchQuery, migrationFlags.toEntryMigrationOptions())
+                    onStartMigration(
+                        cleanedExtraSearchQuery,
+                        migrationFlags.toEntryMigrationOptions(),
+                        if (initialAdvancedSearch) {
+                            SourceMigrationDiscoveryDepth.BROAD
+                        } else {
+                            SourceMigrationDiscoveryDepth.STANDARD
+                        },
+                    )
                 },
                 modifier = Modifier
                     .fillMaxWidth()

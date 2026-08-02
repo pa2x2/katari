@@ -46,7 +46,6 @@ import uy.kohesive.injekt.api.get
 data class EntryInteractionRuntimeDependencies(
     val activityTheme: EntryInteractionActivityTheme,
     val notificationActions: EntryDownloadNotificationActions,
-    val pageImageCache: EntryPageImageCache,
     val childGroupFilterDataSource: EntryChildGroupFilterDataSource,
     val mediaSessionIncognitoState: EntryMediaSessionIncognitoState,
     val basePreferenceStore: PreferenceStore,
@@ -145,7 +144,6 @@ private fun InjektRegistrar.installEntryInteractionHostServices(
 ) {
     addSingletonFactory<EntryInteractionActivityTheme> { dependencies.activityTheme }
     addSingletonFactory<EntryDownloadNotificationActions> { dependencies.notificationActions }
-    addSingletonFactory<EntryPageImageCache> { dependencies.pageImageCache }
     addSingletonFactory<EntryMediaSessionIncognitoState> { dependencies.mediaSessionIncognitoState }
     addSingletonFactory<EntryChildGroupFilterDataSource> { dependencies.childGroupFilterDataSource }
     addSingletonFactory { ReaderBasePreferences(dependencies.basePreferenceStore) }

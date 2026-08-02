@@ -33,6 +33,11 @@ object Notifications {
     const val CHANNEL_LIBRARY_ERROR = "library_errors_channel"
     const val ID_LIBRARY_ERROR = -102
 
+    /** Notification channels used by durable source migration work. */
+    private const val GROUP_SOURCE_MIGRATION = "group_source_migration"
+    const val CHANNEL_SOURCE_MIGRATION_PROGRESS = "source_migration_progress_channel"
+    const val CHANNEL_SOURCE_MIGRATION_COMPLETE = "source_migration_complete_channel"
+
     /**
      * Notification channel and ids used by the downloader.
      */
@@ -104,6 +109,9 @@ object Notifications {
                 buildNotificationChannelGroup(GROUP_LIBRARY) {
                     setName(context.stringResource(MR.strings.label_library))
                 },
+                buildNotificationChannelGroup(GROUP_SOURCE_MIGRATION) {
+                    setName(context.stringResource(MR.strings.label_migration))
+                },
                 buildNotificationChannelGroup(GROUP_APK_UPDATES) {
                     setName(context.stringResource(MR.strings.label_recent_updates))
                 },
@@ -124,6 +132,15 @@ object Notifications {
                     setName(context.stringResource(MR.strings.channel_errors))
                     setGroup(GROUP_LIBRARY)
                     setShowBadge(false)
+                },
+                buildNotificationChannel(CHANNEL_SOURCE_MIGRATION_PROGRESS, IMPORTANCE_LOW) {
+                    setName(context.stringResource(MR.strings.channel_progress))
+                    setGroup(GROUP_SOURCE_MIGRATION)
+                    setShowBadge(false)
+                },
+                buildNotificationChannel(CHANNEL_SOURCE_MIGRATION_COMPLETE, IMPORTANCE_DEFAULT) {
+                    setName(context.stringResource(MR.strings.channel_complete))
+                    setGroup(GROUP_SOURCE_MIGRATION)
                 },
                 buildNotificationChannel(EntryDownloadNotifications.CHANNEL_PROGRESS, IMPORTANCE_LOW) {
                     setName(context.stringResource(MR.strings.channel_progress))

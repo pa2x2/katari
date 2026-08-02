@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.ui.reader.loader
 
-import android.app.Application
 import eu.kanade.tachiyomi.data.database.models.toDomainChapter
 import eu.kanade.tachiyomi.source.entry.EntryImagePage
 import eu.kanade.tachiyomi.source.entry.EntryImageSource
@@ -20,7 +19,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.serialization.json.Json
+import mihon.entry.interactions.manga.page.MangaPageStore
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.entry.adapter.toSEntryChapter
@@ -38,7 +37,7 @@ import kotlin.math.min
 internal class EntryPageLoader(
     private val chapter: ReaderChapter,
     private val source: UnifiedSource,
-    private val chapterCache: ReaderPageCache = ReaderPageCache(Injekt.get<Application>(), Injekt.get<Json>()),
+    private val chapterCache: MangaPageStore = Injekt.get(),
 ) : PageLoader() {
 
     private val imageSource = source as EntryImageSource
@@ -76,18 +75,13 @@ internal class EntryPageLoader(
      * otherwise fallbacks to network.
      */
     override suspend fun getPages(): List<ReaderPage> {
-        val pages: List<EntryImagePage> = try {
-            chapterCache.getPageListFromCache(chapter.chapter.toDomainChapter()!!)
-                .map { EntryImagePage(it.index, it.url, it.imageUrl) }
-        } catch (e: Throwable) {
-            if (e is CancellationException) {
-                throw e
-            }
-            val media = source.getMedia(chapter.chapter.toDomainChapter()!!.toEntryChapter().toSEntryChapter())
+        val domainChapter = chapter.chapter.toDomainChapter()!!
+        val pages = chapterCache.getOrPutPageList(domainChapter) {
+            val media = source.getMedia(domainChapter.toEntryChapter().toSEntryChapter())
             check(media is EntryMedia.ImagePages) {
                 "Source ${source.name} did not return image pages"
             }
-            media.pages
+            media.pages.map { page -> Page(page.index, page.url, page.imageUrl) }
         }
         return pages.mapIndexed { index, page ->
             // Don't trust sources and use our own indexing
@@ -98,7 +92,11 @@ internal class EntryPageLoader(
     /**
      * Loads a page through the queue. Handles re-enqueueing pages if they were evicted from the cache.
      */
-    override suspend fun loadPage(page: ReaderPage) = withIOContext {
+    override suspend fun loadPage(page: ReaderPage) {
+        loadPage(page, preloadSize)
+    }
+
+    override suspend fun loadPage(page: ReaderPage, preloadCount: Int) = withIOContext {
         val imageUrl = page.imageUrl
 
         // Check if the image has been deleted
@@ -111,7 +109,7 @@ internal class EntryPageLoader(
             page.status = Page.State.Queue
         }
 
-        val queuedPages = enqueuePageAndNextPages(page, PriorityPage.DEFAULT)
+        val queuedPages = enqueuePageAndNextPages(page, PriorityPage.DEFAULT, preloadCount)
 
         suspendCancellableCoroutine<Nothing> { continuation ->
             continuation.invokeOnCancellation {
@@ -129,6 +127,24 @@ internal class EntryPageLoader(
             page.status = Page.State.Queue
         }
         enqueuePageAndNextPages(page, PriorityPage.ADJACENT)
+    }
+
+    override fun preloadPages(pages: List<ReaderPage>) {
+        enqueuePages(pages)
+    }
+
+    override fun setPreloadPages(pages: List<ReaderPage>) {
+        val requestedPages = pages.toSet()
+        queue.removeAll { it.priority == PriorityPage.ADJACENT && it.page !in requestedPages }
+        val alreadyQueued = queue.mapTo(mutableSetOf(), PriorityPage::page)
+        enqueuePages(pages.filterNot(alreadyQueued::contains))
+    }
+
+    private fun enqueuePages(pages: List<ReaderPage>) {
+        pages.forEach { page ->
+            if (page.status is Page.State.Error) page.status = Page.State.Queue
+            if (page.status == Page.State.Queue) queue.offer(PriorityPage(page, PriorityPage.ADJACENT))
+        }
     }
 
     /**
@@ -169,6 +185,7 @@ internal class EntryPageLoader(
      * @return a list of [PriorityPage] that were added to the [queue]
      */
     private fun preloadNextPages(currentPage: ReaderPage, amount: Int): List<PriorityPage> {
+        if (amount <= 0) return emptyList()
         val pageIndex = currentPage.index
         val pages = currentPage.chapter.pages ?: return emptyList()
         if (pageIndex == pages.lastIndex) return emptyList()
@@ -187,12 +204,13 @@ internal class EntryPageLoader(
     private fun enqueuePageAndNextPages(
         page: ReaderPage,
         priority: Int,
+        preloadCount: Int = preloadSize,
     ): List<PriorityPage> {
         val queuedPages = mutableListOf<PriorityPage>()
         if (page.status == Page.State.Queue) {
             queuedPages += PriorityPage(page, priority).also(queue::offer)
         }
-        queuedPages += preloadNextPages(page, preloadSize)
+        queuedPages += preloadNextPages(page, preloadCount)
         return queuedPages
     }
 
@@ -210,13 +228,13 @@ internal class EntryPageLoader(
             }
             val imageUrl = page.imageUrl!!
 
-            if (force || !chapterCache.isImageInCache(imageUrl)) {
-                page.status = Page.State.DownloadImage
-                val imageResponse = imageSource.getImage(page.toEntryImagePage(), page)
-                chapterCache.putImageToCache(imageUrl, imageResponse)
-            }
-
-            page.stream = { chapterCache.getImageFile(imageUrl).inputStream() }
+            val imageFile = chapterCache.getOrPutImage(
+                imageUrl = imageUrl,
+                force = force,
+                onFetch = { page.status = Page.State.DownloadImage },
+                fetch = { imageSource.getImage(page.toEntryImagePage(), page) },
+            )
+            page.stream = imageFile::inputStream
             page.status = Page.State.Ready
         } catch (e: Throwable) {
             page.status = Page.State.Error(e)

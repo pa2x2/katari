@@ -184,12 +184,9 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
         return when (val view = pageView) {
             is SubsamplingScaleImageView -> {
                 if (!view.isReady) return false
-                RectF().run {
-                    view.getPanRemaining(this)
-                    left > 1 || right > 1 || top > 1 || bottom > 1
-                }
+                isScaleZoomed(view.scale, view.minScale)
             }
-            is PhotoView -> view.scale > 1F
+            is PhotoView -> isScaleZoomed(view.scale, view.minimumScale)
             else -> false
         }
     }
@@ -448,3 +445,8 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
 }
 
 private const val MAX_ZOOM_SCALE = 5F
+private const val ZOOM_SCALE_TOLERANCE = 0.001F
+
+internal fun isScaleZoomed(scale: Float, minimumScale: Float): Boolean {
+    return scale > minimumScale * (1F + ZOOM_SCALE_TOLERANCE)
+}

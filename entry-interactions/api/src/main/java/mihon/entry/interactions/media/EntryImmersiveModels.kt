@@ -19,7 +19,7 @@ fun interface EntryImmersiveRenderer {
         controlsVisible: Boolean,
         controlsBottomInset: Dp,
         onToggleControls: () -> Unit,
-        onZoomStateChange: (Boolean) -> Unit,
+        onPagingBlockedChange: (Boolean) -> Unit,
         onProgress: (EntryImmersiveProgress) -> Unit,
     )
 }

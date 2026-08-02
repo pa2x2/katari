@@ -4,9 +4,8 @@ import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.model.Page
-import eu.kanade.tachiyomi.ui.reader.loader.ReaderPreviewLoader
+import eu.kanade.tachiyomi.ui.reader.loader.ReaderPageSessionLoader
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
-import eu.kanade.tachiyomi.ui.reader.model.toReaderChapter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
@@ -72,12 +71,7 @@ internal class MangaPreviewInteraction(
     ): EntryPreviewHandle {
         entry.requireManga()
         requireNotNull(chapter) { "Manga previews require a chapter" }
-        val readerChapter = ReaderChapter(
-            chapter = chapter.toReaderChapter(),
-            manga = entry,
-        )
-        readerChapter.ref()
-        ReaderPreviewLoader(context).loadChapter(entry, readerChapter)
+        val readerChapter = ReaderPageSessionLoader(context).load(entry, chapter)
 
         return EntryPreviewHandle(
             entryType = EntryType.MANGA,

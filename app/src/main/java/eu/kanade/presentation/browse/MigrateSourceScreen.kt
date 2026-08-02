@@ -1,6 +1,7 @@
 package eu.kanade.presentation.browse
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,10 +11,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material.icons.outlined.ArrowUpward
+import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Numbers
 import androidx.compose.material.icons.outlined.SortByAlpha
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,6 +30,7 @@ import eu.kanade.presentation.browse.components.BaseSourceItem
 import eu.kanade.presentation.browse.components.SourceIcon
 import eu.kanade.tachiyomi.ui.browse.migration.sources.MigrateSourceScreenModel
 import eu.kanade.tachiyomi.util.system.copyToClipboard
+import mihon.feature.migration.session.model.SourceMigrationSessionStage
 import tachiyomi.domain.source.model.Source
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.Badge
@@ -46,6 +51,7 @@ fun MigrateSourceScreen(
     state: MigrateSourceScreenModel.State,
     contentPadding: PaddingValues,
     onClickItem: (Source) -> Unit,
+    onClickActiveSession: (MigrateSourceScreenModel.ActiveSession) -> Unit,
     onToggleSortingDirection: () -> Unit,
     onToggleSortingMode: () -> Unit,
 ) {
@@ -59,8 +65,10 @@ fun MigrateSourceScreen(
         else ->
             MigrateSourceList(
                 list = state.items,
+                activeSessions = state.activeSessions,
                 contentPadding = contentPadding,
                 onClickItem = onClickItem,
+                onClickActiveSession = onClickActiveSession,
                 onLongClickItem = { source ->
                     val sourceId = source.id.toString()
                     context.copyToClipboard(sourceId, sourceId)
@@ -76,8 +84,10 @@ fun MigrateSourceScreen(
 @Composable
 private fun MigrateSourceList(
     list: List<Pair<Source, Long>>,
+    activeSessions: List<MigrateSourceScreenModel.ActiveSession>,
     contentPadding: PaddingValues,
     onClickItem: (Source) -> Unit,
+    onClickActiveSession: (MigrateSourceScreenModel.ActiveSession) -> Unit,
     onLongClickItem: (Source) -> Unit,
     sortingMode: SetMigrateSorting.Mode,
     onToggleSortingMode: () -> Unit,
@@ -87,59 +97,113 @@ private fun MigrateSourceList(
     ScrollbarLazyColumn(
         contentPadding = contentPadding + topSmallPaddingValues,
     ) {
-        stickyHeader(key = STICKY_HEADER_KEY_PREFIX) {
-            Row(
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.background)
-                    .padding(start = MaterialTheme.padding.medium),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
+        if (activeSessions.isNotEmpty()) {
+            item(key = "active-migrations-header") {
                 Text(
-                    text = stringResource(MR.strings.migration_selection_prompt),
-                    modifier = Modifier.weight(1f),
+                    text = stringResource(MR.strings.sourceMigration_activeHeader),
                     style = MaterialTheme.typography.header,
+                    modifier = Modifier.padding(MaterialTheme.padding.medium),
                 )
-
-                IconButton(onClick = onToggleSortingMode) {
-                    when (sortingMode) {
-                        SetMigrateSorting.Mode.ALPHABETICAL -> Icon(
-                            Icons.Outlined.SortByAlpha,
-                            contentDescription = stringResource(MR.strings.action_sort_alpha),
-                        )
-                        SetMigrateSorting.Mode.TOTAL -> Icon(
-                            Icons.Outlined.Numbers,
-                            contentDescription = stringResource(MR.strings.action_sort_count),
-                        )
-                    }
-                }
-                IconButton(onClick = onToggleSortingDirection) {
-                    when (sortingDirection) {
-                        SetMigrateSorting.Direction.ASCENDING -> Icon(
-                            Icons.Outlined.ArrowUpward,
-                            contentDescription = stringResource(MR.strings.action_asc),
-                        )
-                        SetMigrateSorting.Direction.DESCENDING -> Icon(
-                            Icons.Outlined.ArrowDownward,
-                            contentDescription = stringResource(MR.strings.action_desc),
-                        )
-                    }
+            }
+            items(
+                items = activeSessions,
+                key = { session -> "active-migration-${session.id.value}" },
+            ) { session ->
+                ListItem(
+                    modifier = Modifier.clickable { onClickActiveSession(session) },
+                    supportingContent = {
+                        Text(text = sourceMigrationStageLabel(session.stage))
+                    },
+                    trailingContent = {
+                        Icon(imageVector = Icons.Outlined.ChevronRight, contentDescription = null)
+                    },
+                    colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.background),
+                ) {
+                    Text(
+                        text = session.sourceName,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
             }
         }
 
-        items(
-            items = list,
-            key = { (source, _) -> "migrate-${source.id}" },
-        ) { (source, count) ->
-            MigrateSourceItem(
-                modifier = Modifier.animateItem(),
-                source = source,
-                count = count,
-                onClickItem = { onClickItem(source) },
-                onLongClickItem = { onLongClickItem(source) },
-            )
+        if (list.isNotEmpty()) {
+            stickyHeader(key = STICKY_HEADER_KEY_PREFIX) {
+                Row(
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.background)
+                        .padding(start = MaterialTheme.padding.medium),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = stringResource(MR.strings.migration_selection_prompt),
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.header,
+                    )
+
+                    IconButton(onClick = onToggleSortingMode) {
+                        when (sortingMode) {
+                            SetMigrateSorting.Mode.ALPHABETICAL -> Icon(
+                                Icons.Outlined.SortByAlpha,
+                                contentDescription = stringResource(MR.strings.action_sort_alpha),
+                            )
+                            SetMigrateSorting.Mode.TOTAL -> Icon(
+                                Icons.Outlined.Numbers,
+                                contentDescription = stringResource(MR.strings.action_sort_count),
+                            )
+                        }
+                    }
+                    IconButton(onClick = onToggleSortingDirection) {
+                        when (sortingDirection) {
+                            SetMigrateSorting.Direction.ASCENDING -> Icon(
+                                Icons.Outlined.ArrowUpward,
+                                contentDescription = stringResource(MR.strings.action_asc),
+                            )
+                            SetMigrateSorting.Direction.DESCENDING -> Icon(
+                                Icons.Outlined.ArrowDownward,
+                                contentDescription = stringResource(MR.strings.action_desc),
+                            )
+                        }
+                    }
+                }
+            }
+
+            items(
+                items = list,
+                key = { (source, _) -> "migrate-${source.id}" },
+            ) { (source, count) ->
+                MigrateSourceItem(
+                    modifier = Modifier.animateItem(),
+                    source = source,
+                    count = count,
+                    onClickItem = { onClickItem(source) },
+                    onLongClickItem = { onLongClickItem(source) },
+                )
+            }
         }
     }
+}
+
+@Composable
+private fun sourceMigrationStageLabel(stage: SourceMigrationSessionStage): String {
+    return stringResource(
+        when (stage) {
+            SourceMigrationSessionStage.DISCOVERY_QUEUED,
+            SourceMigrationSessionStage.DISCOVERING,
+            -> MR.strings.sourceMigration_findingReplacements
+            SourceMigrationSessionStage.DISCOVERY_PAUSED -> MR.strings.sourceMigration_discoveryPaused
+            SourceMigrationSessionStage.REVIEW_REQUIRED -> MR.strings.sourceMigration_readyToReview
+            SourceMigrationSessionStage.EXECUTION_QUEUED,
+            SourceMigrationSessionStage.EXECUTING,
+            -> MR.strings.sourceMigration_migrating
+            SourceMigrationSessionStage.EXECUTION_PAUSED -> MR.strings.sourceMigration_executionPaused
+            SourceMigrationSessionStage.DRAFT -> MR.strings.sourceMigration_preparing
+            SourceMigrationSessionStage.COMPLETED -> MR.strings.completed
+            SourceMigrationSessionStage.CANCELLED -> MR.strings.cancelled
+            SourceMigrationSessionStage.FAILED -> MR.strings.sourceMigration_failed
+        },
+    )
 }
 
 @Composable

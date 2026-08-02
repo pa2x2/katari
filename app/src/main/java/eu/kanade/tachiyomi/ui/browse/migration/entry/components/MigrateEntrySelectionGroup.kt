@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -25,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.ui.browse.migration.entry.models.MigrationEntrySelectionAvailability
 import eu.kanade.tachiyomi.ui.browse.migration.entry.models.MigrationEntrySelectionGroup
+import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.pluralStringResource
@@ -144,7 +146,8 @@ fun MigrateEntrySelectionGroup(
                             MigrationEntrySelectionAvailability.UNAVAILABLE,
                             -> {
                                 MigrationEntryMergeContextItem(
-                                    title = member.entry.displayTitle,
+                                    entry = member.entry,
+                                    itemOrientation = itemOrientation,
                                     sourceName = member.sourceName,
                                     mergeRole = stringResource(MR.strings.label_member),
                                     unavailable = member.availability ==
@@ -196,7 +199,8 @@ private fun MigrationEntryTreeChild(
 
 @Composable
 private fun MigrationEntryMergeContextItem(
-    title: String,
+    entry: Entry,
+    itemOrientation: EntryItemOrientation,
     sourceName: String,
     mergeRole: String,
     unavailable: Boolean,
@@ -206,16 +210,23 @@ private fun MigrationEntryMergeContextItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .heightIn(min = 96.dp)
             .clickable(onClick = onInspect)
-            .padding(MaterialTheme.padding.medium),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        MigrateEntrySelectionCover(
+            entry = entry,
+            itemOrientation = itemOrientation,
+            onInspect = onInspect,
+        )
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
         ) {
             Text(
-                text = title,
+                text = entry.displayTitle,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodyMedium,

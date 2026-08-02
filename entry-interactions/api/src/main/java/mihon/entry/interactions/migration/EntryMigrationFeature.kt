@@ -15,6 +15,10 @@ interface EntryMigrationFeature {
 
     suspend fun refreshTarget(intent: EntryMigrationTargetRefreshIntent): EntryMigrationTargetRefreshResult
 
+    suspend fun reconcileOperation(
+        intent: EntryMigrationOperationIntent,
+    ): EntryMigrationOperationReconciliationResult
+
     suspend fun prepare(intent: EntryMigrationPrepareIntent): EntryMigrationPreparationResult
 
     suspend fun execute(intent: EntryMigrationExecuteIntent): EntryMigrationExecutionResult

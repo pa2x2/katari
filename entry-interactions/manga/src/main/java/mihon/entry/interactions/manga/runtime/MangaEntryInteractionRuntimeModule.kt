@@ -6,12 +6,14 @@ import mihon.entry.interactions.manga.download.DownloadCache
 import mihon.entry.interactions.manga.download.DownloadManager
 import mihon.entry.interactions.manga.download.DownloadProvider
 import mihon.entry.interactions.manga.media.session.MangaMediaSessionProcessor
+import mihon.entry.interactions.manga.page.MangaPageStore
 import mihon.entry.interactions.manga.reader.addMangaReaderImageComponents
 import mihon.entry.interactions.media.DefaultEntryViewerSettingsProvider
 import mihon.entry.interactions.media.ENTRY_VIEWER_SETTINGS_LEGACY_PREFERENCE_OWNER_GROUP_ID
 import mihon.entry.interactions.media.session.EntryMediaSessionEventSink
 import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import mihon.entry.interactions.runtime.EntryImageComponentInstaller
+import mihon.entry.interactions.runtime.EntryPageImageCache
 import mihon.entry.interactions.runtime.EntryTypeRuntimeContribution
 import mihon.entry.interactions.runtime.EntryTypeRuntimeModule
 import mihon.entry.interactions.settings.EntryInteractionPreferences
@@ -70,6 +72,8 @@ fun mangaEntryTypeRuntimeModule(profilePreferenceOwners: ProfilePreferenceOwnerI
 private const val LEGACY_MANGA_VIEWER_MASK = 0x3FL
 
 private fun InjektRegistrar.addMangaEntryInteractionRuntime(app: Application): () -> Unit {
+    addSingletonFactory { MangaPageStore(app, get()) }
+    addSingletonFactory<EntryPageImageCache> { get<MangaPageStore>() }
     addSingletonFactory { DownloadProvider(app) }
     addSingletonFactory { DownloadManager(app) }
     addSingletonFactory { DownloadCache(app) }
