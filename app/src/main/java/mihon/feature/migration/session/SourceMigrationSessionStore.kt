@@ -75,6 +75,7 @@ class SourceMigrationSessionStore(
                     sourceUrl = entry.url,
                     sourceThumbnailUrl = entry.thumbnailUrl,
                     state = SourceMigrationItemState.DISCOVERY_QUEUED.name,
+                    searchDepth = draft.initialDiscoveryDepth.name,
                     operationKey = UUID.randomUUID().toString(),
                     updatedAt = now,
                 )
@@ -227,7 +228,8 @@ class SourceMigrationSessionStore(
         return handler.await(inTransaction = true) {
             val session = source_migration_sessionsQueries.sessionById(sessionId.value).awaitAsOneOrNull()
                 ?: return@await false
-            if (session.stage != SourceMigrationSessionStage.REVIEW_REQUIRED.name) return@await false
+            val stage = SourceMigrationSessionStage.valueOf(session.stage)
+            if (stage !in EDITABLE_PREPARATION_STAGES) return@await false
 
             source_migration_sessionsQueries.queueItemDiscovery(
                 searchDepth = depth.name,
@@ -241,6 +243,43 @@ class SourceMigrationSessionStore(
                     item.source_entry_id == sourceEntryId &&
                         item.state == SourceMigrationItemState.DISCOVERY_QUEUED.name
                 }
+            if (!queued) return@await false
+
+            if (stage == SourceMigrationSessionStage.DISCOVERY_PAUSED) {
+                source_migration_sessionsQueries.clearCancellationRequest(now, sessionId.value)
+            }
+            if (stage != SourceMigrationSessionStage.DISCOVERY_QUEUED) {
+                source_migration_sessionsQueries.transitionStage(
+                    newStage = SourceMigrationSessionStage.DISCOVERY_QUEUED.name,
+                    updatedAt = now,
+                    completedAt = null,
+                    sessionId = sessionId.value,
+                    expectedStage = stage.name,
+                )
+            }
+            source_migration_sessionsQueries.sessionById(sessionId.value).awaitAsOneOrNull()
+                ?.stage == SourceMigrationSessionStage.DISCOVERY_QUEUED.name
+        }
+    }
+
+    suspend fun queueUnresolvedDiscovery(
+        sessionId: SourceMigrationSessionId,
+        depth: SourceMigrationDiscoveryDepth,
+    ): Boolean {
+        val now = clockMillis()
+        return handler.await(inTransaction = true) {
+            val session = source_migration_sessionsQueries.sessionById(sessionId.value).awaitAsOneOrNull()
+                ?: return@await false
+            if (session.stage != SourceMigrationSessionStage.REVIEW_REQUIRED.name) return@await false
+
+            source_migration_sessionsQueries.queueUnresolvedItemDiscovery(
+                searchDepth = depth.name,
+                updatedAt = now,
+                sessionId = sessionId.value,
+            )
+            val queued = source_migration_sessionsQueries.itemsBySession(sessionId.value)
+                .awaitAsList()
+                .any { item -> item.state == SourceMigrationItemState.DISCOVERY_QUEUED.name }
             if (!queued) return@await false
 
             source_migration_sessionsQueries.transitionStage(
@@ -370,7 +409,9 @@ class SourceMigrationSessionStore(
         return handler.await(inTransaction = true) {
             val session = source_migration_sessionsQueries.sessionById(sessionId.value).awaitAsOneOrNull()
                 ?: return@await false
-            if (session.stage != SourceMigrationSessionStage.REVIEW_REQUIRED.name) return@await false
+            if (SourceMigrationSessionStage.valueOf(session.stage) !in EDITABLE_PREPARATION_STAGES) {
+                return@await false
+            }
             source_migration_sessionsQueries.selectItemTarget(
                 state = state.name,
                 included = state == SourceMigrationItemState.READY,
@@ -389,6 +430,33 @@ class SourceMigrationSessionStore(
                 .awaitAsList()
                 .firstOrNull { item -> item.source_entry_id == sourceEntryId }
                 ?.let { item -> item.selected_target_entry_id == targetEntryId && item.state == state.name }
+                ?: false
+        }
+    }
+
+    suspend fun clearTarget(
+        sessionId: SourceMigrationSessionId,
+        sourceEntryId: Long,
+    ): Boolean {
+        return handler.await(inTransaction = true) {
+            val session = source_migration_sessionsQueries.sessionById(sessionId.value).awaitAsOneOrNull()
+                ?: return@await false
+            if (SourceMigrationSessionStage.valueOf(session.stage) !in EDITABLE_PREPARATION_STAGES) {
+                return@await false
+            }
+
+            source_migration_sessionsQueries.clearItemTarget(
+                updatedAt = clockMillis(),
+                sessionId = sessionId.value,
+                sourceEntryId = sourceEntryId,
+            )
+            source_migration_sessionsQueries.itemsBySession(sessionId.value)
+                .awaitAsList()
+                .firstOrNull { item -> item.source_entry_id == sourceEntryId }
+                ?.let { item ->
+                    item.selected_target_entry_id == null &&
+                        item.state == SourceMigrationItemState.NO_MATCH.name
+                }
                 ?: false
         }
     }
@@ -494,6 +562,13 @@ class SourceMigrationSessionStore(
             SourceMigrationItemState.EXECUTION_FAILED,
             SourceMigrationItemState.CONFLICT,
             SourceMigrationItemState.CANCELLED,
+        )
+
+        val EDITABLE_PREPARATION_STAGES = setOf(
+            SourceMigrationSessionStage.DISCOVERY_QUEUED,
+            SourceMigrationSessionStage.DISCOVERING,
+            SourceMigrationSessionStage.DISCOVERY_PAUSED,
+            SourceMigrationSessionStage.REVIEW_REQUIRED,
         )
     }
 }

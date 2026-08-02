@@ -9,6 +9,7 @@ data class SourceMigrationSessionDraft(
     val groups: List<SourceMigrationSessionGroupDraft>,
     val targetSourceIds: List<Long>,
     val selectedOptions: Set<EntryMigrationOption>,
+    val initialDiscoveryDepth: SourceMigrationDiscoveryDepth = SourceMigrationDiscoveryDepth.STANDARD,
 ) {
     val entries = groups.flatMap { group ->
         group.members.filter { it.id in group.selectedEntryIds }

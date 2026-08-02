@@ -305,6 +305,7 @@ INSERT INTO source_migration_items(
     source_url,
     source_thumbnail_url,
     state,
+    search_depth,
     included,
     operation_key,
     updated_at
@@ -318,6 +319,7 @@ VALUES (
     :sourceUrl,
     :sourceThumbnailUrl,
     :state,
+    :searchDepth,
     0,
     :operationKey,
     :updatedAt
@@ -440,6 +442,25 @@ WHERE session_id = :sessionId
 AND source_entry_id = :sourceEntryId
 AND state IN ('READY', 'NEEDS_REVIEW', 'NO_MATCH', 'DISCOVERY_FAILED', 'CONFLICT');
 
+queueUnresolvedItemDiscovery:
+UPDATE source_migration_items
+SET state = 'DISCOVERY_QUEUED',
+    search_depth = :searchDepth,
+    included = 0,
+    selected_target_entry_id = NULL,
+    target_source_id = NULL,
+    target_title = NULL,
+    target_url = NULL,
+    target_thumbnail_url = NULL,
+    match_kind = NULL,
+    available_options = '',
+    error_code = NULL,
+    error_message = NULL,
+    updated_at = :updatedAt
+WHERE session_id = :sessionId
+AND selected_target_entry_id IS NULL
+AND state IN ('NO_MATCH', 'DISCOVERY_FAILED', 'CONFLICT');
+
 recordItemDiscovery:
 UPDATE source_migration_items
 SET state = :state,
@@ -494,6 +515,25 @@ SET state = :state,
 WHERE session_id = :sessionId
 AND source_entry_id = :sourceEntryId
 AND state IN ('READY', 'NEEDS_REVIEW', 'NO_MATCH', 'DISCOVERY_FAILED', 'CONFLICT');
+
+clearItemTarget:
+UPDATE source_migration_items
+SET state = 'NO_MATCH',
+    included = 0,
+    selected_target_entry_id = NULL,
+    target_source_id = NULL,
+    target_title = NULL,
+    target_url = NULL,
+    target_thumbnail_url = NULL,
+    match_kind = NULL,
+    available_options = '',
+    error_code = NULL,
+    error_message = NULL,
+    updated_at = :updatedAt
+WHERE session_id = :sessionId
+AND source_entry_id = :sourceEntryId
+AND selected_target_entry_id IS NOT NULL
+AND state IN ('READY', 'NEEDS_REVIEW', 'CONFLICT');
 
 recordItemPlanningConflict:
 UPDATE source_migration_items

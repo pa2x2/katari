@@ -29,7 +29,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AdaptiveSheet
+import eu.kanade.tachiyomi.ui.entry.EntryScreen
+import mihon.feature.migration.review.components.SourceMigrationEntryDetailsButton
 import mihon.feature.migration.review.components.SourceMigrationEntryListItem
 import mihon.feature.migration.session.model.SourceMigrationMatchKind
 import mihon.feature.migration.session.model.SourceMigrationSessionId
@@ -38,6 +42,7 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.Badge
 import tachiyomi.presentation.core.components.BadgeGroup
 import tachiyomi.presentation.core.components.material.Button
+import tachiyomi.presentation.core.components.material.TextButton
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.theme.header
@@ -48,13 +53,23 @@ internal fun Screen.SourceMigrationCandidateSheet(
     item: SourceMigrationSessionItem,
     onDismissRequest: () -> Unit,
 ) {
+    val navigator = LocalNavigator.currentOrThrow
     val screenModel = rememberScreenModel(tag = item.sourceEntryId.toString()) {
         SourceMigrationCandidateSheetModel(sessionId, item.sourceEntryId)
     }
     val state by screenModel.state.collectAsState()
 
-    LaunchedEffect(state.completed) {
-        if (state.completed) onDismissRequest()
+    LaunchedEffect(Unit) {
+        screenModel.events.collect {
+            onDismissRequest()
+        }
+    }
+
+    LaunchedEffect(state.detailsEntryId) {
+        state.detailsEntryId?.let { entryId ->
+            screenModel.consumeDetailsEntry()
+            navigator.push(EntryScreen(entryId, fromSource = true))
+        }
     }
 
     AdaptiveSheet(onDismissRequest = onDismissRequest) {
@@ -93,6 +108,7 @@ internal fun Screen.SourceMigrationCandidateSheet(
                                     candidate.candidate.targetUrl == item.targetUrl,
                                 enabled = !state.isWorking,
                                 onClick = { screenModel.select(candidate.candidate) },
+                                onDetailsClick = { screenModel.openDetails(candidate.candidate) },
                             )
                             if (index < state.candidates.lastIndex) HorizontalDivider()
                         }
@@ -108,6 +124,17 @@ internal fun Screen.SourceMigrationCandidateSheet(
                 )
             }
             HorizontalDivider()
+            if (item.selectedTargetEntryId != null) {
+                TextButton(
+                    onClick = screenModel::clearSelection,
+                    enabled = !state.isWorking,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = MaterialTheme.padding.medium),
+                ) {
+                    Text(text = stringResource(MR.strings.sourceMigrationReview_clearReplacement))
+                }
+            }
             Button(
                 onClick = screenModel::searchAgain,
                 enabled = !state.isWorking,
@@ -141,6 +168,7 @@ private fun SourceMigrationCandidateRow(
     selected: Boolean,
     enabled: Boolean,
     onClick: () -> Unit,
+    onDetailsClick: () -> Unit,
 ) {
     SourceMigrationEntryListItem(
         title = item.candidate.targetTitle,
@@ -171,16 +199,20 @@ private fun SourceMigrationCandidateRow(
                 }
             }
         },
-        trailingContent = if (selected) {
-            {
-                Icon(
-                    imageVector = Icons.Filled.Check,
-                    contentDescription = stringResource(MR.strings.selected),
-                    tint = MaterialTheme.colorScheme.primary,
+        trailingContent = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (selected) {
+                    Icon(
+                        imageVector = Icons.Filled.Check,
+                        contentDescription = stringResource(MR.strings.selected),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+                SourceMigrationEntryDetailsButton(
+                    onClick = onDetailsClick,
+                    enabled = enabled,
                 )
             }
-        } else {
-            null
         },
     )
 }

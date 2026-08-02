@@ -1639,6 +1639,7 @@
     <string name="sourceMigrationReview.title">Review replacements</string>
     <string name="sourceMigrationReview.subtitle">%1$s · %2$d selected entries</string>
     <string name="sourceMigrationReview.filterAll">All %1$d</string>
+    <string name="sourceMigrationReview.filterReady">Ready %1$d</string>
     <string name="sourceMigrationReview.filterFound">Found %1$d</string>
     <string name="sourceMigrationReview.filterSearching">Searching %1$d</string>
     <string name="sourceMigrationReview.filterNeedsReview">Needs review %1$d</string>
@@ -1648,6 +1649,8 @@
     <string name="sourceMigrationReview.notSelected">Not selected %1$d</string>
     <string name="sourceMigrationReview.chooseReplacement">Choose replacement</string>
     <string name="sourceMigrationReview.searchAgain">Search again</string>
+    <string name="sourceMigrationReview.searchUnresolved">Search unresolved again</string>
+    <string name="sourceMigrationReview.clearReplacement">Remove selected match</string>
     <string name="sourceMigrationReview.replacementRejected">This entry cannot be used as a replacement.</string>
     <string name="sourceMigrationReview.exactMatch">Exact match</string>
     <string name="sourceMigrationReview.similarMatch">Similar match</string>
@@ -1656,6 +1659,8 @@
     <string name="sourceMigrationReview.needsReview">Review</string>
     <string name="sourceMigrationReview.noMatchStatus">No match</string>
     <string name="sourceMigrationReview.searching">Searching</string>
+    <string name="sourceMigrationReview.searchingNow">Searching now</string>
+    <string name="sourceMigrationReview.queued">Queued</string>
     <string name="sourceMigrationReview.failed">Failed</string>
     <string name="sourceMigrationReview.migrating">Migrating</string>
     <string name="sourceMigrationReview.migrated">Migrated</string>
