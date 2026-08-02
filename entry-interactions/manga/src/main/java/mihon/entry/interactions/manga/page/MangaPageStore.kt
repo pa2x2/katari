@@ -1,14 +1,18 @@
-package eu.kanade.tachiyomi.ui.reader.loader
+package mihon.entry.interactions.manga.page
 
 import android.content.Context
+import android.text.format.Formatter
 import com.jakewharton.disklrucache.DiskLruCache
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.runInterruptible
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
 import logcat.LogPriority
+import mihon.entry.interactions.runtime.EntryPageImageCache
 import okhttp3.Response
 import okio.buffer
 import okio.sink
@@ -17,10 +21,10 @@ import tachiyomi.domain.chapter.model.Chapter
 import java.io.File
 import java.io.IOException
 
-internal class ReaderPageCache(
-    context: Context,
+internal class MangaPageStore(
+    private val context: Context,
     private val json: Json,
-) {
+) : EntryPageImageCache {
 
     private val diskCache = DiskLruCache.open(
         File(context.cacheDir, "chapter_disk_cache"),
@@ -28,11 +32,29 @@ internal class ReaderPageCache(
         PARAMETER_VALUE_COUNT,
         PARAMETER_CACHE_SIZE,
     )
+    private val entryLocksGuard = Mutex()
+    private val entryLocks = mutableMapOf<String, CacheEntryLock>()
+
+    override val readableSize: String
+        get() = Formatter.formatFileSize(context, DiskUtil.getDirectorySize(diskCache.directory))
 
     fun getPageListFromCache(chapter: Chapter): List<Page> {
         val key = DiskUtil.hashKeyForDisk(getKey(chapter))
         return diskCache.get(key).use {
             json.decodeFromString(it.getString(0))
+        }
+    }
+
+    suspend fun getOrPutPageList(
+        chapter: Chapter,
+        fetch: suspend () -> List<Page>,
+    ): List<Page> {
+        return withCacheEntryLock("page-list:${getKey(chapter)}") {
+            try {
+                getPageListFromCache(chapter)
+            } catch (_: Exception) {
+                fetch().also { putPageListToCache(chapter, it) }
+            }
         }
     }
 
@@ -58,7 +80,7 @@ internal class ReaderPageCache(
         }
     }
 
-    fun isImageInCache(imageUrl: String): Boolean {
+    override fun isImageInCache(imageUrl: String): Boolean {
         return try {
             val key = DiskUtil.hashKeyForDisk(imageUrl)
             val inJournal = diskCache.get(key).use { it != null }
@@ -72,42 +94,49 @@ internal class ReaderPageCache(
         }
     }
 
-    fun getImageFile(imageUrl: String): File {
+    override fun getImageFile(imageUrl: String): File {
         val imageName = DiskUtil.hashKeyForDisk(imageUrl) + ".0"
         return File(diskCache.directory, imageName)
     }
 
-    @Throws(IOException::class)
-    fun putImageToCache(imageUrl: String, response: Response) {
-        var editor: DiskLruCache.Editor? = null
+    suspend fun getOrPutImage(
+        imageUrl: String,
+        force: Boolean,
+        onFetch: () -> Unit = {},
+        fetch: suspend () -> Response,
+    ): File {
+        return withCacheEntryLock("image:$imageUrl") {
+            if (!force && isImageInCache(imageUrl)) return@withCacheEntryLock getImageFile(imageUrl)
+            onFetch()
+            val response = fetch()
+            val coroutineContext = currentCoroutineContext()
+            runInterruptible {
+                putImageToCache(imageUrl, response, coroutineContext)
+            }
+            getImageFile(imageUrl)
+        }
+    }
 
-        try {
-            val key = DiskUtil.hashKeyForDisk(imageUrl)
-            editor = diskCache.edit(key) ?: return
-
-            response.body.source().use { input ->
-                editor.newOutputStream(0).sink().buffer().use {
-                    it.writeAll(input)
-                    it.flush()
+    override fun clear(): Int {
+        var deletedFiles = 0
+        diskCache.directory.listFiles()?.forEach { file ->
+            if (file.name != "journal" && !file.name.startsWith("journal.")) {
+                try {
+                    val key = file.name.substringBeforeLast(".")
+                    if (diskCache.remove(key)) deletedFiles++
+                } catch (e: Exception) {
+                    logcat(LogPriority.WARN, e) { "Failed to remove page cache entry" }
                 }
             }
-            diskCache.flush()
-            editor.commit()
-        } finally {
-            response.body.close()
-            editor?.abortUnlessCommitted()
         }
+        return deletedFiles
     }
 
-    @Throws(IOException::class)
-    suspend fun putImageToCacheCancellable(imageUrl: String, response: Response) {
-        val coroutineContext = currentCoroutineContext()
-        runInterruptible {
-            putImageToCacheCancellable(imageUrl, response, coroutineContext)
-        }
+    internal fun close() {
+        diskCache.close()
     }
 
-    private fun putImageToCacheCancellable(
+    private fun putImageToCache(
         imageUrl: String,
         response: Response,
         coroutineContext: kotlin.coroutines.CoroutineContext,
@@ -141,6 +170,25 @@ internal class ReaderPageCache(
     private fun getKey(chapter: Chapter): String {
         return "${chapter.mangaId}${chapter.url}"
     }
+
+    private suspend fun <T> withCacheEntryLock(key: String, block: suspend () -> T): T {
+        val lock = entryLocksGuard.withLock {
+            entryLocks.getOrPut(key, ::CacheEntryLock).also { it.references++ }
+        }
+        try {
+            return lock.mutex.withLock { block() }
+        } finally {
+            entryLocksGuard.withLock {
+                lock.references--
+                if (lock.references == 0) entryLocks.remove(key, lock)
+            }
+        }
+    }
+
+    private class CacheEntryLock(
+        val mutex: Mutex = Mutex(),
+        var references: Int = 0,
+    )
 }
 
 private const val PARAMETER_APP_VERSION = 1

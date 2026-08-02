@@ -1350,7 +1350,6 @@ private class EntryInteractionBoundaryRules(
         )
 
         private val SOURCE_MEDIA_RESOLUTION_ALLOWED_FILES = setOf(
-            "app/src/main/java/eu/kanade/tachiyomi/data/cache/MangaPageCache.kt",
             "domain/src/main/java/tachiyomi/domain/source/model/StubSource.kt",
         )
 

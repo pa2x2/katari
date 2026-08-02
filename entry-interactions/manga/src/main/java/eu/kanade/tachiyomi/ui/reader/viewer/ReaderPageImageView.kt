@@ -6,7 +6,6 @@ import android.graphics.RectF
 import android.graphics.drawable.Animatable
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import android.net.Uri
 import android.util.AttributeSet
 import android.view.GestureDetector
 import android.view.MotionEvent
@@ -44,7 +43,6 @@ import okio.BufferedSource
 import tachiyomi.core.common.util.system.ImageUtil
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import java.io.File
 
 /**
  * A wrapper view for showing page image.
@@ -171,17 +169,6 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
         }
     }
 
-    fun setImage(file: File, isAnimated: Boolean, config: Config) {
-        this.config = config
-        if (isAnimated) {
-            prepareAnimatedImageView()
-            setAnimatedImage(file, config)
-        } else {
-            prepareNonAnimatedImageView()
-            setNonAnimatedImage(file, config)
-        }
-    }
-
     fun recycle() = pageView?.let {
         when (it) {
             is SubsamplingScaleImageView -> it.recycle()
@@ -197,12 +184,9 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
         return when (val view = pageView) {
             is SubsamplingScaleImageView -> {
                 if (!view.isReady) return false
-                RectF().run {
-                    view.getPanRemaining(this)
-                    left > 1 || right > 1 || top > 1 || bottom > 1
-                }
+                isScaleZoomed(view.scale, view.minScale)
             }
-            is PhotoView -> view.scale > 1F
+            is PhotoView -> isScaleZoomed(view.scale, view.minimumScale)
             else -> false
         }
     }
@@ -362,10 +346,6 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
                     .build()
                     .let(context.imageLoader::enqueue)
             }
-            is File -> {
-                setImage(ImageSource.uri(context, Uri.fromFile(data)))
-                isVisible = true
-            }
             else -> {
                 throw IllegalArgumentException("Not implemented for class ${data::class.simpleName}")
             }
@@ -465,3 +445,8 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
 }
 
 private const val MAX_ZOOM_SCALE = 5F
+private const val ZOOM_SCALE_TOLERANCE = 0.001F
+
+internal fun isScaleZoomed(scale: Float, minimumScale: Float): Boolean {
+    return scale > minimumScale * (1F + ZOOM_SCALE_TOLERANCE)
+}

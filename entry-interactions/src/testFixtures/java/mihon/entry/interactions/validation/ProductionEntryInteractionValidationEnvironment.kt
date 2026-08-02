@@ -34,7 +34,6 @@ import mihon.entry.interactions.migration.host.EntryMigrationExecutionHost
 import mihon.entry.interactions.migration.host.EntryMigrationPreparationHost
 import mihon.entry.interactions.runtime.EntryInteractionComposition
 import mihon.entry.interactions.runtime.EntryInteractionRuntimeDependencies
-import mihon.entry.interactions.runtime.EntryPageImageCache
 import mihon.entry.interactions.runtime.addEntryInteractionRuntime
 import mihon.entry.interactions.runtime.production.EntryFeatureRuntimeInstallation
 import mihon.entry.interactions.runtime.production.validateInstalledEntryFeatureRuntimeModules
@@ -107,7 +106,6 @@ class ProductionEntryInteractionValidationEnvironment(
             dependencies = EntryInteractionRuntimeDependencies(
                 activityTheme = mockk(relaxed = true),
                 notificationActions = mockk<EntryDownloadNotificationActions>(relaxed = true),
-                pageImageCache = mockk(relaxed = true),
                 childGroupFilterDataSource = mockk(relaxed = true),
                 mediaSessionIncognitoState = mockk(relaxed = true),
                 basePreferenceStore = InMemoryPreferenceStore(),
@@ -190,7 +188,6 @@ class ProductionEntryInteractionValidationEnvironment(
         Injekt.addSingletonFactory<LibraryPreferences> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<SourceManager> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<EntryDownloadWorkController> { mockk(relaxed = true) }
-        Injekt.addSingletonFactory<EntryPageImageCache> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<EntryMediaSessionIncognitoState> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<EntryDownloadLifecycleEventSink> { mockk(relaxed = true) }
         Injekt.addSingletonFactory<EntryInteractionPreferences> { mockk(relaxed = true) }

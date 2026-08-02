@@ -12,13 +12,11 @@ import com.eygraber.sqldelight.androidx.driver.FileProvider
 import eu.kanade.domain.track.store.DelayedTrackingStore
 import eu.kanade.presentation.more.settings.screen.productionEntryViewerSettingsScreenProjectionResolver
 import eu.kanade.tachiyomi.data.cache.CoverCache
-import eu.kanade.tachiyomi.data.cache.MangaPageCache
 import eu.kanade.tachiyomi.data.entry.AppEntryChildGroupFilterDataSource
 import eu.kanade.tachiyomi.data.saver.ImageSaver
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.entry.AppEntryDownloadNotificationActions
 import eu.kanade.tachiyomi.entry.AppEntryMetadataChangeNotifier
-import eu.kanade.tachiyomi.entry.AppMangaPageImageCache
 import eu.kanade.tachiyomi.entry.AppMediaSessionIncognitoState
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.network.JavaScriptEngine
@@ -185,7 +183,6 @@ class AppModule(val app: Application) : InjektModule {
             ProtoBuf
         }
 
-        addSingletonFactory { MangaPageCache(app, get()) }
         addSingletonFactory { CoverCache(app) }
         addSingletonFactory<EntryMetadataChangeNotifier> { AppEntryMetadataChangeNotifier(get()) }
         addSingletonFactory { NetworkHelper(app, get()) }
@@ -201,7 +198,6 @@ class AppModule(val app: Application) : InjektModule {
         addSingletonFactory { TrackerManager(get(), get()) }
         addSingletonFactory { DelayedTrackingStore(app) }
 
-        val mangaPageImageCache = AppMangaPageImageCache(get())
         val mergeHost = AppEntryMergeHost(
             handler = get(),
             duplicateCandidates = AppEntryMergeDuplicateCandidateHost(get(), get<DuplicatePreferences>()),
@@ -247,7 +243,6 @@ class AppModule(val app: Application) : InjektModule {
             dependencies = EntryInteractionRuntimeDependencies(
                 activityTheme = EntryInteractionActivityTheme(ThemingDelegateImpl()::applyAppTheme),
                 notificationActions = AppEntryDownloadNotificationActions(),
-                pageImageCache = mangaPageImageCache,
                 childGroupFilterDataSource = AppEntryChildGroupFilterDataSource(get(), get(), get()),
                 mediaSessionIncognitoState = AppMediaSessionIncognitoState(get()),
                 basePreferenceStore = get<ProfileStore>().basePreferenceStore(),

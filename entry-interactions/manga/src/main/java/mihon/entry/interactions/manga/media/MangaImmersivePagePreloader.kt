@@ -1,29 +1,30 @@
 package mihon.entry.interactions.manga.media
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import kotlinx.coroutines.CancellationException
+import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import kotlin.math.min
 
 private const val MANGA_IMMERSIVE_PRELOAD_COUNT = 10
 
 @Composable
 internal fun MangaImmersivePagePreloader(
-    pages: List<MangaImmersivePage>,
+    pages: List<ReaderPage>,
     currentPage: Int,
     active: Boolean,
 ) {
-    LaunchedEffect(pages, currentPage, active) {
-        if (!active) return@LaunchedEffect
-        mangaImmersivePreloadIndexes(currentPage, pages.size).forEach { pageIndex ->
-            try {
-                pages[pageIndex].loadImage()
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Throwable) {
-                // A failed preload remains retryable when its page becomes visible.
-            }
+    val pageLoader = pages.firstOrNull()?.chapter?.pageLoader
+    LaunchedEffect(pageLoader, pages, currentPage, active) {
+        val preloadPages = if (active) {
+            mangaImmersivePreloadIndexes(currentPage, pages.size).map(pages::get)
+        } else {
+            emptyList()
         }
+        pageLoader?.setPreloadPages(preloadPages)
+    }
+    DisposableEffect(pageLoader) {
+        onDispose { pageLoader?.setPreloadPages(emptyList()) }
     }
 }
 
