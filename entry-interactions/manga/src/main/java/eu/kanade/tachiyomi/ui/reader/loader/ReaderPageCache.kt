@@ -4,6 +4,9 @@ import android.content.Context
 import com.jakewharton.disklrucache.DiskLruCache
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.util.storage.DiskUtil
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.runInterruptible
 import kotlinx.serialization.json.Json
 import logcat.LogPriority
 import okhttp3.Response
@@ -96,6 +99,45 @@ internal class ReaderPageCache(
         }
     }
 
+    @Throws(IOException::class)
+    suspend fun putImageToCacheCancellable(imageUrl: String, response: Response) {
+        val coroutineContext = currentCoroutineContext()
+        runInterruptible {
+            putImageToCacheCancellable(imageUrl, response, coroutineContext)
+        }
+    }
+
+    private fun putImageToCacheCancellable(
+        imageUrl: String,
+        response: Response,
+        coroutineContext: kotlin.coroutines.CoroutineContext,
+    ) {
+        var editor: DiskLruCache.Editor? = null
+
+        try {
+            val key = DiskUtil.hashKeyForDisk(imageUrl)
+            editor = diskCache.edit(key) ?: return
+
+            response.body.source().use { input ->
+                editor.newOutputStream(0).sink().buffer().use { output ->
+                    while (true) {
+                        coroutineContext.ensureActive()
+                        val bytesRead = input.read(output.buffer, DOWNLOAD_COPY_BUFFER_SIZE)
+                        if (bytesRead == -1L) break
+                        output.emitCompleteSegments()
+                    }
+                    output.flush()
+                }
+            }
+            coroutineContext.ensureActive()
+            diskCache.flush()
+            editor.commit()
+        } finally {
+            response.close()
+            editor?.abortUnlessCommitted()
+        }
+    }
+
     private fun getKey(chapter: Chapter): String {
         return "${chapter.mangaId}${chapter.url}"
     }
@@ -104,3 +146,4 @@ internal class ReaderPageCache(
 private const val PARAMETER_APP_VERSION = 1
 private const val PARAMETER_VALUE_COUNT = 1
 private const val PARAMETER_CACHE_SIZE = 100L * 1024 * 1024
+private const val DOWNLOAD_COPY_BUFFER_SIZE = 8_192L

@@ -7,6 +7,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.json.Json
 import mihon.entry.interactions.manga.state.mangaProgressState
 import mihon.entry.interactions.manga.state.pageIndex
 import mihon.entry.interactions.media.EntryImmersiveHandle
@@ -22,6 +23,8 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.progressResourceKey
 import tachiyomi.domain.entry.repository.EntryProgressRepository
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 
 internal class MangaImmersiveProcessor(
     private val entryProgressRepository: EntryProgressRepository? = null,
@@ -44,16 +47,26 @@ internal class MangaImmersiveProcessor(
             ?: error("Source ${source.name} does not support image pages")
         val media = source.getMedia(chapter.toSEntryChapter()) as? EntryMedia.ImagePages
             ?: error("Source ${source.name} did not return image pages")
-        val pages = media.pages.mapIndexed { index, page ->
-            val imageUrl = page.imageUrl ?: imageSource.getImageUrl(page)
-            MangaImmersivePage(
-                index = index,
-                imageUrl = imageUrl,
-                headers = imageSource.imageRequest(page, imageUrl).headers,
-            )
-        }
-        if (pages.isEmpty() || pages.all { it.imageUrl.isBlank() }) {
+        if (media.pages.isEmpty()) {
             error("No pages found")
+        }
+        val requestResolver = MangaImmersivePageRequestResolver(imageSource)
+        val pageLoader = MangaImmersivePageLoader(
+            imageSource = imageSource,
+            pageCache = lazy {
+                eu.kanade.tachiyomi.ui.reader.loader.ReaderPageCache(
+                    context = context.applicationContext,
+                    json = Injekt.get<Json>(),
+                )
+            },
+        )
+        val pages = media.pages.mapIndexed { index, page ->
+            MangaImmersivePage.unresolved(
+                index = index,
+                sourcePage = page,
+                requestResolver = requestResolver,
+                loadImage = pageLoader::load,
+            )
         }
         val progress = entryProgressRepository?.get(chapter.entryId, "", chapter.progressResourceKey)
         return EntryImmersiveHandle.ImagePages(

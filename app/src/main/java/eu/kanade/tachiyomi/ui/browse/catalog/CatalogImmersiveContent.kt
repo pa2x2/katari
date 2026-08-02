@@ -87,7 +87,7 @@ internal fun CatalogImmersiveContent(
         onExitImmersive = onExitImmersive,
         onEntryClick = onEntryClick,
         onLibraryAction = onLibraryAction,
-        onZoomStateChange = {},
+        onPagingBlockedChange = {},
         positionState = positionState,
         refreshing = catalogList.loadState.refresh is LoadState.Loading,
         onRefresh = catalogList::refresh,

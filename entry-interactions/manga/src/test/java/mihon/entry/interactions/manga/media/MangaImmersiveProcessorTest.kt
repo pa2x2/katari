@@ -8,8 +8,10 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.manga.media.session.MangaMediaSessionProcessor
 import mihon.entry.interactions.manga.state.mangaProgressState
@@ -19,7 +21,6 @@ import mihon.entry.interactions.media.EntryImmersiveProgress
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
 import mihon.entry.interactions.media.session.EntryMediaSessionEventSink
 import mihon.entry.interactions.media.session.EntryMediaSessionResult
-import okhttp3.Headers
 import okhttp3.Request
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
@@ -28,7 +29,7 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 
 class MangaImmersiveProcessorTest {
     @Test
-    fun `loads direct image requests without reader preview cache`() = runTest {
+    fun `resolves and caches an image URL only when its page is requested`() = runTest {
         val page = EntryImagePage(index = 7, url = "/page")
         val source = mockk<EntryImageSource> {
             every { id } returns 1L
@@ -51,9 +52,17 @@ class MangaImmersiveProcessorTest {
 
         media.pages shouldHaveSize 1
         media.pages.single().index shouldBe 0
-        media.pages.single().imageUrl shouldBe "https://example.invalid/page.jpg"
-        media.pages.single().headers["Referer"] shouldBe "https://example.invalid/"
         media.initialPageIndex shouldBe 0
+        coVerify(exactly = 0) { source.getImageUrl(any()) }
+        verify(exactly = 0) { source.imageRequest(any(), any()) }
+
+        val firstRequest = media.pages.single().resolveRequest()
+        val secondRequest = media.pages.single().resolveRequest()
+
+        firstRequest.imageUrl shouldBe "https://example.invalid/page.jpg"
+        secondRequest shouldBe firstRequest
+        coVerify(exactly = 1) { source.getImageUrl(page) }
+        verify(exactly = 0) { source.imageRequest(any(), any()) }
     }
 
     @Test
@@ -159,13 +168,7 @@ class MangaImmersiveProcessorTest {
             entryType = EntryType.MANGA,
             chapterId = child.id,
             delegate = MangaImmersiveMedia(
-                pages = listOf(
-                    MangaImmersivePage(
-                        0,
-                        "https://example.invalid/page.jpg",
-                        Headers.Builder().build(),
-                    ),
-                ),
+                pages = emptyList(),
                 initialPageIndex = 0,
                 entry = entry,
                 child = child,

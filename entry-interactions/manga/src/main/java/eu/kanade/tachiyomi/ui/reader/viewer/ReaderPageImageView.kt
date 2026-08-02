@@ -6,6 +6,7 @@ import android.graphics.RectF
 import android.graphics.drawable.Animatable
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.util.AttributeSet
 import android.view.GestureDetector
 import android.view.MotionEvent
@@ -43,6 +44,7 @@ import okio.BufferedSource
 import tachiyomi.core.common.util.system.ImageUtil
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.io.File
 
 /**
  * A wrapper view for showing page image.
@@ -166,6 +168,17 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
         } else {
             prepareNonAnimatedImageView()
             setNonAnimatedImage(source, config)
+        }
+    }
+
+    fun setImage(file: File, isAnimated: Boolean, config: Config) {
+        this.config = config
+        if (isAnimated) {
+            prepareAnimatedImageView()
+            setAnimatedImage(file, config)
+        } else {
+            prepareNonAnimatedImageView()
+            setNonAnimatedImage(file, config)
         }
     }
 
@@ -348,6 +361,10 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
                     .crossfade(false)
                     .build()
                     .let(context.imageLoader::enqueue)
+            }
+            is File -> {
+                setImage(ImageSource.uri(context, Uri.fromFile(data)))
+                isVisible = true
             }
             else -> {
                 throw IllegalArgumentException("Not implemented for class ${data::class.simpleName}")

@@ -93,7 +93,6 @@ import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.ui.browse.catalog.BrowseLongPressOutcome
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreenModel
 import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveScreenModel
-import eu.kanade.tachiyomi.ui.browse.immersive.ImmersiveSystemBarsEffect
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
@@ -122,6 +121,7 @@ import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.TextButton
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.material.topSmallPaddingValues
+import tachiyomi.presentation.core.components.reader.ReaderSystemBarsEffect
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
@@ -241,7 +241,7 @@ private fun Screen.FeedsTabContent(
     val scope = rememberCoroutineScope()
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
-    ImmersiveSystemBarsEffect(enabled = feedViewMode == FeedViewMode.Immersive)
+    ReaderSystemBarsEffect(enabled = feedViewMode == FeedViewMode.Immersive)
 
     LaunchedEffect(activeFeed?.id, immersiveAvailable) {
         if (!immersiveAvailable && feedViewMode == FeedViewMode.Immersive) {
@@ -365,7 +365,7 @@ private fun Screen.FeedsTabContent(
                             onExitImmersive = { onFeedViewModeChange(FeedViewMode.Regular) },
                             onEntryClick = { navigator.push(EntryScreen(it.id, fromSource = true)) },
                             onLibraryAction = actionModel::confirmBrowseLibraryAction,
-                            onZoomStateChange = {},
+                            onPagingBlockedChange = {},
                             jumpToNewestRequest = jumpToNewestRequest,
                             modifier = Modifier.fillMaxSize(),
                         )
