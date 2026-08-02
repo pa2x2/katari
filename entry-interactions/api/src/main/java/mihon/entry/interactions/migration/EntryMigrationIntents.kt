@@ -12,6 +12,30 @@ data class EntryMigrationSubject(
 data class EntryMigrationPrepareIntent(
     val source: Entry,
     val target: Entry,
+    val operationKey: EntryMigrationOperationKey? = null,
+)
+
+/** Stable caller-owned identity for a restartable Migration operation. */
+@JvmInline
+value class EntryMigrationOperationKey(val value: String) {
+    init {
+        require(value.isNotBlank()) { "Migration operation key must not be blank" }
+    }
+}
+
+/**
+ * Identifies one durable execution attempt without requiring an in-memory preparation reference.
+ *
+ * A restarted caller reconciles this operation before preparing the pair again. If the operation
+ * already committed, Migration can return its result even when replacing the source removed it
+ * from the Library.
+ */
+data class EntryMigrationOperationIntent(
+    val key: EntryMigrationOperationKey,
+    val source: EntryMigrationSubject,
+    val target: EntryMigrationSubject,
+    val mode: EntryMigrationMode,
+    val selectedOptions: Set<EntryMigrationOption>,
 )
 
 /** Requests source refresh during Migration target discovery or explicit target selection. */

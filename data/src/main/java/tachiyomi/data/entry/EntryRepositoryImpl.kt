@@ -289,9 +289,13 @@ class EntryRepositoryImpl(
     }
 
     override suspend fun insertOrUpdate(entry: Entry): Entry {
+        return insertOrUpdate(entry, profileProvider.activeProfileId)
+    }
+
+    override suspend fun insertOrUpdate(entry: Entry, profileId: Long): Entry {
         return handler.await(inTransaction = true) {
             entriesQueries.insertNetworkEntry(
-                profileId = profileProvider.activeProfileId,
+                profileId = profileId,
                 source = entry.source,
                 url = entry.url,
                 title = entry.title,

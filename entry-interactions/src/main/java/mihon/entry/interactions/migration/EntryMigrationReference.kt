@@ -12,6 +12,8 @@ internal data class FeatureEntryMigrationReference(
 
 internal fun newEntryMigrationSessionId(): String = UUID.randomUUID().toString()
 
+internal fun EntryMigrationOperationKey?.operationId(): String = this?.value ?: newEntryMigrationSessionId()
+
 internal fun Entry.sameMigrationIdentity(other: Entry): Boolean {
     return id == other.id &&
         profileId == other.profileId &&

@@ -14,6 +14,7 @@ import eu.kanade.presentation.browse.MigrateSourceScreen
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.TabContent
 import eu.kanade.tachiyomi.ui.browse.migration.entry.MigrateEntriesScreen
+import mihon.feature.migration.review.SourceMigrationReviewScreen
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -41,6 +42,9 @@ fun Screen.migrateSourceTab(): TabContent {
                 contentPadding = contentPadding,
                 onClickItem = { source ->
                     navigator.push(MigrateEntriesScreen(source.id))
+                },
+                onClickActiveSession = { session ->
+                    navigator.push(SourceMigrationReviewScreen(session.id))
                 },
                 onToggleSortingDirection = screenModel::toggleSortingDirection,
                 onToggleSortingMode = screenModel::toggleSortingMode,

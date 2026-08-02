@@ -47,6 +47,20 @@ sealed interface EntryMigrationPreparationResult {
     ) : EntryMigrationPreparationResult
 }
 
+sealed interface EntryMigrationOperationReconciliationResult {
+    data object NotApplied : EntryMigrationOperationReconciliationResult
+
+    data class Applied(
+        val outcome: EntryMigrationOutcome,
+    ) : EntryMigrationOperationReconciliationResult
+
+    data object Conflict : EntryMigrationOperationReconciliationResult
+
+    data class OperationalFailure(
+        val retryable: Boolean,
+    ) : EntryMigrationOperationReconciliationResult
+}
+
 sealed interface EntryMigrationExecutionResult {
     data class Applied(
         val outcome: EntryMigrationOutcome,

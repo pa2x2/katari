@@ -124,6 +124,10 @@ import mihon.entry.interactions.media.EntryMediaCacheClearResult
 import mihon.entry.interactions.media.EntryMediaCacheFeature
 import mihon.entry.interactions.merge.EntryMergeNavigationFeature
 import mihon.entry.viewer.settings.navigation.ViewerSettingsNavigation
+import mihon.feature.migration.review.SourceMigrationReviewScreen
+import mihon.feature.migration.session.SourceMigrationSessionStore
+import mihon.feature.migration.session.model.SourceMigrationSessionId
+import mihon.feature.migration.work.SourceMigrationNotifier
 import mihon.feature.profiles.core.Profile
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.core.ProfilesPreferences
@@ -155,6 +159,7 @@ class MainActivity : BaseActivity() {
     private val securityPreferences: SecurityPreferences by injectLazy()
     private val profileManager: ProfileManager by injectLazy()
     private val profilesPreferences: ProfilesPreferences by injectLazy()
+    private val sourceMigrationSessionStore: SourceMigrationSessionStore by injectLazy()
 
     private val downloadRuntime: EntryDownloadRuntimeFeature by injectLazy()
     private val mediaCacheFeature: EntryMediaCacheFeature by injectLazy()
@@ -703,6 +708,15 @@ class MainActivity : BaseActivity() {
     }
 
     private suspend fun handleIntentAction(intent: Intent, navigator: Navigator): Boolean {
+        if (intent.action == SourceMigrationNotifier.ACTION_OPEN_SOURCE_MIGRATION_SESSION) {
+            val sessionId = intent.getStringExtra(SourceMigrationNotifier.EXTRA_SOURCE_MIGRATION_SESSION_ID)
+                ?.takeIf(String::isNotBlank)
+                ?.let(::SourceMigrationSessionId)
+                ?: return false
+            val session = sourceMigrationSessionStore.get(sessionId) ?: return false
+            if (session.stage.isTerminal) return false
+            intent.putExtra(Constants.PROFILE_EXTRA, session.profileId)
+        }
         when (routeIntentToProfile(intent)) {
             IntentProfileRouting.READY -> Unit
             IntentProfileRouting.SWITCHED -> return true
@@ -747,6 +761,15 @@ class MainActivity : BaseActivity() {
             TranslationSettingsNavigation.ACTION_OPEN_SETTINGS -> {
                 navigator.popUntilRoot()
                 navigator.push(SettingsScreen(SettingsScreen.Destination.Translation))
+                null
+            }
+            SourceMigrationNotifier.ACTION_OPEN_SOURCE_MIGRATION_SESSION -> {
+                val sessionId = intent.getStringExtra(SourceMigrationNotifier.EXTRA_SOURCE_MIGRATION_SESSION_ID)
+                    ?.takeIf(String::isNotBlank)
+                    ?.let(::SourceMigrationSessionId)
+                    ?: return false
+                navigator.popUntilRoot()
+                navigator.push(SourceMigrationReviewScreen(sessionId))
                 null
             }
             ViewerSettingsNavigation.ACTION_OPEN_SETTINGS -> {

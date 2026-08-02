@@ -208,6 +208,10 @@
             android:name=".data.notification.NotificationReceiver"
             android:exported="false" />
 
+        <receiver
+            android:name="mihon.feature.migration.work.SourceMigrationActionReceiver"
+            android:exported="false" />
+
         <service
             android:name=".extension.util.ExtensionInstallService"
             android:exported="false"
