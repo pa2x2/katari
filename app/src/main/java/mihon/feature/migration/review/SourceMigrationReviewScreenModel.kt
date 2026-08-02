@@ -79,6 +79,10 @@ internal class SourceMigrationReviewScreenModel(
         screenModelScope.launchIO { workScheduler.pauseDiscovery(sessionId) }
     }
 
+    fun startDiscovery() {
+        screenModelScope.launchIO { workScheduler.startDiscovery(sessionId) }
+    }
+
     fun resumeDiscovery() {
         screenModelScope.launchIO { workScheduler.startDiscovery(sessionId) }
     }

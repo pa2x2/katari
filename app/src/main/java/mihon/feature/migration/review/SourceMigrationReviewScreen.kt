@@ -28,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -36,6 +37,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -49,6 +55,8 @@ import mihon.feature.migration.review.components.SourceMigrationReviewGroupCard
 import mihon.feature.migration.session.model.SourceMigrationItemState
 import mihon.feature.migration.session.model.SourceMigrationSessionId
 import mihon.feature.migration.session.model.SourceMigrationSessionStage
+import mihon.feature.migration.work.SourceMigrationNotificationVisibility
+import mihon.feature.migration.work.SourceMigrationNotifier
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.Badge
 import tachiyomi.presentation.core.components.BadgeGroup
@@ -67,6 +75,8 @@ class SourceMigrationReviewScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val context = LocalContext.current
+        val lifecycleOwner = LocalLifecycleOwner.current
         val screenModel = rememberScreenModel { SourceMigrationReviewScreenModel(sessionId) }
         val state by screenModel.state.collectAsState()
         val session = state.session
@@ -76,8 +86,42 @@ class SourceMigrationReviewScreen(
         var candidateItemId by rememberSaveable { mutableStateOf<Long?>(null) }
         var showDiscardDialog by rememberSaveable { mutableStateOf(false) }
 
+        DisposableEffect(lifecycleOwner, sessionId) {
+            var visible = false
+            fun show() {
+                if (visible) return
+                visible = true
+                SourceMigrationNotificationVisibility.show(sessionId)
+                SourceMigrationNotifier(context).cancel(sessionId)
+            }
+            fun hide() {
+                if (!visible) return
+                visible = false
+                SourceMigrationNotificationVisibility.hide(sessionId)
+            }
+
+            val observer = object : DefaultLifecycleObserver {
+                override fun onResume(owner: LifecycleOwner) = show()
+                override fun onPause(owner: LifecycleOwner) = hide()
+            }
+            lifecycleOwner.lifecycle.addObserver(observer)
+            if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) show()
+            onDispose {
+                hide()
+                lifecycleOwner.lifecycle.removeObserver(observer)
+            }
+        }
+
         LaunchedEffect(state.discardCompleted) {
             if (state.discardCompleted) navigator.pop()
+        }
+
+        LaunchedEffect(session?.stage) {
+            when (session?.stage) {
+                SourceMigrationSessionStage.DRAFT -> screenModel.startDiscovery()
+                SourceMigrationSessionStage.COMPLETED -> navigator.pop()
+                else -> Unit
+            }
         }
 
         Scaffold(

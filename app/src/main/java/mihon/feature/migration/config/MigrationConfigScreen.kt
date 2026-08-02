@@ -60,7 +60,6 @@ import mihon.feature.migration.session.model.SourceMigrationDiscoveryDepth
 import mihon.feature.migration.session.model.SourceMigrationSessionDraft
 import mihon.feature.migration.session.model.SourceMigrationSessionGroupDraft
 import mihon.feature.migration.session.model.SourceMigrationSessionId
-import mihon.feature.migration.work.SourceMigrationWorkScheduler
 import sh.calvin.reorderable.ReorderableCollectionItemScope
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.ReorderableLazyListState
@@ -111,7 +110,8 @@ class MigrationConfigScreen private constructor(
 
         LaunchedEffect(state.createdSessionId) {
             state.createdSessionId?.let { sessionId ->
-                navigator.replace(SourceMigrationReviewScreen(sessionId))
+                navigator.popUntilRoot()
+                navigator.push(SourceMigrationReviewScreen(sessionId))
             }
         }
 
@@ -376,7 +376,6 @@ class MigrationConfigScreen private constructor(
         private val sourceManager: SourceManager = Injekt.get(),
         private val catalogueFeature: EntryCatalogueFeature = Injekt.get(),
         private val sessionStore: SourceMigrationSessionStore = Injekt.get(),
-        private val workScheduler: SourceMigrationWorkScheduler = Injekt.get(),
     ) : StateScreenModel<ScreenModel.State>(State()) {
 
         private val sourcesComparator = { includedSources: List<Long> ->
@@ -507,11 +506,7 @@ class MigrationConfigScreen private constructor(
                         initialDiscoveryDepth = initialDiscoveryDepth,
                     ),
                 )
-                if (workScheduler.startDiscovery(sessionId)) {
-                    mutableState.update { it.copy(createdSessionId = sessionId) }
-                } else {
-                    mutableState.update { it.copy(isStarting = false) }
-                }
+                mutableState.update { it.copy(createdSessionId = sessionId) }
             }
         }
 

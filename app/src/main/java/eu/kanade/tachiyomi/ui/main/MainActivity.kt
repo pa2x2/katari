@@ -714,6 +714,7 @@ class MainActivity : BaseActivity() {
                 ?.let(::SourceMigrationSessionId)
                 ?: return false
             val session = sourceMigrationSessionStore.get(sessionId) ?: return false
+            if (session.stage.isTerminal) return false
             intent.putExtra(Constants.PROFILE_EXTRA, session.profileId)
         }
         when (routeIntentToProfile(intent)) {

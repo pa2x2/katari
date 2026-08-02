@@ -48,6 +48,10 @@ class SourceMigrationNotifier(private val context: Context) {
     }
 
     fun showDiscoveryProgress(sessionId: SourceMigrationSessionId, completed: Int, total: Int) {
+        if (SourceMigrationNotificationVisibility.isVisible(sessionId)) {
+            cancel(sessionId)
+            return
+        }
         context.notify(notificationId(sessionId), discoveryProgressNotification(sessionId, completed, total))
     }
 
@@ -83,11 +87,16 @@ class SourceMigrationNotifier(private val context: Context) {
     }
 
     fun showExecutionProgress(sessionId: SourceMigrationSessionId, completed: Int, total: Int) {
+        if (SourceMigrationNotificationVisibility.isVisible(sessionId)) {
+            cancel(sessionId)
+            return
+        }
         context.notify(notificationId(sessionId), executionProgressNotification(sessionId, completed, total))
     }
 
     fun showReviewReady(sessionId: SourceMigrationSessionId, completed: Int) {
         cancel(sessionId)
+        if (SourceMigrationNotificationVisibility.isVisible(sessionId)) return
         context.notify(
             resultNotificationId(sessionId),
             Notifications.CHANNEL_SOURCE_MIGRATION_COMPLETE,
@@ -104,6 +113,7 @@ class SourceMigrationNotifier(private val context: Context) {
 
     fun showExecutionComplete(sessionId: SourceMigrationSessionId, migrated: Int, attention: Int) {
         cancel(sessionId)
+        if (SourceMigrationNotificationVisibility.isVisible(sessionId)) return
         context.notify(
             resultNotificationId(sessionId),
             Notifications.CHANNEL_SOURCE_MIGRATION_COMPLETE,
@@ -114,12 +124,12 @@ class SourceMigrationNotifier(private val context: Context) {
             )
             setSmallIcon(R.drawable.ic_refresh_24dp)
             setAutoCancel(true)
-            setContentIntent(openSessionIntent(sessionId))
         }
     }
 
     fun cancel(sessionId: SourceMigrationSessionId) {
         context.cancelNotification(notificationId(sessionId))
+        context.cancelNotification(resultNotificationId(sessionId))
     }
 
     fun notificationId(sessionId: SourceMigrationSessionId): Int {

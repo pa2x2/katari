@@ -28,10 +28,18 @@ class SourceMigrationDiscoveryWorker(
         val sessionId = inputData.getString(KEY_SESSION_ID)
             ?.let(::SourceMigrationSessionId)
             ?: return Result.failure()
-        setForegroundSafely()
+        var runningInForeground = false
+        suspend fun ensureForegroundWhenScreenIsHidden() {
+            if (!runningInForeground && !SourceMigrationNotificationVisibility.isVisible(sessionId)) {
+                setForegroundSafely()
+                runningInForeground = true
+            }
+        }
+        ensureForegroundWhenScreenIsHidden()
         return try {
             when (
                 val result = runner.run(sessionId) { completed, total ->
+                    ensureForegroundWhenScreenIsHidden()
                     setProgress(workDataOf(KEY_COMPLETED to completed, KEY_TOTAL to total))
                     notifier.showDiscoveryProgress(sessionId, completed, total)
                 }
