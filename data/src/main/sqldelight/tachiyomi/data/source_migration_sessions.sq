@@ -41,6 +41,36 @@ CREATE TABLE source_migration_target_sources(
     CHECK(position >= 0)
 );
 
+CREATE TABLE source_migration_groups(
+    session_id TEXT NOT NULL,
+    group_id INTEGER NOT NULL,
+    position INTEGER NOT NULL,
+    visible_entry_id INTEGER NOT NULL,
+    visible_title TEXT NOT NULL,
+    PRIMARY KEY(session_id, group_id),
+    UNIQUE(session_id, position),
+    FOREIGN KEY(session_id) REFERENCES source_migration_sessions(session_id) ON DELETE CASCADE,
+    CHECK(position >= 0)
+);
+
+CREATE TABLE source_migration_group_members(
+    session_id TEXT NOT NULL,
+    group_id INTEGER NOT NULL,
+    entry_id INTEGER NOT NULL,
+    position INTEGER NOT NULL,
+    source_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    url TEXT NOT NULL,
+    thumbnail_url TEXT,
+    selected INTEGER AS Boolean NOT NULL,
+    PRIMARY KEY(session_id, group_id, entry_id),
+    UNIQUE(session_id, group_id, position),
+    FOREIGN KEY(session_id, group_id)
+        REFERENCES source_migration_groups(session_id, group_id)
+        ON DELETE CASCADE,
+    CHECK(position >= 0)
+);
+
 CREATE TABLE source_migration_items(
     session_id TEXT NOT NULL,
     source_entry_id INTEGER NOT NULL,
@@ -149,6 +179,18 @@ FROM source_migration_target_sources
 WHERE session_id = :sessionId
 ORDER BY position;
 
+groupsBySession:
+SELECT *
+FROM source_migration_groups
+WHERE session_id = :sessionId
+ORDER BY position;
+
+groupMembersBySession:
+SELECT *
+FROM source_migration_group_members
+WHERE session_id = :sessionId
+ORDER BY group_id, position;
+
 itemsBySession:
 SELECT *
 FROM source_migration_items
@@ -207,6 +249,34 @@ VALUES (
 insertTargetSource:
 INSERT INTO source_migration_target_sources(session_id, source_id, position)
 VALUES (:sessionId, :sourceId, :position);
+
+insertGroup:
+INSERT INTO source_migration_groups(session_id, group_id, position, visible_entry_id, visible_title)
+VALUES (:sessionId, :groupId, :position, :visibleEntryId, :visibleTitle);
+
+insertGroupMember:
+INSERT INTO source_migration_group_members(
+    session_id,
+    group_id,
+    entry_id,
+    position,
+    source_id,
+    title,
+    url,
+    thumbnail_url,
+    selected
+)
+VALUES (
+    :sessionId,
+    :groupId,
+    :entryId,
+    :position,
+    :sourceId,
+    :title,
+    :url,
+    :thumbnailUrl,
+    :selected
+);
 
 insertItem:
 INSERT INTO source_migration_items(

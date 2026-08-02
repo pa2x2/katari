@@ -40,6 +40,29 @@ class SourceMigrationSessionStore(
                     position = index.toLong(),
                 )
             }
+            draft.groups.forEachIndexed { groupIndex, group ->
+                val groupId = group.visibleEntry.id
+                source_migration_sessionsQueries.insertGroup(
+                    sessionId = sessionId.value,
+                    groupId = groupId,
+                    position = groupIndex.toLong(),
+                    visibleEntryId = group.visibleEntry.id,
+                    visibleTitle = group.visibleEntry.displayTitle,
+                )
+                group.members.forEachIndexed { memberIndex, member ->
+                    source_migration_sessionsQueries.insertGroupMember(
+                        sessionId = sessionId.value,
+                        groupId = groupId,
+                        entryId = member.id,
+                        position = memberIndex.toLong(),
+                        sourceId = member.source,
+                        title = member.displayTitle,
+                        url = member.url,
+                        thumbnailUrl = member.thumbnailUrl,
+                        selected = member.id in group.selectedEntryIds,
+                    )
+                }
+            }
             draft.entries.forEachIndexed { index, entry ->
                 source_migration_sessionsQueries.insertItem(
                     sessionId = sessionId.value,
@@ -67,10 +90,24 @@ class SourceMigrationSessionStore(
                 source_migration_sessionsQueries.targetSourcesBySession(sessionId.value)
             },
             handler.subscribeToList {
+                source_migration_sessionsQueries.groupsBySession(sessionId.value)
+            },
+            handler.subscribeToList {
+                source_migration_sessionsQueries.groupMembersBySession(sessionId.value)
+            },
+            handler.subscribeToList {
                 source_migration_sessionsQueries.itemsBySession(sessionId.value)
             },
-        ) { session, targetSourceIds, items ->
-            session?.toDomain(targetSourceIds, items.map { it.toDomain() })
+        ) { session, targetSourceIds, groups, groupMembers, items ->
+            val membersByGroupId = groupMembers.groupBy(
+                keySelector = { row -> row.group_id },
+                valueTransform = { row -> row.toDomain() },
+            )
+            session?.toDomain(
+                targetSourceIds = targetSourceIds,
+                groups = groups.map { group -> group.toDomain(membersByGroupId[group.group_id].orEmpty()) },
+                items = items.map { it.toDomain() },
+            )
         }
     }
 
@@ -79,10 +116,15 @@ class SourceMigrationSessionStore(
             val session = source_migration_sessionsQueries.sessionById(sessionId.value).awaitAsOneOrNull()
                 ?: return@await null
             val targetSourceIds = source_migration_sessionsQueries.targetSourcesBySession(sessionId.value).awaitAsList()
+            val groupMembers = source_migration_sessionsQueries.groupMembersBySession(sessionId.value).awaitAsList()
+            val membersByGroupId = groupMembers.groupBy { it.group_id }
+            val groups = source_migration_sessionsQueries.groupsBySession(sessionId.value)
+                .awaitAsList()
+                .map { group -> group.toDomain(membersByGroupId[group.group_id].orEmpty().map { it.toDomain() }) }
             val items = source_migration_sessionsQueries.itemsBySession(sessionId.value)
                 .awaitAsList()
                 .map { it.toDomain() }
-            session.toDomain(targetSourceIds, items)
+            session.toDomain(targetSourceIds, groups, items)
         }
     }
 

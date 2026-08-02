@@ -40,6 +40,7 @@ data class SourceMigrationSession(
     val createdAt: Long,
     val updatedAt: Long,
     val completedAt: Long?,
+    val groups: List<SourceMigrationSessionGroup>,
     val items: List<SourceMigrationSessionItem>,
 ) {
     val includedReadyCount: Int

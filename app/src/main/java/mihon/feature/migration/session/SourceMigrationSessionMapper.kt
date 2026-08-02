@@ -8,16 +8,21 @@ import mihon.feature.migration.session.model.SourceMigrationDiscoveryFailureReas
 import mihon.feature.migration.session.model.SourceMigrationItemState
 import mihon.feature.migration.session.model.SourceMigrationMatchKind
 import mihon.feature.migration.session.model.SourceMigrationSession
+import mihon.feature.migration.session.model.SourceMigrationSessionGroup
+import mihon.feature.migration.session.model.SourceMigrationSessionGroupMember
 import mihon.feature.migration.session.model.SourceMigrationSessionId
 import mihon.feature.migration.session.model.SourceMigrationSessionItem
 import mihon.feature.migration.session.model.SourceMigrationSessionStage
 import tachiyomi.data.Source_migration_candidates
 import tachiyomi.data.Source_migration_discovery_failures
+import tachiyomi.data.Source_migration_group_members
+import tachiyomi.data.Source_migration_groups
 import tachiyomi.data.Source_migration_items
 import tachiyomi.data.Source_migration_sessions
 
 internal fun Source_migration_sessions.toDomain(
     targetSourceIds: List<Long>,
+    groups: List<SourceMigrationSessionGroup>,
     items: List<SourceMigrationSessionItem>,
 ): SourceMigrationSession {
     return SourceMigrationSession(
@@ -33,7 +38,33 @@ internal fun Source_migration_sessions.toDomain(
         createdAt = created_at,
         updatedAt = updated_at,
         completedAt = completed_at,
+        groups = groups,
         items = items,
+    )
+}
+
+internal fun Source_migration_groups.toDomain(
+    members: List<SourceMigrationSessionGroupMember>,
+): SourceMigrationSessionGroup {
+    return SourceMigrationSessionGroup(
+        sessionId = SourceMigrationSessionId(session_id),
+        groupId = group_id,
+        position = position,
+        visibleEntryId = visible_entry_id,
+        visibleTitle = visible_title,
+        members = members,
+    )
+}
+
+internal fun Source_migration_group_members.toDomain(): SourceMigrationSessionGroupMember {
+    return SourceMigrationSessionGroupMember(
+        entryId = entry_id,
+        position = position,
+        sourceId = source_id,
+        title = title,
+        url = url,
+        thumbnailUrl = thumbnail_url,
+        selected = selected,
     )
 }
 
