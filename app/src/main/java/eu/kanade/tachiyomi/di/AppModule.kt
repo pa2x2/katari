@@ -47,6 +47,7 @@ import mihon.entry.interactions.runtime.EntryInteractionActivityTheme
 import mihon.entry.interactions.runtime.EntryInteractionRuntimeDependencies
 import mihon.entry.interactions.runtime.addEntryInteractionRuntime
 import mihon.feature.migration.discovery.SourceMigrationCandidateDiscovery
+import mihon.feature.migration.discovery.SourceMigrationDiscoveryRunner
 import mihon.feature.migration.session.SourceMigrationSessionStore
 import mihon.feature.profiles.core.ProfileDatabase
 import mihon.feature.profiles.core.ProfileManager
@@ -135,6 +136,7 @@ class AppModule(val app: Application) : InjektModule {
         }
         addSingletonFactory<DatabaseHandler> { AndroidDatabaseHandler(get(), get()) }
         addSingletonFactory { SourceMigrationCandidateDiscovery(get()) }
+        addSingletonFactory { SourceMigrationDiscoveryRunner(get(), get(), get(), get(), get()) }
         addSingletonFactory { SourceMigrationSessionStore(get()) }
         addSingletonFactory { ProfileDatabase(get()) }
         addSingletonFactory { mihon.feature.profiles.core.ProfilePreferenceOwnership(get()) }
