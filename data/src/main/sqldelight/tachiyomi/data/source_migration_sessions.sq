@@ -472,11 +472,13 @@ SET state = :state,
     target_url = :targetUrl,
     target_thumbnail_url = :targetThumbnailUrl,
     match_kind = :matchKind,
+    available_options = :availableOptions,
     error_code = NULL,
     error_message = NULL,
     updated_at = :updatedAt
 WHERE session_id = :sessionId
-AND source_entry_id = :sourceEntryId;
+AND source_entry_id = :sourceEntryId
+AND state IN ('READY', 'NEEDS_REVIEW', 'NO_MATCH', 'DISCOVERY_FAILED', 'CONFLICT');
 
 recordItemExecution:
 UPDATE source_migration_items

@@ -1645,6 +1645,11 @@
     <string name="sourceMigrationReview.noMatch">No match %1$d</string>
     <string name="sourceMigrationReview.notSelected">Not selected %1$d</string>
     <string name="sourceMigrationReview.chooseReplacement">Choose replacement</string>
+    <string name="sourceMigrationReview.searchAgain">Search again</string>
+    <string name="sourceMigrationReview.replacementRejected">This entry cannot be used as a replacement.</string>
+    <string name="sourceMigrationReview.exactMatch">Exact match</string>
+    <string name="sourceMigrationReview.similarMatch">Similar match</string>
+    <string name="sourceMigrationReview.manualMatch">Selected manually</string>
     <string name="sourceMigrationReview.ready">Ready</string>
     <string name="sourceMigrationReview.needsReview">Review</string>
     <string name="sourceMigrationReview.noMatchStatus">No match</string>

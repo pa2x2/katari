@@ -356,10 +356,14 @@ class SourceMigrationSessionStore(
         target: SourceMigrationCandidate,
         targetEntryId: Long,
         state: SourceMigrationItemState,
-    ) {
+        availableOptions: Set<EntryMigrationOption>,
+    ): Boolean {
         require(state == SourceMigrationItemState.READY || state == SourceMigrationItemState.NEEDS_REVIEW)
         require(target.sessionId == sessionId && target.sourceEntryId == sourceEntryId)
-        handler.await {
+        return handler.await(inTransaction = true) {
+            val session = source_migration_sessionsQueries.sessionById(sessionId.value).awaitAsOneOrNull()
+                ?: return@await false
+            if (session.stage != SourceMigrationSessionStage.REVIEW_REQUIRED.name) return@await false
             source_migration_sessionsQueries.selectItemTarget(
                 state = state.name,
                 included = state == SourceMigrationItemState.READY,
@@ -369,10 +373,16 @@ class SourceMigrationSessionStore(
                 targetUrl = target.targetUrl,
                 targetThumbnailUrl = target.targetThumbnailUrl,
                 matchKind = target.matchKind.name,
+                availableOptions = availableOptions.encodeOptions(),
                 updatedAt = clockMillis(),
                 sessionId = sessionId.value,
                 sourceEntryId = sourceEntryId,
             )
+            source_migration_sessionsQueries.itemsBySession(sessionId.value)
+                .awaitAsList()
+                .firstOrNull { item -> item.source_entry_id == sourceEntryId }
+                ?.let { item -> item.selected_target_entry_id == targetEntryId && item.state == state.name }
+                ?: false
         }
     }
 

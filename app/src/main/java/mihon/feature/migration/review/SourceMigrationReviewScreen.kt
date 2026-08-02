@@ -25,6 +25,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.core.model.rememberScreenModel
@@ -53,6 +56,7 @@ class SourceMigrationReviewScreen(
         val screenModel = rememberScreenModel { SourceMigrationReviewScreenModel(sessionId) }
         val state by screenModel.state.collectAsState()
         val session = state.session
+        var candidateItemId by rememberSaveable { mutableStateOf<Long?>(null) }
 
         Scaffold(
             topBar = { scrollBehavior ->
@@ -139,8 +143,18 @@ class SourceMigrationReviewScreen(
                     onFilterChange = screenModel::setFilter,
                     onIncludedChange = screenModel::setIncluded,
                     onToggleGroup = screenModel::toggleGroup,
+                    onTargetClick = { sourceEntryId -> candidateItemId = sourceEntryId },
                 )
             }
+        }
+
+        val candidateItem = session?.items?.firstOrNull { item -> item.sourceEntryId == candidateItemId }
+        candidateItem?.let { item ->
+            SourceMigrationCandidateSheet(
+                sessionId = sessionId,
+                item = item,
+                onDismissRequest = { candidateItemId = null },
+            )
         }
     }
 }
@@ -152,6 +166,7 @@ private fun SourceMigrationReviewContent(
     onFilterChange: (SourceMigrationReviewFilter) -> Unit,
     onIncludedChange: (sourceEntryId: Long, included: Boolean) -> Unit,
     onToggleGroup: (groupId: Long) -> Unit,
+    onTargetClick: (sourceEntryId: Long) -> Unit,
 ) {
     val session = requireNotNull(state.session)
     val discoveryActive = session.stage in setOf(
@@ -225,6 +240,7 @@ private fun SourceMigrationReviewContent(
                     group = group,
                     onIncludedChange = onIncludedChange,
                     onToggleGroup = onToggleGroup,
+                    onTargetClick = onTargetClick,
                     modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium),
                 )
             }
