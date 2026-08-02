@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import mihon.feature.migration.session.SourceMigrationSessionStore
+import mihon.feature.migration.session.model.SourceMigrationDiscoveryDepth
 import mihon.feature.migration.session.model.SourceMigrationSession
 import mihon.feature.migration.session.model.SourceMigrationSessionId
 import mihon.feature.migration.session.model.SourceMigrationSessionStage
@@ -98,6 +99,18 @@ internal class SourceMigrationReviewScreenModel(
         }
     }
 
+    fun retryUnresolved() {
+        if (state.value.actionInProgress || state.value.unresolvedCount == 0) return
+        mutableState.update { it.copy(actionInProgress = true) }
+        screenModelScope.launchIO {
+            workScheduler.restartUnresolvedDiscovery(
+                sessionId = sessionId,
+                depth = SourceMigrationDiscoveryDepth.BROAD,
+            )
+            mutableState.update { it.copy(actionInProgress = false) }
+        }
+    }
+
     fun pauseExecution() {
         screenModelScope.launchIO { workScheduler.pauseExecution(sessionId) }
     }
@@ -146,6 +159,7 @@ internal class SourceMigrationReviewScreenModel(
         )
         val DISCOVERY_FILTERS = setOf(
             SourceMigrationReviewFilter.ALL,
+            SourceMigrationReviewFilter.READY,
             SourceMigrationReviewFilter.FOUND,
             SourceMigrationReviewFilter.SEARCHING,
             SourceMigrationReviewFilter.NO_MATCH,

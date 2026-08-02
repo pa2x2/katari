@@ -56,6 +56,7 @@ import mihon.entry.interactions.migration.EntryMigrationSubject
 import mihon.feature.migration.list.MigrationListScreen
 import mihon.feature.migration.review.SourceMigrationReviewScreen
 import mihon.feature.migration.session.SourceMigrationSessionStore
+import mihon.feature.migration.session.model.SourceMigrationDiscoveryDepth
 import mihon.feature.migration.session.model.SourceMigrationSessionDraft
 import mihon.feature.migration.session.model.SourceMigrationSessionGroupDraft
 import mihon.feature.migration.session.model.SourceMigrationSessionId
@@ -120,6 +121,7 @@ class MigrationConfigScreen private constructor(
             openSheet: Boolean,
             extraSearchQuery: String?,
             selectedOptions: Set<EntryMigrationOption> = emptySet(),
+            initialDiscoveryDepth: SourceMigrationDiscoveryDepth = SourceMigrationDiscoveryDepth.STANDARD,
         ) {
             if (isSourceSession) {
                 if (openSheet) {
@@ -129,6 +131,7 @@ class MigrationConfigScreen private constructor(
                         groups = requireNotNull(sessionGroups),
                         originSourceId = requireNotNull(originSourceId),
                         selectedOptions = selectedOptions,
+                        initialDiscoveryDepth = initialDiscoveryDepth,
                     )
                 }
                 return
@@ -260,13 +263,15 @@ class MigrationConfigScreen private constructor(
             MigrationConfigScreenSheet(
                 preferences = screenModel.sourcePreferences,
                 showSearchOptions = !isSourceSession,
+                showInitialAdvancedSearchOption = isSourceSession,
                 onDismissRequest = { migrationSheetOpen = false },
-                onStartMigration = { extraSearchQuery, selectedOptions ->
+                onStartMigration = { extraSearchQuery, selectedOptions, initialDiscoveryDepth ->
                     migrationSheetOpen = false
                     continueMigration(
                         openSheet = false,
                         extraSearchQuery = extraSearchQuery,
                         selectedOptions = selectedOptions,
+                        initialDiscoveryDepth = initialDiscoveryDepth,
                     )
                 },
             )
@@ -484,6 +489,7 @@ class MigrationConfigScreen private constructor(
             groups: List<SourceMigrationSessionGroupDraft>,
             originSourceId: Long,
             selectedOptions: Set<EntryMigrationOption>,
+            initialDiscoveryDepth: SourceMigrationDiscoveryDepth,
         ) {
             if (state.value.isStarting) return
             val profileId = groups.first().members.first().profileId
@@ -498,6 +504,7 @@ class MigrationConfigScreen private constructor(
                         groups = groups,
                         targetSourceIds = targetSourceIds,
                         selectedOptions = selectedOptions,
+                        initialDiscoveryDepth = initialDiscoveryDepth,
                     ),
                 )
                 if (workScheduler.startDiscovery(sessionId)) {

@@ -42,6 +42,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.util.Screen
+import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import mihon.feature.migration.review.components.SourceMigrationDiscardDialog
 import mihon.feature.migration.review.components.SourceMigrationDiscoveryGroupCard
 import mihon.feature.migration.review.components.SourceMigrationReviewGroupCard
@@ -134,6 +135,17 @@ class SourceMigrationReviewScreen(
                                 )
                                 else -> Unit
                             }
+                            if (
+                                session?.stage == SourceMigrationSessionStage.REVIEW_REQUIRED &&
+                                state.unresolvedCount > 0
+                            ) {
+                                add(
+                                    AppBar.OverflowAction(
+                                        title = stringResource(MR.strings.sourceMigrationReview_searchUnresolved),
+                                        onClick = screenModel::retryUnresolved,
+                                    ),
+                                )
+                            }
                             if (preparationActive) {
                                 add(
                                     AppBar.OverflowAction(
@@ -185,6 +197,12 @@ class SourceMigrationReviewScreen(
                     onIncludedChange = screenModel::setIncluded,
                     onToggleGroup = screenModel::toggleGroup,
                     onTargetClick = { sourceEntryId -> candidateItemId = sourceEntryId },
+                    onSourceDetailsClick = { entryId ->
+                        navigator.push(EntryScreen(entryId, bypassMerge = true))
+                    },
+                    onTargetDetailsClick = { entryId ->
+                        navigator.push(EntryScreen(entryId, fromSource = true))
+                    },
                 )
             }
         }
@@ -219,6 +237,8 @@ private fun SourceMigrationReviewContent(
     onIncludedChange: (sourceEntryId: Long, included: Boolean) -> Unit,
     onToggleGroup: (groupId: Long) -> Unit,
     onTargetClick: (sourceEntryId: Long) -> Unit,
+    onSourceDetailsClick: (entryId: Long) -> Unit,
+    onTargetDetailsClick: (entryId: Long) -> Unit,
 ) {
     val session = requireNotNull(state.session)
     val discoveryActive = session.stage in setOf(
@@ -300,6 +320,9 @@ private fun SourceMigrationReviewContent(
             if (discoveryActive) {
                 SourceMigrationDiscoveryGroupCard(
                     group = group,
+                    onSourceDetailsClick = onSourceDetailsClick,
+                    onTargetDetailsClick = onTargetDetailsClick,
+                    onTargetClick = onTargetClick,
                     modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium),
                 )
             } else {
@@ -308,6 +331,8 @@ private fun SourceMigrationReviewContent(
                     onIncludedChange = onIncludedChange,
                     onToggleGroup = onToggleGroup,
                     onTargetClick = onTargetClick,
+                    onSourceDetailsClick = onSourceDetailsClick,
+                    onTargetDetailsClick = onTargetDetailsClick,
                     modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium),
                 )
             }
@@ -352,6 +377,11 @@ private fun SourceMigrationDiscoveryFilters(
             ),
         )
         SourceMigrationFilterChip(
+            selected = state.filter == SourceMigrationReviewFilter.READY,
+            onClick = { onFilterChange(SourceMigrationReviewFilter.READY) },
+            label = stringResource(MR.strings.sourceMigrationReview_filterReady, state.readyCount),
+        )
+        SourceMigrationFilterChip(
             selected = state.filter == SourceMigrationReviewFilter.FOUND,
             onClick = { onFilterChange(SourceMigrationReviewFilter.FOUND) },
             label = stringResource(MR.strings.sourceMigrationReview_filterFound, state.foundCount),
@@ -388,6 +418,11 @@ private fun SourceMigrationReviewFilters(
                 MR.strings.sourceMigrationReview_filterAll,
                 state.session?.items?.size ?: 0,
             ),
+        )
+        SourceMigrationFilterChip(
+            selected = state.filter == SourceMigrationReviewFilter.READY,
+            onClick = { onFilterChange(SourceMigrationReviewFilter.READY) },
+            label = stringResource(MR.strings.sourceMigrationReview_filterReady, state.readyCount),
         )
         SourceMigrationFilterChip(
             selected = state.filter == SourceMigrationReviewFilter.NEEDS_REVIEW,

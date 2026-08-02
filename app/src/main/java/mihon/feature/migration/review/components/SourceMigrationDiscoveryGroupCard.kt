@@ -1,6 +1,12 @@
 package mihon.feature.migration.review.components
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,10 +28,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.entry.components.EntryCover
@@ -44,6 +52,9 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 internal fun SourceMigrationDiscoveryGroupCard(
     group: SourceMigrationReviewGroup,
+    onSourceDetailsClick: (entryId: Long) -> Unit,
+    onTargetDetailsClick: (entryId: Long) -> Unit,
+    onTargetClick: (sourceEntryId: Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     ElevatedCard(modifier = modifier.fillMaxWidth()) {
@@ -74,6 +85,9 @@ internal fun SourceMigrationDiscoveryGroupCard(
                     } else {
                         null
                     },
+                    onSourceDetailsClick = onSourceDetailsClick,
+                    onTargetDetailsClick = onTargetDetailsClick,
+                    onTargetClick = onTargetClick,
                 )
             }
 
@@ -85,7 +99,7 @@ internal fun SourceMigrationDiscoveryGroupCard(
                     ),
                 )
                 group.notSelectedMembers.forEach { member ->
-                    SourceMigrationDiscoveryNotSelectedMember(member)
+                    SourceMigrationDiscoveryNotSelectedMember(member, onSourceDetailsClick)
                 }
             }
         }
@@ -155,6 +169,9 @@ private fun SourceMigrationDiscoveryMapping(
     mapping: SourceMigrationReviewMapping,
     sourceRole: String,
     targetRole: String?,
+    onSourceDetailsClick: (entryId: Long) -> Unit,
+    onTargetDetailsClick: (entryId: Long) -> Unit,
+    onTargetClick: (sourceEntryId: Long) -> Unit,
 ) {
     val item = mapping.item
     Column(
@@ -172,7 +189,14 @@ private fun SourceMigrationDiscoveryMapping(
                     overflow = TextOverflow.Ellipsis,
                 )
             },
-            trailingContent = { SourceMigrationRoleBadge(sourceRole) },
+            trailingContent = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    SourceMigrationRoleBadge(sourceRole)
+                    SourceMigrationEntryDetailsButton {
+                        onSourceDetailsClick(item.sourceEntryId)
+                    }
+                }
+            },
         )
 
         SourceMigrationReplacementConnector()
@@ -189,6 +213,7 @@ private fun SourceMigrationDiscoveryMapping(
                     SourceMigrationEntryListItem(
                         title = item.targetTitle,
                         thumbnailUrl = item.targetThumbnailUrl,
+                        onClick = { onTargetClick(item.sourceEntryId) },
                         supportingContent = {
                             Text(
                                 text = listOfNotNull(
@@ -200,14 +225,23 @@ private fun SourceMigrationDiscoveryMapping(
                                 overflow = TextOverflow.Ellipsis,
                             )
                         },
-                        trailingContent = targetRole?.let { role ->
-                            { SourceMigrationRoleBadge(role) }
+                        trailingContent = item.selectedTargetEntryId?.let { targetEntryId ->
+                            {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    targetRole?.let { role -> SourceMigrationRoleBadge(role) }
+                                    SourceMigrationEntryDetailsButton {
+                                        onTargetDetailsClick(targetEntryId)
+                                    }
+                                }
+                            }
                         },
                     )
                 }
             }
-            item.state in SEARCHING_STATES -> SourceMigrationTargetPlaceholder()
-            else -> SourceMigrationMissingTarget()
+            item.state in SEARCHING_STATES -> SourceMigrationTargetPlaceholder(item.state)
+            else -> SourceMigrationMissingTarget(
+                onClick = { onTargetClick(item.sourceEntryId) },
+            )
         }
     }
 }
@@ -240,7 +274,19 @@ private fun SourceMigrationReplacementConnector() {
 }
 
 @Composable
-private fun SourceMigrationTargetPlaceholder() {
+private fun SourceMigrationTargetPlaceholder(state: SourceMigrationItemState) {
+    val transition = rememberInfiniteTransition(label = "sourceMigrationSkeleton")
+    val skeletonAlpha by transition.animateFloat(
+        initialValue = 0.35f,
+        targetValue = 0.85f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 700),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "sourceMigrationSkeletonAlpha",
+    )
+    val skeletonColor = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = skeletonAlpha)
+
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
         shape = MaterialTheme.shapes.medium,
@@ -257,6 +303,7 @@ private fun SourceMigrationTargetPlaceholder() {
                 modifier = Modifier
                     .width(44.dp)
                     .aspectRatio(EntryCover.Book.ratio),
+                color = skeletonColor,
             )
             Column(
                 modifier = Modifier.weight(1f),
@@ -266,25 +313,52 @@ private fun SourceMigrationTargetPlaceholder() {
                     modifier = Modifier
                         .fillMaxWidth(0.8f)
                         .height(14.dp),
+                    color = skeletonColor,
                 )
                 SourceMigrationSkeleton(
                     modifier = Modifier
                         .fillMaxWidth(0.55f)
                         .height(12.dp),
+                    color = skeletonColor,
                 )
             }
+            SourceMigrationDiscoveryItemStatusBadge(state)
         }
     }
 }
 
 @Composable
-private fun SourceMigrationMissingTarget() {
+private fun SourceMigrationDiscoveryItemStatusBadge(state: SourceMigrationItemState) {
+    val active = state == SourceMigrationItemState.DISCOVERING
+    val containerColor = if (active) {
+        MaterialTheme.colorScheme.secondary
+    } else {
+        MaterialTheme.colorScheme.surfaceContainerHighest
+    }
+    BadgeGroup {
+        Badge(
+            text = stringResource(
+                if (active) {
+                    MR.strings.sourceMigrationReview_searchingNow
+                } else {
+                    MR.strings.sourceMigrationReview_queued
+                },
+            ),
+            color = containerColor,
+            textColor = contentColorFor(containerColor),
+        )
+    }
+}
+
+@Composable
+private fun SourceMigrationMissingTarget(onClick: () -> Unit) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
         shape = MaterialTheme.shapes.medium,
         modifier = Modifier
             .padding(horizontal = MaterialTheme.padding.small)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
     ) {
         Row(
             modifier = Modifier.padding(MaterialTheme.padding.medium),
@@ -314,7 +388,10 @@ private fun SourceMigrationMissingTarget() {
 }
 
 @Composable
-private fun SourceMigrationDiscoveryNotSelectedMember(member: SourceMigrationReviewMember) {
+private fun SourceMigrationDiscoveryNotSelectedMember(
+    member: SourceMigrationReviewMember,
+    onDetailsClick: (entryId: Long) -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -337,11 +414,10 @@ private fun SourceMigrationDiscoveryNotSelectedMember(member: SourceMigrationRev
             overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.bodyMedium,
         )
-        Text(
-            text = stringResource(MR.strings.label_member),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodySmall,
-        )
+        SourceMigrationRoleBadge(stringResource(MR.strings.label_member))
+        SourceMigrationEntryDetailsButton {
+            onDetailsClick(member.member.entryId)
+        }
     }
 }
 
@@ -378,11 +454,11 @@ private fun SourceMigrationRoleBadge(label: String) {
 }
 
 @Composable
-private fun SourceMigrationSkeleton(modifier: Modifier) {
+private fun SourceMigrationSkeleton(modifier: Modifier, color: Color) {
     Box(
         modifier = modifier
             .clip(MaterialTheme.shapes.extraSmall)
-            .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+            .background(color),
     )
 }
 

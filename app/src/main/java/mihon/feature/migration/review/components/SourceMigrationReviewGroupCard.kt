@@ -45,6 +45,8 @@ internal fun SourceMigrationReviewGroupCard(
     onIncludedChange: (sourceEntryId: Long, included: Boolean) -> Unit,
     onToggleGroup: (groupId: Long) -> Unit,
     onTargetClick: ((sourceEntryId: Long) -> Unit)? = null,
+    onSourceDetailsClick: (entryId: Long) -> Unit,
+    onTargetDetailsClick: (entryId: Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val replacements = group.mappings.filter { mapping -> mapping.item.targetTitle != null }
@@ -98,6 +100,8 @@ internal fun SourceMigrationReviewGroupCard(
                         mapping = mapping,
                         onIncludedChange = onIncludedChange,
                         onTargetClick = onTargetClick,
+                        onSourceDetailsClick = onSourceDetailsClick,
+                        onTargetDetailsClick = onTargetDetailsClick,
                     )
                 }
             }
@@ -112,6 +116,8 @@ internal fun SourceMigrationReviewGroupCard(
                         mapping = mapping,
                         onIncludedChange = onIncludedChange,
                         onTargetClick = onTargetClick,
+                        onSourceDetailsClick = onSourceDetailsClick,
+                        onTargetDetailsClick = onTargetDetailsClick,
                     )
                 }
             }
@@ -125,7 +131,7 @@ internal fun SourceMigrationReviewGroupCard(
                 )
                 group.notSelectedMembers.forEachIndexed { index, member ->
                     if (index > 0) HorizontalDivider()
-                    SourceMigrationNotSelectedMember(member)
+                    SourceMigrationNotSelectedMember(member, onSourceDetailsClick)
                 }
             }
         }
@@ -162,6 +168,8 @@ private fun SourceMigrationMapping(
     mapping: SourceMigrationReviewMapping,
     onIncludedChange: (sourceEntryId: Long, included: Boolean) -> Unit,
     onTargetClick: ((sourceEntryId: Long) -> Unit)?,
+    onSourceDetailsClick: (entryId: Long) -> Unit,
+    onTargetDetailsClick: (entryId: Long) -> Unit,
 ) {
     val item = mapping.item
     Column(
@@ -189,6 +197,9 @@ private fun SourceMigrationMapping(
                                 onIncludedChange(item.sourceEntryId, included)
                             },
                         )
+                    }
+                    SourceMigrationEntryDetailsButton {
+                        onSourceDetailsClick(item.sourceEntryId)
                     }
                 }
             },
@@ -224,6 +235,13 @@ private fun SourceMigrationMapping(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
+                    },
+                    trailingContent = item.selectedTargetEntryId?.let { targetEntryId ->
+                        {
+                            SourceMigrationEntryDetailsButton {
+                                onTargetDetailsClick(targetEntryId)
+                            }
+                        }
                     },
                 )
             } else {
@@ -293,7 +311,10 @@ private fun SourceMigrationStateBadge(state: SourceMigrationItemState) {
 }
 
 @Composable
-private fun SourceMigrationNotSelectedMember(member: SourceMigrationReviewMember) {
+private fun SourceMigrationNotSelectedMember(
+    member: SourceMigrationReviewMember,
+    onDetailsClick: (entryId: Long) -> Unit,
+) {
     SourceMigrationEntryListItem(
         title = member.member.title,
         thumbnailUrl = member.member.thumbnailUrl,
@@ -307,6 +328,11 @@ private fun SourceMigrationNotSelectedMember(member: SourceMigrationReviewMember
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+        },
+        trailingContent = {
+            SourceMigrationEntryDetailsButton {
+                onDetailsClick(member.member.entryId)
+            }
         },
     )
 }

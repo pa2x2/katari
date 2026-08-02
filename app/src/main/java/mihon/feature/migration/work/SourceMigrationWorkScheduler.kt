@@ -95,6 +95,14 @@ class SourceMigrationWorkScheduler(
         return startDiscovery(sessionId)
     }
 
+    suspend fun restartUnresolvedDiscovery(
+        sessionId: SourceMigrationSessionId,
+        depth: SourceMigrationDiscoveryDepth,
+    ): Boolean {
+        if (!store.queueUnresolvedDiscovery(sessionId, depth)) return false
+        return startDiscovery(sessionId)
+    }
+
     suspend fun startExecution(sessionId: SourceMigrationSessionId): SourceMigrationExecutionStartResult {
         val session = store.get(sessionId) ?: return SourceMigrationExecutionStartResult.Unavailable
         when (session.stage) {

@@ -37,6 +37,7 @@ import mihon.domain.migration.models.MigrationFlag
 import mihon.entry.interactions.migration.EntryMigrationOption
 import mihon.feature.migration.options.getLabel
 import mihon.feature.migration.options.toEntryMigrationOptions
+import mihon.feature.migration.session.model.SourceMigrationDiscoveryDepth
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.core.common.preference.toggle
@@ -52,10 +53,16 @@ import tachiyomi.presentation.core.util.collectAsState
 fun MigrationConfigScreenSheet(
     preferences: SourcePreferences,
     showSearchOptions: Boolean = true,
+    showInitialAdvancedSearchOption: Boolean = false,
     onDismissRequest: () -> Unit,
-    onStartMigration: (extraSearchQuery: String?, selectedOptions: Set<EntryMigrationOption>) -> Unit,
+    onStartMigration: (
+        extraSearchQuery: String?,
+        selectedOptions: Set<EntryMigrationOption>,
+        initialDiscoveryDepth: SourceMigrationDiscoveryDepth,
+    ) -> Unit,
 ) {
     var extraSearchQuery by rememberSaveable { mutableStateOf("") }
+    var initialAdvancedSearch by rememberSaveable { mutableStateOf(false) }
     val migrationFlags by preferences.migrationFlags.collectAsState()
     AdaptiveSheet(onDismissRequest = onDismissRequest) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -124,6 +131,15 @@ fun MigrationConfigScreenSheet(
                         }
                     },
                 )
+                if (showInitialAdvancedSearchOption) {
+                    MigrationSheetDividerItem()
+                    MigrationSheetSwitchItem(
+                        title = stringResource(MR.strings.migrationConfigScreen_deepSearchModeTitle),
+                        subtitle = stringResource(MR.strings.migrationConfigScreen_deepSearchModeSubtitle),
+                        checked = initialAdvancedSearch,
+                        onClick = { initialAdvancedSearch = !initialAdvancedSearch },
+                    )
+                }
                 if (showSearchOptions) {
                     MigrationSheetDividerItem()
                     OutlinedTextField(
@@ -169,7 +185,15 @@ fun MigrationConfigScreenSheet(
             Button(
                 onClick = {
                     val cleanedExtraSearchQuery = extraSearchQuery.trim().ifBlank { null }
-                    onStartMigration(cleanedExtraSearchQuery, migrationFlags.toEntryMigrationOptions())
+                    onStartMigration(
+                        cleanedExtraSearchQuery,
+                        migrationFlags.toEntryMigrationOptions(),
+                        if (initialAdvancedSearch) {
+                            SourceMigrationDiscoveryDepth.BROAD
+                        } else {
+                            SourceMigrationDiscoveryDepth.STANDARD
+                        },
+                    )
                 },
                 modifier = Modifier
                     .fillMaxWidth()

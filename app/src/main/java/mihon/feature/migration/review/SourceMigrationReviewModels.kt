@@ -7,6 +7,7 @@ import mihon.feature.migration.session.model.SourceMigrationSessionItem
 
 internal enum class SourceMigrationReviewFilter {
     ALL,
+    READY,
     FOUND,
     SEARCHING,
     NEEDS_REVIEW,
@@ -52,6 +53,9 @@ internal data class SourceMigrationReviewState(
         get() = groups.mapNotNull { group ->
             when (filter) {
                 SourceMigrationReviewFilter.ALL -> group
+                SourceMigrationReviewFilter.READY -> group.filtered { mapping ->
+                    mapping.item.state == SourceMigrationItemState.READY
+                }
                 SourceMigrationReviewFilter.FOUND -> group.filtered { mapping ->
                     mapping.item.targetTitle != null && mapping.item.state !in SEARCHING_STATES
                 }
@@ -74,6 +78,11 @@ internal data class SourceMigrationReviewState(
             }
         }
 
+    val readyCount: Int
+        get() = groups.sumOf { group ->
+            group.mappings.count { mapping -> mapping.item.state == SourceMigrationItemState.READY }
+        }
+
     val searchingCount: Int
         get() = groups.sumOf { group ->
             group.mappings.count { mapping -> mapping.item.state in SEARCHING_STATES }
@@ -87,6 +96,11 @@ internal data class SourceMigrationReviewState(
             group.mappings.count { mapping ->
                 mapping.item.targetTitle == null && mapping.item.state !in SEARCHING_STATES
             }
+        }
+
+    val unresolvedCount: Int
+        get() = session?.items.orEmpty().count { item ->
+            item.selectedTargetEntryId == null && item.state in REDISCOVERABLE_STATES
         }
 
     private fun SourceMigrationReviewGroup.filtered(
@@ -111,6 +125,12 @@ internal data class SourceMigrationReviewState(
             SourceMigrationItemState.CONFLICT,
             SourceMigrationItemState.EXECUTION_FAILED,
             SourceMigrationItemState.APPLIED_INCOMPLETE,
+        )
+
+        val REDISCOVERABLE_STATES = setOf(
+            SourceMigrationItemState.NO_MATCH,
+            SourceMigrationItemState.DISCOVERY_FAILED,
+            SourceMigrationItemState.CONFLICT,
         )
     }
 }
