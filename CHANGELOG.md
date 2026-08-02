@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.1.1] - 2026-08-02
+
+### 🌟 Highlights
+
+Jump directly to any page while browsing manga in immersive mode with the new page scrubber.
+
+### ✨ Added
+
+- Added a bottom page scrubber to immersive manga browsing for quick navigation with haptic
+  feedback while scrubbing.
+
 ## [1.1.0] - 2026-08-02
 
 ### 🌟 Highlights
@@ -24,6 +35,7 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.1.0...upcoming
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.1.1...upcoming
+[1.1.1]: https://github.com/pa2x2/katari/releases/tag/v1.1.1
 [1.1.0]: https://github.com/pa2x2/katari/releases/tag/v1.1.0
 [1.0.0]: https://github.com/pa2x2/katari/releases/tag/v1.0.0
