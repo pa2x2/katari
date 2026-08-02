@@ -129,6 +129,7 @@ internal class BookDownloadManager(
         cache.ensureInitialized()
         val queued = chapters
             .filterNot { cache.isDownloaded(BookDownloadPackageKey(entry.source, entry.url, it.url)) }
+            .sortedByDescending(EntryChapter::sourceOrder)
             .toQueuedBookDownloads(entry)
         synchronized(queueMutationLock) {
             val chapterIds = chapters.mapTo(mutableSetOf(), EntryChapter::id)
