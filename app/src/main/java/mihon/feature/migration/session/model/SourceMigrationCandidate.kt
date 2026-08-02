@@ -3,7 +3,6 @@ package mihon.feature.migration.session.model
 data class SourceMigrationCandidate(
     val sessionId: SourceMigrationSessionId,
     val sourceEntryId: Long,
-    val targetEntryId: Long,
     val targetSourceId: Long,
     val targetTitle: String,
     val targetUrl: String,

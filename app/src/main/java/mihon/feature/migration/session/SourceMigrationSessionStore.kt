@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import mihon.entry.interactions.migration.EntryMigrationOption
 import mihon.feature.migration.session.model.SourceMigrationCandidate
+import mihon.feature.migration.session.model.SourceMigrationDiscoveryFailure
 import mihon.feature.migration.session.model.SourceMigrationItemState
 import mihon.feature.migration.session.model.SourceMigrationSession
 import mihon.feature.migration.session.model.SourceMigrationSessionDraft
@@ -93,6 +94,15 @@ class SourceMigrationSessionStore(
         }.map { candidates -> candidates.map { it.toDomain() } }
     }
 
+    fun observeDiscoveryFailures(
+        sessionId: SourceMigrationSessionId,
+        sourceEntryId: Long,
+    ): Flow<List<SourceMigrationDiscoveryFailure>> {
+        return handler.subscribeToList {
+            source_migration_sessionsQueries.discoveryFailuresByItem(sessionId.value, sourceEntryId)
+        }.map { failures -> failures.map { it.toDomain() } }
+    }
+
     suspend fun transitionStage(
         sessionId: SourceMigrationSessionId,
         expected: SourceMigrationSessionStage,
@@ -157,10 +167,11 @@ class SourceMigrationSessionStore(
         }
     }
 
-    suspend fun replaceCandidates(
+    suspend fun replaceDiscoveryEvidence(
         sessionId: SourceMigrationSessionId,
         sourceEntryId: Long,
         candidates: List<SourceMigrationCandidate>,
+        failures: List<SourceMigrationDiscoveryFailure>,
     ) {
         require(candidates.all { it.sessionId == sessionId && it.sourceEntryId == sourceEntryId }) {
             "Migration candidates must belong to the updated session item"
@@ -168,13 +179,19 @@ class SourceMigrationSessionStore(
         require(candidates.map(SourceMigrationCandidate::rank).distinct().size == candidates.size) {
             "Migration candidate ranks must be unique"
         }
+        require(failures.all { it.sessionId == sessionId && it.sourceEntryId == sourceEntryId }) {
+            "Migration discovery failures must belong to the updated session item"
+        }
+        require(failures.map(SourceMigrationDiscoveryFailure::targetSourceId).distinct().size == failures.size) {
+            "Migration discovery can retain only one failure per target source"
+        }
         handler.await(inTransaction = true) {
             source_migration_sessionsQueries.clearCandidates(sessionId.value, sourceEntryId)
+            source_migration_sessionsQueries.clearDiscoveryFailures(sessionId.value, sourceEntryId)
             candidates.forEach { candidate ->
                 source_migration_sessionsQueries.insertCandidate(
                     sessionId = sessionId.value,
                     sourceEntryId = sourceEntryId,
-                    targetEntryId = candidate.targetEntryId,
                     targetSourceId = candidate.targetSourceId,
                     targetTitle = candidate.targetTitle,
                     targetUrl = candidate.targetUrl,
@@ -182,6 +199,17 @@ class SourceMigrationSessionStore(
                     score = candidate.score,
                     matchKind = candidate.matchKind.name,
                     discoveredAt = candidate.discoveredAt,
+                )
+            }
+            failures.forEach { failure ->
+                source_migration_sessionsQueries.insertDiscoveryFailure(
+                    sessionId = sessionId.value,
+                    sourceEntryId = sourceEntryId,
+                    targetSourceId = failure.targetSourceId,
+                    reason = failure.reason.name,
+                    retryable = failure.retryable,
+                    detail = failure.detail?.take(MAX_ERROR_MESSAGE_LENGTH),
+                    updatedAt = failure.updatedAt,
                 )
             }
         }
@@ -192,6 +220,7 @@ class SourceMigrationSessionStore(
         sourceEntryId: Long,
         state: SourceMigrationItemState,
         target: SourceMigrationCandidate?,
+        targetEntryId: Long?,
         included: Boolean,
         availableOptions: Set<EntryMigrationOption>,
         errorCode: String? = null,
@@ -201,11 +230,14 @@ class SourceMigrationSessionStore(
         require((target != null) == (state in DISCOVERY_TARGET_STATES)) {
             "Resolved Migration discovery states require a target and unresolved states must not retain one"
         }
+        require((target != null) == (targetEntryId != null)) {
+            "A resolved Migration target requires its materialized Entry identity"
+        }
         handler.await {
             source_migration_sessionsQueries.recordItemDiscovery(
                 state = state.name,
                 included = included && state == SourceMigrationItemState.READY,
-                targetEntryId = target?.targetEntryId,
+                targetEntryId = targetEntryId,
                 targetSourceId = target?.targetSourceId,
                 targetTitle = target?.targetTitle,
                 targetUrl = target?.targetUrl,
@@ -239,6 +271,7 @@ class SourceMigrationSessionStore(
         sessionId: SourceMigrationSessionId,
         sourceEntryId: Long,
         target: SourceMigrationCandidate,
+        targetEntryId: Long,
         state: SourceMigrationItemState,
     ) {
         require(state == SourceMigrationItemState.READY || state == SourceMigrationItemState.NEEDS_REVIEW)
@@ -247,7 +280,7 @@ class SourceMigrationSessionStore(
             source_migration_sessionsQueries.selectItemTarget(
                 state = state.name,
                 included = state == SourceMigrationItemState.READY,
-                targetEntryId = target.targetEntryId,
+                targetEntryId = targetEntryId,
                 targetSourceId = target.targetSourceId,
                 targetTitle = target.targetTitle,
                 targetUrl = target.targetUrl,

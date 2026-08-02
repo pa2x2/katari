@@ -90,7 +90,6 @@ ON source_migration_items(session_id, state, position);
 CREATE TABLE source_migration_candidates(
     session_id TEXT NOT NULL,
     source_entry_id INTEGER NOT NULL,
-    target_entry_id INTEGER NOT NULL,
     target_source_id INTEGER NOT NULL,
     target_title TEXT NOT NULL,
     target_url TEXT NOT NULL,
@@ -98,7 +97,7 @@ CREATE TABLE source_migration_candidates(
     score REAL,
     match_kind TEXT NOT NULL,
     discovered_at INTEGER NOT NULL,
-    PRIMARY KEY(session_id, source_entry_id, target_entry_id),
+    PRIMARY KEY(session_id, source_entry_id, target_source_id, target_url),
     UNIQUE(session_id, source_entry_id, rank),
     FOREIGN KEY(session_id, source_entry_id)
         REFERENCES source_migration_items(session_id, source_entry_id)
@@ -106,4 +105,24 @@ CREATE TABLE source_migration_candidates(
     CHECK(rank >= 0),
     CHECK(score IS NULL OR (score >= 0.0 AND score <= 1.0)),
     CHECK(match_kind IN ('EXACT', 'SIMILAR', 'MANUAL'))
+);
+
+CREATE TABLE source_migration_discovery_failures(
+    session_id TEXT NOT NULL,
+    source_entry_id INTEGER NOT NULL,
+    target_source_id INTEGER NOT NULL,
+    reason TEXT NOT NULL,
+    retryable INTEGER AS Boolean NOT NULL,
+    detail TEXT,
+    updated_at INTEGER NOT NULL,
+    PRIMARY KEY(session_id, source_entry_id, target_source_id),
+    FOREIGN KEY(session_id, source_entry_id)
+        REFERENCES source_migration_items(session_id, source_entry_id)
+        ON DELETE CASCADE,
+    CHECK(reason IN (
+        'SOURCE_MISSING',
+        'CATALOGUE_UNSUPPORTED',
+        'ENTRY_TYPE_UNSUPPORTED',
+        'SEARCH_FAILED'
+    ))
 );

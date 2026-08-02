@@ -3,6 +3,8 @@ package mihon.feature.migration.session
 import mihon.entry.interactions.migration.EntryMigrationOperationKey
 import mihon.entry.interactions.migration.EntryMigrationOption
 import mihon.feature.migration.session.model.SourceMigrationCandidate
+import mihon.feature.migration.session.model.SourceMigrationDiscoveryFailure
+import mihon.feature.migration.session.model.SourceMigrationDiscoveryFailureReason
 import mihon.feature.migration.session.model.SourceMigrationItemState
 import mihon.feature.migration.session.model.SourceMigrationMatchKind
 import mihon.feature.migration.session.model.SourceMigrationSession
@@ -10,6 +12,7 @@ import mihon.feature.migration.session.model.SourceMigrationSessionId
 import mihon.feature.migration.session.model.SourceMigrationSessionItem
 import mihon.feature.migration.session.model.SourceMigrationSessionStage
 import tachiyomi.data.Source_migration_candidates
+import tachiyomi.data.Source_migration_discovery_failures
 import tachiyomi.data.Source_migration_items
 import tachiyomi.data.Source_migration_sessions
 
@@ -63,7 +66,6 @@ internal fun Source_migration_candidates.toDomain(): SourceMigrationCandidate {
     return SourceMigrationCandidate(
         sessionId = SourceMigrationSessionId(session_id),
         sourceEntryId = source_entry_id,
-        targetEntryId = target_entry_id,
         targetSourceId = target_source_id,
         targetTitle = target_title,
         targetUrl = target_url,
@@ -71,6 +73,18 @@ internal fun Source_migration_candidates.toDomain(): SourceMigrationCandidate {
         score = score,
         matchKind = SourceMigrationMatchKind.valueOf(match_kind),
         discoveredAt = discovered_at,
+    )
+}
+
+internal fun Source_migration_discovery_failures.toDomain(): SourceMigrationDiscoveryFailure {
+    return SourceMigrationDiscoveryFailure(
+        sessionId = SourceMigrationSessionId(session_id),
+        sourceEntryId = source_entry_id,
+        targetSourceId = target_source_id,
+        reason = SourceMigrationDiscoveryFailureReason.valueOf(reason),
+        retryable = retryable,
+        detail = detail,
+        updatedAt = updated_at,
     )
 }
 
