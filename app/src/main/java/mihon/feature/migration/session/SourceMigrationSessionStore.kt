@@ -296,6 +296,37 @@ class SourceMigrationSessionStore(
         }
     }
 
+    suspend fun queueExecution(
+        sessionId: SourceMigrationSessionId,
+        plannedSourceEntryIds: Set<Long>,
+    ): Boolean {
+        if (plannedSourceEntryIds.isEmpty()) return false
+        val now = clockMillis()
+        return handler.await(inTransaction = true) {
+            val session = source_migration_sessionsQueries.sessionById(sessionId.value).awaitAsOneOrNull()
+                ?: return@await false
+            if (session.stage != SourceMigrationSessionStage.REVIEW_REQUIRED.name) return@await false
+            val currentIds = source_migration_sessionsQueries.itemsBySession(sessionId.value)
+                .awaitAsList()
+                .filter { item -> item.included && item.state == SourceMigrationItemState.READY.name }
+                .mapTo(mutableSetOf()) { item -> item.source_entry_id }
+            if (currentIds != plannedSourceEntryIds) return@await false
+
+            plannedSourceEntryIds.forEach { sourceEntryId ->
+                source_migration_sessionsQueries.queueItemExecution(now, sessionId.value, sourceEntryId)
+            }
+            source_migration_sessionsQueries.transitionStage(
+                newStage = SourceMigrationSessionStage.EXECUTION_QUEUED.name,
+                updatedAt = now,
+                completedAt = null,
+                sessionId = sessionId.value,
+                expectedStage = SourceMigrationSessionStage.REVIEW_REQUIRED.name,
+            )
+            source_migration_sessionsQueries.sessionById(sessionId.value).awaitAsOneOrNull()
+                ?.stage == SourceMigrationSessionStage.EXECUTION_QUEUED.name
+        }
+    }
+
     suspend fun recordExecutionState(
         sessionId: SourceMigrationSessionId,
         sourceEntryId: Long,

@@ -49,6 +49,7 @@ import mihon.entry.interactions.runtime.addEntryInteractionRuntime
 import mihon.feature.migration.discovery.SourceMigrationCandidateDiscovery
 import mihon.feature.migration.discovery.SourceMigrationDiscoveryRunner
 import mihon.feature.migration.execution.SourceMigrationExecutionPlanner
+import mihon.feature.migration.execution.SourceMigrationExecutionRunner
 import mihon.feature.migration.session.SourceMigrationSessionStore
 import mihon.feature.migration.work.SourceMigrationWorkScheduler
 import mihon.feature.profiles.core.ProfileDatabase
@@ -140,8 +141,9 @@ class AppModule(val app: Application) : InjektModule {
         addSingletonFactory { SourceMigrationCandidateDiscovery(get()) }
         addSingletonFactory { SourceMigrationDiscoveryRunner(get(), get(), get(), get(), get()) }
         addSingletonFactory { SourceMigrationExecutionPlanner(get(), get()) }
+        addSingletonFactory { SourceMigrationExecutionRunner(get(), get(), get()) }
         addSingletonFactory { SourceMigrationSessionStore(get()) }
-        addSingletonFactory { SourceMigrationWorkScheduler(app, get()) }
+        addSingletonFactory { SourceMigrationWorkScheduler(app, get(), get()) }
         addSingletonFactory { ProfileDatabase(get()) }
         addSingletonFactory { mihon.feature.profiles.core.ProfilePreferenceOwnership(get()) }
         addSingletonFactory {

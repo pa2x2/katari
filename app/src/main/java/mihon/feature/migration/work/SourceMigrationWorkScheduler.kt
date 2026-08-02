@@ -8,6 +8,8 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.workDataOf
 import eu.kanade.tachiyomi.util.system.workManager
+import mihon.feature.migration.execution.SourceMigrationExecutionPlanner
+import mihon.feature.migration.execution.model.SourceMigrationExecutionPlanResult
 import mihon.feature.migration.session.SourceMigrationSessionStore
 import mihon.feature.migration.session.model.SourceMigrationSessionId
 import mihon.feature.migration.session.model.SourceMigrationSessionStage
@@ -16,6 +18,7 @@ import java.util.concurrent.TimeUnit
 class SourceMigrationWorkScheduler(
     private val context: Context,
     private val store: SourceMigrationSessionStore,
+    private val executionPlanner: SourceMigrationExecutionPlanner,
 ) {
     suspend fun startDiscovery(sessionId: SourceMigrationSessionId): Boolean {
         val session = store.get(sessionId) ?: return false
@@ -67,11 +70,70 @@ class SourceMigrationWorkScheduler(
         context.workManager.cancelUniqueWork(discoveryWorkName(sessionId))
     }
 
+    suspend fun startExecution(sessionId: SourceMigrationSessionId): SourceMigrationExecutionStartResult {
+        val session = store.get(sessionId) ?: return SourceMigrationExecutionStartResult.Unavailable
+        when (session.stage) {
+            SourceMigrationSessionStage.REVIEW_REQUIRED -> {
+                when (val plan = executionPlanner.plan(session)) {
+                    is SourceMigrationExecutionPlanResult.Ready -> {
+                        val plannedIds = plan.items.mapTo(mutableSetOf()) { it.sourceEntryId }
+                        if (!store.queueExecution(sessionId, plannedIds)) {
+                            return SourceMigrationExecutionStartResult.Unavailable
+                        }
+                    }
+                    is SourceMigrationExecutionPlanResult.Conflicted -> {
+                        return SourceMigrationExecutionStartResult.Conflicted(plan.conflicts)
+                    }
+                    SourceMigrationExecutionPlanResult.NoItems -> {
+                        return SourceMigrationExecutionStartResult.NoItems
+                    }
+                }
+            }
+            SourceMigrationSessionStage.EXECUTION_PAUSED -> {
+                store.clearCancellationRequest(sessionId)
+                if (!store.transitionStage(sessionId, session.stage, SourceMigrationSessionStage.EXECUTION_QUEUED)) {
+                    return SourceMigrationExecutionStartResult.Unavailable
+                }
+            }
+            SourceMigrationSessionStage.EXECUTION_QUEUED,
+            SourceMigrationSessionStage.EXECUTING,
+            -> Unit
+            else -> return SourceMigrationExecutionStartResult.Unavailable
+        }
+
+        val request = OneTimeWorkRequestBuilder<SourceMigrationExecutionWorker>()
+            .setInputData(workDataOf(SourceMigrationExecutionWorker.KEY_SESSION_ID to sessionId.value))
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, MINIMUM_BACKOFF_SECONDS, TimeUnit.SECONDS)
+            .addTag(TAG_EXECUTION)
+            .addTag(sessionTag(sessionId))
+            .build()
+        context.workManager.enqueueUniqueWork(
+            executionWorkName(sessionId),
+            ExistingWorkPolicy.REPLACE,
+            request,
+        )
+        return SourceMigrationExecutionStartResult.Started
+    }
+
+    suspend fun pauseExecution(sessionId: SourceMigrationSessionId) {
+        store.requestCancellation(sessionId)
+        val stage = store.get(sessionId)?.stage
+        if (stage == SourceMigrationSessionStage.EXECUTION_QUEUED ||
+            stage == SourceMigrationSessionStage.EXECUTING
+        ) {
+            store.transitionStage(sessionId, stage, SourceMigrationSessionStage.EXECUTION_PAUSED)
+        }
+        context.workManager.cancelUniqueWork(executionWorkName(sessionId))
+    }
+
     private companion object {
         const val TAG_DISCOVERY = "source-migration-discovery"
+        const val TAG_EXECUTION = "source-migration-execution"
         const val MINIMUM_BACKOFF_SECONDS = 30L
 
         fun discoveryWorkName(sessionId: SourceMigrationSessionId) = "$TAG_DISCOVERY-${sessionId.value}"
+
+        fun executionWorkName(sessionId: SourceMigrationSessionId) = "$TAG_EXECUTION-${sessionId.value}"
 
         fun sessionTag(sessionId: SourceMigrationSessionId) = "source-migration-${sessionId.value}"
     }

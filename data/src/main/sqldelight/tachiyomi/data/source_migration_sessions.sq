@@ -352,6 +352,17 @@ WHERE session_id = :sessionId
 AND source_entry_id = :sourceEntryId
 AND state = 'DISCOVERING';
 
+queueItemExecution:
+UPDATE source_migration_items
+SET state = 'EXECUTION_QUEUED',
+    error_code = NULL,
+    error_message = NULL,
+    updated_at = :updatedAt
+WHERE session_id = :sessionId
+AND source_entry_id = :sourceEntryId
+AND included = 1
+AND state = 'READY';
+
 setItemIncluded:
 UPDATE source_migration_items
 SET included = :included,

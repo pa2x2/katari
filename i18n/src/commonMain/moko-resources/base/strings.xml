@@ -1641,6 +1641,11 @@
     <string name="sourceMigration.notification.discoveryProgress">%1$d of %2$d entries checked</string>
     <string name="sourceMigration.notification.reviewReadyTitle">Replacements ready to review</string>
     <string name="sourceMigration.notification.reviewReadyText">Checked %1$d entries</string>
+    <string name="sourceMigration.notification.executionTitle">Migrating entries</string>
+    <string name="sourceMigration.notification.executionStarting">Preparing migration</string>
+    <string name="sourceMigration.notification.executionProgress">%1$d of %2$d entries migrated</string>
+    <string name="sourceMigration.notification.completeTitle">Migration complete</string>
+    <string name="sourceMigration.notification.completeText">%1$d migrated, %2$d need attention</string>
 
     <string name="supportUsScreen.perks">Patrons get access to exclusive channels, with more perks to come.</string>
     <string name="supportUsScreen.donationPlatform.patreon">Patreon (preferred)</string>

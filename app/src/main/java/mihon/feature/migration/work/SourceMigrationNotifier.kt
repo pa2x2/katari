@@ -51,6 +51,41 @@ class SourceMigrationNotifier(private val context: Context) {
         context.notify(notificationId(sessionId), discoveryProgressNotification(sessionId, completed, total))
     }
 
+    fun executionProgressNotification(
+        sessionId: SourceMigrationSessionId,
+        completed: Int,
+        total: Int,
+    ): Notification {
+        return context.notificationBuilder(Notifications.CHANNEL_SOURCE_MIGRATION_PROGRESS) {
+            setContentTitle(context.stringResource(MR.strings.sourceMigration_notification_executionTitle))
+            setContentText(
+                if (total > 0) {
+                    context.stringResource(
+                        MR.strings.sourceMigration_notification_executionProgress,
+                        completed,
+                        total,
+                    )
+                } else {
+                    context.stringResource(MR.strings.sourceMigration_notification_executionStarting)
+                },
+            )
+            setSmallIcon(R.drawable.ic_refresh_24dp)
+            setOngoing(true)
+            setOnlyAlertOnce(true)
+            setProgress(total.coerceAtLeast(0), completed.coerceAtLeast(0), total == 0)
+            setContentIntent(openSessionIntent(sessionId))
+            addAction(
+                R.drawable.ic_pause_24dp,
+                context.stringResource(MR.strings.action_pause),
+                SourceMigrationActionReceiver.pauseExecutionIntent(context, sessionId),
+            )
+        }.build()
+    }
+
+    fun showExecutionProgress(sessionId: SourceMigrationSessionId, completed: Int, total: Int) {
+        context.notify(notificationId(sessionId), executionProgressNotification(sessionId, completed, total))
+    }
+
     fun showReviewReady(sessionId: SourceMigrationSessionId, completed: Int) {
         cancel(sessionId)
         context.notify(
@@ -60,6 +95,22 @@ class SourceMigrationNotifier(private val context: Context) {
             setContentTitle(context.stringResource(MR.strings.sourceMigration_notification_reviewReadyTitle))
             setContentText(
                 context.stringResource(MR.strings.sourceMigration_notification_reviewReadyText, completed),
+            )
+            setSmallIcon(R.drawable.ic_refresh_24dp)
+            setAutoCancel(true)
+            setContentIntent(openSessionIntent(sessionId))
+        }
+    }
+
+    fun showExecutionComplete(sessionId: SourceMigrationSessionId, migrated: Int, attention: Int) {
+        cancel(sessionId)
+        context.notify(
+            resultNotificationId(sessionId),
+            Notifications.CHANNEL_SOURCE_MIGRATION_COMPLETE,
+        ) {
+            setContentTitle(context.stringResource(MR.strings.sourceMigration_notification_completeTitle))
+            setContentText(
+                context.stringResource(MR.strings.sourceMigration_notification_completeText, migrated, attention),
             )
             setSmallIcon(R.drawable.ic_refresh_24dp)
             setAutoCancel(true)
