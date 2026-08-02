@@ -119,6 +119,53 @@ internal class DefaultEntryMigrationFeature(
         )
     }
 
+    override suspend fun reconcileOperation(
+        intent: EntryMigrationOperationIntent,
+    ): EntryMigrationOperationReconciliationResult {
+        if (intent.source.profileId != intent.target.profileId) {
+            return EntryMigrationOperationReconciliationResult.Conflict
+        }
+        return try {
+            val profile = executionHost.profile(intent.source.profileId)
+            when (
+                val replay = profile.replay(
+                    EntryMigrationHostOperation(
+                        operationId = intent.key.value,
+                        intentFingerprint = migrationFingerprint(intent.mode, intent.selectedOptions),
+                        sourceEntryId = intent.source.entryId,
+                        targetEntryId = intent.target.entryId,
+                        mode = intent.mode,
+                    ),
+                )
+            ) {
+                is EntryMigrationHostReplayResult.Applied -> {
+                    val followUp = if (replay.hasPendingConsequences) {
+                        consequences.deliverOperation(intent.key.value)
+                    } else {
+                        EntryMigrationFollowUp.COMPLETE
+                    }
+                    EntryMigrationOperationReconciliationResult.Applied(
+                        EntryMigrationOutcome(
+                            source = intent.source,
+                            target = intent.target,
+                            mode = intent.mode,
+                            followUp = followUp,
+                        ),
+                    )
+                }
+                EntryMigrationHostReplayResult.Conflict -> EntryMigrationOperationReconciliationResult.Conflict
+                EntryMigrationHostReplayResult.NotApplied -> EntryMigrationOperationReconciliationResult.NotApplied
+                is EntryMigrationHostReplayResult.OperationalFailure -> {
+                    EntryMigrationOperationReconciliationResult.OperationalFailure(replay.retryable)
+                }
+            }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Exception) {
+            EntryMigrationOperationReconciliationResult.OperationalFailure(retryable = true)
+        }
+    }
+
     override suspend fun prepare(intent: EntryMigrationPrepareIntent): EntryMigrationPreparationResult {
         requirePairContext(intent.source, intent.target)
         validatePair(intent.source, intent.target)?.let { return preparationRejected(it) }
@@ -209,7 +256,7 @@ internal class DefaultEntryMigrationFeature(
             addAll(contributedOptions)
         }
         val reference = FeatureEntryMigrationReference(
-            sessionId = newEntryMigrationSessionId(),
+            sessionId = intent.operationKey.operationId(),
             source = inspection.source,
             target = inspection.target,
             availableOptions = options,
@@ -228,7 +275,7 @@ internal class DefaultEntryMigrationFeature(
     ): EntryMigrationExecutionResult {
         val profileId = reference.source.profileId
         val profile = executionHost.profile(profileId)
-        val fingerprint = intent.fingerprint()
+        val fingerprint = migrationFingerprint(intent.mode, intent.selectedOptions)
         when (
             val replay = profile.replay(
                 EntryMigrationHostOperation(
@@ -509,7 +556,10 @@ internal class DefaultEntryMigrationFeature(
 
     private fun Entry.subject() = EntryMigrationSubject(profileId, id)
 
-    private fun EntryMigrationExecuteIntent.fingerprint(): String {
+    private fun migrationFingerprint(
+        mode: EntryMigrationMode,
+        selectedOptions: Set<EntryMigrationOption>,
+    ): String {
         return buildString {
             append(mode.name)
             append(':')
