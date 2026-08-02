@@ -28,6 +28,7 @@ import mihon.entry.interactions.migration.EntryMigrationAvailability
 import mihon.entry.interactions.migration.EntryMigrationFeature
 import mihon.entry.interactions.migration.EntryMigrationSelectionResult
 import mihon.entry.interactions.migration.EntryMigrationSubject
+import mihon.feature.migration.session.model.SourceMigrationSessionGroupDraft
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -217,6 +218,22 @@ class MigrateEntriesScreenModel(
             .map(MigrationEntrySelectionMember::entry)
             .filter { it.id in state.selection }
         return (migration.prepareSelection(entries) as? EntryMigrationSelectionResult.Ready)?.subjects.orEmpty()
+    }
+
+    fun migrationGroups(): List<SourceMigrationSessionGroupDraft> {
+        val selectedIds = migrationSelection().mapTo(mutableSetOf(), EntryMigrationSubject::entryId)
+        if (selectedIds.isEmpty()) return emptyList()
+        return state.value.groups.mapNotNull { group ->
+            val selectedGroupIds = group.eligibleMembers
+                .map { it.entry.id }
+                .filterTo(mutableSetOf(), selectedIds::contains)
+            if (selectedGroupIds.isEmpty()) return@mapNotNull null
+            SourceMigrationSessionGroupDraft(
+                visibleEntry = group.visibleEntry,
+                members = group.members.map(MigrationEntrySelectionMember::entry),
+                selectedEntryIds = selectedGroupIds,
+            )
+        }
     }
 
     @Immutable

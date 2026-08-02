@@ -51,6 +51,7 @@ import tachiyomi.presentation.core.util.collectAsState
 @Composable
 fun MigrationConfigScreenSheet(
     preferences: SourcePreferences,
+    showSearchOptions: Boolean = true,
     onDismissRequest: () -> Unit,
     onStartMigration: (extraSearchQuery: String?, selectedOptions: Set<EntryMigrationOption>) -> Unit,
 ) {
@@ -123,44 +124,46 @@ fun MigrationConfigScreenSheet(
                         }
                     },
                 )
-                MigrationSheetDividerItem()
-                OutlinedTextField(
-                    value = extraSearchQuery,
-                    onValueChange = { extraSearchQuery = it },
-                    label = { Text(stringResource(MR.strings.migrationConfigScreen_additionalSearchQueryLabel)) },
-                    supportingText = {
-                        Text(stringResource(MR.strings.migrationConfigScreen_additionalSearchQuerySupportingText))
-                    },
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            horizontal = MaterialTheme.padding.medium,
-                            vertical = MaterialTheme.padding.extraSmall,
-                        ),
-                )
-                MigrationSheetSwitchItem(
-                    title = stringResource(MR.strings.migrationConfigScreen_hideUnmatchedTitle),
-                    subtitle = null,
-                    preference = preferences.migrationHideUnmatched,
-                )
-                MigrationSheetSwitchItem(
-                    title = stringResource(MR.strings.migrationConfigScreen_hideWithoutUpdatesTitle),
-                    subtitle = stringResource(MR.strings.migrationConfigScreen_hideWithoutUpdatesSubtitle),
-                    preference = preferences.migrationHideWithoutUpdates,
-                )
-                MigrationSheetDividerItem()
-                MigrationSheetWarningItem(stringResource(MR.strings.migrationConfigScreen_enhancedOptionsWarning))
-                MigrationSheetSwitchItem(
-                    title = stringResource(MR.strings.migrationConfigScreen_deepSearchModeTitle),
-                    subtitle = stringResource(MR.strings.migrationConfigScreen_deepSearchModeSubtitle),
-                    preference = preferences.migrationDeepSearchMode,
-                )
-                MigrationSheetSwitchItem(
-                    title = stringResource(MR.strings.migrationConfigScreen_prioritizeByChaptersTitle),
-                    subtitle = stringResource(MR.strings.migrationConfigScreen_prioritizeByChaptersSubtitle),
-                    preference = preferences.migrationPrioritizeByChapters,
-                )
+                if (showSearchOptions) {
+                    MigrationSheetDividerItem()
+                    OutlinedTextField(
+                        value = extraSearchQuery,
+                        onValueChange = { extraSearchQuery = it },
+                        label = { Text(stringResource(MR.strings.migrationConfigScreen_additionalSearchQueryLabel)) },
+                        supportingText = {
+                            Text(stringResource(MR.strings.migrationConfigScreen_additionalSearchQuerySupportingText))
+                        },
+                        singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                horizontal = MaterialTheme.padding.medium,
+                                vertical = MaterialTheme.padding.extraSmall,
+                            ),
+                    )
+                    MigrationSheetSwitchItem(
+                        title = stringResource(MR.strings.migrationConfigScreen_hideUnmatchedTitle),
+                        subtitle = null,
+                        preference = preferences.migrationHideUnmatched,
+                    )
+                    MigrationSheetSwitchItem(
+                        title = stringResource(MR.strings.migrationConfigScreen_hideWithoutUpdatesTitle),
+                        subtitle = stringResource(MR.strings.migrationConfigScreen_hideWithoutUpdatesSubtitle),
+                        preference = preferences.migrationHideWithoutUpdates,
+                    )
+                    MigrationSheetDividerItem()
+                    MigrationSheetWarningItem(stringResource(MR.strings.migrationConfigScreen_enhancedOptionsWarning))
+                    MigrationSheetSwitchItem(
+                        title = stringResource(MR.strings.migrationConfigScreen_deepSearchModeTitle),
+                        subtitle = stringResource(MR.strings.migrationConfigScreen_deepSearchModeSubtitle),
+                        preference = preferences.migrationDeepSearchMode,
+                    )
+                    MigrationSheetSwitchItem(
+                        title = stringResource(MR.strings.migrationConfigScreen_prioritizeByChaptersTitle),
+                        subtitle = stringResource(MR.strings.migrationConfigScreen_prioritizeByChaptersSubtitle),
+                        preference = preferences.migrationPrioritizeByChapters,
+                    )
+                }
             }
             HorizontalDivider()
             Button(

@@ -136,9 +136,9 @@ data class MigrateEntriesScreen(
                         Icon(imageVector = Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = null)
                     },
                     onClick = {
-                        val selection = screenModel.migrationSelection()
-                        if (selection.isNotEmpty()) {
-                            navigator.push(MigrationConfigScreen(selection))
+                        val groups = screenModel.migrationGroups()
+                        if (groups.isNotEmpty()) {
+                            navigator.push(MigrationConfigScreen(groups, sourceId))
                         }
                     },
                     expanded = lazyListState.shouldExpandFAB(),

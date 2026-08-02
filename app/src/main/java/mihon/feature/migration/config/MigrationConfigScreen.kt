@@ -23,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallExtendedFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -53,6 +54,12 @@ import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.migration.EntryMigrationOption
 import mihon.entry.interactions.migration.EntryMigrationSubject
 import mihon.feature.migration.list.MigrationListScreen
+import mihon.feature.migration.review.SourceMigrationReviewScreen
+import mihon.feature.migration.session.SourceMigrationSessionStore
+import mihon.feature.migration.session.model.SourceMigrationSessionDraft
+import mihon.feature.migration.session.model.SourceMigrationSessionGroupDraft
+import mihon.feature.migration.session.model.SourceMigrationSessionId
+import mihon.feature.migration.work.SourceMigrationWorkScheduler
 import sh.calvin.reorderable.ReorderableCollectionItemScope
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.ReorderableLazyListState
@@ -71,16 +78,41 @@ import tachiyomi.presentation.core.util.shouldExpandFAB
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-class MigrationConfigScreen(private val subjects: Collection<EntryMigrationSubject>) : Screen() {
+class MigrationConfigScreen private constructor(
+    private val subjects: Collection<EntryMigrationSubject>,
+    private val sessionGroups: List<SourceMigrationSessionGroupDraft>?,
+    private val originSourceId: Long?,
+) : Screen() {
 
-    constructor(subject: EntryMigrationSubject) : this(listOf(subject))
+    constructor(subjects: Collection<EntryMigrationSubject>) : this(subjects, null, null)
+
+    constructor(subject: EntryMigrationSubject) : this(listOf(subject), null, null)
+
+    constructor(groups: List<SourceMigrationSessionGroupDraft>, originSourceId: Long) :
+        this(emptyList(), groups, originSourceId)
 
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
 
-        val screenModel = rememberScreenModel { ScreenModel() }
+        val isSourceSession = sessionGroups != null && originSourceId != null
+        val screenModel = rememberScreenModel {
+            ScreenModel(
+                requiredEntryTypes = sessionGroups.orEmpty()
+                    .flatMap(SourceMigrationSessionGroupDraft::members)
+                    .filter { entry -> sessionGroups.orEmpty().any { entry.id in it.selectedEntryIds } }
+                    .mapTo(mutableSetOf()) { it.type },
+                excludedSourceId = originSourceId,
+                persistSourceSelection = !isSourceSession,
+            )
+        }
         val state by screenModel.state.collectAsState()
+
+        LaunchedEffect(state.createdSessionId) {
+            state.createdSessionId?.let { sessionId ->
+                navigator.replace(SourceMigrationReviewScreen(sessionId))
+            }
+        }
 
         var migrationSheetOpen by rememberSaveable { mutableStateOf(false) }
 
@@ -89,6 +121,18 @@ class MigrationConfigScreen(private val subjects: Collection<EntryMigrationSubje
             extraSearchQuery: String?,
             selectedOptions: Set<EntryMigrationOption> = emptySet(),
         ) {
+            if (isSourceSession) {
+                if (openSheet) {
+                    migrationSheetOpen = true
+                } else {
+                    screenModel.startSession(
+                        groups = requireNotNull(sessionGroups),
+                        originSourceId = requireNotNull(originSourceId),
+                        selectedOptions = selectedOptions,
+                    )
+                }
+                return
+            }
             val subject = subjects.singleOrNull()
             if (subject == null && openSheet) {
                 migrationSheetOpen = true
@@ -152,8 +196,10 @@ class MigrationConfigScreen(private val subjects: Collection<EntryMigrationSubje
                     text = { Text(text = stringResource(MR.strings.migrationConfigScreen_continueButtonText)) },
                     icon = { Icon(imageVector = Icons.AutoMirrored.Outlined.ArrowForward, contentDescription = null) },
                     onClick = {
-                        screenModel.saveSources()
-                        continueMigration(openSheet = true, extraSearchQuery = null)
+                        if (state.selectedSourceIds.isNotEmpty()) {
+                            screenModel.saveSources()
+                            continueMigration(openSheet = true, extraSearchQuery = null)
+                        }
                     },
                     expanded = lazyListState.shouldExpandFAB(),
                 )
@@ -213,6 +259,7 @@ class MigrationConfigScreen(private val subjects: Collection<EntryMigrationSubje
         if (migrationSheetOpen) {
             MigrationConfigScreenSheet(
                 preferences = screenModel.sourcePreferences,
+                showSearchOptions = !isSourceSession,
                 onDismissRequest = { migrationSheetOpen = false },
                 onStartMigration = { extraSearchQuery, selectedOptions ->
                     migrationSheetOpen = false
@@ -317,9 +364,14 @@ class MigrationConfigScreen(private val subjects: Collection<EntryMigrationSubje
     }
 
     private class ScreenModel(
+        private val requiredEntryTypes: Set<eu.kanade.tachiyomi.source.entry.EntryType>,
+        private val excludedSourceId: Long?,
+        private val persistSourceSelection: Boolean,
         val sourcePreferences: SourcePreferences = Injekt.get(),
         private val sourceManager: SourceManager = Injekt.get(),
         private val catalogueFeature: EntryCatalogueFeature = Injekt.get(),
+        private val sessionStore: SourceMigrationSessionStore = Injekt.get(),
+        private val workScheduler: SourceMigrationWorkScheduler = Injekt.get(),
     ) : StateScreenModel<ScreenModel.State>(State()) {
 
         private val sourcesComparator = { includedSources: List<Long> ->
@@ -343,7 +395,7 @@ class MigrationConfigScreen(private val subjects: Collection<EntryMigrationSubje
                 val includedSources = updatedSources.mapNotNull { if (!it.isSelected) null else it.id }
                 state.copy(sources = updatedSources.sortedWith(sourcesComparator(includedSources)))
             }
-            saveSources()
+            if (persistSourceSelection) saveSources()
         }
 
         private fun initSources() {
@@ -356,6 +408,11 @@ class MigrationConfigScreen(private val subjects: Collection<EntryMigrationSubje
                 .asSequence()
                 .mapNotNull {
                     if (it.language !in languages) return@mapNotNull null
+                    if (it.id == excludedSourceId) return@mapNotNull null
+                    val supportedEntryTypes = it.supportedEntryTypes
+                    if (supportedEntryTypes != null && !supportedEntryTypes.containsAll(requiredEntryTypes)) {
+                        return@mapNotNull null
+                    }
                     val source = Source(
                         id = it.id,
                         lang = it.language,
@@ -416,16 +473,50 @@ class MigrationConfigScreen(private val subjects: Collection<EntryMigrationSubje
         }
 
         fun saveSources() {
+            if (!persistSourceSelection) return
             state.value.sources
                 .filter { source -> source.isSelected }
                 .map { source -> source.source.id }
                 .let { sources -> sourcePreferences.migrationSources.set(sources) }
         }
 
+        fun startSession(
+            groups: List<SourceMigrationSessionGroupDraft>,
+            originSourceId: Long,
+            selectedOptions: Set<EntryMigrationOption>,
+        ) {
+            if (state.value.isStarting) return
+            val profileId = groups.first().members.first().profileId
+            val targetSourceIds = state.value.selectedSourceIds
+            if (targetSourceIds.isEmpty()) return
+            mutableState.update { it.copy(isStarting = true) }
+            screenModelScope.launchIO {
+                val sessionId = sessionStore.create(
+                    SourceMigrationSessionDraft(
+                        profileId = profileId,
+                        originSourceId = originSourceId,
+                        groups = groups,
+                        targetSourceIds = targetSourceIds,
+                        selectedOptions = selectedOptions,
+                    ),
+                )
+                if (workScheduler.startDiscovery(sessionId)) {
+                    mutableState.update { it.copy(createdSessionId = sessionId) }
+                } else {
+                    mutableState.update { it.copy(isStarting = false) }
+                }
+            }
+        }
+
         data class State(
             val isLoading: Boolean = true,
             val sources: List<MigrationSource> = emptyList(),
-        )
+            val isStarting: Boolean = false,
+            val createdSessionId: SourceMigrationSessionId? = null,
+        ) {
+            val selectedSourceIds: List<Long>
+                get() = sources.filter(MigrationSource::isSelected).map(MigrationSource::id)
+        }
 
         enum class SelectionConfig {
             All,
