@@ -21,6 +21,8 @@ class SourceMigrationWorkScheduler(
     private val store: SourceMigrationSessionStore,
     private val executionPlanner: SourceMigrationExecutionPlanner,
 ) {
+    private val notifier = SourceMigrationNotifier(context)
+
     suspend fun startDiscovery(sessionId: SourceMigrationSessionId): Boolean {
         val session = store.get(sessionId) ?: return false
         when (session.stage) {
@@ -69,6 +71,7 @@ class SourceMigrationWorkScheduler(
             store.transitionStage(sessionId, stage, SourceMigrationSessionStage.DISCOVERY_PAUSED)
         }
         context.workManager.cancelUniqueWork(discoveryWorkName(sessionId))
+        notifier.cancel(sessionId)
     }
 
     suspend fun restartItemDiscovery(
@@ -141,6 +144,7 @@ class SourceMigrationWorkScheduler(
             store.transitionStage(sessionId, stage, SourceMigrationSessionStage.EXECUTION_PAUSED)
         }
         context.workManager.cancelUniqueWork(executionWorkName(sessionId))
+        notifier.cancel(sessionId)
     }
 
     private companion object {
