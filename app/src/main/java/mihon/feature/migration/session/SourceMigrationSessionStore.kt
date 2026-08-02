@@ -393,6 +393,25 @@ class SourceMigrationSessionStore(
         }
     }
 
+    suspend fun recordPlanningConflict(
+        sessionId: SourceMigrationSessionId,
+        sourceEntryIds: Set<Long>,
+        errorCode: String,
+    ) {
+        if (sourceEntryIds.isEmpty()) return
+        val now = clockMillis()
+        handler.await(inTransaction = true) {
+            sourceEntryIds.forEach { sourceEntryId ->
+                source_migration_sessionsQueries.recordItemPlanningConflict(
+                    errorCode = errorCode,
+                    updatedAt = now,
+                    sessionId = sessionId.value,
+                    sourceEntryId = sourceEntryId,
+                )
+            }
+        }
+    }
+
     suspend fun queueExecution(
         sessionId: SourceMigrationSessionId,
         plannedSourceEntryIds: Set<Long>,

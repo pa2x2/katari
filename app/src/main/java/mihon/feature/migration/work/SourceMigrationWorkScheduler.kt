@@ -92,6 +92,13 @@ class SourceMigrationWorkScheduler(
                         }
                     }
                     is SourceMigrationExecutionPlanResult.Conflicted -> {
+                        plan.conflicts.forEach { conflict ->
+                            store.recordPlanningConflict(
+                                sessionId = sessionId,
+                                sourceEntryIds = conflict.sourceEntryIds,
+                                errorCode = conflict.reason.name,
+                            )
+                        }
                         return SourceMigrationExecutionStartResult.Conflicted(plan.conflicts)
                     }
                     SourceMigrationExecutionPlanResult.NoItems -> {
