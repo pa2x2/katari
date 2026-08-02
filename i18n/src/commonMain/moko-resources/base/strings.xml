@@ -1677,6 +1677,10 @@
     <string name="sourceMigrationReview.noAutomaticMatch">No automatic match</string>
     <string name="sourceMigrationReview.migrationProgress">Migrating · %1$d of %2$d</string>
     <string name="sourceMigrationReview.migrateCount">Migrate %1$d</string>
+    <string name="sourceMigrationReview.discardAction">Discard migration</string>
+    <string name="sourceMigrationReview.discardTitle">Discard this migration?</string>
+    <string name="sourceMigrationReview.discardMessage">Replacement search progress will be lost. Your library entries will not be changed.</string>
+    <string name="sourceMigrationReview.discardConfirm">Discard</string>
     <string name="sourceMigration.activeHeader">Active migrations</string>
     <string name="sourceMigration.findingReplacements">Finding replacements</string>
     <string name="sourceMigration.discoveryPaused">Discovery paused</string>

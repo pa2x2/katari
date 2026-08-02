@@ -21,7 +21,6 @@ import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallExtendedFloatingActionButton
@@ -29,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,7 +40,9 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
+import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.util.Screen
+import mihon.feature.migration.review.components.SourceMigrationDiscardDialog
 import mihon.feature.migration.review.components.SourceMigrationDiscoveryGroupCard
 import mihon.feature.migration.review.components.SourceMigrationReviewGroupCard
 import mihon.feature.migration.session.model.SourceMigrationItemState
@@ -68,8 +70,14 @@ class SourceMigrationReviewScreen(
         val state by screenModel.state.collectAsState()
         val session = state.session
         val discoveryActive = session?.stage in DISCOVERY_STAGES
+        val preparationActive = session?.stage in PREPARATION_STAGES
         val lazyListState = rememberLazyListState()
         var candidateItemId by rememberSaveable { mutableStateOf<Long?>(null) }
+        var showDiscardDialog by rememberSaveable { mutableStateOf(false) }
+
+        LaunchedEffect(state.discardCompleted) {
+            if (state.discardCompleted) navigator.pop()
+        }
 
         Scaffold(
             topBar = { scrollBehavior ->
@@ -90,41 +98,52 @@ class SourceMigrationReviewScreen(
                     },
                     navigateUp = navigator::pop,
                     actions = {
-                        when (session?.stage) {
-                            SourceMigrationSessionStage.DISCOVERY_QUEUED,
-                            SourceMigrationSessionStage.DISCOVERING,
-                            -> IconButton(onClick = screenModel::pauseDiscovery) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Pause,
-                                    contentDescription = stringResource(MR.strings.action_pause),
+                        val actions = buildList {
+                            when (session?.stage) {
+                                SourceMigrationSessionStage.DISCOVERY_QUEUED,
+                                SourceMigrationSessionStage.DISCOVERING,
+                                -> add(
+                                    AppBar.Action(
+                                        title = stringResource(MR.strings.action_pause),
+                                        icon = Icons.Outlined.Pause,
+                                        onClick = screenModel::pauseDiscovery,
+                                    ),
+                                )
+                                SourceMigrationSessionStage.DISCOVERY_PAUSED -> add(
+                                    AppBar.Action(
+                                        title = stringResource(MR.strings.action_resume),
+                                        icon = Icons.Outlined.PlayArrow,
+                                        onClick = screenModel::resumeDiscovery,
+                                    ),
+                                )
+                                SourceMigrationSessionStage.EXECUTION_QUEUED,
+                                SourceMigrationSessionStage.EXECUTING,
+                                -> add(
+                                    AppBar.Action(
+                                        title = stringResource(MR.strings.action_pause),
+                                        icon = Icons.Outlined.Pause,
+                                        onClick = screenModel::pauseExecution,
+                                    ),
+                                )
+                                SourceMigrationSessionStage.EXECUTION_PAUSED -> add(
+                                    AppBar.Action(
+                                        title = stringResource(MR.strings.action_resume),
+                                        icon = Icons.Outlined.PlayArrow,
+                                        onClick = screenModel::resumeExecution,
+                                    ),
+                                )
+                                else -> Unit
+                            }
+                            if (preparationActive) {
+                                add(
+                                    AppBar.OverflowAction(
+                                        title = stringResource(MR.strings.sourceMigrationReview_discardAction),
+                                        onClick = { showDiscardDialog = true },
+                                    ),
                                 )
                             }
-                            SourceMigrationSessionStage.DISCOVERY_PAUSED -> {
-                                IconButton(onClick = screenModel::resumeDiscovery) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.PlayArrow,
-                                        contentDescription = stringResource(MR.strings.action_resume),
-                                    )
-                                }
-                            }
-                            SourceMigrationSessionStage.EXECUTION_QUEUED,
-                            SourceMigrationSessionStage.EXECUTING,
-                            -> IconButton(onClick = screenModel::pauseExecution) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Pause,
-                                    contentDescription = stringResource(MR.strings.action_pause),
-                                )
-                            }
-                            SourceMigrationSessionStage.EXECUTION_PAUSED -> {
-                                IconButton(onClick = screenModel::resumeExecution) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.PlayArrow,
-                                        contentDescription = stringResource(MR.strings.action_resume),
-                                    )
-                                }
-                            }
-                            else -> Unit
                         }
+                        AppBarActions(actions)
                     },
                     scrollBehavior = scrollBehavior,
                 )
@@ -176,6 +195,16 @@ class SourceMigrationReviewScreen(
                 sessionId = sessionId,
                 item = item,
                 onDismissRequest = { candidateItemId = null },
+            )
+        }
+
+        if (showDiscardDialog) {
+            SourceMigrationDiscardDialog(
+                onDismissRequest = { showDiscardDialog = false },
+                onConfirm = {
+                    showDiscardDialog = false
+                    screenModel.discardPreparation()
+                },
             )
         }
     }
@@ -487,4 +516,9 @@ private val DISCOVERY_STAGES = setOf(
     SourceMigrationSessionStage.DISCOVERY_QUEUED,
     SourceMigrationSessionStage.DISCOVERING,
     SourceMigrationSessionStage.DISCOVERY_PAUSED,
+)
+
+private val PREPARATION_STAGES = DISCOVERY_STAGES + setOf(
+    SourceMigrationSessionStage.DRAFT,
+    SourceMigrationSessionStage.REVIEW_REQUIRED,
 )

@@ -46,6 +46,7 @@ internal data class SourceMigrationReviewState(
     val groups: List<SourceMigrationReviewGroup> = emptyList(),
     val filter: SourceMigrationReviewFilter = SourceMigrationReviewFilter.ALL,
     val actionInProgress: Boolean = false,
+    val discardCompleted: Boolean = false,
 ) {
     val visibleGroups: List<SourceMigrationReviewGroup>
         get() = groups.mapNotNull { group ->

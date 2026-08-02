@@ -8,6 +8,7 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.workDataOf
 import eu.kanade.tachiyomi.util.system.workManager
+import kotlinx.coroutines.guava.await
 import mihon.feature.migration.execution.SourceMigrationExecutionPlanner
 import mihon.feature.migration.execution.model.SourceMigrationExecutionPlanResult
 import mihon.feature.migration.session.SourceMigrationSessionStore
@@ -72,6 +73,17 @@ class SourceMigrationWorkScheduler(
         }
         context.workManager.cancelUniqueWork(discoveryWorkName(sessionId))
         notifier.cancel(sessionId)
+    }
+
+    suspend fun discardPreparation(sessionId: SourceMigrationSessionId): Boolean {
+        val session = store.get(sessionId) ?: return true
+        if (session.stage !in DISCARDABLE_PREPARATION_STAGES) return false
+
+        store.requestCancellation(sessionId)
+        context.workManager.cancelAllWorkByTag(sessionTag(sessionId)).result.await()
+        notifier.cancel(sessionId)
+        store.delete(sessionId)
+        return true
     }
 
     suspend fun restartItemDiscovery(
@@ -151,6 +163,14 @@ class SourceMigrationWorkScheduler(
         const val TAG_DISCOVERY = "source-migration-discovery"
         const val TAG_EXECUTION = "source-migration-execution"
         const val MINIMUM_BACKOFF_SECONDS = 30L
+
+        val DISCARDABLE_PREPARATION_STAGES = setOf(
+            SourceMigrationSessionStage.DRAFT,
+            SourceMigrationSessionStage.DISCOVERY_QUEUED,
+            SourceMigrationSessionStage.DISCOVERING,
+            SourceMigrationSessionStage.DISCOVERY_PAUSED,
+            SourceMigrationSessionStage.REVIEW_REQUIRED,
+        )
 
         fun discoveryWorkName(sessionId: SourceMigrationSessionId) = "$TAG_DISCOVERY-${sessionId.value}"
 

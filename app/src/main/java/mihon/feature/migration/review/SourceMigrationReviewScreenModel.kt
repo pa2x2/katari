@@ -2,8 +2,10 @@ package mihon.feature.migration.review
 
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withContext
 import mihon.feature.migration.session.SourceMigrationSessionStore
 import mihon.feature.migration.session.model.SourceMigrationSession
 import mihon.feature.migration.session.model.SourceMigrationSessionId
@@ -78,6 +80,22 @@ internal class SourceMigrationReviewScreenModel(
 
     fun resumeDiscovery() {
         screenModelScope.launchIO { workScheduler.startDiscovery(sessionId) }
+    }
+
+    fun discardPreparation() {
+        if (state.value.actionInProgress) return
+        mutableState.update { it.copy(actionInProgress = true) }
+        screenModelScope.launchIO {
+            val discarded = withContext(NonCancellable) {
+                runCatching { workScheduler.discardPreparation(sessionId) }.getOrDefault(false)
+            }
+            mutableState.update {
+                it.copy(
+                    actionInProgress = false,
+                    discardCompleted = discarded,
+                )
+            }
+        }
     }
 
     fun pauseExecution() {
