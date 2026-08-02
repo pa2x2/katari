@@ -1,0 +1,109 @@
+import kotlin.Boolean;
+
+CREATE TABLE source_migration_sessions(
+    session_id TEXT NOT NULL PRIMARY KEY,
+    profile_id INTEGER NOT NULL,
+    origin_source_id INTEGER NOT NULL,
+    stage TEXT NOT NULL,
+    selected_options TEXT NOT NULL,
+    cancellation_requested INTEGER AS Boolean NOT NULL DEFAULT 0,
+    error_code TEXT,
+    error_message TEXT,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    completed_at INTEGER,
+    FOREIGN KEY(profile_id) REFERENCES profiles(_id) ON DELETE CASCADE,
+    CHECK(stage IN (
+        'DRAFT',
+        'DISCOVERY_QUEUED',
+        'DISCOVERING',
+        'REVIEW_REQUIRED',
+        'EXECUTION_QUEUED',
+        'EXECUTING',
+        'COMPLETED',
+        'CANCELLED',
+        'FAILED'
+    ))
+);
+
+CREATE INDEX source_migration_sessions_profile_stage
+ON source_migration_sessions(profile_id, stage, updated_at DESC);
+
+CREATE TABLE source_migration_target_sources(
+    session_id TEXT NOT NULL,
+    source_id INTEGER NOT NULL,
+    position INTEGER NOT NULL,
+    PRIMARY KEY(session_id, source_id),
+    UNIQUE(session_id, position),
+    FOREIGN KEY(session_id) REFERENCES source_migration_sessions(session_id) ON DELETE CASCADE,
+    CHECK(position >= 0)
+);
+
+CREATE TABLE source_migration_items(
+    session_id TEXT NOT NULL,
+    source_entry_id INTEGER NOT NULL,
+    position INTEGER NOT NULL,
+    source_id INTEGER NOT NULL,
+    source_title TEXT NOT NULL,
+    source_url TEXT NOT NULL,
+    state TEXT NOT NULL,
+    included INTEGER AS Boolean NOT NULL DEFAULT 0,
+    selected_target_entry_id INTEGER,
+    target_source_id INTEGER,
+    target_title TEXT,
+    target_url TEXT,
+    match_kind TEXT,
+    operation_key TEXT NOT NULL UNIQUE,
+    available_options TEXT NOT NULL DEFAULT '',
+    discovery_attempts INTEGER NOT NULL DEFAULT 0,
+    execution_attempts INTEGER NOT NULL DEFAULT 0,
+    error_code TEXT,
+    error_message TEXT,
+    updated_at INTEGER NOT NULL,
+    PRIMARY KEY(session_id, source_entry_id),
+    UNIQUE(session_id, position),
+    FOREIGN KEY(session_id) REFERENCES source_migration_sessions(session_id) ON DELETE CASCADE,
+    CHECK(position >= 0),
+    CHECK(discovery_attempts >= 0),
+    CHECK(execution_attempts >= 0),
+    CHECK(state IN (
+        'DISCOVERY_QUEUED',
+        'DISCOVERING',
+        'READY',
+        'NEEDS_REVIEW',
+        'NO_MATCH',
+        'DISCOVERY_FAILED',
+        'CONFLICT',
+        'EXECUTION_QUEUED',
+        'EXECUTING',
+        'APPLIED',
+        'APPLIED_INCOMPLETE',
+        'EXECUTION_FAILED',
+        'CANCELLED'
+    )),
+    CHECK(match_kind IS NULL OR match_kind IN ('EXACT', 'SIMILAR', 'MANUAL'))
+);
+
+CREATE INDEX source_migration_items_session_state
+ON source_migration_items(session_id, state, position);
+
+CREATE TABLE source_migration_candidates(
+    session_id TEXT NOT NULL,
+    source_entry_id INTEGER NOT NULL,
+    target_entry_id INTEGER NOT NULL,
+    target_source_id INTEGER NOT NULL,
+    target_title TEXT NOT NULL,
+    target_url TEXT NOT NULL,
+    rank INTEGER NOT NULL,
+    score REAL,
+    match_kind TEXT NOT NULL,
+    discovered_at INTEGER NOT NULL,
+    PRIMARY KEY(session_id, source_entry_id, target_entry_id),
+    UNIQUE(session_id, source_entry_id, rank),
+    FOREIGN KEY(session_id, source_entry_id)
+        REFERENCES source_migration_items(session_id, source_entry_id)
+        ON DELETE CASCADE,
+    CHECK(rank >= 0),
+    CHECK(score IS NULL OR (score >= 0.0 AND score <= 1.0)),
+    CHECK(match_kind IN ('EXACT', 'SIMILAR', 'MANUAL'))
+);
