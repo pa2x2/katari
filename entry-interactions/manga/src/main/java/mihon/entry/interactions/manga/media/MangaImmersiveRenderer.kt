@@ -13,6 +13,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -22,10 +23,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 import mihon.entry.interactions.media.EntryImmersiveActiveSessionEffect
 import mihon.entry.interactions.media.EntryImmersiveProgress
 import mihon.entry.interactions.media.EntryImmersiveRenderer
-import tachiyomi.presentation.core.components.reader.ReaderPageIndicator
 
 internal class MangaImmersiveRenderer(
     private val media: MangaImmersiveMedia,
@@ -43,7 +44,9 @@ internal class MangaImmersiveRenderer(
     ) {
         val pages = media.pages
         val pagerState = rememberPagerState(initialPage = media.initialPageIndex) { pages.size }
+        val scope = rememberCoroutineScope()
         var zoomedPageIndex by remember { mutableStateOf<Int?>(null) }
+        var isScrubbing by remember { mutableStateOf(false) }
         val isZoomed by remember { derivedStateOf { zoomedPageIndex == pagerState.currentPage } }
         val latestProgress by rememberUpdatedState(onProgress)
         var lastProgressAt by remember { mutableStateOf(SystemClock.elapsedRealtime()) }
@@ -52,8 +55,8 @@ internal class MangaImmersiveRenderer(
             currentPage = pagerState.settledPage,
             active = active,
         )
-        LaunchedEffect(active, isZoomed) {
-            if (active) onPagingBlockedChange(isZoomed)
+        LaunchedEffect(active, isZoomed, isScrubbing) {
+            if (active) onPagingBlockedChange(isZoomed || isScrubbing)
         }
         LaunchedEffect(active, pagerState, pages.size) {
             if (!active) return@LaunchedEffect
@@ -79,7 +82,7 @@ internal class MangaImmersiveRenderer(
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.fillMaxSize(),
-                userScrollEnabled = active && !isZoomed,
+                userScrollEnabled = active && !isZoomed && !isScrubbing,
                 beyondViewportPageCount = 0,
             ) { pageIndex ->
                 MangaImmersiveImage(
@@ -92,12 +95,16 @@ internal class MangaImmersiveRenderer(
                 )
             }
             if (active && controlsVisible) {
-                ReaderPageIndicator(
-                    currentPage = pagerState.currentPage + 1,
-                    totalPages = pages.size,
+                MangaImmersivePageScrubber(
+                    currentPageIndex = pagerState.settledPage,
+                    pageCount = pages.size,
+                    onPageSelected = { pageIndex ->
+                        scope.launch { pagerState.scrollToPage(pageIndex) }
+                    },
+                    onScrubbingChange = { isScrubbing = it },
                     modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(end = 16.dp, bottom = controlsBottomInset + 12.dp),
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = controlsBottomInset + 4.dp),
                 )
             }
         }
