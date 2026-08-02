@@ -140,6 +140,7 @@ import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.category.repository.CategoryRepository
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
+import tachiyomi.domain.entry.interactor.GetLibraryEntries
 import tachiyomi.domain.entry.interactor.SetEntryCategories
 import tachiyomi.domain.entry.interactor.SetEntryChapterFlags
 import tachiyomi.domain.entry.interactor.UpdateEntry
@@ -148,8 +149,6 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
-import tachiyomi.domain.entry.service.EntryLibraryProgressResolution
-import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.util.applyFilter
@@ -185,6 +184,7 @@ class EntryScreenModel(
     private val entryLibraryMembershipFeature: EntryLibraryMembershipFeature = Injekt.get(),
     private val getEntry: GetEntry = Injekt.get(),
     private val getEntryWithChapters: GetEntryWithChapters = Injekt.get(),
+    private val getLibraryEntries: GetLibraryEntries = Injekt.get(),
     private val setEntryChapterFlags: SetEntryChapterFlags = Injekt.get(),
     private val setEntryCategories: SetEntryCategories = Injekt.get(),
     private val updateEntry: UpdateEntry = Injekt.get(),
@@ -1678,9 +1678,8 @@ class EntryScreenModel(
         val state = successState ?: return
         screenModelScope.launchIO {
             val excludedIds = state.mergeGroupMemberIds.toSet()
-            val libraryEntries = entryRepository.getLibraryEntries()
             val targets = buildMergeTargets(
-                libraryItems = libraryEntries.toLibraryItems(),
+                libraryItems = getLibraryEntries.await(),
                 sourceManager = sourceManager,
                 entryType = state.entry.type,
                 excludedEntryIds = excludedIds,
@@ -2195,31 +2194,6 @@ class EntryScreenModel(
             context.stringResource(MR.strings.multi_lang)
         } else {
             sourceManager.getDisplayInfo(entry.source).getDisplayNameForEntryInfo()
-        }
-    }
-
-    /**
-     * TODO: Resolve real [LibraryItem] grouping data so the merge-target picker can surface
-     * already-merged library entries instead of treating these candidates as standalone entries.
-     */
-    private fun List<Entry>.toLibraryItems(): List<LibraryItem> {
-        return map { entry ->
-            LibraryItem(
-                entry = entry,
-                categories = emptyList(),
-                sourceName = "",
-                sourceLanguage = "",
-                sourceItemOrientation = eu.kanade.tachiyomi.source.entry.EntryItemOrientation.VERTICAL,
-                displaySourceId = entry.source,
-                sourceIds = setOf(entry.source),
-                isLocal = entry.isLocal(),
-                isMerged = false,
-                memberEntryIds = emptyList(),
-                memberEntries = listOf(entry),
-                progressSummary = EntryLibraryProgressResolution.Inapplicable(entry.type),
-                latestUpload = 0L,
-                downloadCount = 0,
-            )
         }
     }
 
