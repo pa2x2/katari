@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.update
 import mihon.feature.migration.session.SourceMigrationSessionStore
 import mihon.feature.migration.session.model.SourceMigrationSession
 import mihon.feature.migration.session.model.SourceMigrationSessionId
+import mihon.feature.migration.session.model.SourceMigrationSessionStage
 import mihon.feature.migration.work.SourceMigrationWorkScheduler
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.source.service.SourceManager
@@ -24,11 +25,18 @@ internal class SourceMigrationReviewScreenModel(
         screenModelScope.launchIO {
             sessionStore.observe(sessionId).collectLatest { session ->
                 mutableState.update { state ->
+                    val discoveryActive = session?.stage in DISCOVERY_STAGES
+                    val filter = when {
+                        discoveryActive && state.filter !in DISCOVERY_FILTERS -> SourceMigrationReviewFilter.ALL
+                        !discoveryActive && state.filter in DISCOVERY_ONLY_FILTERS -> SourceMigrationReviewFilter.ALL
+                        else -> state.filter
+                    }
                     state.copy(
                         isLoaded = true,
                         session = session,
                         originSourceName = session?.let { sourceName(it.originSourceId) }.orEmpty(),
                         groups = session?.toReviewGroups().orEmpty(),
+                        filter = filter,
                     )
                 }
             }
@@ -85,6 +93,7 @@ internal class SourceMigrationReviewScreenModel(
         return groups.map { group ->
             SourceMigrationReviewGroup(
                 id = group.groupId,
+                visibleEntryId = group.visibleEntryId,
                 title = group.visibleTitle,
                 memberCount = group.members.size,
                 mappings = group.members
@@ -110,4 +119,22 @@ internal class SourceMigrationReviewScreenModel(
     }
 
     private fun sourceName(sourceId: Long): String = sourceManager.getDisplayInfo(sourceId).name
+
+    private companion object {
+        val DISCOVERY_STAGES = setOf(
+            SourceMigrationSessionStage.DISCOVERY_QUEUED,
+            SourceMigrationSessionStage.DISCOVERING,
+            SourceMigrationSessionStage.DISCOVERY_PAUSED,
+        )
+        val DISCOVERY_FILTERS = setOf(
+            SourceMigrationReviewFilter.ALL,
+            SourceMigrationReviewFilter.FOUND,
+            SourceMigrationReviewFilter.SEARCHING,
+            SourceMigrationReviewFilter.NO_MATCH,
+        )
+        val DISCOVERY_ONLY_FILTERS = setOf(
+            SourceMigrationReviewFilter.FOUND,
+            SourceMigrationReviewFilter.SEARCHING,
+        )
+    }
 }

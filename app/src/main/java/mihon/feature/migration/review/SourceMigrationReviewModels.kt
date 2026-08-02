@@ -7,12 +7,15 @@ import mihon.feature.migration.session.model.SourceMigrationSessionItem
 
 internal enum class SourceMigrationReviewFilter {
     ALL,
+    FOUND,
+    SEARCHING,
     NEEDS_REVIEW,
     NO_MATCH,
 }
 
 internal data class SourceMigrationReviewGroup(
     val id: Long,
+    val visibleEntryId: Long,
     val title: String,
     val memberCount: Int,
     val mappings: List<SourceMigrationReviewMapping>,
@@ -48,13 +51,31 @@ internal data class SourceMigrationReviewState(
         get() = groups.mapNotNull { group ->
             when (filter) {
                 SourceMigrationReviewFilter.ALL -> group
+                SourceMigrationReviewFilter.FOUND -> group.filtered { mapping ->
+                    mapping.item.targetTitle != null && mapping.item.state !in SEARCHING_STATES
+                }
+                SourceMigrationReviewFilter.SEARCHING -> group.filtered { mapping ->
+                    mapping.item.state in SEARCHING_STATES
+                }
                 SourceMigrationReviewFilter.NEEDS_REVIEW -> group.filtered { mapping ->
                     mapping.item.state in REVIEW_STATES
                 }
                 SourceMigrationReviewFilter.NO_MATCH -> group.filtered { mapping ->
-                    mapping.item.state == SourceMigrationItemState.NO_MATCH
+                    mapping.item.targetTitle == null && mapping.item.state !in SEARCHING_STATES
                 }
             }
+        }
+
+    val foundCount: Int
+        get() = groups.sumOf { group ->
+            group.mappings.count { mapping ->
+                mapping.item.targetTitle != null && mapping.item.state !in SEARCHING_STATES
+            }
+        }
+
+    val searchingCount: Int
+        get() = groups.sumOf { group ->
+            group.mappings.count { mapping -> mapping.item.state in SEARCHING_STATES }
         }
 
     val needsReviewCount: Int
@@ -62,7 +83,9 @@ internal data class SourceMigrationReviewState(
 
     val noMatchCount: Int
         get() = groups.sumOf { group ->
-            group.mappings.count { it.item.state == SourceMigrationItemState.NO_MATCH }
+            group.mappings.count { mapping ->
+                mapping.item.targetTitle == null && mapping.item.state !in SEARCHING_STATES
+            }
         }
 
     private fun SourceMigrationReviewGroup.filtered(
@@ -76,6 +99,11 @@ internal data class SourceMigrationReviewState(
     }
 
     private companion object {
+        val SEARCHING_STATES = setOf(
+            SourceMigrationItemState.DISCOVERY_QUEUED,
+            SourceMigrationItemState.DISCOVERING,
+        )
+
         val REVIEW_STATES = setOf(
             SourceMigrationItemState.NEEDS_REVIEW,
             SourceMigrationItemState.DISCOVERY_FAILED,

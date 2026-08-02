@@ -18,6 +18,7 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -26,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallExtendedFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.animateFloatingActionButton
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -39,11 +41,15 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.util.Screen
+import mihon.feature.migration.review.components.SourceMigrationDiscoveryGroupCard
 import mihon.feature.migration.review.components.SourceMigrationReviewGroupCard
 import mihon.feature.migration.session.model.SourceMigrationItemState
 import mihon.feature.migration.session.model.SourceMigrationSessionId
 import mihon.feature.migration.session.model.SourceMigrationSessionStage
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.components.Badge
+import tachiyomi.presentation.core.components.BadgeGroup
+import tachiyomi.presentation.core.components.ListGroupHeader
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
@@ -61,13 +67,20 @@ class SourceMigrationReviewScreen(
         val screenModel = rememberScreenModel { SourceMigrationReviewScreenModel(sessionId) }
         val state by screenModel.state.collectAsState()
         val session = state.session
+        val discoveryActive = session?.stage in DISCOVERY_STAGES
         val lazyListState = rememberLazyListState()
         var candidateItemId by rememberSaveable { mutableStateOf<Long?>(null) }
 
         Scaffold(
             topBar = { scrollBehavior ->
                 AppBar(
-                    title = stringResource(MR.strings.sourceMigrationReview_title),
+                    title = stringResource(
+                        if (discoveryActive) {
+                            MR.strings.sourceMigration_findingReplacements
+                        } else {
+                            MR.strings.sourceMigrationReview_title
+                        },
+                    ),
                     subtitle = session?.let {
                         stringResource(
                             MR.strings.sourceMigrationReview_subtitle,
@@ -202,14 +215,10 @@ private fun SourceMigrationReviewContent(
                     item.state != SourceMigrationItemState.DISCOVERY_QUEUED &&
                         item.state != SourceMigrationItemState.DISCOVERING
                 }
-                SourceMigrationProgress(
-                    label = stringResource(
-                        MR.strings.sourceMigrationReview_findingProgress,
-                        finished,
-                        session.items.size,
-                    ),
+                SourceMigrationDiscoveryProgress(
                     completed = finished,
                     total = session.items.size,
+                    paused = session.stage == SourceMigrationSessionStage.DISCOVERY_PAUSED,
                 )
             }
         }
@@ -233,8 +242,13 @@ private fun SourceMigrationReviewContent(
             }
         }
 
-        if (!discoveryActive) {
-            item(key = "filters") {
+        item(key = "filters") {
+            if (discoveryActive) {
+                SourceMigrationDiscoveryFilters(
+                    state = state,
+                    onFilterChange = onFilterChange,
+                )
+            } else {
                 SourceMigrationReviewFilters(
                     state = state,
                     onFilterChange = onFilterChange,
@@ -242,11 +256,24 @@ private fun SourceMigrationReviewContent(
             }
         }
 
-        if (!discoveryActive) {
-            items(
-                items = state.visibleGroups,
-                key = SourceMigrationReviewGroup::id,
-            ) { group ->
+        if (discoveryActive) {
+            item(key = "replacements-header") {
+                ListGroupHeader(
+                    text = stringResource(MR.strings.sourceMigrationReview_replacementsHeader),
+                )
+            }
+        }
+
+        items(
+            items = state.visibleGroups,
+            key = SourceMigrationReviewGroup::id,
+        ) { group ->
+            if (discoveryActive) {
+                SourceMigrationDiscoveryGroupCard(
+                    group = group,
+                    modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium),
+                )
+            } else {
                 SourceMigrationReviewGroupCard(
                     group = group,
                     onIncludedChange = onIncludedChange,
@@ -257,7 +284,7 @@ private fun SourceMigrationReviewContent(
             }
         }
 
-        if (!discoveryActive && state.visibleGroups.isEmpty()) {
+        if (state.visibleGroups.isEmpty()) {
             item(key = "empty-filter") {
                 Box(
                     modifier = Modifier
@@ -276,6 +303,44 @@ private fun SourceMigrationReviewContent(
 }
 
 @Composable
+private fun SourceMigrationDiscoveryFilters(
+    state: SourceMigrationReviewState,
+    onFilterChange: (SourceMigrationReviewFilter) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = MaterialTheme.padding.medium),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+    ) {
+        SourceMigrationFilterChip(
+            selected = state.filter == SourceMigrationReviewFilter.ALL,
+            onClick = { onFilterChange(SourceMigrationReviewFilter.ALL) },
+            label = stringResource(
+                MR.strings.sourceMigrationReview_filterAll,
+                state.session?.items?.size ?: 0,
+            ),
+        )
+        SourceMigrationFilterChip(
+            selected = state.filter == SourceMigrationReviewFilter.FOUND,
+            onClick = { onFilterChange(SourceMigrationReviewFilter.FOUND) },
+            label = stringResource(MR.strings.sourceMigrationReview_filterFound, state.foundCount),
+        )
+        SourceMigrationFilterChip(
+            selected = state.filter == SourceMigrationReviewFilter.SEARCHING,
+            onClick = { onFilterChange(SourceMigrationReviewFilter.SEARCHING) },
+            label = stringResource(MR.strings.sourceMigrationReview_filterSearching, state.searchingCount),
+        )
+        SourceMigrationFilterChip(
+            selected = state.filter == SourceMigrationReviewFilter.NO_MATCH,
+            onClick = { onFilterChange(SourceMigrationReviewFilter.NO_MATCH) },
+            label = stringResource(MR.strings.sourceMigrationReview_filterNoMatch, state.noMatchCount),
+        )
+    }
+}
+
+@Composable
 private fun SourceMigrationReviewFilters(
     state: SourceMigrationReviewState,
     onFilterChange: (SourceMigrationReviewFilter) -> Unit,
@@ -287,54 +352,114 @@ private fun SourceMigrationReviewFilters(
             .padding(horizontal = MaterialTheme.padding.medium),
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
     ) {
-        FilterChip(
+        SourceMigrationFilterChip(
             selected = state.filter == SourceMigrationReviewFilter.ALL,
             onClick = { onFilterChange(SourceMigrationReviewFilter.ALL) },
-            label = {
-                Text(
-                    stringResource(
-                        MR.strings.sourceMigrationReview_filterAll,
-                        state.session?.items?.size ?: 0,
-                    ),
-                )
-            },
-            leadingIcon = sourceMigrationFilterLeadingIcon(
-                selected = state.filter == SourceMigrationReviewFilter.ALL,
+            label = stringResource(
+                MR.strings.sourceMigrationReview_filterAll,
+                state.session?.items?.size ?: 0,
             ),
         )
-        FilterChip(
+        SourceMigrationFilterChip(
             selected = state.filter == SourceMigrationReviewFilter.NEEDS_REVIEW,
             onClick = { onFilterChange(SourceMigrationReviewFilter.NEEDS_REVIEW) },
-            label = {
-                Text(stringResource(MR.strings.sourceMigrationReview_filterNeedsReview, state.needsReviewCount))
-            },
-            leadingIcon = sourceMigrationFilterLeadingIcon(
-                selected = state.filter == SourceMigrationReviewFilter.NEEDS_REVIEW,
-            ),
+            label = stringResource(MR.strings.sourceMigrationReview_filterNeedsReview, state.needsReviewCount),
         )
-        FilterChip(
+        SourceMigrationFilterChip(
             selected = state.filter == SourceMigrationReviewFilter.NO_MATCH,
             onClick = { onFilterChange(SourceMigrationReviewFilter.NO_MATCH) },
-            label = {
-                Text(stringResource(MR.strings.sourceMigrationReview_filterNoMatch, state.noMatchCount))
-            },
-            leadingIcon = sourceMigrationFilterLeadingIcon(
-                selected = state.filter == SourceMigrationReviewFilter.NO_MATCH,
-            ),
+            label = stringResource(MR.strings.sourceMigrationReview_filterNoMatch, state.noMatchCount),
         )
     }
 }
 
-private fun sourceMigrationFilterLeadingIcon(selected: Boolean): (@Composable () -> Unit)? {
-    return if (selected) {
-        {
-            Icon(
-                imageVector = Icons.Filled.Check,
-                contentDescription = null,
+@Composable
+private fun SourceMigrationFilterChip(
+    selected: Boolean,
+    onClick: () -> Unit,
+    label: String,
+) {
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = { Text(label) },
+        leadingIcon = if (selected) {
+            {
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = null,
+                )
+            }
+        } else {
+            null
+        },
+    )
+}
+
+@Composable
+private fun SourceMigrationDiscoveryProgress(
+    completed: Int,
+    total: Int,
+    paused: Boolean,
+) {
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = MaterialTheme.padding.medium),
+    ) {
+        Column(
+            modifier = Modifier.padding(MaterialTheme.padding.medium),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+                verticalAlignment = Alignment.Top,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(MR.strings.sourceMigration_findingReplacements),
+                        style = MaterialTheme.typography.titleSmall,
+                    )
+                    Text(
+                        text = stringResource(
+                            MR.strings.sourceMigrationReview_discoveryChecked,
+                            completed,
+                            total,
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                val statusColor = if (paused) {
+                    MaterialTheme.colorScheme.secondary
+                } else {
+                    MaterialTheme.colorScheme.primary
+                }
+                BadgeGroup {
+                    Badge(
+                        text = stringResource(
+                            if (paused) {
+                                MR.strings.sourceMigration_discoveryPaused
+                            } else {
+                                MR.strings.sourceMigrationReview_running
+                            },
+                        ),
+                        color = statusColor,
+                        textColor = contentColorFor(statusColor),
+                    )
+                }
+            }
+            LinearProgressIndicator(
+                progress = { if (total == 0) 0f else completed.toFloat() / total },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Text(
+                text = stringResource(MR.strings.sourceMigrationReview_discoveryBackground),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall,
             )
         }
-    } else {
-        null
     }
 }
 
@@ -357,3 +482,9 @@ private fun SourceMigrationProgress(
         )
     }
 }
+
+private val DISCOVERY_STAGES = setOf(
+    SourceMigrationSessionStage.DISCOVERY_QUEUED,
+    SourceMigrationSessionStage.DISCOVERING,
+    SourceMigrationSessionStage.DISCOVERY_PAUSED,
+)
