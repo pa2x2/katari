@@ -1120,7 +1120,6 @@ class EntryScreenModel(
         val dialog = successState?.dialog as? Dialog.DownloadSettings ?: return
         if (dialog.options == null) return
         dismissDialog()
-        toggleAllSelection(false)
         queueDownload(dialog.items, dialog.startNow, selection)
     }
 
@@ -1130,6 +1129,7 @@ class EntryScreenModel(
         selection: EntryDownloadOptionSelection? = null,
     ) {
         val successState = successState ?: return
+        toggleAllSelection(false)
 
         screenModelScope.launchNonCancellable {
             val entry = successState.entry
@@ -1316,21 +1316,6 @@ class EntryScreenModel(
         if (result is EntryTrackingProgressSynchronizationResult.Completed) {
             result.failures.forEach { failure -> logcat(LogPriority.WARN, failure.cause) }
         }
-    }
-
-    /**
-     * Downloads the given list of chapters with the type-specific handler.
-     *
-     * @param items the list of chapter items to download.
-     */
-    private suspend fun downloadChapters(items: List<EntryChapterList.Item>) {
-        items.groupBy { it.entry.id }
-            .forEach { (_, chapterItems) ->
-                val entry = chapterItems.first().entry
-                val chapters = chapterItems.map { it.chapter }
-                entryDownloadActionFeature.download(entry, chapters)
-            }
-        toggleAllSelection(false)
     }
 
     /**
