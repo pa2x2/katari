@@ -9,10 +9,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material3.FilterChip
@@ -22,6 +25,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallExtendedFloatingActionButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -45,6 +49,7 @@ import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
+import tachiyomi.presentation.core.util.shouldExpandFAB
 
 class SourceMigrationReviewScreen(
     private val sessionId: SourceMigrationSessionId,
@@ -56,6 +61,7 @@ class SourceMigrationReviewScreen(
         val screenModel = rememberScreenModel { SourceMigrationReviewScreenModel(sessionId) }
         val state by screenModel.state.collectAsState()
         val session = state.session
+        val lazyListState = rememberLazyListState()
         var candidateItemId by rememberSaveable { mutableStateOf<Long?>(null) }
 
         Scaffold(
@@ -111,27 +117,29 @@ class SourceMigrationReviewScreen(
                 )
             },
             floatingActionButton = {
-                if (session?.stage == SourceMigrationSessionStage.REVIEW_REQUIRED &&
-                    session.includedReadyCount > 0
-                ) {
-                    SmallExtendedFloatingActionButton(
-                        text = {
-                            Text(
-                                stringResource(
-                                    MR.strings.sourceMigrationReview_migrateCount,
-                                    session.includedReadyCount,
-                                ),
-                            )
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
-                                contentDescription = null,
-                            )
-                        },
-                        onClick = screenModel::startExecution,
-                    )
-                }
+                SmallExtendedFloatingActionButton(
+                    text = {
+                        Text(
+                            stringResource(
+                                MR.strings.sourceMigrationReview_migrateCount,
+                                session?.includedReadyCount ?: 0,
+                            ),
+                        )
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
+                            contentDescription = null,
+                        )
+                    },
+                    onClick = screenModel::startExecution,
+                    expanded = lazyListState.shouldExpandFAB(),
+                    modifier = Modifier.animateFloatingActionButton(
+                        visible = session?.stage == SourceMigrationSessionStage.REVIEW_REQUIRED &&
+                            session.includedReadyCount > 0,
+                        alignment = Alignment.BottomEnd,
+                    ),
+                )
             },
         ) { contentPadding ->
             when {
@@ -139,6 +147,7 @@ class SourceMigrationReviewScreen(
                 session == null -> EmptyScreen(MR.strings.internal_error)
                 else -> SourceMigrationReviewContent(
                     state = state,
+                    lazyListState = lazyListState,
                     contentPadding = contentPadding,
                     onFilterChange = screenModel::setFilter,
                     onIncludedChange = screenModel::setIncluded,
@@ -162,6 +171,7 @@ class SourceMigrationReviewScreen(
 @Composable
 private fun SourceMigrationReviewContent(
     state: SourceMigrationReviewState,
+    lazyListState: LazyListState,
     contentPadding: androidx.compose.foundation.layout.PaddingValues,
     onFilterChange: (SourceMigrationReviewFilter) -> Unit,
     onIncludedChange: (sourceEntryId: Long, included: Boolean) -> Unit,
@@ -181,6 +191,7 @@ private fun SourceMigrationReviewContent(
     )
 
     LazyColumn(
+        state = lazyListState,
         modifier = Modifier.fillMaxSize(),
         contentPadding = contentPadding,
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
@@ -287,6 +298,9 @@ private fun SourceMigrationReviewFilters(
                     ),
                 )
             },
+            leadingIcon = sourceMigrationFilterLeadingIcon(
+                selected = state.filter == SourceMigrationReviewFilter.ALL,
+            ),
         )
         FilterChip(
             selected = state.filter == SourceMigrationReviewFilter.NEEDS_REVIEW,
@@ -294,6 +308,9 @@ private fun SourceMigrationReviewFilters(
             label = {
                 Text(stringResource(MR.strings.sourceMigrationReview_filterNeedsReview, state.needsReviewCount))
             },
+            leadingIcon = sourceMigrationFilterLeadingIcon(
+                selected = state.filter == SourceMigrationReviewFilter.NEEDS_REVIEW,
+            ),
         )
         FilterChip(
             selected = state.filter == SourceMigrationReviewFilter.NO_MATCH,
@@ -301,7 +318,23 @@ private fun SourceMigrationReviewFilters(
             label = {
                 Text(stringResource(MR.strings.sourceMigrationReview_filterNoMatch, state.noMatchCount))
             },
+            leadingIcon = sourceMigrationFilterLeadingIcon(
+                selected = state.filter == SourceMigrationReviewFilter.NO_MATCH,
+            ),
         )
+    }
+}
+
+private fun sourceMigrationFilterLeadingIcon(selected: Boolean): (@Composable () -> Unit)? {
+    return if (selected) {
+        {
+            Icon(
+                imageVector = Icons.Filled.Check,
+                contentDescription = null,
+            )
+        }
+    } else {
+        null
     }
 }
 

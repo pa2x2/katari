@@ -4,35 +4,38 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.outlined.AddCircleOutline
+import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.entry.components.EntryCover
 import mihon.feature.migration.review.SourceMigrationReviewGroup
 import mihon.feature.migration.review.SourceMigrationReviewMapping
 import mihon.feature.migration.review.SourceMigrationReviewMember
 import mihon.feature.migration.session.model.SourceMigrationItemState
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.components.Badge
+import tachiyomi.presentation.core.components.BadgeGroup
+import tachiyomi.presentation.core.components.ListGroupHeader
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -136,19 +139,18 @@ private fun SourceMigrationSectionHeader(
     onActionClick: () -> Unit = {},
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = MaterialTheme.padding.medium, end = MaterialTheme.padding.small),
+        modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
+        ListGroupHeader(
             text = title,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.weight(1f),
         )
-        Spacer(modifier = Modifier.weight(1f))
         action?.let {
-            TextButton(onClick = onActionClick) {
+            TextButton(
+                onClick = onActionClick,
+                modifier = Modifier.padding(end = MaterialTheme.padding.small),
+            ) {
                 Text(text = it)
             }
         }
@@ -163,67 +165,84 @@ private fun SourceMigrationMapping(
 ) {
     val item = mapping.item
     Column(
-        modifier = Modifier.padding(MaterialTheme.padding.medium),
+        modifier = Modifier.padding(vertical = MaterialTheme.padding.small),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            SourceMigrationEntry(
-                title = item.sourceTitle,
-                sourceName = mapping.sourceName,
-                thumbnailUrl = item.sourceThumbnailUrl,
-                modifier = Modifier.weight(1f),
-            )
-            SourceMigrationStateLabel(item.state)
-            if (item.state == SourceMigrationItemState.READY) {
-                Checkbox(
-                    checked = item.included,
-                    onCheckedChange = { included ->
-                        onIncludedChange(item.sourceEntryId, included)
-                    },
+        SourceMigrationEntryListItem(
+            title = item.sourceTitle,
+            thumbnailUrl = item.sourceThumbnailUrl,
+            supportingContent = {
+                Text(
+                    text = mapping.sourceName,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
-            }
-        }
+            },
+            trailingContent = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    SourceMigrationStateBadge(item.state)
+                    if (item.state == SourceMigrationItemState.READY) {
+                        Checkbox(
+                            checked = item.included,
+                            onCheckedChange = { included ->
+                                onIncludedChange(item.sourceEntryId, included)
+                            },
+                        )
+                    }
+                }
+            },
+        )
 
         Icon(
-            imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
+            imageVector = Icons.Outlined.ArrowDownward,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
-                .padding(start = 18.dp)
+                .padding(start = MaterialTheme.padding.medium)
                 .size(20.dp),
         )
 
         Surface(
-            color = MaterialTheme.colorScheme.surfaceContainerHighest,
-            shape = RoundedCornerShape(12.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            shape = MaterialTheme.shapes.medium,
             modifier = Modifier
-                .fillMaxWidth()
-                .clickable(enabled = onTargetClick != null) {
-                    onTargetClick?.invoke(item.sourceEntryId)
-                },
+                .padding(horizontal = MaterialTheme.padding.medium)
+                .fillMaxWidth(),
         ) {
             if (item.targetTitle != null) {
-                SourceMigrationEntry(
+                SourceMigrationEntryListItem(
                     title = item.targetTitle,
-                    sourceName = mapping.targetSourceName.orEmpty(),
                     thumbnailUrl = item.targetThumbnailUrl,
-                    modifier = Modifier.padding(MaterialTheme.padding.small),
+                    onClick = onTargetClick?.let { onClick ->
+                        { onClick(item.sourceEntryId) }
+                    },
+                    supportingContent = {
+                        Text(
+                            text = mapping.targetSourceName.orEmpty(),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    },
                 )
             } else {
-                Row(
-                    modifier = Modifier.padding(MaterialTheme.padding.medium),
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-                    verticalAlignment = Alignment.CenterVertically,
+                ListItem(
+                    modifier = onTargetClick?.let { onClick ->
+                        Modifier.clickable { onClick(item.sourceEntryId) }
+                    } ?: Modifier,
+                    leadingContent = {
+                        Icon(
+                            imageVector = Icons.Outlined.AddCircleOutline,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    },
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.AddCircleOutline,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
                     Text(
                         text = stringResource(MR.strings.sourceMigrationReview_chooseReplacement),
                         color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.labelLarge,
                     )
                 }
             }
@@ -232,41 +251,7 @@ private fun SourceMigrationMapping(
 }
 
 @Composable
-private fun SourceMigrationEntry(
-    title: String,
-    sourceName: String,
-    thumbnailUrl: String?,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        EntryCover.Book(
-            data = thumbnailUrl,
-            modifier = Modifier.width(44.dp),
-        )
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.titleSmall,
-            )
-            Text(
-                text = sourceName,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodySmall,
-            )
-        }
-    }
-}
-
-@Composable
-private fun SourceMigrationStateLabel(state: SourceMigrationItemState) {
+private fun SourceMigrationStateBadge(state: SourceMigrationItemState) {
     val label = when (state) {
         SourceMigrationItemState.DISCOVERY_QUEUED,
         SourceMigrationItemState.DISCOVERING,
@@ -286,33 +271,42 @@ private fun SourceMigrationStateLabel(state: SourceMigrationItemState) {
         SourceMigrationItemState.APPLIED -> stringResource(MR.strings.sourceMigrationReview_migrated)
         SourceMigrationItemState.APPLIED_INCOMPLETE -> stringResource(MR.strings.sourceMigrationReview_incomplete)
     }
-    Text(
-        text = label,
-        color = when (state) {
-            SourceMigrationItemState.READY,
-            SourceMigrationItemState.APPLIED,
-            -> MaterialTheme.colorScheme.primary
-            SourceMigrationItemState.NO_MATCH,
-            SourceMigrationItemState.DISCOVERY_FAILED,
-            SourceMigrationItemState.CONFLICT,
-            SourceMigrationItemState.EXECUTION_FAILED,
-            SourceMigrationItemState.APPLIED_INCOMPLETE,
-            -> MaterialTheme.colorScheme.error
-            else -> MaterialTheme.colorScheme.onSurfaceVariant
-        },
-        style = MaterialTheme.typography.labelMedium,
-    )
+    val containerColor = when (state) {
+        SourceMigrationItemState.READY,
+        SourceMigrationItemState.APPLIED,
+        -> MaterialTheme.colorScheme.primary
+        SourceMigrationItemState.NO_MATCH,
+        SourceMigrationItemState.DISCOVERY_FAILED,
+        SourceMigrationItemState.CONFLICT,
+        SourceMigrationItemState.EXECUTION_FAILED,
+        SourceMigrationItemState.APPLIED_INCOMPLETE,
+        -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.secondary
+    }
+    BadgeGroup {
+        Badge(
+            text = label,
+            color = containerColor,
+            textColor = contentColorFor(containerColor),
+        )
+    }
 }
 
 @Composable
 private fun SourceMigrationNotSelectedMember(member: SourceMigrationReviewMember) {
-    SourceMigrationEntry(
+    SourceMigrationEntryListItem(
         title = member.member.title,
-        sourceName = member.sourceName,
         thumbnailUrl = member.member.thumbnailUrl,
         modifier = Modifier
             .fillMaxWidth()
-            .alpha(0.6f)
-            .padding(MaterialTheme.padding.medium),
+            .alpha(0.6f),
+        supportingContent = {
+            Text(
+                text = member.sourceName,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        },
     )
 }
