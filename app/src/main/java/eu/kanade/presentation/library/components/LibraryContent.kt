@@ -40,7 +40,7 @@ fun SharedLibraryContent(
     onRefresh: () -> Boolean,
     onGlobalSearchClicked: () -> Unit,
     getItemCountForPage: (LibraryPage) -> Int?,
-    getItemCountForPrimaryTab: (LibraryPageTab) -> Int?,
+    getItemCountForPages: (List<LibraryPage>) -> Int?,
     pageContent: @Composable (pagerState: PagerState, page: Int, libraryPage: LibraryPage?) -> Unit,
 ) {
     Column(
@@ -68,6 +68,22 @@ fun SharedLibraryContent(
                 }
                 .orEmpty()
         }
+        val tertiaryTabs = remember(
+            pages,
+            activePage?.primaryTab?.id,
+            activePage?.secondaryTab?.id,
+        ) {
+            if (activePage?.secondaryTab == null) {
+                emptyList()
+            } else {
+                pages.filter {
+                    it.primaryTab.id == activePage.primaryTab.id &&
+                        it.secondaryTab?.id == activePage.secondaryTab.id
+                }
+                    .mapNotNull(LibraryPage::tertiaryTab)
+                    .distinctBy(LibraryPageTab::id)
+            }
+        }
 
         if (showPageTabs && pages.isNotEmpty()) {
             LaunchedEffect(pages) {
@@ -76,11 +92,13 @@ fun SharedLibraryContent(
                 }
             }
 
-            if (primaryTabs.size > 1 || secondaryTabs.isNotEmpty()) {
+            if (primaryTabs.size > 1 || secondaryTabs.isNotEmpty() || tertiaryTabs.isNotEmpty()) {
                 LibraryTabs(
                     tabs = primaryTabs,
                     selectedTabId = activePage?.primaryTab?.id,
-                    getItemCountForTab = getItemCountForPrimaryTab,
+                    getItemCountForTab = { tab ->
+                        getItemCountForPages(pages.filter { it.primaryTab.id == tab.id })
+                    },
                     onTabItemClick = { selectedTab ->
                         val targetPageIndex = pages.indexOfFirst { it.primaryTab.id == selectedTab.id }
                         if (targetPageIndex < 0) return@LibraryTabs
@@ -96,13 +114,40 @@ fun SharedLibraryContent(
                     tabs = secondaryTabs,
                     selectedTabId = activePage?.secondaryTab?.id,
                     getItemCountForTab = { tab ->
-                        pages.firstOrNull {
-                            it.primaryTab.id == activePage?.primaryTab?.id && it.secondaryTab?.id == tab.id
-                        }?.let(getItemCountForPage)
+                        getItemCountForPages(
+                            pages.filter {
+                                it.primaryTab.id == activePage?.primaryTab?.id && it.secondaryTab?.id == tab.id
+                            },
+                        )
                     },
                     onTabItemClick = { selectedTab ->
                         val targetPageIndex = pages.indexOfFirst {
                             it.primaryTab.id == activePage?.primaryTab?.id && it.secondaryTab?.id == selectedTab.id
+                        }
+                        if (targetPageIndex < 0) return@LibraryTabs
+                        scope.launch {
+                            pagerState.animateScrollToPage(targetPageIndex)
+                        }
+                    },
+                )
+            }
+            if (tertiaryTabs.isNotEmpty()) {
+                val selectedPage = checkNotNull(activePage)
+                LibraryTabs(
+                    tabs = tertiaryTabs,
+                    selectedTabId = selectedPage.tertiaryTab?.id,
+                    getItemCountForTab = { tab ->
+                        pages.firstOrNull {
+                            it.primaryTab.id == selectedPage.primaryTab.id &&
+                                it.secondaryTab?.id == selectedPage.secondaryTab?.id &&
+                                it.tertiaryTab?.id == tab.id
+                        }?.let(getItemCountForPage)
+                    },
+                    onTabItemClick = { selectedTab ->
+                        val targetPageIndex = pages.indexOfFirst {
+                            it.primaryTab.id == selectedPage.primaryTab.id &&
+                                it.secondaryTab?.id == selectedPage.secondaryTab?.id &&
+                                it.tertiaryTab?.id == selectedTab.id
                         }
                         if (targetPageIndex < 0) return@LibraryTabs
                         scope.launch {
@@ -163,7 +208,7 @@ fun LibraryContent(
     onRefresh: () -> Boolean,
     onGlobalSearchClicked: () -> Unit,
     getItemCountForPage: (LibraryPage) -> Int?,
-    getItemCountForPrimaryTab: (LibraryPageTab) -> Int?,
+    getItemCountForPages: (List<LibraryPage>) -> Int?,
     getDisplayMode: (Int) -> PreferenceMutableState<LibraryDisplayMode>,
     getColumnsForOrientation: (Boolean) -> PreferenceMutableState<Int>,
     getItemsForPage: (LibraryPage) -> List<LibraryItem>,
@@ -181,7 +226,7 @@ fun LibraryContent(
         onRefresh = onRefresh,
         onGlobalSearchClicked = onGlobalSearchClicked,
         getItemCountForPage = getItemCountForPage,
-        getItemCountForPrimaryTab = getItemCountForPrimaryTab,
+        getItemCountForPages = getItemCountForPages,
     ) { pagerState, _, _ ->
         LibraryPager(
             state = pagerState,

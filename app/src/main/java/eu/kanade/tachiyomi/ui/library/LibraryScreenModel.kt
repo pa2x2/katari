@@ -2,7 +2,6 @@ package eu.kanade.tachiyomi.ui.library
 
 import android.content.Context
 import androidx.compose.runtime.Immutable
-import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastMap
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
@@ -15,6 +14,7 @@ import eu.kanade.presentation.library.components.LibraryToolbarTitle
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.getDisplayNameForEntryInfo
+import eu.kanade.tachiyomi.ui.library.grouping.resolveLibraryPages
 import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -79,7 +79,6 @@ import mihon.feature.profiles.core.observeProfileScopedState
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.TriState
-import tachiyomi.core.common.util.lang.compareToWithCollator
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.domain.category.interactor.GetCategories
@@ -91,7 +90,8 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryStatus
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.library.model.LibraryDisplayMode
-import tachiyomi.domain.library.model.LibraryGroupType
+import tachiyomi.domain.library.model.LibraryGrouping
+import tachiyomi.domain.library.model.LibraryGroupingDimension
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
 import tachiyomi.domain.library.model.LibrarySort
@@ -224,28 +224,42 @@ class LibraryScreenModel(
                     .map { it.libraryData }
                     .filter { it.isInitialized }
                     .distinctUntilChanged(),
-                groupType = libraryPreferences.groupType.changes(),
+                grouping = libraryPreferences.grouping.changes(),
                 sortingMode = libraryPreferences.sortingMode.changes(),
                 randomSortSeed = libraryPreferences.randomSortSeed.changes(),
-                applyGrouping = { data, groupType ->
-                    data.favorites.applyGrouping(data.categories, data.showSystemCategory, groupType)
+                applyGrouping = { data, grouping ->
+                    resolveLibraryPages(
+                        items = data.favorites,
+                        categories = data.categories,
+                        showSystemCategory = data.showSystemCategory,
+                        grouping = grouping,
+                        libraryTitle = context.stringResource(MR.strings.label_library),
+                        entryTypeTitle = { entryType ->
+                            context.stringResource(entryType.entryTypePresentation().displayNameLabel)
+                        },
+                    )
                 },
-                applySort = { pages, data, groupType, sortingMode, randomSortSeed ->
+                applySort = { pages, data, sortingMode, randomSortSeed ->
                     pages.applySort(
                         favoritesById = data.favoritesById,
                         trackingEntries = data.trackingEntries,
                         trackingScoreSupportedEntryTypes = data.trackingScoreSupportedEntryTypes,
-                        groupType = groupType,
                         globalSort = sortingMode,
                         randomSortSeed = randomSortSeed,
                     )
                 },
-            ).collectLatest { (groupType, groupedFavorites) ->
+            ).collectLatest { (grouping, groupedFavorites) ->
                 mutableState.update { state ->
+                    val activePageIndex = groupedFavorites.indexOfMatchingPage(
+                        previousPage = state.activePage,
+                        previousGrouping = state.grouping,
+                        newGrouping = grouping,
+                    )
                     state.copy(
                         isLoading = false,
                         groupedFavorites = groupedFavorites,
-                        groupType = groupType,
+                        grouping = grouping,
+                        activePageIndex = activePageIndex,
                     )
                 }
             }
@@ -319,155 +333,10 @@ class LibraryScreenModel(
         )
     }
 
-    private fun List<LibraryItem>.applyGrouping(
-        categories: List<Category>,
-        showSystemCategory: Boolean,
-        groupType: LibraryGroupType,
-    ): List<LibraryPage> {
-        val visibleCategories = categories.filter { showSystemCategory || !it.isSystemCategory }
-        val categoryTabs = visibleCategories.associate { category ->
-            category.id to LibraryPageTab(
-                id = "category:${category.id}",
-                title = category.name,
-                category = category,
-            )
-        }
-
-        val sourceNames = map { it.displaySourceId to it.sourceName }.toMap()
-        val sourceIds = sourceNames.keys.sortedWith { sourceId1, sourceId2 ->
-            sourceNames.getValue(sourceId1)
-                .compareToWithCollator(sourceNames.getValue(sourceId2))
-                .takeIf { it != 0 }
-                ?: sourceId1.compareTo(sourceId2)
-        }
-        val sourceTabs = sourceIds.associateWith { sourceId ->
-            LibraryPageTab(
-                id = "source:$sourceId",
-                title = sourceNames.getValue(sourceId),
-            )
-        }
-        val entryTypes = EntryType.entries.filter { entryType ->
-            any { it.entry.type == entryType }
-        }
-        val typeTabs = entryTypes.associateWith { entryType ->
-            LibraryPageTab(
-                id = "type:${entryType.name}",
-                title = context.stringResource(entryType.entryTypePresentation().displayNameLabel),
-            )
-        }
-        if (
-            groupType == LibraryGroupType.Type ||
-            groupType == LibraryGroupType.TypeCategory ||
-            groupType == LibraryGroupType.CategoryType
-        ) {
-            return buildTypeLibraryPages(
-                items = this,
-                visibleCategories = visibleCategories,
-                groupType = groupType,
-                categoryTabs = categoryTabs,
-                entryTypes = entryTypes,
-                typeTabs = typeTabs,
-            )
-        }
-
-        return when (groupType) {
-            LibraryGroupType.Category -> {
-                visibleCategories.map { category ->
-                    LibraryPage(
-                        id = "category:${category.id}",
-                        primaryTab = categoryTabs.getValue(category.id),
-                        category = category,
-                        itemIds = fastFilter { category.id in it.categories }
-                            .fastMap(LibraryItem::key),
-                    )
-                }
-            }
-            LibraryGroupType.Extension -> {
-                sourceIds.map { sourceId ->
-                    LibraryPage(
-                        id = "source:$sourceId",
-                        primaryTab = sourceTabs.getValue(sourceId),
-                        sourceId = sourceId,
-                        itemIds = fastFilter { it.displaySourceId == sourceId }
-                            .fastMap(LibraryItem::key),
-                    )
-                }
-            }
-            LibraryGroupType.Type,
-            LibraryGroupType.TypeCategory,
-            LibraryGroupType.CategoryType,
-            -> error("Type grouping is handled before source grouping")
-            LibraryGroupType.ExtensionCategory -> {
-                buildList {
-                    sourceIds.forEach { sourceId ->
-                        val sourceItems = this@applyGrouping.fastFilter { it.displaySourceId == sourceId }
-                        visibleCategories.forEach { category ->
-                            val itemIds = sourceItems.fastFilter { category.id in it.categories }
-                                .fastMap(LibraryItem::key)
-                            if (itemIds.isNotEmpty()) {
-                                add(
-                                    LibraryPage(
-                                        id = "source:$sourceId:category:${category.id}",
-                                        primaryTab = sourceTabs.getValue(sourceId),
-                                        secondaryTab = categoryTabs.getValue(category.id),
-                                        category = category,
-                                        sourceId = sourceId,
-                                        itemIds = itemIds,
-                                    ),
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-            LibraryGroupType.CategoryExtension -> {
-                buildList {
-                    visibleCategories.forEach { category ->
-                        val categoryItems = this@applyGrouping.fastFilter { category.id in it.categories }
-                        if (categoryItems.isEmpty()) {
-                            add(
-                                LibraryPage(
-                                    id = "category:${category.id}",
-                                    primaryTab = categoryTabs.getValue(category.id),
-                                    category = category,
-                                ),
-                            )
-                        } else {
-                            val categorySourceIds = categoryItems.map { it.displaySourceId }
-                                .distinct()
-                                .sortedWith { sourceId1, sourceId2 ->
-                                    sourceNames.getValue(sourceId1)
-                                        .compareToWithCollator(sourceNames.getValue(sourceId2))
-                                        .takeIf { it != 0 }
-                                        ?: sourceId1.compareTo(sourceId2)
-                                }
-                            categorySourceIds.forEach { sourceId ->
-                                add(
-                                    LibraryPage(
-                                        id = "category:${category.id}:source:$sourceId",
-                                        primaryTab = categoryTabs.getValue(category.id),
-                                        secondaryTab = sourceTabs.getValue(sourceId),
-                                        category = category,
-                                        sourceId = sourceId,
-                                        itemIds = categoryItems.fastFilter {
-                                            it.displaySourceId == sourceId
-                                        }
-                                            .fastMap(LibraryItem::key),
-                                    ),
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     private fun List<LibraryPage>.applySort(
         favoritesById: Map<LibraryItemKey, LibraryItem>,
         trackingEntries: Map<Long, List<EntryTrackingCollectionTrack>>,
         trackingScoreSupportedEntryTypes: Set<EntryType>,
-        groupType: LibraryGroupType,
         globalSort: LibrarySort,
         randomSortSeed: Int,
     ): List<LibraryPage> {
@@ -482,11 +351,7 @@ class LibraryScreenModel(
         }
 
         return map { page ->
-            val sort = if (groupType == LibraryGroupType.Category) {
-                page.category.effectiveLibrarySort(globalSort)
-            } else {
-                globalSort
-            }
+            val sort = page.category.effectiveLibrarySort(globalSort)
             if (sort.type == LibrarySort.Type.Random) {
                 return@map page.copy(
                     itemIds = page.itemIds.shuffled(Random(randomSortSeed)),
@@ -1217,7 +1082,7 @@ class LibraryScreenModel(
         val displaySettings: LibraryDisplaySettings = LibraryDisplaySettings(),
         val dialog: Dialog? = null,
         val libraryData: LibraryData = LibraryData(),
-        val groupType: LibraryGroupType = LibraryGroupType.Category,
+        val grouping: LibraryGrouping = LibraryGrouping.default,
         private val activePageIndex: Int = 0,
         private val groupedFavorites: List<LibraryPage> = emptyList(),
     ) {
@@ -1231,7 +1096,6 @@ class LibraryScreenModel(
         val activePage: LibraryPage? = displayedPages.getOrNull(coercedActivePageIndex)
 
         val activeSortCategory: Category? = activePage?.category
-            ?.takeIf { groupType == LibraryGroupType.Category }
 
         val isLibraryEmpty = libraryData.favorites.isEmpty()
 
@@ -1260,13 +1124,13 @@ class LibraryScreenModel(
             return if (showEntryCount || !searchQuery.isNullOrEmpty()) page.itemIds.size else null
         }
 
-        fun getItemCountForPrimaryTab(tab: LibraryPageTab): Int? {
+        fun getItemCountForPages(pages: List<LibraryPage>): Int? {
             if (!showEntryCount && searchQuery.isNullOrEmpty()) return null
-            return displayedPages
-                .filter { it.primaryTab.id == tab.id }
-                .flatMap(LibraryPage::itemIds)
-                .distinct()
-                .size
+            return pages.flatMap(LibraryPage::itemIds).distinct().size
+        }
+
+        fun getItemCountForPrimaryTab(tab: LibraryPageTab): Int? {
+            return getItemCountForPages(displayedPages.filter { it.primaryTab.id == tab.id })
         }
 
         fun getToolbarTitle(
@@ -1291,109 +1155,49 @@ internal fun LibraryItem.calculateDownloadCount(downloadRuntime: EntryDownloadRu
     return memberEntries.sumOf(downloadRuntime::downloadCount)
 }
 
-internal fun buildTypeLibraryPages(
-    items: List<LibraryItem>,
-    visibleCategories: List<Category>,
-    groupType: LibraryGroupType,
-    categoryTabs: Map<Long, LibraryPageTab>,
-    entryTypes: List<EntryType>,
-    typeTabs: Map<EntryType, LibraryPageTab>,
-): List<LibraryPage> {
-    return when (groupType) {
-        LibraryGroupType.Type -> {
-            entryTypes.map { entryType ->
-                LibraryPage(
-                    id = "type:${entryType.name}",
-                    primaryTab = typeTabs.getValue(entryType),
-                    entryType = entryType,
-                    itemIds = items.fastFilter { it.entry.type == entryType }
-                        .fastMap(LibraryItem::key),
-                )
-            }
-        }
-        LibraryGroupType.TypeCategory -> {
-            buildList {
-                entryTypes.forEach { entryType ->
-                    val typeItems = items.fastFilter { it.entry.type == entryType }
-                    visibleCategories.forEach { category ->
-                        val itemIds = typeItems.fastFilter { category.id in it.categories }
-                            .fastMap(LibraryItem::key)
-                        if (itemIds.isNotEmpty()) {
-                            add(
-                                LibraryPage(
-                                    id = "type:${entryType.name}:category:${category.id}",
-                                    primaryTab = typeTabs.getValue(entryType),
-                                    secondaryTab = categoryTabs.getValue(category.id),
-                                    category = category,
-                                    entryType = entryType,
-                                    itemIds = itemIds,
-                                ),
-                            )
-                        }
-                    }
-                }
-            }
-        }
-        LibraryGroupType.CategoryType -> {
-            buildList {
-                visibleCategories.forEach { category ->
-                    val categoryItems = items.fastFilter { category.id in it.categories }
-                    if (categoryItems.isEmpty()) {
-                        add(
-                            LibraryPage(
-                                id = "category:${category.id}",
-                                primaryTab = categoryTabs.getValue(category.id),
-                                category = category,
-                            ),
-                        )
-                    } else {
-                        entryTypes.forEach { entryType ->
-                            val itemIds = categoryItems.fastFilter { it.entry.type == entryType }
-                                .fastMap(LibraryItem::key)
-                            if (itemIds.isNotEmpty()) {
-                                add(
-                                    LibraryPage(
-                                        id = "category:${category.id}:type:${entryType.name}",
-                                        primaryTab = categoryTabs.getValue(category.id),
-                                        secondaryTab = typeTabs.getValue(entryType),
-                                        category = category,
-                                        entryType = entryType,
-                                        itemIds = itemIds,
-                                    ),
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        else -> error("Unsupported type grouping mode: $groupType")
-    }
-}
-
 internal fun observeGroupedLibraryPages(
     libraryData: Flow<LibraryScreenModel.LibraryData>,
-    groupType: Flow<LibraryGroupType>,
+    grouping: Flow<LibraryGrouping>,
     sortingMode: Flow<LibrarySort>,
     randomSortSeed: Flow<Int>,
-    applyGrouping: (LibraryScreenModel.LibraryData, LibraryGroupType) -> List<LibraryPage>,
+    applyGrouping: (LibraryScreenModel.LibraryData, LibraryGrouping) -> List<LibraryPage>,
     applySort: (
         pages: List<LibraryPage>,
         data: LibraryScreenModel.LibraryData,
-        groupType: LibraryGroupType,
         sortingMode: LibrarySort,
         randomSortSeed: Int,
     ) -> List<LibraryPage>,
-): Flow<Pair<LibraryGroupType, List<LibraryPage>>> {
+): Flow<Pair<LibraryGrouping, List<LibraryPage>>> {
     return combine(
         libraryData,
-        groupType,
+        grouping,
         sortingMode,
         randomSortSeed,
-    ) { data, groupType, sortingMode, randomSortSeed ->
-        val pages = applyGrouping(data, groupType)
-        groupType to applySort(pages, data, groupType, sortingMode, randomSortSeed)
+    ) { data, grouping, sortingMode, randomSortSeed ->
+        val pages = applyGrouping(data, grouping)
+        grouping to applySort(pages, data, sortingMode, randomSortSeed)
     }
+}
+
+private fun List<LibraryPage>.indexOfMatchingPage(
+    previousPage: LibraryPage?,
+    previousGrouping: LibraryGrouping,
+    newGrouping: LibraryGrouping,
+): Int {
+    if (previousPage == null) return 0
+    val sharedDimensions = previousGrouping.dimensions.intersect(newGrouping.dimensions.toSet())
+    return indexOfFirst { candidate ->
+        sharedDimensions.all { dimension ->
+            when (dimension) {
+                LibraryGroupingDimension.Category ->
+                    previousPage.category?.id?.let { candidate.category?.id == it } ?: true
+                LibraryGroupingDimension.EntryType ->
+                    previousPage.entryType?.let { candidate.entryType == it } ?: true
+                LibraryGroupingDimension.Source ->
+                    previousPage.sourceId?.let { candidate.sourceId == it } ?: true
+            }
+        }
+    }.takeIf { it >= 0 } ?: 0
 }
 
 internal fun availableMoveProfiles(

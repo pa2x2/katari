@@ -16,6 +16,9 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.category.visualName
+import eu.kanade.presentation.library.grouping.LibraryGroupingDialog
+import eu.kanade.presentation.library.grouping.libraryGroupingSummary
+import eu.kanade.presentation.library.grouping.showLibraryGroupingTabsLabel
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TriStateListDialog
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
@@ -27,7 +30,6 @@ import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.interactor.ResetCategoryFlags
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.model.LibraryDisplayMode
-import tachiyomi.domain.library.model.LibraryGroupType
 import tachiyomi.domain.library.model.LibrarySort
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -395,42 +397,32 @@ object SettingsLibraryScreen : SearchableSettings {
     private fun getGroupGroup(
         libraryPreferences: LibraryPreferences,
     ): Preference.PreferenceGroup {
-        val groupType by libraryPreferences.groupType.collectAsState()
+        val grouping by libraryPreferences.grouping.collectAsState()
+        var showGroupingDialog by rememberSaveable { mutableStateOf(false) }
+
+        if (showGroupingDialog) {
+            LibraryGroupingDialog(
+                initialGrouping = grouping,
+                onDismissRequest = { showGroupingDialog = false },
+                onApply = {
+                    libraryPreferences.grouping.set(it)
+                    showGroupingDialog = false
+                },
+            )
+        }
 
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.action_group),
             preferenceItems = persistentListOf(
-                Preference.PreferenceItem.ListPreference(
-                    preference = libraryPreferences.groupType,
-                    entries = persistentMapOf(
-                        LibraryGroupType.Category to stringResource(MR.strings.action_group_category),
-                        LibraryGroupType.Type to stringResource(MR.strings.action_group_type),
-                        LibraryGroupType.Extension to stringResource(MR.strings.action_group_extension),
-                        LibraryGroupType.TypeCategory to stringResource(MR.strings.action_group_type_category),
-                        LibraryGroupType.CategoryType to stringResource(MR.strings.action_group_category_type),
-                        LibraryGroupType.ExtensionCategory to stringResource(
-                            MR.strings.action_group_extension_category,
-                        ),
-                        LibraryGroupType.CategoryExtension to stringResource(
-                            MR.strings.action_group_category_extension,
-                        ),
-                    ),
-                    title = stringResource(MR.strings.action_group),
+                Preference.PreferenceItem.TextPreference(
+                    title = stringResource(MR.strings.library_grouping_hierarchy),
+                    subtitle = libraryGroupingSummary(grouping),
+                    isProfileSpecific = true,
+                    onClick = { showGroupingDialog = true },
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = libraryPreferences.categoryTabs,
-                    title = stringResource(
-                        when (groupType) {
-                            LibraryGroupType.Category -> MR.strings.action_display_show_tabs
-                            LibraryGroupType.Type -> MR.strings.action_display_show_type_tabs
-                            LibraryGroupType.Extension -> MR.strings.action_display_show_extension_tabs
-                            LibraryGroupType.TypeCategory,
-                            LibraryGroupType.CategoryType,
-                            LibraryGroupType.ExtensionCategory,
-                            LibraryGroupType.CategoryExtension,
-                            -> MR.strings.action_display_show_group_tabs
-                        },
-                    ),
+                    title = showLibraryGroupingTabsLabel(grouping),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = libraryPreferences.categoryNumberOfItems,

@@ -20,7 +20,8 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.SearchToolbar
 import kotlinx.collections.immutable.toPersistentList
-import tachiyomi.domain.library.model.LibraryGroupType
+import tachiyomi.domain.library.model.LibraryGrouping
+import tachiyomi.domain.library.model.LibraryGroupingDimension
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.Pill
 import tachiyomi.presentation.core.i18n.stringResource
@@ -31,7 +32,7 @@ fun LibraryToolbar(
     hasActiveFilters: Boolean,
     selectedCount: Int,
     title: LibraryToolbarTitle,
-    currentGroupType: LibraryGroupType,
+    currentGrouping: LibraryGrouping,
     onClickUnselectAll: () -> Unit,
     onClickSelectAll: () -> Unit,
     onClickInvertSelection: () -> Unit,
@@ -52,7 +53,7 @@ fun LibraryToolbar(
     else -> LibraryRegularToolbar(
         title = title,
         hasFilters = hasActiveFilters,
-        currentGroupType = currentGroupType,
+        currentGrouping = currentGrouping,
         searchQuery = searchQuery,
         onSearchQueryChange = onSearchQueryChange,
         onClickFilter = onClickFilter,
@@ -67,7 +68,7 @@ fun LibraryToolbar(
 private fun LibraryRegularToolbar(
     title: LibraryToolbarTitle,
     hasFilters: Boolean,
-    currentGroupType: LibraryGroupType,
+    currentGrouping: LibraryGrouping,
     searchQuery: String?,
     onSearchQueryChange: (String?) -> Unit,
     onClickFilter: () -> Unit,
@@ -77,15 +78,15 @@ private fun LibraryRegularToolbar(
     scrollBehavior: TopAppBarScrollBehavior?,
 ) {
     val pillAlpha = if (isSystemInDarkTheme()) 0.12f else 0.08f
-    val updateCurrentGroupTitle = when (currentGroupType) {
-        LibraryGroupType.Category -> stringResource(MR.strings.action_update_category)
-        LibraryGroupType.Type -> stringResource(MR.strings.action_update_type)
-        LibraryGroupType.Extension -> stringResource(MR.strings.action_update_extension)
-        LibraryGroupType.TypeCategory,
-        LibraryGroupType.CategoryType,
-        LibraryGroupType.ExtensionCategory,
-        LibraryGroupType.CategoryExtension,
-        -> stringResource(MR.strings.action_update_group)
+    val updateCurrentGroupTitle = when (currentGrouping.dimensions.singleOrNull()) {
+        LibraryGroupingDimension.Category -> stringResource(MR.strings.action_update_category)
+        LibraryGroupingDimension.EntryType -> stringResource(MR.strings.action_update_type)
+        LibraryGroupingDimension.Source -> stringResource(MR.strings.action_update_extension)
+        null -> if (currentGrouping.dimensions.isEmpty()) {
+            stringResource(MR.strings.action_update_library)
+        } else {
+            stringResource(MR.strings.action_update_group)
+        }
     }
     SearchToolbar(
         titleContent = {

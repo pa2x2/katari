@@ -15,7 +15,7 @@ import tachiyomi.domain.category.interactor.SetDisplayMode
 import tachiyomi.domain.category.interactor.SetSortModeForCategory
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.model.LibraryDisplayMode
-import tachiyomi.domain.library.model.LibraryGroupType
+import tachiyomi.domain.library.model.LibraryGrouping
 import tachiyomi.domain.library.model.LibrarySort
 import tachiyomi.domain.library.service.LibraryPreferences
 import uy.kohesive.injekt.Injekt
@@ -59,14 +59,11 @@ class LibrarySettingsScreenModel(
         screenModelScope.launchIO {
             val targetCategory = category
                 ?.takeIf { !it.isSystemCategory }
-                ?.takeIf { libraryPreferences.groupType.get() == LibraryGroupType.Category }
             setSortModeForCategory.await(targetCategory, mode, direction)
         }
     }
 
-    fun setGroup(type: LibraryGroupType) {
-        screenModelScope.launchIO {
-            libraryPreferences.groupType.set(type)
-        }
+    fun setGrouping(grouping: LibraryGrouping) {
+        libraryPreferences.grouping.set(grouping)
     }
 }
