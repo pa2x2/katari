@@ -18,13 +18,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import eu.kanade.presentation.components.TabbedDialog
 import eu.kanade.presentation.components.TabbedDialogPaddings
+import eu.kanade.presentation.library.grouping.LibraryGroupingEditor
+import eu.kanade.presentation.library.grouping.showLibraryGroupingTabsLabel
 import eu.kanade.tachiyomi.ui.library.LibrarySettingsScreenModel
 import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import mihon.entry.interactions.library.EntryLibraryFilterAvailability
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.model.LibraryDisplayMode
-import tachiyomi.domain.library.model.LibraryGroupType
 import tachiyomi.domain.library.model.LibrarySort
 import tachiyomi.domain.library.model.effectiveLibrarySort
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -32,7 +33,6 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.BaseSortItem
 import tachiyomi.presentation.core.components.CheckboxItem
 import tachiyomi.presentation.core.components.HeadingItem
-import tachiyomi.presentation.core.components.RadioItem
 import tachiyomi.presentation.core.components.SettingsChipRow
 import tachiyomi.presentation.core.components.SliderItem
 import tachiyomi.presentation.core.components.SortItem
@@ -320,20 +320,9 @@ private fun DisplayPage(
     )
 
     HeadingItem(MR.strings.tabs_header)
-    val groupType by screenModel.libraryPreferences.groupType.collectAsState()
+    val grouping by screenModel.libraryPreferences.grouping.collectAsState()
     CheckboxItem(
-        label = stringResource(
-            when (groupType) {
-                LibraryGroupType.Category -> MR.strings.action_display_show_tabs
-                LibraryGroupType.Type -> MR.strings.action_display_show_type_tabs
-                LibraryGroupType.Extension -> MR.strings.action_display_show_extension_tabs
-                LibraryGroupType.TypeCategory,
-                LibraryGroupType.CategoryType,
-                LibraryGroupType.ExtensionCategory,
-                LibraryGroupType.CategoryExtension,
-                -> MR.strings.action_display_show_group_tabs
-            },
-        ),
+        label = showLibraryGroupingTabsLabel(grouping),
         pref = screenModel.libraryPreferences.categoryTabs,
     )
     CheckboxItem(
@@ -346,27 +335,11 @@ private fun DisplayPage(
 private fun GroupPage(
     screenModel: LibrarySettingsScreenModel,
 ) {
-    val groupState by screenModel.libraryPreferences.groupType.collectAsState()
-
-    val options = remember {
-        listOfNotNull(
-            MR.strings.action_group_category to LibraryGroupType.Category,
-            MR.strings.action_group_type to LibraryGroupType.Type,
-            MR.strings.action_group_extension to LibraryGroupType.Extension,
-            MR.strings.action_group_type_category to LibraryGroupType.TypeCategory,
-            MR.strings.action_group_category_type to LibraryGroupType.CategoryType,
-            MR.strings.action_group_extension_category to LibraryGroupType.ExtensionCategory,
-            MR.strings.action_group_category_extension to LibraryGroupType.CategoryExtension,
-        )
-    }
-
-    options.forEach { (titleRes, mode) ->
-        RadioItem(
-            label = stringResource(titleRes),
-            selected = mode == groupState,
-            onClick = {
-                screenModel.setGroup(mode)
-            },
-        )
-    }
+    val grouping by screenModel.libraryPreferences.grouping.collectAsState()
+    HeadingItem(MR.strings.library_grouping_hierarchy)
+    LibraryGroupingEditor(
+        grouping = grouping,
+        onGroupingChange = screenModel::setGrouping,
+        modifier = Modifier.padding(horizontal = TabbedDialogPaddings.Horizontal),
+    )
 }

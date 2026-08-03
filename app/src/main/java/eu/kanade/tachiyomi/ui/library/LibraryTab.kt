@@ -161,7 +161,7 @@ data object LibraryTab : Tab {
                     hasActiveFilters = state.hasActiveFilters,
                     selectedCount = state.selection.size,
                     title = title,
-                    currentGroupType = state.groupType,
+                    currentGrouping = state.grouping,
                     onClickUnselectAll = screenModel::clearSelection,
                     onClickSelectAll = screenModel::selectAll,
                     onClickInvertSelection = screenModel::invertSelection,
@@ -266,7 +266,7 @@ data object LibraryTab : Tab {
                             navigator.push(GlobalSearchScreen(screenModel.state.value.searchQuery ?: ""))
                         },
                         getItemCountForPage = { state.getItemCountForPage(it) },
-                        getItemCountForPrimaryTab = { state.getItemCountForPrimaryTab(it) },
+                        getItemCountForPages = { state.getItemCountForPages(it) },
                         getDisplayMode = { screenModel.getDisplayMode() },
                         getColumnsForOrientation = { screenModel.getColumnsForOrientation(it) },
                         getItemsForPage = { state.getItemsForPage(it) },

@@ -8,6 +8,7 @@ import tachiyomi.core.common.preference.getEnum
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryGroupType
+import tachiyomi.domain.library.model.LibraryGrouping
 import tachiyomi.domain.library.model.LibrarySort
 
 class LibraryPreferences(
@@ -106,9 +107,17 @@ class LibraryPreferences(
 
     // region Group
 
+    // Compatibility accessor for existing callers and the legacy serialized enum names.
     val groupType: Preference<LibraryGroupType> = preferenceStore.getEnum(
         "pref_group_library_type",
         LibraryGroupType.Category,
+    )
+
+    val grouping: Preference<LibraryGrouping> = preferenceStore.getObjectFromString(
+        "pref_group_library_type",
+        LibraryGrouping.default,
+        LibraryGrouping.Serializer::serialize,
+        LibraryGrouping.Serializer::deserialize,
     )
 
     // endregion

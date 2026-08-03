@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.1.2] - 2026-08-03
+
+### 🌟 Highlights
+
+Customize library grouping levels while navigating immersive manga and book readers more reliably.
+
+### ✨ Added
+
+- Configure the library grouping hierarchy by enabling and reordering category, entry type, and
+  source levels, or view all entries without grouping.
+
+### 🐛 Fixed
+
+- Restored page navigation in immersive manga browsing while an image is zoomed in.
+- Prevented chapter transition controls in the book reader from triggering reader tap actions.
+
 ## [1.1.1] - 2026-08-02
 
 ### 🌟 Highlights
@@ -35,7 +51,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.1.1...upcoming
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.1.2...upcoming
+[1.1.2]: https://github.com/pa2x2/katari/releases/tag/v1.1.2
 [1.1.1]: https://github.com/pa2x2/katari/releases/tag/v1.1.1
 [1.1.0]: https://github.com/pa2x2/katari/releases/tag/v1.1.0
 [1.0.0]: https://github.com/pa2x2/katari/releases/tag/v1.0.0
