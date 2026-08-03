@@ -94,13 +94,11 @@ internal fun MangaImmersiveImage(
         AndroidView(
             factory = { viewContext ->
                 ReaderPageImageView(viewContext).apply {
-                    onScaleChanged = { onPagingBlockedChange(isZoomed()) }
                     onViewClicked = onToggleControls
                     viewRef.value = this
                 }
             },
             update = { view ->
-                view.onScaleChanged = { onPagingBlockedChange(view.isZoomed()) }
                 view.onViewClicked = onToggleControls
                 val image = loadedImage
                 if (image == null) {
