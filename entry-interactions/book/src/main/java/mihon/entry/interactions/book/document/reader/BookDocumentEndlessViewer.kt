@@ -1,6 +1,5 @@
 package mihon.entry.interactions.book.document.reader
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -228,7 +227,6 @@ internal fun BookDocumentEndlessViewer(
                     onRetry = item.transition.to?.let { chapter -> { onTransitionReached(chapter) } },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable(onClick = onReaderTap)
                         .padding(horizontal = 24.dp, vertical = 28.dp),
                 )
             }
