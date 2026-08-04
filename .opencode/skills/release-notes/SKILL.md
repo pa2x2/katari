@@ -114,24 +114,16 @@ Katari's changelog focused on behavior that differs from Mihon.
    or implementation context. Mention extension developer changes only when they alter
    Katari's public SDK or compatibility contract. Do not create one bullet per commit or
    pull request, include commit hashes, or add a catch-all list of minor/internal changes.
-   Prefer fewer, broader bullets that each communicate one distinct and useful outcome. For
-   an outcome with an associated pull request, end its bullet with the verified PR-author
-   credit in the form `(by @user)` or `(by @user1, @user2)`, immediately followed in the
-   same paragraph by the PR Markdown link in the form
-   `([#123](https://github.com/OWNER/REPO/pull/123))`. Never place a pull-request link on a
-   standalone continuation line. Append every associated PR link when one outcome combines
-   multiple pull requests. For an outcome without an associated PR, omit both the
-   contributor credit and PR link; never use a commit-author display name as a substitute.
+   Prefer fewer, broader bullets that each communicate one distinct and useful outcome.
 3. Update `CHANGELOG.md` in the worktree. Insert the complete release section in descending
    version order without changing existing release text. Update `[Unreleased]` to compare
    the target tag with `HEAD`, and add or update the target version's release link using the
    repository URL established by the existing link definitions. Preserve unrelated
    worktree changes and do not modify any other repository file.
-4. Return the complete beautified section in a Markdown code block in the response. When
-   invoked by a command that requests a GitHub release body, use that same section as the
-   exact proposed body and require explicit user confirmation before editing the GitHub
-   release. Do not stage or commit changes, create or push tags, or create or publish a
-   GitHub release.
+4. If changes include merge with upstream repository of Mihon - include information
+   on the version which was merged in the following format:
+
+   Based on [Mihon <version>](<link to mihon release on github>)
 
 ## Safety rules
 
