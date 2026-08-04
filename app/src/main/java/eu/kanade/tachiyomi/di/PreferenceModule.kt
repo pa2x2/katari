@@ -33,6 +33,7 @@ import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.storage.service.StoragePreferences
+import tachiyomi.domain.upcoming.service.UpcomingPreferences
 import tachiyomi.domain.updates.service.UpdatesPreferences
 import uy.kohesive.injekt.api.InjektModule
 import uy.kohesive.injekt.api.InjektRegistrar
@@ -81,6 +82,10 @@ class PreferenceModule(val app: Application) : InjektModule {
             ProfilePreferenceOwnerId("app.updates"),
             factory = ::UpdatesPreferences,
         )
+        val upcomingPreferencesOwner = profilePreferenceOwnerInstaller.register(
+            ProfilePreferenceOwnerId("app.upcoming"),
+            factory = ::UpcomingPreferences,
+        )
         val trackPreferencesOwner = privatePreferenceOwnerInstaller.register(
             id = ProfilePreferenceOwnerId("app.tracking"),
             keyPatterns = TrackPreferences.profileKeyPatterns,
@@ -109,6 +114,7 @@ class PreferenceModule(val app: Application) : InjektModule {
         addSingletonFactory { libraryPreferencesOwner.create() }
         addSingletonFactory { GlobalLibraryPreferences(get<ProfileStore>().basePreferenceStore()) }
         addSingletonFactory { duplicatePreferencesOwner.create() }
+        addSingletonFactory { upcomingPreferencesOwner.create() }
         addSingletonFactory { updatesPreferencesOwner.create() }
         addSingletonFactory { trackPreferencesOwner.create() }
         addSingletonFactory { GlobalTrackPreferences(get<ProfileStore>().basePreferenceStore()) }

@@ -5,7 +5,7 @@ import eu.kanade.tachiyomi.util.removeCovers
 import mihon.entry.interactions.library.membership.host.EntryLibraryCustomCoverHost
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.entry.model.Entry
-import java.time.Instant
+import kotlin.time.Clock
 
 class AppEntryLibraryCustomCoverHost(
     private val coverCache: CoverCache,
@@ -15,7 +15,7 @@ class AppEntryLibraryCustomCoverHost(
         if (entry.removeCovers(coverCache) == entry) return
         handler.await {
             entriesQueries.touchCoverLastModified(
-                coverLastModified = Instant.now().toEpochMilli(),
+                coverLastModified = Clock.System.now().toEpochMilliseconds(),
                 profileId = entry.profileId,
                 entryId = entry.id,
             )

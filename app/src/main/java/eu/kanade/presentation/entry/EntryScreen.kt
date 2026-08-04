@@ -80,7 +80,7 @@ import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.shouldExpandFAB
-import java.time.Instant
+import kotlin.time.Instant
 
 @Composable
 fun EntryScreen(

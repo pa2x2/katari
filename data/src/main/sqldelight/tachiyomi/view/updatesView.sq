@@ -57,15 +57,100 @@ AND dateUpload > :after
 LIMIT :limit;
 
 getRecentUpdatesWithFilters:
-SELECT *
-FROM updatesView
-WHERE profile_id = :profileId
-AND dateUpload > :after
-AND (:read IS NULL OR read = :read)
-AND (:started IS NULL OR started = :started)
-AND (:bookmarked IS NULL OR bookmark = :bookmarked)
+SELECT U.*
+FROM updatesView U
+WHERE U.profile_id = :profileId
+AND U.dateUpload > :after
+AND (:read IS NULL OR U.read = :read)
+AND (:started IS NULL OR U.started = :started)
+AND (:bookmarked IS NULL OR U.bookmark = :bookmarked)
 AND (
-    (excludedScanlator IS NULL OR :hideExcludedScanlators = 0)
+    U.excludedScanlator IS NULL OR :hideExcludedScanlators = 0
+)
+AND (
+    :includedEmpty
+    OR EXISTS (
+        SELECT 1
+        FROM entries_categories EC
+        WHERE EC.profile_id = U.profile_id
+        AND (
+            EC.entry_id = U.entryId
+            OR EXISTS (
+                SELECT 1
+                FROM merged_entries OWNER
+                JOIN merged_entries MEMBER
+                ON MEMBER.profile_id = OWNER.profile_id
+                AND MEMBER.target_entry_id = OWNER.target_entry_id
+                WHERE OWNER.profile_id = U.profile_id
+                AND OWNER.entry_id = U.entryId
+                AND MEMBER.entry_id = EC.entry_id
+            )
+        )
+        AND EC.category_id IN :includedCategories
+    )
+    OR (0 IN :includedCategories AND NOT EXISTS (
+        SELECT 1
+        FROM entries_categories EC
+        WHERE EC.profile_id = U.profile_id
+        AND (
+            EC.entry_id = U.entryId
+            OR EXISTS (
+                SELECT 1
+                FROM merged_entries OWNER
+                JOIN merged_entries MEMBER
+                ON MEMBER.profile_id = OWNER.profile_id
+                AND MEMBER.target_entry_id = OWNER.target_entry_id
+                WHERE OWNER.profile_id = U.profile_id
+                AND OWNER.entry_id = U.entryId
+                AND MEMBER.entry_id = EC.entry_id
+            )
+        )
+    ))
+)
+AND (
+    :excludedEmpty
+    OR (
+        NOT EXISTS (
+            SELECT 1
+            FROM entries_categories EC
+            WHERE EC.profile_id = U.profile_id
+            AND (
+                EC.entry_id = U.entryId
+                OR EXISTS (
+                    SELECT 1
+                    FROM merged_entries OWNER
+                    JOIN merged_entries MEMBER
+                    ON MEMBER.profile_id = OWNER.profile_id
+                    AND MEMBER.target_entry_id = OWNER.target_entry_id
+                    WHERE OWNER.profile_id = U.profile_id
+                    AND OWNER.entry_id = U.entryId
+                    AND MEMBER.entry_id = EC.entry_id
+                )
+            )
+            AND EC.category_id IN :excludedCategories
+        )
+        AND (
+            0 NOT IN :excludedCategories
+            OR EXISTS (
+                SELECT 1
+                FROM entries_categories EC
+                WHERE EC.profile_id = U.profile_id
+                AND (
+                    EC.entry_id = U.entryId
+                    OR EXISTS (
+                        SELECT 1
+                        FROM merged_entries OWNER
+                        JOIN merged_entries MEMBER
+                        ON MEMBER.profile_id = OWNER.profile_id
+                        AND MEMBER.target_entry_id = OWNER.target_entry_id
+                        WHERE OWNER.profile_id = U.profile_id
+                        AND OWNER.entry_id = U.entryId
+                        AND MEMBER.entry_id = EC.entry_id
+                    )
+                )
+            )
+        )
+    )
 )
 LIMIT :limit;
 

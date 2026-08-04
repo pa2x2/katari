@@ -4,6 +4,8 @@ import eu.kanade.tachiyomi.source.entry.ChapterNumberRecognitionSource
 import eu.kanade.tachiyomi.source.entry.EmptyChapterListSource
 import eu.kanade.tachiyomi.source.entry.IncrementalChapterSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import tachiyomi.domain.chapter.model.NoChaptersException
 import tachiyomi.domain.entry.adapter.copyFrom
 import tachiyomi.domain.entry.adapter.toDomainChapter
@@ -22,10 +24,9 @@ import tachiyomi.domain.entry.service.FetchInterval
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.model.SourceNotInstalledException
 import tachiyomi.domain.source.service.SourceManager
-import java.time.Instant
-import java.time.ZoneId
-import java.time.ZonedDateTime
 import kotlin.math.abs
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class SyncEntryWithSource(
     private val entryRepository: EntryRepository,
@@ -35,7 +36,7 @@ class SyncEntryWithSource(
     private val libraryPreferences: LibraryPreferences,
     private val fetchInterval: FetchInterval,
     private val metadataChangeNotifier: EntryMetadataChangeNotifier,
-    private val now: () -> Long = { Instant.now().toEpochMilli() },
+    private val now: () -> Long = { Clock.System.now().toEpochMilliseconds() },
 ) {
 
     suspend operator fun invoke(
@@ -338,7 +339,7 @@ class SyncEntryWithSource(
             insertedChapters.isNotEmpty() || chaptersToUpdate.isNotEmpty() || chaptersToRemove.isNotEmpty()
         var entryAfterChapterSync = if (hasChapterChanges) {
             entryAfterMetadataSync.copy(
-                lastUpdate = now(),
+                lastUpdate = now,
                 dateAdded = if (isInitialLibraryChapterSync) now else entryAfterMetadataSync.dateAdded,
             )
         } else {
@@ -347,9 +348,11 @@ class SyncEntryWithSource(
         val shouldUpdateFetchInterval = hasChapterChanges || manualFetch || entryAfterMetadataSync.fetchInterval == 0 ||
             (fetchWindow.first != 0L && entryAfterMetadataSync.nextUpdate < fetchWindow.first)
         if (shouldUpdateFetchInterval) {
+            val timeZone = TimeZone.currentSystemDefault()
             entryAfterChapterSync = fetchInterval.update(
                 entry = entryAfterChapterSync,
-                dateTime = ZonedDateTime.ofInstant(Instant.ofEpochMilli(now()), ZoneId.systemDefault()),
+                dateTime = Instant.fromEpochMilliseconds(now).toLocalDateTime(timeZone),
+                timeZone = timeZone,
                 window = fetchWindow,
             )
         }

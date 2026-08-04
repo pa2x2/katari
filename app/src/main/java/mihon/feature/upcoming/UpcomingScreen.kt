@@ -18,10 +18,22 @@ class UpcomingScreen : Screen() {
         val screenModel = rememberScreenModel { UpcomingScreenModel() }
         val state by screenModel.state.collectAsState()
 
+        when (state.dialog) {
+            is UpcomingScreenModel.Dialog.FilterSheet -> {
+                UpcomingFilterDialog(
+                    screenModel = screenModel,
+                )
+            }
+
+            null -> {}
+        }
+
         UpcomingScreenContent(
             state = state,
             setSelectedYearMonth = screenModel::setSelectedYearMonth,
             onClickUpcoming = { navigator.push(EntryScreen(it.id)) },
+            hasActiveFilters = state.hasActiveFilters,
+            onClickFilter = screenModel::showFilterDialog,
         )
     }
 }

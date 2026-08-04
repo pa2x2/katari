@@ -8,7 +8,6 @@ import eu.kanade.core.util.insertSeparators
 import eu.kanade.presentation.history.HistoryUiItem
 import eu.kanade.presentation.history.HistoryUiModel
 import eu.kanade.tachiyomi.ui.collapseByVisibleEntry
-import eu.kanade.tachiyomi.util.lang.toLocalDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -20,6 +19,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import logcat.LogPriority
 import mihon.entry.interactions.library.membership.EntryLibraryAddRequest
 import mihon.entry.interactions.library.membership.EntryLibraryAddResult
@@ -95,6 +96,7 @@ class HistoryScreenModel(
     private suspend fun List<HistoryWithRelations>.toHistoryUiModels(): List<HistoryUiModel> {
         val visibleTargetCache = mutableMapOf<Long, Long>()
         val entryCache = mutableMapOf<Long, Entry?>()
+        val timeZone = TimeZone.currentSystemDefault()
 
         return map { historyWithRelations ->
             val historyItem = historyWithRelations.toHistoryItem()
@@ -127,8 +129,8 @@ class HistoryScreenModel(
                 visibleEntryId = { it.item.visibleEntryId },
             )
             .insertSeparators { before, after ->
-                val beforeDate = before?.item?.historyItem?.readAt?.toLocalDate()
-                val afterDate = after?.item?.historyItem?.readAt?.toLocalDate()
+                val beforeDate = before?.item?.historyItem?.readAt?.toLocalDateTime(timeZone)?.date
+                val afterDate = after?.item?.historyItem?.readAt?.toLocalDateTime(timeZone)?.date
                 when {
                     beforeDate != afterDate && afterDate != null -> HistoryUiModel.Header(afterDate)
                     else -> null

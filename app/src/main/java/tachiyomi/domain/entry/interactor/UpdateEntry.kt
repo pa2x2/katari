@@ -1,10 +1,12 @@
 package tachiyomi.domain.entry.interactor
 
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.service.FetchInterval
-import java.time.Instant
-import java.time.ZonedDateTime
+import kotlin.time.Clock
 
 class UpdateEntry(
     private val entryRepository: EntryRepository,
@@ -25,21 +27,22 @@ class UpdateEntry(
 
     suspend fun awaitUpdateFetchInterval(
         entry: Entry,
-        dateTime: ZonedDateTime = ZonedDateTime.now(),
-        window: Pair<Long, Long> = fetchInterval.getWindow(dateTime),
+        timeZone: TimeZone = TimeZone.currentSystemDefault(),
+        dateTime: LocalDateTime = Clock.System.now().toLocalDateTime(timeZone),
+        window: Pair<Long, Long> = fetchInterval.getWindow(dateTime.date, timeZone),
     ): Boolean {
-        val updated = fetchInterval.update(entry, dateTime, window)
+        val updated = fetchInterval.update(entry, dateTime, timeZone, window)
         return entryRepository.update(updated)
     }
 
     suspend fun awaitUpdateLastUpdate(entryId: Long): Boolean {
         val entry = entryRepository.getEntryById(entryId) ?: return false
-        return entryRepository.update(entry.copy(lastUpdate = Instant.now().toEpochMilli()))
+        return entryRepository.update(entry.copy(lastUpdate = Clock.System.now().toEpochMilliseconds()))
     }
 
     suspend fun awaitUpdateCoverLastModified(entryId: Long): Boolean {
         val entry = entryRepository.getEntryById(entryId) ?: return false
-        return entryRepository.update(entry.copy(coverLastModified = Instant.now().toEpochMilli()))
+        return entryRepository.update(entry.copy(coverLastModified = Clock.System.now().toEpochMilliseconds()))
     }
 
     suspend fun awaitUpdateDisplayName(entryId: Long, displayName: String?): Boolean {

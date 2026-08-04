@@ -9,6 +9,9 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.toLocalDateTime
 import logcat.LogPriority
 import tachiyomi.core.common.util.lang.toLong
 import tachiyomi.core.common.util.system.logcat
@@ -20,8 +23,7 @@ import tachiyomi.data.UpdateStrategyColumnAdapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.EntrySourceSyncRepository
-import java.time.LocalDate
-import java.time.ZoneId
+import kotlin.time.Clock
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class EntryRepositoryImpl(
@@ -208,22 +210,30 @@ class EntryRepositoryImpl(
     }
 
     override suspend fun getUpcomingEntries(
+        profileId: Long,
         statuses: Set<Int>,
         types: Set<EntryType>,
+        excludedCategories: List<Long>,
+        includedCategories: List<Long>,
     ): Flow<List<Entry>> {
-        val epochMillis = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toEpochSecond() * 1000
-        return profileProvider.activeProfileIdFlow.flatMapLatest { profileId ->
-            handler.subscribeToList {
-                entriesQueries.getUpcomingEntries(
-                    profileId,
-                    epochMillis,
-                    statuses.map {
-                        it.toLong()
-                    },
-                    types.map { it.name.lowercase() },
-                    EntryMapper::mapEntry,
-                )
-            }
+        val timeZone = TimeZone.currentSystemDefault()
+        val epochMillis = Clock.System.now()
+            .toLocalDateTime(timeZone)
+            .date
+            .atStartOfDayIn(timeZone)
+            .toEpochMilliseconds()
+        return handler.subscribeToList {
+            entriesQueries.getUpcomingEntries(
+                profileId = profileId,
+                startOfDay = epochMillis,
+                statuses = statuses.map { it.toLong() },
+                types = types.map { it.name.lowercase() },
+                includedEmpty = includedCategories.isEmpty(),
+                includedCategories = includedCategories,
+                excludedEmpty = excludedCategories.isEmpty(),
+                excludedCategories = excludedCategories,
+                mapper = EntryMapper::mapEntry,
+            )
         }
     }
 

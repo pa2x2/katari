@@ -266,7 +266,7 @@ class SyncEntryWithSourceTest {
         val existing = chapter(id = 1L)
         val repository = chapterRepository(listOf(existing))
         val fetchInterval = mockk<FetchInterval>()
-        coEvery { fetchInterval.update(any(), any(), any()) } answers {
+        coEvery { fetchInterval.update(any(), any(), any(), any()) } answers {
             firstArg<Entry>().copy(nextUpdate = 500L, fetchInterval = 7)
         }
         val entryRepository = mockEntryRepository()
@@ -281,7 +281,7 @@ class SyncEntryWithSourceTest {
         )(entry().copy(fetchInterval = 7), fetchDetails = false, manualFetch = true)
 
         updated.captured.nextUpdate shouldBe 500L
-        coVerify(exactly = 1) { fetchInterval.update(any(), any(), any()) }
+        coVerify(exactly = 1) { fetchInterval.update(any(), any(), any(), any()) }
     }
 
     @Test
@@ -449,7 +449,7 @@ class SyncEntryWithSourceTest {
     }
 
     private fun mockFetchInterval(): FetchInterval = mockk {
-        coEvery { update(any(), any(), any()) } answers { firstArg() }
+        coEvery { update(any(), any(), any(), any()) } answers { firstArg() }
     }
 
     private fun chapterRepository(chapters: List<EntryChapter>): EntryChapterRepository = mockk(relaxed = true) {

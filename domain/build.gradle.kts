@@ -26,6 +26,8 @@ dependencies {
     implementation(libs.bundles.serialization)
     implementation(libs.stringSimilarity)
 
+    implementation(libs.kotlinx.datetime)
+
     implementation(libs.unifile)
 
     api(libs.sqldelight.androidxPaging)

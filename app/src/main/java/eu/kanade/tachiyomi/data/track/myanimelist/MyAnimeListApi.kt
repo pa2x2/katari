@@ -217,8 +217,8 @@ class MyAnimeListApi(
             status = if (isRereading) MyAnimeList.REREADING else getStatus(listStatus.status)
             last_chapter_read = listStatus.numChaptersRead
             score = listStatus.score.toDouble()
-            listStatus.startDate?.let { started_reading_date = parseDate(it) }
-            listStatus.finishDate?.let { finished_reading_date = parseDate(it) }
+            listStatus.startDate?.let { started_reading_date = parseMyAnimeListDate(it) }
+            listStatus.finishDate?.let { finished_reading_date = parseMyAnimeListDate(it) }
         }
     }
 
@@ -242,10 +242,6 @@ class MyAnimeListApi(
                 .filter { authorNode -> authorNode.role.contains("Story") }
                 .mapNotNull { authorNode -> authorNode.node.getFullName() }
         }
-    }
-
-    private fun parseDate(isoDate: String): Long {
-        return SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(isoDate)?.time ?: 0L
     }
 
     private fun convertToIsoDate(epochTime: Long): String? {
@@ -306,4 +302,14 @@ class MyAnimeListApi(
             return codeVerifier
         }
     }
+}
+
+internal fun parseMyAnimeListDate(isoDate: String): Long {
+    val pattern = when (isoDate.length) {
+        10 -> "yyyy-MM-dd"
+        7 -> "yyyy-MM"
+        4 -> "yyyy"
+        else -> throw IllegalArgumentException("Unsupported date format: \"$isoDate\"")
+    }
+    return SimpleDateFormat(pattern, Locale.US).parse(isoDate)?.time ?: 0L
 }

@@ -41,6 +41,8 @@ dependencies {
 
     implementation(libs.injekt)
 
+    implementation(libs.kotlinx.datetime)
+
     api(libs.bundles.sqldelight)
 
     testImplementation(libs.bundles.test)

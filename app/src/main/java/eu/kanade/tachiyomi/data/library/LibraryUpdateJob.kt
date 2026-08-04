@@ -34,6 +34,8 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import logcat.LogPriority
 import mihon.entry.interactions.library.EntryLibraryUpdateRefreshFeature
 import mihon.entry.interactions.library.EntryLibraryUpdateRefreshRequest
@@ -63,13 +65,12 @@ import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.File
-import java.time.Instant
-import java.time.ZonedDateTime
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.concurrent.atomics.incrementAndFetch
+import kotlin.time.Clock
 
 @OptIn(ExperimentalAtomicApi::class)
 class LibraryUpdateJob(private val context: Context, workerParams: WorkerParameters) :
@@ -120,7 +121,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
         setForegroundSafely()
 
-        libraryPreferences.lastUpdatedTimestamp.set(Instant.now().toEpochMilli())
+        libraryPreferences.lastUpdatedTimestamp.set(Clock.System.now().toEpochMilliseconds())
 
         val categoryId = inputData.getLong(KEY_CATEGORY, -1L)
         val sourceId = inputData.getLong(KEY_SOURCE, -1L)
@@ -185,7 +186,11 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         }
 
         val skippedUpdates = mutableListOf<Pair<Entry, String?>>()
-        currentFetchWindow = fetchInterval.getWindow(ZonedDateTime.now())
+        val timeZone = TimeZone.currentSystemDefault()
+        currentFetchWindow = fetchInterval.getWindow(
+            Clock.System.now().toLocalDateTime(timeZone).date,
+            timeZone,
+        )
         val fetchWindowUpperBound = currentFetchWindow.second
 
         val eligibleLibraryEntries = listToUpdate

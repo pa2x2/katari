@@ -54,7 +54,7 @@ import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.presentation.track.components.TrackLogoIcon
-import eu.kanade.tachiyomi.util.lang.toLocalDate
+import eu.kanade.tachiyomi.util.lang.toJavaLocalDate
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import mihon.entry.interactions.tracking.EntryTrackingServiceDescriptor
 import mihon.entry.interactions.tracking.EntryTrackingSessionService
@@ -113,11 +113,15 @@ fun TrackInfoDialogHome(
                         .takeIf { supportsScoring && track.score != 0.0 },
                     onScoreClick = { onScoreClick(item) }
                         .takeIf { supportsScoring },
-                    startDate = remember(track.startDate) { dateFormat.format(track.startDate.toLocalDate()) }
+                    startDate = remember(track.startDate, dateFormat) {
+                        dateFormat.format(track.startDate.toJavaLocalDate())
+                    }
                         .takeIf { supportsReadingDates && track.startDate != 0L },
                     onStartDateClick = { onStartDateEdit(item) } // TODO
                         .takeIf { supportsReadingDates },
-                    endDate = dateFormat.format(track.finishDate.toLocalDate())
+                    endDate = remember(track.finishDate, dateFormat) {
+                        dateFormat.format(track.finishDate.toJavaLocalDate())
+                    }
                         .takeIf { supportsReadingDates && track.finishDate != 0L },
                     onEndDateClick = { onEndDateEdit(item) }
                         .takeIf { supportsReadingDates },

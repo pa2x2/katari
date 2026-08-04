@@ -7,11 +7,12 @@ import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import mihon.entry.interactions.tracking.EntryTrackingSearchCandidate
 import mihon.entry.interactions.tracking.EntryTrackingServiceId
 import java.text.SimpleDateFormat
-import java.time.Instant
-import java.time.temporal.ChronoUnit
 import java.util.Date
 import java.util.Locale
 import kotlin.random.Random
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
+import kotlin.time.toJavaInstant
 
 internal class TrackerSearchPreviewProvider : PreviewParameterProvider<@Composable () -> Unit> {
     private val fullPageWithSecondSelected = @Composable {
@@ -95,7 +96,9 @@ internal class TrackerSearchPreviewProvider : PreviewParameterProvider<@Composab
         private = false,
         remoteUrl = "https://example.com/tracker-example",
         coverUrl = "https://example.com/cover.png",
-        publicationStartDate = formatter.format(Date.from(Instant.now().minus((1L..365).random(), ChronoUnit.DAYS))),
+        publicationStartDate = formatter.format(
+            Date.from(Clock.System.now().minus((1L..365).random().days).toJavaInstant()),
+        ),
         summary = lorem((0..40).random()).joinToString(),
         publishingStatus = if (Random.nextBoolean()) "Finished" else "",
         publishingType = if (Random.nextBoolean()) "Oneshot" else "",

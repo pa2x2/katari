@@ -4,6 +4,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -16,13 +17,41 @@ class GetUpcomingEntriesTest {
     fun `subscribe queries all entry types`() = runTest {
         val repository = FakeEntryRepository()
 
-        GetUpcomingEntries(repository).subscribe()
+        GetUpcomingEntries(repository).subscribe(
+            profileId = 1L,
+            excludedCategories = listOf(2L),
+            includedCategories = listOf(1L),
+            hiddenSources = emptySet(),
+        )
 
         repository.upcomingTypes shouldBe EntryType.entries.toSet()
+        repository.excludedCategories shouldBe listOf(2L)
+        repository.includedCategories shouldBe listOf(1L)
     }
 
-    private class FakeEntryRepository : EntryRepository {
+    @Test
+    fun `subscribe excludes entries from hidden sources`() = runTest {
+        val visible = Entry.create().copy(id = 1L, source = 10L)
+        val hidden = Entry.create().copy(id = 2L, source = 20L)
+        val repository = FakeEntryRepository(upcomingEntries = listOf(visible, hidden))
+
+        val result = GetUpcomingEntries(repository).subscribe(
+            profileId = 1L,
+            excludedCategories = emptyList(),
+            includedCategories = emptyList(),
+            hiddenSources = setOf(20L),
+        )
+
+        result.first() shouldBe listOf(visible)
+    }
+
+    private class FakeEntryRepository(
+        private val upcomingEntries: List<Entry> = emptyList(),
+    ) : EntryRepository {
         var upcomingTypes: Set<EntryType> = emptySet()
+        var profileId: Long? = null
+        var excludedCategories: List<Long> = emptyList()
+        var includedCategories: List<Long> = emptyList()
 
         override suspend fun getEntryById(id: Long): Entry? = null
         override suspend fun getEntryById(id: Long, profileId: Long): Entry? = null
@@ -63,15 +92,25 @@ class GetUpcomingEntriesTest {
         override fun getLibraryEntriesAsFlow(): Flow<List<Entry>> = flowOf(emptyList())
         override fun getLibraryEntriesAsFlow(profileId: Long): Flow<List<Entry>> = flowOf(emptyList())
         override fun getFavoritesBySourceId(sourceId: Long): Flow<List<Entry>> = flowOf(emptyList())
-        override suspend fun getUpcomingEntries(statuses: Set<Int>, types: Set<EntryType>): Flow<List<Entry>> {
+        override suspend fun getUpcomingEntries(
+            profileId: Long,
+            statuses: Set<Int>,
+            types: Set<EntryType>,
+            excludedCategories: List<Long>,
+            includedCategories: List<Long>,
+        ): Flow<List<Entry>> {
+            this.profileId = profileId
             upcomingTypes = types
-            return flowOf(emptyList())
+            this.excludedCategories = excludedCategories
+            this.includedCategories = includedCategories
+            return flowOf(upcomingEntries)
         }
         override suspend fun resetViewerFlags(): Boolean = true
         override suspend fun setCategories(entryId: Long, categoryIds: List<Long>) = Unit
         override suspend fun updateDisplayName(entryId: Long, displayName: String?): Boolean = true
         override suspend fun insert(entry: Entry): Long = entry.id
         override suspend fun insertOrUpdate(entry: Entry): Entry = entry
+        override suspend fun insertOrUpdate(entry: Entry, profileId: Long): Entry = entry
         override suspend fun update(entry: Entry): Boolean = true
         override suspend fun update(entry: Entry, profileId: Long): Boolean = true
         override suspend fun updateFromSource(entry: Entry): Boolean = true

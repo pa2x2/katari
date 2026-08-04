@@ -179,6 +179,7 @@ class LibraryScreenModel(
                         }
 
                     LibraryData(
+                        profileId = profileId,
                         isInitialized = true,
                         showSystemCategory = showSystemCategory,
                         categories = categories,
@@ -192,6 +193,9 @@ class LibraryScreenModel(
             }.collectLatest { event ->
                 when (event) {
                     is ProfileScopedStateEvent.Reset -> {
+                        val scopedLibraryPreferences = LibraryPreferences(
+                            profileStore.profileStore(event.profileId),
+                        )
                         mutableState.update { state ->
                             state.copy(
                                 isLoading = true,
@@ -200,7 +204,7 @@ class LibraryScreenModel(
                                 hasActiveFilters = false,
                                 dialog = null,
                                 libraryData = LibraryData(),
-                                activePageIndex = libraryPreferences.lastUsedCategory.get(),
+                                activePageIndex = scopedLibraryPreferences.lastUsedCategory.get(),
                                 groupedFavorites = emptyList(),
                             )
                         }
@@ -219,50 +223,63 @@ class LibraryScreenModel(
         }
 
         screenModelScope.launchIO {
-            observeGroupedLibraryPages(
-                libraryData = state
-                    .map { it.libraryData }
-                    .filter { it.isInitialized }
-                    .distinctUntilChanged(),
-                grouping = libraryPreferences.grouping.changes(),
-                sortingMode = libraryPreferences.sortingMode.changes(),
-                randomSortSeed = libraryPreferences.randomSortSeed.changes(),
-                applyGrouping = { data, grouping ->
-                    resolveLibraryPages(
-                        items = data.favorites,
-                        categories = data.categories,
-                        showSystemCategory = data.showSystemCategory,
-                        grouping = grouping,
-                        libraryTitle = context.stringResource(MR.strings.label_library),
-                        entryTypeTitle = { entryType ->
-                            context.stringResource(entryType.entryTypePresentation().displayNameLabel)
+            profileStore.currentProfileIdFlow
+                .distinctUntilChanged()
+                .flatMapLatest { profileId ->
+                    val scopedLibraryPreferences = LibraryPreferences(profileStore.profileStore(profileId))
+                    observeGroupedLibraryPages(
+                        libraryData = state
+                            .map { it.libraryData }
+                            .filter { it.isInitialized && it.profileId == profileId }
+                            .distinctUntilChanged(),
+                        grouping = scopedLibraryPreferences.grouping.changes(),
+                        sortingMode = scopedLibraryPreferences.sortingMode.changes(),
+                        randomSortSeed = scopedLibraryPreferences.randomSortSeed.changes(),
+                        applyGrouping = { data, grouping ->
+                            resolveLibraryPages(
+                                items = data.favorites,
+                                categories = data.categories,
+                                showSystemCategory = data.showSystemCategory,
+                                grouping = grouping,
+                                libraryTitle = context.stringResource(MR.strings.label_library),
+                                entryTypeTitle = { entryType ->
+                                    context.stringResource(entryType.entryTypePresentation().displayNameLabel)
+                                },
+                            )
+                        },
+                        applySort = { pages, data, sortingMode, randomSortSeed ->
+                            pages.applySort(
+                                favoritesById = data.favoritesById,
+                                trackingEntries = data.trackingEntries,
+                                trackingScoreSupportedEntryTypes = data.trackingScoreSupportedEntryTypes,
+                                globalSort = sortingMode,
+                                randomSortSeed = randomSortSeed,
+                            )
                         },
                     )
-                },
-                applySort = { pages, data, sortingMode, randomSortSeed ->
-                    pages.applySort(
-                        favoritesById = data.favoritesById,
-                        trackingEntries = data.trackingEntries,
-                        trackingScoreSupportedEntryTypes = data.trackingScoreSupportedEntryTypes,
-                        globalSort = sortingMode,
-                        randomSortSeed = randomSortSeed,
-                    )
-                },
-            ).collectLatest { (grouping, groupedFavorites) ->
-                mutableState.update { state ->
-                    val activePageIndex = groupedFavorites.indexOfMatchingPage(
-                        previousPage = state.activePage,
-                        previousGrouping = state.grouping,
-                        newGrouping = grouping,
-                    )
-                    state.copy(
-                        isLoading = false,
-                        groupedFavorites = groupedFavorites,
-                        grouping = grouping,
-                        activePageIndex = activePageIndex,
-                    )
                 }
-            }
+                .collectLatest { groupedPages ->
+                    mutableState.update { state ->
+                        if (state.libraryData.profileId != groupedPages.profileId) return@update state
+
+                        val scopedLibraryPreferences = LibraryPreferences(
+                            profileStore.profileStore(groupedPages.profileId),
+                        )
+                        val activePageIndex = groupedPages.pages.indexOfMatchingPage(
+                            previousPage = state.activePage,
+                            restoredPageId = scopedLibraryPreferences.lastUsedPageId.get(),
+                            fallbackPageIndex = state.requestedActivePageIndex,
+                            previousGrouping = state.grouping,
+                            newGrouping = groupedPages.grouping,
+                        )
+                        state.copy(
+                            isLoading = false,
+                            groupedFavorites = groupedPages.pages,
+                            grouping = groupedPages.grouping,
+                            activePageIndex = activePageIndex,
+                        )
+                    }
+                }
         }
 
         combine(
@@ -706,12 +723,14 @@ class LibraryScreenModel(
     }
 
     fun updateActivePageIndex(index: Int) {
-        val newIndex = mutableState.updateAndGet { state ->
+        val newState = mutableState.updateAndGet { state ->
             state.copy(activePageIndex = index)
         }
-            .coercedActivePageIndex
 
-        libraryPreferences.lastUsedCategory.set(newIndex)
+        libraryPreferences.lastUsedCategory.set(newState.coercedActivePageIndex)
+        newState.activePage?.let { page ->
+            libraryPreferences.lastUsedPageId.set(page.id)
+        }
     }
 
     fun openChangeCategoryDialog() {
@@ -1053,6 +1072,7 @@ class LibraryScreenModel(
 
     @Immutable
     data class LibraryData(
+        val profileId: Long? = null,
         val isInitialized: Boolean = false,
         val showSystemCategory: Boolean = false,
         val categories: List<Category> = emptyList(),
@@ -1092,6 +1112,8 @@ class LibraryScreenModel(
             minimumValue = 0,
             maximumValue = displayedPages.lastIndex.coerceAtLeast(0),
         )
+
+        val requestedActivePageIndex = activePageIndex
 
         val activePage: LibraryPage? = displayedPages.getOrNull(coercedActivePageIndex)
 
@@ -1167,7 +1189,7 @@ internal fun observeGroupedLibraryPages(
         sortingMode: LibrarySort,
         randomSortSeed: Int,
     ) -> List<LibraryPage>,
-): Flow<Pair<LibraryGrouping, List<LibraryPage>>> {
+): Flow<GroupedLibraryPages> {
     return combine(
         libraryData,
         grouping,
@@ -1175,16 +1197,33 @@ internal fun observeGroupedLibraryPages(
         randomSortSeed,
     ) { data, grouping, sortingMode, randomSortSeed ->
         val pages = applyGrouping(data, grouping)
-        grouping to applySort(pages, data, sortingMode, randomSortSeed)
+        GroupedLibraryPages(
+            profileId = checkNotNull(data.profileId),
+            grouping = grouping,
+            pages = applySort(pages, data, sortingMode, randomSortSeed),
+        )
     }
 }
 
+internal data class GroupedLibraryPages(
+    val profileId: Long,
+    val grouping: LibraryGrouping,
+    val pages: List<LibraryPage>,
+)
+
 private fun List<LibraryPage>.indexOfMatchingPage(
     previousPage: LibraryPage?,
+    restoredPageId: String,
+    fallbackPageIndex: Int,
     previousGrouping: LibraryGrouping,
     newGrouping: LibraryGrouping,
 ): Int {
-    if (previousPage == null) return 0
+    if (previousPage == null) {
+        if (isEmpty()) return fallbackPageIndex
+        return indexOfFirst { it.id == restoredPageId }
+            .takeIf { it >= 0 }
+            ?: fallbackPageIndex.coerceIn(0, lastIndex.coerceAtLeast(0))
+    }
     val sharedDimensions = previousGrouping.dimensions.intersect(newGrouping.dimensions.toSet())
     return indexOfFirst { candidate ->
         sharedDimensions.all { dimension ->

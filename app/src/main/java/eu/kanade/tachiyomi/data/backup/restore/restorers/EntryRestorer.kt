@@ -7,6 +7,8 @@ import eu.kanade.tachiyomi.data.backup.models.BackupHistory
 import eu.kanade.tachiyomi.data.backup.models.compatibility.featureStatesWithLegacyFallback
 import eu.kanade.tachiyomi.data.backup.models.compatibility.normalizeLegacyViewerFlags
 import eu.kanade.tachiyomi.source.entry.EntryType
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import mihon.entry.interactions.persistence.backup.EntryBackupFeature
 import mihon.entry.interactions.persistence.backup.EntryBackupRestoreFinalization
 import mihon.entry.interactions.persistence.backup.EntryBackupRestoreSession
@@ -25,10 +27,10 @@ import tachiyomi.domain.history.model.HistoryUpdate
 import tachiyomi.domain.history.repository.HistoryRepository
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import java.time.ZonedDateTime
 import java.util.Date
 import java.util.UUID
 import kotlin.math.max
+import kotlin.time.Clock
 
 class EntryRestorer(
     private val handler: DatabaseHandler = Injekt.get(),
@@ -39,17 +41,18 @@ class EntryRestorer(
     private val entryBackupFeature: EntryBackupFeature = Injekt.get(),
     private val upsertHistory: UpsertHistory = Injekt.get(),
     private val historyRepository: HistoryRepository = Injekt.get(),
-    fetchInterval: FetchInterval = Injekt.get(),
+    private val fetchInterval: FetchInterval = Injekt.get(),
 ) {
 
-    private var now = ZonedDateTime.now()
-    private var currentFetchWindow = fetchInterval.getWindow(now)
+    private val timeZone = TimeZone.currentSystemDefault()
+    private var now = Clock.System.now().toLocalDateTime(timeZone)
+    private var currentFetchWindow = fetchInterval.getWindow(now.date, timeZone)
     private val restoreSession = EntryBackupRestoreSession(EntryBackupRestoreSessionId(UUID.randomUUID().toString()))
     private val restoredTypesByProfile = linkedMapOf<Long, MutableSet<EntryType>>()
 
     init {
-        now = ZonedDateTime.now()
-        currentFetchWindow = fetchInterval.getWindow(now)
+        now = Clock.System.now().toLocalDateTime(timeZone)
+        currentFetchWindow = fetchInterval.getWindow(now.date, timeZone)
     }
 
     suspend fun sortByNew(backupEntries: List<BackupEntry>): List<BackupEntry> {
@@ -157,9 +160,7 @@ class EntryRestorer(
             entry = entry,
             states = backupEntry.featureStatesWithLegacyFallback(entry),
         )
-        val withInterval = FetchInterval(
-            entryChapterRepository,
-        ).update(entry, now, currentFetchWindow)
+        val withInterval = fetchInterval.update(entry, now, timeZone, currentFetchWindow)
         entryRepository.update(withInterval)
     }
 

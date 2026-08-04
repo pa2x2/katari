@@ -7,12 +7,12 @@ import tachiyomi.source.local.image.LocalCoverManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.InputStream
-import java.time.Instant
+import kotlin.time.Clock
 
 fun Entry.removeCovers(coverCache: CoverCache = Injekt.get()): Entry {
     if (isLocalEntry()) return this
     return if (coverCache.deleteFromCache(this, true) > 0) {
-        copy(coverLastModified = Instant.now().toEpochMilli())
+        copy(coverLastModified = Clock.System.now().toEpochMilliseconds())
     } else {
         this
     }
