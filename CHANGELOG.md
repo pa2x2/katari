@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.3] - 2026-08-04
+
+### ⚡ Improved
+
+- Prefetch the first viewport of the next book chapter for smoother chapter transitions.
+
+### 🐛 Fixed
+
+- Restored tracking data correctly from backups.
+
 ## [1.1.2] - 2026-08-03
 
 ### 🌟 Highlights
@@ -51,7 +61,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.1.2...upcoming
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.1.3...upcoming
+[1.1.3]: https://github.com/pa2x2/katari/releases/tag/v1.1.3
 [1.1.2]: https://github.com/pa2x2/katari/releases/tag/v1.1.2
 [1.1.1]: https://github.com/pa2x2/katari/releases/tag/v1.1.1
 [1.1.0]: https://github.com/pa2x2/katari/releases/tag/v1.1.0
