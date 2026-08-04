@@ -7,11 +7,15 @@ import tachiyomi.domain.category.model.CategoryUpdate
 import tachiyomi.domain.category.repository.CategoryRepository
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.upcoming.service.UpcomingPreferences
+import tachiyomi.domain.updates.service.UpdatesPreferences
 
 class DeleteCategory(
     private val categoryRepository: CategoryRepository,
     private val libraryPreferences: LibraryPreferences,
     private val downloadPreferences: DownloadPreferences,
+    private val updatesPreferences: UpdatesPreferences,
+    private val upcomingPreferences: UpcomingPreferences,
 ) {
 
     suspend fun await(categoryId: Long) = withNonCancellableContext {
@@ -47,6 +51,17 @@ class DeleteCategory(
             val ids = preference.get()
             if (categoryIdString !in ids) return@forEach
             preference.set(ids.minus(categoryIdString))
+        }
+
+        val longCategoryPreferences = listOf(
+            updatesPreferences.filterIncludedCategories,
+            updatesPreferences.filterExcludedCategories,
+            upcomingPreferences.filterIncludedCategories,
+            upcomingPreferences.filterExcludedCategories,
+        )
+        longCategoryPreferences.forEach { preference ->
+            val ids = preference.get()
+            if (categoryId in ids) preference.set(ids - categoryId)
         }
 
         try {

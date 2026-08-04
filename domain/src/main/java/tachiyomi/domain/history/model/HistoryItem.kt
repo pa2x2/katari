@@ -3,7 +3,7 @@ package tachiyomi.domain.history.model
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.domain.entry.model.EntryCover
 import tachiyomi.domain.library.model.LibraryItemKey
-import java.time.Instant
+import kotlin.time.Instant
 
 /**
  * Unified history item. Manga chapter reads and anime episode watches share common fields;
@@ -27,7 +27,9 @@ sealed class HistoryItem {
         override val entryTitle = history.title
         override val coverData = history.coverData
         override val sourceId = history.coverData.sourceId
-        override val readAt = history.readAt?.toInstant() ?: Instant.EPOCH
+        override val readAt = history.readAt
+            ?.let { Instant.fromEpochMilliseconds(it.time) }
+            ?: Instant.fromEpochMilliseconds(0L)
         override val duration = history.readDuration
     }
 }

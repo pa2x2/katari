@@ -1,5 +1,8 @@
 package mihon.feature.library.search
 
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import mihon.domain.library.model.search.AndNode
 import mihon.domain.library.model.search.ComparisonField
 import mihon.domain.library.model.search.ComparisonQueryNode
@@ -14,10 +17,8 @@ import mihon.domain.library.model.search.OrNode
 import mihon.domain.library.model.search.QueryNode
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.source.local.LocalSource
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
 import kotlin.math.abs
+import kotlin.time.Instant
 
 internal class LibrarySearchMatcher(
     query: String,
@@ -106,7 +107,9 @@ internal class LibrarySearchMatcher(
 
         fun compareDates(timestamp: Long): Boolean? {
             val inputDate = runCatching { LocalDate.parse(value) }.getOrNull() ?: return null
-            val entryDate = Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault()).toLocalDate()
+            val entryDate = Instant.fromEpochMilliseconds(timestamp)
+                .toLocalDateTime(TimeZone.currentSystemDefault())
+                .date
             return queryComparator.apply(entryDate, inputDate)
         }
 

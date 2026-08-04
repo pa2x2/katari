@@ -10,6 +10,7 @@ import android.widget.Toast
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.WebViewUtil
 import eu.kanade.tachiyomi.util.system.setDefaultSettings
+import eu.kanade.tachiyomi.util.system.setUserAgent
 import eu.kanade.tachiyomi.util.system.toast
 import okhttp3.Headers
 import okhttp3.Interceptor
@@ -87,7 +88,10 @@ abstract class WebViewInterceptor(
         return WebView(context).apply {
             setDefaultSettings()
             // Avoid sending empty User-Agent, Chromium WebView will reset to default if empty
-            settings.userAgentString = request.header("User-Agent") ?: defaultUserAgentProvider()
+            val userAgent = request.header("User-Agent")
+                ?.takeIf { it.isNotEmpty() }
+                ?: defaultUserAgentProvider()
+            setUserAgent(userAgent)
         }
     }
 }

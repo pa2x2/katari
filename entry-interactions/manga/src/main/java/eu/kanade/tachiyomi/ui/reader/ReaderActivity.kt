@@ -107,8 +107,6 @@ import kotlin.time.Duration.Companion.seconds
 
 class ReaderActivity : EntryInteractionActivity() {
 
-    private var initialPageIndex: Int? = null
-
     companion object {
         private const val EXTRA_MANGA = "manga"
         private const val EXTRA_CHAPTER = "chapter"
@@ -179,27 +177,12 @@ class ReaderActivity : EntryInteractionActivity() {
         setContentView(binding.root)
         binding.setComposeOverlay()
 
-        if (viewModel.needsInit()) {
-            val manga = intent.extras?.getLong(EXTRA_MANGA, -1) ?: -1L
-            val chapter = intent.extras?.getLong(EXTRA_CHAPTER, -1) ?: -1L
-            val pageIndex = intent.extras?.getInt(EXTRA_PAGE, -1) ?: -1
-            initialPageIndex = pageIndex.takeIf { it >= 0 }
-            if (manga == -1L || chapter == -1L) {
-                finish()
-                return
-            }
-            dismissNewChaptersNotification(this, manga.hashCode())
-
-            lifecycleScope.launch {
-                val initResult = viewModel.init(manga, chapter, pageIndex)
-                if (!initResult.getOrDefault(false)) {
-                    val exception = initResult.exceptionOrNull() ?: IllegalStateException("Unknown err")
-                    withUIContext {
-                        setInitialChapterError(exception)
-                    }
-                }
-            }
+        if (!viewModel.hasValidArgs) {
+            finish()
+            return
         }
+
+        dismissNewChaptersNotification(this, viewModel.mangaId.hashCode())
 
         config = ReaderConfig()
         setMenuVisibility(viewModel.state.value.menuVisible)
@@ -225,6 +208,13 @@ class ReaderActivity : EntryInteractionActivity() {
                     stopAutoScroll(showToast = false)
                 }
             }
+            .launchIn(lifecycleScope)
+
+        viewModel.state
+            .map { it.initError }
+            .distinctUntilChanged()
+            .filterNotNull()
+            .onEach(::setInitialChapterError)
             .launchIn(lifecycleScope)
 
         viewModel.state
@@ -662,10 +652,6 @@ class ReaderActivity : EntryInteractionActivity() {
     private fun setChapters(viewerChapters: ViewerChapters) {
         binding.readerContainer.removeView(loadingIndicator)
         viewModel.state.value.viewer?.setChapters(viewerChapters)
-        initialPageIndex?.let { index ->
-            moveToPageIndex(index)
-            initialPageIndex = null
-        }
 
         val chapterId = viewerChapters.current.chapter.id
         chapterWebView = null

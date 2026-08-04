@@ -29,6 +29,9 @@ import eu.kanade.presentation.track.TrackDateSelector
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.lang.convertEpochMillisZone
 import eu.kanade.tachiyomi.util.lang.toLocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.toLocalDateTime
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingMutation
 import mihon.entry.interactions.tracking.EntryTrackingRecord
@@ -41,9 +44,8 @@ import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneOffset
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 internal data class TrackDateSelectorScreen(
     private val entry: Entry,
@@ -55,27 +57,27 @@ internal data class TrackDateSelectorScreen(
     @Transient
     private val selectableDates = object : SelectableDates {
         override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-            val targetDate = Instant.ofEpochMilli(utcTimeMillis).toLocalDate(ZoneOffset.UTC)
-            if (targetDate > LocalDate.now(ZoneOffset.UTC)) return false
+            val targetDate = Instant.fromEpochMilliseconds(utcTimeMillis).toLocalDateTime(TimeZone.UTC).date
+            if (targetDate > Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date) return false
             return when {
                 start && track.finishDate > 0 -> {
-                    targetDate <= Instant.ofEpochMilli(track.finishDate).toLocalDate(ZoneOffset.UTC)
+                    targetDate <= track.finishDate.toLocalDate()
                 }
                 !start && track.startDate > 0 -> {
-                    Instant.ofEpochMilli(track.startDate).toLocalDate(ZoneOffset.UTC) <= targetDate
+                    track.startDate.toLocalDate() <= targetDate
                 }
                 else -> true
             }
         }
 
         override fun isSelectableYear(year: Int): Boolean {
-            if (year > LocalDate.now(ZoneOffset.UTC).year) return false
+            if (year > Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).year) return false
             return when {
                 start && track.finishDate > 0 -> {
-                    year <= Instant.ofEpochMilli(track.finishDate).toLocalDate(ZoneOffset.UTC).year
+                    year <= track.finishDate.toLocalDate().year
                 }
                 !start && track.startDate > 0 -> {
-                    Instant.ofEpochMilli(track.startDate).toLocalDate(ZoneOffset.UTC).year <= year
+                    track.startDate.toLocalDate().year <= year
                 }
                 else -> true
             }
@@ -113,11 +115,15 @@ internal data class TrackDateSelectorScreen(
         val initialSelection: Long
             get() = (if (start) track.startDate else track.finishDate)
                 .takeIf { it != 0L }
-                ?.convertEpochMillisZone(ZoneOffset.systemDefault(), ZoneOffset.UTC)
-                ?: Instant.now().toEpochMilli()
+                ?.convertEpochMillisZone(TimeZone.currentSystemDefault(), TimeZone.UTC)
+                ?: Clock.System.now()
+                    .toLocalDateTime(TimeZone.currentSystemDefault())
+                    .date
+                    .atStartOfDayIn(TimeZone.UTC)
+                    .toEpochMilliseconds()
 
         fun setDate(millis: Long) {
-            val localMillis = millis.convertEpochMillisZone(ZoneOffset.UTC, ZoneOffset.systemDefault())
+            val localMillis = millis.convertEpochMillisZone(TimeZone.UTC, TimeZone.currentSystemDefault())
             mutateDate(localMillis)
         }
 

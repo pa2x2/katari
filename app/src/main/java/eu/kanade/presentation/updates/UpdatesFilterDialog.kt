@@ -14,10 +14,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEach
 import dev.icerock.moko.resources.StringResource
+import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.components.TabbedDialog
 import eu.kanade.presentation.components.TabbedDialogPaddings
 import eu.kanade.tachiyomi.ui.updates.UpdatesSettingsScreenModel
@@ -30,6 +34,7 @@ import tachiyomi.presentation.core.components.SettingsItemsPaddings
 import tachiyomi.presentation.core.components.TriStateItem
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.screens.LoadingScreen
 import tachiyomi.presentation.core.util.collectAsState
 
 @Composable
@@ -42,17 +47,21 @@ fun UpdatesFilterDialog(
         onDismissRequest = onDismissRequest,
         tabTitles = listOf(
             stringResource(MR.strings.action_filter),
+            stringResource(MR.strings.categories),
         ),
-    ) {
+    ) { page ->
         Column(
             modifier = Modifier
                 .padding(vertical = TabbedDialogPaddings.Vertical)
                 .verticalScroll(rememberScrollState()),
         ) {
-            FilterSheet(
-                screenModel = screenModel,
-                options = options,
-            )
+            when (page) {
+                0 -> FilterSheet(
+                    screenModel = screenModel,
+                    options = options,
+                )
+                1 -> CategoryFilterSheet(screenModel = screenModel)
+            }
         }
     }
 }
@@ -145,4 +154,49 @@ sealed interface UpdatesFilterOption {
         val preference: (UpdatesPreferences) -> Preference<Boolean>,
         val showDividerBefore: Boolean = false,
     ) : UpdatesFilterOption
+}
+
+@Composable
+private fun ColumnScope.CategoryFilterSheet(
+    screenModel: UpdatesSettingsScreenModel,
+) {
+    Text(
+        stringResource(MR.strings.pref_filter_update_categories_details),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                horizontal = SettingsItemsPaddings.Horizontal,
+                vertical = SettingsItemsPaddings.Vertical,
+            ),
+    )
+
+    HorizontalDivider(modifier = Modifier.padding(MaterialTheme.padding.extraSmall))
+
+    val allCategories by screenModel.getCategories.subscribe().collectAsState(initial = emptyList())
+
+    if (allCategories.isEmpty()) {
+        // since it includes the system category, this should only happen when loading is required
+        LoadingScreen(modifier = Modifier.padding(16.dp))
+        return
+    }
+
+    val excluded by screenModel.updatesPreferences.filterExcludedCategories.collectAsState()
+    val included by screenModel.updatesPreferences.filterIncludedCategories.collectAsState()
+
+    Column {
+        allCategories.fastForEach { category ->
+            val state = when (category.id) {
+                in excluded -> TriState.ENABLED_NOT
+                in included -> TriState.ENABLED_IS
+                else -> TriState.DISABLED
+            }
+            TriStateItem(
+                label = category.visualName,
+                state = state,
+                onClick = {
+                    screenModel.cycleCategory(category)
+                },
+            )
+        }
+    }
 }

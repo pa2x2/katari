@@ -1,7 +1,7 @@
 package eu.kanade.presentation.updates
 
 import eu.kanade.core.util.insertSeparators
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 sealed interface UpdatesUiModel<out T> {
     data class Header(val date: LocalDate) : UpdatesUiModel<Nothing>

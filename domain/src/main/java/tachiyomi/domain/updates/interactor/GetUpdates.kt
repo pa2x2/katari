@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.combine
 import tachiyomi.domain.source.service.HiddenSourceIds
 import tachiyomi.domain.updates.model.UpdatesWithRelations
 import tachiyomi.domain.updates.repository.UpdatesRepository
-import java.time.Instant
+import kotlin.time.Instant
 
 class GetUpdates(
     private val repository: UpdatesRepository,
@@ -25,15 +25,19 @@ class GetUpdates(
         started: Boolean?,
         bookmarked: Boolean?,
         hideExcludedScanlators: Boolean,
+        includedCategories: List<Long>,
+        excludedCategories: List<Long>,
     ): Flow<List<UpdatesWithRelations>> {
         return combine(
             repository.subscribeAll(
-                instant.toEpochMilli(),
+                instant.toEpochMilliseconds(),
                 limit = 500,
                 unread = unread,
                 started = started,
                 bookmarked = bookmarked,
                 hideExcludedScanlators = hideExcludedScanlators,
+                includedCategories = includedCategories,
+                excludedCategories = excludedCategories,
             ),
             hiddenSourceIds.subscribe(),
             ::filterHiddenSources,
@@ -47,16 +51,20 @@ class GetUpdates(
         started: Boolean?,
         bookmarked: Boolean?,
         hideExcludedScanlators: Boolean,
+        includedCategories: List<Long>,
+        excludedCategories: List<Long>,
     ): Flow<List<UpdatesWithRelations>> {
         return combine(
             repository.subscribeAll(
                 profileId = profileId,
-                after = instant.toEpochMilli(),
+                after = instant.toEpochMilliseconds(),
                 limit = 500,
                 unread = unread,
                 started = started,
                 bookmarked = bookmarked,
                 hideExcludedScanlators = hideExcludedScanlators,
+                includedCategories = includedCategories,
+                excludedCategories = excludedCategories,
             ),
             hiddenSourceIds.subscribe(profileId),
             ::filterHiddenSources,

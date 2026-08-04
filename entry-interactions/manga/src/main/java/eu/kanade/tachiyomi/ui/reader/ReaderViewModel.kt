@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import logcat.LogPriority
 import mihon.entry.interactions.manga.download.DownloadManager
@@ -83,6 +84,8 @@ import java.io.File
 import java.io.InputStream
 import java.time.Instant
 import java.util.Date
+import kotlin.getValue
+import kotlin.time.Clock
 
 /**
  * Presenter used by the activity to perform background operations.
@@ -114,6 +117,11 @@ internal class ReaderViewModel @JvmOverloads constructor(
     private val mutableState = MutableStateFlow(State())
     val state = mutableState.asStateFlow()
 
+    private val initialState = InitialState.from(savedState)
+
+    val mangaId = initialState.mangaId
+    val hasValidArgs = initialState.hasValidArgs
+
     private val eventChannel = Channel<Event>()
     val eventFlow = eventChannel.receiveAsFlow()
 
@@ -126,7 +134,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
     /**
      * The chapter id of the currently loaded chapter. Used to restore from process kill.
      */
-    private var chapterId = savedState.get<Long>("chapter_id") ?: -1L
+    private var chapterId = initialState.chapterId
         set(value) {
             savedState["chapter_id"] = value
             field = value
@@ -135,7 +143,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
     /**
      * The visible page index of the currently loaded chapter. Used to restore from process kill.
      */
-    private var chapterPageIndex = savedState.get<Int>("page_index") ?: -1
+    private var chapterPageIndex = initialState.pageIndex
         set(value) {
             savedState["page_index"] = value
             field = value
@@ -263,11 +271,6 @@ internal class ReaderViewModel @JvmOverloads constructor(
             .distinctUntilChanged()
             .filterNotNull()
             .onEach { currentChapter ->
-                if (initialPageIndexPending && chapterPageIndex >= 0) {
-                    // Restore from SavedState
-                    currentChapter.requestedPage = chapterPageIndex
-                    initialPageIndexPending = false
-                }
                 chapterId = currentChapter.chapter.id!!
             }
             .launchIn(viewModelScope)
@@ -280,6 +283,10 @@ internal class ReaderViewModel @JvmOverloads constructor(
                 }
             }
             .launchIn(viewModelScope)
+
+        if (hasValidArgs) {
+            viewModelScope.launch { init() }
+        }
     }
 
     override fun onCleared() {
@@ -301,48 +308,25 @@ internal class ReaderViewModel @JvmOverloads constructor(
     }
 
     /**
-     * Whether this presenter is initialized yet.
+     * Initializes this presenter from its saved launch state. This method fetches the entry and
+     * initializes the selected chapter. Failures are reported through [State.initError].
      */
-    fun needsInit(): Boolean {
-        return manga == null
-    }
-
-    /**
-     * Initializes this presenter with the given [mangaId] and [initialChapterId]. This method will
-     * fetch the manga from the database and initialize the initial chapter.
-     */
-    suspend fun init(mangaId: Long, initialChapterId: Long): Result<Boolean> {
-        return init(mangaId, initialChapterId, initialPageIndex = -1)
-    }
-
-    suspend fun init(mangaId: Long, initialChapterId: Long, initialPageIndex: Int): Result<Boolean> {
-        if (!needsInit()) return Result.success(true)
-        return withIOContext {
+    private suspend fun init() {
+        withIOContext {
             try {
-                val entry = getEntry.await(mangaId)
-                if (entry != null) {
-                    sourceManager.isInitialized.first { it }
-                    installViewerSettingBindings(entry)
-                    if (chapterId == -1L) chapterId = initialChapterId
-                    if (initialPageIndex >= 0) {
-                        chapterPageIndex = initialPageIndex
-                        initialPageIndexPending = true
-                    }
+                val entry = getEntry.await(mangaId) ?: error("Requested entry of id $mangaId not found")
+                sourceManager.isInitialized.first { it }
+                installViewerSettingBindings(entry)
 
-                    val context = Injekt.get<Application>()
-                    loader = ChapterLoader(context, downloadManager, downloadProvider, entry, sourceManager)
+                val context = Injekt.get<Application>()
+                loader = ChapterLoader(context, downloadManager, downloadProvider, entry, sourceManager)
 
-                    loadChapter(loader!!, chapterList.first { chapterId == it.chapter.id })
-                    Result.success(true)
-                } else {
-                    // Unlikely but okay
-                    Result.success(false)
-                }
+                loadChapter(loader!!, chapterList.first { chapterId == it.chapter.id })
             } catch (e: Throwable) {
                 if (e is CancellationException) {
                     throw e
                 }
-                Result.failure(e)
+                mutableState.update { it.copy(initError = e) }
             }
         }
     }
@@ -356,6 +340,11 @@ internal class ReaderViewModel @JvmOverloads constructor(
         chapter: ReaderChapter,
     ): ViewerChapters {
         loader.loadChapter(chapter)
+
+        if (initialPageIndexPending && chapterPageIndex >= 0) {
+            chapter.requestedPage = chapterPageIndex
+            initialPageIndexPending = false
+        }
 
         val chapterPos = chapterList.indexOf(chapter)
         val newChapters = ViewerChapters(
@@ -612,7 +601,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
     }
 
     fun restartReadTimer() {
-        chapterReadStartTime = Instant.now().toEpochMilli()
+        chapterReadStartTime = Clock.System.now().toEpochMilliseconds()
     }
 
     /**
@@ -1023,6 +1012,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
     @Immutable
     data class State(
         val manga: Entry? = null,
+        val initError: Throwable? = null,
         val viewerChapters: ViewerChapters? = null,
         val bookmarked: Boolean = false,
         val isLoadingAdjacentChapter: Boolean = false,
@@ -1045,6 +1035,29 @@ internal class ReaderViewModel @JvmOverloads constructor(
 
         val totalPages: Int
             get() = currentChapter?.pages?.size ?: -1
+    }
+
+    internal data class InitialState(
+        val mangaId: Long,
+        val launchChapterId: Long,
+        val chapterId: Long,
+        val pageIndex: Int,
+    ) {
+        val hasValidArgs = mangaId != -1L && launchChapterId != -1L
+
+        companion object {
+            fun from(savedState: SavedStateHandle): InitialState {
+                val launchChapterId = savedState.get<Long>("chapter") ?: -1L
+                return InitialState(
+                    mangaId = savedState.get<Long>("manga") ?: -1L,
+                    launchChapterId = launchChapterId,
+                    chapterId = savedState.get<Long>("chapter_id") ?: launchChapterId,
+                    pageIndex = savedState.get<Int>("page_index")
+                        ?: savedState.get<Int>("page")?.takeIf { it >= 0 }
+                        ?: -1,
+                )
+            }
+        }
     }
 
     sealed interface Dialog {

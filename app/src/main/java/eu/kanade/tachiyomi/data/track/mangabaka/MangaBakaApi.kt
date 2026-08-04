@@ -21,6 +21,9 @@ import eu.kanade.tachiyomi.network.PUT
 import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.network.parseAs
 import eu.kanade.tachiyomi.util.lang.toLocalDate
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -32,8 +35,6 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import tachiyomi.core.common.util.lang.withIOContext
 import uy.kohesive.injekt.injectLazy
 import java.math.RoundingMode
-import java.time.LocalDate
-import java.time.ZoneId
 import java.util.Locale
 import kotlin.time.Instant
 import tachiyomi.domain.track.model.EntryTrack as DomainTrack
@@ -306,8 +307,7 @@ internal fun parseResponseDate(value: String): Long {
     return runCatching { Instant.parse(value).toEpochMilliseconds() }
         .getOrElse {
             LocalDate.parse(value)
-                .atStartOfDay(ZoneId.systemDefault())
-                .toInstant()
-                .toEpochMilli()
+                .atStartOfDayIn(TimeZone.currentSystemDefault())
+                .toEpochMilliseconds()
         }
 }

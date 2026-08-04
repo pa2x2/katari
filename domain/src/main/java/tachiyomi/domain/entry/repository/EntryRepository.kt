@@ -69,8 +69,11 @@ interface EntryRepository {
     fun getFavoritesBySourceId(sourceId: Long): Flow<List<Entry>>
 
     suspend fun getUpcomingEntries(
+        profileId: Long,
         statuses: Set<Int>,
         types: Set<EntryType>,
+        excludedCategories: List<Long>,
+        includedCategories: List<Long>,
     ): Flow<List<Entry>>
 
     suspend fun resetViewerFlags(): Boolean
