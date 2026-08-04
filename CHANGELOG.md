@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.4] - 2026-08-04
+
+### 🐛 Fixed
+
+- Restored the selected grouped library page after relaunch and kept grouped library pages isolated
+  when switching profiles.
+
+Based on [Mihon 0.20.3](https://github.com/mihonapp/mihon/releases/tag/v0.20.3)
+
 ## [1.1.3] - 2026-08-04
 
 ### ⚡ Improved
@@ -61,7 +70,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.1.3...upcoming
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.1.4...upcoming
+[1.1.4]: https://github.com/pa2x2/katari/releases/tag/v1.1.4
 [1.1.3]: https://github.com/pa2x2/katari/releases/tag/v1.1.3
 [1.1.2]: https://github.com/pa2x2/katari/releases/tag/v1.1.2
 [1.1.1]: https://github.com/pa2x2/katari/releases/tag/v1.1.1
