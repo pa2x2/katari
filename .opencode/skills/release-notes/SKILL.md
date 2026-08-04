@@ -108,11 +108,8 @@ Katari's changelog focused on behavior that differs from Mihon.
 
    Omit headings that have no qualifying outcomes.
 2. Describe user-visible outcomes in concise, natural, polished language. Let each heading
-   provide the category context, so avoid mechanically starting bullets with `Added`,
-   `Changed`, `Improved`, `Removed`, or `Fixed` unless the sentence requires it. Keep the
-   tone factual rather than promotional, and make each bullet understandable without commit
-   or implementation context. Mention extension developer changes only when they alter
-   Katari's public SDK or compatibility contract. Do not create one bullet per commit or
+   provide the category context. Keep the tone factual rather than promotional, and make
+   each bullet understandable without commit or implementation context. Do not create one bullet per commit or
    pull request, include commit hashes, or add a catch-all list of minor/internal changes.
    Prefer fewer, broader bullets that each communicate one distinct and useful outcome.
 3. Update `CHANGELOG.md` in the worktree. Insert the complete release section in descending
