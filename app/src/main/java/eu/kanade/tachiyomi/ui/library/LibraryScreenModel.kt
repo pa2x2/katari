@@ -252,6 +252,8 @@ class LibraryScreenModel(
                 mutableState.update { state ->
                     val activePageIndex = groupedFavorites.indexOfMatchingPage(
                         previousPage = state.activePage,
+                        restoredPageId = libraryPreferences.lastUsedPageId.get(),
+                        fallbackPageIndex = state.requestedActivePageIndex,
                         previousGrouping = state.grouping,
                         newGrouping = grouping,
                     )
@@ -706,12 +708,14 @@ class LibraryScreenModel(
     }
 
     fun updateActivePageIndex(index: Int) {
-        val newIndex = mutableState.updateAndGet { state ->
+        val newState = mutableState.updateAndGet { state ->
             state.copy(activePageIndex = index)
         }
-            .coercedActivePageIndex
 
-        libraryPreferences.lastUsedCategory.set(newIndex)
+        libraryPreferences.lastUsedCategory.set(newState.coercedActivePageIndex)
+        newState.activePage?.let { page ->
+            libraryPreferences.lastUsedPageId.set(page.id)
+        }
     }
 
     fun openChangeCategoryDialog() {
@@ -1093,6 +1097,8 @@ class LibraryScreenModel(
             maximumValue = displayedPages.lastIndex.coerceAtLeast(0),
         )
 
+        val requestedActivePageIndex = activePageIndex
+
         val activePage: LibraryPage? = displayedPages.getOrNull(coercedActivePageIndex)
 
         val activeSortCategory: Category? = activePage?.category
@@ -1181,10 +1187,17 @@ internal fun observeGroupedLibraryPages(
 
 private fun List<LibraryPage>.indexOfMatchingPage(
     previousPage: LibraryPage?,
+    restoredPageId: String,
+    fallbackPageIndex: Int,
     previousGrouping: LibraryGrouping,
     newGrouping: LibraryGrouping,
 ): Int {
-    if (previousPage == null) return 0
+    if (previousPage == null) {
+        if (isEmpty()) return fallbackPageIndex
+        return indexOfFirst { it.id == restoredPageId }
+            .takeIf { it >= 0 }
+            ?: fallbackPageIndex.coerceIn(0, lastIndex.coerceAtLeast(0))
+    }
     val sharedDimensions = previousGrouping.dimensions.intersect(newGrouping.dimensions.toSet())
     return indexOfFirst { candidate ->
         sharedDimensions.all { dimension ->

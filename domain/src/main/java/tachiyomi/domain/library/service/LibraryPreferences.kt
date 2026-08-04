@@ -148,6 +148,10 @@ class LibraryPreferences(
 
     val lastUsedCategory: Preference<Int> = preferenceStore.getInt(Preference.appStateKey("last_used_category"), 0)
 
+    val lastUsedPageId: Preference<String> = preferenceStore.getString(
+        Preference.appStateKey("last_used_library_page_id"),
+    )
+
     val categoryTabs: Preference<Boolean> = preferenceStore.getBoolean("display_category_tabs", true)
 
     val categoryNumberOfItems: Preference<Boolean> = preferenceStore.getBoolean("display_number_of_items", false)
