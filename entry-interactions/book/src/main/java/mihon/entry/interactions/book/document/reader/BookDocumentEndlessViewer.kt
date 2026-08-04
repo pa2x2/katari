@@ -1,5 +1,6 @@
 package mihon.entry.interactions.book.document.reader
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,6 +28,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.presentation.core.util.clickableNoIndication
 
 /** Stable-key, adjacent-session vertical document stream. */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun BookDocumentEndlessViewer(
     state: BookDocumentReaderState,
@@ -46,7 +48,11 @@ internal fun BookDocumentEndlessViewer(
     val initialIndex = currentSection?.let { section ->
         items.indexOfPosition(section.key, section.initialPosition).coerceAtLeast(0)
     } ?: 0
-    val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
+    val chapterPrefetchStrategy = remember { BookDocumentChapterPrefetchStrategy() }
+    val listState = rememberLazyListState(
+        initialFirstVisibleItemIndex = initialIndex,
+        prefetchStrategy = chapterPrefetchStrategy,
+    )
     val currentItems by rememberUpdatedState(items)
     val currentOnScrollStarted by rememberUpdatedState(onScrollStarted)
     var observedKeys by remember(listState) { mutableStateOf(items.map { it.key }) }
@@ -78,6 +84,14 @@ internal fun BookDocumentEndlessViewer(
     }
 
     SideEffect {
+        val nextSectionKey = state.window.next?.id?.let(state.loadedSections::get)?.key
+        val nextSectionIndex = nextSectionKey?.let { sectionKey ->
+            items.indexOfFirst { item ->
+                item is BookDocumentViewerItem.Block && item.section.key == sectionKey
+            }
+        } ?: -1
+        chapterPrefetchStrategy.updateTarget(nextSectionKey, nextSectionIndex)
+
         val keys = items.map { it.key }
         if (keys != observedKeys && !listState.isScrollInProgress && state.navigationRequest == null) {
             val info = listState.layoutInfo

@@ -1,5 +1,6 @@
 package mihon.entry.interactions.host.tracking
 
+import app.cash.sqldelight.async.coroutines.awaitAsList
 import mihon.entry.interactions.tracking.backup.EntryTrackingBackupRecord
 import mihon.entry.interactions.tracking.host.EntryTrackingBackupHost
 import tachiyomi.data.DatabaseHandler
@@ -82,7 +83,7 @@ internal class AppEntryTrackingBackupHost(
                         private = private,
                     ),
                 )
-            }.executeAsList().associateBy { it.value.serviceId }
+            }.awaitAsList().associateBy { it.value.serviceId }
 
             records.forEach { incoming ->
                 val existing = existingByService[incoming.serviceId]
