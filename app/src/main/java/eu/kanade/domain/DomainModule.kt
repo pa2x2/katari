@@ -54,7 +54,6 @@ import tachiyomi.domain.category.interactor.ReorderCategory
 import tachiyomi.domain.category.interactor.ResetCategoryFlags
 import tachiyomi.domain.category.interactor.SetDisplayMode
 import tachiyomi.domain.category.interactor.SetSortModeForCategory
-import tachiyomi.domain.category.interactor.UpdateCategory
 import tachiyomi.domain.category.repository.CategoryRepository
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.GetEntryById
@@ -111,7 +110,6 @@ class DomainModule : InjektModule {
         addFactory { CreateCategoryWithName(get(), get()) }
         addFactory { RenameCategory(get()) }
         addFactory { ReorderCategory(get()) }
-        addFactory { UpdateCategory(get()) }
         addFactory { DeleteCategory(get(), get(), get(), get(), get()) }
 
         addSingletonFactory<EntryRepository> { EntryRepositoryImpl(get(), get()) }

@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.category.model.Category
-import tachiyomi.domain.category.model.CategoryUpdate
 import tachiyomi.domain.category.repository.CategoryRepository
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -91,35 +90,44 @@ class CategoryRepositoryImpl(
         }
     }
 
-    override suspend fun updatePartial(update: CategoryUpdate) {
+    override suspend fun updateName(categoryId: Long, name: String) {
         handler.await {
-            categoriesQueries.update(
-                name = update.name,
-                order = update.order,
-                flags = update.flags,
-                categoryId = update.id,
+            categoriesQueries.updateName(
+                name = name,
+                categoryId = categoryId,
                 profileId = profileProvider.activeProfileId,
             )
         }
     }
 
-    override suspend fun updatePartial(updates: List<CategoryUpdate>) {
-        handler.await(inTransaction = true) {
-            updates.forEach { update ->
-                categoriesQueries.update(
-                    name = update.name,
-                    order = update.order,
-                    flags = update.flags,
-                    categoryId = update.id,
-                    profileId = profileProvider.activeProfileId,
-                )
-            }
+    override suspend fun updateFlags(categoryId: Long, flags: Long) {
+        handler.await {
+            categoriesQueries.updateFlags(
+                flags = flags,
+                categoryId = categoryId,
+                profileId = profileProvider.activeProfileId,
+            )
         }
     }
 
     override suspend fun updateAllFlags(flags: Long?) {
         handler.await {
-            categoriesQueries.updateAllFlags(flags, profileProvider.activeProfileId)
+            categoriesQueries.updateAllFlags(
+                flags = flags,
+                profileId = profileProvider.activeProfileId,
+            )
+        }
+    }
+
+    override suspend fun updateAllOrders(orderedIds: List<Long>) {
+        handler.await(inTransaction = true) {
+            orderedIds.forEachIndexed { index, categoryId ->
+                categoriesQueries.updateOrder(
+                    order = index.toLong(),
+                    categoryId = categoryId,
+                    profileId = profileProvider.activeProfileId,
+                )
+            }
         }
     }
 
