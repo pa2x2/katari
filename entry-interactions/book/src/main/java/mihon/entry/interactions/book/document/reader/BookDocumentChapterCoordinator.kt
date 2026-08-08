@@ -4,9 +4,11 @@ import android.content.Context
 import android.os.SystemClock
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import mihon.book.api.document.locatorAt
 import mihon.entry.interactions.book.R
@@ -15,6 +17,7 @@ import mihon.entry.interactions.book.reader.BookReaderOpenResult
 import mihon.entry.interactions.book.reader.BookReaderSessionFactory
 import mihon.entry.interactions.book.reader.OpenedBookReaderSession
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPolicy
+import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.EntryChapter
@@ -145,7 +148,7 @@ internal class BookDocumentChapterCoordinator(
             }
         }
         persistLocationJob?.cancel()
-        persistLocationJob = scope.launch {
+        persistLocationJob = scope.launchIO {
             delay(LOCATION_PERSIST_DEBOUNCE_MILLIS)
             session.saveLocation(locator)
         }
@@ -289,9 +292,13 @@ internal class BookDocumentChapterCoordinator(
         val section = state.loadedSections[chapterId] ?: return
         val total = state.readingOrder.completedProgression(chapterId)
         val document = section.document.document
-        val locator = document.locatorAt(document.positionAtProgression(1f)).copy(totalProgression = total)
-        retainedSessions.updateLocation(chapterId, locator)
-        scope.launch { session.saveLocation(locator, completed = true) }
+        scope.launchNonCancellable {
+            val locator = document.locatorAt(document.positionAtProgression(1f)).copy(totalProgression = total)
+            withContext(Dispatchers.Main.immediate) {
+                retainedSessions.updateLocation(chapterId, locator)
+            }
+            session.saveLocation(locator, completed = true)
+        }
     }
 
     private fun setLoadState(chapterId: Long, loadState: BookDocumentChapterLoadState) {
@@ -302,7 +309,7 @@ internal class BookDocumentChapterCoordinator(
     private fun recordElapsedFor(chapterId: Long) {
         val elapsed = consumeReadingDuration()
         val session = retainedSessions.session(chapterId) ?: return
-        scope.launch { session.recordHistory(elapsed) }
+        scope.launchNonCancellable { session.recordHistory(elapsed) }
     }
 
     private fun consumeReadingDuration(): Long {
