@@ -72,11 +72,23 @@ deleteByProfile:
 DELETE FROM categories
 WHERE profile_id = :profileId;
 
-update:
+updateName:
 UPDATE categories
-SET name = coalesce(:name, name),
-    sort = coalesce(:order, sort),
-    flags = coalesce(:flags, flags)
+SET name = :name
+WHERE _id = :categoryId
+AND _id != 0
+AND profile_id = :profileId;
+
+updateOrder:
+UPDATE categories
+SET sort = :order
+WHERE _id = :categoryId
+AND _id != 0
+AND profile_id = :profileId;
+
+updateFlags:
+UPDATE categories
+SET flags = :flags
 WHERE _id = :categoryId
 AND _id != 0
 AND profile_id = :profileId;

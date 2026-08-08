@@ -250,6 +250,7 @@ internal class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boo
     private fun onPageSelected(page: ReaderPage) {
         val pages = page.chapter.pages ?: return
         logcat { "onPageSelected: ${page.number}/${pages.size}" }
+        page.chapter.pageLoader?.selectPage(page)
         activity.onPageSelected(page)
     }
 

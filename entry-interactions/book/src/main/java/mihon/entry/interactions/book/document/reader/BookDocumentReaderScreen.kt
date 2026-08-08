@@ -123,7 +123,12 @@ internal fun BookDocumentReaderScreen(
                 .background(readerPalette.background),
             content = {
                 BookDocumentEndlessViewer(
-                    state = state,
+                    chapters = state.chapters,
+                    currentChapterId = state.currentChapterId,
+                    window = state.window,
+                    loadedSections = state.loadedSections,
+                    loadStates = state.loadStates,
+                    navigationRequest = state.navigationRequest,
                     onLocation = onLocation,
                     onTransitionReached = onTransitionReached,
                     onTerminalObservation = onTerminalObservation,
@@ -188,13 +193,21 @@ internal fun BookDocumentReaderScreen(
         currentOnChapterSelected(chapter)
     }
 
-    BookReaderNavigationSheet(
-        visible = state.navigationVisible,
-        rows = state.chapters.map { BookReaderNavigationRow(it, it.name) },
-        selectedIndex = state.chapters.indexOfFirst { it.id == state.currentChapterId },
-        onItemClick = { pendingChapterSelection = it },
-        onDismissRequest = { onNavigationVisibilityChange(false) },
-    )
+    if (state.navigationVisible) {
+        val navigationRows = remember(state.chapters) {
+            state.chapters.map { BookReaderNavigationRow(it, it.name) }
+        }
+        val selectedIndex = remember(state.chapters, state.currentChapterId) {
+            state.chapters.indexOfFirst { it.id == state.currentChapterId }
+        }
+        BookReaderNavigationSheet(
+            visible = true,
+            rows = navigationRows,
+            selectedIndex = selectedIndex,
+            onItemClick = { pendingChapterSelection = it },
+            onDismissRequest = { onNavigationVisibilityChange(false) },
+        )
+    }
     if (state.settingsVisible) {
         BookReaderSettingsDialog(
             settingsSurfaceId = BookDocumentReaderProcessor.SETTINGS_SURFACE_ID,

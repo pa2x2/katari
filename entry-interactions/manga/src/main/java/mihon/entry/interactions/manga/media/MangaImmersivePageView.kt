@@ -23,6 +23,7 @@ import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import mihon.core.common.image.progressive.ProgressiveImageVisual
 import okio.Buffer
 import okio.BufferedSource
 import tachiyomi.core.common.util.system.ImageUtil
@@ -42,6 +43,9 @@ internal fun MangaImmersiveImage(
     val viewRef = remember { mutableStateOf<ReaderPageImageView?>(null) }
     val status by page.statusFlow.collectAsStateWithLifecycle()
     val progress by page.progressFlow.collectAsStateWithLifecycle()
+    val progressiveImage by page.progressiveImageState.collectAsStateWithLifecycle(initialValue = null)
+    val hasProgressiveVisual = progressiveImage?.visual is ProgressiveImageVisual.Still ||
+        progressiveImage?.animation?.frames?.isNotEmpty() == true
     val unknownError = stringResource(MR.strings.unknown_error)
     var retryKey by remember(page) { mutableIntStateOf(0) }
     var loadedImage by remember(page) { mutableStateOf<MangaImmersiveLoadedImage?>(null) }
@@ -50,7 +54,10 @@ internal fun MangaImmersiveImage(
 
     LaunchedEffect(page) {
         try {
-            page.chapter.pageLoader?.loadPage(page, preloadCount = 0)
+            page.chapter.pageLoader?.run {
+                selectPage(page)
+                loadPage(page, preloadCount = 0)
+            }
         } catch (e: CancellationException) {
             throw e
         }
@@ -106,18 +113,23 @@ internal fun MangaImmersiveImage(
                         view.tag = null
                         view.onImageLoaded = null
                         view.onImageLoadError = null
-                        view.recycle()
+                        view.recycleFinalImage()
                     }
+                    view.setProgressiveImage(progressiveImage)
                     return@AndroidView
                 }
+                view.setProgressiveImage(progressiveImage)
                 val requestTag = "${page.chapter.chapter.id}:${page.index}:$retryKey"
                 if (view.tag != requestTag) {
                     view.tag = requestTag
-                    view.recycle()
+                    view.recycleFinalImage()
                     imageReady = false
                     decodeErrorMessage = null
                     view.onImageLoaded = {
-                        if (view.tag == requestTag) imageReady = true
+                        if (view.tag == requestTag) {
+                            page.releaseProgressivePreviewAfterFinalImageReady()
+                            imageReady = true
+                        }
                     }
                     view.onImageLoadError = {
                         if (view.tag == requestTag) decodeErrorMessage = it?.message ?: unknownError
@@ -148,6 +160,7 @@ internal fun MangaImmersiveImage(
                 )
             },
             previewModel = previewRequest,
+            showBackground = !hasProgressiveVisual,
             onBackgroundClick = onToggleControls,
             onRetry = {
                 loadedImage = null

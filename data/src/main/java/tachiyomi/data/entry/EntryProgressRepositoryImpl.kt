@@ -133,6 +133,8 @@ class EntryProgressRepositoryImpl(
 
     private suspend fun Database.syncChildCompletion(state: EntryProgressState) {
         val chapterId = state.chapterId ?: return
+        val current = chaptersQueries.getChapterReadById(chapterId).awaitAsOneOrNull() ?: return
+        if (current == state.completed) return
         chaptersQueries.update(
             entryId = null,
             url = null,

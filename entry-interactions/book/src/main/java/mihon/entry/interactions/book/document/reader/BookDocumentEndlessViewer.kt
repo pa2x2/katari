@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import mihon.entry.interactions.viewer.EntryChildDirection
+import mihon.entry.interactions.viewer.EntryChildWindow
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.presentation.core.util.clickableNoIndication
 
@@ -31,7 +32,12 @@ import tachiyomi.presentation.core.util.clickableNoIndication
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun BookDocumentEndlessViewer(
-    state: BookDocumentReaderState,
+    chapters: List<EntryChapter>,
+    currentChapterId: Long,
+    window: EntryChildWindow<EntryChapter>,
+    loadedSections: Map<Long, BookDocumentSection<EntryChapter>>,
+    loadStates: Map<Long, BookDocumentChapterLoadState>,
+    navigationRequest: BookDocumentNavigationRequest?,
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
     onTransitionReached: (EntryChapter) -> Unit,
     onTerminalObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
@@ -41,10 +47,11 @@ internal fun BookDocumentEndlessViewer(
     onReaderTap: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val items = remember(state.window, state.loadedSections) {
-        buildBookDocumentViewerItems(state.window, state.loadedSections, EntryChapter::id)
+    val items = remember(window, loadedSections) {
+        buildBookDocumentViewerItems(window, loadedSections, EntryChapter::id)
     }
-    val currentSection = state.loadedSections[state.currentChapterId]
+    val itemKeys = remember(items) { items.map(BookDocumentViewerItem<EntryChapter>::key) }
+    val currentSection = loadedSections[currentChapterId]
     val initialIndex = currentSection?.let { section ->
         items.indexOfPosition(section.key, section.initialPosition).coerceAtLeast(0)
     } ?: 0
@@ -55,8 +62,17 @@ internal fun BookDocumentEndlessViewer(
     )
     val currentItems by rememberUpdatedState(items)
     val currentOnScrollStarted by rememberUpdatedState(onScrollStarted)
-    var observedKeys by remember(listState) { mutableStateOf(items.map { it.key }) }
+    var observedKeys by remember(listState) { mutableStateOf(itemKeys) }
     var initialPositionRestored by remember(listState) { mutableStateOf(false) }
+    val prefetchTarget = remember(window.next?.id, loadedSections, items) {
+        val nextSectionKey = window.next?.id?.let(loadedSections::get)?.key
+        val nextSectionIndex = nextSectionKey?.let { sectionKey ->
+            items.indexOfFirst { item ->
+                item is BookDocumentViewerItem.Block && item.section.key == sectionKey
+            }
+        } ?: -1
+        nextSectionKey to nextSectionIndex
+    }
 
     suspend fun scrollToSectionPosition(
         section: BookDocumentSection<EntryChapter>,
@@ -84,16 +100,9 @@ internal fun BookDocumentEndlessViewer(
     }
 
     SideEffect {
-        val nextSectionKey = state.window.next?.id?.let(state.loadedSections::get)?.key
-        val nextSectionIndex = nextSectionKey?.let { sectionKey ->
-            items.indexOfFirst { item ->
-                item is BookDocumentViewerItem.Block && item.section.key == sectionKey
-            }
-        } ?: -1
-        chapterPrefetchStrategy.updateTarget(nextSectionKey, nextSectionIndex)
+        chapterPrefetchStrategy.updateTarget(prefetchTarget.first, prefetchTarget.second)
 
-        val keys = items.map { it.key }
-        if (keys != observedKeys && !listState.isScrollInProgress && state.navigationRequest == null) {
+        if (itemKeys != observedKeys && !listState.isScrollInProgress && navigationRequest == null) {
             val info = listState.layoutInfo
             bookDocumentViewerDatasetAnchor(
                 items = items,
@@ -101,7 +110,7 @@ internal fun BookDocumentEndlessViewer(
                 viewportStartOffset = info.viewportStartOffset,
             )?.let { anchor -> listState.requestScrollToItem(anchor.index, anchor.scrollOffset) }
         }
-        observedKeys = keys
+        observedKeys = itemKeys
     }
 
     LaunchedEffect(items) {
@@ -111,22 +120,22 @@ internal fun BookDocumentEndlessViewer(
         }
     }
 
-    LaunchedEffect(state.currentChapterId, items, initialPositionRestored) {
+    LaunchedEffect(currentChapterId, items, initialPositionRestored) {
         if (!initialPositionRestored) return@LaunchedEffect
-        if (state.navigationRequest != null) return@LaunchedEffect
-        val section = state.loadedSections[state.currentChapterId] ?: return@LaunchedEffect
+        if (navigationRequest != null) return@LaunchedEffect
+        val section = loadedSections[currentChapterId] ?: return@LaunchedEffect
         val visibleChapterIds = listState.layoutInfo.visibleItemsInfo.mapNotNull { layout ->
             (items.resolve(layout.index, layout.key) as? BookDocumentViewerItem.Block)?.section?.owner?.id
         }
-        if (state.currentChapterId !in visibleChapterIds) {
+        if (currentChapterId !in visibleChapterIds) {
             val index = items.indexOfPosition(section.key, section.initialPosition)
             if (index >= 0) scrollToSectionPosition(section)
         }
     }
 
-    LaunchedEffect(state.navigationRequest) {
-        val request = state.navigationRequest ?: return@LaunchedEffect
-        val section = state.loadedSections[request.chapterId] ?: return@LaunchedEffect
+    LaunchedEffect(navigationRequest) {
+        val request = navigationRequest ?: return@LaunchedEffect
+        val section = loadedSections[request.chapterId] ?: return@LaunchedEffect
         scrollToSectionPosition(section, request.position)
     }
 
@@ -160,7 +169,7 @@ internal fun BookDocumentEndlessViewer(
             )?.to
         }.filterNotNull().distinctUntilChanged().collect(onTransitionReached)
     }
-    LaunchedEffect(listState, items, state.currentChapterId) {
+    LaunchedEffect(listState, items, currentChapterId) {
         snapshotFlow {
             val info = listState.layoutInfo
             val terminalVisible = info.visibleItemsInfo.any { layout ->
@@ -172,13 +181,13 @@ internal fun BookDocumentEndlessViewer(
                     layout.offset + layout.size > info.viewportStartOffset
             }
             TerminalLayoutObservation(
-                state.currentChapterId,
+                currentChapterId,
                 terminalVisible,
                 listState.canScrollForward,
                 listState.isScrollInProgress,
             )
         }.distinctUntilChanged().collect { observation ->
-            val chapter = state.chapters.firstOrNull { it.id == observation.chapterId } ?: return@collect
+            val chapter = chapters.firstOrNull { it.id == observation.chapterId } ?: return@collect
             onTerminalObservation(
                 chapter,
                 observation.terminalVisible,
@@ -237,7 +246,7 @@ internal fun BookDocumentEndlessViewer(
                 }
                 is BookDocumentViewerItem.Transition -> BookDocumentChapterTransition(
                     transition = item.transition,
-                    loadState = item.transition.to?.let { state.loadStates[it.id] },
+                    loadState = item.transition.to?.let { loadStates[it.id] },
                     onRetry = item.transition.to?.let { chapter -> { onTransitionReached(chapter) } },
                     modifier = Modifier
                         .fillMaxWidth()

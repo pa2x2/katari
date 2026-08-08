@@ -26,6 +26,7 @@ import tachiyomi.domain.library.model.LibraryItemKey
 import tachiyomi.domain.source.service.EntrySourceDescriptionResolutionPort
 import tachiyomi.domain.source.service.HiddenSourceIds
 import tachiyomi.domain.source.service.SourceManager
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 class GetLibraryEntries(
@@ -68,6 +69,7 @@ class GetLibraryEntries(
     ): Flow<List<LibraryItem>> {
         return entries
             .flatMapLatest { favorites ->
+                delay(LIBRARY_INVALIDATION_DEBOUNCE)
                 if (favorites.isEmpty()) return@flatMapLatest flowOf(emptyList())
                 val profileId = favorites.first().profileId
                 check(expectedProfileId == null || profileId == expectedProfileId) {
@@ -106,8 +108,9 @@ class GetLibraryEntries(
         val categoryIdsByEntryId = categoryRepository.getCategoryIdsByEntryIds(profileId, entryIds)
         val lastReadByEntryId = entryRepository.getLibraryLastRead(profileId)
 
+        val chaptersByEntryId = chapters.groupBy(EntryChapter::entryId)
         val itemsById = favorites.associate { entry ->
-            val entryChapters = chapters.filter { it.entryId == entry.id }
+            val entryChapters = chaptersByEntryId[entry.id].orEmpty()
             val libraryState = entryLibraryProgressResolver.calculate(
                 entry = entry,
                 chapters = entryChapters,
@@ -228,6 +231,7 @@ class GetLibraryEntries(
     }
 
     companion object {
+        private val LIBRARY_INVALIDATION_DEBOUNCE = 50.milliseconds
         private const val MULTI_SOURCE_ID = Long.MIN_VALUE
     }
 }

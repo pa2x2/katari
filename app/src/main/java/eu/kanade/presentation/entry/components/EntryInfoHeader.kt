@@ -6,6 +6,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -71,6 +72,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
@@ -101,11 +103,14 @@ import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.components.MARKDOWN_INLINE_IMAGE_TAG
 import eu.kanade.presentation.components.MarkdownRender
 import eu.kanade.presentation.components.getMarkdownLinkStyle
+import eu.kanade.presentation.entry.components.preview.rememberProgressiveEntryPreviewBitmap
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.entry.EntryScreenModel
 import eu.kanade.tachiyomi.util.system.copyToClipboard
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.daysUntil
+import mihon.core.common.image.progressive.ProgressiveImageState
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.media.EntryPreviewPage
 import mihon.entry.interactions.media.EntryPreviewPageStatus
@@ -585,6 +590,14 @@ private fun EntryPreviewTile(
 ) {
     val status by previewPage.page.status.collectAsState()
     val progress by previewPage.page.progress.collectAsState()
+    val progressiveImageFlow = remember(previewPage.page.progressiveImageState) {
+        previewPage.page.progressiveImageState ?: flowOf<ProgressiveImageState?>(null)
+    }
+    val progressiveImage by progressiveImageFlow.collectAsState(initial = null)
+    val progressiveBitmap = rememberProgressiveEntryPreviewBitmap(progressiveImage)
+    val keepProgressiveAnimation = progressiveImage?.animation?.let {
+        it.isComplete && it.isReplayable
+    } == true
 
     Column(
         modifier = modifier,
@@ -603,11 +616,23 @@ private fun EntryPreviewTile(
                 },
             contentAlignment = Alignment.Center,
         ) {
+            progressiveBitmap?.let { bitmap ->
+                Image(
+                    bitmap = bitmap.asImageBitmap(),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(0.72f),
+                )
+            }
             when (status) {
                 EntryPreviewPageStatus.Ready -> {
-                    EntryPreviewImage(
-                        page = previewPage.page,
-                    )
+                    if (!keepProgressiveAnimation) {
+                        EntryPreviewImage(
+                            page = previewPage.page,
+                        )
+                    }
                 }
                 EntryPreviewPageStatus.Queued,
                 EntryPreviewPageStatus.LoadingPage,
@@ -616,21 +641,30 @@ private fun EntryPreviewTile(
                     LaunchedEffect(previewPage.page.index) {
                         onPageLoad(previewPage.page.index)
                     }
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        if (status == EntryPreviewPageStatus.DownloadingImage && progress in 0..100) {
-                            CircularProgressIndicator(progress = { progress / 100f })
-                        } else {
-                            CircularProgressIndicator()
+                    if (progressiveBitmap == null) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            if (status == EntryPreviewPageStatus.DownloadingImage && progress in 0..100) {
+                                CircularProgressIndicator(progress = { progress / 100f })
+                            } else {
+                                CircularProgressIndicator()
+                            }
+                            Text(
+                                text = when (status) {
+                                    EntryPreviewPageStatus.DownloadingImage -> stringResource(
+                                        MR.strings.ext_downloading,
+                                    )
+                                    else -> stringResource(MR.strings.loading)
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                            )
                         }
-                        Text(
-                            text = when (status) {
-                                EntryPreviewPageStatus.DownloadingImage -> stringResource(MR.strings.ext_downloading)
-                                else -> stringResource(MR.strings.loading)
-                            },
-                            style = MaterialTheme.typography.bodySmall,
+                    } else if (status == EntryPreviewPageStatus.DownloadingImage) {
+                        CircularProgressIndicator(
+                            progress = { (progress.coerceIn(0, 100)) / 100f },
+                            modifier = Modifier.size(32.dp),
                         )
                     }
                 }
@@ -672,6 +706,7 @@ private fun EntryPreviewImage(
             .build(),
         contentDescription = null,
         contentScale = ContentScale.Crop,
+        onSuccess = { page.onFinalImageReady() },
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(0.72f),
