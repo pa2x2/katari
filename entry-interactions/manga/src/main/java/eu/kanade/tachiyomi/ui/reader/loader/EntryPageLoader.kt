@@ -20,6 +20,9 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.suspendCancellableCoroutine
 import mihon.entry.interactions.manga.page.MangaPageStore
+import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquirer
+import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquisitionCoordinator
+import mihon.entry.interactions.manga.page.acquisition.StoredMangaPageAcquirer
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.entry.adapter.toSEntryChapter
@@ -34,11 +37,33 @@ import kotlin.math.min
 /**
  * Loader used to load chapters from an online source.
  */
-internal class EntryPageLoader(
+internal class EntryPageLoader private constructor(
     private val chapter: ReaderChapter,
     private val source: UnifiedSource,
-    private val chapterCache: MangaPageStore = Injekt.get(),
+    private val chapterCache: MangaPageStore,
+    private val pageAcquirer: MangaPageAcquirer,
 ) : PageLoader() {
+
+    internal constructor(
+        chapter: ReaderChapter,
+        source: UnifiedSource,
+    ) : this(
+        chapter = chapter,
+        source = source,
+        chapterCache = Injekt.get(),
+        pageAcquirer = Injekt.get<MangaPageAcquisitionCoordinator>(),
+    )
+
+    internal constructor(
+        chapter: ReaderChapter,
+        source: UnifiedSource,
+        chapterCache: MangaPageStore,
+    ) : this(
+        chapter = chapter,
+        source = source,
+        chapterCache = chapterCache,
+        pageAcquirer = StoredMangaPageAcquirer(chapterCache),
+    )
 
     private val imageSource = source as EntryImageSource
 
@@ -228,10 +253,11 @@ internal class EntryPageLoader(
             }
             val imageUrl = page.imageUrl!!
 
-            val imageFile = chapterCache.getOrPutImage(
+            val imageFile = pageAcquirer.acquire(
                 imageUrl = imageUrl,
                 force = force,
                 onFetch = { page.status = Page.State.DownloadImage },
+                onProgressiveState = { page.progressiveImageState = it },
                 fetch = { imageSource.getImage(page.toEntryImagePage(), page) },
             )
             page.stream = imageFile::inputStream

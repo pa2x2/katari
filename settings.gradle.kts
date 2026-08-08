@@ -20,6 +20,13 @@ dependencyResolutionManagement {
 
     @Suppress("UnstableApiUsage")
     repositories {
+        if (providers.gradleProperty("useLocalImageDecoder").orNull.toBoolean()) {
+            mavenLocal {
+                content {
+                    includeModule("com.github.mihonapp", "image-decoder")
+                }
+            }
+        }
         google()
         mavenCentral()
         maven(url = "https://www.jitpack.io")

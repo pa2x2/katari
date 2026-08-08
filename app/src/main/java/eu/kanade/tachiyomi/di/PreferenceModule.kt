@@ -16,6 +16,8 @@ import eu.kanade.tachiyomi.util.system.isDebugBuildType
 import eu.kanade.tachiyomi.util.system.isDynamicColorAvailable
 import mihon.core.common.CustomPreferences
 import mihon.core.common.GlobalCustomPreferences
+import mihon.core.common.image.progressive.ProgressiveImageEngine
+import mihon.core.common.image.progressive.ProgressiveImagePreferences
 import mihon.feature.profiles.core.ProfileAwareStore
 import mihon.feature.profiles.core.ProfileStore
 import mihon.feature.profiles.core.ProfileStoreImpl
@@ -52,6 +54,10 @@ class PreferenceModule(val app: Application) : InjektModule {
         addSingletonFactory<ProfileStore> { get<ProfileStoreImpl>() }
         addSingletonFactory<ProfileAwareStore> { get<ProfileStoreImpl>() }
         addSingletonFactory<ActiveProfileProvider> { get<ProfileStoreImpl>() }
+        addSingletonFactory {
+            ProgressiveImagePreferences(get<ProfileStore>().basePreferenceStore())
+        }
+        addSingletonFactory { ProgressiveImageEngine(get()) }
         val profilePreferenceOwners = ProfilePreferenceOwnerRegistry()
         addSingleton(profilePreferenceOwners)
         val profilePreferenceOwnerInstaller = ProfilePreferenceOwnerInstaller(profilePreferenceOwners) {

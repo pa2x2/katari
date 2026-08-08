@@ -56,6 +56,8 @@ import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.core.common.GlobalCustomPreferences
+import mihon.core.common.image.progressive.ProgressiveImageEngine
+import mihon.core.common.image.progressive.ProgressiveImagePreferences
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
 import mihon.entry.interactions.media.EntryViewerSettingsFeature
 import mihon.entry.interactions.media.EntryViewerSettingsResetResult
@@ -93,6 +95,8 @@ object SettingsAdvancedScreen : SearchableSettings {
         val libraryPreferences = remember { Injekt.get<LibraryPreferences>() }
         val globalLibraryPreferences = remember { Injekt.get<GlobalLibraryPreferences>() }
         val globalCustomPreferences = remember { Injekt.get<GlobalCustomPreferences>() }
+        val progressiveImagePreferences = remember { Injekt.get<ProgressiveImagePreferences>() }
+        val progressiveImageEngine = remember { Injekt.get<ProgressiveImageEngine>() }
 
         return listOf(
             Preference.PreferenceItem.TextPreference(
@@ -137,7 +141,11 @@ object SettingsAdvancedScreen : SearchableSettings {
                 libraryPreferences = libraryPreferences,
                 globalLibraryPreferences = globalLibraryPreferences,
             ),
-            getReaderGroup(basePreferences = basePreferences),
+            getReaderGroup(
+                basePreferences = basePreferences,
+                progressiveImagePreferences = progressiveImagePreferences,
+                progressiveImageEngine = progressiveImageEngine,
+            ),
             getExtensionsGroup(
                 basePreferences = basePreferences,
                 globalCustomPreferences = globalCustomPreferences,
@@ -384,6 +392,8 @@ object SettingsAdvancedScreen : SearchableSettings {
     @Composable
     private fun getReaderGroup(
         basePreferences: BasePreferences,
+        progressiveImagePreferences: ProgressiveImagePreferences,
+        progressiveImageEngine: ProgressiveImageEngine,
     ): Preference.PreferenceGroup {
         val context = LocalContext.current
         val chooseColorProfile = rememberLauncherForActivityResult(
@@ -398,6 +408,15 @@ object SettingsAdvancedScreen : SearchableSettings {
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_category_reader),
             preferenceItems = listOf(
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = progressiveImagePreferences.enabled,
+                    title = stringResource(MR.strings.pref_progressive_image_loading),
+                    subtitle = stringResource(MR.strings.pref_progressive_image_loading_summary),
+                    onValueChanged = { enabled ->
+                        if (!enabled) progressiveImageEngine.disableActiveSessions()
+                        true
+                    },
+                ),
                 Preference.PreferenceItem.ListPreference(
                     preference = basePreferences.hardwareBitmapThreshold,
                     entries = GLUtil.CUSTOM_TEXTURE_LIMIT_OPTIONS
