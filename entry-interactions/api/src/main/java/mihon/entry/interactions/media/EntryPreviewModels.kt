@@ -3,7 +3,9 @@ package mihon.entry.interactions.media
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import mihon.core.common.image.progressive.ProgressiveImageState
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -71,6 +73,7 @@ data class EntryPreviewPage(
     val status: StateFlow<EntryPreviewPageStatus>,
     val progress: StateFlow<Int>,
     val imageModel: Any,
+    val progressiveImageState: Flow<ProgressiveImageState?>? = null,
     val canOpen: Boolean = true,
 )
 

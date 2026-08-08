@@ -16,6 +16,10 @@ import eu.kanade.tachiyomi.ui.reader.readerFormattedMessage
 import eu.kanade.tachiyomi.ui.reader.readerWebViewIntent
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderProgressIndicator
+import eu.kanade.tachiyomi.ui.reader.viewer.progressive.ReaderPageProgressivePreviewConfig
+import eu.kanade.tachiyomi.ui.reader.viewer.progressive.ReaderPageProgressiveScaleMode
+import eu.kanade.tachiyomi.ui.reader.viewer.progressive.ReaderPageProgressiveSide
+import eu.kanade.tachiyomi.ui.reader.viewer.progressive.ReaderPageProgressiveTransformation
 import eu.kanade.tachiyomi.util.system.dpToPx
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
@@ -137,6 +141,17 @@ internal class WebtoonPageHolder(
             launchIO {
                 loader.loadPage(page)
             }
+            launch {
+                page.progressiveImageState.collectLatest { state ->
+                    val isVisible = frame.setProgressiveImage(state, progressivePreviewConfig())
+                    if (isVisible) {
+                        progressContainer.isVisible = false
+                        removeErrorLayout()
+                    } else if (page.status == Page.State.DownloadImage) {
+                        setDownloading()
+                    }
+                }
+            }
             page.statusFlow.collectLatest { state ->
                 when (state) {
                     Page.State.Queue -> setQueued()
@@ -229,6 +244,25 @@ internal class WebtoonPageHolder(
         }
 
         return imageSource
+    }
+
+    private fun progressivePreviewConfig(): ReaderPageProgressivePreviewConfig {
+        return ReaderPageProgressivePreviewConfig(
+            scaleMode = ReaderPageProgressiveScaleMode.FIT_WIDTH,
+            transformation = when {
+                viewer.config.dualPageRotateToFit -> ReaderPageProgressiveTransformation.Rotate(
+                    if (viewer.config.dualPageRotateToFitInvert) -90f else 90f,
+                )
+                viewer.config.dualPageSplit -> ReaderPageProgressiveTransformation.SplitAndStack(
+                    upperSide = if (viewer.config.dualPageInvert) {
+                        ReaderPageProgressiveSide.LEFT
+                    } else {
+                        ReaderPageProgressiveSide.RIGHT
+                    },
+                )
+                else -> ReaderPageProgressiveTransformation.None
+            },
+        )
     }
 
     private fun rotateDualPage(imageSource: BufferedSource): BufferedSource {

@@ -11,6 +11,7 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.FrameLayout
 import androidx.annotation.AttrRes
 import androidx.annotation.CallSuper
@@ -37,7 +38,11 @@ import eu.kanade.tachiyomi.data.coil.cropBorders
 import eu.kanade.tachiyomi.data.coil.customDecoder
 import eu.kanade.tachiyomi.ui.reader.animatorDurationScale
 import eu.kanade.tachiyomi.ui.reader.isVisibleOnScreen
+import eu.kanade.tachiyomi.ui.reader.viewer.progressive.ReaderPageProgressivePreviewConfig
+import eu.kanade.tachiyomi.ui.reader.viewer.progressive.ReaderPageProgressivePreviewView
 import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonSubsamplingImageView
+import mihon.core.common.image.progressive.ProgressiveImageState
+import mihon.core.common.image.progressive.ProgressiveImageVisual
 import mihon.entry.interactions.reader.settings.ReaderBasePreferences
 import okio.BufferedSource
 import tachiyomi.core.common.util.system.ImageUtil
@@ -65,6 +70,8 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
     }
 
     private var pageView: View? = null
+    private var progressivePreviewView: ReaderPageProgressivePreviewView? = null
+    private var finalImageReady = false
 
     private var config: Config? = null
 
@@ -80,6 +87,8 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
 
     @CallSuper
     open fun onImageLoaded() {
+        finalImageReady = true
+        clearProgressiveImage()
         onImageLoaded?.invoke()
         background = pageBackground
     }
@@ -148,6 +157,7 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
     }
 
     fun setImage(drawable: Drawable, config: Config) {
+        finalImageReady = false
         this.config = config
         if (drawable is Animatable) {
             prepareAnimatedImageView()
@@ -159,6 +169,7 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
     }
 
     fun setImage(source: BufferedSource, isAnimated: Boolean, config: Config) {
+        finalImageReady = false
         this.config = config
         if (isAnimated) {
             prepareAnimatedImageView()
@@ -169,12 +180,55 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
         }
     }
 
-    fun recycle() = pageView?.let {
-        when (it) {
-            is SubsamplingScaleImageView -> it.recycle()
-            is AppCompatImageView -> it.dispose()
+    fun setProgressiveImage(
+        state: ProgressiveImageState?,
+        config: ReaderPageProgressivePreviewConfig = ReaderPageProgressivePreviewConfig(),
+    ): Boolean {
+        if (finalImageReady) return false
+        val visual = state?.visual as? ProgressiveImageVisual.Still
+        if (visual == null) {
+            clearProgressiveImage()
+            return false
         }
-        it.isVisible = false
+
+        val previewView = progressivePreviewView ?: ReaderPageProgressivePreviewView(context).also { view ->
+            progressivePreviewView = view
+            view.setOnClickListener { onViewClicked() }
+            addView(
+                view,
+                0,
+                LayoutParams(
+                    MATCH_PARENT,
+                    if (isWebtoon) WRAP_CONTENT else MATCH_PARENT,
+                ),
+            )
+        }
+        previewView.show(visual.bitmap, config)
+        previewView.isVisible = true
+        return true
+    }
+
+    fun clearProgressiveImage() {
+        progressivePreviewView?.apply {
+            clear()
+            isVisible = false
+        }
+    }
+
+    fun recycleFinalImage() {
+        finalImageReady = false
+        pageView?.let {
+            when (it) {
+                is SubsamplingScaleImageView -> it.recycle()
+                is AppCompatImageView -> it.dispose()
+            }
+            it.isVisible = false
+        }
+    }
+
+    fun recycle() {
+        recycleFinalImage()
+        clearProgressiveImage()
     }
 
     /**
@@ -271,7 +325,7 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
             )
             setOnClickListener { this@ReaderPageImageView.onViewClicked() }
         }
-        addView(pageView, MATCH_PARENT, MATCH_PARENT)
+        addPageView(pageView)
     }
 
     private fun SubsamplingScaleImageView.setupZoom(config: Config?) {
@@ -388,7 +442,16 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
                 }
             }
         }
-        addView(pageView, MATCH_PARENT, MATCH_PARENT)
+        addPageView(pageView)
+    }
+
+    private fun addPageView(view: View?) {
+        view ?: return
+        addView(
+            view,
+            if (progressivePreviewView == null) 0 else 1,
+            LayoutParams(MATCH_PARENT, MATCH_PARENT),
+        )
     }
 
     private fun setAnimatedImage(

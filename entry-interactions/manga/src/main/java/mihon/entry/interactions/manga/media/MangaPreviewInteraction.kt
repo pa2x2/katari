@@ -85,6 +85,7 @@ internal class MangaPreviewInteraction(
                         status = page.statusFlow.mapState(Page.State::toEntryPreviewPageStatus),
                         progress = page.progressFlow,
                         imageModel = page,
+                        progressiveImageState = page.progressiveImageState,
                     )
                 },
             delegate = readerChapter,

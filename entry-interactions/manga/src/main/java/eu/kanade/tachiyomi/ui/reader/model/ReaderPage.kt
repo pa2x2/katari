@@ -1,7 +1,11 @@
 package eu.kanade.tachiyomi.ui.reader.model
 
 import eu.kanade.tachiyomi.source.model.Page
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import mihon.core.common.image.progressive.ProgressiveImageState
 import java.io.InputStream
 
@@ -14,5 +18,13 @@ internal open class ReaderPage(
 
     open lateinit var chapter: ReaderChapter
 
-    var progressiveImageState: StateFlow<ProgressiveImageState>? = null
+    private val progressiveImageSession = MutableStateFlow<StateFlow<ProgressiveImageState>?>(null)
+
+    val progressiveImageState: Flow<ProgressiveImageState?> = progressiveImageSession.flatMapLatest { session ->
+        session ?: flowOf(null)
+    }
+
+    fun setProgressiveImageSession(session: StateFlow<ProgressiveImageState>?) {
+        progressiveImageSession.value = session
+    }
 }

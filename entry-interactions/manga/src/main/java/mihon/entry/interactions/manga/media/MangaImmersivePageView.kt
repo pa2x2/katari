@@ -23,6 +23,7 @@ import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import mihon.core.common.image.progressive.ProgressiveImageVisual
 import okio.Buffer
 import okio.BufferedSource
 import tachiyomi.core.common.util.system.ImageUtil
@@ -42,6 +43,8 @@ internal fun MangaImmersiveImage(
     val viewRef = remember { mutableStateOf<ReaderPageImageView?>(null) }
     val status by page.statusFlow.collectAsStateWithLifecycle()
     val progress by page.progressFlow.collectAsStateWithLifecycle()
+    val progressiveImage by page.progressiveImageState.collectAsStateWithLifecycle(initialValue = null)
+    val hasProgressiveStill = progressiveImage?.visual is ProgressiveImageVisual.Still
     val unknownError = stringResource(MR.strings.unknown_error)
     var retryKey by remember(page) { mutableIntStateOf(0) }
     var loadedImage by remember(page) { mutableStateOf<MangaImmersiveLoadedImage?>(null) }
@@ -106,14 +109,16 @@ internal fun MangaImmersiveImage(
                         view.tag = null
                         view.onImageLoaded = null
                         view.onImageLoadError = null
-                        view.recycle()
+                        view.recycleFinalImage()
                     }
+                    view.setProgressiveImage(progressiveImage)
                     return@AndroidView
                 }
+                view.setProgressiveImage(progressiveImage)
                 val requestTag = "${page.chapter.chapter.id}:${page.index}:$retryKey"
                 if (view.tag != requestTag) {
                     view.tag = requestTag
-                    view.recycle()
+                    view.recycleFinalImage()
                     imageReady = false
                     decodeErrorMessage = null
                     view.onImageLoaded = {
@@ -148,6 +153,7 @@ internal fun MangaImmersiveImage(
                 )
             },
             previewModel = previewRequest,
+            showBackground = !hasProgressiveStill,
             onBackgroundClick = onToggleControls,
             onRetry = {
                 loadedImage = null

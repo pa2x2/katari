@@ -126,11 +126,13 @@ internal class EntryPageLoader private constructor(
 
         // Check if the image has been deleted
         if (page.status == Page.State.Ready && imageUrl != null && !chapterCache.isImageInCache(imageUrl)) {
+            page.setProgressiveImageSession(null)
             page.status = Page.State.Queue
         }
 
         // Automatically retry failed pages when subscribed to this page
         if (page.status is Page.State.Error) {
+            page.setProgressiveImageSession(null)
             page.status = Page.State.Queue
         }
 
@@ -149,6 +151,7 @@ internal class EntryPageLoader private constructor(
 
     override fun preloadPage(page: ReaderPage) {
         if (page.status is Page.State.Error) {
+            page.setProgressiveImageSession(null)
             page.status = Page.State.Queue
         }
         enqueuePageAndNextPages(page, PriorityPage.ADJACENT)
@@ -167,7 +170,10 @@ internal class EntryPageLoader private constructor(
 
     private fun enqueuePages(pages: List<ReaderPage>) {
         pages.forEach { page ->
-            if (page.status is Page.State.Error) page.status = Page.State.Queue
+            if (page.status is Page.State.Error) {
+                page.setProgressiveImageSession(null)
+                page.status = Page.State.Queue
+            }
             if (page.status == Page.State.Queue) queue.offer(PriorityPage(page, PriorityPage.ADJACENT))
         }
     }
@@ -177,6 +183,7 @@ internal class EntryPageLoader private constructor(
      */
     override fun retryPage(page: ReaderPage) {
         if (page.status is Page.State.Error) {
+            page.setProgressiveImageSession(null)
             page.status = Page.State.Queue
         }
         queue.offer(PriorityPage(page, PriorityPage.RETRY))
@@ -257,7 +264,7 @@ internal class EntryPageLoader private constructor(
                 imageUrl = imageUrl,
                 force = force,
                 onFetch = { page.status = Page.State.DownloadImage },
-                onProgressiveState = { page.progressiveImageState = it },
+                onProgressiveState = page::setProgressiveImageSession,
                 fetch = { imageSource.getImage(page.toEntryImagePage(), page) },
             )
             page.stream = imageFile::inputStream
