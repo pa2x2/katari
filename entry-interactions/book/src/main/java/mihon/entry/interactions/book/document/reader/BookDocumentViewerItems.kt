@@ -16,6 +16,24 @@ internal data class BookDocumentSection<T>(
     val initialPosition: BookDocumentPosition,
     val resourceLoader: BookPublicationResourceLoader?,
 ) {
+    /**
+     * The surrounding viewer window changes while a section stays loaded. Keep its block rows and
+     * their stable keys with the prepared section, instead of allocating the full projection again
+     * every time an adjacent chapter becomes current.
+     */
+    val viewerBlocks: List<BookDocumentViewerItem.Block<T>> by lazy(LazyThreadSafetyMode.NONE) {
+        document.blocks.map { block -> BookDocumentViewerItem.Block(this, block) }
+    }
+
+    private val viewerBlockIndices by lazy(LazyThreadSafetyMode.NONE) {
+        buildMap(document.blocks.size) {
+            document.blocks.forEachIndexed { index, block -> put(block.id, index) }
+        }
+    }
+
+    fun viewerBlockIndex(blockId: mihon.book.api.document.BookDocumentBlockId): Int =
+        viewerBlockIndices[blockId] ?: -1
+
     init {
         require(key.isNotBlank()) { "document section key must not be blank" }
         require(document.document.contains(initialPosition)) { "initial position must belong to the section document" }
@@ -42,27 +60,95 @@ internal fun <T, K> buildBookDocumentViewerItems(
     window: EntryChildWindow<T>,
     loaded: Map<K, BookDocumentSection<T>>,
     keyOf: (T) -> K,
-): List<BookDocumentViewerItem<T>> = buildList {
-    window.previous?.let { previous ->
-        loaded[keyOf(previous)]?.let(::addDocument)
-    }
-    add(window.previousTransition().toViewerItem(keyOf))
-    addDocument(
-        requireNotNull(loaded[keyOf(window.current)]) {
-            "The current document section must be loaded"
-        },
+): BookDocumentViewerDataset<T> = BookDocumentViewerDataset(
+    previous = window.previous?.let { previous -> loaded[keyOf(previous)] },
+    previousTransition = window.previousTransition().toViewerItem(keyOf),
+    current = requireNotNull(loaded[keyOf(window.current)]) {
+        "The current document section must be loaded"
+    },
+    nextTransition = window.nextTransition().toViewerItem(keyOf),
+    next = window.next?.let { next -> loaded[keyOf(next)] },
+)
+
+/**
+ * A virtual list over the retained BOOK window. Chapter changes only shift three section
+ * references, so they must not allocate or compare a row for every paragraph in those sections.
+ */
+internal class BookDocumentViewerDataset<T>(
+    val previous: BookDocumentSection<T>?,
+    val previousTransition: BookDocumentViewerItem.Transition<T>,
+    val current: BookDocumentSection<T>,
+    val nextTransition: BookDocumentViewerItem.Transition<T>,
+    val next: BookDocumentSection<T>?,
+) : AbstractList<BookDocumentViewerItem<T>>() {
+    val identity = BookDocumentViewerDatasetIdentity(
+        previous = previous?.let(System::identityHashCode),
+        current = System.identityHashCode(current),
+        next = next?.let(System::identityHashCode),
+        previousTransitionKey = previousTransition.key,
+        nextTransitionKey = nextTransition.key,
     )
-    add(window.nextTransition().toViewerItem(keyOf))
-    window.next?.let { next ->
-        loaded[keyOf(next)]?.let(::addDocument)
+
+    override val size = sectionItemCount(previous) + 1 + sectionItemCount(current) + 1 + sectionItemCount(next)
+
+    override fun get(index: Int): BookDocumentViewerItem<T> {
+        if (index !in indices) throw IndexOutOfBoundsException("Index: $index, size: $size")
+        var offset = 0
+        previous?.let { section ->
+            if (index < offset + section.viewerBlocks.size) return section.viewerBlocks[index - offset]
+            offset += section.viewerBlocks.size
+        }
+        if (index == offset) return previousTransition
+        offset += 1
+        if (index < offset + current.viewerBlocks.size) return current.viewerBlocks[index - offset]
+        offset += current.viewerBlocks.size
+        if (index == offset) return nextTransition
+        offset += 1
+        next?.let { section ->
+            if (index < offset + section.viewerBlocks.size) return section.viewerBlocks[index - offset]
+        }
+        throw IndexOutOfBoundsException("Index: $index, size: $size")
     }
+
+    fun indexOfSection(sectionKey: String): Int = sectionOffset(sectionKey)
+
+    fun indexOfPosition(sectionKey: String, position: BookDocumentPosition): Int {
+        val section = sections().firstOrNull { it.key == sectionKey } ?: return -1
+        val blockIndex = section.viewerBlockIndex(position.blockId)
+        return if (blockIndex < 0) -1 else sectionOffset(sectionKey) + blockIndex
+    }
+
+    fun indexOfKey(key: Any): Int {
+        for (section in sections()) {
+            val blockIndex = section.viewerBlocks.indexOfFirst { it.key == key }
+            if (blockIndex >= 0) return sectionOffset(section.key) + blockIndex
+        }
+        return when (key) {
+            previousTransition.key -> sectionItemCount(previous)
+            nextTransition.key -> sectionItemCount(previous) + 1 + current.viewerBlocks.size
+            else -> -1
+        }
+    }
+
+    private fun sectionOffset(sectionKey: String): Int = when (sectionKey) {
+        previous?.key -> 0
+        current.key -> sectionItemCount(previous) + 1
+        next?.key -> sectionItemCount(previous) + 1 + current.viewerBlocks.size + 1
+        else -> -1
+    }
+
+    private fun sections(): List<BookDocumentSection<T>> = listOfNotNull(previous, current, next)
+
+    private fun sectionItemCount(section: BookDocumentSection<T>?) = section?.viewerBlocks?.size ?: 0
 }
 
-private fun <T> MutableList<BookDocumentViewerItem<T>>.addDocument(
-    section: BookDocumentSection<T>,
-) {
-    section.document.blocks.mapTo(this) { block -> BookDocumentViewerItem.Block(section, block) }
-}
+internal data class BookDocumentViewerDatasetIdentity(
+    val previous: Int?,
+    val current: Int,
+    val next: Int?,
+    val previousTransitionKey: String,
+    val nextTransitionKey: String,
+)
 
 private fun <T, K> EntryChildTransition<T>.toViewerItem(
     keyOf: (T) -> K,
@@ -90,12 +176,12 @@ internal data class BookDocumentViewerDatasetAnchor(
 )
 
 internal fun <T> bookDocumentViewerDatasetAnchor(
-    items: List<BookDocumentViewerItem<T>>,
+    items: BookDocumentViewerDataset<T>,
     visibleItems: List<BookDocumentVisibleItemLayout>,
     viewportStartOffset: Int,
 ): BookDocumentViewerDatasetAnchor? {
     visibleItems.forEach { layout ->
-        val index = items.indexOfFirst { it.key == layout.key }
+        val index = items.indexOfKey(layout.key)
         if (index >= 0) {
             return BookDocumentViewerDatasetAnchor(
                 index = index,

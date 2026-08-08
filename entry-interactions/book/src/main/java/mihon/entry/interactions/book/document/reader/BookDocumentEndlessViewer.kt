@@ -50,7 +50,6 @@ internal fun BookDocumentEndlessViewer(
     val items = remember(window, loadedSections) {
         buildBookDocumentViewerItems(window, loadedSections, EntryChapter::id)
     }
-    val itemKeys = remember(items) { items.map(BookDocumentViewerItem<EntryChapter>::key) }
     val currentSection = loadedSections[currentChapterId]
     val initialIndex = currentSection?.let { section ->
         items.indexOfPosition(section.key, section.initialPosition).coerceAtLeast(0)
@@ -62,14 +61,12 @@ internal fun BookDocumentEndlessViewer(
     )
     val currentItems by rememberUpdatedState(items)
     val currentOnScrollStarted by rememberUpdatedState(onScrollStarted)
-    var observedKeys by remember(listState) { mutableStateOf(itemKeys) }
+    var observedDatasetIdentity by remember(listState) { mutableStateOf(items.identity) }
     var initialPositionRestored by remember(listState) { mutableStateOf(false) }
     val prefetchTarget = remember(window.next?.id, loadedSections, items) {
         val nextSectionKey = window.next?.id?.let(loadedSections::get)?.key
         val nextSectionIndex = nextSectionKey?.let { sectionKey ->
-            items.indexOfFirst { item ->
-                item is BookDocumentViewerItem.Block && item.section.key == sectionKey
-            }
+            items.indexOfSection(sectionKey)
         } ?: -1
         nextSectionKey to nextSectionIndex
     }
@@ -102,7 +99,11 @@ internal fun BookDocumentEndlessViewer(
     SideEffect {
         chapterPrefetchStrategy.updateTarget(prefetchTarget.first, prefetchTarget.second)
 
-        if (itemKeys != observedKeys && !listState.isScrollInProgress && navigationRequest == null) {
+        if (
+            items.identity != observedDatasetIdentity &&
+            !listState.isScrollInProgress &&
+            navigationRequest == null
+        ) {
             val info = listState.layoutInfo
             bookDocumentViewerDatasetAnchor(
                 items = items,
@@ -110,7 +111,7 @@ internal fun BookDocumentEndlessViewer(
                 viewportStartOffset = info.viewportStartOffset,
             )?.let { anchor -> listState.requestScrollToItem(anchor.index, anchor.scrollOffset) }
         }
-        observedKeys = itemKeys
+        observedDatasetIdentity = items.identity
     }
 
     LaunchedEffect(items) {
