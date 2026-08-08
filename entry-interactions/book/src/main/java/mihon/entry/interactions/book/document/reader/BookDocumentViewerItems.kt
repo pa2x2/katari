@@ -1,5 +1,6 @@
 package mihon.entry.interactions.book.document.reader
 
+import androidx.compose.runtime.Stable
 import mihon.book.api.document.BookDocumentPosition
 import mihon.entry.interactions.book.document.render.PreparedBookDocument
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
@@ -9,6 +10,7 @@ import mihon.entry.interactions.viewer.entryChildTransitionItemAtAnchor
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
+@Stable
 internal data class BookDocumentSection<T>(
     val key: String,
     val owner: T,
@@ -40,6 +42,7 @@ internal data class BookDocumentSection<T>(
     }
 }
 
+@Stable
 internal sealed interface BookDocumentViewerItem<T> {
     val key: String
 
@@ -74,6 +77,7 @@ internal fun <T, K> buildBookDocumentViewerItems(
  * A virtual list over the retained BOOK window. Chapter changes only shift three section
  * references, so they must not allocate or compare a row for every paragraph in those sections.
  */
+@Stable
 internal class BookDocumentViewerDataset<T>(
     val previous: BookDocumentSection<T>?,
     val previousTransition: BookDocumentViewerItem.Transition<T>,
@@ -127,6 +131,17 @@ internal class BookDocumentViewerDataset<T>(
             previousTransition.key -> sectionItemCount(previous)
             nextTransition.key -> sectionItemCount(previous) + 1 + current.viewerBlocks.size
             else -> -1
+        }
+    }
+
+    fun transitionKeysChangingDirection(other: BookDocumentViewerDataset<T>): Set<String> {
+        val otherDirections = listOf(other.previousTransition, other.nextTransition)
+            .associate { transition -> transition.key to transition.transition.direction }
+        return buildSet(2) {
+            listOf(previousTransition, nextTransition).forEach { transition ->
+                val otherDirection = otherDirections[transition.key] ?: return@forEach
+                if (transition.transition.direction != otherDirection) add(transition.key)
+            }
         }
     }
 
