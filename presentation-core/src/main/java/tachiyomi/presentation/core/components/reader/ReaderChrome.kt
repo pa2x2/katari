@@ -3,8 +3,9 @@
 package tachiyomi.presentation.core.components.reader
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.animateInt
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -44,20 +45,25 @@ fun ReaderChrome(
 ) {
     var bottomBarHeight by remember { mutableIntStateOf(0) }
     val navigationBarHeight = WindowInsets.navigationBarsIgnoringVisibility.getBottom(LocalDensity.current)
-    val persistentBottomContentOffset by animateIntAsState(
-        targetValue = if (visible) {
+    val chromeTransition = updateTransition(
+        targetState = visible,
+        label = "readerChrome",
+    )
+    val persistentBottomContentOffset by chromeTransition.animateInt(
+        transitionSpec = { readerPersistentContentSlideAnimationSpec },
+        label = "readerPersistentBottomContentOffset",
+    ) { chromeVisible ->
+        if (chromeVisible) {
             (bottomBarHeight - navigationBarHeight).coerceAtLeast(0)
         } else {
             0
-        },
-        animationSpec = readerPersistentContentSlideAnimationSpec,
-        label = "readerPersistentBottomContentOffset",
-    )
+        }
+    }
 
     Box(modifier = modifier.fillMaxHeight()) {
         Column(modifier = Modifier.fillMaxHeight()) {
-            AnimatedVisibility(
-                visible = visible,
+            chromeTransition.AnimatedVisibility(
+                visible = { it },
                 enter = slideInVertically(readerBarsSlideAnimationSpec) { -it } + fadeIn(readerBarsFadeAnimationSpec),
                 exit = slideOutVertically(readerBarsSlideAnimationSpec) { -it } + fadeOut(readerBarsFadeAnimationSpec),
                 content = { topBar() },
@@ -70,8 +76,8 @@ fun ReaderChrome(
                 content = middleContent,
             )
 
-            AnimatedVisibility(
-                visible = visible,
+            chromeTransition.AnimatedVisibility(
+                visible = { it },
                 enter = slideInVertically(readerBarsSlideAnimationSpec) { it } + fadeIn(readerBarsFadeAnimationSpec),
                 exit = slideOutVertically(readerBarsSlideAnimationSpec) { it } + fadeOut(readerBarsFadeAnimationSpec),
                 content = {
