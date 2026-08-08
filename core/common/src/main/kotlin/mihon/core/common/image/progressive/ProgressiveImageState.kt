@@ -5,6 +5,7 @@ data class ProgressiveImageState(
     val capabilities: ProgressiveImageCapabilities? = null,
     val metadata: ProgressiveImageMetadata? = null,
     val visual: ProgressiveImageVisual? = null,
+    val animation: ProgressiveAnimationBuffer? = null,
     val status: ProgressiveImageStatus = ProgressiveImageStatus.Receiving,
 )
 

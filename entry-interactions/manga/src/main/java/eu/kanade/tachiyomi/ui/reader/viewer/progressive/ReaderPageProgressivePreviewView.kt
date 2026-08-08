@@ -2,37 +2,165 @@ package eu.kanade.tachiyomi.ui.reader.viewer.progressive
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Paint
 import android.graphics.Rect
-import android.graphics.RectF
-import android.view.View
+import android.widget.ImageView
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
+import com.github.chrisbanes.photoview.PhotoView
+import mihon.core.common.image.progressive.ProgressiveAnimationBuffer
 import kotlin.math.roundToInt
 
 internal class ReaderPageProgressivePreviewView(
     context: Context,
-) : View(context) {
-    private val bitmapPaint = Paint(
-        Paint.ANTI_ALIAS_FLAG or Paint.DITHER_FLAG or Paint.FILTER_BITMAP_FLAG,
-    )
+    zoomEnabled: Boolean,
+) : PhotoView(context) {
+    private val previewDrawable = ReaderPageProgressivePreviewDrawable()
     private var bitmap: Bitmap? = null
     private var config = ReaderPageProgressivePreviewConfig()
+    private var animation: ProgressiveAnimationBuffer? = null
+    private var animationPosition = -1
+    private var completedPlays = 0
+    private var waitingForFrame = false
+    private val advanceAnimationRunnable = Runnable(::advanceAnimation)
+
+    init {
+        setZoomable(zoomEnabled)
+        setImageDrawable(previewDrawable)
+    }
+
+    val hasAnimation: Boolean
+        get() = animation != null
+
+    val hasCompleteAnimation: Boolean
+        get() = animation?.isComplete == true
+
+    val hasCompleteReplayableAnimation: Boolean
+        get() = animation?.let { it.isComplete && it.isReplayable } == true
 
     fun show(bitmap: Bitmap, config: ReaderPageProgressivePreviewConfig) {
-        val layoutChanged = this.bitmap?.width != bitmap.width ||
-            this.bitmap?.height != bitmap.height ||
-            this.config != config
+        stopAnimation()
+        showBitmap(bitmap, config)
+    }
+
+    fun show(animation: ProgressiveAnimationBuffer, config: ReaderPageProgressivePreviewConfig) {
+        if (animation.frames.isEmpty()) return
+        val currentGeneration = this.animation
+            ?.frames
+            ?.getOrNull(animationPosition)
+            ?.generation
+        this.animation = animation
+        this.config = config
+
+        val retainedPosition = animation.frames.indexOfFirst { it.generation == currentGeneration }
+        if (retainedPosition >= 0) {
+            animationPosition = retainedPosition
+            if (waitingForFrame && canAdvance(animation)) {
+                waitingForFrame = false
+                removeCallbacks(advanceAnimationRunnable)
+                post(advanceAnimationRunnable)
+            }
+            return
+        }
+
+        completedPlays = 0
+        animationPosition = 0
+        waitingForFrame = false
+        showCurrentAnimationFrame()
+    }
+
+    private fun showBitmap(bitmap: Bitmap, config: ReaderPageProgressivePreviewConfig) {
+        val firstBitmap = this.bitmap == null
+        val scaleModeChanged = this.config.scaleMode != config.scaleMode
         this.bitmap = bitmap
         this.config = config
+        val layoutChanged = previewDrawable.show(bitmap, config)
+        if (firstBitmap || scaleModeChanged) {
+            scaleType = when (config.scaleMode) {
+                ReaderPageProgressiveScaleMode.FIT_INSIDE -> ImageView.ScaleType.FIT_CENTER
+                ReaderPageProgressiveScaleMode.FIT_WIDTH,
+                ReaderPageProgressiveScaleMode.FIT_HEIGHT,
+                ReaderPageProgressiveScaleMode.CROP,
+                -> ImageView.ScaleType.CENTER_CROP
+            }
+        }
         if (layoutChanged) requestLayout()
         invalidate()
     }
 
     fun clear() {
+        stopAnimation()
         if (bitmap == null) return
         bitmap = null
+        previewDrawable.clear()
         invalidate()
+    }
+
+    override fun onDetachedFromWindow() {
+        removeCallbacks(advanceAnimationRunnable)
+        super.onDetachedFromWindow()
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        if (animation != null && !waitingForFrame) {
+            scheduleCurrentFrame()
+        }
+    }
+
+    private fun advanceAnimation() {
+        val animation = animation ?: return
+        when {
+            animationPosition < animation.frames.lastIndex -> {
+                animationPosition++
+                showCurrentAnimationFrame()
+            }
+            !animation.isComplete || !animation.isReplayable -> {
+                waitingForFrame = true
+            }
+            animation.loopCount == 0 || completedPlays + 1 < (animation.loopCount ?: 1) -> {
+                completedPlays++
+                animationPosition = 0
+                showCurrentAnimationFrame()
+            }
+            else -> {
+                completedPlays++
+                waitingForFrame = true
+            }
+        }
+    }
+
+    private fun showCurrentAnimationFrame() {
+        val frame = animation?.frames?.getOrNull(animationPosition) ?: return
+        showBitmap(frame.bitmap, config)
+        scheduleCurrentFrame()
+    }
+
+    private fun scheduleCurrentFrame() {
+        removeCallbacks(advanceAnimationRunnable)
+        if (!isAttachedToWindow) return
+        val duration = animation
+            ?.frames
+            ?.getOrNull(animationPosition)
+            ?.frame
+            ?.durationMillis
+            ?.coerceAtLeast(MINIMUM_ANIMATION_FRAME_DURATION_MILLIS)
+            ?: return
+        postDelayed(advanceAnimationRunnable, duration)
+    }
+
+    private fun canAdvance(animation: ProgressiveAnimationBuffer): Boolean {
+        return animationPosition < animation.frames.lastIndex ||
+            (
+                animation.isComplete && animation.isReplayable &&
+                    (animation.loopCount == 0 || completedPlays + 1 < (animation.loopCount ?: 1))
+                )
+    }
+
+    private fun stopAnimation() {
+        removeCallbacks(advanceAnimationRunnable)
+        animation = null
+        animationPosition = -1
+        completedPlays = 0
+        waitingForFrame = false
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -52,81 +180,6 @@ internal class ReaderPageProgressivePreviewView(
             resolveSize(desiredWidth, widthMeasureSpec),
             resolveSize(desiredHeight, heightMeasureSpec),
         )
-    }
-
-    override fun onDraw(canvas: Canvas) {
-        super.onDraw(canvas)
-        val preview = bitmap ?: return
-        val dimensions = config.transformation.outputDimensions(preview)
-        val destination = destinationRect(dimensions)
-
-        when (val transformation = config.transformation.effective(preview)) {
-            ReaderPageProgressiveTransformation.None -> {
-                canvas.drawBitmap(preview, null, destination, bitmapPaint)
-            }
-            is ReaderPageProgressiveTransformation.CropHalf -> {
-                canvas.drawBitmap(preview, transformation.side.sourceRect(preview), destination, bitmapPaint)
-            }
-            is ReaderPageProgressiveTransformation.Rotate -> {
-                canvas.save()
-                canvas.rotate(transformation.degrees, destination.centerX(), destination.centerY())
-                val unrotatedDestination = RectF(
-                    destination.centerX() - destination.height() / 2f,
-                    destination.centerY() - destination.width() / 2f,
-                    destination.centerX() + destination.height() / 2f,
-                    destination.centerY() + destination.width() / 2f,
-                )
-                canvas.drawBitmap(preview, null, unrotatedDestination, bitmapPaint)
-                canvas.restore()
-            }
-            is ReaderPageProgressiveTransformation.SplitAndStack -> {
-                val halfHeight = destination.height() / 2f
-                val upperDestination = RectF(
-                    destination.left,
-                    destination.top,
-                    destination.right,
-                    destination.top + halfHeight,
-                )
-                val lowerDestination = RectF(
-                    destination.left,
-                    destination.top + halfHeight,
-                    destination.right,
-                    destination.bottom,
-                )
-                canvas.drawBitmap(
-                    preview,
-                    transformation.upperSide.sourceRect(preview),
-                    upperDestination,
-                    bitmapPaint,
-                )
-                canvas.drawBitmap(
-                    preview,
-                    transformation.upperSide.opposite().sourceRect(preview),
-                    lowerDestination,
-                    bitmapPaint,
-                )
-            }
-        }
-    }
-
-    private fun destinationRect(dimensions: PreviewDimensions): RectF {
-        val scale = when (config.scaleMode) {
-            ReaderPageProgressiveScaleMode.FIT_INSIDE -> minOf(
-                width / dimensions.width,
-                height / dimensions.height,
-            )
-            ReaderPageProgressiveScaleMode.FIT_WIDTH -> width / dimensions.width
-            ReaderPageProgressiveScaleMode.FIT_HEIGHT -> height / dimensions.height
-            ReaderPageProgressiveScaleMode.CROP -> maxOf(
-                width / dimensions.width,
-                height / dimensions.height,
-            )
-        }
-        val outputWidth = dimensions.width * scale
-        val outputHeight = dimensions.height * scale
-        val left = (width - outputWidth) / 2f
-        val top = (height - outputHeight) / 2f
-        return RectF(left, top, left + outputWidth, top + outputHeight)
     }
 }
 
@@ -201,3 +254,5 @@ internal data class PreviewDimensions(
     val width: Float,
     val height: Float,
 )
+
+private const val MINIMUM_ANIMATION_FRAME_DURATION_MILLIS = 10L

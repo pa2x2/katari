@@ -44,7 +44,8 @@ internal fun MangaImmersiveImage(
     val status by page.statusFlow.collectAsStateWithLifecycle()
     val progress by page.progressFlow.collectAsStateWithLifecycle()
     val progressiveImage by page.progressiveImageState.collectAsStateWithLifecycle(initialValue = null)
-    val hasProgressiveStill = progressiveImage?.visual is ProgressiveImageVisual.Still
+    val hasProgressiveVisual = progressiveImage?.visual is ProgressiveImageVisual.Still ||
+        progressiveImage?.animation?.frames?.isNotEmpty() == true
     val unknownError = stringResource(MR.strings.unknown_error)
     var retryKey by remember(page) { mutableIntStateOf(0) }
     var loadedImage by remember(page) { mutableStateOf<MangaImmersiveLoadedImage?>(null) }
@@ -153,7 +154,7 @@ internal fun MangaImmersiveImage(
                 )
             },
             previewModel = previewRequest,
-            showBackground = !hasProgressiveStill,
+            showBackground = !hasProgressiveVisual,
             onBackgroundClick = onToggleControls,
             onRetry = {
                 loadedImage = null

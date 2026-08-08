@@ -19,6 +19,20 @@ sealed interface ProgressiveImageVisual {
     ) : ProgressiveImageVisual
 }
 
+data class ProgressiveAnimationBuffer(
+    val frames: List<ProgressiveAnimationFrameVisual>,
+    val retainedBytes: Long,
+    val isComplete: Boolean = false,
+    val isReplayable: Boolean = true,
+    val loopCount: Int? = null,
+)
+
+data class ProgressiveAnimationFrameVisual(
+    val bitmap: Bitmap,
+    val frame: ProgressiveAnimationFrame,
+    val generation: Long,
+)
+
 data class ProgressiveAnimationFrame(
     val index: Int,
     val durationMillis: Long,

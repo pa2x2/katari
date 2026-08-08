@@ -87,7 +87,7 @@ object ImageUtil {
     }
 
     private fun getImageType(stream: InputStream): tachiyomi.decoder.ImageType? {
-        val bytes = ByteArray(32)
+        val bytes = ByteArray(IMAGE_TYPE_SNIFF_BYTES)
 
         val length = if (stream.markSupported()) {
             stream.mark(bytes.size)
@@ -694,3 +694,5 @@ object ImageUtil {
 
 val getDisplayMaxHeightInPx: Int
     get() = Resources.getSystem().displayMetrics.let { max(it.heightPixels, it.widthPixels) }
+
+private const val IMAGE_TYPE_SNIFF_BYTES = 4 * 1_024

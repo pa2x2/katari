@@ -103,6 +103,7 @@ import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.components.MARKDOWN_INLINE_IMAGE_TAG
 import eu.kanade.presentation.components.MarkdownRender
 import eu.kanade.presentation.components.getMarkdownLinkStyle
+import eu.kanade.presentation.entry.components.preview.rememberProgressiveEntryPreviewBitmap
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.entry.EntryScreenModel
 import eu.kanade.tachiyomi.util.system.copyToClipboard
@@ -110,7 +111,6 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.daysUntil
 import mihon.core.common.image.progressive.ProgressiveImageState
-import mihon.core.common.image.progressive.ProgressiveImageVisual
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.media.EntryPreviewPage
 import mihon.entry.interactions.media.EntryPreviewPageStatus
@@ -594,7 +594,10 @@ private fun EntryPreviewTile(
         previewPage.page.progressiveImageState ?: flowOf<ProgressiveImageState?>(null)
     }
     val progressiveImage by progressiveImageFlow.collectAsState(initial = null)
-    val progressiveBitmap = (progressiveImage?.visual as? ProgressiveImageVisual.Still)?.bitmap
+    val progressiveBitmap = rememberProgressiveEntryPreviewBitmap(progressiveImage)
+    val keepProgressiveAnimation = progressiveImage?.animation?.let {
+        it.isComplete && it.isReplayable
+    } == true
 
     Column(
         modifier = modifier,
@@ -625,9 +628,11 @@ private fun EntryPreviewTile(
             }
             when (status) {
                 EntryPreviewPageStatus.Ready -> {
-                    EntryPreviewImage(
-                        page = previewPage.page,
-                    )
+                    if (!keepProgressiveAnimation) {
+                        EntryPreviewImage(
+                            page = previewPage.page,
+                        )
+                    }
                 }
                 EntryPreviewPageStatus.Queued,
                 EntryPreviewPageStatus.LoadingPage,

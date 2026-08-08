@@ -31,7 +31,10 @@ class ProgressiveImageSession internal constructor(
             try {
                 activeDecoder.append(bytes, offset, length)
                 val now = SystemClock.elapsedRealtime()
-                if (now >= nextPublicationTimeMillis) {
+                val state = mutableState.value
+                val animationNeedsImmediateDrain = state.capabilities?.animationFrames == true &&
+                    state.metadata?.isAnimated != false
+                if (animationNeedsImmediateDrain || now >= nextPublicationTimeMillis) {
                     drainUpdates(activeDecoder)
                     nextPublicationTimeMillis = now + MINIMUM_PUBLICATION_INTERVAL_MILLIS
                 }
@@ -67,6 +70,7 @@ class ProgressiveImageSession internal constructor(
             if (terminal) return
             mutableState.value = mutableState.value.copy(
                 visual = null,
+                animation = null,
                 status = ProgressiveImageStatus.Disabled,
             )
             terminateLocked()
@@ -78,6 +82,7 @@ class ProgressiveImageSession internal constructor(
             if (terminal) return
             mutableState.value = mutableState.value.copy(
                 visual = null,
+                animation = null,
                 status = ProgressiveImageStatus.Cancelled,
             )
             terminateLocked()
@@ -109,23 +114,55 @@ class ProgressiveImageSession internal constructor(
                     )
                 }
                 is IncrementalDecodeUpdate.AnimationFrameAvailable -> {
+                    val frame = ProgressiveAnimationFrame(
+                        index = update.frame.index,
+                        durationMillis = update.frame.durationMillis,
+                        updatedRegion = update.frame.updatedRegion.toProgressiveRegion(),
+                        blendOperation = update.frame.blendOperation.toProgressiveBlendOperation(),
+                        disposalOperation = update.frame.disposalOperation.toProgressiveDisposalOperation(),
+                    )
+                    val frameVisual = ProgressiveAnimationFrameVisual(
+                        bitmap = update.bitmap,
+                        frame = frame,
+                        generation = update.generation,
+                    )
+                    val currentAnimation = mutableState.value.animation ?: ProgressiveAnimationBuffer(
+                        frames = emptyList(),
+                        retainedBytes = 0,
+                    )
+                    val frameBytes = update.bitmap.allocationByteCount.toLong()
+                    val retainFrame = currentAnimation.isReplayable &&
+                        currentAnimation.frames.size < MAXIMUM_RETAINED_ANIMATION_FRAMES &&
+                        currentAnimation.retainedBytes + frameBytes <= MAXIMUM_RETAINED_ANIMATION_BYTES
                     mutableState.value = mutableState.value.copy(
                         visual = ProgressiveImageVisual.AnimationFrame(
                             bitmap = update.bitmap,
-                            frame = ProgressiveAnimationFrame(
-                                index = update.frame.index,
-                                durationMillis = update.frame.durationMillis,
-                                updatedRegion = update.frame.updatedRegion.toProgressiveRegion(),
-                                blendOperation = update.frame.blendOperation.toProgressiveBlendOperation(),
-                                disposalOperation = update.frame.disposalOperation.toProgressiveDisposalOperation(),
-                            ),
+                            frame = frame,
                             generation = update.generation,
                         ),
+                        animation = if (retainFrame) {
+                            currentAnimation.copy(
+                                frames = currentAnimation.frames + frameVisual,
+                                retainedBytes = currentAnimation.retainedBytes + frameBytes,
+                            )
+                        } else {
+                            currentAnimation.copy(isReplayable = false)
+                        },
                     )
                 }
                 is IncrementalDecodeUpdate.Complete -> {
+                    val metadata = update.info.toProgressiveMetadata()
+                    val animation = mutableState.value.animation?.let { buffer ->
+                        val retainedEveryFrame = metadata.frameCount?.let { it == buffer.frames.size } ?: true
+                        buffer.copy(
+                            isComplete = true,
+                            isReplayable = buffer.isReplayable && retainedEveryFrame,
+                            loopCount = metadata.loopCount,
+                        )
+                    }
                     mutableState.value = mutableState.value.copy(
-                        metadata = update.info.toProgressiveMetadata(),
+                        metadata = metadata,
+                        animation = animation,
                         status = ProgressiveImageStatus.Complete,
                     )
                     terminateLocked()
@@ -134,6 +171,7 @@ class ProgressiveImageSession internal constructor(
                     mutableState.value = mutableState.value.copy(
                         format = update.format?.toProgressiveFormat(),
                         visual = null,
+                        animation = null,
                         status = ProgressiveImageStatus.Unsupported,
                     )
                     terminateLocked()
@@ -205,3 +243,5 @@ private fun IncrementalDisposalOperation.toProgressiveDisposalOperation() = when
 }
 
 private const val MINIMUM_PUBLICATION_INTERVAL_MILLIS = 100L
+private const val MAXIMUM_RETAINED_ANIMATION_FRAMES = 120
+private const val MAXIMUM_RETAINED_ANIMATION_BYTES = 64L * 1_024 * 1_024
