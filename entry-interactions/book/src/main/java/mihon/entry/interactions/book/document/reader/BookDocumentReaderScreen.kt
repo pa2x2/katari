@@ -114,7 +114,6 @@ internal fun BookDocumentReaderScreen(
             progress = BookReaderProgress.Percentage(
                 (state.chapterProgression * 100).roundToInt().coerceIn(0, 100),
             ),
-            progressVisible = !state.chromeVisible,
             footerColor = readerPalette.background,
             translationController = translationController,
             onRootPositionInWindow = { rootPosition = it },
@@ -148,10 +147,11 @@ internal fun BookDocumentReaderScreen(
                         ),
                 )
             },
-            overlay = {
+            overlay = { progressIndicator ->
                 ReaderChrome(
                     visible = state.chromeVisible,
                     modifier = Modifier.fillMaxSize(),
+                    persistentBottomContent = progressIndicator,
                     topBar = {
                         ReaderChromeTopBar(
                             title = state.entryTitle,
