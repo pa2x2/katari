@@ -38,11 +38,72 @@ AND EC.entry_id = ENT._id
 WHERE ENT.favorite = 1;
 
 library:
-SELECT *
-FROM libraryView
-WHERE profile_id = :profileId;
+WITH favorite_entries AS (
+    SELECT *
+    FROM entries
+    WHERE profile_id = :profileId
+    AND favorite = 1
+),
+chapter_summary AS (
+    SELECT
+        chapters.entry_id,
+        count(*) AS total,
+        sum(chapters.read) AS readCount,
+        coalesce(max(chapters.date_upload), 0) AS latestUpload,
+        coalesce(max(history.last_read), 0) AS lastRead,
+        coalesce(max(chapters.date_fetch), 0) AS fetchedAt,
+        sum(chapters.bookmark) AS bookmarkCount
+    FROM favorite_entries
+    JOIN chapters
+    ON chapters.entry_id = favorite_entries._id
+    LEFT JOIN excluded_scanlators
+    ON chapters.entry_id = excluded_scanlators.entry_id
+    AND chapters.scanlator = excluded_scanlators.scanlator
+    LEFT JOIN history
+    ON chapters._id = history.chapter_id
+    WHERE excluded_scanlators.scanlator IS NULL
+    GROUP BY chapters.entry_id
+),
+category_summary AS (
+    SELECT
+        entries_categories.profile_id,
+        entries_categories.entry_id,
+        group_concat(entries_categories.category_id) AS categories
+    FROM favorite_entries
+    JOIN entries_categories
+    ON entries_categories.profile_id = favorite_entries.profile_id
+    AND entries_categories.entry_id = favorite_entries._id
+    GROUP BY entries_categories.profile_id, entries_categories.entry_id
+)
+SELECT
+    favorite_entries.*,
+    coalesce(chapter_summary.total, 0) AS totalCount,
+    coalesce(chapter_summary.readCount, 0) AS readCount,
+    coalesce(chapter_summary.latestUpload, 0) AS latestUpload,
+    coalesce(chapter_summary.fetchedAt, 0) AS chapterFetchedAt,
+    coalesce(chapter_summary.lastRead, 0) AS lastRead,
+    coalesce(chapter_summary.bookmarkCount, 0) AS bookmarkCount,
+    coalesce(category_summary.categories, '0') AS categories
+FROM favorite_entries
+LEFT JOIN chapter_summary
+ON favorite_entries._id = chapter_summary.entry_id
+LEFT JOIN category_summary
+ON category_summary.profile_id = favorite_entries.profile_id
+AND category_summary.entry_id = favorite_entries._id;
 
 libraryLastRead:
-SELECT _id AS entryId, lastRead
-FROM libraryView
-WHERE profile_id = :profileId;
+SELECT
+    entries._id AS entryId,
+    coalesce(max(history.last_read), 0) AS lastRead
+FROM entries
+LEFT JOIN chapters
+ON chapters.entry_id = entries._id
+LEFT JOIN excluded_scanlators
+ON chapters.entry_id = excluded_scanlators.entry_id
+AND chapters.scanlator = excluded_scanlators.scanlator
+LEFT JOIN history
+ON chapters._id = history.chapter_id
+WHERE entries.profile_id = :profileId
+AND entries.favorite = 1
+AND excluded_scanlators.scanlator IS NULL
+GROUP BY entries._id;

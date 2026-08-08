@@ -53,6 +53,11 @@ SELECT *
 FROM chapters
 WHERE _id = :id;
 
+getChapterReadById:
+SELECT read
+FROM chapters
+WHERE _id = :id;
+
 getChaptersByEntryId:
 SELECT C.*
 FROM chapters C
