@@ -11,6 +11,10 @@ interface EntryContinueFeature {
 
     suspend fun nextTarget(entry: Entry): EntryContinueTargetResult
 
+    suspend fun nextTargets(entries: List<Entry>): Map<Long, EntryContinueTargetResult> {
+        return entries.associate { entry -> entry.id to nextTarget(entry) }
+    }
+
     suspend fun continueEntry(context: Context, entry: Entry): EntryContinueResult
 }
 

@@ -8,6 +8,7 @@ import mihon.entry.interactions.navigation.EntryOpenOptions
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.service.sortedForReading
 
@@ -20,18 +21,29 @@ internal class BookContinueProcessor(
 
     override suspend fun findNext(entry: Entry): EntryChapter? {
         entry.requireBook()
-        val chapters = getEntryWithChapters.awaitChapters(entry).sortedForReading(entry)
-        val chapterById = chapters.associateBy(EntryChapter::id)
-        return chapters
+        val chapters = getEntryWithChapters.awaitChapters(entry)
+        val progressStates = chapters
             .map(EntryChapter::entryId)
             .distinct()
             .flatMap { entryProgressRepository.getByEntryId(it) }
+        return findNext(entry, chapters, progressStates)
+    }
+
+    override suspend fun findNext(
+        entry: Entry,
+        chapters: List<EntryChapter>,
+        progressStates: List<EntryProgressState>,
+    ): EntryChapter? {
+        entry.requireBook()
+        val sortedChapters = chapters.sortedForReading(entry)
+        val chapterById = sortedChapters.associateBy(EntryChapter::id)
+        return progressStates
             .asSequence()
             .filter { !it.completed && !it.locator.isEmpty }
             .sortedByDescending { it.locatorUpdatedAt }
             .mapNotNull { it.chapterId?.let(chapterById::get) }
             .firstOrNull()
-            ?: chapters.firstOrNull { !it.read }
+            ?: sortedChapters.firstOrNull { !it.read }
     }
 
     override fun open(context: Context, entry: Entry, chapter: EntryChapter) {

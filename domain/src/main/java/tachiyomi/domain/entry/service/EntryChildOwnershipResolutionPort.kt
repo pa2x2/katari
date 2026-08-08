@@ -7,6 +7,13 @@ import tachiyomi.domain.entry.model.Entry
 interface EntryChildOwnershipResolutionPort {
     suspend fun resolveChildOwnership(profileId: Long, entryId: Long): EntryChildOwnershipResolution
 
+    suspend fun resolveChildOwnership(
+        profileId: Long,
+        entryIds: Set<Long>,
+    ): Map<Long, EntryChildOwnershipResolution> {
+        return entryIds.associateWith { entryId -> resolveChildOwnership(profileId, entryId) }
+    }
+
     fun observeChildOwnership(profileId: Long, entryId: Long): Flow<EntryChildOwnershipResolution>
 }
 

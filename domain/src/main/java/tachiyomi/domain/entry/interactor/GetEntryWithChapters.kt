@@ -9,7 +9,7 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.service.EntryChildOwnershipResolutionPort
-import tachiyomi.domain.entry.service.sortedForMergedDisplay
+import tachiyomi.domain.entry.service.mergedForDisplay
 
 class GetEntryWithChapters(
     private val entryChapterRepository: EntryChapterRepository,
@@ -32,7 +32,7 @@ class GetEntryWithChapters(
                     entryChapterRepository.getChaptersByEntryId(owner.id)
                 },
             ) { childLists ->
-                entry to mergeChapters(entry, childLists.asIterable())
+                entry to childLists.asIterable().mergedForDisplay(entry)
             }
         }
     }
@@ -47,20 +47,10 @@ class GetEntryWithChapters(
         } else {
             childOwnership.resolveChildOwnership(entry.profileId, entry.id).orderedOwners.ifEmpty { listOf(entry) }
         }
-        return mergeChapters(
-            entry = entry,
-            episodeLists = orderedOwners.map { owner ->
+        return orderedOwners
+            .map { owner ->
                 entryChapterRepository.getChaptersByEntryIdAwait(owner.id, applyScanlatorFilter)
-            },
-        )
-    }
-
-    private fun mergeChapters(
-        entry: Entry,
-        episodeLists: Iterable<List<EntryChapter>>,
-    ): List<EntryChapter> {
-        val mergedAnimeIds = episodeLists.mapNotNull { it.firstOrNull()?.entryId }
-        return episodeLists.flatten()
-            .sortedForMergedDisplay(entry, mergedAnimeIds)
+            }
+            .mergedForDisplay(entry)
     }
 }

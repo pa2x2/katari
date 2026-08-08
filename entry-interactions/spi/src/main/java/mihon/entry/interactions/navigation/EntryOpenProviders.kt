@@ -7,6 +7,7 @@ import mihon.entry.interactions.runtime.entryInteractionCapability
 import mihon.feature.graph.CapabilityId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryProgressState
 
 interface EntryOpenProcessor : EntryInteractionProvider {
 
@@ -16,6 +17,11 @@ interface EntryOpenProcessor : EntryInteractionProvider {
 
 interface EntryContinueProcessor : EntryInteractionProvider {
     suspend fun findNext(entry: Entry): EntryChapter?
+    suspend fun findNext(
+        entry: Entry,
+        chapters: List<EntryChapter>,
+        progressStates: List<EntryProgressState>,
+    ): EntryChapter? = findNext(entry)
     fun open(context: Context, entry: Entry, chapter: EntryChapter)
 }
 

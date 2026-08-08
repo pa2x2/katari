@@ -6,7 +6,10 @@ import mihon.entry.interactions.navigation.EntryContinueTargetResult
 import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryProgressState
+import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.service.EntryLibraryContinueTarget
+import tachiyomi.domain.entry.service.EntryLibraryProgressMember
 import tachiyomi.domain.entry.service.EntryLibraryProgressResolution
 import tachiyomi.domain.entry.service.EntryLibraryProgressSummary
 
@@ -14,6 +17,7 @@ internal class DefaultEntryLibraryProgressFeature(
     evaluation: FeatureGraphEvaluation,
     private val interaction: EntryLibraryProgressInteraction,
     private val continueFeature: EntryContinueFeature,
+    private val entryProgressRepository: EntryProgressRepository,
 ) : EntryLibraryProgressFeature {
     private val selection = evaluation.libraryProgressSelection()
 
@@ -27,16 +31,54 @@ internal class DefaultEntryLibraryProgressFeature(
         if (!isApplicable(entry.type)) return EntryLibraryProgressResolution.Inapplicable(entry.type)
         val evidence = interaction.evidence(entry, chapters)
         val continueTarget = if (entry.type in selection.continueTypes) {
-            when (val target = continueFeature.nextTarget(entry)) {
-                is EntryContinueTargetResult.Available -> EntryLibraryContinueTarget.Available(target.chapter.id)
-                EntryContinueTargetResult.NoNext -> EntryLibraryContinueTarget.NoNext
-                EntryContinueTargetResult.Inapplicable -> error(
-                    "Library progress selected Continue for ${entry.type}, but Continue returned inapplicable",
-                )
-            }
+            continueFeature.nextTarget(entry).toLibraryTarget(entry.type)
         } else {
             EntryLibraryContinueTarget.Inapplicable
         }
+        return buildResolution(entry, chapters, lastRead, evidence, continueTarget)
+    }
+
+    override suspend fun calculateBatch(
+        members: List<EntryLibraryProgressMember>,
+    ): Map<Long, EntryLibraryProgressResolution> {
+        val progressByEntryId = entryProgressRepository
+            .getByEntryIds(members.mapTo(mutableSetOf()) { it.entry.id })
+            .groupBy(EntryProgressState::entryId)
+        val continueTargets = continueFeature.nextTargets(members.map(EntryLibraryProgressMember::entry))
+
+        return buildMap {
+            members.forEach { member ->
+                val entry = member.entry
+                if (!isApplicable(entry.type)) {
+                    put(entry.id, EntryLibraryProgressResolution.Inapplicable(entry.type))
+                } else {
+                    val evidence = interaction.evidence(
+                        entry = entry,
+                        chapters = member.chapters,
+                        progressStates = progressByEntryId[entry.id].orEmpty(),
+                    )
+                    val continueTarget = if (entry.type in selection.continueTypes) {
+                        (continueTargets[entry.id] ?: continueFeature.nextTarget(entry))
+                            .toLibraryTarget(entry.type)
+                    } else {
+                        EntryLibraryContinueTarget.Inapplicable
+                    }
+                    put(
+                        entry.id,
+                        buildResolution(entry, member.chapters, member.lastRead, evidence, continueTarget),
+                    )
+                }
+            }
+        }
+    }
+
+    private fun buildResolution(
+        entry: Entry,
+        chapters: List<EntryChapter>,
+        lastRead: Long,
+        evidence: EntryLibraryProgressEvidence,
+        continueTarget: EntryLibraryContinueTarget,
+    ): EntryLibraryProgressResolution {
         return EntryLibraryProgressResolution.Available(
             EntryLibraryProgressSummary(
                 totalCount = chapters.size.toLong(),
@@ -50,6 +92,16 @@ internal class DefaultEntryLibraryProgressFeature(
                 continueTarget = continueTarget,
             ),
         )
+    }
+
+    private fun EntryContinueTargetResult.toLibraryTarget(entryType: EntryType): EntryLibraryContinueTarget {
+        return when (this) {
+            is EntryContinueTargetResult.Available -> EntryLibraryContinueTarget.Available(chapter.id)
+            EntryContinueTargetResult.NoNext -> EntryLibraryContinueTarget.NoNext
+            EntryContinueTargetResult.Inapplicable -> error(
+                "Library progress selected Continue for $entryType, but Continue returned inapplicable",
+            )
+        }
     }
 
     override fun merge(

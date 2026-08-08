@@ -19,6 +19,7 @@ import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.service.EntryLibraryGroupResolution
 import tachiyomi.domain.entry.service.EntryLibraryGroupingResolutionPort
+import tachiyomi.domain.entry.service.EntryLibraryProgressMember
 import tachiyomi.domain.entry.service.EntryLibraryProgressResolution
 import tachiyomi.domain.entry.service.EntryLibraryProgressResolutionPort
 import tachiyomi.domain.library.model.LibraryItem
@@ -109,9 +110,17 @@ class GetLibraryEntries(
         val lastReadByEntryId = entryRepository.getLibraryLastRead(profileId)
 
         val chaptersByEntryId = chapters.groupBy(EntryChapter::entryId)
+        val progressMembers = favorites.map { entry ->
+            EntryLibraryProgressMember(
+                entry = entry,
+                chapters = chaptersByEntryId[entry.id].orEmpty(),
+                lastRead = lastReadByEntryId[entry.id] ?: 0L,
+            )
+        }
+        val libraryStateByEntryId = entryLibraryProgressResolver.calculateBatch(progressMembers)
         val itemsById = favorites.associate { entry ->
             val entryChapters = chaptersByEntryId[entry.id].orEmpty()
-            val libraryState = entryLibraryProgressResolver.calculate(
+            val libraryState = libraryStateByEntryId[entry.id] ?: entryLibraryProgressResolver.calculate(
                 entry = entry,
                 chapters = entryChapters,
                 lastRead = lastReadByEntryId[entry.id] ?: 0L,

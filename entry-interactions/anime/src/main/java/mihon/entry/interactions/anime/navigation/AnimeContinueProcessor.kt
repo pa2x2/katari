@@ -9,6 +9,7 @@ import mihon.entry.interactions.navigation.EntryOpenOptions
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.service.sortedForReading
 
@@ -22,13 +23,23 @@ internal class AnimeContinueProcessor(
     override suspend fun findNext(entry: Entry): EntryChapter? {
         entry.requireAnime()
         val chapters = getEntryWithChapters.awaitChapters(entry)
-        if (chapters.isEmpty()) return null
-
-        val chapterIds = chapters.map { it.id }.toSet()
         val states = chapters
             .map { it.entryId }
             .distinct()
             .flatMap { entryId -> entryProgressRepository.getByEntryId(entryId) }
+        return findNext(entry, chapters, states)
+    }
+
+    override suspend fun findNext(
+        entry: Entry,
+        chapters: List<EntryChapter>,
+        progressStates: List<EntryProgressState>,
+    ): EntryChapter? {
+        entry.requireAnime()
+        if (chapters.isEmpty()) return null
+
+        val chapterIds = chapters.map { it.id }.toSet()
+        val states = progressStates
             .filter { it.chapterId in chapterIds }
         val stateByChapterId = states.associateBy { it.chapterId }
 

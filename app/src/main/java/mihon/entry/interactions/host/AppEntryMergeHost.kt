@@ -20,6 +20,7 @@ import mihon.entry.interactions.merge.host.EntryMergeProfileMoveHostTransition
 import tachiyomi.data.Database
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.data.entry.EntryMapper
+import tachiyomi.data.query.chunkedForSqlQuery
 import tachiyomi.domain.entry.model.DuplicateEntryCandidate
 import tachiyomi.domain.entry.model.Entry
 
@@ -100,7 +101,11 @@ internal class AppEntryMergeHost(
         override suspend fun entries(entryIds: List<Long>): List<Entry> {
             if (entryIds.isEmpty()) return emptyList()
             val entriesById = handler.await {
-                entryIds.distinct().mapNotNull { entryId -> loadEntry(profileId, entryId) }.associateBy(Entry::id)
+                entryIds.distinct().chunkedForSqlQuery()
+                    .flatMap { chunk ->
+                        entriesQueries.getEntriesByIds(profileId, chunk, EntryMapper::mapEntry).awaitAsList()
+                    }
+                    .associateBy(Entry::id)
             }
             return entryIds.mapNotNull(entriesById::get)
         }

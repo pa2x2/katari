@@ -86,6 +86,7 @@ class EntryContinueContractValidationContributor : FeatureValidationContributor 
                     val opened = mutableListOf<Long>()
                     val feature = DefaultEntryContinueFeature(
                         evaluation = evaluation,
+                        batchPreparation = mockk(relaxed = true),
                         interaction = object : EntryContinueInteraction {
                             override suspend fun continueEntry(
                                 context: Context,

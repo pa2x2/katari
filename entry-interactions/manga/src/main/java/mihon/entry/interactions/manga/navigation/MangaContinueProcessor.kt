@@ -10,6 +10,7 @@ import mihon.entry.interactions.navigation.EntryOpenOptions
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.service.sortedForReading
 
@@ -23,11 +24,21 @@ internal class MangaContinueProcessor(
     override suspend fun findNext(entry: Entry): EntryChapter? {
         entry.requireManga()
         val chapters = getEntryWithChapters.awaitChapters(entry)
-        val chapterById = chapters.associateBy { it.id }
-        return chapters
+        val progressStates = chapters
             .map { it.entryId }
             .distinct()
             .flatMap { entryId -> entryProgressRepository.getByEntryId(entryId) }
+        return findNext(entry, chapters, progressStates)
+    }
+
+    override suspend fun findNext(
+        entry: Entry,
+        chapters: List<EntryChapter>,
+        progressStates: List<EntryProgressState>,
+    ): EntryChapter? {
+        entry.requireManga()
+        val chapterById = chapters.associateBy { it.id }
+        return progressStates
             .asSequence()
             .filter { !it.completed && it.pageIndex > 0L }
             .sortedByDescending { it.lastReadAt }

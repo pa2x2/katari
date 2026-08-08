@@ -6,6 +6,7 @@ import mihon.entry.interactions.library.EntryLibraryProgressEvidence
 import mihon.entry.interactions.library.EntryLibraryProgressProvider
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 
 internal class BookLibraryProgressProvider(
@@ -15,11 +16,21 @@ internal class BookLibraryProgressProvider(
 
     override suspend fun evidence(entry: Entry, chapters: List<EntryChapter>): EntryLibraryProgressEvidence {
         entry.requireBook()
-        val chapterIds = chapters.mapTo(mutableSetOf(), EntryChapter::id)
         val states = chapters
             .map(EntryChapter::entryId)
             .distinct()
             .flatMap { entryId -> entryProgressRepository.getByEntryId(entryId) }
+        return evidence(entry, chapters, states)
+    }
+
+    override suspend fun evidence(
+        entry: Entry,
+        chapters: List<EntryChapter>,
+        progressStates: List<EntryProgressState>,
+    ): EntryLibraryProgressEvidence {
+        entry.requireBook()
+        val chapterIds = chapters.mapTo(mutableSetOf(), EntryChapter::id)
+        val states = progressStates
             .filter { it.chapterId in chapterIds }
         val inProgress = states
             .filter { !it.completed && !it.locator.isEmpty }

@@ -6,6 +6,7 @@ import mihon.entry.interactions.runtime.requireMatchingEntryType
 import mihon.entry.interactions.runtime.requireProcessor
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryProgressState
 
 internal class ProviderBackedEntryOpenInteraction(
     private val processors: Map<EntryType, EntryOpenProcessor>,
@@ -39,5 +40,15 @@ internal class ProviderBackedEntryContinueInteraction(
         val processor = processors.requireProcessor("continue", entry.type)
         processor.requireMatchingEntryType("continue", entry, processors.keys)
         return processor.findNext(entry)
+    }
+
+    override suspend fun findNext(
+        entry: Entry,
+        chapters: List<EntryChapter>,
+        progressStates: List<EntryProgressState>,
+    ): EntryChapter? {
+        val processor = processors.requireProcessor("continue", entry.type)
+        processor.requireMatchingEntryType("continue", entry, processors.keys)
+        return processor.findNext(entry, chapters, progressStates)
     }
 }
