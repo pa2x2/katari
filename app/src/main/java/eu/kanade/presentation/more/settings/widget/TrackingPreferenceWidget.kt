@@ -23,6 +23,7 @@ import eu.kanade.presentation.more.settings.LocalPreferenceHighlighted
 import eu.kanade.presentation.track.components.TrackLogoIcon
 import mihon.entry.interactions.tracking.EntryTrackingServiceDescriptor
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.components.pulsingHighlightBackground
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -34,7 +35,7 @@ fun TrackingPreferenceWidget(
     onClick: (() -> Unit)? = null,
 ) {
     val highlighted = LocalPreferenceHighlighted.current
-    Box(modifier = Modifier.highlightBackground(highlighted)) {
+    Box(modifier = Modifier.pulsingHighlightBackground(Unit.takeIf { highlighted })) {
         Row(
             modifier = modifier
                 .clickable(enabled = onClick != null, onClick = { onClick?.invoke() })

@@ -30,7 +30,6 @@ import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.more.settings.screen.translation.TranslationPlaygroundState
 import eu.kanade.presentation.more.settings.screen.translation.engine.translationEngineLabel
 import eu.kanade.presentation.more.settings.widget.ProfileSpecificChip
-import eu.kanade.presentation.more.settings.widget.highlightBackground
 import kotlinx.coroutines.delay
 import mihon.translation.api.engine.TranslationEngineState
 import mihon.translation.ui.picker.language.TranslationLanguagePairSelector
@@ -44,6 +43,7 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
+import tachiyomi.presentation.core.components.pulsingHighlightBackground
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -166,7 +166,7 @@ private fun TranslationPlayground(
     ) {
         Column(
             modifier = Modifier
-                .highlightBackground(highlighted)
+                .pulsingHighlightBackground(Unit.takeIf { highlighted })
                 .padding(MaterialTheme.padding.large),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
         ) {

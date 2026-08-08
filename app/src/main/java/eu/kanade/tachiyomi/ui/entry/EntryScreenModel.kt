@@ -116,6 +116,7 @@ import mihon.entry.interactions.migration.EntryMigrationFeature
 import mihon.entry.interactions.migration.EntryMigrationSelectionResult
 import mihon.entry.interactions.migration.EntryMigrationSubject
 import mihon.entry.interactions.navigation.EntryContinueFeature
+import mihon.entry.interactions.navigation.EntryContinueTargetResult
 import mihon.entry.interactions.source.EntrySourceRefreshFailure
 import mihon.entry.interactions.source.EntrySourceRefreshFeature
 import mihon.entry.interactions.source.EntrySourceRefreshRequest
@@ -327,6 +328,7 @@ class EntryScreenModel(
     init {
         observeChildProgressLabels()
         observeChildGroupFilter()
+        observeContinueTarget()
 
         screenModelScope.launchIO {
             mergeAwareEntryAndChaptersFlow(
@@ -427,6 +429,34 @@ class EntryScreenModel(
                     fetchChapters = needRefreshChapter,
                 ).join()
             }
+        }
+    }
+
+    private fun observeContinueTarget() {
+        screenModelScope.launchIO {
+            state
+                .filterIsInstance<State.Success>()
+                .map { successState ->
+                    ContinueTargetRequest(
+                        entry = successState.entry,
+                        chapters = successState.chapters.map { item ->
+                            ContinueTargetChapter(item.chapter.id, item.chapter.read)
+                        },
+                    )
+                }
+                .distinctUntilChanged()
+                .map { request ->
+                    when (val result = entryContinueFeature.nextTarget(request.entry)) {
+                        is EntryContinueTargetResult.Available -> result.chapter.id
+                        EntryContinueTargetResult.Inapplicable,
+                        EntryContinueTargetResult.NoNext,
+                        -> null
+                    }
+                }
+                .flowWithLifecycle(lifecycle)
+                .collectLatest { chapterId ->
+                    updateSuccessState { it.copy(continueTargetChapterId = chapterId) }
+                }
         }
     }
 
@@ -2205,6 +2235,16 @@ class EntryScreenModel(
         val mergeGroupMemberIds: ImmutableList<Long>,
     )
 
+    private data class ContinueTargetRequest(
+        val entry: Entry,
+        val chapters: List<ContinueTargetChapter>,
+    )
+
+    private data class ContinueTargetChapter(
+        val id: Long,
+        val read: Boolean,
+    )
+
     @Immutable
     data class MergeMember(
         val id: Long,
@@ -2233,6 +2273,7 @@ class EntryScreenModel(
             val mergeGroupMemberIds: ImmutableList<Long>,
             val isFromSource: Boolean,
             val chapters: List<EntryChapterList.Item>,
+            val continueTargetChapterId: Long? = null,
             val childProgressLabels: Map<Long, EntryChildProgressLabel> = emptyMap(),
             val childListFeature: EntryChildListFeature,
             val childGroupFilterFeature: EntryChildGroupFilterFeature,

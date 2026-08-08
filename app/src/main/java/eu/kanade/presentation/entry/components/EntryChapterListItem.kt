@@ -44,6 +44,7 @@ import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
 import tachiyomi.presentation.core.components.material.SECONDARY_ALPHA
+import tachiyomi.presentation.core.components.pulsingHighlightBackground
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.selectedBackground
 
@@ -66,6 +67,7 @@ fun EntryChapterListItem(
     onClick: () -> Unit,
     onDownloadClick: ((ChapterDownloadAction) -> Unit)?,
     onChapterSwipe: (LibraryPreferences.ChapterSwipeAction) -> Unit,
+    highlightTrigger: Int? = null,
     modifier: Modifier = Modifier,
 ) {
     val start = getSwipeAction(
@@ -95,6 +97,12 @@ fun EntryChapterListItem(
         Row(
             modifier = modifier
                 .selectedBackground(selected)
+                .pulsingHighlightBackground(
+                    trigger = highlightTrigger,
+                    visible = !selected,
+                    iterations = 2,
+                    highlightDurationMillis = 1_400L,
+                )
                 .combinedClickable(
                     onClick = onClick,
                     onLongClick = onLongClick,
