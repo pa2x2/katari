@@ -25,9 +25,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.shouldExpandFAB
 
@@ -71,7 +71,7 @@ fun EntryContinueActions(
 
     Column(
         horizontalAlignment = Alignment.End,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
     ) {
         continueTargetListIndex?.let { targetIndex ->
             val label = stringResource(MR.strings.action_go_to_current_chapter)
@@ -92,8 +92,6 @@ fun EntryContinueActions(
                             onTargetReached()
                         }
                     },
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                     modifier = Modifier.animateFloatingActionButton(
                         visible = visible && targetPosition != null,
                         alignment = Alignment.BottomEnd,
