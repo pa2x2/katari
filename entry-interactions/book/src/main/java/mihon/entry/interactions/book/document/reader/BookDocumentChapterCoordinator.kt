@@ -15,7 +15,6 @@ import mihon.entry.interactions.book.reader.BookReaderOpenResult
 import mihon.entry.interactions.book.reader.BookReaderSessionFactory
 import mihon.entry.interactions.book.reader.OpenedBookReaderSession
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPolicy
-import mihon.entry.interactions.viewer.entryChildWindow
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.EntryChapter
@@ -122,7 +121,7 @@ internal class BookDocumentChapterCoordinator(
         if (!navigationRequest.acceptsLocation(chapterId, location.position)) return
         if (chapterId != state.currentChapterId) activateChapter(chapterId, completeForwardCrossing = true)
         val session = retainedSessions.session(chapterId) ?: return
-        val total = totalBookProgression(state.chapters, chapterId, location.progression)
+        val total = state.readingOrder.totalProgression(chapterId, location.progression)
         val locator = location.section.document.document.locatorAt(location.position).copy(totalProgression = total)
         retainedSessions.updateLocation(chapterId, locator)
         currentState()?.let { current ->
@@ -211,7 +210,7 @@ internal class BookDocumentChapterCoordinator(
         val state = currentState() ?: return
         val position = section.initialPosition
         val progression = section.document.document.progressionAt(position)
-        val total = totalBookProgression(state.chapters, section.owner.id, progression)
+        val total = state.readingOrder.totalProgression(section.owner.id, progression)
         retainedSessions.updateLocation(
             section.owner.id,
             section.document.document.locatorAt(position).copy(totalProgression = total),
@@ -233,10 +232,10 @@ internal class BookDocumentChapterCoordinator(
         val state = currentState() ?: return
         if (chapterId == state.currentChapterId) return
         val previousId = state.currentChapterId
-        val previousIndex = state.chapters.indexOfFirst { it.id == previousId }
-        val destinationIndex = state.chapters.indexOfFirst { it.id == chapterId }
+        val previousIndex = state.readingOrder.indexOf(previousId)
+        val destinationIndex = state.readingOrder.indexOf(chapterId)
         val session = retainedSessions.activate(chapterId) ?: return
-        val window = state.chapters.entryChildWindow(chapterId, EntryChapter::id) ?: return
+        val window = state.readingOrder.window(chapterId) ?: return
         if (completeForwardCrossing && destinationIndex > previousIndex) {
             completionTracker.onForwardChapterActivated(previousId)?.let(::completeChapter)
         }
@@ -267,8 +266,7 @@ internal class BookDocumentChapterCoordinator(
         val session = retainedSessions.session(chapterId) ?: return
         val state = currentState() ?: return
         val section = state.loadedSections[chapterId] ?: return
-        val chapterIndex = state.chapters.indexOfFirst { it.id == chapterId }
-        val total = ((chapterIndex + 1.0) / state.chapters.size.coerceAtLeast(1)).coerceIn(0.0, 1.0)
+        val total = state.readingOrder.completedProgression(chapterId)
         val document = section.document.document
         val locator = document.locatorAt(document.positionAtProgression(1f)).copy(totalProgression = total)
         retainedSessions.updateLocation(chapterId, locator)

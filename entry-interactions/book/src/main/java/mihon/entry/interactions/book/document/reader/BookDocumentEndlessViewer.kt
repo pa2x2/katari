@@ -32,7 +32,7 @@ import tachiyomi.presentation.core.util.clickableNoIndication
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun BookDocumentEndlessViewer(
-    chapters: List<EntryChapter>,
+    currentChapter: EntryChapter,
     currentChapterId: Long,
     window: EntryChildWindow<EntryChapter>,
     loadedSections: Map<Long, BookDocumentSection<EntryChapter>>,
@@ -187,9 +187,9 @@ internal fun BookDocumentEndlessViewer(
                 listState.isScrollInProgress,
             )
         }.distinctUntilChanged().collect { observation ->
-            val chapter = chapters.firstOrNull { it.id == observation.chapterId } ?: return@collect
+            if (currentChapter.id != observation.chapterId) return@collect
             onTerminalObservation(
-                chapter,
+                currentChapter,
                 observation.terminalVisible,
                 observation.canScrollForward,
                 observation.scrollInProgress,
@@ -207,7 +207,7 @@ internal fun BookDocumentEndlessViewer(
                         layout.offset + layout.size > info.viewportStartOffset
                 }
                 if (stillVisible && !listState.canScrollForward && !listState.isScrollInProgress) {
-                    onTerminalObservation(chapter, true, false, false)
+                    onTerminalObservation(currentChapter, true, false, false)
                 }
             }
         }

@@ -25,15 +25,6 @@ internal fun OpenedBookReaderSession.toDocumentSection(
     )
 }
 
-internal fun totalBookProgression(
-    chapters: List<EntryChapter>,
-    chapterId: Long,
-    chapterProgression: Float,
-): Double {
-    val index = chapters.indexOfFirst { it.id == chapterId }.coerceAtLeast(0)
-    return ((index + chapterProgression) / chapters.size.coerceAtLeast(1)).coerceIn(0f, 1f).toDouble()
-}
-
 internal fun <T> BookDocumentSection<T>.fromBeginningForExplicitNavigation(): BookDocumentSection<T> = copy(
     initialPosition = document.document.positionAtProgression(0f),
 )
