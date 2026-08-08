@@ -9,6 +9,7 @@ import mihon.entry.interactions.library.EntryLibraryProgressEvidence
 import mihon.entry.interactions.library.EntryLibraryProgressProvider
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 
 internal class AnimeLibraryProgressProvider(
@@ -18,8 +19,17 @@ internal class AnimeLibraryProgressProvider(
 
     override suspend fun evidence(entry: Entry, chapters: List<EntryChapter>): EntryLibraryProgressEvidence {
         entry.requireAnime()
+        return evidence(entry, chapters, entryProgressRepository.getByEntryId(entry.id))
+    }
+
+    override suspend fun evidence(
+        entry: Entry,
+        chapters: List<EntryChapter>,
+        progressStates: List<EntryProgressState>,
+    ): EntryLibraryProgressEvidence {
+        entry.requireAnime()
         val chapterIds = chapters.mapTo(mutableSetOf(), EntryChapter::id)
-        val playbackStates = entryProgressRepository.getByEntryId(entry.id)
+        val playbackStates = progressStates
             .filter { it.chapterId in chapterIds }
         val inProgress = playbackStates
             .asSequence()

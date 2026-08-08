@@ -8,6 +8,7 @@ import mihon.entry.interactions.manga.state.lastReadAt
 import mihon.entry.interactions.manga.state.pageIndex
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 
 internal class MangaLibraryProgressProvider(
@@ -17,11 +18,21 @@ internal class MangaLibraryProgressProvider(
 
     override suspend fun evidence(entry: Entry, chapters: List<EntryChapter>): EntryLibraryProgressEvidence {
         entry.requireManga()
-        val chapterIds = chapters.mapTo(mutableSetOf(), EntryChapter::id)
         val progress = chapters
             .map(EntryChapter::entryId)
             .distinct()
             .flatMap { entryId -> entryProgressRepository.getByEntryId(entryId) }
+        return evidence(entry, chapters, progress)
+    }
+
+    override suspend fun evidence(
+        entry: Entry,
+        chapters: List<EntryChapter>,
+        progressStates: List<EntryProgressState>,
+    ): EntryLibraryProgressEvidence {
+        entry.requireManga()
+        val chapterIds = chapters.mapTo(mutableSetOf(), EntryChapter::id)
+        val progress = progressStates
             .filter { it.chapterId in chapterIds }
         val inProgress = progress
             .filter { !it.completed && it.pageIndex > 0L }

@@ -70,7 +70,12 @@ private suspend fun verifyLibraryProgress(input: FeatureContractExecutionInput) 
     val continueFeature = mockk<EntryContinueFeature> {
         coEvery { nextTarget(entry) } returns EntryContinueTargetResult.Available(next)
     }
-    val feature = DefaultEntryLibraryProgressFeature(evaluation, interaction, continueFeature)
+    val feature = DefaultEntryLibraryProgressFeature(
+        evaluation,
+        interaction,
+        continueFeature,
+        mockk(relaxed = true),
+    )
     val result = feature.calculate(entry, listOf(chapter), 0L) as EntryLibraryProgressResolution.Available
 
     contractExpectation(result.summary.hasStarted, "Library Progress must project provider evidence")

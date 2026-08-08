@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
@@ -312,11 +313,12 @@ internal class BookDownloadManager(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun statusFlow(): Flow<BookDownload> = queueState.flatMapLatest { downloads ->
-        downloads.map { download -> download.statusFlow.drop(1).map { download } }.merge()
-    }.onStart {
-        emitAll(queueState.value.filter { it.status == BookDownload.State.DOWNLOADING }.asFlow())
-    }
+    fun statusFlow(): Flow<BookDownload> = merge(
+        addedToQueueFlow(),
+        queueState.flatMapLatest { downloads ->
+            downloads.map { download -> download.statusFlow.drop(1).map { download } }.merge()
+        },
+    )
 
     @OptIn(ExperimentalCoroutinesApi::class)
     fun progressFlow(): Flow<BookDownload> = queueState.flatMapLatest { downloads ->
@@ -336,6 +338,15 @@ internal class BookDownloadManager(
 
     private fun rewriteStoredQueueLocked() {
         store.replace(_queueState.value)
+    }
+
+    private fun addedToQueueFlow(): Flow<BookDownload> = flow {
+        var previousChapterIds = emptySet<Long>()
+        queueState.collect { downloads ->
+            val currentChapterIds = downloads.mapTo(mutableSetOf()) { it.chapter.id }
+            downloads.filter { it.chapter.id !in previousChapterIds }.forEach { emit(it) }
+            previousChapterIds = currentChapterIds
+        }
     }
 }
 

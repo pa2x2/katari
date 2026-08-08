@@ -17,11 +17,30 @@ interface EntryLibraryProgressResolutionPort {
         lastRead: Long,
     ): EntryLibraryProgressResolution
 
+    suspend fun calculateBatch(
+        members: List<EntryLibraryProgressMember>,
+    ): Map<Long, EntryLibraryProgressResolution> {
+        return buildMap {
+            members.forEach { member ->
+                put(
+                    member.entry.id,
+                    calculate(member.entry, member.chapters, member.lastRead),
+                )
+            }
+        }
+    }
+
     fun merge(
         entryType: EntryType,
         members: List<EntryLibraryProgressSummary>,
     ): EntryLibraryProgressResolution
 }
+
+data class EntryLibraryProgressMember(
+    val entry: Entry,
+    val chapters: List<EntryChapter>,
+    val lastRead: Long,
+)
 
 sealed interface EntryLibraryProgressResolution {
     data class Available(val summary: EntryLibraryProgressSummary) : EntryLibraryProgressResolution

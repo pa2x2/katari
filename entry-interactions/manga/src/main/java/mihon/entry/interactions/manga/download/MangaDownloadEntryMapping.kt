@@ -34,24 +34,29 @@ internal fun MangaDownload.toEntryDownloadStatus(): EntryDownloadStatus {
 }
 
 internal fun MangaDownload.toEntryDownloadQueueItem(): EntryDownloadQueueItem {
+    val statusSnapshot = status
+    val pagesSnapshot = pages
+    val progressSnapshot = totalProgress
+    val downloadedImagesSnapshot = downloadedImages
+    val failureSnapshot = failure
     return EntryDownloadQueueItem(
         identity = EntryDownloadIdentity.from(entry, chapter),
-        state = status.toEntryDownloadState(),
+        state = statusSnapshot.toEntryDownloadState(),
         title = entry.title,
         subtitle = chapter.name,
         dateUpload = chapter.dateUpload,
         chapterNumber = chapter.chapterNumber,
-        progress = totalProgress,
-        progressMax = pages?.size?.times(100) ?: 100,
+        progress = progressSnapshot,
+        progressMax = pagesSnapshot?.size?.times(100) ?: 100,
         presentation = EntryDownloadPresentation(
-            phase = status.toEntryDownloadPhase(),
-            progress = if (status == DownloadState.DOWNLOADING) {
-                pages?.let { EntryDownloadProgress.Units(downloadedImages, it.size) }
+            phase = statusSnapshot.toEntryDownloadPhase(),
+            progress = if (statusSnapshot == DownloadState.DOWNLOADING) {
+                pagesSnapshot?.let { EntryDownloadProgress.Units(downloadedImagesSnapshot, it.size) }
                     ?: EntryDownloadProgress.None
             } else {
                 EntryDownloadProgress.None
             },
-            failure = failure.takeIf { status == DownloadState.ERROR },
+            failure = failureSnapshot.takeIf { statusSnapshot == DownloadState.ERROR },
         ),
     )
 }

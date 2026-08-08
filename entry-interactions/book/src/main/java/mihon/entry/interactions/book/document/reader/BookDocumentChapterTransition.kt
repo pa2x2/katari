@@ -18,6 +18,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 internal fun BookDocumentChapterTransition(
     transition: EntryChildTransition<EntryChapter>,
+    direction: EntryChildDirection,
     loadState: BookDocumentChapterLoadState?,
     onRetry: (() -> Unit)?,
     modifier: Modifier = Modifier,
@@ -32,7 +33,7 @@ internal fun BookDocumentChapterTransition(
         )
         is BookDocumentChapterLoadState.Failed -> ReaderEntryChildTransitionLoadState.Failed(loadState.message)
     }
-    val model = when (transition.direction) {
+    val model = when (direction) {
         EntryChildDirection.PREVIOUS -> ReaderEntryChildTransitionUiModel(
             topLabel = stringResource(MR.strings.transition_previous),
             topChild = destination,

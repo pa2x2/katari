@@ -21,6 +21,7 @@ import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingsProvider
 import mihon.entry.interactions.book.navigation.BookChapterNavigationResolver
+import mihon.entry.interactions.book.navigation.BookChapterReadingOrder
 import mihon.entry.interactions.book.processor.BookReaderRequest
 import mihon.entry.interactions.book.reader.BookChildWebViewResolver
 import mihon.entry.interactions.book.reader.BookReaderErrorScreen
@@ -37,7 +38,6 @@ import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.source.EntryWebViewFeature
 import mihon.entry.interactions.source.launchEntryChildWebViewAction
-import mihon.entry.interactions.viewer.entryChildWindow
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.navigation.openViewerSettings
 import mihon.translation.api.TranslationFeature
@@ -210,8 +210,10 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     }
 
     private suspend fun showInitialSession(session: OpenedBookReaderSession) {
-        val chapters = Injekt.get<BookChapterNavigationResolver>().resolveAll(session.entry)
-        val window = chapters.entryChildWindow(session.chapter.id, EntryChapter::id)
+        val readingOrder = BookChapterReadingOrder(
+            Injekt.get<BookChapterNavigationResolver>().resolveAll(session.entry),
+        )
+        val window = readingOrder.window(session.chapter.id)
             ?: return showError(getString(R.string.book_document_chapter_missing))
         val section = session.toDocumentSection(retainedSessions.locator(session.chapter.id))
             ?: return showError(getString(R.string.book_document_incompatible))
@@ -219,7 +221,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         val progression = section.document.document.progressionAt(section.initialPosition)
         readerState = BookDocumentReaderState(
             entryTitle = session.entry.displayTitle,
-            chapters = chapters,
+            readingOrder = readingOrder,
             currentChapterId = session.chapter.id,
             window = window,
             loadedSections = mapOf(session.chapter.id to section),

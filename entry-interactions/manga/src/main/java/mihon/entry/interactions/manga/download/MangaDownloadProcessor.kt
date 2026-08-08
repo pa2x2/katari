@@ -3,7 +3,6 @@ package mihon.entry.interactions.manga.download
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import mihon.entry.interactions.download.EntryBulkDownloadCandidateProcessor
@@ -29,10 +28,7 @@ internal class MangaDownloadProcessor(
     private val ownerResolver = EntryDownloadOwnerResolver(dependencies.entryRepository)
 
     override val type: EntryType = EntryType.MANGA
-    override val changes: Flow<Unit> = combine(
-        dependencies.downloadCache.changes,
-        downloadManager.queueState.map { Unit },
-    ) { _, _ -> }
+    override val changes: Flow<Unit> = dependencies.downloadCache.changes
     override val isInitializing: Flow<Boolean> = dependencies.downloadCache.isInitializing
     override val isRunning: Flow<Boolean> = downloadManager.isDownloaderRunning
     override val queueState: Flow<List<EntryDownloadQueueGroup>> = downloadManager.queueState

@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
@@ -270,19 +271,16 @@ internal class AnimeDownloadManager(
         return cache.getTotalDownloadCount()
     }
 
-    fun statusFlow(): Flow<AnimeDownload> = queueState
-        .flatMapLatest { downloads ->
+    fun statusFlow(): Flow<AnimeDownload> = merge(
+        addedToQueueFlow(),
+        queueState.flatMapLatest { downloads ->
             downloads
                 .map { download ->
                     download.statusFlow.drop(1).map { download }
                 }
                 .merge()
-        }
-        .onStart {
-            emitAll(
-                queueState.value.filter { download -> download.status == AnimeDownload.State.DOWNLOADING }.asFlow(),
-            )
-        }
+        },
+    )
 
     fun progressFlow(): Flow<AnimeDownload> = queueState
         .flatMapLatest { downloads ->
@@ -316,6 +314,15 @@ internal class AnimeDownloadManager(
     private fun rewriteStoredQueue() {
         store.clear()
         store.addAll(_queueState.value)
+    }
+
+    private fun addedToQueueFlow(): Flow<AnimeDownload> = flow {
+        var previousEpisodeIds = emptySet<Long>()
+        queueState.collect { downloads ->
+            val currentEpisodeIds = downloads.mapTo(mutableSetOf()) { it.episode.id }
+            downloads.filter { it.episode.id !in previousEpisodeIds }.forEach { emit(it) }
+            previousEpisodeIds = currentEpisodeIds
+        }
     }
 
     suspend fun runDownloadsUntilIdle() {

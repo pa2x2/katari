@@ -4,6 +4,7 @@ import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import kotlinx.coroutines.flow.Flow
 import tachiyomi.data.Database
 import tachiyomi.data.DatabaseHandler
+import tachiyomi.data.query.chunkedForSqlQuery
 import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 
@@ -24,6 +25,15 @@ class EntryProgressRepositoryImpl(
     override suspend fun getByEntryId(entryId: Long): List<EntryProgressState> {
         return handler.awaitList {
             entry_progress_stateQueries.getByEntryId(entryId, EntryProgressStateMapper::mapState)
+        }
+    }
+
+    override suspend fun getByEntryIds(entryIds: Set<Long>): List<EntryProgressState> {
+        if (entryIds.isEmpty()) return emptyList()
+        return entryIds.sorted().chunkedForSqlQuery().flatMap { chunk ->
+            handler.awaitList {
+                entry_progress_stateQueries.getByEntryIds(chunk, EntryProgressStateMapper::mapState)
+            }
         }
     }
 

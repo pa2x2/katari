@@ -80,6 +80,13 @@ SELECT *
 FROM entries
 WHERE _id = :id;
 
+getEntriesByIds:
+SELECT *
+FROM entries
+WHERE profile_id = :profileId
+AND _id IN :entryIds
+ORDER BY _id;
+
 getEntryByUrlAndSource:
 SELECT *
 FROM entries

@@ -114,7 +114,6 @@ internal fun BookDocumentReaderScreen(
             progress = BookReaderProgress.Percentage(
                 (state.chapterProgression * 100).roundToInt().coerceIn(0, 100),
             ),
-            progressVisible = !state.chromeVisible,
             footerColor = readerPalette.background,
             translationController = translationController,
             onRootPositionInWindow = { rootPosition = it },
@@ -123,7 +122,7 @@ internal fun BookDocumentReaderScreen(
                 .background(readerPalette.background),
             content = {
                 BookDocumentEndlessViewer(
-                    chapters = state.chapters,
+                    currentChapter = state.window.current,
                     currentChapterId = state.currentChapterId,
                     window = state.window,
                     loadedSections = state.loadedSections,
@@ -148,10 +147,11 @@ internal fun BookDocumentReaderScreen(
                         ),
                 )
             },
-            overlay = {
+            overlay = { progressIndicator ->
                 ReaderChrome(
                     visible = state.chromeVisible,
                     modifier = Modifier.fillMaxSize(),
+                    persistentBottomContent = progressIndicator,
                     topBar = {
                         ReaderChromeTopBar(
                             title = state.entryTitle,
@@ -194,11 +194,11 @@ internal fun BookDocumentReaderScreen(
     }
 
     if (state.navigationVisible) {
-        val navigationRows = remember(state.chapters) {
-            state.chapters.map { BookReaderNavigationRow(it, it.name) }
+        val navigationRows = remember(state.readingOrder) {
+            state.readingOrder.chapters.map { BookReaderNavigationRow(it, it.name) }
         }
-        val selectedIndex = remember(state.chapters, state.currentChapterId) {
-            state.chapters.indexOfFirst { it.id == state.currentChapterId }
+        val selectedIndex = remember(state.readingOrder, state.currentChapterId) {
+            state.readingOrder.indexOf(state.currentChapterId)
         }
         BookReaderNavigationSheet(
             visible = true,

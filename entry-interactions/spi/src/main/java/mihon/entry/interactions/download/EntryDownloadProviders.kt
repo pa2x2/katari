@@ -10,6 +10,7 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
 interface EntryDownloadProcessor : EntryInteractionProvider {
+    /** Emits when persisted downloaded content changes, independently of transient queue state. */
     val changes: Flow<Unit>
     val isInitializing: Flow<Boolean>
     val isRunning: Flow<Boolean>

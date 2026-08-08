@@ -16,7 +16,11 @@ internal class BookDocumentChapterPrefetchStrategy : LazyListPrefetchStrategy {
     private val chapterPrefetchHandles = mutableListOf<LazyLayoutPrefetchState.PrefetchHandle>()
 
     fun updateTarget(key: String?, index: Int) {
-        val updated = key?.let { Target(it, index) }
+        // Activation temporarily has no loaded next section. The old target is the chapter that
+        // just became current, so cancelling here would discard its already-composed first
+        // viewport at the exact boundary. Keep it until a real replacement target is available.
+        if (key == null) return
+        val updated = Target(key, index)
         if (updated == target) return
         target = updated
         scheduledTargetKey = null

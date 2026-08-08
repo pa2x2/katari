@@ -8,7 +8,6 @@ import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.SubtitleSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import mihon.entry.interactions.anime.download.model.AnimeDownload
@@ -42,10 +41,7 @@ internal class AnimeDownloadProcessor(
     private val ownerResolver = EntryDownloadOwnerResolver(dependencies.entryRepository)
 
     override val type: EntryType = EntryType.ANIME
-    override val changes: Flow<Unit> = combine(
-        animeDownloadManager.cacheChanges,
-        animeDownloadManager.queueState.map { Unit },
-    ) { _, _ -> }
+    override val changes: Flow<Unit> = animeDownloadManager.cacheChanges
     override val isInitializing: Flow<Boolean> = dependencies.animeDownloadCache.isInitializing
     override val isRunning: Flow<Boolean> = animeDownloadManager.isRunning
     override val queueState: Flow<List<EntryDownloadQueueGroup>> = animeDownloadManager.queueState

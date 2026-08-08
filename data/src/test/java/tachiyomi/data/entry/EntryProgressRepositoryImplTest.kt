@@ -145,7 +145,54 @@ class EntryProgressRepositoryImplTest {
         }
     }
 
+    @Test
+    fun `bulk lookup returns every state across SQL parameter chunks in stable order`() = runTest {
+        withDatabaseDriver { driver, _, repository ->
+            driver.await(
+                identifier = null,
+                sql = """
+                    WITH RECURSIVE ids(id) AS (
+                        SELECT 1000
+                        UNION ALL
+                        SELECT id + 1 FROM ids WHERE id < 1500
+                    )
+                    INSERT INTO entries(_id, profile_id, source, url, title, favorite, date_added, type)
+                    SELECT id, 1, 1, '/entry-' || id, 'Entry ' || id, 1, 0, 'manga'
+                    FROM ids
+                """.trimIndent(),
+                parameters = 0,
+            )
+            driver.await(
+                identifier = null,
+                sql = """
+                    WITH RECURSIVE ids(id) AS (
+                        SELECT 1000
+                        UNION ALL
+                        SELECT id + 1 FROM ids WHERE id < 1500
+                    )
+                    INSERT INTO entry_progress_state(
+                        entry_id,
+                        resource_key,
+                        locator_kind
+                    )
+                    SELECT id, '/resource-' || id, 'page'
+                    FROM ids
+                """.trimIndent(),
+                parameters = 0,
+            )
+            val entryIds = (1000L..1500L).toSet()
+
+            repository.getByEntryIds(entryIds).map(EntryProgressState::entryId) shouldBe entryIds.toList()
+        }
+    }
+
     private suspend fun withDatabase(block: suspend (Database, EntryProgressRepositoryImpl) -> Unit) {
+        withDatabaseDriver { _, database, repository -> block(database, repository) }
+    }
+
+    private suspend fun withDatabaseDriver(
+        block: suspend (JdbcSqliteDriver, Database, EntryProgressRepositoryImpl) -> Unit,
+    ) {
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         try {
             Database.Schema.awaitCreate(driver)
@@ -167,7 +214,7 @@ class EntryProgressRepositoryImplTest {
                     driver = driver,
                 ),
             )
-            block(database, repository)
+            block(driver, database, repository)
         } finally {
             driver.close()
         }

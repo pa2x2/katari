@@ -68,6 +68,7 @@ internal val EntryLibraryProgressFeatureRuntimeModule = EntryFeatureRuntimeModul
             evaluation = composition.evaluation,
             interaction = get<EntryInteractions>().libraryProgress,
             continueFeature = get(),
+            entryProgressRepository = get(),
         )
     }
     addSingletonFactory<EntryLibraryProgressResolutionPort> { get<EntryLibraryProgressFeature>() }

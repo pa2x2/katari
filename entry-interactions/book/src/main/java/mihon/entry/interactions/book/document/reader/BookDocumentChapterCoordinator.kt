@@ -4,9 +4,11 @@ import android.content.Context
 import android.os.SystemClock
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import mihon.book.api.document.locatorAt
 import mihon.entry.interactions.book.R
@@ -15,7 +17,7 @@ import mihon.entry.interactions.book.reader.BookReaderOpenResult
 import mihon.entry.interactions.book.reader.BookReaderSessionFactory
 import mihon.entry.interactions.book.reader.OpenedBookReaderSession
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPolicy
-import mihon.entry.interactions.viewer.entryChildWindow
+import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.EntryChapter
@@ -120,24 +122,33 @@ internal class BookDocumentChapterCoordinator(
         val chapterId = location.section.owner.id
         val navigationRequest = state.navigationRequest
         if (!navigationRequest.acceptsLocation(chapterId, location.position)) return
-        if (chapterId != state.currentChapterId) activateChapter(chapterId, completeForwardCrossing = true)
+        val chapterActivated =
+            chapterId != state.currentChapterId &&
+                activateChapter(
+                    chapterId = chapterId,
+                    completeForwardCrossing = true,
+                    observedLocation = location,
+                    observedNavigationRequest = navigationRequest,
+                )
         val session = retainedSessions.session(chapterId) ?: return
-        val total = totalBookProgression(state.chapters, chapterId, location.progression)
+        val total = state.readingOrder.totalProgression(chapterId, location.progression)
         val locator = location.section.document.document.locatorAt(location.position).copy(totalProgression = total)
         retainedSessions.updateLocation(chapterId, locator)
-        currentState()?.let { current ->
-            updateState(
-                current.copy(
-                    chapterProgression = location.progression,
-                    navigationRequest = current.navigationRequest.afterAcceptedLocation(
-                        observedRequest = navigationRequest,
-                        chapterId = chapterId,
+        if (!chapterActivated) {
+            currentState()?.let { current ->
+                updateState(
+                    current.copy(
+                        chapterProgression = location.progression,
+                        navigationRequest = current.navigationRequest.afterAcceptedLocation(
+                            observedRequest = navigationRequest,
+                            chapterId = chapterId,
+                        ),
                     ),
-                ),
-            )
+                )
+            }
         }
         persistLocationJob?.cancel()
-        persistLocationJob = scope.launch {
+        persistLocationJob = scope.launchIO {
             delay(LOCATION_PERSIST_DEBOUNCE_MILLIS)
             session.saveLocation(locator)
         }
@@ -211,7 +222,7 @@ internal class BookDocumentChapterCoordinator(
         val state = currentState() ?: return
         val position = section.initialPosition
         val progression = section.document.document.progressionAt(position)
-        val total = totalBookProgression(state.chapters, section.owner.id, progression)
+        val total = state.readingOrder.totalProgression(section.owner.id, progression)
         retainedSessions.updateLocation(
             section.owner.id,
             section.document.document.locatorAt(position).copy(totalProgression = total),
@@ -229,14 +240,19 @@ internal class BookDocumentChapterCoordinator(
         )
     }
 
-    private fun activateChapter(chapterId: Long, completeForwardCrossing: Boolean) {
-        val state = currentState() ?: return
-        if (chapterId == state.currentChapterId) return
+    private fun activateChapter(
+        chapterId: Long,
+        completeForwardCrossing: Boolean,
+        observedLocation: BookDocumentViewerLocation<EntryChapter>? = null,
+        observedNavigationRequest: BookDocumentNavigationRequest? = null,
+    ): Boolean {
+        val state = currentState() ?: return false
+        if (chapterId == state.currentChapterId) return false
         val previousId = state.currentChapterId
-        val previousIndex = state.chapters.indexOfFirst { it.id == previousId }
-        val destinationIndex = state.chapters.indexOfFirst { it.id == chapterId }
-        val session = retainedSessions.activate(chapterId) ?: return
-        val window = state.chapters.entryChildWindow(chapterId, EntryChapter::id) ?: return
+        val previousIndex = state.readingOrder.indexOf(previousId)
+        val destinationIndex = state.readingOrder.indexOf(chapterId)
+        val session = retainedSessions.activate(chapterId) ?: return false
+        val window = state.readingOrder.window(chapterId) ?: return false
         if (completeForwardCrossing && destinationIndex > previousIndex) {
             completionTracker.onForwardChapterActivated(previousId)?.let(::completeChapter)
         }
@@ -247,32 +263,42 @@ internal class BookDocumentChapterCoordinator(
             chapterLoadJobs.remove(id)?.cancel()
         }
         chapterSelectionRequests.retainAll(retainedIds)
-        val section = currentState()?.loadedSections?.get(chapterId) ?: return
-        val current = currentState() ?: return
+        val section = currentState()?.loadedSections?.get(chapterId) ?: return false
+        val current = currentState() ?: return false
+        val progression = observedLocation?.progression
+            ?: section.document.document.progressionAt(section.initialPosition)
         updateState(
             current.copy(
                 currentChapterId = chapterId,
                 window = window,
                 loadedSections = current.loadedSections.filterKeys(retainedIds::contains),
                 loadStates = current.loadStates.filterKeys(retainedIds::contains),
-                chapterProgression = section.document.document.progressionAt(section.initialPosition),
+                chapterProgression = progression,
                 childWebView = null,
+                navigationRequest = current.navigationRequest.afterAcceptedLocation(
+                    observedRequest = observedNavigationRequest,
+                    chapterId = chapterId,
+                ),
             ),
         )
         onSessionActivated(session)
         readingStartedAt = SystemClock.elapsedRealtime()
+        return true
     }
 
     private fun completeChapter(chapterId: Long) {
         val session = retainedSessions.session(chapterId) ?: return
         val state = currentState() ?: return
         val section = state.loadedSections[chapterId] ?: return
-        val chapterIndex = state.chapters.indexOfFirst { it.id == chapterId }
-        val total = ((chapterIndex + 1.0) / state.chapters.size.coerceAtLeast(1)).coerceIn(0.0, 1.0)
+        val total = state.readingOrder.completedProgression(chapterId)
         val document = section.document.document
-        val locator = document.locatorAt(document.positionAtProgression(1f)).copy(totalProgression = total)
-        retainedSessions.updateLocation(chapterId, locator)
-        scope.launch { session.saveLocation(locator, completed = true) }
+        scope.launchNonCancellable {
+            val locator = document.locatorAt(document.positionAtProgression(1f)).copy(totalProgression = total)
+            withContext(Dispatchers.Main.immediate) {
+                retainedSessions.updateLocation(chapterId, locator)
+            }
+            session.saveLocation(locator, completed = true)
+        }
     }
 
     private fun setLoadState(chapterId: Long, loadState: BookDocumentChapterLoadState) {
@@ -283,7 +309,7 @@ internal class BookDocumentChapterCoordinator(
     private fun recordElapsedFor(chapterId: Long) {
         val elapsed = consumeReadingDuration()
         val session = retainedSessions.session(chapterId) ?: return
-        scope.launch { session.recordHistory(elapsed) }
+        scope.launchNonCancellable { session.recordHistory(elapsed) }
     }
 
     private fun consumeReadingDuration(): Long {

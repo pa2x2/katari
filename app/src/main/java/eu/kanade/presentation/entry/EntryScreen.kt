@@ -22,21 +22,17 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.SmallExtendedFloatingActionButton
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -59,6 +55,7 @@ import eu.kanade.presentation.entry.components.EntryActionRow
 import eu.kanade.presentation.entry.components.EntryBottomActionMenu
 import eu.kanade.presentation.entry.components.EntryChapterHeader
 import eu.kanade.presentation.entry.components.EntryChapterListItem
+import eu.kanade.presentation.entry.components.EntryContinueActions
 import eu.kanade.presentation.entry.components.EntryInfoBox
 import eu.kanade.presentation.entry.components.EntryToolbar
 import eu.kanade.presentation.entry.components.ExpandableEntryDescription
@@ -79,7 +76,6 @@ import tachiyomi.presentation.core.components.VerticalFastScroller
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.util.shouldExpandFAB
 import kotlin.time.Instant
 
 @Composable
@@ -319,6 +315,9 @@ private fun EntryScreenSmallImpl(
     onPreviewPageClick: ((Long, Int) -> Unit)?,
 ) {
     val chapterListState = rememberLazyListState()
+    var topBarHeight by remember { mutableIntStateOf(0) }
+    var highlightedChapterId by remember { mutableStateOf<Long?>(null) }
+    var chapterHighlightGeneration by remember { mutableIntStateOf(0) }
 
     val (chapters, listItem, isAnySelected) = remember(state) {
         Triple(
@@ -352,6 +351,7 @@ private fun EntryScreenSmallImpl(
                 label = "Top Bar Background",
             )
             EntryToolbar(
+                modifier = Modifier.onSizeChanged { topBarHeight = it.height },
                 title = state.entry.displayTitle,
                 hasFilters = state.filterActive,
                 navigateUp = navigateUp,
@@ -396,22 +396,22 @@ private fun EntryScreenSmallImpl(
                 val isFABVisible = remember(chapters) {
                     chapters.fastAny { !it.chapter.read } && !isAnySelected
                 }
-                SmallExtendedFloatingActionButton(
-                    text = {
-                        val isReading = remember(state.chapters) {
-                            state.chapters.fastAny { it.chapter.read }
-                        }
-                        Text(
-                            text = stringResource(if (isReading) MR.strings.action_resume else MR.strings.action_start),
-                        )
+                val targetListIndex = remember(state.continueTargetChapterId, listItem, state.showMergeNotice) {
+                    listItem.indexOfFirst {
+                        it is EntryChapterList.Item && it.chapter.id == state.continueTargetChapterId
+                    }.takeIf { it >= 0 }?.plus(if (state.showMergeNotice) 5 else 4)
+                }
+                EntryContinueActions(
+                    listState = chapterListState,
+                    continueTargetListIndex = targetListIndex,
+                    topOcclusionPx = topBarHeight,
+                    isReading = state.chapters.fastAny { it.chapter.read },
+                    visible = isFABVisible,
+                    onTargetReached = {
+                        highlightedChapterId = state.continueTargetChapterId
+                        chapterHighlightGeneration++
                     },
-                    icon = { Icon(imageVector = Icons.Filled.PlayArrow, contentDescription = null) },
-                    onClick = continueAction,
-                    expanded = chapterListState.shouldExpandFAB(),
-                    modifier = Modifier.animateFloatingActionButton(
-                        visible = isFABVisible,
-                        alignment = Alignment.BottomEnd,
-                    ),
+                    onContinueReading = continueAction,
                 )
             }
         },
@@ -529,6 +529,8 @@ private fun EntryScreenSmallImpl(
                             memberTitleById = state.memberTitleById,
                             chapters = listItem,
                             childProgressLabels = state.childProgressLabels,
+                            highlightedChapterId = highlightedChapterId,
+                            chapterHighlightGeneration = chapterHighlightGeneration,
                             isAnyChapterSelected = chapters.fastAny { it.selected },
                             chapterSwipeStartAction = chapterSwipeStartAction,
                             chapterSwipeEndAction = chapterSwipeEndAction,
@@ -622,6 +624,8 @@ fun EntryScreenLargeImpl(
     var topBarHeight by remember { mutableIntStateOf(0) }
 
     val chapterListState = rememberLazyListState()
+    var highlightedChapterId by remember { mutableStateOf<Long?>(null) }
+    var chapterHighlightGeneration by remember { mutableIntStateOf(0) }
 
     BackHandler(enabled = isAnySelected) {
         onAllChapterSelected(false)
@@ -683,24 +687,22 @@ fun EntryScreenLargeImpl(
                 val isFABVisible = remember(chapters) {
                     chapters.fastAny { !it.chapter.read } && !isAnySelected
                 }
-                SmallExtendedFloatingActionButton(
-                    text = {
-                        val isReading = remember(state.chapters) {
-                            state.chapters.fastAny { it.chapter.read }
-                        }
-                        Text(
-                            text = stringResource(
-                                if (isReading) MR.strings.action_resume else MR.strings.action_start,
-                            ),
-                        )
+                val targetListIndex = remember(state.continueTargetChapterId, listItem) {
+                    listItem.indexOfFirst {
+                        it is EntryChapterList.Item && it.chapter.id == state.continueTargetChapterId
+                    }.takeIf { it >= 0 }?.plus(1)
+                }
+                EntryContinueActions(
+                    listState = chapterListState,
+                    continueTargetListIndex = targetListIndex,
+                    topOcclusionPx = topBarHeight,
+                    isReading = state.chapters.fastAny { it.chapter.read },
+                    visible = isFABVisible,
+                    onTargetReached = {
+                        highlightedChapterId = state.continueTargetChapterId
+                        chapterHighlightGeneration++
                     },
-                    icon = { Icon(imageVector = Icons.Filled.PlayArrow, contentDescription = null) },
-                    onClick = continueAction,
-                    expanded = chapterListState.shouldExpandFAB(),
-                    modifier = Modifier.animateFloatingActionButton(
-                        visible = isFABVisible,
-                        alignment = Alignment.BottomEnd,
-                    ),
+                    onContinueReading = continueAction,
                 )
             }
         },
@@ -807,6 +809,8 @@ fun EntryScreenLargeImpl(
                                     memberTitleById = state.memberTitleById,
                                     chapters = listItem,
                                     childProgressLabels = state.childProgressLabels,
+                                    highlightedChapterId = highlightedChapterId,
+                                    chapterHighlightGeneration = chapterHighlightGeneration,
                                     isAnyChapterSelected = chapters.fastAny { it.selected },
                                     chapterSwipeStartAction = chapterSwipeStartAction,
                                     chapterSwipeEndAction = chapterSwipeEndAction,
@@ -920,6 +924,8 @@ private fun LazyListScope.sharedChapterItems(
     memberTitleById: Map<Long, String>,
     chapters: List<EntryChapterList>,
     childProgressLabels: Map<Long, EntryChildProgressLabel>,
+    highlightedChapterId: Long?,
+    chapterHighlightGeneration: Int,
     isAnyChapterSelected: Boolean,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
@@ -973,6 +979,9 @@ private fun LazyListScope.sharedChapterItems(
                     downloadIndicatorEnabled = !isAnyChapterSelected && onDownloadChapter != null,
                     downloadStateProvider = { item.downloadState },
                     downloadProgressProvider = { item.downloadProgress },
+                    highlightTrigger = chapterHighlightGeneration.takeIf {
+                        item.chapter.id == highlightedChapterId
+                    },
                     unconsumedIndicatorLabel = item.entry.type.entryTypePresentation().unconsumedIndicatorLabel,
                     chapterSwipeStartAction = chapterSwipeStartAction,
                     chapterSwipeEndAction = chapterSwipeEndAction,

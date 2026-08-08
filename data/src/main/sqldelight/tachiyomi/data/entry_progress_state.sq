@@ -53,7 +53,14 @@ AND resource_key = :resourceKey;
 getByEntryId:
 SELECT *
 FROM entry_progress_state
-WHERE entry_id = :entryId;
+WHERE entry_id = :entryId
+ORDER BY _id;
+
+getByEntryIds:
+SELECT *
+FROM entry_progress_state
+WHERE entry_id IN :entryIds
+ORDER BY entry_id, _id;
 
 getByChapterId:
 SELECT *

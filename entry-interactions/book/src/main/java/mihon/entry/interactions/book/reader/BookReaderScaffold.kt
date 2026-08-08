@@ -51,14 +51,13 @@ import tachiyomi.presentation.core.components.reader.ReaderProgressIndicator
 @Composable
 internal fun BookReaderScaffold(
     progress: BookReaderProgress?,
-    progressVisible: Boolean,
     footerColor: Color,
     modifier: Modifier = Modifier,
     nativeContentView: View? = null,
     translationController: BookSelectionTranslationController? = null,
     onRootPositionInWindow: (Offset) -> Unit = {},
     content: @Composable BoxScope.() -> Unit,
-    overlay: @Composable BoxScope.() -> Unit = {},
+    overlay: @Composable BoxScope.(@Composable () -> Unit) -> Unit = {},
 ) {
     var footerHeight by remember { mutableIntStateOf(0) }
     val originalNativeBottomMargin = remember(nativeContentView) {
@@ -105,9 +104,9 @@ internal fun BookReaderScaffold(
                         progress = it,
                         modifier = Modifier
                             .padding(vertical = 2.dp)
-                            .graphicsLayer { alpha = if (progressVisible) 1f else 0f }
+                            .graphicsLayer { alpha = 0f }
                             .semantics {
-                                if (!progressVisible) hideFromAccessibility()
+                                hideFromAccessibility()
                             },
                     )
                 }
@@ -115,8 +114,25 @@ internal fun BookReaderScaffold(
         }
         Box(
             modifier = Modifier.fillMaxSize(),
-            content = overlay,
-        )
+        ) {
+            overlay {
+                progress?.let {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .windowInsetsPadding(
+                                WindowInsets.navigationBarsIgnoringVisibility.only(WindowInsetsSides.Bottom),
+                            ),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        BookReaderProgressIndicator(
+                            progress = it,
+                            modifier = Modifier.padding(vertical = 2.dp),
+                        )
+                    }
+                }
+            }
+        }
         translationController?.let { controller ->
             BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
                 CoordinatedTranslationSessionHost(

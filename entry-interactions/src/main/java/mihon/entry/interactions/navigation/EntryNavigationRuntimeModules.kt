@@ -33,6 +33,11 @@ internal val EntryContinueFeatureRuntimeModule = EntryFeatureRuntimeModule(
         DefaultEntryContinueFeature(
             evaluation = composition.evaluation,
             interaction = get<EntryInteractions>().continueEntry,
+            batchPreparation = DefaultEntryContinueBatchPreparation(
+                childOwnership = get(),
+                chapterRepository = get(),
+                progressRepository = get(),
+            ),
         )
     }
     EntryFeatureRuntimeArtifacts(

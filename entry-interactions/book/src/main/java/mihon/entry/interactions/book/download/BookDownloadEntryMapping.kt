@@ -34,27 +34,32 @@ internal fun BookDownload.toEntryDownloadStatus(): EntryDownloadStatus = EntryDo
     progress = progress,
 )
 
-internal fun BookDownload.toEntryDownloadQueueItem(): EntryDownloadQueueItem = EntryDownloadQueueItem(
-    identity = EntryDownloadIdentity.from(entry, chapter),
-    state = status.toEntryDownloadState(),
-    title = entry.title,
-    subtitle = chapter.name,
-    dateUpload = chapter.dateUpload,
-    chapterNumber = chapter.chapterNumber,
-    progress = progress,
-    progressMax = 100,
-    presentation = EntryDownloadPresentation(
-        phase = status.toEntryDownloadPhase(),
-        progress = if (status == BookDownload.State.DOWNLOADING) {
-            EntryDownloadProgress.Percent(progress)
-        } else {
-            EntryDownloadProgress.None
-        },
-        failure = failure
-            ?.takeIf { status == BookDownload.State.ERROR }
-            ?.toEntryDownloadMessage(),
-    ),
-)
+internal fun BookDownload.toEntryDownloadQueueItem(): EntryDownloadQueueItem {
+    val statusSnapshot = status
+    val progressSnapshot = progress
+    val failureSnapshot = failure
+    return EntryDownloadQueueItem(
+        identity = EntryDownloadIdentity.from(entry, chapter),
+        state = statusSnapshot.toEntryDownloadState(),
+        title = entry.title,
+        subtitle = chapter.name,
+        dateUpload = chapter.dateUpload,
+        chapterNumber = chapter.chapterNumber,
+        progress = progressSnapshot,
+        progressMax = 100,
+        presentation = EntryDownloadPresentation(
+            phase = statusSnapshot.toEntryDownloadPhase(),
+            progress = if (statusSnapshot == BookDownload.State.DOWNLOADING) {
+                EntryDownloadProgress.Percent(progressSnapshot)
+            } else {
+                EntryDownloadProgress.None
+            },
+            failure = failureSnapshot
+                ?.takeIf { statusSnapshot == BookDownload.State.ERROR }
+                ?.toEntryDownloadMessage(),
+        ),
+    )
+}
 
 private fun BookDownload.State.toEntryDownloadPhase(): EntryDownloadPhase = when (this) {
     BookDownload.State.NOT_DOWNLOADED -> EntryDownloadPhase.IDLE

@@ -62,6 +62,7 @@ internal object EntryContinueFeatureContributor : FeatureGraphContributor {
 internal class DefaultEntryContinueFeature(
     evaluation: FeatureGraphEvaluation,
     private val interaction: EntryContinueInteraction,
+    private val batchPreparation: EntryContinueBatchPreparation,
 ) : EntryContinueFeature {
     private val applicableTypes = evaluation.applicableProviderTypes<EntryContinueProcessor>(
         feature = ENTRY_CONTINUE_FEATURE_ID,
@@ -87,6 +88,21 @@ internal class DefaultEntryContinueFeature(
         return interaction.findNext(entry)
             ?.let(EntryContinueTargetResult::Available)
             ?: EntryContinueTargetResult.NoNext
+    }
+
+    override suspend fun nextTargets(entries: List<Entry>): Map<Long, EntryContinueTargetResult> {
+        val applicableEntries = entries.filter { it.type in targetTypes }
+        val preparedByEntryId = batchPreparation.prepare(applicableEntries)
+        return entries.associate { entry ->
+            entry.id to when {
+                entry.type !in targetTypes -> EntryContinueTargetResult.Inapplicable
+                else -> preparedByEntryId[entry.id]?.let { prepared ->
+                    interaction.findNext(entry, prepared.chapters, prepared.progressStates)
+                        ?.let(EntryContinueTargetResult::Available)
+                        ?: EntryContinueTargetResult.NoNext
+                } ?: nextTarget(entry)
+            }
+        }
     }
 
     override suspend fun continueEntry(context: Context, entry: Entry): EntryContinueResult {

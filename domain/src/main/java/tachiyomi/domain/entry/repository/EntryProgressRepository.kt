@@ -8,6 +8,10 @@ interface EntryProgressRepository {
 
     suspend fun getByEntryId(entryId: Long): List<EntryProgressState>
 
+    suspend fun getByEntryIds(entryIds: Set<Long>): List<EntryProgressState> {
+        return entryIds.flatMap { getByEntryId(it) }
+    }
+
     fun getByEntryIdAsFlow(entryId: Long): Flow<List<EntryProgressState>>
 
     fun getByChapterIdAsFlow(chapterId: Long): Flow<List<EntryProgressState>>

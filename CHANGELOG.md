@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.2.1] - 2026-08-08
+
+### ✨ Added
+
+- Added a `Go to current chapter` action to entry screens that scrolls to the next chapter to
+  continue reading and highlights it.
+
+### 🔄 Changed
+
+- Book reader progress stays visible when reader controls are hidden and moves above the controls
+  when they are shown.
+
+### ⚡️ Performance
+
+- Improved responsiveness when loading large libraries or entry screens and moving between book
+  chapters.
+
 ## [1.2.0] - 2026-08-08
 
 ### 🌟 Highlights
@@ -89,7 +106,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.2.0...upcoming
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/pa2x2/katari/releases/tag/v1.2.1
 [1.2.0]: https://github.com/pa2x2/katari/releases/tag/v1.2.0
 [1.1.4]: https://github.com/pa2x2/katari/releases/tag/v1.1.4
 [1.1.3]: https://github.com/pa2x2/katari/releases/tag/v1.1.3

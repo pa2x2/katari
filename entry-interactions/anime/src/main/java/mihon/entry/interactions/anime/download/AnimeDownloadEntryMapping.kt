@@ -39,24 +39,27 @@ internal fun AnimeDownload.toEntryDownloadStatus(): EntryDownloadStatus {
 }
 
 internal fun AnimeDownload.toEntryDownloadQueueItem(): EntryDownloadQueueItem {
+    val statusSnapshot = status
+    val progressSnapshot = progress
+    val failureSnapshot = failure
     return EntryDownloadQueueItem(
         identity = EntryDownloadIdentity.from(anime, episode),
-        state = status.toEntryDownloadState(),
+        state = statusSnapshot.toEntryDownloadState(),
         title = anime.title,
         subtitle = episode.name,
         dateUpload = episode.dateUpload,
         chapterNumber = episode.chapterNumber,
-        progress = progress,
+        progress = progressSnapshot,
         progressMax = 100,
         presentation = EntryDownloadPresentation(
-            phase = status.toEntryDownloadPhase(),
-            progress = if (status == AnimeDownload.State.DOWNLOADING) {
-                EntryDownloadProgress.Percent(progress)
+            phase = statusSnapshot.toEntryDownloadPhase(),
+            progress = if (statusSnapshot == AnimeDownload.State.DOWNLOADING) {
+                EntryDownloadProgress.Percent(progressSnapshot)
             } else {
                 EntryDownloadProgress.None
             },
-            failure = failure
-                ?.takeIf { status == AnimeDownload.State.ERROR }
+            failure = failureSnapshot
+                ?.takeIf { statusSnapshot == AnimeDownload.State.ERROR }
                 ?.toEntryDownloadMessage(),
         ),
     )

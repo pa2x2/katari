@@ -6,6 +6,12 @@ import tachiyomi.domain.library.service.groupedByMergedMember
 import tachiyomi.domain.library.service.sortedForMergedDisplay
 import tachiyomi.domain.library.service.sortedForReading
 
+fun Iterable<List<EntryChapter>>.mergedForDisplay(entry: Entry): List<EntryChapter> {
+    val chapterLists = toList()
+    val mergedEntryIds = chapterLists.mapNotNull { it.firstOrNull()?.entryId }
+    return chapterLists.flatten().sortedForMergedDisplay(entry, mergedEntryIds)
+}
+
 fun List<EntryChapter>.sortedForMergedDisplay(
     entry: Entry,
     mergedEntryIds: List<Long> = map(EntryChapter::entryId).distinct(),
