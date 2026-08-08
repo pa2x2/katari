@@ -87,7 +87,7 @@ Katari's changelog focused on behavior that differs from Mihon.
 
    - `✨ Added`
    - `🔄 Changed`
-   - `⚡ Improved`
+   - `🧩 Improved`
    - `🗑️ Removed`
    - `🐛 Fixed`
    - `🧩 Other`
