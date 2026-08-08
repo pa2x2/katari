@@ -332,7 +332,6 @@ class EntryScreenModel(
             mergeAwareEntryAndChaptersFlow(
                 entryAndChaptersFlow = entryAndChaptersFlow(),
                 downloadChangesFlow = downloadRuntime.changes,
-                downloadQueueFlow = downloadRuntime.state.map { it.queue },
             )
                 .flowWithLifecycle(lifecycle)
                 .collectLatest { (entry, chapters) ->
@@ -2495,16 +2494,23 @@ private fun DownloadAction.toEntryBulkDownloadAction(): EntryBulkDownloadAction 
     }
 }
 
+internal fun <DownloadChanges> mergeAwareEntryAndChaptersFlow(
+    entryAndChaptersFlow: Flow<Pair<Entry, List<EntryChapter>>>,
+    downloadChangesFlow: Flow<DownloadChanges>,
+): Flow<Pair<Entry, List<EntryChapter>>> {
+    return combine(
+        entryAndChaptersFlow,
+        downloadChangesFlow,
+    ) { entryAndChapters, _ -> entryAndChapters }
+}
+
+/** Compatibility overload for callers that previously supplied queue changes as a refresh signal. */
 internal fun <DownloadChanges, DownloadQueue> mergeAwareEntryAndChaptersFlow(
     entryAndChaptersFlow: Flow<Pair<Entry, List<EntryChapter>>>,
     downloadChangesFlow: Flow<DownloadChanges>,
     downloadQueueFlow: Flow<DownloadQueue>,
 ): Flow<Pair<Entry, List<EntryChapter>>> {
-    return combine(
-        entryAndChaptersFlow,
-        downloadChangesFlow,
-        downloadQueueFlow,
-    ) { entryAndChapters, _, _ -> entryAndChapters }
+    return mergeAwareEntryAndChaptersFlow(entryAndChaptersFlow, downloadChangesFlow)
 }
 
 private fun Map<Long, EntryMergeEditorEntryReference>.referencesFor(

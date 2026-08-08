@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
@@ -388,19 +389,16 @@ internal class DownloadManager(
         }
     }
 
-    fun statusFlow(): Flow<MangaDownload> = queueState
-        .flatMapLatest { downloads ->
+    fun statusFlow(): Flow<MangaDownload> = merge(
+        addedToQueueFlow(),
+        queueState.flatMapLatest { downloads ->
             downloads
                 .map { download ->
                     download.statusFlow.drop(1).map { download }
                 }
                 .merge()
-        }
-        .onStart {
-            emitAll(
-                queueState.value.filter { download -> download.status == DownloadState.DOWNLOADING }.asFlow(),
-            )
-        }
+        },
+    )
 
     fun progressFlow(): Flow<MangaDownload> = queueState
         .flatMapLatest { downloads ->
@@ -416,4 +414,13 @@ internal class DownloadManager(
                     .asFlow(),
             )
         }
+
+    private fun addedToQueueFlow(): Flow<MangaDownload> = flow {
+        var previousChapterIds = emptySet<Long>()
+        queueState.collect { downloads ->
+            val currentChapterIds = downloads.mapTo(mutableSetOf()) { it.chapter.id }
+            downloads.filter { it.chapter.id !in previousChapterIds }.forEach { emit(it) }
+            previousChapterIds = currentChapterIds
+        }
+    }
 }

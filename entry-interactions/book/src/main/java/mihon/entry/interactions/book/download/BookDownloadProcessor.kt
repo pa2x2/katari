@@ -5,6 +5,7 @@ import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.onStart
 import mihon.entry.interactions.book.download.model.BookDownload
 import mihon.entry.interactions.book.runtime.requireBook
 import mihon.entry.interactions.download.EntryBulkDownloadCandidateProcessor
@@ -29,10 +30,7 @@ internal class BookDownloadProcessor(
     private val ownerResolver = EntryDownloadOwnerResolver(dependencies.entryRepository)
 
     override val type: EntryType = EntryType.BOOK
-    override val changes: Flow<Unit> = merge(
-        manager.cacheChanges,
-        manager.queueState.map { Unit },
-    )
+    override val changes: Flow<Unit> = manager.cacheChanges.onStart { emit(Unit) }
     override val isInitializing: Flow<Boolean> = cache.isInitializing
     override val isRunning: Flow<Boolean> = manager.isRunning
     override val queueState: Flow<List<EntryDownloadQueueGroup>> = manager.queueState.map {
