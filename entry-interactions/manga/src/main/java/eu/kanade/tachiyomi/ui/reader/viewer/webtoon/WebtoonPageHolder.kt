@@ -87,7 +87,10 @@ internal class WebtoonPageHolder(
     init {
         refreshLayoutParams()
 
-        frame.onImageLoaded = { onImageDecoded() }
+        frame.onImageLoaded = {
+            page?.releaseProgressivePreviewAfterFinalImageReady()
+            onImageDecoded()
+        }
         frame.onImageLoadError = { error -> setError(error) }
         frame.onScaleChanged = { viewer.activity.hideMenu() }
     }

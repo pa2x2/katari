@@ -123,7 +123,10 @@ internal fun MangaImmersiveImage(
                     imageReady = false
                     decodeErrorMessage = null
                     view.onImageLoaded = {
-                        if (view.tag == requestTag) imageReady = true
+                        if (view.tag == requestTag) {
+                            page.releaseProgressivePreviewAfterFinalImageReady()
+                            imageReady = true
+                        }
                     }
                     view.onImageLoadError = {
                         if (view.tag == requestTag) decodeErrorMessage = it?.message ?: unknownError

@@ -27,4 +27,11 @@ internal open class ReaderPage(
     fun setProgressiveImageSession(session: StateFlow<ProgressiveImageState>?) {
         progressiveImageSession.value = session
     }
+
+    fun releaseProgressivePreviewAfterFinalImageReady() {
+        val animation = progressiveImageSession.value?.value?.animation
+        if (animation?.let { it.isComplete && it.isReplayable } != true) {
+            progressiveImageSession.value = null
+        }
+    }
 }

@@ -22,8 +22,10 @@ class ProgressiveImageSession internal constructor(
     private val mutableState = MutableStateFlow(ProgressiveImageState())
     private var nextPublicationTimeMillis = 0L
     private var terminal = false
+    private var released = false
 
     val state: StateFlow<ProgressiveImageState> = mutableState.asStateFlow()
+    internal val subscriptionCount: StateFlow<Int> = mutableState.subscriptionCount
 
     fun append(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size - offset) {
         synchronized(this) {
@@ -67,25 +69,39 @@ class ProgressiveImageSession internal constructor(
 
     internal fun disable() {
         synchronized(this) {
-            if (terminal) return
             mutableState.value = mutableState.value.copy(
                 visual = null,
                 animation = null,
                 status = ProgressiveImageStatus.Disabled,
             )
             terminateLocked()
+            releaseLocked()
         }
     }
 
     override fun close() {
         synchronized(this) {
-            if (terminal) return
-            mutableState.value = mutableState.value.copy(
-                visual = null,
-                animation = null,
-                status = ProgressiveImageStatus.Cancelled,
-            )
+            if (released) return
+            mutableState.value = if (terminal) {
+                mutableState.value.copy(visual = null, animation = null)
+            } else {
+                mutableState.value.copy(
+                    visual = null,
+                    animation = null,
+                    status = ProgressiveImageStatus.Cancelled,
+                )
+            }
             terminateLocked()
+            releaseLocked()
+        }
+    }
+
+    internal fun releaseIfUnobservedAndTerminal() {
+        synchronized(this) {
+            if (terminal && subscriptionCount.value == 0) {
+                mutableState.value = mutableState.value.copy(visual = null, animation = null)
+                releaseLocked()
+            }
         }
     }
 
@@ -198,6 +214,15 @@ class ProgressiveImageSession internal constructor(
         terminal = true
         decoder?.close()
         decoder = null
+        if (subscriptionCount.value == 0) {
+            mutableState.value = mutableState.value.copy(visual = null, animation = null)
+            releaseLocked()
+        }
+    }
+
+    private fun releaseLocked() {
+        if (released) return
+        released = true
         onTerminated(this)
     }
 }

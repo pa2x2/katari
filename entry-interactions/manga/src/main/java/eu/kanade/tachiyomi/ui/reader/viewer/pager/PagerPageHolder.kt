@@ -290,6 +290,7 @@ internal class PagerPageHolder(
 
     override fun onImageLoaded() {
         super.onImageLoaded()
+        page.releaseProgressivePreviewAfterFinalImageReady()
         progressIndicator?.hide()
     }
 

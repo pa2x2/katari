@@ -75,6 +75,7 @@ data class EntryPreviewPage(
     val imageModel: Any,
     val progressiveImageState: Flow<ProgressiveImageState?>? = null,
     val canOpen: Boolean = true,
+    val onFinalImageReady: () -> Unit = {},
 )
 
 sealed interface EntryPreviewPageStatus {

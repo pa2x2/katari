@@ -706,6 +706,7 @@ private fun EntryPreviewImage(
             .build(),
         contentDescription = null,
         contentScale = ContentScale.Crop,
+        onSuccess = { page.onFinalImageReady() },
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(0.72f),

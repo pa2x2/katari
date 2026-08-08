@@ -194,6 +194,7 @@ internal class EntryPageLoader private constructor(
         super.recycle()
         scope.cancel()
         queue.clear()
+        chapter.pages?.forEach { it.setProgressiveImageSession(null) }
 
         // Cache current page list progress for online chapters to allow a faster reopen
         chapter.pages?.let { pages ->

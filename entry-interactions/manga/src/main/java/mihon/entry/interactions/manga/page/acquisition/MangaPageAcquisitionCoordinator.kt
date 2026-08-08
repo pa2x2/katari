@@ -135,6 +135,7 @@ internal class MangaPageAcquisitionCoordinator(
         fetch: suspend () -> Response,
         progressiveSession: ProgressiveImageSession?,
     ): File {
+        var decoderFinished = false
         try {
             if (!force) store.getCommittedImage(imageUrl)?.let { return it }
             val response = fetch()
@@ -154,6 +155,7 @@ internal class MangaPageAcquisitionCoordinator(
                         }
                         coroutineContext.ensureActive()
                         progressiveSession?.finish()
+                        decoderFinished = true
                         stagingWrite.commit()
                     }
                 }
@@ -166,7 +168,7 @@ internal class MangaPageAcquisitionCoordinator(
             }
             throw error
         } finally {
-            progressiveSession?.close()
+            if (!decoderFinished) progressiveSession?.close()
         }
     }
 
