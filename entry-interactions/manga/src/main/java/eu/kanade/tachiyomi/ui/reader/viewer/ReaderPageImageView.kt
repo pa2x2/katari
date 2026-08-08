@@ -11,6 +11,7 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.FrameLayout
 import androidx.annotation.AttrRes
 import androidx.annotation.CallSuper
@@ -37,7 +38,11 @@ import eu.kanade.tachiyomi.data.coil.cropBorders
 import eu.kanade.tachiyomi.data.coil.customDecoder
 import eu.kanade.tachiyomi.ui.reader.animatorDurationScale
 import eu.kanade.tachiyomi.ui.reader.isVisibleOnScreen
+import eu.kanade.tachiyomi.ui.reader.viewer.progressive.ReaderPageProgressivePreviewConfig
+import eu.kanade.tachiyomi.ui.reader.viewer.progressive.ReaderPageProgressivePreviewView
 import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonSubsamplingImageView
+import mihon.core.common.image.progressive.ProgressiveImageState
+import mihon.core.common.image.progressive.ProgressiveImageVisual
 import mihon.entry.interactions.reader.settings.ReaderBasePreferences
 import okio.BufferedSource
 import tachiyomi.core.common.util.system.ImageUtil
@@ -65,6 +70,9 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
     }
 
     private var pageView: View? = null
+    private var progressivePreviewView: ReaderPageProgressivePreviewView? = null
+    private var pendingFinalAnimation: (() -> Unit)? = null
+    private var finalImageReady = false
 
     private var config: Config? = null
 
@@ -80,6 +88,8 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
 
     @CallSuper
     open fun onImageLoaded() {
+        finalImageReady = true
+        clearProgressiveImage()
         onImageLoaded?.invoke()
         background = pageBackground
     }
@@ -148,39 +158,142 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
     }
 
     fun setImage(drawable: Drawable, config: Config) {
-        this.config = config
-        if (drawable is Animatable) {
-            prepareAnimatedImageView()
-            setAnimatedImage(drawable, config)
-        } else {
-            prepareNonAnimatedImageView()
-            setNonAnimatedImage(drawable, config)
+        val setFinalImage = {
+            finalImageReady = false
+            this.config = config
+            if (drawable is Animatable) {
+                prepareAnimatedImageView()
+                setAnimatedImage(drawable, config)
+            } else {
+                prepareNonAnimatedImageView()
+                setNonAnimatedImage(drawable, config)
+            }
+            Unit
         }
+        if (progressivePreviewView?.hasAnimation == true && deferFinalAnimation(setFinalImage)) {
+            return
+        }
+        setFinalImage()
     }
 
     fun setImage(source: BufferedSource, isAnimated: Boolean, config: Config) {
-        this.config = config
-        if (isAnimated) {
-            prepareAnimatedImageView()
-            setAnimatedImage(source, config)
-        } else {
-            prepareNonAnimatedImageView()
-            setNonAnimatedImage(source, config)
+        val setFinalImage = {
+            finalImageReady = false
+            this.config = config
+            if (isAnimated) {
+                prepareAnimatedImageView()
+                setAnimatedImage(source, config)
+            } else {
+                prepareNonAnimatedImageView()
+                setNonAnimatedImage(source, config)
+            }
+            Unit
+        }
+        if (progressivePreviewView?.hasAnimation == true && deferFinalAnimation(setFinalImage)) {
+            return
+        }
+        setFinalImage()
+    }
+
+    fun setProgressiveImage(
+        state: ProgressiveImageState?,
+        config: ReaderPageProgressivePreviewConfig = ReaderPageProgressivePreviewConfig(),
+    ): Boolean {
+        if (finalImageReady) return false
+        val animation = state?.animation
+        val still = state?.visual as? ProgressiveImageVisual.Still
+        if (animation == null && still == null) {
+            clearProgressiveImage()
+            return false
+        }
+
+        val previewView = progressivePreviewView ?: ReaderPageProgressivePreviewView(
+            context = context,
+            zoomEnabled = !isWebtoon,
+        ).also { view ->
+            progressivePreviewView = view
+            view.setOnViewTapListener { _, _, _ -> onViewClicked() }
+            view.setOnScaleChangeListener { _, _, _ -> onScaleChanged(view.scale) }
+            addView(
+                view,
+                0,
+                LayoutParams(
+                    MATCH_PARENT,
+                    if (isWebtoon) WRAP_CONTENT else MATCH_PARENT,
+                ),
+            )
+        }
+        if (animation != null && animation.frames.isNotEmpty()) {
+            previewView.show(animation, config)
+            if (animation.isComplete) {
+                if (animation.isReplayable) {
+                    completeProgressiveAnimation()
+                } else {
+                    pendingFinalAnimation?.also {
+                        pendingFinalAnimation = null
+                        it()
+                    }
+                }
+            }
+        } else if (still != null) {
+            previewView.show(still.bitmap, config)
+        }
+        previewView.isVisible = true
+        return true
+    }
+
+    fun clearProgressiveImage() {
+        pendingFinalAnimation = null
+        progressivePreviewView?.apply {
+            clear()
+            isVisible = false
         }
     }
 
-    fun recycle() = pageView?.let {
-        when (it) {
-            is SubsamplingScaleImageView -> it.recycle()
-            is AppCompatImageView -> it.dispose()
+    fun recycleFinalImage() {
+        pendingFinalAnimation = null
+        finalImageReady = false
+        pageView?.let {
+            when (it) {
+                is SubsamplingScaleImageView -> it.recycle()
+                is AppCompatImageView -> it.dispose()
+            }
+            it.isVisible = false
         }
-        it.isVisible = false
+    }
+
+    fun recycle() {
+        recycleFinalImage()
+        clearProgressiveImage()
+    }
+
+    private fun deferFinalAnimation(setFinalImage: () -> Unit): Boolean {
+        val preview = progressivePreviewView ?: return false
+        if (!preview.hasAnimation || (preview.hasCompleteAnimation && !preview.hasCompleteReplayableAnimation)) {
+            return false
+        }
+        pendingFinalAnimation = setFinalImage
+        if (preview.hasCompleteReplayableAnimation) {
+            completeProgressiveAnimation()
+        }
+        return true
+    }
+
+    private fun completeProgressiveAnimation() {
+        pendingFinalAnimation = null
+        if (finalImageReady) return
+        finalImageReady = true
+        onImageLoaded?.invoke()
+        background = pageBackground
     }
 
     /**
      * Check if the image is currently zoomed in.
      */
     fun isZoomed(): Boolean {
+        progressivePreviewView
+            ?.takeIf { it.isVisible }
+            ?.let { return isScaleZoomed(it.scale, it.minimumScale) }
         return when (val view = pageView) {
             is SubsamplingScaleImageView -> {
                 if (!view.isReady) return false
@@ -271,7 +384,7 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
             )
             setOnClickListener { this@ReaderPageImageView.onViewClicked() }
         }
-        addView(pageView, MATCH_PARENT, MATCH_PARENT)
+        addPageView(pageView)
     }
 
     private fun SubsamplingScaleImageView.setupZoom(config: Config?) {
@@ -388,7 +501,16 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
                 }
             }
         }
-        addView(pageView, MATCH_PARENT, MATCH_PARENT)
+        addPageView(pageView)
+    }
+
+    private fun addPageView(view: View?) {
+        view ?: return
+        addView(
+            view,
+            if (progressivePreviewView == null) 0 else 1,
+            LayoutParams(MATCH_PARENT, MATCH_PARENT),
+        )
     }
 
     private fun setAnimatedImage(

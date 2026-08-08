@@ -7,6 +7,7 @@ import mihon.entry.interactions.manga.download.DownloadManager
 import mihon.entry.interactions.manga.download.DownloadProvider
 import mihon.entry.interactions.manga.media.session.MangaMediaSessionProcessor
 import mihon.entry.interactions.manga.page.MangaPageStore
+import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquisitionCoordinator
 import mihon.entry.interactions.manga.reader.addMangaReaderImageComponents
 import mihon.entry.interactions.media.DefaultEntryViewerSettingsProvider
 import mihon.entry.interactions.media.ENTRY_VIEWER_SETTINGS_LEGACY_PREFERENCE_OWNER_GROUP_ID
@@ -73,6 +74,7 @@ private const val LEGACY_MANGA_VIEWER_MASK = 0x3FL
 
 private fun InjektRegistrar.addMangaEntryInteractionRuntime(app: Application): () -> Unit {
     addSingletonFactory { MangaPageStore(app, get()) }
+    addSingletonFactory { MangaPageAcquisitionCoordinator(get(), get()) }
     addSingletonFactory<EntryPageImageCache> { get<MangaPageStore>() }
     addSingletonFactory { DownloadProvider(app) }
     addSingletonFactory { DownloadManager(app) }

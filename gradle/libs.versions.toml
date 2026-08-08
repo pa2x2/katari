@@ -41,7 +41,7 @@ firebase-bom = "34.17.0"
 firebase-crashlytics = "3.0.7"
 flexibleAdapter = "c8013533"
 google-services = "4.5.0"
-image-decoder = "e03b81e18a"
+image-decoder = "ab6db1e"
 injekt = "91edab2317"
 japicmp = "0.26.1"
 jsoup = "1.23.1"
@@ -146,7 +146,7 @@ firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 flexibleAdapter = { module = "com.github.arkon.FlexibleAdapter:flexible-adapter", version.ref = "flexibleAdapter" }
-image-decoder = { module = "com.github.mihonapp:image-decoder", version.ref = "image-decoder" }
+image-decoder = { module = "com.github.pa2x2:image-decoder", version.ref = "image-decoder" }
 injekt = { module = "com.github.mihonapp:injekt", version.ref = "injekt" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }

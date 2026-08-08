@@ -11,6 +11,10 @@ import eu.kanade.tachiyomi.ui.reader.readerFormattedMessage
 import eu.kanade.tachiyomi.ui.reader.readerWebViewIntent
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderProgressIndicator
+import eu.kanade.tachiyomi.ui.reader.viewer.progressive.ReaderPageProgressivePreviewConfig
+import eu.kanade.tachiyomi.ui.reader.viewer.progressive.ReaderPageProgressiveSide
+import eu.kanade.tachiyomi.ui.reader.viewer.progressive.ReaderPageProgressiveTransformation
+import eu.kanade.tachiyomi.ui.reader.viewer.progressive.toReaderPageProgressiveScaleMode
 import eu.kanade.tachiyomi.widget.ViewPagerAdapter
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
@@ -96,6 +100,17 @@ internal class PagerPageHolder(
         supervisorScope {
             launchIO {
                 loader.loadPage(page)
+            }
+            launch {
+                page.progressiveImageState.collectLatest { state ->
+                    val isVisible = setProgressiveImage(state, progressivePreviewConfig())
+                    if (isVisible) {
+                        progressIndicator?.hide()
+                        removeErrorLayout()
+                    } else if (page.status == Page.State.DownloadImage) {
+                        setDownloading()
+                    }
+                }
             }
             page.statusFlow.collectLatest { state ->
                 when (state) {
@@ -208,6 +223,29 @@ internal class PagerPageHolder(
         return splitInHalf(imageSource)
     }
 
+    private fun progressivePreviewConfig(): ReaderPageProgressivePreviewConfig {
+        return ReaderPageProgressivePreviewConfig(
+            scaleMode = viewer.config.imageScaleType.toReaderPageProgressiveScaleMode(),
+            transformation = when {
+                viewer.config.dualPageRotateToFit -> ReaderPageProgressiveTransformation.Rotate(
+                    if (viewer.config.dualPageRotateToFitInvert) -90f else 90f,
+                )
+                viewer.config.dualPageSplit -> ReaderPageProgressiveTransformation.CropHalf(progressiveSplitSide())
+                else -> ReaderPageProgressiveTransformation.None
+            },
+        )
+    }
+
+    private fun progressiveSplitSide(): ReaderPageProgressiveSide {
+        val initialSide = when {
+            viewer is L2RPagerViewer && page is InsertPage -> ReaderPageProgressiveSide.RIGHT
+            viewer !is L2RPagerViewer && page is InsertPage -> ReaderPageProgressiveSide.LEFT
+            viewer is L2RPagerViewer -> ReaderPageProgressiveSide.LEFT
+            else -> ReaderPageProgressiveSide.RIGHT
+        }
+        return if (viewer.config.dualPageInvert) initialSide.opposite() else initialSide
+    }
+
     private fun rotateDualPage(imageSource: BufferedSource): BufferedSource {
         val isDoublePage = ImageUtil.isWideImage(imageSource)
         return if (isDoublePage) {
@@ -252,6 +290,7 @@ internal class PagerPageHolder(
 
     override fun onImageLoaded() {
         super.onImageLoaded()
+        page.releaseProgressivePreviewAfterFinalImageReady()
         progressIndicator?.hide()
     }
 

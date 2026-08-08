@@ -20,6 +20,13 @@ dependencyResolutionManagement {
 
     @Suppress("UnstableApiUsage")
     repositories {
+        if (providers.gradleProperty("useLocalImageDecoder").orNull.toBoolean()) {
+            mavenLocal {
+                content {
+                    includeModule("com.github.pa2x2", "image-decoder")
+                }
+            }
+        }
         google()
         mavenCentral()
         maven(url = "https://www.jitpack.io")

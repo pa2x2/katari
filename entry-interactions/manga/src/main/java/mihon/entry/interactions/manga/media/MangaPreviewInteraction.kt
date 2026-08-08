@@ -85,6 +85,8 @@ internal class MangaPreviewInteraction(
                         status = page.statusFlow.mapState(Page.State::toEntryPreviewPageStatus),
                         progress = page.progressFlow,
                         imageModel = page,
+                        progressiveImageState = page.progressiveImageState,
+                        onFinalImageReady = page::releaseProgressivePreviewAfterFinalImageReady,
                     )
                 },
             delegate = readerChapter,
@@ -94,7 +96,10 @@ internal class MangaPreviewInteraction(
     override suspend fun loadPage(handle: EntryPreviewHandle, pageIndex: Int) {
         val chapter = handle.delegate as? ReaderChapter ?: return
         val page = chapter.pages?.getOrNull(pageIndex) ?: return
-        chapter.pageLoader?.loadPage(page)
+        chapter.pageLoader?.run {
+            selectPage(page)
+            loadPage(page)
+        }
     }
 
     override fun release(handle: EntryPreviewHandle) {

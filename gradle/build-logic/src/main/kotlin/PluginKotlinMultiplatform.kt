@@ -8,7 +8,6 @@ import mihon.gradle.extensions.mihonx
 import mihon.gradle.extensions.plugins
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.attributes.LibraryElements
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.withType
@@ -39,18 +38,6 @@ class PluginKotlinMultiplatform : Plugin<Project> {
 
         dependencies {
             coreLibraryDesugaring(libs.android.desugar)
-        }
-
-        afterEvaluate {
-            val fullJarTask = tasks.findByName("createFullJarAndroidMain") ?: return@afterEvaluate
-            val fullJarFile = layout.buildDirectory.file(
-                "intermediates/full_jar/androidMain/createFullJarAndroidMain/full.jar",
-            )
-            configurations.findByName("androidApiElements")?.outgoing?.artifact(fullJarFile) {
-                builtBy(fullJarTask)
-                type = LibraryElements.JAR
-                classifier = "full"
-            }
         }
     }
 }

@@ -29,10 +29,18 @@ internal abstract class PageLoader {
      */
     open suspend fun loadPage(page: ReaderPage) {}
 
-    /** Loads a visible page with a surface-specific number of following pages to enqueue. */
+    /** Loads a page with a surface-specific number of following pages to enqueue. */
     open suspend fun loadPage(page: ReaderPage, preloadCount: Int) {
         loadPage(page)
     }
+
+    /**
+     * Marks [page] as the page currently being read.
+     *
+     * Page bindings may ask the loader to prepare off-screen pages. This signal is reserved for
+     * the page selected by the reading surface, so loaders can prioritize user-visible work.
+     */
+    open fun selectPage(page: ReaderPage) {}
 
     /**
      * Starts background preparation for [page] without attaching a viewer observer.
