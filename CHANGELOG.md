@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.2.0] - 2026-08-08
+
+### 🌟 Highlights
+
+See supported manga images take shape while they download, with smoother book chapter transitions.
+
+### ✨ Added
+
+- Added optional progressive image loading for supported manga images, showing downloaded portions in
+  manga readers and entry previews before the full image is available, including animated previews
+  where supported. Experimental and available under Settings -> Advanced ->
+
+### ⚡️ Performance
+
+- Removed unnecessary work during Book chapter transition that caused noticeable lag
+  for entries with large amount of chapters.
+
+Based on [Mihon 0.20.4](https://github.com/mihonapp/mihon/releases/tag/v0.20.4)
+
 ## [1.1.4] - 2026-08-04
 
 ### 🐛 Fixed
@@ -70,7 +89,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.1.4...upcoming
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.2.0...upcoming
+[1.2.0]: https://github.com/pa2x2/katari/releases/tag/v1.2.0
 [1.1.4]: https://github.com/pa2x2/katari/releases/tag/v1.1.4
 [1.1.3]: https://github.com/pa2x2/katari/releases/tag/v1.1.3
 [1.1.2]: https://github.com/pa2x2/katari/releases/tag/v1.1.2
