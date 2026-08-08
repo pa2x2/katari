@@ -10,7 +10,7 @@ See supported manga images take shape while they download, with smoother book ch
 
 - Added optional progressive image loading for supported manga images, showing downloaded portions in
   manga readers and entry previews before the full image is available, including animated previews
-  where supported. Experimental and available under Settings -> Advanced ->
+  where supported. Experimental and available under Settings -> Advanced -> Progressive image loading.
 
 ### ⚡️ Performance
 
