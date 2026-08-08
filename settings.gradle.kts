@@ -23,7 +23,7 @@ dependencyResolutionManagement {
         if (providers.gradleProperty("useLocalImageDecoder").orNull.toBoolean()) {
             mavenLocal {
                 content {
-                    includeModule("com.github.mihonapp", "image-decoder")
+                    includeModule("com.github.pa2x2", "image-decoder")
                 }
             }
         }
