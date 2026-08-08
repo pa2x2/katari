@@ -21,6 +21,9 @@ class ProgressiveImageEngine(
     private val managedSessions = mutableMapOf<ProgressiveImageSession, Job>()
     private var acceptingSessions = preferences.enabled.get()
 
+    val isEnabled: Boolean
+        get() = preferences.enabled.get()
+
     init {
         scope.launch {
             preferences.enabled.changes()

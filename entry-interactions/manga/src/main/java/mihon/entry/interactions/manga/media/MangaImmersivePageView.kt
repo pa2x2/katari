@@ -54,7 +54,10 @@ internal fun MangaImmersiveImage(
 
     LaunchedEffect(page) {
         try {
-            page.chapter.pageLoader?.loadPage(page, preloadCount = 0)
+            page.chapter.pageLoader?.run {
+                selectPage(page)
+                loadPage(page, preloadCount = 0)
+            }
         } catch (e: CancellationException) {
             throw e
         }

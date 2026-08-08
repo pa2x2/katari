@@ -34,9 +34,13 @@ internal class MangaPageAcquisitionCoordinator(
     private val inFlightMutex = Mutex()
     private val inFlight = mutableMapOf<String, InFlightAcquisition>()
 
+    override val prioritizesVisiblePages: Boolean
+        get() = progressiveImageEngine.isEnabled
+
     override suspend fun acquire(
         imageUrl: String,
         force: Boolean,
+        intent: MangaPageAcquisitionIntent,
         options: ProgressiveImageDecodeOptions,
         onFetch: () -> Unit,
         onProgressiveState: (StateFlow<ProgressiveImageState>?) -> Unit,
@@ -50,7 +54,7 @@ internal class MangaPageAcquisitionCoordinator(
                 }
             }
 
-            when (val selection = selectAcquisition(imageUrl, force, options, fetch)) {
+            when (val selection = selectAcquisition(imageUrl, force, intent, options, fetch)) {
                 is AcquisitionSelection.AwaitTeardown -> {
                     selection.result.join()
                     currentCoroutineContext().ensureActive()
@@ -70,20 +74,29 @@ internal class MangaPageAcquisitionCoordinator(
     private suspend fun selectAcquisition(
         imageUrl: String,
         force: Boolean,
+        intent: MangaPageAcquisitionIntent,
         options: ProgressiveImageDecodeOptions,
         fetch: suspend () -> Response,
     ): AcquisitionSelection = inFlightMutex.withLock {
         val existing = inFlight[imageUrl]
         when {
-            existing == null -> AcquisitionSelection.Use(createAcquisition(imageUrl, force, options, fetch))
+            existing == null -> AcquisitionSelection.Use(createAcquisition(imageUrl, force, intent, options, fetch))
             existing.result.isActive -> {
-                existing.subscribers++
-                AcquisitionSelection.Use(existing)
+                if (intent == MangaPageAcquisitionIntent.Visible &&
+                    existing.intent == MangaPageAcquisitionIntent.Preload &&
+                    progressiveImageEngine.isEnabled
+                ) {
+                    existing.result.cancel(PreemptedMangaPagePreload())
+                    AcquisitionSelection.AwaitTeardown(existing.result)
+                } else {
+                    existing.subscribers++
+                    AcquisitionSelection.Use(existing)
+                }
             }
             !existing.result.isCompleted -> AcquisitionSelection.AwaitTeardown(existing.result)
             else -> {
                 inFlight.remove(imageUrl, existing)
-                AcquisitionSelection.Use(createAcquisition(imageUrl, force, options, fetch))
+                AcquisitionSelection.Use(createAcquisition(imageUrl, force, intent, options, fetch))
             }
         }
     }
@@ -105,15 +118,21 @@ internal class MangaPageAcquisitionCoordinator(
     private fun createAcquisition(
         imageUrl: String,
         force: Boolean,
+        intent: MangaPageAcquisitionIntent,
         options: ProgressiveImageDecodeOptions,
         fetch: suspend () -> Response,
     ): InFlightAcquisition {
-        val progressiveSession = progressiveImageEngine.openSession(options)
+        val progressiveSession = if (intent == MangaPageAcquisitionIntent.Visible) {
+            progressiveImageEngine.openSession(options)
+        } else {
+            null
+        }
         val result = scope.async(start = CoroutineStart.LAZY) {
             download(imageUrl, force, fetch, progressiveSession)
         }
         val acquisition = InFlightAcquisition(
             result = result,
+            intent = intent,
             progressiveState = progressiveSession?.state,
             subscribers = 1,
         )
@@ -193,6 +212,7 @@ internal class MangaPageAcquisitionCoordinator(
 
     private class InFlightAcquisition(
         val result: Deferred<File>,
+        val intent: MangaPageAcquisitionIntent,
         val progressiveState: StateFlow<ProgressiveImageState>?,
         var subscribers: Int,
     )

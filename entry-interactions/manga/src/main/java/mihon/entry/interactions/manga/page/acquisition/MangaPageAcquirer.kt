@@ -7,9 +7,13 @@ import okhttp3.Response
 import java.io.File
 
 internal interface MangaPageAcquirer {
+    /** Whether visible page work must supersede cache-warming requests. */
+    val prioritizesVisiblePages: Boolean
+
     suspend fun acquire(
         imageUrl: String,
         force: Boolean,
+        intent: MangaPageAcquisitionIntent,
         options: ProgressiveImageDecodeOptions = ProgressiveImageDecodeOptions(),
         onFetch: () -> Unit = {},
         onProgressiveState: (StateFlow<ProgressiveImageState>?) -> Unit = {},

@@ -10,9 +10,12 @@ import java.io.File
 internal class StoredMangaPageAcquirer(
     private val store: MangaPageStore,
 ) : MangaPageAcquirer {
+    override val prioritizesVisiblePages = false
+
     override suspend fun acquire(
         imageUrl: String,
         force: Boolean,
+        intent: MangaPageAcquisitionIntent,
         options: ProgressiveImageDecodeOptions,
         onFetch: () -> Unit,
         onProgressiveState: (StateFlow<ProgressiveImageState>?) -> Unit,

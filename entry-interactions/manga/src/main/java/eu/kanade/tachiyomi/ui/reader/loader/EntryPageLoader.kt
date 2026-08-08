@@ -11,17 +11,24 @@ import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.toEntryChapter
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import mihon.entry.interactions.manga.page.MangaPageStore
 import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquirer
 import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquisitionCoordinator
+import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquisitionIntent
+import mihon.entry.interactions.manga.page.acquisition.PreemptedMangaPagePreload
 import mihon.entry.interactions.manga.page.acquisition.StoredMangaPageAcquirer
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withIOContext
@@ -73,6 +80,12 @@ internal class EntryPageLoader private constructor(
      * A queue used to manage requests one by one while allowing priorities.
      */
     private val queue = PriorityBlockingQueue<PriorityPage>()
+    private val activeLoadLock = Any()
+    private val preloadPreemptionMutex = Mutex()
+    private var activeLoad: ActivePageLoad? = null
+
+    @Volatile
+    private var selectedPage: ReaderPage? = null
 
     private val preloadSize = 4
 
@@ -85,10 +98,7 @@ internal class EntryPageLoader private constructor(
             }
                 .filter { it.page.status == Page.State.Queue }
                 .collect {
-                    internalLoadPage(
-                        page = it.page,
-                        force = it.priority == PriorityPage.RETRY,
-                    )
+                    executeQueuedLoad(it)
                 }
         }
     }
@@ -136,7 +146,8 @@ internal class EntryPageLoader private constructor(
             page.status = Page.State.Queue
         }
 
-        val queuedPages = enqueuePageAndNextPages(page, PriorityPage.DEFAULT, preloadCount)
+        val priority = if (selectedPage === page) PriorityPage.DEFAULT else PriorityPage.ADJACENT
+        val queuedPages = enqueuePageAndNextPages(page, priority, preloadCount)
 
         suspendCancellableCoroutine<Nothing> { continuation ->
             continuation.invokeOnCancellation {
@@ -146,6 +157,21 @@ internal class EntryPageLoader private constructor(
                     }
                 }
             }
+        }
+    }
+
+    override fun selectPage(page: ReaderPage) {
+        selectedPage = page
+        scope.launchIO {
+            val preemptedPreload = if (pageAcquirer.prioritizesVisiblePages && page.status != Page.State.Ready) {
+                preemptActivePreload()
+            } else {
+                null
+            }
+            if (page.status == Page.State.Queue) {
+                queue.offer(PriorityPage(page, PriorityPage.DEFAULT))
+            }
+            requeuePreemptedPreload(preemptedPreload, except = page)
         }
     }
 
@@ -182,11 +208,21 @@ internal class EntryPageLoader private constructor(
      * Retries a page. This method is only called from user interaction on the viewer.
      */
     override fun retryPage(page: ReaderPage) {
-        if (page.status is Page.State.Error) {
-            page.setProgressiveImageSession(null)
-            page.status = Page.State.Queue
+        scope.launchIO {
+            val preemptedPreload = if (pageAcquirer.prioritizesVisiblePages) {
+                preemptActivePreload()
+            } else {
+                null
+            }
+            if (page.status is Page.State.Error) {
+                page.setProgressiveImageSession(null)
+                page.status = Page.State.Queue
+            }
+            if (page.status == Page.State.Queue) {
+                queue.offer(PriorityPage(page, PriorityPage.RETRY))
+            }
+            requeuePreemptedPreload(preemptedPreload, except = page)
         }
-        queue.offer(PriorityPage(page, PriorityPage.RETRY))
     }
 
     @OptIn(DelicateCoroutinesApi::class)
@@ -194,6 +230,7 @@ internal class EntryPageLoader private constructor(
         super.recycle()
         scope.cancel()
         queue.clear()
+        selectedPage = null
         chapter.pages?.forEach { it.setProgressiveImageSession(null) }
 
         // Cache current page list progress for online chapters to allow a faster reopen
@@ -253,7 +290,36 @@ internal class EntryPageLoader private constructor(
      *
      * @param page the page whose source image has to be downloaded.
      */
-    private suspend fun internalLoadPage(page: ReaderPage, force: Boolean) {
+    private suspend fun executeQueuedLoad(priorityPage: PriorityPage) {
+        val job = scope.launch(start = CoroutineStart.LAZY) {
+            internalLoadPage(
+                page = priorityPage.page,
+                force = priorityPage.priority == PriorityPage.RETRY,
+                intent = if (priorityPage.priority == PriorityPage.ADJACENT) {
+                    MangaPageAcquisitionIntent.Preload
+                } else {
+                    MangaPageAcquisitionIntent.Visible
+                },
+            )
+        }
+        synchronized(activeLoadLock) {
+            activeLoad = ActivePageLoad(priorityPage, job)
+        }
+        job.start()
+        try {
+            job.join()
+        } finally {
+            synchronized(activeLoadLock) {
+                if (activeLoad?.job == job) activeLoad = null
+            }
+        }
+    }
+
+    private suspend fun internalLoadPage(
+        page: ReaderPage,
+        force: Boolean,
+        intent: MangaPageAcquisitionIntent,
+    ) {
         try {
             if (page.imageUrl.isNullOrEmpty()) {
                 page.status = Page.State.LoadPage
@@ -264,6 +330,7 @@ internal class EntryPageLoader private constructor(
             val imageFile = pageAcquirer.acquire(
                 imageUrl = imageUrl,
                 force = force,
+                intent = intent,
                 onFetch = { page.status = Page.State.DownloadImage },
                 onProgressiveState = page::setProgressiveImageSession,
                 fetch = { imageSource.getImage(page.toEntryImagePage(), page) },
@@ -271,13 +338,37 @@ internal class EntryPageLoader private constructor(
             page.stream = imageFile::inputStream
             page.status = Page.State.Ready
         } catch (e: Throwable) {
+            if (e is PreemptedMangaPagePreload) {
+                page.status = Page.State.Queue
+                return
+            }
             page.status = Page.State.Error(e)
             if (e is CancellationException) {
                 throw e
             }
         }
     }
+
+    private suspend fun preemptActivePreload(): ReaderPage? = preloadPreemptionMutex.withLock {
+        val active = synchronized(activeLoadLock) {
+            activeLoad?.takeIf { it.priorityPage.priority == PriorityPage.ADJACENT }
+        } ?: return@withLock null
+        active.job.cancel(PreemptedMangaPagePreload())
+        active.job.join()
+        active.priorityPage.page.takeIf { it.status == Page.State.Queue }
+    }
+
+    private fun requeuePreemptedPreload(preempted: ReaderPage?, except: ReaderPage) {
+        if (preempted != null && preempted !== except) {
+            queue.offer(PriorityPage(preempted, PriorityPage.ADJACENT))
+        }
+    }
 }
+
+private class ActivePageLoad(
+    val priorityPage: PriorityPage,
+    val job: Job,
+)
 
 private fun ReaderPage.toEntryImagePage(): EntryImagePage =
     EntryImagePage(index, url, imageUrl)
