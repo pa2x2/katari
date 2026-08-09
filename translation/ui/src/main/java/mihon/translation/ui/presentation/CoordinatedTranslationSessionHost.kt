@@ -5,7 +5,6 @@ import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -130,7 +129,7 @@ private fun TranslationSessionPickerDialog(
                     .fillMaxWidth()
                     .heightIn(max = maxHeight * 0.85f),
             ) {
-                Column(modifier = Modifier.fillMaxHeight()) {
+                Column {
                     TranslationSessionHeader(
                         title = stringResource(
                             when (picker) {
