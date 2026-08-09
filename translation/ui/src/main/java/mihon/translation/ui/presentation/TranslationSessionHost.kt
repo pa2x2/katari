@@ -61,6 +61,8 @@ fun TranslationSessionHost(
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit = controller::dismiss,
+    speechState: TranslationResultSpeechState = TranslationResultSpeechState(),
+    onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)? = null,
 ) {
     val state by controller.state.collectAsState()
     val active = state as? TranslationSessionState.Active
@@ -91,6 +93,8 @@ fun TranslationSessionHost(
         onSelectSource = controller::selectSourceLanguage,
         onSelectEngine = controller::selectEngine,
         onExternalAction = onExternalAction,
+        speechState = speechState,
+        onSpeechToggle = onSpeechToggle,
         modifier = modifier,
     )
 }
@@ -108,6 +112,8 @@ internal fun TranslationSessionOverlay(
     onSelectSource: (LanguageTag) -> Unit,
     onSelectEngine: (TranslationEngineSelection) -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
+    speechState: TranslationResultSpeechState = TranslationResultSpeechState(),
+    onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val active = state as? TranslationSessionState.Active ?: return
@@ -131,6 +137,8 @@ internal fun TranslationSessionOverlay(
             onSelectSource = onSelectSource,
             onSelectEngine = onSelectEngine,
             onExternalAction = onExternalAction,
+            speechState = speechState,
+            onSpeechToggle = onSpeechToggle,
         )
     }
 
@@ -242,6 +250,8 @@ internal fun TranslationSessionOverlay(
                 onSelectSource = onSelectSource,
                 onSelectEngine = onSelectEngine,
                 onExternalAction = onExternalAction,
+                speechState = speechState,
+                onSpeechToggle = onSpeechToggle,
             )
         }
     }
@@ -259,6 +269,8 @@ private fun TranslationSessionSheetDialog(
     onSelectSource: (LanguageTag) -> Unit,
     onSelectEngine: (TranslationEngineSelection) -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
+    speechState: TranslationResultSpeechState,
+    onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)?,
 ) {
     Dialog(
         onDismissRequest = onDismiss,
@@ -288,6 +300,8 @@ private fun TranslationSessionSheetDialog(
                     onSelectSource = onSelectSource,
                     onSelectEngine = onSelectEngine,
                     onExternalAction = onExternalAction,
+                    speechState = speechState,
+                    onSpeechToggle = onSpeechToggle,
                     modifier = Modifier
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState()),
@@ -310,6 +324,8 @@ private fun TranslationSessionPopup(
     onSelectSource: (LanguageTag) -> Unit,
     onSelectEngine: (TranslationEngineSelection) -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
+    speechState: TranslationResultSpeechState,
+    onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)?,
 ) {
     BackHandler(onBack = onDismiss)
     Box(modifier = Modifier.alpha(if (visible) 1f else 0f)) {
@@ -339,6 +355,8 @@ private fun TranslationSessionPopup(
                 onSelectSource = onSelectSource,
                 onSelectEngine = onSelectEngine,
                 onExternalAction = onExternalAction,
+                speechState = speechState,
+                onSpeechToggle = onSpeechToggle,
                 modifier = Modifier.fillMaxWidth(),
                 compact = true,
             )
@@ -466,7 +484,11 @@ private fun calculateTranslationPopupFallbackPosition(
 }
 
 private val POPUP_EDGE_MARGIN = 16.dp
-private val POPUP_ANCHOR_GAP = 8.dp
+
+// Text selection handles extend below the selected glyph bounds and keep a larger invisible
+// touch target. Keep popup actions clear of that target so the platform handle cannot consume
+// taps intended for the first action in the popup.
+private val POPUP_ANCHOR_GAP = 24.dp
 private val POPUP_MAXIMUM_WIDTH = 360.dp
 private val translationPopupProperties = PopupProperties(
     focusable = false,

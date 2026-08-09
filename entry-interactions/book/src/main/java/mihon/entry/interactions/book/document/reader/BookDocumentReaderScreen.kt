@@ -36,11 +36,14 @@ import mihon.entry.interactions.book.reader.BookReaderNavigationSheet
 import mihon.entry.interactions.book.reader.BookReaderProgress
 import mihon.entry.interactions.book.reader.BookReaderScaffold
 import mihon.entry.interactions.book.reader.selection.BookSelectionActionCoordinator
-import mihon.entry.interactions.book.reader.selection.BookSelectionSpeechPhase
 import mihon.entry.interactions.book.reader.settings.BookReaderSettingsDialog
+import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechOwner
+import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechPhase
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewActionsMenu
 import mihon.entry.interactions.source.EntryChildWebViewResolution
+import mihon.translation.ui.presentation.TranslationResultSpeechPhase
+import mihon.translation.ui.presentation.TranslationResultSpeechState
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.reader.ReaderChrome
@@ -79,11 +82,25 @@ internal fun BookDocumentReaderScreen(
     val automaticTranslationEnabled =
         selectionCoordinator?.automaticTranslationEnabled?.collectAsState()?.value == true
     val speechState = selectionCoordinator?.speechState?.collectAsState()?.value
+    val activeSelectionSpeech = speechState?.owner as? BookShortFormSpeechOwner.Selection
+    val translationSpeechState = when (val owner = speechState?.owner) {
+        is BookShortFormSpeechOwner.TranslationResult -> TranslationResultSpeechState(
+            activeTarget = owner.target,
+            phase = when (speechState.phase) {
+                BookShortFormSpeechPhase.Preparing -> TranslationResultSpeechPhase.Preparing
+                BookShortFormSpeechPhase.Speaking -> TranslationResultSpeechPhase.Speaking
+                BookShortFormSpeechPhase.Idle -> error("Idle speech cannot have an owner")
+            },
+        )
+        is BookShortFormSpeechOwner.Selection,
+        null,
+        -> TranslationResultSpeechState()
+    }
     val textInteraction = remember(
         selectionCoordinator,
         observeSelections,
         automaticTranslationEnabled,
-        speechState,
+        activeSelectionSpeech?.identity,
         rootPosition,
     ) {
         BookDocumentTextInteraction(
@@ -111,9 +128,7 @@ internal fun BookDocumentReaderScreen(
             } else {
                 emptySet()
             },
-            activeSpeechSelectionIdentity = speechState
-                ?.takeIf { it.phase != BookSelectionSpeechPhase.Idle }
-                ?.selectionIdentity,
+            activeSpeechSelectionIdentity = activeSelectionSpeech?.identity,
             onSelectionAction = { ownerIdentity, selectionIdentity, action ->
                 selectionCoordinator?.performAction(ownerIdentity, selectionIdentity, action)
             },
@@ -130,6 +145,8 @@ internal fun BookDocumentReaderScreen(
             ),
             footerColor = readerPalette.background,
             translationController = selectionCoordinator?.translationController,
+            translationSpeechState = translationSpeechState,
+            onTranslationSpeechToggle = selectionCoordinator?.let { it::toggleTranslationSpeech },
             onRootPositionInWindow = { rootPosition = it },
             modifier = Modifier
                 .fillMaxSize()

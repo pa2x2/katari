@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -15,12 +16,15 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.OpenInFull
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,6 +44,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.TextStyle
@@ -84,6 +90,8 @@ internal fun TranslationSessionContent(
     onSelectSource: (LanguageTag) -> Unit,
     onSelectEngine: (TranslationEngineSelection) -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
+    speechState: TranslationResultSpeechState = TranslationResultSpeechState(),
+    onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)? = null,
     modifier: Modifier = Modifier,
     compact: Boolean = false,
 ) {
@@ -133,11 +141,22 @@ internal fun TranslationSessionContent(
                 horizontal = if (compact) 16.dp else 20.dp,
                 vertical = if (compact) 12.dp else 20.dp,
             ),
-            verticalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 12.dp),
+            verticalArrangement = Arrangement.spacedBy(
+                when {
+                    compactResult -> 4.dp
+                    compact -> 8.dp
+                    else -> 12.dp
+                },
+            ),
         ) {
             if (displayedResult != null) {
                 SuccessContent(
                     result = displayedResult,
+                    sourceText = (state as? TranslationSessionState.Success)
+                        ?.takeIf { it.result == displayedResult }
+                        ?.input
+                        ?.request
+                        ?.text,
                     expanded = expanded,
                     compact = compact,
                     showExpand = showExpand,
@@ -148,6 +167,8 @@ internal fun TranslationSessionContent(
                     onCopy = onCopy,
                     onExpand = onExpand,
                     onExternalAction = onExternalAction,
+                    speechState = speechState,
+                    onSpeechToggle = onSpeechToggle,
                 )
             } else {
                 when (state) {
@@ -267,6 +288,7 @@ private fun ReadyContent(
 @Composable
 private fun SuccessContent(
     result: TranslationResult,
+    sourceText: String?,
     expanded: Boolean,
     compact: Boolean,
     showExpand: Boolean,
@@ -277,6 +299,8 @@ private fun SuccessContent(
     onCopy: (String) -> Unit,
     onExpand: () -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
+    speechState: TranslationResultSpeechState,
+    onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)?,
 ) {
     var resultOverflowed by remember(result.translatedText, compact) { mutableStateOf(false) }
     val showOverflowAction = showExpand && !expanded && (!compact || resultOverflowed)
@@ -296,51 +320,60 @@ private fun SuccessContent(
     val changeEngine = {
         onExternalAction(TranslationSessionExternalAction.ChooseEngine)
     }
-    if (!compact) {
-        TranslationLanguagePair(
-            languagePair = languagePair,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+    val speechContent = sourceText?.takeIf { onSpeechToggle != null }?.let { exactSourceText ->
+        TranslationResultSpeechContent(
+            sourceText = exactSourceText,
+            sourceTarget = TranslationResultSpeechTarget(
+                side = TranslationResultSpeechSide.Source,
+                text = exactSourceText,
+                language = result.sourceLanguage,
+            ),
+            targetTarget = TranslationResultSpeechTarget(
+                side = TranslationResultSpeechSide.Target,
+                text = result.translatedText,
+                language = result.targetLanguage,
+            ),
+            onToggle = requireNotNull(onSpeechToggle),
         )
-    } else {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+    }
+    if (!compact) {
+        if (speechContent != null) {
+            TranslationSpeechSection(
+                title = stringResource(MR.strings.translation_original),
+                language = result.sourceLanguage.displayName(),
+                text = speechContent.sourceText,
+                target = speechContent.sourceTarget,
+                speechState = speechState,
+                onSpeechToggle = speechContent.onToggle,
+            )
+            HorizontalDivider()
+            TranslationSpeechSectionHeader(
+                title = stringResource(MR.strings.translation_title),
+                language = result.targetLanguage.displayName(),
+                target = speechContent.targetTarget,
+                speechState = speechState,
+                onSpeechToggle = speechContent.onToggle,
+            )
+        } else {
             TranslationLanguagePair(
                 languagePair = languagePair,
-                modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
             )
-            if (showCopy) {
-                TranslationCompactIconButton(
-                    icon = Icons.Outlined.ContentCopy,
-                    contentDescription = stringResource(MR.strings.copy),
-                    onClick = { onCopy(result.translatedText) },
-                )
-            }
-            if (showOverflowAction) {
-                TranslationCompactIconButton(
-                    icon = Icons.Outlined.OpenInFull,
-                    contentDescription = stringResource(MR.strings.action_expand),
-                    onClick = onExpand,
-                )
-            }
-            if (showLanguageChange) {
-                TranslationCompactIconButton(
-                    icon = Icons.Outlined.Language,
-                    contentDescription = stringResource(MR.strings.action_change_language),
-                    onClick = changeLanguages,
-                )
-            }
-            if (showEngineChange) {
-                TranslationCompactIconButton(
-                    icon = Icons.Outlined.Settings,
-                    contentDescription = stringResource(MR.strings.translation_choose_engine),
-                    onClick = changeEngine,
+        }
+    }
+    if (compact) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Top,
+        ) {
+            SelectionContainer(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = result.translatedText,
+                    style = MaterialTheme.typography.bodyLarge,
+                    maxLines = ANCHORED_RESULT_MAX_LINES,
+                    overflow = TextOverflow.Ellipsis,
+                    onTextLayout = { resultOverflowed = it.hasVisualOverflow },
                 )
             }
             onDismiss?.let {
@@ -351,63 +384,297 @@ private fun SuccessContent(
                 )
             }
         }
-    }
-    SelectionContainer {
-        Text(
-            text = result.translatedText,
-            style = MaterialTheme.typography.bodyLarge,
-            maxLines = if (compact) ANCHORED_RESULT_MAX_LINES else Int.MAX_VALUE,
-            overflow = if (compact) TextOverflow.Ellipsis else TextOverflow.Clip,
-            onTextLayout = { resultOverflowed = it.hasVisualOverflow },
-        )
-    }
-    result.presentation.resultAttribution?.let { attribution ->
-        Text(
-            text = attribution.label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = if (compact) 1 else Int.MAX_VALUE,
-            overflow = if (compact) TextOverflow.Ellipsis else TextOverflow.Clip,
-        )
-    }
-    if (!compact && (showCopy || showOverflowAction || showLanguageChange || showEngineChange)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (showCopy) {
-                IconButton(onClick = { onCopy(result.translatedText) }) {
-                    Icon(
-                        imageVector = Icons.Outlined.ContentCopy,
+            if (speechContent != null) {
+                TranslationSpeechLanguagePair(
+                    sourceLanguage = result.sourceLanguage.displayName(),
+                    targetLanguage = result.targetLanguage.displayName(),
+                    sourceTarget = speechContent.sourceTarget,
+                    targetTarget = speechContent.targetTarget,
+                    speechState = speechState,
+                    onSpeechToggle = speechContent.onToggle,
+                    modifier = Modifier.weight(1f),
+                )
+            } else {
+                TranslationLanguagePair(
+                    languagePair = languagePair,
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        val attribution = result.presentation.resultAttribution
+        if (attribution != null || showCopy || showOverflowAction || showLanguageChange || showEngineChange) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (attribution != null) {
+                    Text(
+                        text = attribution.label,
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                } else {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+                if (showCopy) {
+                    TranslationCompactIconButton(
+                        icon = Icons.Outlined.ContentCopy,
                         contentDescription = stringResource(MR.strings.copy),
+                        onClick = { onCopy(result.translatedText) },
                     )
                 }
-            }
-            if (showOverflowAction) {
-                IconButton(onClick = onExpand) {
-                    Icon(
-                        imageVector = Icons.Outlined.OpenInFull,
+                if (showOverflowAction) {
+                    TranslationCompactIconButton(
+                        icon = Icons.Outlined.OpenInFull,
                         contentDescription = stringResource(MR.strings.action_expand),
+                        onClick = onExpand,
                     )
                 }
-            }
-            if (showLanguageChange) {
-                IconButton(
-                    onClick = changeLanguages,
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Language,
+                if (showLanguageChange) {
+                    TranslationCompactIconButton(
+                        icon = Icons.Outlined.Language,
                         contentDescription = stringResource(MR.strings.action_change_language),
+                        onClick = changeLanguages,
+                    )
+                }
+                if (showEngineChange) {
+                    TranslationCompactIconButton(
+                        icon = Icons.Outlined.Settings,
+                        contentDescription = stringResource(MR.strings.translation_choose_engine),
+                        onClick = changeEngine,
                     )
                 }
             }
-            if (showEngineChange) {
-                IconButton(onClick = changeEngine) {
-                    Icon(
-                        imageVector = Icons.Outlined.Settings,
-                        contentDescription = stringResource(MR.strings.translation_choose_engine),
-                    )
+        }
+    } else {
+        SelectionContainer {
+            Text(
+                text = result.translatedText,
+                style = MaterialTheme.typography.bodyLarge,
+            )
+        }
+        result.presentation.resultAttribution?.let { attribution ->
+            Text(
+                text = attribution.label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        if (showCopy || showOverflowAction || showLanguageChange || showEngineChange) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                if (showCopy) {
+                    IconButton(onClick = { onCopy(result.translatedText) }) {
+                        Icon(
+                            imageVector = Icons.Outlined.ContentCopy,
+                            contentDescription = stringResource(MR.strings.copy),
+                        )
+                    }
                 }
+                if (showOverflowAction) {
+                    IconButton(onClick = onExpand) {
+                        Icon(
+                            imageVector = Icons.Outlined.OpenInFull,
+                            contentDescription = stringResource(MR.strings.action_expand),
+                        )
+                    }
+                }
+                if (showLanguageChange) {
+                    IconButton(
+                        onClick = changeLanguages,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Language,
+                            contentDescription = stringResource(MR.strings.action_change_language),
+                        )
+                    }
+                }
+                if (showEngineChange) {
+                    IconButton(onClick = changeEngine) {
+                        Icon(
+                            imageVector = Icons.Outlined.Settings,
+                            contentDescription = stringResource(MR.strings.translation_choose_engine),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+private data class TranslationResultSpeechContent(
+    val sourceText: String,
+    val sourceTarget: TranslationResultSpeechTarget,
+    val targetTarget: TranslationResultSpeechTarget,
+    val onToggle: (TranslationResultSpeechTarget) -> Unit,
+)
+
+@Composable
+private fun TranslationSpeechSection(
+    title: String,
+    language: String,
+    text: String,
+    target: TranslationResultSpeechTarget,
+    speechState: TranslationResultSpeechState,
+    onSpeechToggle: (TranslationResultSpeechTarget) -> Unit,
+) {
+    TranslationSpeechSectionHeader(
+        title = title,
+        language = language,
+        target = target,
+        speechState = speechState,
+        onSpeechToggle = onSpeechToggle,
+    )
+    SelectionContainer {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyLarge,
+        )
+    }
+}
+
+@Composable
+private fun TranslationSpeechSectionHeader(
+    title: String,
+    language: String,
+    target: TranslationResultSpeechTarget,
+    speechState: TranslationResultSpeechState,
+    onSpeechToggle: (TranslationResultSpeechTarget) -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = title, style = MaterialTheme.typography.titleSmall)
+            Text(
+                text = language,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        TranslationSpeechActionButton(
+            target = target,
+            speechState = speechState,
+            onSpeechToggle = onSpeechToggle,
+        )
+    }
+}
+
+@Composable
+private fun TranslationSpeechLanguagePair(
+    sourceLanguage: String,
+    targetLanguage: String,
+    sourceTarget: TranslationResultSpeechTarget,
+    targetTarget: TranslationResultSpeechTarget,
+    speechState: TranslationResultSpeechState,
+    onSpeechToggle: (TranslationResultSpeechTarget) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Row(
+            modifier = Modifier.weight(1f),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            TranslationSpeechActionButton(sourceTarget, speechState, onSpeechToggle, compact = true)
+            Text(
+                text = sourceLanguage,
+                modifier = Modifier.weight(1f, fill = false),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Icon(
+            imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
+            contentDescription = null,
+            modifier = Modifier
+                .padding(horizontal = 4.dp)
+                .size(16.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Row(
+            modifier = Modifier.weight(1f),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            TranslationSpeechActionButton(targetTarget, speechState, onSpeechToggle, compact = true)
+            Text(
+                text = targetLanguage,
+                modifier = Modifier.weight(1f, fill = false),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+@Composable
+private fun TranslationSpeechActionButton(
+    target: TranslationResultSpeechTarget,
+    speechState: TranslationResultSpeechState,
+    onSpeechToggle: (TranslationResultSpeechTarget) -> Unit,
+    compact: Boolean = false,
+) {
+    val active = speechState.activeTarget == target
+    val size = if (compact) 36.dp else 48.dp
+    val contentDescription = stringResource(
+        when (target.side) {
+            TranslationResultSpeechSide.Source -> if (active) {
+                MR.strings.translation_stop_original
+            } else {
+                MR.strings.translation_listen_original
+            }
+            TranslationResultSpeechSide.Target -> if (active) {
+                MR.strings.translation_stop_result
+            } else {
+                MR.strings.translation_listen_result
+            }
+        },
+    )
+    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
+        IconButton(
+            onClick = { onSpeechToggle(target) },
+            modifier = Modifier.size(size),
+        ) {
+            if (active && speechState.phase == TranslationResultSpeechPhase.Preparing) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .size(if (compact) 18.dp else 22.dp)
+                        .semantics { this.contentDescription = contentDescription },
+                    strokeWidth = 2.dp,
+                )
+            } else {
+                Icon(
+                    imageVector = if (active) Icons.Outlined.Stop else Icons.AutoMirrored.Outlined.VolumeUp,
+                    contentDescription = contentDescription,
+                    modifier = Modifier.size(if (compact) 20.dp else 24.dp),
+                    tint = if (active) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                )
             }
         }
     }

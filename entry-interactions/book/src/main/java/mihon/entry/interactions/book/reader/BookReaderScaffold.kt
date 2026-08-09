@@ -38,6 +38,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import mihon.entry.interactions.book.reader.translation.BookSelectionTranslationController
 import mihon.translation.ui.presentation.CoordinatedTranslationSessionHost
+import mihon.translation.ui.presentation.TranslationResultSpeechState
+import mihon.translation.ui.presentation.TranslationResultSpeechTarget
 import tachiyomi.presentation.core.components.reader.ReaderPageIndicator
 import tachiyomi.presentation.core.components.reader.ReaderProgressIndicator
 
@@ -55,6 +57,8 @@ internal fun BookReaderScaffold(
     modifier: Modifier = Modifier,
     nativeContentView: View? = null,
     translationController: BookSelectionTranslationController? = null,
+    translationSpeechState: TranslationResultSpeechState = TranslationResultSpeechState(),
+    onTranslationSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)? = null,
     onRootPositionInWindow: (Offset) -> Unit = {},
     content: @Composable BoxScope.() -> Unit,
     overlay: @Composable BoxScope.(@Composable () -> Unit) -> Unit = {},
@@ -140,6 +144,8 @@ internal fun BookReaderScaffold(
                     isTabletUi = maxWidth >= 720.dp,
                     modifier = Modifier.fillMaxSize(),
                     onDismiss = controller::dismissTranslation,
+                    speechState = translationSpeechState,
+                    onSpeechToggle = onTranslationSpeechToggle,
                 )
             }
         }

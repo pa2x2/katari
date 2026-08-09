@@ -103,7 +103,7 @@ internal class DefaultTtsFeature(
             )
         }
         val voices = availableVoices.voices
-        val voice = resolveVoice(
+        val voiceResolution = resolveVoice(
             selection = request.voice,
             language = language,
             engine = engine,
@@ -116,8 +116,9 @@ internal class DefaultTtsFeature(
                 language,
                 voices.filter { it.supports(language) }.sortedWith(VOICE_ORDER),
             )
+        val voice = voiceResolution.voice
         val networkAllowed = when (request.processingPolicy) {
-            TtsProcessingPolicy.ProfileDefault -> true
+            TtsProcessingPolicy.ProfileDefault -> voiceResolution.profileNetworkConsent
             TtsProcessingPolicy.OnDeviceOnly -> false
             TtsProcessingPolicy.NetworkAllowed -> true
         }
@@ -223,21 +224,49 @@ internal class DefaultTtsFeature(
         engine: TtsEngine,
         voices: List<TtsVoice>,
         engineDefaultVoice: TtsVoiceId?,
-    ): TtsVoice? {
+    ): TtsVoiceResolution? {
         return when (selection) {
             is TtsVoiceSelection.Explicit -> voices.singleOrNull { it.id == selection.voice }
                 ?.takeIf { it.supports(language) && it.id.engine == engine.catalogEntry.id }
+                ?.let { TtsVoiceResolution(it, profileNetworkConsent = false) }
             TtsVoiceSelection.LanguageDefault -> {
-                val configured = preferences.voice(language).get()?.let(TtsDefaultVoiceSelection::Explicit)
-                    ?: preferences.selectedDefaultVoice()
-                val configuredVoice = when (configured) {
-                    TtsDefaultVoiceSelection.EngineDefault -> engineDefaultVoice
-                    is TtsDefaultVoiceSelection.Explicit -> configured.voice
+                val languageOverride = preferences.voice(language).get()
+                if (languageOverride != null) {
+                    return voices.singleOrNull { it.id == languageOverride }
+                        ?.takeIf { it.supports(language) && it.id.engine == engine.catalogEntry.id }
+                        ?.let { TtsVoiceResolution(it, profileNetworkConsent = true) }
                 }
-                voices.singleOrNull { it.id == configuredVoice }
+
+                val profileDefault = when (val configured = preferences.selectedDefaultVoice()) {
+                    TtsDefaultVoiceSelection.EngineDefault -> null
+                    is TtsDefaultVoiceSelection.Explicit -> voices.singleOrNull { it.id == configured.voice }
+                        ?: return null
+                }
+                profileDefault
                     ?.takeIf { it.supports(language) && it.id.engine == engine.catalogEntry.id }
+                    ?.let { TtsVoiceResolution(it, profileNetworkConsent = true) }
+                    ?: voices.compatibleDefault(
+                        language = language,
+                        engine = engine.catalogEntry.id,
+                        engineDefaultVoice = engineDefaultVoice,
+                    )
+                        ?.let { TtsVoiceResolution(it, profileNetworkConsent = false) }
             }
         }
+    }
+
+    private fun List<TtsVoice>.compatibleDefault(
+        language: LanguageTag,
+        engine: TtsEngineId,
+        engineDefaultVoice: TtsVoiceId?,
+    ): TtsVoice? {
+        val compatible = filter { voice ->
+            voice.id.engine == engine && voice.supports(language)
+        }
+        val local = compatible.filter { it.processing != TtsVoiceProcessing.NetworkRequired }
+        return local.singleOrNull { it.id == engineDefaultVoice }
+            ?: local.sortedWith(VOICE_ORDER).firstOrNull()
+            ?: compatible.sortedWith(VOICE_ORDER).firstOrNull()
     }
 
     private fun voiceChoiceRequired(
@@ -249,7 +278,6 @@ internal class DefaultTtsFeature(
         val unavailable = when (selection) {
             is TtsVoiceSelection.Explicit -> selection.voice
             TtsVoiceSelection.LanguageDefault -> preferences.voice(language).get()
-                ?: (preferences.selectedDefaultVoice() as? TtsDefaultVoiceSelection.Explicit)?.voice
         }
         return TtsPreparation.VoiceChoiceRequired(
             engine = engine,
@@ -312,6 +340,11 @@ internal class DefaultTtsFeature(
     }
 
     private companion object {
+        data class TtsVoiceResolution(
+            val voice: TtsVoice,
+            val profileNetworkConsent: Boolean,
+        )
+
         const val MAXIMUM_REQUEST_CODE_POINTS = 50_000
         val VOICE_ORDER = compareBy<TtsVoice>(
             { it.processing == TtsVoiceProcessing.NetworkRequired },

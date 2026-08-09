@@ -2,6 +2,7 @@ package mihon.translation.ui.session
 
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore.InMemoryPreference
 import tachiyomi.core.common.preference.Preference
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class TranslationLanguageSupportControllerTest {
     @Test
     fun `new engine selection discards the prior lookup and late result`() = runTest {

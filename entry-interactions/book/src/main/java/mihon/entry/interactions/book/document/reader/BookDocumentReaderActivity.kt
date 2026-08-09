@@ -32,8 +32,8 @@ import mihon.entry.interactions.book.reader.BookReaderSessionFactory
 import mihon.entry.interactions.book.reader.BookReaderSessionRegistry
 import mihon.entry.interactions.book.reader.OpenedBookReaderSession
 import mihon.entry.interactions.book.reader.selection.BookSelectionActionCoordinator
-import mihon.entry.interactions.book.reader.selection.BookSelectionSpeechController
-import mihon.entry.interactions.book.reader.selection.BookSelectionSpeechFailure
+import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechController
+import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechFailure
 import mihon.entry.interactions.book.reader.translation.BookSelectionTranslationController
 import mihon.entry.interactions.runtime.EntryInteractionActivity
 import mihon.entry.interactions.runtime.registerEntryInteractionSecureScreen
@@ -262,25 +262,25 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         )
         selectionCoordinator = BookSelectionActionCoordinator(
             translationController = translationController,
-            speechController = BookSelectionSpeechController(
+            speechController = BookShortFormSpeechController(
                 feature = Injekt.get<TtsFeature>(),
                 scope = lifecycleScope,
-                onFailure = ::showSelectionSpeechFailure,
+                onFailure = ::showSpeechFailure,
             ),
             scope = lifecycleScope,
             initialCapabilities = session.readerCapabilities,
         )
     }
 
-    private fun showSelectionSpeechFailure(failure: BookSelectionSpeechFailure) {
+    private fun showSpeechFailure(failure: BookShortFormSpeechFailure) {
         val message = when (failure) {
-            BookSelectionSpeechFailure.LanguageUnavailable ->
+            BookShortFormSpeechFailure.LanguageUnavailable ->
                 R.string.book_reader_selection_speech_language_unavailable
-            BookSelectionSpeechFailure.ConfigurationRequired ->
+            BookShortFormSpeechFailure.ConfigurationRequired ->
                 R.string.book_reader_selection_speech_configuration_required
-            BookSelectionSpeechFailure.Unavailable ->
+            BookShortFormSpeechFailure.Unavailable ->
                 R.string.book_reader_selection_speech_unavailable
-            BookSelectionSpeechFailure.PlaybackFailed ->
+            BookShortFormSpeechFailure.PlaybackFailed ->
                 R.string.book_reader_selection_speech_failed
         }
         toast(getString(message))

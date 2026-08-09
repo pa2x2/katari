@@ -255,6 +255,11 @@
 
     <!-- Translation -->
     <string name="translation_title">Translation</string>
+    <string name="translation_original">Original</string>
+    <string name="translation_listen_original">Listen to original</string>
+    <string name="translation_stop_original">Stop original speech</string>
+    <string name="translation_listen_result">Listen to translation</string>
+    <string name="translation_stop_result">Stop translated speech</string>
     <string name="translation_language_pair">%1$s → %2$s</string>
     <string name="translation_source_undetermined">The source language could not be determined.</string>
     <string name="translation_choose_source_language">Choose source language</string>
