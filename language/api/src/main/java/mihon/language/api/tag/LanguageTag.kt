@@ -1,18 +1,14 @@
-package mihon.translation.api.language
+package mihon.language.api.tag
 
 import java.util.Locale
 
-/**
- * Provider-neutral BCP-47 language identity.
- *
- * Provider enums and Android locale objects are converted at adapter boundaries and never cross the Translation API.
- */
+/** A determinate, normalized BCP-47 language tag. */
 @JvmInline
-value class TranslationLanguageTag private constructor(
+value class LanguageTag private constructor(
     val value: String,
 ) {
     companion object {
-        fun parse(value: String): TranslationLanguageTag? {
+        fun parse(value: String): LanguageTag? {
             val candidate = value.trim().replace('_', '-')
             if (candidate.isEmpty()) return null
 
@@ -22,13 +18,11 @@ value class TranslationLanguageTag private constructor(
             val normalized = locale.toLanguageTag()
             return normalized
                 .takeUnless { it.isEmpty() || it == UNDETERMINED_LANGUAGE }
-                ?.let(::TranslationLanguageTag)
+                ?.let(::LanguageTag)
         }
 
-        fun require(value: String): TranslationLanguageTag {
-            return requireNotNull(parse(value)) {
-                "Translation language tag must be a determinate BCP-47 tag: '$value'"
-            }
+        fun require(value: String): LanguageTag = requireNotNull(parse(value)) {
+            "Language tag must be a determinate BCP-47 tag: '$value'"
         }
 
         private const val UNDETERMINED_LANGUAGE = "und"

@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationEngineSelection
@@ -17,7 +18,6 @@ import mihon.translation.api.engine.TranslationEngineState
 import mihon.translation.api.engine.TranslationEngineStatus
 import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationHostActions
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.api.preparation.TranslationPreparation
 import mihon.translation.api.preparation.TranslationUnavailableReason
 import mihon.translation.api.request.TranslationSourceLanguageSelection
@@ -110,7 +110,7 @@ class TranslationSessionHostCoordinator(
         }
     }
 
-    fun selectLanguage(language: TranslationLanguageTag) {
+    fun selectLanguage(language: LanguageTag) {
         val available = languageSupport.value as? TranslationLanguageSupportState.Available
             ?: return
         if (available.engine != activeEngine()) return
@@ -219,7 +219,7 @@ class TranslationSessionHostCoordinator(
         }
     }
 
-    fun selectedLanguage(picker: TranslationSessionPicker): TranslationLanguageTag? =
+    fun selectedLanguage(picker: TranslationSessionPicker): LanguageTag? =
         when (picker) {
             TranslationSessionPicker.SourceLanguage -> mutableLanguagePair.value.source
             TranslationSessionPicker.TargetLanguage -> mutableLanguagePair.value.target
@@ -228,7 +228,7 @@ class TranslationSessionHostCoordinator(
             -> null
         }
 
-    fun counterpartLanguage(picker: TranslationSessionPicker): TranslationLanguageTag? =
+    fun counterpartLanguage(picker: TranslationSessionPicker): LanguageTag? =
         when (picker) {
             TranslationSessionPicker.SourceLanguage -> mutableLanguagePair.value.target
             TranslationSessionPicker.TargetLanguage -> mutableLanguagePair.value.source
@@ -325,7 +325,7 @@ class TranslationSessionHostCoordinator(
         mutablePicker.value = picker
     }
 
-    private fun resolvedLanguageContext(): Pair<TranslationLanguageTag?, TranslationLanguageTag?> {
+    private fun resolvedLanguageContext(): Pair<LanguageTag?, LanguageTag?> {
         val state = controller.state.value as? TranslationSessionState.Active
             ?: return null to null
         val explicitSource =
@@ -370,6 +370,6 @@ enum class TranslationSessionPicker {
 }
 
 data class TranslationSessionLanguagePair(
-    val source: TranslationLanguageTag? = null,
-    val target: TranslationLanguageTag? = null,
+    val source: LanguageTag? = null,
+    val target: LanguageTag? = null,
 )

@@ -39,8 +39,8 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
 import kotlinx.coroutines.launch
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.TranslationEngineSelection
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.ui.session.TranslationSessionController
 import mihon.translation.ui.session.TranslationSessionState
 import tachiyomi.i18n.MR
@@ -105,7 +105,7 @@ internal fun TranslationSessionOverlay(
     onRetry: () -> Unit,
     onCopy: (String) -> Unit,
     onExpand: () -> Unit,
-    onSelectSource: (TranslationLanguageTag) -> Unit,
+    onSelectSource: (LanguageTag) -> Unit,
     onSelectEngine: (TranslationEngineSelection) -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
     modifier: Modifier = Modifier,
@@ -256,7 +256,7 @@ private fun TranslationSessionSheetDialog(
     onRetry: () -> Unit,
     onCopy: (String) -> Unit,
     onExpand: () -> Unit,
-    onSelectSource: (TranslationLanguageTag) -> Unit,
+    onSelectSource: (LanguageTag) -> Unit,
     onSelectEngine: (TranslationEngineSelection) -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
 ) {
@@ -307,7 +307,7 @@ private fun TranslationSessionPopup(
     onRetry: () -> Unit,
     onCopy: (String) -> Unit,
     onExpand: () -> Unit,
-    onSelectSource: (TranslationLanguageTag) -> Unit,
+    onSelectSource: (LanguageTag) -> Unit,
     onSelectEngine: (TranslationEngineSelection) -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
 ) {

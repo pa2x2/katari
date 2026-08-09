@@ -2,8 +2,8 @@ package mihon.translation.runtime.preference
 
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.TranslationEngineId
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.api.request.TranslationTargetLanguageSelection
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
@@ -31,7 +31,7 @@ class ProfileTranslationPreferencesTest {
     fun `engine and target selections preserve provider-neutral identities`() {
         val preferences = ProfileTranslationPreferences(InMemoryPreferenceStore(), DEFAULT_ENGINE)
         val engine = TranslationEngineId("example.engine")
-        val target = TranslationTargetLanguageSelection.Explicit(TranslationLanguageTag.require("pt-BR"))
+        val target = TranslationTargetLanguageSelection.Explicit(LanguageTag.require("pt-BR"))
 
         preferences.engine.set(engine)
         preferences.targetLanguage.set(target)

@@ -6,9 +6,9 @@ import mihon.feature.graph.validation.FeatureContractVerificationResult
 import mihon.feature.graph.validation.FeatureContractVerifier
 import mihon.feature.graph.validation.FeatureValidationContributionSink
 import mihon.feature.graph.validation.FeatureValidationContributor
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationEngineSelection
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.api.preparation.TranslationEngineChoiceReason
 import mihon.translation.api.preparation.TranslationPreparation
 import mihon.translation.api.request.TranslationRequest
@@ -36,7 +36,7 @@ class TranslationFeatureContractValidationContributor : FeatureValidationContrib
                 val feature = DefaultTranslationFeature(
                     engineRegistry = registry,
                     knownEngineCatalog = registry,
-                    sourceLanguageDetectors = emptyList(),
+                    textLanguageDetectors = emptyList(),
                     defaultTargetLanguageResolver = TranslationDefaultTargetLanguageResolver { null },
                     selectedEngine = { TranslationEngineId("missing") },
                 )
@@ -44,10 +44,10 @@ class TranslationFeatureContractValidationContributor : FeatureValidationContrib
                     TranslationRequest(
                         text = "Feature contract",
                         sourceLanguage = TranslationSourceLanguageSelection.Explicit(
-                            TranslationLanguageTag.require("en"),
+                            LanguageTag.require("en"),
                         ),
                         targetLanguage = TranslationTargetLanguageSelection.Explicit(
-                            TranslationLanguageTag.require("pl"),
+                            LanguageTag.require("pl"),
                         ),
                         engine = TranslationEngineSelection.ProfileDefault,
                     ),

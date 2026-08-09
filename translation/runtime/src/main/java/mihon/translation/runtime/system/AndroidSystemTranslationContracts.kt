@@ -1,11 +1,11 @@
 package mihon.translation.runtime.system
 
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.language.TranslationLanguageSupportInspection
-import mihon.translation.api.language.TranslationLanguageTag
 
 internal data class AndroidSystemTranslationPair(
-    val source: TranslationLanguageTag,
-    val target: TranslationLanguageTag,
+    val source: LanguageTag,
+    val target: LanguageTag,
 )
 
 internal enum class AndroidSystemCapabilityState {

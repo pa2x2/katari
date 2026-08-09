@@ -1,9 +1,11 @@
 package mihon.translation.runtime.feature
 
+import mihon.language.api.identification.TextLanguageDetection
+import mihon.language.api.identification.TextLanguageDetector
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationEngineSelection
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.api.preparation.ReadyTranslation
 import mihon.translation.api.preparation.TranslationEngineChoiceReason
 import mihon.translation.api.preparation.TranslationPreparation
@@ -24,17 +26,15 @@ import mihon.translation.spi.engine.TranslationEngine
 import mihon.translation.spi.engine.TranslationEngineExecution
 import mihon.translation.spi.engine.TranslationEnginePreparation
 import mihon.translation.spi.engine.TranslationEngineRegistry
-import mihon.translation.spi.language.TranslationSourceLanguageDetection
-import mihon.translation.spi.language.TranslationSourceLanguageDetector
 
 fun interface TranslationDefaultTargetLanguageResolver {
-    fun resolve(): TranslationLanguageTag?
+    fun resolve(): LanguageTag?
 }
 
 class DefaultTranslationFeature(
     private val engineRegistry: TranslationEngineRegistry,
     private val knownEngineCatalog: KnownTranslationEngineCatalog,
-    private val sourceLanguageDetectors: List<TranslationSourceLanguageDetector>,
+    private val textLanguageDetectors: List<TextLanguageDetector>,
     private val defaultTargetLanguageResolver: TranslationDefaultTargetLanguageResolver,
     private val selectedEngine: suspend () -> TranslationEngineId?,
 ) : TranslationFeature {
@@ -132,14 +132,14 @@ class DefaultTranslationFeature(
         }
     }
 
-    private suspend fun resolveSourceLanguage(request: TranslationRequest): TranslationLanguageTag? {
+    private suspend fun resolveSourceLanguage(request: TranslationRequest): LanguageTag? {
         return when (val selection = request.sourceLanguage) {
             is TranslationSourceLanguageSelection.Explicit -> selection.language
-            TranslationSourceLanguageSelection.Automatic -> sourceLanguageDetectors.firstNotNullOfOrNull { detector ->
+            TranslationSourceLanguageSelection.Automatic -> textLanguageDetectors.firstNotNullOfOrNull { detector ->
                 when (val result = detector.detect(request.text)) {
-                    is TranslationSourceLanguageDetection.Detected -> result.language
-                    TranslationSourceLanguageDetection.Undetermined,
-                    is TranslationSourceLanguageDetection.Unavailable,
+                    is TextLanguageDetection.Detected -> result.language
+                    TextLanguageDetection.Undetermined,
+                    is TextLanguageDetection.Unavailable,
                     -> null
                 }
             }
@@ -148,8 +148,8 @@ class DefaultTranslationFeature(
 
     private suspend fun prepareExplicitly(
         request: TranslationRequest,
-        sourceLanguage: TranslationLanguageTag,
-        targetLanguage: TranslationLanguageTag,
+        sourceLanguage: LanguageTag,
+        targetLanguage: LanguageTag,
         codePointCount: Int,
         engineId: TranslationEngineId,
     ): TranslationPreparation {
@@ -163,8 +163,8 @@ class DefaultTranslationFeature(
     }
 
     private fun TranslationRequest.resolve(
-        sourceLanguage: TranslationLanguageTag,
-        targetLanguage: TranslationLanguageTag,
+        sourceLanguage: LanguageTag,
+        targetLanguage: LanguageTag,
         engine: TranslationEngine,
     ) = ResolvedTranslationRequest(
         text = text,

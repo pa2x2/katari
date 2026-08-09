@@ -1,8 +1,8 @@
 package mihon.translation.runtime.language
 
 import io.kotest.matchers.shouldBe
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.TranslationEngineId
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.api.request.TranslationTargetLanguageSelection
 import mihon.translation.runtime.preference.ProfileTranslationPreferences
 import org.junit.jupiter.api.Test
@@ -17,22 +17,22 @@ class ProfileTranslationDefaultTargetLanguageResolverTest {
         var locale = Locale.forLanguageTag("pl-PL")
         val resolver = ProfileTranslationDefaultTargetLanguageResolver(preferences) { locale }
 
-        resolver.resolve() shouldBe TranslationLanguageTag.require("pl-PL")
+        resolver.resolve() shouldBe LanguageTag.require("pl-PL")
         locale = Locale.forLanguageTag("de-DE")
-        resolver.resolve() shouldBe TranslationLanguageTag.require("de-DE")
+        resolver.resolve() shouldBe LanguageTag.require("de-DE")
     }
 
     @Test
     fun `explicit profile target wins over the effective UI locale`() {
         val preferences = ProfileTranslationPreferences(InMemoryPreferenceStore(), DEFAULT_ENGINE)
         preferences.targetLanguage.set(
-            TranslationTargetLanguageSelection.Explicit(TranslationLanguageTag.require("es")),
+            TranslationTargetLanguageSelection.Explicit(LanguageTag.require("es")),
         )
         val resolver = ProfileTranslationDefaultTargetLanguageResolver(preferences) {
             Locale.forLanguageTag("pl-PL")
         }
 
-        resolver.resolve() shouldBe TranslationLanguageTag.require("es")
+        resolver.resolve() shouldBe LanguageTag.require("es")
     }
 
     private companion object {

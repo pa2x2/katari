@@ -1,8 +1,8 @@
 package mihon.translation.api.preparation
 
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.KnownTranslationEngine
 import mihon.translation.api.engine.TranslationEngineId
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.api.model.TranslationModelDescriptor
 import mihon.translation.api.model.TranslationOperationProgress
 import mihon.translation.api.provider.TranslationProviderDisclosure
@@ -48,11 +48,11 @@ sealed interface TranslationPreparation {
     ) : TranslationPreparation
 
     data class SourceUndetermined(
-        val suggestedLanguages: List<TranslationLanguageTag> = emptyList(),
+        val suggestedLanguages: List<LanguageTag> = emptyList(),
     ) : TranslationPreparation
 
     data class TargetLanguageRequired(
-        val sourceLanguage: TranslationLanguageTag?,
+        val sourceLanguage: LanguageTag?,
         val reason: TranslationTargetChoiceReason,
     ) : TranslationPreparation
 
@@ -108,12 +108,12 @@ sealed interface TranslationUnavailableReason {
     data object SystemSettingsUnavailable : TranslationUnavailableReason
 
     data class UnsupportedLanguage(
-        val language: TranslationLanguageTag,
+        val language: LanguageTag,
     ) : TranslationUnavailableReason
 
     data class UnsupportedLanguagePair(
-        val source: TranslationLanguageTag,
-        val target: TranslationLanguageTag,
+        val source: LanguageTag,
+        val target: LanguageTag,
     ) : TranslationUnavailableReason
 
     data class EngineUnavailable(

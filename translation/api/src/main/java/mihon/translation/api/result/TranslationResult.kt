@@ -1,14 +1,14 @@
 package mihon.translation.api.result
 
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.TranslationEngineId
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.api.preparation.TranslationPreparation
 import mihon.translation.api.provider.TranslationProviderPresentation
 
 data class TranslationResult(
     val translatedText: String,
-    val sourceLanguage: TranslationLanguageTag,
-    val targetLanguage: TranslationLanguageTag,
+    val sourceLanguage: LanguageTag,
+    val targetLanguage: LanguageTag,
     val presentation: TranslationProviderPresentation,
 ) {
     init {

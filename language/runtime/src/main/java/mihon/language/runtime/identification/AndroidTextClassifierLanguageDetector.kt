@@ -1,4 +1,4 @@
-package mihon.translation.runtime.language
+package mihon.language.runtime.identification
 
 import android.app.Application
 import android.os.Build
@@ -8,35 +8,35 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import mihon.translation.api.language.TranslationLanguageTag
-import mihon.translation.spi.language.TranslationSourceLanguageDetection
-import mihon.translation.spi.language.TranslationSourceLanguageDetector
-import mihon.translation.spi.language.TranslationSourceLanguageDetectorId
+import mihon.language.api.identification.TextLanguageDetection
+import mihon.language.api.identification.TextLanguageDetector
+import mihon.language.api.identification.TextLanguageDetectorId
+import mihon.language.api.tag.LanguageTag
 
-internal class AndroidTextClassifierSourceLanguageDetector(
+class AndroidTextClassifierLanguageDetector(
     private val classify: (String) -> LanguageCandidate?,
     private val workerDispatcher: CoroutineDispatcher = Dispatchers.Default,
-) : TranslationSourceLanguageDetector {
-    override val id = TranslationSourceLanguageDetectorId("android-text-classifier")
+) : TextLanguageDetector {
+    override val id = TextLanguageDetectorId("android-text-classifier")
 
-    override suspend fun detect(text: String): TranslationSourceLanguageDetection {
+    override suspend fun detect(text: String): TextLanguageDetection {
         return try {
             val candidate = withContext(workerDispatcher) { classify(text) }
-                ?: return TranslationSourceLanguageDetection.Undetermined
+                ?: return TextLanguageDetection.Undetermined
             if (candidate.confidence < MINIMUM_CONFIDENCE) {
-                return TranslationSourceLanguageDetection.Undetermined
+                return TextLanguageDetection.Undetermined
             }
-            val language = TranslationLanguageTag.parse(candidate.languageTag)
-                ?: return TranslationSourceLanguageDetection.Undetermined
-            TranslationSourceLanguageDetection.Detected(language, candidate.confidence)
+            val language = LanguageTag.parse(candidate.languageTag)
+                ?: return TextLanguageDetection.Undetermined
+            TextLanguageDetection.Detected(language, candidate.confidence)
         } catch (error: CancellationException) {
             throw error
         } catch (_: RuntimeException) {
-            TranslationSourceLanguageDetection.Unavailable("Android language identification failed")
+            TextLanguageDetection.Unavailable("Android language identification failed")
         }
     }
 
-    internal data class LanguageCandidate(
+    data class LanguageCandidate(
         val languageTag: String,
         val confidence: Float,
     )
@@ -46,17 +46,17 @@ internal class AndroidTextClassifierSourceLanguageDetector(
     }
 }
 
-internal fun androidTextClassifierSourceLanguageDetector(
+fun androidTextClassifierLanguageDetector(
     application: Application,
     sdkInt: Int = Build.VERSION.SDK_INT,
-): TranslationSourceLanguageDetector? {
+): TextLanguageDetector? {
     if (sdkInt < Build.VERSION_CODES.Q) return null
 
     val textClassifier = application
         .getSystemService(TextClassificationManager::class.java)
         ?.textClassifier
         ?: return null
-    return AndroidTextClassifierSourceLanguageDetector(
+    return AndroidTextClassifierLanguageDetector(
         classify = { text ->
             val result = textClassifier.detectLanguage(
                 TextLanguage.Request.Builder(text).build(),
@@ -65,7 +65,7 @@ internal fun androidTextClassifierSourceLanguageDetector(
                 null
             } else {
                 val locale = result.getLocale(0)
-                AndroidTextClassifierSourceLanguageDetector.LanguageCandidate(
+                AndroidTextClassifierLanguageDetector.LanguageCandidate(
                     languageTag = locale.toLanguageTag(),
                     confidence = result.getConfidenceScore(locale),
                 )

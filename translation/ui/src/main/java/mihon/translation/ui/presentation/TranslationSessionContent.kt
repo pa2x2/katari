@@ -47,10 +47,10 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.KnownTranslationEngine
 import mihon.translation.api.engine.TranslationEngineBuildAvailability
 import mihon.translation.api.engine.TranslationEngineSelection
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.api.preparation.TranslationEngineChoiceReason
 import mihon.translation.api.preparation.TranslationPreparation
 import mihon.translation.api.preparation.TranslationRejectionReason
@@ -81,7 +81,7 @@ internal fun TranslationSessionContent(
     onRetry: () -> Unit,
     onCopy: (String) -> Unit,
     onExpand: () -> Unit,
-    onSelectSource: (TranslationLanguageTag) -> Unit,
+    onSelectSource: (LanguageTag) -> Unit,
     onSelectEngine: (TranslationEngineSelection) -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
     modifier: Modifier = Modifier,
@@ -488,7 +488,7 @@ private fun TranslationCompactIconButton(
 private fun PreparationContent(
     preparation: TranslationPreparation,
     onRetry: () -> Unit,
-    onSelectSource: (TranslationLanguageTag) -> Unit,
+    onSelectSource: (LanguageTag) -> Unit,
     onSelectEngine: (TranslationEngineSelection) -> Unit,
     useExternalEnginePicker: Boolean,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
@@ -886,7 +886,7 @@ private fun TranslationRejectionReason.message(): String {
     }
 }
 
-private fun TranslationLanguageTag.displayName(): String {
+private fun LanguageTag.displayName(): String {
     return Locale.forLanguageTag(value)
         .getDisplayName(Locale.getDefault())
         .ifBlank { value }

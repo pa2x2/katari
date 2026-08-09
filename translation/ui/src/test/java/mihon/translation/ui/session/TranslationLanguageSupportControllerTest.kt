@@ -6,6 +6,7 @@ import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.availability.TranslationDeviceAvailability
 import mihon.translation.api.engine.KnownTranslationEngine
 import mihon.translation.api.engine.TranslationEngineId
@@ -14,7 +15,6 @@ import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationHostActions
 import mihon.translation.api.language.TranslationLanguageSupport
 import mihon.translation.api.language.TranslationLanguageSupportInspection
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.api.model.TranslationModelDescriptor
 import mihon.translation.api.provider.TranslationProviderDisclosure
 import mihon.translation.api.request.TranslationTargetLanguageSelection
@@ -112,14 +112,14 @@ class TranslationLanguageSupportControllerTest {
 
         override fun setSelectedEngine(engine: TranslationEngineId) = Unit
 
-        override fun setDefaultTargetLanguage(language: TranslationLanguageTag?) = Unit
+        override fun setDefaultTargetLanguage(language: LanguageTag?) = Unit
     }
 
     private companion object {
         val FIRST_ENGINE = TranslationEngineId("first")
         val SECOND_ENGINE = TranslationEngineId("second")
-        val ENGLISH = TranslationLanguageTag.require("en")
-        val FRENCH = TranslationLanguageTag.require("fr")
+        val ENGLISH = LanguageTag.require("en")
+        val FRENCH = LanguageTag.require("fr")
         val SUPPORT = TranslationLanguageSupport.ByRole(
             sourceLanguages = setOf(ENGLISH),
             targetLanguages = setOf(FRENCH),

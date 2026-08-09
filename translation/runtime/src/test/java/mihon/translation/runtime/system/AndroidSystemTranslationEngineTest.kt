@@ -2,11 +2,11 @@ package mihon.translation.runtime.system
 
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.host.TranslationSetupDestination
 import mihon.translation.api.language.TranslationLanguageSupport
 import mihon.translation.api.language.TranslationLanguageSupportInspection
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.api.preparation.TranslationSystemSetupReason
 import mihon.translation.api.preparation.TranslationUnavailableReason
 import mihon.translation.api.request.ResolvedTranslationRequest
@@ -164,8 +164,8 @@ class AndroidSystemTranslationEngineTest {
     }
 
     private companion object {
-        val ENGLISH = TranslationLanguageTag.require("en")
-        val POLISH = TranslationLanguageTag.require("pl")
+        val ENGLISH = LanguageTag.require("en")
+        val POLISH = LanguageTag.require("pl")
         val REQUEST = ResolvedTranslationRequest(
             text = "Hello",
             sourceLanguage = ENGLISH,

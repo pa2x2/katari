@@ -1,7 +1,7 @@
 package mihon.translation.ui.presentation
 
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.TranslationEngineId
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.api.model.TranslationModelDescriptor
 import mihon.translation.api.provider.TranslationProviderDisclosure
 
@@ -13,8 +13,8 @@ sealed interface TranslationSessionExternalAction {
     data object ChooseEngine : TranslationSessionExternalAction
 
     data class ChangeLanguages(
-        val source: TranslationLanguageTag,
-        val target: TranslationLanguageTag,
+        val source: LanguageTag,
+        val target: LanguageTag,
     ) : TranslationSessionExternalAction
 
     data class ConfirmProviderDisclosure(

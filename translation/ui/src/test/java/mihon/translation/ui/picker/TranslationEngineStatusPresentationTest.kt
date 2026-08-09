@@ -1,6 +1,7 @@
 package mihon.translation.ui.picker
 
 import io.kotest.matchers.shouldBe
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.KnownTranslationEngine
 import mihon.translation.api.engine.TranslationEngineAction
 import mihon.translation.api.engine.TranslationEngineArtwork
@@ -10,7 +11,6 @@ import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationEngineState
 import mihon.translation.api.engine.TranslationEngineStatus
 import mihon.translation.api.engine.TranslationProviderId
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.api.model.TranslationModelDescriptor
 import mihon.translation.api.model.TranslationModelId
 import mihon.translation.api.preparation.TranslationSystemSetupReason
@@ -196,7 +196,7 @@ class TranslationEngineStatusPresentationTest {
         )
         val MODEL = TranslationModelDescriptor(
             id = TranslationModelId("test-model"),
-            language = TranslationLanguageTag.require("en"),
+            language = LanguageTag.require("en"),
             displayName = "English",
         )
     }

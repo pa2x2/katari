@@ -1,12 +1,12 @@
 package mihon.translation.ui.picker.language
 
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.language.TranslationLanguageSupport
-import mihon.translation.api.language.TranslationLanguageTag
 import java.text.Collator
 import java.util.Locale
 
 data class TranslationLanguageOption(
-    val tag: TranslationLanguageTag,
+    val tag: LanguageTag,
     val displayName: String,
 )
 
@@ -18,9 +18,9 @@ fun translationLanguageOptions(
     return availableLocales
         .mapNotNull { locale ->
             val candidate = if (locale.script.isBlank()) locale.language else "${locale.language}-${locale.script}"
-            TranslationLanguageTag.parse(candidate)
+            LanguageTag.parse(candidate)
         }
-        .distinctBy(TranslationLanguageTag::value)
+        .distinctBy(LanguageTag::value)
         .map { tag ->
             TranslationLanguageOption(
                 tag = tag,
@@ -39,7 +39,7 @@ fun translationLanguageOptions(
 fun translationLanguageOptions(
     support: TranslationLanguageSupport,
     role: TranslationLanguageRole,
-    counterpart: TranslationLanguageTag?,
+    counterpart: LanguageTag?,
     availableLocales: Array<Locale> = Locale.getAvailableLocales(),
     displayLocale: Locale = Locale.getDefault(),
 ): List<TranslationLanguageOption> {
@@ -53,7 +53,7 @@ fun translationLanguageOptions(
 }
 
 fun translationLanguageOptions(
-    tags: Set<TranslationLanguageTag>,
+    tags: Set<LanguageTag>,
     displayLocale: Locale = Locale.getDefault(),
 ): List<TranslationLanguageOption> {
     val collator = Collator.getInstance(displayLocale)
@@ -75,8 +75,8 @@ fun translationLanguageOptions(
 
 fun TranslationLanguageSupport.selectableLanguages(
     role: TranslationLanguageRole,
-    counterpart: TranslationLanguageTag?,
-): Set<TranslationLanguageTag> {
+    counterpart: LanguageTag?,
+): Set<LanguageTag> {
     return when (this) {
         is TranslationLanguageSupport.ExactPairs -> when (role) {
             TranslationLanguageRole.Source ->
@@ -97,8 +97,8 @@ fun TranslationLanguageSupport.selectableLanguages(
 }
 
 fun TranslationLanguageSupport.supportsPair(
-    source: TranslationLanguageTag,
-    target: TranslationLanguageTag,
+    source: LanguageTag,
+    target: LanguageTag,
 ): Boolean {
     if (source == target) return false
     return when (this) {
@@ -112,8 +112,8 @@ fun TranslationLanguageSupport.supportsPair(
 
 fun TranslationLanguageSupport.supportsSelection(
     role: TranslationLanguageRole,
-    language: TranslationLanguageTag,
-    counterpart: TranslationLanguageTag?,
+    language: LanguageTag,
+    counterpart: LanguageTag?,
 ): Boolean {
     return this == TranslationLanguageSupport.AnyLanguage ||
         language in selectableLanguages(role, counterpart)
@@ -124,7 +124,7 @@ enum class TranslationLanguageRole {
     Target,
 }
 
-fun TranslationLanguageTag.displayName(
+fun LanguageTag.displayName(
     locale: Locale = Locale.getDefault(),
 ): String = Locale.forLanguageTag(value)
     .getDisplayName(locale)

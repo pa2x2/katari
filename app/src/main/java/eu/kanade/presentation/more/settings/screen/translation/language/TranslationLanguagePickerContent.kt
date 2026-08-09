@@ -5,8 +5,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import eu.kanade.presentation.components.AppBar
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.TranslationEngineId
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.ui.picker.language.TranslationLanguageRole
 import mihon.translation.ui.picker.language.TranslationLanguageSupportPicker
 import mihon.translation.ui.session.TranslationLanguageSupportState
@@ -18,9 +18,9 @@ internal fun TranslationLanguagePickerContent(
     support: TranslationLanguageSupportState,
     engine: TranslationEngineId?,
     role: TranslationLanguageRole,
-    counterpart: TranslationLanguageTag?,
-    selected: TranslationLanguageTag?,
-    onSelect: (TranslationLanguageTag?) -> Unit,
+    counterpart: LanguageTag?,
+    selected: LanguageTag?,
+    onSelect: (LanguageTag?) -> Unit,
     onRetry: () -> Unit,
     onBack: () -> Unit,
 ) {

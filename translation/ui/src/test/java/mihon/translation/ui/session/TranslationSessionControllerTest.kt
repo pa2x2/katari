@@ -10,10 +10,10 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationProviderId
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.api.preparation.ReadyTranslation
 import mihon.translation.api.preparation.TranslationPreparation
 import mihon.translation.api.provider.TranslationInvocationPolicy
@@ -406,8 +406,8 @@ class TranslationSessionControllerTest {
     }
 
     private companion object {
-        val SOURCE = TranslationLanguageTag.require("en")
-        val TARGET = TranslationLanguageTag.require("pl")
+        val SOURCE = LanguageTag.require("en")
+        val TARGET = LanguageTag.require("pl")
         val ENGINE = TranslationEngineId("fake")
         val PROVIDER = TranslationProviderId("fake")
         val PRESENTATION = TranslationProviderPresentation(
