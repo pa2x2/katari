@@ -138,6 +138,10 @@
             android:process=":error_handler" />
 
         <activity
+            android:name=".ui.setting.SettingsActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".ui.deeplink.DeepLinkActivity"
             android:exported="true"
             android:label="@string/action_search"

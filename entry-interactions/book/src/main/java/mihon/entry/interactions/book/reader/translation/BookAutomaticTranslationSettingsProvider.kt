@@ -1,6 +1,5 @@
 package mihon.entry.interactions.book.reader.translation
 
-import android.content.Intent
 import kotlinx.coroutines.flow.map
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.processor.BookReaderProcessorRegistry
@@ -14,7 +13,7 @@ import mihon.entry.viewer.settings.shared.ReaderSharedToggleSetting
 import mihon.entry.viewer.settings.shared.StandardReaderCapabilities
 import mihon.translation.api.availability.TranslationDeviceAvailability
 import mihon.translation.api.host.TranslationHostActions
-import mihon.translation.api.host.TranslationSettingsNavigation
+import mihon.translation.api.host.openTranslationSettings
 
 internal class BookAutomaticTranslationSettingsProvider(
     processorRegistry: BookReaderProcessorRegistry,
@@ -90,15 +89,7 @@ internal class BookAutomaticTranslationSettingsProvider(
                 label = ReaderSharedSettingText { context ->
                     context.getString(R.string.book_reader_configure_translation)
                 },
-                perform = { context ->
-                    context.packageManager
-                        .getLaunchIntentForPackage(context.packageName)
-                        ?.apply {
-                            action = TranslationSettingsNavigation.ACTION_OPEN_SETTINGS
-                            addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                        }
-                        ?.let(context::startActivity)
-                },
+                perform = { context -> context.openTranslationSettings() },
             ),
         )
     }
