@@ -357,7 +357,6 @@ private fun TranslationSessionPopup(
                 onExternalAction = onExternalAction,
                 speechState = speechState,
                 onSpeechToggle = onSpeechToggle,
-                modifier = Modifier.fillMaxWidth(),
                 compact = true,
             )
         }
