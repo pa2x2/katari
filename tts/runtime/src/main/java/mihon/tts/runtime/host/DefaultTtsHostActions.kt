@@ -82,7 +82,7 @@ internal class DefaultTtsHostActions(
         val installed = engineRegistry.find(engine)
             ?: return TtsVoiceInspection.Unavailable(engine, "TTS engine is not available")
         return try {
-            installed.inspectVoices()
+            installed.refreshVoices()
         } catch (error: CancellationException) {
             throw error
         } catch (_: Exception) {

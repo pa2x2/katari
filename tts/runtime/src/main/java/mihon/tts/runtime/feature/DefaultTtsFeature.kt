@@ -103,7 +103,6 @@ internal class DefaultTtsFeature(
             )
         }
         val voices = availableVoices.voices
-        val compatibleVoices = voices.filter { it.supports(language) }.sortedWith(VOICE_ORDER)
         val voice = resolveVoice(
             selection = request.voice,
             language = language,
@@ -111,7 +110,12 @@ internal class DefaultTtsFeature(
             voices = voices,
             engineDefaultVoice = availableVoices.defaultVoice,
         )
-            ?: return voiceChoiceRequired(request.voice, engineId, language, compatibleVoices)
+            ?: return voiceChoiceRequired(
+                request.voice,
+                engineId,
+                language,
+                voices.filter { it.supports(language) }.sortedWith(VOICE_ORDER),
+            )
         val networkAllowed = when (request.processingPolicy) {
             TtsProcessingPolicy.ProfileDefault -> true
             TtsProcessingPolicy.OnDeviceOnly -> false

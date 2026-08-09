@@ -3,6 +3,11 @@ package mihon.tts.provider.android.engine
 import android.app.Application
 import android.speech.tts.TextToSpeech
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import mihon.tts.api.engine.KnownTtsEngine
 import mihon.tts.api.preparation.TtsSystemSetupReason
 import mihon.tts.api.preparation.TtsUnavailableReason
@@ -29,8 +34,17 @@ internal class AndroidTtsEngine(
     private val enginePackage: String,
     override val catalogEntry: KnownTtsEngine,
     override val presentation: TtsProviderPresentation,
+    private val blockingDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : TtsEngine {
-    private val connection = AndroidTtsConnection(application, enginePackage)
+    private val connection = AndroidTtsConnection(
+        application = application,
+        enginePackage = enginePackage,
+        blockingDispatcher = blockingDispatcher,
+    )
+    private val voiceInspectionMutex = Mutex()
+
+    @Volatile
+    private var voiceInspection: TtsVoiceInspection? = null
 
     override val capabilities = TtsProviderCapabilities(
         rangeProgress = TtsOptionalCapability.Supported,
@@ -40,7 +54,10 @@ internal class AndroidTtsEngine(
     )
 
     override suspend fun inspectDevice(): TtsEngineDeviceAvailability {
-        return if (application.packageManager.isAndroidTtsEngineInstalled(enginePackage)) {
+        return if (withContext(blockingDispatcher) {
+                application.packageManager.isAndroidTtsEngineInstalled(enginePackage)
+            }
+        ) {
             TtsEngineDeviceAvailability.Available
         } else {
             TtsEngineDeviceAvailability.NotInstalled
@@ -48,22 +65,36 @@ internal class AndroidTtsEngine(
     }
 
     override suspend fun inspectVoices(): TtsVoiceInspection {
+        voiceInspection?.let { return it }
+        return inspectVoices(forceRefresh = false)
+    }
+
+    override suspend fun refreshVoices(): TtsVoiceInspection = inspectVoices(forceRefresh = true)
+
+    private suspend fun inspectVoices(forceRefresh: Boolean): TtsVoiceInspection = voiceInspectionMutex.withLock {
+        if (!forceRefresh) voiceInspection?.let { return@withLock it }
+        voiceInspection = null
         if (inspectDevice() != TtsEngineDeviceAvailability.Available) {
             return TtsVoiceInspection.Unavailable(catalogEntry.id, "Android TTS engine is not installed")
         }
         return try {
-            val voices = connection.voices().mapNotNull { voice ->
-                voice.toApiVoice(ANDROID_TTS_PROVIDER_ID, catalogEntry.id)
-            }.sortedBy { it.name }
-            if (voices.isEmpty()) {
-                TtsVoiceInspection.VoiceDataRequired(catalogEntry.id, "The engine reported no installed voices")
-            } else {
-                val defaultVoice = connection.defaultVoice()
-                    ?.toApiVoice(ANDROID_TTS_PROVIDER_ID, catalogEntry.id)
-                    ?.id
-                    ?.takeIf { candidate -> voices.any { it.id == candidate } }
-                TtsVoiceInspection.Available(catalogEntry.id, voices, defaultVoice)
+            val snapshot = connection.voiceSnapshot(forceRefresh)
+            val inspection = withContext(blockingDispatcher) {
+                val voices = snapshot.voices.mapNotNull { voice ->
+                    voice.toApiVoice(ANDROID_TTS_PROVIDER_ID, catalogEntry.id)
+                }.sortedBy { it.name }
+                if (voices.isEmpty()) {
+                    TtsVoiceInspection.VoiceDataRequired(catalogEntry.id, "The engine reported no installed voices")
+                } else {
+                    val defaultVoice = snapshot.defaultVoice
+                        ?.toApiVoice(ANDROID_TTS_PROVIDER_ID, catalogEntry.id)
+                        ?.id
+                        ?.takeIf { candidate -> voices.any { it.id == candidate } }
+                    TtsVoiceInspection.Available(catalogEntry.id, voices, defaultVoice)
+                }
             }
+            voiceInspection = inspection
+            inspection
         } catch (error: CancellationException) {
             throw error
         } catch (_: Exception) {
@@ -78,9 +109,9 @@ internal class AndroidTtsEngine(
             )
         }
         return try {
-            val voiceAvailable = connection.voices().any { it.name == request.voice.id.value }
-            if (voiceAvailable) {
-                TtsEnginePreparation.Ready(AndroidReadyTtsRequest(this, request))
+            val voice = connection.resolveVoice(request.voice.id.value)
+            if (voice != null) {
+                TtsEnginePreparation.Ready(AndroidReadyTtsRequest(this, request, voice))
             } else {
                 TtsEnginePreparation.SystemSetupRequired(TtsSystemSetupReason.VoiceDataRequired)
             }
@@ -103,7 +134,9 @@ internal class AndroidTtsEngine(
                 TtsUnavailableReason.EngineUnavailable(catalogEntry.id, "Stale Android TTS readiness"),
             )
         }
-        return prepare(androidReady.request)
+        val voice = connection.cachedVoice(androidReady.request.voice.id.value)
+            ?: return TtsEnginePreparation.SystemSetupRequired(TtsSystemSetupReason.VoiceDataRequired)
+        return TtsEnginePreparation.Ready(androidReady.copy(voice = voice))
     }
 
     override suspend fun play(ready: ReadyTtsEngineRequest): TtsEngineExecution {
@@ -111,7 +144,7 @@ internal class AndroidTtsEngine(
             ?: return TtsEngineExecution.Failed("Invalid Android TTS readiness")
         if (androidReady.owner !== this) return TtsEngineExecution.Failed("Stale Android TTS readiness")
         return try {
-            connection.play(androidReady.request)
+            connection.play(androidReady.request, androidReady.voice)
         } catch (error: CancellationException) {
             throw error
         } catch (_: Exception) {
@@ -120,6 +153,7 @@ internal class AndroidTtsEngine(
     }
 
     override suspend fun release() {
+        voiceInspection = null
         connection.shutdown()
     }
 }
@@ -127,4 +161,5 @@ internal class AndroidTtsEngine(
 private data class AndroidReadyTtsRequest(
     val owner: AndroidTtsEngine,
     val request: ResolvedTtsRequest,
+    val voice: android.speech.tts.Voice,
 ) : ReadyTtsEngineRequest

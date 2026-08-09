@@ -22,6 +22,9 @@ interface TtsEngine {
     /** Voice catalog inspection. Implementations must not send or manufacture user text. */
     suspend fun inspectVoices(): TtsVoiceInspection
 
+    /** Refreshes provider-owned voice data before returning the catalog. */
+    suspend fun refreshVoices(): TtsVoiceInspection = inspectVoices()
+
     suspend fun prepare(request: ResolvedTtsRequest): TtsEnginePreparation
 
     suspend fun revalidate(ready: ReadyTtsEngineRequest): TtsEnginePreparation

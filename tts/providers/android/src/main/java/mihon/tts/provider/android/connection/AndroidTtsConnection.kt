@@ -23,24 +23,44 @@ internal class AndroidTtsConnection(
     private val application: Application,
     private val enginePackage: String,
     private val mainDispatcher: CoroutineDispatcher = Dispatchers.Main.immediate,
+    private val blockingDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
     private val initializationMutex = Mutex()
+    private val voiceSnapshotMutex = Mutex()
     private val playbacks = ConcurrentHashMap<String, AndroidTtsPlayback>()
     private val utteranceIds = AtomicLong()
 
     @Volatile
     private var instance: TextToSpeech? = null
 
-    suspend fun voices(): Set<Voice> = withInstance { it.voices.orEmpty() }
+    @Volatile
+    private var voiceSnapshot: AndroidTtsVoiceSnapshot? = null
 
-    suspend fun defaultVoice(): Voice? = withInstance(TextToSpeech::getDefaultVoice)
+    suspend fun voiceSnapshot(forceRefresh: Boolean = false): AndroidTtsVoiceSnapshot {
+        if (!forceRefresh) voiceSnapshot?.let { return it }
+        return voiceSnapshotMutex.withLock {
+            if (!forceRefresh) voiceSnapshot?.let { return@withLock it }
+            voiceSnapshot = null
+            withInstance { textToSpeech ->
+                AndroidTtsVoiceSnapshot(
+                    voices = textToSpeech.voices.orEmpty(),
+                    defaultVoice = textToSpeech.defaultVoice,
+                )
+            }.also { voiceSnapshot = it }
+        }
+    }
 
-    suspend fun play(request: ResolvedTtsRequest): TtsEngineExecution = withInstance { tts ->
+    fun cachedVoice(name: String): Voice? = voiceSnapshot?.find(name)
+
+    suspend fun resolveVoice(name: String): Voice? = voiceSnapshot().find(name)
+
+    suspend fun play(request: ResolvedTtsRequest, voice: Voice): TtsEngineExecution = withInstance { tts ->
         if (request.text.length > TextToSpeech.getMaxSpeechInputLength()) {
             return@withInstance TtsEngineExecution.Failed("Android TTS input limit was exceeded")
         }
-        val voice = tts.voices.orEmpty().singleOrNull { it.name == request.voice.id.value }
-            ?: return@withInstance TtsEngineExecution.Failed("The selected Android TTS voice is unavailable")
+        if (voice.name != request.voice.id.value) {
+            return@withInstance TtsEngineExecution.Failed("The selected Android TTS voice is unavailable")
+        }
         if (tts.setVoice(voice) != TextToSpeech.SUCCESS ||
             tts.setSpeechRate(request.parameters.speechRate) != TextToSpeech.SUCCESS ||
             tts.setPitch(request.parameters.pitch) != TextToSpeech.SUCCESS ||
@@ -69,9 +89,11 @@ internal class AndroidTtsConnection(
 
     suspend fun shutdown() {
         initializationMutex.withLock {
-            withContext(mainDispatcher) {
-                instance?.shutdown()
-                instance = null
+            val activeInstance = instance
+            instance = null
+            voiceSnapshot = null
+            withContext(blockingDispatcher) {
+                activeInstance?.shutdown()
                 playbacks.values.forEach(AndroidTtsPlayback::stopped)
                 playbacks.clear()
             }
@@ -81,7 +103,7 @@ internal class AndroidTtsConnection(
     private suspend fun stop(playback: AndroidTtsPlayback): TtsEngineStopResult {
         if (playbacks[playback.utteranceId] !== playback) return TtsEngineStopResult.AlreadyTerminal
         return try {
-            val result = withContext(mainDispatcher) { instance?.stop() ?: TextToSpeech.ERROR }
+            val result = withContext(blockingDispatcher) { instance?.stop() ?: TextToSpeech.ERROR }
             playbacks.remove(playback.utteranceId)
             if (result == TextToSpeech.SUCCESS) {
                 playback.stopped()
@@ -96,7 +118,7 @@ internal class AndroidTtsConnection(
 
     private suspend fun <T> withInstance(action: (TextToSpeech) -> T): T {
         val initialized = initializedInstance()
-        return withContext(mainDispatcher) { action(initialized) }
+        return withContext(blockingDispatcher) { action(initialized) }
     }
 
     private suspend fun initializedInstance(): TextToSpeech {
