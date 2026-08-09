@@ -13,6 +13,7 @@ import tachiyomi.presentation.core.util.clickableNoIndication
 internal fun BookDocumentViewerList(
     items: BookDocumentViewerDataset<EntryChapter>,
     state: LazyListState,
+    selection: BookDocumentChapterSelection,
     chapterLoadState: (Long) -> BookDocumentChapterLoadState?,
     onAnchorClick: (BookDocumentSection<EntryChapter>, String) -> Unit,
     onExternalLinkClick: (String) -> Unit,
@@ -22,7 +23,9 @@ internal fun BookDocumentViewerList(
 ) {
     LazyColumn(
         state = state,
-        modifier = modifier.clickableNoIndication(onClick = onReaderTap),
+        modifier = modifier.clickableNoIndication {
+            selection.handleReaderTap(onReaderTap)
+        },
     ) {
         items(items, key = { it.key }) { item ->
             BookDocumentViewerRow(

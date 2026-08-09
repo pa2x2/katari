@@ -1,6 +1,7 @@
 package mihon.entry.interactions.book.document.reader
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -241,16 +242,22 @@ internal fun BookDocumentEndlessViewer(
         }
     }
 
-    BookDocumentViewerList(
-        items = items,
-        state = listState,
-        chapterLoadState = chapterLoadState,
-        onAnchorClick = anchorClick,
-        onExternalLinkClick = externalLinkClick,
-        onReaderTap = readerTap,
-        onTransitionRetry = transitionRetry,
+    BookDocumentChapterSelectionContainer(
+        chapterId = currentChapterId,
         modifier = modifier,
-    )
+    ) { selection ->
+        BookDocumentViewerList(
+            items = items,
+            state = listState,
+            selection = selection,
+            chapterLoadState = chapterLoadState,
+            onAnchorClick = anchorClick,
+            onExternalLinkClick = externalLinkClick,
+            onReaderTap = readerTap,
+            onTransitionRetry = transitionRetry,
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
 }
 
 private fun androidx.compose.foundation.lazy.LazyListLayoutInfo.visibleBookDocumentLayouts() =
