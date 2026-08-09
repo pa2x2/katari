@@ -11,7 +11,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -20,6 +19,7 @@ import logcat.LogPriority
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingsProvider
+import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeMode
 import mihon.entry.interactions.book.navigation.BookChapterNavigationResolver
 import mihon.entry.interactions.book.navigation.BookChapterReadingOrder
 import mihon.entry.interactions.book.processor.BookReaderRequest
@@ -56,15 +56,13 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     private var settingBindings: BookDocumentReaderSettingBindings? = null
     private lateinit var childWebViewResolver: BookChildWebViewResolver
     private lateinit var chapterCoordinator: BookDocumentChapterCoordinator
-
-    private val windowInsetsController by lazy { WindowCompat.getInsetsController(window, window.decorView) }
+    private lateinit var readerSystemBars: BookDocumentReaderSystemBars
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        windowInsetsController.systemBarsBehavior =
-            androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        readerSystemBars = BookDocumentReaderSystemBars(window)
         registerEntryInteractionSecureScreen()
         childWebViewResolver = BookChildWebViewResolver(
             scope = lifecycleScope,
@@ -149,7 +147,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus && surfaceState == BookDocumentReaderSurfaceState.Ready) {
-            setSystemBarsVisible(readerState?.chromeVisible == true)
+            applyReaderSystemBars()
         }
     }
 
@@ -188,6 +186,18 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                 .collect { enabled ->
                     if (enabled) chapterCoordinator.prepareCurrentNextChapterIfNeeded()
                 }
+        }
+        lifecycleScope.launch {
+            bindings.showStatusBar.state
+                .map { setting -> setting.effectiveValue }
+                .distinctUntilChanged()
+                .collect { applyReaderSystemBars() }
+        }
+        lifecycleScope.launch {
+            bindings.themeMode.state
+                .map { setting -> setting.effectiveValue }
+                .distinctUntilChanged()
+                .collect { applyReaderSystemBars() }
         }
         val retained = retainedSessions.currentSession()
         val token = intent.getStringExtra(EXTRA_SESSION_TOKEN)
@@ -275,23 +285,27 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         if (readerState?.chromeVisible != visible) {
             readerState = readerState?.copy(chromeVisible = visible)
         }
-        setSystemBarsVisible(visible)
+        applyReaderSystemBars()
     }
 
     private fun toggleChrome() {
         setChromeVisible(readerState?.chromeVisible != true)
     }
 
-    private fun setSystemBarsVisible(visible: Boolean) {
-        if (visible) {
-            windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
-        } else {
-            windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
-        }
+    private fun applyReaderSystemBars() {
+        if (surfaceState != BookDocumentReaderSurfaceState.Ready) return
+        val chromeVisible = readerState?.chromeVisible == true
+        val keepStatusBarVisible = settingBindings?.showStatusBar?.state?.value?.effectiveValue == true
+        val readerTheme = settingBindings?.themeMode?.state?.value?.effectiveValue ?: BookDocumentReaderThemeMode.APP
+        readerSystemBars.apply(
+            chromeVisible = chromeVisible,
+            keepStatusBarVisible = keepStatusBarVisible,
+            readerTheme = readerTheme,
+        )
     }
 
     private fun showError(message: String) {
-        setSystemBarsVisible(true)
+        readerSystemBars.showAppBars()
         surfaceState = BookDocumentReaderSurfaceState.Error(message)
     }
 

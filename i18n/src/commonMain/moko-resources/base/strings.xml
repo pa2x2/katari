@@ -400,6 +400,7 @@
     <string name="book_reader_layout_scrolling">Continuous scrolling</string>
     <string name="pref_book_document_reader">Book reader</string>
     <string name="pref_book_document_reader_theme">Theme</string>
+    <string name="pref_book_document_reader_show_status_bar">Show status bar</string>
     <string name="book_document_reader_theme_app">App theme</string>
     <string name="book_document_reader_theme_black">Black</string>
     <string name="pref_epub_column_count">Page spread</string>

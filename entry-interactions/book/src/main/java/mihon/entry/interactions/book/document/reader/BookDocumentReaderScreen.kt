@@ -27,6 +27,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalFocusManager
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings
+import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderStatusBarSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeSettings
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.document.reader.theme.bookDocumentReaderPalette
@@ -215,9 +216,15 @@ internal fun BookDocumentReaderScreen(
             sharedSettingBindings = settingBindings.sharedSettings,
             onDismissRequest = { onSettingsVisibilityChange(false) },
             onOpenDefaultSettings = onOpenDefaultSettings,
-            onResetProcessorSettings = settingBindings.themeMode::clearEntryOverride,
+            onResetProcessorSettings = {
+                settingBindings.themeMode.clearEntryOverride()
+                settingBindings.showStatusBar.clearEntryOverride()
+            },
             processorTabTitles = listOf(androidStringResource(R.string.book_reader_appearance_settings)),
-            content = { BookDocumentReaderThemeSettings(settingBindings.themeMode) },
+            content = {
+                BookDocumentReaderStatusBarSettings(settingBindings.showStatusBar)
+                BookDocumentReaderThemeSettings(settingBindings.themeMode)
+            },
         )
     }
 }
