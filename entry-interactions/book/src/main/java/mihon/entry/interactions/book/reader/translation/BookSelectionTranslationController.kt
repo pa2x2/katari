@@ -22,6 +22,7 @@ import mihon.translation.ui.session.TranslationSelectionAnchor
 import mihon.translation.ui.session.TranslationSessionHostCoordinator
 import mihon.translation.ui.session.TranslationSessionInput
 import mihon.translation.ui.session.TranslationSessionState
+import mihon.entry.interactions.book.reader.selection.BookReaderTextSelection as NeutralBookReaderTextSelection
 
 internal data class BookReaderTextSelection(
     val ownerIdentity: String,
@@ -59,14 +60,12 @@ internal class BookSelectionTranslationController(
 
     private var capabilities = initialCapabilities
     private var currentSelection: BookReaderTextSelection? = null
+    private var currentSelectionWasAutomatic = false
     private var dismissedSelectionIdentity: String? = null
     private var availabilityJob: Job? = null
     private val observerJobs = listOf(
         automaticSelectionSetting
-            .onEach {
-                clearSelection()
-                updateEffectiveState()
-            }
+            .onEach { updateEffectiveState() }
             .launchIn(scope),
         hostActions.selectedEngine.changes()
             .onEach {
@@ -97,10 +96,42 @@ internal class BookSelectionTranslationController(
 
     fun submitSelection(selection: BookReaderTextSelection) {
         if (!mutableEffectiveEnabled.value || closed) return
+        submit(selection, automatic = true)
+    }
+
+    fun submitSelection(selection: NeutralBookReaderTextSelection) {
+        if (!mutableEffectiveEnabled.value || closed) return
+        submit(selection.toTranslationSelection(), automatic = true)
+    }
+
+    fun translateSelection(selection: NeutralBookReaderTextSelection) {
+        if (closed) return
+        dismissedSelectionIdentity = null
+        submit(selection.toTranslationSelection(), automatic = false)
+    }
+
+    fun onSelectionChanged(selection: NeutralBookReaderTextSelection) {
+        val translatedSelection = currentSelection ?: return
+        if (translatedSelection.identity == selection.identity && translatedSelection.text == selection.text) {
+            updateSelectionAnchor(selection)
+        } else {
+            clearSelection()
+        }
+    }
+
+    fun updateSelectionAnchor(selection: NeutralBookReaderTextSelection) {
+        val translatedSelection = currentSelection ?: return
+        if (translatedSelection.identity != selection.identity || translatedSelection.text != selection.text) return
+        currentSelection = selection.toTranslationSelection()
+        hostCoordinator.controller.updateAnchor(currentSelection?.anchor)
+    }
+
+    private fun submit(selection: BookReaderTextSelection, automatic: Boolean) {
         if (dismissedSelectionIdentity == selection.identity) return
 
         val previous = currentSelection
         currentSelection = selection
+        currentSelectionWasAutomatic = automatic
         if (previous?.identity == selection.identity && previous.text == selection.text) {
             hostCoordinator.controller.updateAnchor(selection.anchor)
             return
@@ -121,6 +152,7 @@ internal class BookSelectionTranslationController(
 
     fun clearSelection() {
         currentSelection = null
+        currentSelectionWasAutomatic = false
         dismissedSelectionIdentity = null
         hostCoordinator.controller.clear()
     }
@@ -150,6 +182,7 @@ internal class BookSelectionTranslationController(
         availabilityJob?.cancel()
         observerJobs.forEach(Job::cancel)
         currentSelection = null
+        currentSelectionWasAutomatic = false
         dismissedSelectionIdentity = null
         mutableEffectiveEnabled.value = false
         hostCoordinator.close()
@@ -170,7 +203,7 @@ internal class BookSelectionTranslationController(
             mutableDeviceAvailability.value == TranslationDeviceAvailability.Available
         if (mutableEffectiveEnabled.value == enabled) return
         mutableEffectiveEnabled.value = enabled
-        if (!enabled) clearSelection()
+        if (!enabled && currentSelectionWasAutomatic) clearSelection()
     }
 
     private companion object {
@@ -180,3 +213,17 @@ internal class BookSelectionTranslationController(
         )
     }
 }
+
+private fun NeutralBookReaderTextSelection.toTranslationSelection() = BookReaderTextSelection(
+    ownerIdentity = ownerIdentity,
+    identity = identity,
+    text = text,
+    anchor = anchor?.let { anchor ->
+        TranslationSelectionAnchor(
+            left = anchor.left,
+            top = anchor.top,
+            right = anchor.right,
+            bottom = anchor.bottom,
+        )
+    },
+)

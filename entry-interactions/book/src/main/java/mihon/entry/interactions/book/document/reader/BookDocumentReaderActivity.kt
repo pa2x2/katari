@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
+import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -30,6 +31,9 @@ import mihon.entry.interactions.book.reader.BookReaderOpenResult
 import mihon.entry.interactions.book.reader.BookReaderSessionFactory
 import mihon.entry.interactions.book.reader.BookReaderSessionRegistry
 import mihon.entry.interactions.book.reader.OpenedBookReaderSession
+import mihon.entry.interactions.book.reader.selection.BookSelectionActionCoordinator
+import mihon.entry.interactions.book.reader.selection.BookSelectionSpeechController
+import mihon.entry.interactions.book.reader.selection.BookSelectionSpeechFailure
 import mihon.entry.interactions.book.reader.translation.BookSelectionTranslationController
 import mihon.entry.interactions.runtime.EntryInteractionActivity
 import mihon.entry.interactions.runtime.registerEntryInteractionSecureScreen
@@ -42,6 +46,7 @@ import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.navigation.openViewerSettings
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.host.TranslationHostActions
+import mihon.tts.api.TtsFeature
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.EntryChapter
 import uy.kohesive.injekt.Injekt
@@ -52,7 +57,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     private val retainedSessions by viewModels<BookDocumentReaderSessionViewModel>()
     private var surfaceState by mutableStateOf<BookDocumentReaderSurfaceState>(BookDocumentReaderSurfaceState.Loading)
     private var readerState by mutableStateOf<BookDocumentReaderState?>(null)
-    private var translationController: BookSelectionTranslationController? = null
+    private var selectionCoordinator: BookSelectionActionCoordinator? = null
     private var settingBindings: BookDocumentReaderSettingBindings? = null
     private lateinit var childWebViewResolver: BookChildWebViewResolver
     private lateinit var chapterCoordinator: BookDocumentChapterCoordinator
@@ -84,7 +89,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             currentState = { readerState },
             updateState = { readerState = it },
             onSessionActivated = { session ->
-                translationController?.updateCapabilities(session.readerCapabilities)
+                selectionCoordinator?.updateCapabilities(session.readerCapabilities)
                 childWebViewResolver.resolve(session)
             },
         )
@@ -103,7 +108,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                     BookDocumentReaderScreen(
                         state = state,
                         settingBindings = requireNotNull(settingBindings),
-                        translationController = translationController,
+                        selectionCoordinator = selectionCoordinator,
                         onLocation = chapterCoordinator::onLocation,
                         onTransitionReached = { chapterCoordinator.loadChapter(it, activate = false, retry = true) },
                         onTerminalObservation = chapterCoordinator::onTerminalObservation,
@@ -136,10 +141,11 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
 
     override fun onResume() {
         super.onResume()
-        translationController?.onResume()
+        selectionCoordinator?.onResume()
     }
 
     override fun onStop() {
+        selectionCoordinator?.onStop()
         chapterCoordinator.stopReading(persist = !isChangingConfigurations)
         super.onStop()
     }
@@ -159,8 +165,8 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     override fun onDestroy() {
         chapterCoordinator.close()
         childWebViewResolver.close()
-        translationController?.close()
-        translationController = null
+        selectionCoordinator?.close()
+        selectionCoordinator = null
         super.onDestroy()
     }
 
@@ -227,7 +233,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             ?: return showError(getString(R.string.book_document_chapter_missing))
         val section = session.toDocumentSection(retainedSessions.locator(session.chapter.id))
             ?: return showError(getString(R.string.book_document_incompatible))
-        ensureTranslationController(session)
+        ensureSelectionCoordinator(session)
         val progression = section.document.document.progressionAt(section.initialPosition)
         readerState = BookDocumentReaderState(
             entryTitle = session.entry.displayTitle,
@@ -244,16 +250,40 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         chapterCoordinator.prepareNextChapterIfNeeded(progression.toDouble())
     }
 
-    private fun ensureTranslationController(session: OpenedBookReaderSession) {
+    private fun ensureSelectionCoordinator(session: OpenedBookReaderSession) {
         if (session.readerSettingsSurfaceId != BookDocumentReaderProcessor.SETTINGS_SURFACE_ID) return
         val automaticTranslation = settingBindings?.automaticTranslation ?: return
-        translationController = BookSelectionTranslationController(
+        val translationController = BookSelectionTranslationController(
             feature = Injekt.get<TranslationFeature>(),
             hostActions = Injekt.get<TranslationHostActions>(),
             automaticSelectionSetting = automaticTranslation.state,
             scope = lifecycleScope,
             initialCapabilities = session.readerCapabilities,
         )
+        selectionCoordinator = BookSelectionActionCoordinator(
+            translationController = translationController,
+            speechController = BookSelectionSpeechController(
+                feature = Injekt.get<TtsFeature>(),
+                scope = lifecycleScope,
+                onFailure = ::showSelectionSpeechFailure,
+            ),
+            scope = lifecycleScope,
+            initialCapabilities = session.readerCapabilities,
+        )
+    }
+
+    private fun showSelectionSpeechFailure(failure: BookSelectionSpeechFailure) {
+        val message = when (failure) {
+            BookSelectionSpeechFailure.LanguageUnavailable ->
+                R.string.book_reader_selection_speech_language_unavailable
+            BookSelectionSpeechFailure.ConfigurationRequired ->
+                R.string.book_reader_selection_speech_configuration_required
+            BookSelectionSpeechFailure.Unavailable ->
+                R.string.book_reader_selection_speech_unavailable
+            BookSelectionSpeechFailure.PlaybackFailed ->
+                R.string.book_reader_selection_speech_failed
+        }
+        toast(getString(message))
     }
 
     private fun launchChildWebViewAction(

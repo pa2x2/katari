@@ -35,13 +35,12 @@ import mihon.entry.interactions.book.reader.BookReaderNavigationRow
 import mihon.entry.interactions.book.reader.BookReaderNavigationSheet
 import mihon.entry.interactions.book.reader.BookReaderProgress
 import mihon.entry.interactions.book.reader.BookReaderScaffold
+import mihon.entry.interactions.book.reader.selection.BookSelectionActionCoordinator
+import mihon.entry.interactions.book.reader.selection.BookSelectionSpeechPhase
 import mihon.entry.interactions.book.reader.settings.BookReaderSettingsDialog
-import mihon.entry.interactions.book.reader.translation.BookReaderTextSelection
-import mihon.entry.interactions.book.reader.translation.BookSelectionTranslationController
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewActionsMenu
 import mihon.entry.interactions.source.EntryChildWebViewResolution
-import mihon.translation.ui.session.TranslationSelectionAnchor
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.reader.ReaderChrome
@@ -55,7 +54,7 @@ import androidx.compose.ui.res.stringResource as androidStringResource
 internal fun BookDocumentReaderScreen(
     state: BookDocumentReaderState,
     settingBindings: BookDocumentReaderSettingBindings,
-    translationController: BookSelectionTranslationController?,
+    selectionCoordinator: BookSelectionActionCoordinator?,
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
     onTransitionReached: (EntryChapter) -> Unit,
     onTerminalObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
@@ -76,33 +75,47 @@ internal fun BookDocumentReaderScreen(
     var pendingChapterSelection by remember { mutableStateOf<EntryChapter?>(null) }
     val currentOnChromeToggle by rememberUpdatedState(onChromeToggle)
     val currentOnChapterSelected by rememberUpdatedState(onChapterSelected)
-    val automaticTranslationEnabled = translationController?.effectiveEnabled?.collectAsState()?.value == true
-    val textInteraction = remember(translationController, automaticTranslationEnabled, rootPosition) {
+    val observeSelections = selectionCoordinator?.observeSelections?.collectAsState()?.value == true
+    val automaticTranslationEnabled =
+        selectionCoordinator?.automaticTranslationEnabled?.collectAsState()?.value == true
+    val speechState = selectionCoordinator?.speechState?.collectAsState()?.value
+    val textInteraction = remember(
+        selectionCoordinator,
+        observeSelections,
+        automaticTranslationEnabled,
+        speechState,
+        rootPosition,
+    ) {
         BookDocumentTextInteraction(
-            observeSelections = automaticTranslationEnabled,
+            observeSelections = observeSelections,
             rootPositionInWindow = rootPosition,
             onSelection = { selection ->
                 when (selection) {
-                    is BookDocumentTextSelection.Changed -> translationController?.submitSelection(
-                        BookReaderTextSelection(
-                            ownerIdentity = selection.ownerIdentity,
-                            identity = selection.identity,
-                            text = selection.text,
-                            anchor = selection.boundsInReaderRoot.let { bounds ->
-                                TranslationSelectionAnchor(bounds.left, bounds.top, bounds.right, bounds.bottom)
-                            },
-                        ),
-                    )
+                    is BookDocumentTextSelection.Changed -> selectionCoordinator?.submitSelection(selection)
                     is BookDocumentTextSelection.Cleared ->
-                        translationController?.clearSelection(selection.ownerIdentity)
+                        selectionCoordinator?.clearSelection(selection.ownerIdentity)
                 }
             },
-            isReaderTapBlocked = { translationController?.isTranslationActive() == true },
-            onBlockedReaderTap = { translationController?.dismissTranslation() },
+            isReaderTapBlocked = { selectionCoordinator?.isTranslationActive() == true },
+            onBlockedReaderTap = { selectionCoordinator?.dismissTranslation() },
             onNonLinkTap = { _, _ ->
-                if (translationController?.dismissTranslationOnReaderTap() != true) {
+                if (selectionCoordinator?.dismissTranslationOnReaderTap() != true) {
                     currentOnChromeToggle()
                 }
+            },
+            selectionActions = if (observeSelections) {
+                buildSet {
+                    add(BookDocumentSelectionAction.Listen)
+                    if (!automaticTranslationEnabled) add(BookDocumentSelectionAction.Translate)
+                }
+            } else {
+                emptySet()
+            },
+            activeSpeechSelectionIdentity = speechState
+                ?.takeIf { it.phase != BookSelectionSpeechPhase.Idle }
+                ?.selectionIdentity,
+            onSelectionAction = { ownerIdentity, selectionIdentity, action ->
+                selectionCoordinator?.performAction(ownerIdentity, selectionIdentity, action)
             },
         )
     }
@@ -116,7 +129,7 @@ internal fun BookDocumentReaderScreen(
                 (state.chapterProgression * 100).roundToInt().coerceIn(0, 100),
             ),
             footerColor = readerPalette.background,
-            translationController = translationController,
+            translationController = selectionCoordinator?.translationController,
             onRootPositionInWindow = { rootPosition = it },
             modifier = Modifier
                 .fillMaxSize()
@@ -135,7 +148,7 @@ internal fun BookDocumentReaderScreen(
                     onExternalLinkClick = onExternalLinkClick,
                     onScrollStarted = onChromeHide,
                     onReaderTap = {
-                        if (translationController?.dismissTranslationOnReaderTap() != true) {
+                        if (selectionCoordinator?.dismissTranslationOnReaderTap() != true) {
                             currentOnChromeToggle()
                         }
                     },

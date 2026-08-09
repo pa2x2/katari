@@ -11,6 +11,13 @@ internal data class BookDocumentTextInteraction(
     val isReaderTapBlocked: () -> Boolean,
     val onBlockedReaderTap: () -> Unit,
     val onNonLinkTap: (x: Float, width: Float) -> Unit,
+    val selectionActions: Set<BookDocumentSelectionAction> = emptySet(),
+    val activeSpeechSelectionIdentity: String? = null,
+    val onSelectionAction: (
+        ownerIdentity: String,
+        selectionIdentity: String,
+        action: BookDocumentSelectionAction,
+    ) -> Unit = { _, _, _ -> },
 ) {
     companion object {
         val Disabled = BookDocumentTextInteraction(
@@ -22,6 +29,11 @@ internal data class BookDocumentTextInteraction(
             onNonLinkTap = { _, _ -> },
         )
     }
+}
+
+internal enum class BookDocumentSelectionAction {
+    Listen,
+    Translate,
 }
 
 internal sealed interface BookDocumentTextSelection {
