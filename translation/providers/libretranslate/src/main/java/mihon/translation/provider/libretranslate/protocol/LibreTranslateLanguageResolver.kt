@@ -1,15 +1,15 @@
 package mihon.translation.provider.libretranslate.protocol
 
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.language.TranslationLanguagePair
 import mihon.translation.api.language.TranslationLanguageSupport
 import mihon.translation.api.language.TranslationLanguageSupportInspection
-import mihon.translation.api.language.TranslationLanguageTag
 import java.util.Locale
 
 internal class LibreTranslateLanguageResolver(
     private val languages: List<LibreTranslateLanguage>,
 ) {
-    fun resolve(language: TranslationLanguageTag): LibreTranslateLanguage? {
+    fun resolve(language: LanguageTag): LibreTranslateLanguage? {
         val exact = languages.filter { candidate ->
             candidate.normalizedTag()?.equals(language.value, ignoreCase = true) == true
         }
@@ -31,7 +31,7 @@ internal class LibreTranslateLanguageResolver(
             candidate.equals(target.code, ignoreCase = true) ||
                 (
                     targetTag != null &&
-                        TranslationLanguageTag.parse(candidate)?.value
+                        LanguageTag.parse(candidate)?.value
                             ?.equals(targetTag, ignoreCase = true) == true
                     )
         }
@@ -39,7 +39,7 @@ internal class LibreTranslateLanguageResolver(
 
     fun languageSupport(): TranslationLanguageSupportInspection {
         val resolvable = languages.mapNotNull { language ->
-            val tag = TranslationLanguageTag.parse(language.code) ?: return@mapNotNull null
+            val tag = LanguageTag.parse(language.code) ?: return@mapNotNull null
             (language to tag).takeIf { resolve(tag) == language }
         }
         val pairs = resolvable.flatMapTo(mutableSetOf()) { (source, sourceTag) ->
@@ -63,7 +63,7 @@ internal class LibreTranslateLanguageResolver(
     }
 
     private fun LibreTranslateLanguage.normalizedTag(): String? {
-        return TranslationLanguageTag.parse(code)?.value
+        return LanguageTag.parse(code)?.value
     }
 
     private fun String.languageCode(): String = Locale.forLanguageTag(this).language

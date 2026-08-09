@@ -10,6 +10,7 @@ import kotlinx.coroutines.test.runTest
 import mihon.entry.viewer.settings.ResolvedViewerSetting
 import mihon.entry.viewer.settings.ViewerSettingSource
 import mihon.entry.viewer.settings.shared.StandardReaderCapabilities
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.availability.TranslationDeviceAvailability
 import mihon.translation.api.engine.KnownTranslationEngine
@@ -21,7 +22,6 @@ import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationHostActions
 import mihon.translation.api.language.TranslationLanguageSupport
 import mihon.translation.api.language.TranslationLanguageSupportInspection
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.api.model.TranslationModelDescriptor
 import mihon.translation.api.preparation.ReadyTranslation
 import mihon.translation.api.preparation.TranslationPreparation
@@ -228,6 +228,6 @@ class BookSelectionTranslationControllerTest {
             selectedEngine.set(engine)
         }
 
-        override fun setDefaultTargetLanguage(language: TranslationLanguageTag?) = Unit
+        override fun setDefaultTargetLanguage(language: LanguageTag?) = Unit
     }
 }

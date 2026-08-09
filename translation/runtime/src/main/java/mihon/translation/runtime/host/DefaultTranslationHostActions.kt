@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.launch
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.availability.TranslationDeviceAvailability
 import mihon.translation.api.engine.KnownTranslationEngine
 import mihon.translation.api.engine.TranslationEngineAction
@@ -23,7 +24,6 @@ import mihon.translation.api.engine.TranslationEngineStatus
 import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationHostActions
 import mihon.translation.api.language.TranslationLanguageSupportInspection
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.api.model.TranslationModelDescriptor
 import mihon.translation.api.model.TranslationModelOperationResult
 import mihon.translation.api.preparation.TranslationUnavailableReason
@@ -215,7 +215,7 @@ internal class DefaultTranslationHostActions(
         selectedEngine.set(engine)
     }
 
-    override fun setDefaultTargetLanguage(language: TranslationLanguageTag?) {
+    override fun setDefaultTargetLanguage(language: LanguageTag?) {
         defaultTargetLanguage.set(
             language?.let(TranslationTargetLanguageSelection::Explicit)
                 ?: TranslationTargetLanguageSelection.Default,

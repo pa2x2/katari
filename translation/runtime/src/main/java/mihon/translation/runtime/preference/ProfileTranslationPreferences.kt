@@ -1,7 +1,7 @@
 package mihon.translation.runtime.preference
 
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.TranslationEngineId
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.api.request.TranslationTargetLanguageSelection
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
@@ -33,7 +33,7 @@ class ProfileTranslationPreferences(
 
     private fun deserializeTargetLanguage(value: String): TranslationTargetLanguageSelection {
         if (value == DEFAULT_TARGET_VALUE) return TranslationTargetLanguageSelection.Default
-        return TranslationLanguageTag.parse(value)
+        return LanguageTag.parse(value)
             ?.let(TranslationTargetLanguageSelection::Explicit)
             ?: TranslationTargetLanguageSelection.Default
     }

@@ -17,6 +17,7 @@ import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.PlayCircle
+import androidx.compose.material.icons.outlined.RecordVoiceOver
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Storage
@@ -232,6 +233,12 @@ object SettingsMainScreen : Screen() {
             subtitleRes = MR.strings.translation_settings_summary,
             icon = Icons.Outlined.Translate,
             screen = SettingsTranslationScreen,
+        ),
+        Item(
+            titleRes = MR.strings.tts_title,
+            subtitleRes = MR.strings.tts_settings_summary,
+            icon = Icons.Outlined.RecordVoiceOver,
+            screen = SettingsTtsScreen,
         ),
         Item(
             titleRes = MR.strings.browse,

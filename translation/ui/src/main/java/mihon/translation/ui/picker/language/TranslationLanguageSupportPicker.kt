@@ -13,8 +13,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.TranslationEngineId
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.ui.session.TranslationLanguageSupportState
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
@@ -24,9 +24,9 @@ fun TranslationLanguageSupportPicker(
     state: TranslationLanguageSupportState,
     engine: TranslationEngineId?,
     role: TranslationLanguageRole,
-    counterpart: TranslationLanguageTag?,
-    selected: TranslationLanguageTag?,
-    onSelect: (TranslationLanguageTag) -> Unit,
+    counterpart: LanguageTag?,
+    selected: LanguageTag?,
+    onSelect: (LanguageTag) -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {

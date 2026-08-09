@@ -6,10 +6,10 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.selects.select
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.language.TranslationLanguagePair
 import mihon.translation.api.language.TranslationLanguageSupport
 import mihon.translation.api.language.TranslationLanguageSupportInspection
-import mihon.translation.api.language.TranslationLanguageTag
 import java.util.Locale
 
 internal class DefaultAndroidSystemTranslationPlatform(
@@ -36,9 +36,9 @@ internal class DefaultAndroidSystemTranslationPlatform(
                 .asSequence()
                 .filter { it.state != AndroidSystemCapabilityState.Unavailable }
                 .mapNotNull { capability ->
-                    val source = TranslationLanguageTag.parse(capability.sourceLanguageTag)
+                    val source = LanguageTag.parse(capability.sourceLanguageTag)
                         ?: return@mapNotNull null
-                    val target = TranslationLanguageTag.parse(capability.targetLanguageTag)
+                    val target = LanguageTag.parse(capability.targetLanguageTag)
                         ?: return@mapNotNull null
                     if (source == target) null else TranslationLanguagePair(source, target)
                 }

@@ -3,6 +3,7 @@ package mihon.translation.ui.session
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.availability.TranslationDeviceAvailability
 import mihon.translation.api.engine.KnownTranslationEngine
@@ -22,7 +23,6 @@ import mihon.translation.api.host.TranslationSetupDestination
 import mihon.translation.api.language.TranslationLanguagePair
 import mihon.translation.api.language.TranslationLanguageSupport
 import mihon.translation.api.language.TranslationLanguageSupportInspection
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.api.model.TranslationModelDescriptor
 import mihon.translation.api.preparation.ReadyTranslation
 import mihon.translation.api.preparation.TranslationPreparation
@@ -362,15 +362,15 @@ class TranslationSessionHostCoordinatorTest {
             selectedEngine.set(engine)
         }
 
-        override fun setDefaultTargetLanguage(language: TranslationLanguageTag?) = Unit
+        override fun setDefaultTargetLanguage(language: LanguageTag?) = Unit
     }
 
     private companion object {
-        val SOURCE = TranslationLanguageTag.require("en")
-        val TARGET = TranslationLanguageTag.require("pl")
-        val FRENCH = TranslationLanguageTag.require("fr")
-        val GERMAN = TranslationLanguageTag.require("de")
-        val CATALAN = TranslationLanguageTag.require("ca")
+        val SOURCE = LanguageTag.require("en")
+        val TARGET = LanguageTag.require("pl")
+        val FRENCH = LanguageTag.require("fr")
+        val GERMAN = LanguageTag.require("de")
+        val CATALAN = LanguageTag.require("ca")
         val PROFILE_ENGINE = engine("profile")
         val READY_ENGINE = engine("ready")
         val BLOCKED_ENGINE = engine("blocked")

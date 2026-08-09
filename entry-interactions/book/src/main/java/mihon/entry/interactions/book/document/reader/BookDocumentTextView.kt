@@ -14,6 +14,7 @@ import android.widget.TextView
 import mihon.book.api.document.BookDocumentLinkTarget
 
 internal class BookDocumentTextView(context: Context) : TextView(context) {
+    private val selectionActionMode = BookDocumentSelectionActionMode(this)
     private val selectionOwnerIdentity = "text-view-${System.identityHashCode(this)}"
     private val tapTouchSlop = ViewConfiguration.get(context).scaledTouchSlop.toFloat()
     private val basePaddingLeft = paddingLeft
@@ -25,6 +26,13 @@ internal class BookDocumentTextView(context: Context) : TextView(context) {
     private var nonLinkTapDownX = 0f
     private var nonLinkTapDownY = 0f
     internal var selectionInteraction: BookDocumentTextInteraction? = null
+        set(value) {
+            val actionPresentationChanged = field?.observeSelections != value?.observeSelections ||
+                field?.selectionActions != value?.selectionActions ||
+                field?.activeSpeechSelectionIdentity != value?.activeSpeechSelectionIdentity
+            field = value
+            if (actionPresentationChanged) selectionActionMode.invalidate()
+        }
     internal var appliedStyle: BookDocumentTextStyle? = null
     internal var documentSectionKey: String? = null
     internal var appliedDocumentTextIdentity: String? = null
@@ -35,6 +43,7 @@ internal class BookDocumentTextView(context: Context) : TextView(context) {
     init {
         applyBookDocumentTextLayoutPolicy()
         setTextIsSelectable(true)
+        customSelectionActionModeCallback = selectionActionMode
     }
 
     internal fun applyTerminalLineSpacing(trimmedTerminalLineBreaks: Int) {
@@ -125,6 +134,20 @@ internal class BookDocumentTextView(context: Context) : TextView(context) {
         publishSelection(selectionStart, selectionEnd, clearWhenEmpty = false)
     }
 
+    internal fun currentSelectionIdentity(): String? {
+        val start = selectionStart
+        val end = selectionEnd
+        val selectedText = text?.toString()?.substringOrNull(start, end) ?: return null
+        if (selectedText.isBlank()) return null
+        return "$selectionOwnerIdentity:$start:$end:${selectedText.hashCode()}"
+    }
+
+    internal fun dispatchSelectionAction(action: BookDocumentSelectionAction) {
+        publishSelection(selectionStart, selectionEnd, clearWhenEmpty = false)
+        val selectionIdentity = currentSelectionIdentity() ?: return
+        selectionInteraction?.onSelectionAction?.invoke(selectionOwnerIdentity, selectionIdentity, action)
+    }
+
     private fun publishSelection(selStart: Int, selEnd: Int, clearWhenEmpty: Boolean) {
         val interaction = selectionInteraction ?: BookDocumentTextInteraction.Disabled
         if (!interaction.observeSelections) return
@@ -203,3 +226,8 @@ private fun Spanned.clickableSpanAt(widget: TextView, event: MotionEvent): Click
 
 private const val SELECTION_HIGHLIGHT_ALPHA = 0x66
 private const val DEFAULT_SELECTION_ACCENT = 0xFF3F51B5.toInt()
+
+private fun String.substringOrNull(startIndex: Int, endIndex: Int): String? {
+    if (startIndex < 0 || endIndex <= startIndex || endIndex > length) return null
+    return substring(startIndex, endIndex)
+}

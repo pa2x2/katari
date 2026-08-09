@@ -2,12 +2,12 @@ package mihon.translation.api.host
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.availability.TranslationDeviceAvailability
 import mihon.translation.api.engine.KnownTranslationEngine
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationEngineInspection
 import mihon.translation.api.language.TranslationLanguageSupportInspection
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.api.model.TranslationModelDescriptor
 import mihon.translation.api.provider.TranslationProviderDisclosure
 import mihon.translation.api.request.TranslationTargetLanguageSelection
@@ -62,7 +62,7 @@ interface TranslationHostActions {
 
     fun setSelectedEngine(engine: TranslationEngineId)
 
-    fun setDefaultTargetLanguage(language: TranslationLanguageTag?)
+    fun setDefaultTargetLanguage(language: LanguageTag?)
 }
 
 sealed interface TranslationHostActionResult {

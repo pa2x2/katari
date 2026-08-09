@@ -10,9 +10,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.engine.TranslationEngineSelection
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.api.preparation.TranslationPreparation
 import mihon.translation.api.provider.TranslationInvocationPolicy
 import mihon.translation.api.request.TranslationRequest
@@ -75,21 +75,21 @@ class TranslationSessionController(
         mutableState.value = mutableState.value.withInput(updated)
     }
 
-    fun selectSourceLanguage(language: TranslationLanguageTag) {
+    fun selectSourceLanguage(language: LanguageTag) {
         updateRequest {
             copy(sourceLanguage = TranslationSourceLanguageSelection.Explicit(language))
         }
     }
 
-    fun selectTargetLanguage(language: TranslationLanguageTag) {
+    fun selectTargetLanguage(language: LanguageTag) {
         updateRequest {
             copy(targetLanguage = TranslationTargetLanguageSelection.Explicit(language))
         }
     }
 
     fun selectLanguages(
-        source: TranslationLanguageTag,
-        target: TranslationLanguageTag,
+        source: LanguageTag,
+        target: LanguageTag,
     ) {
         updateRequest {
             copy(

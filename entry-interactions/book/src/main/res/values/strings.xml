@@ -25,6 +25,15 @@
     <string name="book_reader_translation_unsupported_os">Automatic translation requires Android API %1$d or newer.</string>
     <string name="book_reader_translation_service_missing">This device does not provide the Android translation service.</string>
     <string name="book_reader_translation_provider_failure">Translation availability could not be checked: %1$s</string>
+    <string name="book_reader_selection_listen">Listen</string>
+    <string name="book_reader_selection_listen_with_katari">Listen with Katari</string>
+    <string name="book_reader_selection_stop_listening">Stop</string>
+    <string name="book_reader_selection_translate">Translate</string>
+    <string name="book_reader_selection_translate_with_katari">Translate with Katari</string>
+    <string name="book_reader_selection_speech_language_unavailable">The language of the selected text could not be determined.</string>
+    <string name="book_reader_selection_speech_configuration_required">Text to speech needs attention in Settings.</string>
+    <string name="book_reader_selection_speech_unavailable">Text to speech is unavailable for this selection.</string>
+    <string name="book_reader_selection_speech_failed">Text to speech playback failed.</string>
     <string name="book_document_chapter_missing">The selected chapter is no longer in the reading order.</string>
     <string name="book_document_incompatible">The prepared chapter is not a semantic document.</string>
     <string name="book_document_chapter_unavailable">Chapter unavailable</string>

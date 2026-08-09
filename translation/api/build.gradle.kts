@@ -8,6 +8,7 @@ android {
 }
 
 dependencies {
+    api(projects.language.api)
     api(projects.core.common)
 
     testImplementation(libs.bundles.test)

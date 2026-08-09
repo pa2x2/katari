@@ -1,8 +1,8 @@
 package mihon.translation.api.request
 
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationEngineSelection
-import mihon.translation.api.language.TranslationLanguageTag
 
 data class TranslationRequest(
     val text: String,
@@ -15,7 +15,7 @@ sealed interface TranslationSourceLanguageSelection {
     data object Automatic : TranslationSourceLanguageSelection
 
     data class Explicit(
-        val language: TranslationLanguageTag,
+        val language: LanguageTag,
     ) : TranslationSourceLanguageSelection
 }
 
@@ -23,13 +23,13 @@ sealed interface TranslationTargetLanguageSelection {
     data object Default : TranslationTargetLanguageSelection
 
     data class Explicit(
-        val language: TranslationLanguageTag,
+        val language: LanguageTag,
     ) : TranslationTargetLanguageSelection
 }
 
 data class ResolvedTranslationRequest(
     val text: String,
-    val sourceLanguage: TranslationLanguageTag,
-    val targetLanguage: TranslationLanguageTag,
+    val sourceLanguage: LanguageTag,
+    val targetLanguage: LanguageTag,
     val engine: TranslationEngineId,
 )
