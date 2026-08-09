@@ -33,6 +33,8 @@ internal class AndroidTtsConnection(
 
     suspend fun voices(): Set<Voice> = withInstance { it.voices.orEmpty() }
 
+    suspend fun defaultVoice(): Voice? = withInstance(TextToSpeech::getDefaultVoice)
+
     suspend fun play(request: ResolvedTtsRequest): TtsEngineExecution = withInstance { tts ->
         if (request.text.length > TextToSpeech.getMaxSpeechInputLength()) {
             return@withInstance TtsEngineExecution.Failed("Android TTS input limit was exceeded")

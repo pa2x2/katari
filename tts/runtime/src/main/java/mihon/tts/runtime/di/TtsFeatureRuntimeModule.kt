@@ -37,14 +37,14 @@ val ttsFeatureRuntimeModule = ApplicationFeatureRuntimeModule(
         components = context.components,
     ).flatMap(TtsRuntimeContribution::engineContributions)
     val registry = DefaultTtsEngineRegistry(contributions)
-    val implicitEngine = registry.engines.firstOrNull()?.catalogEntry?.id ?: TtsEngineId("tts-unavailable")
+    val initialEngine = registry.engines.firstOrNull()?.catalogEntry?.id
     val profilePreferencesOwner = context.dependencies.profilePreferenceOwners.register(
         id = ProfilePreferenceOwnerId("tts"),
         keyPatterns = setOf(ProfileTtsPreferences.VOICE_KEY_FAMILY),
-        factory = { store -> ProfileTtsPreferences(store, implicitEngine) },
+        factory = { store -> ProfileTtsPreferences(store, initialEngine) },
     )
     val preferences = profilePreferencesOwner.create()
-    val engineResolver = ProfileTtsEngineResolver(preferences, registry)
+    val engineResolver = ProfileTtsEngineResolver(preferences)
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     lateinit var feature: DefaultTtsFeature
     val audioFocus = AndroidTtsAudioFocus(context.application) {

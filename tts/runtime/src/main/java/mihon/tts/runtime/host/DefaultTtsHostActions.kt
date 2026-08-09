@@ -13,6 +13,7 @@ import mihon.tts.api.engine.TtsEngineStatus
 import mihon.tts.api.host.TtsHostActionResult
 import mihon.tts.api.host.TtsHostActions
 import mihon.tts.api.provider.TtsProviderDisclosure
+import mihon.tts.api.voice.TtsDefaultVoiceSelection
 import mihon.tts.api.voice.TtsVoiceId
 import mihon.tts.api.voice.TtsVoiceInspection
 import mihon.tts.runtime.preference.ProfileTtsPreferences
@@ -67,12 +68,13 @@ internal class DefaultTtsHostActions(
                 presentation = engine?.presentation,
                 status = status,
                 action = status.action(),
+                capabilities = engine?.capabilities,
             )
         }
         return TtsEngineInspection(
             engines = states,
             selectedEngine = resolvedEngine,
-            selectionResolved = resolvedEngine != null,
+            selectionResolved = true,
         )
     }
 
@@ -117,12 +119,20 @@ internal class DefaultTtsHostActions(
 
     override fun selectedVoice(language: LanguageTag): TtsVoiceId? = preferences.voice(language).get()
 
+    override fun selectedDefaultVoice(): TtsDefaultVoiceSelection = preferences.selectedDefaultVoice()
+
+    override fun selectedVoiceOverrides(): Map<LanguageTag, TtsVoiceId> = preferences.voiceOverrides()
+
     override fun setSelectedEngine(engine: TtsEngineId) {
         selectedEngine.set(engine)
     }
 
     override fun setSelectedVoice(language: LanguageTag, voice: TtsVoiceId?) {
-        preferences.voice(language).set(voice)
+        preferences.setVoice(language, voice)
+    }
+
+    override fun setSelectedDefaultVoice(voice: TtsDefaultVoiceSelection) {
+        preferences.setDefaultVoice(voice)
     }
 
     private suspend fun inspectDevice(engine: TtsEngine): TtsEngineDeviceAvailability {

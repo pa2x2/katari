@@ -17,4 +17,7 @@ dependencies {
     implementation(projects.tts.spi)
     implementation(libs.injekt)
     implementation(libs.kotlinx.coroutines.core)
+
+    testImplementation(libs.bundles.test)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }

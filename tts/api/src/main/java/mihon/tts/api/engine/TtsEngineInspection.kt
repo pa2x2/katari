@@ -1,5 +1,6 @@
 package mihon.tts.api.engine
 
+import mihon.tts.api.provider.TtsProviderCapabilities
 import mihon.tts.api.provider.TtsProviderDisclosure
 import mihon.tts.api.provider.TtsProviderPresentation
 
@@ -14,6 +15,7 @@ data class TtsEngineState(
     val presentation: TtsProviderPresentation?,
     val status: TtsEngineStatus,
     val action: TtsEngineAction? = null,
+    val capabilities: TtsProviderCapabilities? = null,
 )
 
 sealed interface TtsEngineStatus {

@@ -8,6 +8,7 @@ import android.os.Build
 import android.provider.Settings
 import android.speech.tts.TextToSpeech
 import mihon.tts.api.engine.KnownTtsEngine
+import mihon.tts.api.engine.TtsEngineArtwork
 import mihon.tts.api.engine.TtsEngineBuildAvailability
 import mihon.tts.api.engine.TtsEngineDetails
 import mihon.tts.api.engine.TtsEngineId
@@ -29,6 +30,7 @@ internal fun discoverAndroidTtsEngines(application: Application): List<TtsEngine
     return packageManager.queryTtsServices()
         .mapNotNull { service ->
             val packageName = service.serviceInfo?.packageName ?: return@mapNotNull null
+            if (!packageName.isSupportedAndroidTtsEngine()) return@mapNotNull null
             val engineId = packageName.toAndroidTtsEngineId()
             val engineName = service.loadLabel(packageManager).toString().takeIf(String::isNotBlank)
                 ?: packageName
@@ -38,8 +40,12 @@ internal fun discoverAndroidTtsEngines(application: Application): List<TtsEngine
                 providerName = "Android text-to-speech",
                 engineName = engineName,
                 buildAvailability = TtsEngineBuildAvailability.Included,
+                artwork = TtsEngineArtwork.InstalledApplication(
+                    packageName = packageName,
+                    fallbackResourceId = android.R.drawable.sym_def_app_icon,
+                ),
                 details = TtsEngineDetails(
-                    description = "Uses the installed $engineName speech synthesis engine.",
+                    description = "Speech synthesis through the installed $engineName app.",
                     processingDescription = "Processing depends on the selected Android voice.",
                     privacyDescription = "Selected text is passed only to the chosen Android TTS engine. " +
                         "Network voices are used only when the profile allows them.",
@@ -68,7 +74,7 @@ internal fun discoverAndroidTtsEngines(application: Application): List<TtsEngine
 }
 
 internal fun PackageManager.isAndroidTtsEngineInstalled(packageName: String): Boolean {
-    return queryTtsServices(packageName).isNotEmpty()
+    return packageName.isSupportedAndroidTtsEngine() && queryTtsServices(packageName).isNotEmpty()
 }
 
 private fun PackageManager.queryTtsServices(packageName: String? = null): List<ResolveInfo> {
@@ -90,5 +96,10 @@ private fun String.toAndroidTtsEngineId(): TtsEngineId {
     return TtsEngineId("android-$encodedPackage")
 }
 
+private fun String.isSupportedAndroidTtsEngine(): Boolean {
+    return this != UNSUPPORTED_TRANSLATOR_PACKAGE
+}
+
 private const val DEFAULT_ENGINE_ORDER = 0
 private const val INSTALLED_ENGINE_ORDER = 100
+private const val UNSUPPORTED_TRANSLATOR_PACKAGE = "dev.davidv.translator"

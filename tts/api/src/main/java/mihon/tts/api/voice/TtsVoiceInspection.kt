@@ -6,6 +6,7 @@ sealed interface TtsVoiceInspection {
     data class Available(
         val engine: TtsEngineId,
         val voices: List<TtsVoice>,
+        val defaultVoice: TtsVoiceId? = null,
     ) : TtsVoiceInspection
 
     data class VoiceDataRequired(

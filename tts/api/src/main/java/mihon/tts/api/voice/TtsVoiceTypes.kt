@@ -46,6 +46,14 @@ enum class TtsVoiceLatency {
     Unspecified,
 }
 
+sealed interface TtsDefaultVoiceSelection {
+    data object EngineDefault : TtsDefaultVoiceSelection
+
+    data class Explicit(
+        val voice: TtsVoiceId,
+    ) : TtsDefaultVoiceSelection
+}
+
 sealed interface TtsVoiceSelection {
     data object LanguageDefault : TtsVoiceSelection
 

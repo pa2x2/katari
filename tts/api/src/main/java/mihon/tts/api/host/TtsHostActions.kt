@@ -8,6 +8,7 @@ import mihon.tts.api.engine.KnownTtsEngine
 import mihon.tts.api.engine.TtsEngineId
 import mihon.tts.api.engine.TtsEngineInspection
 import mihon.tts.api.provider.TtsProviderDisclosure
+import mihon.tts.api.voice.TtsDefaultVoiceSelection
 import mihon.tts.api.voice.TtsVoiceId
 import mihon.tts.api.voice.TtsVoiceInspection
 import tachiyomi.core.common.preference.Preference
@@ -46,9 +47,15 @@ interface TtsHostActions {
 
     fun selectedVoice(language: LanguageTag): TtsVoiceId?
 
+    fun selectedDefaultVoice(): TtsDefaultVoiceSelection = TtsDefaultVoiceSelection.EngineDefault
+
+    fun selectedVoiceOverrides(): Map<LanguageTag, TtsVoiceId>
+
     fun setSelectedEngine(engine: TtsEngineId)
 
     fun setSelectedVoice(language: LanguageTag, voice: TtsVoiceId?)
+
+    fun setSelectedDefaultVoice(voice: TtsDefaultVoiceSelection) = Unit
 }
 
 sealed interface TtsHostActionResult {

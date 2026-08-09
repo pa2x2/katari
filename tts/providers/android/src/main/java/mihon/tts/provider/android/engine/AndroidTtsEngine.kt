@@ -58,7 +58,11 @@ internal class AndroidTtsEngine(
             if (voices.isEmpty()) {
                 TtsVoiceInspection.VoiceDataRequired(catalogEntry.id, "The engine reported no installed voices")
             } else {
-                TtsVoiceInspection.Available(catalogEntry.id, voices)
+                val defaultVoice = connection.defaultVoice()
+                    ?.toApiVoice(ANDROID_TTS_PROVIDER_ID, catalogEntry.id)
+                    ?.id
+                    ?.takeIf { candidate -> voices.any { it.id == candidate } }
+                TtsVoiceInspection.Available(catalogEntry.id, voices, defaultVoice)
             }
         } catch (error: CancellationException) {
             throw error

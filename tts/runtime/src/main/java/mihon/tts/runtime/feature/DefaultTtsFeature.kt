@@ -27,6 +27,7 @@ import mihon.tts.api.request.TtsParameterSelection
 import mihon.tts.api.request.TtsParameters
 import mihon.tts.api.request.TtsProcessingPolicy
 import mihon.tts.api.request.TtsRequest
+import mihon.tts.api.voice.TtsDefaultVoiceSelection
 import mihon.tts.api.voice.TtsVoice
 import mihon.tts.api.voice.TtsVoiceId
 import mihon.tts.api.voice.TtsVoiceInspection
@@ -84,8 +85,8 @@ internal class DefaultTtsFeature(
                 knownEngines,
             )
         val voiceInspection = inspectVoices(engine)
-        val voices = when (voiceInspection) {
-            is TtsVoiceInspection.Available -> voiceInspection.voices
+        val availableVoices = when (voiceInspection) {
+            is TtsVoiceInspection.Available -> voiceInspection
             is TtsVoiceInspection.VoiceDataRequired -> return TtsPreparation.SystemSetupRequired(
                 engine = engineId,
                 presentation = engine.presentation,
@@ -101,11 +102,18 @@ internal class DefaultTtsFeature(
                 TtsUnavailableReason.ProviderInspectionFailed(engineId, voiceInspection.reason),
             )
         }
+        val voices = availableVoices.voices
         val compatibleVoices = voices.filter { it.supports(language) }.sortedWith(VOICE_ORDER)
-        val voice = resolveVoice(request.voice, language, engine, voices, compatibleVoices)
+        val voice = resolveVoice(
+            selection = request.voice,
+            language = language,
+            engine = engine,
+            voices = voices,
+            engineDefaultVoice = availableVoices.defaultVoice,
+        )
             ?: return voiceChoiceRequired(request.voice, engineId, language, compatibleVoices)
         val networkAllowed = when (request.processingPolicy) {
-            TtsProcessingPolicy.ProfileDefault -> preferences.allowNetworkVoices.get()
+            TtsProcessingPolicy.ProfileDefault -> true
             TtsProcessingPolicy.OnDeviceOnly -> false
             TtsProcessingPolicy.NetworkAllowed -> true
         }
@@ -114,7 +122,7 @@ internal class DefaultTtsFeature(
         }
         val parameters = when (val selection = request.parameters) {
             TtsParameterSelection.ProfileDefault -> TtsParameters(
-                speechRate = preferences.speechRate.get(),
+                speechRate = engine.capabilities.speechRate.defaultValue(),
                 pitch = preferences.pitch.get(),
             )
             is TtsParameterSelection.Explicit -> selection.parameters
@@ -210,18 +218,20 @@ internal class DefaultTtsFeature(
         language: LanguageTag,
         engine: TtsEngine,
         voices: List<TtsVoice>,
-        compatibleVoices: List<TtsVoice>,
+        engineDefaultVoice: TtsVoiceId?,
     ): TtsVoice? {
         return when (selection) {
             is TtsVoiceSelection.Explicit -> voices.singleOrNull { it.id == selection.voice }
                 ?.takeIf { it.supports(language) && it.id.engine == engine.catalogEntry.id }
             TtsVoiceSelection.LanguageDefault -> {
-                val preferred = preferences.voice(language).get()
-                if (preferred != null) {
-                    voices.singleOrNull { it.id == preferred }?.takeIf { it.supports(language) }
-                } else {
-                    compatibleVoices.firstOrNull()
+                val configured = preferences.voice(language).get()?.let(TtsDefaultVoiceSelection::Explicit)
+                    ?: preferences.selectedDefaultVoice()
+                val configuredVoice = when (configured) {
+                    TtsDefaultVoiceSelection.EngineDefault -> engineDefaultVoice
+                    is TtsDefaultVoiceSelection.Explicit -> configured.voice
                 }
+                voices.singleOrNull { it.id == configuredVoice }
+                    ?.takeIf { it.supports(language) && it.id.engine == engine.catalogEntry.id }
             }
         }
     }
@@ -235,6 +245,7 @@ internal class DefaultTtsFeature(
         val unavailable = when (selection) {
             is TtsVoiceSelection.Explicit -> selection.voice
             TtsVoiceSelection.LanguageDefault -> preferences.voice(language).get()
+                ?: (preferences.selectedDefaultVoice() as? TtsDefaultVoiceSelection.Explicit)?.voice
         }
         return TtsPreparation.VoiceChoiceRequired(
             engine = engine,
@@ -286,6 +297,13 @@ internal class DefaultTtsFeature(
         return when (this) {
             TtsParameterSupport.Unsupported -> value == 1f
             is TtsParameterSupport.Supported -> value in range.minimum..range.maximum
+        }
+    }
+
+    private fun TtsParameterSupport.defaultValue(): Float {
+        return when (this) {
+            TtsParameterSupport.Unsupported -> 1f
+            is TtsParameterSupport.Supported -> range.default
         }
     }
 

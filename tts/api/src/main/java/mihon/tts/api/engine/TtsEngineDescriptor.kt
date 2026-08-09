@@ -1,11 +1,14 @@
 package mihon.tts.api.engine
 
+import androidx.annotation.DrawableRes
+
 data class KnownTtsEngine(
     val id: TtsEngineId,
     val providerId: TtsProviderId,
     val providerName: String,
     val engineName: String,
     val buildAvailability: TtsEngineBuildAvailability,
+    val artwork: TtsEngineArtwork,
     val details: TtsEngineDetails,
     val documentationUrl: String? = null,
 ) {
@@ -13,6 +16,26 @@ data class KnownTtsEngine(
         require(providerName.isNotBlank())
         require(engineName.isNotBlank())
         require(documentationUrl == null || documentationUrl.isNotBlank())
+    }
+}
+
+sealed interface TtsEngineArtwork {
+    data class Bundled(
+        @DrawableRes val resourceId: Int,
+    ) : TtsEngineArtwork {
+        init {
+            require(resourceId != 0)
+        }
+    }
+
+    data class InstalledApplication(
+        val packageName: String,
+        @DrawableRes val fallbackResourceId: Int,
+    ) : TtsEngineArtwork {
+        init {
+            require(packageName.isNotBlank())
+            require(fallbackResourceId != 0)
+        }
     }
 }
 
