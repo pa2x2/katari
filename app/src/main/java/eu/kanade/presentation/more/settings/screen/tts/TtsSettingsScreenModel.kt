@@ -30,16 +30,24 @@ internal class TtsSettingsScreenModel(
     )
     val state = controller.state
 
-    fun onResume() = controller.refresh()
+    fun onResume() = controller.refresh(forceVoiceRefresh = true)
+
+    fun onStop() = controller.stopPreview()
 
     fun selectDraftEngine(engine: TtsEngineId) = controller.selectDraftEngine(engine)
 
     fun setDraftPitch(value: Float) = controller.setDraftPitch(value)
 
-    fun setDraftDefaultVoice(voice: TtsDefaultVoiceSelection) = controller.setDraftDefaultVoice(voice)
+    fun setDraftDefaultVoice(
+        voice: TtsDefaultVoiceSelection,
+        networkVoiceConfirmed: Boolean,
+    ) = controller.setDraftDefaultVoice(voice, networkVoiceConfirmed)
 
-    fun setDraftVoiceOverride(language: LanguageTag, voice: TtsVoiceId) =
-        controller.setDraftVoiceOverride(language, voice)
+    fun setDraftVoiceOverride(
+        language: LanguageTag,
+        voice: TtsVoiceId,
+        networkVoiceConfirmed: Boolean,
+    ) = controller.setDraftVoiceOverride(language, voice, networkVoiceConfirmed)
 
     fun removeDraftVoiceOverride(language: LanguageTag) = controller.removeDraftVoiceOverride(language)
 
@@ -90,7 +98,7 @@ internal class TtsSettingsScreenModel(
             onComplete(result)
             if (result == TtsHostActionResult.Completed) {
                 controller.stopPreview()
-                controller.refresh()
+                controller.refresh(forceVoiceRefresh = true)
             }
         }
     }

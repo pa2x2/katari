@@ -27,12 +27,10 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -506,17 +504,15 @@ internal fun TranslationCompactIconButton(
     contentDescription: String,
     onClick: () -> Unit,
 ) {
-    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
-        IconButton(
-            onClick = onClick,
-            modifier = Modifier.size(36.dp),
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = contentDescription,
-                modifier = Modifier.size(20.dp),
-            )
-        }
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier.size(48.dp),
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            modifier = Modifier.size(20.dp),
+        )
     }
 }
 
@@ -804,18 +800,16 @@ private fun SessionActionButton(
     compact: Boolean,
 ) {
     if (compact) {
-        CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
-            Button(
-                onClick = onClick,
-                modifier = modifier.heightIn(min = COMPACT_ACTION_MINIMUM_HEIGHT),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-            ) {
-                Text(
-                    text = label,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
+        Button(
+            onClick = onClick,
+            modifier = modifier.heightIn(min = COMPACT_ACTION_MINIMUM_HEIGHT),
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+        ) {
+            Text(
+                text = label,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     } else {
         Button(
@@ -874,7 +868,7 @@ private fun TranslationSessionState.Active.hasExpandedCompactContent(): Boolean 
 }
 
 private const val COMPACT_MESSAGE_MAX_LINES = 3
-private val COMPACT_ACTION_MINIMUM_HEIGHT = 36.dp
+private val COMPACT_ACTION_MINIMUM_HEIGHT = 48.dp
 
 @Composable
 private fun TranslationSystemSetupReason.message(): String {

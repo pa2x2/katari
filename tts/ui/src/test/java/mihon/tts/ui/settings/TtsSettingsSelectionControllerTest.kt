@@ -47,4 +47,23 @@ class TtsSettingsSelectionControllerTest {
         host.selectedVoiceOverrides() shouldBe emptyMap()
         controller.close()
     }
+
+    @Test
+    fun `provider return re-inspects voices for the unchanged selected engine`() = runTest {
+        val host = TestTtsHostActions()
+        val controller = TtsSettingsController(TestTtsFeature(), host, backgroundScope, ENGLISH)
+        runCurrent()
+        host.voiceInspectionCount shouldBe 1
+
+        host.voices = listOf(ENGLISH_VOICE)
+        controller.refresh(forceVoiceRefresh = true)
+        runCurrent()
+
+        host.voiceInspectionCount shouldBe 2
+        controller.state.value.voiceCatalog shouldBe TtsVoiceCatalogState.Available(
+            engine = FIRST_ENGINE,
+            voices = listOf(ENGLISH_VOICE),
+        )
+        controller.close()
+    }
 }

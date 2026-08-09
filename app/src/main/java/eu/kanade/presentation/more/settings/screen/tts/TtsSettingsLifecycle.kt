@@ -11,7 +11,11 @@ internal fun RefreshTtsSettingsOnResume(model: TtsSettingsScreenModel) {
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner, model) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) model.onResume()
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> model.onResume()
+                Lifecycle.Event.ON_STOP -> model.onStop()
+                else -> Unit
+            }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }

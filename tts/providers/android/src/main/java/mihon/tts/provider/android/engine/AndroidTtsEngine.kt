@@ -134,9 +134,23 @@ internal class AndroidTtsEngine(
                 TtsUnavailableReason.EngineUnavailable(catalogEntry.id, "Stale Android TTS readiness"),
             )
         }
-        val voice = connection.cachedVoice(androidReady.request.voice.id.value)
-            ?: return TtsEnginePreparation.SystemSetupRequired(TtsSystemSetupReason.VoiceDataRequired)
-        return TtsEnginePreparation.Ready(androidReady.copy(voice = voice))
+        if (inspectDevice() != TtsEngineDeviceAvailability.Available) {
+            return TtsEnginePreparation.Unavailable(
+                TtsUnavailableReason.EngineUnavailable(catalogEntry.id, "Android TTS engine is not installed"),
+            )
+        }
+        return try {
+            val voice = connection.voiceSnapshot(forceRefresh = true)
+                .find(androidReady.request.voice.id.value)
+                ?: return TtsEnginePreparation.SystemSetupRequired(TtsSystemSetupReason.VoiceDataRequired)
+            TtsEnginePreparation.Ready(androidReady.copy(voice = voice))
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Exception) {
+            TtsEnginePreparation.Unavailable(
+                TtsUnavailableReason.EngineUnavailable(catalogEntry.id, "Android TTS engine initialization failed"),
+            )
+        }
     }
 
     override suspend fun play(ready: ReadyTtsEngineRequest): TtsEngineExecution {

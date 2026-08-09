@@ -50,8 +50,6 @@ internal class AndroidTtsConnection(
         }
     }
 
-    fun cachedVoice(name: String): Voice? = voiceSnapshot?.find(name)
-
     suspend fun resolveVoice(name: String): Voice? = voiceSnapshot().find(name)
 
     suspend fun play(request: ResolvedTtsRequest, voice: Voice): TtsEngineExecution = withInstance { tts ->

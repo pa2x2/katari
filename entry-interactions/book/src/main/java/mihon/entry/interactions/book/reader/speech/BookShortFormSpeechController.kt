@@ -2,12 +2,15 @@ package mihon.entry.interactions.book.reader.speech
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mihon.translation.ui.presentation.TranslationResultSpeechTarget
 import mihon.tts.api.TtsFeature
 import mihon.tts.api.playback.TtsPlaybackSession
@@ -139,6 +142,7 @@ internal class BookShortFormSpeechController(
         owner: BookShortFormSpeechOwner,
         activeGeneration: Long,
     ) {
+        if (activeGeneration != generation || closed) return
         when (val start = feature.play(preparation.speech)) {
             is TtsPlaybackStart.Started -> observe(start.session, owner, activeGeneration)
             is TtsPlaybackStart.PreparationChanged -> fail(activeGeneration, start.preparation.failure())
@@ -152,7 +156,7 @@ internal class BookShortFormSpeechController(
         activeGeneration: Long,
     ) {
         if (activeGeneration != generation || closed) {
-            activeSession.stop()
+            withContext(NonCancellable) { activeSession.stop() }
             return
         }
         session = activeSession
@@ -181,7 +185,11 @@ internal class BookShortFormSpeechController(
         val activeSession = session
         session = null
         mutableState.value = BookShortFormSpeechState()
-        if (activeSession != null) scope.launch { activeSession.stop() }
+        if (activeSession != null) {
+            scope.launch(start = CoroutineStart.UNDISPATCHED) {
+                withContext(NonCancellable) { activeSession.stop() }
+            }
+        }
     }
 
     private fun update(

@@ -11,11 +11,9 @@ import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
@@ -84,7 +82,6 @@ internal fun TranslationSpeechActionButton(
     compact: Boolean = false,
 ) {
     val active = speechState.activeTarget == target
-    val size = if (compact) 36.dp else 48.dp
     val contentDescription = stringResource(
         when (target.side) {
             TranslationResultSpeechSide.Source -> if (active) {
@@ -99,30 +96,28 @@ internal fun TranslationSpeechActionButton(
             }
         },
     )
-    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
-        IconButton(
-            onClick = { onSpeechToggle(target) },
-            modifier = Modifier.size(size),
-        ) {
-            if (active && speechState.phase == TranslationResultSpeechPhase.Preparing) {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .size(if (compact) 18.dp else 22.dp)
-                        .semantics { this.contentDescription = contentDescription },
-                    strokeWidth = 2.dp,
-                )
-            } else {
-                Icon(
-                    imageVector = if (active) Icons.Outlined.Stop else Icons.AutoMirrored.Outlined.VolumeUp,
-                    contentDescription = contentDescription,
-                    modifier = Modifier.size(if (compact) 20.dp else 24.dp),
-                    tint = if (active) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                )
-            }
+    IconButton(
+        onClick = { onSpeechToggle(target) },
+        modifier = Modifier.size(48.dp),
+    ) {
+        if (active && speechState.phase == TranslationResultSpeechPhase.Preparing) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .size(if (compact) 18.dp else 22.dp)
+                    .semantics { this.contentDescription = contentDescription },
+                strokeWidth = 2.dp,
+            )
+        } else {
+            Icon(
+                imageVector = if (active) Icons.Outlined.Stop else Icons.AutoMirrored.Outlined.VolumeUp,
+                contentDescription = contentDescription,
+                modifier = Modifier.size(if (compact) 20.dp else 24.dp),
+                tint = if (active) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+            )
         }
     }
 }

@@ -40,6 +40,7 @@ class TtsSettingsController(
     private var savedDefaultVoice = hostActions.selectedDefaultVoice()
     private var savedVoiceOverrides = hostActions.selectedVoiceOverrides()
     private var savedPitch = hostActions.pitch.get()
+    private var savedAllowNetworkVoices = hostActions.allowNetworkVoices.get()
     private val mutableState = MutableStateFlow(
         TtsSettingsState(
             engineInspection = TtsEngineInspection(
@@ -53,7 +54,7 @@ class TtsSettingsController(
             voiceOverrides = savedVoiceOverrides,
             speechRate = hostActions.speechRate.get(),
             pitch = hostActions.pitch.get(),
-            allowNetworkVoices = hostActions.allowNetworkVoices.get(),
+            allowNetworkVoices = savedAllowNetworkVoices,
             previewLanguage = initialPreviewLanguage,
             defaultVoice = savedDefaultVoice,
         ),
@@ -62,6 +63,8 @@ class TtsSettingsController(
 
     private var engineRefreshJob: Job? = null
     private var voiceRefreshJob: Job? = null
+    private var engineRefreshGeneration = 0L
+    private var voiceRefreshGeneration = 0L
     private var closed = false
     private val previewPlayback = TtsPreviewPlaybackController(
         feature = feature,
@@ -88,7 +91,14 @@ class TtsSettingsController(
             }
         }.launchIn(scope),
         hostActions.allowNetworkVoices.changes().onEach { value ->
-            mutableState.update { it.copy(allowNetworkVoices = value) }
+            mutableState.update { current ->
+                if (current.hasUnsavedProfileChanges) {
+                    current
+                } else {
+                    savedAllowNetworkVoices = value
+                    current.copy(allowNetworkVoices = value)
+                }
+            }
         }.launchIn(scope),
     )
 
@@ -96,12 +106,15 @@ class TtsSettingsController(
         refresh()
     }
 
-    fun refresh() {
+    fun refresh(forceVoiceRefresh: Boolean = false) {
         if (closed) return
         engineRefreshJob?.cancel()
+        val activeGeneration = ++engineRefreshGeneration
         engineRefreshJob = scope.launch {
             hostActions.inspectEngineStates().collect { inspection ->
+                if (closed || activeGeneration != engineRefreshGeneration) return@collect
                 val previousEngine = mutableState.value.selectedEngine
+                val previousEngineStatus = mutableState.value.selectedEngineState?.status
                 mutableState.update { current ->
                     if (current.hasUnsavedProfileChanges) {
                         current.copy(
@@ -112,16 +125,22 @@ class TtsSettingsController(
                         savedDefaultVoice = hostActions.selectedDefaultVoice()
                         savedVoiceOverrides = hostActions.selectedVoiceOverrides()
                         savedPitch = hostActions.pitch.get()
+                        savedAllowNetworkVoices = hostActions.allowNetworkVoices.get()
                         current.copy(
                             engineInspection = inspection,
                             defaultVoice = savedDefaultVoice,
                             voiceOverrides = savedVoiceOverrides,
                             pitch = savedPitch,
+                            allowNetworkVoices = savedAllowNetworkVoices,
                         )
                     }
                 }
                 val currentEngine = mutableState.value.selectedEngine
-                if (previousEngine != currentEngine ||
+                val currentEngineStatus = mutableState.value.selectedEngineState?.status
+                if (currentEngineStatus != TtsEngineStatus.Ready) stopPreview()
+                if (forceVoiceRefresh ||
+                    previousEngine != currentEngine ||
+                    previousEngineStatus != currentEngineStatus ||
                     voiceCatalogNeedsRefresh(currentEngine)
                 ) {
                     refreshVoices(currentEngine)
@@ -238,18 +257,39 @@ class TtsSettingsController(
         mutableState.update { it.copy(voiceOverrides = hostActions.selectedVoiceOverrides()) }
     }
 
-    fun setDraftDefaultVoice(selection: TtsDefaultVoiceSelection) {
-        if (resolvedVoice(selection) == null) return
+    fun setDraftDefaultVoice(
+        selection: TtsDefaultVoiceSelection,
+        networkVoiceConfirmed: Boolean = false,
+    ) {
+        val voice = resolvedVoice(selection) ?: return
+        val allowNetworkVoices = mutableState.value.allowNetworkVoices ||
+            (voice.processing == TtsVoiceProcessing.NetworkRequired && networkVoiceConfirmed)
+        if (voice.processing == TtsVoiceProcessing.NetworkRequired && !allowNetworkVoices) return
         stopPreview()
-        mutableState.update { it.copy(defaultVoice = selection).withUnsavedState() }
+        mutableState.update {
+            it.copy(
+                defaultVoice = selection,
+                allowNetworkVoices = allowNetworkVoices,
+            ).withUnsavedState()
+        }
     }
 
-    fun setDraftVoiceOverride(language: LanguageTag, voice: TtsVoiceId) {
+    fun setDraftVoiceOverride(
+        language: LanguageTag,
+        voice: TtsVoiceId,
+        networkVoiceConfirmed: Boolean = false,
+    ) {
         val available = (mutableState.value.voiceCatalog as? TtsVoiceCatalogState.Available)?.voices.orEmpty()
-        if (available.compatibleWith(language).none { it.id == voice }) return
+        val selectedVoice = available.compatibleWith(language).singleOrNull { it.id == voice } ?: return
+        val allowNetworkVoices = mutableState.value.allowNetworkVoices ||
+            (selectedVoice.processing == TtsVoiceProcessing.NetworkRequired && networkVoiceConfirmed)
+        if (selectedVoice.processing == TtsVoiceProcessing.NetworkRequired && !allowNetworkVoices) return
         stopPreview()
         mutableState.update { current ->
-            current.copy(voiceOverrides = current.voiceOverrides + (language to voice)).withUnsavedState()
+            current.copy(
+                voiceOverrides = current.voiceOverrides + (language to voice),
+                allowNetworkVoices = allowNetworkVoices,
+            ).withUnsavedState()
         }
     }
 
@@ -298,10 +338,12 @@ class TtsSettingsController(
         }
         state.voiceOverrides.forEach(hostActions::setSelectedVoice)
         hostActions.pitch.set(state.pitch)
+        hostActions.allowNetworkVoices.set(state.allowNetworkVoices)
         savedEngine = engine
         savedDefaultVoice = state.defaultVoice
         savedVoiceOverrides = state.voiceOverrides
         savedPitch = state.pitch
+        savedAllowNetworkVoices = state.allowNetworkVoices
         mutableState.update { it.copy(hasUnsavedProfileChanges = false) }
     }
 
@@ -333,6 +375,8 @@ class TtsSettingsController(
     override fun close() {
         if (closed) return
         closed = true
+        engineRefreshGeneration += 1
+        voiceRefreshGeneration += 1
         engineRefreshJob?.cancel()
         voiceRefreshJob?.cancel()
         preferenceJobs.forEach(Job::cancel)
@@ -341,6 +385,7 @@ class TtsSettingsController(
 
     private fun refreshVoices(engine: TtsEngineId?) {
         voiceRefreshJob?.cancel()
+        val activeGeneration = ++voiceRefreshGeneration
         if (engine == null) {
             mutableState.update { it.copy(voiceCatalog = TtsVoiceCatalogState.NoEngine) }
             return
@@ -357,6 +402,13 @@ class TtsSettingsController(
                     TtsVoiceCatalogState.VoiceDataRequired(engine, inspection.reason)
                 is TtsVoiceInspection.Unavailable -> TtsVoiceCatalogState.Unavailable(engine, inspection.reason)
                 is TtsVoiceInspection.Failed -> TtsVoiceCatalogState.Failed(engine, inspection.reason)
+            }
+            if (closed || activeGeneration != voiceRefreshGeneration) return@launch
+            val previewVoice = mutableState.value.previewVoice
+            if (catalog !is TtsVoiceCatalogState.Available ||
+                (previewVoice != null && catalog.voices.none { it.id == previewVoice })
+            ) {
+                stopPreview()
             }
             mutableState.update { current ->
                 if (current.selectedEngine == engine) current.copy(voiceCatalog = catalog) else current
@@ -421,12 +473,22 @@ class TtsSettingsController(
 
     private fun configurationReady(state: TtsSettingsState): Boolean {
         val catalog = state.voiceCatalog as? TtsVoiceCatalogState.Available ?: return false
-        if (catalog.engine != state.selectedEngine || resolvedVoice(state.defaultVoice) == null) return false
+        val defaultVoice = resolvedVoice(state.defaultVoice) ?: return false
+        if (catalog.engine != state.selectedEngine) return false
         if (state.voiceOverrides.any { (language, voice) ->
                 catalog.voices.compatibleWith(language).none { it.id == voice }
             }
         ) {
             return false
+        }
+        if (!state.allowNetworkVoices) {
+            val configuredVoiceIds = state.voiceOverrides.values + defaultVoice.id
+            if (catalog.voices.any {
+                    it.id in configuredVoiceIds && it.processing == TtsVoiceProcessing.NetworkRequired
+                }
+            ) {
+                return false
+            }
         }
         return when (val support = state.selectedEngineState?.capabilities?.pitch) {
             is TtsParameterSupport.Supported -> support.accepts(state.pitch)
@@ -440,7 +502,8 @@ class TtsSettingsController(
             hasUnsavedProfileChanges = selectedEngine != savedEngine ||
                 defaultVoice != savedDefaultVoice ||
                 voiceOverrides != savedVoiceOverrides ||
-                pitch != savedPitch,
+                pitch != savedPitch ||
+                allowNetworkVoices != savedAllowNetworkVoices,
         )
     }
 

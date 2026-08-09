@@ -2,9 +2,12 @@ package mihon.tts.ui.settings
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mihon.language.api.tag.LanguageTag
 import mihon.tts.api.TtsFeature
 import mihon.tts.api.playback.TtsPlaybackSession
@@ -57,7 +60,9 @@ internal class TtsPreviewPlaybackController(
         session = null
         updateState(TtsPreviewState.Idle)
         if (activeSession != null) {
-            scope.launch { activeSession.stop() }
+            scope.launch(start = CoroutineStart.UNDISPATCHED) {
+                withContext(NonCancellable) { activeSession.stop() }
+            }
         }
     }
 
@@ -93,6 +98,7 @@ internal class TtsPreviewPlaybackController(
     }
 
     private suspend fun play(preparation: TtsPreparation.Ready, activeGeneration: Long) {
+        if (activeGeneration != generation || closed) return
         when (val start = feature.play(preparation.speech)) {
             is TtsPlaybackStart.Started -> observe(start.session, activeGeneration)
             is TtsPlaybackStart.PreparationChanged -> update(
@@ -107,8 +113,8 @@ internal class TtsPreviewPlaybackController(
     }
 
     private suspend fun observe(activeSession: TtsPlaybackSession, activeGeneration: Long) {
-        if (activeGeneration != generation) {
-            activeSession.stop()
+        if (activeGeneration != generation || closed) {
+            withContext(NonCancellable) { activeSession.stop() }
             return
         }
         session = activeSession

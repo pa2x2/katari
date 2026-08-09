@@ -43,7 +43,7 @@ import tachiyomi.core.common.preference.Preference
 
 internal class TestTtsHostActions(
     val engineStates: List<TtsEngineState> = TEST_ENGINE_STATES,
-    val voices: List<TtsVoice> = TEST_VOICES,
+    voices: List<TtsVoice> = TEST_VOICES,
 ) : TtsHostActions {
     override val knownEngines = engineStates.map(TtsEngineState::engine)
     override val selectedEngine: Preference<TtsEngineId> = InMemoryPreference("engine", FIRST_ENGINE, FIRST_ENGINE)
@@ -51,6 +51,9 @@ internal class TestTtsHostActions(
     override val pitch: Preference<Float> = InMemoryPreference("pitch", null, 1f)
     override val allowNetworkVoices: Preference<Boolean> = InMemoryPreference("network", null, false)
     private val voiceOverrides = mutableMapOf<LanguageTag, TtsVoiceId>()
+    var voices: List<TtsVoice> = voices
+    var voiceInspectionCount = 0
+        private set
 
     override suspend fun deviceAvailability() = TtsDeviceAvailability.Available
 
@@ -59,7 +62,10 @@ internal class TestTtsHostActions(
         selectedEngine = selectedEngine.get(),
     )
 
-    override suspend fun inspectVoices(engine: TtsEngineId) = TtsVoiceInspection.Available(engine, voices)
+    override suspend fun inspectVoices(engine: TtsEngineId): TtsVoiceInspection {
+        voiceInspectionCount += 1
+        return TtsVoiceInspection.Available(engine, voices)
+    }
 
     override suspend fun acknowledgeProviderDisclosure(
         engine: TtsEngineId,

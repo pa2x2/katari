@@ -43,12 +43,13 @@ internal class TtsVoicePickerScreen(
                 initialSelection = state.voiceOverrides[language]?.let(TtsDefaultVoiceSelection::Explicit),
                 engineDefaultVoice = null,
                 previewingVoice = state.previewVoice,
+                networkVoicesAllowed = state.allowNetworkVoices,
                 language = language,
                 contentPadding = contentPadding,
                 onAudition = model::auditionVoice,
-                onUse = { selection ->
+                onUse = { selection, networkVoiceConfirmed ->
                     val explicit = selection as TtsDefaultVoiceSelection.Explicit
-                    model.setDraftVoiceOverride(language, explicit.voice)
+                    model.setDraftVoiceOverride(language, explicit.voice, networkVoiceConfirmed)
                     navigator.pop()
                 },
                 onStopPreview = model::stopPreview,

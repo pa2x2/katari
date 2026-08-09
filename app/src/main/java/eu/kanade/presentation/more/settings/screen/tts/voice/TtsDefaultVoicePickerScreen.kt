@@ -38,11 +38,12 @@ internal class TtsDefaultVoicePickerScreen : Screen() {
                 initialSelection = state.defaultVoice,
                 engineDefaultVoice = catalog.defaultVoice,
                 previewingVoice = state.previewVoice,
+                networkVoicesAllowed = state.allowNetworkVoices,
                 language = null,
                 contentPadding = contentPadding,
                 onAudition = model::auditionVoice,
-                onUse = { selection ->
-                    model.setDraftDefaultVoice(selection)
+                onUse = { selection, networkVoiceConfirmed ->
+                    model.setDraftDefaultVoice(selection, networkVoiceConfirmed)
                     navigator.pop()
                 },
                 onStopPreview = model::stopPreview,

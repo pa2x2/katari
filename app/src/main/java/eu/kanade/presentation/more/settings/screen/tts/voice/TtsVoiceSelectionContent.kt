@@ -35,10 +35,11 @@ internal fun TtsVoiceSelectionContent(
     initialSelection: TtsDefaultVoiceSelection?,
     engineDefaultVoice: TtsVoiceId?,
     previewingVoice: TtsVoiceId?,
+    networkVoicesAllowed: Boolean,
     language: LanguageTag?,
     contentPadding: PaddingValues,
     onAudition: (TtsVoice) -> Unit,
-    onUse: (TtsDefaultVoiceSelection) -> Unit,
+    onUse: (TtsDefaultVoiceSelection, networkVoiceConfirmed: Boolean) -> Unit,
     onStopPreview: () -> Unit,
     preview: TtsPreviewState,
     onAcknowledgeDisclosure: (TtsProviderDisclosure) -> Unit,
@@ -51,7 +52,7 @@ internal fun TtsVoiceSelectionContent(
     }
     var candidate by remember(initialCandidate) { mutableStateOf(initialCandidate) }
     var pendingNetworkCandidate by remember { mutableStateOf<TtsVoiceCandidate?>(null) }
-    var networkConfirmed by remember { mutableStateOf(false) }
+    var networkConfirmed by remember(networkVoicesAllowed) { mutableStateOf(networkVoicesAllowed) }
 
     DisposableEffect(Unit) {
         onDispose(onStopPreview)
@@ -86,7 +87,18 @@ internal fun TtsVoiceSelectionContent(
             onRetry = { candidate?.voice?.let(onAudition) },
         )
         Button(
-            onClick = { candidate?.selection?.let(onUse) },
+            onClick = {
+                candidate?.let { selected ->
+                    if (selected.voice.processing == TtsVoiceProcessing.NetworkRequired && !networkConfirmed) {
+                        pendingNetworkCandidate = selected
+                    } else {
+                        onUse(
+                            selected.selection,
+                            selected.voice.processing == TtsVoiceProcessing.NetworkRequired && networkConfirmed,
+                        )
+                    }
+                }
+            },
             enabled = candidate != null,
             modifier = Modifier
                 .fillMaxWidth()

@@ -204,7 +204,10 @@ private class RuntimeTtsPlaybackSession(
                 val preparation = ready.engine.prepare(segmentRequest)
                 val providerReady = preparation as? TtsEnginePreparation.Ready
                     ?: return fail("TTS provider became unavailable between segments")
-                currentPlayback = when (val execution = ready.engine.play(providerReady.request)) {
+                val revalidated = ready.engine.revalidate(providerReady.request)
+                val currentReady = revalidated as? TtsEnginePreparation.Ready
+                    ?: return fail("TTS provider became unavailable between segments")
+                currentPlayback = when (val execution = ready.engine.play(currentReady.request)) {
                     is TtsEngineExecution.Started -> execution.playback
                     is TtsEngineExecution.PreparationChanged ->
                         return fail("TTS provider readiness changed between segments")
