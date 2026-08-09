@@ -6,7 +6,6 @@ import mihon.feature.graph.CapabilityId
 import mihon.feature.graph.CapabilityProvider
 import mihon.feature.graph.ContributionOwner
 import mihon.feature.graph.FeatureArtifactId
-import mihon.feature.graph.FeatureBehaviorContract
 import mihon.feature.graph.FeatureBehaviorProjection
 import mihon.feature.graph.FeatureContribution
 import mihon.feature.graph.FeatureGraphContributionSink
@@ -33,10 +32,6 @@ internal object TtsEngineRegistryCapability {
     }
 }
 
-internal object TtsFeatureBehaviorContract : FeatureBehaviorContract {
-    override val id = FeatureArtifactId("tts.behavior")
-}
-
 private data object TtsShortFormPlaybackBehavior : FeatureBehaviorProjection {
     override val id = FeatureArtifactId("tts.prepare-play-stop")
 }
@@ -55,7 +50,6 @@ internal object TtsFeatureContributor : FeatureGraphContributor {
                         prerequisites = CapabilityExpression.Provided(TtsEngineRegistryCapability.definition),
                         subjectScope = FeatureSubjectScope.Application,
                         behaviorProjections = listOf(TtsShortFormPlaybackBehavior),
-                        behavioralContracts = listOf(TtsFeatureBehaviorContract),
                     ),
                 ),
             ),

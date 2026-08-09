@@ -83,6 +83,8 @@ sealed interface TtsPlaybackStart {
 sealed interface TtsPlaybackFailureReason {
     data object InvalidReadyTts : TtsPlaybackFailureReason
 
+    data object AudioFocusUnavailable : TtsPlaybackFailureReason
+
     data class ProviderFailure(
         val engine: TtsEngineId,
         val message: String? = null,

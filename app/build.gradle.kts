@@ -232,6 +232,8 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.translation.runtime.path)))
     implementation(dependencies.project(mapOf("path" to projects.translation.ui.path)))
     implementation(dependencies.project(mapOf("path" to projects.translation.providers.libretranslate.path)))
+    implementation(dependencies.project(mapOf("path" to projects.tts.runtime.path)))
+    implementation(dependencies.project(mapOf("path" to projects.tts.providers.android.path)))
 
     // Compose
     implementation(libs.androidx.activity.compose)

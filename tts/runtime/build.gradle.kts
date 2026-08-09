@@ -10,6 +10,11 @@ android {
 dependencies {
     api(projects.tts.api)
 
+    implementation(projects.core.common)
     implementation(projects.featureGraph)
+    implementation(projects.featureRuntime)
+    implementation(projects.language.runtime)
     implementation(projects.tts.spi)
+    implementation(libs.injekt)
+    implementation(libs.kotlinx.coroutines.core)
 }

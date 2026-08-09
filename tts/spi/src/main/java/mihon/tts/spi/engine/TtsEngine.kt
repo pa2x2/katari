@@ -27,6 +27,9 @@ interface TtsEngine {
     suspend fun revalidate(ready: ReadyTtsEngineRequest): TtsEnginePreparation
 
     suspend fun play(ready: ReadyTtsEngineRequest): TtsEngineExecution
+
+    /** Releases initialized provider resources when the runtime switches engines. */
+    suspend fun release() = Unit
 }
 
 sealed interface TtsEngineDeviceAvailability {

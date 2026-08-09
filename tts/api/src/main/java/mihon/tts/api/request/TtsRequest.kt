@@ -11,7 +11,7 @@ data class TtsRequest(
     val language: TtsLanguageSelection = TtsLanguageSelection.Automatic,
     val engine: TtsEngineSelection = TtsEngineSelection.ProfileDefault,
     val voice: TtsVoiceSelection = TtsVoiceSelection.LanguageDefault,
-    val parameters: TtsParameters = TtsParameters(),
+    val parameters: TtsParameterSelection = TtsParameterSelection.ProfileDefault,
     val processingPolicy: TtsProcessingPolicy = TtsProcessingPolicy.ProfileDefault,
 )
 
@@ -31,6 +31,14 @@ data class TtsParameters(
         require(speechRate > 0f)
         require(pitch > 0f)
     }
+}
+
+sealed interface TtsParameterSelection {
+    data object ProfileDefault : TtsParameterSelection
+
+    data class Explicit(
+        val parameters: TtsParameters,
+    ) : TtsParameterSelection
 }
 
 enum class TtsProcessingPolicy {

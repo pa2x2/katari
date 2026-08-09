@@ -1,0 +1,2 @@
+id=tts.android
+component=mihon.tts.provider.android.androidTtsRuntimeComponent
