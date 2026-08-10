@@ -11,6 +11,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.availability.TranslationDeviceAvailability
 import mihon.translation.api.engine.KnownTranslationEngine
 import mihon.translation.api.engine.TranslationEngineAction
@@ -26,7 +27,6 @@ import mihon.translation.api.host.TranslationSetupDestination
 import mihon.translation.api.language.TranslationLanguagePair
 import mihon.translation.api.language.TranslationLanguageSupport
 import mihon.translation.api.language.TranslationLanguageSupportInspection
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.api.model.TranslationModelId
 import mihon.translation.api.model.TranslationModelOperationResult
 import mihon.translation.api.preparation.TranslationUnavailableReason
@@ -353,8 +353,8 @@ class DefaultTranslationHostActionsTest {
     private companion object {
         val ENGINE_ID = TranslationEngineId("test-engine")
         val SECOND_ENGINE_ID = TranslationEngineId("second-engine")
-        val ENGLISH = TranslationLanguageTag.require("en")
-        val POLISH = TranslationLanguageTag.require("pl")
+        val ENGLISH = LanguageTag.require("en")
+        val POLISH = LanguageTag.require("pl")
         val PRESENTATION = TranslationProviderPresentation(
             providerId = TranslationProviderId("test"),
             providerName = "Test",

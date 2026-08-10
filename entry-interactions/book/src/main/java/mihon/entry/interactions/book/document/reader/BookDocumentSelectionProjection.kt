@@ -1,0 +1,141 @@
+package mihon.entry.interactions.book.document.reader
+
+import android.graphics.RectF
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.IntOffset
+
+/** Reader projection of one visible text leaf and the text that follows it in reading order. */
+internal data class BookDocumentSelectableLeaf(
+    val token: String,
+    val chapterId: Long,
+    val fullText: String,
+    val leadingText: String = "",
+    val separatorAfter: String,
+)
+
+internal data class BookDocumentSelectionLayout(
+    val textLayout: TextLayoutResult? = null,
+    val positionInWindow: IntOffset? = null,
+)
+
+internal data class BookDocumentSelectionProjection(
+    val chapterId: Long,
+    val selectedTokens: Set<String>,
+    val identity: String,
+    val text: String,
+    val boundsInReaderRoot: RectF?,
+)
+
+internal fun projectBookDocumentSelection(
+    ownerIdentity: String,
+    selectedTexts: List<AnnotatedString>,
+    selectableLeaves: Map<String, BookDocumentSelectableLeaf>,
+    layouts: Map<String, BookDocumentSelectionLayout>,
+    readerRootPositionInWindow: Offset,
+): BookDocumentSelectionProjection? {
+    val fragments = selectedTexts.mapNotNull { selectedText ->
+        val token = selectedText
+            .getStringAnnotations(
+                tag = BOOK_DOCUMENT_SELECTION_TOKEN_TAG,
+                start = 0,
+                end = selectedText.length,
+            )
+            .firstOrNull()
+            ?.item
+            ?: return@mapNotNull null
+        val leaf = selectableLeaves[token] ?: return@mapNotNull null
+        BookDocumentSelectionFragment(leaf, selectedText.text)
+    }
+    if (fragments.isEmpty()) return null
+    val chapterId = fragments.first().metadata.chapterId
+    if (fragments.any { it.metadata.chapterId != chapterId }) return null
+
+    val resolvedFragments = fragments.mapIndexed { index, fragment ->
+        fragment.resolveRange(index, fragments.lastIndex)
+    }
+    val text = buildString {
+        resolvedFragments.forEachIndexed { index, fragment ->
+            if (index > 0) append(resolvedFragments[index - 1].fragment.metadata.separatorAfter)
+            if (fragment.start == 0) append(fragment.fragment.metadata.leadingText)
+            append(fragment.fragment.text)
+        }
+    }
+    if (text.isBlank()) return null
+    val identity = buildString {
+        append(ownerIdentity)
+        resolvedFragments.forEach { fragment ->
+            append('|')
+            append(fragment.fragment.metadata.token)
+            append(':')
+            append(fragment.start)
+            append(':')
+            append(fragment.endExclusive)
+        }
+    }
+    val bounds = resolvedFragments
+        .mapNotNull { fragment ->
+            fragment.boundsInReaderRoot(
+                layout = layouts[fragment.fragment.metadata.token],
+                readerRootPositionInWindow = readerRootPositionInWindow,
+            )
+        }
+        .reduceOrNull(RectF::unionWith)
+
+    return BookDocumentSelectionProjection(
+        chapterId = chapterId,
+        selectedTokens = fragments.mapTo(linkedSetOf()) { it.metadata.token },
+        identity = identity,
+        text = text,
+        boundsInReaderRoot = bounds,
+    )
+}
+
+private data class BookDocumentSelectionFragment(
+    val metadata: BookDocumentSelectableLeaf,
+    val text: String,
+) {
+    fun resolveRange(index: Int, lastIndex: Int): ResolvedBookDocumentSelectionFragment {
+        val fullText = metadata.fullText
+        val start = when {
+            text == fullText -> 0
+            index == 0 && lastIndex > 0 -> fullText.lastIndexOf(text)
+            else -> fullText.indexOf(text)
+        }.coerceAtLeast(0)
+        return ResolvedBookDocumentSelectionFragment(
+            fragment = this,
+            start = start,
+            endExclusive = (start + text.length).coerceAtMost(fullText.length),
+        )
+    }
+}
+
+private data class ResolvedBookDocumentSelectionFragment(
+    val fragment: BookDocumentSelectionFragment,
+    val start: Int,
+    val endExclusive: Int,
+) {
+    fun boundsInReaderRoot(
+        layout: BookDocumentSelectionLayout?,
+        readerRootPositionInWindow: Offset,
+    ): RectF? {
+        val textLayout = layout?.textLayout ?: return null
+        val positionInWindow = layout.positionInWindow ?: return null
+        if (endExclusive <= start) return null
+        val localBounds = textLayout.getPathForRange(start, endExclusive).getBounds()
+        if (localBounds.isEmpty) return null
+        val left = localBounds.left + positionInWindow.x - readerRootPositionInWindow.x
+        val top = localBounds.top + positionInWindow.y - readerRootPositionInWindow.y
+        return RectF(
+            left,
+            top,
+            localBounds.right + positionInWindow.x - readerRootPositionInWindow.x,
+            localBounds.bottom + positionInWindow.y - readerRootPositionInWindow.y,
+        )
+    }
+}
+
+private fun RectF.unionWith(other: RectF): RectF = RectF(this).apply { union(other) }
+
+internal const val BOOK_DOCUMENT_SELECTION_TOKEN_TAG = "book-document-selection-token"

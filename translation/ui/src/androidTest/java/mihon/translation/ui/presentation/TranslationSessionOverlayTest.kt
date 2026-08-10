@@ -25,13 +25,13 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.KnownTranslationEngine
 import mihon.translation.api.engine.TranslationEngineArtwork
 import mihon.translation.api.engine.TranslationEngineBuildAvailability
 import mihon.translation.api.engine.TranslationEngineDetails
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationProviderId
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.api.preparation.TranslationEngineChoiceReason
 import mihon.translation.api.preparation.TranslationPreparation
 import mihon.translation.api.preparation.TranslationSystemSetupReason
@@ -575,9 +575,9 @@ class TranslationSessionOverlayTest {
     }
 
     private companion object {
-        val SOURCE = TranslationLanguageTag.require("en")
-        val TARGET = TranslationLanguageTag.require("pl")
-        val CATALAN = TranslationLanguageTag.require("ca")
+        val SOURCE = LanguageTag.require("en")
+        val TARGET = LanguageTag.require("pl")
+        val CATALAN = LanguageTag.require("ca")
         val PROVIDER = TranslationProviderId("android")
         val PRESENTATION = TranslationProviderPresentation(
             providerId = PROVIDER,

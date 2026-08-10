@@ -2,9 +2,9 @@ package mihon.translation.ui.picker.language
 
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.language.TranslationLanguagePair
 import mihon.translation.api.language.TranslationLanguageSupport
-import mihon.translation.api.language.TranslationLanguageTag
 import org.junit.jupiter.api.Test
 import java.util.Locale
 
@@ -76,11 +76,11 @@ class TranslationLanguageCatalogTest {
     }
 
     private companion object {
-        val ENGLISH = TranslationLanguageTag.require("en")
-        val FRENCH = TranslationLanguageTag.require("fr")
-        val GERMAN = TranslationLanguageTag.require("de")
-        val ITALIAN = TranslationLanguageTag.require("it")
-        val POLISH = TranslationLanguageTag.require("pl")
-        val SPANISH = TranslationLanguageTag.require("es")
+        val ENGLISH = LanguageTag.require("en")
+        val FRENCH = LanguageTag.require("fr")
+        val GERMAN = LanguageTag.require("de")
+        val ITALIAN = LanguageTag.require("it")
+        val POLISH = LanguageTag.require("pl")
+        val SPANISH = LanguageTag.require("es")
     }
 }

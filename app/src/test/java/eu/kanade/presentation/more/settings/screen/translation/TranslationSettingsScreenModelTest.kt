@@ -13,6 +13,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.availability.TranslationDeviceAvailability
 import mihon.translation.api.engine.KnownTranslationEngine
@@ -31,7 +32,6 @@ import mihon.translation.api.host.TranslationSetupDestination
 import mihon.translation.api.language.TranslationLanguagePair
 import mihon.translation.api.language.TranslationLanguageSupport
 import mihon.translation.api.language.TranslationLanguageSupportInspection
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.api.model.TranslationModelDescriptor
 import mihon.translation.api.preparation.ReadyTranslation
 import mihon.translation.api.preparation.TranslationEngineChoiceReason
@@ -405,7 +405,7 @@ class TranslationSettingsScreenModelTest {
                     if (value == "default") {
                         TranslationTargetLanguageSelection.Default
                     } else {
-                        TranslationTargetLanguageSelection.Explicit(TranslationLanguageTag.require(value))
+                        TranslationTargetLanguageSelection.Explicit(LanguageTag.require(value))
                     }
                 },
             )
@@ -442,7 +442,7 @@ class TranslationSettingsScreenModelTest {
             selectedEngine.set(engine)
         }
 
-        override fun setDefaultTargetLanguage(language: TranslationLanguageTag?) {
+        override fun setDefaultTargetLanguage(language: LanguageTag?) {
             defaultTargetLanguage.set(
                 language?.let(TranslationTargetLanguageSelection::Explicit)
                     ?: TranslationTargetLanguageSelection.Default,
@@ -480,15 +480,15 @@ class TranslationSettingsScreenModelTest {
         val SECOND_ENGINE = TranslationEngineId("second")
 
         fun exactSupport(
-            source: TranslationLanguageTag,
-            target: TranslationLanguageTag,
+            source: LanguageTag,
+            target: LanguageTag,
         ) = TranslationLanguageSupportInspection.Available(
             TranslationLanguageSupport.ExactPairs(
                 setOf(TranslationLanguagePair(source, target)),
             ),
         )
-        val ENGLISH = TranslationLanguageTag.require("en")
-        val FRENCH = TranslationLanguageTag.require("fr")
+        val ENGLISH = LanguageTag.require("en")
+        val FRENCH = LanguageTag.require("fr")
         val PRESENTATION = TranslationProviderPresentation(
             providerId = TranslationProviderId("android"),
             providerName = "Android",

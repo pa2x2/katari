@@ -1,6 +1,6 @@
 package mihon.translation.api.model
 
-import mihon.translation.api.language.TranslationLanguageTag
+import mihon.language.api.tag.LanguageTag
 
 @JvmInline
 value class TranslationModelId(
@@ -13,7 +13,7 @@ value class TranslationModelId(
 
 data class TranslationModelDescriptor(
     val id: TranslationModelId,
-    val language: TranslationLanguageTag,
+    val language: LanguageTag,
     val displayName: String,
     val approximateSizeBytes: Long? = null,
 ) {

@@ -1,6 +1,7 @@
 package mihon.translation.api.language
 
 import io.kotest.assertions.throwables.shouldThrow
+import mihon.language.api.tag.LanguageTag
 import org.junit.jupiter.api.Test
 
 class TranslationLanguageSupportTest {
@@ -21,6 +22,6 @@ class TranslationLanguageSupportTest {
     }
 
     private companion object {
-        val ENGLISH = TranslationLanguageTag.require("en")
+        val ENGLISH = LanguageTag.require("en")
     }
 }

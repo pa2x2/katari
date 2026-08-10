@@ -5,7 +5,6 @@ import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -47,6 +46,8 @@ fun CoordinatedTranslationSessionHost(
     isTabletUi: Boolean,
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit = coordinator.controller::dismiss,
+    speechState: TranslationResultSpeechState = TranslationResultSpeechState(),
+    onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val picker by coordinator.picker.collectAsState()
@@ -64,6 +65,8 @@ fun CoordinatedTranslationSessionHost(
         },
         modifier = modifier,
         onDismiss = onDismiss,
+        speechState = speechState,
+        onSpeechToggle = onSpeechToggle,
     )
     LaunchedEffect(coordinator) {
         coordinator.results.collect { result ->
@@ -126,7 +129,7 @@ private fun TranslationSessionPickerDialog(
                     .fillMaxWidth()
                     .heightIn(max = maxHeight * 0.85f),
             ) {
-                Column(modifier = Modifier.fillMaxHeight()) {
+                Column {
                     TranslationSessionHeader(
                         title = stringResource(
                             when (picker) {

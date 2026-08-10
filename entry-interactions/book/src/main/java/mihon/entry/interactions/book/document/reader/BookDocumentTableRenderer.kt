@@ -19,20 +19,20 @@ import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentRead
 internal fun BookDocumentTableRenderer(
     content: BookDocumentBlockContent.Table,
     block: BookDocumentBlock,
+    selectionIdentity: String,
     onAnchorClick: (String) -> Unit,
     onExternalLinkClick: (String) -> Unit,
-    onReaderTap: () -> Unit,
 ) {
     val palette = LocalBookDocumentReaderPalette.current
     Column(modifier = Modifier.horizontalScroll(rememberScrollState())) {
         content.caption?.let {
             BookDocumentRichTextRenderer(
                 value = it,
-                identity = "${block.id.value}:table-caption",
+                identity = "$selectionIdentity:table-caption",
                 block = block,
                 onAnchorClick = onAnchorClick,
                 onExternalLinkClick = onExternalLinkClick,
-                onReaderTap = onReaderTap,
+                separatorAfter = "\n",
             )
         }
         content.rows.forEachIndexed { rowIndex, row ->
@@ -40,11 +40,15 @@ internal fun BookDocumentTableRenderer(
                 row.cells.forEachIndexed { cellIndex, cell ->
                     BookDocumentRichTextRenderer(
                         value = cell.content,
-                        identity = "${block.id.value}:cell:$rowIndex:$cellIndex",
+                        identity = "$selectionIdentity:cell:$rowIndex:$cellIndex",
                         block = block,
                         onAnchorClick = onAnchorClick,
                         onExternalLinkClick = onExternalLinkClick,
-                        onReaderTap = onReaderTap,
+                        separatorAfter = when {
+                            cellIndex < row.cells.lastIndex -> "\t"
+                            rowIndex < content.rows.lastIndex -> "\n"
+                            else -> "\n\n"
+                        },
                         modifier = Modifier
                             .width((120 * cell.columnSpan).dp)
                             .background(palette.surfaceVariant)

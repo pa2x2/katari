@@ -6,6 +6,10 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.test.runTest
+import mihon.language.api.identification.TextLanguageDetection
+import mihon.language.api.identification.TextLanguageDetector
+import mihon.language.api.identification.TextLanguageDetectorId
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.KnownTranslationEngine
 import mihon.translation.api.engine.TranslationEngineArtwork
 import mihon.translation.api.engine.TranslationEngineBuildAvailability
@@ -15,7 +19,6 @@ import mihon.translation.api.engine.TranslationEngineSelection
 import mihon.translation.api.engine.TranslationProviderId
 import mihon.translation.api.language.TranslationLanguageSupport
 import mihon.translation.api.language.TranslationLanguageSupportInspection
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.api.preparation.ReadyTranslation
 import mihon.translation.api.preparation.TranslationEngineChoiceReason
 import mihon.translation.api.preparation.TranslationPreparation
@@ -42,9 +45,6 @@ import mihon.translation.spi.engine.TranslationEngine
 import mihon.translation.spi.engine.TranslationEngineDeviceAvailability
 import mihon.translation.spi.engine.TranslationEngineExecution
 import mihon.translation.spi.engine.TranslationEnginePreparation
-import mihon.translation.spi.language.TranslationSourceLanguageDetection
-import mihon.translation.spi.language.TranslationSourceLanguageDetector
-import mihon.translation.spi.language.TranslationSourceLanguageDetectorId
 import org.junit.jupiter.api.Test
 
 class DefaultTranslationFeatureTest {
@@ -302,9 +302,9 @@ class DefaultTranslationFeatureTest {
             registry = DefaultTranslationEngineRegistry(
                 listOf(TranslationEngineContribution(FakeTranslationEngine())),
             ),
-            sourceLanguageDetectors = listOf(
-                FakeDetector("unavailable", TranslationSourceLanguageDetection.Unavailable("not available")),
-                FakeDetector("undetermined", TranslationSourceLanguageDetection.Undetermined),
+            textLanguageDetectors = listOf(
+                FakeDetector("unavailable", TextLanguageDetection.Unavailable("not available")),
+                FakeDetector("undetermined", TextLanguageDetection.Undetermined),
             ),
         )
         val request = explicitRequest().copy(sourceLanguage = TranslationSourceLanguageSelection.Automatic)
@@ -319,12 +319,12 @@ class DefaultTranslationFeatureTest {
     private fun feature(
         registry: DefaultTranslationEngineRegistry,
         selectedEngine: suspend () -> TranslationEngineId? = { ENGINE_ID },
-        sourceLanguageDetectors: List<TranslationSourceLanguageDetector> = emptyList(),
+        textLanguageDetectors: List<TextLanguageDetector> = emptyList(),
     ): DefaultTranslationFeature {
         return DefaultTranslationFeature(
             engineRegistry = registry,
             knownEngineCatalog = registry,
-            sourceLanguageDetectors = sourceLanguageDetectors,
+            textLanguageDetectors = textLanguageDetectors,
             defaultTargetLanguageResolver = TranslationDefaultTargetLanguageResolver { null },
             selectedEngine = selectedEngine,
         )
@@ -384,18 +384,18 @@ class DefaultTranslationFeatureTest {
 
     private class FakeDetector(
         id: String,
-        private val result: TranslationSourceLanguageDetection,
-    ) : TranslationSourceLanguageDetector {
-        override val id = TranslationSourceLanguageDetectorId("fake-detector-$id")
+        private val result: TextLanguageDetection,
+    ) : TextLanguageDetector {
+        override val id = TextLanguageDetectorId("fake-detector-$id")
 
-        override suspend fun detect(text: String): TranslationSourceLanguageDetection = result
+        override suspend fun detect(text: String): TextLanguageDetection = result
     }
 
     private companion object {
         val ENGINE_ID = TranslationEngineId("fake")
         val PROVIDER_ID = TranslationProviderId("fake")
-        val ENGLISH = TranslationLanguageTag.require("en")
-        val SPANISH = TranslationLanguageTag.require("es")
+        val ENGLISH = LanguageTag.require("en")
+        val SPANISH = LanguageTag.require("es")
         val PRESENTATION = TranslationProviderPresentation(
             providerId = PROVIDER_ID,
             providerName = "Fake provider",

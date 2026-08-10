@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationEngineSelection
@@ -17,7 +18,6 @@ import mihon.translation.api.engine.TranslationEngineState
 import mihon.translation.api.engine.TranslationEngineStatus
 import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationHostActions
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.api.model.TranslationModelDescriptor
 import mihon.translation.api.provider.TranslationProviderDisclosure
 import mihon.translation.api.request.TranslationRequest
@@ -75,13 +75,13 @@ internal class TranslationSettingsScreenModel(
         updatePlayground { it.copy(text = text) }
     }
 
-    fun setSourceLanguage(language: TranslationLanguageTag) {
+    fun setSourceLanguage(language: LanguageTag) {
         val current = mutablePlayground.value
         if (!isSelectable(TranslationLanguageRole.Source, language, current.targetLanguage)) return
         updatePlayground { it.copy(sourceLanguage = language) }
     }
 
-    fun setTargetLanguage(language: TranslationLanguageTag) {
+    fun setTargetLanguage(language: LanguageTag) {
         val current = mutablePlayground.value
         if (!isSelectable(TranslationLanguageRole.Target, language, current.sourceLanguage)) return
         updatePlayground { it.copy(targetLanguage = language) }
@@ -268,8 +268,8 @@ internal class TranslationSettingsScreenModel(
 
     private fun isSelectable(
         role: TranslationLanguageRole,
-        language: TranslationLanguageTag,
-        counterpart: TranslationLanguageTag,
+        language: LanguageTag,
+        counterpart: LanguageTag,
     ): Boolean {
         val available = languageSupport.value as? TranslationLanguageSupportState.Available
             ?: return false
@@ -278,8 +278,8 @@ internal class TranslationSettingsScreenModel(
     }
 
     private fun TranslationPlaygroundState.hasSupportedPair(
-        source: TranslationLanguageTag = sourceLanguage,
-        target: TranslationLanguageTag = targetLanguage,
+        source: LanguageTag = sourceLanguage,
+        target: LanguageTag = targetLanguage,
     ): Boolean {
         val available = languageSupport.value as? TranslationLanguageSupportState.Available
             ?: return false
@@ -303,8 +303,8 @@ internal class TranslationSettingsScreenModel(
     }
 
     private companion object {
-        val ENGLISH = TranslationLanguageTag.require("en")
-        val FRENCH = TranslationLanguageTag.require("fr")
+        val ENGLISH = LanguageTag.require("en")
+        val FRENCH = LanguageTag.require("fr")
         const val ENGLISH_SAMPLE = "Hello, world"
         const val FRENCH_SAMPLE = "Bonjour tout le monde"
         const val PLAYGROUND_DEBOUNCE_MILLIS = 400L
@@ -313,8 +313,8 @@ internal class TranslationSettingsScreenModel(
 
 internal data class TranslationPlaygroundState(
     val text: String,
-    val sourceLanguage: TranslationLanguageTag,
-    val targetLanguage: TranslationLanguageTag,
+    val sourceLanguage: LanguageTag,
+    val targetLanguage: LanguageTag,
     val engine: TranslationEngineId?,
     val engineSelectionResolved: Boolean,
     val hasUnsavedProfileChanges: Boolean,
@@ -322,16 +322,16 @@ internal data class TranslationPlaygroundState(
 
 private data class TranslationPlaygroundDefaults(
     val engine: TranslationEngineId?,
-    val targetLanguage: TranslationLanguageTag,
+    val targetLanguage: LanguageTag,
 )
 
-private fun effectiveUiLanguage(): TranslationLanguageTag? {
+private fun effectiveUiLanguage(): LanguageTag? {
     val locale = AppCompatDelegate.getApplicationLocales().get(0)
         ?: LocaleListCompat.getAdjustedDefault().get(0)
         ?: Locale.getDefault()
-    return TranslationLanguageTag.parse(locale.toLanguageTag())
+    return LanguageTag.parse(locale.toLanguageTag())
 }
 
-private fun TranslationLanguageTag.languageCode(): String {
+private fun LanguageTag.languageCode(): String {
     return Locale.forLanguageTag(value).language
 }

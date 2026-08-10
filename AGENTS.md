@@ -42,4 +42,18 @@
 ## Guidance
 - When asked to fix the issue - never simply apply the easiest fix without finding the reason of the issue. Band-aid solutions are not welcomed. The goal is to fix the reason issue arised in the first place, not to merely fix the symptom
 - Introduced warnings must not be left un-addressed. Not just suppressed so that thwy no longer show up, but cause of their appearance should be fixed instead
-- Make sure to pick appropriate `type` from allow-list when writing commit message
+
+## Commit classification
+
+- Before committing, inspect the complete staged diff and classify the commit by its primary purpose.
+- Use `fix` when restoring behavior that was faulty relative to existing expectations.
+- Use `perf` when improving performance without introducing a new capability.
+- Use `feat` when adding or extending a user-facing or developer-facing capability.
+- Use `refactor` when restructuring production code without changing observable behavior.
+- Use `docs`, `test`, `build`, or `ci` only when that concern is the commit's primary purpose.
+- Use `style` only for source formatting without behavioral changes; never use it for visual or UI changes.
+- Use `chore` for maintenance that does not fit a more specific type; it is the fallback, not the default.
+- Use `revert` when reversing an earlier commit.
+- Supporting tests, documentation, formatting, or refactoring do not determine the type when the commit primarily fixes or adds behavior. A bug fix with regression tests is still `fix`.
+- If independently meaningful changes require different types, split them into separate commits. If classification remains ambiguous, present the proposed subject and rationale to the user before committing.
+- Use exactly `(type): summary` and never bypass the commit-message hook.

@@ -1,8 +1,10 @@
 package mihon.translation.api.language
 
+import mihon.language.api.tag.LanguageTag
+
 data class TranslationLanguagePair(
-    val source: TranslationLanguageTag,
-    val target: TranslationLanguageTag,
+    val source: LanguageTag,
+    val target: LanguageTag,
 ) {
     init {
         require(source != target) { "Translation language pair must contain different languages" }
@@ -26,8 +28,8 @@ sealed interface TranslationLanguageSupport {
     }
 
     data class ByRole(
-        val sourceLanguages: Set<TranslationLanguageTag>,
-        val targetLanguages: Set<TranslationLanguageTag>,
+        val sourceLanguages: Set<LanguageTag>,
+        val targetLanguages: Set<LanguageTag>,
     ) : TranslationLanguageSupport {
         init {
             require(sourceLanguages.isNotEmpty()) {

@@ -754,12 +754,10 @@ class MainActivity : BaseActivity() {
                 tab
             }
             Intent.ACTION_APPLICATION_PREFERENCES -> {
-                navigator.popUntilRoot()
                 navigator.push(SettingsScreen())
                 null
             }
             TranslationSettingsNavigation.ACTION_OPEN_SETTINGS -> {
-                navigator.popUntilRoot()
                 navigator.push(SettingsScreen(SettingsScreen.Destination.Translation))
                 null
             }
@@ -773,7 +771,6 @@ class MainActivity : BaseActivity() {
                 null
             }
             ViewerSettingsNavigation.ACTION_OPEN_SETTINGS -> {
-                navigator.popUntilRoot()
                 navigator.push(
                     SettingsScreen(
                         destination = SettingsScreen.Destination.Readers,

@@ -2,7 +2,7 @@ package mihon.translation.provider.libretranslate.server
 
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
-import mihon.translation.api.language.TranslationLanguageTag
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.preparation.TranslationSystemSetupReason
 import mihon.translation.api.preparation.TranslationUnavailableReason
 import mihon.translation.api.request.ResolvedTranslationRequest
@@ -120,8 +120,8 @@ class LibreTranslateServerEngineTest {
     ) = LibreTranslateServerEngine(settings, serviceFactory)
 
     private fun request(
-        source: TranslationLanguageTag = ENGLISH,
-        target: TranslationLanguageTag = FRENCH,
+        source: LanguageTag = ENGLISH,
+        target: LanguageTag = FRENCH,
     ) = ResolvedTranslationRequest(
         text = "Hello",
         sourceLanguage = source,
@@ -171,10 +171,10 @@ class LibreTranslateServerEngineTest {
     }
 
     private companion object {
-        val ENGLISH = TranslationLanguageTag.require("en")
-        val FRENCH = TranslationLanguageTag.require("fr")
-        val CATALAN = TranslationLanguageTag.require("ca")
-        val GERMAN = TranslationLanguageTag.require("de")
+        val ENGLISH = LanguageTag.require("en")
+        val FRENCH = LanguageTag.require("fr")
+        val CATALAN = LanguageTag.require("ca")
+        val GERMAN = LanguageTag.require("de")
 
         fun language(
             code: String,

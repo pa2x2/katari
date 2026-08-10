@@ -4,16 +4,17 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationProviderId
-import mihon.translation.api.language.TranslationLanguageTag
 import mihon.translation.api.preparation.ReadyTranslation
 import mihon.translation.api.preparation.TranslationPreparation
 import mihon.translation.api.provider.TranslationInvocationPolicy
@@ -27,6 +28,7 @@ import mihon.translation.api.result.TranslationExecution
 import mihon.translation.api.result.TranslationResult
 import org.junit.jupiter.api.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class TranslationSessionControllerTest {
     @Test
     fun `provider surface execution is represented without manufacturing an inline result`() = runTest {
@@ -406,8 +408,8 @@ class TranslationSessionControllerTest {
     }
 
     private companion object {
-        val SOURCE = TranslationLanguageTag.require("en")
-        val TARGET = TranslationLanguageTag.require("pl")
+        val SOURCE = LanguageTag.require("en")
+        val TARGET = LanguageTag.require("pl")
         val ENGINE = TranslationEngineId("fake")
         val PROVIDER = TranslationProviderId("fake")
         val PRESENTATION = TranslationProviderPresentation(

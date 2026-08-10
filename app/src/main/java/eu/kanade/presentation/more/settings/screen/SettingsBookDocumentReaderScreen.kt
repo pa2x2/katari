@@ -27,6 +27,9 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
         val theme = remember(provider, binder) {
             binder.bind(provider.themeModeSetting).asProfilePreference()
         }
+        val showStatusBar = remember(provider, binder) {
+            binder.bind(provider.showStatusBarSetting).asProfilePreference()
+        }
         return listOf(
             Preference.PreferenceItem.ListPreference(
                 preference = theme,
@@ -35,6 +38,10 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
                     BookDocumentReaderThemeMode.BLACK to stringResource(MR.strings.book_document_reader_theme_black),
                 ),
                 title = stringResource(MR.strings.pref_book_document_reader_theme),
+            ),
+            Preference.PreferenceItem.SwitchPreference(
+                preference = showStatusBar,
+                title = stringResource(MR.strings.pref_book_document_reader_show_status_bar),
             ),
         )
     }

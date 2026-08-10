@@ -25,6 +25,11 @@
         <item quantity="other">%d languages</item>
     </plurals>
 
+    <plurals name="tts_settings_voice_count">
+        <item quantity="one">%d voice</item>
+        <item quantity="other">%d voices</item>
+    </plurals>
+
     <plurals name="next_unread_chapters">
         <item quantity="one">Next unseen item</item>
         <item quantity="other">Next %d unseen items</item>

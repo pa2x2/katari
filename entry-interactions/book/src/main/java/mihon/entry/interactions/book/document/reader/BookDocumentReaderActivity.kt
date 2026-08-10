@@ -11,8 +11,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
+import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -20,6 +20,7 @@ import logcat.LogPriority
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingsProvider
+import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeMode
 import mihon.entry.interactions.book.navigation.BookChapterNavigationResolver
 import mihon.entry.interactions.book.navigation.BookChapterReadingOrder
 import mihon.entry.interactions.book.processor.BookReaderRequest
@@ -30,6 +31,9 @@ import mihon.entry.interactions.book.reader.BookReaderOpenResult
 import mihon.entry.interactions.book.reader.BookReaderSessionFactory
 import mihon.entry.interactions.book.reader.BookReaderSessionRegistry
 import mihon.entry.interactions.book.reader.OpenedBookReaderSession
+import mihon.entry.interactions.book.reader.selection.BookSelectionActionCoordinator
+import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechController
+import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechFailure
 import mihon.entry.interactions.book.reader.translation.BookSelectionTranslationController
 import mihon.entry.interactions.runtime.EntryInteractionActivity
 import mihon.entry.interactions.runtime.registerEntryInteractionSecureScreen
@@ -42,6 +46,7 @@ import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.navigation.openViewerSettings
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.host.TranslationHostActions
+import mihon.tts.api.TtsFeature
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.EntryChapter
 import uy.kohesive.injekt.Injekt
@@ -52,19 +57,17 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     private val retainedSessions by viewModels<BookDocumentReaderSessionViewModel>()
     private var surfaceState by mutableStateOf<BookDocumentReaderSurfaceState>(BookDocumentReaderSurfaceState.Loading)
     private var readerState by mutableStateOf<BookDocumentReaderState?>(null)
-    private var translationController: BookSelectionTranslationController? = null
+    private var selectionCoordinator: BookSelectionActionCoordinator? = null
     private var settingBindings: BookDocumentReaderSettingBindings? = null
     private lateinit var childWebViewResolver: BookChildWebViewResolver
     private lateinit var chapterCoordinator: BookDocumentChapterCoordinator
-
-    private val windowInsetsController by lazy { WindowCompat.getInsetsController(window, window.decorView) }
+    private lateinit var readerSystemBars: BookDocumentReaderSystemBars
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        windowInsetsController.systemBarsBehavior =
-            androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        readerSystemBars = BookDocumentReaderSystemBars(window)
         registerEntryInteractionSecureScreen()
         childWebViewResolver = BookChildWebViewResolver(
             scope = lifecycleScope,
@@ -86,7 +89,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             currentState = { readerState },
             updateState = { readerState = it },
             onSessionActivated = { session ->
-                translationController?.updateCapabilities(session.readerCapabilities)
+                selectionCoordinator?.updateCapabilities(session.readerCapabilities)
                 childWebViewResolver.resolve(session)
             },
         )
@@ -105,7 +108,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                     BookDocumentReaderScreen(
                         state = state,
                         settingBindings = requireNotNull(settingBindings),
-                        translationController = translationController,
+                        selectionCoordinator = selectionCoordinator,
                         onLocation = chapterCoordinator::onLocation,
                         onTransitionReached = { chapterCoordinator.loadChapter(it, activate = false, retry = true) },
                         onTerminalObservation = chapterCoordinator::onTerminalObservation,
@@ -138,10 +141,11 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
 
     override fun onResume() {
         super.onResume()
-        translationController?.onResume()
+        selectionCoordinator?.onResume()
     }
 
     override fun onStop() {
+        selectionCoordinator?.onStop()
         chapterCoordinator.stopReading(persist = !isChangingConfigurations)
         super.onStop()
     }
@@ -149,7 +153,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus && surfaceState == BookDocumentReaderSurfaceState.Ready) {
-            setSystemBarsVisible(readerState?.chromeVisible == true)
+            applyReaderSystemBars()
         }
     }
 
@@ -161,8 +165,8 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     override fun onDestroy() {
         chapterCoordinator.close()
         childWebViewResolver.close()
-        translationController?.close()
-        translationController = null
+        selectionCoordinator?.close()
+        selectionCoordinator = null
         super.onDestroy()
     }
 
@@ -188,6 +192,18 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                 .collect { enabled ->
                     if (enabled) chapterCoordinator.prepareCurrentNextChapterIfNeeded()
                 }
+        }
+        lifecycleScope.launch {
+            bindings.showStatusBar.state
+                .map { setting -> setting.effectiveValue }
+                .distinctUntilChanged()
+                .collect { applyReaderSystemBars() }
+        }
+        lifecycleScope.launch {
+            bindings.themeMode.state
+                .map { setting -> setting.effectiveValue }
+                .distinctUntilChanged()
+                .collect { applyReaderSystemBars() }
         }
         val retained = retainedSessions.currentSession()
         val token = intent.getStringExtra(EXTRA_SESSION_TOKEN)
@@ -217,7 +233,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             ?: return showError(getString(R.string.book_document_chapter_missing))
         val section = session.toDocumentSection(retainedSessions.locator(session.chapter.id))
             ?: return showError(getString(R.string.book_document_incompatible))
-        ensureTranslationController(session)
+        ensureSelectionCoordinator(session)
         val progression = section.document.document.progressionAt(section.initialPosition)
         readerState = BookDocumentReaderState(
             entryTitle = session.entry.displayTitle,
@@ -234,16 +250,40 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         chapterCoordinator.prepareNextChapterIfNeeded(progression.toDouble())
     }
 
-    private fun ensureTranslationController(session: OpenedBookReaderSession) {
+    private fun ensureSelectionCoordinator(session: OpenedBookReaderSession) {
         if (session.readerSettingsSurfaceId != BookDocumentReaderProcessor.SETTINGS_SURFACE_ID) return
         val automaticTranslation = settingBindings?.automaticTranslation ?: return
-        translationController = BookSelectionTranslationController(
+        val translationController = BookSelectionTranslationController(
             feature = Injekt.get<TranslationFeature>(),
             hostActions = Injekt.get<TranslationHostActions>(),
             automaticSelectionSetting = automaticTranslation.state,
             scope = lifecycleScope,
             initialCapabilities = session.readerCapabilities,
         )
+        selectionCoordinator = BookSelectionActionCoordinator(
+            translationController = translationController,
+            speechController = BookShortFormSpeechController(
+                feature = Injekt.get<TtsFeature>(),
+                scope = lifecycleScope,
+                onFailure = ::showSpeechFailure,
+            ),
+            scope = lifecycleScope,
+            initialCapabilities = session.readerCapabilities,
+        )
+    }
+
+    private fun showSpeechFailure(failure: BookShortFormSpeechFailure) {
+        val message = when (failure) {
+            BookShortFormSpeechFailure.LanguageUnavailable ->
+                R.string.book_reader_selection_speech_language_unavailable
+            BookShortFormSpeechFailure.ConfigurationRequired ->
+                R.string.book_reader_selection_speech_configuration_required
+            BookShortFormSpeechFailure.Unavailable ->
+                R.string.book_reader_selection_speech_unavailable
+            BookShortFormSpeechFailure.PlaybackFailed ->
+                R.string.book_reader_selection_speech_failed
+        }
+        toast(getString(message))
     }
 
     private fun launchChildWebViewAction(
@@ -275,23 +315,27 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         if (readerState?.chromeVisible != visible) {
             readerState = readerState?.copy(chromeVisible = visible)
         }
-        setSystemBarsVisible(visible)
+        applyReaderSystemBars()
     }
 
     private fun toggleChrome() {
         setChromeVisible(readerState?.chromeVisible != true)
     }
 
-    private fun setSystemBarsVisible(visible: Boolean) {
-        if (visible) {
-            windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
-        } else {
-            windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
-        }
+    private fun applyReaderSystemBars() {
+        if (surfaceState != BookDocumentReaderSurfaceState.Ready) return
+        val chromeVisible = readerState?.chromeVisible == true
+        val keepStatusBarVisible = settingBindings?.showStatusBar?.state?.value?.effectiveValue == true
+        val readerTheme = settingBindings?.themeMode?.state?.value?.effectiveValue ?: BookDocumentReaderThemeMode.APP
+        readerSystemBars.apply(
+            chromeVisible = chromeVisible,
+            keepStatusBarVisible = keepStatusBarVisible,
+            readerTheme = readerTheme,
+        )
     }
 
     private fun showError(message: String) {
-        setSystemBarsVisible(true)
+        readerSystemBars.showAppBars()
         surfaceState = BookDocumentReaderSurfaceState.Error(message)
     }
 

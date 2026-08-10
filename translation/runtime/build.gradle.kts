@@ -14,6 +14,7 @@ android {
 dependencies {
     api(projects.translation.api)
 
+    implementation(projects.language.runtime)
     implementation(projects.featureGraph)
     implementation(projects.featureRuntime)
     implementation(projects.core.common)

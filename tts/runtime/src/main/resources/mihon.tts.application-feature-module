@@ -1,0 +1,2 @@
+id=tts
+module=mihon.tts.runtime.di.ttsFeatureRuntimeModule

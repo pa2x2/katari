@@ -6,10 +6,10 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.language.TranslationLanguagePair
 import mihon.translation.api.language.TranslationLanguageSupport
 import mihon.translation.api.language.TranslationLanguageSupportInspection
-import mihon.translation.api.language.TranslationLanguageTag
 import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -43,16 +43,16 @@ class DefaultAndroidSystemTranslationPlatformTest {
         val inspection = platform.inspectLanguageSupport() as TranslationLanguageSupportInspection.Available
         (inspection.support as TranslationLanguageSupport.ExactPairs).pairs shouldBe setOf(
             TranslationLanguagePair(
-                TranslationLanguageTag.require("en"),
-                TranslationLanguageTag.require("pl"),
+                LanguageTag.require("en"),
+                LanguageTag.require("pl"),
             ),
             TranslationLanguagePair(
-                TranslationLanguageTag.require("de"),
-                TranslationLanguageTag.require("pl"),
+                LanguageTag.require("de"),
+                LanguageTag.require("pl"),
             ),
             TranslationLanguagePair(
-                TranslationLanguageTag.require("fr"),
-                TranslationLanguageTag.require("pl"),
+                LanguageTag.require("fr"),
+                LanguageTag.require("pl"),
             ),
         )
     }
@@ -215,8 +215,8 @@ class DefaultAndroidSystemTranslationPlatformTest {
 
     private companion object {
         fun pair(source: String, target: String) = AndroidSystemTranslationPair(
-            TranslationLanguageTag.require(source),
-            TranslationLanguageTag.require(target),
+            LanguageTag.require(source),
+            LanguageTag.require(target),
         )
 
         fun capability(

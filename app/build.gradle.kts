@@ -33,8 +33,8 @@ android {
     defaultConfig {
         applicationId = "app.katari"
 
-        versionCode = 32
-        versionName = "1.2.1"
+        versionCode = 33
+        versionName = "1.3.0"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getLatestCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getLatestCommitSha()}\"")
@@ -232,6 +232,9 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.translation.runtime.path)))
     implementation(dependencies.project(mapOf("path" to projects.translation.ui.path)))
     implementation(dependencies.project(mapOf("path" to projects.translation.providers.libretranslate.path)))
+    implementation(dependencies.project(mapOf("path" to projects.tts.runtime.path)))
+    implementation(dependencies.project(mapOf("path" to projects.tts.providers.android.path)))
+    implementation(dependencies.project(mapOf("path" to projects.tts.ui.path)))
 
     // Compose
     implementation(libs.androidx.activity.compose)

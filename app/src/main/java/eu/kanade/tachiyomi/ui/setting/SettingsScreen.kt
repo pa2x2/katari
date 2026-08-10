@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.setting
 
+import android.app.Activity
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -12,6 +13,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -44,6 +46,12 @@ class SettingsScreen(
     @Composable
     override fun Content() {
         val parentNavigator = LocalNavigator.currentOrThrow
+        val activity = LocalContext.current as? Activity
+        val close: () -> Unit = {
+            if (!parentNavigator.pop()) {
+                activity?.finish()
+            }
+        }
         val twoPane = isTabletUi()
         val viewerSettingsScreen = remember(destination, viewerSettingsSurfaceId) {
             if (destination != Destination.Readers.id || viewerSettingsSurfaceId == null) {
@@ -82,7 +90,7 @@ class SettingsScreen(
                     if (it.canPop) {
                         it.pop()
                     } else {
-                        parentNavigator.pop()
+                        close()
                     }
                 }
                 CompositionLocalProvider(LocalBackPress provides pop) {
@@ -100,7 +108,7 @@ class SettingsScreen(
                         .windowInsetsPadding(insets)
                         .consumeWindowInsets(insets),
                     startContent = {
-                        CompositionLocalProvider(LocalBackPress provides parentNavigator::pop) {
+                        CompositionLocalProvider(LocalBackPress provides close) {
                             SettingsMainScreen.Content(twoPane = true)
                         }
                     },

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -26,7 +27,6 @@ import kotlinx.coroutines.withContext
 import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentBlockContent
 import mihon.entry.interactions.book.R
-import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.document.resource.PROSE_IMAGE_RESOURCE_REQUIREMENT
 import mihon.entry.interactions.book.document.resource.decodeValidatedProseImage
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
@@ -36,12 +36,13 @@ import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
 internal fun BookDocumentFigureRenderer(
     content: BookDocumentBlockContent.Figure,
     block: BookDocumentBlock,
+    selectionIdentity: String,
     resourceLoader: BookPublicationResourceLoader?,
     onAnchorClick: (String) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     onReaderTap: () -> Unit,
 ) {
-    val palette = LocalBookDocumentReaderPalette.current
+    val selection = LocalBookDocumentChapterSelection.current
     var retryGeneration by remember(content.image.resourceId) { mutableIntStateOf(0) }
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val density = LocalDensity.current
@@ -78,25 +79,41 @@ internal fun BookDocumentFigureRenderer(
                 modifier = Modifier
                     .fillMaxWidth()
                     .sizeIn(maxHeight = maxWidth * 2)
-                    .clickable(onClick = onReaderTap),
+                    .clickable {
+                        selection?.handleReaderTap(onReaderTap) ?: onReaderTap()
+                    },
             )
-            bitmapResult == null -> Text(stringResource(R.string.book_document_image_loading))
-            else -> Text(
-                text = content.image.alternativeText?.text
-                    ?: stringResource(R.string.book_document_image_unavailable),
-                modifier = Modifier.clickable { retryGeneration++ },
-                color = palette.foreground.copy(alpha = 0.72f),
-            )
+            bitmapResult == null -> DisableSelection {
+                Text(stringResource(R.string.book_document_image_loading))
+            }
+            else -> {
+                val fallback = content.image.alternativeText
+                val fallbackText = fallback?.text ?: stringResource(R.string.book_document_image_unavailable)
+                BookDocumentSelectableText(
+                    text = fallbackText,
+                    links = fallback?.links.orEmpty(),
+                    inlineStyles = fallback?.inlineStyles.orEmpty(),
+                    identity = "$selectionIdentity:image-fallback",
+                    block = block,
+                    separatorAfter = if (content.caption == null) "\n\n" else "\n",
+                    onAnchorClick = onAnchorClick,
+                    onExternalLinkClick = onExternalLinkClick,
+                    contentAlpha = 0.72f,
+                    modifier = Modifier.clickable {
+                        selection?.handleReaderTap { retryGeneration++ } ?: run { retryGeneration++ }
+                    },
+                )
+            }
         }
     }
     content.caption?.let {
         BookDocumentRichTextRenderer(
             value = it,
-            identity = "${block.id.value}:caption",
+            identity = "$selectionIdentity:caption",
             block = block,
             onAnchorClick = onAnchorClick,
             onExternalLinkClick = onExternalLinkClick,
-            onReaderTap = onReaderTap,
+            separatorAfter = "\n\n",
             modifier = Modifier.padding(top = 8.dp),
         )
     }

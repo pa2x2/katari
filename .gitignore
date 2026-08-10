@@ -10,6 +10,7 @@ gradle/tmp
 !.idea/icon.svg
 /captures
 /.codex/workspaces/
+/.agents-workspaces/
 
 # Configuration files
 keystore.properties

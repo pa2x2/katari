@@ -145,6 +145,41 @@ internal class BookDocumentViewerDataset<T>(
         }
     }
 
+    /**
+     * A newly prepared next section only extends the dataset tail. Every existing item keeps its
+     * index and stable key, so the lazy list can consume this update without interrupting a scroll.
+     */
+    fun isStablePrefixOf(other: BookDocumentViewerDataset<T>): Boolean =
+        next == null &&
+            other.next != null &&
+            identity.previous == other.identity.previous &&
+            identity.current == other.identity.current &&
+            identity.previousTransitionKey == other.identity.previousTransitionKey &&
+            identity.nextTransitionKey == other.identity.nextTransitionKey
+
+    /**
+     * Advancing into the already appended next section only removes content before that section
+     * and adds its new forward boundary. Once the shared boundary is offscreen, every visible
+     * block keeps its stable key and order, so the lazy list can adopt the new window mid-scroll.
+     */
+    fun advancesToLoadedNext(other: BookDocumentViewerDataset<T>): Boolean =
+        next != null &&
+            other.previous === current &&
+            other.current === next &&
+            identity.nextTransitionKey == other.identity.previousTransitionKey
+
+    /**
+     * Moving back into the already prepended previous section only removes content after that
+     * section and adds its new backward boundary. Once the shared boundary is offscreen, every
+     * visible block keeps its stable key and order, so the lazy list can adopt the new window
+     * mid-scroll.
+     */
+    fun retreatsToLoadedPrevious(other: BookDocumentViewerDataset<T>): Boolean =
+        previous != null &&
+            other.current === previous &&
+            other.next === current &&
+            identity.previousTransitionKey == other.identity.nextTransitionKey
+
     private fun sectionOffset(sectionKey: String): Int = when (sectionKey) {
         previous?.key -> 0
         current.key -> sectionItemCount(previous) + 1
