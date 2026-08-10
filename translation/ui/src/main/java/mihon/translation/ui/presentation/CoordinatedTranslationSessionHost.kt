@@ -190,7 +190,7 @@ private fun TranslationSessionPickerDialog(
                                 onSelect = coordinator::selectLanguage,
                                 onRetry = coordinator::retryLanguageSupport,
                                 modifier = Modifier
-                                    .weight(1f)
+                                    .weight(1f, fill = false)
                                     .padding(top = 8.dp),
                             )
                         }
