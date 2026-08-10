@@ -74,8 +74,16 @@ internal fun BookDocumentEndlessViewer(
     LaunchedEffect(proposedItems, listState) {
         if (proposedItems.identity == items.identity) return@LaunchedEffect
         val directionChangingTransitions = items.transitionKeysChangingDirection(proposedItems)
+        val stableTailExpansion = items.isStablePrefixOf(proposedItems)
+        val stableForwardAdvance = items.advancesToLoadedNext(proposedItems)
+        val stableBackwardRetreat = items.retreatsToLoadedPrevious(proposedItems)
         snapshotFlow {
-            !listState.isScrollInProgress &&
+            (
+                stableTailExpansion ||
+                    stableForwardAdvance ||
+                    stableBackwardRetreat ||
+                    !listState.isScrollInProgress
+                ) &&
                 listState.layoutInfo.visibleItemsInfo.none { it.key in directionChangingTransitions }
         }
             .filter { ready -> ready }

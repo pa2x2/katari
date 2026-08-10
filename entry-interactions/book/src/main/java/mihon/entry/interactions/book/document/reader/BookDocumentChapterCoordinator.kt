@@ -63,6 +63,7 @@ internal class BookDocumentChapterCoordinator(
         val state = currentState() ?: return
         val adjacent = listOfNotNull(state.window.previous, state.window.next).any { it.id == chapter.id }
         if (!activate && !adjacent) return
+        if (!activate && chapter.id in state.loadedSections) return
         retainedSessions.session(chapter.id)?.let { cached ->
             addLoadedSession(cached, activate)
             return
