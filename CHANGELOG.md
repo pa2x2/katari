@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.3.0] - 2026-08-10
+
+### 🌟 Highlights
+
+Listen to selected book passages and translation results with configurable speech engines and voices, while selecting text across whole book chapters for copying, translation, or speech.
+
+### ✨ Added
+
+- Added configurable text-to-speech for selected book passages and translation results, with selectable engines and voices, language-specific voice overrides, pitch controls, playback previews, and network-voice consent.
+- Added chapter-wide text selection in the book reader (previously selection was possibly only inside one block).
+- Added an optional book-reader status bar setting that keeps the status bar visible while reader controls are hidden.
+
+### 🐛 Fixed
+
+- Opening book-reader settings now preserves the current reading position.
+- Translation picker dialogs now adapt their height to their content instead of occupying the full available height.
+- Book reader navigation bars now match the reader appearance without an unwanted contrast overlay.
+
+### ⚡️ Performance
+
+- Book chapter transitions no longer interrupt continuous scrolling while adjacent chapters load.
+
 ## [1.2.1] - 2026-08-08
 
 ### ✨ Added
@@ -106,7 +128,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/pa2x2/katari/releases/tag/v1.3.0
 [1.2.1]: https://github.com/pa2x2/katari/releases/tag/v1.2.1
 [1.2.0]: https://github.com/pa2x2/katari/releases/tag/v1.2.0
 [1.1.4]: https://github.com/pa2x2/katari/releases/tag/v1.1.4
