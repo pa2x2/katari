@@ -722,14 +722,20 @@ class LibraryScreenModel(
         mutableState.update { it.copy(searchQuery = query) }
     }
 
-    fun updateActivePageIndex(index: Int) {
+    fun updateActivePageIndex(profileId: Long, index: Int) {
         val newState = mutableState.updateAndGet { state ->
-            state.copy(activePageIndex = index)
+            if (state.libraryData.profileId != profileId) {
+                state
+            } else {
+                state.copy(activePageIndex = index)
+            }
         }
+        if (newState.libraryData.profileId != profileId) return
 
-        libraryPreferences.lastUsedCategory.set(newState.coercedActivePageIndex)
+        val scopedLibraryPreferences = LibraryPreferences(profileStore.profileStore(profileId))
+        scopedLibraryPreferences.lastUsedCategory.set(newState.coercedActivePageIndex)
         newState.activePage?.let { page ->
-            libraryPreferences.lastUsedPageId.set(page.id)
+            scopedLibraryPreferences.lastUsedPageId.set(page.id)
         }
     }
 
