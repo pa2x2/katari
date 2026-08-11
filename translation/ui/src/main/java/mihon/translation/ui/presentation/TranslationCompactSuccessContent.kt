@@ -2,7 +2,6 @@ package mihon.translation.ui.presentation
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -96,26 +95,27 @@ internal fun TranslationCompactSuccessContent(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (sourceSpeechTarget != null && targetSpeechTarget != null && onSpeechToggle != null) {
-            TranslationCompactSpeechLanguagePair(
-                sourceLanguage = sourceLanguage,
-                targetLanguage = targetLanguage,
-                sourceTarget = sourceSpeechTarget,
-                targetTarget = targetSpeechTarget,
-                speechState = speechState,
-                onSpeechToggle = onSpeechToggle,
-                modifier = Modifier.widthIn(max = COMPACT_SPEECH_LANGUAGE_PAIR_MAXIMUM_WIDTH),
-            )
-        } else {
-            TranslationLanguagePair(
-                languagePair = languagePair,
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+        Box(modifier = Modifier.weight(1f)) {
+            if (sourceSpeechTarget != null && targetSpeechTarget != null && onSpeechToggle != null) {
+                TranslationCompactSpeechLanguagePair(
+                    sourceLanguage = sourceLanguage,
+                    targetLanguage = targetLanguage,
+                    sourceTarget = sourceSpeechTarget,
+                    targetTarget = targetSpeechTarget,
+                    speechState = speechState,
+                    onSpeechToggle = onSpeechToggle,
+                    modifier = Modifier.widthIn(max = COMPACT_SPEECH_LANGUAGE_PAIR_MAXIMUM_WIDTH),
+                )
+            } else {
+                TranslationLanguagePair(
+                    languagePair = languagePair,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
-        Spacer(modifier = Modifier.weight(1f))
         if (showCopy) {
             TranslationCompactIconButton(
                 icon = Icons.Outlined.ContentCopy,

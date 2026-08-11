@@ -21,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import mihon.language.api.tag.LanguageTag
 import tachiyomi.i18n.MR
@@ -79,6 +80,19 @@ fun TranslationLanguagePickerList(
                     enabled = true,
                     onClick = { onSelect(option.tag) },
                 )
+            }
+            if (filtered.isEmpty()) {
+                item(key = "empty") {
+                    Text(
+                        text = stringResource(MR.strings.no_results_found),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
         }
     }

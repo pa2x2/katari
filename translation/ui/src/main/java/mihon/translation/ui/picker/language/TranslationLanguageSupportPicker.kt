@@ -3,7 +3,7 @@ package mihon.translation.ui.picker.language
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -71,7 +71,9 @@ fun TranslationLanguageSupportPicker(
 @Composable
 private fun TranslationLanguageSupportLoading(modifier: Modifier) {
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(24.dp),
         contentAlignment = Alignment.Center,
     ) {
         CircularProgressIndicator()
@@ -86,7 +88,7 @@ private fun TranslationLanguageSupportUnavailable(
 ) {
     Column(
         modifier = modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,

@@ -50,7 +50,6 @@ fun TranslationLanguagePairSelector(
             Icon(
                 imageVector = Icons.Outlined.SwapHoriz,
                 contentDescription = stringResource(MR.strings.translation_settings_swap_languages),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         TranslationLanguageSelector(

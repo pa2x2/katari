@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -60,7 +59,7 @@ fun TranslationEnginePickerList(
     var detailsEngineId by remember { mutableStateOf<TranslationEngineId?>(null) }
     val detailsModel = picker.cards.firstOrNull { it.state.engine.id == detailsEngineId }
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxWidth()) {
         LazyColumn(
             modifier = Modifier
                 .align(Alignment.TopCenter)

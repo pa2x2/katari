@@ -206,7 +206,7 @@ private fun TranslationSessionPickerDialog(
                                         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
                                     }
                                 },
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier.weight(1f, fill = false),
                             )
                         }
                     }
