@@ -38,6 +38,7 @@ internal fun LibraryComfortableGrid(
 
         items(
             items = items,
+            key = { it.key.toString() },
             span = { libraryItem ->
                 GridItemSpan(
                     if (libraryItem.sourceItemOrientation == EntryItemOrientation.HORIZONTAL) {

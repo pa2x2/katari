@@ -34,6 +34,12 @@ internal class BookDownloadCache(
 
     @Volatile
     private var packagesByChild = emptyMap<BookDownloadChildKey, List<VerifiedBookDownloadPackage>>()
+
+    @Volatile
+    private var packageKeysByEntryIdentity = emptyMap<BookDownloadEntryKey, Set<BookDownloadPackageKey>>()
+
+    @Volatile
+    private var packageKeysByEntryId = emptyMap<Long, Set<BookDownloadPackageKey>>()
     val packages: StateFlow<Map<BookDownloadPackageKey, VerifiedBookDownloadPackage>> = _packages.asStateFlow()
     private val verifiedPackageKeys = mutableSetOf<BookDownloadPackageKey>()
     val changes: Flow<Unit> = _packages.drop(1).map {}
@@ -157,14 +163,52 @@ internal class BookDownloadCache(
 
     fun isDownloaded(packageKey: BookDownloadPackageKey): Boolean = packageKey in _packages.value
 
-    fun getDownloadCount(sourceId: Long, entryUrl: String): Int =
-        _packages.value.keys.count { it.sourceId == sourceId && it.entryUrl == entryUrl }
+    fun getDownloadCount(sourceId: Long, entryUrl: String): Int {
+        return packageKeysByEntryIdentity[BookDownloadEntryKey(sourceId, entryUrl)].orEmpty().size
+    }
 
     fun getDownloadCount(entry: Entry): Int {
-        return _packages.value.values.count { download ->
-            val manifest = download.manifest
-            (manifest.sourceId == entry.source && manifest.entryUrl == entry.url) || manifest.entryId == entry.id
+        val identityMatches = packageKeysByEntryIdentity[
+            BookDownloadEntryKey(entry.source, entry.url),
+        ].orEmpty()
+        val idMatches = packageKeysByEntryId[entry.id].orEmpty()
+        return identityMatches.size + idMatches.count { it !in identityMatches }
+    }
+
+    private fun indexPackagesByEntryIdentity(
+        packages: Map<BookDownloadPackageKey, VerifiedBookDownloadPackage>,
+    ): Map<BookDownloadEntryKey, Set<BookDownloadPackageKey>> {
+        return packages.entries
+            .groupBy(
+                keySelector = { (_, download) ->
+                    BookDownloadEntryKey(download.manifest.sourceId, download.manifest.entryUrl)
+                },
+                valueTransform = Map.Entry<BookDownloadPackageKey, VerifiedBookDownloadPackage>::key,
+            )
+            .mapValues { (_, packageKeys) -> packageKeys.toSet() }
+    }
+
+    private fun indexPackagesByEntryId(
+        packages: Map<BookDownloadPackageKey, VerifiedBookDownloadPackage>,
+    ): Map<Long, Set<BookDownloadPackageKey>> {
+        return packages.entries
+            .groupBy(
+                keySelector = { (_, download) -> download.manifest.entryId },
+                valueTransform = Map.Entry<BookDownloadPackageKey, VerifiedBookDownloadPackage>::key,
+            )
+            .mapValues { (_, packageKeys) -> packageKeys.toSet() }
+    }
+
+    private fun publishPackages(packages: Map<BookDownloadPackageKey, VerifiedBookDownloadPackage>) {
+        packagesByChild = packages.values.groupBy {
+            BookDownloadChildKey(
+                sourceId = it.manifest.sourceId,
+                childUrl = it.manifest.childUrl,
+            )
         }
+        packageKeysByEntryIdentity = indexPackagesByEntryIdentity(packages)
+        packageKeysByEntryId = indexPackagesByEntryId(packages)
+        _packages.value = packages
     }
 
     fun getTotalDownloadCount(): Int = _packages.value.size
@@ -180,16 +224,6 @@ internal class BookDownloadCache(
             )
         }
 
-    private fun publishPackages(packages: Map<BookDownloadPackageKey, VerifiedBookDownloadPackage>) {
-        packagesByChild = packages.values.groupBy {
-            BookDownloadChildKey(
-                sourceId = it.manifest.sourceId,
-                childUrl = it.manifest.childUrl,
-            )
-        }
-        _packages.value = packages
-    }
-
     private suspend fun persistLocked() = withContext(Dispatchers.IO) {
         runCatching {
             indexStore?.write(provider.downloadsRootUri(), _packages.value.values)
@@ -202,6 +236,11 @@ internal class BookDownloadCache(
 private data class BookDownloadChildKey(
     val sourceId: Long,
     val childUrl: String,
+)
+
+private data class BookDownloadEntryKey(
+    val sourceId: Long,
+    val entryUrl: String,
 )
 
 internal data class BookDownloadCacheRefresh(

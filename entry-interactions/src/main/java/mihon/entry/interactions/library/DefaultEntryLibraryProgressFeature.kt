@@ -1,8 +1,10 @@
 package mihon.entry.interactions.library
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.navigation.EntryContinueBatchSeed
 import mihon.entry.interactions.navigation.EntryContinueFeature
 import mihon.entry.interactions.navigation.EntryContinueTargetResult
+import mihon.entry.interactions.navigation.SeededEntryContinueBatchFeature
 import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -41,10 +43,23 @@ internal class DefaultEntryLibraryProgressFeature(
     override suspend fun calculateBatch(
         members: List<EntryLibraryProgressMember>,
     ): Map<Long, EntryLibraryProgressResolution> {
-        val progressByEntryId = entryProgressRepository
+        val progressStates = entryProgressRepository
             .getByEntryIds(members.mapTo(mutableSetOf()) { it.entry.id })
+        val progressByEntryId = progressStates
             .groupBy(EntryProgressState::entryId)
-        val continueTargets = continueFeature.nextTargets(members.map(EntryLibraryProgressMember::entry))
+        val entries = members.map(EntryLibraryProgressMember::entry)
+        val continueTargets = if (continueFeature is SeededEntryContinueBatchFeature) {
+            continueFeature.nextTargets(
+                entries = entries,
+                seed = EntryContinueBatchSeed(
+                    completeOwnerIds = entries.mapTo(mutableSetOf(), Entry::id),
+                    chapters = members.flatMap(EntryLibraryProgressMember::chapters),
+                    progressStates = progressStates,
+                ),
+            )
+        } else {
+            continueFeature.nextTargets(entries)
+        }
 
         return buildMap {
             members.forEach { member ->

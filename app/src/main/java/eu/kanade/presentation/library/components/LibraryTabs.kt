@@ -15,6 +15,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 internal fun LibraryTabs(
     tabs: List<LibraryPageTab>,
     selectedTabId: String?,
+    showItemCounts: Boolean,
     getItemCountForTab: (LibraryPageTab) -> Int?,
     onTabItemClick: (LibraryPageTab) -> Unit,
 ) {
@@ -32,7 +33,7 @@ internal fun LibraryTabs(
                 text = {
                     TabText(
                         text = tab.displayTitle(stringResource(MR.strings.label_default)),
-                        badgeCount = getItemCountForTab(tab),
+                        badgeCount = if (showItemCounts) getItemCountForTab(tab) else null,
                     )
                 },
                 unselectedContentColor = MaterialTheme.colorScheme.onSurface,

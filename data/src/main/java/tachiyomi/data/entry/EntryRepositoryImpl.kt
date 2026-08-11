@@ -9,6 +9,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
@@ -23,13 +24,14 @@ import tachiyomi.data.UpdateStrategyColumnAdapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.EntrySourceSyncRepository
+import tachiyomi.domain.entry.repository.LibraryLastReadObserver
 import kotlin.time.Clock
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class EntryRepositoryImpl(
     private val handler: DatabaseHandler,
     private val profileProvider: ActiveProfileProvider,
-) : EntryRepository, EntrySourceSyncRepository {
+) : EntryRepository, EntrySourceSyncRepository, LibraryLastReadObserver {
 
     override suspend fun getEntryById(id: Long): Entry? {
         return handler.awaitOneOrNull {
@@ -173,7 +175,7 @@ class EntryRepositoryImpl(
 
     override suspend fun getLibraryEntries(): List<Entry> {
         return handler.awaitList {
-            libraryViewQueries.library(profileProvider.activeProfileId, EntryMapper::mapLibraryEntry)
+            entriesQueries.getFavorites(profileProvider.activeProfileId, EntryMapper::mapEntry)
         }
     }
 
@@ -185,7 +187,7 @@ class EntryRepositoryImpl(
 
     override fun getLibraryEntriesAsFlow(profileId: Long): Flow<List<Entry>> {
         return handler.subscribeToList {
-            libraryViewQueries.library(profileId, EntryMapper::mapLibraryEntry)
+            entriesQueries.getFavorites(profileId, EntryMapper::mapEntry)
         }
     }
 
@@ -199,6 +201,14 @@ class EntryRepositoryImpl(
                 entryId to lastRead
             }
         }.toMap()
+    }
+
+    override fun observeLibraryLastRead(profileId: Long): Flow<Map<Long, Long>> {
+        return handler.subscribeToList {
+            libraryViewQueries.libraryLastRead(profileId) { entryId, lastRead ->
+                entryId to lastRead
+            }
+        }.map(List<Pair<Long, Long>>::toMap)
     }
 
     override fun getFavoritesBySourceId(sourceId: Long): Flow<List<Entry>> {

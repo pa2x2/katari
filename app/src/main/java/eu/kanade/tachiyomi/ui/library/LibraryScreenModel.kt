@@ -18,6 +18,7 @@ import eu.kanade.tachiyomi.ui.library.grouping.resolveLibraryPages
 import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
@@ -27,6 +28,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
@@ -133,19 +135,36 @@ class LibraryScreenModel(
 
     val moveEvents = Channel<MoveEvent>(Channel.BUFFERED)
     private var moveInProgress = false
+    private val pagePersistenceRequests = Channel<PagePersistenceRequest>(Channel.UNLIMITED)
+
+    private val displayModeState = libraryPreferences.displayMode.asState(screenModelScope)
+    private val portraitColumnsState = libraryPreferences.portraitColumns.asState(screenModelScope)
+    private val landscapeColumnsState = libraryPreferences.landscapeColumns.asState(screenModelScope)
 
     init {
+        screenModelScope.launchIO {
+            for (request in pagePersistenceRequests) {
+                val preferences = LibraryPreferences(profileStore.profileStore(request.profileId))
+                if (preferences.lastUsedCategory.get() != request.pageIndex) {
+                    preferences.lastUsedCategory.set(request.pageIndex)
+                }
+                request.pageId?.let { pageId ->
+                    if (preferences.lastUsedPageId.get() != pageId) {
+                        preferences.lastUsedPageId.set(pageId)
+                    }
+                }
+            }
+        }
         mutableState.update { state ->
             state.copy(activePageIndex = libraryPreferences.lastUsedCategory.get())
         }
-        state.map { current ->
-            current.selectedLibraryItems.flatMap(LibraryItem::memberEntries).distinctBy(Entry::id)
-        }
+        state.map(::selectionActionInput)
             .distinctUntilChanged()
-            .mapLatest { entries ->
-                entryMergeFeature.prepare(EntryMergePrepareIntent(entries)) is EntryMergePreparationResult.Ready
+            .mapLatest(::resolveSelectionActions)
+            .flowOn(Dispatchers.IO)
+            .onEach { actions ->
+                mutableState.update { state -> state.copy(selectionActions = actions) }
             }
-            .onEach { available -> mutableState.update { it.copy(mergeSelectionAvailable = available) } }
             .launchIn(screenModelScope)
         screenModelScope.launchIO {
             observeProfileScopedState(profileStore.currentProfileIdFlow) { profileId ->
@@ -200,12 +219,13 @@ class LibraryScreenModel(
                             state.copy(
                                 isLoading = true,
                                 selection = emptySet(),
-                                mergeSelectionAvailable = false,
+                                selectionActions = SelectionActions(),
                                 hasActiveFilters = false,
                                 dialog = null,
                                 libraryData = LibraryData(),
                                 activePageIndex = scopedLibraryPreferences.lastUsedCategory.get(),
                                 groupedFavorites = emptyList(),
+                                pageItemsById = emptyMap(),
                             )
                         }
                         lastSelectionPageId = null
@@ -275,6 +295,7 @@ class LibraryScreenModel(
                         state.copy(
                             isLoading = false,
                             groupedFavorites = groupedPages.pages,
+                            pageItemsById = groupedPages.itemsByPageId,
                             grouping = groupedPages.grouping,
                             activePageIndex = activePageIndex,
                         )
@@ -375,20 +396,25 @@ class LibraryScreenModel(
                 )
             }
 
-            val items = page.itemIds.mapNotNull { favoritesById[it] }
-
-            val comparator = Comparator<LibraryItem> { a, b ->
-                librarySortComparator(
-                    sort = sort,
-                    trackerScores = trackerScores,
-                    defaultTrackerScore = defaultTrackerScoreSortValue,
-                ).compare(
-                    a.toLibrarySortKey(trackingScoreSupportedEntryTypes, defaultTrackerScoreSortValue),
-                    b.toLibrarySortKey(trackingScoreSupportedEntryTypes, defaultTrackerScoreSortValue),
-                )
+            val comparator = librarySortComparator(
+                sort = sort,
+                trackerScores = trackerScores,
+                defaultTrackerScore = defaultTrackerScoreSortValue,
+            )
+            val itemsWithSortKeys = page.itemIds.mapNotNull { itemId ->
+                favoritesById[itemId]?.let { item ->
+                    itemId to item.toLibrarySortKey(
+                        trackingScoreSupportedEntryTypes,
+                        defaultTrackerScoreSortValue,
+                    )
+                }
             }
 
-            page.copy(itemIds = items.sortedWith(comparator).map { it.key })
+            val sortedItemIds = itemsWithSortKeys
+                .sortedWith { first, second -> comparator.compare(first.second, second.second) }
+                .map { it.first }
+
+            page.copy(itemIds = sortedItemIds)
         }
     }
 
@@ -551,12 +577,12 @@ class LibraryScreenModel(
     }
 
     fun canDownloadSelection(action: DownloadAction = DownloadAction.UNREAD_CHAPTERS): Boolean {
-        return entryDownloadActionFeature.bulkAvailability(
-            requests = state.value.selectedLibraryItems.map { item ->
-                EntryDownloadActionRequest(item.entry.type, item.sourceIds)
-            },
-            action = action.toEntryBulkDownloadAction(),
-        ) == EntryDownloadActionAvailability.Available
+        val state = state.value
+        val actions = state.selectionActions.takeIf { it.selection == state.selection } ?: return false
+        return when (action) {
+            DownloadAction.BOOKMARKED_CHAPTERS -> actions.bookmarkedDownloadsAvailable
+            else -> actions.downloadsAvailable
+        }
     }
 
     /**
@@ -627,12 +653,11 @@ class LibraryScreenModel(
     }
 
     fun getDisplayMode(): PreferenceMutableState<LibraryDisplayMode> {
-        return libraryPreferences.displayMode.asState(screenModelScope)
+        return displayModeState
     }
 
     fun getColumnsForOrientation(isLandscape: Boolean): PreferenceMutableState<Int> {
-        return (if (isLandscape) libraryPreferences.landscapeColumns else libraryPreferences.portraitColumns)
-            .asState(screenModelScope)
+        return if (isLandscape) landscapeColumnsState else portraitColumnsState
     }
 
     fun getRandomLibraryItemForCurrentPage(): LibraryItem? {
@@ -726,17 +751,21 @@ class LibraryScreenModel(
         val newState = mutableState.updateAndGet { state ->
             if (state.libraryData.profileId != profileId) {
                 state
+            } else if (state.requestedActivePageIndex == index) {
+                state
             } else {
                 state.copy(activePageIndex = index)
             }
         }
         if (newState.libraryData.profileId != profileId) return
 
-        val scopedLibraryPreferences = LibraryPreferences(profileStore.profileStore(profileId))
-        scopedLibraryPreferences.lastUsedCategory.set(newState.coercedActivePageIndex)
-        newState.activePage?.let { page ->
-            scopedLibraryPreferences.lastUsedPageId.set(page.id)
-        }
+        pagePersistenceRequests.trySend(
+            PagePersistenceRequest(
+                profileId = profileId,
+                pageIndex = newState.coercedActivePageIndex,
+                pageId = newState.activePage?.id,
+            ),
+        )
     }
 
     fun openChangeCategoryDialog() {
@@ -876,21 +905,20 @@ class LibraryScreenModel(
     }
 
     fun isMergeSelectionAvailable(): Boolean {
-        return state.value.mergeSelectionAvailable
+        val state = state.value
+        return state.selectionActions.takeIf { it.selection == state.selection }?.mergeAvailable == true
     }
 
     fun canMigrateSelection(): Boolean {
-        return selectedMigrationResult() is EntryMigrationSelectionResult.Ready
+        val state = state.value
+        return state.selectionActions.takeIf { it.selection == state.selection }?.migrationSubjects != null
     }
 
     fun selectedMigrationSubjects(): List<EntryMigrationSubject> {
-        return (selectedMigrationResult() as? EntryMigrationSelectionResult.Ready)
-            ?.subjects
+        val state = state.value
+        return state.selectionActions.takeIf { it.selection == state.selection }
+            ?.migrationSubjects
             .orEmpty()
-    }
-
-    private fun selectedMigrationResult(): EntryMigrationSelectionResult {
-        return entryMigrationFeature.prepareSelection(state.value.selectedLibraryItems.map { it.entry })
     }
 
     fun openMergeDialog() {
@@ -1077,6 +1105,59 @@ class LibraryScreenModel(
     )
 
     @Immutable
+    data class SelectionActions(
+        val selection: Set<LibraryItemKey> = emptySet(),
+        val mergeAvailable: Boolean = false,
+        val downloadsAvailable: Boolean = false,
+        val bookmarkedDownloadsAvailable: Boolean = false,
+        val migrationSubjects: List<EntryMigrationSubject>? = null,
+    )
+
+    private data class SelectionActionInput(
+        val selection: Set<LibraryItemKey>,
+        val items: List<LibraryItem>,
+        val entries: List<Entry>,
+    )
+
+    private fun selectionActionInput(state: State): SelectionActionInput {
+        val items = state.selectedLibraryItems
+        return SelectionActionInput(
+            selection = state.selection,
+            items = items,
+            entries = items.flatMap(LibraryItem::memberEntries).distinctBy(Entry::id),
+        )
+    }
+
+    private suspend fun resolveSelectionActions(input: SelectionActionInput): SelectionActions {
+        if (input.selection.isEmpty()) return SelectionActions()
+
+        val requests = input.items.map { item ->
+            EntryDownloadActionRequest(item.entry.type, item.sourceIds)
+        }
+        val migrationSubjects = when (
+            val result = entryMigrationFeature.prepareSelection(input.items.map { it.entry })
+        ) {
+            is EntryMigrationSelectionResult.Ready -> result.subjects
+            is EntryMigrationSelectionResult.Rejected -> null
+        }
+        return SelectionActions(
+            selection = input.selection,
+            mergeAvailable = entryMergeFeature.prepare(
+                EntryMergePrepareIntent(input.entries),
+            ) is EntryMergePreparationResult.Ready,
+            downloadsAvailable = entryDownloadActionFeature.bulkAvailability(
+                requests = requests,
+                action = DownloadAction.UNREAD_CHAPTERS.toEntryBulkDownloadAction(),
+            ) == EntryDownloadActionAvailability.Available,
+            bookmarkedDownloadsAvailable = entryDownloadActionFeature.bulkAvailability(
+                requests = requests,
+                action = DownloadAction.BOOKMARKED_CHAPTERS.toEntryBulkDownloadAction(),
+            ) == EntryDownloadActionAvailability.Available,
+            migrationSubjects = migrationSubjects,
+        )
+    }
+
+    @Immutable
     data class LibraryData(
         val profileId: Long? = null,
         val isInitialized: Boolean = false,
@@ -1100,7 +1181,7 @@ class LibraryScreenModel(
         val isLoading: Boolean = true,
         val searchQuery: String? = null,
         val selection: Set<LibraryItemKey> = setOf(),
-        val mergeSelectionAvailable: Boolean = false,
+        internal val selectionActions: SelectionActions = SelectionActions(),
         val hasActiveFilters: Boolean = false,
         val showCategoryTabs: Boolean = false,
         val showEntryCount: Boolean = false,
@@ -1111,6 +1192,7 @@ class LibraryScreenModel(
         val grouping: LibraryGrouping = LibraryGrouping.default,
         private val activePageIndex: Int = 0,
         private val groupedFavorites: List<LibraryPage> = emptyList(),
+        private val pageItemsById: Map<String, List<LibraryItem>> = emptyMap(),
     ) {
         val displayedPages: List<LibraryPage> = groupedFavorites
 
@@ -1140,12 +1222,11 @@ class LibraryScreenModel(
 
         fun getItemsForPageId(pageId: String?): List<LibraryItem> {
             if (pageId == null) return emptyList()
-            val page = displayedPages.find { it.id == pageId } ?: return emptyList()
-            return getItemsForPage(page)
+            return pageItemsById[pageId].orEmpty()
         }
 
         fun getItemsForPage(page: LibraryPage): List<LibraryItem> {
-            return page.itemIds.mapNotNull { libraryData.favoritesById[it] }
+            return pageItemsById[page.id].orEmpty()
         }
 
         fun getItemCountForPage(page: LibraryPage): Int? {
@@ -1202,11 +1283,14 @@ internal fun observeGroupedLibraryPages(
         sortingMode,
         randomSortSeed,
     ) { data, grouping, sortingMode, randomSortSeed ->
-        val pages = applyGrouping(data, grouping)
+        val pages = applySort(applyGrouping(data, grouping), data, sortingMode, randomSortSeed)
         GroupedLibraryPages(
             profileId = checkNotNull(data.profileId),
             grouping = grouping,
-            pages = applySort(pages, data, sortingMode, randomSortSeed),
+            pages = pages,
+            itemsByPageId = pages.associate { page ->
+                page.id to page.itemIds.mapNotNull(data.favoritesById::get)
+            },
         )
     }
 }
@@ -1215,6 +1299,13 @@ internal data class GroupedLibraryPages(
     val profileId: Long,
     val grouping: LibraryGrouping,
     val pages: List<LibraryPage>,
+    val itemsByPageId: Map<String, List<LibraryItem>>,
+)
+
+private data class PagePersistenceRequest(
+    val profileId: Long,
+    val pageIndex: Int,
+    val pageId: String?,
 )
 
 private fun List<LibraryPage>.indexOfMatchingPage(

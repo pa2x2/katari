@@ -63,7 +63,7 @@ internal class DefaultEntryContinueFeature(
     evaluation: FeatureGraphEvaluation,
     private val interaction: EntryContinueInteraction,
     private val batchPreparation: EntryContinueBatchPreparation,
-) : EntryContinueFeature {
+) : EntryContinueFeature, SeededEntryContinueBatchFeature {
     private val applicableTypes = evaluation.applicableProviderTypes<EntryContinueProcessor>(
         feature = ENTRY_CONTINUE_FEATURE_ID,
         integration = ENTRY_CONTINUE_INTEGRATION_ID,
@@ -93,6 +93,22 @@ internal class DefaultEntryContinueFeature(
     override suspend fun nextTargets(entries: List<Entry>): Map<Long, EntryContinueTargetResult> {
         val applicableEntries = entries.filter { it.type in targetTypes }
         val preparedByEntryId = batchPreparation.prepare(applicableEntries)
+        return resolvePreparedTargets(entries, preparedByEntryId)
+    }
+
+    override suspend fun nextTargets(
+        entries: List<Entry>,
+        seed: EntryContinueBatchSeed,
+    ): Map<Long, EntryContinueTargetResult> {
+        val applicableEntries = entries.filter { it.type in targetTypes }
+        val preparedByEntryId = batchPreparation.prepare(applicableEntries, seed)
+        return resolvePreparedTargets(entries, preparedByEntryId)
+    }
+
+    private suspend fun resolvePreparedTargets(
+        entries: List<Entry>,
+        preparedByEntryId: Map<Long, EntryContinuePreparedInput>,
+    ): Map<Long, EntryContinueTargetResult> {
         return entries.associate { entry ->
             entry.id to when {
                 entry.type !in targetTypes -> EntryContinueTargetResult.Inapplicable

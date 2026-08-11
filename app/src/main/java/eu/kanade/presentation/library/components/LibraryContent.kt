@@ -36,6 +36,7 @@ fun SharedLibraryContent(
     currentPage: Int,
     hasActiveFilters: Boolean,
     showPageTabs: Boolean,
+    showItemCounts: Boolean,
     onChangeCurrentPage: (Int) -> Unit,
     onRefresh: () -> Boolean,
     onGlobalSearchClicked: () -> Unit,
@@ -96,6 +97,7 @@ fun SharedLibraryContent(
                 LibraryTabs(
                     tabs = primaryTabs,
                     selectedTabId = activePage?.primaryTab?.id,
+                    showItemCounts = showItemCounts,
                     getItemCountForTab = { tab ->
                         getItemCountForPages(pages.filter { it.primaryTab.id == tab.id })
                     },
@@ -113,6 +115,7 @@ fun SharedLibraryContent(
                 LibraryTabs(
                     tabs = secondaryTabs,
                     selectedTabId = activePage?.secondaryTab?.id,
+                    showItemCounts = showItemCounts,
                     getItemCountForTab = { tab ->
                         getItemCountForPages(
                             pages.filter {
@@ -136,6 +139,7 @@ fun SharedLibraryContent(
                 LibraryTabs(
                     tabs = tertiaryTabs,
                     selectedTabId = selectedPage.tertiaryTab?.id,
+                    showItemCounts = showItemCounts,
                     getItemCountForTab = { tab ->
                         pages.firstOrNull {
                             it.primaryTab.id == selectedPage.primaryTab.id &&
@@ -184,8 +188,8 @@ fun SharedLibraryContent(
             pageContent(pagerState, pagerState.currentPage, pages.getOrNull(pagerState.currentPage))
         }
 
-        LaunchedEffect(pagerState.currentPage) {
-            onChangeCurrentPage(pagerState.currentPage)
+        LaunchedEffect(pagerState.settledPage) {
+            onChangeCurrentPage(pagerState.settledPage)
         }
     }
 }
@@ -199,6 +203,7 @@ fun LibraryContent(
     currentPage: Int,
     hasActiveFilters: Boolean,
     showPageTabs: Boolean,
+    showItemCounts: Boolean,
     onChangeCurrentPage: (Int) -> Unit,
     onClickItem: (LibraryItem) -> Unit,
     onContinueReadingClicked: ((LibraryItem) -> Unit)?,
@@ -222,6 +227,7 @@ fun LibraryContent(
         currentPage = currentPage,
         hasActiveFilters = hasActiveFilters,
         showPageTabs = showPageTabs,
+        showItemCounts = showItemCounts,
         onChangeCurrentPage = onChangeCurrentPage,
         onRefresh = onRefresh,
         onGlobalSearchClicked = onGlobalSearchClicked,

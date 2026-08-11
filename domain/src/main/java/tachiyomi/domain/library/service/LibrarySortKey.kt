@@ -14,7 +14,9 @@ data class LibrarySortKey(
     val entryFetchDate: Long,
     val dateAdded: Long,
     val trackerScore: Double?,
-)
+) {
+    internal val normalizedTitle: String = title.lowercase()
+}
 
 fun librarySortComparator(
     sort: LibrarySort,
@@ -22,7 +24,7 @@ fun librarySortComparator(
     defaultTrackerScore: Double = -1.0,
 ): Comparator<LibrarySortKey> {
     val sortAlphabetically: (LibrarySortKey, LibrarySortKey) -> Int = { item1, item2 ->
-        item1.title.lowercase().compareToWithCollator(item2.title.lowercase())
+        item1.normalizedTitle.compareToWithCollator(item2.normalizedTitle)
     }
 
     val comparator = Comparator<LibrarySortKey> { item1, item2 ->

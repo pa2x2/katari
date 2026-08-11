@@ -47,6 +47,7 @@ internal fun LibraryList(
 
         items(
             items = items,
+            key = { it.key.toString() },
             contentType = { "library_list_item" },
         ) { libraryItem ->
             val useFitCover = libraryItem.sourceItemOrientation == EntryItemOrientation.HORIZONTAL
