@@ -1,6 +1,5 @@
 package eu.kanade.presentation.library.components
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
@@ -31,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -520,7 +520,7 @@ private fun ButtonProgressIndicator(
     shape: Shape,
 ) {
     val coercedProgress = progress.takeUnless { it.isNaN() }?.coerceIn(0f, 1f) ?: 0f
-    Canvas(
+    Box(
         modifier = Modifier
             .size(size)
             .semantics(mergeDescendants = true) {
@@ -528,56 +528,65 @@ private fun ButtonProgressIndicator(
                     current = coercedProgress,
                     range = 0f..1f,
                 )
-            },
-    ) {
-        val outlinePath = Path().apply {
-            when (val outline = shape.createOutline(this@Canvas.size, layoutDirection, this@Canvas)) {
-                is Outline.Rectangle -> addRect(outline.rect, Path.Direction.Clockwise)
-                is Outline.Rounded -> addRoundRect(outline.roundRect, Path.Direction.Clockwise)
-                is Outline.Generic -> addPath(outline.path)
             }
-        }
-        val pathMeasure = PathMeasure().apply {
-            setPath(outlinePath, forceClosed = true)
-        }
-        val pathLength = pathMeasure.length
-        val startDistance = (0..100)
-            .minBy { sample ->
-                val position = pathMeasure.getPosition(pathLength * sample / 100f)
-                val delta = position - Offset(this.size.width / 2f, 0f)
-                delta.getDistanceSquared()
-            }
-            .let { pathLength * it / 100f }
-        val progressPath = Path()
-        val progressLength = pathLength * coercedProgress
-        val firstSegmentLength = minOf(progressLength, pathLength - startDistance)
+            .drawWithCache {
+                val outlinePath = Path().apply {
+                    when (
+                        val outline = shape.createOutline(
+                            this@drawWithCache.size,
+                            layoutDirection,
+                            this@drawWithCache,
+                        )
+                    ) {
+                        is Outline.Rectangle -> addRect(outline.rect, Path.Direction.Clockwise)
+                        is Outline.Rounded -> addRoundRect(outline.roundRect, Path.Direction.Clockwise)
+                        is Outline.Generic -> addPath(outline.path)
+                    }
+                }
+                val pathMeasure = PathMeasure().apply {
+                    setPath(outlinePath, forceClosed = true)
+                }
+                val pathLength = pathMeasure.length
+                val startDistance = (0..100)
+                    .minBy { sample ->
+                        val position = pathMeasure.getPosition(pathLength * sample / 100f)
+                        val delta = position - Offset(this@drawWithCache.size.width / 2f, 0f)
+                        delta.getDistanceSquared()
+                    }
+                    .let { pathLength * it / 100f }
+                val progressPath = Path()
+                val progressLength = pathLength * coercedProgress
+                val firstSegmentLength = minOf(progressLength, pathLength - startDistance)
 
-        if (coercedProgress == 1f) {
-            progressPath.addPath(outlinePath)
-        } else {
-            pathMeasure.getSegment(
-                startDistance = startDistance,
-                stopDistance = startDistance + firstSegmentLength,
-                destination = progressPath,
-            )
-            if (progressLength > firstSegmentLength) {
-                pathMeasure.getSegment(
-                    startDistance = 0f,
-                    stopDistance = progressLength - firstSegmentLength,
-                    destination = progressPath,
+                if (coercedProgress == 1f) {
+                    progressPath.addPath(outlinePath)
+                } else {
+                    pathMeasure.getSegment(
+                        startDistance = startDistance,
+                        stopDistance = startDistance + firstSegmentLength,
+                        destination = progressPath,
+                    )
+                    if (progressLength > firstSegmentLength) {
+                        pathMeasure.getSegment(
+                            startDistance = 0f,
+                            stopDistance = progressLength - firstSegmentLength,
+                            destination = progressPath,
+                        )
+                    }
+                }
+
+                val stroke = Stroke(
+                    // The path lies on the button boundary, so draw double width and clip the outer half.
+                    width = 2 * ContinueReadingProgressStrokeWidth.toPx(),
+                    cap = StrokeCap.Round,
+                    join = StrokeJoin.Round,
                 )
-            }
-        }
-
-        val stroke = Stroke(
-            // The path lies on the button boundary, so draw double width and clip the outer half.
-            width = 2 * ContinueReadingProgressStrokeWidth.toPx(),
-            cap = StrokeCap.Round,
-            join = StrokeJoin.Round,
-        )
-        clipPath(outlinePath) {
-            drawPath(path = outlinePath, color = trackColor, style = stroke)
-            drawPath(path = progressPath, color = color, style = stroke)
-        }
-    }
+                onDrawBehind {
+                    clipPath(outlinePath) {
+                        drawPath(path = outlinePath, color = trackColor, style = stroke)
+                        drawPath(path = progressPath, color = color, style = stroke)
+                    }
+                }
+            },
+    )
 }

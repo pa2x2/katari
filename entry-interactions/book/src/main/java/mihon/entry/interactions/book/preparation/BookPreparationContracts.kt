@@ -23,7 +23,10 @@ internal interface BookContentPreparer {
 
 internal sealed interface BookPreparationResult {
     data class Success(val publication: PreparedBookPublication) : BookPreparationResult
-    data class Failure(val failure: BookFailure) : BookPreparationResult
+    data class Failure(
+        val failure: BookFailure,
+        val canRetry: Boolean,
+    ) : BookPreparationResult
 }
 
 /** Owns a prepared model and the runtime resources required to render it. */

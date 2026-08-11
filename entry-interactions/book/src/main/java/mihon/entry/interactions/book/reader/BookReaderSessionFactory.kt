@@ -56,21 +56,36 @@ internal class BookReaderSessionFactory(
         processorId: String,
     ): BookReaderOpenResult {
         return when (val prepared = prepare(request)) {
-            is BookReaderPrepareResult.Failure -> BookReaderOpenResult.Failure(prepared.failure)
+            is BookReaderPrepareResult.Failure -> BookReaderOpenResult.Failure(
+                failure = prepared.failure,
+                canRetry = prepared.canRetry,
+            )
             is BookReaderPrepareResult.Success -> openPrepared(context, prepared.request, processorId)
         }
     }
 
     suspend fun prepare(request: BookReaderRequest): BookReaderPrepareResult {
         val visibleEntry = entryRepository.getEntryById(request.entryId)
-            ?: return prepareFailure(BookFailureReason.CONTENT_UNAVAILABLE, "The book entry no longer exists.")
+            ?: return prepareFailure(
+                BookFailureReason.CONTENT_UNAVAILABLE,
+                "The book entry no longer exists.",
+                canRetry = false,
+            )
         if (visibleEntry.type != EntryType.BOOK) {
             return prepareFailure(BookFailureReason.MALFORMED_CONTENT, "The selected entry is not a book.")
         }
         val chapter = entryChapterRepository.getChapterById(request.chapterId)
-            ?: return prepareFailure(BookFailureReason.CONTENT_UNAVAILABLE, "The selected book item no longer exists.")
+            ?: return prepareFailure(
+                BookFailureReason.CONTENT_UNAVAILABLE,
+                "The selected book item no longer exists.",
+                canRetry = false,
+            )
         val owner = entryRepository.getEntryById(chapter.entryId)
-            ?: return prepareFailure(BookFailureReason.CONTENT_UNAVAILABLE, "The book item owner no longer exists.")
+            ?: return prepareFailure(
+                BookFailureReason.CONTENT_UNAVAILABLE,
+                "The book item owner no longer exists.",
+                canRetry = false,
+            )
         if (owner.type != EntryType.BOOK) {
             return prepareFailure(BookFailureReason.MALFORMED_CONTENT, "The selected item does not belong to a book.")
         }
@@ -78,7 +93,11 @@ internal class BookReaderSessionFactory(
             return preparedSuccess(request, visibleEntry, owner, chapter, downloaded)
         }
         val source = sourceManager.get(owner.source)
-            ?: return prepareFailure(BookFailureReason.CONTENT_UNAVAILABLE, "The book source is not available.")
+            ?: return prepareFailure(
+                BookFailureReason.CONTENT_UNAVAILABLE,
+                "The book source is not available.",
+                canRetry = true,
+            )
         val media = try {
             source.getMedia(chapter.toSEntryChapter()) as? EntryMedia.Book
         } catch (error: CancellationException) {
@@ -87,6 +106,7 @@ internal class BookReaderSessionFactory(
             return prepareFailure(
                 BookFailureReason.CONTENT_UNAVAILABLE,
                 error.message ?: "The source could not resolve this book item.",
+                canRetry = true,
             )
         } ?: return prepareFailure(
             BookFailureReason.MALFORMED_CONTENT,
@@ -149,7 +169,10 @@ internal class BookReaderSessionFactory(
         return when (preparedPublication) {
             is BookPreparationResult.Failure -> {
                 closeAfterFailure(contentSession)
-                BookReaderOpenResult.Failure(preparedPublication.failure)
+                BookReaderOpenResult.Failure(
+                    failure = preparedPublication.failure,
+                    canRetry = preparedPublication.canRetry,
+                )
             }
             is BookPreparationResult.Success -> {
                 val publication = preparedPublication.publication
@@ -268,12 +291,20 @@ internal class BookReaderSessionFactory(
         return current
     }
 
-    private fun failure(reason: BookFailureReason, message: String): BookReaderOpenResult.Failure {
-        return BookReaderOpenResult.Failure(BookFailure(reason, message))
+    private fun failure(
+        reason: BookFailureReason,
+        message: String,
+        canRetry: Boolean = false,
+    ): BookReaderOpenResult.Failure {
+        return BookReaderOpenResult.Failure(BookFailure(reason, message), canRetry)
     }
 
-    private fun prepareFailure(reason: BookFailureReason, message: String): BookReaderPrepareResult.Failure {
-        return BookReaderPrepareResult.Failure(BookFailure(reason, message))
+    private fun prepareFailure(
+        reason: BookFailureReason,
+        message: String,
+        canRetry: Boolean = false,
+    ): BookReaderPrepareResult.Failure {
+        return BookReaderPrepareResult.Failure(BookFailure(reason, message), canRetry)
     }
 
     private suspend fun resolveDownloadedContent(

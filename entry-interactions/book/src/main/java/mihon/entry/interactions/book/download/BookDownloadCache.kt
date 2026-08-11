@@ -31,6 +31,15 @@ internal class BookDownloadCache(
     @Volatile
     private var initialized = false
     private val _packages = MutableStateFlow<Map<BookDownloadPackageKey, VerifiedBookDownloadPackage>>(emptyMap())
+
+    @Volatile
+    private var packagesByChild = emptyMap<BookDownloadChildKey, List<VerifiedBookDownloadPackage>>()
+
+    @Volatile
+    private var packageKeysByEntryIdentity = emptyMap<BookDownloadEntryKey, Set<BookDownloadPackageKey>>()
+
+    @Volatile
+    private var packageKeysByEntryId = emptyMap<Long, Set<BookDownloadPackageKey>>()
     val packages: StateFlow<Map<BookDownloadPackageKey, VerifiedBookDownloadPackage>> = _packages.asStateFlow()
     private val verifiedPackageKeys = mutableSetOf<BookDownloadPackageKey>()
     val changes: Flow<Unit> = _packages.drop(1).map {}
@@ -52,7 +61,7 @@ internal class BookDownloadCache(
                     indexStore?.read(provider.downloadsRootUri())
                 }
                 if (restored != null) {
-                    _packages.value = selectPackages(restored)
+                    publishPackages(selectPackages(restored))
                     verifiedPackageKeys.clear()
                     initialized = true
                 } else {
@@ -72,7 +81,7 @@ internal class BookDownloadCache(
             try {
                 val scan = provider.rebuildPackages()
                 val selected = selectPackages(scan.packages)
-                _packages.value = selected
+                publishPackages(selected)
                 verifiedPackageKeys.clear()
                 verifiedPackageKeys += selected.keys
                 initialized = true
@@ -100,11 +109,11 @@ internal class BookDownloadCache(
                 provider.readVerifiedPackage(indexed.directory)
             }?.takeIf { it.manifest == indexed.manifest }
             if (verified == null) {
-                _packages.value -= packageKey
+                publishPackages(_packages.value - packageKey)
                 persistLocked()
                 null
             } else {
-                _packages.value += packageKey to verified
+                publishPackages(_packages.value + (packageKey to verified))
                 verifiedPackageKeys += packageKey
                 verified
             }
@@ -115,7 +124,7 @@ internal class BookDownloadCache(
         ensureInitialized()
         refreshMutex.withLock {
             val packageKey = download.manifest.packageKey
-            _packages.value += packageKey to download
+            publishPackages(_packages.value + (packageKey to download))
             verifiedPackageKeys += packageKey
             persistLocked()
         }
@@ -125,7 +134,7 @@ internal class BookDownloadCache(
         if (packageKeys.isEmpty()) return
         ensureInitialized()
         refreshMutex.withLock {
-            _packages.value -= packageKeys.toSet()
+            publishPackages(_packages.value - packageKeys.toSet())
             verifiedPackageKeys -= packageKeys.toSet()
             persistLocked()
         }
@@ -139,7 +148,7 @@ internal class BookDownloadCache(
         refreshMutex.withLock {
             val removedKeys = packageKeys.toSet()
             val replacements = selectPackages(downloads)
-            _packages.value = (_packages.value - removedKeys) + replacements
+            publishPackages((_packages.value - removedKeys) + replacements)
             verifiedPackageKeys -= removedKeys
             verifiedPackageKeys += replacements.keys
             persistLocked()
@@ -147,23 +156,59 @@ internal class BookDownloadCache(
     }
 
     fun find(sourceId: Long, childUrl: String, entryTitle: String): VerifiedBookDownloadPackage? {
-        val candidates = _packages.value.values.filter {
-            it.manifest.sourceId == sourceId && it.manifest.childUrl == childUrl
-        }
+        val candidates = packagesByChild[BookDownloadChildKey(sourceId, childUrl)].orEmpty()
         return candidates.singleOrNull()
             ?: candidates.firstOrNull { it.manifest.entryTitle == entryTitle }
     }
 
     fun isDownloaded(packageKey: BookDownloadPackageKey): Boolean = packageKey in _packages.value
 
-    fun getDownloadCount(sourceId: Long, entryUrl: String): Int =
-        _packages.value.keys.count { it.sourceId == sourceId && it.entryUrl == entryUrl }
+    fun getDownloadCount(sourceId: Long, entryUrl: String): Int {
+        return packageKeysByEntryIdentity[BookDownloadEntryKey(sourceId, entryUrl)].orEmpty().size
+    }
 
     fun getDownloadCount(entry: Entry): Int {
-        return _packages.value.values.count { download ->
-            val manifest = download.manifest
-            (manifest.sourceId == entry.source && manifest.entryUrl == entry.url) || manifest.entryId == entry.id
+        val identityMatches = packageKeysByEntryIdentity[
+            BookDownloadEntryKey(entry.source, entry.url),
+        ].orEmpty()
+        val idMatches = packageKeysByEntryId[entry.id].orEmpty()
+        return identityMatches.size + idMatches.count { it !in identityMatches }
+    }
+
+    private fun indexPackagesByEntryIdentity(
+        packages: Map<BookDownloadPackageKey, VerifiedBookDownloadPackage>,
+    ): Map<BookDownloadEntryKey, Set<BookDownloadPackageKey>> {
+        return packages.entries
+            .groupBy(
+                keySelector = { (_, download) ->
+                    BookDownloadEntryKey(download.manifest.sourceId, download.manifest.entryUrl)
+                },
+                valueTransform = Map.Entry<BookDownloadPackageKey, VerifiedBookDownloadPackage>::key,
+            )
+            .mapValues { (_, packageKeys) -> packageKeys.toSet() }
+    }
+
+    private fun indexPackagesByEntryId(
+        packages: Map<BookDownloadPackageKey, VerifiedBookDownloadPackage>,
+    ): Map<Long, Set<BookDownloadPackageKey>> {
+        return packages.entries
+            .groupBy(
+                keySelector = { (_, download) -> download.manifest.entryId },
+                valueTransform = Map.Entry<BookDownloadPackageKey, VerifiedBookDownloadPackage>::key,
+            )
+            .mapValues { (_, packageKeys) -> packageKeys.toSet() }
+    }
+
+    private fun publishPackages(packages: Map<BookDownloadPackageKey, VerifiedBookDownloadPackage>) {
+        packagesByChild = packages.values.groupBy {
+            BookDownloadChildKey(
+                sourceId = it.manifest.sourceId,
+                childUrl = it.manifest.childUrl,
+            )
         }
+        packageKeysByEntryIdentity = indexPackagesByEntryIdentity(packages)
+        packageKeysByEntryId = indexPackagesByEntryId(packages)
+        _packages.value = packages
     }
 
     fun getTotalDownloadCount(): Int = _packages.value.size
@@ -187,6 +232,16 @@ internal class BookDownloadCache(
         }
     }
 }
+
+private data class BookDownloadChildKey(
+    val sourceId: Long,
+    val childUrl: String,
+)
+
+private data class BookDownloadEntryKey(
+    val sourceId: Long,
+    val entryUrl: String,
+)
 
 internal data class BookDownloadCacheRefresh(
     val packageCount: Int,

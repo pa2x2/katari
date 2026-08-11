@@ -80,7 +80,7 @@ fun MarkdownRender(
         markdownState = rememberMarkdownState(
             content = content,
             flavour = flavour,
-            immediate = true,
+            immediate = false,
         ),
         annotator = annotator,
         colors = getMarkdownColors(),

@@ -27,15 +27,24 @@ internal class MangaPageListStore(
         fetch: suspend () -> List<Page>,
     ): List<Page> {
         return entryLocks.withLock("page-list:${chapter.key()}") {
-            try {
+            val cached = try {
                 get(chapter)
             } catch (_: Exception) {
-                fetch().also { put(chapter, it) }
+                null
+            }
+            if (!cached.isNullOrEmpty()) {
+                cached
+            } else {
+                if (cached != null) remove(chapter)
+                fetch().also { pages ->
+                    if (pages.isNotEmpty()) put(chapter, pages)
+                }
             }
         }
     }
 
     fun put(chapter: Chapter, pages: List<Page>) {
+        if (pages.isEmpty()) return
         var editor: DiskLruCache.Editor? = null
         try {
             val key = DiskUtil.hashKeyForDisk(chapter.key())
@@ -50,6 +59,15 @@ internal class MangaPageListStore(
             logcat(LogPriority.WARN, error) { "Failed to put page list to cache" }
         } finally {
             editor?.abortUnlessCommitted()
+        }
+    }
+
+    private fun remove(chapter: Chapter) {
+        try {
+            diskCache.remove(DiskUtil.hashKeyForDisk(chapter.key()))
+            diskCache.flush()
+        } catch (error: Exception) {
+            logcat(LogPriority.WARN, error) { "Failed to remove empty page list from cache" }
         }
     }
 

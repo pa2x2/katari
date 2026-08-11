@@ -91,7 +91,7 @@ class SecureActivityDelegateImpl : SecureActivityDelegate, DefaultLifecycleObser
     }
 
     override fun onResume(owner: LifecycleOwner) {
-        setAppLock()
+        requestAppUnlock(activity)
     }
 
     private fun setSecureScreen() {
@@ -104,21 +104,22 @@ class SecureActivityDelegateImpl : SecureActivityDelegate, DefaultLifecycleObser
             .onEach(activity.window::setSecureScreen)
             .launchIn(activity.lifecycleScope)
     }
+}
 
-    private fun setAppLock() {
-        if (!securityPreferences.useAuthenticator.get()) return
-        if (activity.isAuthenticationSupported()) {
-            if (!SecureActivityDelegate.requireUnlock) return
-            if (!(activity as SecureActivityDelegate).shouldRequestAppUnlock(activity)) return
-            activity.startActivity(Intent(activity, UnlockActivity::class.java))
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                activity.overrideActivityTransition(Activity.OVERRIDE_TRANSITION_OPEN, 0, 0)
-            } else {
-                @Suppress("DEPRECATION")
-                activity.overridePendingTransition(0, 0)
-            }
+fun SecureActivityDelegate.requestAppUnlock(activity: AppCompatActivity) {
+    val securityPreferences = Injekt.get<SecurityPreferences>()
+    if (!securityPreferences.useAuthenticator.get()) return
+    if (activity.isAuthenticationSupported()) {
+        if (!SecureActivityDelegate.requireUnlock) return
+        if (!shouldRequestAppUnlock(activity)) return
+        activity.startActivity(Intent(activity, UnlockActivity::class.java))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            activity.overrideActivityTransition(Activity.OVERRIDE_TRANSITION_OPEN, 0, 0)
         } else {
-            securityPreferences.useAuthenticator.set(false)
+            @Suppress("DEPRECATION")
+            activity.overridePendingTransition(0, 0)
         }
+    } else {
+        securityPreferences.useAuthenticator.set(false)
     }
 }

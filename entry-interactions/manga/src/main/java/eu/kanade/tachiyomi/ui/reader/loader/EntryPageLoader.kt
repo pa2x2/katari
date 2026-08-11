@@ -113,8 +113,11 @@ internal class EntryPageLoader private constructor(
         val domainChapter = chapter.chapter.toDomainChapter()!!
         val pages = chapterCache.getOrPutPageList(domainChapter) {
             val media = source.getMedia(domainChapter.toEntryChapter().toSEntryChapter())
-            check(media is EntryMedia.ImagePages) {
-                "Source ${source.name} did not return image pages"
+            if (media !is EntryMedia.ImagePages) {
+                throw ReaderLoadException(
+                    message = "Source ${source.name} did not return image pages",
+                    canRetry = false,
+                )
             }
             media.pages.map { page -> Page(page.index, page.url, page.imageUrl) }
         }

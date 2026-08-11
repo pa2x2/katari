@@ -39,6 +39,7 @@ internal fun LibraryCompactGrid(
 
         items(
             items = items,
+            key = { it.key.toString() },
             span = { libraryItem ->
                 GridItemSpan(
                     if (libraryItem.sourceItemOrientation == EntryItemOrientation.HORIZONTAL) {

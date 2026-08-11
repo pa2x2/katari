@@ -29,8 +29,10 @@ import eu.kanade.tachiyomi.source.getDisplayNameForEntryInfo
 import eu.kanade.tachiyomi.util.lang.toStoredDisplayName
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -977,33 +979,23 @@ class EntryScreenModel(
         screenModelScope.launchIO {
             downloadRuntime.statusUpdates()
                 .filter { download ->
-                    successState?.chapters.orEmpty().any { item ->
-                        item.entry.type == download.entryType && item.chapter.id == download.chapterId
-                    }
+                    successState?.containsChapter(download) == true
                 }
                 .catch { error -> logcat(LogPriority.ERROR, error) }
                 .flowWithLifecycle(lifecycle)
-                .collect {
-                    withUIContext {
-                        updateDownloadState(it)
-                    }
-                }
+                .collect(::updateDownloadState)
         }
     }
 
     private fun updateDownloadState(download: EntryDownloadStatus) {
         updateSuccessState { successState ->
-            val modifiedIndex = successState.chapters.indexOfFirst {
-                it.entry.type == download.entryType && it.id == download.chapterId
-            }
-            if (modifiedIndex < 0) return@updateSuccessState successState
-
-            val newChapters = successState.chapters.toMutableList().apply {
-                val item = removeAt(modifiedIndex)
-                    .copy(downloadState = download.state, downloadProgress = download.progress)
-                add(modifiedIndex, item)
-            }
-            successState.copy(chapters = newChapters).rebuildChapterPresentation()
+            val item = successState.chapter(download) ?: return@updateSuccessState successState
+            val updatedItem = item.copy(downloadState = download.state, downloadProgress = download.progress)
+            successState.updateChapterItems(
+                items = listOf(updatedItem),
+                rebuildPresentation = successState.entry.downloadedFilter != TriState.DISABLED &&
+                    item.isDownloaded != updatedItem.isDownloaded,
+            )
         }
     }
 
@@ -1041,7 +1033,7 @@ class EntryScreenModel(
                 downloadProgress = activeDownload?.progress ?: 0,
                 selected = chapter.id in selectedChapterIds,
             )
-        }
+        }.toPersistentList()
     }
 
     /**
@@ -1507,84 +1499,82 @@ class EntryScreenModel(
         fromLongPress: Boolean = false,
     ) {
         updateSuccessState { successState ->
-            val newChapters = successState.processedChapters.toMutableList().apply {
-                val selectedIndex = successState.processedChapters.indexOfFirst { it.chapter.id == item.chapter.id }
-                if (selectedIndex < 0) return@apply
+            val chapters = successState.processedChapters
+            val selectedIndex = successState.processedChapterIndex(item.id)
+                ?: return@updateSuccessState successState
 
-                val selectedItem = get(selectedIndex)
-                if ((selectedItem.selected && selected) || (!selectedItem.selected && !selected)) return@apply
+            val selectedItem = chapters[selectedIndex]
+            if (selectedItem.selected == selected) return@updateSuccessState successState
 
-                val firstSelection = none { it.selected }
-                set(selectedIndex, selectedItem.copy(selected = selected))
-                selectedChapterIds.addOrRemove(item.id, selected)
+            val updates = mutableListOf(selectedItem.copy(selected = selected))
+            selectedChapterIds.addOrRemove(item.id, selected)
 
-                if (selected && fromLongPress) {
-                    if (firstSelection) {
+            if (selected && fromLongPress) {
+                if (successState.selectedChapters.isEmpty()) {
+                    selectedPositions[0] = selectedIndex
+                    selectedPositions[1] = selectedIndex
+                } else {
+                    // Try to select the items in-between when possible
+                    val range: IntRange
+                    if (selectedIndex < selectedPositions[0]) {
+                        range = selectedIndex + 1..<selectedPositions[0]
                         selectedPositions[0] = selectedIndex
+                    } else if (selectedIndex > selectedPositions[1]) {
+                        range = (selectedPositions[1] + 1)..<selectedIndex
                         selectedPositions[1] = selectedIndex
                     } else {
-                        // Try to select the items in-between when possible
-                        val range: IntRange
-                        if (selectedIndex < selectedPositions[0]) {
-                            range = selectedIndex + 1..<selectedPositions[0]
-                            selectedPositions[0] = selectedIndex
-                        } else if (selectedIndex > selectedPositions[1]) {
-                            range = (selectedPositions[1] + 1)..<selectedIndex
-                            selectedPositions[1] = selectedIndex
-                        } else {
-                            // Just select itself
-                            range = IntRange.EMPTY
-                        }
-
-                        range.forEach {
-                            val inbetweenItem = get(it)
-                            if (!inbetweenItem.selected) {
-                                selectedChapterIds.add(inbetweenItem.id)
-                                set(it, inbetweenItem.copy(selected = true))
-                            }
-                        }
+                        // Just select itself
+                        range = IntRange.EMPTY
                     }
-                } else if (!fromLongPress) {
-                    if (!selected) {
-                        if (selectedIndex == selectedPositions[0]) {
-                            selectedPositions[0] = indexOfFirst { it.selected }
-                        } else if (selectedIndex == selectedPositions[1]) {
-                            selectedPositions[1] = indexOfLast { it.selected }
-                        }
-                    } else {
-                        if (selectedIndex < selectedPositions[0]) {
-                            selectedPositions[0] = selectedIndex
-                        } else if (selectedIndex > selectedPositions[1]) {
-                            selectedPositions[1] = selectedIndex
+
+                    range.forEach { index ->
+                        val inbetweenItem = chapters[index]
+                        if (!inbetweenItem.selected) {
+                            selectedChapterIds.add(inbetweenItem.id)
+                            updates += inbetweenItem.copy(selected = true)
                         }
                     }
                 }
+            } else if (!fromLongPress) {
+                if (!selected) {
+                    if (selectedIndex == selectedPositions[0]) {
+                        selectedPositions[0] = chapters.indexOfFirst { it.selected && it.id != item.id }
+                    } else if (selectedIndex == selectedPositions[1]) {
+                        selectedPositions[1] = chapters.indexOfLast { it.selected && it.id != item.id }
+                    }
+                } else if (selectedIndex < selectedPositions[0]) {
+                    selectedPositions[0] = selectedIndex
+                } else if (selectedIndex > selectedPositions[1]) {
+                    selectedPositions[1] = selectedIndex
+                }
             }
-            successState.copy(chapters = newChapters).rebuildChapterPresentation()
+            successState.updateChapterItems(updates)
         }
     }
 
     fun toggleAllSelection(selected: Boolean) {
+        if (!selected && selectedChapterIds.isEmpty()) return
         updateSuccessState { successState ->
-            val newChapters = successState.chapters.map {
+            val updates = successState.chapters.mapNotNull {
+                if (it.selected == selected) return@mapNotNull null
                 selectedChapterIds.addOrRemove(it.id, selected)
                 it.copy(selected = selected)
             }
             selectedPositions[0] = -1
             selectedPositions[1] = -1
-            successState.copy(chapters = newChapters).rebuildChapterPresentation()
+            successState.updateChapterItems(updates)
         }
     }
 
     fun invertSelection() {
         updateSuccessState { successState ->
-            val newChapters = successState.chapters.map {
+            val updates = successState.chapters.map {
                 selectedChapterIds.addOrRemove(it.id, !it.selected)
                 it.copy(selected = !it.selected)
             }
             selectedPositions[0] = -1
             selectedPositions[1] = -1
-            successState.copy(chapters = newChapters).rebuildChapterPresentation()
+            successState.updateChapterItems(updates)
         }
     }
 
@@ -2302,6 +2292,35 @@ class EntryScreenModel(
                 hideMissingChapters = hideMissingChapters,
             ),
         ) : State {
+            fun containsChapter(download: EntryDownloadStatus): Boolean =
+                chapter(download) != null
+
+            fun chapter(download: EntryDownloadStatus): EntryChapterList.Item? {
+                val item = chapterPresentation.rawIndexOf(download.chapterId)?.let(chapters::get) ?: return null
+                return item.takeIf { it.entry.type == download.entryType }
+            }
+
+            fun updateChapterItems(
+                items: Collection<EntryChapterList.Item>,
+                rebuildPresentation: Boolean = false,
+            ): Success {
+                if (items.isEmpty()) return this
+                var updatedChapters: PersistentList<EntryChapterList.Item> = chapters.toPersistentList()
+                items.forEach { item ->
+                    chapterPresentation.rawIndexOf(item.id)?.let { index ->
+                        updatedChapters = updatedChapters.replacingAt(index, item)
+                    }
+                }
+                return if (rebuildPresentation) {
+                    copy(chapters = updatedChapters).rebuildChapterPresentation()
+                } else {
+                    copy(
+                        chapters = updatedChapters,
+                        chapterPresentation = chapterPresentation.updateItems(items),
+                    )
+                }
+            }
+
             val processedChapters: List<EntryChapterList.Item>
                 get() = chapterPresentation.processedChapters
 
@@ -2312,11 +2331,29 @@ class EntryScreenModel(
             val isAnySelected: Boolean
                 get() = chapterPresentation.isAnySelected
 
+            val selectedChapters: List<EntryChapterList.Item>
+                get() = chapterPresentation.selectedChapters
+
+            val hasUnreadChapters: Boolean
+                get() = chapterPresentation.hasUnreadChapters
+
+            val hasReadChapters: Boolean
+                get() = chapterPresentation.hasReadChapters
+
+            fun chapterListIndex(chapterId: Long?): Int? =
+                chapterId?.let(chapterPresentation::rowIndexOf)
+
+            fun processedChapterIndex(chapterId: Long): Int? =
+                chapterPresentation.processedIndexOf(chapterId)
+
             val chapterListItems: List<EntryChapterList>
                 get() = chapterPresentation.rows
 
             val missingChildCount: Int
                 get() = chapterPresentation.aggregateMissingCount
+
+            val downloadSourceIds: Set<Long>
+                get() = chapterPresentation.sourceIds
 
             fun rebuildChapterPresentation(): Success {
                 return copy(

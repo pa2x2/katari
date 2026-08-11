@@ -4,6 +4,7 @@ import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryProgressState
 
 /** Feature-owned gate for finding and opening the next child of an Entry. */
 interface EntryContinueFeature {
@@ -16,6 +17,28 @@ interface EntryContinueFeature {
     }
 
     suspend fun continueEntry(context: Context, entry: Entry): EntryContinueResult
+}
+
+interface SeededEntryContinueBatchFeature {
+    suspend fun nextTargets(
+        entries: List<Entry>,
+        seed: EntryContinueBatchSeed,
+    ): Map<Long, EntryContinueTargetResult>
+}
+
+data class EntryContinueBatchSeed(
+    val completeOwnerIds: Set<Long>,
+    val chapters: List<EntryChapter>,
+    val progressStates: List<EntryProgressState>,
+) {
+    init {
+        require(chapters.all { it.entryId in completeOwnerIds }) {
+            "Seeded Continue chapters must belong to complete owners"
+        }
+        require(progressStates.all { it.entryId in completeOwnerIds }) {
+            "Seeded Continue progress must belong to complete owners"
+        }
+    }
 }
 
 sealed interface EntryContinueTargetResult {

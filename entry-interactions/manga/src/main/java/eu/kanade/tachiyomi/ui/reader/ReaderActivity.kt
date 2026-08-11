@@ -66,6 +66,9 @@ import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
 import eu.kanade.tachiyomi.ui.reader.setting.toViewer
+import eu.kanade.tachiyomi.ui.reader.startup.ReaderStartupErrorScreen
+import eu.kanade.tachiyomi.ui.reader.startup.ReaderStartupLoadingScreen
+import eu.kanade.tachiyomi.ui.reader.startup.ReaderStartupState
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderProgressIndicator
 import eu.kanade.tachiyomi.ui.reader.viewer.pager.R2LPagerViewer
 import eu.kanade.tachiyomi.util.system.toast
@@ -211,13 +214,6 @@ class ReaderActivity : EntryInteractionActivity() {
             .launchIn(lifecycleScope)
 
         viewModel.state
-            .map { it.initError }
-            .distinctUntilChanged()
-            .filterNotNull()
-            .onEach(::setInitialChapterError)
-            .launchIn(lifecycleScope)
-
-        viewModel.state
             .map { it.isLoadingAdjacentChapter }
             .distinctUntilChanged()
             .onEach(::setProgressDialog)
@@ -271,8 +267,23 @@ class ReaderActivity : EntryInteractionActivity() {
             .launchIn(lifecycleScope)
     }
 
-    private fun ReaderActivityBinding.setComposeOverlay(): Unit = composeOverlay.setReaderComposeContent {
+    private fun ReaderActivityBinding.setComposeOverlay(): Unit = composeOverlay.setReaderComposeContent content@{
         val state by viewModel.state.collectAsState()
+        when (val startup = state.startupState) {
+            ReaderStartupState.Loading -> {
+                ReaderStartupLoadingScreen()
+                return@content
+            }
+            is ReaderStartupState.Failed -> {
+                ReaderStartupErrorScreen(
+                    failure = startup,
+                    onRetry = viewModel::retryInitialChapter,
+                    onClose = ::finish,
+                )
+                return@content
+            }
+            ReaderStartupState.Ready -> Unit
+        }
         val showPageNumber by readerPreferences.showPageNumber.collectAsState()
         val settingsScreenModel = remember {
             ReaderSettingsScreenModel(
@@ -673,16 +684,6 @@ class ReaderActivity : EntryInteractionActivity() {
     }
 
     /**
-     * Called from the presenter if the initial load couldn't load the pages of the chapter. In
-     * this case the activity is closed and a toast is shown to the user.
-     */
-    private fun setInitialChapterError(error: Throwable) {
-        logcat(LogPriority.ERROR, error)
-        finish()
-        toast(error.message)
-    }
-
-    /**
      * Called from the presenter whenever it's loading the next or previous chapter. It shows or
      * dismisses a non-cancellable dialog to prevent user interaction according to the value of
      * [show]. This is only used when the next/previous buttons on the toolbar are clicked; the
@@ -750,6 +751,13 @@ class ReaderActivity : EntryInteractionActivity() {
      */
     internal fun requestTransitionChapterLoad(chapter: ReaderChapter) {
         lifecycleScope.launchIO { viewModel.loadChapterForTransition(chapter) }
+    }
+
+    /**
+     * Stops automatic movement when the active viewer detects direct manipulation.
+     */
+    internal fun onViewerDirectManipulation() {
+        stopAutoScroll(showToast = false)
     }
 
     /**

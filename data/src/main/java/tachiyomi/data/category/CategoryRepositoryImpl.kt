@@ -3,17 +3,21 @@ package tachiyomi.data.category
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
+import tachiyomi.data.query.chunkedForSqlQuery
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.category.repository.CategoryRepository
+import tachiyomi.domain.category.repository.LibraryCategoryMappingObserver
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CategoryRepositoryImpl(
     private val handler: DatabaseHandler,
     private val profileProvider: ActiveProfileProvider,
-) : CategoryRepository {
+) : CategoryRepository, LibraryCategoryMappingObserver {
 
     override suspend fun get(id: Long): Category? {
         return handler.awaitOneOrNull {
@@ -69,13 +73,34 @@ class CategoryRepositoryImpl(
     ): Map<Long, List<Long>> {
         if (entryIds.isEmpty()) return emptyMap()
 
-        return handler.await {
-            categoriesQueries.getEntryCategoryMappings(profileId, entryIds)
-                .awaitAsList()
-                .groupBy(
-                    keySelector = { it.entry_id },
-                    valueTransform = { it.category_id },
-                )
+        return entryIds.distinct().chunkedForSqlQuery()
+            .flatMap { entryIdChunk ->
+                handler.awaitList {
+                    categoriesQueries.getEntryCategoryMappings(profileId, entryIdChunk)
+                }
+            }
+            .groupBy(
+                keySelector = { it.entry_id },
+                valueTransform = { it.category_id },
+            )
+    }
+
+    override fun observeCategoryIdsByEntryIds(
+        profileId: Long,
+        entryIds: List<Long>,
+    ): Flow<Map<Long, List<Long>>> {
+        if (entryIds.isEmpty()) return flowOf(emptyMap())
+
+        val chunkFlows = entryIds.distinct().chunkedForSqlQuery().map { entryIdChunk ->
+            handler.subscribeToList {
+                categoriesQueries.getEntryCategoryMappings(profileId, entryIdChunk)
+            }
+        }
+        return combine(chunkFlows) { chunkMappings ->
+            chunkMappings.flatMap { it }.groupBy(
+                keySelector = { it.entry_id },
+                valueTransform = { it.category_id },
+            )
         }
     }
 

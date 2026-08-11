@@ -45,10 +45,16 @@ internal sealed interface PreparedBookContent {
 
 internal sealed interface BookReaderPrepareResult {
     data class Success(val request: PreparedBookReaderRequest) : BookReaderPrepareResult
-    data class Failure(val failure: BookFailure) : BookReaderPrepareResult
+    data class Failure(
+        val failure: BookFailure,
+        val canRetry: Boolean,
+    ) : BookReaderPrepareResult
 }
 
 internal sealed interface BookReaderOpenResult {
     data class Success(val session: OpenedBookReaderSession) : BookReaderOpenResult
-    data class Failure(val failure: BookFailure) : BookReaderOpenResult
+    data class Failure(
+        val failure: BookFailure,
+        val canRetry: Boolean,
+    ) : BookReaderOpenResult
 }

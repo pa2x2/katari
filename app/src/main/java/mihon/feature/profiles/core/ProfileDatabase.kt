@@ -78,12 +78,6 @@ class ProfileDatabase(
         }
     }
 
-    suspend fun getVisibleProfileCount(): Long {
-        return handler.awaitOne {
-            profilesQueries.getVisibleProfileCount()
-        }
-    }
-
     suspend fun getMangaCount(profileId: Long): Long {
         return handler.awaitOne {
             entriesQueries.countProfileFavorites(profileId)

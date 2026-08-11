@@ -243,7 +243,12 @@ data object LibraryTab : Tab {
                         currentPage = state.coercedActivePageIndex,
                         hasActiveFilters = state.hasActiveFilters,
                         showPageTabs = state.showCategoryTabs || !state.searchQuery.isNullOrEmpty(),
-                        onChangeCurrentPage = screenModel::updateActivePageIndex,
+                        showItemCounts = state.showEntryCount || !state.searchQuery.isNullOrEmpty(),
+                        onChangeCurrentPage = { index ->
+                            state.libraryData.profileId?.let { profileId ->
+                                screenModel.updateActivePageIndex(profileId, index)
+                            }
+                        },
                         onClickItem = { item ->
                             navigator.push(EntryScreen(item.entry.id))
                         },

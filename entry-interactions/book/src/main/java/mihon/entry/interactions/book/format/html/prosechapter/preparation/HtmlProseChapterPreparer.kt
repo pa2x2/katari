@@ -1,5 +1,6 @@
 package mihon.entry.interactions.book.format.html.prosechapter.preparation
 
+import eu.kanade.tachiyomi.network.HttpException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -24,6 +25,11 @@ import mihon.entry.interactions.book.format.html.prosechapter.parsing.HtmlProseD
 import mihon.entry.interactions.book.format.html.prosechapter.sanitization.HtmlProseSanitizer
 import mihon.entry.interactions.book.preparation.BookContentPreparer
 import mihon.entry.interactions.book.preparation.BookPreparationResult
+import java.net.ConnectException
+import java.net.NoRouteToHostException
+import java.net.SocketException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 
 internal class HtmlProseChapterPreparer : BookContentPreparer {
     override val id = "html.prose-chapter"
@@ -46,6 +52,7 @@ internal class HtmlProseChapterPreparer : BookContentPreparer {
                 return failure(
                     BookFailureReason.CONTENT_UNAVAILABLE,
                     error.message ?: "The prose chapter resource is unavailable",
+                    canRetry = error.isTransientBookAccessFailure(),
                 )
             }
             if (!resource.isReadableBookResource()) {
@@ -55,12 +62,13 @@ internal class HtmlProseChapterPreparer : BookContentPreparer {
                 return failure(BookFailureReason.FORMAT_UNSUPPORTED, "The primary resource is not text/html")
             }
             if (resource.size?.let { it > HtmlProseChapterContract.MAX_RAW_BYTES } == true) {
-                return failure(BookFailureReason.CONTENT_UNAVAILABLE, "The prose chapter exceeds its byte limit")
+                return failure(BookFailureReason.MALFORMED_CONTENT, "The prose chapter exceeds its byte limit")
             }
             val prepared = content.openResource(resourceId).getOrElse { error ->
                 return failure(
                     BookFailureReason.CONTENT_UNAVAILABLE,
                     error.message ?: "The prose chapter resource could not be opened",
+                    canRetry = error.isTransientBookAccessFailure(),
                 )
             }.use { opened ->
                 require(opened.metadata.id == resourceId) { "The opened prose resource identity changed" }
@@ -119,9 +127,29 @@ internal class HtmlProseChapterPreparer : BookContentPreparer {
         }
     }
 
-    private fun failure(reason: BookFailureReason, message: String): BookPreparationResult.Failure =
-        BookPreparationResult.Failure(BookFailure(reason, message))
+    private fun failure(
+        reason: BookFailureReason,
+        message: String,
+        canRetry: Boolean = false,
+    ): BookPreparationResult.Failure = BookPreparationResult.Failure(BookFailure(reason, message), canRetry)
 }
+
+private fun Throwable.isTransientBookAccessFailure(): Boolean {
+    return generateSequence(this) { it.cause }.any { error ->
+        when (error) {
+            is SocketTimeoutException,
+            is UnknownHostException,
+            is ConnectException,
+            is NoRouteToHostException,
+            is SocketException,
+            -> true
+            is HttpException -> error.code in RETRYABLE_HTTP_STATUS_CODES
+            else -> false
+        }
+    }
+}
+
+private val RETRYABLE_HTTP_STATUS_CODES = setOf(408, 425, 429, 500, 502, 503, 504, 520, 521, 522, 523, 524)
 
 private data class PreparedHtmlProseChapter(
     val document: BookDocument,

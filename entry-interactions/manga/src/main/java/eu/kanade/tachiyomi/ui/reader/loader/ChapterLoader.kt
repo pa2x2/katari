@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.reader.loader
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryImageSource
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
+import kotlinx.coroutines.CancellationException
 import mihon.core.archive.archiveReader
 import mihon.core.archive.epubReader
 import mihon.entry.interactions.manga.download.DownloadManager
@@ -37,24 +38,50 @@ internal class ChapterLoader(
             return
         }
 
+        if (chapter.state is ReaderChapter.State.Error) {
+            chapter.pageLoader?.recycle()
+            chapter.pageLoader = null
+        }
         chapter.state = ReaderChapter.State.Loading
         withIOContext {
             logcat { "Loading pages for ${chapter.chapter.name}" }
+            var pageLoader: PageLoader? = null
             try {
-                val loader = getPageLoader(chapter)
-                chapter.pageLoader = loader
+                val resolvedLoader = getPageLoader(chapter)
+                pageLoader = resolvedLoader
+                chapter.pageLoader = resolvedLoader
 
-                val pages = loader.getPages()
+                val pages = resolvedLoader.getPages()
                     .onEach { it.chapter = chapter }
 
                 if (pages.isEmpty()) {
-                    throw Exception(context.stringResource(MR.strings.page_list_empty_error))
+                    throw ReaderLoadException(
+                        message = context.stringResource(MR.strings.page_list_empty_error),
+                        canRetry = !resolvedLoader.isLocal,
+                    )
                 }
 
                 chapter.state = ReaderChapter.State.Loaded(pages)
             } catch (e: Throwable) {
-                chapter.state = ReaderChapter.State.Error(e)
-                throw e
+                if (e is CancellationException) {
+                    chapter.state = ReaderChapter.State.Error(e)
+                    throw e
+                }
+                val failure = when {
+                    e is ReaderLoadException -> e
+                    pageLoader?.isLocal == true -> ReaderLoadException(
+                        message = e.message ?: "The local chapter content could not be read.",
+                        canRetry = false,
+                        cause = e,
+                    )
+                    else -> ReaderLoadException(
+                        message = e.message ?: "The chapter pages could not be loaded.",
+                        canRetry = true,
+                        cause = e,
+                    )
+                }
+                chapter.state = ReaderChapter.State.Error(failure)
+                throw failure
             }
         }
     }
@@ -90,18 +117,34 @@ internal class ChapterLoader(
                 downloadManager,
                 downloadProvider,
             )
-            localSource != null -> localSource.getFormat(chapter.chapter.url).let { format ->
-                when (format) {
-                    is Format.Directory -> DirectoryPageLoader(format.file)
-                    is Format.Archive -> ArchivePageLoader(format.file.archiveReader(context))
-                    is Format.Epub -> EpubPageLoader(format.file.epubReader(context))
+            localSource != null -> {
+                try {
+                    localSource.getFormat(chapter.chapter.url).let { format ->
+                        when (format) {
+                            is Format.Directory -> DirectoryPageLoader(format.file)
+                            is Format.Archive -> ArchivePageLoader(format.file.archiveReader(context))
+                            is Format.Epub -> EpubPageLoader(format.file.epubReader(context))
+                        }
+                    }
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (error: Exception) {
+                    throw ReaderLoadException(
+                        message = error.message ?: "The local chapter content could not be read.",
+                        canRetry = false,
+                        cause = error,
+                    )
                 }
             }
             chapterUnifiedSource is EntryImageSource -> EntryPageLoader(chapter, chapterUnifiedSource)
-            chapterUnifiedSource is UnifiedStubSource -> error(
-                context.stringResource(MR.strings.source_not_installed, chapterUnifiedSource.toString()),
+            chapterUnifiedSource is UnifiedStubSource -> throw ReaderLoadException(
+                message = context.stringResource(MR.strings.source_not_installed, chapterUnifiedSource.toString()),
+                canRetry = false,
             )
-            else -> error(context.stringResource(MR.strings.loader_not_implemented_error))
+            else -> throw ReaderLoadException(
+                message = context.stringResource(MR.strings.loader_not_implemented_error),
+                canRetry = false,
+            )
         }
     }
 }

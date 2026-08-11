@@ -4,6 +4,7 @@ import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import logcat.LogPriority
 import tachiyomi.core.common.util.lang.toLong
@@ -11,6 +12,7 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.data.MemoColumnAdapter
+import tachiyomi.data.query.chunkedForSqlQuery
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 
@@ -33,8 +35,13 @@ class EntryChapterRepositoryImpl(
 
     override fun getChaptersByEntryIds(entryIds: List<Long>): Flow<List<EntryChapter>> {
         if (entryIds.isEmpty()) return kotlinx.coroutines.flow.flowOf(emptyList())
-        return handler.subscribeToList {
-            chaptersQueries.getChaptersByEntryIds(entryIds, EntryMapper::mapChapter)
+        val chunkFlows = entryIds.distinct().chunkedForSqlQuery().map { entryIdChunk ->
+            handler.subscribeToList {
+                chaptersQueries.getChaptersByEntryIds(entryIdChunk, EntryMapper::mapChapter)
+            }
+        }
+        return combine(chunkFlows) { chapterChunks ->
+            chapterChunks.flatMap { it }
         }
     }
 

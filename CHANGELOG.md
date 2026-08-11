@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.3.1] - 2026-08-11
+
+### 🐛 Fixed
+
+- Manga and book readers now keep retryable startup failures on screen with a `Retry` action instead of closing immediately.
+- Webtoon auto-scroll now stops when you manually scroll, zoom, or drag the reader.
+- Library tabs now preserve the selected page separately for each profile when switching profiles.
+
+### 🧩 Improved
+
+- Unread book chapters with saved partial progress now show a percentage read in chapter lists when available.
+
+### ⚡️ Performance
+
+- Improved responsiveness during profile startup and when browsing large libraries or entry chapter lists.
+
 ## [1.3.0] - 2026-08-10
 
 ### 🌟 Highlights
@@ -128,7 +144,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.3.1...HEAD
+[1.3.1]: https://github.com/pa2x2/katari/releases/tag/v1.3.1
 [1.3.0]: https://github.com/pa2x2/katari/releases/tag/v1.3.0
 [1.2.1]: https://github.com/pa2x2/katari/releases/tag/v1.2.1
 [1.2.0]: https://github.com/pa2x2/katari/releases/tag/v1.2.0

@@ -43,11 +43,6 @@ FROM profiles
 WHERE uuid = :uuid
 LIMIT 1;
 
-getVisibleProfileCount:
-SELECT count(*)
-FROM profiles
-WHERE is_archived = 0;
-
 insert:
 INSERT INTO profiles(uuid, name, color_seed, position, requires_auth, is_archived, created_at, updated_at)
 VALUES (:uuid, :name, :colorSeed, :position, :requiresAuth, :isArchived, strftime('%s', 'now'), strftime('%s', 'now'));

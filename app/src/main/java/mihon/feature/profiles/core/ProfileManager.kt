@@ -12,7 +12,6 @@ import eu.kanade.tachiyomi.extension.ExtensionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -60,19 +59,13 @@ class ProfileManager(
     val profiles: StateFlow<List<Profile>> = profileDatabase.subscribeProfiles(includeArchived = true)
         .stateIn(scope, SharingStarted.Eagerly, emptyList())
 
-    val visibleProfiles: StateFlow<List<Profile>> = profileDatabase.subscribeProfiles(includeArchived = false)
+    val visibleProfiles: StateFlow<List<Profile>> = profiles
+        .map { profiles -> profiles.filterNot(Profile::isArchived) }
         .stateIn(scope, SharingStarted.Eagerly, emptyList())
 
     val activeProfile: StateFlow<Profile?> = combine(profiles, switchRequests) { profiles, activeId ->
         profiles.firstOrNull { it.id == activeId }
     }.stateIn(scope, SharingStarted.Eagerly, null)
-
-    val shouldShowPicker: Flow<Boolean> = profileDatabase.subscribeProfiles(includeArchived = false)
-        .map { it.size > 1 }
-
-    suspend fun shouldShowPickerOnLaunch(): Boolean {
-        return profilesPreferences.pickerEnabled.get() && profileDatabase.getVisibleProfileCount() > 1
-    }
 
     suspend fun ensureDefaultProfile() {
         val defaultProfile = profileDatabase.getProfileById(ProfileConstants.DEFAULT_PROFILE_ID)
@@ -90,20 +83,30 @@ class ProfileManager(
         migrateLegacyPreferencesIfNeeded()
     }
 
-    suspend fun loadInitialProfile(): Profile? {
+    suspend fun loadStartupSnapshot(): ProfileStartupSnapshot {
         ensureDefaultProfile()
+        val loadedProfiles = profileDatabase.getProfiles(includeArchived = true)
+        val visibleProfiles = loadedProfiles.filterNot(Profile::isArchived)
         val activeId = profilesPreferences.activeProfileId.get()
-        val profile = profileDatabase.getProfileById(activeId)
-            ?: visibleProfiles.value.firstOrNull()
-            ?: profileDatabase.getProfileById(ProfileConstants.DEFAULT_PROFILE_ID)
-        if (profile != null) {
-            setActiveProfile(profile.id, rescheduleJobs = false)
+        val initialProfile = loadedProfiles.firstOrNull { it.id == activeId }
+            ?: visibleProfiles.firstOrNull()
+            ?: loadedProfiles.firstOrNull { it.id == ProfileConstants.DEFAULT_PROFILE_ID }
+        if (initialProfile != null) {
+            activateProfile(initialProfile, rescheduleJobs = false)
         }
-        return profile
+        return ProfileStartupSnapshot(
+            initialProfile = initialProfile,
+            visibleProfiles = visibleProfiles,
+            shouldShowPicker = profilesPreferences.pickerEnabled.get() && visibleProfiles.size > 1,
+        )
     }
 
     suspend fun setActiveProfile(profileId: Long, rescheduleJobs: Boolean = true) {
         val profile = profileDatabase.getProfileById(profileId) ?: return
+        activateProfile(profile, rescheduleJobs)
+    }
+
+    private fun activateProfile(profile: Profile, rescheduleJobs: Boolean) {
         profileStore.setCurrentProfileId(profile.id)
         switchRequests.value = profile.id
         if (rescheduleJobs) {
@@ -158,7 +161,7 @@ class ProfileManager(
         if (profileId == ProfileConstants.DEFAULT_PROFILE_ID) return
         val profile = profileDatabase.getProfileById(profileId) ?: return
         if (!profile.isArchived) return
-        val fallback = visibleProfiles.value.firstOrNull { it.id != profileId }
+        val fallback = profiles.value.firstOrNull { !it.isArchived && it.id != profileId }
             ?: profileDatabase.getProfileById(ProfileConstants.DEFAULT_PROFILE_ID)
         if (activeProfileId == profileId && fallback != null) {
             setActiveProfile(fallback.id)
