@@ -15,6 +15,7 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.service.sortedForMergedDisplay
 import tachiyomi.domain.entry.service.sortedForReading
 import tachiyomi.i18n.MR
+import kotlin.math.roundToInt
 
 internal class BookChildListProcessor(
     private val entryProgressRepository: EntryProgressRepository,
@@ -38,12 +39,22 @@ internal class BookChildListProcessor(
         if (stateFlows.isEmpty()) return flowOf(emptyMap())
 
         return combine(stateFlows) { statesByMember ->
-            val progressByChapterId = statesByMember.flatMap { it }.associateBy { it.chapterId }
+            val progressByChapterId = statesByMember
+                .flatMap { it }
+                .filter { it.chapterId != null }
+                .groupBy { it.chapterId }
+                .mapValues { (_, states) -> states.maxBy { it.locatorUpdatedAt } }
             request.chapters.mapNotNull { chapter ->
                 if (chapter.read) return@mapNotNull null
                 val progress = progressByChapterId[chapter.id] ?: return@mapNotNull null
                 if (!progress.hasPartialBookProgress) return@mapNotNull null
-                chapter.id to EntryChildProgressLabel(MR.strings.label_started)
+                val label = progress.locator.progression?.let { progression ->
+                    EntryChildProgressLabel(
+                        resource = MR.strings.book_chapter_progress,
+                        args = listOf((progression * 100).roundToInt().coerceIn(0, 100)),
+                    )
+                } ?: EntryChildProgressLabel(MR.strings.label_started)
+                chapter.id to label
             }.toMap()
         }
     }

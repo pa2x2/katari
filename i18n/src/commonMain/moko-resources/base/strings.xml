@@ -1444,6 +1444,7 @@
     <string name="cover_updated">Cover updated</string>
     <string name="share_page_info">%1$s: %2$s, page %3$d</string>
     <string name="chapter_progress">Page: %1$d</string>
+    <string name="book_chapter_progress">%1$d%% read</string>
     <string name="episode_progress_timestamp">%1$s / %2$s</string>
     <string name="episode_progress_position">%1$s</string>
     <string name="no_next_chapter">Next chapter not found</string>
