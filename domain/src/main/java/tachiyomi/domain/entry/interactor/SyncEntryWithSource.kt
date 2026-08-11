@@ -24,7 +24,6 @@ import tachiyomi.domain.entry.service.FetchInterval
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.model.SourceNotInstalledException
 import tachiyomi.domain.source.service.SourceManager
-import kotlin.math.abs
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -214,7 +213,11 @@ class SyncEntryWithSource(
         val chaptersToUpdate = mutableListOf<EntryChapter>()
         val progressResourcesToRekey = mutableListOf<ProgressResourceRekey>()
         val matchedChapterIds = mutableSetOf<Long>()
-        val remainingChapters = representativeChapters.toMutableList()
+        val chapterMatcher = EntrySourceChapterMatcher(
+            chapters = representativeChapters,
+            currentSourceUrls = currentSourceUrls,
+            currentSourceNames = currentSourceNames,
+        )
         var maxSeenUploadDate = 0L
 
         fun resolveDateUpload(sourceDateUpload: Long, existingDateUpload: Long? = null): Long {
@@ -228,38 +231,14 @@ class SyncEntryWithSource(
             }
         }
 
-        fun matchChapter(
-            sourceChapter: IndexedSourceChapter,
-            predicate: (EntryChapter) -> Boolean,
-        ): EntryChapter? {
-            val candidates = remainingChapters.filter(predicate)
-            val exactSourceOrderCandidate = candidates.firstOrNull { it.sourceOrder == sourceChapter.sourceOrder }
-            val matchedChapter = exactSourceOrderCandidate
-                ?: candidates.singleOrNull()
-                ?: candidates.minByOrNull { abs(it.sourceOrder - sourceChapter.sourceOrder) }
-            if (matchedChapter != null) {
-                remainingChapters.remove(matchedChapter)
-            }
-            return matchedChapter
-        }
-
         sourceChapters.forEach { sourceChapter ->
             val sourceDateUpload = sourceChapter.chapter.dateUpload
-            val existingChapter = matchChapter(sourceChapter) { it.url == sourceChapter.chapter.url }
-                ?: matchChapter(sourceChapter) {
-                    it.name == sourceChapter.resolvedName && it.chapterNumber == sourceChapter.chapterNumber
-                }
-                ?: matchChapter(sourceChapter) { it.name == sourceChapter.resolvedName }
-                ?: matchChapter(sourceChapter) {
-                    sourceChapter.chapterNumber >= 0.0 &&
-                        it.chapterNumber == sourceChapter.chapterNumber &&
-                        it.url !in currentSourceUrls &&
-                        it.name !in currentSourceNames
-                }
-                ?: matchChapter(sourceChapter) {
-                    sourceChapter.chapterNumber < 0.0 && sourceChapter.resolvedName == sourceChapter.chapter.url &&
-                        it.sourceOrder == sourceChapter.sourceOrder
-                }
+            val existingChapter = chapterMatcher.match(
+                sourceUrl = sourceChapter.chapter.url,
+                resolvedName = sourceChapter.resolvedName,
+                chapterNumber = sourceChapter.chapterNumber,
+                sourceOrder = sourceChapter.sourceOrder,
+            )
 
             if (existingChapter == null) {
                 val chapterToInsert = sourceChapter.chapter.toDomainChapter(
