@@ -754,6 +754,13 @@ class ReaderActivity : EntryInteractionActivity() {
     }
 
     /**
+     * Stops automatic movement when the active viewer detects direct manipulation.
+     */
+    internal fun onViewerDirectManipulation() {
+        stopAutoScroll(showToast = false)
+    }
+
+    /**
      * Called from the viewer to toggle the visibility of the menu. It's implemented on the
      * viewer because each one implements its own touch and key events.
      */

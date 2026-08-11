@@ -91,6 +91,7 @@ internal class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boo
         recycler.itemAnimator = null
         recycler.layoutManager = layoutManager
         recycler.adapter = adapter
+        recycler.directManipulationListener = activity::onViewerDirectManipulation
         recycler.addOnScrollListener(
             object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {

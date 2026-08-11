@@ -51,6 +51,7 @@ internal class WebtoonRecyclerView @JvmOverloads constructor(
 
     var tapListener: ((MotionEvent) -> Unit)? = null
     var longTapListener: ((MotionEvent) -> Boolean)? = null
+    var directManipulationListener: (() -> Unit)? = null
 
     private var isManuallyScrolling = false
     private var tapDuringManualScroll = false
@@ -90,8 +91,9 @@ internal class WebtoonRecyclerView @JvmOverloads constructor(
         atLastPosition = visibleItemCount > 0 && lastVisibleItemPosition == totalItemCount - 1
         atFirstPosition = firstVisibleItemPosition == 0
 
-        if (state == SCROLL_STATE_IDLE) {
-            isManuallyScrolling = false
+        when (state) {
+            SCROLL_STATE_DRAGGING -> onManualScroll()
+            SCROLL_STATE_IDLE -> isManuallyScrolling = false
         }
     }
 
@@ -212,6 +214,7 @@ internal class WebtoonRecyclerView @JvmOverloads constructor(
     }
 
     fun onScaleBegin() {
+        directManipulationListener?.invoke()
         if (detector.isDoubleTapping) {
             detector.isQuickScaling = true
         }
@@ -225,6 +228,7 @@ internal class WebtoonRecyclerView @JvmOverloads constructor(
 
     fun onManualScroll() {
         isManuallyScrolling = true
+        directManipulationListener?.invoke()
     }
 
     inner class GestureListener : GestureDetectorWithLongTap.Listener() {
@@ -326,6 +330,7 @@ internal class WebtoonRecyclerView @JvmOverloads constructor(
 
                         if (startScroll) {
                             isZoomDragging = true
+                            onManualScroll()
                         }
                     }
 
