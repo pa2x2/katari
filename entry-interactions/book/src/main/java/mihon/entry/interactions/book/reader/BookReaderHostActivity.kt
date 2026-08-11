@@ -31,14 +31,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import logcat.LogPriority
 import mihon.book.api.BookFailure
 import mihon.book.api.BookFailureReason
 import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.processor.BookReaderRequest
 import mihon.entry.interactions.book.runtime.requireBook
 import mihon.entry.interactions.runtime.EntryInteractionActivity
 import mihon.entry.interactions.runtime.setEntryInteractionContent
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import uy.kohesive.injekt.Injekt
@@ -48,6 +52,13 @@ import uy.kohesive.injekt.api.get
 internal class BookReaderHostActivity : EntryInteractionActivity() {
     private var hostState by mutableStateOf<BookReaderHostState?>(null)
     private var launchJob: Job? = null
+    private var retrySelection: BookReaderHostState.ReaderSelected? = null
+    private val request by lazy {
+        BookReaderRequest(
+            entryId = intent.getLongExtra(EXTRA_ENTRY_ID, -1L),
+            chapterId = intent.getLongExtra(EXTRA_CHAPTER_ID, -1L),
+        )
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,25 +67,11 @@ internal class BookReaderHostActivity : EntryInteractionActivity() {
             BookReaderHostContent(
                 state = hostState,
                 onChoose = ::chooseProcessor,
+                onRetry = ::retry,
                 onClose = ::finish,
             )
         }
-
-        lifecycleScope.launch {
-            val entryId = intent.getLongExtra(EXTRA_ENTRY_ID, -1L)
-            val chapterId = intent.getLongExtra(EXTRA_CHAPTER_ID, -1L)
-            val state = if (entryId < 0L || chapterId < 0L) {
-                BookReaderHostState.Unavailable(
-                    BookFailure(
-                        reason = BookFailureReason.CONTENT_UNAVAILABLE,
-                        message = getString(R.string.book_reader_invalid_request),
-                    ),
-                )
-            } else {
-                Injekt.get<BookReaderHostResolver>().resolve(entryId, chapterId)
-            }
-            handle(state)
-        }
+        resolve()
     }
 
     private fun chooseProcessor(
@@ -82,61 +79,114 @@ internal class BookReaderHostActivity : EntryInteractionActivity() {
         processorId: String,
         remember: Boolean,
     ) {
-        handle(
-            Injekt.get<BookReaderHostResolver>().choose(
-                state = state,
-                processorId = processorId,
-                remember = remember,
+        open(
+            state = Injekt.get<BookReaderHostResolver>().choose(
+                state,
+                processorId,
+                remember,
             ),
         )
     }
 
-    private fun handle(state: BookReaderHostState) {
-        when (state) {
-            is BookReaderHostState.ReaderSelected -> launch(state)
-            else -> hostState = state
+    private fun retry() {
+        val unavailable = hostState as? BookReaderHostState.Unavailable ?: return
+        if (!unavailable.canRetry) return
+        retrySelection?.let(::open) ?: resolve()
+    }
+
+    private fun resolve() {
+        retrySelection = null
+        if (request.entryId < 0L || request.chapterId < 0L) {
+            hostState = BookReaderHostState.Unavailable(
+                failure = BookFailure(
+                    reason = BookFailureReason.CONTENT_UNAVAILABLE,
+                    message = getString(R.string.book_reader_invalid_request),
+                ),
+            )
+            return
+        }
+        runStartup(retrySelection = null) {
+            when (
+                val state = Injekt.get<BookReaderHostResolver>().resolve(
+                    request.entryId,
+                    request.chapterId,
+                )
+            ) {
+                is BookReaderHostState.ReaderSelected -> openSelected(state)
+                else -> hostState = state
+            }
         }
     }
 
-    private fun launch(state: BookReaderHostState.ReaderSelected) {
-        launchJob?.cancel()
-        hostState = null
-        launchJob = lifecycleScope.launch {
-            val result = Injekt.get<BookReaderSessionFactory>().openPrepared(
-                context = this@BookReaderHostActivity,
-                prepared = state.prepared,
-                processorId = state.processor.id,
-            )
-            when (result) {
-                is BookReaderOpenResult.Failure -> {
+    private fun open(state: BookReaderHostState.ReaderSelected) {
+        retrySelection = null
+        runStartup(retrySelection = state) { openSelected(state) }
+    }
+
+    private suspend fun openSelected(state: BookReaderHostState.ReaderSelected) {
+        val result = Injekt.get<BookReaderSessionFactory>().openPrepared(
+            context = this@BookReaderHostActivity,
+            prepared = state.prepared,
+            processorId = state.processor.id,
+        )
+        when (result) {
+            is BookReaderOpenResult.Failure -> {
+                retrySelection = state.takeIf { result.canRetry }
+                hostState = BookReaderHostState.Unavailable(
+                    failure = result.failure,
+                    descriptor = state.descriptor,
+                    canRetry = result.canRetry,
+                )
+            }
+            is BookReaderOpenResult.Success -> {
+                val registry = Injekt.get<BookReaderSessionRegistry>()
+                val token = registry.register(result.session)
+                try {
+                    startActivity(
+                        state.processor.createReaderIntent(
+                            context = this@BookReaderHostActivity,
+                            request = state.prepared.request,
+                            sessionToken = token,
+                        ),
+                    )
+                    finish()
+                } catch (error: Exception) {
+                    registry.discard(token)
+                    retrySelection = null
                     hostState = BookReaderHostState.Unavailable(
-                        failure = result.failure,
+                        failure = BookFailure(
+                            reason = BookFailureReason.PROCESSOR_UNAVAILABLE,
+                            message = error.message ?: "The selected book reader could not be started.",
+                        ),
                         descriptor = state.descriptor,
                     )
                 }
-                is BookReaderOpenResult.Success -> {
-                    val registry = Injekt.get<BookReaderSessionRegistry>()
-                    val token = registry.register(result.session)
-                    try {
-                        startActivity(
-                            state.processor.createReaderIntent(
-                                context = this@BookReaderHostActivity,
-                                request = state.prepared.request,
-                                sessionToken = token,
-                            ),
-                        )
-                        finish()
-                    } catch (error: Exception) {
-                        registry.discard(token)
-                        hostState = BookReaderHostState.Unavailable(
-                            failure = BookFailure(
-                                reason = BookFailureReason.PROCESSOR_UNAVAILABLE,
-                                message = error.message ?: "The selected book reader could not be started.",
-                            ),
-                            descriptor = state.descriptor,
-                        )
-                    }
-                }
+            }
+        }
+    }
+
+    private fun runStartup(
+        retrySelection: BookReaderHostState.ReaderSelected?,
+        block: suspend () -> Unit,
+    ) {
+        launchJob?.cancel()
+        hostState = null
+        launchJob = lifecycleScope.launch {
+            try {
+                block()
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                logcat(LogPriority.ERROR, error) { "Unexpected BOOK reader startup failure" }
+                this@BookReaderHostActivity.retrySelection = retrySelection
+                hostState = BookReaderHostState.Unavailable(
+                    failure = BookFailure(
+                        reason = BookFailureReason.CONTENT_UNAVAILABLE,
+                        message = error.message ?: "The book reader could not be opened.",
+                    ),
+                    descriptor = retrySelection?.descriptor,
+                    canRetry = true,
+                )
             }
         }
     }
@@ -159,6 +209,7 @@ internal class BookReaderHostActivity : EntryInteractionActivity() {
 private fun BookReaderHostContent(
     state: BookReaderHostState?,
     onChoose: (BookReaderHostState.ChoiceRequired, String, Boolean) -> Unit,
+    onRetry: () -> Unit,
     onClose: () -> Unit,
 ) {
     when (state) {
@@ -173,6 +224,7 @@ private fun BookReaderHostContent(
                 state.failure.message,
             ),
             closeLabel = stringResource(R.string.book_reader_close),
+            onRetry = onRetry.takeIf { state.canRetry },
             onClose = onClose,
         )
         is BookReaderHostState.ChoiceRequired -> BookProcessorChooserDialog(

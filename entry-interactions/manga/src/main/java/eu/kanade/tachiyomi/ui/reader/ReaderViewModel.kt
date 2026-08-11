@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import eu.kanade.tachiyomi.data.database.models.toDomainChapter
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.ui.reader.loader.ChapterLoader
+import eu.kanade.tachiyomi.ui.reader.loader.ReaderLoadException
 import eu.kanade.tachiyomi.ui.reader.model.InsertPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
@@ -20,6 +21,8 @@ import eu.kanade.tachiyomi.ui.reader.model.removeDuplicates
 import eu.kanade.tachiyomi.ui.reader.model.toEntryChapter
 import eu.kanade.tachiyomi.ui.reader.model.toReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.unref
+import eu.kanade.tachiyomi.ui.reader.startup.ReaderStartupState
+import eu.kanade.tachiyomi.ui.reader.startup.toReaderStartupFailure
 import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
 import eu.kanade.tachiyomi.util.lang.byteSize
 import eu.kanade.tachiyomi.util.storage.DiskUtil
@@ -164,6 +167,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
     private var chapterToDownload: MangaDownload? = null
     private var nextChapterPreparationJob: Job? = null
     private var nextChapterPreparationId: Long? = null
+    private var startupJob: Job? = null
     private var readingModeBinding: ViewerSettingBinding<Int>? = null
     private var orientationBinding: ViewerSettingBinding<Int>? = null
 
@@ -179,7 +183,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
     private val chapterList by lazy {
         val manga = manga!!
         val entry = runBlocking { getEntry.await(manga.id) }
-            ?: error("Entry ${manga.id} not found")
+            ?: throw ReaderLoadException("Entry ${manga.id} not found", canRetry = false)
         val chapters = runBlocking { getAllEntryChapters(manga, applyScanlatorFilter = true) }
         val mergedEntryIds = chapters.map { it.entryId }.distinct()
         val progressByChapterId = mergedEntryIds
@@ -190,7 +194,10 @@ internal class ReaderViewModel @JvmOverloads constructor(
         }
 
         val selectedChapter = chapters.find { it.id == chapterId }
-            ?: error("Requested chapter of id $chapterId not found in chapter list")
+            ?: throw ReaderLoadException(
+                message = "Requested chapter of id $chapterId not found in chapter list",
+                canRetry = false,
+            )
 
         val chaptersForReader = when {
             (readerPreferences.skipRead.get() || readerPreferences.skipFiltered.get()) -> {
@@ -285,7 +292,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
             .launchIn(viewModelScope)
 
         if (hasValidArgs) {
-            viewModelScope.launch { init() }
+            startInitialChapterLoad()
         }
     }
 
@@ -308,25 +315,53 @@ internal class ReaderViewModel @JvmOverloads constructor(
     }
 
     /**
-     * Initializes this presenter from its saved launch state. This method fetches the entry and
-     * initializes the selected chapter. Failures are reported through [State.initError].
+     * Retries loading the originally requested chapter without changing its saved identity or page.
      */
-    private suspend fun init() {
+    fun retryInitialChapter() {
+        val failure = state.value.startupState as? ReaderStartupState.Failed ?: return
+        if (!failure.canRetry) return
+        startInitialChapterLoad()
+    }
+
+    private fun startInitialChapterLoad() {
+        startupJob?.cancel()
+        mutableState.update { it.copy(startupState = ReaderStartupState.Loading) }
+        startupJob = viewModelScope.launch { loadInitialChapter() }
+    }
+
+    /** Initializes reader-owned dependencies once, then loads the saved requested chapter. */
+    private suspend fun loadInitialChapter() {
         withIOContext {
             try {
-                val entry = getEntry.await(mangaId) ?: error("Requested entry of id $mangaId not found")
-                sourceManager.isInitialized.first { it }
-                installViewerSettingBindings(entry)
-
-                val context = Injekt.get<Application>()
-                loader = ChapterLoader(context, downloadManager, downloadProvider, entry, sourceManager)
-
-                loadChapter(loader!!, chapterList.first { chapterId == it.chapter.id })
+                val activeLoader = loader ?: run {
+                    val entry = getEntry.await(mangaId)
+                        ?: throw ReaderLoadException(
+                            message = "Requested entry of id $mangaId not found",
+                            canRetry = false,
+                        )
+                    sourceManager.isInitialized.first { it }
+                    installViewerSettingBindings(entry)
+                    ChapterLoader(
+                        context = Injekt.get<Application>(),
+                        downloadManager = downloadManager,
+                        downloadProvider = downloadProvider,
+                        manga = entry,
+                        sourceManager = sourceManager,
+                    ).also { loader = it }
+                }
+                val requestedChapter = chapterList.firstOrNull { chapterId == it.chapter.id }
+                    ?: throw ReaderLoadException(
+                        message = "Requested chapter of id $chapterId not found in chapter list",
+                        canRetry = false,
+                    )
+                loadChapter(activeLoader, requestedChapter)
+                mutableState.update { it.copy(startupState = ReaderStartupState.Ready) }
             } catch (e: Throwable) {
                 if (e is CancellationException) {
                     throw e
                 }
-                mutableState.update { it.copy(initError = e) }
+                logcat(LogPriority.ERROR, e) { "Failed to open the initial reader chapter" }
+                mutableState.update { it.copy(startupState = e.toReaderStartupFailure()) }
             }
         }
     }
@@ -751,6 +786,8 @@ internal class ReaderViewModel @JvmOverloads constructor(
     private suspend fun installViewerSettingBindings(entry: Entry) {
         val readingMode = viewerSettingBinder.resolve(readerPreferences.readingModeSetting, entry.id)
         val orientation = viewerSettingBinder.resolve(readerPreferences.orientationSetting, entry.id)
+        val newReadingModeBinding = viewerSettingBinder.bind(readerPreferences.readingModeSetting, entry.id)
+        val newOrientationBinding = viewerSettingBinder.bind(readerPreferences.orientationSetting, entry.id)
         mutableState.update {
             it.copy(
                 manga = entry,
@@ -761,14 +798,14 @@ internal class ReaderViewModel @JvmOverloads constructor(
             )
         }
 
-        readingModeBinding = viewerSettingBinder.bind(readerPreferences.readingModeSetting, entry.id).also { binding ->
+        readingModeBinding = newReadingModeBinding.also { binding ->
             binding.state
                 .drop(1)
                 .distinctUntilChanged()
                 .onEach(::updateReadingMode)
                 .launchIn(viewModelScope)
         }
-        orientationBinding = viewerSettingBinder.bind(readerPreferences.orientationSetting, entry.id).also { binding ->
+        orientationBinding = newOrientationBinding.also { binding ->
             binding.state
                 .drop(1)
                 .distinctUntilChanged()
@@ -1011,8 +1048,8 @@ internal class ReaderViewModel @JvmOverloads constructor(
 
     @Immutable
     data class State(
+        val startupState: ReaderStartupState = ReaderStartupState.Loading,
         val manga: Entry? = null,
-        val initError: Throwable? = null,
         val viewerChapters: ViewerChapters? = null,
         val bookmarked: Boolean = false,
         val isLoadingAdjacentChapter: Boolean = false,

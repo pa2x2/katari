@@ -9,6 +9,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.InfoScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
 
@@ -31,6 +33,7 @@ internal fun BookReaderErrorScreen(
     title: String,
     message: String,
     closeLabel: String,
+    onRetry: (() -> Unit)?,
     onClose: () -> Unit,
 ) {
     Surface(
@@ -41,8 +44,10 @@ internal fun BookReaderErrorScreen(
             icon = Icons.Outlined.ErrorOutline,
             headingText = title,
             subtitleText = message,
-            acceptText = closeLabel,
-            onAcceptClick = onClose,
+            acceptText = if (onRetry != null) stringResource(MR.strings.action_retry) else closeLabel,
+            onAcceptClick = onRetry ?: onClose,
+            rejectText = closeLabel.takeIf { onRetry != null },
+            onRejectClick = onClose.takeIf { onRetry != null },
             content = {},
         )
     }

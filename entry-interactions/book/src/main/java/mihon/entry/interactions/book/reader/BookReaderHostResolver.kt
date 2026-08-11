@@ -19,7 +19,12 @@ internal class BookReaderHostResolver(
     suspend fun resolve(entryId: Long, chapterId: Long): BookReaderHostState {
         val request = BookReaderRequest(entryId, chapterId)
         val prepared = when (val result = sessionFactory.prepare(request)) {
-            is BookReaderPrepareResult.Failure -> return BookReaderHostState.Unavailable(result.failure)
+            is BookReaderPrepareResult.Failure -> {
+                return BookReaderHostState.Unavailable(
+                    failure = result.failure,
+                    canRetry = result.canRetry,
+                )
+            }
             is BookReaderPrepareResult.Success -> result.request
         }
         val descriptor = prepared.content.descriptor
@@ -86,6 +91,7 @@ internal sealed interface BookReaderHostState {
     data class Unavailable(
         val failure: BookFailure,
         val descriptor: BookContentDescriptor? = null,
+        val canRetry: Boolean = false,
     ) : BookReaderHostState
 
     data class ChoiceRequired(

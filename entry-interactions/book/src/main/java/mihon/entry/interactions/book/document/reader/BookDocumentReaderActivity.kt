@@ -13,6 +13,8 @@ import androidx.compose.runtime.setValue
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import eu.kanade.tachiyomi.util.system.toast
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -62,6 +64,13 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     private lateinit var childWebViewResolver: BookChildWebViewResolver
     private lateinit var chapterCoordinator: BookDocumentChapterCoordinator
     private lateinit var readerSystemBars: BookDocumentReaderSystemBars
+    private var startupJob: Job? = null
+    private val startupRequest by lazy {
+        BookReaderRequest(
+            entryId = intent.getLongExtra(EXTRA_ENTRY_ID, -1L),
+            chapterId = intent.getLongExtra(EXTRA_CHAPTER_ID, -1L),
+        )
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -102,6 +111,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                     title = getString(R.string.book_reader_unavailable_title),
                     message = surface.message,
                     closeLabel = getString(R.string.book_reader_close),
+                    onRetry = ::retryOpen.takeIf { surface.canRetry },
                     onClose = ::finish,
                 )
                 BookDocumentReaderSurfaceState.Ready -> readerState?.let { state ->
@@ -131,7 +141,12 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                 }
             }
         }
-        lifecycleScope.launch { open() }
+        if (startupRequest.entryId < 0L || startupRequest.chapterId < 0L) {
+            showError(getString(R.string.book_reader_invalid_request))
+        } else {
+            installSettingBindings(startupRequest.entryId)
+            startOpen()
+        }
     }
 
     override fun onStart() {
@@ -170,19 +185,11 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         super.onDestroy()
     }
 
-    private suspend fun open() {
-        val request = BookReaderRequest(
-            entryId = intent.getLongExtra(EXTRA_ENTRY_ID, -1L),
-            chapterId = intent.getLongExtra(EXTRA_CHAPTER_ID, -1L),
-        )
-        if (request.entryId < 0L || request.chapterId < 0L) {
-            showError(getString(R.string.book_reader_invalid_request))
-            return
-        }
+    private fun installSettingBindings(entryId: Long) {
         val bindings = BookDocumentReaderSettingBindings.create(
             provider = Injekt.get<BookDocumentReaderSettingsProvider>(),
             binder = Injekt.get<ViewerSettingBinder>(),
-            entryId = request.entryId,
+            entryId = entryId,
         )
         settingBindings = bindings
         lifecycleScope.launch {
@@ -205,19 +212,47 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                 .distinctUntilChanged()
                 .collect { applyReaderSystemBars() }
         }
+    }
+
+    private fun retryOpen() {
+        val error = surfaceState as? BookDocumentReaderSurfaceState.Error ?: return
+        if (!error.canRetry) return
+        startOpen()
+    }
+
+    private fun startOpen() {
+        startupJob?.cancel()
+        surfaceState = BookDocumentReaderSurfaceState.Loading
+        startupJob = lifecycleScope.launch {
+            try {
+                open()
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                logcat(LogPriority.ERROR, error) { "Unexpected BOOK document reader startup failure" }
+                showError(error.message ?: "The book reader could not be opened.", canRetry = true)
+            }
+        }
+    }
+
+    private suspend fun open() {
         val retained = retainedSessions.currentSession()
         val token = intent.getStringExtra(EXTRA_SESSION_TOKEN)
         val handedOff = if (retained == null && !token.isNullOrBlank()) {
-            Injekt.get<BookReaderSessionRegistry>().claim(token, request)
+            Injekt.get<BookReaderSessionRegistry>().claim(token, startupRequest)
         } else {
             null
         }
         val result = when (val existing = retained ?: handedOff) {
-            null -> Injekt.get<BookReaderSessionFactory>().open(this, request, BookDocumentReaderProcessor.PROCESSOR_ID)
+            null -> Injekt.get<BookReaderSessionFactory>().open(
+                this,
+                startupRequest,
+                BookDocumentReaderProcessor.PROCESSOR_ID,
+            )
             else -> BookReaderOpenResult.Success(existing)
         }
         when (result) {
-            is BookReaderOpenResult.Failure -> showError(result.failure.message)
+            is BookReaderOpenResult.Failure -> showError(result.failure.message, result.canRetry)
             is BookReaderOpenResult.Success -> {
                 if (retained == null) retainedSessions.attachInitial(result.session)
                 showInitialSession(result.session)
@@ -334,9 +369,9 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         )
     }
 
-    private fun showError(message: String) {
+    private fun showError(message: String, canRetry: Boolean = false) {
         readerSystemBars.showAppBars()
-        surfaceState = BookDocumentReaderSurfaceState.Error(message)
+        surfaceState = BookDocumentReaderSurfaceState.Error(message, canRetry)
     }
 
     companion object {
@@ -358,5 +393,8 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
 private sealed interface BookDocumentReaderSurfaceState {
     data object Loading : BookDocumentReaderSurfaceState
     data object Ready : BookDocumentReaderSurfaceState
-    data class Error(val message: String) : BookDocumentReaderSurfaceState
+    data class Error(
+        val message: String,
+        val canRetry: Boolean,
+    ) : BookDocumentReaderSurfaceState
 }
