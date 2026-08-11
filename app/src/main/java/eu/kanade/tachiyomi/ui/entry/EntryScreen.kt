@@ -144,21 +144,30 @@ class EntryScreen(
         }
 
         val successState = state as EntryScreenModel.State.Success
-        val downloadRequest = EntryDownloadActionRequest(
-            type = successState.entry.type,
-            sourceIds = successState.chapters.mapTo(mutableSetOf(successState.entry.source)) { it.entry.source },
-        )
-        val downloadsAvailable = entryDownloadActionFeature.individualAvailability(downloadRequest) ==
-            EntryDownloadActionAvailability.Available
-        val bulkDownloadsAvailable = entryDownloadActionFeature.bulkAvailability(
-            requests = listOf(downloadRequest),
-            action = EntryBulkDownloadAction.unread,
-        ) == EntryDownloadActionAvailability.Available
+        val downloadRequest = remember(successState.entry.type, successState.downloadSourceIds) {
+            EntryDownloadActionRequest(
+                type = successState.entry.type,
+                sourceIds = successState.downloadSourceIds + successState.entry.source,
+            )
+        }
+        val downloadCapabilities = remember(downloadRequest) {
+            Triple(
+                entryDownloadActionFeature.individualAvailability(downloadRequest) ==
+                    EntryDownloadActionAvailability.Available,
+                entryDownloadActionFeature.bulkAvailability(
+                    requests = listOf(downloadRequest),
+                    action = EntryBulkDownloadAction.unread,
+                ) == EntryDownloadActionAvailability.Available,
+                entryDownloadActionFeature.bulkAvailability(
+                    requests = listOf(downloadRequest),
+                    action = EntryBulkDownloadAction.bookmarked,
+                ) == EntryDownloadActionAvailability.Available,
+            )
+        }
+        val downloadsAvailable = downloadCapabilities.first
+        val bulkDownloadsAvailable = downloadCapabilities.second
         val bookmarksSupported = entryBookmarkFeature.isApplicable(successState.entry.type)
-        val bookmarkedDownloadsSupported = entryDownloadActionFeature.bulkAvailability(
-            requests = listOf(downloadRequest),
-            action = EntryBulkDownloadAction.bookmarked,
-        ) == EntryDownloadActionAvailability.Available
+        val bookmarkedDownloadsSupported = downloadCapabilities.third
         val previewConfig by screenModel.previewConfig.collectAsStateWithLifecycle()
         val previewState by screenModel.previewState.collectAsStateWithLifecycle()
         val webView = remember(successState.entry) {

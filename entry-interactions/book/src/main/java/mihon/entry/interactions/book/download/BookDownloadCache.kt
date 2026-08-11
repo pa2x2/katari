@@ -31,6 +31,9 @@ internal class BookDownloadCache(
     @Volatile
     private var initialized = false
     private val _packages = MutableStateFlow<Map<BookDownloadPackageKey, VerifiedBookDownloadPackage>>(emptyMap())
+
+    @Volatile
+    private var packagesByChild = emptyMap<BookDownloadChildKey, List<VerifiedBookDownloadPackage>>()
     val packages: StateFlow<Map<BookDownloadPackageKey, VerifiedBookDownloadPackage>> = _packages.asStateFlow()
     private val verifiedPackageKeys = mutableSetOf<BookDownloadPackageKey>()
     val changes: Flow<Unit> = _packages.drop(1).map {}
@@ -52,7 +55,7 @@ internal class BookDownloadCache(
                     indexStore?.read(provider.downloadsRootUri())
                 }
                 if (restored != null) {
-                    _packages.value = selectPackages(restored)
+                    publishPackages(selectPackages(restored))
                     verifiedPackageKeys.clear()
                     initialized = true
                 } else {
@@ -72,7 +75,7 @@ internal class BookDownloadCache(
             try {
                 val scan = provider.rebuildPackages()
                 val selected = selectPackages(scan.packages)
-                _packages.value = selected
+                publishPackages(selected)
                 verifiedPackageKeys.clear()
                 verifiedPackageKeys += selected.keys
                 initialized = true
@@ -100,11 +103,11 @@ internal class BookDownloadCache(
                 provider.readVerifiedPackage(indexed.directory)
             }?.takeIf { it.manifest == indexed.manifest }
             if (verified == null) {
-                _packages.value -= packageKey
+                publishPackages(_packages.value - packageKey)
                 persistLocked()
                 null
             } else {
-                _packages.value += packageKey to verified
+                publishPackages(_packages.value + (packageKey to verified))
                 verifiedPackageKeys += packageKey
                 verified
             }
@@ -115,7 +118,7 @@ internal class BookDownloadCache(
         ensureInitialized()
         refreshMutex.withLock {
             val packageKey = download.manifest.packageKey
-            _packages.value += packageKey to download
+            publishPackages(_packages.value + (packageKey to download))
             verifiedPackageKeys += packageKey
             persistLocked()
         }
@@ -125,7 +128,7 @@ internal class BookDownloadCache(
         if (packageKeys.isEmpty()) return
         ensureInitialized()
         refreshMutex.withLock {
-            _packages.value -= packageKeys.toSet()
+            publishPackages(_packages.value - packageKeys.toSet())
             verifiedPackageKeys -= packageKeys.toSet()
             persistLocked()
         }
@@ -139,7 +142,7 @@ internal class BookDownloadCache(
         refreshMutex.withLock {
             val removedKeys = packageKeys.toSet()
             val replacements = selectPackages(downloads)
-            _packages.value = (_packages.value - removedKeys) + replacements
+            publishPackages((_packages.value - removedKeys) + replacements)
             verifiedPackageKeys -= removedKeys
             verifiedPackageKeys += replacements.keys
             persistLocked()
@@ -147,9 +150,7 @@ internal class BookDownloadCache(
     }
 
     fun find(sourceId: Long, childUrl: String, entryTitle: String): VerifiedBookDownloadPackage? {
-        val candidates = _packages.value.values.filter {
-            it.manifest.sourceId == sourceId && it.manifest.childUrl == childUrl
-        }
+        val candidates = packagesByChild[BookDownloadChildKey(sourceId, childUrl)].orEmpty()
         return candidates.singleOrNull()
             ?: candidates.firstOrNull { it.manifest.entryTitle == entryTitle }
     }
@@ -179,6 +180,16 @@ internal class BookDownloadCache(
             )
         }
 
+    private fun publishPackages(packages: Map<BookDownloadPackageKey, VerifiedBookDownloadPackage>) {
+        packagesByChild = packages.values.groupBy {
+            BookDownloadChildKey(
+                sourceId = it.manifest.sourceId,
+                childUrl = it.manifest.childUrl,
+            )
+        }
+        _packages.value = packages
+    }
+
     private suspend fun persistLocked() = withContext(Dispatchers.IO) {
         runCatching {
             indexStore?.write(provider.downloadsRootUri(), _packages.value.values)
@@ -187,6 +198,11 @@ internal class BookDownloadCache(
         }
     }
 }
+
+private data class BookDownloadChildKey(
+    val sourceId: Long,
+    val childUrl: String,
+)
 
 internal data class BookDownloadCacheRefresh(
     val packageCount: Int,

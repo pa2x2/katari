@@ -333,9 +333,7 @@ private fun EntryScreenSmallImpl(
 
     Scaffold(
         topBar = {
-            val selectedChapterCount: Int = remember(chapters) {
-                chapters.count { it.selected }
-            }
+            val selectedChapterCount = state.selectedChapters.size
             val isFirstItemVisible by remember {
                 derivedStateOf { chapterListState.firstVisibleItemIndex == 0 }
             }
@@ -376,11 +374,8 @@ private fun EntryScreenSmallImpl(
             )
         },
         bottomBar = {
-            val selectedChapters = remember(chapters) {
-                chapters.filter { it.selected }
-            }
             SharedEntryBottomActionMenu(
-                selected = selectedChapters,
+                selected = state.selectedChapters,
                 childProgressLabels = state.childProgressLabels,
                 onMultiBookmarkClicked = onMultiBookmarkClicked,
                 onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
@@ -393,19 +388,14 @@ private fun EntryScreenSmallImpl(
         snackbarHost = { AppSnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
             onContinueReading?.let { continueAction ->
-                val isFABVisible = remember(chapters) {
-                    chapters.fastAny { !it.chapter.read } && !isAnySelected
-                }
-                val targetListIndex = remember(state.continueTargetChapterId, listItem, state.showMergeNotice) {
-                    listItem.indexOfFirst {
-                        it is EntryChapterList.Item && it.chapter.id == state.continueTargetChapterId
-                    }.takeIf { it >= 0 }?.plus(if (state.showMergeNotice) 5 else 4)
-                }
+                val isFABVisible = state.hasUnreadChapters && !isAnySelected
+                val targetListIndex = state.chapterListIndex(state.continueTargetChapterId)
+                    ?.plus(if (state.showMergeNotice) 5 else 4)
                 EntryContinueActions(
                     listState = chapterListState,
                     continueTargetListIndex = targetListIndex,
                     topOcclusionPx = topBarHeight,
-                    isReading = state.chapters.fastAny { it.chapter.read },
+                    isReading = state.hasReadChapters,
                     visible = isFABVisible,
                     onTargetReached = {
                         highlightedChapterId = state.continueTargetChapterId
@@ -531,7 +521,7 @@ private fun EntryScreenSmallImpl(
                             childProgressLabels = state.childProgressLabels,
                             highlightedChapterId = highlightedChapterId,
                             chapterHighlightGeneration = chapterHighlightGeneration,
-                            isAnyChapterSelected = chapters.fastAny { it.selected },
+                            isAnyChapterSelected = isAnySelected,
                             chapterSwipeStartAction = chapterSwipeStartAction,
                             chapterSwipeEndAction = chapterSwipeEndAction,
                             onChapterClicked = onChapterClicked,
@@ -633,9 +623,7 @@ fun EntryScreenLargeImpl(
 
     Scaffold(
         topBar = {
-            val selectedChapterCount = remember(chapters) {
-                chapters.count { it.selected }
-            }
+            val selectedChapterCount = state.selectedChapters.size
             EntryToolbar(
                 modifier = Modifier.onSizeChanged { topBarHeight = it.height },
                 title = state.entry.displayTitle,
@@ -666,11 +654,8 @@ fun EntryScreenLargeImpl(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.BottomEnd,
             ) {
-                val selectedChapters = remember(chapters) {
-                    chapters.filter { it.selected }
-                }
                 SharedEntryBottomActionMenu(
-                    selected = selectedChapters,
+                    selected = state.selectedChapters,
                     childProgressLabels = state.childProgressLabels,
                     onMultiBookmarkClicked = onMultiBookmarkClicked,
                     onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
@@ -684,19 +669,13 @@ fun EntryScreenLargeImpl(
         snackbarHost = { AppSnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
             onContinueReading?.let { continueAction ->
-                val isFABVisible = remember(chapters) {
-                    chapters.fastAny { !it.chapter.read } && !isAnySelected
-                }
-                val targetListIndex = remember(state.continueTargetChapterId, listItem) {
-                    listItem.indexOfFirst {
-                        it is EntryChapterList.Item && it.chapter.id == state.continueTargetChapterId
-                    }.takeIf { it >= 0 }?.plus(1)
-                }
+                val isFABVisible = state.hasUnreadChapters && !isAnySelected
+                val targetListIndex = state.chapterListIndex(state.continueTargetChapterId)?.plus(1)
                 EntryContinueActions(
                     listState = chapterListState,
                     continueTargetListIndex = targetListIndex,
                     topOcclusionPx = topBarHeight,
-                    isReading = state.chapters.fastAny { it.chapter.read },
+                    isReading = state.hasReadChapters,
                     visible = isFABVisible,
                     onTargetReached = {
                         highlightedChapterId = state.continueTargetChapterId
@@ -811,7 +790,7 @@ fun EntryScreenLargeImpl(
                                     childProgressLabels = state.childProgressLabels,
                                     highlightedChapterId = highlightedChapterId,
                                     chapterHighlightGeneration = chapterHighlightGeneration,
-                                    isAnyChapterSelected = chapters.fastAny { it.selected },
+                                    isAnyChapterSelected = isAnySelected,
                                     chapterSwipeStartAction = chapterSwipeStartAction,
                                     chapterSwipeEndAction = chapterSwipeEndAction,
                                     onChapterClicked = onChapterClicked,
@@ -879,6 +858,9 @@ private fun SharedEntryBottomActionMenu(
     fillFraction: Float,
     modifier: Modifier = Modifier,
 ) {
+    val selectionTypes = remember(selected) { selected.fastMap { it.entry.type } }
+    val selectionPresentation = remember(selectionTypes) { selectionTypes.selectionEntryTypePresentation() }
+    val selectionActionLabels = remember(selectionTypes) { selectionTypes.entrySelectionActionLabels() }
     EntryBottomActionMenu(
         visible = selected.isNotEmpty(),
         modifier = modifier.fillMaxWidth(fillFraction),
@@ -888,20 +870,18 @@ private fun SharedEntryBottomActionMenu(
         onRemoveBookmarkClicked = onMultiBookmarkClicked?.let { callback ->
             { callback(selected.fastMap { it.chapter }, false) }
         }?.takeIf { selected.fastAll { it.chapter.bookmark } },
-        bookmarkLabel = selected.map { it.entry.type }.selectionEntryTypePresentation().bookmarkChildLabel,
-        removeBookmarkLabel = selected.map { it.entry.type }.selectionEntryTypePresentation().removeBookmarkChildLabel,
+        bookmarkLabel = selectionPresentation.bookmarkChildLabel,
+        removeBookmarkLabel = selectionPresentation.removeBookmarkChildLabel,
         onMarkAsReadClicked = onMultiMarkAsReadClicked?.let { callback ->
             { callback(selected.fastMap { it.chapter }, true) }
         }?.takeIf { selected.fastAny { !it.chapter.read } },
         onMarkAsUnreadClicked = onMultiMarkAsReadClicked?.let { callback ->
             { callback(selected.fastMap { it.chapter }, false) }
         }?.takeIf { selected.fastAny { it.chapter.read || it.chapter.id in childProgressLabels } },
-        markAsReadLabel = selected.map { it.entry.type }.entrySelectionActionLabels().markAsReadLabel,
-        markAsUnreadLabel = selected.map { it.entry.type }.entrySelectionActionLabels().markAsUnreadLabel,
-        markPreviousAsReadLabel = selected.map { it.entry.type }
-            .selectionEntryTypePresentation()
-            .markPreviousAsConsumedLabel,
-        downloadPresentation = selected.map { it.entry.type }.selectionEntryTypePresentation(),
+        markAsReadLabel = selectionActionLabels.markAsReadLabel,
+        markAsUnreadLabel = selectionActionLabels.markAsUnreadLabel,
+        markPreviousAsReadLabel = selectionPresentation.markPreviousAsConsumedLabel,
+        downloadPresentation = selectionPresentation,
         onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked?.let { callback ->
             { callback(selected[0].chapter) }
         }?.takeIf { selected.size == 1 },
