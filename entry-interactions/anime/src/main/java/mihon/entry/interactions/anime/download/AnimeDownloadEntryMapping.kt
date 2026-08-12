@@ -35,6 +35,8 @@ internal fun AnimeDownload.toEntryDownloadStatus(): EntryDownloadStatus {
         chapterId = episode.id,
         state = status.toEntryDownloadState(),
         progress = progress,
+        entryId = anime.id,
+        sourceId = anime.source,
     )
 }
 

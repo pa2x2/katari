@@ -26,6 +26,7 @@ import eu.kanade.tachiyomi.source.entry.EntryPreferenceProvider
 import eu.kanade.tachiyomi.ui.base.delegate.ThemingDelegateImpl
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
+import mihon.entry.interactions.download.markEntryDownloadRuntimeDependenciesRegistered
 import mihon.entry.interactions.host.AppEntryMergeDuplicateCandidateHost
 import mihon.entry.interactions.host.AppEntryMergeHost
 import mihon.entry.interactions.host.library.AppEntryLibraryCustomCoverHost
@@ -309,6 +310,8 @@ class AppModule(val app: Application) : InjektModule {
         }
 
         addSingletonFactory { ImageSaver(app) }
+
+        markEntryDownloadRuntimeDependenciesRegistered()
 
         // Asynchronously init expensive components for a faster cold start
         ContextCompat.getMainExecutor(app).execute {

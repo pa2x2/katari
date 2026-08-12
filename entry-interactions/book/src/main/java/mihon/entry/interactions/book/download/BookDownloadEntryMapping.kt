@@ -32,6 +32,8 @@ internal fun BookDownload.toEntryDownloadStatus(): EntryDownloadStatus = EntryDo
     chapterId = chapter.id,
     state = status.toEntryDownloadState(),
     progress = progress,
+    entryId = entry.id,
+    sourceId = entry.source,
 )
 
 internal fun BookDownload.toEntryDownloadQueueItem(): EntryDownloadQueueItem {

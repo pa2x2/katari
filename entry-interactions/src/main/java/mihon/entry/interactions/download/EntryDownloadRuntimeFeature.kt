@@ -1,9 +1,14 @@
 package mihon.entry.interactions.download
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.shareIn
 import mihon.entry.interactions.runtime.applicableProviderTypes
 import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
@@ -19,6 +24,7 @@ internal class DefaultEntryDownloadRuntimeFeature(
     evaluation: FeatureGraphEvaluation,
     private val interaction: EntryDownloadInteraction,
 ) : EntryDownloadRuntimeCoordinator {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val applicableTypes = EntryDownloadRuntimeBehavior.entries
         .map { behavior ->
             evaluation.applicableProviderTypes<EntryDownloadProcessor>(
@@ -49,7 +55,7 @@ internal class DefaultEntryDownloadRuntimeFeature(
             isRunning = isRunning && applicableTypes.isNotEmpty(),
             isPaused = isPaused && applicableTypes.isNotEmpty(),
         )
-    }
+    }.shareIn(scope, SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000), replay = 1)
 
     override fun isApplicable(type: EntryType): Boolean = type in applicableTypes
 

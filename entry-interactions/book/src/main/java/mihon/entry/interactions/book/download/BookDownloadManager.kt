@@ -6,24 +6,20 @@ import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -58,10 +54,20 @@ internal class BookDownloadManager(
     private val _queueState = MutableStateFlow<List<BookDownload>>(emptyList())
     val queueState = _queueState.asStateFlow()
     val cacheChanges = cache.changes
+    val cachePackageUpdates: Flow<BookDownloadPackageUpdate>
+        get() = cache.packageUpdates
     private val _isRunning = MutableStateFlow(false)
     val isRunning = _isRunning.asStateFlow()
     private val _events = MutableSharedFlow<EntryDownloadEvent>(replay = 16, extraBufferCapacity = 16)
     val events = _events.asSharedFlow()
+    private val statusUpdates = MutableSharedFlow<BookDownload>(
+        extraBufferCapacity = UPDATE_BUFFER_CAPACITY,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
+    private val progressUpdates = MutableSharedFlow<BookDownload>(
+        extraBufferCapacity = UPDATE_BUFFER_CAPACITY,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
 
     @Volatile
     private var activeChapterId: Long? = null
@@ -73,7 +79,17 @@ internal class BookDownloadManager(
         scope.launch {
             try {
                 cache.ensureInitialized()
-                mergeRestoredQueue(store.restore())
+                val restored = store.restore().filterNot { download ->
+                    cache.isDownloaded(
+                        BookDownloadPackageKey(
+                            sourceId = download.entry.source,
+                            entryUrl = download.entry.url,
+                            childUrl = download.chapter.url,
+                        ),
+                    )
+                }
+                mergeRestoredQueue(restored)
+                if (queueState.value.isNotEmpty()) workController.resumeIfRequested()
             } finally {
                 initialized.complete(Unit)
             }
@@ -88,7 +104,6 @@ internal class BookDownloadManager(
                 download.status = BookDownload.State.QUEUE
             }
         }
-        rewriteStoredQueue()
         if (!_isRunning.value) workController.start()
     }
 
@@ -104,7 +119,6 @@ internal class BookDownloadManager(
                     }
                     .forEach { it.status = BookDownload.State.QUEUE }
                 _isRunning.value = false
-                rewriteStoredQueueLocked()
                 true
             }
         }
@@ -137,6 +151,7 @@ internal class BookDownloadManager(
             _queueState.update { current -> current.filterNot { it.chapter.id in chapterIds } + queued }
             rewriteStoredQueueLocked()
         }
+        queued.forEach(statusUpdates::tryEmit)
         if (autoStart) startDownloads()
     }
 
@@ -159,8 +174,9 @@ internal class BookDownloadManager(
         if (chapterIds.isEmpty()) return
         val removesActiveDownload = activeChapterId in chapterIds
         synchronized(queueMutationLock) {
+            val removed = _queueState.value.filter { it.chapter.id in chapterIds }
             _queueState.update { current -> current.filterNot { it.chapter.id in chapterIds } }
-            rewriteStoredQueueLocked()
+            store.remove(removed)
         }
         if (removesActiveDownload) activeDownloadJob?.cancel()
         if (queueState.value.isEmpty()) {
@@ -194,30 +210,38 @@ internal class BookDownloadManager(
                 activeChapterId = next.chapter.id
                 try {
                     val failure = coroutineScope {
+                        val statusObserver = launch(start = CoroutineStart.UNDISPATCHED) {
+                            next.statusFlow.drop(1).collect { statusUpdates.emit(next) }
+                        }
+                        val progressObserver = launch(start = CoroutineStart.UNDISPATCHED) {
+                            next.progressFlow.drop(1).collect { progressUpdates.emit(next) }
+                        }
                         val job = async { downloader.download(next) }
                         activeDownloadJob = job
                         try {
                             job.await()
                         } finally {
                             if (activeDownloadJob === job) activeDownloadJob = null
+                            statusObserver.cancelAndJoin()
+                            progressObserver.cancelAndJoin()
                         }
                     }
                     if (failure == null) {
                         synchronized(queueMutationLock) {
                             _queueState.update { current -> current.filterNot { it.chapter.id == next.chapter.id } }
-                            rewriteStoredQueueLocked()
+                            store.remove(listOf(next))
                         }
                     } else {
                         next.progress = 0
                         next.failure = failure
                         next.status = BookDownload.State.ERROR
-                        rewriteStoredQueue()
+                        statusUpdates.tryEmit(next)
                         reportError(next)
                     }
                 } catch (error: CancellationException) {
                     if (queueState.value.any { it.chapter.id == next.chapter.id }) {
                         next.status = BookDownload.State.QUEUE
-                        rewriteStoredQueue()
+                        statusUpdates.tryEmit(next)
                         throw error
                     }
                     continue
@@ -225,7 +249,7 @@ internal class BookDownloadManager(
                     next.progress = 0
                     next.failure = BookDownloadFailure(BookDownloadFailure.Reason.UNKNOWN, error.message)
                     next.status = BookDownload.State.ERROR
-                    rewriteStoredQueue()
+                    statusUpdates.tryEmit(next)
                     reportError(next)
                 } finally {
                     activeChapterId = null
@@ -255,7 +279,7 @@ internal class BookDownloadManager(
         cache.ensureInitialized()
         val deletedKeys = chapters.mapNotNull { chapter ->
             val packageKey = BookDownloadPackageKey(entry.source, entry.url, chapter.url)
-            val directory = cache.get(packageKey)?.directory ?: return@mapNotNull null
+            val directory = cache.packageDirectory(packageKey) ?: return@mapNotNull null
             packageKey.takeIf { directory.delete() || !directory.exists() }
         }
         cache.remove(deletedKeys)
@@ -264,14 +288,15 @@ internal class BookDownloadManager(
     suspend fun deleteEntryDownloads(entry: Entry): Boolean {
         removeFromQueue(queueState.value.filter { it.entry.id == entry.id }.map { it.chapter.id })
         cache.ensureInitialized()
-        val downloads = cache.packages.value.values
+        val downloads = cache.packagesSnapshot()
             .filter {
                 (it.manifest.sourceId == entry.source && it.manifest.entryUrl == entry.url) ||
                     it.manifest.entryId == entry.id
             }
         val deletedKeys = downloads.mapNotNull { download ->
             download.manifest.packageKey.takeIf {
-                download.directory.delete() || !download.directory.exists()
+                val directory = cache.packageDirectory(download.manifest.packageKey) ?: return@takeIf false
+                directory.delete() || !directory.exists()
             }
         }
         cache.remove(deletedKeys)
@@ -285,7 +310,7 @@ internal class BookDownloadManager(
     fun renameSource(oldSource: UnifiedSource, newSource: UnifiedSource) {
         scope.launch {
             cache.ensureInitialized()
-            val affectedKeys = cache.packages.value.values
+            val affectedKeys = cache.packagesSnapshot()
                 .filter { it.manifest.sourceId == oldSource.id }
                 .map { it.manifest.packageKey }
             if (provider.renameSource(oldSource.name, newSource.name)) {
@@ -298,7 +323,7 @@ internal class BookDownloadManager(
         removeFromQueue(queueState.value.filter { it.entry.id == entry.id }.map { it.chapter.id })
         cache.ensureInitialized()
         val sourceName = sourceManager.get(entry.source)?.name ?: return
-        val affectedKeys = cache.packages.value.values
+        val affectedKeys = cache.packagesSnapshot()
             .filter {
                 (it.manifest.sourceId == entry.source && it.manifest.entryUrl == entry.url) ||
                     it.manifest.entryId == entry.id
@@ -312,19 +337,16 @@ internal class BookDownloadManager(
         }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    fun statusFlow(): Flow<BookDownload> = merge(
-        addedToQueueFlow(),
-        queueState.flatMapLatest { downloads ->
-            downloads.map { download -> download.statusFlow.drop(1).map { download } }.merge()
-        },
-    )
+    fun statusFlow(): Flow<BookDownload> = statusUpdates.asSharedFlow().onStart {
+        queueState.value
+            .filter { it.status != BookDownload.State.QUEUE }
+            .forEach { emit(it) }
+    }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    fun progressFlow(): Flow<BookDownload> = queueState.flatMapLatest { downloads ->
-        downloads.map { download -> download.progressFlow.drop(1).map { download } }.merge()
-    }.onStart {
-        emitAll(queueState.value.filter { it.status == BookDownload.State.DOWNLOADING }.asFlow())
+    fun progressFlow(): Flow<BookDownload> = progressUpdates.asSharedFlow().onStart {
+        queueState.value
+            .filter { it.status == BookDownload.State.DOWNLOADING }
+            .forEach { emit(it) }
     }
 
     private fun mergeRestoredQueue(restored: List<BookDownload>) {
@@ -334,19 +356,12 @@ internal class BookDownloadManager(
         }
     }
 
-    private fun rewriteStoredQueue() = synchronized(queueMutationLock) { rewriteStoredQueueLocked() }
-
     private fun rewriteStoredQueueLocked() {
         store.replace(_queueState.value)
     }
 
-    private fun addedToQueueFlow(): Flow<BookDownload> = flow {
-        var previousChapterIds = emptySet<Long>()
-        queueState.collect { downloads ->
-            val currentChapterIds = downloads.mapTo(mutableSetOf()) { it.chapter.id }
-            downloads.filter { it.chapter.id !in previousChapterIds }.forEach { emit(it) }
-            previousChapterIds = currentChapterIds
-        }
+    private companion object {
+        const val UPDATE_BUFFER_CAPACITY = 128
     }
 }
 

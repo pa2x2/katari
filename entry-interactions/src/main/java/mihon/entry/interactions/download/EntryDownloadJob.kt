@@ -7,6 +7,7 @@ import android.net.ConnectivityManager.NetworkCallback
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.os.Build
+import androidx.core.content.edit
 import androidx.core.content.getSystemService
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
@@ -34,33 +35,37 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 class EntryDownloadJob(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams) {
-    private val downloads: EntryDownloadRuntimeCoordinator = Injekt.get()
-    private val downloadPreferences: DownloadPreferences = Injekt.get()
-    private val notificationProvider: EntryDownloadForegroundNotificationProvider = Injekt.get()
+    @Volatile
+    private var dependencies: EntryDownloadWorkerDependencies? = null
 
-    override suspend fun getForegroundInfo(): ForegroundInfo = ForegroundInfo(
-        notificationProvider.notificationId,
-        notificationProvider.notification(),
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
-        } else {
-            0
-        },
-    )
-
-    override suspend fun doWork(): Result {
-        setForegroundSafely()
-        while (!isStopped) {
-            allowedNetworkFlow().first { it }
-            if (runUntilNetworkBlocked()) return Result.success()
-            setForegroundSafely()
-        }
-        return Result.success()
+    override suspend fun getForegroundInfo(): ForegroundInfo {
+        val notificationProvider = dependencies().notificationProvider
+        return ForegroundInfo(
+            notificationProvider.notificationId,
+            notificationProvider.notification(),
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+            } else {
+                0
+            },
+        )
     }
 
-    private suspend fun runUntilNetworkBlocked(): Boolean = coroutineScope {
-        val processing = async { downloads.runDownloadsUntilIdle() }
-        val networkBlocked = async { allowedNetworkFlow().first { !it } }
+    override suspend fun doWork(): Result {
+        val dependencies = dependencies()
+        setForegroundSafely(dependencies.notificationProvider)
+        while (true) {
+            allowedNetworkFlow(dependencies.downloadPreferences).first { it }
+            if (runUntilNetworkBlocked(dependencies)) return Result.success()
+            setForegroundSafely(dependencies.notificationProvider)
+        }
+    }
+
+    private suspend fun runUntilNetworkBlocked(
+        dependencies: EntryDownloadWorkerDependencies,
+    ): Boolean = coroutineScope {
+        val processing = async { dependencies.downloads.runDownloadsUntilIdle() }
+        val networkBlocked = async { allowedNetworkFlow(dependencies.downloadPreferences).first { !it } }
         select {
             processing.onAwait {
                 networkBlocked.cancelAndJoin()
@@ -73,7 +78,7 @@ class EntryDownloadJob(context: Context, workerParams: WorkerParameters) : Corou
         }
     }
 
-    private fun allowedNetworkFlow(): Flow<Boolean> = combine(
+    private fun allowedNetworkFlow(downloadPreferences: DownloadPreferences): Flow<Boolean> = combine(
         applicationContext.entryDownloadNetworkStateFlow(),
         flow {
             emit(downloadPreferences.downloadOnlyOverWifi.get())
@@ -83,19 +88,48 @@ class EntryDownloadJob(context: Context, workerParams: WorkerParameters) : Corou
         isEntryDownloadNetworkAllowed(network.isOnline, network.isWifi, requireWifi)
     }
 
-    private suspend fun setForegroundSafely() {
+    private suspend fun setForegroundSafely(notificationProvider: EntryDownloadForegroundNotificationProvider) {
         try {
-            setForeground(getForegroundInfo())
+            setForeground(
+                ForegroundInfo(
+                    notificationProvider.notificationId,
+                    notificationProvider.notification(),
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+                    } else {
+                        0
+                    },
+                ),
+            )
         } catch (error: IllegalStateException) {
             logcat(LogPriority.ERROR, error) { "Not allowed to foreground download worker" }
         }
     }
+
+    private suspend fun dependencies(): EntryDownloadWorkerDependencies {
+        dependencies?.let { return it }
+        EntryDownloadRuntimeAvailability.awaitInstalled()
+        return synchronized(this) {
+            dependencies ?: EntryDownloadWorkerDependencies(
+                downloads = Injekt.get(),
+                downloadPreferences = Injekt.get(),
+                notificationProvider = Injekt.get(),
+            ).also { dependencies = it }
+        }
+    }
 }
+
+private data class EntryDownloadWorkerDependencies(
+    val downloads: EntryDownloadRuntimeCoordinator,
+    val downloadPreferences: DownloadPreferences,
+    val notificationProvider: EntryDownloadForegroundNotificationProvider,
+)
 
 internal class DefaultEntryDownloadWorkController(
     private val context: Context,
 ) : EntryDownloadWorkController {
     override fun start() {
+        preferences.edit(commit = true) { putBoolean(KEY_EXECUTION_REQUESTED, true) }
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
@@ -104,15 +138,26 @@ internal class DefaultEntryDownloadWorkController(
             .addTag(TAG)
             .build()
         WorkManager.getInstance(context)
-            .enqueueUniqueWork(TAG, ExistingWorkPolicy.APPEND_OR_REPLACE, request)
+            .enqueueUniqueWork(TAG, ExistingWorkPolicy.KEEP, request)
     }
 
     override fun stop() {
+        preferences.edit(commit = true) { putBoolean(KEY_EXECUTION_REQUESTED, false) }
         WorkManager.getInstance(context).cancelUniqueWork(TAG)
+    }
+
+    override fun resumeIfRequested() {
+        if (preferences.getBoolean(KEY_EXECUTION_REQUESTED, true)) start()
+    }
+
+    private val preferences by lazy {
+        context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
     }
 
     private companion object {
         const val TAG = "EntryDownloader"
+        const val PREFERENCES_NAME = "entry_download_execution"
+        const val KEY_EXECUTION_REQUESTED = "requested"
     }
 }
 

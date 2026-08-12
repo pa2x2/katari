@@ -30,7 +30,10 @@ internal class BookDownloadProcessor(
     private val ownerResolver = EntryDownloadOwnerResolver(dependencies.entryRepository)
 
     override val type: EntryType = EntryType.BOOK
-    override val changes: Flow<Unit> = manager.cacheChanges.onStart { emit(Unit) }
+    override val changes: Flow<Unit> = manager.cacheChanges.onStart {
+        cache.awaitInitialSnapshot()
+        emit(Unit)
+    }
     override val isInitializing: Flow<Boolean> = cache.isInitializing
     override val isRunning: Flow<Boolean> = manager.isRunning
     override val queueState: Flow<List<EntryDownloadQueueGroup>> = manager.queueState.map {
@@ -41,6 +44,7 @@ internal class BookDownloadProcessor(
     override fun updates(): Flow<EntryDownloadStatus> = merge(
         manager.statusFlow().map(BookDownload::toEntryDownloadStatus),
         manager.progressFlow().map(BookDownload::toEntryDownloadStatus),
+        manager.cachePackageUpdates.map(BookDownloadPackageUpdate::toEntryDownloadStatus),
     )
 
     override fun queueStatusUpdates(): Flow<EntryDownloadQueueItem> =
@@ -180,6 +184,15 @@ internal class BookDownloadProcessor(
         return cache.isDownloaded(BookDownloadPackageKey(owner.source, owner.url, chapter.url))
     }
 }
+
+private fun BookDownloadPackageUpdate.toEntryDownloadStatus() = EntryDownloadStatus(
+    entryType = EntryType.BOOK,
+    chapterId = manifest.childId,
+    state = if (downloaded) EntryDownloadState.DOWNLOADED else EntryDownloadState.NOT_DOWNLOADED,
+    entryId = manifest.entryId,
+    sourceId = manifest.sourceId,
+    persistedContentChanged = true,
+)
 
 internal data class BookDownloadProcessorDependencies(
     val manager: BookDownloadManager,
