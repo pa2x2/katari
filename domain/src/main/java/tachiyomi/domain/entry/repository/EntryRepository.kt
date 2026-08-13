@@ -82,6 +82,11 @@ interface EntryRepository {
 
     suspend fun updateDisplayName(entryId: Long, displayName: String?): Boolean
 
+    suspend fun updateNotes(entryId: Long, profileId: Long, notes: String): Boolean {
+        val entry = getEntryById(entryId, profileId) ?: return false
+        return update(entry.copy(notes = notes), profileId)
+    }
+
     suspend fun insert(entry: Entry): Long
 
     suspend fun insertOrUpdate(entry: Entry): Entry

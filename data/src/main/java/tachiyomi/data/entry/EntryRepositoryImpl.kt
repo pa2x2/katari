@@ -276,6 +276,16 @@ class EntryRepositoryImpl(
         }
     }
 
+    override suspend fun updateNotes(entryId: Long, profileId: Long, notes: String): Boolean {
+        return try {
+            handler.await { entriesQueries.updateNotes(notes, entryId, profileId) }
+            true
+        } catch (e: Exception) {
+            logcat(LogPriority.ERROR, e)
+            false
+        }
+    }
+
     override suspend fun insert(entry: Entry): Long {
         return handler.await(inTransaction = true) {
             entriesQueries.insertReturningId(
