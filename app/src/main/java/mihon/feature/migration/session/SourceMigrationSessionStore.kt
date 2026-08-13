@@ -10,6 +10,7 @@ import mihon.feature.migration.session.model.SourceMigrationCandidate
 import mihon.feature.migration.session.model.SourceMigrationDiscoveryDepth
 import mihon.feature.migration.session.model.SourceMigrationDiscoveryFailure
 import mihon.feature.migration.session.model.SourceMigrationItemState
+import mihon.feature.migration.session.model.SourceMigrationRunControl
 import mihon.feature.migration.session.model.SourceMigrationSession
 import mihon.feature.migration.session.model.SourceMigrationSessionDraft
 import mihon.feature.migration.session.model.SourceMigrationSessionId
@@ -134,6 +135,17 @@ class SourceMigrationSessionStore(
                 .awaitAsList()
                 .map { it.toDomain() }
             session.toDomain(targetSourceIds, groups, items)
+        }
+    }
+
+    internal suspend fun getRunControl(sessionId: SourceMigrationSessionId): SourceMigrationRunControl? {
+        return handler.awaitOneOrNull {
+            source_migration_sessionsQueries.runControlById(sessionId.value) { stage, cancellationRequested ->
+                SourceMigrationRunControl(
+                    stage = SourceMigrationSessionStage.valueOf(stage),
+                    cancellationRequested = cancellationRequested,
+                )
+            }
         }
     }
 

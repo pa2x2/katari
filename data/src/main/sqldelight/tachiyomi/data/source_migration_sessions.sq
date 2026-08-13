@@ -169,6 +169,11 @@ SELECT *
 FROM source_migration_sessions
 WHERE session_id = :sessionId;
 
+runControlById:
+SELECT stage, cancellation_requested
+FROM source_migration_sessions
+WHERE session_id = :sessionId;
+
 sessionsByProfile:
 SELECT *
 FROM source_migration_sessions
