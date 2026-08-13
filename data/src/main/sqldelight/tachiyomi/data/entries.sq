@@ -379,11 +379,14 @@ UPDATE entries SET
 WHERE _id = :entryId
 AND profile_id = :profileId;
 
-updateNotes:
-UPDATE entries SET
-    notes = :notes
-WHERE _id = :entryId
-AND profile_id = :profileId;
+updateNotes {
+    UPDATE entries SET
+        notes = :notes
+    WHERE _id = :entryId
+    AND profile_id = :profileId;
+
+    SELECT changes();
+}
 
 insertNetworkEntry:
 INSERT INTO entries(

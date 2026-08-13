@@ -1,6 +1,7 @@
 package tachiyomi.data.entry
 
 import app.cash.sqldelight.async.coroutines.await
+import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitCreate
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import io.kotest.matchers.shouldBe
@@ -50,11 +51,11 @@ class EntryBatchObservationTest {
                 last().id shouldBe 502L
             }
 
-            database.entriesQueries.updateNotes("Unrelated", entryId = 503, profileId = PROFILE_ID)
+            database.entriesQueries.updateNotes("Unrelated", entryId = 503, profileId = PROFILE_ID).awaitAsOne()
             delay(100)
             emissions.size shouldBe 1
 
-            database.entriesQueries.updateNotes("Updated", entryId = 1, profileId = PROFILE_ID)
+            database.entriesQueries.updateNotes("Updated", entryId = 1, profileId = PROFILE_ID).awaitAsOne()
             awaitEmissionCount(emissions, 2)
 
             emissions.size shouldBe 2

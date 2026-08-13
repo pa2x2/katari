@@ -1736,7 +1736,12 @@ class EntryScreenModel(
         updateSuccessState { state ->
             val currentDialog = state.dialog as? Dialog.SelectMergeTarget ?: return@updateSuccessState state
             if (currentDialog.targets !== dialog.targets) return@updateSuccessState state
-            state.copy(dialog = currentDialog.copy(query = query))
+            state.copy(
+                dialog = currentDialog.copy(
+                    query = query,
+                    visibleTargets = persistentListOf(),
+                ),
+            )
         }
         mergeTargetSearchController.submit(dialog.targets, query) { visibleTargets ->
             updateSuccessState { state ->
@@ -1752,7 +1757,7 @@ class EntryScreenModel(
     fun openMergeEditor(targetId: Long) {
         val dialog = successState?.dialog as? Dialog.SelectMergeTarget ?: return
         screenModelScope.launchIO {
-            val target = dialog.targets.firstOrNull { it.id == targetId } ?: return@launchIO
+            val target = dialog.visibleTargets.firstOrNull { it.id == targetId } ?: return@launchIO
             val editor = createMergeEditorDialog(dialog.entry, target) ?: return@launchIO
             updateSuccessState {
                 val current = it.dialog as? Dialog.SelectMergeTarget ?: return@updateSuccessState it

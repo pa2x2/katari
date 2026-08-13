@@ -316,8 +316,7 @@ class EntryRepositoryImpl(
 
     override suspend fun updateNotes(entryId: Long, profileId: Long, notes: String): Boolean {
         return try {
-            handler.await { entriesQueries.updateNotes(notes, entryId, profileId) }
-            true
+            handler.awaitOneExecutable { entriesQueries.updateNotes(notes, entryId, profileId) } > 0
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e)
             false

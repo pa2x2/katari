@@ -35,8 +35,8 @@ internal class EntryNotesScreenModel(
         pendingNotes.trySend(content)
     }
 
-    override fun onDispose() {
+    fun finishEditing(content: String) {
+        updateNotes(content)
         pendingNotes.close()
-        super.onDispose()
     }
 }

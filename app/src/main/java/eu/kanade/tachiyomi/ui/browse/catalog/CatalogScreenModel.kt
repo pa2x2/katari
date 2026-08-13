@@ -45,6 +45,7 @@ import eu.kanade.tachiyomi.source.sourceNotInstalledName
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.PagedFilterBrowseSession
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.PagedFilterBrowseSessionStore
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -595,7 +596,12 @@ class CatalogScreenModel(
                 mutableState.update { currentState ->
                     val current = currentState.dialog as? Dialog.SelectEntryMergeTarget ?: return@update currentState
                     if (current.targets !== dialog.targets) return@update currentState
-                    currentState.copy(dialog = current.copy(query = query))
+                    currentState.copy(
+                        dialog = current.copy(
+                            query = query,
+                            visibleTargets = persistentListOf(),
+                        ),
+                    )
                 }
                 mergeTargetSearchController.submit(dialog.targets, query) { visibleTargets ->
                     mutableState.update { currentState ->
@@ -616,7 +622,7 @@ class CatalogScreenModel(
         when (val dialog = state.value.dialog) {
             is Dialog.SelectEntryMergeTarget -> {
                 screenModelScope.launchIO {
-                    val target = dialog.targets.firstOrNull { it.id == targetId } ?: return@launchIO
+                    val target = dialog.visibleTargets.firstOrNull { it.id == targetId } ?: return@launchIO
                     val editor = createEntryMergeEditorDialog(dialog.entry, target) ?: return@launchIO
                     mutableState.update { currentState ->
                         val current = currentState.dialog as? Dialog.SelectEntryMergeTarget

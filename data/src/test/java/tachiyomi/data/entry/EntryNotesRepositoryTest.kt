@@ -1,12 +1,15 @@
 package tachiyomi.data.entry
 
 import app.cash.sqldelight.async.coroutines.await
-import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitCreate
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import tachiyomi.data.ActiveProfileProvider
+import tachiyomi.data.AndroidDatabaseHandler
 import tachiyomi.data.Chapters
 import tachiyomi.data.Database
 import tachiyomi.data.DateColumnAdapter
@@ -16,9 +19,10 @@ import tachiyomi.data.MemoColumnAdapter
 import tachiyomi.data.StringListColumnAdapter
 import tachiyomi.data.UpdateStrategyColumnAdapter
 
-class EntryNotesQueriesTest {
+class EntryNotesRepositoryTest {
+
     @Test
-    fun `notes update is profile scoped and leaves other entry fields unchanged`() = runTest {
+    fun `update reports whether the profile owns the entry`() = runTest {
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         try {
             Database.Schema.awaitCreate(driver)
@@ -36,22 +40,18 @@ class EntryNotesQueriesTest {
                 identifier = null,
                 sql = """
                     INSERT INTO entries(_id, profile_id, source, url, title, notes)
-                    VALUES
-                        (10, 2, 1, '/target', 'Original title', 'Old target notes'),
-                        (11, 3, 1, '/other', 'Other title', 'Other notes')
+                    VALUES (10, 2, 1, '/target', 'Target', 'Old notes')
                 """.trimIndent(),
                 parameters = 0,
             )
-            val database = database(driver)
+            val repository = EntryRepositoryImpl(
+                handler = AndroidDatabaseHandler(database(driver), driver),
+                profileProvider = FixedProfileProvider(2),
+            )
 
-            database.entriesQueries.updateNotes("New target notes", entryId = 10, profileId = 2).awaitAsOne() shouldBe 1
-            database.entriesQueries.updateNotes("Wrong profile", entryId = 11, profileId = 2).awaitAsOne() shouldBe 0
-
-            database.entriesQueries.getEntryById(10, 2).awaitAsOne().run {
-                title shouldBe "Original title"
-                notes shouldBe "New target notes"
-            }
-            database.entriesQueries.getEntryById(11, 3).awaitAsOne().notes shouldBe "Other notes"
+            repository.updateNotes(entryId = 10, profileId = 2, notes = "Updated") shouldBe true
+            repository.updateNotes(entryId = 10, profileId = 3, notes = "Wrong profile") shouldBe false
+            repository.updateNotes(entryId = 11, profileId = 2, notes = "Missing") shouldBe false
         } finally {
             driver.close()
         }
@@ -68,5 +68,11 @@ class EntryNotesQueriesTest {
             chaptersAdapter = Chapters.Adapter(memoAdapter = MemoColumnAdapter),
             historyAdapter = History.Adapter(last_readAdapter = DateColumnAdapter),
         )
+    }
+
+    private class FixedProfileProvider(
+        override val activeProfileId: Long,
+    ) : ActiveProfileProvider {
+        override val activeProfileIdFlow: Flow<Long> = flowOf(activeProfileId)
     }
 }

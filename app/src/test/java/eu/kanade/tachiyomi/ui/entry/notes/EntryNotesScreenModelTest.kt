@@ -23,7 +23,7 @@ import kotlin.time.Duration.Companion.seconds
 
 class EntryNotesScreenModelTest {
     @Test
-    fun `writes are ordered conflated and drained after disposal`() = runTest {
+    fun `final edit is accepted and drained after screen model disposal`() = runTest {
         val writes = Collections.synchronizedList(mutableListOf<String>())
         val firstWriteStarted = CompletableDeferred<Unit>()
         val releaseFirstWrite = CompletableDeferred<Unit>()
@@ -43,12 +43,11 @@ class EntryNotesScreenModelTest {
         model.updateNotes("first")
         firstWriteStarted.await()
         model.updateNotes("intermediate")
-        model.updateNotes("final")
-
-        model.state.value.notes shouldBe "final"
         model.onDispose()
+        model.finishEditing("final")
         releaseFirstWrite.complete(Unit)
 
+        model.state.value.notes shouldBe "final"
         eventually(ASYNC_TIMEOUT) {
             writes.shouldContainExactly("first", "final")
         }

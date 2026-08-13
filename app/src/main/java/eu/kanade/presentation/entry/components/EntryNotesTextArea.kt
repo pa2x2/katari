@@ -59,6 +59,7 @@ import kotlin.time.Duration.Companion.seconds
 fun EntryNotesTextArea(
     state: EntryNotesScreen.State,
     onUpdate: (String) -> Unit,
+    onFinish: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
@@ -74,7 +75,7 @@ fun EntryNotesTextArea(
             .launchIn(scope)
 
         onDispose {
-            onUpdate(richTextState.toMarkdown())
+            onFinish(richTextState.toMarkdown())
         }
     }
     LaunchedEffect(Unit) {

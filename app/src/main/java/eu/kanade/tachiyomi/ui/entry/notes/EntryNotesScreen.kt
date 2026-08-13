@@ -24,6 +24,7 @@ class EntryNotesScreen(
             state = state,
             navigateUp = navigator::pop,
             onUpdate = screenModel::updateNotes,
+            onFinish = screenModel::finishEditing,
         )
     }
 }
