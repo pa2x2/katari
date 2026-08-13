@@ -384,10 +384,18 @@ internal class DefaultEntryMigrationFeature(
         }
 
         val transferChildren = EntryMigrationOption.CHILD_STATE in intent.selectedOptions
+        val durableEvent = EntryMigrationDurableEvent(
+            operationId = reference.sessionId,
+            source = inspected.source,
+            target = inspected.target,
+            selectedOptions = intent.selectedOptions,
+            sourceChildren = inspected.sourceChildren,
+            targetChildren = inspected.targetChildren,
+        )
         val childUpdates = if (transferChildren) {
             prepareMigrationChildUpdates(
                 sourceChildren = inspected.sourceChildren,
-                targetChildren = inspected.targetChildren,
+                childMatches = durableEvent.childMatches,
                 transferConsumption = inspected.source.type in consumptionTypes,
                 transferBookmarks = inspected.source.type in bookmarkTypes,
             )
@@ -395,16 +403,7 @@ internal class DefaultEntryMigrationFeature(
             emptyList()
         }
         val replace = intent.mode == EntryMigrationMode.REPLACE
-        val preparedConsequences = durableConsequences.prepare(
-            EntryMigrationDurableEvent(
-                operationId = reference.sessionId,
-                source = inspected.source,
-                target = inspected.target,
-                selectedOptions = intent.selectedOptions,
-                sourceChildren = inspected.sourceChildren,
-                targetChildren = inspected.targetChildren,
-            ),
-        )
+        val preparedConsequences = durableConsequences.prepare(durableEvent)
         if (!preparedConsequences.isSuccessful) {
             durableConsequences.discard(preparedConsequences.envelopes)
             return EntryMigrationExecutionResult.OperationalFailure(retryable = true)

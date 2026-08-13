@@ -1,7 +1,9 @@
 package mihon.entry.interactions.migration.consequence
 
 import mihon.entry.interactions.migration.ENTRY_MIGRATION_FEATURE_OWNER
+import mihon.entry.interactions.migration.EntryMigrationChildMatch
 import mihon.entry.interactions.migration.EntryMigrationOption
+import mihon.entry.interactions.migration.matchMigrationChildren
 import mihon.entry.interactions.prepareDurable
 import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.feature.graph.FeatureExecutionPointId
@@ -20,7 +22,11 @@ internal data class EntryMigrationDurableEvent(
     val selectedOptions: Set<EntryMigrationOption>,
     val sourceChildren: List<EntryChapter>,
     val targetChildren: List<EntryChapter>,
-)
+) {
+    val childMatches: List<EntryMigrationChildMatch> by lazy {
+        matchMigrationChildren(sourceChildren, targetChildren)
+    }
+}
 
 internal val ENTRY_MIGRATION_DURABLE_EXECUTION_POINT =
     durableFeatureExecutionPointDefinition<EntryMigrationDurableEvent>(

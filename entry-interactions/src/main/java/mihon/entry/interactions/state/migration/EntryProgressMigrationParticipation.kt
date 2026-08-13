@@ -1,10 +1,10 @@
 package mihon.entry.interactions.state.migration
 
 import kotlinx.serialization.json.Json
+import mihon.entry.interactions.migration.EntryMigrationChildMatch
 import mihon.entry.interactions.migration.EntryMigrationOption
 import mihon.entry.interactions.migration.consequence.ENTRY_MIGRATION_DURABLE_EXECUTION_POINT
 import mihon.entry.interactions.migration.consequence.EntryMigrationDurableEvent
-import mihon.entry.interactions.migration.findMigrationSourceChild
 import mihon.entry.interactions.state.ENTRY_PROGRESS_FEATURE_OWNER
 import mihon.entry.interactions.state.EntryMigrationCapability
 import mihon.entry.interactions.state.EntryProgressCapability
@@ -23,7 +23,6 @@ import mihon.feature.graph.allOf
 import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
 import mihon.feature.graph.execution.FeatureDurableExecutionPayload
 import mihon.feature.graph.execution.FeatureExecutionParticipantDefinition
-import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.progressResourceKey
 
 internal object EntryProgressMigrationDurableBehaviorContract : FeatureBehaviorContract {
@@ -60,7 +59,7 @@ internal fun entryProgressMigrationBinding(
         definition = ENTRY_PROGRESS_MIGRATION_PARTICIPANT,
         preparer = { event ->
             val mappings = if (EntryMigrationOption.CHILD_STATE in event.selectedOptions) {
-                prepareMigrationProgressMappings(event.sourceChildren, event.targetChildren)
+                prepareMigrationProgressMappings(event.childMatches)
             } else {
                 emptyList()
             }
@@ -86,15 +85,14 @@ internal fun entryProgressMigrationBinding(
 }
 
 private fun prepareMigrationProgressMappings(
-    sourceChildren: List<EntryChapter>,
-    targetChildren: List<EntryChapter>,
+    childMatches: List<EntryMigrationChildMatch>,
 ): List<EntryProgressResourceMapping> {
-    return targetChildren.mapNotNull { target ->
-        findMigrationSourceChild(target, sourceChildren)?.let { source ->
+    return childMatches.mapNotNull { match ->
+        match.source?.let { source ->
             EntryProgressResourceMapping(
                 sourceResourceKey = source.progressResourceKey,
-                targetResourceKey = target.progressResourceKey,
-                targetChapterId = target.id,
+                targetResourceKey = match.target.progressResourceKey,
+                targetChapterId = match.target.id,
             )
         }
     }

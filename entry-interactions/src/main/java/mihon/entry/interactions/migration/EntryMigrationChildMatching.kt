@@ -5,7 +5,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 
 internal fun prepareMigrationChildUpdates(
     sourceChildren: List<EntryChapter>,
-    targetChildren: List<EntryChapter>,
+    childMatches: List<EntryMigrationChildMatch>,
     transferConsumption: Boolean,
     transferBookmarks: Boolean,
 ): List<EntryMigrationHostChildUpdate> {
@@ -14,8 +14,9 @@ internal fun prepareMigrationChildUpdates(
         .mapNotNull { child -> child.chapterNumber.takeIf { it >= 0.0 } }
         .maxOrNull()
 
-    return targetChildren.mapNotNull { target ->
-        val source = findMigrationSourceChild(target, sourceChildren)
+    return childMatches.mapNotNull { match ->
+        val source = match.source
+        val target = match.target
         var read = target.read
         var bookmark = target.bookmark
         var dateFetch = target.dateFetch
@@ -37,15 +38,34 @@ internal fun prepareMigrationChildUpdates(
     }
 }
 
-internal fun findMigrationSourceChild(
-    target: EntryChapter,
+internal data class EntryMigrationChildMatch(
+    val source: EntryChapter?,
+    val target: EntryChapter,
+)
+
+internal fun matchMigrationChildren(
     sourceChildren: List<EntryChapter>,
-): EntryChapter? {
-    return if (target.chapterNumber >= 0.0) {
-        sourceChildren.firstOrNull { source ->
-            source.chapterNumber >= 0.0 && source.chapterNumber == target.chapterNumber
+    targetChildren: List<EntryChapter>,
+): List<EntryMigrationChildMatch> {
+    val sourceByNumber = buildMap {
+        sourceChildren.forEach { source ->
+            if (source.chapterNumber >= 0.0) {
+                putIfAbsent(source.chapterNumber.normalizedMigrationNumber(), source)
+            }
         }
-    } else {
-        sourceChildren.firstOrNull { source -> source.name == target.name }
+    }
+    val sourceByName = buildMap {
+        sourceChildren.forEach { source -> putIfAbsent(source.name, source) }
+    }
+
+    return targetChildren.map { target ->
+        val source = if (target.chapterNumber >= 0.0) {
+            sourceByNumber[target.chapterNumber.normalizedMigrationNumber()]
+        } else {
+            sourceByName[target.name]
+        }
+        EntryMigrationChildMatch(source = source, target = target)
     }
 }
+
+private fun Double.normalizedMigrationNumber(): Double = if (this == 0.0) 0.0 else this
