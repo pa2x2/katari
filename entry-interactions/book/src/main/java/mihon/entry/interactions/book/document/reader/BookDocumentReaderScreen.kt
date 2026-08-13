@@ -147,7 +147,7 @@ internal fun BookDocumentReaderScreen(
         BookReaderScaffold(
             progress = if (showReadingProgressSetting.effectiveValue) {
                 BookReaderProgress.Chapter(
-                    value = state.chapterProgression,
+                    value = state.visualChapterProgression,
                     style = readingProgressStyleSetting.effectiveValue,
                     activeColor = readerPalette.accent.copy(alpha = 0.75f),
                     trackColor = readerPalette.surfaceVariant,

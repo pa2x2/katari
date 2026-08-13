@@ -37,6 +37,7 @@ import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import mihon.entry.interactions.book.reader.layout.BookReaderRoundedCornerSafeArea
 import mihon.entry.interactions.book.reader.translation.BookSelectionTranslationController
 import mihon.translation.ui.presentation.CoordinatedTranslationSessionHost
 import mihon.translation.ui.presentation.TranslationResultSpeechState
@@ -94,8 +95,7 @@ internal fun BookReaderScaffold(
             ) {
                 content()
                 progress?.let {
-                    BookReaderAmbientProgressIndicator(
-                        progress = it,
+                    BookReaderRoundedCornerSafeArea(
                         modifier = Modifier
                             .fillMaxSize()
                             .windowInsetsPadding(
@@ -103,7 +103,13 @@ internal fun BookReaderScaffold(
                                     WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
                                 ),
                             ),
-                    )
+                    ) { roundedCornerInsets ->
+                        BookReaderAmbientProgressIndicator(
+                            progress = it,
+                            roundedCornerInsets = roundedCornerInsets,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
                 }
             }
             Box(

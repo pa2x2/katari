@@ -30,6 +30,17 @@ internal sealed interface BookReaderProgress {
     ) : BookReaderProgress
 }
 
+internal data class BookReaderProgressInsets(
+    val left: Int,
+    val top: Int,
+    val right: Int,
+    val bottom: Int,
+) {
+    companion object {
+        val Zero = BookReaderProgressInsets(0, 0, 0, 0)
+    }
+}
+
 internal val BookReaderProgress.usesFooter: Boolean
     get() = this is BookReaderProgress.Page ||
         (this is BookReaderProgress.Chapter && style == BookDocumentReaderProgressStyle.PERCENTAGE)
@@ -59,6 +70,7 @@ internal fun BookReaderFooterProgressIndicator(
 @Composable
 internal fun BookReaderAmbientProgressIndicator(
     progress: BookReaderProgress,
+    roundedCornerInsets: BookReaderProgressInsets,
     modifier: Modifier = Modifier,
 ) {
     if (progress !is BookReaderProgress.Chapter || progress.style == BookDocumentReaderProgressStyle.PERCENTAGE) {
@@ -76,20 +88,23 @@ internal fun BookReaderAmbientProgressIndicator(
         } else {
             edgeInset
         }
+        val trackTop = roundedCornerInsets.top.toFloat().coerceIn(0f, size.height)
+        val trackBottom = (size.height - roundedCornerInsets.bottom).coerceIn(trackTop, size.height)
+        val verticalTrackHeight = trackBottom - trackTop
         when (progress.style) {
             BookDocumentReaderProgressStyle.EDGE_FILL_RAIL -> {
                 drawLine(
                     color = progress.trackColor,
-                    start = Offset(trailingEdgeX, 0f),
-                    end = Offset(trailingEdgeX, size.height),
+                    start = Offset(trailingEdgeX, trackTop),
+                    end = Offset(trailingEdgeX, trackBottom),
                     strokeWidth = 1.dp.toPx(),
                     cap = StrokeCap.Round,
                 )
                 if (value > 0f) {
                     drawLine(
                         color = progress.activeColor,
-                        start = Offset(trailingEdgeX, 0f),
-                        end = Offset(trailingEdgeX, size.height * value),
+                        start = Offset(trailingEdgeX, trackTop),
+                        end = Offset(trailingEdgeX, trackTop + verticalTrackHeight * value),
                         strokeWidth = 2.dp.toPx(),
                         cap = StrokeCap.Round,
                     )
@@ -98,14 +113,13 @@ internal fun BookReaderAmbientProgressIndicator(
             BookDocumentReaderProgressStyle.EDGE_POSITION_MARKER -> {
                 drawLine(
                     color = progress.trackColor,
-                    start = Offset(trailingEdgeX, 0f),
-                    end = Offset(trailingEdgeX, size.height),
+                    start = Offset(trailingEdgeX, trackTop),
+                    end = Offset(trailingEdgeX, trackBottom),
                     strokeWidth = 1.dp.toPx(),
                     cap = StrokeCap.Round,
                 )
-                val markerHeight = 32.dp.toPx().coerceAtMost(size.height)
-                val markerTop = (size.height * value - markerHeight / 2f)
-                    .coerceIn(0f, size.height - markerHeight)
+                val markerHeight = 32.dp.toPx().coerceAtMost(verticalTrackHeight)
+                val markerTop = trackTop + (verticalTrackHeight - markerHeight).coerceAtLeast(0f) * value
                 drawLine(
                     color = progress.activeColor,
                     start = Offset(trailingEdgeX, markerTop),
@@ -116,17 +130,23 @@ internal fun BookReaderAmbientProgressIndicator(
             }
             BookDocumentReaderProgressStyle.BOTTOM_HAIRLINE -> {
                 val y = size.height - 1.dp.toPx()
-                val completedX = size.width * value
+                val trackStartX = roundedCornerInsets.left.toFloat().coerceIn(0f, size.width)
+                val trackEndX = (size.width - roundedCornerInsets.right).coerceIn(trackStartX, size.width)
+                val trackWidth = trackEndX - trackStartX
                 drawLine(
                     color = progress.trackColor,
-                    start = Offset(0f, y),
-                    end = Offset(size.width, y),
+                    start = Offset(trackStartX, y),
+                    end = Offset(trackEndX, y),
                     strokeWidth = 1.dp.toPx(),
                     cap = StrokeCap.Round,
                 )
                 if (value > 0f) {
-                    val startX = if (layoutDirection == LayoutDirection.Ltr) 0f else size.width
-                    val endX = if (layoutDirection == LayoutDirection.Ltr) completedX else size.width - completedX
+                    val startX = if (layoutDirection == LayoutDirection.Ltr) trackStartX else trackEndX
+                    val endX = if (layoutDirection == LayoutDirection.Ltr) {
+                        trackStartX + trackWidth * value
+                    } else {
+                        trackEndX - trackWidth * value
+                    }
                     drawLine(
                         color = progress.activeColor,
                         start = Offset(startX, y),

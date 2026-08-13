@@ -139,7 +139,7 @@ internal class BookDocumentChapterCoordinator(
             currentState()?.let { current ->
                 updateState(
                     current.copy(
-                        chapterProgression = location.progression,
+                        visualChapterProgression = location.visualProgression,
                         navigationRequest = current.navigationRequest.afterAcceptedLocation(
                             observedRequest = navigationRequest,
                             chapterId = chapterId,
@@ -231,7 +231,7 @@ internal class BookDocumentChapterCoordinator(
         navigationRequestId += 1
         updateState(
             state.copy(
-                chapterProgression = progression,
+                visualChapterProgression = progression,
                 navigationRequest = BookDocumentNavigationRequest(
                     id = navigationRequestId,
                     chapterId = section.owner.id,
@@ -274,7 +274,7 @@ internal class BookDocumentChapterCoordinator(
                 window = window,
                 loadedSections = current.loadedSections.filterKeys(retainedIds::contains),
                 loadStates = current.loadStates.filterKeys(retainedIds::contains),
-                chapterProgression = progression,
+                visualChapterProgression = observedLocation?.visualProgression ?: progression,
                 childWebView = null,
                 navigationRequest = current.navigationRequest.afterAcceptedLocation(
                     observedRequest = observedNavigationRequest,

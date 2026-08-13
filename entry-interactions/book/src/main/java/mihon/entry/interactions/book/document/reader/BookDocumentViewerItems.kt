@@ -246,6 +246,7 @@ internal data class BookDocumentViewerLocation<T>(
     val section: BookDocumentSection<T>,
     val position: BookDocumentPosition,
     val progression: Float,
+    val visualProgression: Float = progression,
 )
 
 internal fun <T> bookDocumentViewerLocation(
@@ -266,10 +267,18 @@ internal fun <T> bookDocumentViewerLocation(
         topItem.content.id == topItem.section.document.document.blocks.firstOrNull()?.id
     ) {
         val position = BookDocumentPosition(topItem.content.id, 0)
+        val progression = topItem.section.document.document.progressionAt(position)
         return BookDocumentViewerLocation(
             section = topItem.section,
             position = position,
-            progression = topItem.section.document.document.progressionAt(position),
+            progression = progression,
+            visualProgression = bookDocumentVisualProgress(
+                section = topItem.section,
+                items = items,
+                visibleItems = visibleItems,
+                viewportStartOffset = viewportStartOffset,
+                viewportEndOffset = viewportEndOffset,
+            ) ?: progression,
         )
     }
     val viewportAnchor = (viewportStartOffset + viewportEndOffset) / 2
@@ -292,10 +301,18 @@ internal fun <T> bookDocumentViewerLocation(
         blockId = item.content.id,
         offsetWithinBlock = (item.content.logicalLength * fraction).roundToInt(),
     )
+    val progression = item.section.document.document.progressionAt(position)
     return BookDocumentViewerLocation(
         section = item.section,
         position = position,
-        progression = item.section.document.document.progressionAt(position),
+        progression = progression,
+        visualProgression = bookDocumentVisualProgress(
+            section = item.section,
+            items = items,
+            visibleItems = visibleItems,
+            viewportStartOffset = viewportStartOffset,
+            viewportEndOffset = viewportEndOffset,
+        ) ?: progression,
     )
 }
 

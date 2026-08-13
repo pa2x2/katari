@@ -276,7 +276,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             currentChapterId = session.chapter.id,
             window = window,
             loadedSections = mapOf(session.chapter.id to section),
-            chapterProgression = progression,
+            visualChapterProgression = progression,
         )
         childWebViewResolver.resolve(session)
         surfaceState = BookDocumentReaderSurfaceState.Ready
