@@ -44,6 +44,12 @@ SELECT *
 FROM entry_sync
 WHERE profile_id = :profileId;
 
+getTrackIdentityKeys:
+SELECT entry_id, sync_id, remote_id
+FROM entry_sync
+WHERE profile_id = :profileId
+ORDER BY entry_id, sync_id, remote_id;
+
 getTrackById:
 SELECT *
 FROM entry_sync
