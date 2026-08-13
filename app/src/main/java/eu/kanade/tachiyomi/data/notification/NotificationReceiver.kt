@@ -221,7 +221,9 @@ class NotificationReceiver : BroadcastReceiver() {
      * @param context context of application
      */
     private fun cancelLibraryUpdate(context: Context) {
-        LibraryUpdateJob.stop(context)
+        async(scope, Dispatchers.IO) {
+            LibraryUpdateJob.stop(context)
+        }
     }
 
     private fun dismissNotification(context: Context, intent: Intent) {

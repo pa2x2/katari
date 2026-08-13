@@ -250,11 +250,9 @@ class UpdatesScreenModel(
         }
     }
 
-    fun updateLibrary(): Boolean {
+    suspend fun updateLibrary(): Boolean {
         val started = LibraryUpdateJob.startNow(Injekt.get<Application>())
-        screenModelScope.launch {
-            _events.send(Event.LibraryUpdateTriggered(started))
-        }
+        _events.send(Event.LibraryUpdateTriggered(started))
         return started
     }
 

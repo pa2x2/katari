@@ -5,6 +5,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.guava.await
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 import kotlin.time.Duration.Companion.seconds
@@ -12,8 +13,8 @@ import kotlin.time.Duration.Companion.seconds
 val Context.workManager: WorkManager
     get() = WorkManager.getInstance(this)
 
-fun WorkManager.isRunning(tag: String): Boolean {
-    val list = this.getWorkInfosByTag(tag).get()
+suspend fun WorkManager.isRunning(tag: String): Boolean {
+    val list = getWorkInfosByTag(tag).await()
     return list.any { it.state == WorkInfo.State.RUNNING }
 }
 

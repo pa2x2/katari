@@ -38,7 +38,7 @@ fun SharedLibraryContent(
     showPageTabs: Boolean,
     showItemCounts: Boolean,
     onChangeCurrentPage: (Int) -> Unit,
-    onRefresh: () -> Boolean,
+    onRefresh: suspend () -> Boolean,
     onGlobalSearchClicked: () -> Unit,
     getItemCountForPage: (LibraryPage) -> Int?,
     getItemCountForPages: (List<LibraryPage>) -> Int?,
@@ -166,9 +166,9 @@ fun SharedLibraryContent(
             refreshing = isRefreshing,
             enabled = selection.isEmpty(),
             onRefresh = {
-                val started = onRefresh()
-                if (!started) return@PullRefresh
                 scope.launch {
+                    val started = onRefresh()
+                    if (!started) return@launch
                     // Fake refresh status but hide it after a second as it's a long running task
                     isRefreshing = true
                     delay(1.seconds)
@@ -210,7 +210,7 @@ fun LibraryContent(
     isContinueReadingAvailable: (LibraryItem) -> Boolean,
     onToggleSelection: (LibraryPage, LibraryItem) -> Unit,
     onToggleRangeSelection: (LibraryPage, LibraryItem) -> Unit,
-    onRefresh: () -> Boolean,
+    onRefresh: suspend () -> Boolean,
     onGlobalSearchClicked: () -> Unit,
     getItemCountForPage: (LibraryPage) -> Int?,
     getItemCountForPages: (List<LibraryPage>) -> Int?,
