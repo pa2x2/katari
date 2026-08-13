@@ -115,7 +115,7 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
     )
     addSingletonFactory { materializationCache }
     addSingletonFactory<BookMaterializationStore> { get<BookMaterializationCache>() }
-    addSingletonFactory { BookDownloadProvider(get<StorageManager>()) }
+    addSingletonFactory { BookDownloadProvider(get<StorageManager>(), app) }
     addSingletonFactory {
         val storageManager = get<StorageManager>()
         BookDownloadCache(
