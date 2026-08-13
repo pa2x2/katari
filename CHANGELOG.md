@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.3.2] - 2026-08-13
+
+### 🧩 Improved
+
+- Book downloads are now discovered and reflected in library and update counts progressively, and queued manga or book downloads resume after an app restart unless you explicitly paused them.
+
+### 🐛 Fixed
+
+- Leaving the entry notes editor now preserves the final text edit even when it occurs before the autosave delay completes.
+- Translation pickers now size correctly, show a clear no-results message for language searches, and keep compact translation controls aligned.
+
+### ⚡️ Performance
+
+- Improved responsiveness when browsing large libraries, filtering or grouping them, searching merge targets, and loading related entries.
+
 ## [1.3.1] - 2026-08-11
 
 ### 🐛 Fixed
@@ -144,7 +159,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.3.1...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.3.2...HEAD
+[1.3.2]: https://github.com/pa2x2/katari/releases/tag/v1.3.2
 [1.3.1]: https://github.com/pa2x2/katari/releases/tag/v1.3.1
 [1.3.0]: https://github.com/pa2x2/katari/releases/tag/v1.3.0
 [1.2.1]: https://github.com/pa2x2/katari/releases/tag/v1.2.1
