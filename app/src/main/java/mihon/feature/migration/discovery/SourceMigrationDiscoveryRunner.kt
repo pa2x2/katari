@@ -48,17 +48,17 @@ class SourceMigrationDiscoveryRunner(
         var completed = session.items.size - items.size
         onProgress(completed, session.items.size)
         for (item in items) {
-            val current = store.get(sessionId) ?: return SourceMigrationDiscoveryRunResult.SessionMissing
+            val current = store.getRunControl(sessionId) ?: return SourceMigrationDiscoveryRunResult.SessionMissing
             if (current.stage != SourceMigrationSessionStage.DISCOVERING || current.cancellationRequested) {
                 pause(sessionId, current.stage)
                 return SourceMigrationDiscoveryRunResult.Paused
             }
-            discoverItem(current, item)
+            discoverItem(session, item)
             completed++
             onProgress(completed, session.items.size)
         }
 
-        val current = store.get(sessionId) ?: return SourceMigrationDiscoveryRunResult.SessionMissing
+        val current = store.getRunControl(sessionId) ?: return SourceMigrationDiscoveryRunResult.SessionMissing
         if (current.stage != SourceMigrationSessionStage.DISCOVERING || current.cancellationRequested) {
             pause(sessionId, current.stage)
             return SourceMigrationDiscoveryRunResult.Paused

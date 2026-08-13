@@ -5,10 +5,21 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.category.model.Category
@@ -186,6 +197,125 @@ class GetLibraryEntriesTest {
         every { sourceManager.getDisplayInfo(entry.source) } returns sourceDisplayInfo(entry.source)
 
         interactor.subscribe(profileId).first().single().entry shouldBe entry
+    }
+
+    @Test
+    fun `subscription retains detail observers for metadata updates and rebinds for ordered membership`() = runTest {
+        val profileId = 2L
+        val first = entry(id = 1L, source = 10L, type = EntryType.MANGA, profileId = profileId)
+        val second = entry(id = 2L, source = 20L, type = EntryType.MANGA, profileId = profileId)
+        val favorites = MutableSharedFlow<List<Entry>>(replay = 1)
+        var chapterSubscriptions = 0
+        var chapterCancellations = 0
+        var groupingSubscriptions = 0
+        var groupingCancellations = 0
+        var hiddenSourceSubscriptions = 0
+        var hiddenSourceCancellations = 0
+        every { entryRepository.getLibraryEntriesAsFlow(profileId) } returns favorites
+        every { entryChapterRepository.getChaptersByEntryIds(any()) } answers {
+            flow {
+                chapterSubscriptions++
+                try {
+                    emit(emptyList())
+                    awaitCancellation()
+                } finally {
+                    chapterCancellations++
+                }
+            }
+        }
+        every { libraryGrouping.observeLibraryGrouping(profileId, any()) } answers {
+            val suppliedEntries = secondArg<Flow<List<Entry>>>()
+            flow {
+                groupingSubscriptions++
+                try {
+                    val entries = suppliedEntries.first()
+                    emit(
+                        EntryLibraryGroupingResolution(
+                            profileId = profileId,
+                            groups = entries.map { entry -> EntryLibraryGroupResolution(entry, listOf(entry)) },
+                        ),
+                    )
+                    awaitCancellation()
+                } finally {
+                    groupingCancellations++
+                }
+            }
+        }
+        every { hiddenSourceIds.subscribe(profileId) } answers {
+            flow {
+                hiddenSourceSubscriptions++
+                try {
+                    emit(emptySet())
+                    awaitCancellation()
+                } finally {
+                    hiddenSourceCancellations++
+                }
+            }
+        }
+        coEvery { categoryRepository.getCategoryIdsByEntryIds(profileId, any()) } returns emptyMap()
+        coEvery { entryRepository.getLibraryLastRead(profileId) } returns emptyMap()
+        listOf(first, second).forEach { entry ->
+            every { sourceManager.getOrStub(entry.source) } returns source(entry.source)
+            every { sourceManager.getDisplayInfo(entry.source) } returns sourceDisplayInfo(entry.source)
+        }
+
+        val outputs = mutableListOf<List<tachiyomi.domain.library.model.LibraryItem>>()
+        val collection = backgroundScope.launch {
+            interactor.subscribe(profileId).collect(outputs::add)
+        }
+        favorites.emit(listOf(first, second))
+        advanceTimeBy(101)
+        runCurrent()
+
+        val updatedFirst = first.copy(title = "Updated title", version = 2)
+        favorites.emit(listOf(updatedFirst, second))
+        advanceTimeBy(51)
+        runCurrent()
+
+        outputs[1].first().entry shouldBe updatedFirst
+        chapterSubscriptions shouldBe 1
+        groupingSubscriptions shouldBe 1
+        hiddenSourceSubscriptions shouldBe 1
+        coVerify(exactly = 1) {
+            categoryRepository.getCategoryIdsByEntryIds(profileId, listOf(first.id, second.id))
+        }
+        coVerify(exactly = 1) { entryRepository.getLibraryLastRead(profileId) }
+
+        favorites.emit(listOf(second, updatedFirst))
+        advanceTimeBy(101)
+        runCurrent()
+
+        outputs[2].map { it.entry.id } shouldBe listOf(second.id, first.id)
+        chapterSubscriptions shouldBe 2
+        groupingSubscriptions shouldBe 2
+        hiddenSourceSubscriptions shouldBe 2
+        chapterCancellations shouldBe 1
+        groupingCancellations shouldBe 1
+        hiddenSourceCancellations shouldBe 1
+        collection.cancelAndJoin()
+    }
+
+    @Test
+    fun `subscription completes when finite inputs complete`() = runTest {
+        val profileId = 2L
+        val entry = entry(id = 1L, source = 10L, type = EntryType.MANGA, profileId = profileId)
+        every { entryRepository.getLibraryEntriesAsFlow(profileId) } returns flowOf(listOf(entry))
+        every {
+            libraryGrouping.observeLibraryGrouping(profileId, any())
+        } returns flowOf(
+            EntryLibraryGroupingResolution(
+                profileId = profileId,
+                groups = listOf(EntryLibraryGroupResolution(entry, listOf(entry))),
+            ),
+        )
+        every { hiddenSourceIds.subscribe(profileId) } returns flowOf(emptySet())
+        every { entryChapterRepository.getChaptersByEntryIds(listOf(entry.id)) } returns flowOf(emptyList())
+        coEvery { categoryRepository.getCategoryIdsByEntryIds(profileId, listOf(entry.id)) } returns emptyMap()
+        coEvery { entryRepository.getLibraryLastRead(profileId) } returns emptyMap()
+        every { sourceManager.getOrStub(entry.source) } returns source(entry.source)
+        every { sourceManager.getDisplayInfo(entry.source) } returns sourceDisplayInfo(entry.source)
+
+        interactor.subscribe(profileId).toList().single().single().entry shouldBe entry
     }
 
     private fun entry(

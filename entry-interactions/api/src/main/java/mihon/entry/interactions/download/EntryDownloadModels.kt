@@ -21,6 +21,9 @@ data class EntryDownloadStatus(
     val chapterId: Long,
     val state: EntryDownloadState,
     val progress: Int = 0,
+    val entryId: Long? = null,
+    val sourceId: Long? = null,
+    val persistedContentChanged: Boolean = false,
 )
 
 data class EntryDownloadQueueGroup(

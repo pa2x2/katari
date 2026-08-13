@@ -46,7 +46,7 @@ fun <T> UpdatesScreen(
     snackbarHostState: SnackbarHostState,
     onSelectAll: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
-    onUpdateLibrary: () -> Boolean,
+    onUpdateLibrary: suspend () -> Boolean,
     onCalendarClicked: (() -> Unit)?,
     onFilterClicked: (() -> Unit)?,
     hasActiveFilters: Boolean,
@@ -59,6 +59,8 @@ fun <T> UpdatesScreen(
     },
     content: LazyListScope.() -> Unit,
 ) {
+    val scope = rememberCoroutineScope()
+
     BackHandler(enabled = state.selectionMode) {
         onSelectAll(false)
     }
@@ -67,7 +69,7 @@ fun <T> UpdatesScreen(
         topBar = { scrollBehavior ->
             UpdatesAppBar(
                 onCalendarClicked = onCalendarClicked,
-                onUpdateLibrary = { onUpdateLibrary() },
+                onUpdateLibrary = { scope.launch { onUpdateLibrary() } },
                 onFilterClicked = onFilterClicked,
                 hasFilters = hasActiveFilters,
                 actionModeCounter = state.selectedCount,
@@ -87,16 +89,15 @@ fun <T> UpdatesScreen(
         when {
             state.isLoading -> loadingContent(Modifier.padding(contentPadding))
             else -> {
-                val scope = rememberCoroutineScope()
                 var isRefreshing by remember { mutableStateOf(false) }
 
                 PullRefresh(
                     modifier = Modifier.fillMaxSize(),
                     refreshing = isRefreshing,
                     onRefresh = {
-                        val started = onUpdateLibrary()
-                        if (!started) return@PullRefresh
                         scope.launch {
+                            val started = onUpdateLibrary()
+                            if (!started) return@launch
                             isRefreshing = true
                             delay(1.seconds)
                             isRefreshing = false

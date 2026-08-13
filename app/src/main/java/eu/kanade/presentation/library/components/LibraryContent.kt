@@ -38,10 +38,8 @@ fun SharedLibraryContent(
     showPageTabs: Boolean,
     showItemCounts: Boolean,
     onChangeCurrentPage: (Int) -> Unit,
-    onRefresh: () -> Boolean,
+    onRefresh: suspend () -> Boolean,
     onGlobalSearchClicked: () -> Unit,
-    getItemCountForPage: (LibraryPage) -> Int?,
-    getItemCountForPages: (List<LibraryPage>) -> Int?,
     pageContent: @Composable (pagerState: PagerState, page: Int, libraryPage: LibraryPage?) -> Unit,
 ) {
     Column(
@@ -98,9 +96,6 @@ fun SharedLibraryContent(
                     tabs = primaryTabs,
                     selectedTabId = activePage?.primaryTab?.id,
                     showItemCounts = showItemCounts,
-                    getItemCountForTab = { tab ->
-                        getItemCountForPages(pages.filter { it.primaryTab.id == tab.id })
-                    },
                     onTabItemClick = { selectedTab ->
                         val targetPageIndex = pages.indexOfFirst { it.primaryTab.id == selectedTab.id }
                         if (targetPageIndex < 0) return@LibraryTabs
@@ -116,13 +111,6 @@ fun SharedLibraryContent(
                     tabs = secondaryTabs,
                     selectedTabId = activePage?.secondaryTab?.id,
                     showItemCounts = showItemCounts,
-                    getItemCountForTab = { tab ->
-                        getItemCountForPages(
-                            pages.filter {
-                                it.primaryTab.id == activePage?.primaryTab?.id && it.secondaryTab?.id == tab.id
-                            },
-                        )
-                    },
                     onTabItemClick = { selectedTab ->
                         val targetPageIndex = pages.indexOfFirst {
                             it.primaryTab.id == activePage?.primaryTab?.id && it.secondaryTab?.id == selectedTab.id
@@ -140,13 +128,6 @@ fun SharedLibraryContent(
                     tabs = tertiaryTabs,
                     selectedTabId = selectedPage.tertiaryTab?.id,
                     showItemCounts = showItemCounts,
-                    getItemCountForTab = { tab ->
-                        pages.firstOrNull {
-                            it.primaryTab.id == selectedPage.primaryTab.id &&
-                                it.secondaryTab?.id == selectedPage.secondaryTab?.id &&
-                                it.tertiaryTab?.id == tab.id
-                        }?.let(getItemCountForPage)
-                    },
                     onTabItemClick = { selectedTab ->
                         val targetPageIndex = pages.indexOfFirst {
                             it.primaryTab.id == selectedPage.primaryTab.id &&
@@ -166,9 +147,9 @@ fun SharedLibraryContent(
             refreshing = isRefreshing,
             enabled = selection.isEmpty(),
             onRefresh = {
-                val started = onRefresh()
-                if (!started) return@PullRefresh
                 scope.launch {
+                    val started = onRefresh()
+                    if (!started) return@launch
                     // Fake refresh status but hide it after a second as it's a long running task
                     isRefreshing = true
                     delay(1.seconds)
@@ -210,10 +191,8 @@ fun LibraryContent(
     isContinueReadingAvailable: (LibraryItem) -> Boolean,
     onToggleSelection: (LibraryPage, LibraryItem) -> Unit,
     onToggleRangeSelection: (LibraryPage, LibraryItem) -> Unit,
-    onRefresh: () -> Boolean,
+    onRefresh: suspend () -> Boolean,
     onGlobalSearchClicked: () -> Unit,
-    getItemCountForPage: (LibraryPage) -> Int?,
-    getItemCountForPages: (List<LibraryPage>) -> Int?,
     getDisplayMode: (Int) -> PreferenceMutableState<LibraryDisplayMode>,
     getColumnsForOrientation: (Boolean) -> PreferenceMutableState<Int>,
     getItemsForPage: (LibraryPage) -> List<LibraryItem>,
@@ -231,8 +210,6 @@ fun LibraryContent(
         onChangeCurrentPage = onChangeCurrentPage,
         onRefresh = onRefresh,
         onGlobalSearchClicked = onGlobalSearchClicked,
-        getItemCountForPage = getItemCountForPage,
-        getItemCountForPages = getItemCountForPages,
     ) { pagerState, _, _ ->
         LibraryPager(
             state = pagerState,

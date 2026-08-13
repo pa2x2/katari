@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import mihon.entry.interactions.runtime.combinedAny
 import mihon.entry.interactions.runtime.combinedFlatten
+import mihon.entry.interactions.runtime.combinedLatestUnit
 import mihon.entry.interactions.runtime.merged
 import mihon.entry.interactions.runtime.requireMatchingEntryType
 import mihon.entry.interactions.runtime.requireProcessor
@@ -24,7 +25,7 @@ internal class EntryDownloadInteractionDispatch(
 ) : EntryDownloadInteraction {
     private val paused = MutableStateFlow(false)
 
-    override val changes: Flow<Unit> = processors.values.map { it.changes }.merged()
+    override val changes: Flow<Unit> = processors.values.map { it.changes }.combinedLatestUnit()
     override val isInitializing: Flow<Boolean> = processors.values.map { it.isInitializing }.combinedAny()
     override val isRunning: Flow<Boolean> = processors.values.map { it.isRunning }.combinedAny()
     override val isPaused: Flow<Boolean> = paused.asStateFlow()

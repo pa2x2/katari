@@ -75,6 +75,12 @@ SELECT *
 FROM chapters
 WHERE entry_id IN :entryIds;
 
+chapterTableInvalidation:
+SELECT _id
+FROM chapters
+ORDER BY _id
+LIMIT 1;
+
 getCountsByEntryIds:
 SELECT entry_id, count(*) AS child_count
 FROM chapters

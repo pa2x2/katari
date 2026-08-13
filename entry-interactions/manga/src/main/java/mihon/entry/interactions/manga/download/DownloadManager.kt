@@ -47,6 +47,13 @@ internal class DownloadManager(
     private val workController: EntryDownloadWorkController = Injekt.get(),
 ) {
 
+    init {
+        launchIO {
+            downloader.awaitInitialized()
+            if (queueState.value.isNotEmpty()) workController.resumeIfRequested()
+        }
+    }
+
     val isRunning: Boolean
         get() = downloader.isRunning
 

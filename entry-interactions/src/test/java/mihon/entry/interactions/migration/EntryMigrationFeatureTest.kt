@@ -74,6 +74,7 @@ import mihon.feature.graph.featureGraphContributor
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.progressResourceKey
 
 class EntryMigrationFeatureTest {
     private val source = entry(id = 10, sourceId = 100, favorite = true, dateAdded = 50)
@@ -440,6 +441,71 @@ class EntryMigrationFeatureTest {
         coVerify(exactly = 1) { delivery.deliverOperation(any()) }
     }
 
+    @Test
+    fun `child state and progress use the same first matching source child`() = runTest {
+        val firstSource = child(
+            id = 11,
+            entryId = source.id,
+            read = false,
+            bookmark = true,
+            dateFetch = 90,
+            url = "first-source",
+        )
+        val duplicateSource = firstSource.copy(id = 12, url = "duplicate-source", dateFetch = 120)
+        val migratingTarget = child(
+            id = 21,
+            entryId = target.id,
+            read = false,
+            bookmark = false,
+            dateFetch = 10,
+            url = "target",
+        )
+        val host = RecordingMigrationHost(source, target).apply {
+            sourceChildren = listOf(firstSource, duplicateSource)
+            targetChildren = listOf(migratingTarget)
+        }
+        var progressMappings = emptyList<EntryProgressResourceMapping>()
+        val progress = mockk<EntryProgressFeature>()
+        coEvery { progress.prepareMigration(any(), any(), any()) } answers {
+            @Suppress("UNCHECKED_CAST")
+            progressMappings = args[2] as List<EntryProgressResourceMapping>
+            EntryProgressMigrationPreparation.Prepared(
+                EntryProgressMigrationPayload(target, EntryProgressSnapshot()),
+            )
+        }
+        val feature = feature(
+            host = host,
+            bindings = listOf(
+                EntryMigrationCapability.bind(MigrationProvider()),
+                EntryBookmarkCapability.bind(BookmarkProvider()),
+                EntryProgressCapability.bind(ProgressProvider()),
+            ),
+            progress = progress,
+        )
+        val preparation = feature.prepare(EntryMigrationPrepareIntent(source, target))
+            .shouldBeInstanceOf<EntryMigrationPreparationResult.Ready>()
+
+        feature.execute(
+            EntryMigrationExecuteIntent(
+                preparation.reference,
+                EntryMigrationMode.COPY,
+                setOf(EntryMigrationOption.CHILD_STATE),
+            ),
+        ).shouldBeInstanceOf<EntryMigrationExecutionResult.Applied>()
+
+        host.transitions.single().childUpdates.single().updated shouldBe migratingTarget.copy(
+            bookmark = true,
+            dateFetch = firstSource.dateFetch,
+        )
+        progressMappings.shouldContainExactly(
+            EntryProgressResourceMapping(
+                sourceResourceKey = firstSource.progressResourceKey,
+                targetResourceKey = migratingTarget.progressResourceKey,
+                targetChapterId = migratingTarget.id,
+            ),
+        )
+    }
+
     private fun feature(
         host: RecordingMigrationHost,
         merge: RecordingMergeMigrationFeature = RecordingMergeMigrationFeature(),
@@ -559,11 +625,12 @@ class EntryMigrationFeatureTest {
         read: Boolean,
         bookmark: Boolean,
         dateFetch: Long,
+        url: String = "child-$id",
     ): EntryChapter {
         return EntryChapter.create().copy(
             id = id,
             entryId = entryId,
-            url = "child-$id",
+            url = url,
             name = "Child",
             chapterNumber = 1.0,
             read = read,

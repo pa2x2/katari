@@ -1,13 +1,12 @@
 package mihon.entry.interactions.book.download
 
 import android.content.Context
-import android.content.SharedPreferences
-import androidx.core.content.edit
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import mihon.entry.interactions.book.download.model.BookDownload
 import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import uy.kohesive.injekt.Injekt
@@ -26,8 +25,9 @@ internal class BookDownloadStore(
         entryRepository: EntryRepository = Injekt.get(),
         entryChapterRepository: EntryChapterRepository = Injekt.get(),
     ) : this(
-        backend = SharedPreferencesBookDownloadStoreBackend(
-            context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE),
+        backend = BookDownloadQueueFileBackend(
+            snapshotFile = context.durableBookDownloadQueueDirectory().resolve(QUEUE_FILE_NAME),
+            legacyPreferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE),
         ),
         json = json,
         entryRepository = entryRepository,
@@ -36,8 +36,7 @@ internal class BookDownloadStore(
 
     @Synchronized
     fun replace(downloads: List<BookDownload>) {
-        backend.clear()
-        backend.putAll(
+        backend.replace(
             downloads.mapIndexed { order, download ->
                 "${download.entry.profileId}:${download.entry.id}:${download.chapter.id}" to json.encodeToString(
                     BookDownloadObject(
@@ -54,6 +53,10 @@ internal class BookDownloadStore(
 
     fun clear() = backend.clear()
 
+    fun remove(downloads: Collection<BookDownload>) {
+        backend.remove(downloads.mapTo(mutableSetOf()) { it.storageKey() })
+    }
+
     suspend fun restore(): List<BookDownload> {
         val objects = backend.values()
             .mapNotNull { (_, value) ->
@@ -69,6 +72,15 @@ internal class BookDownloadStore(
                     .associateBy(Entry::id)
             }
 
+        val chaptersByEntry = objects
+            .mapNotNull { stored -> entriesByProfile[stored.profileId]?.get(stored.entryId) }
+            .distinctBy(Entry::id)
+            .associate { entry ->
+                entry.id to runCatching {
+                    entryChapterRepository.getChaptersByEntryIdAwait(entry.id).associateBy(EntryChapter::id)
+                }.getOrDefault(emptyMap())
+            }
+
         return objects.mapNotNull { stored ->
             val entry = entriesByProfile[stored.profileId]?.get(stored.entryId)
                 ?.takeIf {
@@ -77,8 +89,9 @@ internal class BookDownloadStore(
                         (stored.sourceId == null || it.source == stored.sourceId)
                 }
                 ?: return@mapNotNull null
-            val chapter = runCatching { entryChapterRepository.getChapterById(stored.chapterId) }.getOrNull()
-                ?.takeIf { it.entryId == entry.id }
+            val chapter = chaptersByEntry[entry.id]?.get(stored.chapterId)
+                ?: runCatching { entryChapterRepository.getChapterById(stored.chapterId) }.getOrNull()
+                    ?.takeIf { it.entryId == entry.id }
                 ?: return@mapNotNull null
             BookDownload(entry, chapter).apply { status = BookDownload.State.QUEUE }
         }
@@ -86,26 +99,22 @@ internal class BookDownloadStore(
 
     private companion object {
         const val PREFERENCES_NAME = "active_book_downloads"
+        const val QUEUE_FILE_NAME = "active_book_downloads_v2"
     }
+
+    private fun BookDownload.storageKey(): String = "${entry.profileId}:${entry.id}:${chapter.id}"
 }
 
 internal interface BookDownloadStoreBackend {
     fun values(): Map<String, *>
     fun putAll(values: Map<String, String>)
     fun clear()
-}
 
-private class SharedPreferencesBookDownloadStoreBackend(
-    private val preferences: SharedPreferences,
-) : BookDownloadStoreBackend {
-    override fun values(): Map<String, *> = preferences.all
+    fun remove(keys: Set<String>) = Unit
 
-    override fun putAll(values: Map<String, String>) {
-        preferences.edit { values.forEach(::putString) }
-    }
-
-    override fun clear() {
-        preferences.edit { clear() }
+    fun replace(values: Map<String, String>) {
+        clear()
+        putAll(values)
     }
 }
 
@@ -117,3 +126,8 @@ private data class BookDownloadObject(
     val sourceId: Long? = null,
     val order: Int,
 )
+
+private fun Context.durableBookDownloadQueueDirectory() =
+    runCatching { noBackupFilesDir }.getOrNull()
+        ?.takeIf { directory -> runCatching { directory.path.isNotBlank() }.getOrDefault(false) }
+        ?: filesDir

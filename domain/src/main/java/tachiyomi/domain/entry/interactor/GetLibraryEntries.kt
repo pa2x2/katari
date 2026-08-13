@@ -7,11 +7,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.retry
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
@@ -55,7 +58,7 @@ class GetLibraryEntries(
         return buildItems(
             profileId = profileId,
             favorites = favorites,
-            groups = libraryGrouping.resolveLibraryGrouping(profileId, favorites).groups,
+            groups = libraryGrouping.resolveLibraryGrouping(profileId, favorites).groups.map { it.toIdentity() },
             hiddenSources = hiddenSourceIds.get(profileId),
         )
     }
@@ -75,51 +78,15 @@ class GetLibraryEntries(
         entries: Flow<List<Entry>>,
         expectedProfileId: Long? = null,
     ): Flow<List<LibraryItem>> {
-        return entries
-            .flatMapLatest { favorites ->
-                delay(LIBRARY_INVALIDATION_DEBOUNCE)
-                if (favorites.isEmpty()) return@flatMapLatest flowOf(emptyList())
-                val profileId = favorites.first().profileId
-                check(expectedProfileId == null || profileId == expectedProfileId) {
-                    "Library entries belong to profile $profileId instead of $expectedProfileId"
-                }
-                val entryIds = favorites.map(Entry::id)
-                val details = combine(
-                    entryChapterRepository.getChaptersByEntryIds(entryIds),
-                    observeCategoryIds(profileId, entryIds),
-                    observeLibraryLastRead(profileId),
-                ) { chapters, categories, lastRead ->
-                    LibraryDetailInput(
-                        chapters = chapters,
-                        categoryIdsByEntryId = categories,
-                        lastReadByEntryId = lastRead,
-                    )
-                }
-                combine(
-                    libraryGrouping.observeLibraryGrouping(profileId, flowOf(favorites)),
-                    hiddenSourceIds.subscribe(profileId),
-                    details,
-                ) { grouping, hiddenSources, detailInput ->
-                    LibraryBuildInput(
-                        favorites = favorites,
-                        groups = grouping.groups,
-                        hiddenSources = hiddenSources,
-                        chapters = detailInput.chapters,
-                        categoryIdsByEntryId = detailInput.categoryIdsByEntryId,
-                        lastReadByEntryId = detailInput.lastReadByEntryId,
-                    )
-                }
-                    .debounce(LIBRARY_INVALIDATION_DEBOUNCE)
-                    .mapLatest { input ->
-                        buildItems(
-                            favorites = input.favorites,
-                            groups = input.groups,
-                            hiddenSources = input.hiddenSources,
-                            chapters = input.chapters,
-                            categoryIdsByEntryId = input.categoryIdsByEntryId,
-                            lastReadByEntryId = input.lastReadByEntryId,
-                        )
+        return observeLibraryFavoriteSets(entries, expectedProfileId)
+            .flatMapLatest { observation ->
+                when (observation) {
+                    LibraryFavoriteSetObservation.Empty -> flow {
+                        delay(LIBRARY_INVALIDATION_DEBOUNCE)
+                        emit(emptyList())
                     }
+                    is LibraryFavoriteSetObservation.Populated -> observeMembership(observation)
+                }
             }
             .retry {
                 if (it is NullPointerException) {
@@ -134,10 +101,63 @@ class GetLibraryEntries(
             }
     }
 
+    private fun observeMembership(
+        observation: LibraryFavoriteSetObservation.Populated,
+    ): Flow<List<LibraryItem>> = flow {
+        delay(LIBRARY_INVALIDATION_DEBOUNCE)
+        val initialFavorites = observation.updates.receive()
+        val favorites = flow {
+            emit(initialFavorites)
+            emitAll(observation.updates.receiveAsFlow())
+        }
+        val profileId = observation.key.profileId
+        val entryIds = observation.key.orderedEntryIds
+        val details = combine(
+            entryChapterRepository.getChaptersByEntryIds(entryIds),
+            observeCategoryIds(profileId, entryIds),
+            observeLibraryLastRead(profileId),
+        ) { chapters, categories, lastRead ->
+            LibraryDetailInput(
+                chapters = chapters,
+                categoryIdsByEntryId = categories,
+                lastReadByEntryId = lastRead,
+            )
+        }
+        emitAll(
+            combine(
+                favorites,
+                libraryGrouping.observeLibraryGrouping(profileId, flowOf(initialFavorites))
+                    .map { grouping -> grouping.groups.map { it.toIdentity() } },
+                hiddenSourceIds.subscribe(profileId),
+                details,
+            ) { currentFavorites, groups, hiddenSources, detailInput ->
+                LibraryBuildInput(
+                    favorites = currentFavorites,
+                    groups = groups,
+                    hiddenSources = hiddenSources,
+                    chapters = detailInput.chapters,
+                    categoryIdsByEntryId = detailInput.categoryIdsByEntryId,
+                    lastReadByEntryId = detailInput.lastReadByEntryId,
+                )
+            }
+                .debounce(LIBRARY_INVALIDATION_DEBOUNCE)
+                .mapLatest { input ->
+                    buildItems(
+                        favorites = input.favorites,
+                        groups = input.groups,
+                        hiddenSources = input.hiddenSources,
+                        chapters = input.chapters,
+                        categoryIdsByEntryId = input.categoryIdsByEntryId,
+                        lastReadByEntryId = input.lastReadByEntryId,
+                    )
+                },
+        )
+    }
+
     private suspend fun buildItems(
         profileId: Long,
         favorites: List<Entry>,
-        groups: List<EntryLibraryGroupResolution>,
+        groups: List<LibraryGroupIdentity>,
         hiddenSources: Set<Long>,
     ): List<LibraryItem> {
         if (favorites.isEmpty()) return emptyList()
@@ -174,7 +194,7 @@ class GetLibraryEntries(
 
     private suspend fun buildItems(
         favorites: List<Entry>,
-        groups: List<EntryLibraryGroupResolution>,
+        groups: List<LibraryGroupIdentity>,
         hiddenSources: Set<Long>,
         chapters: List<EntryChapter>,
         categoryIdsByEntryId: Map<Long, List<Long>>,
@@ -212,9 +232,9 @@ class GetLibraryEntries(
         }
 
         val collapsedItems = groups.mapNotNull { group ->
-            val members = group.orderedEntries.mapNotNull { entry -> itemsById[entry.id] }
+            val members = group.orderedEntryIds.mapNotNull(itemsById::get)
             when {
-                members.size > 1 -> mergeEntryItem(group.visibleEntry.id, members)
+                members.size > 1 -> mergeEntryItem(group.visibleEntryId, members)
                 members.size == 1 -> members.single()
                 else -> null
             }
@@ -320,7 +340,7 @@ class GetLibraryEntries(
 
 private data class LibraryBuildInput(
     val favorites: List<Entry>,
-    val groups: List<EntryLibraryGroupResolution>,
+    val groups: List<LibraryGroupIdentity>,
     val hiddenSources: Set<Long>,
     val chapters: List<EntryChapter>,
     val categoryIdsByEntryId: Map<Long, List<Long>>,
@@ -331,4 +351,14 @@ private data class LibraryDetailInput(
     val chapters: List<EntryChapter>,
     val categoryIdsByEntryId: Map<Long, List<Long>>,
     val lastReadByEntryId: Map<Long, Long>,
+)
+
+private data class LibraryGroupIdentity(
+    val visibleEntryId: Long,
+    val orderedEntryIds: List<Long>,
+)
+
+private fun EntryLibraryGroupResolution.toIdentity() = LibraryGroupIdentity(
+    visibleEntryId = visibleEntry.id,
+    orderedEntryIds = orderedEntries.map(Entry::id),
 )

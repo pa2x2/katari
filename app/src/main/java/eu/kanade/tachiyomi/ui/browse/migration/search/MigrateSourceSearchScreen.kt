@@ -16,7 +16,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.paging.compose.LazyPagingItems
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -31,7 +30,6 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.SourceFilterDialog
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.migration.EntryMigrationFeature
 import mihon.entry.interactions.migration.EntryMigrationPreparationResult
@@ -80,9 +78,7 @@ data class MigrateSourceSearchScreen(
         val snackbarHostState = remember { SnackbarHostState() }
         val migrationFailureMessage = stringResource(MR.strings.internal_error)
 
-        @Suppress("UNCHECKED_CAST")
-        val catalogList = screenModel.catalogPagerFlowFlow.collectAsLazyPagingItems() as
-            LazyPagingItems<StateFlow<CatalogListItem>>
+        val catalogList = screenModel.catalogPagerFlowFlow.collectAsLazyPagingItems()
 
         Scaffold(
             topBar = { scrollBehavior ->

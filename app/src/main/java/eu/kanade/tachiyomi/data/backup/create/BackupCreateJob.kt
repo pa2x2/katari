@@ -83,7 +83,7 @@ class BackupCreateJob(private val context: Context, workerParams: WorkerParamete
     }
 
     companion object {
-        fun isManualJobRunning(context: Context): Boolean {
+        suspend fun isManualJobRunning(context: Context): Boolean {
             return context.workManager.isRunning(TAG_MANUAL)
         }
 

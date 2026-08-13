@@ -77,6 +77,7 @@ internal class AnimeDownloadManager(
                 val downloads = store.restore()
                 if (downloads.isNotEmpty()) {
                     mergeRestoredQueue(downloads)
+                    workController.resumeIfRequested()
                 } else {
                     synchronized(queueMutationLock) {
                         rewriteStoredQueue()

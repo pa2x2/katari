@@ -18,6 +18,7 @@ fun EntryNotesScreen(
     state: EntryNotesScreen.State,
     navigateUp: () -> Unit,
     onUpdate: (String) -> Unit,
+    onFinish: (String) -> Unit,
 ) {
     Scaffold(
         topBar = { topBarScrollBehavior ->
@@ -36,6 +37,7 @@ fun EntryNotesScreen(
         EntryNotesTextArea(
             state = state,
             onUpdate = onUpdate,
+            onFinish = onFinish,
             modifier = Modifier
                 .padding(contentPadding)
                 .consumeWindowInsets(contentPadding)

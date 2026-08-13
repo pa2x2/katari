@@ -69,6 +69,12 @@ abstract class SearchScreenModel(
         }
     }
 
+    override fun onDispose() {
+        searchJob?.cancel()
+        coroutineDispatcher.close()
+        super.onDispose()
+    }
+
     @Composable
     fun getEntryState(initialEntry: Entry): androidx.compose.runtime.State<Entry> {
         return produceState(initialValue = initialEntry) {

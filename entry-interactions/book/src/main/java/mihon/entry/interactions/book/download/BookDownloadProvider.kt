@@ -1,5 +1,6 @@
 package mihon.entry.interactions.book.download
 
+import android.content.Context
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.util.lang.Hash
 import eu.kanade.tachiyomi.util.storage.DiskUtil
@@ -17,10 +18,21 @@ import java.security.MessageDigest
 internal class BookDownloadProvider(
     private val downloadsDirectory: () -> UniFile?,
     private val json: Json = manifestJson(),
+    private val directoryListing: BookDownloadDirectoryListing = BookDownloadDirectoryListing(),
+    private val reconciliationStore: BookDownloadReconciliationStore? = null,
 ) {
-    constructor(storageManager: StorageManager, json: Json = manifestJson()) : this(
+    private val reconciler = BookDownloadReconciler(
+        downloadsDirectory = downloadsDirectory,
+        directoryListing = directoryListing,
+        reconciliationStore = reconciliationStore,
+        readIndexedPackage = ::readIndexedPackage,
+    )
+
+    constructor(storageManager: StorageManager, context: Context, json: Json = manifestJson()) : this(
         downloadsDirectory = storageManager::getDownloadsDirectory,
         json = json,
+        directoryListing = BookDownloadDirectoryListing(context),
+        reconciliationStore = BookDownloadReconciliationStore(context),
     )
 
     fun downloadsRootUri(): String? = downloadsDirectory()?.uri?.toString()
@@ -56,7 +68,7 @@ internal class BookDownloadProvider(
         manifest: BookDownloadManifest,
     ): Result<VerifiedBookDownloadPackage> = runCatching {
         require(staging.packageKey == manifest.packageKey) { "BOOK staging identity does not match its manifest" }
-        verifyResources(staging.directory, manifest)
+        verifyResources(directoryListing.list(staging.directory), manifest)
         check(staging.directory.findFile(MANIFEST_FILE_NAME) == null) { "BOOK staging manifest already exists" }
         val manifestFile = staging.directory.createFile(MANIFEST_FILE_NAME)
             ?: throw IOException("Unable to create BOOK download manifest")
@@ -90,20 +102,27 @@ internal class BookDownloadProvider(
 
     fun scanPackages(): BookDownloadPackageScan {
         val root = downloadsDirectory() ?: return BookDownloadPackageScan(emptyList(), 0)
-        val sourceDirectories = root.listFiles().orEmpty()
+        val sourceDirectories = directoryListing.list(root)
             .filter { it.isDirectory && it.name?.endsWith(SOURCE_DIRECTORY_SUFFIX) == true }
+            .map(BookDownloadDirectoryEntry::file)
         return scanSourceDirectories(sourceDirectories)
     }
 
     fun rebuildPackages(): BookDownloadPackageScan {
         val root = downloadsDirectory() ?: return BookDownloadPackageScan(emptyList(), 0)
-        val sourceDirectories = root.listFiles().orEmpty()
+        val sourceDirectories = directoryListing.list(root)
             .filter { it.isDirectory && it.name?.endsWith(SOURCE_DIRECTORY_SUFFIX) == true }
+            .map(BookDownloadDirectoryEntry::file)
         val entryDirectories = sourceDirectories.flatMap { sourceDirectory ->
-            sourceDirectory.listFiles().orEmpty().filter(UniFile::isDirectory)
+            directoryListing.list(sourceDirectory).filter(BookDownloadDirectoryEntry::isDirectory)
+                .map(BookDownloadDirectoryEntry::file)
         }
         return scanEntryDirectories(entryDirectories, cleanupTemporaryPackages = true)
     }
+
+    suspend fun discoverPackages(
+        onPackage: (IndexedBookDownloadPackage) -> Unit = {},
+    ): BookDownloadIndexScan = reconciler.discoverPackages(onPackage)
 
     fun scanSourcePackages(sourceName: String): BookDownloadPackageScan {
         val root = downloadsDirectory() ?: return BookDownloadPackageScan(emptyList(), 0)
@@ -124,9 +143,29 @@ internal class BookDownloadProvider(
         return scanEntryDirectories(listOf(entryDirectory))
     }
 
+    /** Resolves one known package without waiting for a whole-library discovery pass. */
+    fun findVerifiedPackage(entry: Entry, child: EntryChapter): VerifiedBookDownloadPackage? {
+        val root = downloadsDirectory() ?: return null
+        val packageKey = BookDownloadPackageKey(entry.source, entry.url, child.url)
+        val entryDirectoryName = entryDirectoryName(entry)
+        val childDirectoryName = childDirectoryName(child)
+        return root.listFiles().orEmpty()
+            .asSequence()
+            .filter { it.isDirectory && it.name?.endsWith(SOURCE_DIRECTORY_SUFFIX) == true }
+            .mapNotNull { sourceDirectory ->
+                sourceDirectory.findFile(entryDirectoryName)?.takeIf(UniFile::isDirectory)
+            }
+            .mapNotNull { entryDirectory ->
+                entryDirectory.findFile(childDirectoryName)?.takeIf(UniFile::isDirectory)
+            }
+            .mapNotNull(::readVerifiedPackage)
+            .firstOrNull { it.manifest.packageKey == packageKey }
+    }
+
     private fun scanSourceDirectories(sourceDirectories: Collection<UniFile>): BookDownloadPackageScan {
         val entryDirectories = sourceDirectories.flatMap { sourceDirectory ->
-            sourceDirectory.listFiles().orEmpty().filter(UniFile::isDirectory)
+            directoryListing.list(sourceDirectory).filter(BookDownloadDirectoryEntry::isDirectory)
+                .map(BookDownloadDirectoryEntry::file)
         }
         return scanEntryDirectories(entryDirectories)
     }
@@ -135,11 +174,26 @@ internal class BookDownloadProvider(
         entryDirectories: Collection<UniFile>,
         cleanupTemporaryPackages: Boolean = false,
     ): BookDownloadPackageScan {
+        val scan = scanEntryDirectories(
+            entryDirectories = entryDirectories,
+            cleanupTemporaryPackages = cleanupTemporaryPackages,
+            readPackage = ::readVerifiedPackage,
+        )
+        return BookDownloadPackageScan(scan.packages, scan.invalidPackageCount, scan.cleanedTemporaryPackageCount)
+    }
+
+    private fun <Package> scanEntryDirectories(
+        entryDirectories: Collection<UniFile>,
+        cleanupTemporaryPackages: Boolean,
+        readPackage: (UniFile, List<BookDownloadDirectoryEntry>) -> Package?,
+        onPackage: (Package) -> Unit = {},
+    ): BookDownloadDirectoryScan<Package> {
         var invalidPackages = 0
         var cleanedTemporaryPackages = 0
         val packages = buildList {
             entryDirectories.forEach { entryDirectory ->
-                val childDirectories = entryDirectory.listFiles().orEmpty().filter(UniFile::isDirectory)
+                val entryContents = directoryListing.list(entryDirectory)
+                val childDirectories = entryContents.filter(BookDownloadDirectoryEntry::isDirectory)
                 val completeDirectories = childDirectories
                     .filterTo(mutableListOf()) { childDirectory ->
                         childDirectory.name?.endsWith(STAGING_SUFFIX) != true &&
@@ -149,31 +203,39 @@ internal class BookDownloadProvider(
                 if (cleanupTemporaryPackages) {
                     childDirectories
                         .filter { it.name?.endsWith(STAGING_SUFFIX) == true }
-                        .forEach { if (it.delete()) cleanedTemporaryPackages++ }
-                    val completeNames = completeDirectories.mapNotNullTo(mutableSetOf(), UniFile::getName)
+                        .forEach { if (it.file.delete()) cleanedTemporaryPackages++ }
+                    val completeNames = completeDirectories.mapNotNullTo(
+                        mutableSetOf(),
+                        BookDownloadDirectoryEntry::name,
+                    )
                     childDirectories
                         .filter { it.name?.endsWith(BACKUP_SUFFIX) == true }
                         .forEach { backup ->
                             val finalName = checkNotNull(backup.name).removeSuffix(BACKUP_SUFFIX)
                             if (finalName in completeNames) {
-                                if (backup.delete()) cleanedTemporaryPackages++
-                            } else if (backup.renameTo(finalName)) {
+                                if (backup.file.delete()) cleanedTemporaryPackages++
+                            } else if (backup.file.renameTo(finalName)) {
                                 cleanedTemporaryPackages++
                                 completeNames += finalName
-                                completeDirectories += backup
+                                completeDirectories += backup.copy(name = finalName)
                             }
                         }
                 }
 
                 completeDirectories.forEach { childDirectory ->
-                    val manifestFile = childDirectory.findFile(MANIFEST_FILE_NAME)
-                    if (manifestFile == null) return@forEach
-                    val verified = readVerifiedPackage(childDirectory)
-                    if (verified == null) invalidPackages++ else add(verified)
+                    val contents = directoryListing.list(childDirectory.file)
+                    if (contents.none { it.name == MANIFEST_FILE_NAME && !it.isDirectory }) return@forEach
+                    val discovered = readPackage(childDirectory.file, contents)
+                    if (discovered == null) {
+                        invalidPackages++
+                    } else {
+                        add(discovered)
+                        onPackage(discovered)
+                    }
                 }
             }
         }
-        return BookDownloadPackageScan(packages, invalidPackages, cleanedTemporaryPackages)
+        return BookDownloadDirectoryScan(packages, invalidPackages, cleanedTemporaryPackages)
     }
 
     fun renameSource(oldName: String, newName: String): Boolean {
@@ -209,28 +271,58 @@ internal class BookDownloadProvider(
         return oldDirectory.renameTo(newDirectoryName)
     }
 
-    internal fun readVerifiedPackage(directory: UniFile): VerifiedBookDownloadPackage? = runCatching {
-        val manifestFile = directory.findFile(MANIFEST_FILE_NAME) ?: return null
-        val manifestLength = manifestFile.length()
-        require(manifestLength <= MAX_MANIFEST_BYTES) { "BOOK download manifest is too large" }
-        val manifestText = manifestFile.openInputStream().use { it.readBoundedText(MAX_MANIFEST_BYTES) }
-        require(manifestText.isNotEmpty()) { "BOOK download manifest is empty" }
-        val manifest = json.decodeFromString<BookDownloadManifest>(manifestText)
-        val resources = verifyResources(directory, manifest)
+    internal fun readVerifiedPackage(directory: UniFile): VerifiedBookDownloadPackage? =
+        readVerifiedPackage(directory, directoryListing.list(directory))
+
+    private fun readVerifiedPackage(
+        directory: UniFile,
+        contents: List<BookDownloadDirectoryEntry>,
+    ): VerifiedBookDownloadPackage? = runCatching {
+        val manifest = readManifest(contents)
+        val resources = verifyResources(contents, manifest)
         VerifiedBookDownloadPackage(directory, manifest, resources)
     }.getOrNull()
 
-    private fun verifyResources(
+    private fun readIndexedPackage(
         directory: UniFile,
+        contents: List<BookDownloadDirectoryEntry>,
+    ): IndexedBookDownloadPackage? = runCatching {
+        IndexedBookDownloadPackage(
+            manifest = BookDownloadIndexManifest.from(readManifest(contents)),
+            directoryUri = directory.uri.toString(),
+        )
+    }.getOrNull()
+
+    private fun readManifest(contents: List<BookDownloadDirectoryEntry>): BookDownloadManifest {
+        val manifestEntry = contents.firstOrNull { it.name == MANIFEST_FILE_NAME && !it.isDirectory }
+            ?: throw IOException("BOOK download manifest is missing")
+        val manifestLength = manifestEntry.length
+        require(manifestLength <= MAX_MANIFEST_BYTES) { "BOOK download manifest is too large" }
+        val manifestText = manifestEntry.file.openInputStream().use { it.readBoundedText(MAX_MANIFEST_BYTES) }
+        require(manifestText.isNotEmpty()) { "BOOK download manifest is empty" }
+        return json.decodeFromString<BookDownloadManifest>(manifestText)
+    }
+
+    private fun verifyResources(
+        contents: List<BookDownloadDirectoryEntry>,
         manifest: BookDownloadManifest,
-    ): Map<String, UniFile> = manifest.resources.associate { resource ->
-        val file = directory.findFile(resource.fileName)
-            ?.takeIf(UniFile::isFile)
-            ?: throw IOException("Downloaded BOOK resource ${resource.id} is missing")
-        require(file.length() == resource.storedSize) { "Downloaded BOOK resource ${resource.id} has the wrong size" }
-        val digest = file.openInputStream().use(InputStream::sha256)
-        require(digest == resource.sha256) { "Downloaded BOOK resource ${resource.id} failed integrity verification" }
-        resource.id to file
+    ): Map<String, UniFile> {
+        val filesByName = contents.filterNot(
+            BookDownloadDirectoryEntry::isDirectory,
+        ).associateBy(BookDownloadDirectoryEntry::name)
+        return manifest.resources.associate { resource ->
+            val entry = filesByName[resource.fileName]
+                ?: throw IOException("Downloaded BOOK resource ${resource.id} is missing")
+            val storedSize = entry.length.takeIf { it >= 0L } ?: entry.file.length()
+            require(storedSize == resource.storedSize) {
+                "Downloaded BOOK resource ${resource.id} has the wrong size"
+            }
+            val digest = entry.file.openInputStream().use(InputStream::sha256)
+            require(digest == resource.sha256) {
+                "Downloaded BOOK resource ${resource.id} failed integrity verification"
+            }
+            resource.id to entry.file
+        }
     }
 
     private fun sourceDirectoryName(sourceName: String): String =
@@ -277,6 +369,18 @@ internal data class BookDownloadPackageScan(
     val packages: List<VerifiedBookDownloadPackage>,
     val invalidPackageCount: Int,
     val cleanedTemporaryPackageCount: Int = 0,
+)
+
+internal data class BookDownloadIndexScan(
+    val packages: List<IndexedBookDownloadPackage>,
+    val invalidPackageCount: Int,
+    val cleanedTemporaryPackageCount: Int = 0,
+)
+
+internal data class BookDownloadDirectoryScan<Package>(
+    val packages: List<Package>,
+    val invalidPackageCount: Int,
+    val cleanedTemporaryPackageCount: Int,
 )
 
 private fun resourceFileSuffix(mediaType: String?): String = when (mediaType) {

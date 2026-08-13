@@ -173,7 +173,7 @@ class LibraryScreenModel(
                     getCategories.subscribeForProfile(profileId),
                     getLibraryItemsFlow(profileId),
                     combine(trackingFeature.observeCollection(), getTrackingFiltersFlow(), ::Pair),
-                    getLibraryItemPreferencesFlow(),
+                    observeLibraryFilterPreferences(LibraryPreferences(profileStore.profileStore(profileId))),
                 ) { searchQuery, categories, favorites, (tracking, trackingFilters), itemPreferences ->
                     val showSystemCategory = favorites.any { it.categories.contains(0L) }
                     val categoryNamesById = categories.associate { it.id to it.name }
@@ -319,9 +319,7 @@ class LibraryScreenModel(
             }
             .launchIn(screenModelScope)
 
-        getLibraryItemPreferencesFlow()
-            .map(ItemPreferences::toDisplaySettings)
-            .distinctUntilChanged()
+        observeLibraryDisplaySettings(libraryPreferences)
             .onEach { displaySettings ->
                 mutableState.update { state ->
                     state.copy(displaySettings = displaySettings)
@@ -333,7 +331,7 @@ class LibraryScreenModel(
     private fun List<LibraryItem>.applyFilters(
         trackingEntries: Map<Long, List<EntryTrackingCollectionTrack>>,
         trackingFilter: Map<Long, TriState>,
-        preferences: ItemPreferences,
+        preferences: LibraryFilterPreferences,
     ): AppliedLibraryFilters {
         val targets = map { item ->
             EntryLibraryFilterTarget(
@@ -436,47 +434,19 @@ class LibraryScreenModel(
         )
     }
 
-    private fun getLibraryItemPreferencesFlow(): Flow<ItemPreferences> {
-        return combine(
-            libraryPreferences.downloadBadge.changes(),
-            libraryPreferences.unreadBadge.changes(),
-            libraryPreferences.localBadge.changes(),
-            libraryPreferences.languageBadge.changes(),
-            libraryPreferences.entryTypeBadge.changes(),
-            libraryPreferences.autoUpdateEntryRestrictions.changes(),
-
-            libraryPreferences.downloadedOnly.changes(),
-            libraryPreferences.filterDownloaded.changes(),
-            libraryPreferences.filterUnread.changes(),
-            libraryPreferences.filterNotStarted.changes(),
-            libraryPreferences.filterBookmarked.changes(),
-            libraryPreferences.filterCompleted.changes(),
-            libraryPreferences.filterIntervalCustom.changes(),
-        ) {
-            ItemPreferences(
-                downloadBadge = it[0] as Boolean,
-                unreadBadge = it[1] as Boolean,
-                localBadge = it[2] as Boolean,
-                languageBadge = it[3] as Boolean,
-                entryTypeBadge = it[4] as Boolean,
-                skipOutsideReleasePeriod = LibraryPreferences.ENTRY_OUTSIDE_RELEASE_PERIOD in (it[5] as Set<*>),
-                globalFilterDownloaded = it[6] as Boolean,
-                filterDownloaded = it[7] as TriState,
-                filterUnread = it[8] as TriState,
-                filterNotStarted = it[9] as TriState,
-                filterBookmarked = it[10] as TriState,
-                filterCompleted = it[11] as TriState,
-                filterIntervalCustom = it[12] as TriState,
-            )
-        }
-    }
-
     private fun getLibraryItemsFlow(profileId: Long): Flow<List<LibraryItem>> {
-        return combine(
+        val enrichedItems = combine(
             getLibraryEntries.subscribe(profileId),
             downloadRuntime.changes,
         ) { items, _ ->
             items.enrichEntryItems()
+        }
+        return enrichedItems.flatMapLatest { initialItems ->
+            observeLibraryDownloadCountUpdates(
+                initialItems = initialItems,
+                statusUpdates = downloadRuntime.statusUpdates(),
+                calculateDownloadCount = { item -> item.calculateDownloadCount(downloadRuntime) },
+            )
         }
     }
 
@@ -524,30 +494,6 @@ class LibraryScreenModel(
                 combine(filterFlows) { it.toMap() }
             }
         }
-    }
-
-    /**
-     * Returns the common categories for the given library items.
-     */
-    private suspend fun getCommonCategories(items: List<LibraryItem>): Collection<Category> {
-        if (items.isEmpty()) return emptyList()
-        return items
-            .map { getCategoriesForItem(it).toSet() }
-            .reduce { set1, set2 -> set1.intersect(set2) }
-    }
-
-    /**
-     * Returns the mix (non-common) categories for the given library items.
-     */
-    private suspend fun getMixCategories(items: List<LibraryItem>): Collection<Category> {
-        if (items.isEmpty()) return emptyList()
-        val itemCategories = items.map { getCategoriesForItem(it).toSet() }
-        val common = itemCategories.reduce { set1, set2 -> set1.intersect(set2) }
-        return itemCategories.flatten().distinct().subtract(common)
-    }
-
-    private suspend fun getCategoriesForItem(item: LibraryItem): List<Category> {
-        return categoriesForLibraryItem(item, getCategories::await)
     }
 
     /**
@@ -774,15 +720,14 @@ class LibraryScreenModel(
         // Hide the default category because it has a different behavior than the ones from db.
         val categories = state.libraryData.categories.filter { it.id != 0L }
         screenModelScope.launchIO {
-            // Get indexes of the common categories to preselect.
-            val common = getCommonCategories(items)
-            // Get indexes of the mix categories to preselect.
-            val mix = getMixCategories(items)
+            val selection = prepareLibraryCategorySelection(items) { item ->
+                categoriesForLibraryItem(item, getCategories::await)
+            }
             val preselected = categories
                 .map {
                     when (it) {
-                        in common -> CheckboxState.State.Checked(it)
-                        in mix -> CheckboxState.TriState.Exclude(it)
+                        in selection.common -> CheckboxState.State.Checked(it)
+                        in selection.mixed -> CheckboxState.TriState.Exclude(it)
                         else -> CheckboxState.State.None(it)
                     }
                 }
@@ -1007,9 +952,7 @@ class LibraryScreenModel(
     }
 
     private suspend fun getActionEntries(entryIds: List<Long>): List<Entry> {
-        return entryIds
-            .mapNotNull { getEntry.await(it) }
-            .distinctBy { it.id }
+        return getEntry.await(entryIds)
     }
 
     sealed interface Dialog {
@@ -1068,34 +1011,6 @@ class LibraryScreenModel(
                     append(creator)
                 }
             }
-    }
-
-    @Immutable
-    private data class ItemPreferences(
-        val downloadBadge: Boolean,
-        val unreadBadge: Boolean,
-        val localBadge: Boolean,
-        val languageBadge: Boolean,
-        val entryTypeBadge: Boolean,
-        val skipOutsideReleasePeriod: Boolean,
-
-        val globalFilterDownloaded: Boolean,
-        val filterDownloaded: TriState,
-        val filterUnread: TriState,
-        val filterNotStarted: TriState,
-        val filterBookmarked: TriState,
-        val filterCompleted: TriState,
-        val filterIntervalCustom: TriState,
-    ) {
-        fun toDisplaySettings(): LibraryDisplaySettings {
-            return LibraryDisplaySettings(
-                downloadBadge = downloadBadge,
-                unreadBadge = unreadBadge,
-                localBadge = localBadge,
-                languageBadge = languageBadge,
-                entryTypeBadge = entryTypeBadge,
-            )
-        }
     }
 
     private data class AppliedLibraryFilters(
@@ -1233,15 +1148,6 @@ class LibraryScreenModel(
             return if (showEntryCount || !searchQuery.isNullOrEmpty()) page.itemIds.size else null
         }
 
-        fun getItemCountForPages(pages: List<LibraryPage>): Int? {
-            if (!showEntryCount && searchQuery.isNullOrEmpty()) return null
-            return pages.flatMap(LibraryPage::itemIds).distinct().size
-        }
-
-        fun getItemCountForPrimaryTab(tab: LibraryPageTab): Int? {
-            return getItemCountForPages(displayedPages.filter { it.primaryTab.id == tab.id })
-        }
-
         fun getToolbarTitle(
             defaultTitle: String,
             defaultCategoryTitle: String,
@@ -1258,10 +1164,6 @@ class LibraryScreenModel(
             return LibraryToolbarTitle(title, count)
         }
     }
-}
-
-internal fun LibraryItem.calculateDownloadCount(downloadRuntime: EntryDownloadRuntimeFeature): Int {
-    return memberEntries.sumOf(downloadRuntime::downloadCount)
 }
 
 internal fun observeGroupedLibraryPages(
@@ -1284,6 +1186,7 @@ internal fun observeGroupedLibraryPages(
         randomSortSeed,
     ) { data, grouping, sortingMode, randomSortSeed ->
         val pages = applySort(applyGrouping(data, grouping), data, sortingMode, randomSortSeed)
+            .withTabItemCounts()
         GroupedLibraryPages(
             profileId = checkNotNull(data.profileId),
             grouping = grouping,
@@ -1359,17 +1262,6 @@ internal fun List<LibraryItem>.downloadSourceIdsFor(entry: Entry): Set<Long> {
         .flatMap { it.sourceIds }
         .toSet()
         .ifEmpty { setOf(entry.source) }
-}
-
-internal suspend fun categoriesForLibraryItem(
-    item: LibraryItem,
-    getCategories: suspend (Long) -> List<Category>,
-): List<Category> {
-    return item.memberEntryIds
-        .map(LibraryItemKey::id)
-        .distinct()
-        .flatMap { getCategories(it) }
-        .distinctBy(Category::id)
 }
 
 internal suspend fun updateLibraryItemCategories(

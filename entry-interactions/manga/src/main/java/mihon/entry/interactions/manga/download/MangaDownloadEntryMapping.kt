@@ -30,6 +30,8 @@ internal fun MangaDownload.toEntryDownloadStatus(): EntryDownloadStatus {
         chapterId = chapter.id,
         state = status.toEntryDownloadState(),
         progress = progress,
+        entryId = entry.id,
+        sourceId = entry.source,
     )
 }
 

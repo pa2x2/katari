@@ -184,6 +184,7 @@ object SettingsDataScreen : SearchableSettings {
     private fun getBackupAndRestoreGroup(backupPreferences: BackupPreferences): Preference.PreferenceGroup {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
+        val scope = rememberCoroutineScope()
 
         val lastAutoBackup by backupPreferences.lastAutoBackupTimestamp.collectAsState()
 
@@ -230,15 +231,17 @@ object SettingsDataScreen : SearchableSettings {
                                     modifier = Modifier.fillMaxHeight(),
                                     checked = false,
                                     onCheckedChange = {
-                                        if (!BackupRestoreJob.isRunning(context)) {
-                                            if (DeviceUtil.isMiui && DeviceUtil.isMiuiOptimizationDisabled()) {
-                                                context.toast(MR.strings.restore_miui_warning)
-                                            }
+                                        scope.launch {
+                                            if (!BackupRestoreJob.isRunning(context)) {
+                                                if (DeviceUtil.isMiui && DeviceUtil.isMiuiOptimizationDisabled()) {
+                                                    context.toast(MR.strings.restore_miui_warning)
+                                                }
 
-                                            // no need to catch because it's wrapped with a chooser
-                                            chooseBackup.launch("*/*")
-                                        } else {
-                                            context.toast(MR.strings.restore_in_progress)
+                                                // no need to catch because it's wrapped with a chooser
+                                                chooseBackup.launch("*/*")
+                                            } else {
+                                                context.toast(MR.strings.restore_in_progress)
+                                            }
                                         }
                                     },
                                     shape = SegmentedButtonDefaults.itemShape(1, 2),

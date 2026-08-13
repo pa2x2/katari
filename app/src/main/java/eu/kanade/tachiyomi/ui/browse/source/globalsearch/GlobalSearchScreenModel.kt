@@ -76,6 +76,12 @@ class GlobalSearchScreenModel(
         }
     }
 
+    override fun onDispose() {
+        searchJob?.cancel()
+        coroutineDispatcher.close()
+        super.onDispose()
+    }
+
     @Composable
     fun getItem(initialItem: GlobalSearchItem): androidx.compose.runtime.State<GlobalSearchItem> {
         return produceState(initialValue = initialItem) {

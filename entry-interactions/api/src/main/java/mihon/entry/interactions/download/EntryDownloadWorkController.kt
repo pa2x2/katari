@@ -4,4 +4,7 @@ package mihon.entry.interactions.download
 interface EntryDownloadWorkController {
     fun start()
     fun stop()
+
+    /** Restores execution only when the last explicit user intent was to keep downloading. */
+    fun resumeIfRequested() = Unit
 }

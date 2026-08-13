@@ -24,7 +24,11 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -101,6 +105,17 @@ class UpdatesScreenModel(
             val limit = Clock.System.now().minus(3, DateTimeUnit.MONTH, TimeZone.currentSystemDefault())
 
             observeProfileScopedState(activeProfileProvider.activeProfileIdFlow) { profileId ->
+                val durableDownloadChanges = getUpdatesItemPreferenceFlow()
+                    .distinctUntilChanged { old, new -> old.filterDownloaded == new.filterDownloaded }
+                    .flatMapLatest { preferences ->
+                        if (preferences.filterDownloaded == TriState.DISABLED) {
+                            emptyFlow<Unit>()
+                        } else {
+                            downloadRuntime.statusUpdates()
+                                .filter { it.persistedContentChanged }
+                                .map { Unit }
+                        }
+                    }
                 combine(
                     // needed for SQL filters (unread, started, bookmarked, etc)
                     getUpdatesItemPreferenceFlow()
@@ -117,7 +132,7 @@ class UpdatesScreenModel(
                                 excludedCategories = it.filterExcludedCategories,
                             ).distinctUntilChanged()
                         },
-                    downloadRuntime.changes,
+                    merge(downloadRuntime.changes, durableDownloadChanges),
                     // needed for Kotlin filters (downloaded)
                     getUpdatesItemPreferenceFlow().distinctUntilChanged { old, new ->
                         old.filterDownloaded == new.filterDownloaded
@@ -235,11 +250,9 @@ class UpdatesScreenModel(
         }
     }
 
-    fun updateLibrary(): Boolean {
+    suspend fun updateLibrary(): Boolean {
         val started = LibraryUpdateJob.startNow(Injekt.get<Application>())
-        screenModelScope.launch {
-            _events.send(Event.LibraryUpdateTriggered(started))
-        }
+        _events.send(Event.LibraryUpdateTriggered(started))
         return started
     }
 

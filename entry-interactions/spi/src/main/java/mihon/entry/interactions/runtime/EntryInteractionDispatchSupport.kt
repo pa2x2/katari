@@ -165,6 +165,28 @@ internal fun <T> List<Flow<T>>.merged(): Flow<T> {
     }
 }
 
+/** Emits after every input has a current value, then whenever any input changes. */
+internal fun List<Flow<Unit>>.combinedLatestUnit(): Flow<Unit> {
+    return when (size) {
+        0 -> flowOf(Unit)
+        1 -> first()
+        else -> channelFlow {
+            val ready = BooleanArray(size)
+            forEachIndexed { index, flow ->
+                launch {
+                    flow.collect {
+                        val allReady = synchronized(ready) {
+                            ready[index] = true
+                            ready.all { it }
+                        }
+                        if (allReady) send(Unit)
+                    }
+                }
+            }
+        }
+    }
+}
+
 internal fun List<Flow<Boolean>>.combinedAny(): Flow<Boolean> {
     return when (size) {
         0 -> flowOf(false)

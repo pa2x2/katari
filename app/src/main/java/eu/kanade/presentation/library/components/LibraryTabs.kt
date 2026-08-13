@@ -16,7 +16,6 @@ internal fun LibraryTabs(
     tabs: List<LibraryPageTab>,
     selectedTabId: String?,
     showItemCounts: Boolean,
-    getItemCountForTab: (LibraryPageTab) -> Int?,
     onTabItemClick: (LibraryPageTab) -> Unit,
 ) {
     val selectedTabIndex = tabs.indexOfFirst { it.id == selectedTabId }
@@ -33,7 +32,7 @@ internal fun LibraryTabs(
                 text = {
                     TabText(
                         text = tab.displayTitle(stringResource(MR.strings.label_default)),
-                        badgeCount = if (showItemCounts) getItemCountForTab(tab) else null,
+                        badgeCount = if (showItemCounts) tab.itemCount else null,
                     )
                 },
                 unselectedContentColor = MaterialTheme.colorScheme.onSurface,

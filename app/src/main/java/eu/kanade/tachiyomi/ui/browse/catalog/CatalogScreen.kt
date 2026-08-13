@@ -38,7 +38,6 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.paging.LoadState
-import androidx.paging.compose.LazyPagingItems
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -73,7 +72,6 @@ import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -131,9 +129,7 @@ data class CatalogScreen(
         val haptic = LocalHapticFeedback.current
         val snackbarHostState = remember { SnackbarHostState() }
 
-        @Suppress("UNCHECKED_CAST")
-        val catalogList =
-            screenModel.catalogPagerFlowFlow.collectAsLazyPagingItems() as LazyPagingItems<StateFlow<CatalogListItem>>
+        val catalogList = screenModel.catalogPagerFlowFlow.collectAsLazyPagingItems()
         var presetPendingDeletion by rememberSaveable { mutableStateOf<String?>(null) }
         var immersiveMode by rememberSaveable(sourceId) { mutableStateOf(false) }
         val immersivePositionState = rememberEntryImmersivePositionState(resetKey = state.listing)

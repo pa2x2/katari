@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.rememberScreenModel
@@ -24,6 +25,7 @@ import eu.kanade.tachiyomi.data.backup.create.BackupOptions
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.LabeledCheckbox
 import tachiyomi.presentation.core.components.LazyColumnWithAction
@@ -39,6 +41,7 @@ class CreateBackupScreen : Screen() {
         val navigator = LocalNavigator.currentOrThrow
         val model = rememberScreenModel { CreateBackupScreenModel() }
         val state by model.state.collectAsState()
+        val scope = rememberCoroutineScope()
 
         val chooseBackupDir = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.CreateDocument("application/*"),
@@ -68,14 +71,16 @@ class CreateBackupScreen : Screen() {
                 actionLabel = stringResource(MR.strings.action_create),
                 actionEnabled = state.options.canCreate(),
                 onClickAction = {
-                    if (!BackupCreateJob.isManualJobRunning(context)) {
-                        try {
-                            chooseBackupDir.launch(BackupCreator.getFilename())
-                        } catch (e: ActivityNotFoundException) {
-                            context.toast(MR.strings.file_picker_error)
+                    scope.launch {
+                        if (!BackupCreateJob.isManualJobRunning(context)) {
+                            try {
+                                chooseBackupDir.launch(BackupCreator.getFilename())
+                            } catch (e: ActivityNotFoundException) {
+                                context.toast(MR.strings.file_picker_error)
+                            }
+                        } else {
+                            context.toast(MR.strings.backup_in_progress)
                         }
-                    } else {
-                        context.toast(MR.strings.backup_in_progress)
                     }
                 },
             ) {

@@ -3,6 +3,8 @@ package tachiyomi.domain.entry.repository
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import tachiyomi.domain.entry.model.Entry
 
 interface EntryRepository {
@@ -11,7 +13,20 @@ interface EntryRepository {
 
     suspend fun getEntryById(id: Long, profileId: Long): Entry?
 
+    suspend fun getEntriesByIds(entryIds: List<Long>): List<Entry> {
+        return entryIds.distinct().sorted().mapNotNull { getEntryById(it) }
+    }
+
     suspend fun getEntryByIdAsFlow(id: Long): Flow<Entry>
+
+    suspend fun getEntriesByIdsAsFlow(entryIds: List<Long>): Flow<List<Entry>> {
+        val entryFlows = entryIds.distinct().sorted().map { getEntryByIdAsFlow(it) }
+        return if (entryFlows.isEmpty()) {
+            flowOf(emptyList())
+        } else {
+            combine(entryFlows) { it.toList() }
+        }
+    }
 
     suspend fun getEntryByUrlAndSourceId(
         url: String,
@@ -82,11 +97,20 @@ interface EntryRepository {
 
     suspend fun updateDisplayName(entryId: Long, displayName: String?): Boolean
 
+    suspend fun updateNotes(entryId: Long, profileId: Long, notes: String): Boolean {
+        val entry = getEntryById(entryId, profileId) ?: return false
+        return update(entry.copy(notes = notes), profileId)
+    }
+
     suspend fun insert(entry: Entry): Long
 
     suspend fun insertOrUpdate(entry: Entry): Entry
 
     suspend fun insertOrUpdate(entry: Entry, profileId: Long): Entry
+
+    suspend fun insertOrUpdateBatch(entries: List<Entry>, profileId: Long): List<Entry> {
+        return entries.map { insertOrUpdate(it, profileId) }
+    }
 
     suspend fun update(entry: Entry): Boolean
 

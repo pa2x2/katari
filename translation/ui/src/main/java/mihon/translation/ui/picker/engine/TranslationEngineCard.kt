@@ -45,7 +45,6 @@ internal fun TranslationEngineCard(
     modifier: Modifier = Modifier,
 ) {
     val engine = model.state.engine
-    val selectionEnabled = model.selectable && !model.selected
     val contentPadding = if (density == TranslationEnginePickerDensity.Full) 16.dp else 12.dp
     val artworkSize = if (density == TranslationEnginePickerDensity.Full) 56.dp else 40.dp
     val containerColor = if (model.selected) {
@@ -102,11 +101,7 @@ internal fun TranslationEngineCard(
                 RadioButton(
                     selected = model.selected,
                     enabled = model.selectable,
-                    onClick = if (selectionEnabled) {
-                        { onSelect(engine.id) }
-                    } else {
-                        null
-                    },
+                    onClick = null,
                 )
             }
             Spacer(modifier = Modifier.height(if (density == TranslationEnginePickerDensity.Full) 12.dp else 8.dp))

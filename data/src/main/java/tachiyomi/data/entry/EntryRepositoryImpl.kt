@@ -6,10 +6,16 @@ import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
@@ -17,10 +23,12 @@ import logcat.LogPriority
 import tachiyomi.core.common.util.lang.toLong
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.ActiveProfileProvider
+import tachiyomi.data.Database
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.data.MemoColumnAdapter
 import tachiyomi.data.StringListColumnAdapter
 import tachiyomi.data.UpdateStrategyColumnAdapter
+import tachiyomi.data.query.chunkedForSqlQuery
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.EntrySourceSyncRepository
@@ -45,11 +53,41 @@ class EntryRepositoryImpl(
         }
     }
 
+    override suspend fun getEntriesByIds(entryIds: List<Long>): List<Entry> {
+        val sortedEntryIds = entryIds.distinct().sorted()
+        if (sortedEntryIds.isEmpty()) return emptyList()
+        val profileId = profileProvider.activeProfileId
+        return handler.await(inTransaction = true) {
+            sortedEntryIds.chunkedForSqlQuery().flatMap { entryIdChunk ->
+                entriesQueries.getEntriesByIds(profileId, entryIdChunk, EntryMapper::mapEntry).awaitAsList()
+            }
+        }
+    }
+
     override suspend fun getEntryByIdAsFlow(id: Long): Flow<Entry> {
         return profileProvider.activeProfileIdFlow.flatMapLatest { profileId ->
             handler.subscribeToOneOrNull {
                 entriesQueries.getEntryById(id, profileId, EntryMapper::mapEntry)
             }.filterNotNull()
+        }
+    }
+
+    override suspend fun getEntriesByIdsAsFlow(entryIds: List<Long>): Flow<List<Entry>> {
+        val sortedEntryIds = entryIds.distinct().sorted()
+        if (sortedEntryIds.isEmpty()) return kotlinx.coroutines.flow.flowOf(emptyList())
+        return profileProvider.activeProfileIdFlow.flatMapLatest { profileId ->
+            handler.subscribeToOneOrNull {
+                entriesQueries.getEntryById(sortedEntryIds.first(), profileId, EntryMapper::mapEntry)
+            }.map { Unit }
+                .mapLatest {
+                    handler.await(inTransaction = true) {
+                        sortedEntryIds.chunkedForSqlQuery().flatMap { entryIdChunk ->
+                            entriesQueries.getEntriesByIds(profileId, entryIdChunk, EntryMapper::mapEntry)
+                                .awaitAsList()
+                        }
+                    }
+                }
+                .distinctUntilChanged()
         }
     }
 
@@ -276,6 +314,15 @@ class EntryRepositoryImpl(
         }
     }
 
+    override suspend fun updateNotes(entryId: Long, profileId: Long, notes: String): Boolean {
+        return try {
+            handler.awaitOneExecutable { entriesQueries.updateNotes(notes, entryId, profileId) } > 0
+        } catch (e: Exception) {
+            logcat(LogPriority.ERROR, e)
+            false
+        }
+    }
+
     override suspend fun insert(entry: Entry): Long {
         return handler.await(inTransaction = true) {
             entriesQueries.insertReturningId(
@@ -314,35 +361,102 @@ class EntryRepositoryImpl(
 
     override suspend fun insertOrUpdate(entry: Entry, profileId: Long): Entry {
         return handler.await(inTransaction = true) {
-            entriesQueries.insertNetworkEntry(
-                profileId = profileId,
-                source = entry.source,
-                url = entry.url,
-                title = entry.title,
-                artist = entry.artist,
-                author = entry.author,
-                description = entry.description,
-                genre = entry.genre,
-                status = entry.status.value.toLong(),
-                thumbnailUrl = entry.thumbnailUrl,
-                favorite = entry.favorite,
-                lastUpdate = entry.lastUpdate,
-                nextUpdate = entry.nextUpdate,
-                initialized = entry.initialized,
-                viewerFlags = entry.viewerFlags,
-                chapterFlags = entry.chapterFlags,
-                coverLastModified = entry.coverLastModified,
-                dateAdded = entry.dateAdded,
-                updateStrategy = entry.updateStrategy,
-                calculateInterval = entry.fetchInterval.toLong(),
-                version = entry.version,
-                memo = entry.memo,
-                type = entry.type.name.lowercase(),
-                updateTitle = entry.title.isNotBlank(),
-                updateCover = !entry.thumbnailUrl.isNullOrBlank(),
-                updateDetails = entry.initialized,
-            ).awaitAsOne().let(EntryMapper::mapEntry)
+            insertOrUpdateNetworkEntry(entry, profileId)
         }
+    }
+
+    override suspend fun insertOrUpdateBatch(entries: List<Entry>, profileId: Long): List<Entry> {
+        if (entries.isEmpty()) return emptyList()
+
+        val callerContext = currentCoroutineContext()
+        val outcome = withContext(NonCancellable) {
+            handler.await(inTransaction = true) {
+                val persisted = ArrayList<Entry>(entries.size)
+                var failure: Throwable? = null
+                for (entry in entries) {
+                    try {
+                        callerContext.ensureActive()
+                    } catch (error: Throwable) {
+                        failure = error
+                        break
+                    }
+
+                    var savepointStarted = false
+                    try {
+                        entriesQueries.beginNetworkEntryPersistence()
+                        savepointStarted = true
+                        val persistedEntry = insertOrUpdateNetworkEntry(entry, profileId)
+                        callerContext.ensureActive()
+                        entriesQueries.finishNetworkEntryPersistence()
+                        savepointStarted = false
+                        persisted += persistedEntry
+                    } catch (error: Throwable) {
+                        if (savepointStarted) {
+                            entriesQueries.rollbackNetworkEntryPersistence()
+                            entriesQueries.finishNetworkEntryPersistence()
+                        }
+                        failure = error
+                        break
+                    }
+                }
+                EntryBatchPersistenceOutcome(persisted, failure)
+            }
+        }
+        outcome.failure?.let { throw it }
+        return outcome.entries
+    }
+
+    private suspend fun Database.insertOrUpdateNetworkEntry(entry: Entry, profileId: Long): Entry {
+        entriesQueries.insertNetworkEntry(
+            profileId = profileId,
+            source = entry.source,
+            url = entry.url,
+            title = entry.title,
+            artist = entry.artist,
+            author = entry.author,
+            description = entry.description,
+            genre = entry.genre,
+            status = entry.status.value.toLong(),
+            thumbnailUrl = entry.thumbnailUrl,
+            favorite = entry.favorite,
+            lastUpdate = entry.lastUpdate,
+            nextUpdate = entry.nextUpdate,
+            initialized = entry.initialized,
+            viewerFlags = entry.viewerFlags,
+            chapterFlags = entry.chapterFlags,
+            coverLastModified = entry.coverLastModified,
+            dateAdded = entry.dateAdded,
+            updateStrategy = entry.updateStrategy,
+            calculateInterval = entry.fetchInterval.toLong(),
+            version = entry.version,
+            memo = entry.memo,
+            type = entry.type.name.lowercase(),
+        )
+        entriesQueries.updateNetworkEntry(
+            profileId = profileId,
+            source = entry.source,
+            url = entry.url,
+            title = entry.title,
+            artist = entry.artist,
+            author = entry.author,
+            description = entry.description,
+            genre = entry.genre,
+            status = entry.status.value.toLong(),
+            thumbnailUrl = entry.thumbnailUrl,
+            updateStrategy = entry.updateStrategy,
+            memo = entry.memo,
+            type = entry.type.name.lowercase(),
+            updateTitle = entry.title.isNotBlank(),
+            updateCover = !entry.thumbnailUrl.isNullOrBlank(),
+            updateDetails = entry.initialized,
+        )
+        return entriesQueries.getEntryByUrlAndSource(
+            profileId = profileId,
+            url = entry.url,
+            source = entry.source,
+            type = entry.type.name.lowercase(),
+            mapper = EntryMapper::mapEntry,
+        ).awaitAsOne()
     }
 
     override suspend fun update(entry: Entry): Boolean {
@@ -475,3 +589,8 @@ class EntryRepositoryImpl(
         }
     }
 }
+
+private data class EntryBatchPersistenceOutcome(
+    val entries: List<Entry>,
+    val failure: Throwable?,
+)

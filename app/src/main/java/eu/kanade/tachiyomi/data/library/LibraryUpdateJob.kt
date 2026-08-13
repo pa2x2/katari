@@ -32,6 +32,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.datetime.TimeZone
@@ -520,7 +521,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
             }
         }
 
-        fun startNow(
+        suspend fun startNow(
             context: Context,
             category: Category? = null,
             sourceId: Long? = null,
@@ -547,12 +548,12 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
             return true
         }
 
-        fun stop(context: Context) {
+        suspend fun stop(context: Context) {
             val wm = context.workManager
             val workQuery = WorkQuery.Builder.fromTags(listOf(TAG))
                 .addStates(listOf(WorkInfo.State.RUNNING))
                 .build()
-            wm.getWorkInfos(workQuery).get()
+            wm.getWorkInfos(workQuery).await()
                 // Should only return one work but just in case
                 .forEach {
                     wm.cancelWorkById(it.id)

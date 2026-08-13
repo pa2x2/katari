@@ -120,7 +120,7 @@ data object LibraryTab : Tab {
             }
         }
 
-        val onClickRefresh: (LibraryScreenModel.State) -> Boolean = { state ->
+        val onClickRefresh: suspend (LibraryScreenModel.State) -> Boolean = { state ->
             val activePage = state.activePage
             val started = LibraryUpdateJob.startNow(
                 context = context,
@@ -144,7 +144,7 @@ data object LibraryTab : Tab {
             started
         }
 
-        val onClickGlobalUpdate: () -> Boolean = {
+        val onClickGlobalUpdate: suspend () -> Boolean = {
             val started = LibraryUpdateJob.startNow(context)
             showRefreshMessage(started, MR.strings.updating_library)
             started
@@ -166,8 +166,8 @@ data object LibraryTab : Tab {
                     onClickSelectAll = screenModel::selectAll,
                     onClickInvertSelection = screenModel::invertSelection,
                     onClickFilter = screenModel::showSettingsDialog,
-                    onClickRefresh = { onClickRefresh(state) },
-                    onClickGlobalUpdate = { onClickGlobalUpdate() },
+                    onClickRefresh = { scope.launch { onClickRefresh(state) } },
+                    onClickGlobalUpdate = { scope.launch { onClickGlobalUpdate() } },
                     onClickOpenRandomEntry = {
                         scope.launch {
                             val randomItem = screenModel.getRandomLibraryItemForCurrentPage()
@@ -270,8 +270,6 @@ data object LibraryTab : Tab {
                         onGlobalSearchClicked = {
                             navigator.push(GlobalSearchScreen(screenModel.state.value.searchQuery ?: ""))
                         },
-                        getItemCountForPage = { state.getItemCountForPage(it) },
-                        getItemCountForPages = { state.getItemCountForPages(it) },
                         getDisplayMode = { screenModel.getDisplayMode() },
                         getColumnsForOrientation = { screenModel.getColumnsForOrientation(it) },
                         getItemsForPage = { state.getItemsForPage(it) },

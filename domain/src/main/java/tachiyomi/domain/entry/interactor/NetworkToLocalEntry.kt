@@ -26,4 +26,8 @@ class NetworkToLocalEntry(
             entryRepository.insertOrUpdate(it, profileId)
         }
     }
+
+    suspend fun persistBatch(entries: List<Entry>, profileId: Long): List<Entry> {
+        return entryRepository.insertOrUpdateBatch(entries, profileId)
+    }
 }

@@ -42,17 +42,17 @@ class SourceMigrationExecutionRunner(
         val total = items.size + completed
         onProgress(completed, total)
         for (item in items) {
-            val current = store.get(sessionId) ?: return SourceMigrationExecutionRunResult.SessionMissing
+            val current = store.getRunControl(sessionId) ?: return SourceMigrationExecutionRunResult.SessionMissing
             if (current.stage != SourceMigrationSessionStage.EXECUTING || current.cancellationRequested) {
                 pause(sessionId, current.stage)
                 return SourceMigrationExecutionRunResult.Paused
             }
-            executeItem(current, item)
+            executeItem(session, item)
             completed++
             onProgress(completed, total)
         }
 
-        val current = store.get(sessionId) ?: return SourceMigrationExecutionRunResult.SessionMissing
+        val current = store.getRunControl(sessionId) ?: return SourceMigrationExecutionRunResult.SessionMissing
         if (current.stage != SourceMigrationSessionStage.EXECUTING || current.cancellationRequested) {
             pause(sessionId, current.stage)
             return SourceMigrationExecutionRunResult.Paused
