@@ -10,9 +10,11 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
@@ -26,6 +28,7 @@ import tachiyomi.data.DatabaseHandler
 import tachiyomi.data.MemoColumnAdapter
 import tachiyomi.data.StringListColumnAdapter
 import tachiyomi.data.UpdateStrategyColumnAdapter
+import tachiyomi.data.query.chunkedForSqlQuery
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.EntrySourceSyncRepository
@@ -55,6 +58,25 @@ class EntryRepositoryImpl(
             handler.subscribeToOneOrNull {
                 entriesQueries.getEntryById(id, profileId, EntryMapper::mapEntry)
             }.filterNotNull()
+        }
+    }
+
+    override suspend fun getEntriesByIdsAsFlow(entryIds: List<Long>): Flow<List<Entry>> {
+        val sortedEntryIds = entryIds.distinct().sorted()
+        if (sortedEntryIds.isEmpty()) return kotlinx.coroutines.flow.flowOf(emptyList())
+        return profileProvider.activeProfileIdFlow.flatMapLatest { profileId ->
+            handler.subscribeToOneOrNull {
+                entriesQueries.getEntryById(sortedEntryIds.first(), profileId, EntryMapper::mapEntry)
+            }.map { Unit }
+                .mapLatest {
+                    handler.await(inTransaction = true) {
+                        sortedEntryIds.chunkedForSqlQuery().flatMap { entryIdChunk ->
+                            entriesQueries.getEntriesByIds(profileId, entryIdChunk, EntryMapper::mapEntry)
+                                .awaitAsList()
+                        }
+                    }
+                }
+                .distinctUntilChanged()
         }
     }
 

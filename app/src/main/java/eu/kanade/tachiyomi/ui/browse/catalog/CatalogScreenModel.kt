@@ -180,6 +180,7 @@ class CatalogScreenModel(
     }
 
     private val hideInLibraryItems = sourcePreferences.hideInLibraryItems.get()
+    private val catalogEntryStateStore = CatalogEntryStateStore(ioCoroutineScope, getEntry::subscribe)
 
     val catalogPagerFlowFlow = state.map { it.listing }
         .distinctUntilChanged()
@@ -194,18 +195,7 @@ class CatalogScreenModel(
                 }.flow.map { pagingData ->
                     pagingData.map { item ->
                         val entryItem = item as CatalogListItem.EntryItem
-                        getEntry.subscribe(
-                            entryItem.entry.url,
-                            entryItem.entry.source,
-                            entryItem.entry.type,
-                        )
-                            .map {
-                                CatalogListItem.EntryItem(
-                                    it ?: entryItem.entry,
-                                    entryItem.sourceItemOrientation,
-                                )
-                            }
-                            .stateIn(ioCoroutineScope)
+                        catalogEntryStateStore.stateFor(entryItem)
                     }
                         .filter { migrationEntryType == null || it.value.entry.type == migrationEntryType }
                         .filter { !hideInLibraryItems || !it.value.favorite }

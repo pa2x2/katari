@@ -27,6 +27,10 @@ class GetEntry(
         return entryRepository.getEntryByIdAsFlow(id)
     }
 
+    suspend fun subscribe(entryIds: List<Long>): Flow<List<Entry>> {
+        return entryRepository.getEntriesByIdsAsFlow(entryIds)
+    }
+
     suspend fun awaitNonFavoriteIds(entryIds: List<Long>): List<Long> {
         return entryRepository.getNonFavoriteIds(entryIds)
     }

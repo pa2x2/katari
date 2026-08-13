@@ -3,6 +3,8 @@ package tachiyomi.domain.entry.repository
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import tachiyomi.domain.entry.model.Entry
 
 interface EntryRepository {
@@ -12,6 +14,15 @@ interface EntryRepository {
     suspend fun getEntryById(id: Long, profileId: Long): Entry?
 
     suspend fun getEntryByIdAsFlow(id: Long): Flow<Entry>
+
+    suspend fun getEntriesByIdsAsFlow(entryIds: List<Long>): Flow<List<Entry>> {
+        val entryFlows = entryIds.distinct().sorted().map { getEntryByIdAsFlow(it) }
+        return if (entryFlows.isEmpty()) {
+            flowOf(emptyList())
+        } else {
+            combine(entryFlows) { it.toList() }
+        }
+    }
 
     suspend fun getEntryByUrlAndSourceId(
         url: String,
