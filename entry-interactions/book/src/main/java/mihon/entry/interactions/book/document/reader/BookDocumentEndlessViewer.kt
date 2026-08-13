@@ -15,12 +15,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.withTimeoutOrNull
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildWindow
 import tachiyomi.domain.entry.model.EntryChapter
@@ -175,16 +173,7 @@ internal fun BookDocumentEndlessViewer(
         observedTextSizePercent = textSizePercent
         if (anchor == null) return@LaunchedEffect
         textSizeReflowAnchor = anchor
-        val previousLayout = listState.layoutInfo.visibleItemsInfo.map { it.key to it.size }
-        withTimeoutOrNull(TEXT_SIZE_REFLOW_TIMEOUT_MILLIS) {
-            snapshotFlow {
-                listState.layoutInfo.visibleItemsInfo.map { it.key to it.size }
-            }
-                .filter { layout -> layout != previousLayout }
-                .first()
-        }
         scrollToSectionPosition(anchor.section, anchor.position)
-        delay(TEXT_SIZE_REFLOW_SETTLE_MILLIS)
         textSizeReflowAnchor = null
     }
 
@@ -230,7 +219,9 @@ internal fun BookDocumentEndlessViewer(
         snapshotFlow { listState.isScrollInProgress }
             .distinctUntilChanged()
             .filter { it }
-            .collect { currentOnScrollStarted() }
+            .collect {
+                if (textSizeReflowAnchor == null) currentOnScrollStarted()
+            }
     }
     LaunchedEffect(listState, items) {
         snapshotFlow {
@@ -321,6 +312,3 @@ private data class TerminalLayoutObservation(
     val canScrollForward: Boolean,
     val scrollInProgress: Boolean,
 )
-
-private const val TEXT_SIZE_REFLOW_TIMEOUT_MILLIS = 1_500L
-private const val TEXT_SIZE_REFLOW_SETTLE_MILLIS = 500L
