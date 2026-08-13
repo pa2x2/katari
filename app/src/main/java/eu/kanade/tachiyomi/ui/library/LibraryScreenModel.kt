@@ -33,7 +33,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.updateAndGet
 import mihon.core.common.utils.mutate
@@ -45,7 +44,6 @@ import mihon.entry.interactions.download.EntryDownloadActionAvailability
 import mihon.entry.interactions.download.EntryDownloadActionFeature
 import mihon.entry.interactions.download.EntryDownloadActionRequest
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
-import mihon.entry.interactions.download.EntryDownloadStatus
 import mihon.entry.interactions.library.EntryLibraryFilterAvailability
 import mihon.entry.interactions.library.EntryLibraryFilterControlAvailability
 import mihon.entry.interactions.library.EntryLibraryFilterFeature
@@ -481,21 +479,11 @@ class LibraryScreenModel(
             items.enrichEntryItems()
         }
         return enrichedItems.flatMapLatest { initialItems ->
-            downloadRuntime.statusUpdates()
-                .filter { status -> status.persistedContentChanged && status.entryId != null }
-                .scan(initialItems) { items, status -> items.updateDownloadCount(status) }
-        }
-    }
-
-    private fun List<LibraryItem>.updateDownloadCount(status: EntryDownloadStatus): List<LibraryItem> {
-        val entryId = status.entryId ?: return this
-        val affectedIndex = indexOfFirst { item ->
-            item.memberEntries.any { it.type == status.entryType && it.id == entryId }
-        }
-        if (affectedIndex < 0) return this
-        return toMutableList().also { items ->
-            val affected = items[affectedIndex]
-            items[affectedIndex] = affected.copy(downloadCount = affected.calculateDownloadCount(downloadRuntime))
+            observeLibraryDownloadCountUpdates(
+                initialItems = initialItems,
+                statusUpdates = downloadRuntime.statusUpdates(),
+                calculateDownloadCount = { item -> item.calculateDownloadCount(downloadRuntime) },
+            )
         }
     }
 
@@ -1252,10 +1240,6 @@ class LibraryScreenModel(
             return LibraryToolbarTitle(title, count)
         }
     }
-}
-
-internal fun LibraryItem.calculateDownloadCount(downloadRuntime: EntryDownloadRuntimeFeature): Int {
-    return memberEntries.sumOf(downloadRuntime::downloadCount)
 }
 
 internal fun observeGroupedLibraryPages(
