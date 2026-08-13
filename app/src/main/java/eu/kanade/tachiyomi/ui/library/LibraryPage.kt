@@ -24,6 +24,7 @@ data class LibraryPageTab(
     val title: String,
     val category: Category? = null,
     val dimension: LibraryGroupingDimension? = null,
+    val itemCount: Int? = null,
 )
 
 fun LibraryPage.displayTitle(defaultCategoryTitle: String): String {

@@ -1215,15 +1215,6 @@ class LibraryScreenModel(
             return if (showEntryCount || !searchQuery.isNullOrEmpty()) page.itemIds.size else null
         }
 
-        fun getItemCountForPages(pages: List<LibraryPage>): Int? {
-            if (!showEntryCount && searchQuery.isNullOrEmpty()) return null
-            return pages.flatMap(LibraryPage::itemIds).distinct().size
-        }
-
-        fun getItemCountForPrimaryTab(tab: LibraryPageTab): Int? {
-            return getItemCountForPages(displayedPages.filter { it.primaryTab.id == tab.id })
-        }
-
         fun getToolbarTitle(
             defaultTitle: String,
             defaultCategoryTitle: String,
@@ -1262,6 +1253,7 @@ internal fun observeGroupedLibraryPages(
         randomSortSeed,
     ) { data, grouping, sortingMode, randomSortSeed ->
         val pages = applySort(applyGrouping(data, grouping), data, sortingMode, randomSortSeed)
+            .withTabItemCounts()
         GroupedLibraryPages(
             profileId = checkNotNull(data.profileId),
             grouping = grouping,

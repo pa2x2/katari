@@ -270,8 +270,6 @@ data object LibraryTab : Tab {
                         onGlobalSearchClicked = {
                             navigator.push(GlobalSearchScreen(screenModel.state.value.searchQuery ?: ""))
                         },
-                        getItemCountForPage = { state.getItemCountForPage(it) },
-                        getItemCountForPages = { state.getItemCountForPages(it) },
                         getDisplayMode = { screenModel.getDisplayMode() },
                         getColumnsForOrientation = { screenModel.getColumnsForOrientation(it) },
                         getItemsForPage = { state.getItemsForPage(it) },
