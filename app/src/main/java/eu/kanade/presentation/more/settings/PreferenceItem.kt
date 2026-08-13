@@ -28,6 +28,7 @@ import eu.kanade.presentation.more.settings.widget.TitleFontSize
 import eu.kanade.presentation.more.settings.widget.TrackingPreferenceWidget
 import kotlinx.coroutines.launch
 import tachiyomi.presentation.core.components.BaseSliderItem
+import tachiyomi.presentation.core.components.SettingsStepper
 import tachiyomi.presentation.core.util.collectAsState
 
 val LocalPreferenceHighlighted = compositionLocalOf(structuralEqualityPolicy()) { false }
@@ -103,6 +104,31 @@ internal fun PreferenceItem(
                         horizontal = PrefsHorizontalPadding,
                         vertical = PrefsVerticalPadding,
                     ),
+                )
+            }
+            is Preference.PreferenceItem.StepperPreference -> {
+                val value by item.preference.collectAsState()
+                TextPreferenceWidget(
+                    title = item.title,
+                    subtitle = item.subtitle,
+                    isProfileSpecific = showProfileChip && item.isProfileSpecific,
+                    widget = {
+                        SettingsStepper(
+                            value = value,
+                            valueRange = item.valueRange,
+                            step = item.step,
+                            valueFormatter = item.valueFormatter,
+                            inputSuffix = item.inputSuffix,
+                            decreaseContentDescription = item.decreaseContentDescription,
+                            increaseContentDescription = item.increaseContentDescription,
+                            editContentDescription = item.editContentDescription,
+                            onValueChange = { target ->
+                                scope.launch {
+                                    if (item.onValueChanged(target)) item.preference.set(target)
+                                }
+                            },
+                        )
+                    },
                 )
             }
             is Preference.PreferenceItem.ListPreference<*> -> {

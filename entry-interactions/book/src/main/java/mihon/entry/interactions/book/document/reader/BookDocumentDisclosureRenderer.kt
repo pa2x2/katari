@@ -32,6 +32,7 @@ internal fun BookDocumentDisclosureRenderer(
     preserveTerminalSpacing: Boolean,
 ) {
     val palette = LocalBookDocumentReaderPalette.current
+    val textScale = LocalBookDocumentTextScale.current
     val selection = LocalBookDocumentChapterSelection.current
     var expanded by remember(content) { mutableStateOf(content.initiallyExpanded) }
     Row(
@@ -71,7 +72,7 @@ internal fun BookDocumentDisclosureRenderer(
                 onReaderTap = onReaderTap,
                 selectionIdentity = "$selectionIdentity:body:$index:${nested.id.value}",
                 preserveTerminalSpacing = index != content.body.blocks.lastIndex || preserveTerminalSpacing,
-                modifier = Modifier.padding(start = 12.dp),
+                modifier = Modifier.padding(start = (12 * textScale).dp),
             )
         }
     }

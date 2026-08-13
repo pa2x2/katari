@@ -36,11 +36,12 @@ internal fun BookDocumentBlockRenderer(
     modifier: Modifier = Modifier,
 ) {
     val palette = LocalBookDocumentReaderPalette.current
+    val textScale = LocalBookDocumentTextScale.current
     val selection = LocalBookDocumentChapterSelection.current
     val blockText = remember(block, owningContent.text) {
         owningContent.text.substring(block.logicalStart, block.logicalEndExclusive)
     }
-    val padding = (block.style.paddingEm * 16).dp
+    val padding = (block.style.paddingEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp
     Column(modifier = modifier.padding(padding)) {
         when (val content = block.content) {
             is BookDocumentBlockContent.Text -> BookDocumentSelectableText(
@@ -54,9 +55,11 @@ internal fun BookDocumentBlockRenderer(
                 onExternalLinkClick = onExternalLinkClick,
                 preserveTerminalSpacing = preserveTerminalSpacing,
             )
-            is BookDocumentBlockContent.ListBlock -> Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            is BookDocumentBlockContent.ListBlock -> Column(
+                verticalArrangement = Arrangement.spacedBy((4 * textScale).dp),
+            ) {
                 content.items.forEachIndexed { index, item ->
-                    Row(modifier = Modifier.padding(start = (item.depth * 18).dp)) {
+                    Row(modifier = Modifier.padding(start = (item.depth * 18 * textScale).dp)) {
                         BookDocumentSelectableText(
                             text = item.marker ?: if (content.ordered) "${content.start + index}." else "•",
                             links = emptyList(),
@@ -67,7 +70,7 @@ internal fun BookDocumentBlockRenderer(
                             separatorAfter = " ",
                             onAnchorClick = onAnchorClick,
                             onExternalLinkClick = onExternalLinkClick,
-                            modifier = Modifier.width(32.dp),
+                            modifier = Modifier.width((32 * textScale).dp),
                         )
                         BookDocumentRichTextRenderer(
                             value = item.content,
@@ -140,7 +143,7 @@ internal fun BookDocumentRichTextRenderer(
     onExternalLinkClick: (String) -> Unit,
     separatorAfter: String = "\n\n",
     leadingSelectionText: String = "",
-    baseFontSizeSp: Float = 16f,
+    baseFontSizeSp: Float = BOOK_DOCUMENT_BASE_TEXT_SIZE_SP,
     modifier: Modifier = Modifier,
 ) {
     BookDocumentSelectableText(

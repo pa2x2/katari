@@ -26,8 +26,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalFocusManager
 import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderProgressSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderStatusBarSettings
+import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderTextSizeSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeSettings
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.document.reader.theme.bookDocumentReaderPalette
@@ -50,7 +52,6 @@ import tachiyomi.presentation.core.components.reader.ReaderChrome
 import tachiyomi.presentation.core.components.reader.ReaderChromeBottomBar
 import tachiyomi.presentation.core.components.reader.ReaderChromeTopBar
 import tachiyomi.presentation.core.i18n.stringResource
-import kotlin.math.roundToInt
 import androidx.compose.ui.res.stringResource as androidStringResource
 
 @Composable
@@ -72,6 +73,9 @@ internal fun BookDocumentReaderScreen(
     onClose: () -> Unit,
 ) {
     val themeSetting by settingBindings.themeMode.state.collectAsState()
+    val textSizeSetting by settingBindings.textSize.state.collectAsState()
+    val showReadingProgressSetting by settingBindings.showReadingProgress.state.collectAsState()
+    val readingProgressStyleSetting by settingBindings.readingProgressStyle.state.collectAsState()
     val readerPalette = bookDocumentReaderPalette(themeSetting.effectiveValue)
     val focusManager = LocalFocusManager.current
     var rootPosition by remember { mutableStateOf(Offset.Zero) }
@@ -137,12 +141,20 @@ internal fun BookDocumentReaderScreen(
 
     CompositionLocalProvider(
         LocalBookDocumentTextInteraction provides textInteraction,
+        LocalBookDocumentTextScale provides textSizeSetting.effectiveValue / 100f,
         LocalBookDocumentReaderPalette provides readerPalette,
     ) {
         BookReaderScaffold(
-            progress = BookReaderProgress.Percentage(
-                (state.chapterProgression * 100).roundToInt().coerceIn(0, 100),
-            ),
+            progress = if (showReadingProgressSetting.effectiveValue) {
+                BookReaderProgress.Chapter(
+                    value = state.chapterProgression,
+                    style = readingProgressStyleSetting.effectiveValue,
+                    activeColor = readerPalette.accent.copy(alpha = 0.75f),
+                    trackColor = readerPalette.surfaceVariant,
+                )
+            } else {
+                null
+            },
             footerColor = readerPalette.background,
             translationController = selectionCoordinator?.translationController,
             translationSpeechState = translationSpeechState,
@@ -159,6 +171,7 @@ internal fun BookDocumentReaderScreen(
                     loadedSections = state.loadedSections,
                     loadStates = state.loadStates,
                     navigationRequest = state.navigationRequest,
+                    textSizePercent = textSizeSetting.effectiveValue,
                     onLocation = onLocation,
                     onTransitionReached = onTransitionReached,
                     onTerminalObservation = onTerminalObservation,
@@ -248,12 +261,20 @@ internal fun BookDocumentReaderScreen(
             onOpenDefaultSettings = onOpenDefaultSettings,
             onResetProcessorSettings = {
                 settingBindings.themeMode.clearEntryOverride()
+                settingBindings.textSize.clearEntryOverride()
                 settingBindings.showStatusBar.clearEntryOverride()
+                settingBindings.showReadingProgress.clearEntryOverride()
+                settingBindings.readingProgressStyle.clearEntryOverride()
             },
             processorTabTitles = listOf(androidStringResource(R.string.book_reader_appearance_settings)),
             content = {
                 BookDocumentReaderStatusBarSettings(settingBindings.showStatusBar)
                 BookDocumentReaderThemeSettings(settingBindings.themeMode)
+                BookDocumentReaderTextSizeSettings(settingBindings.textSize)
+                BookDocumentReaderProgressSettings(
+                    showProgressBinding = settingBindings.showReadingProgress,
+                    styleBinding = settingBindings.readingProgressStyle,
+                )
             },
         )
     }

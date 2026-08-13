@@ -1,24 +1,19 @@
 package mihon.entry.interactions.book.document.reader.settings
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.book.R
 import mihon.entry.viewer.settings.ViewerSettingBinding
+import tachiyomi.presentation.core.components.RadioItem
 
 @Composable
 internal fun BookDocumentReaderThemeSettings(
@@ -33,7 +28,7 @@ internal fun BookDocumentReaderThemeSettings(
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
         )
         BookDocumentReaderThemeMode.entries.forEach { mode ->
-            ThemeSettingRow(
+            RadioItem(
                 label = mode.label(),
                 selected = setting.effectiveValue == mode,
                 onClick = {
@@ -47,25 +42,6 @@ internal fun BookDocumentReaderThemeSettings(
                 },
             )
         }
-    }
-}
-
-@Composable
-private fun ThemeSettingRow(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        RadioButton(selected = selected, onClick = null)
-        Text(label)
     }
 }
 

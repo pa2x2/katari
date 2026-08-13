@@ -1,6 +1,5 @@
 package eu.kanade.presentation.more.settings
 
-import androidx.annotation.IntRange
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -8,6 +7,7 @@ import mihon.entry.interactions.tracking.EntryTrackingAccount
 import mihon.feature.profiles.core.ProfileAwarePreferenceStore
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import androidx.annotation.IntRange as AndroidXIntRange
 import tachiyomi.core.common.preference.Preference as CorePreference
 import tachiyomi.core.common.preference.Preference as PreferenceData
 
@@ -63,12 +63,37 @@ sealed class Preference {
             val valueString: String? = null,
             val preference: PreferenceData<Int>? = null,
             val valueRange: IntProgression = 0..1,
-            @IntRange(from = 0) val steps: Int = with(valueRange) { ((last - first) - 1).coerceAtLeast(0) },
+            @AndroidXIntRange(from = 0) val steps: Int = with(valueRange) { ((last - first) - 1).coerceAtLeast(0) },
             override val enabled: Boolean = true,
             override val isProfileSpecific: Boolean = preference?.isProfileSpecificKey() ?: false,
             override val onValueChanged: suspend (value: Int) -> Unit = {},
         ) : PreferenceItem<Int, Unit>() {
             override val icon: ImageVector? = null
+        }
+
+        /**
+         * An integer preference adjusted through discrete decrement and increment actions.
+         */
+        data class StepperPreference(
+            val preference: PreferenceData<Int>,
+            val valueRange: IntRange,
+            val step: Int,
+            val valueFormatter: (Int) -> String = Int::toString,
+            val inputSuffix: String = "",
+            val decreaseContentDescription: String,
+            val increaseContentDescription: String,
+            val editContentDescription: String,
+            override val title: String,
+            override val subtitle: String? = null,
+            override val enabled: Boolean = true,
+            override val onValueChanged: suspend (value: Int) -> Boolean = { true },
+        ) : PreferenceItem<Int, Boolean>() {
+            init {
+                require(step > 0) { "Stepper preference step must be positive" }
+            }
+
+            override val icon: ImageVector? = null
+            override val isProfileSpecific: Boolean = preference.isProfileSpecificKey()
         }
 
         /**

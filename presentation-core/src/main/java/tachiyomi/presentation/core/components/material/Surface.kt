@@ -49,6 +49,7 @@ fun Surface(
     shadowElevation: Dp = 0.dp,
     border: BorderStroke? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    onClickLabel: String? = null,
     content: @Composable () -> Unit,
 ) {
     val absoluteElevation = LocalAbsoluteTonalElevation.current + tonalElevation
@@ -73,6 +74,7 @@ fun Surface(
                     indication = ripple(),
                     enabled = enabled,
                     role = Role.Button,
+                    onClickLabel = onClickLabel,
                     onLongClick = onLongClick,
                     onClick = onClick,
                 ),

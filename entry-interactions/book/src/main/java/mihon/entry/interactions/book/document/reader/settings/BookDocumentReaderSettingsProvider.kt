@@ -31,12 +31,40 @@ internal class BookDocumentReaderSettingsProvider(
         ),
     )
 
+    override val textSizeSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.TEXT_SIZE_PERCENT_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = BookDocumentReaderSettings.DEFAULT_TEXT_SIZE_PERCENT,
+        profilePreference = preferences.textSizePercent,
+        codec = ViewerSettingCodecs.Int,
+        validate = BookDocumentReaderSettings::isValidTextSizePercent,
+    )
+
     override val showStatusBarSetting = ViewerSettingDefinition(
         id = ViewerSettingId(id, BookDocumentReaderPreferences.SHOW_STATUS_BAR_KEY),
         scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
         processorDefault = false,
         profilePreference = preferences.showStatusBar,
         codec = ViewerSettingCodecs.Boolean,
+    )
+
+    override val showReadingProgressSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.SHOW_READING_PROGRESS_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = true,
+        profilePreference = preferences.showReadingProgress,
+        codec = ViewerSettingCodecs.Boolean,
+    )
+
+    override val readingProgressStyleSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.READING_PROGRESS_STYLE_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = BookDocumentReaderProgressStyle.PERCENTAGE,
+        profilePreference = preferences.readingProgressStyle,
+        codec = ViewerSettingCodecs.codec(
+            encode = BookDocumentReaderProgressStyle::name,
+            decode = { encoded -> BookDocumentReaderProgressStyle.entries.firstOrNull { it.name == encoded } },
+        ),
     )
 
     val prepareNextChapterSetting = ViewerSettingDefinition(
@@ -57,7 +85,10 @@ internal class BookDocumentReaderSettingsProvider(
 
     override val settings = listOf(
         themeModeSetting,
+        textSizeSetting,
         showStatusBarSetting,
+        showReadingProgressSetting,
+        readingProgressStyleSetting,
         prepareNextChapterSetting,
         automaticTranslationSetting,
     )

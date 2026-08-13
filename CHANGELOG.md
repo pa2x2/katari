@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.3.3] - 2026-08-13
+
+### ✨ Added
+
+- Added adjustable book-reader text size from 80% to 200% in 10% steps, with direct value entry and reading position preservation when text reflows.
+- Added configurable book-reading progress, including an option to hide it or choose percentage, edge fill rail, edge position marker, or bottom hairline styles.
+
+### 🧩 Improved
+
+- Immersive video controls now hide automatically after three seconds of active playback and reappear when you interact with playback controls.
+
 ## [1.3.2] - 2026-08-13
 
 ### 🧩 Improved
@@ -159,7 +170,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.3.2...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.3.3...HEAD
+[1.3.3]: https://github.com/pa2x2/katari/releases/tag/v1.3.3
 [1.3.2]: https://github.com/pa2x2/katari/releases/tag/v1.3.2
 [1.3.1]: https://github.com/pa2x2/katari/releases/tag/v1.3.1
 [1.3.0]: https://github.com/pa2x2/katari/releases/tag/v1.3.0

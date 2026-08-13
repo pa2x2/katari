@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -14,10 +15,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildWindow
 import tachiyomi.domain.entry.model.EntryChapter
@@ -32,6 +35,7 @@ internal fun BookDocumentEndlessViewer(
     loadedSections: Map<Long, BookDocumentSection<EntryChapter>>,
     loadStates: Map<Long, BookDocumentChapterLoadState>,
     navigationRequest: BookDocumentNavigationRequest?,
+    textSizePercent: Int,
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
     onTransitionReached: (EntryChapter) -> Unit,
     onTerminalObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
@@ -61,8 +65,16 @@ internal fun BookDocumentEndlessViewer(
     val currentOnReaderTap by rememberUpdatedState(onReaderTap)
     val currentOnTransitionReached by rememberUpdatedState(onTransitionReached)
     val currentLoadStates by rememberUpdatedState(loadStates)
+    val currentTextSizePercent by rememberUpdatedState(textSizePercent)
     var observedDatasetIdentity by remember(listState) { mutableStateOf(items.identity) }
     var initialPositionRestored by remember(listState) { mutableStateOf(false) }
+    var observedTextSizePercent by remember(listState) { mutableIntStateOf(textSizePercent) }
+    var lastObservedLocation by remember(listState) {
+        mutableStateOf<BookDocumentViewerLocation<EntryChapter>?>(null)
+    }
+    var textSizeReflowAnchor by remember(listState) {
+        mutableStateOf<BookDocumentViewerLocation<EntryChapter>?>(null)
+    }
     val prefetchTarget = remember(window.next?.id, loadedSections, items) {
         val nextSectionKey = window.next?.id?.let(loadedSections::get)?.key
         val nextSectionIndex = nextSectionKey?.let { sectionKey ->
@@ -157,6 +169,25 @@ internal fun BookDocumentEndlessViewer(
         }
     }
 
+    LaunchedEffect(textSizePercent, initialPositionRestored) {
+        if (!initialPositionRestored || textSizePercent == observedTextSizePercent) return@LaunchedEffect
+        val anchor = textSizeReflowAnchor ?: lastObservedLocation
+        observedTextSizePercent = textSizePercent
+        if (anchor == null) return@LaunchedEffect
+        textSizeReflowAnchor = anchor
+        val previousLayout = listState.layoutInfo.visibleItemsInfo.map { it.key to it.size }
+        withTimeoutOrNull(TEXT_SIZE_REFLOW_TIMEOUT_MILLIS) {
+            snapshotFlow {
+                listState.layoutInfo.visibleItemsInfo.map { it.key to it.size }
+            }
+                .filter { layout -> layout != previousLayout }
+                .first()
+        }
+        scrollToSectionPosition(anchor.section, anchor.position)
+        delay(TEXT_SIZE_REFLOW_SETTLE_MILLIS)
+        textSizeReflowAnchor = null
+    }
+
     LaunchedEffect(currentChapterId, items, initialPositionRestored) {
         if (!initialPositionRestored) return@LaunchedEffect
         if (navigationRequest != null) return@LaunchedEffect
@@ -185,7 +216,15 @@ internal fun BookDocumentEndlessViewer(
                 info.viewportStartOffset,
                 info.viewportEndOffset,
             )
-        }.filterNotNull().distinctUntilChanged().collect(onLocation)
+        }.filterNotNull().distinctUntilChanged().collect { location ->
+            if (
+                textSizeReflowAnchor == null &&
+                currentTextSizePercent == observedTextSizePercent
+            ) {
+                lastObservedLocation = location
+            }
+            onLocation(location)
+        }
     }
     LaunchedEffect(listState) {
         snapshotFlow { listState.isScrollInProgress }
@@ -282,3 +321,6 @@ private data class TerminalLayoutObservation(
     val canScrollForward: Boolean,
     val scrollInProgress: Boolean,
 )
+
+private const val TEXT_SIZE_REFLOW_TIMEOUT_MILLIS = 1_500L
+private const val TEXT_SIZE_REFLOW_SETTLE_MILLIS = 500L
