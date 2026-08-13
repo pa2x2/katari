@@ -3,9 +3,10 @@ package tachiyomi.data.entry
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import logcat.LogPriority
 import tachiyomi.core.common.util.lang.toLong
 import tachiyomi.core.common.util.system.logcat
@@ -16,6 +17,7 @@ import tachiyomi.data.query.chunkedForSqlQuery
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class EntryChapterRepositoryImpl(
     private val handler: DatabaseHandler,
     private val profileProvider: ActiveProfileProvider,
@@ -35,14 +37,22 @@ class EntryChapterRepositoryImpl(
 
     override fun getChaptersByEntryIds(entryIds: List<Long>): Flow<List<EntryChapter>> {
         if (entryIds.isEmpty()) return kotlinx.coroutines.flow.flowOf(emptyList())
-        val chunkFlows = entryIds.distinct().chunkedForSqlQuery().map { entryIdChunk ->
-            handler.subscribeToList {
-                chaptersQueries.getChaptersByEntryIds(entryIdChunk, EntryMapper::mapChapter)
+        val entryIdChunks = entryIds.distinct().chunkedForSqlQuery()
+        if (entryIdChunks.size == 1) {
+            return handler.subscribeToList {
+                chaptersQueries.getChaptersByEntryIds(entryIdChunks.single(), EntryMapper::mapChapter)
             }
         }
-        return combine(chunkFlows) { chapterChunks ->
-            chapterChunks.flatMap { it }
-        }
+        return handler.subscribeToList {
+            chaptersQueries.chapterTableInvalidation()
+        }.map { Unit }
+            .mapLatest {
+                handler.await(inTransaction = true) {
+                    entryIdChunks.flatMap { entryIdChunk ->
+                        chaptersQueries.getChaptersByEntryIds(entryIdChunk, EntryMapper::mapChapter).awaitAsList()
+                    }
+                }
+            }
     }
 
     override suspend fun getChaptersByEntryIdAwait(entryId: Long, applyScanlatorFilter: Boolean): List<EntryChapter> {
