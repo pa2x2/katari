@@ -21,6 +21,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -75,6 +76,7 @@ internal fun AnimeImmersivePlayerSurface(
     modifier: Modifier = Modifier,
 ) {
     var speedBoostActive by remember(player) { mutableStateOf(false) }
+    var controllerInteractionSequence by remember(player) { mutableStateOf(0L) }
     var seekFeedbackSequence by remember(player) { mutableStateOf(0L) }
     var seekFeedbackState by remember(player) { mutableStateOf<VideoPlayerSeekFeedbackState?>(null) }
     val latestControlsVisible by rememberUpdatedState(controlsVisible)
@@ -107,6 +109,20 @@ internal fun AnimeImmersivePlayerSurface(
         animationSpec = tween(durationMillis = 180),
         label = "immersiveVideoAlpha",
     )
+    LaunchedEffect(
+        active,
+        controlsVisible,
+        controllerInteractionSequence,
+        playbackSnapshot.isPlaying,
+        isBuffering,
+    ) {
+        if (!active || !controlsVisible || !playbackSnapshot.isPlaying || isBuffering) {
+            return@LaunchedEffect
+        }
+
+        delay(CONTROLS_AUTO_HIDE_DELAY_MS)
+        latestOnToggleControls()
+    }
 
     Box(modifier = modifier) {
         AndroidView(
@@ -213,6 +229,7 @@ internal fun AnimeImmersivePlayerSurface(
                 durationMs = playbackSnapshot.durationMs,
                 bufferedPositionMs = playbackSnapshot.bufferedPositionMs,
                 onSeek = { positionMs ->
+                    controllerInteractionSequence += 1L
                     player.seekTo(positionMs)
                     if (playbackSnapshot.playbackEnded) player.play()
                     onPlayIntentChange(true)
@@ -224,6 +241,7 @@ internal fun AnimeImmersivePlayerSurface(
             )
             IconButton(
                 onClick = {
+                    controllerInteractionSequence += 1L
                     if (playbackSnapshot.playbackEnded) player.seekTo(0L)
                     if (player.isPlaying) {
                         player.pause()
@@ -273,7 +291,10 @@ internal fun AnimeImmersivePlayerSurface(
                 }
             }
             IconButton(
-                onClick = { onMutedChange(!muted) },
+                onClick = {
+                    controllerInteractionSequence += 1L
+                    onMutedChange(!muted)
+                },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(
@@ -324,5 +345,6 @@ internal fun AnimeImmersivePlayerSurface(
 }
 
 private const val SPEED_BOOST_PRESS_DELAY_MS = 350L
+private const val CONTROLS_AUTO_HIDE_DELAY_MS = 3_000L
 private const val SPEED_BOOST_MULTIPLIER = 2f
 private const val NORMAL_PLAYBACK_SPEED = 1f
