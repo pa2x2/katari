@@ -5,7 +5,7 @@ description: Create an immediately usable, ignored planning workspace for a requ
 
 # Create Agent Workspace
 
-Create the workspace before analysing or implementing the requested change. It is a durable planning artifact, not authority to modify product code, tests, device state, commits, or external systems.
+Create the workspace before analysing or implementing the requested change. It is a durable planning artifact, not authority to modify product code, tests, device state, commits, or external systems. Workspace's purpose is for you to track your work. You should keep reporting and conversation with user inside the chat.
 
 ## Create the workspace
 
