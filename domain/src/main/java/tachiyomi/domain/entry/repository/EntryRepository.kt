@@ -93,6 +93,10 @@ interface EntryRepository {
 
     suspend fun insertOrUpdate(entry: Entry, profileId: Long): Entry
 
+    suspend fun insertOrUpdateBatch(entries: List<Entry>, profileId: Long): List<Entry> {
+        return entries.map { insertOrUpdate(it, profileId) }
+    }
+
     suspend fun update(entry: Entry): Boolean
 
     suspend fun update(entry: Entry, profileId: Long): Boolean

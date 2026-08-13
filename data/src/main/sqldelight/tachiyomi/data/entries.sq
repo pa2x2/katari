@@ -385,49 +385,50 @@ UPDATE entries SET
 WHERE _id = :entryId
 AND profile_id = :profileId;
 
-insertNetworkEntry {
-    INSERT INTO entries(
-        profile_id, source, url, title, display_name, artist, author, description, genre,
-        status, thumbnail_url, favorite, last_update, next_update, initialized, viewer,
-        chapter_flags, cover_last_modified, date_added, update_strategy, calculate_interval,
-        last_modified_at, version, memo, type
-    )
-    SELECT
-        :profileId, :source, :url, :title, NULL, :artist, :author, :description, :genre,
-        :status, :thumbnailUrl, :favorite, :lastUpdate, :nextUpdate, :initialized, :viewerFlags,
-        :chapterFlags, :coverLastModified, :dateAdded, :updateStrategy, :calculateInterval,
-        0, :version, :memo, :type
-    WHERE NOT EXISTS(
-        SELECT 0 FROM entries
-        WHERE profile_id = :profileId
-        AND source = :source
-        AND url = :url
-        AND type = :type
-    );
-
-    UPDATE entries
-    SET
-        title = CASE WHEN :updateTitle THEN :title ELSE title END,
-        thumbnail_url = CASE WHEN :updateCover THEN :thumbnailUrl ELSE thumbnail_url END,
-        author = CASE WHEN :updateDetails THEN :author ELSE author END,
-        artist = CASE WHEN :updateDetails THEN :artist ELSE artist END,
-        description = CASE WHEN :updateDetails THEN :description ELSE description END,
-        genre = CASE WHEN :updateDetails THEN :genre ELSE genre END,
-        status = CASE WHEN :updateDetails THEN :status ELSE status END,
-        update_strategy = CASE WHEN :updateDetails THEN :updateStrategy ELSE update_strategy END,
-        initialized = :updateDetails,
-        memo = :memo
+insertNetworkEntry:
+INSERT INTO entries(
+    profile_id, source, url, title, display_name, artist, author, description, genre,
+    status, thumbnail_url, favorite, last_update, next_update, initialized, viewer,
+    chapter_flags, cover_last_modified, date_added, update_strategy, calculate_interval,
+    last_modified_at, version, memo, type
+)
+SELECT
+    :profileId, :source, :url, :title, NULL, :artist, :author, :description, :genre,
+    :status, :thumbnailUrl, :favorite, :lastUpdate, :nextUpdate, :initialized, :viewerFlags,
+    :chapterFlags, :coverLastModified, :dateAdded, :updateStrategy, :calculateInterval,
+    0, :version, :memo, :type
+WHERE NOT EXISTS(
+    SELECT 0 FROM entries
     WHERE profile_id = :profileId
     AND source = :source
     AND url = :url
     AND type = :type
-    AND favorite = 0;
+);
 
-    SELECT *
-    FROM entries
-    WHERE profile_id = :profileId
-    AND source = :source
-    AND url = :url
-    AND type = :type
-    LIMIT 1;
-}
+updateNetworkEntry:
+UPDATE entries
+SET
+    title = CASE WHEN :updateTitle THEN :title ELSE title END,
+    thumbnail_url = CASE WHEN :updateCover THEN :thumbnailUrl ELSE thumbnail_url END,
+    author = CASE WHEN :updateDetails THEN :author ELSE author END,
+    artist = CASE WHEN :updateDetails THEN :artist ELSE artist END,
+    description = CASE WHEN :updateDetails THEN :description ELSE description END,
+    genre = CASE WHEN :updateDetails THEN :genre ELSE genre END,
+    status = CASE WHEN :updateDetails THEN :status ELSE status END,
+    update_strategy = CASE WHEN :updateDetails THEN :updateStrategy ELSE update_strategy END,
+    initialized = :updateDetails,
+    memo = :memo
+WHERE profile_id = :profileId
+AND source = :source
+AND url = :url
+AND type = :type
+AND favorite = 0;
+
+beginNetworkEntryPersistence:
+SAVEPOINT network_entry_persistence;
+
+rollbackNetworkEntryPersistence:
+ROLLBACK TO network_entry_persistence;
+
+finishNetworkEntryPersistence:
+RELEASE network_entry_persistence;

@@ -138,7 +138,7 @@ internal class DefaultEntryRelatedEntriesFeature(
         val entries = relatedSource.getRelatedEntries(entry.toSEntry())
             .map { it.toEntry(source.id) }
             .distinctBy(Entry::identity)
-            .let { networkToLocalEntry(it) }
+            .let { networkToLocalEntry.persistBatch(it, entry.profileId) }
         return EntryRelatedEntriesLoadResult.Loaded(entries, orientation)
     }
 

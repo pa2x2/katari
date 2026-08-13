@@ -304,7 +304,7 @@ internal class AppEntryMergeHost(
         }
 
         private suspend fun Database.materialize(entry: Entry): Entry {
-            return entriesQueries.insertNetworkEntry(
+            entriesQueries.insertNetworkEntry(
                 profileId = profileId,
                 source = entry.source,
                 url = entry.url,
@@ -328,10 +328,32 @@ internal class AppEntryMergeHost(
                 version = entry.version,
                 memo = entry.memo,
                 type = entry.type.name.lowercase(),
+            )
+            entriesQueries.updateNetworkEntry(
+                profileId = profileId,
+                source = entry.source,
+                url = entry.url,
+                title = entry.title,
+                artist = entry.artist,
+                author = entry.author,
+                description = entry.description,
+                genre = entry.genre,
+                status = entry.status.value.toLong(),
+                thumbnailUrl = entry.thumbnailUrl,
+                updateStrategy = entry.updateStrategy,
+                memo = entry.memo,
+                type = entry.type.name.lowercase(),
                 updateTitle = entry.title.isNotBlank(),
                 updateCover = !entry.thumbnailUrl.isNullOrBlank(),
                 updateDetails = entry.initialized,
-            ).awaitAsOne().let(EntryMapper::mapEntry)
+            )
+            return entriesQueries.getEntryByUrlAndSource(
+                profileId = profileId,
+                url = entry.url,
+                source = entry.source,
+                type = entry.type.name.lowercase(),
+                mapper = EntryMapper::mapEntry,
+            ).awaitAsOne()
         }
 
         private suspend fun Database.changeExistingGroup(

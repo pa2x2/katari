@@ -57,7 +57,7 @@ class EntryRelatedEntriesFeatureTest {
             EntryRelatedEntriesAvailability.Unavailable(EntryRelatedEntriesUnavailableReason.SOURCE_UNSUPPORTED)
         feature.load(ORIGIN_ID) shouldBe
             EntryRelatedEntriesLoadResult.Unavailable(EntryRelatedEntriesUnavailableReason.SOURCE_UNSUPPORTED)
-        coVerify(exactly = 0) { repository.insertOrUpdate(any()) }
+        coVerify(exactly = 0) { repository.insertOrUpdateBatch(any(), any()) }
     }
 
     @Test
@@ -72,7 +72,9 @@ class EntryRelatedEntriesFeatureTest {
             EntryItemOrientation.HORIZONTAL,
         )
         var nextId = 20L
+        val persistedNetworkEntries = mutableListOf<Entry>()
         val repository = repository(origin) { networkEntry ->
+            persistedNetworkEntries += networkEntry
             networkEntry.copy(
                 id = nextId++,
                 profileId = PROFILE_ID,
@@ -89,7 +91,8 @@ class EntryRelatedEntriesFeatureTest {
         result.entries.map(Entry::type) shouldContainExactly listOf(EntryType.MANGA, EntryType.ANIME)
         result.entries.map(Entry::profileId) shouldContainExactly listOf(PROFILE_ID, PROFILE_ID)
         result.entries.map(Entry::favorite) shouldContainExactly listOf(false, true)
-        coVerify(exactly = 2) { repository.insertOrUpdate(any()) }
+        persistedNetworkEntries.map(Entry::title) shouldContainExactly listOf("Manga", "Anime")
+        coVerify(exactly = 1) { repository.insertOrUpdateBatch(any(), PROFILE_ID) }
     }
 
     @Test
@@ -154,7 +157,9 @@ class EntryRelatedEntriesFeatureTest {
         persist: (Entry) -> Entry = { it },
     ): EntryRepository = mockk {
         coEvery { getEntryById(ORIGIN_ID) } returns origin
-        coEvery { insertOrUpdate(any()) } answers { persist(firstArg()) }
+        coEvery { insertOrUpdateBatch(any(), PROFILE_ID) } answers {
+            firstArg<List<Entry>>().map(persist)
+        }
     }
 
     private fun sourceManager(source: UnifiedSource?): SourceManager = mockk {

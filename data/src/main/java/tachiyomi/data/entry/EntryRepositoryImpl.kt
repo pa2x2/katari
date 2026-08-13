@@ -6,10 +6,14 @@ import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
@@ -17,6 +21,7 @@ import logcat.LogPriority
 import tachiyomi.core.common.util.lang.toLong
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.ActiveProfileProvider
+import tachiyomi.data.Database
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.data.MemoColumnAdapter
 import tachiyomi.data.StringListColumnAdapter
@@ -324,35 +329,102 @@ class EntryRepositoryImpl(
 
     override suspend fun insertOrUpdate(entry: Entry, profileId: Long): Entry {
         return handler.await(inTransaction = true) {
-            entriesQueries.insertNetworkEntry(
-                profileId = profileId,
-                source = entry.source,
-                url = entry.url,
-                title = entry.title,
-                artist = entry.artist,
-                author = entry.author,
-                description = entry.description,
-                genre = entry.genre,
-                status = entry.status.value.toLong(),
-                thumbnailUrl = entry.thumbnailUrl,
-                favorite = entry.favorite,
-                lastUpdate = entry.lastUpdate,
-                nextUpdate = entry.nextUpdate,
-                initialized = entry.initialized,
-                viewerFlags = entry.viewerFlags,
-                chapterFlags = entry.chapterFlags,
-                coverLastModified = entry.coverLastModified,
-                dateAdded = entry.dateAdded,
-                updateStrategy = entry.updateStrategy,
-                calculateInterval = entry.fetchInterval.toLong(),
-                version = entry.version,
-                memo = entry.memo,
-                type = entry.type.name.lowercase(),
-                updateTitle = entry.title.isNotBlank(),
-                updateCover = !entry.thumbnailUrl.isNullOrBlank(),
-                updateDetails = entry.initialized,
-            ).awaitAsOne().let(EntryMapper::mapEntry)
+            insertOrUpdateNetworkEntry(entry, profileId)
         }
+    }
+
+    override suspend fun insertOrUpdateBatch(entries: List<Entry>, profileId: Long): List<Entry> {
+        if (entries.isEmpty()) return emptyList()
+
+        val callerContext = currentCoroutineContext()
+        val outcome = withContext(NonCancellable) {
+            handler.await(inTransaction = true) {
+                val persisted = ArrayList<Entry>(entries.size)
+                var failure: Throwable? = null
+                for (entry in entries) {
+                    try {
+                        callerContext.ensureActive()
+                    } catch (error: Throwable) {
+                        failure = error
+                        break
+                    }
+
+                    var savepointStarted = false
+                    try {
+                        entriesQueries.beginNetworkEntryPersistence()
+                        savepointStarted = true
+                        val persistedEntry = insertOrUpdateNetworkEntry(entry, profileId)
+                        callerContext.ensureActive()
+                        entriesQueries.finishNetworkEntryPersistence()
+                        savepointStarted = false
+                        persisted += persistedEntry
+                    } catch (error: Throwable) {
+                        if (savepointStarted) {
+                            entriesQueries.rollbackNetworkEntryPersistence()
+                            entriesQueries.finishNetworkEntryPersistence()
+                        }
+                        failure = error
+                        break
+                    }
+                }
+                EntryBatchPersistenceOutcome(persisted, failure)
+            }
+        }
+        outcome.failure?.let { throw it }
+        return outcome.entries
+    }
+
+    private suspend fun Database.insertOrUpdateNetworkEntry(entry: Entry, profileId: Long): Entry {
+        entriesQueries.insertNetworkEntry(
+            profileId = profileId,
+            source = entry.source,
+            url = entry.url,
+            title = entry.title,
+            artist = entry.artist,
+            author = entry.author,
+            description = entry.description,
+            genre = entry.genre,
+            status = entry.status.value.toLong(),
+            thumbnailUrl = entry.thumbnailUrl,
+            favorite = entry.favorite,
+            lastUpdate = entry.lastUpdate,
+            nextUpdate = entry.nextUpdate,
+            initialized = entry.initialized,
+            viewerFlags = entry.viewerFlags,
+            chapterFlags = entry.chapterFlags,
+            coverLastModified = entry.coverLastModified,
+            dateAdded = entry.dateAdded,
+            updateStrategy = entry.updateStrategy,
+            calculateInterval = entry.fetchInterval.toLong(),
+            version = entry.version,
+            memo = entry.memo,
+            type = entry.type.name.lowercase(),
+        )
+        entriesQueries.updateNetworkEntry(
+            profileId = profileId,
+            source = entry.source,
+            url = entry.url,
+            title = entry.title,
+            artist = entry.artist,
+            author = entry.author,
+            description = entry.description,
+            genre = entry.genre,
+            status = entry.status.value.toLong(),
+            thumbnailUrl = entry.thumbnailUrl,
+            updateStrategy = entry.updateStrategy,
+            memo = entry.memo,
+            type = entry.type.name.lowercase(),
+            updateTitle = entry.title.isNotBlank(),
+            updateCover = !entry.thumbnailUrl.isNullOrBlank(),
+            updateDetails = entry.initialized,
+        )
+        return entriesQueries.getEntryByUrlAndSource(
+            profileId = profileId,
+            url = entry.url,
+            source = entry.source,
+            type = entry.type.name.lowercase(),
+            mapper = EntryMapper::mapEntry,
+        ).awaitAsOne()
     }
 
     override suspend fun update(entry: Entry): Boolean {
@@ -485,3 +557,8 @@ class EntryRepositoryImpl(
         }
     }
 }
+
+private data class EntryBatchPersistenceOutcome(
+    val entries: List<Entry>,
+    val failure: Throwable?,
+)
