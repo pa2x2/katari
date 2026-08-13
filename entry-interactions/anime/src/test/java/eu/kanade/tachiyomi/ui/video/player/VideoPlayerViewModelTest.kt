@@ -76,14 +76,15 @@ class VideoPlayerViewModelTest {
             ),
         )
         val historyRepository = FakeHistoryRepository()
-        val viewModel = createViewModel(
-            entryChapterRepository = FakeEntryChapterRepository(
-                chapters = listOf(
-                    chapter(id = 1L, entryId = 1L, sourceOrder = 0L),
-                    chapter(id = 2L, entryId = 1L, sourceOrder = 1L),
-                    chapter(id = 3L, entryId = 1L, sourceOrder = 2L),
-                ),
+        val chapterRepository = FakeEntryChapterRepository(
+            chapters = listOf(
+                chapter(id = 1L, entryId = 1L, sourceOrder = 0L),
+                chapter(id = 2L, entryId = 1L, sourceOrder = 1L),
+                chapter(id = 3L, entryId = 1L, sourceOrder = 2L),
             ),
+        )
+        val viewModel = createViewModel(
+            entryChapterRepository = chapterRepository,
             playbackRepository = playbackRepository,
             historyRepository = historyRepository,
             resolver = RecordingVideoStreamResolver(),
@@ -97,6 +98,7 @@ class VideoPlayerViewModelTest {
         state.previousChapterId shouldBe 1L
         state.nextChapterId shouldBe 3L
         state.resumePositionMs shouldBe 12_345L
+        chapterRepository.awaitedEntryIds shouldBe listOf(1L)
         playbackRepository.requestedResourceKeys shouldBe listOf("/chapter/2")
         historyRepository.upserts shouldBe emptyList()
     }
@@ -573,6 +575,7 @@ class VideoPlayerViewModelTest {
         private val chapters: List<EntryChapter>,
     ) : EntryChapterRepository {
         private val chaptersById = chapters.associateBy(EntryChapter::id)
+        val awaitedEntryIds = mutableListOf<Long>()
 
         override suspend fun getChapterById(id: Long): EntryChapter? = chaptersById[id]
 
@@ -588,6 +591,7 @@ class VideoPlayerViewModelTest {
             entryId: Long,
             applyScanlatorFilter: Boolean,
         ): List<EntryChapter> {
+            awaitedEntryIds += entryId
             return chapters.filter { it.entryId == entryId }
         }
 

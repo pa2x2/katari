@@ -555,17 +555,16 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
         }
     }
 
-    private suspend fun resolveEpisodeNavigation(
-        visibleEntry: Entry,
-        ownerEntry: Entry,
+    private fun resolveEpisodeNavigation(
+        effectiveEntry: Entry,
+        episodes: List<EntryChapter>,
         episodeId: Long,
     ): EntryChildWindow<EntryChapter>? {
-        val effectiveEntry = if (bypassMerge) ownerEntry else visibleEntry
-        val sortedEpisodes = getEntryWithChapters?.let { getEntryWithChapters ->
-            val episodes = getEntryWithChapters.awaitChapters(effectiveEntry, bypassMerge = bypassMerge)
+        val sortedEpisodes = if (getEntryWithChapters != null) {
             episodes.sortedForReading(effectiveEntry)
-        } ?: entryChapterRepository.getChaptersByEntryIdAwait(effectiveEntry.id)
-            .sortedBy(EntryChapter::sourceOrder)
+        } else {
+            episodes.sortedBy(EntryChapter::sourceOrder)
+        }
 
         return sortedEpisodes.entryChildWindow(episodeId, EntryChapter::id)
     }
@@ -631,15 +630,23 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
         val resumePositionMs = preservePositionMs
             ?: entryProgressRepository.get(result.ownerEntry.id, "", result.chapter.progressResourceKey)?.positionMs
             ?: 0L
-        val childWindow = resolveEpisodeNavigation(
-            visibleEntry = result.visibleEntry,
-            ownerEntry = result.ownerEntry,
-            episodeId = result.chapter.id,
-        ) ?: EntryChildWindow(current = result.chapter)
         val episodeDrawerData = resolveEpisodeDrawerData(
             entry = result.visibleEntry,
             ownerEntry = result.ownerEntry,
         )
+        val effectiveEntry = if (bypassMerge) result.ownerEntry else result.visibleEntry
+        val childWindow = resolveEpisodeNavigation(
+            effectiveEntry = effectiveEntry,
+            episodes = episodeDrawerData.chapters,
+            episodeId = result.chapter.id,
+        ) ?: EntryChildWindow(current = result.chapter)
+        val chapterListItems = buildVideoPlayerEpisodeDisplayData(
+            entry = episodeDrawerData.entry,
+            chapters = episodeDrawerData.chapters,
+            memberIds = episodeDrawerData.memberIds,
+            memberTitleById = episodeDrawerData.memberTitleById,
+            playbackStates = episodeDrawerData.playbackStateByChapterId.values.toList(),
+        ).chapterListItems
         val playback = buildPlaybackUiState(result.playbackData, result.stream, result.savedPreferences)
             .copy(
                 subtitles = result.subtitles,
@@ -667,6 +674,7 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
             memberIds = episodeDrawerData.memberIds,
             memberTitleById = episodeDrawerData.memberTitleById,
             playbackStateByChapterId = episodeDrawerData.playbackStateByChapterId,
+            chapterListItems = chapterListItems,
             sourceAvailable = true,
             childWebView = childWebView,
             chapterTitle = result.visibleEntry.displayTitle,
@@ -835,6 +843,7 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
             val memberIds: List<Long>,
             val memberTitleById: Map<Long, String>,
             val playbackStateByChapterId: Map<Long, EntryProgressState>,
+            val chapterListItems: List<VideoPlayerEpisodeListEntry>,
             val sourceAvailable: Boolean,
             val childWebView: EntryChildWebViewResolution.Available?,
             val chapterTitle: String,
@@ -852,15 +861,6 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
 
             val nextChapterId: Long?
                 get() = childWindow.next?.id
-
-            val chapterListItems: List<VideoPlayerEpisodeListEntry>
-                get() = buildVideoPlayerEpisodeDisplayData(
-                    entry = entry,
-                    chapters = allChapters,
-                    memberIds = memberIds,
-                    memberTitleById = memberTitleById,
-                    playbackStates = playbackStateByChapterId.values.toList(),
-                ).chapterListItems
         }
 
         data class Error(val message: String) : State
