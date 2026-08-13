@@ -39,6 +39,25 @@ internal class BookDocumentReaderSettingsProvider(
         codec = ViewerSettingCodecs.Boolean,
     )
 
+    override val showReadingProgressSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.SHOW_READING_PROGRESS_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = true,
+        profilePreference = preferences.showReadingProgress,
+        codec = ViewerSettingCodecs.Boolean,
+    )
+
+    override val readingProgressStyleSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.READING_PROGRESS_STYLE_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = BookDocumentReaderProgressStyle.PERCENTAGE,
+        profilePreference = preferences.readingProgressStyle,
+        codec = ViewerSettingCodecs.codec(
+            encode = BookDocumentReaderProgressStyle::name,
+            decode = { encoded -> BookDocumentReaderProgressStyle.entries.firstOrNull { it.name == encoded } },
+        ),
+    )
+
     val prepareNextChapterSetting = ViewerSettingDefinition(
         id = ViewerSettingId(id, StandardReaderSharedSettingIds.NextChapterPreparation.value),
         scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
@@ -58,6 +77,8 @@ internal class BookDocumentReaderSettingsProvider(
     override val settings = listOf(
         themeModeSetting,
         showStatusBarSetting,
+        showReadingProgressSetting,
+        readingProgressStyleSetting,
         prepareNextChapterSetting,
         automaticTranslationSetting,
     )

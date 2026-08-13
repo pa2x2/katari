@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsIgnoringVisibility
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -40,15 +41,14 @@ import mihon.entry.interactions.book.reader.translation.BookSelectionTranslation
 import mihon.translation.ui.presentation.CoordinatedTranslationSessionHost
 import mihon.translation.ui.presentation.TranslationResultSpeechState
 import mihon.translation.ui.presentation.TranslationResultSpeechTarget
-import tachiyomi.presentation.core.components.reader.ReaderPageIndicator
-import tachiyomi.presentation.core.components.reader.ReaderProgressIndicator
 
 /**
- * Owns the bottom safe area for BOOK reader content and progress.
+ * Owns the safe reading viewport and progress placement for BOOK reader content.
  *
- * Processor chrome remains a full-screen overlay, while the reading viewport ends above the
- * measured progress footer. Native processor views can opt into the same viewport through
- * [nativeContentView] without reproducing inset or indicator sizing logic.
+ * Processor chrome remains a full-screen overlay. Ambient progress is drawn inside the reading
+ * viewport, while footer progress reserves space below it and moves with chrome. Native processor
+ * views can opt into the same viewport through [nativeContentView] without reproducing inset or
+ * progress sizing logic.
  */
 @Composable
 internal fun BookReaderScaffold(
@@ -91,8 +91,21 @@ internal fun BookReaderScaffold(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
-                content = content,
-            )
+            ) {
+                content()
+                progress?.let {
+                    BookReaderAmbientProgressIndicator(
+                        progress = it,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .windowInsetsPadding(
+                                WindowInsets.safeDrawing.only(
+                                    WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
+                                ),
+                            ),
+                    )
+                }
+            }
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -103,8 +116,8 @@ internal fun BookReaderScaffold(
                     .onSizeChanged { footerHeight = it.height },
                 contentAlignment = Alignment.Center,
             ) {
-                progress?.let {
-                    BookReaderProgressIndicator(
+                progress?.takeIf { it.usesFooter }?.let {
+                    BookReaderFooterProgressIndicator(
                         progress = it,
                         modifier = Modifier
                             .padding(vertical = 2.dp)
@@ -120,7 +133,7 @@ internal fun BookReaderScaffold(
             modifier = Modifier.fillMaxSize(),
         ) {
             overlay {
-                progress?.let {
+                progress?.takeIf { it.usesFooter }?.let {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -129,7 +142,7 @@ internal fun BookReaderScaffold(
                             ),
                         contentAlignment = Alignment.Center,
                     ) {
-                        BookReaderProgressIndicator(
+                        BookReaderFooterProgressIndicator(
                             progress = it,
                             modifier = Modifier.padding(vertical = 2.dp),
                         )
@@ -149,33 +162,6 @@ internal fun BookReaderScaffold(
                 )
             }
         }
-    }
-}
-
-internal sealed interface BookReaderProgress {
-    data class Page(
-        val currentPage: Int,
-        val totalPages: Int,
-    ) : BookReaderProgress
-
-    data class Percentage(val value: Int) : BookReaderProgress
-}
-
-@Composable
-private fun BookReaderProgressIndicator(
-    progress: BookReaderProgress,
-    modifier: Modifier,
-) {
-    when (progress) {
-        is BookReaderProgress.Page -> ReaderPageIndicator(
-            currentPage = progress.currentPage,
-            totalPages = progress.totalPages,
-            modifier = modifier,
-        )
-        is BookReaderProgress.Percentage -> ReaderProgressIndicator(
-            text = "${progress.value}%",
-            modifier = modifier,
-        )
     }
 }
 
