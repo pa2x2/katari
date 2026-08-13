@@ -53,6 +53,17 @@ class EntryRepositoryImpl(
         }
     }
 
+    override suspend fun getEntriesByIds(entryIds: List<Long>): List<Entry> {
+        val sortedEntryIds = entryIds.distinct().sorted()
+        if (sortedEntryIds.isEmpty()) return emptyList()
+        val profileId = profileProvider.activeProfileId
+        return handler.await(inTransaction = true) {
+            sortedEntryIds.chunkedForSqlQuery().flatMap { entryIdChunk ->
+                entriesQueries.getEntriesByIds(profileId, entryIdChunk, EntryMapper::mapEntry).awaitAsList()
+            }
+        }
+    }
+
     override suspend fun getEntryByIdAsFlow(id: Long): Flow<Entry> {
         return profileProvider.activeProfileIdFlow.flatMapLatest { profileId ->
             handler.subscribeToOneOrNull {

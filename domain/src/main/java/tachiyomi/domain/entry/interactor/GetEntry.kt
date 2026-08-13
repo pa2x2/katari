@@ -23,6 +23,20 @@ class GetEntry(
         }
     }
 
+    suspend fun await(entryIds: List<Long>): List<Entry> {
+        val distinctEntryIds = entryIds.distinct()
+        if (distinctEntryIds.isEmpty()) return emptyList()
+        val entries = try {
+            entryRepository.getEntriesByIds(distinctEntryIds)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            return distinctEntryIds.mapNotNull { await(it) }
+        }
+        val entriesById = entries.associateBy(Entry::id)
+        return distinctEntryIds.mapNotNull(entriesById::get)
+    }
+
     suspend fun subscribe(id: Long): Flow<Entry> {
         return entryRepository.getEntryByIdAsFlow(id)
     }

@@ -13,6 +13,10 @@ interface EntryRepository {
 
     suspend fun getEntryById(id: Long, profileId: Long): Entry?
 
+    suspend fun getEntriesByIds(entryIds: List<Long>): List<Entry> {
+        return entryIds.distinct().sorted().mapNotNull { getEntryById(it) }
+    }
+
     suspend fun getEntryByIdAsFlow(id: Long): Flow<Entry>
 
     suspend fun getEntriesByIdsAsFlow(entryIds: List<Long>): Flow<List<Entry>> {

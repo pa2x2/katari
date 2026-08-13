@@ -989,9 +989,7 @@ class LibraryScreenModel(
     }
 
     private suspend fun getActionEntries(entryIds: List<Long>): List<Entry> {
-        return entryIds
-            .mapNotNull { getEntry.await(it) }
-            .distinctBy { it.id }
+        return getEntry.await(entryIds)
     }
 
     sealed interface Dialog {
