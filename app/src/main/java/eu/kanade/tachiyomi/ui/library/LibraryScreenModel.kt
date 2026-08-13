@@ -173,7 +173,7 @@ class LibraryScreenModel(
                     getCategories.subscribeForProfile(profileId),
                     getLibraryItemsFlow(profileId),
                     combine(trackingFeature.observeCollection(), getTrackingFiltersFlow(), ::Pair),
-                    getLibraryItemPreferencesFlow(),
+                    observeLibraryFilterPreferences(LibraryPreferences(profileStore.profileStore(profileId))),
                 ) { searchQuery, categories, favorites, (tracking, trackingFilters), itemPreferences ->
                     val showSystemCategory = favorites.any { it.categories.contains(0L) }
                     val categoryNamesById = categories.associate { it.id to it.name }
@@ -319,9 +319,7 @@ class LibraryScreenModel(
             }
             .launchIn(screenModelScope)
 
-        getLibraryItemPreferencesFlow()
-            .map(ItemPreferences::toDisplaySettings)
-            .distinctUntilChanged()
+        observeLibraryDisplaySettings(libraryPreferences)
             .onEach { displaySettings ->
                 mutableState.update { state ->
                     state.copy(displaySettings = displaySettings)
@@ -333,7 +331,7 @@ class LibraryScreenModel(
     private fun List<LibraryItem>.applyFilters(
         trackingEntries: Map<Long, List<EntryTrackingCollectionTrack>>,
         trackingFilter: Map<Long, TriState>,
-        preferences: ItemPreferences,
+        preferences: LibraryFilterPreferences,
     ): AppliedLibraryFilters {
         val targets = map { item ->
             EntryLibraryFilterTarget(
@@ -434,41 +432,6 @@ class LibraryScreenModel(
             dateAdded = entry.dateAdded,
             trackerScore = if (entry.type in trackerSupportedEntryTypes) null else defaultTrackerScoreSortValue,
         )
-    }
-
-    private fun getLibraryItemPreferencesFlow(): Flow<ItemPreferences> {
-        return combine(
-            libraryPreferences.downloadBadge.changes(),
-            libraryPreferences.unreadBadge.changes(),
-            libraryPreferences.localBadge.changes(),
-            libraryPreferences.languageBadge.changes(),
-            libraryPreferences.entryTypeBadge.changes(),
-            libraryPreferences.autoUpdateEntryRestrictions.changes(),
-
-            libraryPreferences.downloadedOnly.changes(),
-            libraryPreferences.filterDownloaded.changes(),
-            libraryPreferences.filterUnread.changes(),
-            libraryPreferences.filterNotStarted.changes(),
-            libraryPreferences.filterBookmarked.changes(),
-            libraryPreferences.filterCompleted.changes(),
-            libraryPreferences.filterIntervalCustom.changes(),
-        ) {
-            ItemPreferences(
-                downloadBadge = it[0] as Boolean,
-                unreadBadge = it[1] as Boolean,
-                localBadge = it[2] as Boolean,
-                languageBadge = it[3] as Boolean,
-                entryTypeBadge = it[4] as Boolean,
-                skipOutsideReleasePeriod = LibraryPreferences.ENTRY_OUTSIDE_RELEASE_PERIOD in (it[5] as Set<*>),
-                globalFilterDownloaded = it[6] as Boolean,
-                filterDownloaded = it[7] as TriState,
-                filterUnread = it[8] as TriState,
-                filterNotStarted = it[9] as TriState,
-                filterBookmarked = it[10] as TriState,
-                filterCompleted = it[11] as TriState,
-                filterIntervalCustom = it[12] as TriState,
-            )
-        }
     }
 
     private fun getLibraryItemsFlow(profileId: Long): Flow<List<LibraryItem>> {
@@ -1048,34 +1011,6 @@ class LibraryScreenModel(
                     append(creator)
                 }
             }
-    }
-
-    @Immutable
-    private data class ItemPreferences(
-        val downloadBadge: Boolean,
-        val unreadBadge: Boolean,
-        val localBadge: Boolean,
-        val languageBadge: Boolean,
-        val entryTypeBadge: Boolean,
-        val skipOutsideReleasePeriod: Boolean,
-
-        val globalFilterDownloaded: Boolean,
-        val filterDownloaded: TriState,
-        val filterUnread: TriState,
-        val filterNotStarted: TriState,
-        val filterBookmarked: TriState,
-        val filterCompleted: TriState,
-        val filterIntervalCustom: TriState,
-    ) {
-        fun toDisplaySettings(): LibraryDisplaySettings {
-            return LibraryDisplaySettings(
-                downloadBadge = downloadBadge,
-                unreadBadge = unreadBadge,
-                localBadge = localBadge,
-                languageBadge = languageBadge,
-                entryTypeBadge = entryTypeBadge,
-            )
-        }
     }
 
     private data class AppliedLibraryFilters(
