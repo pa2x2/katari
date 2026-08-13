@@ -3,9 +3,10 @@ package tachiyomi.data.category
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.data.query.chunkedForSqlQuery
@@ -91,17 +92,32 @@ class CategoryRepositoryImpl(
     ): Flow<Map<Long, List<Long>>> {
         if (entryIds.isEmpty()) return flowOf(emptyMap())
 
-        val chunkFlows = entryIds.distinct().chunkedForSqlQuery().map { entryIdChunk ->
-            handler.subscribeToList {
-                categoriesQueries.getEntryCategoryMappings(profileId, entryIdChunk)
+        val entryIdChunks = entryIds.distinct().chunkedForSqlQuery()
+        if (entryIdChunks.size == 1) {
+            return handler.subscribeToList {
+                categoriesQueries.getEntryCategoryMappings(profileId, entryIdChunks.single())
+            }.map { mappings ->
+                mappings.groupBy(
+                    keySelector = { it.entry_id },
+                    valueTransform = { it.category_id },
+                )
             }
         }
-        return combine(chunkFlows) { chunkMappings ->
-            chunkMappings.flatMap { it }.groupBy(
-                keySelector = { it.entry_id },
-                valueTransform = { it.category_id },
-            )
-        }
+        return handler.subscribeToList {
+            entries_categoriesQueries.categoryMappingTableInvalidation()
+        }.map { Unit }
+            .mapLatest {
+                handler.await(inTransaction = true) {
+                    entryIdChunks
+                        .flatMap { entryIdChunk ->
+                            categoriesQueries.getEntryCategoryMappings(profileId, entryIdChunk).awaitAsList()
+                        }
+                        .groupBy(
+                            keySelector = { it.entry_id },
+                            valueTransform = { it.category_id },
+                        )
+                }
+            }
     }
 
     override suspend fun insert(category: Category) {

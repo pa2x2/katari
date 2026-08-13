@@ -19,6 +19,12 @@ BEGIN
       AND (SELECT is_syncing FROM entries WHERE _id = new.entry_id) = 0;
 END;
 
+categoryMappingTableInvalidation:
+SELECT _id
+FROM entries_categories
+ORDER BY _id
+LIMIT 1;
+
 insert:
 INSERT INTO entries_categories(profile_id, entry_id, category_id)
 VALUES (:profileId, :entryId, :categoryId);
