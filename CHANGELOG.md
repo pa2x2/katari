@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.4] - 2026-08-13
+
+### 🐛 Fixed
+
+- Book reader text reflow no longer causes a delayed jump after changing text size.
+
 ## [1.3.3] - 2026-08-13
 
 ### ✨ Added
@@ -170,7 +176,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.3.3...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.3.4...HEAD
+[1.3.4]: https://github.com/pa2x2/katari/releases/tag/v1.3.4
 [1.3.3]: https://github.com/pa2x2/katari/releases/tag/v1.3.3
 [1.3.2]: https://github.com/pa2x2/katari/releases/tag/v1.3.2
 [1.3.1]: https://github.com/pa2x2/katari/releases/tag/v1.3.1
