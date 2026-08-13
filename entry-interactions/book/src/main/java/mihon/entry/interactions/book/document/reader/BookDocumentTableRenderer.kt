@@ -24,6 +24,7 @@ internal fun BookDocumentTableRenderer(
     onExternalLinkClick: (String) -> Unit,
 ) {
     val palette = LocalBookDocumentReaderPalette.current
+    val textScale = LocalBookDocumentTextScale.current
     Column(modifier = Modifier.horizontalScroll(rememberScrollState())) {
         content.caption?.let {
             BookDocumentRichTextRenderer(
@@ -50,7 +51,7 @@ internal fun BookDocumentTableRenderer(
                             else -> "\n\n"
                         },
                         modifier = Modifier
-                            .width((120 * cell.columnSpan).dp)
+                            .width((120 * cell.columnSpan * textScale).dp)
                             .background(palette.surfaceVariant)
                             .padding(8.dp),
                     )

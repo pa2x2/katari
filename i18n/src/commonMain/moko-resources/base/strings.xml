@@ -475,11 +475,15 @@
     <string name="book_reader_layout_scrolling">Continuous scrolling</string>
     <string name="pref_book_document_reader">Book reader</string>
     <string name="pref_book_document_reader_theme">Theme</string>
+    <string name="pref_book_document_reader_text_size">Text size</string>
     <string name="pref_book_document_reader_show_status_bar">Show status bar</string>
     <string name="pref_book_document_reader_show_reading_progress">Show reading progress</string>
     <string name="pref_book_document_reader_reading_progress_style">Reading progress style</string>
     <string name="book_document_reader_theme_app">App theme</string>
     <string name="book_document_reader_theme_black">Black</string>
+    <string name="action_decrease_text_size">Decrease text size</string>
+    <string name="action_increase_text_size">Increase text size</string>
+    <string name="action_edit_text_size">Edit text size</string>
     <string name="book_document_reader_progress_edge_fill_rail">Edge fill rail</string>
     <string name="book_document_reader_progress_edge_position_marker">Edge position marker</string>
     <string name="book_document_reader_progress_bottom_hairline">Bottom hairline</string>

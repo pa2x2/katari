@@ -30,6 +30,9 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
         val theme = remember(provider, binder) {
             binder.bind(provider.themeModeSetting).asProfilePreference()
         }
+        val textSize = remember(provider, binder) {
+            binder.bind(provider.textSizeSetting).asProfilePreference()
+        }
         val showStatusBar = remember(provider, binder) {
             binder.bind(provider.showStatusBarSetting).asProfilePreference()
         }
@@ -48,6 +51,17 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
                     BookDocumentReaderThemeMode.BLACK to stringResource(MR.strings.book_document_reader_theme_black),
                 ),
                 title = stringResource(MR.strings.pref_book_document_reader_theme),
+            ),
+            Preference.PreferenceItem.StepperPreference(
+                preference = textSize,
+                valueRange = BookDocumentReaderSettings.TEXT_SIZE_RANGE,
+                step = BookDocumentReaderSettings.TEXT_SIZE_STEP_PERCENT,
+                valueFormatter = { "$it%" },
+                inputSuffix = "%",
+                decreaseContentDescription = stringResource(MR.strings.action_decrease_text_size),
+                increaseContentDescription = stringResource(MR.strings.action_increase_text_size),
+                editContentDescription = stringResource(MR.strings.action_edit_text_size),
+                title = stringResource(MR.strings.pref_book_document_reader_text_size),
             ),
             Preference.PreferenceItem.SwitchPreference(
                 preference = showStatusBar,

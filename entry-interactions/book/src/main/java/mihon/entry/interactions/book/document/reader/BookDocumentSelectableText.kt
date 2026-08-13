@@ -48,11 +48,12 @@ internal fun BookDocumentSelectableText(
     onExternalLinkClick: (String) -> Unit,
     leadingSelectionText: String = "",
     preserveTerminalSpacing: Boolean = true,
-    baseFontSizeSp: Float = 16f,
+    baseFontSizeSp: Float = BOOK_DOCUMENT_BASE_TEXT_SIZE_SP,
     contentAlpha: Float = 1f,
     modifier: Modifier = Modifier,
 ) {
     val palette = LocalBookDocumentReaderPalette.current
+    val textScale = LocalBookDocumentTextScale.current
     val selection = LocalBookDocumentChapterSelection.current
     val chapterId = requireNotNull(LocalBookDocumentSelectionChapterId.current) {
         "Selectable book text must belong to a chapter"
@@ -84,7 +85,7 @@ internal fun BookDocumentSelectableText(
         5 -> 1.1f
         else -> 1f
     }
-    val fontSize = (baseFontSizeSp * block.style.fontSizeScale * headingScale).sp
+    val fontSize = (baseFontSizeSp * textScale * block.style.fontSizeScale * headingScale).sp
     val annotatedText = remember(
         visibleText,
         links,
@@ -113,7 +114,7 @@ internal fun BookDocumentSelectableText(
         )
     }
     val terminalSpacing = if (preserveTerminalSpacing && terminalLineBreaks > 0) {
-        (terminalLineBreaks - 1).coerceAtLeast(0).times(20).dp
+        (terminalLineBreaks - 1).coerceAtLeast(0).times(20 * textScale).dp
     } else {
         0.dp
     }

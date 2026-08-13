@@ -29,6 +29,7 @@ import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderProgressSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderStatusBarSettings
+import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderTextSizeSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeSettings
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.document.reader.theme.bookDocumentReaderPalette
@@ -72,6 +73,7 @@ internal fun BookDocumentReaderScreen(
     onClose: () -> Unit,
 ) {
     val themeSetting by settingBindings.themeMode.state.collectAsState()
+    val textSizeSetting by settingBindings.textSize.state.collectAsState()
     val showReadingProgressSetting by settingBindings.showReadingProgress.state.collectAsState()
     val readingProgressStyleSetting by settingBindings.readingProgressStyle.state.collectAsState()
     val readerPalette = bookDocumentReaderPalette(themeSetting.effectiveValue)
@@ -139,6 +141,7 @@ internal fun BookDocumentReaderScreen(
 
     CompositionLocalProvider(
         LocalBookDocumentTextInteraction provides textInteraction,
+        LocalBookDocumentTextScale provides textSizeSetting.effectiveValue / 100f,
         LocalBookDocumentReaderPalette provides readerPalette,
     ) {
         BookReaderScaffold(
@@ -168,6 +171,7 @@ internal fun BookDocumentReaderScreen(
                     loadedSections = state.loadedSections,
                     loadStates = state.loadStates,
                     navigationRequest = state.navigationRequest,
+                    textSizePercent = textSizeSetting.effectiveValue,
                     onLocation = onLocation,
                     onTransitionReached = onTransitionReached,
                     onTerminalObservation = onTerminalObservation,
@@ -257,6 +261,7 @@ internal fun BookDocumentReaderScreen(
             onOpenDefaultSettings = onOpenDefaultSettings,
             onResetProcessorSettings = {
                 settingBindings.themeMode.clearEntryOverride()
+                settingBindings.textSize.clearEntryOverride()
                 settingBindings.showStatusBar.clearEntryOverride()
                 settingBindings.showReadingProgress.clearEntryOverride()
                 settingBindings.readingProgressStyle.clearEntryOverride()
@@ -265,6 +270,7 @@ internal fun BookDocumentReaderScreen(
             content = {
                 BookDocumentReaderStatusBarSettings(settingBindings.showStatusBar)
                 BookDocumentReaderThemeSettings(settingBindings.themeMode)
+                BookDocumentReaderTextSizeSettings(settingBindings.textSize)
                 BookDocumentReaderProgressSettings(
                     showProgressBinding = settingBindings.showReadingProgress,
                     styleBinding = settingBindings.readingProgressStyle,

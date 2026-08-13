@@ -31,6 +31,15 @@ internal class BookDocumentReaderSettingsProvider(
         ),
     )
 
+    override val textSizeSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.TEXT_SIZE_PERCENT_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = BookDocumentReaderSettings.DEFAULT_TEXT_SIZE_PERCENT,
+        profilePreference = preferences.textSizePercent,
+        codec = ViewerSettingCodecs.Int,
+        validate = BookDocumentReaderSettings::isValidTextSizePercent,
+    )
+
     override val showStatusBarSetting = ViewerSettingDefinition(
         id = ViewerSettingId(id, BookDocumentReaderPreferences.SHOW_STATUS_BAR_KEY),
         scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
@@ -76,6 +85,7 @@ internal class BookDocumentReaderSettingsProvider(
 
     override val settings = listOf(
         themeModeSetting,
+        textSizeSetting,
         showStatusBarSetting,
         showReadingProgressSetting,
         readingProgressStyleSetting,
