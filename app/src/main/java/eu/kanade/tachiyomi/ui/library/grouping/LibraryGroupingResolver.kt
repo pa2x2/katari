@@ -88,55 +88,104 @@ private fun resolveGroups(
     entryTypeTitle: (EntryType) -> String,
 ): List<ResolvedLibraryGroup> {
     return when (dimension) {
-        LibraryGroupingDimension.Category -> visibleCategories.mapNotNull { category ->
-            val groupItems = items.filter { category.id in it.categories }
-            if (!preserveEmptyCategories && groupItems.isEmpty()) return@mapNotNull null
-            ResolvedLibraryGroup(
-                tab = LibraryPageTab(
-                    id = "category:${category.id}",
-                    title = category.name,
-                    category = category,
-                    dimension = dimension,
-                ),
-                category = category,
-                items = groupItems,
-            )
-        }
-        LibraryGroupingDimension.EntryType -> EntryType.entries.mapNotNull { entryType ->
-            val groupItems = items.filter { it.entry.type == entryType }
-            if (groupItems.isEmpty()) return@mapNotNull null
-            ResolvedLibraryGroup(
-                tab = LibraryPageTab(
-                    id = "type:${entryType.name}",
-                    title = entryTypeTitle(entryType),
-                    dimension = dimension,
-                ),
-                entryType = entryType,
-                items = groupItems,
-            )
-        }
-        LibraryGroupingDimension.Source -> {
-            val sourceNames = items.associate { it.displaySourceId to it.sourceName }
-            sourceNames.keys
-                .sortedWith { first, second ->
-                    sourceNames.getValue(first)
-                        .compareToWithCollator(sourceNames.getValue(second))
-                        .takeIf { it != 0 }
-                        ?: first.compareTo(second)
-                }
-                .map { sourceId ->
-                    ResolvedLibraryGroup(
-                        tab = LibraryPageTab(
-                            id = "source:$sourceId",
-                            title = sourceNames.getValue(sourceId),
-                            dimension = dimension,
-                        ),
-                        sourceId = sourceId,
-                        items = items.filter { it.displaySourceId == sourceId },
-                    )
-                }
+        LibraryGroupingDimension.Category -> resolveCategoryGroups(
+            items = items,
+            preserveEmptyCategories = preserveEmptyCategories,
+            visibleCategories = visibleCategories,
+        )
+        LibraryGroupingDimension.EntryType -> resolveEntryTypeGroups(items, entryTypeTitle)
+        LibraryGroupingDimension.Source -> resolveSourceGroups(items)
+    }
+}
+
+private fun resolveCategoryGroups(
+    items: List<LibraryItem>,
+    preserveEmptyCategories: Boolean,
+    visibleCategories: List<Category>,
+): List<ResolvedLibraryGroup> {
+    val bucketPositionsByCategoryId = buildMap<Long, MutableList<Int>> {
+        visibleCategories.forEachIndexed { index, category ->
+            getOrPut(category.id, ::mutableListOf) += index
         }
     }
+    val buckets = List(visibleCategories.size) { mutableListOf<LibraryItem>() }
+    val lastItemIndexByBucket = IntArray(visibleCategories.size) { -1 }
+
+    items.forEachIndexed { itemIndex, item ->
+        item.categories.forEach { categoryId ->
+            bucketPositionsByCategoryId[categoryId]?.forEach { bucketIndex ->
+                if (lastItemIndexByBucket[bucketIndex] != itemIndex) {
+                    buckets[bucketIndex] += item
+                    lastItemIndexByBucket[bucketIndex] = itemIndex
+                }
+            }
+        }
+    }
+
+    return visibleCategories.mapIndexedNotNull { index, category ->
+        val groupItems = buckets[index]
+        if (!preserveEmptyCategories && groupItems.isEmpty()) return@mapIndexedNotNull null
+        ResolvedLibraryGroup(
+            tab = LibraryPageTab(
+                id = "category:${category.id}",
+                title = category.name,
+                category = category,
+                dimension = LibraryGroupingDimension.Category,
+            ),
+            category = category,
+            items = groupItems,
+        )
+    }
+}
+
+private fun resolveEntryTypeGroups(
+    items: List<LibraryItem>,
+    entryTypeTitle: (EntryType) -> String,
+): List<ResolvedLibraryGroup> {
+    val buckets = List(EntryType.entries.size) { mutableListOf<LibraryItem>() }
+    items.forEach { item -> buckets[item.entry.type.ordinal] += item }
+
+    return EntryType.entries.mapIndexedNotNull { index, entryType ->
+        val groupItems = buckets[index]
+        if (groupItems.isEmpty()) return@mapIndexedNotNull null
+        ResolvedLibraryGroup(
+            tab = LibraryPageTab(
+                id = "type:${entryType.name}",
+                title = entryTypeTitle(entryType),
+                dimension = LibraryGroupingDimension.EntryType,
+            ),
+            entryType = entryType,
+            items = groupItems,
+        )
+    }
+}
+
+private fun resolveSourceGroups(items: List<LibraryItem>): List<ResolvedLibraryGroup> {
+    val sourceNames = mutableMapOf<Long, String>()
+    val buckets = mutableMapOf<Long, MutableList<LibraryItem>>()
+    items.forEach { item ->
+        sourceNames[item.displaySourceId] = item.sourceName
+        buckets.getOrPut(item.displaySourceId, ::mutableListOf) += item
+    }
+
+    return sourceNames.keys
+        .sortedWith { first, second ->
+            sourceNames.getValue(first)
+                .compareToWithCollator(sourceNames.getValue(second))
+                .takeIf { it != 0 }
+                ?: first.compareTo(second)
+        }
+        .map { sourceId ->
+            ResolvedLibraryGroup(
+                tab = LibraryPageTab(
+                    id = "source:$sourceId",
+                    title = sourceNames.getValue(sourceId),
+                    dimension = LibraryGroupingDimension.Source,
+                ),
+                sourceId = sourceId,
+                items = buckets.getValue(sourceId),
+            )
+        }
 }
 
 private fun List<ResolvedLibraryGroup>.toPage(items: List<LibraryItem>): LibraryPage {
