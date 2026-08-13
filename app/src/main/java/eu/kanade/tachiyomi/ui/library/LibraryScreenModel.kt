@@ -546,30 +546,6 @@ class LibraryScreenModel(
     }
 
     /**
-     * Returns the common categories for the given library items.
-     */
-    private suspend fun getCommonCategories(items: List<LibraryItem>): Collection<Category> {
-        if (items.isEmpty()) return emptyList()
-        return items
-            .map { getCategoriesForItem(it).toSet() }
-            .reduce { set1, set2 -> set1.intersect(set2) }
-    }
-
-    /**
-     * Returns the mix (non-common) categories for the given library items.
-     */
-    private suspend fun getMixCategories(items: List<LibraryItem>): Collection<Category> {
-        if (items.isEmpty()) return emptyList()
-        val itemCategories = items.map { getCategoriesForItem(it).toSet() }
-        val common = itemCategories.reduce { set1, set2 -> set1.intersect(set2) }
-        return itemCategories.flatten().distinct().subtract(common)
-    }
-
-    private suspend fun getCategoriesForItem(item: LibraryItem): List<Category> {
-        return categoriesForLibraryItem(item, getCategories::await)
-    }
-
-    /**
      * Queues the amount specified of unread chapters from the list of selected entries.
      */
     fun performDownloadAction(action: DownloadAction) {
@@ -793,15 +769,14 @@ class LibraryScreenModel(
         // Hide the default category because it has a different behavior than the ones from db.
         val categories = state.libraryData.categories.filter { it.id != 0L }
         screenModelScope.launchIO {
-            // Get indexes of the common categories to preselect.
-            val common = getCommonCategories(items)
-            // Get indexes of the mix categories to preselect.
-            val mix = getMixCategories(items)
+            val selection = prepareLibraryCategorySelection(items) { item ->
+                categoriesForLibraryItem(item, getCategories::await)
+            }
             val preselected = categories
                 .map {
                     when (it) {
-                        in common -> CheckboxState.State.Checked(it)
-                        in mix -> CheckboxState.TriState.Exclude(it)
+                        in selection.common -> CheckboxState.State.Checked(it)
+                        in selection.mixed -> CheckboxState.TriState.Exclude(it)
                         else -> CheckboxState.State.None(it)
                     }
                 }
@@ -1378,17 +1353,6 @@ internal fun List<LibraryItem>.downloadSourceIdsFor(entry: Entry): Set<Long> {
         .flatMap { it.sourceIds }
         .toSet()
         .ifEmpty { setOf(entry.source) }
-}
-
-internal suspend fun categoriesForLibraryItem(
-    item: LibraryItem,
-    getCategories: suspend (Long) -> List<Category>,
-): List<Category> {
-    return item.memberEntryIds
-        .map(LibraryItemKey::id)
-        .distinct()
-        .flatMap { getCategories(it) }
-        .distinctBy(Category::id)
 }
 
 internal suspend fun updateLibraryItemCategories(
