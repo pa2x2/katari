@@ -1,8 +1,10 @@
 package mihon.entry.interactions.host
 
+import app.cash.sqldelight.async.coroutines.awaitAsList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import mihon.entry.interactions.merge.host.EntryMergeMembershipSnapshot
 import tachiyomi.data.DatabaseHandler
@@ -41,20 +43,39 @@ internal class AppEntryMergeDuplicateCandidateHost(
         entry: Flow<Entry>,
         memberships: Flow<List<EntryMergeMembershipSnapshot>>,
     ): Flow<List<DuplicateEntryCandidate>> {
-        val libraryEntries = handler.subscribeToList {
-            libraryViewQueries.library(profileId, EntryMapper::mapLibraryEntry)
-        }
+        val entriesWithCounts = observeEntriesWithCounts(profileId, entry)
         val tracks = handler.subscribeToList {
             entry_syncQueries.getTracks(profileId, TrackMapper::mapTrack)
         }
         return combine(
-            entry,
-            libraryEntries,
+            entriesWithCounts,
             memberships,
             tracks,
             duplicateConfig(),
-        ) { current, library, currentMemberships, currentTracks, config ->
-            detect(current, library, currentMemberships, currentTracks, config)
+        ) { entries, currentMemberships, currentTracks, config ->
+            detect(
+                entry = entries.current,
+                sameTypeLibraryEntries = entries.library,
+                memberships = currentMemberships,
+                tracks = currentTracks,
+                config = config,
+                counts = entries.counts,
+            )
+        }
+    }
+
+    private fun observeEntriesWithCounts(
+        profileId: Long,
+        entry: Flow<Entry>,
+    ): Flow<DuplicateCandidateEntries> {
+        val libraryEntries = handler.subscribeToList {
+            entriesQueries.getFavorites(profileId, EntryMapper::mapEntry)
+        }
+        return observeDuplicateCandidateEntries(entry, libraryEntries) { entryIds ->
+            val invalidations = handler.subscribeToList {
+                chaptersQueries.getCountsByEntryIds(listOf(entryIds.first())) { entryId, count -> entryId to count }
+            }.map { Unit }
+            observeDuplicateCandidateCounts(invalidations) { loadCounts(entryIds) }
         }
     }
 
@@ -79,7 +100,7 @@ internal class AppEntryMergeDuplicateCandidateHost(
     }
 
     private suspend fun libraryEntries(profileId: Long): List<Entry> {
-        return handler.awaitList { libraryViewQueries.library(profileId, EntryMapper::mapLibraryEntry) }
+        return handler.awaitList { entriesQueries.getFavorites(profileId, EntryMapper::mapEntry) }
     }
 
     private suspend fun tracks(profileId: Long): List<EntryTrack> {
@@ -101,36 +122,53 @@ internal class AppEntryMergeDuplicateCandidateHost(
         val counts = if (entryIds.isEmpty()) {
             emptyMap()
         } else {
-            handler.awaitList {
-                chaptersQueries.getCountsByEntryIds(entryIds) { entryId, count -> entryId to count }
-            }.toMap()
+            loadCounts(entryIds)
         }
-        return withContext(Dispatchers.Default) {
-            val membershipByEntry = memberships
-                .flatMap { membership -> membership.orderedEntryIds.map { it to membership } }
-                .toMap()
-            val current = entry.toMetadata(counts[entry.id])
-            val excludedIds = membershipByEntry[entry.id]?.orderedEntryIds?.toSet() ?: setOf(entry.id)
-            val libraryMemberIds = sameTypeLibraryEntries.mapTo(mutableSetOf(), Entry::id)
-            val trackerDuplicates = trackerDuplicateIds(entry.id, libraryMemberIds, tracks)
-            val candidates = buildCandidates(sameTypeLibraryEntries, memberships, counts)
-            DuplicateLibrarySupport.detectDuplicates(
-                currentEntry = current,
-                libraryEntries = candidates,
-                excludedIds = excludedIds,
-                trackerDuplicateIds = trackerDuplicates,
-                config = config,
-            ).map { match ->
-                DuplicateEntryCandidate(
-                    entry = match.item,
-                    count = match.count,
-                    cheapScore = match.cheapScore,
-                    scoreMax = match.scoreMax,
-                    score = match.score,
-                    reasons = match.reasons,
-                    contentSignature = match.contentSignature,
-                )
+        return detect(entry, sameTypeLibraryEntries, memberships, tracks, config, counts)
+    }
+
+    private suspend fun loadCounts(entryIds: List<Long>): Map<Long, Long> {
+        return handler.await(inTransaction = true) {
+            loadDuplicateCandidateCounts(entryIds) { entryIdChunk ->
+                chaptersQueries.getCountsByEntryIds(entryIdChunk) { entryId, count -> entryId to count }
+                    .awaitAsList()
+                    .toMap()
             }
+        }
+    }
+
+    private suspend fun detect(
+        entry: Entry,
+        sameTypeLibraryEntries: List<Entry>,
+        memberships: List<EntryMergeMembershipSnapshot>,
+        tracks: List<EntryTrack>,
+        config: DuplicateConfig,
+        counts: Map<Long, Long>,
+    ): List<DuplicateEntryCandidate> = withContext(Dispatchers.Default) {
+        val membershipByEntry = memberships
+            .flatMap { membership -> membership.orderedEntryIds.map { it to membership } }
+            .toMap()
+        val current = entry.toMetadata(counts[entry.id])
+        val excludedIds = membershipByEntry[entry.id]?.orderedEntryIds?.toSet() ?: setOf(entry.id)
+        val libraryMemberIds = sameTypeLibraryEntries.mapTo(mutableSetOf(), Entry::id)
+        val trackerDuplicates = trackerDuplicateIds(entry.id, libraryMemberIds, tracks)
+        val candidates = buildCandidates(sameTypeLibraryEntries, memberships, counts)
+        DuplicateLibrarySupport.detectDuplicates(
+            currentEntry = current,
+            libraryEntries = candidates,
+            excludedIds = excludedIds,
+            trackerDuplicateIds = trackerDuplicates,
+            config = config,
+        ).map { match ->
+            DuplicateEntryCandidate(
+                entry = match.item,
+                count = match.count,
+                cheapScore = match.cheapScore,
+                scoreMax = match.scoreMax,
+                score = match.score,
+                reasons = match.reasons,
+                contentSignature = match.contentSignature,
+            )
         }
     }
 
