@@ -18,6 +18,7 @@ import eu.kanade.presentation.entry.DownloadAction
 import eu.kanade.presentation.entry.components.ChapterDownloadAction
 import eu.kanade.presentation.entry.components.MergeEditorEntry
 import eu.kanade.presentation.entry.components.MergeTarget
+import eu.kanade.presentation.entry.components.MergeTargetSearchController
 import eu.kanade.presentation.entry.components.buildMergeTargetQuery
 import eu.kanade.presentation.entry.components.buildMergeTargets
 import eu.kanade.presentation.entry.components.rankMergeTargets
@@ -199,6 +200,8 @@ class EntryScreenModel(
     private val sourceManager: SourceManager = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
 ) : StateScreenModel<EntryScreenModel.State>(State.Loading) {
+
+    private val mergeTargetSearchController = MergeTargetSearchController<MergeTarget>(screenModelScope)
 
     private val successState: State.Success?
         get() = state.value as? State.Success
@@ -1678,6 +1681,7 @@ class EntryScreenModel(
     }
 
     fun dismissDialog() {
+        mergeTargetSearchController.cancelPending()
         updateSuccessState { it.copy(dialog = null) }
     }
 
@@ -1701,6 +1705,7 @@ class EntryScreenModel(
 
     fun showMergeTargetPicker() {
         val state = successState ?: return
+        mergeTargetSearchController.cancelPending()
         screenModelScope.launchIO {
             val excludedIds = state.mergeGroupMemberIds.toSet()
             val targets = buildMergeTargets(
@@ -1726,10 +1731,21 @@ class EntryScreenModel(
     }
 
     fun updateMergeTargetQuery(query: String) {
+        val dialog = successState?.dialog as? Dialog.SelectMergeTarget ?: return
+        if (dialog.query == query) return
         updateSuccessState { state ->
-            val dialog = state.dialog as? Dialog.SelectMergeTarget ?: return@updateSuccessState state
-            val visibleTargets = rankMergeTargets(dialog.targets, query).toImmutableList()
-            state.copy(dialog = dialog.copy(query = query, visibleTargets = visibleTargets))
+            val currentDialog = state.dialog as? Dialog.SelectMergeTarget ?: return@updateSuccessState state
+            if (currentDialog.targets !== dialog.targets) return@updateSuccessState state
+            state.copy(dialog = currentDialog.copy(query = query))
+        }
+        mergeTargetSearchController.submit(dialog.targets, query) { visibleTargets ->
+            updateSuccessState { state ->
+                val currentDialog = state.dialog as? Dialog.SelectMergeTarget ?: return@updateSuccessState state
+                if (currentDialog.targets !== dialog.targets || currentDialog.query != query) {
+                    return@updateSuccessState state
+                }
+                state.copy(dialog = currentDialog.copy(visibleTargets = visibleTargets))
+            }
         }
     }
 
@@ -1739,6 +1755,8 @@ class EntryScreenModel(
             val target = dialog.targets.firstOrNull { it.id == targetId } ?: return@launchIO
             val editor = createMergeEditorDialog(dialog.entry, target) ?: return@launchIO
             updateSuccessState {
+                val current = it.dialog as? Dialog.SelectMergeTarget ?: return@updateSuccessState it
+                if (current.targets !== dialog.targets) return@updateSuccessState it
                 it.copy(dialog = editor)
             }
         }

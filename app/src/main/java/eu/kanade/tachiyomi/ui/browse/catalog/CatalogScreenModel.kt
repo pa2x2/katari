@@ -28,6 +28,7 @@ import eu.kanade.domain.source.service.BrowseFeedService
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.entry.components.MergeEditorEntry
 import eu.kanade.presentation.entry.components.MergeTarget
+import eu.kanade.presentation.entry.components.MergeTargetSearchController
 import eu.kanade.presentation.entry.components.buildMergeTargetQuery
 import eu.kanade.presentation.entry.components.buildMergeTargets
 import eu.kanade.presentation.entry.components.rankMergeTargets
@@ -158,6 +159,7 @@ class CatalogScreenModel(
     private val filterLoader = CatalogFilterLoader(entryCatalogueFeature)
     private val presetHelper = CatalogPresetHelper(sourceId, browseFeedService, entryCatalogueFeature)
     private val pagedFilterBrowseSessions = PagedFilterBrowseSessionStore(screenModelScope)
+    private val mergeTargetSearchController = MergeTargetSearchController<MergeTarget>(screenModelScope)
 
     val catalogSource =
         (entryCatalogueFeature.source(sourceId) as? EntryCatalogueSourceResolution.Available)?.source
@@ -565,6 +567,7 @@ class CatalogScreenModel(
     }
 
     private fun showEntryMergeTargetPicker(entry: Entry) {
+        mergeTargetSearchController.cancelPending()
         screenModelScope.launchIO {
             val targets = buildMergeTargets(
                 libraryItems = getLibraryEntries.await(),
@@ -588,8 +591,22 @@ class CatalogScreenModel(
     fun updateMergeTargetQuery(query: String) {
         when (val dialog = state.value.dialog) {
             is Dialog.SelectEntryMergeTarget -> {
-                val visibleTargets = rankMergeTargets(dialog.targets, query).toImmutableList()
-                setDialog(dialog.copy(query = query, visibleTargets = visibleTargets))
+                if (dialog.query == query) return
+                mutableState.update { currentState ->
+                    val current = currentState.dialog as? Dialog.SelectEntryMergeTarget ?: return@update currentState
+                    if (current.targets !== dialog.targets) return@update currentState
+                    currentState.copy(dialog = current.copy(query = query))
+                }
+                mergeTargetSearchController.submit(dialog.targets, query) { visibleTargets ->
+                    mutableState.update { currentState ->
+                        val current = currentState.dialog as? Dialog.SelectEntryMergeTarget
+                            ?: return@update currentState
+                        if (current.targets !== dialog.targets || current.query != query) return@update currentState
+                        currentState.copy(
+                            dialog = current.copy(visibleTargets = visibleTargets),
+                        )
+                    }
+                }
             }
             else -> {}
         }
@@ -601,7 +618,12 @@ class CatalogScreenModel(
                 screenModelScope.launchIO {
                     val target = dialog.targets.firstOrNull { it.id == targetId } ?: return@launchIO
                     val editor = createEntryMergeEditorDialog(dialog.entry, target) ?: return@launchIO
-                    setDialog(editor)
+                    mutableState.update { currentState ->
+                        val current = currentState.dialog as? Dialog.SelectEntryMergeTarget
+                            ?: return@update currentState
+                        if (current.targets !== dialog.targets) return@update currentState
+                        currentState.copy(dialog = editor)
+                    }
                 }
             }
             else -> {}
@@ -974,6 +996,9 @@ class CatalogScreenModel(
     }
 
     private fun setDialog(dialog: Dialog?) {
+        if (state.value.dialog is Dialog.SelectEntryMergeTarget && dialog !is Dialog.SelectEntryMergeTarget) {
+            mergeTargetSearchController.cancelPending()
+        }
         mutableState.update { it.copy(dialog = dialog) }
     }
 
