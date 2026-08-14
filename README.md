@@ -18,6 +18,10 @@ Read, watch, and explore in one familiar Android app—built to welcome new ways
 
 Stories do not all fit the same format. Katari gives them the same home, with an experience designed to feel coherent as the library grows.
 
+## Built on Mihon
+
+Katari would not exist without [Mihon](https://github.com/mihonapp/mihon) and the many people who contribute to it. This is an independent, preference-driven fork—not an official Mihon project.
+
 ## One experience, however stories are told
 
 **Everything belongs together.** Different content types share one library, discovery space, updates feed, and history—without feeling like separate apps joined at the menu.
@@ -29,16 +33,6 @@ Stories do not all fit the same format. Katari gives them the same home, with an
 **Enjoy each format on its own terms.** A configurable reader, a capable video player, offline downloads, and format-aware controls give every kind of content the treatment it deserves.
 
 **One title, even across sources.** Combine versions of the same title into one library entry, keeping alternatives close without filling your library, updates, and history with duplicates.
-
-## Built on Mihon
-
-Katari would not exist without [Mihon](https://github.com/mihonapp/mihon) and the many people who contribute to it. This is an independent, preference-driven fork—not an official Mihon project.
-
-## Developers
-
-Katari provides an Entry SDK for building sources that can expose different content types and media experiences.
-
-For changes to Katari itself, see the [contribution guide](./CONTRIBUTING.md).
 
 ## Disclaimer
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.5] - 2026-08-14
+
+### 🐛 Fixed
+
+- Book reader progress indicators now reflect the visible scrollable range accurately, preserve the actual resume position independently, and stay within rounded screen corners.
+
 ## [1.3.4] - 2026-08-13
 
 ### 🐛 Fixed
@@ -176,7 +182,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.3.4...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.3.5...HEAD
+[1.3.5]: https://github.com/pa2x2/katari/releases/tag/v1.3.5
 [1.3.4]: https://github.com/pa2x2/katari/releases/tag/v1.3.4
 [1.3.3]: https://github.com/pa2x2/katari/releases/tag/v1.3.3
 [1.3.2]: https://github.com/pa2x2/katari/releases/tag/v1.3.2
