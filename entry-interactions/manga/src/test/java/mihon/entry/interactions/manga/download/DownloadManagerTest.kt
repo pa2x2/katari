@@ -24,6 +24,7 @@ class DownloadManagerTest {
         val started = CompletableDeferred<Unit>()
         val downloader = mockk<Downloader>(relaxed = true) {
             coEvery { awaitInitialized() } returns Unit
+            every { queueState } returns MutableStateFlow(emptyList())
             every { start() } returns true
             coEvery { awaitIdle() } coAnswers {
                 started.complete(Unit)

@@ -147,6 +147,7 @@ class ProfileManagerTest {
         val profileDatabase = mockk<ProfileDatabase> {
             coEvery { subscribeProfiles(any()) } returns flowOf(listOf(defaultProfile(), profile))
             coEvery { getProfileById(profileId) } returns profile
+            coEvery { getProfileById(ProfileConstants.DEFAULT_PROFILE_ID) } returns defaultProfile()
             coEvery { deleteProfile(profileId) } just runs
         }
         val profileStore = mockk<ProfileStoreImpl> {
@@ -197,6 +198,7 @@ class ProfileManagerTest {
         val profileDatabase = mockk<ProfileDatabase> {
             coEvery { subscribeProfiles(any()) } returns flowOf(listOf(defaultProfile(), profile))
             coEvery { getProfileById(profileId) } returns profile
+            coEvery { getProfileById(ProfileConstants.DEFAULT_PROFILE_ID) } returns defaultProfile()
         }
         val profileStore = mockk<ProfileStoreImpl> {
             every { currentProfileId } returns ProfileConstants.DEFAULT_PROFILE_ID
