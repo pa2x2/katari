@@ -179,19 +179,9 @@ internal fun TranslationSessionOverlay(
             Sheet()
             return@BoxWithConstraints
         }
-        val hostBounds = TranslationViewportBounds(
-            left = 0,
-            top = 0,
-            right = hostSize.width,
-            bottom = hostSize.height,
-        )
-        if (anchor.isUsable() && !anchor.isInside(hostBounds, edgeMargin = 0)) {
-            SideEffect { onPopupBoundsChanged(null) }
-            return@BoxWithConstraints
-        }
-
         // Anchor coordinates change on every scroll frame. Keep placement visibility scoped to the
-        // translation request so repositioning cannot repeatedly hide and reveal the popup.
+        // translation request so the popup can pin to the viewport edge and re-anchor without
+        // restarting its session.
         var placementAvailability by remember(
             active.input.request,
             hostSize,
@@ -256,7 +246,8 @@ internal fun TranslationSessionOverlay(
                 maximumWidth = with(density) {
                     minOf(popupMaximumWidth, safeWidth).toDp()
                 },
-                visible = placementAvailability == TranslationPopupPlacementAvailability.Fits,
+                visible = placementAvailability != null &&
+                    placementAvailability != TranslationPopupPlacementAvailability.NeedsSheet,
                 onDismiss = onDismiss,
                 onExecute = onExecute,
                 onRetry = onRetry,
@@ -446,20 +437,7 @@ internal class TranslationPopupPositionProvider(
                 TranslationPopupPlacementAvailability.AnchorOutsideViewport
             else -> TranslationPopupPlacementAvailability.NeedsSheet
         }
-        onPlacementAvailabilityChanged(availability)
-        onPopupBoundsChanged(
-            placement?.let {
-                val left = rootLeft + it.x
-                val top = rootTop + it.y
-                Rect(
-                    left = left.toFloat(),
-                    top = top.toFloat(),
-                    right = (left + popupContentSize.width).toFloat(),
-                    bottom = (top + popupContentSize.height).toFloat(),
-                )
-            },
-        )
-        return placement?.let {
+        val resolvedPosition = placement?.let {
             IntOffset(rootLeft + it.x, rootTop + it.y)
         } ?: calculateTranslationPopupFallbackPosition(
             anchor = anchor,
@@ -473,6 +451,20 @@ internal class TranslationPopupPositionProvider(
             edgeMargin = edgeMargin,
             anchorGap = anchorGap,
         )
+        onPlacementAvailabilityChanged(availability)
+        onPopupBoundsChanged(
+            resolvedPosition.takeIf {
+                availability != TranslationPopupPlacementAvailability.NeedsSheet
+            }?.let {
+                Rect(
+                    left = it.x.toFloat(),
+                    top = it.y.toFloat(),
+                    right = (it.x + popupContentSize.width).toFloat(),
+                    bottom = (it.y + popupContentSize.height).toFloat(),
+                )
+            },
+        )
+        return resolvedPosition
     }
 }
 
