@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.6] - 2026-08-14
+
+### 🐛 Fixed
+
+- Book-reader translation popups now remain visible and re-anchor while scrolling without conflicting with text-selection action menus.
+
 ## [1.3.5] - 2026-08-14
 
 ### 🐛 Fixed
@@ -182,7 +188,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.3.5...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.3.6...HEAD
+[1.3.6]: https://github.com/pa2x2/katari/releases/tag/v1.3.6
 [1.3.5]: https://github.com/pa2x2/katari/releases/tag/v1.3.5
 [1.3.4]: https://github.com/pa2x2/katari/releases/tag/v1.3.4
 [1.3.3]: https://github.com/pa2x2/katari/releases/tag/v1.3.3

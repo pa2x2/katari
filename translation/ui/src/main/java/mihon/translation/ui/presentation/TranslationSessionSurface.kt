@@ -64,14 +64,7 @@ internal fun calculateTranslationPopupPlacement(
     val safeRight = viewport.right - edgeMargin
     val safeBottom = viewport.bottom - edgeMargin
     if (safeRight <= safeLeft || safeBottom <= safeTop) return null
-    if (
-        anchor.left < safeLeft ||
-        anchor.top < safeTop ||
-        anchor.right > safeRight ||
-        anchor.bottom > safeBottom
-    ) {
-        return null
-    }
+    if (!anchor.isInside(viewport, edgeMargin = 0)) return null
 
     val safeWidth = safeRight - safeLeft
     if (popup.width > safeWidth) return null
@@ -105,8 +98,8 @@ internal fun TranslationSelectionAnchor.isInside(
     val safeTop = viewport.top + edgeMargin
     val safeRight = viewport.right - edgeMargin
     val safeBottom = viewport.bottom - edgeMargin
-    return left >= safeLeft &&
-        top >= safeTop &&
-        right <= safeRight &&
-        bottom <= safeBottom
+    return left > safeLeft &&
+        top > safeTop &&
+        right < safeRight &&
+        bottom < safeBottom
 }
