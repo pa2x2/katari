@@ -29,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -60,6 +61,7 @@ internal fun BookReaderScaffold(
     translationController: BookSelectionTranslationController? = null,
     translationSpeechState: TranslationResultSpeechState = TranslationResultSpeechState(),
     onTranslationSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)? = null,
+    onTranslationPopupBoundsChanged: (Rect?) -> Unit = {},
     onRootPositionInWindow: (Offset) -> Unit = {},
     content: @Composable BoxScope.() -> Unit,
     overlay: @Composable BoxScope.(@Composable () -> Unit) -> Unit = {},
@@ -163,6 +165,7 @@ internal fun BookReaderScaffold(
                     isTabletUi = maxWidth >= 720.dp,
                     modifier = Modifier.fillMaxSize(),
                     onDismiss = controller::dismissTranslation,
+                    onPopupBoundsChanged = onTranslationPopupBoundsChanged,
                     speechState = translationSpeechState,
                     onSpeechToggle = onTranslationSpeechToggle,
                 )

@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalFocusManager
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderProgressSettings
@@ -70,6 +71,7 @@ internal fun BookDocumentReaderScreen(
     onOpenDefaultSettings: () -> Unit,
     onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
     onExternalLinkClick: (String) -> Unit,
+    onTranslationPopupBoundsChanged: (Rect?) -> Unit,
     onClose: () -> Unit,
 ) {
     val themeSetting by settingBindings.themeMode.state.collectAsState()
@@ -159,6 +161,7 @@ internal fun BookDocumentReaderScreen(
             translationController = selectionCoordinator?.translationController,
             translationSpeechState = translationSpeechState,
             onTranslationSpeechToggle = selectionCoordinator?.let { it::toggleTranslationSpeech },
+            onTranslationPopupBoundsChanged = onTranslationPopupBoundsChanged,
             onRootPositionInWindow = { rootPosition = it },
             modifier = Modifier
                 .fillMaxSize()

@@ -5,11 +5,13 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.ViewGroup
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import eu.kanade.tachiyomi.util.system.toast
@@ -60,6 +62,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     private var surfaceState by mutableStateOf<BookDocumentReaderSurfaceState>(BookDocumentReaderSurfaceState.Loading)
     private var readerState by mutableStateOf<BookDocumentReaderState?>(null)
     private var selectionCoordinator: BookSelectionActionCoordinator? = null
+    private val selectionActionModeAvoidance = BookSelectionActionModeAvoidance()
     private var settingBindings: BookDocumentReaderSettingBindings? = null
     private lateinit var childWebViewResolver: BookChildWebViewResolver
     private lateinit var chapterCoordinator: BookDocumentChapterCoordinator
@@ -102,7 +105,19 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                 childWebViewResolver.resolve(session)
             },
         )
-        setEntryInteractionContent {
+        val readerContent = ComposeView(this)
+        setContentView(
+            BookSelectionActionModeHost(this, selectionActionModeAvoidance).apply {
+                addView(
+                    readerContent,
+                    ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                    ),
+                )
+            },
+        )
+        readerContent.setEntryInteractionContent {
             when (val surface = surfaceState) {
                 BookDocumentReaderSurfaceState.Loading -> BookReaderLoadingScreen(
                     contentDescription = getString(R.string.book_reader_loading),
@@ -136,6 +151,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                         },
                         onChildWebViewAction = ::launchChildWebViewAction,
                         onExternalLinkClick = ::launchExternalLink,
+                        onTranslationPopupBoundsChanged = selectionActionModeAvoidance::updateBounds,
                         onClose = ::finish,
                     )
                 }
@@ -178,6 +194,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     }
 
     override fun onDestroy() {
+        selectionActionModeAvoidance.clear()
         chapterCoordinator.close()
         childWebViewResolver.close()
         selectionCoordinator?.close()

@@ -15,14 +15,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -61,6 +64,7 @@ fun TranslationSessionHost(
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit = controller::dismiss,
+    onPopupBoundsChanged: (Rect?) -> Unit = {},
     speechState: TranslationResultSpeechState = TranslationResultSpeechState(),
     onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)? = null,
 ) {
@@ -95,6 +99,7 @@ fun TranslationSessionHost(
         onExternalAction = onExternalAction,
         speechState = speechState,
         onSpeechToggle = onSpeechToggle,
+        onPopupBoundsChanged = onPopupBoundsChanged,
         modifier = modifier,
     )
 }
@@ -114,9 +119,15 @@ internal fun TranslationSessionOverlay(
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
     speechState: TranslationResultSpeechState = TranslationResultSpeechState(),
     onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)? = null,
+    onPopupBoundsChanged: (Rect?) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    val active = state as? TranslationSessionState.Active ?: return
+    val currentOnPopupBoundsChanged = rememberUpdatedState(onPopupBoundsChanged)
+    val active = state as? TranslationSessionState.Active
+    if (active == null) {
+        SideEffect { onPopupBoundsChanged(null) }
+        return
+    }
     val preferredSurface = if (expanded) {
         TranslationSessionSurface.AdaptiveSheet
     } else {
@@ -154,6 +165,7 @@ internal fun TranslationSessionOverlay(
 
     val anchor = active.input.anchor
     if (preferredSurface == TranslationSessionSurface.AdaptiveSheet || anchor == null) {
+        SideEffect { onPopupBoundsChanged(null) }
         Sheet()
         return
     }
@@ -163,6 +175,7 @@ internal fun TranslationSessionOverlay(
         val safeWidth = hostSize.width - leftInset - rightInset - edgeMargin * 2
         val safeHeight = hostSize.height - topInset - bottomInset - edgeMargin * 2
         if (safeWidth <= 0 || safeHeight <= 0) {
+            SideEffect { onPopupBoundsChanged(null) }
             Sheet()
             return@BoxWithConstraints
         }
@@ -173,6 +186,7 @@ internal fun TranslationSessionOverlay(
             bottom = hostSize.height,
         )
         if (anchor.isUsable() && !anchor.isInside(hostBounds, edgeMargin = 0)) {
+            SideEffect { onPopupBoundsChanged(null) }
             return@BoxWithConstraints
         }
 
@@ -228,6 +242,7 @@ internal fun TranslationSessionOverlay(
                         placementAvailability = availability
                     }
                 },
+                onPopupBoundsChanged = { bounds -> currentOnPopupBoundsChanged.value(bounds) },
             )
         }
 
@@ -383,6 +398,7 @@ internal class TranslationPopupPositionProvider(
     private val edgeMargin: Int,
     private val anchorGap: Int,
     private val onPlacementAvailabilityChanged: (TranslationPopupPlacementAvailability) -> Unit,
+    private val onPopupBoundsChanged: (Rect?) -> Unit = {},
 ) : PopupPositionProvider {
     override fun calculatePosition(
         anchorBounds: IntRect,
@@ -426,11 +442,23 @@ internal class TranslationPopupPositionProvider(
         val availability = when {
             placement != null -> TranslationPopupPlacementAvailability.Fits
             viewport != null && anchor.isUsable() &&
-                !anchor.isInside(viewport, edgeMargin) ->
+                !anchor.isInside(viewport, edgeMargin = 0) ->
                 TranslationPopupPlacementAvailability.AnchorOutsideViewport
             else -> TranslationPopupPlacementAvailability.NeedsSheet
         }
         onPlacementAvailabilityChanged(availability)
+        onPopupBoundsChanged(
+            placement?.let {
+                val left = rootLeft + it.x
+                val top = rootTop + it.y
+                Rect(
+                    left = left.toFloat(),
+                    top = top.toFloat(),
+                    right = (left + popupContentSize.width).toFloat(),
+                    bottom = (top + popupContentSize.height).toFloat(),
+                )
+            },
+        )
         return placement?.let {
             IntOffset(rootLeft + it.x, rootTop + it.y)
         } ?: calculateTranslationPopupFallbackPosition(
