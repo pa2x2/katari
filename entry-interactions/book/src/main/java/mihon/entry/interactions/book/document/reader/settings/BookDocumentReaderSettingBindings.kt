@@ -10,6 +10,7 @@ internal class BookDocumentReaderSettingBindings private constructor(
     val themeMode: ViewerSettingBinding<BookDocumentReaderThemeMode>,
     val textSize: ViewerSettingBinding<Int>,
     val showStatusBar: ViewerSettingBinding<Boolean>,
+    val showNavigationBar: ViewerSettingBinding<Boolean>,
     val showReadingProgress: ViewerSettingBinding<Boolean>,
     val readingProgressStyle: ViewerSettingBinding<BookDocumentReaderProgressStyle>,
     val sharedSettings: Map<ReaderSharedSettingId, ViewerSettingBinding<Boolean>>,
@@ -30,6 +31,7 @@ internal class BookDocumentReaderSettingBindings private constructor(
                 themeMode = binder.bind(provider.themeModeSetting, entryId),
                 textSize = binder.bind(provider.textSizeSetting, entryId),
                 showStatusBar = binder.bind(provider.showStatusBarSetting, entryId),
+                showNavigationBar = binder.bind(provider.showNavigationBarSetting, entryId),
                 showReadingProgress = binder.bind(provider.showReadingProgressSetting, entryId),
                 readingProgressStyle = binder.bind(provider.readingProgressStyleSetting, entryId),
                 sharedSettings = provider.sharedSettingDefinitions.mapValues { (_, definition) ->

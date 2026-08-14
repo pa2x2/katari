@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.7] - 2026-08-14
+
+### ✨ Added
+
+- Added an option to keep the navigation bar visible in the book reader when reader controls are hidden.
+
 ## [1.3.6] - 2026-08-14
 
 ### 🐛 Fixed
@@ -188,7 +194,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.3.6...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.3.7...HEAD
+[1.3.7]: https://github.com/pa2x2/katari/releases/tag/v1.3.7
 [1.3.6]: https://github.com/pa2x2/katari/releases/tag/v1.3.6
 [1.3.5]: https://github.com/pa2x2/katari/releases/tag/v1.3.5
 [1.3.4]: https://github.com/pa2x2/katari/releases/tag/v1.3.4

@@ -17,6 +17,7 @@
     <string name="book_document_reader_increase_text_size">Increase text size</string>
     <string name="book_document_reader_edit_text_size">Edit text size</string>
     <string name="book_document_reader_show_status_bar">Show status bar</string>
+    <string name="book_document_reader_show_navigation_bar">Show navigation bar</string>
     <string name="book_document_reader_theme_app">App theme</string>
     <string name="book_document_reader_theme_black">Black</string>
     <string name="book_reader_automatic_translation">Translate selected text automatically</string>

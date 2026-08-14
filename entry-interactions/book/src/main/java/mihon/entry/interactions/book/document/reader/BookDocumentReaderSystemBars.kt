@@ -11,6 +11,7 @@ import mihon.entry.interactions.book.document.reader.settings.BookDocumentReader
 internal class BookDocumentReaderSystemBars(window: Window) {
     private val controller = WindowCompat.getInsetsController(window, window.decorView)
     private val appUsesDarkStatusBarIcons = controller.isAppearanceLightStatusBars
+    private val appUsesDarkNavigationBarIcons = controller.isAppearanceLightNavigationBars
 
     init {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -22,6 +23,7 @@ internal class BookDocumentReaderSystemBars(window: Window) {
     fun apply(
         chromeVisible: Boolean,
         keepStatusBarVisible: Boolean,
+        keepNavigationBarVisible: Boolean,
         readerTheme: BookDocumentReaderThemeMode,
     ) {
         if (chromeVisible || keepStatusBarVisible) {
@@ -29,27 +31,34 @@ internal class BookDocumentReaderSystemBars(window: Window) {
         } else {
             controller.hide(WindowInsetsCompat.Type.statusBars())
         }
-        if (chromeVisible) {
+        if (chromeVisible || keepNavigationBarVisible) {
             controller.show(WindowInsetsCompat.Type.navigationBars())
         } else {
             controller.hide(WindowInsetsCompat.Type.navigationBars())
         }
-        applyStatusBarIconAppearance(chromeVisible, readerTheme)
+        applySystemBarIconAppearance(chromeVisible, readerTheme)
     }
 
-    private fun applyStatusBarIconAppearance(
+    private fun applySystemBarIconAppearance(
         chromeVisible: Boolean,
         readerTheme: BookDocumentReaderThemeMode,
     ) {
-        controller.isAppearanceLightStatusBars = when {
+        val useDarkIcons = when {
             chromeVisible -> appUsesDarkStatusBarIcons
             readerTheme == BookDocumentReaderThemeMode.BLACK -> false
             else -> appUsesDarkStatusBarIcons
+        }
+        controller.isAppearanceLightStatusBars = useDarkIcons
+        controller.isAppearanceLightNavigationBars = when {
+            chromeVisible -> appUsesDarkNavigationBarIcons
+            readerTheme == BookDocumentReaderThemeMode.BLACK -> false
+            else -> appUsesDarkNavigationBarIcons
         }
     }
 
     fun showAppBars() {
         controller.show(WindowInsetsCompat.Type.systemBars())
         controller.isAppearanceLightStatusBars = appUsesDarkStatusBarIcons
+        controller.isAppearanceLightNavigationBars = appUsesDarkNavigationBarIcons
     }
 }

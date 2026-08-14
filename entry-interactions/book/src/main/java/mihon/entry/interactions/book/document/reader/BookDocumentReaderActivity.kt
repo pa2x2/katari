@@ -224,6 +224,12 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                 .collect { applyReaderSystemBars() }
         }
         lifecycleScope.launch {
+            bindings.showNavigationBar.state
+                .map { setting -> setting.effectiveValue }
+                .distinctUntilChanged()
+                .collect { applyReaderSystemBars() }
+        }
+        lifecycleScope.launch {
             bindings.themeMode.state
                 .map { setting -> setting.effectiveValue }
                 .distinctUntilChanged()
@@ -378,10 +384,12 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         if (surfaceState != BookDocumentReaderSurfaceState.Ready) return
         val chromeVisible = readerState?.chromeVisible == true
         val keepStatusBarVisible = settingBindings?.showStatusBar?.state?.value?.effectiveValue == true
+        val keepNavigationBarVisible = settingBindings?.showNavigationBar?.state?.value?.effectiveValue == true
         val readerTheme = settingBindings?.themeMode?.state?.value?.effectiveValue ?: BookDocumentReaderThemeMode.APP
         readerSystemBars.apply(
             chromeVisible = chromeVisible,
             keepStatusBarVisible = keepStatusBarVisible,
+            keepNavigationBarVisible = keepNavigationBarVisible,
             readerTheme = readerTheme,
         )
     }
