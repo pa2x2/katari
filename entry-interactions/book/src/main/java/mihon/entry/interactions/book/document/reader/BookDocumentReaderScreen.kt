@@ -27,6 +27,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalFocusManager
 import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderNavigationBarSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderProgressSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderStatusBarSettings
@@ -266,12 +267,14 @@ internal fun BookDocumentReaderScreen(
                 settingBindings.themeMode.clearEntryOverride()
                 settingBindings.textSize.clearEntryOverride()
                 settingBindings.showStatusBar.clearEntryOverride()
+                settingBindings.showNavigationBar.clearEntryOverride()
                 settingBindings.showReadingProgress.clearEntryOverride()
                 settingBindings.readingProgressStyle.clearEntryOverride()
             },
             processorTabTitles = listOf(androidStringResource(R.string.book_reader_appearance_settings)),
             content = {
                 BookDocumentReaderStatusBarSettings(settingBindings.showStatusBar)
+                BookDocumentReaderNavigationBarSettings(settingBindings.showNavigationBar)
                 BookDocumentReaderThemeSettings(settingBindings.themeMode)
                 BookDocumentReaderTextSizeSettings(settingBindings.textSize)
                 BookDocumentReaderProgressSettings(

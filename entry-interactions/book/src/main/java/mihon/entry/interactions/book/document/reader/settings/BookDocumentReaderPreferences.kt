@@ -15,6 +15,7 @@ internal class BookDocumentReaderPreferences(
         BookDocumentReaderSettings.DEFAULT_TEXT_SIZE_PERCENT,
     )
     val showStatusBar: Preference<Boolean> = preferenceStore.getBoolean(SHOW_STATUS_BAR_KEY, false)
+    val showNavigationBar: Preference<Boolean> = preferenceStore.getBoolean(SHOW_NAVIGATION_BAR_KEY, false)
     val showReadingProgress: Preference<Boolean> = preferenceStore.getBoolean(SHOW_READING_PROGRESS_KEY, true)
     val readingProgressStyle: Preference<BookDocumentReaderProgressStyle> =
         preferenceStore.getEnum(READING_PROGRESS_STYLE_KEY, BookDocumentReaderProgressStyle.PERCENTAGE)
@@ -24,6 +25,7 @@ internal class BookDocumentReaderPreferences(
         const val THEME_MODE_KEY = "book_document_reader_theme_mode"
         const val TEXT_SIZE_PERCENT_KEY = "book_document_reader_text_size_percent"
         const val SHOW_STATUS_BAR_KEY = "book_document_reader_show_status_bar"
+        const val SHOW_NAVIGATION_BAR_KEY = "book_document_reader_show_navigation_bar"
         const val SHOW_READING_PROGRESS_KEY = "book_document_reader_show_reading_progress"
         const val READING_PROGRESS_STYLE_KEY = "book_document_reader_reading_progress_style"
     }
