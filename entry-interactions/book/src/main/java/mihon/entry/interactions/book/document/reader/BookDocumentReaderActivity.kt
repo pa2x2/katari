@@ -175,7 +175,6 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         if (startupRequest.entryId < 0L || startupRequest.chapterId < 0L) {
             showError(getString(R.string.book_reader_invalid_request))
         } else {
-            installSettingBindings(startupRequest.entryId)
             startOpen()
         }
     }
@@ -218,7 +217,8 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         super.onDestroy()
     }
 
-    private fun installSettingBindings(entryId: Long) {
+    private suspend fun installSettingBindings(entryId: Long) {
+        if (settingBindings != null) return
         val bindings = BookDocumentReaderSettingBindings.create(
             provider = Injekt.get<BookDocumentReaderSettingsProvider>(),
             binder = Injekt.get<ViewerSettingBinder>(),
@@ -276,6 +276,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     }
 
     private suspend fun open() {
+        installSettingBindings(startupRequest.entryId)
         val retained = retainedSessions.currentSession()
         val token = intent.getStringExtra(EXTRA_SESSION_TOKEN)
         val handedOff = if (retained == null && !token.isNullOrBlank()) {
