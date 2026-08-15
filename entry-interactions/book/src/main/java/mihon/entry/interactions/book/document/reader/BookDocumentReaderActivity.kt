@@ -8,6 +8,8 @@ import android.os.Bundle
 import android.view.ViewGroup
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.annotation.StringRes
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -64,6 +66,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     private var selectionCoordinator: BookSelectionActionCoordinator? = null
     private val selectionActionModeAvoidance = BookSelectionActionModeAvoidance()
     private var settingBindings: BookDocumentReaderSettingBindings? = null
+    private val snackbarHostState = SnackbarHostState()
     private lateinit var childWebViewResolver: BookChildWebViewResolver
     private lateinit var chapterCoordinator: BookDocumentChapterCoordinator
     private lateinit var readerSystemBars: BookDocumentReaderSystemBars
@@ -150,6 +153,8 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                             openViewerSettings(BookDocumentReaderSettingsProvider.PROVIDER_ID)
                         },
                         onChildWebViewAction = ::launchChildWebViewAction,
+                        snackbarHostState = snackbarHostState,
+                        onAnchorMissing = { showReaderFeedback(R.string.book_document_anchor_missing) },
                         onExternalLinkClick = ::launchExternalLink,
                         onTranslationPopupBoundsChanged = selectionActionModeAvoidance::updateBounds,
                         onClose = ::finish,
@@ -361,6 +366,13 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             startActivity(Intent(Intent.ACTION_VIEW, uri))
         }.onFailure { error ->
             logcat(LogPriority.ERROR, error) { "Failed to launch prose external link" }
+            showReaderFeedback(R.string.book_document_external_link_unavailable)
+        }
+    }
+
+    private fun showReaderFeedback(@StringRes messageRes: Int) {
+        lifecycleScope.launch {
+            snackbarHostState.showSnackbar(getString(messageRes))
         }
     }
 

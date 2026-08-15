@@ -5,12 +5,15 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -21,10 +24,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.unit.dp
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderNavigationBarSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderProgressSettings
@@ -71,6 +76,8 @@ internal fun BookDocumentReaderScreen(
     onSettingsVisibilityChange: (Boolean) -> Unit,
     onOpenDefaultSettings: () -> Unit,
     onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
+    snackbarHostState: SnackbarHostState,
+    onAnchorMissing: (String) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     onTranslationPopupBoundsChanged: (Rect?) -> Unit,
     onClose: () -> Unit,
@@ -179,6 +186,7 @@ internal fun BookDocumentReaderScreen(
                     onLocation = onLocation,
                     onTransitionReached = onTransitionReached,
                     onTerminalObservation = onTerminalObservation,
+                    onAnchorMissing = onAnchorMissing,
                     onExternalLinkClick = onExternalLinkClick,
                     onScrollStarted = onChromeHide,
                     onReaderTap = {
@@ -226,6 +234,17 @@ internal fun BookDocumentReaderScreen(
                             }
                         }
                     },
+                )
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 56.dp)
+                        .windowInsetsPadding(
+                            WindowInsets.safeDrawing.only(
+                                WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal,
+                            ),
+                        ),
                 )
             },
         )

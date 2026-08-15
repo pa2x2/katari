@@ -37,7 +37,7 @@ internal fun BookDocumentEndlessViewer(
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
     onTransitionReached: (EntryChapter) -> Unit,
     onTerminalObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
-    onAnchorMissing: (String) -> Unit = {},
+    onAnchorMissing: (String) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     onScrollStarted: () -> Unit,
     onReaderTap: () -> Unit,
