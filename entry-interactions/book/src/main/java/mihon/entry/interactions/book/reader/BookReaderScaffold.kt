@@ -62,6 +62,7 @@ internal fun BookReaderScaffold(
     translationSpeechState: TranslationResultSpeechState = TranslationResultSpeechState(),
     onTranslationSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)? = null,
     onTranslationPopupBoundsChanged: (Rect?) -> Unit = {},
+    translationTheme: @Composable (@Composable () -> Unit) -> Unit = { content -> content() },
     onRootPositionInWindow: (Offset) -> Unit = {},
     content: @Composable BoxScope.() -> Unit,
     overlay: @Composable BoxScope.(@Composable () -> Unit) -> Unit = {},
@@ -159,16 +160,18 @@ internal fun BookReaderScaffold(
             }
         }
         translationController?.let { controller ->
-            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-                CoordinatedTranslationSessionHost(
-                    coordinator = controller.hostCoordinator,
-                    isTabletUi = maxWidth >= 720.dp,
-                    modifier = Modifier.fillMaxSize(),
-                    onDismiss = controller::dismissTranslation,
-                    onPopupBoundsChanged = onTranslationPopupBoundsChanged,
-                    speechState = translationSpeechState,
-                    onSpeechToggle = onTranslationSpeechToggle,
-                )
+            translationTheme {
+                BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                    CoordinatedTranslationSessionHost(
+                        coordinator = controller.hostCoordinator,
+                        isTabletUi = maxWidth >= 720.dp,
+                        modifier = Modifier.fillMaxSize(),
+                        onDismiss = controller::dismissTranslation,
+                        onPopupBoundsChanged = onTranslationPopupBoundsChanged,
+                        speechState = translationSpeechState,
+                        onSpeechToggle = onTranslationSpeechToggle,
+                    )
+                }
             }
         }
     }

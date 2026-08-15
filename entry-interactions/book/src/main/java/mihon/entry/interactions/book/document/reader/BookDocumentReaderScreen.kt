@@ -37,6 +37,7 @@ import mihon.entry.interactions.book.document.reader.settings.BookDocumentReader
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderStatusBarSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderTextSizeSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeSettings
+import mihon.entry.interactions.book.document.reader.theme.BookDocumentReaderTranslationTheme
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.document.reader.theme.bookDocumentReaderPalette
 import mihon.entry.interactions.book.reader.BookReaderNavigationRow
@@ -170,6 +171,13 @@ internal fun BookDocumentReaderScreen(
             translationSpeechState = translationSpeechState,
             onTranslationSpeechToggle = selectionCoordinator?.let { it::toggleTranslationSpeech },
             onTranslationPopupBoundsChanged = onTranslationPopupBoundsChanged,
+            translationTheme = { content ->
+                BookDocumentReaderTranslationTheme(
+                    mode = themeSetting.effectiveValue,
+                    palette = readerPalette,
+                    content = content,
+                )
+            },
             onRootPositionInWindow = { rootPosition = it },
             modifier = Modifier
                 .fillMaxSize()
