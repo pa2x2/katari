@@ -11,7 +11,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -52,6 +51,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.reader.ReaderChrome
 import tachiyomi.presentation.core.components.reader.ReaderChromeBottomBar
+import tachiyomi.presentation.core.components.reader.ReaderChromeBottomBarAction
 import tachiyomi.presentation.core.components.reader.ReaderChromeTopBar
 import tachiyomi.presentation.core.i18n.stringResource
 import androidx.compose.ui.res.stringResource as androidStringResource
@@ -215,13 +215,13 @@ internal fun BookDocumentReaderScreen(
                     },
                     bottomBar = {
                         ReaderChromeBottomBar {
-                            IconButton(onClick = { onNavigationVisibilityChange(true) }) {
+                            ReaderChromeBottomBarAction(onClick = { onNavigationVisibilityChange(true) }) {
                                 Icon(
                                     Icons.AutoMirrored.Outlined.ViewList,
                                     stringResource(MR.strings.book_table_of_contents),
                                 )
                             }
-                            IconButton(onClick = { onSettingsVisibilityChange(true) }) {
+                            ReaderChromeBottomBarAction(onClick = { onSettingsVisibilityChange(true) }) {
                                 Icon(Icons.Outlined.Settings, stringResource(MR.strings.action_settings))
                             }
                         }
