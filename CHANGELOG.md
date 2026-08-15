@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.8] - 2026-08-15
+
+### 🔄 Changed
+
+- Immersive catalog and feed views now keep the system bars visible instead of hiding them.
+
 ## [1.3.7] - 2026-08-14
 
 ### ✨ Added
@@ -194,7 +200,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.3.7...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.3.8...HEAD
+[1.3.8]: https://github.com/pa2x2/katari/releases/tag/v1.3.8
 [1.3.7]: https://github.com/pa2x2/katari/releases/tag/v1.3.7
 [1.3.6]: https://github.com/pa2x2/katari/releases/tag/v1.3.6
 [1.3.5]: https://github.com/pa2x2/katari/releases/tag/v1.3.5

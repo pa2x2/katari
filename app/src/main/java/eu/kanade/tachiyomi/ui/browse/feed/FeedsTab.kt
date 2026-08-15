@@ -121,7 +121,6 @@ import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.TextButton
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.material.topSmallPaddingValues
-import tachiyomi.presentation.core.components.reader.ReaderSystemBarsEffect
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
@@ -241,8 +240,6 @@ private fun Screen.FeedsTabContent(
     val scope = rememberCoroutineScope()
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
-    ReaderSystemBarsEffect(enabled = feedViewMode == FeedViewMode.Immersive)
-
     LaunchedEffect(activeFeed?.id, immersiveAvailable) {
         if (!immersiveAvailable && feedViewMode == FeedViewMode.Immersive) {
             onFeedViewModeChange(FeedViewMode.Regular)
