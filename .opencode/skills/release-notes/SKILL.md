@@ -81,8 +81,7 @@ Katari's changelog focused on behavior that differs from Mihon.
    date. For major and minor release versions follow the heading with a `🌟 Highlights`
    subsection containing one concise sentence that summarizes the release's most meaningful
    verified user benefit. Write the sentence as normal paragraph text, not a blockquote, list item,
-   or GitHub alert. Make the highlight specific to the release; do not use generic filler such as
-   "This release includes improvements and bug fixes." Use only the applicable decorated category
+   or GitHub alert. Make the highlight specific to the release; Use only the applicable decorated category
    headings from this mapping:
 
    - `✨ Added`
@@ -110,9 +109,8 @@ Katari's changelog focused on behavior that differs from Mihon.
    Omit headings that have no qualifying outcomes.
 2. Describe user-visible outcomes in concise, natural, polished language. Let each heading
    provide the category context. Keep the tone factual rather than promotional, and make
-   each bullet understandable without commit or implementation context. Do not create one bullet per commit or
-   pull request, include commit hashes, or add a catch-all list of minor/internal changes.
-   Prefer fewer, broader bullets that each communicate one distinct and useful outcome.
+   each bullet understandable without commit or implementation context.
+   Prefer bullets that each communicate one distinct and useful outcome.
 3. Update `CHANGELOG.md` in the worktree. Insert the complete release section in descending
    version order without changing existing release text. Update `[Unreleased]` to compare
    the target tag with `HEAD`, and add or update the target version's release link using the
