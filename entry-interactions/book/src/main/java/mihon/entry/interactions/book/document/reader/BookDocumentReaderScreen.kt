@@ -261,11 +261,19 @@ internal fun BookDocumentReaderScreen(
     }
 
     if (state.navigationVisible) {
-        val navigationRows = remember(state.readingOrder) {
-            state.readingOrder.chapters.map { BookReaderNavigationRow(it, it.name) }
+        val navigationRows = remember(state.navigationPresentation) {
+            state.navigationPresentation.chapters.map { chapter ->
+                BookReaderNavigationRow(
+                    item = chapter,
+                    title = chapter.name,
+                    read = chapter.read,
+                    bookmark = chapter.bookmark,
+                    progressLabel = state.navigationPresentation.progressLabels[chapter.id],
+                )
+            }
         }
-        val selectedIndex = remember(state.readingOrder, state.currentChapterId) {
-            state.readingOrder.indexOf(state.currentChapterId)
+        val selectedIndex = remember(state.navigationPresentation, state.currentChapterId) {
+            state.navigationPresentation.chapters.indexOfFirst { it.id == state.currentChapterId }
         }
         BookReaderNavigationSheet(
             visible = true,

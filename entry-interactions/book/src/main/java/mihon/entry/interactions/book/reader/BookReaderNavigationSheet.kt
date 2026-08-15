@@ -1,6 +1,5 @@
 package mihon.entry.interactions.book.reader
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -13,6 +12,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ViewList
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -23,17 +23,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import mihon.entry.interactions.child.EntryChildProgressLabel
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.AdaptiveSheet
+import tachiyomi.presentation.core.components.EntryChildListItemContent
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.selectedBackground
 
 internal data class BookReaderNavigationRow<T>(
     val item: T,
     val title: String,
+    val read: Boolean = false,
+    val bookmark: Boolean = false,
+    val progressLabel: EntryChildProgressLabel? = null,
     val depth: Int = 0,
 )
 
@@ -98,17 +105,19 @@ internal fun <T> BookReaderNavigationSheet(
                     ) {
                         itemsIndexed(rows) { index, row ->
                             val selected = index == selectedIndex
-                            Text(
-                                text = row.title,
+                            EntryChildListItemContent(
+                                title = row.title,
+                                date = null,
+                                readProgress = row.progressLabel?.let { label ->
+                                    stringResource(label.resource, *label.args.toTypedArray())
+                                },
+                                scanlator = null,
+                                read = row.read,
+                                bookmark = row.bookmark,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .background(
-                                        if (selected) {
-                                            MaterialTheme.colorScheme.secondaryContainer
-                                        } else {
-                                            Color.Transparent
-                                        },
-                                    )
+                                    .selectedBackground(selected)
+                                    .semantics { this.selected = selected }
                                     .clickable {
                                         onItemClick(row.item)
                                         onDismissRequest()
@@ -119,12 +128,18 @@ internal fun <T> BookReaderNavigationSheet(
                                         end = 16.dp,
                                         bottom = 12.dp,
                                     ),
-                                color = if (selected) {
-                                    MaterialTheme.colorScheme.onSecondaryContainer
+                                trailingContent = if (selected) {
+                                    {
+                                        Icon(
+                                            imageVector = Icons.Filled.PlayArrow,
+                                            contentDescription = null,
+                                            modifier = Modifier.padding(start = 12.dp),
+                                            tint = MaterialTheme.colorScheme.primary,
+                                        )
+                                    }
                                 } else {
-                                    MaterialTheme.colorScheme.onSurface
+                                    null
                                 },
-                                style = MaterialTheme.typography.bodyMedium,
                             )
                         }
                     }

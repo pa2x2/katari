@@ -19,6 +19,7 @@ import androidx.lifecycle.lifecycleScope
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -37,10 +38,12 @@ import mihon.entry.interactions.book.reader.BookReaderOpenResult
 import mihon.entry.interactions.book.reader.BookReaderSessionFactory
 import mihon.entry.interactions.book.reader.BookReaderSessionRegistry
 import mihon.entry.interactions.book.reader.OpenedBookReaderSession
+import mihon.entry.interactions.book.reader.navigation.BookReaderNavigationPresenter
 import mihon.entry.interactions.book.reader.selection.BookSelectionActionCoordinator
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechController
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechFailure
 import mihon.entry.interactions.book.reader.translation.BookSelectionTranslationController
+import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.runtime.EntryInteractionActivity
 import mihon.entry.interactions.runtime.registerEntryInteractionSecureScreen
 import mihon.entry.interactions.runtime.setEntryInteractionContent
@@ -54,6 +57,8 @@ import mihon.translation.api.TranslationFeature
 import mihon.translation.api.host.TranslationHostActions
 import mihon.tts.api.TtsFeature
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.entry.interactor.GetEntryWithChapters
+import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -71,6 +76,13 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     private lateinit var chapterCoordinator: BookDocumentChapterCoordinator
     private lateinit var readerSystemBars: BookDocumentReaderSystemBars
     private var startupJob: Job? = null
+    private var navigationPresentationJob: Job? = null
+    private val navigationPresenter by lazy {
+        BookReaderNavigationPresenter(
+            getEntryWithChapters = Injekt.get<GetEntryWithChapters>(),
+            childListFeature = Injekt.get<EntryChildListFeature>(),
+        )
+    }
     private val startupRequest by lazy {
         BookReaderRequest(
             entryId = intent.getLongExtra(EXTRA_ENTRY_ID, -1L),
@@ -143,9 +155,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                         onChapterSelected = ::selectChapterFromNavigation,
                         onChromeToggle = ::toggleChrome,
                         onChromeHide = { setChromeVisible(false) },
-                        onNavigationVisibilityChange = { visible ->
-                            readerState = readerState?.copy(navigationVisible = visible)
-                        },
+                        onNavigationVisibilityChange = ::setNavigationVisible,
                         onSettingsVisibilityChange = { visible ->
                             readerState = readerState?.copy(settingsVisible = visible)
                         },
@@ -199,6 +209,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     }
 
     override fun onDestroy() {
+        navigationPresentationJob?.cancel()
         selectionActionModeAvoidance.clear()
         chapterCoordinator.close()
         childWebViewResolver.close()
@@ -250,6 +261,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
 
     private fun startOpen() {
         startupJob?.cancel()
+        navigationPresentationJob?.cancel()
         surfaceState = BookDocumentReaderSurfaceState.Loading
         startupJob = lifecycleScope.launch {
             try {
@@ -311,6 +323,31 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         setChromeVisible(false)
         chapterCoordinator.startReading()
         chapterCoordinator.prepareNextChapterIfNeeded(progression.toDouble())
+    }
+
+    private fun setNavigationVisible(visible: Boolean) {
+        readerState = readerState?.copy(navigationVisible = visible)
+        if (!visible) {
+            navigationPresentationJob?.cancel()
+            navigationPresentationJob = null
+            return
+        }
+        val entry = retainedSessions.currentSession()?.entry ?: return
+        val readingOrder = readerState?.readingOrder ?: return
+        observeNavigationPresentation(entry, readingOrder)
+    }
+
+    private fun observeNavigationPresentation(entry: Entry, readingOrder: BookChapterReadingOrder) {
+        navigationPresentationJob?.cancel()
+        navigationPresentationJob = lifecycleScope.launch {
+            navigationPresenter.observe(entry, readingOrder.chapters)
+                .catch { error ->
+                    logcat(LogPriority.ERROR, error) { "Failed to observe BOOK table-of-contents state" }
+                }
+                .collect { presentation ->
+                    readerState = readerState?.copy(navigationPresentation = presentation)
+                }
+        }
     }
 
     private fun ensureSelectionCoordinator(session: OpenedBookReaderSession) {
