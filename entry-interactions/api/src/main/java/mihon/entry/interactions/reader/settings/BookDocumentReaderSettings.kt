@@ -8,6 +8,7 @@ interface BookDocumentReaderSettings : ViewerSettingsProvider {
     val textSizeSetting: ViewerSettingDefinition<Int>
     val showStatusBarSetting: ViewerSettingDefinition<Boolean>
     val showNavigationBarSetting: ViewerSettingDefinition<Boolean>
+    val showTextSelectionMenuSetting: ViewerSettingDefinition<Boolean>
     val showReadingProgressSetting: ViewerSettingDefinition<Boolean>
     val readingProgressStyleSetting: ViewerSettingDefinition<BookDocumentReaderProgressStyle>
 

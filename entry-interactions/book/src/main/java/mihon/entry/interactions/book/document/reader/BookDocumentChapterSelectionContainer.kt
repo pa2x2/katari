@@ -97,7 +97,7 @@ internal fun BookDocumentChapterSelectionContainer(
             modifier = modifier
                 .captureSelectionAtPointerDown(session)
                 .filterTextContextMenuComponents { component ->
-                    component.key !== TextContextMenuKeys.CopyKey
+                    interaction.showTextSelectionMenu && component.key !== TextContextMenuKeys.CopyKey
                 }
                 .appendTextContextMenuComponents {
                     projection ?: return@appendTextContextMenuComponents

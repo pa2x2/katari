@@ -56,6 +56,14 @@ internal class BookDocumentReaderSettingsProvider(
         codec = ViewerSettingCodecs.Boolean,
     )
 
+    override val showTextSelectionMenuSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.SHOW_TEXT_SELECTION_MENU_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = true,
+        profilePreference = preferences.showTextSelectionMenu,
+        codec = ViewerSettingCodecs.Boolean,
+    )
+
     override val showReadingProgressSetting = ViewerSettingDefinition(
         id = ViewerSettingId(id, BookDocumentReaderPreferences.SHOW_READING_PROGRESS_KEY),
         scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
@@ -96,6 +104,7 @@ internal class BookDocumentReaderSettingsProvider(
         textSizeSetting,
         showStatusBarSetting,
         showNavigationBarSetting,
+        showTextSelectionMenuSetting,
         showReadingProgressSetting,
         readingProgressStyleSetting,
         prepareNextChapterSetting,

@@ -35,6 +35,7 @@ import mihon.entry.interactions.book.document.reader.settings.BookDocumentReader
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderProgressSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderStatusBarSettings
+import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderTextSelectionMenuSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderTextSizeSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeSettings
 import mihon.entry.interactions.book.document.reader.theme.BookDocumentReaderMaterialTheme
@@ -85,6 +86,7 @@ internal fun BookDocumentReaderScreen(
 ) {
     val themeSetting by settingBindings.themeMode.state.collectAsState()
     val textSizeSetting by settingBindings.textSize.state.collectAsState()
+    val showTextSelectionMenuSetting by settingBindings.showTextSelectionMenu.state.collectAsState()
     val showReadingProgressSetting by settingBindings.showReadingProgress.state.collectAsState()
     val readingProgressStyleSetting by settingBindings.readingProgressStyle.state.collectAsState()
     val readerPalette = bookDocumentReaderPalette(themeSetting.effectiveValue)
@@ -117,6 +119,7 @@ internal fun BookDocumentReaderScreen(
         automaticTranslationEnabled,
         activeSelectionSpeech?.identity,
         rootPosition,
+        showTextSelectionMenuSetting.effectiveValue,
     ) {
         BookDocumentTextInteraction(
             observeSelections = observeSelections,
@@ -135,6 +138,7 @@ internal fun BookDocumentReaderScreen(
                     currentOnChromeToggle()
                 }
             },
+            showTextSelectionMenu = showTextSelectionMenuSetting.effectiveValue,
             selectionActions = if (observeSelections) {
                 buildSet {
                     add(BookDocumentSelectionAction.Listen)
@@ -299,19 +303,30 @@ internal fun BookDocumentReaderScreen(
                         settingBindings.textSize.clearEntryOverride()
                         settingBindings.showStatusBar.clearEntryOverride()
                         settingBindings.showNavigationBar.clearEntryOverride()
+                        settingBindings.showTextSelectionMenu.clearEntryOverride()
                         settingBindings.showReadingProgress.clearEntryOverride()
                         settingBindings.readingProgressStyle.clearEntryOverride()
                     },
-                    processorTabTitles = listOf(androidStringResource(R.string.book_reader_appearance_settings)),
-                    content = {
-                        BookDocumentReaderStatusBarSettings(settingBindings.showStatusBar)
-                        BookDocumentReaderNavigationBarSettings(settingBindings.showNavigationBar)
-                        BookDocumentReaderThemeSettings(settingBindings.themeMode)
-                        BookDocumentReaderTextSizeSettings(settingBindings.textSize)
-                        BookDocumentReaderProgressSettings(
-                            showProgressBinding = settingBindings.showReadingProgress,
-                            styleBinding = settingBindings.readingProgressStyle,
-                        )
+                    processorTabTitles = listOf(
+                        androidStringResource(R.string.book_reader_appearance_settings),
+                        androidStringResource(R.string.book_reader_behavior_settings),
+                    ),
+                    content = { page ->
+                        when (page) {
+                            0 -> {
+                                BookDocumentReaderThemeSettings(settingBindings.themeMode)
+                                BookDocumentReaderTextSizeSettings(settingBindings.textSize)
+                            }
+                            1 -> {
+                                BookDocumentReaderTextSelectionMenuSettings(settingBindings.showTextSelectionMenu)
+                                BookDocumentReaderStatusBarSettings(settingBindings.showStatusBar)
+                                BookDocumentReaderNavigationBarSettings(settingBindings.showNavigationBar)
+                                BookDocumentReaderProgressSettings(
+                                    showProgressBinding = settingBindings.showReadingProgress,
+                                    styleBinding = settingBindings.readingProgressStyle,
+                                )
+                            }
+                        }
                     },
                 )
             }
