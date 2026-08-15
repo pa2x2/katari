@@ -6,6 +6,7 @@ import mihon.entry.viewer.settings.ViewerSettingsProvider
 interface BookDocumentReaderSettings : ViewerSettingsProvider {
     val themeModeSetting: ViewerSettingDefinition<BookDocumentReaderThemeMode>
     val textSizeSetting: ViewerSettingDefinition<Int>
+    val keepScreenAliveSetting: ViewerSettingDefinition<Boolean>
     val showStatusBarSetting: ViewerSettingDefinition<Boolean>
     val showNavigationBarSetting: ViewerSettingDefinition<Boolean>
     val showTextSelectionMenuSetting: ViewerSettingDefinition<Boolean>
@@ -14,6 +15,7 @@ interface BookDocumentReaderSettings : ViewerSettingsProvider {
 
     companion object {
         const val SURFACE_ID = "builtin.book.document"
+        const val DEFAULT_KEEP_SCREEN_ALIVE = true
         const val DEFAULT_TEXT_SIZE_PERCENT = 100
         const val MIN_TEXT_SIZE_PERCENT = 80
         const val MAX_TEXT_SIZE_PERCENT = 200

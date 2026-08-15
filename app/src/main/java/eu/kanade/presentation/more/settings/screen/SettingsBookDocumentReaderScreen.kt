@@ -33,6 +33,9 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
         val textSize = remember(provider, binder) {
             binder.bind(provider.textSizeSetting).asProfilePreference()
         }
+        val keepScreenAlive = remember(provider, binder) {
+            binder.bind(provider.keepScreenAliveSetting).asProfilePreference()
+        }
         val showStatusBar = remember(provider, binder) {
             binder.bind(provider.showStatusBarSetting).asProfilePreference()
         }
@@ -83,6 +86,10 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.pref_behavior),
                 preferenceItems = listOf(
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = keepScreenAlive,
+                        title = stringResource(MR.strings.pref_book_document_reader_keep_screen_alive),
+                    ),
                     Preference.PreferenceItem.SwitchPreference(
                         preference = showTextSelectionMenu,
                         title = stringResource(MR.strings.pref_book_document_reader_show_text_selection_menu),

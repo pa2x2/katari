@@ -14,6 +14,10 @@ internal class BookDocumentReaderPreferences(
         TEXT_SIZE_PERCENT_KEY,
         BookDocumentReaderSettings.DEFAULT_TEXT_SIZE_PERCENT,
     )
+    val keepScreenAlive: Preference<Boolean> = preferenceStore.getBoolean(
+        KEEP_SCREEN_ALIVE_KEY,
+        BookDocumentReaderSettings.DEFAULT_KEEP_SCREEN_ALIVE,
+    )
     val showStatusBar: Preference<Boolean> = preferenceStore.getBoolean(SHOW_STATUS_BAR_KEY, false)
     val showNavigationBar: Preference<Boolean> = preferenceStore.getBoolean(SHOW_NAVIGATION_BAR_KEY, false)
     val showTextSelectionMenu: Preference<Boolean> = preferenceStore.getBoolean(SHOW_TEXT_SELECTION_MENU_KEY, true)
@@ -25,6 +29,7 @@ internal class BookDocumentReaderPreferences(
         const val KEY_PREFIX = "book_document_reader_"
         const val THEME_MODE_KEY = "book_document_reader_theme_mode"
         const val TEXT_SIZE_PERCENT_KEY = "book_document_reader_text_size_percent"
+        const val KEEP_SCREEN_ALIVE_KEY = "book_document_reader_keep_screen_alive"
         const val SHOW_STATUS_BAR_KEY = "book_document_reader_show_status_bar"
         const val SHOW_NAVIGATION_BAR_KEY = "book_document_reader_show_navigation_bar"
         const val SHOW_TEXT_SELECTION_MENU_KEY = "book_document_reader_show_text_selection_menu"

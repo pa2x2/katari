@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderNavigationBarSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderProgressSettings
+import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderScreenAliveSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderStatusBarSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderTextSelectionMenuSettings
@@ -301,6 +302,7 @@ internal fun BookDocumentReaderScreen(
                     onResetProcessorSettings = {
                         settingBindings.themeMode.clearEntryOverride()
                         settingBindings.textSize.clearEntryOverride()
+                        settingBindings.keepScreenAlive.clearEntryOverride()
                         settingBindings.showStatusBar.clearEntryOverride()
                         settingBindings.showNavigationBar.clearEntryOverride()
                         settingBindings.showTextSelectionMenu.clearEntryOverride()
@@ -318,6 +320,7 @@ internal fun BookDocumentReaderScreen(
                                 BookDocumentReaderTextSizeSettings(settingBindings.textSize)
                             }
                             1 -> {
+                                BookDocumentReaderScreenAliveSettings(settingBindings.keepScreenAlive)
                                 BookDocumentReaderTextSelectionMenuSettings(settingBindings.showTextSelectionMenu)
                                 BookDocumentReaderStatusBarSettings(settingBindings.showStatusBar)
                                 BookDocumentReaderNavigationBarSettings(settingBindings.showNavigationBar)
