@@ -470,9 +470,6 @@
     <string name="pref_epub_font_monospace">Monospace</string>
     <string name="pref_epub_font_size">Font size</string>
     <string name="pref_epub_page_layout">Page layout</string>
-    <string name="book_reader_layout">Reading layout</string>
-    <string name="book_reader_layout_paginated">Paginated</string>
-    <string name="book_reader_layout_scrolling">Continuous scrolling</string>
     <string name="pref_book_document_reader">Book reader</string>
     <string name="pref_book_document_reader_theme">Theme</string>
     <string name="pref_book_document_reader_text_size">Text size</string>

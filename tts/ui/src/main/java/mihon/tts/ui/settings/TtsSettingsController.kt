@@ -204,28 +204,11 @@ class TtsSettingsController(
         hostActions.speechRate.set(value)
     }
 
-    fun resetSpeechRate() {
-        val default =
-            (mutableState.value.selectedEngineState?.capabilities?.speechRate as? TtsParameterSupport.Supported)
-                ?.range
-                ?.default
-                ?: 1f
-        setSpeechRate(default)
-    }
-
     fun setPitch(value: Float) {
         val support = mutableState.value.selectedEngineState?.capabilities?.pitch
         if (!support.accepts(value)) return
         stopPreview()
         hostActions.pitch.set(value)
-    }
-
-    fun resetPitch() {
-        val default = (mutableState.value.selectedEngineState?.capabilities?.pitch as? TtsParameterSupport.Supported)
-            ?.range
-            ?.default
-            ?: 1f
-        setPitch(default)
     }
 
     fun setDraftPitch(value: Float) {
@@ -234,11 +217,6 @@ class TtsSettingsController(
         stopPreview()
         mutableState.update { it.copy(pitch = value).withUnsavedState() }
         toggleConfiguredPreview()
-    }
-
-    fun setAllowNetworkVoices(allow: Boolean) {
-        stopPreview()
-        hostActions.allowNetworkVoices.set(allow)
     }
 
     fun setVoiceOverride(language: LanguageTag, voice: TtsVoiceId?) {
@@ -298,13 +276,6 @@ class TtsSettingsController(
         mutableState.update { current ->
             current.copy(voiceOverrides = current.voiceOverrides - language).withUnsavedState()
         }
-    }
-
-    fun setPreviewLanguage(language: LanguageTag) {
-        val voices = (mutableState.value.voiceCatalog as? TtsVoiceCatalogState.Available)?.voices.orEmpty()
-        if (!voices.supports(language, mutableState.value.allowNetworkVoices)) return
-        stopPreview()
-        mutableState.update { it.copy(previewLanguage = language) }
     }
 
     fun togglePreview() {

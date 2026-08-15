@@ -1,12 +1,9 @@
 package eu.kanade.presentation.entry
 
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -31,7 +28,6 @@ typealias EntryTypePresentation = mihon.entry.interactions.presentation.EntryTyp
 
 object EntryTypeIconDefaults {
     val InlineSize = 16.dp
-    val CoverOverlaySize = 16.dp
 }
 
 /**
@@ -76,22 +72,6 @@ fun EntryType.InlineEntryTypeIndicator(
         modifier = modifier.size(size),
         tint = tint,
     )
-}
-
-@Composable
-fun EntryType.coverTypeIndicatorOverlay(): (@Composable BoxScope.() -> Unit)? {
-    val icon = entryTypePresentation().coverOverlayIcon ?: return null
-    return {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier
-                .padding(4.dp)
-                .size(EntryTypeIconDefaults.CoverOverlaySize)
-                .align(Alignment.TopStart),
-            tint = Color.White,
-        )
-    }
 }
 
 @Composable

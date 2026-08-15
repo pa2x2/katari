@@ -378,8 +378,3 @@ internal const val DEFAULT_SUBTITLE_TEXT_COLOR = Color.WHITE
 internal const val DEFAULT_SUBTITLE_BACKGROUND_COLOR = Color.BLACK
 
 private const val EXTERNAL_SUBTITLE_PREFERENCE_PREFIX = "external:"
-
-internal fun subtitleBaselineTop(containerHeight: Int, subtitleHeight: Int): Float {
-    return (containerHeight - subtitleHeight - (containerHeight * DEFAULT_SUBTITLE_BOTTOM_PADDING_FRACTION))
-        .coerceAtLeast(0f)
-}

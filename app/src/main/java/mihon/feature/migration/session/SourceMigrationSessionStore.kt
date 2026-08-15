@@ -158,15 +158,6 @@ class SourceMigrationSessionStore(
         }.map { candidates -> candidates.map { it.toDomain() } }
     }
 
-    fun observeDiscoveryFailures(
-        sessionId: SourceMigrationSessionId,
-        sourceEntryId: Long,
-    ): Flow<List<SourceMigrationDiscoveryFailure>> {
-        return handler.subscribeToList {
-            source_migration_sessionsQueries.discoveryFailuresByItem(sessionId.value, sourceEntryId)
-        }.map { failures -> failures.map { it.toDomain() } }
-    }
-
     suspend fun transitionStage(
         sessionId: SourceMigrationSessionId,
         expected: SourceMigrationSessionStage,

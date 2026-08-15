@@ -511,10 +511,6 @@ internal class AnimeDownloader(
         return selectStreamForPreferences(download.preferences.streamKey, download.preferences.qualityMode, streams)
     }
 
-    private fun streamHeightScore(stream: VideoStream): Int {
-        return scoreStreamHeight(stream)
-    }
-
     private fun streamKey(stream: VideoStream): String {
         return streamChoiceKey(stream)
     }

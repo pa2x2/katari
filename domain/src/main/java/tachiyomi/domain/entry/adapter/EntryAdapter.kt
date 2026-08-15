@@ -1,33 +1,10 @@
 package tachiyomi.domain.entry.adapter
 
-import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryStatus
-
-fun SEntry.toDomainEntry(
-    sourceId: Long,
-    type: EntryType,
-): Entry {
-    return Entry.create().copy(
-        source = sourceId,
-        url = url,
-        title = title,
-        artist = artist,
-        author = author,
-        description = description,
-        genre = genre,
-        status = EntryStatus.from(status),
-        thumbnailUrl = thumbnailUrl,
-        updateStrategy = updateStrategy ?: EntryUpdateStrategy.ALWAYS_UPDATE,
-        initialized = initialized,
-        memo = memo,
-        type = type,
-    )
-}
 
 fun Entry.toSEntry(): SEntry {
     return SEntry.create().also {

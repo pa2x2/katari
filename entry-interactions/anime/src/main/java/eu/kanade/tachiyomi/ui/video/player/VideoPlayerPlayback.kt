@@ -604,7 +604,6 @@ private fun buildSelectionFlags(isDefault: Boolean, isForced: Boolean): Int {
 }
 
 internal const val OFF_SUBTITLE_KEY = "off"
-internal const val DEFAULT_SUBTITLE_KEY = "default"
 
 internal fun subtitleChoiceKey(subtitle: VideoSubtitle): String {
     return subtitle.key.ifBlank {

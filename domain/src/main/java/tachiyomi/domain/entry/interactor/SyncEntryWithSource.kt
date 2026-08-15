@@ -403,9 +403,6 @@ class SyncEntryWithSource(
         val removedChapters: Int,
         val hasMetadataChanges: Boolean,
     ) {
-        val insertedChaptersCount: Int
-            get() = insertedChapters.size
-
         val hasChanges: Boolean
             get() = insertedChaptersTotal > 0 || updatedChapters > 0 || removedChapters > 0
     }

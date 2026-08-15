@@ -544,10 +544,6 @@ class ExtensionManager(
     }
 }
 
-internal fun pendingExtensionUpdateCount(extensions: Collection<Extension.Installed>): Int {
-    return extensions.count { it.hasUpdate }
-}
-
 internal fun List<Extension.Available>.filterCompatibleWithApp(): List<Extension.Available> {
     return filter { ExtensionLoader.isRawLibVersionCompatible(it.libVersionName) }
 }
