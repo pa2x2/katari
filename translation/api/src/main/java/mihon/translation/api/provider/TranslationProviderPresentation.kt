@@ -50,19 +50,8 @@ data class TranslationProviderDisclosure(
 
 data class TranslationResultAttribution(
     val label: String,
-    val asset: TranslationAttributionAssetReference? = null,
 ) {
     init {
         require(label.isNotBlank())
-    }
-}
-
-data class TranslationAttributionAssetReference(
-    val key: String,
-    val contentDescription: String,
-) {
-    init {
-        require(key.isNotBlank())
-        require(contentDescription.isNotBlank())
     }
 }

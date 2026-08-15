@@ -98,7 +98,6 @@ import com.mikepenz.markdown.model.markdownAnnotatorConfig
 import com.mikepenz.markdown.utils.getUnescapedTextInNode
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.components.DISALLOWED_MARKDOWN_TYPES
-import eu.kanade.presentation.components.DotSeparatorText
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.components.MARKDOWN_INLINE_IMAGE_TAG
 import eu.kanade.presentation.components.MarkdownRender
@@ -120,6 +119,7 @@ import org.intellij.markdown.ast.findChildOfType
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryStatus
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.components.DotSeparatorText
 import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
 import tachiyomi.presentation.core.components.material.TextButton
 import tachiyomi.presentation.core.components.material.padding

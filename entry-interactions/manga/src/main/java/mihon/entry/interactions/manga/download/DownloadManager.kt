@@ -361,41 +361,6 @@ internal class DownloadManager(
         }
     }
 
-    /**
-     * Renames an already downloaded chapter
-     *
-     * @param source the source of the manga.
-     * @param manga the manga of the chapter.
-     * @param oldChapter the existing chapter with the old name.
-     * @param newChapter the target chapter with the new name.
-     */
-    suspend fun renameChapter(source: UnifiedSource, manga: Entry, oldChapter: EntryChapter, newChapter: EntryChapter) {
-        val oldNames = provider.getValidChapterDirNames(oldChapter.name, oldChapter.scanlator, oldChapter.url)
-        val mangaDir = provider.getEntryDir(manga.title, source).getOrElse { e ->
-            logcat(LogPriority.ERROR, e) { "Manga download folder doesn't exist. Skipping renaming after source sync" }
-            return
-        }
-
-        // Assume there's only 1 version of the chapter name formats present
-        val oldDownload = oldNames.asSequence()
-            .mapNotNull { mangaDir.findFile(it) }
-            .firstOrNull() ?: return
-
-        var newName = provider.getChapterDirName(newChapter.name, newChapter.scanlator, newChapter.url)
-        if (oldDownload.isFile && oldDownload.extension == "cbz") {
-            newName += ".cbz"
-        }
-
-        if (oldDownload.name == newName) return
-
-        if (oldDownload.renameTo(newName)) {
-            cache.removeChapter(oldChapter, manga)
-            cache.addChapter(newName, mangaDir, manga)
-        } else {
-            logcat(LogPriority.ERROR) { "Could not rename downloaded chapter: ${oldNames.joinToString()}" }
-        }
-    }
-
     fun statusFlow(): Flow<MangaDownload> = merge(
         addedToQueueFlow(),
         queueState.flatMapLatest { downloads ->

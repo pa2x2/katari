@@ -41,7 +41,6 @@ import eu.kanade.tachiyomi.source.entry.EntryFilterPageScope
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.source.sourceNotInstalledName
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.PagedFilterBrowseSession
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.PagedFilterBrowseSessionStore
 import kotlinx.collections.immutable.ImmutableList
@@ -791,15 +790,6 @@ class CatalogScreenModel(
                 append(" • ")
                 append(creator)
             }
-        }
-    }
-
-    private fun getSourceNameForId(sourceId: Long): String {
-        val sourceInfo = sourceManager.getDisplayInfo(sourceId)
-        return if (sourceInfo.isMissing) {
-            application.stringResource(MR.strings.source_not_installed, sourceInfo.sourceNotInstalledName())
-        } else {
-            sourceInfo.name
         }
     }
 

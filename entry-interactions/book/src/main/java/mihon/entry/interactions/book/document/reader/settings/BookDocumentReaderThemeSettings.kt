@@ -49,6 +49,8 @@ internal fun BookDocumentReaderThemeSettings(
 private fun BookDocumentReaderThemeMode.label(): String = stringResource(
     when (this) {
         BookDocumentReaderThemeMode.APP -> R.string.book_document_reader_theme_app
+        BookDocumentReaderThemeMode.PAPER -> R.string.book_document_reader_theme_paper
+        BookDocumentReaderThemeMode.DUSK -> R.string.book_document_reader_theme_dusk
         BookDocumentReaderThemeMode.BLACK -> R.string.book_document_reader_theme_black
     },
 )

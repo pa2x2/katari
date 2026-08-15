@@ -60,10 +60,6 @@ fun <T : MergeSearchTarget> rankMergeTargets(
         .toList()
 }
 
-fun MergeTarget.matchesQuery(query: String): Boolean {
-    return rankMergeTargets(listOf(this), query).isNotEmpty()
-}
-
 internal fun normalizeForSearch(value: String): String {
     return value.lowercase(Locale.ROOT)
         .replace(nonTextRegex, " ")

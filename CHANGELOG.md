@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.3.9] - 2026-08-15
+
+### ✨ Added
+
+- Added Paper and Dusk themes for the book reader.
+
+### 🧩 Improved
+
+- The book reader table of contents now shows read status, bookmarks, reading progress, and the current chapter.
+- Reader controls now use larger touch targets in manga and book readers.
+
+### 🐛 Fixed
+
+- The book reader now shows feedback when an internal section link is missing or an external link cannot be opened.
+- Saved per-entry reader settings now apply before reader content is rendered.
+
 ## [1.3.8] - 2026-08-15
 
 ### 🔄 Changed
@@ -200,7 +216,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.3.8...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.3.9...HEAD
+[1.3.9]: https://github.com/pa2x2/katari/releases/tag/v1.3.9
 [1.3.8]: https://github.com/pa2x2/katari/releases/tag/v1.3.8
 [1.3.7]: https://github.com/pa2x2/katari/releases/tag/v1.3.7
 [1.3.6]: https://github.com/pa2x2/katari/releases/tag/v1.3.6

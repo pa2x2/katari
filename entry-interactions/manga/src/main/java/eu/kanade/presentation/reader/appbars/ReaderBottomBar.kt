@@ -5,7 +5,6 @@ import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -16,6 +15,7 @@ import mihon.entry.interactions.reader.settings.ReaderOrientation
 import mihon.entry.interactions.reader.settings.ReadingMode
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.reader.ReaderChromeBottomBar
+import tachiyomi.presentation.core.components.reader.ReaderChromeBottomBarAction
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -34,7 +34,7 @@ fun ReaderBottomBar(
 ) {
     ReaderChromeBottomBar(modifier = modifier) {
         val readingModeDescription = stringResource(readingMode.stringRes)
-        IconButton(
+        ReaderChromeBottomBarAction(
             onClick = onClickReadingMode,
             modifier = Modifier.semantics { stateDescription = readingModeDescription },
         ) {
@@ -45,7 +45,7 @@ fun ReaderBottomBar(
         }
 
         val orientationDescription = stringResource(orientation.stringRes)
-        IconButton(
+        ReaderChromeBottomBarAction(
             onClick = onClickOrientation,
             modifier = Modifier.semantics { stateDescription = orientationDescription },
         ) {
@@ -55,7 +55,7 @@ fun ReaderBottomBar(
             )
         }
 
-        IconButton(onClick = onClickCropBorder) {
+        ReaderChromeBottomBarAction(onClick = onClickCropBorder) {
             Icon(
                 painter = painterResource(if (cropEnabled) R.drawable.ic_crop_24dp else R.drawable.ic_crop_off_24dp),
                 contentDescription = stringResource(MR.strings.pref_crop_borders),
@@ -63,7 +63,7 @@ fun ReaderBottomBar(
         }
 
         if (showAutoScrollToggle) {
-            IconButton(onClick = onClickAutoScroll) {
+            ReaderChromeBottomBarAction(onClick = onClickAutoScroll) {
                 Icon(
                     imageVector = if (autoScrollActive) Icons.Outlined.Pause else Icons.Outlined.PlayArrow,
                     contentDescription = stringResource(MR.strings.pref_auto_scroll),
@@ -71,7 +71,7 @@ fun ReaderBottomBar(
             }
         }
 
-        IconButton(onClick = onClickSettings) {
+        ReaderChromeBottomBarAction(onClick = onClickSettings) {
             Icon(
                 imageVector = Icons.Outlined.Settings,
                 contentDescription = stringResource(MR.strings.action_settings),

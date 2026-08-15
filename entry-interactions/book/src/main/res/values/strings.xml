@@ -19,6 +19,8 @@
     <string name="book_document_reader_show_status_bar">Show status bar</string>
     <string name="book_document_reader_show_navigation_bar">Show navigation bar</string>
     <string name="book_document_reader_theme_app">App theme</string>
+    <string name="book_document_reader_theme_paper">Paper</string>
+    <string name="book_document_reader_theme_dusk">Dusk</string>
     <string name="book_document_reader_theme_black">Black</string>
     <string name="book_reader_automatic_translation">Translate selected text automatically</string>
     <string name="book_reader_automatic_translation_summary">Translation starts after text selection settles and uses this profile’s Translation engine and target language.</string>
@@ -31,10 +33,8 @@
     <string name="book_reader_translation_service_missing">This device does not provide the Android translation service.</string>
     <string name="book_reader_translation_provider_failure">Translation availability could not be checked: %1$s</string>
     <string name="book_reader_selection_listen">Listen</string>
-    <string name="book_reader_selection_listen_with_katari">Listen with Katari</string>
     <string name="book_reader_selection_stop_listening">Stop</string>
     <string name="book_reader_selection_translate">Translate</string>
-    <string name="book_reader_selection_translate_with_katari">Translate with Katari</string>
     <string name="book_reader_selection_speech_language_unavailable">The language of the selected text could not be determined.</string>
     <string name="book_reader_selection_speech_configuration_required">Text to speech needs attention in Settings.</string>
     <string name="book_reader_selection_speech_unavailable">Text to speech is unavailable for this selection.</string>
@@ -44,5 +44,7 @@
     <string name="book_document_chapter_unavailable">Chapter unavailable</string>
     <string name="book_document_image_loading">Loading image…</string>
     <string name="book_document_image_unavailable">Image unavailable. Tap to retry.</string>
+    <string name="book_document_anchor_missing">The linked section could not be found.</string>
+    <string name="book_document_external_link_unavailable">The link could not be opened.</string>
     <string name="book_document_unsupported">Unsupported %1$s</string>
 </resources>

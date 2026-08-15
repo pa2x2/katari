@@ -23,29 +23,6 @@ data class TranslationModelDescriptor(
     }
 }
 
-sealed interface TranslationModelStatus {
-    data object Installed : TranslationModelStatus
-
-    data object Missing : TranslationModelStatus
-
-    data class Downloading(
-        val progress: TranslationOperationProgress? = null,
-    ) : TranslationModelStatus
-
-    data class Failed(
-        val reason: String,
-    ) : TranslationModelStatus {
-        init {
-            require(reason.isNotBlank())
-        }
-    }
-}
-
-data class TranslationModelInventoryItem(
-    val model: TranslationModelDescriptor,
-    val status: TranslationModelStatus,
-)
-
 data class TranslationOperationProgress(
     val completed: Long,
     val total: Long?,

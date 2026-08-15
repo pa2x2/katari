@@ -136,7 +136,7 @@ class DomainModule : InjektModule {
         addFactory { GetUpcomingEntries(get()) }
         addFactory { FetchInterval(get()) }
         addFactory { SetEntryViewerFlags(get()) }
-        addFactory { UpdateEntry(get(), get()) }
+        addFactory { UpdateEntry(get()) }
         addSingletonFactory<ReleaseService> { ReleaseServiceImpl(get(), get()) }
         addFactory { GetApplicationRelease(get()) }
 

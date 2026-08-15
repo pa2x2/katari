@@ -34,8 +34,6 @@ internal class MangaPageStore(
     override val readableSize: String
         get() = Formatter.formatFileSize(context, DiskUtil.getDirectorySize(diskCache.directory))
 
-    fun getPageListFromCache(chapter: Chapter): List<Page> = pageLists.get(chapter)
-
     suspend fun getOrPutPageList(
         chapter: Chapter,
         fetch: suspend () -> List<Page>,

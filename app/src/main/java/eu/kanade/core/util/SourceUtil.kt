@@ -14,11 +14,6 @@ fun ifSourcesLoaded(): Boolean {
 }
 
 @Composable
-fun ifAnimeSourcesLoaded(): Boolean {
-    return remember { Injekt.get<SourceManager>().isInitialized }.collectAsState().value
-}
-
-@Composable
 fun ifCatalogSourcesLoaded(): Boolean {
     return remember { Injekt.get<EntryCatalogueFeature>().isInitialized }.collectAsState().value
 }

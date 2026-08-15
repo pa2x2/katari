@@ -470,9 +470,6 @@
     <string name="pref_epub_font_monospace">Monospace</string>
     <string name="pref_epub_font_size">Font size</string>
     <string name="pref_epub_page_layout">Page layout</string>
-    <string name="book_reader_layout">Reading layout</string>
-    <string name="book_reader_layout_paginated">Paginated</string>
-    <string name="book_reader_layout_scrolling">Continuous scrolling</string>
     <string name="pref_book_document_reader">Book reader</string>
     <string name="pref_book_document_reader_theme">Theme</string>
     <string name="pref_book_document_reader_text_size">Text size</string>
@@ -481,6 +478,8 @@
     <string name="pref_book_document_reader_show_reading_progress">Show reading progress</string>
     <string name="pref_book_document_reader_reading_progress_style">Reading progress style</string>
     <string name="book_document_reader_theme_app">App theme</string>
+    <string name="book_document_reader_theme_paper">Paper</string>
+    <string name="book_document_reader_theme_dusk">Dusk</string>
     <string name="book_document_reader_theme_black">Black</string>
     <string name="action_decrease_text_size">Decrease text size</string>
     <string name="action_increase_text_size">Increase text size</string>

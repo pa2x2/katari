@@ -34,7 +34,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.components.DotSeparatorText
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.entry.InlineEntryTypeIndicator
 import eu.kanade.presentation.entry.components.ChapterDownloadAction
@@ -47,6 +46,7 @@ import eu.kanade.tachiyomi.ui.updates.UpdatesItem
 import mihon.entry.interactions.download.EntryDownloadState
 import tachiyomi.domain.updates.model.UpdateItem
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.components.DotSeparatorText
 import tachiyomi.presentation.core.components.ListGroupHeader
 import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
 import tachiyomi.presentation.core.components.material.padding
@@ -284,89 +284,6 @@ internal fun UnifiedUpdatesUiItem(
                     downloadStateProvider = item.downloadStateProvider,
                     downloadProgressProvider = item.downloadProgressProvider,
                     onClick = { onDownloadChapter(listOf(item), it) },
-                )
-            }
-        } else {
-            null
-        },
-    )
-}
-
-@Composable
-internal fun ChapterUpdatesUiItem(
-    title: String,
-    subtitle: String,
-    coverData: EntryCoverData,
-    selected: Boolean,
-    read: Boolean,
-    bookmark: Boolean,
-    readProgress: String?,
-    onClick: () -> Unit,
-    onLongClick: () -> Unit,
-    onClickCover: (() -> Unit)?,
-    onDownloadChapter: ((ChapterDownloadAction) -> Unit)? = null,
-    downloadStateProvider: (() -> EntryDownloadState)? = null,
-    downloadProgressProvider: (() -> Int)? = null,
-    modifier: Modifier = Modifier,
-) {
-    UpdatesBaseUiItem(
-        title = title,
-        coverData = coverData,
-        selected = selected,
-        read = read,
-        onClick = onClick,
-        onLongClick = onLongClick,
-        modifier = modifier,
-        onClickCover = onClickCover,
-        subtitle = { textAlpha ->
-            var textHeight by remember { mutableIntStateOf(0) }
-            if (!read) {
-                Icon(
-                    imageVector = Icons.Filled.Circle,
-                    contentDescription = stringResource(MR.strings.action_filter_unconsumed),
-                    modifier = Modifier
-                        .height(8.dp)
-                        .padding(end = 4.dp),
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-            }
-            if (bookmark) {
-                Icon(
-                    imageVector = Icons.Filled.Bookmark,
-                    contentDescription = stringResource(MR.strings.action_filter_bookmarked),
-                    modifier = Modifier
-                        .sizeIn(maxHeight = with(LocalDensity.current) { textHeight.toDp() - 2.dp }),
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-                Spacer(modifier = Modifier.width(2.dp))
-            }
-            Text(
-                text = subtitle,
-                maxLines = 1,
-                style = MaterialTheme.typography.bodySmall,
-                color = LocalContentColor.current.copy(alpha = textAlpha),
-                overflow = TextOverflow.Ellipsis,
-                onTextLayout = { textHeight = it.size.height },
-                modifier = Modifier.weight(weight = 1f, fill = false),
-            )
-            if (readProgress != null) {
-                DotSeparatorText()
-                Text(
-                    text = readProgress,
-                    maxLines = 1,
-                    color = LocalContentColor.current.copy(alpha = DISABLED_ALPHA),
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        },
-        trailing = if (downloadStateProvider != null && downloadProgressProvider != null) {
-            {
-                EntryChapterDownloadIndicator(
-                    enabled = onDownloadChapter != null,
-                    modifier = Modifier.padding(start = 4.dp),
-                    downloadStateProvider = downloadStateProvider,
-                    downloadProgressProvider = downloadProgressProvider,
-                    onClick = onDownloadChapter,
                 )
             }
         } else {

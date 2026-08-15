@@ -237,8 +237,6 @@ class TranslationSessionHostCoordinator(
             -> null
         }
 
-    fun isEditingLanguagePair(): Boolean = editingLanguagePair
-
     fun activeEngine(): TranslationEngineId? {
         val active = controller.state.value as? TranslationSessionState.Active
         return when (val selection = active?.input?.request?.engine) {

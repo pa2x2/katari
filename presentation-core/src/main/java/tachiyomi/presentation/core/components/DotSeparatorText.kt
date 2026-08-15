@@ -1,4 +1,4 @@
-package eu.kanade.presentation.components
+package tachiyomi.presentation.core.components
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable

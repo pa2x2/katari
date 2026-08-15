@@ -22,20 +22,21 @@ internal class BookDocumentReaderSettingBindings private constructor(
         get() = sharedSettings.getValue(BookAutomaticTranslationSettingsProvider.AUTOMATIC_SELECTION_SETTING_ID)
 
     companion object {
-        fun create(
+        suspend fun create(
             provider: BookDocumentReaderSettingsProvider,
             binder: ViewerSettingBinder,
             entryId: Long,
         ): BookDocumentReaderSettingBindings {
+            val entryBinder = binder.initializeEntry(entryId)
             return BookDocumentReaderSettingBindings(
-                themeMode = binder.bind(provider.themeModeSetting, entryId),
-                textSize = binder.bind(provider.textSizeSetting, entryId),
-                showStatusBar = binder.bind(provider.showStatusBarSetting, entryId),
-                showNavigationBar = binder.bind(provider.showNavigationBarSetting, entryId),
-                showReadingProgress = binder.bind(provider.showReadingProgressSetting, entryId),
-                readingProgressStyle = binder.bind(provider.readingProgressStyleSetting, entryId),
+                themeMode = entryBinder.bind(provider.themeModeSetting),
+                textSize = entryBinder.bind(provider.textSizeSetting),
+                showStatusBar = entryBinder.bind(provider.showStatusBarSetting),
+                showNavigationBar = entryBinder.bind(provider.showNavigationBarSetting),
+                showReadingProgress = entryBinder.bind(provider.showReadingProgressSetting),
+                readingProgressStyle = entryBinder.bind(provider.readingProgressStyleSetting),
                 sharedSettings = provider.sharedSettingDefinitions.mapValues { (_, definition) ->
-                    binder.bind(definition, entryId)
+                    entryBinder.bind(definition)
                 },
             )
         }

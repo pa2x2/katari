@@ -17,17 +17,6 @@ internal fun Chapter.toSChapter(): SChapter {
     }
 }
 
-internal fun Chapter.copyFromSChapter(sChapter: SChapter): Chapter {
-    return this.copy(
-        name = sChapter.name,
-        url = sChapter.url,
-        dateUpload = sChapter.date_upload,
-        chapterNumber = sChapter.chapter_number.toDouble(),
-        scanlator = sChapter.scanlator?.ifBlank { null }?.trim(),
-        memo = sChapter.memo,
-    )
-}
-
 internal fun Chapter.toDbChapter(): DbChapter = ChapterImpl().also {
     it.id = id
     it.manga_id = mangaId

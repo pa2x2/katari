@@ -6,7 +6,6 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 import mihon.core.common.extensions.JsonObjectEmptyBytes
 import mihon.entry.interactions.state.EntryProgressStateSnapshot
-import mihon.entry.viewer.settings.ViewerSettingOverride
 import tachiyomi.data.MemoColumnAdapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryProgressLocator
@@ -254,15 +253,6 @@ internal fun EntryProgressStateSnapshot.toBackupEntryProgressState(): BackupEntr
         completed = completed,
         locatorUpdatedAt = locatorUpdatedAt,
         completionUpdatedAt = completionUpdatedAt,
-    )
-}
-
-internal fun ViewerSettingOverride.toBackupViewerSettingOverride(): BackupViewerSettingOverride {
-    return BackupViewerSettingOverride(
-        providerId = settingId.providerId,
-        settingKey = settingId.key,
-        encodedValue = encodedValue,
-        updatedAt = updatedAt,
     )
 }
 

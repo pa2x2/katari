@@ -11,6 +11,8 @@ import mihon.entry.viewer.settings.ResolvedViewerSetting
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.ViewerSettingBinding
 import mihon.entry.viewer.settings.ViewerSettingDefinition
+import mihon.entry.viewer.settings.ViewerSettingEntryBinder
+import mihon.entry.viewer.settings.ViewerSettingId
 import mihon.entry.viewer.settings.ViewerSettingOverride
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import mihon.entry.viewer.settings.ViewerSettingScope
@@ -27,6 +29,15 @@ internal class DefaultViewerSettingBinder(
     ): ViewerSettingBinding<T> = DefaultViewerSettingBinding(
         definition = definition,
         entryId = entryId,
+        initialOverride = null,
+        overrideRepository = overrideRepository,
+        scope = scope,
+        now = now,
+    )
+
+    override suspend fun initializeEntry(entryId: Long): ViewerSettingEntryBinder = DefaultViewerSettingEntryBinder(
+        entryId = entryId,
+        initialOverrides = overrideRepository.getByEntryId(entryId).associateBy(ViewerSettingOverride::settingId),
         overrideRepository = overrideRepository,
         scope = scope,
         now = now,
@@ -36,15 +47,42 @@ internal class DefaultViewerSettingBinder(
         definition: ViewerSettingDefinition<T>,
         entryId: Long?,
     ): ResolvedViewerSetting<T> {
-        val override = when {
-            definition.scope != ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE -> null
-            entryId == null -> null
-            else -> overrideRepository.get(entryId, definition.id)
-        }
+        val override = getOverride(definition, entryId)
         return resolve(
             definition = definition,
             profileValue = definition.profilePreference.get().takeIf { definition.profilePreference.isSet() },
             override = override,
+        )
+    }
+
+    private suspend fun <T> getOverride(
+        definition: ViewerSettingDefinition<T>,
+        entryId: Long?,
+    ): ViewerSettingOverride? {
+        return when {
+            definition.scope != ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE -> null
+            entryId == null -> null
+            else -> overrideRepository.get(entryId, definition.id)
+        }
+    }
+}
+
+private class DefaultViewerSettingEntryBinder(
+    override val entryId: Long,
+    private val initialOverrides: Map<ViewerSettingId, ViewerSettingOverride>,
+    private val overrideRepository: ViewerSettingOverrideRepository,
+    private val scope: CoroutineScope,
+    private val now: () -> Long,
+) : ViewerSettingEntryBinder {
+    override fun <T> bind(definition: ViewerSettingDefinition<T>): ViewerSettingBinding<T> {
+        return DefaultViewerSettingBinding(
+            definition = definition,
+            entryId = entryId,
+            initialOverride = initialOverrides[definition.id]
+                .takeIf { definition.scope == ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE },
+            overrideRepository = overrideRepository,
+            scope = scope,
+            now = now,
         )
     }
 }
@@ -52,6 +90,7 @@ internal class DefaultViewerSettingBinder(
 private class DefaultViewerSettingBinding<T>(
     override val definition: ViewerSettingDefinition<T>,
     override val entryId: Long?,
+    initialOverride: ViewerSettingOverride?,
     private val overrideRepository: ViewerSettingOverrideRepository,
     scope: CoroutineScope,
     private val now: () -> Long,
@@ -74,7 +113,7 @@ private class DefaultViewerSettingBinding<T>(
         initialValue = resolve(
             definition = definition,
             profileValue = definition.profilePreference.get().takeIf { definition.profilePreference.isSet() },
-            override = null,
+            override = initialOverride,
         ),
     )
 

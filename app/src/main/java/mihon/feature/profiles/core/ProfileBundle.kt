@@ -5,7 +5,3 @@ data class ProfileBundle(
     val categories: List<Long>,
     val mangaCount: Int,
 )
-
-data class PendingProfileIntent(
-    val action: String?,
-)

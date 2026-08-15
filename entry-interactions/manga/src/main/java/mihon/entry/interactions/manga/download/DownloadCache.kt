@@ -227,26 +227,6 @@ internal class DownloadCache(
     }
 
     /**
-     * Removes a chapter that has been deleted from this cache.
-     *
-     * @param chapter the chapter to remove.
-     * @param manga the manga of the chapter.
-     */
-    suspend fun removeChapter(chapter: EntryChapter, manga: Entry) {
-        rootDownloadsDirMutex.withLock {
-            val sourceDir = rootDownloadsDir.sourceDirs[manga.source] ?: return
-            val mangaDir = sourceDir.mangaDirs[provider.getEntryDirName(manga.title)] ?: return
-            provider.getValidChapterDirNames(chapter.name, chapter.scanlator, chapter.url).forEach {
-                if (it in mangaDir.chapterDirs) {
-                    mangaDir.chapterDirs -= it
-                }
-            }
-        }
-
-        notifyChanges()
-    }
-
-    /**
      * Removes a list of chapters that have been deleted from this cache.
      *
      * @param chapters the list of chapter to remove.

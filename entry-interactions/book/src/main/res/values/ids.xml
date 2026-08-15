@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <item name="book_reader_selection_action_listen" type="id" />
-    <item name="book_reader_selection_action_stop" type="id" />
-    <item name="book_reader_selection_action_translate" type="id" />
-</resources>

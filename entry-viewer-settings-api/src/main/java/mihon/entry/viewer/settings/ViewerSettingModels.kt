@@ -80,7 +80,22 @@ interface ViewerSettingBinding<T> {
 
 interface ViewerSettingBinder {
     fun <T> bind(definition: ViewerSettingDefinition<T>, entryId: Long? = null): ViewerSettingBinding<T>
+
+    /**
+     * Loads the current overrides for [entryId] before creating its live bindings.
+     *
+     * Runtime consumers should initialize the entry before presenting its content so every binding's
+     * first state comes from one consistent persisted snapshot.
+     */
+    suspend fun initializeEntry(entryId: Long): ViewerSettingEntryBinder
+
     suspend fun <T> resolve(definition: ViewerSettingDefinition<T>, entryId: Long? = null): ResolvedViewerSetting<T>
+}
+
+interface ViewerSettingEntryBinder {
+    val entryId: Long
+
+    fun <T> bind(definition: ViewerSettingDefinition<T>): ViewerSettingBinding<T>
 }
 
 interface ViewerSettingsProvider {
