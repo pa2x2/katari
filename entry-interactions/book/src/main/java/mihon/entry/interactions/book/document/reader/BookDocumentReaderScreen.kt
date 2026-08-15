@@ -33,10 +33,13 @@ import androidx.compose.ui.unit.dp
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderNavigationBarSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderProgressSettings
+import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderScreenAliveSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderStatusBarSettings
+import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderTextSelectionMenuSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderTextSizeSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeSettings
+import mihon.entry.interactions.book.document.reader.theme.BookDocumentReaderMaterialTheme
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.document.reader.theme.bookDocumentReaderPalette
 import mihon.entry.interactions.book.reader.BookReaderNavigationRow
@@ -84,6 +87,7 @@ internal fun BookDocumentReaderScreen(
 ) {
     val themeSetting by settingBindings.themeMode.state.collectAsState()
     val textSizeSetting by settingBindings.textSize.state.collectAsState()
+    val showTextSelectionMenuSetting by settingBindings.showTextSelectionMenu.state.collectAsState()
     val showReadingProgressSetting by settingBindings.showReadingProgress.state.collectAsState()
     val readingProgressStyleSetting by settingBindings.readingProgressStyle.state.collectAsState()
     val readerPalette = bookDocumentReaderPalette(themeSetting.effectiveValue)
@@ -116,6 +120,7 @@ internal fun BookDocumentReaderScreen(
         automaticTranslationEnabled,
         activeSelectionSpeech?.identity,
         rootPosition,
+        showTextSelectionMenuSetting.effectiveValue,
     ) {
         BookDocumentTextInteraction(
             observeSelections = observeSelections,
@@ -134,6 +139,7 @@ internal fun BookDocumentReaderScreen(
                     currentOnChromeToggle()
                 }
             },
+            showTextSelectionMenu = showTextSelectionMenuSetting.effectiveValue,
             selectionActions = if (observeSelections) {
                 buildSet {
                     add(BookDocumentSelectionAction.Listen)
@@ -154,161 +160,179 @@ internal fun BookDocumentReaderScreen(
         LocalBookDocumentTextScale provides textSizeSetting.effectiveValue / 100f,
         LocalBookDocumentReaderPalette provides readerPalette,
     ) {
-        BookReaderScaffold(
-            progress = if (showReadingProgressSetting.effectiveValue) {
-                BookReaderProgress.Chapter(
-                    value = state.visualChapterProgression,
-                    style = readingProgressStyleSetting.effectiveValue,
-                    activeColor = readerPalette.accent.copy(alpha = 0.75f),
-                    trackColor = readerPalette.surfaceVariant,
-                )
-            } else {
-                null
-            },
-            footerColor = readerPalette.background,
-            translationController = selectionCoordinator?.translationController,
-            translationSpeechState = translationSpeechState,
-            onTranslationSpeechToggle = selectionCoordinator?.let { it::toggleTranslationSpeech },
-            onTranslationPopupBoundsChanged = onTranslationPopupBoundsChanged,
-            onRootPositionInWindow = { rootPosition = it },
-            modifier = Modifier
-                .fillMaxSize()
-                .background(readerPalette.background),
-            content = {
-                BookDocumentEndlessViewer(
-                    currentChapter = state.window.current,
-                    currentChapterId = state.currentChapterId,
-                    window = state.window,
-                    loadedSections = state.loadedSections,
-                    loadStates = state.loadStates,
-                    navigationRequest = state.navigationRequest,
-                    textSizePercent = textSizeSetting.effectiveValue,
-                    onLocation = onLocation,
-                    onTransitionReached = onTransitionReached,
-                    onTerminalObservation = onTerminalObservation,
-                    onAnchorMissing = onAnchorMissing,
-                    onExternalLinkClick = onExternalLinkClick,
-                    onScrollStarted = onChromeHide,
-                    onReaderTap = {
-                        if (selectionCoordinator?.dismissTranslationOnReaderTap() != true) {
-                            currentOnChromeToggle()
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .windowInsetsPadding(
-                            WindowInsets.safeDrawing.only(
-                                WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
+        BookDocumentReaderMaterialTheme(
+            mode = themeSetting.effectiveValue,
+            palette = readerPalette,
+        ) {
+            BookReaderScaffold(
+                progress = if (showReadingProgressSetting.effectiveValue) {
+                    BookReaderProgress.Chapter(
+                        value = state.visualChapterProgression,
+                        style = readingProgressStyleSetting.effectiveValue,
+                        activeColor = readerPalette.accent.copy(alpha = 0.75f),
+                        trackColor = readerPalette.surfaceVariant,
+                    )
+                } else {
+                    null
+                },
+                footerColor = readerPalette.background,
+                translationController = selectionCoordinator?.translationController,
+                translationSpeechState = translationSpeechState,
+                onTranslationSpeechToggle = selectionCoordinator?.let { it::toggleTranslationSpeech },
+                onTranslationPopupBoundsChanged = onTranslationPopupBoundsChanged,
+                onRootPositionInWindow = { rootPosition = it },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(readerPalette.background),
+                content = {
+                    BookDocumentEndlessViewer(
+                        currentChapter = state.window.current,
+                        currentChapterId = state.currentChapterId,
+                        window = state.window,
+                        loadedSections = state.loadedSections,
+                        loadStates = state.loadStates,
+                        navigationRequest = state.navigationRequest,
+                        textSizePercent = textSizeSetting.effectiveValue,
+                        onLocation = onLocation,
+                        onTransitionReached = onTransitionReached,
+                        onTerminalObservation = onTerminalObservation,
+                        onAnchorMissing = onAnchorMissing,
+                        onExternalLinkClick = onExternalLinkClick,
+                        onScrollStarted = onChromeHide,
+                        onReaderTap = {
+                            if (selectionCoordinator?.dismissTranslationOnReaderTap() != true) {
+                                currentOnChromeToggle()
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .windowInsetsPadding(
+                                WindowInsets.safeDrawing.only(
+                                    WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
+                                ),
                             ),
-                        ),
-                )
-            },
-            overlay = { progressIndicator ->
-                ReaderChrome(
-                    visible = state.chromeVisible,
-                    modifier = Modifier.fillMaxSize(),
-                    persistentBottomContent = progressIndicator,
-                    topBar = {
-                        ReaderChromeTopBar(
-                            title = state.entryTitle,
-                            subtitle = state.window.current.name,
-                            navigateUp = onClose,
-                            actions = {
-                                EntryChildWebViewActionsMenu(
-                                    resolution = state.childWebView,
-                                    onAction = onChildWebViewAction,
-                                )
-                            },
+                    )
+                },
+                overlay = { progressIndicator ->
+                    ReaderChrome(
+                        visible = state.chromeVisible,
+                        modifier = Modifier.fillMaxSize(),
+                        persistentBottomContent = progressIndicator,
+                        topBar = {
+                            ReaderChromeTopBar(
+                                title = state.entryTitle,
+                                subtitle = state.window.current.name,
+                                navigateUp = onClose,
+                                actions = {
+                                    EntryChildWebViewActionsMenu(
+                                        resolution = state.childWebView,
+                                        onAction = onChildWebViewAction,
+                                    )
+                                },
+                            )
+                        },
+                        bottomBar = {
+                            ReaderChromeBottomBar {
+                                ReaderChromeBottomBarAction(onClick = { onNavigationVisibilityChange(true) }) {
+                                    Icon(
+                                        Icons.AutoMirrored.Outlined.ViewList,
+                                        stringResource(MR.strings.book_table_of_contents),
+                                    )
+                                }
+                                ReaderChromeBottomBarAction(onClick = { onSettingsVisibilityChange(true) }) {
+                                    Icon(Icons.Outlined.Settings, stringResource(MR.strings.action_settings))
+                                }
+                            }
+                        },
+                    )
+                    SnackbarHost(
+                        hostState = snackbarHostState,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 56.dp)
+                            .windowInsetsPadding(
+                                WindowInsets.safeDrawing.only(
+                                    WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal,
+                                ),
+                            ),
+                    )
+                },
+            )
+
+            LaunchedEffect(state.navigationVisible, pendingChapterSelection) {
+                val chapter = pendingChapterSelection ?: return@LaunchedEffect
+                if (state.navigationVisible) return@LaunchedEffect
+                withFrameNanos { }
+                focusManager.clearFocus(force = true)
+                withFrameNanos { }
+                pendingChapterSelection = null
+                currentOnChapterSelected(chapter)
+            }
+
+            if (state.navigationVisible) {
+                val navigationRows = remember(state.navigationPresentation) {
+                    state.navigationPresentation.chapters.map { chapter ->
+                        BookReaderNavigationRow(
+                            item = chapter,
+                            title = chapter.name,
+                            read = chapter.read,
+                            bookmark = chapter.bookmark,
+                            progressLabel = state.navigationPresentation.progressLabels[chapter.id],
                         )
+                    }
+                }
+                val selectedIndex = remember(state.navigationPresentation, state.currentChapterId) {
+                    state.navigationPresentation.chapters.indexOfFirst { it.id == state.currentChapterId }
+                }
+                BookReaderNavigationSheet(
+                    visible = true,
+                    rows = navigationRows,
+                    selectedIndex = selectedIndex,
+                    onItemClick = { pendingChapterSelection = it },
+                    onDismissRequest = { onNavigationVisibilityChange(false) },
+                )
+            }
+            if (state.settingsVisible) {
+                BookReaderSettingsDialog(
+                    settingsSurfaceId = BookDocumentReaderProcessor.SETTINGS_SURFACE_ID,
+                    capabilities = BookDocumentReaderProcessor.CAPABILITIES,
+                    sharedSettingBindings = settingBindings.sharedSettings,
+                    onDismissRequest = { onSettingsVisibilityChange(false) },
+                    onOpenDefaultSettings = onOpenDefaultSettings,
+                    onResetProcessorSettings = {
+                        settingBindings.themeMode.clearEntryOverride()
+                        settingBindings.textSize.clearEntryOverride()
+                        settingBindings.keepScreenAlive.clearEntryOverride()
+                        settingBindings.showStatusBar.clearEntryOverride()
+                        settingBindings.showNavigationBar.clearEntryOverride()
+                        settingBindings.showTextSelectionMenu.clearEntryOverride()
+                        settingBindings.showReadingProgress.clearEntryOverride()
+                        settingBindings.readingProgressStyle.clearEntryOverride()
                     },
-                    bottomBar = {
-                        ReaderChromeBottomBar {
-                            ReaderChromeBottomBarAction(onClick = { onNavigationVisibilityChange(true) }) {
-                                Icon(
-                                    Icons.AutoMirrored.Outlined.ViewList,
-                                    stringResource(MR.strings.book_table_of_contents),
-                                )
+                    processorTabTitles = listOf(
+                        androidStringResource(R.string.book_reader_appearance_settings),
+                        androidStringResource(R.string.book_reader_behavior_settings),
+                    ),
+                    content = { page ->
+                        when (page) {
+                            0 -> {
+                                BookDocumentReaderThemeSettings(settingBindings.themeMode)
+                                BookDocumentReaderTextSizeSettings(settingBindings.textSize)
                             }
-                            ReaderChromeBottomBarAction(onClick = { onSettingsVisibilityChange(true) }) {
-                                Icon(Icons.Outlined.Settings, stringResource(MR.strings.action_settings))
+                            1 -> {
+                                BookDocumentReaderScreenAliveSettings(settingBindings.keepScreenAlive)
+                                BookDocumentReaderTextSelectionMenuSettings(settingBindings.showTextSelectionMenu)
+                                BookDocumentReaderStatusBarSettings(settingBindings.showStatusBar)
+                                BookDocumentReaderNavigationBarSettings(settingBindings.showNavigationBar)
+                                BookDocumentReaderProgressSettings(
+                                    showProgressBinding = settingBindings.showReadingProgress,
+                                    styleBinding = settingBindings.readingProgressStyle,
+                                )
                             }
                         }
                     },
-                )
-                SnackbarHost(
-                    hostState = snackbarHostState,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 56.dp)
-                        .windowInsetsPadding(
-                            WindowInsets.safeDrawing.only(
-                                WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal,
-                            ),
-                        ),
-                )
-            },
-        )
-    }
-
-    LaunchedEffect(state.navigationVisible, pendingChapterSelection) {
-        val chapter = pendingChapterSelection ?: return@LaunchedEffect
-        if (state.navigationVisible) return@LaunchedEffect
-        withFrameNanos { }
-        focusManager.clearFocus(force = true)
-        withFrameNanos { }
-        pendingChapterSelection = null
-        currentOnChapterSelected(chapter)
-    }
-
-    if (state.navigationVisible) {
-        val navigationRows = remember(state.navigationPresentation) {
-            state.navigationPresentation.chapters.map { chapter ->
-                BookReaderNavigationRow(
-                    item = chapter,
-                    title = chapter.name,
-                    read = chapter.read,
-                    bookmark = chapter.bookmark,
-                    progressLabel = state.navigationPresentation.progressLabels[chapter.id],
                 )
             }
         }
-        val selectedIndex = remember(state.navigationPresentation, state.currentChapterId) {
-            state.navigationPresentation.chapters.indexOfFirst { it.id == state.currentChapterId }
-        }
-        BookReaderNavigationSheet(
-            visible = true,
-            rows = navigationRows,
-            selectedIndex = selectedIndex,
-            onItemClick = { pendingChapterSelection = it },
-            onDismissRequest = { onNavigationVisibilityChange(false) },
-        )
-    }
-    if (state.settingsVisible) {
-        BookReaderSettingsDialog(
-            settingsSurfaceId = BookDocumentReaderProcessor.SETTINGS_SURFACE_ID,
-            capabilities = BookDocumentReaderProcessor.CAPABILITIES,
-            sharedSettingBindings = settingBindings.sharedSettings,
-            onDismissRequest = { onSettingsVisibilityChange(false) },
-            onOpenDefaultSettings = onOpenDefaultSettings,
-            onResetProcessorSettings = {
-                settingBindings.themeMode.clearEntryOverride()
-                settingBindings.textSize.clearEntryOverride()
-                settingBindings.showStatusBar.clearEntryOverride()
-                settingBindings.showNavigationBar.clearEntryOverride()
-                settingBindings.showReadingProgress.clearEntryOverride()
-                settingBindings.readingProgressStyle.clearEntryOverride()
-            },
-            processorTabTitles = listOf(androidStringResource(R.string.book_reader_appearance_settings)),
-            content = {
-                BookDocumentReaderStatusBarSettings(settingBindings.showStatusBar)
-                BookDocumentReaderNavigationBarSettings(settingBindings.showNavigationBar)
-                BookDocumentReaderThemeSettings(settingBindings.themeMode)
-                BookDocumentReaderTextSizeSettings(settingBindings.textSize)
-                BookDocumentReaderProgressSettings(
-                    showProgressBinding = settingBindings.showReadingProgress,
-                    styleBinding = settingBindings.readingProgressStyle,
-                )
-            },
-        )
     }
 }

@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.10] - 2026-08-15
+
+### ✨ Added
+
+- Added a book-reader option to keep the screen awake while reading.
+- Added a book-reader option to control the standard text-selection menu.
+
+### 🐛 Fixed
+
+- Book reader themes now apply consistently to reader controls, translation popups, and text-selection colors.
+- The text-selection menu now stays stable while translation results resize.
+
 ## [1.3.9] - 2026-08-15
 
 ### ✨ Added
@@ -216,7 +228,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.3.9...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.3.10...HEAD
+[1.3.10]: https://github.com/pa2x2/katari/releases/tag/v1.3.10
 [1.3.9]: https://github.com/pa2x2/katari/releases/tag/v1.3.9
 [1.3.8]: https://github.com/pa2x2/katari/releases/tag/v1.3.8
 [1.3.7]: https://github.com/pa2x2/katari/releases/tag/v1.3.7

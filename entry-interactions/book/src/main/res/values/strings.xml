@@ -11,13 +11,16 @@
     <string name="book_reader_invalid_request">The selected book item is invalid.</string>
     <string name="book_reader_general_settings">General</string>
     <string name="book_reader_appearance_settings">Appearance</string>
+    <string name="book_reader_behavior_settings">Behavior</string>
     <string name="book_document_reader_theme">Theme</string>
     <string name="book_document_reader_text_size">Text size</string>
     <string name="book_document_reader_decrease_text_size">Decrease text size</string>
     <string name="book_document_reader_increase_text_size">Increase text size</string>
     <string name="book_document_reader_edit_text_size">Edit text size</string>
+    <string name="book_document_reader_keep_screen_alive">Keep screen alive</string>
     <string name="book_document_reader_show_status_bar">Show status bar</string>
     <string name="book_document_reader_show_navigation_bar">Show navigation bar</string>
+    <string name="book_document_reader_show_text_selection_menu">Show text selection menu</string>
     <string name="book_document_reader_theme_app">App theme</string>
     <string name="book_document_reader_theme_paper">Paper</string>
     <string name="book_document_reader_theme_dusk">Dusk</string>

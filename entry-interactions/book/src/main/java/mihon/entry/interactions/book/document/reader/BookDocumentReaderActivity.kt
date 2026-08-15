@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.ViewGroup
+import android.view.WindowManager
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
@@ -226,6 +227,12 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         )
         settingBindings = bindings
         lifecycleScope.launch {
+            bindings.keepScreenAlive.state
+                .map { setting -> setting.effectiveValue }
+                .distinctUntilChanged()
+                .collect(::setKeepScreenAlive)
+        }
+        lifecycleScope.launch {
             bindings.prepareNextChapter.state
                 .map { setting -> setting.effectiveValue }
                 .distinctUntilChanged()
@@ -428,6 +435,14 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
 
     private fun toggleChrome() {
         setChromeVisible(readerState?.chromeVisible != true)
+    }
+
+    private fun setKeepScreenAlive(enabled: Boolean) {
+        if (enabled) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
     }
 
     private fun applyReaderSystemBars() {

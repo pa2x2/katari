@@ -33,11 +33,17 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
         val textSize = remember(provider, binder) {
             binder.bind(provider.textSizeSetting).asProfilePreference()
         }
+        val keepScreenAlive = remember(provider, binder) {
+            binder.bind(provider.keepScreenAliveSetting).asProfilePreference()
+        }
         val showStatusBar = remember(provider, binder) {
             binder.bind(provider.showStatusBarSetting).asProfilePreference()
         }
         val showNavigationBar = remember(provider, binder) {
             binder.bind(provider.showNavigationBarSetting).asProfilePreference()
+        }
+        val showTextSelectionMenu = remember(provider, binder) {
+            binder.bind(provider.showTextSelectionMenuSetting).asProfilePreference()
         }
         val showReadingProgress = remember(provider, binder) {
             binder.bind(provider.showReadingProgressSetting).asProfilePreference()
@@ -47,53 +53,75 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
         }
         val readingProgressVisible by showReadingProgress.collectAsState()
         return listOf(
-            Preference.PreferenceItem.ListPreference(
-                preference = theme,
-                entries = mapOf(
-                    BookDocumentReaderThemeMode.APP to stringResource(MR.strings.book_document_reader_theme_app),
-                    BookDocumentReaderThemeMode.PAPER to stringResource(MR.strings.book_document_reader_theme_paper),
-                    BookDocumentReaderThemeMode.DUSK to stringResource(MR.strings.book_document_reader_theme_dusk),
-                    BookDocumentReaderThemeMode.BLACK to stringResource(MR.strings.book_document_reader_theme_black),
+            Preference.PreferenceGroup(
+                title = stringResource(MR.strings.pref_category_appearance),
+                preferenceItems = listOf(
+                    Preference.PreferenceItem.ListPreference(
+                        preference = theme,
+                        entries = mapOf(
+                            BookDocumentReaderThemeMode.APP to
+                                stringResource(MR.strings.book_document_reader_theme_app),
+                            BookDocumentReaderThemeMode.PAPER to
+                                stringResource(MR.strings.book_document_reader_theme_paper),
+                            BookDocumentReaderThemeMode.DUSK to
+                                stringResource(MR.strings.book_document_reader_theme_dusk),
+                            BookDocumentReaderThemeMode.BLACK to
+                                stringResource(MR.strings.book_document_reader_theme_black),
+                        ),
+                        title = stringResource(MR.strings.pref_book_document_reader_theme),
+                    ),
+                    Preference.PreferenceItem.StepperPreference(
+                        preference = textSize,
+                        valueRange = BookDocumentReaderSettings.TEXT_SIZE_RANGE,
+                        step = BookDocumentReaderSettings.TEXT_SIZE_STEP_PERCENT,
+                        valueFormatter = { "$it%" },
+                        inputSuffix = "%",
+                        decreaseContentDescription = stringResource(MR.strings.action_decrease_text_size),
+                        increaseContentDescription = stringResource(MR.strings.action_increase_text_size),
+                        editContentDescription = stringResource(MR.strings.action_edit_text_size),
+                        title = stringResource(MR.strings.pref_book_document_reader_text_size),
+                    ),
                 ),
-                title = stringResource(MR.strings.pref_book_document_reader_theme),
             ),
-            Preference.PreferenceItem.StepperPreference(
-                preference = textSize,
-                valueRange = BookDocumentReaderSettings.TEXT_SIZE_RANGE,
-                step = BookDocumentReaderSettings.TEXT_SIZE_STEP_PERCENT,
-                valueFormatter = { "$it%" },
-                inputSuffix = "%",
-                decreaseContentDescription = stringResource(MR.strings.action_decrease_text_size),
-                increaseContentDescription = stringResource(MR.strings.action_increase_text_size),
-                editContentDescription = stringResource(MR.strings.action_edit_text_size),
-                title = stringResource(MR.strings.pref_book_document_reader_text_size),
-            ),
-            Preference.PreferenceItem.SwitchPreference(
-                preference = showStatusBar,
-                title = stringResource(MR.strings.pref_book_document_reader_show_status_bar),
-            ),
-            Preference.PreferenceItem.SwitchPreference(
-                preference = showNavigationBar,
-                title = stringResource(MR.strings.pref_book_document_reader_show_navigation_bar),
-            ),
-            Preference.PreferenceItem.SwitchPreference(
-                preference = showReadingProgress,
-                title = stringResource(MR.strings.pref_book_document_reader_show_reading_progress),
-            ),
-            Preference.PreferenceItem.ListPreference(
-                preference = readingProgressStyle,
-                entries = mapOf(
-                    BookDocumentReaderProgressStyle.EDGE_FILL_RAIL to
-                        stringResource(MR.strings.book_document_reader_progress_edge_fill_rail),
-                    BookDocumentReaderProgressStyle.EDGE_POSITION_MARKER to
-                        stringResource(MR.strings.book_document_reader_progress_edge_position_marker),
-                    BookDocumentReaderProgressStyle.BOTTOM_HAIRLINE to
-                        stringResource(MR.strings.book_document_reader_progress_bottom_hairline),
-                    BookDocumentReaderProgressStyle.PERCENTAGE to
-                        stringResource(MR.strings.book_document_reader_progress_percentage),
+            Preference.PreferenceGroup(
+                title = stringResource(MR.strings.pref_behavior),
+                preferenceItems = listOf(
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = keepScreenAlive,
+                        title = stringResource(MR.strings.pref_book_document_reader_keep_screen_alive),
+                    ),
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = showTextSelectionMenu,
+                        title = stringResource(MR.strings.pref_book_document_reader_show_text_selection_menu),
+                    ),
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = showStatusBar,
+                        title = stringResource(MR.strings.pref_book_document_reader_show_status_bar),
+                    ),
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = showNavigationBar,
+                        title = stringResource(MR.strings.pref_book_document_reader_show_navigation_bar),
+                    ),
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = showReadingProgress,
+                        title = stringResource(MR.strings.pref_book_document_reader_show_reading_progress),
+                    ),
+                    Preference.PreferenceItem.ListPreference(
+                        preference = readingProgressStyle,
+                        entries = mapOf(
+                            BookDocumentReaderProgressStyle.EDGE_FILL_RAIL to
+                                stringResource(MR.strings.book_document_reader_progress_edge_fill_rail),
+                            BookDocumentReaderProgressStyle.EDGE_POSITION_MARKER to
+                                stringResource(MR.strings.book_document_reader_progress_edge_position_marker),
+                            BookDocumentReaderProgressStyle.BOTTOM_HAIRLINE to
+                                stringResource(MR.strings.book_document_reader_progress_bottom_hairline),
+                            BookDocumentReaderProgressStyle.PERCENTAGE to
+                                stringResource(MR.strings.book_document_reader_progress_percentage),
+                        ),
+                        title = stringResource(MR.strings.pref_book_document_reader_reading_progress_style),
+                        enabled = readingProgressVisible,
+                    ),
                 ),
-                title = stringResource(MR.strings.pref_book_document_reader_reading_progress_style),
-                enabled = readingProgressVisible,
             ),
         )
     }

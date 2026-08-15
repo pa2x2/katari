@@ -473,8 +473,10 @@
     <string name="pref_book_document_reader">Book reader</string>
     <string name="pref_book_document_reader_theme">Theme</string>
     <string name="pref_book_document_reader_text_size">Text size</string>
+    <string name="pref_book_document_reader_keep_screen_alive">Keep screen alive</string>
     <string name="pref_book_document_reader_show_status_bar">Show status bar</string>
     <string name="pref_book_document_reader_show_navigation_bar">Show navigation bar</string>
+    <string name="pref_book_document_reader_show_text_selection_menu">Show text selection menu</string>
     <string name="pref_book_document_reader_show_reading_progress">Show reading progress</string>
     <string name="pref_book_document_reader_reading_progress_style">Reading progress style</string>
     <string name="book_document_reader_theme_app">App theme</string>

@@ -9,8 +9,10 @@ import mihon.entry.viewer.settings.shared.StandardReaderSharedSettingIds
 internal class BookDocumentReaderSettingBindings private constructor(
     val themeMode: ViewerSettingBinding<BookDocumentReaderThemeMode>,
     val textSize: ViewerSettingBinding<Int>,
+    val keepScreenAlive: ViewerSettingBinding<Boolean>,
     val showStatusBar: ViewerSettingBinding<Boolean>,
     val showNavigationBar: ViewerSettingBinding<Boolean>,
+    val showTextSelectionMenu: ViewerSettingBinding<Boolean>,
     val showReadingProgress: ViewerSettingBinding<Boolean>,
     val readingProgressStyle: ViewerSettingBinding<BookDocumentReaderProgressStyle>,
     val sharedSettings: Map<ReaderSharedSettingId, ViewerSettingBinding<Boolean>>,
@@ -31,8 +33,10 @@ internal class BookDocumentReaderSettingBindings private constructor(
             return BookDocumentReaderSettingBindings(
                 themeMode = entryBinder.bind(provider.themeModeSetting),
                 textSize = entryBinder.bind(provider.textSizeSetting),
+                keepScreenAlive = entryBinder.bind(provider.keepScreenAliveSetting),
                 showStatusBar = entryBinder.bind(provider.showStatusBarSetting),
                 showNavigationBar = entryBinder.bind(provider.showNavigationBarSetting),
+                showTextSelectionMenu = entryBinder.bind(provider.showTextSelectionMenuSetting),
                 showReadingProgress = entryBinder.bind(provider.showReadingProgressSetting),
                 readingProgressStyle = entryBinder.bind(provider.readingProgressStyleSetting),
                 sharedSettings = provider.sharedSettingDefinitions.mapValues { (_, definition) ->

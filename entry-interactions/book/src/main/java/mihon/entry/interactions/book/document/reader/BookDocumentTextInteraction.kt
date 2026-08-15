@@ -11,6 +11,7 @@ internal data class BookDocumentTextInteraction(
     val isReaderTapBlocked: () -> Boolean,
     val onBlockedReaderTap: () -> Unit,
     val onNonLinkTap: (x: Float, width: Float) -> Unit,
+    val showTextSelectionMenu: Boolean = true,
     val selectionActions: Set<BookDocumentSelectionAction> = emptySet(),
     val activeSpeechSelectionIdentity: String? = null,
     val onSelectionAction: (

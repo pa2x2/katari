@@ -8,8 +8,10 @@ import androidx.compose.foundation.text.contextmenu.builder.item
 import androidx.compose.foundation.text.contextmenu.data.TextContextMenuKeys
 import androidx.compose.foundation.text.contextmenu.modifier.appendTextContextMenuComponents
 import androidx.compose.foundation.text.contextmenu.modifier.filterTextContextMenuComponents
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.text.selection.SelectionState
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -24,6 +26,7 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.toClipEntry
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 
 /** Binds the active chapter's selection owner to Compose selection and Android context actions. */
 @OptIn(ExperimentalFoundationApi::class)
@@ -35,6 +38,13 @@ internal fun BookDocumentChapterSelectionContainer(
 ) {
     val selectionState = remember { SelectionState() }
     val interaction = LocalBookDocumentTextInteraction.current
+    val palette = LocalBookDocumentReaderPalette.current
+    val selectionColors = remember(palette.accent) {
+        TextSelectionColors(
+            handleColor = palette.accent,
+            backgroundColor = palette.accent.copy(alpha = 0.4f),
+        )
+    }
     val clipboard = LocalClipboard.current
     val coroutineScope = rememberCoroutineScope()
     val session = remember(selectionState) {
@@ -81,41 +91,43 @@ internal fun BookDocumentChapterSelectionContainer(
         }
     }
 
-    SelectionContainer(
-        state = selectionState,
-        modifier = modifier
-            .captureSelectionAtPointerDown(session)
-            .filterTextContextMenuComponents { component ->
-                component.key !== TextContextMenuKeys.CopyKey
+    CompositionLocalProvider(LocalTextSelectionColors provides selectionColors) {
+        SelectionContainer(
+            state = selectionState,
+            modifier = modifier
+                .captureSelectionAtPointerDown(session)
+                .filterTextContextMenuComponents { component ->
+                    interaction.showTextSelectionMenu && component.key !== TextContextMenuKeys.CopyKey
+                }
+                .appendTextContextMenuComponents {
+                    projection ?: return@appendTextContextMenuComponents
+                    item(BookDocumentCopySelectionKey, copyLabel) {
+                        coroutineScope.launch {
+                            clipboard.setClipEntry(
+                                ClipData.newPlainText(copyLabel, projection.text).toClipEntry(),
+                            )
+                        }
+                        session.clearSelection()
+                        close()
+                    }
+                    val actions = interaction.selectionActions
+                    if (interaction.observeSelections && BookDocumentSelectionAction.Listen in actions) {
+                        item(BookDocumentListenSelectionKey, listenLabel) {
+                            session.performAction(BookDocumentSelectionAction.Listen)
+                            close()
+                        }
+                    }
+                    if (interaction.observeSelections && BookDocumentSelectionAction.Translate in actions) {
+                        item(BookDocumentTranslateSelectionKey, translateLabel) {
+                            session.performAction(BookDocumentSelectionAction.Translate)
+                            close()
+                        }
+                    }
+                },
+        ) {
+            CompositionLocalProvider(LocalBookDocumentChapterSelection provides session) {
+                content(session)
             }
-            .appendTextContextMenuComponents {
-                projection ?: return@appendTextContextMenuComponents
-                item(BookDocumentCopySelectionKey, copyLabel) {
-                    coroutineScope.launch {
-                        clipboard.setClipEntry(
-                            ClipData.newPlainText(copyLabel, projection.text).toClipEntry(),
-                        )
-                    }
-                    session.clearSelection()
-                    close()
-                }
-                val actions = interaction.selectionActions
-                if (interaction.observeSelections && BookDocumentSelectionAction.Listen in actions) {
-                    item(BookDocumentListenSelectionKey, listenLabel) {
-                        session.performAction(BookDocumentSelectionAction.Listen)
-                        close()
-                    }
-                }
-                if (interaction.observeSelections && BookDocumentSelectionAction.Translate in actions) {
-                    item(BookDocumentTranslateSelectionKey, translateLabel) {
-                        session.performAction(BookDocumentSelectionAction.Translate)
-                        close()
-                    }
-                }
-            },
-    ) {
-        CompositionLocalProvider(LocalBookDocumentChapterSelection provides session) {
-            content(session)
         }
     }
 }
