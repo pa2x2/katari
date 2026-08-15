@@ -105,6 +105,16 @@ private class RecordingViewerSettingBinder : ViewerSettingBinder {
         }
     }
 
+    override suspend fun initializeEntry(entryId: Long): ViewerSettingEntryBinder {
+        return object : ViewerSettingEntryBinder {
+            override val entryId = entryId
+
+            override fun <T> bind(definition: ViewerSettingDefinition<T>): ViewerSettingBinding<T> {
+                return this@RecordingViewerSettingBinder.bind(definition, entryId)
+            }
+        }
+    }
+
     override suspend fun <T> resolve(
         definition: ViewerSettingDefinition<T>,
         entryId: Long?,

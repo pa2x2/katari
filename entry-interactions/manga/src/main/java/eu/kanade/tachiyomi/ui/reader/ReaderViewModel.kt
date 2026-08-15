@@ -784,10 +784,11 @@ internal class ReaderViewModel @JvmOverloads constructor(
     }
 
     private suspend fun installViewerSettingBindings(entry: Entry) {
-        val readingMode = viewerSettingBinder.resolve(readerPreferences.readingModeSetting, entry.id)
-        val orientation = viewerSettingBinder.resolve(readerPreferences.orientationSetting, entry.id)
-        val newReadingModeBinding = viewerSettingBinder.bind(readerPreferences.readingModeSetting, entry.id)
-        val newOrientationBinding = viewerSettingBinder.bind(readerPreferences.orientationSetting, entry.id)
+        val entryBinder = viewerSettingBinder.initializeEntry(entry.id)
+        val newReadingModeBinding = entryBinder.bind(readerPreferences.readingModeSetting)
+        val newOrientationBinding = entryBinder.bind(readerPreferences.orientationSetting)
+        val readingMode = newReadingModeBinding.state.value
+        val orientation = newOrientationBinding.state.value
         mutableState.update {
             it.copy(
                 manga = entry,

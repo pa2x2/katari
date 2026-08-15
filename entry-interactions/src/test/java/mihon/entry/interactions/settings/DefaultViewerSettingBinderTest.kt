@@ -68,6 +68,24 @@ class DefaultViewerSettingBinderTest {
     }
 
     @Test
+    fun `initialized binding exposes entry override in its initial state`() = runTest {
+        preference.set(3)
+        val repository = FakeOverrideRepository()
+        repository.upsert(ViewerSettingOverride(7, definition.id, "1", 5))
+
+        val binding = DefaultViewerSettingBinder(repository, backgroundScope)
+            .initializeEntry(entryId = 7)
+            .bind(definition)
+
+        binding.state.value.run {
+            effectiveValue shouldBe 1
+            source shouldBe ViewerSettingSource.ENTRY
+            profileValue shouldBe 3
+            entryOverride shouldBe 1
+        }
+    }
+
+    @Test
     fun `invalid layers are preserved but ignored`() = runTest {
         preference.set(99)
         val repository = FakeOverrideRepository()
