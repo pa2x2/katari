@@ -481,6 +481,8 @@
     <string name="pref_book_document_reader_show_reading_progress">Show reading progress</string>
     <string name="pref_book_document_reader_reading_progress_style">Reading progress style</string>
     <string name="book_document_reader_theme_app">App theme</string>
+    <string name="book_document_reader_theme_paper">Paper</string>
+    <string name="book_document_reader_theme_dusk">Dusk</string>
     <string name="book_document_reader_theme_black">Black</string>
     <string name="action_decrease_text_size">Decrease text size</string>
     <string name="action_increase_text_size">Increase text size</string>

@@ -51,6 +51,8 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
                 preference = theme,
                 entries = mapOf(
                     BookDocumentReaderThemeMode.APP to stringResource(MR.strings.book_document_reader_theme_app),
+                    BookDocumentReaderThemeMode.PAPER to stringResource(MR.strings.book_document_reader_theme_paper),
+                    BookDocumentReaderThemeMode.DUSK to stringResource(MR.strings.book_document_reader_theme_dusk),
                     BookDocumentReaderThemeMode.BLACK to stringResource(MR.strings.book_document_reader_theme_black),
                 ),
                 title = stringResource(MR.strings.pref_book_document_reader_theme),
