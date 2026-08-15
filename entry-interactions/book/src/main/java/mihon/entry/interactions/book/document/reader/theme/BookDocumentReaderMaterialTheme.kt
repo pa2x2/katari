@@ -1,34 +1,40 @@
 package mihon.entry.interactions.book.document.reader.theme
 
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeMode
 
-/** Adapts shared Translation surfaces to the active BOOK document reader palette. */
+/** Applies the active BOOK palette to every Material surface in the reading session. */
 @Composable
-internal fun BookDocumentReaderTranslationTheme(
+internal fun BookDocumentReaderMaterialTheme(
     mode: BookDocumentReaderThemeMode,
     palette: BookDocumentReaderPalette,
     content: @Composable () -> Unit,
 ) {
-    if (mode == BookDocumentReaderThemeMode.APP) {
-        content()
-        return
-    }
     val inheritedColorScheme = MaterialTheme.colorScheme
-    val colorScheme = remember(inheritedColorScheme, palette) {
-        inheritedColorScheme.withBookDocumentReaderPalette(palette)
+    val colorScheme = remember(inheritedColorScheme, mode, palette) {
+        if (mode == BookDocumentReaderThemeMode.APP) {
+            inheritedColorScheme
+        } else {
+            inheritedColorScheme.withBookDocumentReaderPalette(palette)
+        }
     }
     MaterialTheme(
         colorScheme = colorScheme,
         typography = MaterialTheme.typography,
         shapes = MaterialTheme.shapes,
-        content = content,
-    )
+    ) {
+        CompositionLocalProvider(
+            LocalContentColor provides colorScheme.onBackground,
+            content = content,
+        )
+    }
 }
 
 private fun ColorScheme.withBookDocumentReaderPalette(

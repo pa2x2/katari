@@ -37,25 +37,16 @@ internal class BookDocumentReaderSystemBars(window: Window) {
         } else {
             controller.hide(WindowInsetsCompat.Type.navigationBars())
         }
-        applySystemBarIconAppearance(chromeVisible, readerTheme)
+        applySystemBarIconAppearance(readerTheme)
     }
 
     private fun applySystemBarIconAppearance(
-        chromeVisible: Boolean,
         readerTheme: BookDocumentReaderThemeMode,
     ) {
         val readerHasDarkBackground = bookDocumentReaderThemeHasDarkBackground(readerTheme)
-        val useDarkIcons = when {
-            chromeVisible -> appUsesDarkStatusBarIcons
-            readerHasDarkBackground != null -> !readerHasDarkBackground
-            else -> appUsesDarkStatusBarIcons
-        }
-        controller.isAppearanceLightStatusBars = useDarkIcons
-        controller.isAppearanceLightNavigationBars = when {
-            chromeVisible -> appUsesDarkNavigationBarIcons
-            readerHasDarkBackground != null -> !readerHasDarkBackground
-            else -> appUsesDarkNavigationBarIcons
-        }
+        controller.isAppearanceLightStatusBars = readerHasDarkBackground?.not() ?: appUsesDarkStatusBarIcons
+        controller.isAppearanceLightNavigationBars =
+            readerHasDarkBackground?.not() ?: appUsesDarkNavigationBarIcons
     }
 
     fun showAppBars() {
