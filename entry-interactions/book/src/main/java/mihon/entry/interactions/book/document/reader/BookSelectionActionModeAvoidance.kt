@@ -12,18 +12,26 @@ import androidx.compose.ui.geometry.Rect as ComposeRect
 /** Extends Android's native selection anchor around Katari-owned popup content. */
 internal class BookSelectionActionModeAvoidance {
     private var boundsInWindow: ComposeRect? = null
+    private var selectionBoundsInWindow: ComposeRect? = null
     private var activeActionMode: ActionMode? = null
 
     fun wrap(callback: ActionMode.Callback): ActionMode.Callback = AvoidingCallback(callback)
 
     fun updateBounds(bounds: ComposeRect?) {
         if (boundsInWindow == bounds) return
+        val previousBounds = boundsInWindow
         boundsInWindow = bounds
-        activeActionMode?.invalidateContentRect()
+        val selectionBounds = selectionBoundsInWindow ?: return
+        // Android briefly hides a floating action mode whenever its content rect moves. A popup
+        // resize on the same side cannot create a new collision, so keep the native placement.
+        if (requiresActionModeReposition(selectionBounds, previousBounds, bounds)) {
+            activeActionMode?.invalidateContentRect()
+        }
     }
 
     fun clear() {
         boundsInWindow = null
+        selectionBoundsInWindow = null
         activeActionMode = null
     }
 
@@ -46,7 +54,10 @@ internal class BookSelectionActionModeAvoidance {
             try {
                 delegate.onDestroyActionMode(mode)
             } finally {
-                if (activeActionMode === mode) activeActionMode = null
+                if (activeActionMode === mode) {
+                    activeActionMode = null
+                    selectionBoundsInWindow = null
+                }
             }
         }
 
@@ -57,10 +68,16 @@ internal class BookSelectionActionModeAvoidance {
             } else {
                 super.onGetContentRect(mode, view, outRect)
             }
-            val avoidanceBounds = boundsInWindow ?: return
-            if (!avoidanceBounds.hasFiniteBounds()) return
             val locationInWindow = IntArray(2)
             view?.getLocationInWindow(locationInWindow)
+            selectionBoundsInWindow = ComposeRect(
+                left = (outRect.left + locationInWindow[0]).toFloat(),
+                top = (outRect.top + locationInWindow[1]).toFloat(),
+                right = (outRect.right + locationInWindow[0]).toFloat(),
+                bottom = (outRect.bottom + locationInWindow[1]).toFloat(),
+            )
+            val avoidanceBounds = boundsInWindow ?: return
+            if (!avoidanceBounds.hasFiniteBounds()) return
             outRect.union(
                 floor(avoidanceBounds.left - locationInWindow[0]).toInt(),
                 floor(avoidanceBounds.top - locationInWindow[1]).toInt(),
@@ -69,6 +86,28 @@ internal class BookSelectionActionModeAvoidance {
             )
         }
     }
+}
+
+internal fun requiresActionModeReposition(
+    selectionBounds: ComposeRect,
+    previousPopupBounds: ComposeRect?,
+    popupBounds: ComposeRect?,
+): Boolean = previousPopupBounds.placementRelativeTo(selectionBounds) !=
+    popupBounds.placementRelativeTo(selectionBounds)
+
+private fun ComposeRect?.placementRelativeTo(selectionBounds: ComposeRect): BookSelectionPopupPlacement? {
+    if (this == null || !hasFiniteBounds() || !selectionBounds.hasFiniteBounds()) return null
+    return when {
+        bottom <= selectionBounds.top -> BookSelectionPopupPlacement.Above
+        top >= selectionBounds.bottom -> BookSelectionPopupPlacement.Below
+        else -> BookSelectionPopupPlacement.Overlapping
+    }
+}
+
+private enum class BookSelectionPopupPlacement {
+    Above,
+    Below,
+    Overlapping,
 }
 
 private fun ComposeRect.hasFiniteBounds(): Boolean =
