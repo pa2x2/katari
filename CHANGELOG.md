@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.11] - 2026-08-16
+
+### 🐛 Fixed
+
+- Viewer settings tabs now remain stable while editing numeric values.
+
 ## [1.3.10] - 2026-08-15
 
 ### ✨ Added
@@ -228,7 +234,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.3.10...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.3.11...HEAD
+[1.3.11]: https://github.com/pa2x2/katari/releases/tag/v1.3.11
 [1.3.10]: https://github.com/pa2x2/katari/releases/tag/v1.3.10
 [1.3.9]: https://github.com/pa2x2/katari/releases/tag/v1.3.9
 [1.3.8]: https://github.com/pa2x2/katari/releases/tag/v1.3.8
