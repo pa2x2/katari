@@ -15,6 +15,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -133,9 +134,25 @@ private fun SettingsStepperValue(
     onValueChange: (Int) -> Unit,
 ) {
     var isEditing by remember { mutableStateOf(false) }
+    val pagerScrollLock = LocalViewerSettingsPagerScrollLock.current
+    val pagerScrollLockOwner = remember { Any() }
+
+    DisposableEffect(pagerScrollLock, pagerScrollLockOwner) {
+        onDispose { pagerScrollLock?.release(pagerScrollLockOwner) }
+    }
+
+    fun startEditing() {
+        pagerScrollLock?.acquire(pagerScrollLockOwner)
+        isEditing = true
+    }
+
+    fun stopEditing() {
+        isEditing = false
+        pagerScrollLock?.release(pagerScrollLockOwner)
+    }
 
     Surface(
-        onClick = { isEditing = true },
+        onClick = ::startEditing,
         enabled = !isEditing,
         shape = MaterialTheme.shapes.extraLarge,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -158,7 +175,7 @@ private fun SettingsStepperValue(
                 val isValid = parsedValue != null && parsedValue in valueRange
                 val finishEditing = {
                     if (isValid) onValueChange(requireNotNull(parsedValue))
-                    isEditing = false
+                    stopEditing()
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {

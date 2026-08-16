@@ -1,6 +1,9 @@
 package tachiyomi.presentation.core.components
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.BringIntoViewSpec
+import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -31,6 +34,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,6 +63,7 @@ object ViewerSettingsPaddings {
  * surface without also defining how that surface returns to its defaults.
  */
 @Composable
+@OptIn(ExperimentalFoundationApi::class)
 fun ViewerSettingsTabbedDialog(
     onDismissRequest: () -> Unit,
     onResetSettings: () -> Unit,
@@ -70,6 +75,8 @@ fun ViewerSettingsTabbedDialog(
     content: @Composable ColumnScope.(Int) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+    val pagerScrollLock = remember { ViewerSettingsPagerScrollLock() }
+    val contentBringIntoViewSpec = LocalBringIntoViewSpec.current
 
     Dialog(
         onDismissRequest = onDismissRequest,
@@ -110,17 +117,32 @@ fun ViewerSettingsTabbedDialog(
                         )
                     }
                     HorizontalDivider()
-                    HorizontalPager(
-                        modifier = Modifier.animateContentSize(),
-                        state = pagerState,
-                        verticalAlignment = Alignment.Top,
-                    ) { page ->
-                        Column(
-                            modifier = Modifier
-                                .verticalScroll(rememberScrollState())
-                                .padding(vertical = ViewerSettingsPaddings.Vertical),
-                        ) {
-                            content(page)
+                    CompositionLocalProvider(
+                        LocalViewerSettingsPagerScrollLock provides pagerScrollLock,
+                        LocalBringIntoViewSpec provides if (pagerScrollLock.isLocked) {
+                            NoOpBringIntoViewSpec
+                        } else {
+                            contentBringIntoViewSpec
+                        },
+                    ) {
+                        HorizontalPager(
+                            modifier = Modifier.animateContentSize(),
+                            state = pagerState,
+                            verticalAlignment = Alignment.Top,
+                            userScrollEnabled = !pagerScrollLock.isLocked,
+                        ) { page ->
+                            // Keep normal focus relocation inside the page's vertical scroller.
+                            CompositionLocalProvider(
+                                LocalBringIntoViewSpec provides contentBringIntoViewSpec,
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .verticalScroll(rememberScrollState())
+                                        .padding(vertical = ViewerSettingsPaddings.Vertical),
+                                ) {
+                                    content(page)
+                                }
+                            }
                         }
                     }
                 }
@@ -220,3 +242,7 @@ private val viewerSettingsDialogProperties = DialogProperties(
 )
 private val VIEWER_TABLET_MIN_WIDTH = 720.dp
 private const val VIEWER_SETTINGS_MAX_HEIGHT_FRACTION = 0.75f
+
+private object NoOpBringIntoViewSpec : BringIntoViewSpec {
+    override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float) = 0f
+}
