@@ -246,7 +246,6 @@ internal data class BookDocumentViewerLocation<T>(
     val section: BookDocumentSection<T>,
     val position: BookDocumentPosition,
     val progression: Float,
-    val visualProgression: Float = progression,
 )
 
 internal fun <T> bookDocumentViewerLocation(
@@ -272,13 +271,6 @@ internal fun <T> bookDocumentViewerLocation(
             section = topItem.section,
             position = position,
             progression = progression,
-            visualProgression = bookDocumentVisualProgress(
-                section = topItem.section,
-                items = items,
-                visibleItems = visibleItems,
-                viewportStartOffset = viewportStartOffset,
-                viewportEndOffset = viewportEndOffset,
-            ) ?: progression,
         )
     }
     val viewportAnchor = (viewportStartOffset + viewportEndOffset) / 2
@@ -306,13 +298,6 @@ internal fun <T> bookDocumentViewerLocation(
         section = item.section,
         position = position,
         progression = progression,
-        visualProgression = bookDocumentVisualProgress(
-            section = item.section,
-            items = items,
-            visibleItems = visibleItems,
-            viewportStartOffset = viewportStartOffset,
-            viewportEndOffset = viewportEndOffset,
-        ) ?: progression,
     )
 }
 
