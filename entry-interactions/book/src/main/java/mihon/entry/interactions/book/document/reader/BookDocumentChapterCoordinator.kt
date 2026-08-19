@@ -128,7 +128,6 @@ internal class BookDocumentChapterCoordinator(
                 activateChapter(
                     chapterId = chapterId,
                     completeForwardCrossing = true,
-                    observedLocation = location,
                     observedNavigationRequest = navigationRequest,
                 )
         val session = retainedSessions.session(chapterId) ?: return
@@ -139,7 +138,6 @@ internal class BookDocumentChapterCoordinator(
             currentState()?.let { current ->
                 updateState(
                     current.copy(
-                        visualChapterProgression = location.visualProgression,
                         navigationRequest = current.navigationRequest.afterAcceptedLocation(
                             observedRequest = navigationRequest,
                             chapterId = chapterId,
@@ -154,6 +152,13 @@ internal class BookDocumentChapterCoordinator(
             session.saveLocation(locator)
         }
         prepareNextChapterIfNeeded(location.progression.toDouble())
+    }
+
+    fun onVisualProgress(progress: BookDocumentViewerVisualProgress<EntryChapter>) {
+        val state = currentState() ?: return
+        if (state.navigationRequest?.chapterId?.let { it != progress.section.owner.id } == true) return
+        if (state.visualChapterProgression == progress.progression) return
+        updateState(state.copy(visualChapterProgression = progress.progression))
     }
 
     fun onTerminalObservation(
@@ -244,7 +249,6 @@ internal class BookDocumentChapterCoordinator(
     private fun activateChapter(
         chapterId: Long,
         completeForwardCrossing: Boolean,
-        observedLocation: BookDocumentViewerLocation<EntryChapter>? = null,
         observedNavigationRequest: BookDocumentNavigationRequest? = null,
     ): Boolean {
         val state = currentState() ?: return false
@@ -264,17 +268,14 @@ internal class BookDocumentChapterCoordinator(
             chapterLoadJobs.remove(id)?.cancel()
         }
         chapterSelectionRequests.retainAll(retainedIds)
-        val section = currentState()?.loadedSections?.get(chapterId) ?: return false
+        if (currentState()?.loadedSections?.containsKey(chapterId) != true) return false
         val current = currentState() ?: return false
-        val progression = observedLocation?.progression
-            ?: section.document.document.progressionAt(section.initialPosition)
         updateState(
             current.copy(
                 currentChapterId = chapterId,
                 window = window,
                 loadedSections = current.loadedSections.filterKeys(retainedIds::contains),
                 loadStates = current.loadStates.filterKeys(retainedIds::contains),
-                visualChapterProgression = observedLocation?.visualProgression ?: progression,
                 childWebView = null,
                 navigationRequest = current.navigationRequest.afterAcceptedLocation(
                     observedRequest = observedNavigationRequest,

@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.12] - 2026-08-19
+
+### 🐛 Fixed
+
+- Book reader progress indicators now continue through chapter transitions and reach 100% at the chapter's terminal scroll boundary.
+
 ## [1.3.11] - 2026-08-16
 
 ### 🐛 Fixed
@@ -234,7 +240,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.3.11...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.3.12...HEAD
+[1.3.12]: https://github.com/pa2x2/katari/releases/tag/v1.3.12
 [1.3.11]: https://github.com/pa2x2/katari/releases/tag/v1.3.11
 [1.3.10]: https://github.com/pa2x2/katari/releases/tag/v1.3.10
 [1.3.9]: https://github.com/pa2x2/katari/releases/tag/v1.3.9
