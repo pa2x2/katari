@@ -42,6 +42,7 @@ object EntryMapper {
             notes = entry.notes,
             memo = entry.memo,
             type = entry.type,
+            libraryPinned = entry.library_pinned,
         )
     }
 
@@ -76,6 +77,7 @@ object EntryMapper {
         notes: String,
         memo: JsonObject,
         type: String,
+        libraryPinned: Boolean,
     ): Entry = Entry(
         id = id,
         source = source,
@@ -89,6 +91,7 @@ object EntryMapper {
         status = EntryStatus.from(status.toInt()),
         thumbnailUrl = thumbnailUrl,
         favorite = favorite,
+        libraryPinned = libraryPinned,
         lastUpdate = lastUpdate ?: 0L,
         nextUpdate = nextUpdate ?: 0L,
         initialized = initialized,

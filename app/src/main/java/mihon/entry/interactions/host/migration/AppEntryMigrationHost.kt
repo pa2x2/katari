@@ -426,6 +426,7 @@ private suspend fun Database.updateEntry(profileId: Long, entry: Entry) {
         notes = entry.notes,
         memo = MemoColumnAdapter.encode(entry.memo),
         type = entry.type.name.lowercase(),
+        libraryPinned = entry.favorite && entry.libraryPinned,
         entryId = entry.id,
         profileId = profileId,
     )

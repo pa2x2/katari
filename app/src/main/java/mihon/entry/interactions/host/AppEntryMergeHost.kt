@@ -328,6 +328,7 @@ internal class AppEntryMergeHost(
                 version = entry.version,
                 memo = entry.memo,
                 type = entry.type.name.lowercase(),
+                libraryPinned = entry.favorite && entry.libraryPinned,
             )
             entriesQueries.updateNetworkEntry(
                 profileId = profileId,

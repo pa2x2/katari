@@ -351,6 +351,7 @@ class EntryRepositoryImpl(
                 notes = entry.notes,
                 memo = entry.memo,
                 type = entry.type.name.lowercase(),
+                libraryPinned = entry.favorite && entry.libraryPinned,
             ).awaitAsOne()
         }
     }
@@ -431,6 +432,7 @@ class EntryRepositoryImpl(
             version = entry.version,
             memo = entry.memo,
             type = entry.type.name.lowercase(),
+            libraryPinned = entry.favorite && entry.libraryPinned,
         )
         entriesQueries.updateNetworkEntry(
             profileId = profileId,
@@ -524,6 +526,16 @@ class EntryRepositoryImpl(
         return updateField(id) { copy(updateStrategy = strategy) }
     }
 
+    override suspend fun setLibraryPinned(profileId: Long, entryIds: List<Long>, libraryPinned: Boolean) {
+        val distinctEntryIds = entryIds.distinct()
+        if (distinctEntryIds.isEmpty()) return
+        handler.await(inTransaction = true) {
+            distinctEntryIds.chunkedForSqlQuery().forEach { entryIdChunk ->
+                entriesQueries.setLibraryPinnedForProfile(libraryPinned, profileId, entryIdChunk)
+            }
+        }
+    }
+
     private suspend fun updateField(id: Long, transform: Entry.() -> Entry): Boolean {
         val entry = getEntryById(id) ?: return false
         return try {
@@ -562,6 +574,7 @@ class EntryRepositoryImpl(
                 notes = entry.notes,
                 memo = MemoColumnAdapter.encode(entry.memo),
                 type = entry.type.name.lowercase(),
+                libraryPinned = entry.favorite && entry.libraryPinned,
                 entryId = entry.id,
                 profileId = profileId,
             ) > 0L

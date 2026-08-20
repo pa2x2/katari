@@ -9,6 +9,7 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryGroupType
 import tachiyomi.domain.library.model.LibraryGrouping
+import tachiyomi.domain.library.model.LibraryPinnedDisplayStyle
 import tachiyomi.domain.library.model.LibrarySort
 
 class LibraryPreferences(
@@ -25,6 +26,11 @@ class LibraryPreferences(
         LibraryDisplayMode.default,
         LibraryDisplayMode.Serializer::serialize,
         LibraryDisplayMode.Serializer::deserialize,
+    )
+
+    val pinnedDisplayStyle: Preference<LibraryPinnedDisplayStyle> = preferenceStore.getEnum(
+        "pref_library_pinned_display_style",
+        LibraryPinnedDisplayStyle.TonalGroup,
     )
 
     val sortingMode: Preference<LibrarySort> = preferenceStore.getObjectFromString(

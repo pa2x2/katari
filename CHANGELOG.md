@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.4.0] - 2026-08-20
+
+### 🌟 Highlights
+
+Pin library entries to keep them together at the top of your library, with a choice of tonal-group or horizontal-shelf display.
+
+### ✨ Added
+
+- Added bulk pin and unpin actions for library entries, keeping pinned entries prioritized across library sorting modes.
+- Added configurable pinned-entry displays for list and grid layouts, with tonal-group and horizontal-shelf options.
+
 ## [1.3.12] - 2026-08-19
 
 ### 🐛 Fixed
@@ -240,7 +251,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.3.12...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/pa2x2/katari/releases/tag/v1.4.0
 [1.3.12]: https://github.com/pa2x2/katari/releases/tag/v1.3.12
 [1.3.11]: https://github.com/pa2x2/katari/releases/tag/v1.3.11
 [1.3.10]: https://github.com/pa2x2/katari/releases/tag/v1.3.10

@@ -417,6 +417,7 @@ internal class DefaultEntryMigrationFeature(
         }
         val targetUpdate = inspected.target.copy(
             favorite = true,
+            libraryPinned = inspected.source.libraryPinned || inspected.target.libraryPinned,
             chapterFlags = inspected.source.chapterFlags,
             dateAdded = if (replace) inspected.source.dateAdded else clockMillis(),
             notes = if (EntryMigrationOption.NOTES in intent.selectedOptions) {
@@ -435,7 +436,11 @@ internal class DefaultEntryMigrationFeature(
             expectedSourceCategoryIds = inspected.sourceCategoryIds
                 .takeIf { EntryMigrationOption.CATEGORIES in intent.selectedOptions },
             expectedTargetChildren = inspected.targetChildren.takeIf { transferChildren },
-            sourceUpdate = inspected.source.copy(favorite = false, dateAdded = 0L).takeIf { replace },
+            sourceUpdate = inspected.source.copy(
+                favorite = false,
+                libraryPinned = false,
+                dateAdded = 0L,
+            ).takeIf { replace },
             targetUpdate = targetUpdate,
             targetCategoryIds = inspected.sourceCategoryIds
                 .takeIf { EntryMigrationOption.CATEGORIES in intent.selectedOptions },

@@ -62,6 +62,13 @@ class AppEntryProfileMoveHost(
                             plan.destinationProfileId,
                             mapping.destinationEntryId,
                         )
+                        if (source.libraryPinned) {
+                            entriesQueries.setLibraryPinnedForProfile(
+                                true,
+                                plan.destinationProfileId,
+                                listOf(mapping.destinationEntryId),
+                            )
+                        }
                     }
                     else -> {
                         conflict?.let { duplicate ->

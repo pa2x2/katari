@@ -34,6 +34,7 @@ CREATE TABLE entries (
     notes TEXT NOT NULL DEFAULT "",
     memo BLOB AS JsonObject NOT NULL DEFAULT '{}',
     type TEXT NOT NULL DEFAULT 'manga',
+    library_pinned INTEGER AS Boolean NOT NULL DEFAULT 0 CHECK (favorite = 1 OR library_pinned = 0),
     FOREIGN KEY (profile_id) REFERENCES profiles(_id) ON DELETE CASCADE
 );
 
@@ -65,7 +66,8 @@ BEGIN
     WHERE _id = new._id AND new.is_syncing = 0 AND (
         new.url != old.url OR
         new.description != old.description OR
-        new.favorite != old.favorite
+        new.favorite != old.favorite OR
+        new.library_pinned != old.library_pinned
     );
 END;
 
@@ -249,14 +251,23 @@ AND _id = :entryId;
 
 setFavoriteForProfile:
 UPDATE entries
-SET favorite = :favorite
+SET favorite = :favorite,
+    library_pinned = CASE WHEN :favorite THEN library_pinned ELSE 0 END
 WHERE profile_id = :profileId
 AND _id = :entryId;
+
+setLibraryPinnedForProfile:
+UPDATE entries
+SET library_pinned = :libraryPinned
+WHERE profile_id = :profileId
+AND favorite = 1
+AND _id IN :entryIds;
 
 removeFromLibrary:
 UPDATE entries
 SET favorite = 0,
-    date_added = 0
+    date_added = 0,
+    library_pinned = 0
 WHERE profile_id = :profileId
 AND _id = :entryId
 AND favorite = 1;
@@ -271,7 +282,8 @@ prepareForLibrary:
 UPDATE entries
 SET favorite = 1,
     date_added = CASE WHEN favorite = 0 THEN :dateAdded ELSE date_added END,
-    chapter_flags = CASE WHEN favorite = 0 THEN :chapterFlags ELSE chapter_flags END
+    chapter_flags = CASE WHEN favorite = 0 THEN :chapterFlags ELSE chapter_flags END,
+    library_pinned = CASE WHEN favorite = 0 THEN 0 ELSE library_pinned END
 WHERE profile_id = :profileId
 AND _id = :entryId;
 
@@ -290,13 +302,13 @@ INSERT INTO entries(
     profile_id, source, url, title, display_name, artist, author, description, genre,
     status, thumbnail_url, favorite, last_update, next_update, initialized, viewer,
     chapter_flags, cover_last_modified, date_added, update_strategy, calculate_interval,
-    last_modified_at, version, notes, memo, type
+    last_modified_at, version, notes, memo, type, library_pinned
 )
 VALUES (
     :profileId, :source, :url, :title, :displayName, :artist, :author, :description, :genre,
     :status, :thumbnailUrl, :favorite, :lastUpdate, :nextUpdate, :initialized, :viewerFlags,
     :chapterFlags, :coverLastModified, :dateAdded, :updateStrategy, :calculateInterval,
-    0, :version, :notes, :memo, :type
+    0, :version, :notes, :memo, :type, :libraryPinned
 );
 
 insertReturningId:
@@ -304,13 +316,13 @@ INSERT INTO entries(
     profile_id, source, url, title, display_name, artist, author, description, genre,
     status, thumbnail_url, favorite, last_update, next_update, initialized, viewer,
     chapter_flags, cover_last_modified, date_added, update_strategy, calculate_interval,
-    last_modified_at, version, notes, memo, type
+    last_modified_at, version, notes, memo, type, library_pinned
 )
 VALUES (
     :profileId, :source, :url, :title, :displayName, :artist, :author, :description, :genre,
     :status, :thumbnailUrl, :favorite, :lastUpdate, :nextUpdate, :initialized, :viewerFlags,
     :chapterFlags, :coverLastModified, :dateAdded, :updateStrategy, :calculateInterval,
-    0, :version, :notes, :memo, :type
+    0, :version, :notes, :memo, :type, :libraryPinned
 )
 RETURNING _id;
 
@@ -340,7 +352,8 @@ UPDATE entries SET
     is_syncing = coalesce(:isSyncing, is_syncing),
     notes = coalesce(:notes, notes),
     memo = coalesce(:memo, memo),
-    type = coalesce(:type, type)
+    type = coalesce(:type, type),
+    library_pinned = coalesce(:libraryPinned, library_pinned)
 WHERE _id = :entryId
 AND profile_id = :profileId;
 
@@ -393,13 +406,13 @@ INSERT INTO entries(
     profile_id, source, url, title, display_name, artist, author, description, genre,
     status, thumbnail_url, favorite, last_update, next_update, initialized, viewer,
     chapter_flags, cover_last_modified, date_added, update_strategy, calculate_interval,
-    last_modified_at, version, memo, type
+    last_modified_at, version, memo, type, library_pinned
 )
 SELECT
     :profileId, :source, :url, :title, NULL, :artist, :author, :description, :genre,
     :status, :thumbnailUrl, :favorite, :lastUpdate, :nextUpdate, :initialized, :viewerFlags,
     :chapterFlags, :coverLastModified, :dateAdded, :updateStrategy, :calculateInterval,
-    0, :version, :memo, :type
+    0, :version, :memo, :type, :libraryPinned
 WHERE NOT EXISTS(
     SELECT 0 FROM entries
     WHERE profile_id = :profileId
