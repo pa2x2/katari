@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -122,12 +123,15 @@ class GetLibraryEntries(
                 categoryIdsByEntryId = categories,
                 lastReadByEntryId = lastRead,
             )
-        }
+        }.distinctUntilChanged()
+        var previousInput: LibraryBuildInput? = null
+        var previousItems: List<LibraryItem>? = null
         emitAll(
             combine(
                 favorites,
                 libraryGrouping.observeLibraryGrouping(profileId, flowOf(initialFavorites))
-                    .map { grouping -> grouping.groups.map { it.toIdentity() } },
+                    .map { grouping -> grouping.groups.map { it.toIdentity() } }
+                    .distinctUntilChanged(),
                 hiddenSourceIds.subscribe(profileId),
                 details,
             ) { currentFavorites, groups, hiddenSources, detailInput ->
@@ -142,14 +146,20 @@ class GetLibraryEntries(
             }
                 .debounce(LIBRARY_INVALIDATION_DEBOUNCE)
                 .mapLatest { input ->
-                    buildItems(
-                        favorites = input.favorites,
-                        groups = input.groups,
-                        hiddenSources = input.hiddenSources,
-                        chapters = input.chapters,
-                        categoryIdsByEntryId = input.categoryIdsByEntryId,
-                        lastReadByEntryId = input.lastReadByEntryId,
-                    )
+                    val items = previousInput
+                        ?.takeIf(input::isPinOnlyUpdateFrom)
+                        ?.let { previousItems?.applyEntryUpdates(input.favorites) }
+                        ?: buildItems(
+                            favorites = input.favorites,
+                            groups = input.groups,
+                            hiddenSources = input.hiddenSources,
+                            chapters = input.chapters,
+                            categoryIdsByEntryId = input.categoryIdsByEntryId,
+                            lastReadByEntryId = input.lastReadByEntryId,
+                        )
+                    previousInput = input
+                    previousItems = items
+                    items
                 },
         )
     }
@@ -357,6 +367,45 @@ private data class LibraryGroupIdentity(
     val visibleEntryId: Long,
     val orderedEntryIds: List<Long>,
 )
+
+private fun LibraryBuildInput.isPinOnlyUpdateFrom(previous: LibraryBuildInput): Boolean {
+    return groups === previous.groups &&
+        hiddenSources === previous.hiddenSources &&
+        chapters === previous.chapters &&
+        categoryIdsByEntryId === previous.categoryIdsByEntryId &&
+        lastReadByEntryId === previous.lastReadByEntryId &&
+        favorites.isPinOnlyUpdateFrom(previous.favorites)
+}
+
+private fun List<Entry>.isPinOnlyUpdateFrom(previous: List<Entry>): Boolean {
+    if (size != previous.size) return false
+    var pinChanged = false
+    for (index in indices) {
+        val currentEntry = this[index]
+        val previousEntry = previous[index]
+        pinChanged = pinChanged || currentEntry.libraryPinned != previousEntry.libraryPinned
+        if (currentEntry.withoutPinMutationState() != previousEntry.withoutPinMutationState()) return false
+    }
+    return pinChanged
+}
+
+private fun Entry.withoutPinMutationState(): Entry {
+    return copy(
+        libraryPinned = false,
+        lastModifiedAt = 0L,
+        version = 0L,
+    )
+}
+
+private fun List<LibraryItem>.applyEntryUpdates(favorites: List<Entry>): List<LibraryItem> {
+    val favoritesById = favorites.associateBy(Entry::id)
+    return map { item ->
+        item.copy(
+            entry = favoritesById.getValue(item.entry.id),
+            memberEntries = item.memberEntries.map { member -> favoritesById.getValue(member.id) },
+        )
+    }
+}
 
 private fun EntryLibraryGroupResolution.toIdentity() = LibraryGroupIdentity(
     visibleEntryId = visibleEntry.id,

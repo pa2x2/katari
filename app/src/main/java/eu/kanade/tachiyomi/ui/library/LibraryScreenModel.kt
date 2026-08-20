@@ -442,9 +442,8 @@ class LibraryScreenModel(
         val enrichedItems = combine(
             getLibraryEntries.subscribe(profileId),
             downloadRuntime.changes,
-        ) { items, _ ->
-            items.enrichEntryItems()
-        }
+        ) { items, _ -> items }
+            .reuseEnrichmentForPinUpdates { items -> items.enrichEntryItems() }
         return enrichedItems.flatMapLatest { initialItems ->
             observeLibraryDownloadCountUpdates(
                 initialItems = initialItems,
