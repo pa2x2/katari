@@ -64,6 +64,7 @@ import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.entry.interactor.SetEntryCategories
 import tachiyomi.domain.entry.interactor.SetEntryChapterFlags
 import tachiyomi.domain.entry.interactor.SetEntryViewerFlags
+import tachiyomi.domain.entry.interactor.SetLibraryPinned
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
 import tachiyomi.domain.entry.interactor.UpdateEntry
 import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
@@ -128,6 +129,7 @@ class DomainModule : InjektModule {
         addFactory { SetEntryChapterFlags(get()) }
         addFactory { NetworkToLocalEntry(get()) }
         addFactory { GetLibraryEntries(get(), get(), get(), get(), get(), get(), get(), get()) }
+        addFactory { SetLibraryPinned(get()) }
         addFactory { SyncEntryWithSource(get(), get(), get(), get(), get(), get(), get()) }
 
         addFactory { GetEntryWithChapters(get(), get()) }

@@ -41,6 +41,9 @@ data class LibraryItem(
     val favorite: Boolean
         get() = entry.favorite
 
+    val isPinned: Boolean
+        get() = memberEntries.any(Entry::libraryPinned)
+
     val dateAdded: Long
         get() = entry.dateAdded
 

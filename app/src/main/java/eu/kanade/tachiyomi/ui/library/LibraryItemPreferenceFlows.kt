@@ -47,7 +47,7 @@ internal fun observeLibraryFilterPreferences(
 internal fun observeLibraryDisplaySettings(
     preferences: LibraryPreferences,
 ): Flow<LibraryDisplaySettings> {
-    return combine(
+    val badgeSettings = combine(
         preferences.downloadBadge.changes(),
         preferences.unreadBadge.changes(),
         preferences.localBadge.changes(),
@@ -61,5 +61,11 @@ internal fun observeLibraryDisplaySettings(
             languageBadge = languageBadge,
             entryTypeBadge = entryTypeBadge,
         )
+    }
+    return combine(
+        badgeSettings,
+        preferences.pinnedDisplayStyle.changes(),
+    ) { settings, pinnedDisplayStyle ->
+        settings.copy(pinnedDisplayStyle = pinnedDisplayStyle)
     }.distinctUntilChanged()
 }

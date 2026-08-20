@@ -124,6 +124,15 @@ interface EntryRepository {
 
     suspend fun setUpdateStrategy(id: Long, strategy: EntryUpdateStrategy): Boolean
 
+    suspend fun setLibraryPinned(profileId: Long, entryIds: List<Long>, libraryPinned: Boolean) {
+        entryIds.distinct().forEach { entryId ->
+            val entry = getEntryById(entryId, profileId) ?: return@forEach
+            if (entry.favorite && entry.libraryPinned != libraryPinned) {
+                update(entry.copy(libraryPinned = libraryPinned), profileId)
+            }
+        }
+    }
+
     suspend fun getCoverHash(entryId: Long, coverLastModified: Long): Long?
 
     suspend fun upsertCoverHash(entryId: Long, coverLastModified: Long, hash: Long)

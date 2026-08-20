@@ -26,6 +26,7 @@ import mihon.entry.interactions.library.EntryLibraryFilterAvailability
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.model.LibraryDisplayMode
+import tachiyomi.domain.library.model.LibraryPinnedDisplayStyle
 import tachiyomi.domain.library.model.LibrarySort
 import tachiyomi.domain.library.model.effectiveLibrarySort
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -263,6 +264,20 @@ private fun DisplayPage(
             FilterChip(
                 selected = displayMode == mode,
                 onClick = { screenModel.setDisplayMode(mode) },
+                label = { Text(stringResource(titleRes)) },
+            )
+        }
+    }
+
+    val pinnedDisplayStyle by screenModel.libraryPreferences.pinnedDisplayStyle.collectAsState()
+    SettingsChipRow(MR.strings.pref_library_pinned_display_style) {
+        listOf(
+            MR.strings.pref_library_pinned_style_tonal to LibraryPinnedDisplayStyle.TonalGroup,
+            MR.strings.pref_library_pinned_style_shelf to LibraryPinnedDisplayStyle.Shelf,
+        ).forEach { (titleRes, style) ->
+            FilterChip(
+                selected = pinnedDisplayStyle == style,
+                onClick = { screenModel.setPinnedDisplayStyle(style) },
                 label = { Text(stringResource(titleRes)) },
             )
         }

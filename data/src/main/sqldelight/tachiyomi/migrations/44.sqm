@@ -1,0 +1,17 @@
+import kotlin.Boolean;
+
+ALTER TABLE entries
+ADD COLUMN library_pinned INTEGER AS Boolean NOT NULL DEFAULT 0 CHECK (favorite = 1 OR library_pinned = 0);
+
+DROP TRIGGER update_entry_version;
+
+CREATE TRIGGER update_entry_version AFTER UPDATE ON entries
+BEGIN
+    UPDATE entries SET version = version + 1
+    WHERE _id = new._id AND new.is_syncing = 0 AND (
+        new.url != old.url OR
+        new.description != old.description OR
+        new.favorite != old.favorite OR
+        new.library_pinned != old.library_pinned
+    );
+END;

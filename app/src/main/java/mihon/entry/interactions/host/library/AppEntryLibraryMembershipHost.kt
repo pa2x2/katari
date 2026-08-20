@@ -100,7 +100,13 @@ class AppEntryLibraryMembershipHost(
                 entriesQueries.removeFromLibrary(entry.profileId, entry.id)
             }
             EntryLibraryMembershipCommit.Applied(
-                persisted.map { entry -> entry.copy(favorite = false, dateAdded = 0L) },
+                persisted.map { entry ->
+                    entry.copy(
+                        favorite = false,
+                        libraryPinned = false,
+                        dateAdded = 0L,
+                    )
+                },
             )
         }
     }

@@ -51,6 +51,7 @@ class BackupEntry(
     @ProtoNumber(36) var progressStates: List<BackupEntryProgressState> = emptyList(),
     @ProtoNumber(37) var viewerSettingOverrides: List<BackupViewerSettingOverride> = emptyList(),
     @ProtoNumber(38) var featureStates: List<BackupEntryFeatureState> = emptyList(),
+    @ProtoNumber(39) var libraryPinned: Boolean = false,
     @ProtoNumber(100) var type: EntryType = EntryType.MANGA,
 ) {
     fun toEntry(): Entry {
@@ -65,6 +66,7 @@ class BackupEntry(
             status = EntryStatus.from(status),
             thumbnailUrl = thumbnailUrl,
             favorite = favorite,
+            libraryPinned = libraryPinned,
             source = source,
             dateAdded = dateAdded,
             viewerFlags = viewerFlags,
@@ -205,6 +207,7 @@ fun Entry.toBackupEntry(): BackupEntry {
         status = status.value,
         thumbnailUrl = thumbnailUrl,
         favorite = favorite,
+        libraryPinned = libraryPinned,
         dateAdded = dateAdded,
         viewerFlags = viewerFlags,
         chapterFlags = chapterFlags,

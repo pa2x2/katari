@@ -88,6 +88,7 @@ import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.GetLibraryEntries
 import tachiyomi.domain.entry.interactor.SetEntryCategories
+import tachiyomi.domain.entry.interactor.SetLibraryPinned
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryStatus
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -114,6 +115,7 @@ class LibraryScreenModel(
     private val getLibraryEntries: GetLibraryEntries = Injekt.get(),
     private val getCategories: GetCategories = Injekt.get(),
     private val getEntry: GetEntry = Injekt.get(),
+    private val setLibraryPinned: SetLibraryPinned = Injekt.get(),
     private val setEntryCategories: SetEntryCategories = Injekt.get(),
     private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
@@ -390,7 +392,9 @@ class LibraryScreenModel(
             val sort = page.category.effectiveLibrarySort(globalSort)
             if (sort.type == LibrarySort.Type.Random) {
                 return@map page.copy(
-                    itemIds = page.itemIds.shuffled(Random(randomSortSeed)),
+                    itemIds = page.itemIds
+                        .shuffled(Random(randomSortSeed))
+                        .prioritizePinned(favoritesById),
                 )
             }
 
@@ -412,7 +416,7 @@ class LibraryScreenModel(
                 .sortedWith { first, second -> comparator.compare(first.second, second.second) }
                 .map { it.first }
 
-            page.copy(itemIds = sortedItemIds)
+            page.copy(itemIds = sortedItemIds.prioritizePinned(favoritesById))
         }
     }
 
@@ -546,6 +550,19 @@ class LibraryScreenModel(
             }
         }
         clearSelection()
+    }
+
+    fun setSelectionPinned() {
+        val state = state.value
+        val profileId = state.libraryData.profileId ?: return
+        val selectedItems = state.selectedLibraryItems
+        val entryIds = selectedActionEntryIds(selectedItems)
+        if (entryIds.isEmpty()) return
+        val libraryPinned = selectedItems.any { !it.isPinned }
+        clearSelection()
+        screenModelScope.launchNonCancellable {
+            setLibraryPinned.await(profileId, entryIds, libraryPinned)
+        }
     }
 
     fun canSetConsumedSelection(): Boolean {
@@ -1134,6 +1151,9 @@ class LibraryScreenModel(
         val selectedEntryTypes by lazy {
             selectedLibraryItems.map { it.entry.type }.toSet()
         }
+
+        val selectionPinTarget: Boolean
+            get() = selectedLibraryItems.any { !it.isPinned }
 
         fun getItemsForPageId(pageId: String?): List<LibraryItem> {
             if (pageId == null) return emptyList()
