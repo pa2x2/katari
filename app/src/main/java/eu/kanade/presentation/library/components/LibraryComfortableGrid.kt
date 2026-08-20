@@ -15,6 +15,7 @@ import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import tachiyomi.domain.entry.model.asEntryCover
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
+import tachiyomi.domain.library.model.LibraryPinnedDisplayStyle
 
 @Composable
 internal fun LibraryComfortableGrid(
@@ -51,7 +52,7 @@ internal fun LibraryComfortableGrid(
             items = pinnedItems,
             style = displaySettings.pinnedDisplayStyle,
             columns = columns,
-            contentType = "library_pinned_comfortable_grid_item",
+            contentType = "library_comfortable_grid_item",
         ) { libraryItem, modifier ->
             LibraryComfortableGridEntry(
                 libraryItem = libraryItem,
@@ -81,6 +82,11 @@ internal fun LibraryComfortableGrid(
         ) { libraryItem ->
             LibraryComfortableGridEntry(
                 libraryItem = libraryItem,
+                modifier = if (displaySettings.pinnedDisplayStyle == LibraryPinnedDisplayStyle.TonalGroup) {
+                    Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null)
+                } else {
+                    Modifier.animateItem(placementSpec = null)
+                },
                 selection = selection,
                 onClick = onClick,
                 onLongClick = onLongClick,

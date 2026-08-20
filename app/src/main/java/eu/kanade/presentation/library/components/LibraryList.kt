@@ -16,6 +16,7 @@ import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import tachiyomi.domain.entry.model.asEntryCover
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
+import tachiyomi.domain.library.model.LibraryPinnedDisplayStyle
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.util.plus
 
@@ -79,6 +80,11 @@ internal fun LibraryList(
         ) { libraryItem ->
             LibraryListEntry(
                 libraryItem = libraryItem,
+                modifier = if (displaySettings.pinnedDisplayStyle == LibraryPinnedDisplayStyle.TonalGroup) {
+                    Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null)
+                } else {
+                    Modifier.animateItem(placementSpec = null)
+                },
                 selection = selection,
                 onClick = onClick,
                 onLongClick = onLongClick,

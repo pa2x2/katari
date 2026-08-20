@@ -183,7 +183,7 @@
     <string name="action_unpin">Unpin</string>
     <string name="label_pinned">Pinned</string>
     <string name="pref_library_pinned_display_style">Pinned display style</string>
-    <string name="pref_library_pinned_style_tonal">Tonal group</string>
+    <string name="pref_library_pinned_style_tonal">Pinned section</string>
     <string name="pref_library_pinned_style_shelf">Pinned shelf</string>
     <string name="action_apply">Apply</string>
     <string name="action_cancel">Cancel</string>
