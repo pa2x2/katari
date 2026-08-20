@@ -188,10 +188,12 @@ data object LibraryTab : Tab {
             },
             bottomBar = {
                 val actionLabels = state.selectedEntryTypes.entrySelectionActionLabels()
+                val pinAction = state.selectionPinAction
                 LibraryBottomActionMenu(
                     visible = state.selectionMode,
-                    onPinClicked = screenModel::setSelectionPinned,
-                    pinSelection = state.selectionPinTarget,
+                    onPinClicked = screenModel::setSelectionPinned
+                        .takeUnless { pinAction == LibraryPinSelectionAction.Hidden },
+                    pinSelection = pinAction == LibraryPinSelectionAction.Pin,
                     onMergeClicked = screenModel::openMergeDialog.takeIf { screenModel.isMergeSelectionAvailable() },
                     onChangeCategoryClicked = screenModel::openChangeCategoryDialog,
                     onMarkAsReadClicked = { screenModel.markReadSelection(true) }
