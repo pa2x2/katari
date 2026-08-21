@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.1] - 2026-08-21
+
+### 🔄 Changed
+
+- Library selection pin actions now reflect the selected entries' current states and are hidden when a selection mixes pinned and unpinned entries.
+
+### 🧩 Improved
+
+- Pinned library display settings now include visual previews, and shelf layouts adapt to available space while showing the next entry when more are available.
+- Library grid fast scrolling now tracks actual row sizes, preventing scrollbar jumps.
+- Backup restoration now preserves the newer entry's pinned or unpinned state.
+
 ## [1.4.0] - 2026-08-20
 
 ### 🌟 Highlights
@@ -251,7 +263,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.4.1...HEAD
+[1.4.1]: https://github.com/pa2x2/katari/releases/tag/v1.4.1
 [1.4.0]: https://github.com/pa2x2/katari/releases/tag/v1.4.0
 [1.3.12]: https://github.com/pa2x2/katari/releases/tag/v1.3.12
 [1.3.11]: https://github.com/pa2x2/katari/releases/tag/v1.3.11
