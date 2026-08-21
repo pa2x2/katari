@@ -160,12 +160,12 @@ class LibraryScreenModel(
         mutableState.update { state ->
             state.copy(activePageIndex = libraryPreferences.lastUsedCategory.get())
         }
-        state.map(::selectionActionInput)
+        state.map(::mergeSelectionActionInput)
             .distinctUntilChanged()
-            .mapLatest(::resolveSelectionActions)
+            .mapLatest(::resolveMergeSelectionAvailability)
             .flowOn(Dispatchers.IO)
-            .onEach { actions ->
-                mutableState.update { state -> state.copy(selectionActions = actions) }
+            .onEach { available ->
+                mutableState.update { state -> state.copy(mergeSelectionAvailable = available) }
             }
             .launchIn(screenModelScope)
         screenModelScope.launchIO {
@@ -221,7 +221,7 @@ class LibraryScreenModel(
                             state.copy(
                                 isLoading = true,
                                 selection = emptySet(),
-                                selectionActions = SelectionActions(),
+                                mergeSelectionAvailable = false,
                                 hasActiveFilters = false,
                                 dialog = null,
                                 libraryData = LibraryData(),
@@ -442,9 +442,8 @@ class LibraryScreenModel(
         val enrichedItems = combine(
             getLibraryEntries.subscribe(profileId),
             downloadRuntime.changes,
-        ) { items, _ ->
-            items.enrichEntryItems()
-        }
+        ) { items, _ -> items }
+            .reuseEnrichmentForPinUpdates { items -> items.enrichEntryItems() }
         return enrichedItems.flatMapLatest { initialItems ->
             observeLibraryDownloadCountUpdates(
                 initialItems = initialItems,
@@ -528,11 +527,13 @@ class LibraryScreenModel(
 
     fun canDownloadSelection(action: DownloadAction = DownloadAction.UNREAD_CHAPTERS): Boolean {
         val state = state.value
-        val actions = state.selectionActions.takeIf { it.selection == state.selection } ?: return false
-        return when (action) {
-            DownloadAction.BOOKMARKED_CHAPTERS -> actions.bookmarkedDownloadsAvailable
-            else -> actions.downloadsAvailable
+        val requests = state.selectedLibraryItems.map { item ->
+            EntryDownloadActionRequest(item.entry.type, item.sourceIds)
         }
+        return entryDownloadActionFeature.bulkAvailability(
+            requests = requests,
+            action = action.toEntryBulkDownloadAction(),
+        ) == EntryDownloadActionAvailability.Available
     }
 
     /**
@@ -558,7 +559,7 @@ class LibraryScreenModel(
         val selectedItems = state.selectedLibraryItems
         val entryIds = selectedActionEntryIds(selectedItems)
         if (entryIds.isEmpty()) return
-        val libraryPinned = selectedItems.any { !it.isPinned }
+        val libraryPinned = state.selectionPinAction.libraryPinned ?: return
         clearSelection()
         screenModelScope.launchNonCancellable {
             setLibraryPinned.await(profileId, entryIds, libraryPinned)
@@ -867,20 +868,15 @@ class LibraryScreenModel(
     }
 
     fun isMergeSelectionAvailable(): Boolean {
-        val state = state.value
-        return state.selectionActions.takeIf { it.selection == state.selection }?.mergeAvailable == true
+        return state.value.mergeSelectionAvailable
     }
 
     fun canMigrateSelection(): Boolean {
-        val state = state.value
-        return state.selectionActions.takeIf { it.selection == state.selection }?.migrationSubjects != null
+        return migrationSubjects(state.value) != null
     }
 
     fun selectedMigrationSubjects(): List<EntryMigrationSubject> {
-        val state = state.value
-        return state.selectionActions.takeIf { it.selection == state.selection }
-            ?.migrationSubjects
-            .orEmpty()
+        return migrationSubjects(state.value).orEmpty()
     }
 
     fun openMergeDialog() {
@@ -1036,57 +1032,32 @@ class LibraryScreenModel(
         val availability: EntryLibraryFilterAvailability,
     )
 
-    @Immutable
-    data class SelectionActions(
-        val selection: Set<LibraryItemKey> = emptySet(),
-        val mergeAvailable: Boolean = false,
-        val downloadsAvailable: Boolean = false,
-        val bookmarkedDownloadsAvailable: Boolean = false,
-        val migrationSubjects: List<EntryMigrationSubject>? = null,
-    )
-
-    private data class SelectionActionInput(
+    private data class MergeSelectionActionInput(
         val selection: Set<LibraryItemKey>,
-        val items: List<LibraryItem>,
         val entries: List<Entry>,
     )
 
-    private fun selectionActionInput(state: State): SelectionActionInput {
-        val items = state.selectedLibraryItems
-        return SelectionActionInput(
+    private fun mergeSelectionActionInput(state: State): MergeSelectionActionInput {
+        return MergeSelectionActionInput(
             selection = state.selection,
-            items = items,
-            entries = items.flatMap(LibraryItem::memberEntries).distinctBy(Entry::id),
+            entries = state.selectedLibraryItems.flatMap(LibraryItem::memberEntries).distinctBy(Entry::id),
         )
     }
 
-    private suspend fun resolveSelectionActions(input: SelectionActionInput): SelectionActions {
-        if (input.selection.isEmpty()) return SelectionActions()
+    private suspend fun resolveMergeSelectionAvailability(input: MergeSelectionActionInput): Boolean {
+        if (input.selection.isEmpty()) return false
+        return entryMergeFeature.prepare(
+            EntryMergePrepareIntent(input.entries),
+        ) is EntryMergePreparationResult.Ready
+    }
 
-        val requests = input.items.map { item ->
-            EntryDownloadActionRequest(item.entry.type, item.sourceIds)
-        }
-        val migrationSubjects = when (
-            val result = entryMigrationFeature.prepareSelection(input.items.map { it.entry })
+    private fun migrationSubjects(state: State): List<EntryMigrationSubject>? {
+        return when (
+            val result = entryMigrationFeature.prepareSelection(state.selectedLibraryItems.map { it.entry })
         ) {
             is EntryMigrationSelectionResult.Ready -> result.subjects
             is EntryMigrationSelectionResult.Rejected -> null
         }
-        return SelectionActions(
-            selection = input.selection,
-            mergeAvailable = entryMergeFeature.prepare(
-                EntryMergePrepareIntent(input.entries),
-            ) is EntryMergePreparationResult.Ready,
-            downloadsAvailable = entryDownloadActionFeature.bulkAvailability(
-                requests = requests,
-                action = DownloadAction.UNREAD_CHAPTERS.toEntryBulkDownloadAction(),
-            ) == EntryDownloadActionAvailability.Available,
-            bookmarkedDownloadsAvailable = entryDownloadActionFeature.bulkAvailability(
-                requests = requests,
-                action = DownloadAction.BOOKMARKED_CHAPTERS.toEntryBulkDownloadAction(),
-            ) == EntryDownloadActionAvailability.Available,
-            migrationSubjects = migrationSubjects,
-        )
     }
 
     @Immutable
@@ -1113,7 +1084,7 @@ class LibraryScreenModel(
         val isLoading: Boolean = true,
         val searchQuery: String? = null,
         val selection: Set<LibraryItemKey> = setOf(),
-        internal val selectionActions: SelectionActions = SelectionActions(),
+        internal val mergeSelectionAvailable: Boolean = false,
         val hasActiveFilters: Boolean = false,
         val showCategoryTabs: Boolean = false,
         val showEntryCount: Boolean = false,
@@ -1152,8 +1123,15 @@ class LibraryScreenModel(
             selectedLibraryItems.map { it.entry.type }.toSet()
         }
 
-        val selectionPinTarget: Boolean
-            get() = selectedLibraryItems.any { !it.isPinned }
+        internal val selectionPinAction: LibraryPinSelectionAction
+            get() {
+                val selectedPinStates = selectedLibraryItems.map(LibraryItem::isPinned).toSet()
+                return when (selectedPinStates.singleOrNull()) {
+                    false -> LibraryPinSelectionAction.Pin
+                    true -> LibraryPinSelectionAction.Unpin
+                    null -> LibraryPinSelectionAction.Hidden
+                }
+            }
 
         fun getItemsForPageId(pageId: String?): List<LibraryItem> {
             if (pageId == null) return emptyList()
@@ -1184,6 +1162,12 @@ class LibraryScreenModel(
             return LibraryToolbarTitle(title, count)
         }
     }
+}
+
+internal enum class LibraryPinSelectionAction(val libraryPinned: Boolean?) {
+    Pin(true),
+    Unpin(false),
+    Hidden(null),
 }
 
 internal fun observeGroupedLibraryPages(

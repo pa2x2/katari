@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import eu.kanade.presentation.components.TabbedDialog
 import eu.kanade.presentation.components.TabbedDialogPaddings
+import eu.kanade.presentation.library.components.LibraryPinnedStyleChooser
 import eu.kanade.presentation.library.grouping.LibraryGroupingEditor
 import eu.kanade.presentation.library.grouping.showLibraryGroupingTabsLabel
 import eu.kanade.tachiyomi.ui.library.LibrarySettingsScreenModel
@@ -26,7 +27,6 @@ import mihon.entry.interactions.library.EntryLibraryFilterAvailability
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.model.LibraryDisplayMode
-import tachiyomi.domain.library.model.LibraryPinnedDisplayStyle
 import tachiyomi.domain.library.model.LibrarySort
 import tachiyomi.domain.library.model.effectiveLibrarySort
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -270,18 +270,10 @@ private fun DisplayPage(
     }
 
     val pinnedDisplayStyle by screenModel.libraryPreferences.pinnedDisplayStyle.collectAsState()
-    SettingsChipRow(MR.strings.pref_library_pinned_display_style) {
-        listOf(
-            MR.strings.pref_library_pinned_style_tonal to LibraryPinnedDisplayStyle.TonalGroup,
-            MR.strings.pref_library_pinned_style_shelf to LibraryPinnedDisplayStyle.Shelf,
-        ).forEach { (titleRes, style) ->
-            FilterChip(
-                selected = pinnedDisplayStyle == style,
-                onClick = { screenModel.setPinnedDisplayStyle(style) },
-                label = { Text(stringResource(titleRes)) },
-            )
-        }
-    }
+    LibraryPinnedStyleChooser(
+        selectedStyle = pinnedDisplayStyle,
+        onStyleSelected = screenModel::setPinnedDisplayStyle,
+    )
 
     if (displayMode != LibraryDisplayMode.List && displayMode != LibraryDisplayMode.ComfortableList) {
         val configuration = LocalConfiguration.current

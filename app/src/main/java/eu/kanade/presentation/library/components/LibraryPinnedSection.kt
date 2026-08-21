@@ -1,5 +1,6 @@
 package eu.kanade.presentation.library.components
 
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -25,7 +26,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import tachiyomi.domain.library.model.LibraryItem
@@ -38,7 +49,10 @@ import androidx.compose.foundation.lazy.grid.items as gridItems
 internal const val LIBRARY_PINNED_HEADER_KEY = "library_pinned_header"
 internal const val LIBRARY_PINNED_FOOTER_KEY = "library_pinned_footer"
 
-internal fun libraryPinnedItemKey(item: LibraryItem): String = "library_pinned:${item.key}"
+private val SHELF_HORIZONTAL_PADDING = 8.dp
+private const val SHELF_NEXT_ITEM_PEEK_FRACTION = 0.18f
+
+internal fun libraryPinnedItemKey(item: LibraryItem): String = item.key.toString()
 
 internal fun LazyGridScope.libraryPinnedGridItems(
     items: List<LibraryItem>,
@@ -80,7 +94,13 @@ internal fun LazyGridScope.libraryPinnedGridItems(
         },
         contentType = { contentType },
     ) { libraryItem ->
-        itemContent(libraryItem, Modifier)
+        val pinnedStateDescription = stringResource(MR.strings.label_pinned)
+        itemContent(
+            libraryItem,
+            Modifier
+                .animateItem(fadeInSpec = null, fadeOutSpec = null)
+                .semantics { stateDescription = pinnedStateDescription },
+        )
     }
     item(
         key = LIBRARY_PINNED_FOOTER_KEY,
@@ -116,9 +136,15 @@ internal fun LazyListScope.libraryPinnedListItems(
     items(
         items = items,
         key = ::libraryPinnedItemKey,
-        contentType = { "library_pinned_list_item" },
+        contentType = { "library_list_item" },
     ) { libraryItem ->
-        itemContent(libraryItem, Modifier)
+        val pinnedStateDescription = stringResource(MR.strings.label_pinned)
+        itemContent(
+            libraryItem,
+            Modifier
+                .animateItem(fadeInSpec = null, fadeOutSpec = null)
+                .semantics { stateDescription = pinnedStateDescription },
+        )
     }
     item(
         key = LIBRARY_PINNED_FOOTER_KEY,
@@ -141,20 +167,27 @@ internal fun LibraryPinnedGridShelf(
         Column(modifier = Modifier.padding(vertical = 8.dp)) {
             LibraryPinnedHeading(items.size)
             BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                val resolvedColumns = resolveColumnCount(columns, maxWidth)
-                val itemWidth = gridItemWidth(maxWidth, resolvedColumns)
+                val contentWidth = (maxWidth - SHELF_HORIZONTAL_PADDING * 2).coerceAtLeast(0.dp)
+                val resolvedColumns = resolveColumnCount(columns, contentWidth)
+                val hasOverflow = items.sumOf { it.gridSpan(resolvedColumns) } > resolvedColumns
+                val itemWidth = gridItemWidth(contentWidth, resolvedColumns, hasOverflow)
                 LazyRow(
-                    contentPadding = PaddingValues(horizontal = 8.dp),
+                    modifier = Modifier.shelfInputIsolation(),
+                    contentPadding = PaddingValues(horizontal = SHELF_HORIZONTAL_PADDING),
                     horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
                 ) {
                     items(items, key = { libraryPinnedItemKey(it) }) { item ->
                         val span = item.gridSpan(resolvedColumns)
+                        val pinnedStateDescription = stringResource(MR.strings.label_pinned)
                         itemContent(
                             item,
-                            Modifier.width(
-                                itemWidth * span +
-                                    CommonEntryItemDefaults.GridHorizontalSpacer * (span - 1),
-                            ),
+                            Modifier
+                                .width(
+                                    itemWidth * span +
+                                        CommonEntryItemDefaults.GridHorizontalSpacer * (span - 1),
+                                )
+                                .animateItem(placementSpec = null)
+                                .semantics { stateDescription = pinnedStateDescription },
                         )
                     }
                 }
@@ -174,12 +207,24 @@ internal fun LibraryPinnedListShelf(
     ) {
         Column(modifier = Modifier.padding(vertical = 4.dp)) {
             LibraryPinnedHeading(items.size)
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                items(items, key = { libraryPinnedItemKey(it) }) { item ->
-                    itemContent(item, Modifier.width(280.dp))
+            BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                val contentWidth = (maxWidth - SHELF_HORIZONTAL_PADDING * 2).coerceAtLeast(0.dp)
+                val itemWidth = listShelfItemWidth(contentWidth, items.size)
+                LazyRow(
+                    modifier = Modifier.shelfInputIsolation(),
+                    contentPadding = PaddingValues(horizontal = SHELF_HORIZONTAL_PADDING),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(items, key = { libraryPinnedItemKey(it) }) { item ->
+                        val pinnedStateDescription = stringResource(MR.strings.label_pinned)
+                        itemContent(
+                            item,
+                            Modifier
+                                .width(itemWidth)
+                                .animateItem(placementSpec = null)
+                                .semantics { stateDescription = pinnedStateDescription },
+                        )
+                    }
                 }
             }
         }
@@ -191,6 +236,7 @@ internal fun LibraryPinnedHeading(count: Int) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .semantics { heading() }
             .padding(horizontal = 8.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -235,7 +281,57 @@ private fun resolveColumnCount(columns: Int, availableWidth: Dp): Int {
     return floor((availableWidth + spacing) / (minimumWidth + spacing)).toInt().coerceAtLeast(1)
 }
 
-private fun gridItemWidth(availableWidth: Dp, columns: Int): Dp {
+private fun gridItemWidth(availableWidth: Dp, columns: Int, hasOverflow: Boolean): Dp {
     val spacing = CommonEntryItemDefaults.GridHorizontalSpacer
-    return (availableWidth - spacing * (columns - 1)) / columns
+    return if (hasOverflow) {
+        (availableWidth - spacing * columns) / (columns + SHELF_NEXT_ITEM_PEEK_FRACTION)
+    } else {
+        (availableWidth - spacing * (columns - 1)) / columns
+    }
+}
+
+private fun listShelfItemWidth(availableWidth: Dp, itemCount: Int): Dp {
+    val preferredWidth = 280.dp
+    val spacing = 8.dp
+    val fullyVisibleItems = floor((availableWidth + spacing) / (preferredWidth + spacing))
+        .toInt()
+        .coerceAtLeast(1)
+    return if (itemCount > fullyVisibleItems) {
+        (availableWidth - spacing * fullyVisibleItems) /
+            (fullyVisibleItems + SHELF_NEXT_ITEM_PEEK_FRACTION)
+    } else {
+        minOf(
+            preferredWidth,
+            (availableWidth - spacing * (itemCount - 1)) / itemCount.coerceAtLeast(1),
+        )
+    }
+}
+
+private fun Modifier.shelfInputIsolation(): Modifier {
+    return focusProperties {
+        onExit = {
+            when (requestedFocusDirection) {
+                FocusDirection.Left,
+                FocusDirection.Right,
+                -> cancelFocusChange()
+                else -> Unit
+            }
+        }
+    }
+        .focusGroup()
+        .nestedScroll(ShelfPagerIsolation)
+}
+
+private object ShelfPagerIsolation : NestedScrollConnection {
+    override fun onPostScroll(
+        consumed: Offset,
+        available: Offset,
+        source: NestedScrollSource,
+    ): Offset {
+        return if (source == NestedScrollSource.UserInput) Offset(available.x, 0f) else Offset.Zero
+    }
+
+    override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
+        return Velocity(available.x, 0f)
+    }
 }

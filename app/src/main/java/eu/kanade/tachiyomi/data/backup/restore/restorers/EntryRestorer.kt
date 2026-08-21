@@ -134,7 +134,7 @@ class EntryRestorer(
     private fun Entry.copyFrom(newer: Entry): Entry {
         return this.copy(
             favorite = this.favorite || newer.favorite,
-            libraryPinned = this.libraryPinned || newer.libraryPinned,
+            libraryPinned = newer.libraryPinned,
             author = newer.author,
             artist = newer.artist,
             description = newer.description,
