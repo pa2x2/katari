@@ -26,6 +26,12 @@ import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
+import tachiyomi.domain.history.model.activity.HistoryActivitySegmentSnapshot
+import tachiyomi.domain.history.model.activity.HistoryActivitySessionSnapshot
+import tachiyomi.domain.history.model.activity.HistoryActivitySnapshot
+import tachiyomi.domain.history.model.activity.HistoryCompletionCause
+import tachiyomi.domain.history.model.activity.HistoryCompletionSnapshot
+import tachiyomi.domain.history.repository.HistoryActivityBackupRepository
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class EntryBackupCreatorTest {
@@ -98,6 +104,57 @@ class EntryBackupCreatorTest {
         }
     }
 
+    @Test
+    fun `history selection serializes portable detailed activity and profile epoch`() = runTest {
+        val entry = Entry.create().copy(id = 1L, type = EntryType.MANGA, source = 10L, url = "/entry")
+        val chapter = EntryChapter.create().copy(id = 2L, entryId = entry.id, url = "/chapter")
+        val fixture = Fixture(entry, chapter)
+        coEvery { fixture.activityBackupRepository.getActivityByEntryId(entry.id) } returns HistoryActivitySnapshot(
+            sessions = listOf(
+                HistoryActivitySessionSnapshot(
+                    sessionId = "session",
+                    startedAtEpochMillis = 1_000L,
+                    endedAtEpochMillis = 2_000L,
+                    durationMillis = 1_000L,
+                    lastSequence = 1L,
+                    segments = listOf(
+                        HistoryActivitySegmentSnapshot(
+                            chapterId = chapter.id,
+                            localDate = "2026-08-23",
+                            timeZoneId = "UTC",
+                            startedAtEpochMillis = 1_000L,
+                            endedAtEpochMillis = 2_000L,
+                            durationMillis = 1_000L,
+                        ),
+                    ),
+                ),
+            ),
+            completions = listOf(
+                HistoryCompletionSnapshot(
+                    eventId = "completion",
+                    chapterId = chapter.id,
+                    sessionId = "session",
+                    occurredAtEpochMillis = 2_000L,
+                    localDate = "2026-08-23",
+                    timeZoneId = "UTC",
+                    cause = HistoryCompletionCause.CONSUMPTION,
+                ),
+            ),
+        )
+        coEvery { fixture.activityBackupRepository.getStatisticsEpoch(1L) } returns 500L
+
+        val created = fixture.creator.invoke(
+            profileId = 1L,
+            entries = listOf(entry),
+            options = BackupOptions(categories = false, chapters = false, tracking = false, history = true),
+        ).single()
+
+        created.activitySessions.single().segments.single().chapterUrl shouldBe chapter.url
+        created.activityCompletions.single().chapterUrl shouldBe chapter.url
+        created.activityCompletions.single().cause shouldBe "consumption"
+        created.statisticsEpoch shouldBe 500L
+    }
+
     private fun chapterCases(): List<Arguments> = listOf(Arguments.of(false), Arguments.of(true))
 
     private class Fixture(entry: Entry, chapter: EntryChapter) {
@@ -105,12 +162,14 @@ class EntryBackupCreatorTest {
         private val profileProvider = mockk<ActiveProfileProvider>()
         val entryBackupFeature = mockk<EntryBackupFeature>()
         val entryChapterRepository = mockk<EntryChapterRepository>()
+        val activityBackupRepository = mockk<HistoryActivityBackupRepository>()
 
         val creator = EntryBackupCreator(
             handler = handler,
             profileProvider = profileProvider,
             entryBackupFeature = entryBackupFeature,
             entryChapterRepository = entryChapterRepository,
+            activityBackupRepository = activityBackupRepository,
         )
 
         init {
@@ -118,7 +177,11 @@ class EntryBackupCreatorTest {
             coEvery {
                 entryChapterRepository.getChaptersByEntryIdAwait(entry.id, applyScanlatorFilter = false)
             } returns listOf(chapter)
+            coEvery { entryChapterRepository.getChapterById(chapter.id) } returns chapter
             coEvery { handler.awaitList<Any>(false, any()) } returns emptyList()
+            coEvery { activityBackupRepository.getActivityByEntryId(entry.id) } returns
+                HistoryActivitySnapshot(emptyList(), emptyList())
+            coEvery { activityBackupRepository.getStatisticsEpoch(any()) } returns null
         }
     }
 }

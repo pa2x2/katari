@@ -177,6 +177,17 @@ JOIN activity_sessions A ON A.session_id = S.session_id
 WHERE A.entry_id = :entryId
 ORDER BY S.started_at;
 
+getActivitySessionsByEntryId:
+SELECT
+    session_id,
+    started_at,
+    ended_at,
+    duration,
+    last_sequence
+FROM activity_sessions
+WHERE entry_id = :entryId
+ORDER BY started_at;
+
 getCompletionEventsByEntryId:
 SELECT
     event_id,
@@ -189,3 +200,71 @@ SELECT
 FROM activity_completion_events
 WHERE entry_id = :entryId
 ORDER BY occurred_at;
+
+restoreActivitySession:
+INSERT INTO activity_sessions(
+    session_id,
+    entry_id,
+    started_at,
+    ended_at,
+    duration,
+    last_sequence
+)
+VALUES (
+    :sessionId,
+    :entryId,
+    :startedAt,
+    :endedAt,
+    :duration,
+    :lastSequence
+)
+ON CONFLICT(session_id) DO UPDATE SET
+    started_at = min(activity_sessions.started_at, excluded.started_at),
+    ended_at = max(activity_sessions.ended_at, excluded.ended_at),
+    duration = max(activity_sessions.duration, excluded.duration),
+    last_sequence = max(activity_sessions.last_sequence, excluded.last_sequence)
+WHERE activity_sessions.entry_id = excluded.entry_id;
+
+restoreActivitySegment:
+UPDATE activity_segments
+SET
+    started_at = min(started_at, :startedAt),
+    ended_at = max(ended_at, :endedAt),
+    duration = max(duration, :duration)
+WHERE session_id = :sessionId
+AND chapter_id IS :chapterId
+AND local_date = :localDate
+AND time_zone_id = :timeZoneId;
+
+insertActivitySegmentIfAbsent:
+INSERT INTO activity_segments(
+    session_id,
+    chapter_id,
+    local_date,
+    time_zone_id,
+    started_at,
+    ended_at,
+    duration
+)
+SELECT
+    :sessionId,
+    :chapterId,
+    :localDate,
+    :timeZoneId,
+    :startedAt,
+    :endedAt,
+    :duration
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM activity_segments
+    WHERE session_id = :sessionId
+    AND chapter_id IS :chapterId
+    AND local_date = :localDate
+    AND time_zone_id = :timeZoneId
+);
+
+restoreStatisticsEpoch:
+INSERT INTO statistics_epochs(profile_id, started_at)
+VALUES (:profileId, :startedAt)
+ON CONFLICT(profile_id) DO UPDATE SET
+    started_at = min(statistics_epochs.started_at, excluded.started_at);
