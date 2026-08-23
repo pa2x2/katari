@@ -143,6 +143,7 @@ private fun ActivitySessionList(
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                Spacer(Modifier.height(8.dp))
             }
             ActivitySessionCard(session = session, showType = type == null, onClick = onEntryClick)
         }
@@ -202,7 +203,14 @@ private fun ActivitySessionCard(
                     overflow = TextOverflow.Ellipsis,
                 )
                 Spacer(Modifier.width(12.dp))
-                Text(formatDuration(session.durationMillis), style = MaterialTheme.typography.labelLarge)
+                Text(
+                    text = stringResource(
+                        MR.strings.statistics_active_duration,
+                        formatDuration(session.durationMillis),
+                    ),
+                    style = MaterialTheme.typography.labelLarge,
+                    maxLines = 1,
+                )
             }
             Text(
                 text = buildString {
@@ -228,11 +236,13 @@ private fun ActivitySessionCard(
                         overflow = TextOverflow.Ellipsis,
                     )
                     Spacer(Modifier.width(12.dp))
-                    Text(
-                        text = formatDuration(duration),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    if (childDurations.size > 1) {
+                        Text(
+                            text = formatDuration(duration),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
             if (session.completionCount > 0L) {
@@ -257,13 +267,17 @@ private fun rememberActivityDurationFormatter(): (Long) -> String {
     return remember(locale) {
         val numbers = NumberFormat.getIntegerInstance(locale)
         val formatter: (Long) -> String = { durationMillis ->
-            val totalMinutes = durationMillis.coerceAtLeast(0L) / 60_000L
+            val totalSeconds = durationMillis.coerceAtLeast(0L) / 1_000L
+            val totalMinutes = totalSeconds / 60L
             val hours = totalMinutes / 60L
             val minutes = totalMinutes % 60L
+            val seconds = totalSeconds % 60L
             when {
                 hours > 0L && minutes > 0L -> "${numbers.format(hours)}h ${numbers.format(minutes)}m"
                 hours > 0L -> "${numbers.format(hours)}h"
-                else -> "${numbers.format(minutes)}m"
+                minutes > 0L && seconds > 0L -> "${numbers.format(minutes)}m ${numbers.format(seconds)}s"
+                minutes > 0L -> "${numbers.format(minutes)}m"
+                else -> "${numbers.format(seconds)}s"
             }
         }
         formatter

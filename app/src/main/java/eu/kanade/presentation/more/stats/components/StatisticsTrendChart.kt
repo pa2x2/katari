@@ -1,7 +1,8 @@
 package eu.kanade.presentation.more.stats.components
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -101,27 +102,52 @@ internal fun StatisticsTrendChart(
                 .fillMaxWidth()
                 .height(220.dp)
                 .pointerInput(points) {
-                    detectTapGestures { offset ->
-                        if (points.isNotEmpty() && size.width > 0) {
-                            val fraction = (offset.x / size.width).coerceIn(0f, 1f)
-                            selectedIndex = (fraction * points.lastIndex).roundToInt()
+                    awaitEachGesture {
+                        val down = awaitFirstDown(requireUnconsumed = false)
+                        if (points.isNotEmpty()) {
+                            selectedIndex = trendPointIndexForPosition(
+                                positionX = down.position.x,
+                                width = size.width.toFloat(),
+                                pointCount = points.size,
+                                horizontalInset = CHART_HORIZONTAL_INSET.toPx(),
+                            )
+                        }
+                        var change = down
+                        while (change.pressed) {
+                            val event = awaitPointerEvent()
+                            change = event.changes.firstOrNull() ?: break
+                            if (change.pressed && points.isNotEmpty()) {
+                                selectedIndex = trendPointIndexForPosition(
+                                    positionX = change.position.x,
+                                    width = size.width.toFloat(),
+                                    pointCount = points.size,
+                                    horizontalInset = CHART_HORIZONTAL_INSET.toPx(),
+                                )
+                                change.consume()
+                            }
                         }
                     }
                 },
         ) {
             val chartHeight = size.height - 8.dp.toPx()
+            val horizontalInset = CHART_HORIZONTAL_INSET.toPx().coerceAtMost(size.width / 2f)
+            val chartWidth = (size.width - horizontalInset * 2f).coerceAtLeast(0f)
             repeat(4) { index ->
                 val y = chartHeight * index / 3f
                 drawLine(
                     color = Color(outlineVariant.value).copy(alpha = 0.45f),
-                    start = Offset(0f, y),
-                    end = Offset(size.width, y),
+                    start = Offset(horizontalInset, y),
+                    end = Offset(size.width - horizontalInset, y),
                     strokeWidth = 1.dp.toPx(),
                 )
             }
             if (points.isEmpty()) return@Canvas
             val x = { index: Int ->
-                if (points.size == 1) size.width / 2f else size.width * index / points.lastIndex
+                if (points.size == 1) {
+                    size.width / 2f
+                } else {
+                    horizontalInset + chartWidth * index / points.lastIndex
+                }
             }
             var lowerValues = List(points.size) { 0L }
             types.forEach { type ->
@@ -256,3 +282,18 @@ internal fun StatisticsTrendChart(
         }
     }
 }
+
+internal fun trendPointIndexForPosition(
+    positionX: Float,
+    width: Float,
+    pointCount: Int,
+    horizontalInset: Float,
+): Int {
+    if (pointCount <= 1 || width <= 0f) return 0
+    val inset = horizontalInset.coerceIn(0f, width / 2f)
+    val chartWidth = (width - inset * 2f).coerceAtLeast(1f)
+    val fraction = ((positionX - inset) / chartWidth).coerceIn(0f, 1f)
+    return (fraction * (pointCount - 1)).roundToInt()
+}
+
+private val CHART_HORIZONTAL_INSET = 12.dp

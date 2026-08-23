@@ -283,31 +283,6 @@ private fun StatisticsPage(
             )
         }
         item {
-            StatisticsLibraryCard(
-                titleCounts = titleCounts,
-                types = visibleTypes,
-                onSeeTitles = { onOpenLibrary(selectedType) },
-            )
-        }
-        item {
-            StatisticsProgressCard(progress)
-        }
-        selectedType?.let { type ->
-            state.library.coverageByType[type]?.let { coverage ->
-                item {
-                    StatisticsLibraryCoverageCard(
-                        coverage = coverage,
-                        onSeeOfflineTitles = coverage.offline
-                            ?.takeIf { it.partlyOfflineTitles + it.fullyOfflineTitles > 0 }
-                            ?.let { { onOpenOfflineTitles(type) } },
-                        onSeeTrackedTitles = (coverage.tracking as? StatsTrackingCoverage.Connected)
-                            ?.takeIf { it.trackedTitles > 0 }
-                            ?.let { { onOpenTrackedTitles(type) } },
-                    )
-                }
-            }
-        }
-        item {
             StatisticsActivityCard(
                 state = state.activity,
                 activity = visibleActivity,
@@ -325,6 +300,31 @@ private fun StatisticsPage(
                     formatDuration = formatter,
                     onTitleClick = onOpenEntry,
                 )
+            }
+        }
+        item {
+            StatisticsProgressCard(progress)
+        }
+        item {
+            StatisticsLibraryCard(
+                titleCounts = titleCounts,
+                types = visibleTypes,
+                onSeeTitles = { onOpenLibrary(selectedType) },
+            )
+        }
+        selectedType?.let { type ->
+            state.library.coverageByType[type]?.let { coverage ->
+                item {
+                    StatisticsLibraryCoverageCard(
+                        coverage = coverage,
+                        onSeeOfflineTitles = coverage.offline
+                            ?.takeIf { it.partlyOfflineTitles + it.fullyOfflineTitles > 0 }
+                            ?.let { { onOpenOfflineTitles(type) } },
+                        onSeeTrackedTitles = (coverage.tracking as? StatsTrackingCoverage.Connected)
+                            ?.takeIf { it.trackedTitles > 0 }
+                            ?.let { { onOpenTrackedTitles(type) } },
+                    )
+                }
             }
         }
         if (selectedStatsType != null) {
