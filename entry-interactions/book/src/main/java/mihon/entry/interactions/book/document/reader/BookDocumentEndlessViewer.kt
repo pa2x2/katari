@@ -35,7 +35,6 @@ internal fun BookDocumentEndlessViewer(
     navigationRequest: BookDocumentNavigationRequest?,
     textSizePercent: Int,
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
-    onVisualProgress: (BookDocumentViewerVisualProgress<EntryChapter>) -> Unit,
     onTransitionReached: (EntryChapter) -> Unit,
     onTerminalObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
     onAnchorMissing: (String) -> Unit,
@@ -65,7 +64,6 @@ internal fun BookDocumentEndlessViewer(
     val currentOnTransitionReached by rememberUpdatedState(onTransitionReached)
     val currentLoadStates by rememberUpdatedState(loadStates)
     val currentTextSizePercent by rememberUpdatedState(textSizePercent)
-    val visualProgressTracker = remember(listState, textSizePercent) { BookDocumentVisualProgressTracker() }
     var observedDatasetIdentity by remember(listState) { mutableStateOf(items.identity) }
     var initialPositionRestored by remember(listState) { mutableStateOf(false) }
     var observedTextSizePercent by remember(listState) { mutableIntStateOf(textSizePercent) }
@@ -216,19 +214,6 @@ internal fun BookDocumentEndlessViewer(
             }
             onLocation(location)
         }
-    }
-    LaunchedEffect(listState, items) {
-        snapshotFlow {
-            val info = listState.layoutInfo
-            bookDocumentVisualProgress(
-                items = currentItems,
-                visibleItems = info.visibleBookDocumentLayouts(),
-                viewportStartOffset = info.viewportStartOffset,
-                viewportEndOffset = info.viewportEndOffset,
-                canScrollForward = listState.canScrollForward,
-                tracker = visualProgressTracker,
-            )
-        }.filterNotNull().distinctUntilChanged().collect(onVisualProgress)
     }
     LaunchedEffect(listState) {
         snapshotFlow { listState.isScrollInProgress }

@@ -151,7 +151,6 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                         settingBindings = requireNotNull(settingBindings),
                         selectionCoordinator = selectionCoordinator,
                         onLocation = chapterCoordinator::onLocation,
-                        onVisualProgress = chapterCoordinator::onVisualProgress,
                         onTransitionReached = { chapterCoordinator.loadChapter(it, activate = false, retry = true) },
                         onTerminalObservation = chapterCoordinator::onTerminalObservation,
                         onChapterSelected = ::selectChapterFromNavigation,
