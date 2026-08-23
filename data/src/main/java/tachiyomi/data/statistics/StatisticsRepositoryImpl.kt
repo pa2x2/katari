@@ -8,6 +8,7 @@ import tachiyomi.domain.statistics.model.StatisticsActivityBucket
 import tachiyomi.domain.statistics.model.StatisticsActivitySnapshot
 import tachiyomi.domain.statistics.model.StatisticsCompletionBucket
 import tachiyomi.domain.statistics.model.StatisticsEarlierActivity
+import tachiyomi.domain.statistics.model.StatisticsEarlierActivityDetails
 import tachiyomi.domain.statistics.model.StatisticsSessionSummary
 import tachiyomi.domain.statistics.model.StatisticsTopEntry
 import tachiyomi.domain.statistics.repository.StatisticsRepository
@@ -15,6 +16,31 @@ import tachiyomi.domain.statistics.repository.StatisticsRepository
 class StatisticsRepositoryImpl(
     private val handler: DatabaseHandler,
 ) : StatisticsRepository {
+    override suspend fun getEarlierActivityDetails(
+        profileId: Long,
+        type: EntryType?,
+        limit: Long,
+    ): StatisticsEarlierActivityDetails {
+        val totals = getEarlierActivity(profileId).let { rows ->
+            if (type == null) rows else rows.filter { it.type == type }
+        }
+        val topEntries = handler.awaitList {
+            statisticsViewQueries.earlierActivityEntries(
+                profileId = profileId,
+                type = type?.name?.lowercase(),
+                limit = limit,
+            ) { entryId, entryType, title, duration ->
+                StatisticsTopEntry(
+                    entryId = entryId,
+                    type = EntryType.valueOf(entryType.uppercase()),
+                    title = title,
+                    durationMillis = duration ?: 0L,
+                )
+            }
+        }
+        return StatisticsEarlierActivityDetails(totals = totals, topEntries = topEntries)
+    }
+
     override fun subscribeActivity(
         profileId: Long,
         startLocalDate: String?,
@@ -53,15 +79,21 @@ class StatisticsRepositoryImpl(
                 EntryType.valueOf(type.uppercase()) to (duration ?: 0L)
             }
         }
-        return combine(legacy, detailed) { legacyRows, detailedRows ->
-            val detailedByType = detailedRows.toMap()
-            legacyRows.mapNotNull { (type, duration) ->
-                (duration - (detailedByType[type] ?: 0L))
-                    .coerceAtLeast(0L)
-                    .takeIf { it > 0L }
-                    ?.let { StatisticsEarlierActivity(type, it) }
+        return combine(legacy, detailed, ::calculateEarlierActivity)
+    }
+
+    private suspend fun getEarlierActivity(profileId: Long): List<StatisticsEarlierActivity> {
+        val legacyRows = handler.awaitList {
+            historyQueries.getReadDurationByType(profileId) { type, duration ->
+                EntryType.valueOf(type.uppercase()) to duration
             }
         }
+        val detailedRows = handler.awaitList {
+            statisticsViewQueries.detailedLifetimeDurationByType(profileId) { type, duration ->
+                EntryType.valueOf(type.uppercase()) to (duration ?: 0L)
+            }
+        }
+        return calculateEarlierActivity(legacyRows, detailedRows)
     }
 
     private fun subscribeActivityRows(
@@ -141,5 +173,18 @@ class StatisticsRepositoryImpl(
         } else {
             statisticsViewQueries.sessionSummariesSince(profileId, startLocalDate, mapper)
         }
+    }
+}
+
+private fun calculateEarlierActivity(
+    legacyRows: List<Pair<EntryType, Long>>,
+    detailedRows: List<Pair<EntryType, Long>>,
+): List<StatisticsEarlierActivity> {
+    val detailedByType = detailedRows.toMap()
+    return legacyRows.mapNotNull { (type, duration) ->
+        (duration - (detailedByType[type] ?: 0L))
+            .coerceAtLeast(0L)
+            .takeIf { it > 0L }
+            ?.let { StatisticsEarlierActivity(type, it) }
     }
 }

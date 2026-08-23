@@ -69,6 +69,18 @@ class StatisticsRepositoryImplTest {
             snapshot.earlierActivity.associate { it.type to it.durationMillis } shouldBe mapOf(
                 EntryType.MANGA to 5_000L,
             )
+
+            val earlierDetails = repository.getEarlierActivityDetails(
+                profileId = 1L,
+                type = null,
+                limit = 20L,
+            )
+            earlierDetails.totals.associate { it.type to it.durationMillis } shouldBe mapOf(
+                EntryType.MANGA to 5_000L,
+            )
+            earlierDetails.topEntries.map { it.title to it.durationMillis } shouldBe listOf(
+                "Manga" to 5_000L,
+            )
         }
     }
 

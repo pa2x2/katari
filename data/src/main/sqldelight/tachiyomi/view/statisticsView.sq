@@ -43,6 +43,36 @@ WHERE profile_id = :profileId
 GROUP BY type
 ORDER BY type;
 
+earlierActivityEntries:
+WITH legacy_entry_totals AS (
+    SELECT HIS.entry_id, CAST(sum(HIS.time_read) AS INTEGER) AS duration
+    FROM history HIS
+    JOIN entries ENT ON ENT._id = HIS.entry_id
+    WHERE ENT.profile_id = :profileId
+    AND (:type IS NULL OR ENT.type = :type)
+    GROUP BY HIS.entry_id
+), detailed_entry_totals AS (
+    SELECT entry_id, CAST(sum(duration) AS INTEGER) AS duration
+    FROM statisticsView
+    WHERE profile_id = :profileId
+    AND (:type IS NULL OR type = :type)
+    GROUP BY entry_id
+), earlier_entries AS (
+    SELECT
+        ENT._id AS entry_id,
+        ENT.type,
+        ENT.title,
+        max(LEG.duration - coalesce(DET.duration, 0), 0) AS duration
+    FROM legacy_entry_totals LEG
+    JOIN entries ENT ON ENT._id = LEG.entry_id
+    LEFT JOIN detailed_entry_totals DET ON DET.entry_id = LEG.entry_id
+)
+SELECT entry_id, type, title, CAST(duration AS INTEGER) AS duration
+FROM earlier_entries
+WHERE duration > 0
+ORDER BY duration DESC, title COLLATE NOCASE
+LIMIT :limit;
+
 sessionSummaries:
 WITH session_totals AS (
     SELECT session_id, type, CAST(sum(duration) AS INTEGER) AS duration

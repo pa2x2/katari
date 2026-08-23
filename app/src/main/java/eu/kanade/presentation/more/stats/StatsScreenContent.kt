@@ -42,6 +42,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.components.StatisticsAdditionalInsightsCard
+import eu.kanade.presentation.more.stats.components.StatisticsEarlierActivityCard
 import eu.kanade.presentation.more.stats.components.StatisticsHeadlineCards
 import eu.kanade.presentation.more.stats.components.StatisticsLibraryCard
 import eu.kanade.presentation.more.stats.components.StatisticsLibraryCoverageCard
@@ -50,6 +51,7 @@ import eu.kanade.presentation.more.stats.components.StatisticsSectionCard
 import eu.kanade.presentation.more.stats.components.StatisticsTopTitlesCard
 import eu.kanade.presentation.more.stats.components.StatisticsTrendChart
 import eu.kanade.presentation.more.stats.components.color
+import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.more.stats.data.StatsActivity
 import eu.kanade.presentation.more.stats.data.StatsRange
 import eu.kanade.presentation.more.stats.data.StatsTrackingCoverage
@@ -67,7 +69,6 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-import java.util.Locale
 
 @Composable
 fun StatsScreenContent(
@@ -81,6 +82,7 @@ fun StatsScreenContent(
     onOpenLibrary: (EntryType?) -> Unit,
     onOpenOfflineTitles: (EntryType) -> Unit,
     onOpenTrackedTitles: (EntryType) -> Unit,
+    onOpenEarlierActivity: (EntryType?, Long?) -> Unit,
 ) {
     val pages = remember(state.types) { listOf<EntryType?>(null) + state.types.map(StatsType::type) }
     val selectedPage = pages.indexOf(state.selectedType).coerceAtLeast(0)
@@ -147,6 +149,7 @@ fun StatsScreenContent(
                 onOpenLibrary = onOpenLibrary,
                 onOpenOfflineTitles = onOpenOfflineTitles,
                 onOpenTrackedTitles = onOpenTrackedTitles,
+                onOpenEarlierActivity = onOpenEarlierActivity,
             )
         }
     }
@@ -193,6 +196,7 @@ private fun StatisticsPage(
     onOpenLibrary: (EntryType?) -> Unit,
     onOpenOfflineTitles: (EntryType) -> Unit,
     onOpenTrackedTitles: (EntryType) -> Unit,
+    onOpenEarlierActivity: (EntryType?, Long?) -> Unit,
 ) {
     val visibleTypes = state.types.filter { selectedType == null || it.type == selectedType }
     val titleCounts = state.library.titlesByType.filterKeys { selectedType == null || it == selectedType }
@@ -344,22 +348,20 @@ private fun StatisticsPage(
         }
         if (visibleActivity?.earlierDurationMillis?.let { it > 0L } == true) {
             item {
-                StatisticsSectionCard(stringResource(MR.strings.statistics_earlier_activity)) {
-                    Text(
-                        text = formatter(visibleActivity.earlierDurationMillis),
-                        style = MaterialTheme.typography.headlineSmall,
-                    )
-                    visibleActivity.trackingStartedAtEpochMillis?.let { startedAt ->
-                        val date = Instant.ofEpochMilli(startedAt)
-                            .atZone(ZoneId.systemDefault())
-                            .toLocalDate()
-                            .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
-                        Text(
-                            text = stringResource(MR.strings.statistics_before_date, date),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                val beforeDate = visibleActivity.trackingStartedAtEpochMillis?.let { startedAt ->
+                    val date = Instant.ofEpochMilli(startedAt)
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate()
+                        .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
+                    stringResource(MR.strings.statistics_before_date, date)
                 }
+                StatisticsEarlierActivityCard(
+                    duration = formatter(visibleActivity.earlierDurationMillis),
+                    beforeDate = beforeDate,
+                    onClick = {
+                        onOpenEarlierActivity(selectedType, visibleActivity.trackingStartedAtEpochMillis)
+                    },
+                )
             }
         }
     }
@@ -456,23 +458,4 @@ private fun StatsActivity.forType(type: EntryType?): StatsActivity {
         earlierDurationMillis = earlierDurationByType[type] ?: 0L,
         earlierDurationByType = mapOf(type to (earlierDurationByType[type] ?: 0L)),
     )
-}
-
-@Composable
-private fun rememberStatisticsDurationFormatter(): (Long) -> String {
-    val locale = Locale.getDefault()
-    return remember(locale) {
-        val numbers = NumberFormat.getIntegerInstance(locale)
-        val formatter: (Long) -> String = { durationMillis ->
-            val totalMinutes = durationMillis.coerceAtLeast(0L) / 60_000L
-            val hours = totalMinutes / 60L
-            val minutes = totalMinutes % 60L
-            when {
-                hours > 0L && minutes > 0L -> "${numbers.format(hours)}h ${numbers.format(minutes)}m"
-                hours > 0L -> "${numbers.format(hours)}h"
-                else -> "${numbers.format(minutes)}m"
-            }
-        }
-        formatter
-    }
 }

@@ -22,7 +22,6 @@ import kotlinx.coroutines.flow.update
 import logcat.LogPriority
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.entry.interactions.presentation.EntryTypePresentationFeature
-import mihon.entry.interactions.presentation.EntryTypePresentationResult
 import mihon.entry.interactions.statistics.EntryStatisticsFeature
 import mihon.entry.interactions.tracking.EntryTrackingAvailability
 import mihon.entry.interactions.tracking.EntryTrackingFeature
@@ -52,18 +51,7 @@ class StatsScreenModel(
 ) : StateScreenModel<StatsScreenState>(StatsScreenState.Loading) {
 
     private val activityReload = MutableStateFlow(0L)
-    private val types = statisticsFeature.contributions.map { contribution ->
-        val presentation = checkNotNull(
-            presentationFeature.presentation(contribution.type) as? EntryTypePresentationResult.Contributed,
-        ) { "Statistics contribution ${contribution.type} requires contributed type presentation" }.presentation
-        StatsType(
-            type = contribution.type,
-            displayName = presentation.displayNameLabel,
-            icon = presentation.badgeIcon,
-            accent = contribution.accent,
-            consumedUnitLabel = contribution.consumedUnitLabel,
-        )
-    }
+    private val types = buildStatisticsTypes(statisticsFeature, presentationFeature)
 
     init {
         screenModelScope.launchIO {

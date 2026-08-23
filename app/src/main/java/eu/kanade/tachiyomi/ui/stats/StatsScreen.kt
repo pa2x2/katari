@@ -15,6 +15,7 @@ import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityScreen
 import eu.kanade.tachiyomi.ui.library.statistics.LibraryStatisticsFilter
 import eu.kanade.tachiyomi.ui.library.statistics.LibraryStatisticsFilterKind
 import eu.kanade.tachiyomi.ui.library.statistics.LibraryStatisticsScreen
+import eu.kanade.tachiyomi.ui.stats.earlier.StatisticsEarlierActivityScreen
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
@@ -77,6 +78,14 @@ class StatsScreen : Screen() {
                     navigator.push(
                         LibraryStatisticsScreen(
                             LibraryStatisticsFilter(LibraryStatisticsFilterKind.TRACKED, type.name),
+                        ),
+                    )
+                },
+                onOpenEarlierActivity = { type, trackingStartedAtEpochMillis ->
+                    navigator.push(
+                        StatisticsEarlierActivityScreen(
+                            typeName = type?.name,
+                            trackingStartedAtEpochMillis = trackingStartedAtEpochMillis,
                         ),
                     )
                 },

@@ -33,6 +33,11 @@ data class StatisticsSessionSummary(
     val longestDurationMillis: Long,
 )
 
+data class StatisticsEarlierActivityDetails(
+    val totals: List<StatisticsEarlierActivity>,
+    val topEntries: List<StatisticsTopEntry>,
+)
+
 data class StatisticsActivitySnapshot(
     val profileId: Long,
     val trackingStartedAtEpochMillis: Long?,
