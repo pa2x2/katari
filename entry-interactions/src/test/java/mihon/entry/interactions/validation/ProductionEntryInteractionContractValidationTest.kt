@@ -4,6 +4,7 @@ import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import mihon.feature.graph.validation.CompletedFeatureContractExecution
+import mihon.feature.graph.validation.CompletedFeatureExecutionContractExecution
 import mihon.feature.graph.validation.FeatureContractVerificationResult
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -32,16 +33,26 @@ class ProductionEntryInteractionContractValidationTest {
         val composition = environment.composition()
 
         val result = validateEntryInteractionContracts(composition)
-        val unexpected = result.executions.filterNot { execution ->
+        val unexpectedContractExecutions = result.executions.filterNot { execution ->
             execution is CompletedFeatureContractExecution &&
                 execution.verification == FeatureContractVerificationResult.Passed
         }
+        val unexpectedParticipantExecutions = result.executionParticipantExecutions.filterNot { execution ->
+            execution is CompletedFeatureExecutionContractExecution &&
+                execution.verification == FeatureContractVerificationResult.Passed
+        }
+        val diagnostics = buildList {
+            addAll(result.plan.issues.map { issue -> "Plan issue: $issue" })
+            addAll(unexpectedContractExecutions.map { execution -> "Contract execution: $execution" })
+            addAll(unexpectedParticipantExecutions.map { execution -> "Participant execution: $execution" })
+        }
 
-        withClue(unexpected.joinToString(separator = "\n")) {
+        withClue(diagnostics.joinToString(separator = "\n")) {
             result.isSuccessful shouldBe true
         }
         result.plan.isComplete shouldBe true
         result.plan.executions.isNotEmpty() shouldBe true
-        unexpected shouldBe emptyList()
+        unexpectedContractExecutions shouldBe emptyList()
+        unexpectedParticipantExecutions shouldBe emptyList()
     }
 }
