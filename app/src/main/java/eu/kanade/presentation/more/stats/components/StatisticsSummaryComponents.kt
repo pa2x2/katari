@@ -112,13 +112,8 @@ private fun StatisticsHeadlineCard(
 internal fun StatisticsLibraryCard(
     titleCounts: Map<EntryType, Int>,
     types: List<StatsType>,
-    onSeeTitles: () -> Unit,
 ) {
-    StatisticsSectionCard(
-        title = stringResource(MR.strings.statistics_library),
-        actionLabel = stringResource(MR.strings.statistics_see_titles),
-        onActionClick = onSeeTitles,
-    ) {
+    StatisticsSectionCard(title = stringResource(MR.strings.statistics_library)) {
         val maximum = titleCounts.values.maxOrNull()?.coerceAtLeast(1) ?: 1
         types.forEach { type ->
             val count = titleCounts[type.type] ?: 0

@@ -69,6 +69,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import java.util.Locale
 
 @Composable
 fun StatsScreenContent(
@@ -79,7 +80,6 @@ fun StatsScreenContent(
     onRetryActivity: () -> Unit,
     onOpenActivity: (EntryType?, StatsTrendPoint) -> Unit,
     onOpenEntry: (Long) -> Unit,
-    onOpenLibrary: (EntryType?) -> Unit,
     onOpenOfflineTitles: (EntryType) -> Unit,
     onOpenTrackedTitles: (EntryType) -> Unit,
     onOpenEarlierActivity: (EntryType?, Long?) -> Unit,
@@ -146,7 +146,6 @@ fun StatsScreenContent(
                 onRetryActivity = onRetryActivity,
                 onOpenActivity = onOpenActivity,
                 onOpenEntry = onOpenEntry,
-                onOpenLibrary = onOpenLibrary,
                 onOpenOfflineTitles = onOpenOfflineTitles,
                 onOpenTrackedTitles = onOpenTrackedTitles,
                 onOpenEarlierActivity = onOpenEarlierActivity,
@@ -193,7 +192,6 @@ private fun StatisticsPage(
     onRetryActivity: () -> Unit,
     onOpenActivity: (EntryType?, StatsTrendPoint) -> Unit,
     onOpenEntry: (Long) -> Unit,
-    onOpenLibrary: (EntryType?) -> Unit,
     onOpenOfflineTitles: (EntryType) -> Unit,
     onOpenTrackedTitles: (EntryType) -> Unit,
     onOpenEarlierActivity: (EntryType?, Long?) -> Unit,
@@ -291,6 +289,7 @@ private fun StatisticsPage(
                 state = state.activity,
                 activity = visibleActivity,
                 types = visibleTypes,
+                range = state.range,
                 formatter = formatter,
                 onRetry = onRetryActivity,
                 onOpenActivity = { point -> onOpenActivity(selectedType, point) },
@@ -313,7 +312,6 @@ private fun StatisticsPage(
             StatisticsLibraryCard(
                 titleCounts = titleCounts,
                 types = visibleTypes,
-                onSeeTitles = { onOpenLibrary(selectedType) },
             )
         }
         selectedType?.let { type ->
@@ -372,6 +370,7 @@ private fun StatisticsActivityCard(
     state: ActivityState,
     activity: StatsActivity?,
     types: List<StatsType>,
+    range: StatsRange,
     formatter: (Long) -> String,
     onRetry: () -> Unit,
     onOpenActivity: (StatsTrendPoint) -> Unit,
@@ -406,6 +405,21 @@ private fun StatisticsActivityCard(
             } else {
                 val labels = types.associate { it.type to stringResource(it.displayName) }
                 val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+                val axisDateFormatter = DateTimeFormatter.ofPattern(
+                    when (range) {
+                        StatsRange.SEVEN_DAYS -> "EEE"
+                        StatsRange.THIRTY_DAYS -> "MMM d"
+                        StatsRange.ONE_YEAR -> "MMM yy"
+                        StatsRange.ALL -> if (
+                            activity.trend.any { it.endDate.toEpochDay() - it.startDate.toEpochDay() > 45L }
+                        ) {
+                            "yyyy"
+                        } else {
+                            "MMM yy"
+                        }
+                    },
+                    Locale.getDefault(),
+                )
                 StatisticsTrendChart(
                     points = activity.trend,
                     types = types,
@@ -417,6 +431,7 @@ private fun StatisticsActivityCard(
                             "${point.startDate.format(dateFormatter)} – ${point.endDate.format(dateFormatter)}"
                         }
                     },
+                    formatAxisDate = { point -> point.startDate.format(axisDateFormatter) },
                     formatDuration = formatter,
                     onOpenActivity = onOpenActivity,
                 )

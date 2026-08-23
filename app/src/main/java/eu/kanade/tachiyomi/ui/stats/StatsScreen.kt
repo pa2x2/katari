@@ -60,13 +60,6 @@ class StatsScreen : Screen() {
                     )
                 },
                 onOpenEntry = { navigator.push(EntryScreen(it)) },
-                onOpenLibrary = { type ->
-                    navigator.push(
-                        LibraryStatisticsScreen(
-                            LibraryStatisticsFilter(LibraryStatisticsFilterKind.LIBRARY, type?.name),
-                        ),
-                    )
-                },
                 onOpenOfflineTitles = { type ->
                     navigator.push(
                         LibraryStatisticsScreen(

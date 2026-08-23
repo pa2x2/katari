@@ -1545,8 +1545,6 @@
     <string name="statistics_activity">Activity</string>
     <string name="statistics_top_titles">Top titles</string>
     <string name="statistics_no_activity">No recorded activity yet</string>
-    <string name="statistics_show_exact_values">Show exact values</string>
-    <string name="statistics_hide_exact_values">Hide exact values</string>
     <string name="statistics_could_not_load_activity">Couldn\'t load activity</string>
     <string name="statistics_active_duration">%s active</string>
     <string name="statistics_see_activity">See activity</string>

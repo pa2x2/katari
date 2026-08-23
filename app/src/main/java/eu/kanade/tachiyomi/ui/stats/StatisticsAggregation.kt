@@ -44,8 +44,8 @@ internal fun buildActivity(
             val values = durationByBucket[bucket].orEmpty()
             add(
                 StatsTrendPoint(
-                    startDate = bucket,
-                    endDate = bucket.endDate(bucketUnit),
+                    startDate = maxOf(bucket, firstDate),
+                    endDate = minOf(bucket.endDate(bucketUnit), today),
                     durationByType = types.associateWith { values[it] ?: 0L },
                 ),
             )

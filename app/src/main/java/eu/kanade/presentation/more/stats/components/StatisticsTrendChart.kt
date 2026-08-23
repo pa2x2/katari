@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,22 +13,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ExpandLess
-import androidx.compose.material.icons.outlined.ExpandMore
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -41,7 +39,6 @@ import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
-import kotlin.math.roundToInt
 
 @Composable
 internal fun StatisticsTrendChart(
@@ -49,6 +46,7 @@ internal fun StatisticsTrendChart(
     types: List<StatsType>,
     typeLabels: Map<EntryType, String>,
     formatDate: (StatsTrendPoint) -> String,
+    formatAxisDate: (StatsTrendPoint) -> String,
     formatDuration: (Long) -> String,
     onOpenActivity: (StatsTrendPoint) -> Unit,
     modifier: Modifier = Modifier,
@@ -58,9 +56,22 @@ internal fun StatisticsTrendChart(
     val surfaceColor = MaterialTheme.colorScheme.surface
     val primaryColor = MaterialTheme.colorScheme.primary
     val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
-    val maximum = points.maxOfOrNull(StatsTrendPoint::totalDurationMillis)?.coerceAtLeast(1L) ?: 1L
-    var selectedIndex by remember(points) { mutableIntStateOf(points.lastIndex.coerceAtLeast(0)) }
-    var exactValuesVisible by remember { mutableStateOf(false) }
+    val maximum = niceTrendMaximum(
+        points.maxOfOrNull(StatsTrendPoint::totalDurationMillis) ?: 0L,
+    )
+    val selectionKey = buildString {
+        append(points.firstOrNull()?.startDate)
+        append(':')
+        append(points.lastOrNull()?.endDate)
+        types.forEach { append(':').append(it.type.name) }
+    }
+    var selectedStartDate by rememberSaveable(selectionKey) {
+        mutableStateOf(points.lastOrNull()?.startDate?.toString())
+    }
+    val selectedIndex = points.indexOfFirst { it.startDate.toString() == selectedStartDate }
+        .takeIf { it >= 0 }
+        ?: points.lastIndex.coerceAtLeast(0)
+    val tickIndices = trendTickIndices(points.size)
     val activityLabel = stringResource(MR.strings.statistics_activity)
     val semanticsText = buildString {
         append(activityLabel)
@@ -97,112 +108,148 @@ internal fun StatisticsTrendChart(
             Spacer(Modifier.height(12.dp))
         }
 
-        Canvas(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(220.dp)
-                .pointerInput(points) {
-                    awaitEachGesture {
-                        val down = awaitFirstDown(requireUnconsumed = false)
-                        if (points.isNotEmpty()) {
-                            selectedIndex = trendPointIndexForPosition(
-                                positionX = down.position.x,
-                                width = size.width.toFloat(),
-                                pointCount = points.size,
-                                horizontalInset = CHART_HORIZONTAL_INSET.toPx(),
-                            )
-                        }
-                        var change = down
-                        while (change.pressed) {
-                            val event = awaitPointerEvent()
-                            change = event.changes.firstOrNull() ?: break
-                            if (change.pressed && points.isNotEmpty()) {
-                                selectedIndex = trendPointIndexForPosition(
-                                    positionX = change.position.x,
+        Row(Modifier.fillMaxWidth().height(CHART_HEIGHT)) {
+            Column(
+                modifier = Modifier.width(Y_AXIS_WIDTH).height(CHART_HEIGHT),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.End,
+            ) {
+                Text(formatDuration(maximum), style = MaterialTheme.typography.labelSmall)
+                Text(formatDuration(maximum / 2L), style = MaterialTheme.typography.labelSmall)
+                Text(formatDuration(0L), style = MaterialTheme.typography.labelSmall)
+            }
+            Canvas(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(CHART_HEIGHT)
+                    .pointerInput(points) {
+                        awaitEachGesture {
+                            val down = awaitFirstDown(requireUnconsumed = false)
+                            if (points.isNotEmpty()) {
+                                val index = trendPointIndexForPosition(
+                                    positionX = down.position.x,
                                     width = size.width.toFloat(),
                                     pointCount = points.size,
                                     horizontalInset = CHART_HORIZONTAL_INSET.toPx(),
                                 )
-                                change.consume()
+                                selectedStartDate = points[index].startDate.toString()
+                            }
+                            var change = down
+                            while (change.pressed) {
+                                val event = awaitPointerEvent()
+                                change = event.changes.firstOrNull() ?: break
+                                if (change.pressed && points.isNotEmpty()) {
+                                    val index = trendPointIndexForPosition(
+                                        positionX = change.position.x,
+                                        width = size.width.toFloat(),
+                                        pointCount = points.size,
+                                        horizontalInset = CHART_HORIZONTAL_INSET.toPx(),
+                                    )
+                                    selectedStartDate = points[index].startDate.toString()
+                                    change.consume()
+                                }
                             }
                         }
-                    }
-                },
-        ) {
-            val chartHeight = size.height - 8.dp.toPx()
-            val horizontalInset = CHART_HORIZONTAL_INSET.toPx().coerceAtMost(size.width / 2f)
-            val chartWidth = (size.width - horizontalInset * 2f).coerceAtLeast(0f)
-            repeat(4) { index ->
-                val y = chartHeight * index / 3f
-                drawLine(
-                    color = Color(outlineVariant.value).copy(alpha = 0.45f),
-                    start = Offset(horizontalInset, y),
-                    end = Offset(size.width - horizontalInset, y),
-                    strokeWidth = 1.dp.toPx(),
-                )
-            }
-            if (points.isEmpty()) return@Canvas
-            val x = { index: Int ->
-                if (points.size == 1) {
-                    size.width / 2f
-                } else {
-                    horizontalInset + chartWidth * index / points.lastIndex
+                    },
+            ) {
+                val plotTop = CHART_VERTICAL_INSET.toPx()
+                val plotBottom = size.height - CHART_VERTICAL_INSET.toPx()
+                val plotHeight = (plotBottom - plotTop).coerceAtLeast(1f)
+                val horizontalInset = CHART_HORIZONTAL_INSET.toPx().coerceAtMost(size.width / 2f)
+                val chartWidth = (size.width - horizontalInset * 2f).coerceAtLeast(0f)
+                val y = { value: Long ->
+                    plotBottom - plotHeight * value.coerceIn(0L, maximum).toFloat() / maximum.toFloat()
                 }
-            }
-            var lowerValues = List(points.size) { 0L }
-            types.forEach { type ->
-                val upperValues = points.mapIndexed { index, point ->
-                    lowerValues[index] + (point.durationByType[type.type] ?: 0L)
+                listOf(maximum, maximum / 2L, 0L).forEach { value ->
+                    drawLine(
+                        color = Color(outlineVariant.value).copy(alpha = 0.45f),
+                        start = Offset(horizontalInset, y(value)),
+                        end = Offset(size.width - horizontalInset, y(value)),
+                        strokeWidth = 1.dp.toPx(),
+                    )
                 }
-                val area = Path().apply {
-                    points.indices.forEach { index ->
-                        val y = chartHeight * (1f - upperValues[index].toFloat() / maximum.toFloat())
-                        if (index == 0) moveTo(x(index), y) else lineTo(x(index), y)
+                if (points.isEmpty()) return@Canvas
+                val x = { index: Int ->
+                    if (points.size == 1) {
+                        size.width / 2f
+                    } else {
+                        horizontalInset + chartWidth * index / points.lastIndex
                     }
-                    points.indices.reversed().forEach { index ->
-                        val y = chartHeight * (1f - lowerValues[index].toFloat() / maximum.toFloat())
-                        lineTo(x(index), y)
-                    }
-                    close()
                 }
-                drawPath(area, typeColors.getValue(type.type).copy(alpha = 0.32f))
-                lowerValues = upperValues
-            }
-            val outline = Path().apply {
+                tickIndices.forEach { index ->
+                    drawLine(
+                        color = Color(outlineVariant.value).copy(alpha = 0.2f),
+                        start = Offset(x(index), plotTop),
+                        end = Offset(x(index), plotBottom),
+                        strokeWidth = 1.dp.toPx(),
+                    )
+                }
+                val pointSpacing = if (points.size <= 1) chartWidth else chartWidth / points.lastIndex
+                val barWidth = (pointSpacing * 0.62f)
+                    .coerceIn(MINIMUM_BAR_WIDTH.toPx(), MAXIMUM_BAR_WIDTH.toPx())
                 points.forEachIndexed { index, point ->
-                    val y = chartHeight * (1f - point.totalDurationMillis.toFloat() / maximum.toFloat())
-                    if (index == 0) moveTo(x(index), y) else lineTo(x(index), y)
+                    var cumulative = 0L
+                    types.forEach { type ->
+                        val duration = point.durationByType[type.type] ?: 0L
+                        if (duration > 0L) {
+                            val bottom = y(cumulative)
+                            cumulative += duration
+                            val top = y(cumulative)
+                            drawRect(
+                                color = typeColors.getValue(type.type).copy(alpha = 0.78f),
+                                topLeft = Offset(x(index) - barWidth / 2f, top),
+                                size = Size(barWidth, (bottom - top).coerceAtLeast(1f)),
+                            )
+                        }
+                    }
                 }
-            }
-            drawPath(
-                path = outline,
-                color = if (types.size == 1) typeColors.getValue(types.single().type) else primaryColor,
-                style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round),
-            )
-            if (selectedIndex in points.indices) {
-                val selected = points[selectedIndex]
-                val selectedX = x(selectedIndex)
-                val selectedY = chartHeight * (1f - selected.totalDurationMillis.toFloat() / maximum.toFloat())
-                drawLine(
-                    color = onSurfaceVariant.copy(alpha = 0.55f),
-                    start = Offset(selectedX, 0f),
-                    end = Offset(selectedX, chartHeight),
-                    strokeWidth = 1.dp.toPx(),
+                val outline = Path().apply {
+                    points.forEachIndexed { index, point ->
+                        if (index == 0) {
+                            moveTo(x(index), y(point.totalDurationMillis))
+                        } else {
+                            lineTo(x(index), y(point.totalDurationMillis))
+                        }
+                    }
+                }
+                drawPath(
+                    path = outline,
+                    color = if (types.size == 1) typeColors.getValue(types.single().type) else primaryColor,
+                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round),
                 )
-                drawCircle(surfaceColor, 6.dp.toPx(), Offset(selectedX, selectedY))
-                drawCircle(primaryColor, 4.dp.toPx(), Offset(selectedX, selectedY))
+                if (selectedIndex in points.indices) {
+                    val selected = points[selectedIndex]
+                    val selectedX = x(selectedIndex)
+                    val selectedY = y(selected.totalDurationMillis)
+                    drawLine(
+                        color = onSurfaceVariant.copy(alpha = 0.55f),
+                        start = Offset(selectedX, plotTop),
+                        end = Offset(selectedX, plotBottom),
+                        strokeWidth = 1.dp.toPx(),
+                    )
+                    drawCircle(surfaceColor, 6.dp.toPx(), Offset(selectedX, selectedY))
+                    drawCircle(primaryColor, 4.dp.toPx(), Offset(selectedX, selectedY))
+                }
             }
         }
 
         if (points.isNotEmpty()) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(formatDate(points.first()), style = MaterialTheme.typography.labelSmall)
-                if (points.size >
-                    2
-                ) {
-                    Text(formatDate(points[points.lastIndex / 2]), style = MaterialTheme.typography.labelSmall)
+            Row(Modifier.fillMaxWidth()) {
+                Spacer(Modifier.width(Y_AXIS_WIDTH))
+                Row(Modifier.weight(1f)) {
+                    tickIndices.forEachIndexed { tickPosition, pointIndex ->
+                        Box(
+                            modifier = Modifier.weight(1f),
+                            contentAlignment = when (tickPosition) {
+                                0 -> Alignment.CenterStart
+                                tickIndices.lastIndex -> Alignment.CenterEnd
+                                else -> Alignment.Center
+                            },
+                        ) {
+                            Text(formatAxisDate(points[pointIndex]), style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
                 }
-                Text(formatDate(points.last()), style = MaterialTheme.typography.labelSmall)
             }
             val selected = points[selectedIndex.coerceIn(points.indices)]
             Surface(
@@ -236,64 +283,12 @@ internal fun StatisticsTrendChart(
                 Text(stringResource(MR.strings.statistics_see_activity))
             }
         }
-
-        TextButton(onClick = { exactValuesVisible = !exactValuesVisible }) {
-            Icon(
-                imageVector = if (exactValuesVisible) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
-                contentDescription = null,
-            )
-            Spacer(Modifier.width(6.dp))
-            Text(
-                stringResource(
-                    if (exactValuesVisible) {
-                        MR.strings.statistics_hide_exact_values
-                    } else {
-                        MR.strings.statistics_show_exact_values
-                    },
-                ),
-            )
-        }
-        if (exactValuesVisible) {
-            points.forEach { point ->
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 5.dp),
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Text(formatDate(point), style = MaterialTheme.typography.bodySmall)
-                        Text(formatDuration(point.totalDurationMillis), style = MaterialTheme.typography.labelLarge)
-                    }
-                    val contributions = types.mapNotNull { type ->
-                        (point.durationByType[type.type] ?: 0L).takeIf { it > 0L }?.let { duration ->
-                            "${typeLabels.getValue(type.type)} ${formatDuration(duration)}"
-                        }
-                    }
-                    if (contributions.isNotEmpty()) {
-                        Text(
-                            text = contributions.joinToString(separator = " · "),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-            }
-        }
     }
 }
 
-internal fun trendPointIndexForPosition(
-    positionX: Float,
-    width: Float,
-    pointCount: Int,
-    horizontalInset: Float,
-): Int {
-    if (pointCount <= 1 || width <= 0f) return 0
-    val inset = horizontalInset.coerceIn(0f, width / 2f)
-    val chartWidth = (width - inset * 2f).coerceAtLeast(1f)
-    val fraction = ((positionX - inset) / chartWidth).coerceIn(0f, 1f)
-    return (fraction * (pointCount - 1)).roundToInt()
-}
-
 private val CHART_HORIZONTAL_INSET = 12.dp
+private val CHART_VERTICAL_INSET = 6.dp
+private val CHART_HEIGHT = 220.dp
+private val Y_AXIS_WIDTH = 48.dp
+private val MINIMUM_BAR_WIDTH = 1.dp
+private val MAXIMUM_BAR_WIDTH = 24.dp

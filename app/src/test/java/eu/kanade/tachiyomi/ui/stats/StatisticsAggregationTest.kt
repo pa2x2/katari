@@ -15,6 +15,28 @@ import java.util.Locale
 class StatisticsAggregationTest {
 
     @Test
+    fun `year trend does not expose dates outside selected range`() {
+        val today = LocalDate.parse("2026-08-23")
+        val result = buildActivity(
+            snapshot = StatisticsActivitySnapshot(
+                profileId = 1L,
+                trackingStartedAtEpochMillis = 1L,
+                activity = emptyList(),
+                completions = emptyList(),
+                topEntries = emptyList(),
+                earlierActivity = emptyList(),
+            ),
+            range = StatsRange.ONE_YEAR,
+            types = listOf(EntryType.MANGA),
+            today = today,
+            locale = Locale.UK,
+        )
+
+        result.trend.first().startDate shouldBe today.minusYears(1L).plusDays(1L)
+        result.trend.last().endDate shouldBe today
+    }
+
+    @Test
     fun `overview trend fills empty days and retains each type contribution`() {
         val result = buildActivity(
             snapshot = StatisticsActivitySnapshot(
