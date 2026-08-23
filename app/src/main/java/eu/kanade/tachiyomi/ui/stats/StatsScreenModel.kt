@@ -20,9 +20,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
+import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.entry.interactions.presentation.EntryTypePresentationFeature
 import mihon.entry.interactions.presentation.EntryTypePresentationResult
 import mihon.entry.interactions.statistics.EntryStatisticsFeature
+import mihon.entry.interactions.tracking.EntryTrackingAvailability
+import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.feature.profiles.core.ProfileScopedStateEvent
 import mihon.feature.profiles.core.observeProfileScopedState
 import tachiyomi.core.common.util.lang.launchIO
@@ -44,6 +47,8 @@ class StatsScreenModel(
     private val statisticsRepository: StatisticsRepository = Injekt.get(),
     private val statisticsPreferences: StatisticsPreferences = Injekt.get(),
     private val basePreferences: BasePreferences = Injekt.get(),
+    private val downloadRuntime: EntryDownloadRuntimeFeature = Injekt.get(),
+    private val trackingFeature: EntryTrackingFeature = Injekt.get(),
 ) : StateScreenModel<StatsScreenState>(StatsScreenState.Loading) {
 
     private val activityReload = MutableStateFlow(0L)
@@ -64,7 +69,11 @@ class StatsScreenModel(
         screenModelScope.launchIO {
             observeProfileScopedState(activeProfileProvider.activeProfileIdFlow) { profileId ->
                 combine(
-                    getLibraryEntries.subscribe(profileId).map { libraryEntries ->
+                    combine(
+                        getLibraryEntries.subscribe(profileId),
+                        downloadRuntime.changes.onStart { emit(Unit) },
+                        trackingFeature.observeCollection(),
+                    ) { libraryEntries, _, tracking ->
                         val distinctEntries = libraryEntries.fastDistinctBy { it.key }
                         StatsLibrary(
                             totalTitles = distinctEntries.size,
@@ -75,6 +84,17 @@ class StatsScreenModel(
                                     buildLibraryProgress(items)?.let { type to it }
                                 }
                                 .toMap(),
+                            coverageByType = buildLibraryCoverage(
+                                items = distinctEntries,
+                                types = types.map(StatsType::type),
+                                downloadApplicable = downloadRuntime::isApplicable,
+                                downloadCount = { item -> item.memberEntries.sumOf(downloadRuntime::downloadCount) },
+                                trackingApplicable = { type ->
+                                    trackingFeature.availability(type) is EntryTrackingAvailability.Available
+                                },
+                                connectedTrackingTypes = tracking.scoreSupportedEntryTypes,
+                                trackedEntryIds = tracking.entries.filterValues { it.isNotEmpty() }.keys,
+                            ),
                         )
                     },
                     combine(

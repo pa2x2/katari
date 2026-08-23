@@ -40,6 +40,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.components.StatisticsHeadlineCards
 import eu.kanade.presentation.more.stats.components.StatisticsLibraryCard
+import eu.kanade.presentation.more.stats.components.StatisticsLibraryCoverageCard
 import eu.kanade.presentation.more.stats.components.StatisticsProgressCard
 import eu.kanade.presentation.more.stats.components.StatisticsSectionCard
 import eu.kanade.presentation.more.stats.components.StatisticsTopTitlesCard
@@ -234,6 +235,13 @@ private fun StatisticsPage(
         }
         item {
             StatisticsProgressCard(progress)
+        }
+        selectedType?.let { type ->
+            state.library.coverageByType[type]?.let { coverage ->
+                item {
+                    StatisticsLibraryCoverageCard(coverage)
+                }
+            }
         }
         item {
             StatisticsActivityCard(
