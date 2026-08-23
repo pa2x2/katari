@@ -52,6 +52,9 @@ class BackupEntry(
     @ProtoNumber(37) var viewerSettingOverrides: List<BackupViewerSettingOverride> = emptyList(),
     @ProtoNumber(38) var featureStates: List<BackupEntryFeatureState> = emptyList(),
     @ProtoNumber(39) var libraryPinned: Boolean = false,
+    @ProtoNumber(40) var activitySessions: List<BackupActivitySession> = emptyList(),
+    @ProtoNumber(41) var activityCompletions: List<BackupActivityCompletion> = emptyList(),
+    @ProtoNumber(42) var statisticsEpoch: Long? = null,
     @ProtoNumber(100) var type: EntryType = EntryType.MANGA,
 ) {
     fun toEntry(): Entry {
@@ -132,6 +135,37 @@ data class BackupHistory(
     @ProtoNumber(1) var url: String,
     @ProtoNumber(2) var lastRead: Long,
     @ProtoNumber(3) var readDuration: Long = 0,
+)
+
+@Serializable
+data class BackupActivitySession(
+    @ProtoNumber(1) var sessionId: String,
+    @ProtoNumber(2) var startedAt: Long,
+    @ProtoNumber(3) var endedAt: Long,
+    @ProtoNumber(4) var duration: Long,
+    @ProtoNumber(5) var lastSequence: Long,
+    @ProtoNumber(6) var segments: List<BackupActivitySegment> = emptyList(),
+)
+
+@Serializable
+data class BackupActivitySegment(
+    @ProtoNumber(1) var chapterUrl: String? = null,
+    @ProtoNumber(2) var localDate: String,
+    @ProtoNumber(3) var timeZoneId: String,
+    @ProtoNumber(4) var startedAt: Long,
+    @ProtoNumber(5) var endedAt: Long,
+    @ProtoNumber(6) var duration: Long,
+)
+
+@Serializable
+data class BackupActivityCompletion(
+    @ProtoNumber(1) var eventId: String,
+    @ProtoNumber(2) var chapterUrl: String? = null,
+    @ProtoNumber(3) var sessionId: String? = null,
+    @ProtoNumber(4) var occurredAt: Long,
+    @ProtoNumber(5) var localDate: String,
+    @ProtoNumber(6) var timeZoneId: String,
+    @ProtoNumber(7) var cause: String,
 )
 
 @Serializable

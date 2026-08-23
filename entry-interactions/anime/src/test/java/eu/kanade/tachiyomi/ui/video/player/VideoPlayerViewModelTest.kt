@@ -44,6 +44,8 @@ import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 import tachiyomi.domain.history.model.History
 import tachiyomi.domain.history.model.HistoryUpdate
 import tachiyomi.domain.history.model.HistoryWithRelations
+import tachiyomi.domain.history.model.activity.HistoryActivityUpdate
+import tachiyomi.domain.history.model.activity.HistoryCompletionUpdate
 import tachiyomi.domain.history.repository.HistoryRepository
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -154,7 +156,7 @@ class VideoPlayerViewModelTest {
         viewModel.init(entryId = 1L, chapterId = 2L)
         advanceUntilIdle()
 
-        viewModel.persistPlayback(positionMs = 15_000L, durationMs = 100_000L)
+        viewModel.persistPlayback(positionMs = 15_000L, durationMs = 100_000L, activeDurationMs = 15_000L)
         advanceUntilIdle()
 
         playbackRepository.upserts shouldBe emptyList()
@@ -569,6 +571,12 @@ class VideoPlayerViewModelTest {
         override suspend fun upsertHistory(historyUpdate: HistoryUpdate) {
             upserts += historyUpdate
         }
+
+        override suspend fun recordActivity(activityUpdate: HistoryActivityUpdate) = Unit
+
+        override suspend fun recordCompletion(completionUpdate: HistoryCompletionUpdate) = Unit
+
+        override suspend fun recordCompletions(completionUpdates: List<HistoryCompletionUpdate>) = Unit
     }
 
     private class FakeEntryChapterRepository(

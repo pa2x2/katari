@@ -6,8 +6,12 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import mihon.book.api.document.locatorAt
@@ -16,6 +20,7 @@ import mihon.entry.interactions.book.processor.BookReaderRequest
 import mihon.entry.interactions.book.reader.BookReaderOpenResult
 import mihon.entry.interactions.book.reader.BookReaderSessionFactory
 import mihon.entry.interactions.book.reader.OpenedBookReaderSession
+import mihon.entry.interactions.media.session.EntryMediaSessionActivitySession
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPolicy
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
@@ -37,16 +42,29 @@ internal class BookDocumentChapterCoordinator(
     private val completionTracker = BookDocumentCompletionTracker<Long>()
     private val chapterSelectionRequests = mutableSetOf<Long>()
     private var persistLocationJob: Job? = null
+    private var activityCheckpointJob: Job? = null
     private var readingStartedAt: Long? = null
+    private val activitySession = EntryMediaSessionActivitySession()
+    private val activityMutex = Mutex()
     private var navigationRequestId = 0L
 
     fun startReading() {
         if (retainedSessions.currentSession() != null && readingStartedAt == null) {
             readingStartedAt = SystemClock.elapsedRealtime()
         }
+        if (retainedSessions.currentSession() != null && activityCheckpointJob?.isActive != true) {
+            activityCheckpointJob = scope.launchIO {
+                while (isActive) {
+                    delay(ACTIVITY_CHECKPOINT_INTERVAL_MILLIS)
+                    checkpointReading()
+                }
+            }
+        }
     }
 
     fun stopReading(persist: Boolean) {
+        activityCheckpointJob?.cancel()
+        activityCheckpointJob = null
         persistLocationJob?.cancel()
         val session = retainedSessions.currentSession()
         val locator = session?.let { retainedSessions.locator(it.chapter.id) }
@@ -54,7 +72,7 @@ internal class BookDocumentChapterCoordinator(
         if (session != null) {
             scope.launchNonCancellable {
                 if (persist) locator?.let { session.saveLocation(it) }
-                session.recordHistory(elapsed)
+                recordActivity(session, elapsed)
             }
         }
     }
@@ -128,6 +146,7 @@ internal class BookDocumentChapterCoordinator(
                 activateChapter(
                     chapterId = chapterId,
                     completeForwardCrossing = true,
+                    observedLocation = location,
                     observedNavigationRequest = navigationRequest,
                 )
         val session = retainedSessions.session(chapterId) ?: return
@@ -138,6 +157,7 @@ internal class BookDocumentChapterCoordinator(
             currentState()?.let { current ->
                 updateState(
                     current.copy(
+                        visualChapterProgression = location.visualProgression,
                         navigationRequest = current.navigationRequest.afterAcceptedLocation(
                             observedRequest = navigationRequest,
                             chapterId = chapterId,
@@ -152,13 +172,6 @@ internal class BookDocumentChapterCoordinator(
             session.saveLocation(locator)
         }
         prepareNextChapterIfNeeded(location.progression.toDouble())
-    }
-
-    fun onVisualProgress(progress: BookDocumentViewerVisualProgress<EntryChapter>) {
-        val state = currentState() ?: return
-        if (state.navigationRequest?.chapterId?.let { it != progress.section.owner.id } == true) return
-        if (state.visualChapterProgression == progress.progression) return
-        updateState(state.copy(visualChapterProgression = progress.progression))
     }
 
     fun onTerminalObservation(
@@ -197,6 +210,8 @@ internal class BookDocumentChapterCoordinator(
         chapterLoadJobs.clear()
         chapterSelectionRequests.clear()
         persistLocationJob?.cancel()
+        activityCheckpointJob?.cancel()
+        activityCheckpointJob = null
     }
 
     private fun addLoadedSession(session: OpenedBookReaderSession, activate: Boolean) {
@@ -249,6 +264,7 @@ internal class BookDocumentChapterCoordinator(
     private fun activateChapter(
         chapterId: Long,
         completeForwardCrossing: Boolean,
+        observedLocation: BookDocumentViewerLocation<EntryChapter>? = null,
         observedNavigationRequest: BookDocumentNavigationRequest? = null,
     ): Boolean {
         val state = currentState() ?: return false
@@ -268,14 +284,17 @@ internal class BookDocumentChapterCoordinator(
             chapterLoadJobs.remove(id)?.cancel()
         }
         chapterSelectionRequests.retainAll(retainedIds)
-        if (currentState()?.loadedSections?.containsKey(chapterId) != true) return false
+        val section = currentState()?.loadedSections?.get(chapterId) ?: return false
         val current = currentState() ?: return false
+        val progression = observedLocation?.progression
+            ?: section.document.document.progressionAt(section.initialPosition)
         updateState(
             current.copy(
                 currentChapterId = chapterId,
                 window = window,
                 loadedSections = current.loadedSections.filterKeys(retainedIds::contains),
                 loadStates = current.loadStates.filterKeys(retainedIds::contains),
+                visualChapterProgression = observedLocation?.visualProgression ?: progression,
                 childWebView = null,
                 navigationRequest = current.navigationRequest.afterAcceptedLocation(
                     observedRequest = observedNavigationRequest,
@@ -311,7 +330,22 @@ internal class BookDocumentChapterCoordinator(
     private fun recordElapsedFor(chapterId: Long) {
         val elapsed = consumeReadingDuration()
         val session = retainedSessions.session(chapterId) ?: return
-        scope.launchNonCancellable { session.recordHistory(elapsed) }
+        scope.launchNonCancellable { recordActivity(session, elapsed) }
+    }
+
+    private suspend fun recordActivity(session: OpenedBookReaderSession, durationMillis: Long) {
+        activityMutex.withLock {
+            withContext(NonCancellable) {
+                session.recordHistory(durationMillis, activitySession)
+            }
+        }
+    }
+
+    private suspend fun checkpointReading() {
+        val session = retainedSessions.currentSession() ?: return
+        val elapsed = consumeReadingDuration()
+        readingStartedAt = SystemClock.elapsedRealtime()
+        recordActivity(session, elapsed)
     }
 
     private fun consumeReadingDuration(): Long {
@@ -322,5 +356,6 @@ internal class BookDocumentChapterCoordinator(
 
     private companion object {
         const val LOCATION_PERSIST_DEBOUNCE_MILLIS = 500L
+        const val ACTIVITY_CHECKPOINT_INTERVAL_MILLIS = 30_000L
     }
 }

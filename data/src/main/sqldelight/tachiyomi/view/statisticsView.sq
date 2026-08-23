@@ -1,0 +1,183 @@
+CREATE VIEW statisticsView AS
+SELECT
+    SEG.session_id,
+    SEG.chapter_id,
+    SEG.local_date,
+    SEG.time_zone_id,
+    SEG.started_at,
+    SEG.ended_at,
+    SEG.duration,
+    SES.entry_id,
+    ENT.profile_id,
+    ENT.type,
+    ENT.title
+FROM activity_segments SEG
+JOIN activity_sessions SES ON SES.session_id = SEG.session_id
+JOIN entries ENT ON ENT._id = SES.entry_id;
+
+activityTotals:
+SELECT
+    type,
+    local_date,
+    CAST(sum(duration) AS INTEGER) AS duration
+FROM statisticsView
+WHERE profile_id = :profileId
+GROUP BY type, local_date
+ORDER BY local_date, type;
+
+activityTotalsSince:
+SELECT
+    type,
+    local_date,
+    CAST(sum(duration) AS INTEGER) AS duration
+FROM statisticsView
+WHERE profile_id = :profileId
+AND local_date >= :startLocalDate
+GROUP BY type, local_date
+ORDER BY local_date, type;
+
+detailedLifetimeDurationByType:
+SELECT type, CAST(sum(duration) AS INTEGER) AS duration
+FROM statisticsView
+WHERE profile_id = :profileId
+GROUP BY type
+ORDER BY type;
+
+earlierActivityEntries:
+WITH legacy_entry_totals AS (
+    SELECT HIS.entry_id, CAST(sum(HIS.time_read) AS INTEGER) AS duration
+    FROM history HIS
+    JOIN entries ENT ON ENT._id = HIS.entry_id
+    WHERE ENT.profile_id = :profileId
+    AND (:type IS NULL OR ENT.type = :type)
+    GROUP BY HIS.entry_id
+), detailed_entry_totals AS (
+    SELECT entry_id, CAST(sum(duration) AS INTEGER) AS duration
+    FROM statisticsView
+    WHERE profile_id = :profileId
+    AND (:type IS NULL OR type = :type)
+    GROUP BY entry_id
+), earlier_entries AS (
+    SELECT
+        ENT._id AS entry_id,
+        ENT.type,
+        ENT.title,
+        max(LEG.duration - coalesce(DET.duration, 0), 0) AS duration
+    FROM legacy_entry_totals LEG
+    JOIN entries ENT ON ENT._id = LEG.entry_id
+    LEFT JOIN detailed_entry_totals DET ON DET.entry_id = LEG.entry_id
+)
+SELECT entry_id, type, title, CAST(duration AS INTEGER) AS duration
+FROM earlier_entries
+WHERE duration > 0
+ORDER BY duration DESC, title COLLATE NOCASE
+LIMIT :limit;
+
+sessionSummaries:
+WITH session_totals AS (
+    SELECT session_id, type, CAST(sum(duration) AS INTEGER) AS duration
+    FROM statisticsView
+    WHERE profile_id = :profileId
+    GROUP BY session_id, type
+)
+SELECT
+    type,
+    count(*) AS session_count,
+    CAST(avg(duration) AS INTEGER) AS average_duration,
+    CAST(max(duration) AS INTEGER) AS longest_duration
+FROM session_totals
+GROUP BY type
+ORDER BY type;
+
+sessionSummariesSince:
+WITH session_totals AS (
+    SELECT session_id, type, CAST(sum(duration) AS INTEGER) AS duration
+    FROM statisticsView
+    WHERE profile_id = :profileId
+    AND local_date >= :startLocalDate
+    GROUP BY session_id, type
+)
+SELECT
+    type,
+    count(*) AS session_count,
+    CAST(avg(duration) AS INTEGER) AS average_duration,
+    CAST(max(duration) AS INTEGER) AS longest_duration
+FROM session_totals
+GROUP BY type
+ORDER BY type;
+
+completionTotals:
+SELECT
+    ENT.type,
+    CMP.local_date,
+    count(*) AS count
+FROM activity_completion_events CMP
+JOIN entries ENT ON ENT._id = CMP.entry_id
+WHERE ENT.profile_id = :profileId
+AND CMP.cause = 'consumption'
+GROUP BY ENT.type, CMP.local_date
+ORDER BY CMP.local_date, ENT.type;
+
+completionTotalsSince:
+SELECT
+    ENT.type,
+    CMP.local_date,
+    count(*) AS count
+FROM activity_completion_events CMP
+JOIN entries ENT ON ENT._id = CMP.entry_id
+WHERE ENT.profile_id = :profileId
+AND CMP.cause = 'consumption'
+AND CMP.local_date >= :startLocalDate
+GROUP BY ENT.type, CMP.local_date
+ORDER BY CMP.local_date, ENT.type;
+
+topActivityEntries:
+WITH entry_totals AS (
+    SELECT
+        entry_id,
+        type,
+        title,
+        CAST(sum(duration) AS INTEGER) AS duration
+    FROM statisticsView
+    WHERE profile_id = :profileId
+    GROUP BY entry_id
+), ranked AS (
+    SELECT
+        entry_id,
+        type,
+        title,
+        duration,
+        row_number() OVER (ORDER BY duration DESC, title COLLATE NOCASE) AS overall_rank,
+        row_number() OVER (PARTITION BY type ORDER BY duration DESC, title COLLATE NOCASE) AS type_rank
+    FROM entry_totals
+)
+SELECT entry_id, type, title, duration
+FROM ranked
+WHERE overall_rank <= 5 OR type_rank <= 5
+ORDER BY duration DESC, title COLLATE NOCASE;
+
+topActivityEntriesSince:
+WITH entry_totals AS (
+    SELECT
+        entry_id,
+        type,
+        title,
+        CAST(sum(duration) AS INTEGER) AS duration
+    FROM statisticsView
+    WHERE profile_id = :profileId
+    AND local_date >= :startLocalDate
+    GROUP BY entry_id
+), ranked AS (
+    SELECT
+        entry_id,
+        type,
+        title,
+        duration,
+        row_number() OVER (ORDER BY duration DESC, title COLLATE NOCASE) AS overall_rank,
+        row_number() OVER (PARTITION BY type ORDER BY duration DESC, title COLLATE NOCASE) AS type_rank
+    FROM entry_totals
+)
+SELECT entry_id, type, title, duration
+FROM ranked
+WHERE overall_rank <= 5 OR type_rank <= 5
+ORDER BY duration DESC, title COLLATE NOCASE;

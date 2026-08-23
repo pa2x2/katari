@@ -3,6 +3,7 @@ package mihon.entry.interactions.history
 import mihon.entry.interactions.media.EntryMediaSessionCapability
 import mihon.entry.interactions.media.session.ENTRY_MEDIA_SESSION_CONSEQUENCE_EXECUTION_POINT
 import mihon.entry.interactions.media.session.ENTRY_MEDIA_SESSION_INCOGNITO_OWNER
+import mihon.entry.interactions.state.ENTRY_PROGRESS_MEDIA_SESSION_PARTICIPANT
 import mihon.feature.graph.CapabilityExpression
 import mihon.feature.graph.ContextInputId
 import mihon.feature.graph.ContributionOwner
@@ -19,6 +20,7 @@ import mihon.feature.graph.FeatureId
 import mihon.feature.graph.FeatureIntegration
 import mihon.feature.graph.FeatureIntegrationId
 import mihon.feature.graph.contextInputDefinition
+import mihon.feature.graph.execution.FeatureExecutionOrder
 import mihon.feature.graph.execution.FeatureExecutionParticipantDefinition
 import mihon.feature.graph.featureContextRule
 
@@ -58,6 +60,7 @@ internal val ENTRY_HISTORY_MEDIA_SESSION_PARTICIPANT = FeatureExecutionParticipa
     },
     contextBlockers = listOf(ENTRY_MEDIA_SESSION_HISTORY_BLOCKED),
     behavioralContracts = listOf(EntryHistoryBehaviorContract),
+    order = FeatureExecutionOrder(afterIfPresent = setOf(ENTRY_PROGRESS_MEDIA_SESSION_PARTICIPANT.id)),
 )
 
 internal object EntryHistoryFeatureContributor : FeatureGraphContributor {

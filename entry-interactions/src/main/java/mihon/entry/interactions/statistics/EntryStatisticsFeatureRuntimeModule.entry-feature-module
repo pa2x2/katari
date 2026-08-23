@@ -1,0 +1,2 @@
+id=entry.statistics
+module=mihon.entry.interactions.statistics.EntryStatisticsFeatureRuntimeModule

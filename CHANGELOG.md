@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.5.0] - 2026-08-23
+
+### 🌟 Highlights
+
+Explore your reading and viewing habits with detailed activity trends, progress, streaks, completions, and media-specific insights in the rebuilt Statistics dashboard.
+
+### ✨ Added
+
+- Added detailed activity statistics for manga, books, and anime, including time spent, sessions, completions, active days, streaks, top titles, and selectable date ranges.
+- Added activity drill-downs for individual date ranges and entries, plus a separate view of activity recorded before detailed Statistics tracking began.
+- Added library coverage and progress breakdowns by media type, with genre, category, and source insights.
+
+### 🔄 Changed
+
+- Entry backups now preserve and restore detailed activity sessions and completion records used by Statistics.
+
 ## [1.4.1] - 2026-08-21
 
 ### 🔄 Changed
@@ -263,7 +279,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.4.1...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/pa2x2/katari/releases/tag/v1.5.0
 [1.4.1]: https://github.com/pa2x2/katari/releases/tag/v1.4.1
 [1.4.0]: https://github.com/pa2x2/katari/releases/tag/v1.4.0
 [1.3.12]: https://github.com/pa2x2/katari/releases/tag/v1.3.12

@@ -1,8 +1,10 @@
 package mihon.entry.interactions.state
 
+import io.mockk.mockk
 import mihon.entry.interactions.download.EntryDownloadLifecycleEvent
 import mihon.entry.interactions.download.EntryDownloadLifecycleEventSink
 import mihon.entry.interactions.download.EntryDownloadLifecycleResult
+import mihon.entry.interactions.history.EntryHistoryFeature
 import mihon.entry.interactions.validation.contractExpectation
 import mihon.entry.interactions.validation.productionSubjectEvaluation
 import mihon.entry.interactions.validation.verifyFeatureContract
@@ -118,6 +120,7 @@ private suspend fun verifyConsumptionCoordinator(
             lifecycleEvents += event
             EntryDownloadLifecycleResult.Handled
         },
+        history = mockk<EntryHistoryFeature>(relaxed = true),
     )
 
     contractExpectation(feature.isApplicable(provider.type), "Consumption must be applicable")

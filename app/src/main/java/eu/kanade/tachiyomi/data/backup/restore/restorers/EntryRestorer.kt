@@ -24,6 +24,12 @@ import tachiyomi.domain.entry.service.FetchInterval
 import tachiyomi.domain.history.interactor.UpsertHistory
 import tachiyomi.domain.history.model.History
 import tachiyomi.domain.history.model.HistoryUpdate
+import tachiyomi.domain.history.model.activity.HistoryActivitySegmentSnapshot
+import tachiyomi.domain.history.model.activity.HistoryActivitySessionSnapshot
+import tachiyomi.domain.history.model.activity.HistoryActivitySnapshot
+import tachiyomi.domain.history.model.activity.HistoryCompletionCause
+import tachiyomi.domain.history.model.activity.HistoryCompletionSnapshot
+import tachiyomi.domain.history.repository.HistoryActivityBackupRepository
 import tachiyomi.domain.history.repository.HistoryRepository
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -41,6 +47,7 @@ class EntryRestorer(
     private val entryBackupFeature: EntryBackupFeature = Injekt.get(),
     private val upsertHistory: UpsertHistory = Injekt.get(),
     private val historyRepository: HistoryRepository = Injekt.get(),
+    private val activityBackupRepository: HistoryActivityBackupRepository = Injekt.get(),
     private val fetchInterval: FetchInterval = Injekt.get(),
 ) {
 
@@ -155,6 +162,7 @@ class EntryRestorer(
         restoreCategories(entry, backupEntry.categories, backupCategories)
         restoreChapters(entry, backupEntry.chapters)
         restoreHistory(entry, backupEntry.history)
+        restoreActivity(entry, backupEntry)
         entryBackupFeature.restore(
             session = restoreSession,
             profileId = profileProvider.activeProfileId,
@@ -240,6 +248,67 @@ class EntryRestorer(
             val chapter = entryChapterRepository.getChapterByUrlAndEntryId(history.url, entry.id)
                 ?: return@forEach
             upsertHistory.await(history.mergeWith(chapter.id, existingHistoryByChapterId[chapter.id]))
+        }
+    }
+
+    private suspend fun restoreActivity(entry: Entry, backupEntry: BackupEntry) {
+        if (
+            backupEntry.activitySessions.isEmpty() &&
+            backupEntry.activityCompletions.isEmpty() &&
+            backupEntry.statisticsEpoch == null
+        ) {
+            return
+        }
+
+        val chapterUrls = buildSet {
+            backupEntry.activitySessions.forEach { session ->
+                session.segments.mapNotNullTo(this) { it.chapterUrl }
+            }
+            backupEntry.activityCompletions.mapNotNullTo(this) { it.chapterUrl }
+        }
+        val chapterIdsByUrl = buildMap {
+            chapterUrls.forEach { url ->
+                put(url, entryChapterRepository.getChapterByUrlAndEntryId(url, entry.id)?.id)
+            }
+        }
+        val snapshot = HistoryActivitySnapshot(
+            sessions = backupEntry.activitySessions.map { session ->
+                HistoryActivitySessionSnapshot(
+                    sessionId = session.sessionId,
+                    startedAtEpochMillis = session.startedAt,
+                    endedAtEpochMillis = session.endedAt,
+                    durationMillis = session.duration,
+                    lastSequence = session.lastSequence,
+                    segments = session.segments.map { segment ->
+                        HistoryActivitySegmentSnapshot(
+                            chapterId = segment.chapterUrl?.let(chapterIdsByUrl::get),
+                            localDate = segment.localDate,
+                            timeZoneId = segment.timeZoneId,
+                            startedAtEpochMillis = segment.startedAt,
+                            endedAtEpochMillis = segment.endedAt,
+                            durationMillis = segment.duration,
+                        )
+                    },
+                )
+            },
+            completions = backupEntry.activityCompletions.mapNotNull { completion ->
+                val cause = HistoryCompletionCause.entries.firstOrNull {
+                    it.storageValue == completion.cause
+                } ?: return@mapNotNull null
+                HistoryCompletionSnapshot(
+                    eventId = completion.eventId,
+                    chapterId = completion.chapterUrl?.let(chapterIdsByUrl::get),
+                    sessionId = completion.sessionId,
+                    occurredAtEpochMillis = completion.occurredAt,
+                    localDate = completion.localDate,
+                    timeZoneId = completion.timeZoneId,
+                    cause = cause,
+                )
+            },
+        )
+        activityBackupRepository.restoreActivity(entry.id, snapshot)
+        backupEntry.statisticsEpoch?.let { epoch ->
+            activityBackupRepository.restoreStatisticsEpoch(profileProvider.activeProfileId, epoch)
         }
     }
 }

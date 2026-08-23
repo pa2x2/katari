@@ -25,6 +25,7 @@ import logcat.LogPriority
 import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
 import mihon.entry.interactions.anime.state.positionMs
 import mihon.entry.interactions.media.session.EntryMediaSessionActivity
+import mihon.entry.interactions.media.session.EntryMediaSessionActivitySession
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.source.EntryWebViewFeature
@@ -73,6 +74,7 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
 
     private var initialized = false
     private var playbackSession: VideoPlaybackSession? = null
+    private val activitySession = EntryMediaSessionActivitySession()
     private val persistMutex = Mutex()
     private var visibleEntryId: Long = INVALID_ID
     private var ownerEntryId: Long = INVALID_ID
@@ -359,7 +361,7 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
         )
     }
 
-    fun persistPlayback(positionMs: Long, durationMs: Long) {
+    fun persistPlayback(positionMs: Long, durationMs: Long, activeDurationMs: Long = 0L) {
         val current = mutableState.value as? State.Ready ?: return
         val safePositionMs = positionMs.coerceAtLeast(0L)
         val safeDurationMs = durationMs.coerceAtLeast(0L)
@@ -367,9 +369,14 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
             current.ownerEntryId,
             current.chapterId,
             current.chapterResourceKey,
+            activitySession,
         )
             .also { playbackSession = it }
-        val snapshot = session.snapshot(positionMs = safePositionMs, durationMs = safeDurationMs)
+        val snapshot = session.snapshot(
+            positionMs = safePositionMs,
+            durationMs = safeDurationMs,
+            activeDurationMs = activeDurationMs,
+        )
         mutableState.value = current.copy(
             resumePositionMs = safePositionMs,
             playbackStateByChapterId = current.playbackStateByChapterId + (current.chapterId to snapshot.progressState),
@@ -388,12 +395,7 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
                             } else {
                                 0.0
                             },
-                            activity = snapshot.historyUpdate?.let { history ->
-                                EntryMediaSessionActivity(
-                                    recordedAtEpochMillis = history.readAt.time,
-                                    durationMillis = history.sessionReadDuration,
-                                )
-                            },
+                            activity = snapshot.activity,
                         ),
                     )
                 }
@@ -548,6 +550,7 @@ internal class VideoPlayerViewModel @JvmOverloads constructor(
                     current.ownerEntryId,
                     current.chapterId,
                     current.chapterResourceKey,
+                    activitySession,
                 )
             session.restore(current.playbackStateByChapterId[current.chapterId])
             session.restore(current.resumePositionMs)

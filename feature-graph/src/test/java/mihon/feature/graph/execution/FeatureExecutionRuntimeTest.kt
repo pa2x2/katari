@@ -148,6 +148,29 @@ class FeatureExecutionRuntimeTest {
     }
 
     @Test
+    fun `optional participant ordering applies only when the predecessor is present`() = runSuspend {
+        val point = point()
+        val optionalPredecessorId = FeatureExecutionParticipantId("example.optional")
+        val participant = participant(
+            id = "example.consumer",
+            point = point,
+            order = FeatureExecutionOrder(afterIfPresent = setOf(optionalPredecessorId)),
+        )
+
+        val graph = graph(listOf(point), listOf(participant))
+        val calls = mutableListOf<String>()
+        val runtime = runtime(graph, binding(participant) { calls += participant.id.value })
+
+        runtime.executeInline(
+            point,
+            FeatureSubjectId.EntryContentType(ContentTypeId("subject")),
+            Event("event"),
+        )
+
+        calls shouldContainExactly listOf(participant.id.value)
+    }
+
+    @Test
     fun `context evidence is resolved by participant binding without coordinator knowledge`() = runSuspend {
         val point = point()
         val enabled = contextInputDefinition<Boolean>(

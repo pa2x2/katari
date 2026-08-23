@@ -1,6 +1,9 @@
 package eu.kanade.tachiyomi.data.backup.create.creators
 
 import eu.kanade.tachiyomi.data.backup.create.BackupOptions
+import eu.kanade.tachiyomi.data.backup.models.BackupActivityCompletion
+import eu.kanade.tachiyomi.data.backup.models.BackupActivitySegment
+import eu.kanade.tachiyomi.data.backup.models.BackupActivitySession
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.models.BackupHistory
 import eu.kanade.tachiyomi.data.backup.models.compatibility.applyLegacyFeatureStateProjection
@@ -14,6 +17,7 @@ import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.history.model.History
+import tachiyomi.domain.history.repository.HistoryActivityBackupRepository
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -22,6 +26,7 @@ class EntryBackupCreator(
     private val profileProvider: ActiveProfileProvider = Injekt.get(),
     private val entryBackupFeature: EntryBackupFeature = Injekt.get(),
     private val entryChapterRepository: EntryChapterRepository = Injekt.get(),
+    private val activityBackupRepository: HistoryActivityBackupRepository = Injekt.get(),
 ) {
 
     suspend operator fun invoke(entries: List<Entry>, options: BackupOptions): List<BackupEntry> {
@@ -33,13 +38,19 @@ class EntryBackupCreator(
         entries: List<Entry>,
         options: BackupOptions,
     ): List<BackupEntry> {
-        return entries.map { backupEntry(profileId, it, options) }
+        val statisticsEpoch = if (options.history) {
+            activityBackupRepository.getStatisticsEpoch(profileId)
+        } else {
+            null
+        }
+        return entries.map { backupEntry(profileId, it, options, statisticsEpoch) }
     }
 
     private suspend fun backupEntry(
         profileId: Long,
         entry: Entry,
         options: BackupOptions,
+        statisticsEpoch: Long?,
     ): BackupEntry {
         val entryObject = entry.toBackupEntry()
         val featureStates = entryBackupFeature.snapshot(
@@ -78,6 +89,15 @@ class EntryBackupCreator(
         }
 
         if (options.history) {
+            val chapterUrls = mutableMapOf<Long, String?>()
+            suspend fun chapterUrl(chapterId: Long?): String? {
+                if (chapterId == null) return null
+                if (chapterId !in chapterUrls) {
+                    chapterUrls[chapterId] = entryChapterRepository.getChapterById(chapterId)?.url
+                }
+                return chapterUrls[chapterId]
+            }
+
             val historyByEntryId = handler.awaitList {
                 historyQueries.getHistoryByEntryId(entry.id) { _, chapterId, lastRead, timeRead ->
                     History(
@@ -90,13 +110,46 @@ class EntryBackupCreator(
             }
             if (historyByEntryId.isNotEmpty()) {
                 val history = historyByEntryId.mapNotNull { history ->
-                    val chapter = entryChapterRepository.getChapterById(history.chapterId) ?: return@mapNotNull null
-                    BackupHistory(chapter.url, history.readAt?.time ?: 0L, history.readDuration)
+                    val url = chapterUrl(history.chapterId) ?: return@mapNotNull null
+                    BackupHistory(url, history.readAt?.time ?: 0L, history.readDuration)
                 }
                 if (history.isNotEmpty()) {
                     entryObject.history = history
                 }
             }
+
+            val activity = activityBackupRepository.getActivityByEntryId(entry.id)
+            entryObject.activitySessions = activity.sessions.map { session ->
+                BackupActivitySession(
+                    sessionId = session.sessionId,
+                    startedAt = session.startedAtEpochMillis,
+                    endedAt = session.endedAtEpochMillis,
+                    duration = session.durationMillis,
+                    lastSequence = session.lastSequence,
+                    segments = session.segments.map { segment ->
+                        BackupActivitySegment(
+                            chapterUrl = chapterUrl(segment.chapterId),
+                            localDate = segment.localDate,
+                            timeZoneId = segment.timeZoneId,
+                            startedAt = segment.startedAtEpochMillis,
+                            endedAt = segment.endedAtEpochMillis,
+                            duration = segment.durationMillis,
+                        )
+                    },
+                )
+            }
+            entryObject.activityCompletions = activity.completions.map { completion ->
+                BackupActivityCompletion(
+                    eventId = completion.eventId,
+                    chapterUrl = chapterUrl(completion.chapterId),
+                    sessionId = completion.sessionId,
+                    occurredAt = completion.occurredAtEpochMillis,
+                    localDate = completion.localDate,
+                    timeZoneId = completion.timeZoneId,
+                    cause = completion.cause.storageValue,
+                )
+            }
+            entryObject.statisticsEpoch = statisticsEpoch
         }
 
         entryObject.applyLegacyFeatureStateProjection(featureStates)

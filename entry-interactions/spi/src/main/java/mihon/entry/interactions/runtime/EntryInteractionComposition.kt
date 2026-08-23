@@ -59,6 +59,8 @@ import mihon.entry.interactions.state.ProviderBackedEntryBookmarkInteraction
 import mihon.entry.interactions.state.ProviderBackedEntryConsumptionInteraction
 import mihon.entry.interactions.state.ProviderBackedEntryPlaybackPreferencesInteraction
 import mihon.entry.interactions.state.ProviderBackedEntryProgressInteraction
+import mihon.entry.interactions.statistics.EntryStatisticsInteraction
+import mihon.entry.interactions.statistics.ProviderBackedEntryStatisticsInteraction
 import mihon.feature.graph.FeatureGraphContributor
 import mihon.feature.graph.execution.FeatureDurableExecutionParticipantBinding
 import mihon.feature.graph.execution.FeatureExecutionParticipantBinding
@@ -148,6 +150,7 @@ fun createEntryInteractionInstallation(
             typePresentationProviders = providers[EntryTypePresentationCapability],
             viewerSettingsProviders = providers[EntryViewerSettingsCapability],
             mediaCacheProviders = providers[EntryMediaCacheCapability],
+            statisticsProviders = providers[EntryStatisticsCapability],
         ),
         featureRuntimeInputs = FeatureRuntimeInputs(
             graphContributors = plugins + featureContributors,
@@ -213,6 +216,7 @@ private class DefaultEntryInteractions(
     typePresentationProviders: Map<EntryType, EntryTypePresentationProvider>,
     viewerSettingsProviders: Map<EntryType, EntryViewerSettingsProvider>,
     mediaCacheProviders: Map<EntryType, EntryMediaCacheProvider>,
+    statisticsProviders: Map<EntryType, EntryStatisticsProvider>,
 ) : EntryInteractions {
     override val open: EntryOpenInteraction = ProviderBackedEntryOpenInteraction(openProcessors)
     override val continueEntry: EntryContinueInteraction =
@@ -249,4 +253,6 @@ private class DefaultEntryInteractions(
         ProviderBackedEntryViewerSettingsInteraction(viewerSettingsProviders)
     override val mediaCache: EntryMediaCacheInteraction =
         ProviderBackedEntryMediaCacheInteraction(mediaCacheProviders)
+    override val statistics: EntryStatisticsInteraction =
+        ProviderBackedEntryStatisticsInteraction(statisticsProviders)
 }
