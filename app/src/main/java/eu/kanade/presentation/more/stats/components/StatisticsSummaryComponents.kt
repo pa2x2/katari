@@ -1,5 +1,6 @@
 package eu.kanade.presentation.more.stats.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -220,6 +221,7 @@ internal fun StatisticsTopTitlesCard(
     titles: List<StatsTopTitle>,
     typesById: Map<EntryType, StatsType>,
     formatDuration: (Long) -> String,
+    onTitleClick: (Long) -> Unit,
 ) {
     StatisticsSectionCard(title = stringResource(MR.strings.statistics_top_titles)) {
         val visibleTitles = titles.take(5)
@@ -227,7 +229,10 @@ internal fun StatisticsTopTitlesCard(
         visibleTitles.forEach { title ->
             val type = typesById[title.type]
             val color = type?.accent?.color() ?: MaterialTheme.colorScheme.primary
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Row(
+                modifier = Modifier.fillMaxWidth().clickable { onTitleClick(title.entryId) },
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
                 Text(
                     text = title.title,
                     modifier = Modifier.weight(1f),

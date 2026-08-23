@@ -1548,6 +1548,9 @@
     <string name="statistics_show_exact_values">Show exact values</string>
     <string name="statistics_hide_exact_values">Hide exact values</string>
     <string name="statistics_could_not_load_activity">Couldn\'t load activity</string>
+    <string name="statistics_see_activity">See activity</string>
+    <string name="statistics_recorded_since">Recorded since %s</string>
+    <string name="statistics_show_more_activity">Show more</string>
     <string name="statistics_titles">titles</string>
     <string name="label_completed_titles">Completed entries</string>
     <string name="label_read_duration">Read duration</string>

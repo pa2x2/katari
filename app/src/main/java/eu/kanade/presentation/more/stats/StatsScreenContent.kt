@@ -55,6 +55,8 @@ import tachiyomi.presentation.core.components.material.TabText
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import java.text.NumberFormat
+import java.time.Instant
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
@@ -66,6 +68,8 @@ fun StatsScreenContent(
     onRangeSelected: (StatsRange) -> Unit,
     onTypeSelected: (EntryType?) -> Unit,
     onRetryActivity: () -> Unit,
+    onOpenActivity: (EntryType?, StatsTrendPoint) -> Unit,
+    onOpenEntry: (Long) -> Unit,
 ) {
     val pages = remember(state.types) { listOf<EntryType?>(null) + state.types.map(StatsType::type) }
     val selectedPage = pages.indexOf(state.selectedType).coerceAtLeast(0)
@@ -127,6 +131,8 @@ fun StatsScreenContent(
                 selectedType = pages[page],
                 bottomPadding = paddingValues.calculateBottomPadding(),
                 onRetryActivity = onRetryActivity,
+                onOpenActivity = onOpenActivity,
+                onOpenEntry = onOpenEntry,
             )
         }
     }
@@ -168,6 +174,8 @@ private fun StatisticsPage(
     selectedType: EntryType?,
     bottomPadding: androidx.compose.ui.unit.Dp,
     onRetryActivity: () -> Unit,
+    onOpenActivity: (EntryType?, StatsTrendPoint) -> Unit,
+    onOpenEntry: (Long) -> Unit,
 ) {
     val visibleTypes = state.types.filter { selectedType == null || it.type == selectedType }
     val titleCounts = state.library.titlesByType.filterKeys { selectedType == null || it == selectedType }
@@ -209,6 +217,7 @@ private fun StatisticsPage(
                 types = visibleTypes,
                 formatter = formatter,
                 onRetry = onRetryActivity,
+                onOpenActivity = { point -> onOpenActivity(selectedType, point) },
             )
         }
         if (visibleActivity?.topTitles?.isNotEmpty() == true) {
@@ -217,6 +226,7 @@ private fun StatisticsPage(
                     titles = visibleActivity.topTitles,
                     typesById = state.types.associateBy(StatsType::type),
                     formatDuration = formatter,
+                    onTitleClick = onOpenEntry,
                 )
             }
         }
@@ -230,6 +240,7 @@ private fun StatisticsActivityCard(
     types: List<StatsType>,
     formatter: (Long) -> String,
     onRetry: () -> Unit,
+    onOpenActivity: (StatsTrendPoint) -> Unit,
 ) {
     when (state) {
         ActivityState.Loading -> StatisticsSectionCard(stringResource(MR.strings.statistics_activity)) {
@@ -273,6 +284,19 @@ private fun StatisticsActivityCard(
                         }
                     },
                     formatDuration = formatter,
+                    onOpenActivity = onOpenActivity,
+                )
+            }
+            activity?.trackingStartedAtEpochMillis?.let { startedAt ->
+                val recordedDate = Instant.ofEpochMilli(startedAt)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
+                    .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
+                Text(
+                    text = stringResource(MR.strings.statistics_recorded_since, recordedDate),
+                    modifier = Modifier.padding(top = 8.dp),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

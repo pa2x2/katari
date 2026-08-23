@@ -42,6 +42,7 @@ import tachiyomi.data.entry.PlaybackPreferencesRepositoryImpl
 import tachiyomi.data.entry.ViewerSettingOverrideRepositoryImpl
 import tachiyomi.data.history.HistoryRepositoryImpl
 import tachiyomi.data.history.activity.HistoryActivityBackupRepositoryImpl
+import tachiyomi.data.history.activity.HistoryActivityRepositoryImpl
 import tachiyomi.data.release.ReleaseServiceImpl
 import tachiyomi.data.source.SourceRepositoryImpl
 import tachiyomi.data.source.StubSourceRepositoryImpl
@@ -83,6 +84,7 @@ import tachiyomi.domain.history.interactor.GetTotalReadDuration
 import tachiyomi.domain.history.interactor.RemoveHistory
 import tachiyomi.domain.history.interactor.UpsertHistory
 import tachiyomi.domain.history.repository.HistoryActivityBackupRepository
+import tachiyomi.domain.history.repository.HistoryActivityRepository
 import tachiyomi.domain.history.repository.HistoryRepository
 import tachiyomi.domain.release.interactor.GetApplicationRelease
 import tachiyomi.domain.release.service.ReleaseService
@@ -158,6 +160,7 @@ class DomainModule : InjektModule {
 
         addSingletonFactory<HistoryRepository> { HistoryRepositoryImpl(get(), get()) }
         addSingletonFactory<HistoryActivityBackupRepository> { HistoryActivityBackupRepositoryImpl(get()) }
+        addSingletonFactory<HistoryActivityRepository> { HistoryActivityRepositoryImpl(get()) }
         addSingletonFactory<StatisticsRepository> { StatisticsRepositoryImpl(get()) }
         addFactory { GetHistory(get(), get()) }
         addFactory { UpsertHistory(get()) }

@@ -10,6 +10,8 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.more.stats.StatsScreenContent
 import eu.kanade.presentation.more.stats.StatsScreenState
 import eu.kanade.presentation.util.Screen
+import eu.kanade.tachiyomi.ui.entry.EntryScreen
+import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityScreen
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
@@ -44,6 +46,16 @@ class StatsScreen : Screen() {
                 onRangeSelected = screenModel::setRange,
                 onTypeSelected = screenModel::setType,
                 onRetryActivity = screenModel::retryActivity,
+                onOpenActivity = { type, point ->
+                    navigator.push(
+                        HistoryActivityScreen(
+                            startLocalDate = point.startDate.toString(),
+                            endLocalDate = point.endDate.toString(),
+                            typeName = type?.name,
+                        ),
+                    )
+                },
+                onOpenEntry = { navigator.push(EntryScreen(it)) },
             )
         }
     }

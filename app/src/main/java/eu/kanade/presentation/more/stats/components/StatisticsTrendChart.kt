@@ -49,6 +49,7 @@ internal fun StatisticsTrendChart(
     typeLabels: Map<EntryType, String>,
     formatDate: (StatsTrendPoint) -> String,
     formatDuration: (Long) -> String,
+    onOpenActivity: (StatsTrendPoint) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val typeColors = types.associate { it.type to it.accent.color() }
@@ -201,6 +202,12 @@ internal fun StatisticsTrendChart(
                         }
                     }
                 }
+            }
+            TextButton(
+                onClick = { onOpenActivity(points[selectedIndex.coerceIn(points.indices)]) },
+                modifier = Modifier.padding(top = 4.dp),
+            ) {
+                Text(stringResource(MR.strings.statistics_see_activity))
             }
         }
 

@@ -201,6 +201,82 @@ FROM activity_completion_events
 WHERE entry_id = :entryId
 ORDER BY occurred_at;
 
+getActivityDetailSessions:
+SELECT
+    SES.session_id,
+    SES.entry_id,
+    ENT.type,
+    ENT.title,
+    max(SEG.local_date) AS local_date,
+    min(SEG.started_at) AS started_at,
+    max(SEG.ended_at) AS ended_at,
+    CAST(sum(SEG.duration) AS INTEGER) AS duration,
+    coalesce(CMP.completion_count, 0) AS completion_count
+FROM activity_sessions SES
+JOIN entries ENT ON ENT._id = SES.entry_id
+JOIN activity_segments SEG ON SEG.session_id = SES.session_id
+LEFT JOIN (
+    SELECT session_id, count(*) AS completion_count
+    FROM activity_completion_events
+    WHERE local_date >= :startLocalDate
+    AND local_date <= :endLocalDate
+    AND cause = 'consumption'
+    GROUP BY session_id
+) CMP ON CMP.session_id = SES.session_id
+WHERE ENT.profile_id = :profileId
+AND SEG.local_date >= :startLocalDate
+AND SEG.local_date <= :endLocalDate
+GROUP BY SES.session_id
+ORDER BY ended_at DESC, SES.session_id
+LIMIT :limit OFFSET :offset;
+
+getActivityDetailSessionsByType:
+SELECT
+    SES.session_id,
+    SES.entry_id,
+    ENT.type,
+    ENT.title,
+    max(SEG.local_date) AS local_date,
+    min(SEG.started_at) AS started_at,
+    max(SEG.ended_at) AS ended_at,
+    CAST(sum(SEG.duration) AS INTEGER) AS duration,
+    coalesce(CMP.completion_count, 0) AS completion_count
+FROM activity_sessions SES
+JOIN entries ENT ON ENT._id = SES.entry_id
+JOIN activity_segments SEG ON SEG.session_id = SES.session_id
+LEFT JOIN (
+    SELECT session_id, count(*) AS completion_count
+    FROM activity_completion_events
+    WHERE local_date >= :startLocalDate
+    AND local_date <= :endLocalDate
+    AND cause = 'consumption'
+    GROUP BY session_id
+) CMP ON CMP.session_id = SES.session_id
+WHERE ENT.profile_id = :profileId
+AND ENT.type = :type
+AND SEG.local_date >= :startLocalDate
+AND SEG.local_date <= :endLocalDate
+GROUP BY SES.session_id
+ORDER BY ended_at DESC, SES.session_id
+LIMIT :limit OFFSET :offset;
+
+getActivityDetailSegments:
+SELECT
+    SEG.session_id,
+    SEG.chapter_id,
+    CH.name AS chapter_name,
+    SEG.local_date,
+    SEG.time_zone_id,
+    SEG.started_at,
+    SEG.ended_at,
+    SEG.duration
+FROM activity_segments SEG
+LEFT JOIN chapters CH ON CH._id = SEG.chapter_id
+WHERE SEG.session_id IN :sessionIds
+AND SEG.local_date >= :startLocalDate
+AND SEG.local_date <= :endLocalDate
+ORDER BY SEG.started_at, SEG.chapter_id;
+
 restoreActivitySession:
 INSERT INTO activity_sessions(
     session_id,
