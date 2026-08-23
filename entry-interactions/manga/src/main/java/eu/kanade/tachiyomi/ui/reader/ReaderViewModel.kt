@@ -28,6 +28,7 @@ import eu.kanade.tachiyomi.util.lang.byteSize
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -42,6 +43,9 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import mihon.entry.interactions.manga.download.DownloadManager
 import mihon.entry.interactions.manga.download.DownloadProvider
@@ -49,7 +53,7 @@ import mihon.entry.interactions.manga.download.model.MangaDownload
 import mihon.entry.interactions.manga.media.session.MangaMediaSessionProcessor
 import mihon.entry.interactions.manga.state.mangaProgressState
 import mihon.entry.interactions.manga.state.pageIndex
-import mihon.entry.interactions.media.session.EntryMediaSessionActivity
+import mihon.entry.interactions.media.session.EntryMediaSessionActivitySession
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPolicy
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPreferences
@@ -86,7 +90,6 @@ import uy.kohesive.injekt.api.get
 import java.io.File
 import java.io.InputStream
 import java.time.Instant
-import java.util.Date
 import kotlin.getValue
 import kotlin.time.Clock
 
@@ -127,6 +130,8 @@ internal class ReaderViewModel @JvmOverloads constructor(
 
     private val eventChannel = Channel<Event>()
     val eventFlow = eventChannel.receiveAsFlow()
+    private val activitySession = EntryMediaSessionActivitySession()
+    private val activityMutex = Mutex()
 
     /**
      * The manga loaded in the reader. It can be null when instantiated for a short time.
@@ -643,23 +648,35 @@ internal class ReaderViewModel @JvmOverloads constructor(
      * Reports completed reader activity through the shared media-session boundary.
      */
     suspend fun updateHistory() {
-        getCurrentChapter()?.let { readerChapter ->
-            val chapterId = readerChapter.chapter.id!!
-            val endTime = Date()
-            val sessionReadDuration = chapterReadStartTime?.let { endTime.time - it } ?: 0
-            val visibleEntry = manga?.let { getEntry.await(it.id) } ?: return@let
-            val child = readerChapter.chapter.toDomainChapter()?.toEntryChapter() ?: return@let
-            mediaSession.onEvent(
-                EntryMediaSessionEvent.ActivityRecorded(
-                    visibleEntry = visibleEntry,
-                    child = child,
-                    activity = EntryMediaSessionActivity(
-                        recordedAtEpochMillis = endTime.time,
-                        durationMillis = sessionReadDuration,
+        recordHistory(continueReading = false)
+    }
+
+    suspend fun checkpointHistory() {
+        recordHistory(continueReading = true)
+    }
+
+    private suspend fun recordHistory(continueReading: Boolean) {
+        activityMutex.withLock {
+            val endTime = System.currentTimeMillis()
+            val startedAt = chapterReadStartTime
+            chapterReadStartTime = if (continueReading) endTime else null
+            val readerChapter = getCurrentChapter() ?: return@withLock
+            val sessionReadDuration = startedAt?.let { endTime - it } ?: return@withLock
+            if (sessionReadDuration <= 0L) return@withLock
+            val visibleEntry = manga?.let { getEntry.await(it.id) } ?: return@withLock
+            val child = readerChapter.chapter.toDomainChapter()?.toEntryChapter() ?: return@withLock
+            withContext(NonCancellable) {
+                mediaSession.onEvent(
+                    EntryMediaSessionEvent.ActivityRecorded(
+                        visibleEntry = visibleEntry,
+                        child = child,
+                        activity = activitySession.record(
+                            recordedAtEpochMillis = endTime,
+                            durationMillis = sessionReadDuration,
+                        ),
                     ),
-                ),
-            )
-            chapterReadStartTime = null
+                )
+            }
         }
     }
 

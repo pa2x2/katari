@@ -18,6 +18,7 @@ import mihon.feature.graph.validation.FeatureExecutionContractScenario
 import mihon.feature.graph.validation.FeatureExecutionContractVerifier
 import mihon.feature.graph.validation.FeatureValidationContributionSink
 import mihon.feature.graph.validation.FeatureValidationContributor
+import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.history.repository.HistoryRepository
 
 class EntryHistoryContractValidationContributor : FeatureValidationContributor {
@@ -33,7 +34,7 @@ class EntryHistoryContractValidationContributor : FeatureValidationContributor {
                     )
                     val repository = mockk<HistoryRepository>(relaxed = true)
                     DefaultEntryHistoryFeature(repository).record(event, requireNotNull(event.activity))
-                    coVerify(exactly = 1) { repository.upsertHistory(any()) }
+                    coVerify(exactly = 1) { repository.recordActivity(any()) }
                 }
             },
         )
@@ -55,6 +56,11 @@ class EntryHistoryContractValidationContributor : FeatureValidationContributor {
                         ) {
                             recorded = activity
                         }
+
+                        override suspend fun recordCompletion(
+                            event: EntryMediaSessionEvent.Progressed,
+                            progress: EntryProgressState,
+                        ) = Unit
                     }
                     entryHistoryMediaSessionBinding { feature }
                         .handler

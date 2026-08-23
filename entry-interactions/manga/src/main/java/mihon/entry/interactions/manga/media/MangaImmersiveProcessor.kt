@@ -13,7 +13,6 @@ import mihon.entry.interactions.media.EntryImmersiveHandle
 import mihon.entry.interactions.media.EntryImmersiveProgress
 import mihon.entry.interactions.media.EntryImmersiveRenderer
 import mihon.entry.interactions.media.EntryMediaSessionProcessor
-import mihon.entry.interactions.media.session.EntryMediaSessionActivity
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
 import mihon.entry.interactions.runtime.EntryImmersiveLoadMode
 import mihon.entry.interactions.runtime.EntryImmersiveProcessor
@@ -100,7 +99,7 @@ internal class MangaImmersiveProcessor(
                     fraction = pageIndex.toDouble() / imageProgress.pageCount,
                     completeEquivalentChildrenByNumber = true,
                     activity = imageProgress.sessionDurationMs.takeIf { it > 0L }?.let { duration ->
-                        EntryMediaSessionActivity(
+                        media.activitySession.record(
                             recordedAtEpochMillis = timestamp,
                             durationMillis = duration,
                         )

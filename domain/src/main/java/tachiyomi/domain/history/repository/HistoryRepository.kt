@@ -4,6 +4,8 @@ import kotlinx.coroutines.flow.Flow
 import tachiyomi.domain.history.model.History
 import tachiyomi.domain.history.model.HistoryUpdate
 import tachiyomi.domain.history.model.HistoryWithRelations
+import tachiyomi.domain.history.model.activity.HistoryActivityUpdate
+import tachiyomi.domain.history.model.activity.HistoryCompletionUpdate
 
 interface HistoryRepository {
 
@@ -24,4 +26,9 @@ interface HistoryRepository {
     suspend fun deleteAllHistory(): Boolean
 
     suspend fun upsertHistory(historyUpdate: HistoryUpdate)
+
+    /** Atomically records legacy History duration and its detailed, idempotent activity checkpoint. */
+    suspend fun recordActivity(activityUpdate: HistoryActivityUpdate)
+
+    suspend fun recordCompletion(completionUpdate: HistoryCompletionUpdate)
 }

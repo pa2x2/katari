@@ -24,6 +24,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.ui.video.player.AnimePlayerBasePreferences
+import eu.kanade.tachiyomi.ui.video.player.VideoActivePlaybackClock
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerMediaCache
 import eu.kanade.tachiyomi.ui.video.player.buildVideoPlayer
 import eu.kanade.tachiyomi.ui.video.player.capturePlaybackSnapshot
@@ -67,7 +68,10 @@ internal class AnimeImmersiveRenderer(
         var hasRenderedFirstFrame by remember(handle.chapterId, handle.stream.request.url) {
             mutableStateOf(false)
         }
-        val player = remember(handle.chapterId, handle.stream.request.url) {
+        val activePlaybackClock = remember(handle.chapterId, handle.stream.request.url) {
+            VideoActivePlaybackClock()
+        }
+        val player = remember(handle.chapterId, handle.stream.request.url, activePlaybackClock) {
             buildVideoPlayer(
                 context = context,
                 networkHelper = networkHelper,
@@ -78,6 +82,10 @@ internal class AnimeImmersiveRenderer(
                 exoPlayer.repeatMode = Player.REPEAT_MODE_ONE
                 exoPlayer.addListener(
                     object : Player.Listener {
+                        override fun onIsPlayingChanged(isPlaying: Boolean) {
+                            activePlaybackClock.setActive(isPlaying)
+                        }
+
                         override fun onPlaybackStateChanged(playbackState: Int) {
                             isBuffering = playbackState == Player.STATE_BUFFERING
                         }
@@ -161,7 +169,13 @@ internal class AnimeImmersiveRenderer(
             while (isActive) {
                 delay(PROGRESS_SAVE_INTERVAL_MS)
                 val snapshot = player.capturePlaybackSnapshot()
-                onProgress(EntryImmersiveProgress.Playback(snapshot.positionMs, snapshot.durationMs))
+                onProgress(
+                    EntryImmersiveProgress.Playback(
+                        positionMs = snapshot.positionMs,
+                        durationMs = snapshot.durationMs,
+                        activeDurationMs = activePlaybackClock.checkpoint(),
+                    ),
+                )
             }
         }
         EntryImmersiveActiveSessionEffect(active, onPagingBlockedChange) {
@@ -170,6 +184,7 @@ internal class AnimeImmersiveRenderer(
                 EntryImmersiveProgress.Playback(
                     positionMs = snapshot.positionMs,
                     durationMs = snapshot.durationMs,
+                    activeDurationMs = activePlaybackClock.checkpoint(),
                     resetSession = true,
                 ),
             )
@@ -180,6 +195,14 @@ internal class AnimeImmersiveRenderer(
         }
         DisposableEffect(player) {
             onDispose {
+                val snapshot = player.capturePlaybackSnapshot()
+                onProgress(
+                    EntryImmersiveProgress.Playback(
+                        positionMs = snapshot.positionMs,
+                        durationMs = snapshot.durationMs,
+                        activeDurationMs = activePlaybackClock.checkpoint(),
+                    ),
+                )
                 player.stop()
                 player.release()
             }

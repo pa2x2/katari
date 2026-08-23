@@ -34,6 +34,7 @@ sealed interface EntryImmersiveProgress {
     data class Playback(
         val positionMs: Long,
         val durationMs: Long,
+        val activeDurationMs: Long = 0L,
         val resetSession: Boolean = false,
     ) : EntryImmersiveProgress
 }

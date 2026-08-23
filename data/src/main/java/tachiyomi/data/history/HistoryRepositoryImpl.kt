@@ -8,15 +8,21 @@ import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
+import tachiyomi.data.history.activity.HistoryActivityRecorder
+import tachiyomi.data.history.activity.HistoryCompletionRecorder
 import tachiyomi.domain.history.model.History
 import tachiyomi.domain.history.model.HistoryUpdate
 import tachiyomi.domain.history.model.HistoryWithRelations
+import tachiyomi.domain.history.model.activity.HistoryActivityUpdate
+import tachiyomi.domain.history.model.activity.HistoryCompletionUpdate
 import tachiyomi.domain.history.repository.HistoryRepository
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HistoryRepositoryImpl(
     private val handler: DatabaseHandler,
     private val profileProvider: ActiveProfileProvider,
+    private val activityRecorder: HistoryActivityRecorder = HistoryActivityRecorder(handler),
+    private val completionRecorder: HistoryCompletionRecorder = HistoryCompletionRecorder(handler),
 ) : HistoryRepository {
 
     override fun getHistory(query: String): Flow<List<HistoryWithRelations>> {
@@ -65,7 +71,12 @@ class HistoryRepositoryImpl(
 
     override suspend fun deleteAllHistory(): Boolean {
         return try {
-            handler.await { historyQueries.removeAllHistory(profileProvider.activeProfileId) }
+            val profileId = profileProvider.activeProfileId
+            handler.await(inTransaction = true) {
+                historyQueries.removeAllHistory(profileId)
+                activityQueries.deleteActivityByProfile(profileId)
+                activityQueries.resetStatisticsEpoch(profileId, System.currentTimeMillis())
+            }
             true
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, throwable = e)
@@ -91,6 +102,22 @@ class HistoryRepositoryImpl(
                     historyUpdate.sessionReadDuration,
                 )
             }
+        } catch (e: Exception) {
+            logcat(LogPriority.ERROR, throwable = e)
+        }
+    }
+
+    override suspend fun recordActivity(activityUpdate: HistoryActivityUpdate) {
+        try {
+            activityRecorder.record(activityUpdate)
+        } catch (e: Exception) {
+            logcat(LogPriority.ERROR, throwable = e)
+        }
+    }
+
+    override suspend fun recordCompletion(completionUpdate: HistoryCompletionUpdate) {
+        try {
+            completionRecorder.record(completionUpdate)
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, throwable = e)
         }

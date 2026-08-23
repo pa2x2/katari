@@ -8,11 +8,11 @@ import org.junit.jupiter.api.Test
 class VideoPlaybackSessionTest {
 
     @Test
-    fun `restored baseline only records newly watched duration`() {
+    fun `restored baseline preserves progress while activity uses active wall clock`() {
         val session = VideoPlaybackSession(entryId = 3L, chapterId = 7L, resourceKey = "/episode", now = { 1_000L })
 
         session.restore(30_000L)
-        val snapshot = session.snapshot(positionMs = 45_000L, durationMs = 100_000L)
+        val snapshot = session.snapshot(positionMs = 45_000L, durationMs = 100_000L, activeDurationMs = 5_000L)
 
         snapshot.progressState.entryId shouldBe 3L
         snapshot.progressState.chapterId shouldBe 7L
@@ -22,9 +22,8 @@ class VideoPlaybackSessionTest {
         snapshot.progressState.completed shouldBe false
         snapshot.progressState.locatorUpdatedAt shouldBe 1_000L
         snapshot.progressState.completionUpdatedAt shouldBe 0L
-        snapshot.historyUpdate?.chapterId shouldBe 7L
-        snapshot.historyUpdate?.sessionReadDuration shouldBe 15_000L
-        snapshot.historyUpdate?.readAt?.time shouldBe 1_000L
+        snapshot.activity?.durationMillis shouldBe 5_000L
+        snapshot.activity?.recordedAtEpochMillis shouldBe 1_000L
     }
 
     @Test
@@ -41,7 +40,7 @@ class VideoPlaybackSessionTest {
         val snapshot = session.snapshot(positionMs = 10_000L, durationMs = 100_000L)
 
         snapshot.progressState.locator.position shouldBe 10_000L
-        snapshot.historyUpdate.shouldBeNull()
+        snapshot.activity.shouldBeNull()
     }
 
     @Test
@@ -53,7 +52,7 @@ class VideoPlaybackSessionTest {
         snapshot.progressState.completed shouldBe true
         snapshot.completedNow shouldBe true
         snapshot.progressState.completionUpdatedAt shouldBe 4_000L
-        snapshot.historyUpdate?.sessionReadDuration shouldBe 90_000L
+        snapshot.activity.shouldBeNull()
     }
 
     @Test
@@ -78,7 +77,7 @@ class VideoPlaybackSessionTest {
         snapshot.progressState.locator.position shouldBe 20_000L
         snapshot.progressState.locatorUpdatedAt shouldBe 8_000L
         snapshot.progressState.completionUpdatedAt shouldBe 8_000L
-        snapshot.historyUpdate.shouldBeNull()
+        snapshot.activity.shouldBeNull()
         snapshot.completedNow shouldBe false
     }
 }

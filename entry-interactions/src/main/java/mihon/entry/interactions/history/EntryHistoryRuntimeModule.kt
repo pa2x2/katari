@@ -39,8 +39,12 @@ internal fun entryHistoryMediaSessionBinding(
     },
     handler = FeatureExecutionHandler { execution ->
         when (val event = execution.event) {
-            is EntryMediaSessionEvent.Progressed ->
+            is EntryMediaSessionEvent.Progressed -> {
                 event.activity?.let { feature().record(event, it) }
+                execution.progressResult
+                    ?.takeIf { it.completedNow }
+                    ?.let { feature().recordCompletion(event, it.state) }
+            }
             is EntryMediaSessionEvent.ActivityRecorded ->
                 feature().record(event, event.activity)
         }

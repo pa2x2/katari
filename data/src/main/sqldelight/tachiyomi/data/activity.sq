@@ -1,0 +1,191 @@
+CREATE TABLE activity_sessions(
+    session_id TEXT NOT NULL PRIMARY KEY,
+    entry_id INTEGER NOT NULL,
+    started_at INTEGER NOT NULL,
+    ended_at INTEGER NOT NULL,
+    duration INTEGER NOT NULL DEFAULT 0,
+    last_sequence INTEGER NOT NULL DEFAULT -1,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    CHECK(length(trim(session_id)) > 0),
+    CHECK(started_at >= 0),
+    CHECK(ended_at >= started_at),
+    CHECK(duration >= 0),
+    CHECK(last_sequence >= -1)
+);
+
+CREATE INDEX idx_activity_sessions_entry_time
+ON activity_sessions(entry_id, ended_at);
+
+CREATE TABLE activity_segments(
+    session_id TEXT NOT NULL,
+    chapter_id INTEGER,
+    local_date TEXT NOT NULL,
+    time_zone_id TEXT NOT NULL,
+    started_at INTEGER NOT NULL,
+    ended_at INTEGER NOT NULL,
+    duration INTEGER NOT NULL,
+    PRIMARY KEY(session_id, chapter_id, local_date, time_zone_id),
+    FOREIGN KEY(session_id) REFERENCES activity_sessions(session_id) ON DELETE CASCADE,
+    FOREIGN KEY(chapter_id) REFERENCES chapters(_id) ON DELETE SET NULL,
+    CHECK(length(local_date) = 10),
+    CHECK(length(trim(time_zone_id)) > 0),
+    CHECK(started_at >= 0),
+    CHECK(ended_at >= started_at),
+    CHECK(duration > 0)
+);
+
+CREATE INDEX idx_activity_segments_local_date
+ON activity_segments(local_date, session_id);
+
+CREATE INDEX idx_activity_segments_chapter
+ON activity_segments(chapter_id);
+
+CREATE TABLE activity_completion_events(
+    event_id TEXT NOT NULL PRIMARY KEY,
+    entry_id INTEGER NOT NULL,
+    chapter_id INTEGER,
+    session_id TEXT,
+    occurred_at INTEGER NOT NULL,
+    local_date TEXT NOT NULL,
+    time_zone_id TEXT NOT NULL,
+    cause TEXT NOT NULL,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    FOREIGN KEY(chapter_id) REFERENCES chapters(_id) ON DELETE SET NULL,
+    FOREIGN KEY(session_id) REFERENCES activity_sessions(session_id) ON DELETE SET NULL,
+    CHECK(length(trim(event_id)) > 0),
+    CHECK(occurred_at >= 0),
+    CHECK(length(local_date) = 10),
+    CHECK(length(trim(time_zone_id)) > 0),
+    CHECK(cause IN ('consumption', 'manual'))
+);
+
+CREATE INDEX idx_activity_completion_entry_time
+ON activity_completion_events(entry_id, occurred_at);
+
+CREATE INDEX idx_activity_completion_local_date
+ON activity_completion_events(local_date, entry_id);
+
+CREATE TABLE statistics_epochs(
+    profile_id INTEGER NOT NULL PRIMARY KEY,
+    started_at INTEGER NOT NULL,
+    FOREIGN KEY(profile_id) REFERENCES profiles(_id) ON DELETE CASCADE,
+    CHECK(started_at >= 0)
+);
+
+getActivitySessionCheckpoint:
+SELECT entry_id, last_sequence
+FROM activity_sessions
+WHERE session_id = :sessionId;
+
+insertActivitySession:
+INSERT INTO activity_sessions(
+    session_id,
+    entry_id,
+    started_at,
+    ended_at,
+    duration,
+    last_sequence
+)
+VALUES (:sessionId, :entryId, :startedAt, :endedAt, 0, -1);
+
+updateActivitySession:
+UPDATE activity_sessions
+SET
+    started_at = min(started_at, :startedAt),
+    ended_at = max(ended_at, :endedAt),
+    duration = duration + :duration,
+    last_sequence = :sequence
+WHERE session_id = :sessionId;
+
+upsertActivitySegment:
+INSERT INTO activity_segments(
+    session_id,
+    chapter_id,
+    local_date,
+    time_zone_id,
+    started_at,
+    ended_at,
+    duration
+)
+VALUES (
+    :sessionId,
+    :chapterId,
+    :localDate,
+    :timeZoneId,
+    :startedAt,
+    :endedAt,
+    :duration
+)
+ON CONFLICT(session_id, chapter_id, local_date, time_zone_id) DO UPDATE SET
+    started_at = min(activity_segments.started_at, excluded.started_at),
+    ended_at = max(activity_segments.ended_at, excluded.ended_at),
+    duration = activity_segments.duration + excluded.duration;
+
+ensureStatisticsEpochForEntry:
+INSERT OR IGNORE INTO statistics_epochs(profile_id, started_at)
+SELECT profile_id, :startedAt
+FROM entries
+WHERE _id = :entryId;
+
+resetStatisticsEpoch:
+INSERT INTO statistics_epochs(profile_id, started_at)
+VALUES (:profileId, :startedAt)
+ON CONFLICT(profile_id) DO UPDATE SET started_at = excluded.started_at;
+
+deleteActivityByProfile:
+DELETE FROM activity_sessions
+WHERE entry_id IN (SELECT _id FROM entries WHERE profile_id = :profileId);
+
+getStatisticsEpoch:
+SELECT started_at
+FROM statistics_epochs
+WHERE profile_id = :profileId;
+
+insertCompletionEvent:
+INSERT OR IGNORE INTO activity_completion_events(
+    event_id,
+    entry_id,
+    chapter_id,
+    session_id,
+    occurred_at,
+    local_date,
+    time_zone_id,
+    cause
+)
+VALUES (
+    :eventId,
+    :entryId,
+    :chapterId,
+    :sessionId,
+    :occurredAt,
+    :localDate,
+    :timeZoneId,
+    :cause
+);
+
+getActivitySegmentsByEntryId:
+SELECT
+    S.session_id,
+    S.chapter_id,
+    S.local_date,
+    S.time_zone_id,
+    S.started_at,
+    S.ended_at,
+    S.duration
+FROM activity_segments S
+JOIN activity_sessions A ON A.session_id = S.session_id
+WHERE A.entry_id = :entryId
+ORDER BY S.started_at;
+
+getCompletionEventsByEntryId:
+SELECT
+    event_id,
+    chapter_id,
+    session_id,
+    occurred_at,
+    local_date,
+    time_zone_id,
+    cause
+FROM activity_completion_events
+WHERE entry_id = :entryId
+ORDER BY occurred_at;

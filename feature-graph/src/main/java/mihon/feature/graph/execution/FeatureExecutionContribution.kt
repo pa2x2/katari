@@ -149,10 +149,11 @@ inline fun <reified E : Any> durableFeatureExecutionPointDefinition(
 /** Explicit dependencies between independently owned participants in one execution point. */
 data class FeatureExecutionOrder(
     val after: Set<FeatureExecutionParticipantId> = emptySet(),
+    val afterIfPresent: Set<FeatureExecutionParticipantId> = emptySet(),
     val before: Set<FeatureExecutionParticipantId> = emptySet(),
 ) {
     init {
-        require(after.intersect(before).isEmpty()) {
+        require((after + afterIfPresent).intersect(before).isEmpty()) {
             "An execution participant cannot require the same participant both before and after it"
         }
     }
@@ -178,7 +179,7 @@ data class FeatureExecutionParticipantDefinition<E : Any>(
     val behavioralContracts: List<FeatureBehaviorContract>,
 ) {
     init {
-        require(id !in order.after && id !in order.before) {
+        require(id !in order.after && id !in order.afterIfPresent && id !in order.before) {
             "Execution participant $id cannot order itself"
         }
         require(contextInputs.isNotEmpty() == (contextRule != null)) {
