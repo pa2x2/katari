@@ -17,6 +17,7 @@ import mihon.entry.interactions.anime.player.AnimeChildWebViewHostAdapter
 import mihon.entry.interactions.anime.presentation.AnimeEntryTypePresentationProvider
 import mihon.entry.interactions.anime.state.AnimeConsumptionProcessor
 import mihon.entry.interactions.anime.state.AnimeProgressProcessor
+import mihon.entry.interactions.anime.statistics.AnimeEntryStatisticsProvider
 import mihon.entry.interactions.download.EntryBulkDownloadCandidateCapability
 import mihon.entry.interactions.download.EntryDownloadCapability
 import mihon.entry.interactions.download.EntryDownloadOptionsCapability
@@ -34,6 +35,7 @@ import mihon.entry.interactions.runtime.EntryImmersiveCapability
 import mihon.entry.interactions.runtime.EntryInteractionPlugin
 import mihon.entry.interactions.runtime.EntryPreviewCapability
 import mihon.entry.interactions.runtime.EntryPreviewConfigurationCapability
+import mihon.entry.interactions.runtime.EntryStatisticsCapability
 import mihon.entry.interactions.runtime.EntryTypePresentationCapability
 import mihon.entry.interactions.settings.EntryInteractionPreferences
 import mihon.entry.interactions.source.EntryChildWebViewHostContribution
@@ -131,6 +133,7 @@ internal fun animeEntryInteractionPlugin(
                     EntryImmersiveCapability.bind(immersiveProcessor),
                     EntryMediaSessionCapability.bind(dependencies.mediaSession),
                     EntryTypePresentationCapability.bind(AnimeEntryTypePresentationProvider),
+                    EntryStatisticsCapability.bind(AnimeEntryStatisticsProvider),
                     EntryMediaCacheCapability.bind(AnimeMediaCacheProvider { Injekt.get() }),
                 ),
             )

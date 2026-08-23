@@ -17,6 +17,7 @@ import mihon.entry.interactions.state.EntryBookmarkInteraction
 import mihon.entry.interactions.state.EntryConsumptionInteraction
 import mihon.entry.interactions.state.EntryPlaybackPreferencesInteraction
 import mihon.entry.interactions.state.EntryProgressInteraction
+import mihon.entry.interactions.statistics.EntryStatisticsInteraction
 
 /** Internal operational dispatch assembled from contributed type providers. */
 interface EntryInteractions {
@@ -37,4 +38,5 @@ interface EntryInteractions {
     val typePresentation: EntryTypePresentationInteraction
     val viewerSettings: EntryViewerSettingsInteraction
     val mediaCache: EntryMediaCacheInteraction
+    val statistics: EntryStatisticsInteraction
 }

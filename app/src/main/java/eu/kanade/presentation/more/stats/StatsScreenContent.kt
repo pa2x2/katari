@@ -1,165 +1,311 @@
 package eu.kanade.presentation.more.stats
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CollectionsBookmark
-import androidx.compose.material.icons.outlined.LocalLibrary
+import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryScrollableTabRow
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Tab
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import eu.kanade.presentation.more.stats.components.StatsItem
-import eu.kanade.presentation.more.stats.components.StatsOverviewItem
-import eu.kanade.presentation.more.stats.data.StatsData
-import eu.kanade.presentation.util.toDurationString
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.dp
+import eu.kanade.presentation.more.stats.components.StatisticsHeadlineCards
+import eu.kanade.presentation.more.stats.components.StatisticsLibraryCard
+import eu.kanade.presentation.more.stats.components.StatisticsProgressCard
+import eu.kanade.presentation.more.stats.components.StatisticsSectionCard
+import eu.kanade.presentation.more.stats.components.StatisticsTopTitlesCard
+import eu.kanade.presentation.more.stats.components.StatisticsTrendChart
+import eu.kanade.presentation.more.stats.data.StatsActivity
+import eu.kanade.presentation.more.stats.data.StatsRange
+import eu.kanade.presentation.more.stats.data.StatsTrendPoint
+import eu.kanade.presentation.more.stats.data.StatsType
+import eu.kanade.tachiyomi.source.entry.EntryType
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.SectionCard
-import tachiyomi.presentation.core.components.material.padding
+import tachiyomi.presentation.core.components.material.TabText
+import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
+import java.text.NumberFormat
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.Locale
-import kotlin.time.DurationUnit
-import kotlin.time.toDuration
 
 @Composable
 fun StatsScreenContent(
     state: StatsScreenState.Success,
     paddingValues: PaddingValues,
+    onRangeSelected: (StatsRange) -> Unit,
+    onTypeSelected: (EntryType?) -> Unit,
+    onRetryActivity: () -> Unit,
 ) {
+    val pages = remember(state.types) { listOf<EntryType?>(null) + state.types.map(StatsType::type) }
+    val selectedPage = pages.indexOf(state.selectedType).coerceAtLeast(0)
+    val pagerState = rememberPagerState(initialPage = selectedPage) { pages.size }
+    val scope = rememberCoroutineScope()
+    val layoutDirection = LocalLayoutDirection.current
+
+    LaunchedEffect(state.profileId, state.selectedType, pages) {
+        if (pagerState.currentPage != selectedPage) {
+            pagerState.scrollToPage(selectedPage)
+        }
+    }
+    LaunchedEffect(pagerState, pages) {
+        snapshotFlow { pagerState.settledPage }
+            .distinctUntilChanged()
+            .collect { page -> onTypeSelected(pages[page]) }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(
+                top = paddingValues.calculateTopPadding(),
+                start = paddingValues.calculateStartPadding(layoutDirection),
+                end = paddingValues.calculateEndPadding(layoutDirection),
+            ),
+    ) {
+        PrimaryScrollableTabRow(
+            selectedTabIndex = pagerState.currentPage,
+            edgePadding = 0.dp,
+        ) {
+            pages.forEachIndexed { index, type ->
+                val label = if (type == null) {
+                    stringResource(MR.strings.label_overview_section)
+                } else {
+                    stringResource(state.types.first { it.type == type }.displayName)
+                }
+                Tab(
+                    selected = pagerState.currentPage == index,
+                    onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
+                    text = { TabText(label) },
+                    unselectedContentColor = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+        }
+        StatisticsRangeSelector(
+            selected = state.range,
+            onSelected = onRangeSelected,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+        )
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.Top,
+            key = { pages[it]?.name ?: "overview" },
+        ) { page ->
+            StatisticsPage(
+                state = state,
+                selectedType = pages[page],
+                bottomPadding = paddingValues.calculateBottomPadding(),
+                onRetryActivity = onRetryActivity,
+            )
+        }
+    }
+}
+
+@Composable
+private fun StatisticsRangeSelector(
+    selected: StatsRange,
+    onSelected: (StatsRange) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val ranges = StatsRange.entries
+    SingleChoiceSegmentedButtonRow(modifier = modifier.fillMaxWidth()) {
+        ranges.forEachIndexed { index, range ->
+            SegmentedButton(
+                selected = selected == range,
+                onClick = { onSelected(range) },
+                shape = SegmentedButtonDefaults.itemShape(index, ranges.size),
+                label = {
+                    Text(
+                        stringResource(
+                            when (range) {
+                                StatsRange.SEVEN_DAYS -> MR.strings.statistics_range_7_days
+                                StatsRange.THIRTY_DAYS -> MR.strings.statistics_range_30_days
+                                StatsRange.ONE_YEAR -> MR.strings.statistics_range_1_year
+                                StatsRange.ALL -> MR.strings.all
+                            },
+                        ),
+                    )
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun StatisticsPage(
+    state: StatsScreenState.Success,
+    selectedType: EntryType?,
+    bottomPadding: androidx.compose.ui.unit.Dp,
+    onRetryActivity: () -> Unit,
+) {
+    val visibleTypes = state.types.filter { selectedType == null || it.type == selectedType }
+    val titleCounts = state.library.titlesByType.filterKeys { selectedType == null || it == selectedType }
+    val titleCount = if (selectedType == null) state.library.totalTitles else titleCounts[selectedType] ?: 0
+    val progress = if (selectedType == null) state.library.progress else state.library.progressByType[selectedType]
+    val activity = (state.activity as? ActivityState.Available)?.data
+    val formatter = rememberStatisticsDurationFormatter()
+    val visibleActivity = activity?.forType(selectedType)
+    val streakDays = when {
+        activity == null -> null
+        selectedType == null -> activity.currentStreakDays
+        else -> activity.currentStreakDaysByType[selectedType] ?: 0
+    }
+
     LazyColumn(
-        contentPadding = paddingValues,
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = bottomPadding + 20.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         item {
-            OverviewSection(state.overview)
+            StatisticsHeadlineCards(
+                time = visibleActivity?.let { formatter(it.totalDurationMillis) } ?: "—",
+                titles = titleCount,
+                streak = streakDays?.let { pluralStringResource(MR.plurals.day, it, it) } ?: "—",
+                timeIcon = Icons.Outlined.Schedule,
+                titlesIcon = Icons.Outlined.CollectionsBookmark,
+                streakIcon = Icons.Outlined.LocalFireDepartment,
+            )
         }
         item {
-            TitlesStats(state.titles)
+            StatisticsLibraryCard(titleCounts = titleCounts, types = visibleTypes)
         }
         item {
-            ChapterStats(state.chapters)
+            StatisticsProgressCard(progress)
         }
         item {
-            TrackerStats(state.trackers)
+            StatisticsActivityCard(
+                state = state.activity,
+                activity = visibleActivity,
+                types = visibleTypes,
+                formatter = formatter,
+                onRetry = onRetryActivity,
+            )
+        }
+        if (visibleActivity?.topTitles?.isNotEmpty() == true) {
+            item {
+                StatisticsTopTitlesCard(
+                    titles = visibleActivity.topTitles,
+                    typesById = state.types.associateBy(StatsType::type),
+                    formatDuration = formatter,
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun LazyItemScope.OverviewSection(
-    data: StatsData.Overview,
+private fun StatisticsActivityCard(
+    state: ActivityState,
+    activity: StatsActivity?,
+    types: List<StatsType>,
+    formatter: (Long) -> String,
+    onRetry: () -> Unit,
 ) {
-    val none = stringResource(MR.strings.none)
-    val notApplicable = stringResource(MR.strings.not_applicable)
-    val context = LocalContext.current
-    val readDurationString = remember(data.totalReadDuration) {
-        data.totalReadDuration
-            .toDuration(DurationUnit.MILLISECONDS)
-            .toDurationString(context, fallback = none)
-    }
-    SectionCard(MR.strings.label_overview_section) {
-        Row(
-            modifier = Modifier.height(IntrinsicSize.Min),
-        ) {
-            StatsOverviewItem(
-                title = data.libraryEntryCount.toString(),
-                subtitle = stringResource(MR.strings.in_library),
-                icon = Icons.Outlined.CollectionsBookmark,
-            )
-            StatsOverviewItem(
-                title = readDurationString,
-                subtitle = stringResource(MR.strings.label_read_duration),
-                icon = Icons.Outlined.Schedule,
-            )
-            StatsOverviewItem(
-                title = data.completedEntryCount?.toString() ?: notApplicable,
-                subtitle = stringResource(MR.strings.label_completed_titles),
-                icon = Icons.Outlined.LocalLibrary,
-            )
+    when (state) {
+        ActivityState.Loading -> StatisticsSectionCard(stringResource(MR.strings.statistics_activity)) {
+            Row(
+                modifier = Modifier.fillMaxWidth().height(180.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+        ActivityState.Failed -> StatisticsSectionCard(stringResource(MR.strings.statistics_activity)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(stringResource(MR.strings.statistics_could_not_load_activity))
+                TextButton(onClick = onRetry) { Text(stringResource(MR.strings.action_retry)) }
+            }
+        }
+        is ActivityState.Available -> StatisticsSectionCard(stringResource(MR.strings.statistics_activity)) {
+            if (activity == null || activity.totalDurationMillis <= 0L) {
+                Text(
+                    text = stringResource(MR.strings.statistics_no_activity),
+                    modifier = Modifier.padding(vertical = 44.dp).align(Alignment.CenterHorizontally),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                val labels = types.associate { it.type to stringResource(it.displayName) }
+                val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+                StatisticsTrendChart(
+                    points = activity.trend,
+                    types = types,
+                    typeLabels = labels,
+                    formatDate = { point ->
+                        if (point.startDate == point.endDate) {
+                            point.startDate.format(dateFormatter)
+                        } else {
+                            "${point.startDate.format(dateFormatter)} – ${point.endDate.format(dateFormatter)}"
+                        }
+                    },
+                    formatDuration = formatter,
+                )
+            }
         }
     }
 }
 
-@Composable
-private fun LazyItemScope.TitlesStats(
-    data: StatsData.Titles,
-) {
-    val notApplicable = stringResource(MR.strings.not_applicable)
-    SectionCard(MR.strings.label_titles_section) {
-        Row {
-            StatsItem(
-                data.globalUpdateItemCount.toString(),
-                stringResource(MR.strings.label_titles_in_global_update),
-            )
-            StatsItem(
-                data.startedEntryCount?.toString() ?: notApplicable,
-                stringResource(MR.strings.label_started),
-            )
-            StatsItem(
-                data.localEntryCount.toString(),
-                stringResource(MR.strings.label_local),
-            )
-        }
-    }
+private fun StatsActivity.forType(type: EntryType?): StatsActivity {
+    if (type == null) return this
+    return copy(
+        totalDurationMillis = trend.sumOf { it.durationByType[type] ?: 0L },
+        completionCount = 0L,
+        trend = trend.map { point ->
+            point.copy(durationByType = mapOf(type to (point.durationByType[type] ?: 0L)))
+        },
+        topTitles = topTitles.filter { it.type == type },
+    )
 }
 
 @Composable
-private fun LazyItemScope.ChapterStats(
-    data: StatsData.Chapters,
-) {
-    val notApplicable = stringResource(MR.strings.not_applicable)
-    SectionCard(MR.strings.label_items_section) {
-        Row {
-            StatsItem(
-                data.totalChapterCount?.toString() ?: notApplicable,
-                stringResource(MR.strings.label_total_chapters),
-            )
-            StatsItem(
-                data.readChapterCount?.toString() ?: notApplicable,
-                stringResource(MR.strings.label_read_chapters),
-            )
-            StatsItem(
-                data.downloadCount.toString(),
-                stringResource(MR.strings.label_downloaded),
-            )
+private fun rememberStatisticsDurationFormatter(): (Long) -> String {
+    val locale = Locale.getDefault()
+    return remember(locale) {
+        val numbers = NumberFormat.getIntegerInstance(locale)
+        val formatter: (Long) -> String = { durationMillis ->
+            val totalMinutes = durationMillis.coerceAtLeast(0L) / 60_000L
+            val hours = totalMinutes / 60L
+            val minutes = totalMinutes % 60L
+            when {
+                hours > 0L && minutes > 0L -> "${numbers.format(hours)}h ${numbers.format(minutes)}m"
+                hours > 0L -> "${numbers.format(hours)}h"
+                else -> "${numbers.format(minutes)}m"
+            }
         }
-    }
-}
-
-@Composable
-private fun LazyItemScope.TrackerStats(
-    data: StatsData.Trackers,
-) {
-    val notApplicable = stringResource(MR.strings.not_applicable)
-    val meanScoreStr = remember(data.trackedTitleCount, data.meanScore) {
-        if (data.trackedTitleCount > 0 && !data.meanScore.isNaN()) {
-            // All other numbers are localized in English
-            "%.2f ★".format(Locale.ENGLISH, data.meanScore)
-        } else {
-            notApplicable
-        }
-    }
-    SectionCard(MR.strings.label_tracker_section) {
-        Row {
-            StatsItem(
-                data.trackedTitleCount.toString(),
-                stringResource(MR.strings.label_tracked_titles),
-            )
-            StatsItem(
-                meanScoreStr,
-                stringResource(MR.strings.label_mean_score),
-            )
-            StatsItem(
-                data.trackerCount.toString(),
-                stringResource(MR.strings.label_used),
-            )
-        }
+        formatter
     }
 }

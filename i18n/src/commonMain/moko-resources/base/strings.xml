@@ -1532,6 +1532,23 @@
 
     <!-- Stats screen -->
     <string name="label_overview_section">Overview</string>
+    <string name="statistics_range_7_days">7 days</string>
+    <string name="statistics_range_30_days">30 days</string>
+    <string name="statistics_range_1_year">1 year</string>
+    <string name="statistics_time_spent">Time spent</string>
+    <string name="statistics_current_streak">Current streak</string>
+    <string name="statistics_library">Your library</string>
+    <string name="statistics_progress">Your progress</string>
+    <string name="statistics_not_started">Not started</string>
+    <string name="statistics_in_progress">In progress</string>
+    <string name="statistics_caught_up">Caught up</string>
+    <string name="statistics_activity">Activity</string>
+    <string name="statistics_top_titles">Top titles</string>
+    <string name="statistics_no_activity">No recorded activity yet</string>
+    <string name="statistics_show_exact_values">Show exact values</string>
+    <string name="statistics_hide_exact_values">Hide exact values</string>
+    <string name="statistics_could_not_load_activity">Couldn\'t load activity</string>
+    <string name="statistics_titles">titles</string>
     <string name="label_completed_titles">Completed entries</string>
     <string name="label_read_duration">Read duration</string>
     <string name="label_titles_section">Entries</string>

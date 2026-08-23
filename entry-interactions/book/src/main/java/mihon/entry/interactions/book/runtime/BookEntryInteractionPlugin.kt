@@ -15,6 +15,7 @@ import mihon.entry.interactions.book.presentation.BookEntryTypePresentationProvi
 import mihon.entry.interactions.book.reader.BookChildWebViewHostAdapter
 import mihon.entry.interactions.book.state.BookConsumptionProcessor
 import mihon.entry.interactions.book.state.BookProgressProcessor
+import mihon.entry.interactions.book.statistics.BookEntryStatisticsProvider
 import mihon.entry.interactions.download.EntryBulkDownloadCandidateCapability
 import mihon.entry.interactions.download.EntryDownloadCapability
 import mihon.entry.interactions.library.EntryLibraryProgressCapability
@@ -30,6 +31,7 @@ import mihon.entry.interactions.runtime.EntryChildProgressCapability
 import mihon.entry.interactions.runtime.EntryInteractionPlugin
 import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
 import mihon.entry.interactions.runtime.EntryOutsideReleasePeriodFilterCapability
+import mihon.entry.interactions.runtime.EntryStatisticsCapability
 import mihon.entry.interactions.runtime.EntryTypePresentationCapability
 import mihon.entry.interactions.source.EntryChildWebViewHostContribution
 import mihon.entry.interactions.state.EntryConsumptionCapability
@@ -90,6 +92,7 @@ fun bookEntryInteractionPlugin(
             add(EntryLibraryProgressCapability.bind(libraryProgressProvider))
             add(EntryOutsideReleasePeriodFilterCapability.bind(outsideReleasePeriodFilterProvider))
             add(EntryTypePresentationCapability.bind(BookEntryTypePresentationProvider))
+            add(EntryStatisticsCapability.bind(BookEntryStatisticsProvider))
             add(EntryMediaCacheCapability.bind(BookMediaCacheProvider { Injekt.get() }))
             add(EntryMediaSessionCapability.bind(dependencies.mediaSession))
             add(EntryMigrationCapability.bind(migrationProvider))

@@ -41,6 +41,9 @@ class StatsScreen : Screen() {
             StatsScreenContent(
                 state = state as StatsScreenState.Success,
                 paddingValues = paddingValues,
+                onRangeSelected = screenModel::setRange,
+                onTypeSelected = screenModel::setType,
+                onRetryActivity = screenModel::retryActivity,
             )
         }
     }
