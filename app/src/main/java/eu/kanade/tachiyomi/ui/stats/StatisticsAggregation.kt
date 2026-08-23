@@ -109,6 +109,8 @@ internal fun buildActivity(
             StatsTopTitle(entry.entryId, entry.type, entry.title, entry.durationMillis)
         },
         trackingStartedAtEpochMillis = snapshot.trackingStartedAtEpochMillis,
+        earlierDurationMillis = snapshot.earlierActivity.sumOf { it.durationMillis },
+        earlierDurationByType = snapshot.earlierActivity.associate { it.type to it.durationMillis },
     )
 }
 

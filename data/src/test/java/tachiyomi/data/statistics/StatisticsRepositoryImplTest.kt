@@ -61,6 +61,9 @@ class StatisticsRepositoryImplTest {
                 EntryType.MANGA to 1_000L,
             )
             snapshot.topEntries.map { it.title } shouldBe listOf("Anime", "Manga")
+            snapshot.earlierActivity.associate { it.type to it.durationMillis } shouldBe mapOf(
+                EntryType.MANGA to 5_000L,
+            )
         }
     }
 
@@ -83,6 +86,26 @@ class StatisticsRepositoryImplTest {
                         (1, 1, 1, '/manga', 'Manga', 'manga'),
                         (2, 1, 1, '/anime', 'Anime', 'anime'),
                         (3, 2, 1, '/book', 'Book', 'book')
+                """.trimIndent(),
+                0,
+            )
+            driver.await(
+                null,
+                """
+                    INSERT INTO chapters(_id, entry_id, url, name)
+                    VALUES
+                        (11, 1, '/manga/chapter', 'Manga chapter'),
+                        (12, 2, '/anime/episode', 'Anime episode')
+                """.trimIndent(),
+                0,
+            )
+            driver.await(
+                null,
+                """
+                    INSERT INTO history(entry_id, chapter_id, last_read, time_read)
+                    VALUES
+                        (1, 11, 1000, 6000),
+                        (2, 12, 1000, 3000)
                 """.trimIndent(),
                 0,
             )

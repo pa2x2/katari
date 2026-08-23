@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.stats
 import androidx.compose.ui.util.fastDistinctBy
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.more.stats.ActivityState
 import eu.kanade.presentation.more.stats.StatsScreenState
 import eu.kanade.presentation.more.stats.data.StatsLibrary
@@ -42,6 +43,7 @@ class StatsScreenModel(
     private val statisticsFeature: EntryStatisticsFeature = Injekt.get(),
     private val statisticsRepository: StatisticsRepository = Injekt.get(),
     private val statisticsPreferences: StatisticsPreferences = Injekt.get(),
+    private val basePreferences: BasePreferences = Injekt.get(),
 ) : StateScreenModel<StatsScreenState>(StatsScreenState.Loading) {
 
     private val activityReload = MutableStateFlow(0L)
@@ -105,7 +107,8 @@ class StatsScreenModel(
                         }
                     },
                     statisticsPreferences.selectedType.changes(),
-                ) { library, (range, activity), selectedTypeName ->
+                    basePreferences.incognitoMode.changes(),
+                ) { library, (range, activity), selectedTypeName, incognito ->
                     StatsScreenState.Success(
                         profileId = profileId,
                         range = range,
@@ -113,6 +116,7 @@ class StatsScreenModel(
                         types = types,
                         library = library,
                         activity = activity,
+                        incognito = incognito,
                     )
                 }.distinctUntilChanged().flowOn(Dispatchers.IO)
             }.collect { event ->

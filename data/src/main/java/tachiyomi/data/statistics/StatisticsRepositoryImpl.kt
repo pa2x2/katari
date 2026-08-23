@@ -7,6 +7,7 @@ import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.statistics.model.StatisticsActivityBucket
 import tachiyomi.domain.statistics.model.StatisticsActivitySnapshot
 import tachiyomi.domain.statistics.model.StatisticsCompletionBucket
+import tachiyomi.domain.statistics.model.StatisticsEarlierActivity
 import tachiyomi.domain.statistics.model.StatisticsTopEntry
 import tachiyomi.domain.statistics.repository.StatisticsRepository
 
@@ -22,14 +23,38 @@ class StatisticsRepositoryImpl(
             subscribeCompletions(profileId, startLocalDate),
             subscribeTopEntries(profileId, startLocalDate),
             handler.subscribeToOneOrNull { activityQueries.getStatisticsEpoch(profileId) },
-        ) { activity, completions, topEntries, trackingStartedAt ->
+            subscribeEarlierActivity(profileId),
+        ) { activity, completions, topEntries, trackingStartedAt, earlierActivity ->
             StatisticsActivitySnapshot(
                 profileId = profileId,
                 trackingStartedAtEpochMillis = trackingStartedAt,
                 activity = activity,
                 completions = completions,
                 topEntries = topEntries,
+                earlierActivity = earlierActivity,
             )
+        }
+    }
+
+    private fun subscribeEarlierActivity(profileId: Long): Flow<List<StatisticsEarlierActivity>> {
+        val legacy = handler.subscribeToList {
+            historyQueries.getReadDurationByType(profileId) { type, duration ->
+                EntryType.valueOf(type.uppercase()) to duration
+            }
+        }
+        val detailed = handler.subscribeToList {
+            statisticsViewQueries.detailedLifetimeDurationByType(profileId) { type, duration ->
+                EntryType.valueOf(type.uppercase()) to (duration ?: 0L)
+            }
+        }
+        return combine(legacy, detailed) { legacyRows, detailedRows ->
+            val detailedByType = detailedRows.toMap()
+            legacyRows.mapNotNull { (type, duration) ->
+                (duration - (detailedByType[type] ?: 0L))
+                    .coerceAtLeast(0L)
+                    .takeIf { it > 0L }
+                    ?.let { StatisticsEarlierActivity(type, it) }
+            }
         }
     }
 

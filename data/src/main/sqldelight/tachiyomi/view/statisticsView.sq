@@ -36,6 +36,13 @@ AND local_date >= :startLocalDate
 GROUP BY type, local_date
 ORDER BY local_date, type;
 
+detailedLifetimeDurationByType:
+SELECT type, CAST(sum(duration) AS INTEGER) AS duration
+FROM statisticsView
+WHERE profile_id = :profileId
+GROUP BY type
+ORDER BY type;
+
 completionTotals:
 SELECT
     ENT.type,

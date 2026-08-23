@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 import tachiyomi.domain.statistics.model.StatisticsActivityBucket
 import tachiyomi.domain.statistics.model.StatisticsActivitySnapshot
 import tachiyomi.domain.statistics.model.StatisticsCompletionBucket
+import tachiyomi.domain.statistics.model.StatisticsEarlierActivity
 import java.time.LocalDate
 import java.util.Locale
 
@@ -26,6 +27,9 @@ class StatisticsAggregationTest {
                     StatisticsCompletionBucket(EntryType.ANIME, "2026-08-22", 1L),
                 ),
                 topEntries = emptyList(),
+                earlierActivity = listOf(
+                    StatisticsEarlierActivity(EntryType.MANGA, 12_000L),
+                ),
             ),
             range = StatsRange.SEVEN_DAYS,
             types = listOf(EntryType.MANGA, EntryType.ANIME, EntryType.BOOK),
@@ -49,5 +53,7 @@ class StatisticsAggregationTest {
             EntryType.ANIME to 1L,
             EntryType.BOOK to 0L,
         )
+        result.earlierDurationMillis shouldBe 12_000L
+        result.earlierDurationByType shouldBe mapOf(EntryType.MANGA to 12_000L)
     }
 }

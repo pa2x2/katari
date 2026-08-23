@@ -19,6 +19,7 @@ sealed interface StatsScreenState {
         val types: List<StatsType>,
         val library: StatsLibrary,
         val activity: ActivityState,
+        val incognito: Boolean,
     ) : StatsScreenState
 }
 

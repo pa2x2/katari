@@ -61,4 +61,6 @@ data class StatsActivity(
     val trend: List<StatsTrendPoint>,
     val topTitles: List<StatsTopTitle>,
     val trackingStartedAtEpochMillis: Long?,
+    val earlierDurationMillis: Long,
+    val earlierDurationByType: Map<EntryType, Long>,
 )

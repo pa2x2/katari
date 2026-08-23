@@ -25,6 +25,7 @@ import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -202,6 +203,21 @@ private fun StatisticsPage(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = bottomPadding + 20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
+        if (state.incognito) {
+            item {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    shape = MaterialTheme.shapes.medium,
+                ) {
+                    Text(
+                        text = stringResource(MR.strings.statistics_incognito_active),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    )
+                }
+            }
+        }
         item {
             StatisticsHeadlineCards(
                 time = visibleActivity?.let { formatter(it.totalDurationMillis) } ?: "—",
@@ -237,6 +253,26 @@ private fun StatisticsPage(
                     formatDuration = formatter,
                     onTitleClick = onOpenEntry,
                 )
+            }
+        }
+        if (visibleActivity?.earlierDurationMillis?.let { it > 0L } == true) {
+            item {
+                StatisticsSectionCard(stringResource(MR.strings.statistics_earlier_activity)) {
+                    Text(
+                        text = formatter(visibleActivity.earlierDurationMillis),
+                        style = MaterialTheme.typography.headlineSmall,
+                    )
+                    visibleActivity.trackingStartedAtEpochMillis?.let { startedAt ->
+                        val date = Instant.ofEpochMilli(startedAt)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate()
+                            .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
+                        Text(
+                            text = stringResource(MR.strings.statistics_before_date, date),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
             }
         }
     }
@@ -322,6 +358,8 @@ private fun StatsActivity.forType(type: EntryType?): StatsActivity {
             point.copy(durationByType = mapOf(type to (point.durationByType[type] ?: 0L)))
         },
         topTitles = topTitles.filter { it.type == type },
+        earlierDurationMillis = earlierDurationByType[type] ?: 0L,
+        earlierDurationByType = mapOf(type to (earlierDurationByType[type] ?: 0L)),
     )
 }
 

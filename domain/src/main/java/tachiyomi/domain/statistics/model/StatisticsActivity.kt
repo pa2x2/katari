@@ -21,10 +21,16 @@ data class StatisticsTopEntry(
     val durationMillis: Long,
 )
 
+data class StatisticsEarlierActivity(
+    val type: EntryType,
+    val durationMillis: Long,
+)
+
 data class StatisticsActivitySnapshot(
     val profileId: Long,
     val trackingStartedAtEpochMillis: Long?,
     val activity: List<StatisticsActivityBucket>,
     val completions: List<StatisticsCompletionBucket>,
     val topEntries: List<StatisticsTopEntry>,
+    val earlierActivity: List<StatisticsEarlierActivity>,
 )
