@@ -1,16 +1,10 @@
 package eu.kanade.tachiyomi.ui.stats
 
 import eu.kanade.presentation.more.stats.data.StatsActivity
-import eu.kanade.presentation.more.stats.data.StatsLibraryCoverage
-import eu.kanade.presentation.more.stats.data.StatsOfflineCoverage
-import eu.kanade.presentation.more.stats.data.StatsProgress
 import eu.kanade.presentation.more.stats.data.StatsRange
 import eu.kanade.presentation.more.stats.data.StatsTopTitle
-import eu.kanade.presentation.more.stats.data.StatsTrackingCoverage
 import eu.kanade.presentation.more.stats.data.StatsTrendPoint
 import eu.kanade.tachiyomi.source.entry.EntryType
-import tachiyomi.domain.entry.model.EntryStatus
-import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.statistics.model.StatisticsActivitySnapshot
 import java.time.LocalDate
 import java.time.temporal.TemporalAdjusters
@@ -22,65 +16,6 @@ internal fun StatsRange.startLocalDate(today: LocalDate): LocalDate? = when (thi
     StatsRange.THIRTY_DAYS -> today.minusDays(29L)
     StatsRange.ONE_YEAR -> today.minusYears(1L).plusDays(1L)
     StatsRange.ALL -> null
-}
-
-internal fun buildLibraryProgress(items: List<LibraryItem>): StatsProgress? {
-    if (items.any { !it.hasProgressSummary }) return null
-    var notStarted = 0
-    var inProgress = 0
-    var caughtUp = 0
-    var completed = 0
-    items.forEach { item ->
-        val consumed = checkNotNull(item.consumedCount)
-        val total = checkNotNull(item.totalCount)
-        when {
-            consumed <= 0L -> notStarted += 1
-            total > 0L && consumed >= total && item.entry.status == EntryStatus.COMPLETED -> completed += 1
-            total > 0L && consumed >= total -> caughtUp += 1
-            else -> inProgress += 1
-        }
-    }
-    return StatsProgress(notStarted, inProgress, caughtUp, completed)
-}
-
-internal fun buildLibraryCoverage(
-    items: List<LibraryItem>,
-    types: List<EntryType>,
-    downloadApplicable: (EntryType) -> Boolean,
-    downloadCount: (LibraryItem) -> Int,
-    trackingApplicable: (EntryType) -> Boolean,
-    connectedTrackingTypes: Set<EntryType>,
-    trackedEntryIds: Set<Long>,
-): Map<EntryType, StatsLibraryCoverage> = types.associateWith { type ->
-    val typeItems = items.filter { it.entry.type == type }
-    val offline = if (downloadApplicable(type)) {
-        var partly = 0
-        var fully = 0
-        typeItems.forEach { item ->
-            val downloaded = downloadCount(item)
-            if (downloaded <= 0) return@forEach
-            val total = item.totalCount
-            if (!item.isMerged && total != null && total > 0L && downloaded.toLong() >= total) {
-                fully += 1
-            } else {
-                partly += 1
-            }
-        }
-        StatsOfflineCoverage(partlyOfflineTitles = partly, fullyOfflineTitles = fully)
-    } else {
-        null
-    }
-    val tracking = when {
-        !trackingApplicable(type) -> StatsTrackingCoverage.Unsupported
-        type !in connectedTrackingTypes -> StatsTrackingCoverage.NotConnected
-        else -> StatsTrackingCoverage.Connected(
-            trackedTitles = typeItems.count { item ->
-                item.memberEntries.any { it.id in trackedEntryIds }
-            },
-            totalTitles = typeItems.size,
-        )
-    }
-    StatsLibraryCoverage(offline = offline, tracking = tracking)
 }
 
 internal fun buildActivity(
@@ -146,6 +81,23 @@ internal fun buildActivity(
         completionCount = snapshot.completions.sumOf { it.count },
         completionCountByType = types.associateWith { type ->
             snapshot.completions.filter { it.type == type }.sumOf { it.count }
+        },
+        sessionCount = snapshot.sessions.sumOf { it.sessionCount },
+        sessionCountByType = types.associateWith { type ->
+            snapshot.sessions.firstOrNull { it.type == type }?.sessionCount ?: 0L
+        },
+        averageSessionDurationMillis = snapshot.activity.sumOf { it.durationMillis }
+            .div(snapshot.sessions.sumOf { it.sessionCount }.coerceAtLeast(1L)),
+        averageSessionDurationByType = types.associateWith { type ->
+            snapshot.sessions.firstOrNull { it.type == type }?.averageDurationMillis ?: 0L
+        },
+        longestSessionDurationMillis = snapshot.sessions.maxOfOrNull { it.longestDurationMillis } ?: 0L,
+        longestSessionDurationByType = types.associateWith { type ->
+            snapshot.sessions.firstOrNull { it.type == type }?.longestDurationMillis ?: 0L
+        },
+        activeDays = snapshot.activity.filter { it.durationMillis > 0L }.distinctBy { it.localDate }.size,
+        activeDaysByType = types.associateWith { type ->
+            snapshot.activity.filter { it.type == type && it.durationMillis > 0L }.distinctBy { it.localDate }.size
         },
         trend = trend,
         topTitles = snapshot.topEntries.map { entry ->

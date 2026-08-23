@@ -12,6 +12,9 @@ import eu.kanade.presentation.more.stats.StatsScreenState
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityScreen
+import eu.kanade.tachiyomi.ui.library.statistics.LibraryStatisticsFilter
+import eu.kanade.tachiyomi.ui.library.statistics.LibraryStatisticsFilterKind
+import eu.kanade.tachiyomi.ui.library.statistics.LibraryStatisticsScreen
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
@@ -56,6 +59,27 @@ class StatsScreen : Screen() {
                     )
                 },
                 onOpenEntry = { navigator.push(EntryScreen(it)) },
+                onOpenLibrary = { type ->
+                    navigator.push(
+                        LibraryStatisticsScreen(
+                            LibraryStatisticsFilter(LibraryStatisticsFilterKind.LIBRARY, type?.name),
+                        ),
+                    )
+                },
+                onOpenOfflineTitles = { type ->
+                    navigator.push(
+                        LibraryStatisticsScreen(
+                            LibraryStatisticsFilter(LibraryStatisticsFilterKind.OFFLINE, type.name),
+                        ),
+                    )
+                },
+                onOpenTrackedTitles = { type ->
+                    navigator.push(
+                        LibraryStatisticsScreen(
+                            LibraryStatisticsFilter(LibraryStatisticsFilterKind.TRACKED, type.name),
+                        ),
+                    )
+                },
             )
         }
     }

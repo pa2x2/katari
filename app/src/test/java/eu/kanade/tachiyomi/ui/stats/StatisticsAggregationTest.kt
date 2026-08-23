@@ -8,6 +8,7 @@ import tachiyomi.domain.statistics.model.StatisticsActivityBucket
 import tachiyomi.domain.statistics.model.StatisticsActivitySnapshot
 import tachiyomi.domain.statistics.model.StatisticsCompletionBucket
 import tachiyomi.domain.statistics.model.StatisticsEarlierActivity
+import tachiyomi.domain.statistics.model.StatisticsSessionSummary
 import java.time.LocalDate
 import java.util.Locale
 
@@ -29,6 +30,10 @@ class StatisticsAggregationTest {
                 topEntries = emptyList(),
                 earlierActivity = listOf(
                     StatisticsEarlierActivity(EntryType.MANGA, 12_000L),
+                ),
+                sessions = listOf(
+                    StatisticsSessionSummary(EntryType.MANGA, 2L, 30_000L, 45_000L),
+                    StatisticsSessionSummary(EntryType.ANIME, 1L, 30_000L, 30_000L),
                 ),
             ),
             range = StatsRange.SEVEN_DAYS,
@@ -55,5 +60,9 @@ class StatisticsAggregationTest {
         )
         result.earlierDurationMillis shouldBe 12_000L
         result.earlierDurationByType shouldBe mapOf(EntryType.MANGA to 12_000L)
+        result.sessionCount shouldBe 3L
+        result.averageSessionDurationMillis shouldBe 30_000L
+        result.longestSessionDurationMillis shouldBe 45_000L
+        result.activeDays shouldBe 2
     }
 }

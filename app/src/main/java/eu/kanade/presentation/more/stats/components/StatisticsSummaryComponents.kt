@@ -20,7 +20,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -110,8 +112,13 @@ private fun StatisticsHeadlineCard(
 internal fun StatisticsLibraryCard(
     titleCounts: Map<EntryType, Int>,
     types: List<StatsType>,
+    onSeeTitles: () -> Unit,
 ) {
-    StatisticsSectionCard(title = stringResource(MR.strings.statistics_library)) {
+    StatisticsSectionCard(
+        title = stringResource(MR.strings.statistics_library),
+        actionLabel = stringResource(MR.strings.statistics_see_titles),
+        onActionClick = onSeeTitles,
+    ) {
         val maximum = titleCounts.values.maxOrNull()?.coerceAtLeast(1) ?: 1
         types.forEach { type ->
             val count = titleCounts[type.type] ?: 0
@@ -220,7 +227,11 @@ internal fun StatisticsProgressCard(progress: StatsProgress?) {
 }
 
 @Composable
-internal fun StatisticsLibraryCoverageCard(coverage: StatsLibraryCoverage) {
+internal fun StatisticsLibraryCoverageCard(
+    coverage: StatsLibraryCoverage,
+    onSeeOfflineTitles: (() -> Unit)?,
+    onSeeTrackedTitles: (() -> Unit)?,
+) {
     StatisticsSectionCard(title = stringResource(MR.strings.statistics_library_coverage)) {
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
@@ -236,6 +247,7 @@ internal fun StatisticsLibraryCoverageCard(coverage: StatsLibraryCoverage) {
                         offline.partlyOfflineTitles,
                         offline.fullyOfflineTitles,
                     ),
+                    onClick = onSeeOfflineTitles,
                     modifier = Modifier.weight(1f).widthIn(min = 150.dp),
                 )
             }
@@ -250,6 +262,7 @@ internal fun StatisticsLibraryCoverageCard(coverage: StatsLibraryCoverage) {
                         tracking.totalTitles,
                     )
                 },
+                onClick = onSeeTrackedTitles,
                 modifier = Modifier.weight(1f).widthIn(min = 150.dp),
             )
         }
@@ -257,9 +270,16 @@ internal fun StatisticsLibraryCoverageCard(coverage: StatsLibraryCoverage) {
 }
 
 @Composable
-private fun CoverageItem(title: String, value: String, modifier: Modifier = Modifier) {
+private fun CoverageItem(
+    title: String,
+    value: String,
+    onClick: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
     Surface(
-        modifier = modifier,
+        modifier = modifier.then(
+            if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier,
+        ),
         color = MaterialTheme.colorScheme.surfaceVariant,
         shape = MaterialTheme.shapes.medium,
     ) {
@@ -267,6 +287,14 @@ private fun CoverageItem(title: String, value: String, modifier: Modifier = Modi
             Text(title, style = MaterialTheme.typography.labelLarge)
             Spacer(Modifier.height(6.dp))
             Text(value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (onClick != null) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = stringResource(MR.strings.statistics_see_titles),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
         }
     }
 }
@@ -313,13 +341,28 @@ internal fun StatisticsTopTitlesCard(
 @Composable
 internal fun StatisticsSectionCard(
     title: String,
+    actionLabel: String? = null,
+    onActionClick: (() -> Unit)? = null,
+    showContent: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     OutlinedCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(20.dp)) {
-            Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-            Spacer(Modifier.height(18.dp))
-            content()
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = title,
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                if (actionLabel != null && onActionClick != null) {
+                    TextButton(onClick = onActionClick) { Text(actionLabel) }
+                }
+            }
+            if (showContent) {
+                Spacer(Modifier.height(18.dp))
+                content()
+            }
         }
     }
 }

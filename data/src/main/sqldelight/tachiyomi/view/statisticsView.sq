@@ -43,6 +43,39 @@ WHERE profile_id = :profileId
 GROUP BY type
 ORDER BY type;
 
+sessionSummaries:
+WITH session_totals AS (
+    SELECT session_id, type, CAST(sum(duration) AS INTEGER) AS duration
+    FROM statisticsView
+    WHERE profile_id = :profileId
+    GROUP BY session_id, type
+)
+SELECT
+    type,
+    count(*) AS session_count,
+    CAST(avg(duration) AS INTEGER) AS average_duration,
+    CAST(max(duration) AS INTEGER) AS longest_duration
+FROM session_totals
+GROUP BY type
+ORDER BY type;
+
+sessionSummariesSince:
+WITH session_totals AS (
+    SELECT session_id, type, CAST(sum(duration) AS INTEGER) AS duration
+    FROM statisticsView
+    WHERE profile_id = :profileId
+    AND local_date >= :startLocalDate
+    GROUP BY session_id, type
+)
+SELECT
+    type,
+    count(*) AS session_count,
+    CAST(avg(duration) AS INTEGER) AS average_duration,
+    CAST(max(duration) AS INTEGER) AS longest_duration
+FROM session_totals
+GROUP BY type
+ORDER BY type;
+
 completionTotals:
 SELECT
     ENT.type,

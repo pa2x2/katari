@@ -95,6 +95,9 @@ class StatsScreenModel(
                                 connectedTrackingTypes = tracking.scoreSupportedEntryTypes,
                                 trackedEntryIds = tracking.entries.filterValues { it.isNotEmpty() }.keys,
                             ),
+                            insightsByType = distinctEntries
+                                .groupBy { it.entry.type }
+                                .mapValues { (_, items) -> buildLibraryInsights(items) },
                         )
                     },
                     combine(

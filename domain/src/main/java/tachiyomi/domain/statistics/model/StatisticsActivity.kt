@@ -26,6 +26,13 @@ data class StatisticsEarlierActivity(
     val durationMillis: Long,
 )
 
+data class StatisticsSessionSummary(
+    val type: EntryType,
+    val sessionCount: Long,
+    val averageDurationMillis: Long,
+    val longestDurationMillis: Long,
+)
+
 data class StatisticsActivitySnapshot(
     val profileId: Long,
     val trackingStartedAtEpochMillis: Long?,
@@ -33,4 +40,5 @@ data class StatisticsActivitySnapshot(
     val completions: List<StatisticsCompletionBucket>,
     val topEntries: List<StatisticsTopEntry>,
     val earlierActivity: List<StatisticsEarlierActivity>,
+    val sessions: List<StatisticsSessionSummary> = emptyList(),
 )

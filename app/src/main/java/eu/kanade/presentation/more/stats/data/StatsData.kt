@@ -36,6 +36,13 @@ data class StatsLibrary(
     val progress: StatsProgress?,
     val progressByType: Map<EntryType, StatsProgress>,
     val coverageByType: Map<EntryType, StatsLibraryCoverage>,
+    val insightsByType: Map<EntryType, StatsLibraryInsights>,
+)
+
+data class StatsLibraryInsights(
+    val topGenre: String?,
+    val categoryCount: Int,
+    val sourceCount: Int,
 )
 
 data class StatsLibraryCoverage(
@@ -75,6 +82,14 @@ data class StatsActivity(
     val currentStreakDaysByType: Map<EntryType, Int>,
     val completionCount: Long,
     val completionCountByType: Map<EntryType, Long>,
+    val sessionCount: Long,
+    val sessionCountByType: Map<EntryType, Long>,
+    val averageSessionDurationMillis: Long,
+    val averageSessionDurationByType: Map<EntryType, Long>,
+    val longestSessionDurationMillis: Long,
+    val longestSessionDurationByType: Map<EntryType, Long>,
+    val activeDays: Int,
+    val activeDaysByType: Map<EntryType, Int>,
     val trend: List<StatsTrendPoint>,
     val topTitles: List<StatsTopTitle>,
     val trackingStartedAtEpochMillis: Long?,

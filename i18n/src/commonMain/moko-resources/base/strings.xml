@@ -1561,6 +1561,16 @@
     <string name="statistics_not_available">Not available</string>
     <string name="statistics_not_connected">Not connected</string>
     <string name="statistics_titles_coverage">%1$d of %2$d titles</string>
+    <string name="statistics_see_titles">See titles</string>
+    <string name="statistics_could_not_load_titles">Couldn’t load titles</string>
+    <string name="statistics_more_type_stats">More %s stats</string>
+    <string name="statistics_show_less">Show less</string>
+    <string name="statistics_average_visit">Average visit</string>
+    <string name="statistics_longest_visit">Longest visit</string>
+    <string name="statistics_active_days">Active days</string>
+    <string name="statistics_top_genre">Top genre</string>
+    <string name="statistics_no_type_stats">No %s stats yet</string>
+    <string name="statistics_empty_type_hint">Add something to your library to see it here.</string>
     <string name="statistics_show_more_activity">Show more</string>
     <string name="statistics_titles">titles</string>
     <string name="label_completed_titles">Completed entries</string>

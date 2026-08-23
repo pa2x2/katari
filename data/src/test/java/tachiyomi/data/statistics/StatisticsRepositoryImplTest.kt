@@ -61,6 +61,11 @@ class StatisticsRepositoryImplTest {
                 EntryType.MANGA to 1_000L,
             )
             snapshot.topEntries.map { it.title } shouldBe listOf("Anime", "Manga")
+            snapshot.sessions.associateBy { it.type }.let { sessions ->
+                sessions.getValue(EntryType.MANGA).sessionCount shouldBe 1L
+                sessions.getValue(EntryType.MANGA).averageDurationMillis shouldBe 1_000L
+                sessions.getValue(EntryType.ANIME).longestDurationMillis shouldBe 3_000L
+            }
             snapshot.earlierActivity.associate { it.type to it.durationMillis } shouldBe mapOf(
                 EntryType.MANGA to 5_000L,
             )

@@ -8,6 +8,7 @@ import tachiyomi.domain.statistics.model.StatisticsActivityBucket
 import tachiyomi.domain.statistics.model.StatisticsActivitySnapshot
 import tachiyomi.domain.statistics.model.StatisticsCompletionBucket
 import tachiyomi.domain.statistics.model.StatisticsEarlierActivity
+import tachiyomi.domain.statistics.model.StatisticsSessionSummary
 import tachiyomi.domain.statistics.model.StatisticsTopEntry
 import tachiyomi.domain.statistics.repository.StatisticsRepository
 
@@ -21,16 +22,21 @@ class StatisticsRepositoryImpl(
         return combine(
             subscribeActivityRows(profileId, startLocalDate),
             subscribeCompletions(profileId, startLocalDate),
-            subscribeTopEntries(profileId, startLocalDate),
+            combine(
+                subscribeTopEntries(profileId, startLocalDate),
+                subscribeSessionSummaries(profileId, startLocalDate),
+                ::Pair,
+            ),
             handler.subscribeToOneOrNull { activityQueries.getStatisticsEpoch(profileId) },
             subscribeEarlierActivity(profileId),
-        ) { activity, completions, topEntries, trackingStartedAt, earlierActivity ->
+        ) { activity, completions, (topEntries, sessions), trackingStartedAt, earlierActivity ->
             StatisticsActivitySnapshot(
                 profileId = profileId,
                 trackingStartedAtEpochMillis = trackingStartedAt,
                 activity = activity,
                 completions = completions,
                 topEntries = topEntries,
+                sessions = sessions,
                 earlierActivity = earlierActivity,
             )
         }
@@ -110,6 +116,30 @@ class StatisticsRepositoryImpl(
             statisticsViewQueries.topActivityEntries(profileId, mapper)
         } else {
             statisticsViewQueries.topActivityEntriesSince(profileId, startLocalDate, mapper)
+        }
+    }
+
+    private fun subscribeSessionSummaries(
+        profileId: Long,
+        startLocalDate: String?,
+    ): Flow<List<StatisticsSessionSummary>> = handler.subscribeToList {
+        val mapper = {
+                type: String,
+                sessionCount: Long,
+                averageDuration: Long?,
+                longestDuration: Long?,
+            ->
+            StatisticsSessionSummary(
+                type = EntryType.valueOf(type.uppercase()),
+                sessionCount = sessionCount,
+                averageDurationMillis = averageDuration ?: 0L,
+                longestDurationMillis = longestDuration ?: 0L,
+            )
+        }
+        if (startLocalDate == null) {
+            statisticsViewQueries.sessionSummaries(profileId, mapper)
+        } else {
+            statisticsViewQueries.sessionSummariesSince(profileId, startLocalDate, mapper)
         }
     }
 }
