@@ -35,7 +35,6 @@ data class StatsLibrary(
     val titlesByType: Map<EntryType, Int>,
     val progress: StatsProgress?,
     val progressByType: Map<EntryType, StatsProgress>,
-    val coverageByType: Map<EntryType, StatsLibraryCoverage>,
     val insightsByType: Map<EntryType, StatsLibraryInsights>,
 )
 
@@ -44,22 +43,6 @@ data class StatsLibraryInsights(
     val categoryCount: Int,
     val sourceCount: Int,
 )
-
-data class StatsLibraryCoverage(
-    val offline: StatsOfflineCoverage?,
-    val tracking: StatsTrackingCoverage,
-)
-
-data class StatsOfflineCoverage(
-    val partlyOfflineTitles: Int,
-    val fullyOfflineTitles: Int,
-)
-
-sealed interface StatsTrackingCoverage {
-    data object Unsupported : StatsTrackingCoverage
-    data object NotConnected : StatsTrackingCoverage
-    data class Connected(val trackedTitles: Int, val totalTitles: Int) : StatsTrackingCoverage
-}
 
 data class StatsTrendPoint(
     val startDate: LocalDate,

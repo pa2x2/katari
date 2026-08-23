@@ -1555,16 +1555,7 @@
     <string name="statistics_before_date">Before %s</string>
     <string name="statistics_by_media">By media</string>
     <string name="statistics_incognito_active">Activity isn’t recorded in incognito mode</string>
-    <string name="statistics_library_coverage">Library coverage</string>
-    <string name="statistics_available_offline">Available offline</string>
-    <string name="statistics_offline_coverage">%1$d partly · %2$d fully</string>
-    <string name="statistics_not_available">Not available</string>
-    <string name="statistics_not_connected">Not connected</string>
-    <string name="statistics_titles_coverage">%1$d of %2$d titles</string>
-    <string name="statistics_see_titles">See titles</string>
-    <string name="statistics_could_not_load_titles">Couldn’t load titles</string>
     <string name="statistics_more_type_stats">More %s stats</string>
-    <string name="statistics_show_less">Show less</string>
     <string name="statistics_average_visit">Average visit</string>
     <string name="statistics_longest_visit">Longest visit</string>
     <string name="statistics_active_days">Active days</string>

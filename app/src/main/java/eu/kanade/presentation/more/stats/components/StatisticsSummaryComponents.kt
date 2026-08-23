@@ -31,10 +31,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.more.stats.data.StatsLibraryCoverage
 import eu.kanade.presentation.more.stats.data.StatsProgress
 import eu.kanade.presentation.more.stats.data.StatsTopTitle
-import eu.kanade.presentation.more.stats.data.StatsTrackingCoverage
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.i18n.MR
@@ -216,79 +214,6 @@ internal fun StatisticsProgressCard(progress: StatsProgress?) {
                     )
                     Text(slice.count.toString(), style = MaterialTheme.typography.labelLarge)
                 }
-            }
-        }
-    }
-}
-
-@Composable
-internal fun StatisticsLibraryCoverageCard(
-    coverage: StatsLibraryCoverage,
-    onSeeOfflineTitles: (() -> Unit)?,
-    onSeeTrackedTitles: (() -> Unit)?,
-) {
-    StatisticsSectionCard(title = stringResource(MR.strings.statistics_library_coverage)) {
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            maxItemsInEachRow = 2,
-        ) {
-            coverage.offline?.let { offline ->
-                CoverageItem(
-                    title = stringResource(MR.strings.statistics_available_offline),
-                    value = stringResource(
-                        MR.strings.statistics_offline_coverage,
-                        offline.partlyOfflineTitles,
-                        offline.fullyOfflineTitles,
-                    ),
-                    onClick = onSeeOfflineTitles,
-                    modifier = Modifier.weight(1f).widthIn(min = 150.dp),
-                )
-            }
-            CoverageItem(
-                title = stringResource(MR.strings.pref_category_tracking),
-                value = when (val tracking = coverage.tracking) {
-                    StatsTrackingCoverage.Unsupported -> stringResource(MR.strings.statistics_not_available)
-                    StatsTrackingCoverage.NotConnected -> stringResource(MR.strings.statistics_not_connected)
-                    is StatsTrackingCoverage.Connected -> stringResource(
-                        MR.strings.statistics_titles_coverage,
-                        tracking.trackedTitles,
-                        tracking.totalTitles,
-                    )
-                },
-                onClick = onSeeTrackedTitles,
-                modifier = Modifier.weight(1f).widthIn(min = 150.dp),
-            )
-        }
-    }
-}
-
-@Composable
-private fun CoverageItem(
-    title: String,
-    value: String,
-    onClick: (() -> Unit)?,
-    modifier: Modifier = Modifier,
-) {
-    Surface(
-        modifier = modifier.then(
-            if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier,
-        ),
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        shape = MaterialTheme.shapes.medium,
-    ) {
-        Column(Modifier.padding(14.dp)) {
-            Text(title, style = MaterialTheme.typography.labelLarge)
-            Spacer(Modifier.height(6.dp))
-            Text(value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            if (onClick != null) {
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    text = stringResource(MR.strings.statistics_see_titles),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                )
             }
         }
     }

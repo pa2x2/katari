@@ -1,11 +1,7 @@
 package eu.kanade.tachiyomi.ui.stats
 
-import eu.kanade.presentation.more.stats.data.StatsLibraryCoverage
 import eu.kanade.presentation.more.stats.data.StatsLibraryInsights
-import eu.kanade.presentation.more.stats.data.StatsOfflineCoverage
 import eu.kanade.presentation.more.stats.data.StatsProgress
-import eu.kanade.presentation.more.stats.data.StatsTrackingCoverage
-import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.domain.entry.model.EntryStatus
 import tachiyomi.domain.library.model.LibraryItem
 import java.util.Locale
@@ -27,46 +23,6 @@ internal fun buildLibraryProgress(items: List<LibraryItem>): StatsProgress? {
         }
     }
     return StatsProgress(notStarted, inProgress, caughtUp, completed)
-}
-
-internal fun buildLibraryCoverage(
-    items: List<LibraryItem>,
-    types: List<EntryType>,
-    downloadApplicable: (EntryType) -> Boolean,
-    downloadCount: (LibraryItem) -> Int,
-    trackingApplicable: (EntryType) -> Boolean,
-    connectedTrackingTypes: Set<EntryType>,
-    trackedEntryIds: Set<Long>,
-): Map<EntryType, StatsLibraryCoverage> = types.associateWith { type ->
-    val typeItems = items.filter { it.entry.type == type }
-    val offline = if (downloadApplicable(type)) {
-        var partly = 0
-        var fully = 0
-        typeItems.forEach { item ->
-            val downloaded = downloadCount(item)
-            if (downloaded <= 0) return@forEach
-            val total = item.totalCount
-            if (!item.isMerged && total != null && total > 0L && downloaded.toLong() >= total) {
-                fully += 1
-            } else {
-                partly += 1
-            }
-        }
-        StatsOfflineCoverage(partlyOfflineTitles = partly, fullyOfflineTitles = fully)
-    } else {
-        null
-    }
-    val tracking = when {
-        !trackingApplicable(type) -> StatsTrackingCoverage.Unsupported
-        type !in connectedTrackingTypes -> StatsTrackingCoverage.NotConnected
-        else -> StatsTrackingCoverage.Connected(
-            trackedTitles = typeItems.count { item ->
-                item.memberEntries.any { it.id in trackedEntryIds }
-            },
-            totalTitles = typeItems.size,
-        )
-    }
-    StatsLibraryCoverage(offline = offline, tracking = tracking)
 }
 
 internal fun buildLibraryInsights(items: List<LibraryItem>): StatsLibraryInsights {

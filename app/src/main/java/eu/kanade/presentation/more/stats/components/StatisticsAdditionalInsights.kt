@@ -12,10 +12,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -34,14 +30,8 @@ internal fun StatisticsAdditionalInsightsCard(
     library: StatsLibraryInsights,
     formatDuration: (Long) -> String,
 ) {
-    var expanded by rememberSaveable(typeLabel) { mutableStateOf(false) }
     StatisticsSectionCard(
         title = stringResource(MR.strings.statistics_more_type_stats, typeLabel.lowercase()),
-        actionLabel = stringResource(
-            if (expanded) MR.strings.statistics_show_less else MR.strings.statistics_show_more_activity,
-        ),
-        onActionClick = { expanded = !expanded },
-        showContent = expanded,
     ) {
         FlowRow(
             modifier = Modifier.fillMaxWidth(),

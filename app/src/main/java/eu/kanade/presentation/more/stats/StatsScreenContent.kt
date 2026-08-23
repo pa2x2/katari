@@ -45,7 +45,6 @@ import eu.kanade.presentation.more.stats.components.StatisticsAdditionalInsights
 import eu.kanade.presentation.more.stats.components.StatisticsEarlierActivityCard
 import eu.kanade.presentation.more.stats.components.StatisticsHeadlineCards
 import eu.kanade.presentation.more.stats.components.StatisticsLibraryCard
-import eu.kanade.presentation.more.stats.components.StatisticsLibraryCoverageCard
 import eu.kanade.presentation.more.stats.components.StatisticsProgressCard
 import eu.kanade.presentation.more.stats.components.StatisticsSectionCard
 import eu.kanade.presentation.more.stats.components.StatisticsTopTitlesCard
@@ -54,7 +53,6 @@ import eu.kanade.presentation.more.stats.components.color
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.more.stats.data.StatsActivity
 import eu.kanade.presentation.more.stats.data.StatsRange
-import eu.kanade.presentation.more.stats.data.StatsTrackingCoverage
 import eu.kanade.presentation.more.stats.data.StatsTrendPoint
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
@@ -80,8 +78,6 @@ fun StatsScreenContent(
     onRetryActivity: () -> Unit,
     onOpenActivity: (EntryType?, StatsTrendPoint) -> Unit,
     onOpenEntry: (Long) -> Unit,
-    onOpenOfflineTitles: (EntryType) -> Unit,
-    onOpenTrackedTitles: (EntryType) -> Unit,
     onOpenEarlierActivity: (EntryType?, Long?) -> Unit,
 ) {
     val pages = remember(state.types) { listOf<EntryType?>(null) + state.types.map(StatsType::type) }
@@ -146,8 +142,6 @@ fun StatsScreenContent(
                 onRetryActivity = onRetryActivity,
                 onOpenActivity = onOpenActivity,
                 onOpenEntry = onOpenEntry,
-                onOpenOfflineTitles = onOpenOfflineTitles,
-                onOpenTrackedTitles = onOpenTrackedTitles,
                 onOpenEarlierActivity = onOpenEarlierActivity,
             )
         }
@@ -192,8 +186,6 @@ private fun StatisticsPage(
     onRetryActivity: () -> Unit,
     onOpenActivity: (EntryType?, StatsTrendPoint) -> Unit,
     onOpenEntry: (Long) -> Unit,
-    onOpenOfflineTitles: (EntryType) -> Unit,
-    onOpenTrackedTitles: (EntryType) -> Unit,
     onOpenEarlierActivity: (EntryType?, Long?) -> Unit,
 ) {
     val visibleTypes = state.types.filter { selectedType == null || it.type == selectedType }
@@ -313,21 +305,6 @@ private fun StatisticsPage(
                 titleCounts = titleCounts,
                 types = visibleTypes,
             )
-        }
-        selectedType?.let { type ->
-            state.library.coverageByType[type]?.let { coverage ->
-                item {
-                    StatisticsLibraryCoverageCard(
-                        coverage = coverage,
-                        onSeeOfflineTitles = coverage.offline
-                            ?.takeIf { it.partlyOfflineTitles + it.fullyOfflineTitles > 0 }
-                            ?.let { { onOpenOfflineTitles(type) } },
-                        onSeeTrackedTitles = (coverage.tracking as? StatsTrackingCoverage.Connected)
-                            ?.takeIf { it.trackedTitles > 0 }
-                            ?.let { { onOpenTrackedTitles(type) } },
-                    )
-                }
-            }
         }
         if (selectedStatsType != null) {
             state.library.insightsByType[selectedStatsType.type]?.let { insights ->
