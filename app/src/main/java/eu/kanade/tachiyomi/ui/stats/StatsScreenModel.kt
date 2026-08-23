@@ -54,6 +54,7 @@ class StatsScreenModel(
             displayName = presentation.displayNameLabel,
             icon = presentation.badgeIcon,
             accent = contribution.accent,
+            consumedUnitLabel = contribution.consumedUnitLabel,
         )
     }
 

@@ -31,4 +31,6 @@ interface HistoryRepository {
     suspend fun recordActivity(activityUpdate: HistoryActivityUpdate)
 
     suspend fun recordCompletion(completionUpdate: HistoryCompletionUpdate)
+
+    suspend fun recordCompletions(completionUpdates: List<HistoryCompletionUpdate>)
 }

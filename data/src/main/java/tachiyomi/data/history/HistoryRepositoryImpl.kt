@@ -122,4 +122,12 @@ class HistoryRepositoryImpl(
             logcat(LogPriority.ERROR, throwable = e)
         }
     }
+
+    override suspend fun recordCompletions(completionUpdates: List<HistoryCompletionUpdate>) {
+        try {
+            completionRecorder.recordAll(completionUpdates)
+        } catch (e: Exception) {
+            logcat(LogPriority.ERROR, throwable = e)
+        }
+    }
 }

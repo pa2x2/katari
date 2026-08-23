@@ -189,6 +189,14 @@ private fun StatisticsPage(
         selectedType == null -> activity.currentStreakDays
         else -> activity.currentStreakDaysByType[selectedType] ?: 0
     }
+    val selectedStatsType = state.types.firstOrNull { it.type == selectedType }
+    val thirdHeadlineValue = if (selectedStatsType == null) {
+        streakDays?.let { pluralStringResource(MR.plurals.day, it, it) } ?: "—"
+    } else {
+        NumberFormat.getIntegerInstance().format(visibleActivity?.completionCount ?: 0L)
+    }
+    val thirdHeadlineLabel = selectedStatsType?.let { stringResource(it.consumedUnitLabel) }
+        ?: stringResource(MR.strings.statistics_current_streak)
 
     LazyColumn(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = bottomPadding + 20.dp),
@@ -198,10 +206,11 @@ private fun StatisticsPage(
             StatisticsHeadlineCards(
                 time = visibleActivity?.let { formatter(it.totalDurationMillis) } ?: "—",
                 titles = titleCount,
-                streak = streakDays?.let { pluralStringResource(MR.plurals.day, it, it) } ?: "—",
+                thirdValue = thirdHeadlineValue,
+                thirdLabel = thirdHeadlineLabel,
                 timeIcon = Icons.Outlined.Schedule,
                 titlesIcon = Icons.Outlined.CollectionsBookmark,
-                streakIcon = Icons.Outlined.LocalFireDepartment,
+                thirdIcon = selectedStatsType?.icon ?: Icons.Outlined.LocalFireDepartment,
             )
         }
         item {
@@ -307,7 +316,8 @@ private fun StatsActivity.forType(type: EntryType?): StatsActivity {
     if (type == null) return this
     return copy(
         totalDurationMillis = trend.sumOf { it.durationByType[type] ?: 0L },
-        completionCount = 0L,
+        completionCount = completionCountByType[type] ?: 0L,
+        completionCountByType = mapOf(type to (completionCountByType[type] ?: 0L)),
         trend = trend.map { point ->
             point.copy(durationByType = mapOf(type to (point.durationByType[type] ?: 0L)))
         },

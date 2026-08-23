@@ -34,6 +34,7 @@ internal val EntryConsumptionFeatureRuntimeModule = EntryFeatureRuntimeModule(
             evaluation = composition.evaluation,
             interaction = get<EntryInteractions>().consumption,
             downloadLifecycle = get(),
+            history = get(),
         )
     }
     EntryFeatureRuntimeArtifacts(

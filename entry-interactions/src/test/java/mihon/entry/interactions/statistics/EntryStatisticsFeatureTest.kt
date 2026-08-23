@@ -11,6 +11,7 @@ import mihon.entry.interactions.runtime.EntryTypePresentationProvider
 import mihon.entry.interactions.runtime.createEntryInteractionComposition
 import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
+import tachiyomi.i18n.MR
 
 class EntryStatisticsFeatureTest {
 
@@ -35,8 +36,16 @@ class EntryStatisticsFeatureTest {
         )
 
         feature.contributions shouldBe listOf(
-            EntryStatisticsContribution(EntryType.MANGA, EntryStatisticsAccent.ROSE),
-            EntryStatisticsContribution(EntryType.BOOK, EntryStatisticsAccent.SAGE),
+            EntryStatisticsContribution(
+                EntryType.MANGA,
+                EntryStatisticsAccent.ROSE,
+                MR.strings.statistics_chapters_read,
+            ),
+            EntryStatisticsContribution(
+                EntryType.BOOK,
+                EntryStatisticsAccent.SAGE,
+                MR.strings.statistics_chapters_read,
+            ),
         )
         feature.contribution(EntryType.ANIME) shouldBe null
     }
@@ -45,6 +54,7 @@ class EntryStatisticsFeatureTest {
         val provider = object : EntryStatisticsProvider {
             override val type = type
             override val accent = accent
+            override val consumedUnitLabel = MR.strings.statistics_chapters_read
         }
         val presentationProvider = object : EntryTypePresentationProvider {
             override val type = type

@@ -18,6 +18,7 @@ data class StatsType(
     val displayName: StringResource,
     val icon: ImageVector,
     val accent: EntryStatisticsAccent,
+    val consumedUnitLabel: StringResource,
 )
 
 data class StatsProgress(
@@ -56,6 +57,7 @@ data class StatsActivity(
     val currentStreakDays: Int,
     val currentStreakDaysByType: Map<EntryType, Int>,
     val completionCount: Long,
+    val completionCountByType: Map<EntryType, Long>,
     val trend: List<StatsTrendPoint>,
     val topTitles: List<StatsTopTitle>,
     val trackingStartedAtEpochMillis: Long?,

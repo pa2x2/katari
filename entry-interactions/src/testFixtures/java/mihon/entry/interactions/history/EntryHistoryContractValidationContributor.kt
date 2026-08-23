@@ -61,6 +61,11 @@ class EntryHistoryContractValidationContributor : FeatureValidationContributor {
                             event: EntryMediaSessionEvent.Progressed,
                             progress: EntryProgressState,
                         ) = Unit
+
+                        override suspend fun recordManualCompletions(
+                            entry: tachiyomi.domain.entry.model.Entry,
+                            children: List<tachiyomi.domain.entry.model.EntryChapter>,
+                        ) = Unit
                     }
                     entryHistoryMediaSessionBinding { feature }
                         .handler

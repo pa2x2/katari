@@ -101,6 +101,9 @@ internal fun buildActivity(
         currentStreakDays = currentStreak(null),
         currentStreakDaysByType = types.associateWith(::currentStreak),
         completionCount = snapshot.completions.sumOf { it.count },
+        completionCountByType = types.associateWith { type ->
+            snapshot.completions.filter { it.type == type }.sumOf { it.count }
+        },
         trend = trend,
         topTitles = snapshot.topEntries.map { entry ->
             StatsTopTitle(entry.entryId, entry.type, entry.title, entry.durationMillis)

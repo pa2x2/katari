@@ -575,6 +575,8 @@ class VideoPlayerViewModelTest {
         override suspend fun recordActivity(activityUpdate: HistoryActivityUpdate) = Unit
 
         override suspend fun recordCompletion(completionUpdate: HistoryCompletionUpdate) = Unit
+
+        override suspend fun recordCompletions(completionUpdates: List<HistoryCompletionUpdate>) = Unit
     }
 
     private class FakeEntryChapterRepository(

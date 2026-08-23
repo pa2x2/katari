@@ -43,5 +43,11 @@ class StatisticsAggregationTest {
         result.currentStreakDays shouldBe 2
         result.currentStreakDaysByType[EntryType.MANGA] shouldBe 1
         result.currentStreakDaysByType[EntryType.ANIME] shouldBe 0
+        result.completionCount shouldBe 1L
+        result.completionCountByType shouldBe mapOf(
+            EntryType.MANGA to 0L,
+            EntryType.ANIME to 1L,
+            EntryType.BOOK to 0L,
+        )
     }
 }

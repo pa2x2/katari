@@ -14,6 +14,7 @@ internal class ProviderBackedEntryStatisticsInteraction(
         EntryStatisticsContribution(
             type = provider.type,
             accent = provider.accent,
+            consumedUnitLabel = provider.consumedUnitLabel,
         )
     }
 }

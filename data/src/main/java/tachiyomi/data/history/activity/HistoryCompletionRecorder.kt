@@ -7,21 +7,30 @@ class HistoryCompletionRecorder(
     private val handler: DatabaseHandler,
 ) {
     suspend fun record(update: HistoryCompletionUpdate) {
+        recordAll(listOf(update))
+    }
+
+    suspend fun recordAll(updates: List<HistoryCompletionUpdate>) {
+        if (updates.isEmpty()) return
         handler.await(inTransaction = true) {
+            val first = updates.first()
             activityQueries.ensureStatisticsEpochForEntry(
-                startedAt = update.occurredAtEpochMillis,
-                entryId = update.entryId,
+                startedAt = first.occurredAtEpochMillis,
+                entryId = first.entryId,
             )
-            activityQueries.insertCompletionEvent(
-                eventId = update.eventId,
-                entryId = update.entryId,
-                chapterId = update.chapterId,
-                sessionId = update.sessionId,
-                occurredAt = update.occurredAtEpochMillis,
-                localDate = update.localDate,
-                timeZoneId = update.timeZoneId,
-                cause = update.cause.storageValue,
-            )
+            updates.forEach { update ->
+                require(update.entryId == first.entryId) { "Completion batch must belong to one entry" }
+                activityQueries.insertCompletionEvent(
+                    eventId = update.eventId,
+                    entryId = update.entryId,
+                    chapterId = update.chapterId,
+                    sessionId = update.sessionId,
+                    occurredAt = update.occurredAtEpochMillis,
+                    localDate = update.localDate,
+                    timeZoneId = update.timeZoneId,
+                    cause = update.cause.storageValue,
+                )
+            }
         }
     }
 }

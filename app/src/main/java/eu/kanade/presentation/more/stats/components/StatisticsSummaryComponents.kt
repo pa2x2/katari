@@ -40,10 +40,11 @@ import tachiyomi.presentation.core.i18n.stringResource
 internal fun StatisticsHeadlineCards(
     time: String,
     titles: Int,
-    streak: String,
+    thirdValue: String,
+    thirdLabel: String,
     timeIcon: ImageVector,
     titlesIcon: ImageVector,
-    streakIcon: ImageVector,
+    thirdIcon: ImageVector,
 ) {
     FlowRow(
         modifier = Modifier.fillMaxWidth(),
@@ -64,9 +65,9 @@ internal fun StatisticsHeadlineCards(
             modifier = Modifier.weight(1f).widthIn(min = 140.dp),
         )
         StatisticsHeadlineCard(
-            value = streak,
-            label = stringResource(MR.strings.statistics_current_streak),
-            icon = streakIcon,
+            value = thirdValue,
+            label = thirdLabel,
+            icon = thirdIcon,
             modifier = Modifier.weight(1f).widthIn(min = 140.dp),
         )
     }
