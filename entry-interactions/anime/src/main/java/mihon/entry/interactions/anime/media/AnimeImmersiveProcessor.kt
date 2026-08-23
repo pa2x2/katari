@@ -13,7 +13,6 @@ import mihon.entry.interactions.media.EntryImmersiveHandle
 import mihon.entry.interactions.media.EntryImmersiveProgress
 import mihon.entry.interactions.media.EntryImmersiveRenderer
 import mihon.entry.interactions.media.EntryMediaSessionProcessor
-import mihon.entry.interactions.media.session.EntryMediaSessionActivity
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
 import mihon.entry.interactions.runtime.EntryImmersiveLoadMode
 import mihon.entry.interactions.runtime.EntryImmersiveProcessor
@@ -81,6 +80,7 @@ internal class AnimeImmersiveProcessor(
             val snapshot = immersiveSession.playback.snapshot(
                 positionMs = playbackProgress.positionMs,
                 durationMs = playbackProgress.durationMs,
+                activeDurationMs = playbackProgress.activeDurationMs,
             )
             mediaSession.onEvent(
                 EntryMediaSessionEvent.Progressed(
@@ -92,12 +92,7 @@ internal class AnimeImmersiveProcessor(
                     } else {
                         0.0
                     },
-                    activity = snapshot.historyUpdate?.let { history ->
-                        EntryMediaSessionActivity(
-                            recordedAtEpochMillis = history.readAt.time,
-                            durationMillis = history.sessionReadDuration,
-                        )
-                    },
+                    activity = snapshot.activity,
                 ),
             )
             if (playbackProgress.resetSession) immersiveSession.playback.restore(0L)

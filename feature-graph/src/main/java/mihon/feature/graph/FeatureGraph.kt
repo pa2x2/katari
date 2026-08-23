@@ -187,6 +187,9 @@ internal fun orderedExecutionParticipants(
             check(referenced.point.id == point.id)
             edges.getValue(predecessor) += participant.id
         }
+        participant.order.afterIfPresent.forEach { predecessor ->
+            if (predecessor in byId) edges.getValue(predecessor) += participant.id
+        }
         participant.order.before.forEach { successor ->
             val referenced = requireNotNull(byId[successor]) {
                 "Execution participant ${participant.id} orders itself before unknown participant $successor"

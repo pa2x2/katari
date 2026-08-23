@@ -25,6 +25,7 @@ import mihon.entry.interactions.manga.presentation.MangaEntryTypePresentationPro
 import mihon.entry.interactions.manga.reader.MangaChildWebViewHostAdapter
 import mihon.entry.interactions.manga.state.MangaConsumptionProcessor
 import mihon.entry.interactions.manga.state.MangaProgressProcessor
+import mihon.entry.interactions.manga.statistics.MangaEntryStatisticsProvider
 import mihon.entry.interactions.media.EntryMediaCacheCapability
 import mihon.entry.interactions.media.EntryMediaSessionCapability
 import mihon.entry.interactions.media.EntryMediaSessionProcessor
@@ -41,6 +42,7 @@ import mihon.entry.interactions.runtime.EntryMissingChildGapCapability
 import mihon.entry.interactions.runtime.EntryOutsideReleasePeriodFilterCapability
 import mihon.entry.interactions.runtime.EntryPreviewCapability
 import mihon.entry.interactions.runtime.EntryPreviewConfigurationCapability
+import mihon.entry.interactions.runtime.EntryStatisticsCapability
 import mihon.entry.interactions.runtime.EntryTypePresentationCapability
 import mihon.entry.interactions.settings.EntryInteractionPreferences
 import mihon.entry.interactions.source.EntryChildWebViewHostContribution
@@ -137,6 +139,7 @@ internal fun mangaEntryInteractionPlugin(
                     EntryImmersiveCapability.bind(immersiveProcessor),
                     EntryMediaSessionCapability.bind(dependencies.mediaSession),
                     EntryTypePresentationCapability.bind(MangaEntryTypePresentationProvider),
+                    EntryStatisticsCapability.bind(MangaEntryStatisticsProvider),
                     EntryMediaCacheCapability.bind(MangaMediaCacheProvider { Injekt.get() }),
                 ),
             )

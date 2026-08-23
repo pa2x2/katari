@@ -72,6 +72,8 @@ import eu.kanade.tachiyomi.ui.reader.startup.ReaderStartupState
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderProgressIndicator
 import eu.kanade.tachiyomi.ui.reader.viewer.pager.R2LPagerViewer
 import eu.kanade.tachiyomi.util.system.toast
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
@@ -80,6 +82,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.sample
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.entry.interactions.manga.R
@@ -114,6 +117,7 @@ class ReaderActivity : EntryInteractionActivity() {
         private const val EXTRA_MANGA = "manga"
         private const val EXTRA_CHAPTER = "chapter"
         private const val EXTRA_PAGE = "page"
+        private const val ACTIVITY_CHECKPOINT_INTERVAL_MS = 30_000L
 
         fun newIntent(context: Context, entry: Entry, chapter: EntryChapter, pageIndex: Int? = null): Intent {
             return Intent(context, ReaderActivity::class.java).apply {
@@ -148,6 +152,7 @@ class ReaderActivity : EntryInteractionActivity() {
     private var isAutoScrollRunning by mutableStateOf(false)
     private var autoScrollSpeed by mutableStateOf(MangaReaderSettingsProvider.AUTO_SCROLL_LEVEL_DEFAULT)
     private var appliedRuntimeSettings: ReaderRuntimeSettings? = null
+    private var activityCheckpointJob: Job? = null
 
     var isScrollingThroughPages = false
         private set
@@ -385,6 +390,8 @@ class ReaderActivity : EntryInteractionActivity() {
 
     override fun onPause() {
         stopAutoScroll(showToast = false)
+        activityCheckpointJob?.cancel()
+        activityCheckpointJob = null
         lifecycleScope.launchNonCancellable {
             viewModel.updateHistory()
         }
@@ -398,6 +405,13 @@ class ReaderActivity : EntryInteractionActivity() {
     override fun onResume() {
         super.onResume()
         viewModel.restartReadTimer()
+        activityCheckpointJob?.cancel()
+        activityCheckpointJob = lifecycleScope.launchIO {
+            while (isActive) {
+                delay(ACTIVITY_CHECKPOINT_INTERVAL_MS)
+                viewModel.checkpointHistory()
+            }
+        }
         setMenuVisibility(viewModel.state.value.menuVisible)
     }
 

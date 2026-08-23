@@ -47,6 +47,7 @@ data class FeatureDeveloperExecutionParticipant(
     val prerequisites: FeatureDeveloperCapabilityRequirement,
     val contextInputs: List<FeatureDeveloperOwnedReference>,
     val after: List<String>,
+    val afterIfPresent: List<String>,
     val before: List<String>,
     val contracts: List<FeatureDeveloperExecutionContract>,
 )

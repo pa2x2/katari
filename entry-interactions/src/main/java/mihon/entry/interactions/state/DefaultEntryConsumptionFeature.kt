@@ -3,6 +3,7 @@ package mihon.entry.interactions.state
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.download.EntryDownloadLifecycleEvent
 import mihon.entry.interactions.download.EntryDownloadLifecycleEventSink
+import mihon.entry.interactions.history.EntryHistoryFeature
 import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -11,6 +12,7 @@ internal class DefaultEntryConsumptionFeature(
     private val evaluation: FeatureGraphEvaluation,
     private val interaction: EntryConsumptionInteraction,
     private val downloadLifecycle: EntryDownloadLifecycleEventSink,
+    private val history: EntryHistoryFeature,
 ) : EntryConsumptionFeature {
     private val applicableTypes = evaluation.consumptionTypes()
 
@@ -40,6 +42,7 @@ internal class DefaultEntryConsumptionFeature(
         if (changed.isEmpty()) return EntryConsumptionResult.NoChange
 
         if (consumed) {
+            history.recordManualCompletions(entry, changed)
             downloadLifecycle.onEvent(EntryDownloadLifecycleEvent.MarkedConsumed(entry, changed))
         }
         return EntryConsumptionResult.Changed(changed)

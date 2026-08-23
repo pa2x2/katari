@@ -9,6 +9,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.download.EntryDownloadLifecycleEventSink
 import mihon.entry.interactions.download.EntryDownloadLifecycleResult
+import mihon.entry.interactions.history.EntryHistoryFeature
 import mihon.entry.interactions.runtime.EntryInteractionPlugin
 import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
 import mihon.entry.interactions.runtime.createEntryInteractionComposition
@@ -27,12 +28,14 @@ class EntryConsumptionFeatureTest {
         val processor = consumptionProcessor()
         coEvery { processor.setConsumed(entry, listOf(consumedChild), consumed = false) } returns listOf(consumedChild)
         val lifecycle = lifecycleSink()
-        val feature = featureFor(plugin(EntryConsumptionCapability.bind(processor)), lifecycle)
+        val history = mockk<EntryHistoryFeature>(relaxed = true)
+        val feature = featureFor(plugin(EntryConsumptionCapability.bind(processor)), lifecycle, history)
 
         feature.setConsumed(entry, listOf(consumedChild), consumed = false) shouldBe
             EntryConsumptionResult.Changed(listOf(consumedChild))
 
         coVerify(exactly = 0) { lifecycle.onEvent(any()) }
+        coVerify(exactly = 0) { history.recordManualCompletions(any(), any()) }
     }
 
     @Test
@@ -40,17 +43,36 @@ class EntryConsumptionFeatureTest {
         val processor = consumptionProcessor()
         coEvery { processor.setConsumed(entry, listOf(child), consumed = true) } returns emptyList()
         val lifecycle = lifecycleSink()
-        val feature = featureFor(plugin(EntryConsumptionCapability.bind(processor)), lifecycle)
+        val history = mockk<EntryHistoryFeature>(relaxed = true)
+        val feature = featureFor(plugin(EntryConsumptionCapability.bind(processor)), lifecycle, history)
 
         feature.setConsumed(entry, listOf(child), consumed = true) shouldBe EntryConsumptionResult.NoChange
 
         coVerify(exactly = 0) { lifecycle.onEvent(any()) }
+        coVerify(exactly = 0) { history.recordManualCompletions(any(), any()) }
+    }
+
+    @Test
+    fun `marking children consumed records manual completions once for changed children`() = runTest {
+        val consumedChild = child.copy(read = true)
+        val processor = consumptionProcessor()
+        coEvery { processor.setConsumed(entry, listOf(child), consumed = true) } returns listOf(consumedChild)
+        val lifecycle = lifecycleSink()
+        val history = mockk<EntryHistoryFeature>(relaxed = true)
+        val feature = featureFor(plugin(EntryConsumptionCapability.bind(processor)), lifecycle, history)
+
+        feature.setConsumed(entry, listOf(child), consumed = true) shouldBe
+            EntryConsumptionResult.Changed(listOf(consumedChild))
+
+        coVerify(exactly = 1) { history.recordManualCompletions(entry, listOf(consumedChild)) }
+        coVerify(exactly = 1) { lifecycle.onEvent(any()) }
     }
 
     @Test
     fun `a partial type without consumption remains valid and inapplicable`() = runTest {
         val lifecycle = lifecycleSink()
-        val feature = featureFor(plugin(), lifecycle)
+        val history = mockk<EntryHistoryFeature>(relaxed = true)
+        val feature = featureFor(plugin(), lifecycle, history)
 
         feature.isApplicable(entry.type) shouldBe false
         feature.canSetConsumed(
@@ -62,11 +84,13 @@ class EntryConsumptionFeatureTest {
             EntryConsumptionResult.Inapplicable(entry.type)
 
         coVerify(exactly = 0) { lifecycle.onEvent(any()) }
+        coVerify(exactly = 0) { history.recordManualCompletions(any(), any()) }
     }
 
     private fun featureFor(
         plugin: EntryInteractionPlugin,
         lifecycle: EntryDownloadLifecycleEventSink,
+        history: EntryHistoryFeature,
     ): EntryConsumptionFeature {
         val composition = createEntryInteractionComposition(
             plugins = listOf(plugin),
@@ -76,6 +100,7 @@ class EntryConsumptionFeatureTest {
             evaluation = composition.featureGraphEvaluation,
             interaction = composition.interactions.consumption,
             downloadLifecycle = lifecycle,
+            history = history,
         )
     }
 

@@ -10,8 +10,12 @@ internal fun mediaSessionContractEvent(
     type: EntryType,
     completed: Boolean = true,
     activity: EntryMediaSessionActivity? = EntryMediaSessionActivity(
+        sessionId = "contract-session",
+        sequence = 0L,
+        startedAtEpochMillis = 1_000L,
         recordedAtEpochMillis = 2_000L,
         durationMillis = 1_000L,
+        timeZoneId = "UTC",
     ),
 ): EntryMediaSessionEvent.Progressed {
     val entry = Entry.create().copy(id = 91L, source = 17L, type = type)

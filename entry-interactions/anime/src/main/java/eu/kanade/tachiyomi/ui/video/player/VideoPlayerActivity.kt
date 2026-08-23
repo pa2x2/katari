@@ -104,6 +104,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.util.IdentityHashMap
 import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.roundToInt
@@ -183,6 +184,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var player by mutableStateOf<ExoPlayer?>(null)
     private var mediaSession: MediaSession? = null
     private var progressSaveJob: Job? = null
+    private val playbackClocks = IdentityHashMap<ExoPlayer, VideoActivePlaybackClock>()
     private var supportsPictureInPicture = false
     private var pictureInPictureEnabled by mutableStateOf(false)
     private var isInPictureInPictureModeState by mutableStateOf(false)
@@ -498,6 +500,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                 val initialSettingsDraft = remember(current.playback) { current.playback.toSettingsDraft() }
                 val currentPlayer =
                     remember(current.chapterId, current.streamUrl, current.playbackRevision, subtitlePayloadKey) {
+                        val activePlaybackClock = VideoActivePlaybackClock()
                         buildVideoPlayer(
                             context = context,
                             networkHelper = networkHelper,
@@ -505,8 +508,13 @@ class VideoPlayerActivity : AppCompatActivity() {
                             stream = current.stream,
                             subtitles = current.playback.subtitles,
                         ).also { exoPlayer ->
+                            playbackClocks[exoPlayer] = activePlaybackClock
                             exoPlayer.addListener(
                                 object : Player.Listener {
+                                    override fun onIsPlayingChanged(isPlaying: Boolean) {
+                                        activePlaybackClock.setActive(isPlaying)
+                                    }
+
                                     override fun onPositionDiscontinuity(
                                         oldPosition: Player.PositionInfo,
                                         newPosition: Player.PositionInfo,
@@ -1694,6 +1702,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         viewModel.persistPlayback(
             positionMs = player.currentPosition,
             durationMs = player.duration.takeIf { it > 0L } ?: 0L,
+            activeDurationMs = playbackClocks[player]?.checkpoint() ?: 0L,
         )
     }
 
@@ -1705,7 +1714,10 @@ class VideoPlayerActivity : AppCompatActivity() {
         }
         mediaSession?.release()
         mediaSession = null
-        player?.release()
+        player?.let { currentPlayer ->
+            playbackClocks.remove(currentPlayer)?.setActive(false)
+            currentPlayer.release()
+        }
         player = null
     }
 

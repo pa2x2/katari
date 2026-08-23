@@ -41,9 +41,12 @@ import tachiyomi.data.entry.EntrySyncRepositoryImpl
 import tachiyomi.data.entry.PlaybackPreferencesRepositoryImpl
 import tachiyomi.data.entry.ViewerSettingOverrideRepositoryImpl
 import tachiyomi.data.history.HistoryRepositoryImpl
+import tachiyomi.data.history.activity.HistoryActivityBackupRepositoryImpl
+import tachiyomi.data.history.activity.HistoryActivityRepositoryImpl
 import tachiyomi.data.release.ReleaseServiceImpl
 import tachiyomi.data.source.SourceRepositoryImpl
 import tachiyomi.data.source.StubSourceRepositoryImpl
+import tachiyomi.data.statistics.StatisticsRepositoryImpl
 import tachiyomi.data.track.TrackRepositoryImpl
 import tachiyomi.data.updates.UpdatesRepositoryImpl
 import tachiyomi.domain.category.interactor.CreateCategoryWithName
@@ -80,6 +83,8 @@ import tachiyomi.domain.history.interactor.GetNextChapters
 import tachiyomi.domain.history.interactor.GetTotalReadDuration
 import tachiyomi.domain.history.interactor.RemoveHistory
 import tachiyomi.domain.history.interactor.UpsertHistory
+import tachiyomi.domain.history.repository.HistoryActivityBackupRepository
+import tachiyomi.domain.history.repository.HistoryActivityRepository
 import tachiyomi.domain.history.repository.HistoryRepository
 import tachiyomi.domain.release.interactor.GetApplicationRelease
 import tachiyomi.domain.release.service.ReleaseService
@@ -87,6 +92,7 @@ import tachiyomi.domain.source.interactor.GetSourcesWithNonLibraryEntries
 import tachiyomi.domain.source.repository.SourceRepository
 import tachiyomi.domain.source.repository.StubSourceRepository
 import tachiyomi.domain.source.service.HiddenSourceIds
+import tachiyomi.domain.statistics.repository.StatisticsRepository
 import tachiyomi.domain.track.interactor.DeleteTrack
 import tachiyomi.domain.track.interactor.GetTracks
 import tachiyomi.domain.track.interactor.GetTracksPerEntry
@@ -153,6 +159,9 @@ class DomainModule : InjektModule {
         addFactory { SyncChapterProgressWithTrack(get(), get(), get(), get()) }
 
         addSingletonFactory<HistoryRepository> { HistoryRepositoryImpl(get(), get()) }
+        addSingletonFactory<HistoryActivityBackupRepository> { HistoryActivityBackupRepositoryImpl(get()) }
+        addSingletonFactory<HistoryActivityRepository> { HistoryActivityRepositoryImpl(get()) }
+        addSingletonFactory<StatisticsRepository> { StatisticsRepositoryImpl(get()) }
         addFactory { GetHistory(get(), get()) }
         addFactory { UpsertHistory(get()) }
         addFactory { RemoveHistory(get()) }

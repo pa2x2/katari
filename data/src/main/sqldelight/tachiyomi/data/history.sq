@@ -80,6 +80,14 @@ SELECT coalesce(sum(time_read), 0)
 FROM history
 WHERE entry_id IN (SELECT _id FROM entries WHERE profile_id = :profileId);
 
+getReadDurationByType:
+SELECT ENT.type, coalesce(sum(H.time_read), 0) AS duration
+FROM history H
+JOIN entries ENT ON ENT._id = H.entry_id
+WHERE ENT.profile_id = :profileId
+GROUP BY ENT.type
+ORDER BY ENT.type;
+
 deleteByProfile:
 DELETE FROM history
 WHERE entry_id IN (SELECT _id FROM entries WHERE profile_id = :profileId);

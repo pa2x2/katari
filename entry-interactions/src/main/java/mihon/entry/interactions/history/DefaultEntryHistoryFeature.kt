@@ -2,21 +2,82 @@ package mihon.entry.interactions.history
 
 import mihon.entry.interactions.media.session.EntryMediaSessionActivity
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
-import tachiyomi.domain.history.model.HistoryUpdate
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.history.model.activity.HistoryActivityUpdate
+import tachiyomi.domain.history.model.activity.HistoryCompletionCause
+import tachiyomi.domain.history.model.activity.HistoryCompletionUpdate
 import tachiyomi.domain.history.repository.HistoryRepository
-import java.util.Date
+import java.nio.charset.StandardCharsets
+import java.time.Instant
+import java.time.ZoneId
+import java.util.UUID
 
 internal class DefaultEntryHistoryFeature(
     private val repository: HistoryRepository,
 ) : EntryHistoryFeature {
     override suspend fun record(event: EntryMediaSessionEvent, activity: EntryMediaSessionActivity) {
         if (activity.durationMillis <= 0L) return
-        repository.upsertHistory(
-            HistoryUpdate(
+        repository.recordActivity(
+            HistoryActivityUpdate(
+                entryId = event.visibleEntry.id,
                 chapterId = event.child.id,
-                readAt = Date(activity.recordedAtEpochMillis),
-                sessionReadDuration = activity.durationMillis,
+                sessionId = activity.sessionId,
+                sequence = activity.sequence,
+                startedAtEpochMillis = activity.startedAtEpochMillis,
+                endedAtEpochMillis = activity.recordedAtEpochMillis,
+                durationMillis = activity.durationMillis,
+                timeZoneId = activity.timeZoneId,
             ),
+        )
+    }
+
+    override suspend fun recordCompletion(
+        event: EntryMediaSessionEvent.Progressed,
+        progress: tachiyomi.domain.entry.model.EntryProgressState,
+    ) {
+        val occurredAt = progress.completionUpdatedAt.takeIf { it > 0L } ?: progress.locatorUpdatedAt
+        val timeZone = ZoneId.systemDefault()
+        val identity = listOf(
+            event.visibleEntry.id,
+            progress.contentKey,
+            progress.resourceKey,
+            occurredAt,
+        ).joinToString(separator = "\u001f")
+        repository.recordCompletion(
+            HistoryCompletionUpdate(
+                eventId = UUID.nameUUIDFromBytes(identity.toByteArray(StandardCharsets.UTF_8)).toString(),
+                entryId = event.visibleEntry.id,
+                chapterId = event.child.id,
+                sessionId = event.activity?.sessionId,
+                occurredAtEpochMillis = occurredAt,
+                localDate = Instant.ofEpochMilli(occurredAt).atZone(timeZone).toLocalDate().toString(),
+                timeZoneId = timeZone.id,
+                cause = HistoryCompletionCause.CONSUMPTION,
+            ),
+        )
+    }
+
+    override suspend fun recordManualCompletions(entry: Entry, children: List<EntryChapter>) {
+        if (children.isEmpty()) return
+        val occurredAt = System.currentTimeMillis()
+        val timeZone = ZoneId.systemDefault()
+        val localDate = Instant.ofEpochMilli(occurredAt).atZone(timeZone).toLocalDate().toString()
+        repository.recordCompletions(
+            children.map { child ->
+                val identity = listOf(entry.id, child.id, occurredAt, HistoryCompletionCause.MANUAL.storageValue)
+                    .joinToString(separator = "\u001f")
+                HistoryCompletionUpdate(
+                    eventId = UUID.nameUUIDFromBytes(identity.toByteArray(StandardCharsets.UTF_8)).toString(),
+                    entryId = entry.id,
+                    chapterId = child.id,
+                    sessionId = null,
+                    occurredAtEpochMillis = occurredAt,
+                    localDate = localDate,
+                    timeZoneId = timeZone.id,
+                    cause = HistoryCompletionCause.MANUAL,
+                )
+            },
         )
     }
 }

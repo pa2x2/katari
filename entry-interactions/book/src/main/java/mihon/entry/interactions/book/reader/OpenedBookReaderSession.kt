@@ -6,7 +6,7 @@ import mihon.entry.interactions.book.preparation.PreparedBookPublication
 import mihon.entry.interactions.book.state.BookProgressIdentity
 import mihon.entry.interactions.book.state.BookProgressLocatorCodec
 import mihon.entry.interactions.media.EntryMediaSessionProcessor
-import mihon.entry.interactions.media.session.EntryMediaSessionActivity
+import mihon.entry.interactions.media.session.EntryMediaSessionActivitySession
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
 import mihon.entry.viewer.settings.shared.ReaderCapabilityId
 import tachiyomi.domain.entry.model.Entry
@@ -26,6 +26,7 @@ internal class OpenedBookReaderSession(
     val readerSettingsSurfaceId: String? = null,
     val readerCapabilities: Set<ReaderCapabilityId> = emptySet(),
 ) : AutoCloseable {
+    private val defaultActivitySession = EntryMediaSessionActivitySession()
     private val closeStack = BookSessionCloseStack().apply {
         own(contentSession)
         own(preparedPublication)
@@ -56,13 +57,16 @@ internal class OpenedBookReaderSession(
         )
     }
 
-    suspend fun recordHistory(sessionReadDuration: Long) {
+    suspend fun recordHistory(
+        sessionReadDuration: Long,
+        activitySession: EntryMediaSessionActivitySession = defaultActivitySession,
+    ) {
         if (sessionReadDuration <= 0L) return
         mediaSession.onEvent(
             EntryMediaSessionEvent.ActivityRecorded(
                 visibleEntry = entry,
                 child = chapter,
-                activity = EntryMediaSessionActivity(
+                activity = activitySession.record(
                     recordedAtEpochMillis = now(),
                     durationMillis = sessionReadDuration,
                 ),

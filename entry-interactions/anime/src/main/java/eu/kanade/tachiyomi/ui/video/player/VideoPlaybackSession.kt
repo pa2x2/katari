@@ -2,14 +2,15 @@ package eu.kanade.tachiyomi.ui.video.player
 
 import mihon.entry.interactions.anime.state.animeProgressState
 import mihon.entry.interactions.anime.state.positionMs
+import mihon.entry.interactions.media.session.EntryMediaSessionActivity
+import mihon.entry.interactions.media.session.EntryMediaSessionActivitySession
 import tachiyomi.domain.entry.model.EntryProgressState
-import tachiyomi.domain.history.model.HistoryUpdate
-import java.util.Date
 
 internal class VideoPlaybackSession(
     private val entryId: Long,
     private val chapterId: Long,
     private val resourceKey: String,
+    private val activitySession: EntryMediaSessionActivitySession = EntryMediaSessionActivitySession(),
     private val now: () -> Long = System::currentTimeMillis,
 ) {
 
@@ -27,12 +28,11 @@ internal class VideoPlaybackSession(
         savedPositionMs = positionMs.coerceAtLeast(0L)
     }
 
-    fun snapshot(positionMs: Long, durationMs: Long): Snapshot {
+    fun snapshot(positionMs: Long, durationMs: Long, activeDurationMs: Long = 0L): Snapshot {
         val safePositionMs = positionMs.coerceAtLeast(0L)
         val safeDurationMs = durationMs.coerceAtLeast(0L)
         val completed = safeDurationMs > 0L && safePositionMs * 100 >= safeDurationMs * COMPLETION_PERCENTAGE
         val completedNow = completed && !savedCompleted
-        val watchedDelta = (safePositionMs - savedPositionMs).coerceAtLeast(0L)
         val timestamp = now()
         if (completed != savedCompleted) {
             completionUpdatedAt = timestamp
@@ -52,20 +52,14 @@ internal class VideoPlaybackSession(
                 locatorUpdatedAt = timestamp,
                 completionUpdatedAt = completionUpdatedAt,
             ),
-            historyUpdate = watchedDelta.takeIf { it > 0L }?.let {
-                HistoryUpdate(
-                    chapterId = chapterId,
-                    readAt = Date(timestamp),
-                    sessionReadDuration = it,
-                )
-            },
+            activity = activeDurationMs.takeIf { it > 0L }?.let { activitySession.record(it, timestamp) },
             completedNow = completedNow,
         )
     }
 
     data class Snapshot(
         val progressState: EntryProgressState,
-        val historyUpdate: HistoryUpdate?,
+        val activity: EntryMediaSessionActivity?,
         val completedNow: Boolean,
     )
 

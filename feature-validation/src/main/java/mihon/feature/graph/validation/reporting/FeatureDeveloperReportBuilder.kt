@@ -160,6 +160,7 @@ fun buildFeatureDeveloperReport(
                         FeatureDeveloperOwnedReference(input.id.value, input.owner.value)
                     }.sortedBy(FeatureDeveloperOwnedReference::id),
                     after = evaluated.participant.order.after.map { it.value }.sorted(),
+                    afterIfPresent = evaluated.participant.order.afterIfPresent.map { it.value }.sorted(),
                     before = evaluated.participant.order.before.map { it.value }.sorted(),
                     contracts = evaluated.participant.behavioralContracts.map { contract ->
                         val key = ExecutionContractKey(evaluated.subject, contract.id.value)
