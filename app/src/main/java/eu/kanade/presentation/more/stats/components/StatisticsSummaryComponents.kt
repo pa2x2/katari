@@ -28,6 +28,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.data.StatsProgress
 import eu.kanade.presentation.more.stats.data.StatsTopTitle
@@ -231,6 +232,7 @@ internal fun StatisticsSectionCard(
     actionLabel: String? = null,
     onActionClick: (() -> Unit)? = null,
     reserveActionHeight: Boolean = false,
+    contentSpacing: Dp = 18.dp,
     showContent: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -253,7 +255,7 @@ internal fun StatisticsSectionCard(
                 }
             }
             if (showContent) {
-                Spacer(Modifier.height(18.dp))
+                Spacer(Modifier.height(contentSpacing))
                 content()
             }
         }

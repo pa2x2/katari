@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -15,6 +16,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -144,6 +146,7 @@ private fun SettledActivityCard(
         actionLabel = stringResource(MR.strings.statistics_today).takeIf { isFinite && !isLatest },
         onActionClick = onToday,
         reserveActionHeight = true,
+        contentSpacing = 0.dp,
     ) {
         ActivityWindowNavigation(
             window = window,
@@ -152,42 +155,48 @@ private fun SettledActivityCard(
             onOlder = { onNavigateByBuckets(1) },
             onNewer = { onNavigateByBuckets(-1) },
         )
-        ActivityRequestStatus(state, onRetry)
-
+        Spacer(Modifier.height(16.dp))
         val labels = types.associate { it.type to stringResource(it.displayName) }
         val notTrackedLabel = stringResource(MR.strings.statistics_not_tracked)
-        StatisticsTrendChart(
-            points = activity.trend,
-            navigationPoints = activity.navigationTrend,
-            types = types,
-            typeLabels = labels,
-            formatDate = { point ->
-                if (point.startDate == point.endDate) {
-                    point.startDate.format(dateFormatter)
-                } else {
-                    "${point.startDate.format(dateFormatter)} – ${point.endDate.format(dateFormatter)}"
-                }
-            },
-            formatAxisDate = { point -> point.startDate.format(axisDateFormatter) },
-            formatDuration = formatter,
-            notTrackedLabel = notTrackedLabel,
-            previousPointLabel = stringResource(MR.strings.statistics_previous_data_point),
-            nextPointLabel = stringResource(MR.strings.statistics_next_data_point),
-            canNavigateOlder = canNavigateOlder,
-            canNavigateNewer = canNavigateNewer,
-            navigationPending = isPending,
-            onNavigateByBuckets = onNavigateByBuckets,
-            onOpenActivity = { point ->
-                val trackedStart = activity.trackingStartDate
-                onOpenActivity(
-                    if (trackedStart != null && point.startDate.isBefore(trackedStart)) {
-                        point.copy(startDate = trackedStart)
+        Box {
+            StatisticsTrendChart(
+                points = activity.trend,
+                navigationPoints = activity.navigationTrend,
+                types = types,
+                typeLabels = labels,
+                formatDate = { point ->
+                    if (point.startDate == point.endDate) {
+                        point.startDate.format(dateFormatter)
                     } else {
-                        point
-                    },
-                )
-            },
-        )
+                        "${point.startDate.format(dateFormatter)} – ${point.endDate.format(dateFormatter)}"
+                    }
+                },
+                formatAxisDate = { point -> point.startDate.format(axisDateFormatter) },
+                formatDuration = formatter,
+                notTrackedLabel = notTrackedLabel,
+                previousPointLabel = stringResource(MR.strings.statistics_previous_data_point),
+                nextPointLabel = stringResource(MR.strings.statistics_next_data_point),
+                canNavigateOlder = canNavigateOlder,
+                canNavigateNewer = canNavigateNewer,
+                navigationPending = isPending,
+                onNavigateByBuckets = onNavigateByBuckets,
+                onOpenActivity = { point ->
+                    val trackedStart = activity.trackingStartDate
+                    onOpenActivity(
+                        if (trackedStart != null && point.startDate.isBefore(trackedStart)) {
+                            point.copy(startDate = trackedStart)
+                        } else {
+                            point
+                        },
+                    )
+                },
+            )
+            ActivityRequestStatus(
+                state = state,
+                onRetry = onRetry,
+                modifier = Modifier.align(Alignment.TopCenter),
+            )
+        }
         Box(
             modifier = Modifier.fillMaxWidth().height(28.dp),
             contentAlignment = Alignment.Center,
@@ -238,6 +247,7 @@ private fun ActivityWindowNavigation(
 private fun ActivityRequestStatus(
     state: ActivityState.Available,
     onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val loadingTarget = state.loadingTarget
     var visibleLoadingTarget by remember(loadingTarget) {
@@ -251,44 +261,58 @@ private fun ActivityRequestStatus(
     }
 
     Box(
-        modifier = Modifier.fillMaxWidth().height(40.dp),
+        modifier = modifier.fillMaxWidth().height(40.dp),
         contentAlignment = Alignment.Center,
     ) {
         visibleLoadingTarget?.let { target ->
-            Row(
-                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-                verticalAlignment = Alignment.CenterVertically,
+            Surface(
+                shape = MaterialTheme.shapes.small,
+                tonalElevation = 2.dp,
             ) {
-                CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
-                Text(
-                    text = stringResource(MR.strings.statistics_loading_period, formatWindow(target)),
-                    modifier = Modifier.padding(start = 8.dp),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                Row(
+                    modifier = Modifier
+                        .semantics { liveRegion = LiveRegionMode.Polite }
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
+                    Text(
+                        text = stringResource(MR.strings.statistics_loading_period, formatWindow(target)),
+                        modifier = Modifier.padding(start = 8.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
         }
         state.failedTarget?.let { target ->
-            Row(
-                modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite },
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.small,
+                tonalElevation = 2.dp,
             ) {
-                Text(
-                    text = stringResource(MR.strings.statistics_could_not_load_period, formatWindow(target)),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                TextButton(
-                    onClick = onRetry,
-                    modifier = Modifier.height(36.dp),
-                    contentPadding = PaddingValues(horizontal = 12.dp),
+                Row(
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(stringResource(MR.strings.action_retry))
+                    Text(
+                        text = stringResource(MR.strings.statistics_could_not_load_period, formatWindow(target)),
+                        modifier = Modifier.weight(1f).padding(start = 12.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    TextButton(
+                        onClick = onRetry,
+                        modifier = Modifier.height(36.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp),
+                    ) {
+                        Text(stringResource(MR.strings.action_retry))
+                    }
                 }
             }
         }
