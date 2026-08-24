@@ -1557,7 +1557,6 @@
     <string name="statistics_could_not_load_activity">Couldn\'t load activity</string>
     <string name="statistics_active_duration">%s active</string>
     <string name="statistics_see_activity">See activity</string>
-    <string name="statistics_recorded_since">Recorded since %s</string>
     <string name="statistics_chapters_read">Chapters read</string>
     <string name="statistics_episodes_watched">Episodes watched</string>
     <string name="statistics_earlier_activity">Earlier activity</string>

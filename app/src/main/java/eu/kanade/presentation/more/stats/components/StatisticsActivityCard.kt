@@ -200,15 +200,6 @@ private fun SettledActivityCard(
                 )
             }
         }
-        activity.trackingStartedAtEpochMillis?.let {
-            val recordedDate = activity.trackingStartDate?.format(dateFormatter) ?: return@let
-            Text(
-                text = stringResource(MR.strings.statistics_recorded_since, recordedDate),
-                modifier = Modifier.padding(top = 8.dp),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
     }
 }
 
