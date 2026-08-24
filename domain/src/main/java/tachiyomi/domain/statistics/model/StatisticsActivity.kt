@@ -14,6 +14,11 @@ data class StatisticsCompletionBucket(
     val count: Long,
 )
 
+data class StatisticsActivityTimeline(
+    val activity: List<StatisticsActivityBucket>,
+    val completions: List<StatisticsCompletionBucket>,
+)
+
 data class StatisticsTopEntry(
     val entryId: Long,
     val type: EntryType,

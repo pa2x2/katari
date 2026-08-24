@@ -504,10 +504,10 @@ private fun calculateTranslationPopupFallbackPosition(
 
 private val POPUP_EDGE_MARGIN = 16.dp
 
-// Text selection handles extend below the selected glyph bounds and keep a larger invisible
-// touch target. Keep popup actions clear of that target so the platform handle cannot consume
-// taps intended for the first action in the popup.
-private val POPUP_ANCHOR_GAP = 24.dp
+// Text selection handles extend below the selected glyph bounds and receive a 36 dp minimum
+// touch target. Keep popup actions clear of that full target so the handle cannot consume taps
+// intended for the popup.
+private val POPUP_ANCHOR_GAP = 36.dp
 private val POPUP_MAXIMUM_WIDTH = 360.dp
 private val translationPopupProperties = PopupProperties(
     focusable = false,

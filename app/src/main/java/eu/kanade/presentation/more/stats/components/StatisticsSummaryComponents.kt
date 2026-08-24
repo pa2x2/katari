@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -39,6 +40,7 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 internal fun StatisticsHeadlineCards(
     time: String,
     titles: Int,
@@ -58,19 +60,19 @@ internal fun StatisticsHeadlineCards(
             value = time,
             label = stringResource(MR.strings.statistics_time_spent),
             icon = timeIcon,
-            modifier = Modifier.weight(1f).widthIn(min = 140.dp),
+            modifier = Modifier.weight(1f).widthIn(min = 140.dp).fillMaxRowHeight(),
         )
         StatisticsHeadlineCard(
             value = titles.toString(),
             label = stringResource(MR.strings.in_library),
             icon = titlesIcon,
-            modifier = Modifier.weight(1f).widthIn(min = 140.dp),
+            modifier = Modifier.weight(1f).widthIn(min = 140.dp).fillMaxRowHeight(),
         )
         StatisticsHeadlineCard(
             value = thirdValue,
             label = thirdLabel,
             icon = thirdIcon,
-            modifier = Modifier.weight(1f).widthIn(min = 140.dp),
+            modifier = Modifier.weight(1f).widthIn(min = 140.dp).fillMaxRowHeight(),
         )
     }
 }
@@ -263,12 +265,18 @@ internal fun StatisticsSectionCard(
     title: String,
     actionLabel: String? = null,
     onActionClick: (() -> Unit)? = null,
+    reserveActionHeight: Boolean = false,
     showContent: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     OutlinedCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(20.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.then(
+                    if (reserveActionHeight) Modifier.height(48.dp) else Modifier,
+                ),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(
                     text = title,
                     modifier = Modifier.weight(1f),
