@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.5.1] - 2026-08-24
+
+### ✨ Added
+
+- Added navigation through older and newer activity periods in the Statistics dashboard for 7-day, 30-day, and 1-year ranges, with swipe gestures, previous and next controls, accessibility actions, and a `Today` shortcut.
+- Added clear visual treatment for periods before detailed activity tracking began, including `Not tracked` chart regions and period-specific loading and retry feedback.
+
+### 🧩 Improved
+
+- Statistics summary and insight cards now keep equal heights when displayed together.
+
+### 🐛 Fixed
+
+- Translation popups now stay clear of text-selection handles so their actions remain tappable.
+
 ## [1.5.0] - 2026-08-23
 
 ### 🌟 Highlights
@@ -279,7 +294,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.5.1...HEAD
+[1.5.1]: https://github.com/pa2x2/katari/releases/tag/v1.5.1
 [1.5.0]: https://github.com/pa2x2/katari/releases/tag/v1.5.0
 [1.4.1]: https://github.com/pa2x2/katari/releases/tag/v1.4.1
 [1.4.0]: https://github.com/pa2x2/katari/releases/tag/v1.4.0
