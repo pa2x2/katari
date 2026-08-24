@@ -375,6 +375,12 @@ private fun StatsActivity.forType(type: EntryType?): StatsActivity {
                 completionCountByType = mapOf(type to (point.completionCountByType[type] ?: 0L)),
             )
         },
+        allRangeMonthlyTrend = allRangeMonthlyTrend.map { point ->
+            point.copy(
+                durationByType = mapOf(type to (point.durationByType[type] ?: 0L)),
+                completionCountByType = mapOf(type to (point.completionCountByType[type] ?: 0L)),
+            )
+        },
         topTitles = topTitles.filter { it.type == type },
         earlierDurationMillis = earlierDurationByType[type] ?: 0L,
         earlierDurationByType = mapOf(type to (earlierDurationByType[type] ?: 0L)),

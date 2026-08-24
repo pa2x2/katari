@@ -69,6 +69,9 @@ internal fun StatisticsTrendChart(
     navigationPending: Boolean,
     onNavigateByBuckets: (Int) -> Unit,
     onOpenActivity: (StatsTrendPoint) -> Unit,
+    showTrendLine: Boolean = true,
+    selectionActionLabel: @Composable (StatsTrendPoint) -> String? = { null },
+    periodTotalCaption: String? = null,
     modifier: Modifier = Modifier,
 ) {
     val typeColors = types.associate { it.type to it.accent.color() }
@@ -403,35 +406,37 @@ internal fun StatisticsTrendChart(
                                 }
                             }
 
-                            val trackedPaths = buildList {
-                                var path: Path? = null
-                                navigationPoints.forEachIndexed { index, point ->
-                                    if (!point.isTracked) {
-                                        path?.let(::add)
-                                        path = null
-                                    } else {
-                                        val currentPath = path
-                                        if (currentPath == null) {
-                                            path = Path().apply {
-                                                moveTo(navigationX(index), y(point.totalDurationMillis))
-                                            }
+                            if (showTrendLine) {
+                                val trackedPaths = buildList {
+                                    var path: Path? = null
+                                    navigationPoints.forEachIndexed { index, point ->
+                                        if (!point.isTracked) {
+                                            path?.let(::add)
+                                            path = null
                                         } else {
-                                            currentPath.lineTo(navigationX(index), y(point.totalDurationMillis))
+                                            val currentPath = path
+                                            if (currentPath == null) {
+                                                path = Path().apply {
+                                                    moveTo(navigationX(index), y(point.totalDurationMillis))
+                                                }
+                                            } else {
+                                                currentPath.lineTo(navigationX(index), y(point.totalDurationMillis))
+                                            }
                                         }
                                     }
+                                    path?.let(::add)
                                 }
-                                path?.let(::add)
-                            }
-                            trackedPaths.forEach { path ->
-                                drawPath(
-                                    path = path,
-                                    color = if (types.size == 1) {
-                                        typeColors.getValue(types.single().type)
-                                    } else {
-                                        primaryColor
-                                    },
-                                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round),
-                                )
+                                trackedPaths.forEach { path ->
+                                    drawPath(
+                                        path = path,
+                                        color = if (types.size == 1) {
+                                            typeColors.getValue(types.single().type)
+                                        } else {
+                                            primaryColor
+                                        },
+                                        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round),
+                                    )
+                                }
                             }
                             if (selectedIndex in points.indices) {
                                 val selected = points[selectedIndex]
@@ -494,6 +499,14 @@ internal fun StatisticsTrendChart(
                     }
                 }
             }
+            periodTotalCaption?.let { caption ->
+                Text(
+                    text = caption,
+                    modifier = Modifier.padding(start = Y_AXIS_WIDTH, top = 8.dp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
             val selected = points[selectedIndex.coerceIn(points.indices)]
             StatisticsTrendSelection(
                 selected = selected,
@@ -504,6 +517,7 @@ internal fun StatisticsTrendChart(
                 formattedDuration = formatDuration(selected.totalDurationMillis),
                 notTrackedLabel = notTrackedLabel,
                 formatDuration = formatDuration,
+                actionLabel = selectionActionLabel(selected),
                 onOpenActivity = onOpenActivity,
             )
         }

@@ -40,9 +40,10 @@ internal fun StatisticsTrendSelection(
     formattedDuration: String,
     notTrackedLabel: String,
     formatDuration: (Long) -> String,
+    actionLabel: String?,
     onOpenActivity: (StatsTrendPoint) -> Unit,
 ) {
-    val isActionable = selected.isTracked && selected.hasActivity
+    val isActionable = selected.isTracked && (selected.hasActivity || actionLabel != null)
     val breakdownRowHeight = with(LocalDensity.current) {
         MaterialTheme.typography.bodySmall.lineHeight.toDp()
     }
@@ -89,6 +90,15 @@ internal fun StatisticsTrendSelection(
                 )
                 if (isActionable) {
                     Spacer(Modifier.width(4.dp))
+                    actionLabel?.let { label ->
+                        Text(
+                            text = label,
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.labelLarge,
+                            maxLines = 1,
+                        )
+                        Spacer(Modifier.width(2.dp))
+                    }
                     Icon(
                         imageVector = Icons.Outlined.ChevronRight,
                         contentDescription = null,
