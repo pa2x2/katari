@@ -15,24 +15,15 @@ FROM activity_segments SEG
 JOIN activity_sessions SES ON SES.session_id = SEG.session_id
 JOIN entries ENT ON ENT._id = SES.entry_id;
 
-activityTotals:
+activityTotalsInWindow:
 SELECT
     type,
     local_date,
     CAST(sum(duration) AS INTEGER) AS duration
 FROM statisticsView
 WHERE profile_id = :profileId
-GROUP BY type, local_date
-ORDER BY local_date, type;
-
-activityTotalsSince:
-SELECT
-    type,
-    local_date,
-    CAST(sum(duration) AS INTEGER) AS duration
-FROM statisticsView
-WHERE profile_id = :profileId
-AND local_date >= :startLocalDate
+AND (:startLocalDate IS NULL OR local_date >= :startLocalDate)
+AND (:endLocalDate IS NULL OR local_date <= :endLocalDate)
 GROUP BY type, local_date
 ORDER BY local_date, type;
 
@@ -73,11 +64,13 @@ WHERE duration > 0
 ORDER BY duration DESC, title COLLATE NOCASE
 LIMIT :limit;
 
-sessionSummaries:
+sessionSummariesInWindow:
 WITH session_totals AS (
     SELECT session_id, type, CAST(sum(duration) AS INTEGER) AS duration
     FROM statisticsView
     WHERE profile_id = :profileId
+    AND (:startLocalDate IS NULL OR local_date >= :startLocalDate)
+    AND (:endLocalDate IS NULL OR local_date <= :endLocalDate)
     GROUP BY session_id, type
 )
 SELECT
@@ -89,24 +82,7 @@ FROM session_totals
 GROUP BY type
 ORDER BY type;
 
-sessionSummariesSince:
-WITH session_totals AS (
-    SELECT session_id, type, CAST(sum(duration) AS INTEGER) AS duration
-    FROM statisticsView
-    WHERE profile_id = :profileId
-    AND local_date >= :startLocalDate
-    GROUP BY session_id, type
-)
-SELECT
-    type,
-    count(*) AS session_count,
-    CAST(avg(duration) AS INTEGER) AS average_duration,
-    CAST(max(duration) AS INTEGER) AS longest_duration
-FROM session_totals
-GROUP BY type
-ORDER BY type;
-
-completionTotals:
+completionTotalsInWindow:
 SELECT
     ENT.type,
     CMP.local_date,
@@ -115,23 +91,12 @@ FROM activity_completion_events CMP
 JOIN entries ENT ON ENT._id = CMP.entry_id
 WHERE ENT.profile_id = :profileId
 AND CMP.cause = 'consumption'
+AND (:startLocalDate IS NULL OR CMP.local_date >= :startLocalDate)
+AND (:endLocalDate IS NULL OR CMP.local_date <= :endLocalDate)
 GROUP BY ENT.type, CMP.local_date
 ORDER BY CMP.local_date, ENT.type;
 
-completionTotalsSince:
-SELECT
-    ENT.type,
-    CMP.local_date,
-    count(*) AS count
-FROM activity_completion_events CMP
-JOIN entries ENT ON ENT._id = CMP.entry_id
-WHERE ENT.profile_id = :profileId
-AND CMP.cause = 'consumption'
-AND CMP.local_date >= :startLocalDate
-GROUP BY ENT.type, CMP.local_date
-ORDER BY CMP.local_date, ENT.type;
-
-topActivityEntries:
+topActivityEntriesInWindow:
 WITH entry_totals AS (
     SELECT
         entry_id,
@@ -140,32 +105,8 @@ WITH entry_totals AS (
         CAST(sum(duration) AS INTEGER) AS duration
     FROM statisticsView
     WHERE profile_id = :profileId
-    GROUP BY entry_id
-), ranked AS (
-    SELECT
-        entry_id,
-        type,
-        title,
-        duration,
-        row_number() OVER (ORDER BY duration DESC, title COLLATE NOCASE) AS overall_rank,
-        row_number() OVER (PARTITION BY type ORDER BY duration DESC, title COLLATE NOCASE) AS type_rank
-    FROM entry_totals
-)
-SELECT entry_id, type, title, duration
-FROM ranked
-WHERE overall_rank <= 5 OR type_rank <= 5
-ORDER BY duration DESC, title COLLATE NOCASE;
-
-topActivityEntriesSince:
-WITH entry_totals AS (
-    SELECT
-        entry_id,
-        type,
-        title,
-        CAST(sum(duration) AS INTEGER) AS duration
-    FROM statisticsView
-    WHERE profile_id = :profileId
-    AND local_date >= :startLocalDate
+    AND (:startLocalDate IS NULL OR local_date >= :startLocalDate)
+    AND (:endLocalDate IS NULL OR local_date <= :endLocalDate)
     GROUP BY entry_id
 ), ranked AS (
     SELECT

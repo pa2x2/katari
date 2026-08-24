@@ -1,8 +1,12 @@
 package eu.kanade.tachiyomi.ui.stats
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -26,6 +30,15 @@ class StatsScreen : Screen() {
 
         val screenModel = rememberScreenModel { StatsScreenModel() }
         val state by screenModel.state.collectAsState()
+        val lifecycleOwner = LocalLifecycleOwner.current
+
+        DisposableEffect(lifecycleOwner, screenModel) {
+            val observer = LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME) screenModel.refreshToday()
+            }
+            lifecycleOwner.lifecycle.addObserver(observer)
+            onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+        }
 
         Scaffold(
             topBar = { scrollBehavior ->
@@ -46,6 +59,8 @@ class StatsScreen : Screen() {
                 paddingValues = paddingValues,
                 onRangeSelected = screenModel::setRange,
                 onTypeSelected = screenModel::setType,
+                onNavigateActivity = screenModel::navigateActivityByBuckets,
+                onShowToday = screenModel::showToday,
                 onRetryActivity = screenModel::retryActivity,
                 onOpenActivity = { type, point ->
                     navigator.push(

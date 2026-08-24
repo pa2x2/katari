@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.combine
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.statistics.model.StatisticsActivityBucket
 import tachiyomi.domain.statistics.model.StatisticsActivitySnapshot
+import tachiyomi.domain.statistics.model.StatisticsActivityTimeline
 import tachiyomi.domain.statistics.model.StatisticsCompletionBucket
 import tachiyomi.domain.statistics.model.StatisticsEarlierActivity
 import tachiyomi.domain.statistics.model.StatisticsEarlierActivityDetails
@@ -16,6 +17,11 @@ import tachiyomi.domain.statistics.repository.StatisticsRepository
 class StatisticsRepositoryImpl(
     private val handler: DatabaseHandler,
 ) : StatisticsRepository {
+    fun subscribeActivity(
+        profileId: Long,
+        startLocalDate: String?,
+    ): Flow<StatisticsActivitySnapshot> = subscribeActivity(profileId, startLocalDate, null)
+
     override suspend fun getEarlierActivityDetails(
         profileId: Long,
         type: EntryType?,
@@ -44,13 +50,14 @@ class StatisticsRepositoryImpl(
     override fun subscribeActivity(
         profileId: Long,
         startLocalDate: String?,
+        endLocalDate: String?,
     ): Flow<StatisticsActivitySnapshot> {
         return combine(
-            subscribeActivityRows(profileId, startLocalDate),
-            subscribeCompletions(profileId, startLocalDate),
+            subscribeActivityRows(profileId, startLocalDate, endLocalDate),
+            subscribeCompletions(profileId, startLocalDate, endLocalDate),
             combine(
-                subscribeTopEntries(profileId, startLocalDate),
-                subscribeSessionSummaries(profileId, startLocalDate),
+                subscribeTopEntries(profileId, startLocalDate, endLocalDate),
+                subscribeSessionSummaries(profileId, startLocalDate, endLocalDate),
                 ::Pair,
             ),
             handler.subscribeToOneOrNull { activityQueries.getStatisticsEpoch(profileId) },
@@ -67,6 +74,16 @@ class StatisticsRepositoryImpl(
             )
         }
     }
+
+    override fun subscribeActivityTimeline(
+        profileId: Long,
+        startLocalDate: String?,
+        endLocalDate: String,
+    ): Flow<StatisticsActivityTimeline> = combine(
+        subscribeActivityRows(profileId, startLocalDate, endLocalDate),
+        subscribeCompletions(profileId, startLocalDate, endLocalDate),
+        ::StatisticsActivityTimeline,
+    )
 
     private fun subscribeEarlierActivity(profileId: Long): Flow<List<StatisticsEarlierActivity>> {
         val legacy = handler.subscribeToList {
@@ -99,6 +116,7 @@ class StatisticsRepositoryImpl(
     private fun subscribeActivityRows(
         profileId: Long,
         startLocalDate: String?,
+        endLocalDate: String?,
     ): Flow<List<StatisticsActivityBucket>> = handler.subscribeToList {
         val mapper = { type: String, localDate: String, duration: Long? ->
             StatisticsActivityBucket(
@@ -107,16 +125,13 @@ class StatisticsRepositoryImpl(
                 durationMillis = duration ?: 0L,
             )
         }
-        if (startLocalDate == null) {
-            statisticsViewQueries.activityTotals(profileId, mapper)
-        } else {
-            statisticsViewQueries.activityTotalsSince(profileId, startLocalDate, mapper)
-        }
+        statisticsViewQueries.activityTotalsInWindow(profileId, startLocalDate, endLocalDate, mapper)
     }
 
     private fun subscribeCompletions(
         profileId: Long,
         startLocalDate: String?,
+        endLocalDate: String?,
     ): Flow<List<StatisticsCompletionBucket>> = handler.subscribeToList {
         val mapper = { type: String, localDate: String, count: Long ->
             StatisticsCompletionBucket(
@@ -125,16 +140,13 @@ class StatisticsRepositoryImpl(
                 count = count,
             )
         }
-        if (startLocalDate == null) {
-            statisticsViewQueries.completionTotals(profileId, mapper)
-        } else {
-            statisticsViewQueries.completionTotalsSince(profileId, startLocalDate, mapper)
-        }
+        statisticsViewQueries.completionTotalsInWindow(profileId, startLocalDate, endLocalDate, mapper)
     }
 
     private fun subscribeTopEntries(
         profileId: Long,
         startLocalDate: String?,
+        endLocalDate: String?,
     ): Flow<List<StatisticsTopEntry>> = handler.subscribeToList {
         val mapper = { entryId: Long, type: String, title: String, duration: Long? ->
             StatisticsTopEntry(
@@ -144,16 +156,13 @@ class StatisticsRepositoryImpl(
                 durationMillis = duration ?: 0L,
             )
         }
-        if (startLocalDate == null) {
-            statisticsViewQueries.topActivityEntries(profileId, mapper)
-        } else {
-            statisticsViewQueries.topActivityEntriesSince(profileId, startLocalDate, mapper)
-        }
+        statisticsViewQueries.topActivityEntriesInWindow(profileId, startLocalDate, endLocalDate, mapper)
     }
 
     private fun subscribeSessionSummaries(
         profileId: Long,
         startLocalDate: String?,
+        endLocalDate: String?,
     ): Flow<List<StatisticsSessionSummary>> = handler.subscribeToList {
         val mapper = {
                 type: String,
@@ -168,11 +177,7 @@ class StatisticsRepositoryImpl(
                 longestDurationMillis = longestDuration ?: 0L,
             )
         }
-        if (startLocalDate == null) {
-            statisticsViewQueries.sessionSummaries(profileId, mapper)
-        } else {
-            statisticsViewQueries.sessionSummariesSince(profileId, startLocalDate, mapper)
-        }
+        statisticsViewQueries.sessionSummariesInWindow(profileId, startLocalDate, endLocalDate, mapper)
     }
 }
 

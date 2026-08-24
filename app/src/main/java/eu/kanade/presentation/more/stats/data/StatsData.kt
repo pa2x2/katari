@@ -48,8 +48,14 @@ data class StatsTrendPoint(
     val startDate: LocalDate,
     val endDate: LocalDate,
     val durationByType: Map<EntryType, Long>,
+    val completionCountByType: Map<EntryType, Long> = emptyMap(),
+    val trackedStartDate: LocalDate? = startDate,
+    val bucketStartDate: LocalDate = startDate,
 ) {
     val totalDurationMillis: Long = durationByType.values.sum()
+    val completionCount: Long = completionCountByType.values.sum()
+    val hasActivity: Boolean = totalDurationMillis > 0L || completionCount > 0L
+    val isTracked: Boolean = trackedStartDate != null
 }
 
 data class StatsTopTitle(
@@ -60,6 +66,7 @@ data class StatsTopTitle(
 )
 
 data class StatsActivity(
+    val window: StatsActivityWindow,
     val totalDurationMillis: Long,
     val currentStreakDays: Int,
     val currentStreakDaysByType: Map<EntryType, Int>,
@@ -74,8 +81,10 @@ data class StatsActivity(
     val activeDays: Int,
     val activeDaysByType: Map<EntryType, Int>,
     val trend: List<StatsTrendPoint>,
+    val navigationTrend: List<StatsTrendPoint>,
     val topTitles: List<StatsTopTitle>,
     val trackingStartedAtEpochMillis: Long?,
+    val trackingStartDate: LocalDate?,
     val earlierDurationMillis: Long,
     val earlierDurationByType: Map<EntryType, Long>,
 )

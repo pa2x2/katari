@@ -2,6 +2,7 @@ package eu.kanade.presentation.more.stats
 
 import androidx.compose.runtime.Immutable
 import eu.kanade.presentation.more.stats.data.StatsActivity
+import eu.kanade.presentation.more.stats.data.StatsActivityWindow
 import eu.kanade.presentation.more.stats.data.StatsLibrary
 import eu.kanade.presentation.more.stats.data.StatsRange
 import eu.kanade.presentation.more.stats.data.StatsType
@@ -25,11 +26,15 @@ sealed interface StatsScreenState {
 
 sealed interface ActivityState {
     @Immutable
-    data object Loading : ActivityState
+    data class Loading(val target: StatsActivityWindow) : ActivityState
 
     @Immutable
-    data class Available(val data: StatsActivity) : ActivityState
+    data class Available(
+        val data: StatsActivity,
+        val loadingTarget: StatsActivityWindow? = null,
+        val failedTarget: StatsActivityWindow? = null,
+    ) : ActivityState
 
     @Immutable
-    data object Failed : ActivityState
+    data class Failed(val target: StatsActivityWindow) : ActivityState
 }

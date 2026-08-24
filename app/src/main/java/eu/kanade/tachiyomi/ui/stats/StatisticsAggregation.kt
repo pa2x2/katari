@@ -1,12 +1,16 @@
 package eu.kanade.tachiyomi.ui.stats
 
 import eu.kanade.presentation.more.stats.data.StatsActivity
+import eu.kanade.presentation.more.stats.data.StatsActivityWindow
 import eu.kanade.presentation.more.stats.data.StatsRange
 import eu.kanade.presentation.more.stats.data.StatsTopTitle
 import eu.kanade.presentation.more.stats.data.StatsTrendPoint
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.domain.statistics.model.StatisticsActivitySnapshot
+import tachiyomi.domain.statistics.model.StatisticsActivityTimeline
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.temporal.TemporalAdjusters
 import java.time.temporal.WeekFields
 import java.util.Locale
@@ -25,33 +29,79 @@ internal fun buildActivity(
     today: LocalDate,
     locale: Locale,
 ): StatsActivity {
-    val bucketUnit = range.bucketUnit(snapshot, today)
-    val firstDate = range.startLocalDate(today)
-        ?: snapshot.activity.minOfOrNull { LocalDate.parse(it.localDate) }
-        ?: today
-    val firstBucket = firstDate.bucketStart(bucketUnit, locale)
-    val lastBucket = today.bucketStart(bucketUnit, locale)
+    return buildWindowActivity(
+        snapshot = snapshot,
+        window = range.windowEndingOn(today, isLatest = true),
+        types = types,
+        locale = locale,
+    )
+}
 
-    val durationByBucket = snapshot.activity.groupBy { activity ->
+internal fun buildWindowActivity(
+    snapshot: StatisticsActivitySnapshot,
+    window: StatsActivityWindow,
+    types: List<EntryType>,
+    locale: Locale,
+    zoneId: ZoneId = ZoneId.systemDefault(),
+    navigationTimeline: StatisticsActivityTimeline = StatisticsActivityTimeline(
+        activity = snapshot.activity,
+        completions = snapshot.completions,
+    ),
+    navigationStartDate: LocalDate? = window.startDate,
+    navigationEndDate: LocalDate = window.endDate,
+): StatsActivity {
+    val range = window.range
+    val endDate = window.endDate
+    val earliestDetailedDate = (snapshot.activity.map { it.localDate } + snapshot.completions.map { it.localDate })
+        .minOrNull()
+        ?.let(LocalDate::parse)
+    val trackingStartDate = snapshot.trackingStartedAtEpochMillis
+        ?.let { startedAt -> Instant.ofEpochMilli(startedAt).atZone(zoneId).toLocalDate() }
+        ?: earliestDetailedDate
+    val bucketUnit = range.bucketUnit(snapshot, endDate)
+    val firstDate = window.startDate
+        ?: trackingStartDate
+        ?: snapshot.activity.minOfOrNull { LocalDate.parse(it.localDate) }
+        ?: endDate
+    val durationByBucket = navigationTimeline.activity.groupBy { activity ->
         LocalDate.parse(activity.localDate).bucketStart(bucketUnit, locale)
     }.mapValues { (_, rows) ->
         rows.groupBy { it.type }.mapValues { (_, typeRows) -> typeRows.sumOf { it.durationMillis } }
     }
+    val completionsByBucket = navigationTimeline.completions.groupBy { completion ->
+        LocalDate.parse(completion.localDate).bucketStart(bucketUnit, locale)
+    }.mapValues { (_, rows) ->
+        rows.groupBy { it.type }.mapValues { (_, typeRows) -> typeRows.sumOf { it.count } }
+    }
 
-    val trend = buildList {
-        var bucket = firstBucket
-        while (!bucket.isAfter(lastBucket)) {
-            val values = durationByBucket[bucket].orEmpty()
-            add(
-                StatsTrendPoint(
-                    startDate = maxOf(bucket, firstDate),
-                    endDate = minOf(bucket.endDate(bucketUnit), today),
-                    durationByType = types.associateWith { values[it] ?: 0L },
-                ),
-            )
-            bucket = bucket.next(bucketUnit)
+    fun buildTrend(trendStartDate: LocalDate, trendEndDate: LocalDate): List<StatsTrendPoint> {
+        val trendFirstBucket = trendStartDate.bucketStart(bucketUnit, locale)
+        val trendLastBucket = trendEndDate.bucketStart(bucketUnit, locale)
+        return buildList {
+            var bucket = trendFirstBucket
+            while (!bucket.isAfter(trendLastBucket)) {
+                val values = durationByBucket[bucket].orEmpty()
+                val completions = completionsByBucket[bucket].orEmpty()
+                val pointStart = maxOf(bucket, trendStartDate)
+                val pointEnd = minOf(bucket.endDate(bucketUnit), trendEndDate)
+                add(
+                    StatsTrendPoint(
+                        bucketStartDate = bucket,
+                        startDate = pointStart,
+                        endDate = pointEnd,
+                        durationByType = types.associateWith { values[it] ?: 0L },
+                        completionCountByType = types.associateWith { completions[it] ?: 0L },
+                        trackedStartDate = trackingStartDate
+                            ?.takeUnless(pointEnd::isBefore)
+                            ?.let { maxOf(pointStart, it) },
+                    ),
+                )
+                bucket = bucket.next(bucketUnit)
+            }
         }
     }
+    val trend = buildTrend(firstDate, endDate)
+    val navigationTrend = buildTrend(navigationStartDate ?: firstDate, navigationEndDate)
 
     fun currentStreak(type: EntryType?): Int {
         val qualifyingDays = buildSet {
@@ -65,7 +115,7 @@ internal fun buildActivity(
                 .filter { it.count > 0L && (type == null || it.type == type) }
                 .mapTo(this) { LocalDate.parse(it.localDate) }
         }
-        var streakDay = today
+        var streakDay = endDate
         var streak = 0
         while (streakDay in qualifyingDays) {
             streak += 1
@@ -75,6 +125,7 @@ internal fun buildActivity(
     }
 
     return StatsActivity(
+        window = window.copy(startDate = firstDate),
         totalDurationMillis = snapshot.activity.sumOf { it.durationMillis },
         currentStreakDays = currentStreak(null),
         currentStreakDaysByType = types.associateWith(::currentStreak),
@@ -100,10 +151,12 @@ internal fun buildActivity(
             snapshot.activity.filter { it.type == type && it.durationMillis > 0L }.distinctBy { it.localDate }.size
         },
         trend = trend,
+        navigationTrend = navigationTrend,
         topTitles = snapshot.topEntries.map { entry ->
             StatsTopTitle(entry.entryId, entry.type, entry.title, entry.durationMillis)
         },
         trackingStartedAtEpochMillis = snapshot.trackingStartedAtEpochMillis,
+        trackingStartDate = trackingStartDate,
         earlierDurationMillis = snapshot.earlierActivity.sumOf { it.durationMillis },
         earlierDurationByType = snapshot.earlierActivity.associate { it.type to it.durationMillis },
     )

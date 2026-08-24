@@ -265,12 +265,18 @@ internal fun StatisticsSectionCard(
     title: String,
     actionLabel: String? = null,
     onActionClick: (() -> Unit)? = null,
+    reserveActionHeight: Boolean = false,
     showContent: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     OutlinedCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(20.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.then(
+                    if (reserveActionHeight) Modifier.height(48.dp) else Modifier,
+                ),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(
                     text = title,
                     modifier = Modifier.weight(1f),
