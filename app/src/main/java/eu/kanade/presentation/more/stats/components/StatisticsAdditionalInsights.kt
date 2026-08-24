@@ -2,6 +2,7 @@ package eu.kanade.presentation.more.stats.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +22,7 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 internal fun StatisticsAdditionalInsightsCard(
     typeLabel: String,
     sessionCount: Long,
@@ -43,35 +45,35 @@ internal fun StatisticsAdditionalInsightsCard(
                 InsightItem(
                     value = formatDuration(averageSessionDurationMillis),
                     label = stringResource(MR.strings.statistics_average_visit),
-                    modifier = Modifier.weight(1f).widthIn(min = 150.dp),
+                    modifier = Modifier.weight(1f).widthIn(min = 150.dp).fillMaxRowHeight(),
                 )
                 InsightItem(
                     value = formatDuration(longestSessionDurationMillis),
                     label = stringResource(MR.strings.statistics_longest_visit),
-                    modifier = Modifier.weight(1f).widthIn(min = 150.dp),
+                    modifier = Modifier.weight(1f).widthIn(min = 150.dp).fillMaxRowHeight(),
                 )
             }
             InsightItem(
                 value = activeDays.toString(),
                 label = stringResource(MR.strings.statistics_active_days),
-                modifier = Modifier.weight(1f).widthIn(min = 150.dp),
+                modifier = Modifier.weight(1f).widthIn(min = 150.dp).fillMaxRowHeight(),
             )
             library.topGenre?.let { genre ->
                 InsightItem(
                     value = genre,
                     label = stringResource(MR.strings.statistics_top_genre),
-                    modifier = Modifier.weight(1f).widthIn(min = 150.dp),
+                    modifier = Modifier.weight(1f).widthIn(min = 150.dp).fillMaxRowHeight(),
                 )
             }
             InsightItem(
                 value = library.categoryCount.toString(),
                 label = stringResource(MR.strings.categories),
-                modifier = Modifier.weight(1f).widthIn(min = 150.dp),
+                modifier = Modifier.weight(1f).widthIn(min = 150.dp).fillMaxRowHeight(),
             )
             InsightItem(
                 value = library.sourceCount.toString(),
                 label = stringResource(MR.strings.label_sources),
-                modifier = Modifier.weight(1f).widthIn(min = 150.dp),
+                modifier = Modifier.weight(1f).widthIn(min = 150.dp).fillMaxRowHeight(),
             )
         }
     }
