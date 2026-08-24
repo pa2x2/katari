@@ -14,18 +14,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -148,74 +145,42 @@ internal fun StatisticsProgressCard(progress: StatsProgress?) {
             return@StatisticsSectionCard
         }
         val values = listOf(
-            ProgressSlice(
+            ProgressRow(
                 stringResource(MR.strings.statistics_not_started),
                 progress.notStarted,
-                MaterialTheme.colorScheme.outline,
             ),
-            ProgressSlice(
+            ProgressRow(
                 stringResource(MR.strings.statistics_in_progress),
                 progress.inProgress,
-                MaterialTheme.colorScheme.primary,
             ),
-            ProgressSlice(
+            ProgressRow(
                 stringResource(MR.strings.statistics_caught_up),
                 progress.caughtUp,
-                MaterialTheme.colorScheme.tertiary,
             ),
-            ProgressSlice(
+            ProgressRow(
                 stringResource(MR.strings.completed),
                 progress.completed,
-                MaterialTheme.colorScheme.secondary,
             ),
         )
         val total = progress.total.coerceAtLeast(1)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(20.dp)
-                .semantics {
-                    contentDescription = values.joinToString { "${it.label}, ${it.count}" }
-                },
-        ) {
-            values.filter { it.count > 0 }.forEach { slice ->
-                Surface(
-                    modifier = Modifier.weight(slice.count.toFloat()).height(20.dp),
-                    color = slice.color,
-                    content = {},
-                )
-            }
-            if (progress.total == 0) {
-                Surface(
-                    modifier = Modifier.weight(total.toFloat()).height(20.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    content = {},
-                )
-            }
-        }
-        Spacer(Modifier.height(16.dp))
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(18.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            maxItemsInEachRow = 2,
-        ) {
-            values.forEach { slice ->
-                Row(Modifier.weight(1f).widthIn(min = 150.dp)) {
-                    Surface(
-                        modifier = Modifier.padding(top = 5.dp).size(10.dp),
-                        color = slice.color,
-                        shape = CircleShape,
-                        content = {},
-                    )
-                    Spacer(Modifier.width(8.dp))
+        values.forEach { row ->
+            Column(Modifier.semantics { contentDescription = "${row.label}, ${row.count}" }) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(
-                        text = slice.label,
-                        modifier = Modifier.weight(1f),
-                        style = MaterialTheme.typography.bodySmall,
+                        text = row.label,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    Text(slice.count.toString(), style = MaterialTheme.typography.labelLarge)
+                    Text(row.count.toString(), style = MaterialTheme.typography.labelLarge)
                 }
+                Spacer(Modifier.height(6.dp))
+                LinearProgressIndicator(
+                    progress = { row.count.toFloat() / total },
+                    modifier = Modifier.fillMaxWidth().height(8.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                )
+                Spacer(Modifier.height(12.dp))
             }
         }
     }
@@ -295,8 +260,7 @@ internal fun StatisticsSectionCard(
     }
 }
 
-private data class ProgressSlice(
+private data class ProgressRow(
     val label: String,
     val count: Int,
-    val color: Color,
 )
