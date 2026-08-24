@@ -26,6 +26,7 @@ internal object AnimeEntryTypePresentationProvider : EntryTypePresentationProvid
         filterUnconsumedLabel = MR.strings.action_filter_unwatched,
         childListTitle = MR.strings.episodes,
         childCountPlural = MR.plurals.anime_num_episodes,
+        completedChildCountPlural = MR.plurals.activity_completed_episodes,
         missingChildCountPlural = MR.plurals.missing_episodes,
         childCountReasonLabel = MR.strings.possible_duplicates_reason_episode_count,
         childNumberDisplayLabel = MR.strings.display_mode_episode,

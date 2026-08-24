@@ -139,6 +139,7 @@
     <string name="action_retry">Retry</string>
     <string name="action_translate">Translate</string>
     <string name="action_expand">Expand</string>
+    <string name="action_collapse">Collapse</string>
     <string name="action_change_language">Change language</string>
     <string name="action_choose_language">Choose language</string>
     <string name="action_learn_more">Learn more</string>
@@ -1571,6 +1572,7 @@
     <string name="statistics_no_type_stats">No %s stats yet</string>
     <string name="statistics_empty_type_hint">Add something to your library to see it here.</string>
     <string name="statistics_show_more_activity">Show more</string>
+    <string name="statistics_no_child_activity_details">No item details recorded</string>
     <string name="statistics_titles">titles</string>
     <string name="label_completed_titles">Completed entries</string>
     <string name="label_read_duration">Read duration</string>

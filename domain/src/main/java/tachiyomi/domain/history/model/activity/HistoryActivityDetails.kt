@@ -1,6 +1,7 @@
 package tachiyomi.domain.history.model.activity
 
 import eu.kanade.tachiyomi.source.entry.EntryType
+import tachiyomi.domain.entry.model.EntryCover
 
 data class HistoryActivityPage(
     val sessions: List<HistoryActivitySessionDetail>,
@@ -12,6 +13,7 @@ data class HistoryActivitySessionDetail(
     val entryId: Long,
     val entryType: EntryType,
     val entryTitle: String,
+    val coverData: EntryCover,
     val localDate: String,
     val startedAtEpochMillis: Long,
     val endedAtEpochMillis: Long,

@@ -26,6 +26,7 @@ internal object BookEntryTypePresentationProvider : EntryTypePresentationProvide
         filterUnconsumedLabel = MR.strings.action_filter_unconsumed,
         childListTitle = MR.strings.chapters,
         childCountPlural = MR.plurals.manga_num_chapters,
+        completedChildCountPlural = MR.plurals.activity_completed_chapters,
         missingChildCountPlural = MR.plurals.missing_chapters,
         childCountReasonLabel = MR.strings.possible_duplicates_reason_chapter_count,
         childNumberDisplayLabel = MR.strings.display_mode_chapter,
