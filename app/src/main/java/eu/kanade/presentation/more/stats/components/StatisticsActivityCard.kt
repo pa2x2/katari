@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -15,6 +16,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -22,6 +24,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +38,7 @@ import eu.kanade.presentation.more.stats.ActivityState
 import eu.kanade.presentation.more.stats.data.StatsActivity
 import eu.kanade.presentation.more.stats.data.StatsActivityWindow
 import eu.kanade.presentation.more.stats.data.StatsRange
+import eu.kanade.presentation.more.stats.data.StatsTrendGranularity
 import eu.kanade.presentation.more.stats.data.StatsTrendPoint
 import eu.kanade.presentation.more.stats.data.StatsType
 import kotlinx.coroutines.delay
@@ -116,6 +120,25 @@ private fun SettledActivityCard(
 ) {
     val window = activity.window
     val isFinite = window.range != StatsRange.ALL
+    val isAllRange = window.range == StatsRange.ALL
+    val hasYearDrilldown = isAllRange &&
+        activity.trendGranularity == StatsTrendGranularity.YEAR &&
+        activity.allRangeMonthlyTrend.isNotEmpty()
+    var selectedYear by rememberSaveable(
+        activity.trackingStartDate,
+        activity.window.endDate,
+    ) {
+        mutableStateOf<Int?>(null)
+    }
+    LaunchedEffect(hasYearDrilldown) {
+        if (!hasYearDrilldown) selectedYear = null
+    }
+    val availableYears = remember(activity.trend) { activity.trend.map { it.startDate.year } }
+    val drilledYear = selectedYear?.takeIf { hasYearDrilldown && it in availableYears }
+    val displayedPoints = drilledYear?.let { year ->
+        activity.allRangeMonthlyTrend.filter { it.startDate.year == year }
+    } ?: activity.trend
+    val isYearOverview = hasYearDrilldown && drilledYear == null
     val isLatest = window.isLatest
     val isPending = state.loadingTarget != null
     val canNavigateOlder = isFinite &&
@@ -124,90 +147,150 @@ private fun SettledActivityCard(
     val canNavigateNewer = isFinite && !isLatest && !isPending
     val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
     val axisDateFormatter = DateTimeFormatter.ofPattern(
-        when (window.range) {
-            StatsRange.SEVEN_DAYS -> "EEE"
-            StatsRange.THIRTY_DAYS -> "MMM d"
-            StatsRange.ONE_YEAR -> "MMM yy"
-            StatsRange.ALL -> if (
-                activity.trend.any { it.endDate.toEpochDay() - it.startDate.toEpochDay() > 45L }
-            ) {
-                "yyyy"
-            } else {
-                "MMM yy"
+        when {
+            drilledYear != null -> "MMM"
+            else -> when (window.range) {
+                StatsRange.SEVEN_DAYS -> "EEE"
+                StatsRange.THIRTY_DAYS -> "MMM d"
+                StatsRange.ONE_YEAR -> "MMM yy"
+                StatsRange.ALL -> if (
+                    activity.trendGranularity == StatsTrendGranularity.YEAR
+                ) {
+                    "yyyy"
+                } else {
+                    "MMM yyyy"
+                }
             }
         },
         Locale.getDefault(),
     )
+    val allRangeTotal = if (drilledYear == null) {
+        activity.totalDurationMillis
+    } else {
+        displayedPoints.sumOf(StatsTrendPoint::totalDurationMillis)
+    }
+    val cardTitle = when {
+        drilledYear != null -> stringResource(MR.strings.statistics_year_activity, drilledYear)
+        isAllRange -> stringResource(MR.strings.statistics_all_recorded_activity)
+        else -> stringResource(MR.strings.statistics_activity)
+    }
 
     StatisticsSectionCard(
-        title = stringResource(MR.strings.statistics_activity),
+        title = cardTitle,
         actionLabel = stringResource(MR.strings.statistics_today).takeIf { isFinite && !isLatest },
         onActionClick = onToday,
         reserveActionHeight = true,
+        contentSpacing = 0.dp,
     ) {
-        ActivityWindowNavigation(
-            window = window,
-            olderEnabled = canNavigateOlder,
-            newerEnabled = canNavigateNewer,
-            onOlder = { onNavigateByBuckets(1) },
-            onNewer = { onNavigateByBuckets(-1) },
-        )
-        ActivityRequestStatus(state, onRetry)
-
+        if (isAllRange) {
+            drilledYear?.let { year ->
+                AllRangeYearNavigation(
+                    year = year,
+                    previousEnabled = availableYears.firstOrNull()?.let { year > it } == true,
+                    nextEnabled = availableYears.lastOrNull()?.let { year < it } == true,
+                    onAllActivity = { selectedYear = null },
+                    onPrevious = { selectedYear = year - 1 },
+                    onNext = { selectedYear = year + 1 },
+                )
+                Spacer(Modifier.height(12.dp))
+            }
+            AllRangeSummary(
+                totalDuration = formatter(allRangeTotal),
+                trackingStartDate = activity.trackingStartDate,
+                year = drilledYear,
+            )
+        } else {
+            ActivityWindowNavigation(
+                window = window,
+                olderEnabled = canNavigateOlder,
+                newerEnabled = canNavigateNewer,
+                onOlder = { onNavigateByBuckets(1) },
+                onNewer = { onNavigateByBuckets(-1) },
+            )
+        }
+        Spacer(Modifier.height(16.dp))
         val labels = types.associate { it.type to stringResource(it.displayName) }
         val notTrackedLabel = stringResource(MR.strings.statistics_not_tracked)
-        StatisticsTrendChart(
-            points = activity.trend,
-            navigationPoints = activity.navigationTrend,
-            types = types,
-            typeLabels = labels,
-            formatDate = { point ->
-                if (point.startDate == point.endDate) {
-                    point.startDate.format(dateFormatter)
-                } else {
-                    "${point.startDate.format(dateFormatter)} – ${point.endDate.format(dateFormatter)}"
-                }
-            },
-            formatAxisDate = { point -> point.startDate.format(axisDateFormatter) },
-            formatDuration = formatter,
-            notTrackedLabel = notTrackedLabel,
-            previousPointLabel = stringResource(MR.strings.statistics_previous_data_point),
-            nextPointLabel = stringResource(MR.strings.statistics_next_data_point),
-            canNavigateOlder = canNavigateOlder,
-            canNavigateNewer = canNavigateNewer,
-            navigationPending = isPending,
-            onNavigateByBuckets = onNavigateByBuckets,
-            onOpenActivity = { point ->
-                val trackedStart = activity.trackingStartDate
-                onOpenActivity(
-                    if (trackedStart != null && point.startDate.isBefore(trackedStart)) {
-                        point.copy(startDate = trackedStart)
+        val hasDisplayedActivity = displayedPoints.any(StatsTrendPoint::hasActivity)
+        if (isAllRange && drilledYear == null && !hasDisplayedActivity) {
+            AllRangeEmptyActivity()
+        } else {
+            Box {
+                StatisticsTrendChart(
+                    points = displayedPoints,
+                    navigationPoints = if (drilledYear == null) activity.navigationTrend else displayedPoints,
+                    types = types,
+                    typeLabels = labels,
+                    formatDate = { point ->
+                        if (isYearOverview) {
+                            point.startDate.year.toString()
+                        } else if (point.startDate == point.endDate) {
+                            point.startDate.format(dateFormatter)
+                        } else {
+                            "${point.startDate.format(dateFormatter)} – ${point.endDate.format(dateFormatter)}"
+                        }
+                    },
+                    formatAxisDate = { point -> point.startDate.format(axisDateFormatter) },
+                    formatDuration = formatter,
+                    notTrackedLabel = notTrackedLabel,
+                    previousPointLabel = stringResource(MR.strings.statistics_previous_data_point),
+                    nextPointLabel = stringResource(MR.strings.statistics_next_data_point),
+                    canNavigateOlder = canNavigateOlder && drilledYear == null,
+                    canNavigateNewer = canNavigateNewer && drilledYear == null,
+                    navigationPending = isPending,
+                    onNavigateByBuckets = onNavigateByBuckets,
+                    showTrendLine = !isAllRange,
+                    selectionActionLabel = { point ->
+                        if (isYearOverview) {
+                            stringResource(MR.strings.statistics_view_year, point.startDate.year)
+                        } else {
+                            null
+                        }
+                    },
+                    periodTotalCaption = if (isAllRange) {
+                        stringResource(
+                            if (drilledYear == null && activity.trendGranularity == StatsTrendGranularity.YEAR) {
+                                MR.strings.statistics_year_bars_caption
+                            } else {
+                                MR.strings.statistics_month_bars_caption
+                            },
+                        )
                     } else {
-                        point
+                        null
+                    },
+                    onOpenActivity = { point ->
+                        if (isYearOverview) {
+                            selectedYear = point.startDate.year
+                        } else {
+                            val trackedStart = activity.trackingStartDate
+                            onOpenActivity(
+                                if (trackedStart != null && point.startDate.isBefore(trackedStart)) {
+                                    point.copy(startDate = trackedStart)
+                                } else {
+                                    point
+                                },
+                            )
+                        }
                     },
                 )
-            },
-        )
-        Box(
-            modifier = Modifier.fillMaxWidth().height(28.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (activity.trend.none(StatsTrendPoint::hasActivity)) {
-                Text(
-                    text = stringResource(MR.strings.statistics_no_activity),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall,
+                ActivityRequestStatus(
+                    state = state,
+                    onRetry = onRetry,
+                    modifier = Modifier.align(Alignment.TopCenter),
                 )
             }
-        }
-        activity.trackingStartedAtEpochMillis?.let {
-            val recordedDate = activity.trackingStartDate?.format(dateFormatter) ?: return@let
-            Text(
-                text = stringResource(MR.strings.statistics_recorded_since, recordedDate),
-                modifier = Modifier.padding(top = 8.dp),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Box(
+                modifier = Modifier.fillMaxWidth().height(28.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (!hasDisplayedActivity) {
+                    Text(
+                        text = stringResource(MR.strings.statistics_no_activity),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
         }
     }
 }
@@ -247,6 +330,7 @@ private fun ActivityWindowNavigation(
 private fun ActivityRequestStatus(
     state: ActivityState.Available,
     onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val loadingTarget = state.loadingTarget
     var visibleLoadingTarget by remember(loadingTarget) {
@@ -260,44 +344,58 @@ private fun ActivityRequestStatus(
     }
 
     Box(
-        modifier = Modifier.fillMaxWidth().height(40.dp),
+        modifier = modifier.fillMaxWidth().height(40.dp),
         contentAlignment = Alignment.Center,
     ) {
         visibleLoadingTarget?.let { target ->
-            Row(
-                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-                verticalAlignment = Alignment.CenterVertically,
+            Surface(
+                shape = MaterialTheme.shapes.small,
+                tonalElevation = 2.dp,
             ) {
-                CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
-                Text(
-                    text = stringResource(MR.strings.statistics_loading_period, formatWindow(target)),
-                    modifier = Modifier.padding(start = 8.dp),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                Row(
+                    modifier = Modifier
+                        .semantics { liveRegion = LiveRegionMode.Polite }
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
+                    Text(
+                        text = stringResource(MR.strings.statistics_loading_period, formatWindow(target)),
+                        modifier = Modifier.padding(start = 8.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
         }
         state.failedTarget?.let { target ->
-            Row(
-                modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite },
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.small,
+                tonalElevation = 2.dp,
             ) {
-                Text(
-                    text = stringResource(MR.strings.statistics_could_not_load_period, formatWindow(target)),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                TextButton(
-                    onClick = onRetry,
-                    modifier = Modifier.height(36.dp),
-                    contentPadding = PaddingValues(horizontal = 12.dp),
+                Row(
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(stringResource(MR.strings.action_retry))
+                    Text(
+                        text = stringResource(MR.strings.statistics_could_not_load_period, formatWindow(target)),
+                        modifier = Modifier.weight(1f).padding(start = 12.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    TextButton(
+                        onClick = onRetry,
+                        modifier = Modifier.height(36.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp),
+                    ) {
+                        Text(stringResource(MR.strings.action_retry))
+                    }
                 }
             }
         }

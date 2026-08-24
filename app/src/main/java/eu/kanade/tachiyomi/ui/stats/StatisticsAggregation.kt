@@ -4,6 +4,7 @@ import eu.kanade.presentation.more.stats.data.StatsActivity
 import eu.kanade.presentation.more.stats.data.StatsActivityWindow
 import eu.kanade.presentation.more.stats.data.StatsRange
 import eu.kanade.presentation.more.stats.data.StatsTopTitle
+import eu.kanade.presentation.more.stats.data.StatsTrendGranularity
 import eu.kanade.presentation.more.stats.data.StatsTrendPoint
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.domain.statistics.model.StatisticsActivitySnapshot
@@ -58,32 +59,35 @@ internal fun buildWindowActivity(
     val trackingStartDate = snapshot.trackingStartedAtEpochMillis
         ?.let { startedAt -> Instant.ofEpochMilli(startedAt).atZone(zoneId).toLocalDate() }
         ?: earliestDetailedDate
-    val bucketUnit = range.bucketUnit(snapshot, endDate)
     val firstDate = window.startDate
         ?: trackingStartDate
         ?: snapshot.activity.minOfOrNull { LocalDate.parse(it.localDate) }
         ?: endDate
-    val durationByBucket = navigationTimeline.activity.groupBy { activity ->
-        LocalDate.parse(activity.localDate).bucketStart(bucketUnit, locale)
-    }.mapValues { (_, rows) ->
-        rows.groupBy { it.type }.mapValues { (_, typeRows) -> typeRows.sumOf { it.durationMillis } }
-    }
-    val completionsByBucket = navigationTimeline.completions.groupBy { completion ->
-        LocalDate.parse(completion.localDate).bucketStart(bucketUnit, locale)
-    }.mapValues { (_, rows) ->
-        rows.groupBy { it.type }.mapValues { (_, typeRows) -> typeRows.sumOf { it.count } }
-    }
-
-    fun buildTrend(trendStartDate: LocalDate, trendEndDate: LocalDate): List<StatsTrendPoint> {
-        val trendFirstBucket = trendStartDate.bucketStart(bucketUnit, locale)
-        val trendLastBucket = trendEndDate.bucketStart(bucketUnit, locale)
+    val bucketUnit = range.bucketUnit(firstDate, endDate)
+    fun buildTrend(
+        trendStartDate: LocalDate,
+        trendEndDate: LocalDate,
+        unit: BucketUnit,
+    ): List<StatsTrendPoint> {
+        val durationByBucket = navigationTimeline.activity.groupBy { activity ->
+            LocalDate.parse(activity.localDate).bucketStart(unit, locale)
+        }.mapValues { (_, rows) ->
+            rows.groupBy { it.type }.mapValues { (_, typeRows) -> typeRows.sumOf { it.durationMillis } }
+        }
+        val completionsByBucket = navigationTimeline.completions.groupBy { completion ->
+            LocalDate.parse(completion.localDate).bucketStart(unit, locale)
+        }.mapValues { (_, rows) ->
+            rows.groupBy { it.type }.mapValues { (_, typeRows) -> typeRows.sumOf { it.count } }
+        }
+        val trendFirstBucket = trendStartDate.bucketStart(unit, locale)
+        val trendLastBucket = trendEndDate.bucketStart(unit, locale)
         return buildList {
             var bucket = trendFirstBucket
             while (!bucket.isAfter(trendLastBucket)) {
                 val values = durationByBucket[bucket].orEmpty()
                 val completions = completionsByBucket[bucket].orEmpty()
                 val pointStart = maxOf(bucket, trendStartDate)
-                val pointEnd = minOf(bucket.endDate(bucketUnit), trendEndDate)
+                val pointEnd = minOf(bucket.endDate(unit), trendEndDate)
                 add(
                     StatsTrendPoint(
                         bucketStartDate = bucket,
@@ -96,12 +100,17 @@ internal fun buildWindowActivity(
                             ?.let { maxOf(pointStart, it) },
                     ),
                 )
-                bucket = bucket.next(bucketUnit)
+                bucket = bucket.next(unit)
             }
         }
     }
-    val trend = buildTrend(firstDate, endDate)
-    val navigationTrend = buildTrend(navigationStartDate ?: firstDate, navigationEndDate)
+    val trend = buildTrend(firstDate, endDate, bucketUnit)
+    val navigationTrend = buildTrend(navigationStartDate ?: firstDate, navigationEndDate, bucketUnit)
+    val allRangeMonthlyTrend = if (range == StatsRange.ALL && bucketUnit == BucketUnit.YEAR) {
+        buildTrend(firstDate, endDate, BucketUnit.MONTH)
+    } else {
+        emptyList()
+    }
 
     fun currentStreak(type: EntryType?): Int {
         val qualifyingDays = buildSet {
@@ -159,15 +168,23 @@ internal fun buildWindowActivity(
         trackingStartDate = trackingStartDate,
         earlierDurationMillis = snapshot.earlierActivity.sumOf { it.durationMillis },
         earlierDurationByType = snapshot.earlierActivity.associate { it.type to it.durationMillis },
+        trendGranularity = bucketUnit.toTrendGranularity(),
+        allRangeMonthlyTrend = allRangeMonthlyTrend,
     )
 }
 
-private fun StatsRange.bucketUnit(snapshot: StatisticsActivitySnapshot, today: LocalDate): BucketUnit = when (this) {
+private fun BucketUnit.toTrendGranularity(): StatsTrendGranularity = when (this) {
+    BucketUnit.DAY -> StatsTrendGranularity.DAY
+    BucketUnit.WEEK -> StatsTrendGranularity.WEEK
+    BucketUnit.MONTH -> StatsTrendGranularity.MONTH
+    BucketUnit.YEAR -> StatsTrendGranularity.YEAR
+}
+
+private fun StatsRange.bucketUnit(firstDate: LocalDate, today: LocalDate): BucketUnit = when (this) {
     StatsRange.SEVEN_DAYS, StatsRange.THIRTY_DAYS -> BucketUnit.DAY
     StatsRange.ONE_YEAR -> BucketUnit.WEEK
     StatsRange.ALL -> {
-        val earliest = snapshot.activity.minOfOrNull { LocalDate.parse(it.localDate) } ?: today
-        if (earliest.isBefore(today.minusYears(2L))) BucketUnit.YEAR else BucketUnit.MONTH
+        if (firstDate.isBefore(today.minusYears(2L))) BucketUnit.YEAR else BucketUnit.MONTH
     }
 }
 

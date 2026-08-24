@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.5.2] - 2026-08-24
+
+### ✨ Added
+
+- The all-time Statistics view now summarizes precisely recorded time, supports year-to-month drill-down for long histories, and labels chart bars as non-cumulative totals.
+
+### 🧩 Improved
+
+- Activity history sessions now include entry covers, session durations, completion badges, and detailed chapter, episode, or item breakdowns that can be expanded for longer sessions.
+- Statistics progress now shows each library status with its count and proportional bar, making the breakdown easier to compare.
+
 ## [1.5.1] - 2026-08-24
 
 ### ✨ Added
@@ -294,7 +305,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.5.1...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.5.2...HEAD
+[1.5.2]: https://github.com/pa2x2/katari/releases/tag/v1.5.2
 [1.5.1]: https://github.com/pa2x2/katari/releases/tag/v1.5.1
 [1.5.0]: https://github.com/pa2x2/katari/releases/tag/v1.5.0
 [1.4.1]: https://github.com/pa2x2/katari/releases/tag/v1.4.1

@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,7 +42,6 @@ import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.data.StatsTrendPoint
 import eu.kanade.presentation.more.stats.data.StatsType
@@ -71,6 +69,9 @@ internal fun StatisticsTrendChart(
     navigationPending: Boolean,
     onNavigateByBuckets: (Int) -> Unit,
     onOpenActivity: (StatsTrendPoint) -> Unit,
+    showTrendLine: Boolean = true,
+    selectionActionLabel: @Composable (StatsTrendPoint) -> String? = { null },
+    periodTotalCaption: String? = null,
     modifier: Modifier = Modifier,
 ) {
     val typeColors = types.associate { it.type to it.accent.color() }
@@ -405,35 +406,37 @@ internal fun StatisticsTrendChart(
                                 }
                             }
 
-                            val trackedPaths = buildList {
-                                var path: Path? = null
-                                navigationPoints.forEachIndexed { index, point ->
-                                    if (!point.isTracked) {
-                                        path?.let(::add)
-                                        path = null
-                                    } else {
-                                        val currentPath = path
-                                        if (currentPath == null) {
-                                            path = Path().apply {
-                                                moveTo(navigationX(index), y(point.totalDurationMillis))
-                                            }
+                            if (showTrendLine) {
+                                val trackedPaths = buildList {
+                                    var path: Path? = null
+                                    navigationPoints.forEachIndexed { index, point ->
+                                        if (!point.isTracked) {
+                                            path?.let(::add)
+                                            path = null
                                         } else {
-                                            currentPath.lineTo(navigationX(index), y(point.totalDurationMillis))
+                                            val currentPath = path
+                                            if (currentPath == null) {
+                                                path = Path().apply {
+                                                    moveTo(navigationX(index), y(point.totalDurationMillis))
+                                                }
+                                            } else {
+                                                currentPath.lineTo(navigationX(index), y(point.totalDurationMillis))
+                                            }
                                         }
                                     }
+                                    path?.let(::add)
                                 }
-                                path?.let(::add)
-                            }
-                            trackedPaths.forEach { path ->
-                                drawPath(
-                                    path = path,
-                                    color = if (types.size == 1) {
-                                        typeColors.getValue(types.single().type)
-                                    } else {
-                                        primaryColor
-                                    },
-                                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round),
-                                )
+                                trackedPaths.forEach { path ->
+                                    drawPath(
+                                        path = path,
+                                        color = if (types.size == 1) {
+                                            typeColors.getValue(types.single().type)
+                                        } else {
+                                            primaryColor
+                                        },
+                                        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round),
+                                    )
+                                }
                             }
                             if (selectedIndex in points.indices) {
                                 val selected = points[selectedIndex]
@@ -496,51 +499,27 @@ internal fun StatisticsTrendChart(
                     }
                 }
             }
+            periodTotalCaption?.let { caption ->
+                Text(
+                    text = caption,
+                    modifier = Modifier.padding(start = Y_AXIS_WIDTH, top = 8.dp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
             val selected = points[selectedIndex.coerceIn(points.indices)]
-            Surface(
-                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
-                shape = MaterialTheme.shapes.medium,
-            ) {
-                Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
-                    Text(
-                        text = if (selected.isTracked) {
-                            "${formatDate(selected)} · ${formatDuration(selected.totalDurationMillis)}"
-                        } else {
-                            "${formatDate(selected)} · $notTrackedLabel"
-                        },
-                        style = MaterialTheme.typography.titleSmall,
-                    )
-                    if (selected.isTracked && types.size > 1) {
-                        types.forEach { type ->
-                            val duration = selected.durationByType[type.type] ?: 0L
-                            if (duration > 0L) {
-                                Text(
-                                    text = "${typeLabels.getValue(type.type)} · ${formatDuration(duration)}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            } else {
-                                Spacer(Modifier.height(16.dp))
-                            }
-                        }
-                    } else if (types.size > 1) {
-                        Spacer(Modifier.height(16.dp * types.size))
-                    }
-                }
-            }
-            Box(
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                contentAlignment = Alignment.CenterStart,
-            ) {
-                if (selected.isTracked && selected.hasActivity) {
-                    TextButton(onClick = { onOpenActivity(selected) }) {
-                        Text(stringResource(MR.strings.statistics_see_activity))
-                    }
-                }
-            }
+            StatisticsTrendSelection(
+                selected = selected,
+                types = types,
+                typeLabels = typeLabels,
+                typeColors = typeColors,
+                formattedDate = formatDate(selected),
+                formattedDuration = formatDuration(selected.totalDurationMillis),
+                notTrackedLabel = notTrackedLabel,
+                formatDuration = formatDuration,
+                actionLabel = selectionActionLabel(selected),
+                onOpenActivity = onOpenActivity,
+            )
         }
     }
 }

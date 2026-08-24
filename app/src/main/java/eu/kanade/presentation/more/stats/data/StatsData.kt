@@ -58,6 +58,13 @@ data class StatsTrendPoint(
     val isTracked: Boolean = trackedStartDate != null
 }
 
+enum class StatsTrendGranularity {
+    DAY,
+    WEEK,
+    MONTH,
+    YEAR,
+}
+
 data class StatsTopTitle(
     val entryId: Long,
     val type: EntryType,
@@ -87,4 +94,6 @@ data class StatsActivity(
     val trackingStartDate: LocalDate?,
     val earlierDurationMillis: Long,
     val earlierDurationByType: Map<EntryType, Long>,
+    val trendGranularity: StatsTrendGranularity = StatsTrendGranularity.DAY,
+    val allRangeMonthlyTrend: List<StatsTrendPoint> = emptyList(),
 )

@@ -2,6 +2,7 @@ package tachiyomi.data.history.activity
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.data.DatabaseHandler
+import tachiyomi.domain.entry.model.EntryCover
 import tachiyomi.domain.history.model.activity.HistoryActivityPage
 import tachiyomi.domain.history.model.activity.HistoryActivitySegmentDetail
 import tachiyomi.domain.history.model.activity.HistoryActivitySessionDetail
@@ -28,6 +29,10 @@ class HistoryActivityRepositoryImpl(
                     entryId: Long,
                     typeName: String,
                     title: String,
+                    thumbnailUrl: String?,
+                    source: Long,
+                    favorite: Boolean,
+                    coverLastModified: Long,
                     localDate: String?,
                     startedAt: Long?,
                     endedAt: Long?,
@@ -39,6 +44,13 @@ class HistoryActivityRepositoryImpl(
                     entryId = entryId,
                     entryType = EntryType.valueOf(typeName.uppercase()),
                     entryTitle = title,
+                    coverData = EntryCover(
+                        entryId = entryId,
+                        sourceId = source,
+                        isFavorite = favorite,
+                        url = thumbnailUrl,
+                        lastModified = coverLastModified,
+                    ),
                     localDate = checkNotNull(localDate),
                     startedAtEpochMillis = checkNotNull(startedAt),
                     endedAtEpochMillis = checkNotNull(endedAt),
@@ -106,6 +118,7 @@ class HistoryActivityRepositoryImpl(
                     entryId = row.entryId,
                     entryType = row.entryType,
                     entryTitle = row.entryTitle,
+                    coverData = row.coverData,
                     localDate = row.localDate,
                     startedAtEpochMillis = row.startedAtEpochMillis,
                     endedAtEpochMillis = row.endedAtEpochMillis,
@@ -123,6 +136,7 @@ class HistoryActivityRepositoryImpl(
         val entryId: Long,
         val entryType: EntryType,
         val entryTitle: String,
+        val coverData: EntryCover,
         val localDate: String,
         val startedAtEpochMillis: Long,
         val endedAtEpochMillis: Long,

@@ -10,12 +10,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -23,24 +21,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityScreenModel
-import tachiyomi.domain.history.model.activity.HistoryActivitySegmentDetail
-import tachiyomi.domain.history.model.activity.HistoryActivitySessionDetail
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.LoadingScreen
-import java.text.NumberFormat
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-import java.util.Locale
 
 @Composable
 fun HistoryActivityScreenContent(
@@ -168,118 +158,5 @@ private fun ActivitySessionList(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun ActivitySessionCard(
-    session: HistoryActivitySessionDetail,
-    showType: Boolean,
-    onClick: (Long) -> Unit,
-) {
-    val formatDuration = rememberActivityDurationFormatter()
-    val timeFormatter = remember { DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT) }
-    val zone = remember(session.segments) {
-        session.segments.firstOrNull()?.timeZoneId
-            ?.let { runCatching { ZoneId.of(it) }.getOrNull() }
-            ?: ZoneId.systemDefault()
-    }
-    val startedAt = Instant.ofEpochMilli(session.startedAtEpochMillis).atZone(zone).format(timeFormatter)
-    val endedAt = Instant.ofEpochMilli(session.endedAtEpochMillis).atZone(zone).format(timeFormatter)
-    val childDurations = session.segments
-        .filter { !it.chapterTitle.isNullOrBlank() }
-        .groupBy(HistoryActivitySegmentDetail::chapterId)
-        .map { (_, segments) -> segments.first().chapterTitle.orEmpty() to segments.sumOf { it.durationMillis } }
-
-    OutlinedCard(onClick = { onClick(session.entryId) }, modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp)) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(
-                    text = session.entryTitle,
-                    modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Spacer(Modifier.width(12.dp))
-                Text(
-                    text = stringResource(
-                        MR.strings.statistics_active_duration,
-                        formatDuration(session.durationMillis),
-                    ),
-                    style = MaterialTheme.typography.labelLarge,
-                    maxLines = 1,
-                )
-            }
-            Text(
-                text = buildString {
-                    if (showType) {
-                        append(stringResource(session.entryType.entryTypePresentation().displayNameLabel))
-                        append(" · ")
-                    }
-                    append(startedAt)
-                    append(" – ")
-                    append(endedAt)
-                },
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            childDurations.forEach { (title, duration) ->
-                Spacer(Modifier.height(10.dp))
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(
-                        text = title,
-                        modifier = Modifier.weight(1f),
-                        style = MaterialTheme.typography.bodySmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Spacer(Modifier.width(12.dp))
-                    if (childDurations.size > 1) {
-                        Text(
-                            text = formatDuration(duration),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-            }
-            if (session.completionCount > 0L) {
-                Spacer(Modifier.height(10.dp))
-                Text(
-                    text = pluralStringResource(
-                        MR.plurals.statistics_completion_count,
-                        session.completionCount.toInt(),
-                        session.completionCount,
-                    ),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun rememberActivityDurationFormatter(): (Long) -> String {
-    val locale = Locale.getDefault()
-    return remember(locale) {
-        val numbers = NumberFormat.getIntegerInstance(locale)
-        val formatter: (Long) -> String = { durationMillis ->
-            val totalSeconds = durationMillis.coerceAtLeast(0L) / 1_000L
-            val totalMinutes = totalSeconds / 60L
-            val hours = totalMinutes / 60L
-            val minutes = totalMinutes % 60L
-            val seconds = totalSeconds % 60L
-            when {
-                hours > 0L && minutes > 0L -> "${numbers.format(hours)}h ${numbers.format(minutes)}m"
-                hours > 0L -> "${numbers.format(hours)}h"
-                minutes > 0L && seconds > 0L -> "${numbers.format(minutes)}m ${numbers.format(seconds)}s"
-                minutes > 0L -> "${numbers.format(minutes)}m"
-                else -> "${numbers.format(seconds)}s"
-            }
-        }
-        formatter
     }
 }

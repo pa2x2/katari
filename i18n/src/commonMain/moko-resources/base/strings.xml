@@ -139,6 +139,7 @@
     <string name="action_retry">Retry</string>
     <string name="action_translate">Translate</string>
     <string name="action_expand">Expand</string>
+    <string name="action_collapse">Collapse</string>
     <string name="action_change_language">Change language</string>
     <string name="action_choose_language">Choose language</string>
     <string name="action_learn_more">Learn more</string>
@@ -1544,6 +1545,18 @@
     <string name="statistics_in_progress">In progress</string>
     <string name="statistics_caught_up">Caught up</string>
     <string name="statistics_activity">Activity</string>
+    <string name="statistics_all_recorded_activity">All recorded activity</string>
+    <string name="statistics_year_activity">%s activity</string>
+    <string name="statistics_all_activity">All activity</string>
+    <string name="statistics_total_recorded_time">Total recorded time</string>
+    <string name="statistics_recorded_in_year">Recorded in %s</string>
+    <string name="statistics_precisely_dated_since">Precisely dated since %s</string>
+    <string name="statistics_view_year">View %s</string>
+    <string name="statistics_previous_year">Previous year</string>
+    <string name="statistics_next_year">Next year</string>
+    <string name="statistics_year_bars_caption">Each bar is a year total. Bars are not cumulative.</string>
+    <string name="statistics_month_bars_caption">Each bar is a month total. Bars are not cumulative.</string>
+    <string name="statistics_all_activity_empty_hint">Activity recorded from now on will appear here.</string>
     <string name="statistics_today">Today</string>
     <string name="statistics_older_activity">Older activity</string>
     <string name="statistics_newer_activity">Newer activity</string>
@@ -1557,7 +1570,6 @@
     <string name="statistics_could_not_load_activity">Couldn\'t load activity</string>
     <string name="statistics_active_duration">%s active</string>
     <string name="statistics_see_activity">See activity</string>
-    <string name="statistics_recorded_since">Recorded since %s</string>
     <string name="statistics_chapters_read">Chapters read</string>
     <string name="statistics_episodes_watched">Episodes watched</string>
     <string name="statistics_earlier_activity">Earlier activity</string>
@@ -1572,6 +1584,7 @@
     <string name="statistics_no_type_stats">No %s stats yet</string>
     <string name="statistics_empty_type_hint">Add something to your library to see it here.</string>
     <string name="statistics_show_more_activity">Show more</string>
+    <string name="statistics_no_child_activity_details">No item details recorded</string>
     <string name="statistics_titles">titles</string>
     <string name="label_completed_titles">Completed entries</string>
     <string name="label_read_duration">Read duration</string>
