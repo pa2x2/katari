@@ -230,13 +230,14 @@ internal fun StatisticsTrendChart(
                                         canNavigateOlder,
                                         canNavigateNewer,
                                     )
-                                    val plotWidth = (
-                                        size.width - CHART_HORIZONTAL_INSET.toPx() * 2f
+                                    val dataWidth = (
+                                        size.width -
+                                            (CHART_HORIZONTAL_INSET + CHART_EDGE_POINT_INSET).toPx() * 2f
                                         ).coerceAtLeast(1f)
                                     val pointSpacing = if (points.size <= 1) {
-                                        plotWidth
+                                        dataWidth
                                     } else {
-                                        plotWidth / points.lastIndex
+                                        dataWidth / points.lastIndex
                                     }
                                     liveBucketShift = (plotOffsetPx / pointSpacing).roundToInt()
                                         .coerceIn(
@@ -260,7 +261,9 @@ internal fun StatisticsTrendChart(
                                                     positionX = change.position.x,
                                                     width = size.width.toFloat(),
                                                     pointCount = points.size,
-                                                    horizontalInset = CHART_HORIZONTAL_INSET.toPx(),
+                                                    horizontalInset = (
+                                                        CHART_HORIZONTAL_INSET + CHART_EDGE_POINT_INSET
+                                                        ).toPx(),
                                                 )
                                                 selectedStartDate = points[index].startDate.toString()
                                             }
@@ -294,11 +297,14 @@ internal fun StatisticsTrendChart(
                                     val displacement = latestPosition.x - down.position.x
                                     val velocity = displacement / elapsedSeconds
                                     val projectedOffset = plotOffsetPx + velocity * FLING_PROJECTION_SECONDS
-                                    val plotWidth = (size.width - CHART_HORIZONTAL_INSET.toPx() * 2f).coerceAtLeast(1f)
+                                    val dataWidth = (
+                                        size.width -
+                                            (CHART_HORIZONTAL_INSET + CHART_EDGE_POINT_INSET).toPx() * 2f
+                                        ).coerceAtLeast(1f)
                                     val pointSpacing = if (points.size <= 1) {
-                                        plotWidth
+                                        dataWidth
                                     } else {
-                                        plotWidth / points.lastIndex
+                                        dataWidth / points.lastIndex
                                     }
                                     var bucketCount = (projectedOffset / pointSpacing).roundToInt()
                                         .coerceIn(-points.size.coerceAtLeast(1), points.size.coerceAtLeast(1))
@@ -320,7 +326,9 @@ internal fun StatisticsTrendChart(
                     val plotBottom = size.height - CHART_VERTICAL_INSET.toPx()
                     val plotHeight = (plotBottom - plotTop).coerceAtLeast(1f)
                     val horizontalInset = CHART_HORIZONTAL_INSET.toPx().coerceAtMost(size.width / 2f)
-                    val chartWidth = (size.width - horizontalInset * 2f).coerceAtLeast(0f)
+                    val dataHorizontalInset = (horizontalInset + CHART_EDGE_POINT_INSET.toPx())
+                        .coerceAtMost(size.width / 2f)
+                    val dataWidth = (size.width - dataHorizontalInset * 2f).coerceAtLeast(0f)
                     val y = { value: Long ->
                         plotBottom - plotHeight * value.coerceIn(0L, maximum).toFloat() / maximum.toFloat()
                     }
@@ -332,12 +340,20 @@ internal fun StatisticsTrendChart(
                             strokeWidth = 1.dp.toPx(),
                         )
                     }
+                    listOf(horizontalInset, size.width - horizontalInset).forEach { x ->
+                        drawLine(
+                            color = Color(outlineVariant.value).copy(alpha = 0.45f),
+                            start = Offset(x, plotTop),
+                            end = Offset(x, plotBottom),
+                            strokeWidth = 1.dp.toPx(),
+                        )
+                    }
                     if (points.isEmpty()) return@Canvas
                     val visibleX = { index: Int ->
                         if (points.size == 1) {
                             size.width / 2f
                         } else {
-                            horizontalInset + chartWidth * index / points.lastIndex
+                            dataHorizontalInset + dataWidth * index / points.lastIndex
                         }
                     }
                     tickIndices.forEach { index ->
@@ -349,16 +365,16 @@ internal fun StatisticsTrendChart(
                         )
                     }
                     val pointSpacing = if (points.size <= 1) {
-                        chartWidth
+                        dataWidth
                     } else {
-                        chartWidth / points.lastIndex
+                        dataWidth / points.lastIndex
                     }
                     val barWidth = (pointSpacing * 0.62f).coerceIn(
                         MINIMUM_BAR_WIDTH.toPx(),
                         MAXIMUM_BAR_WIDTH.toPx(),
                     )
                     val navigationX = { index: Int ->
-                        horizontalInset + pointSpacing * (index - visibleStartIndex)
+                        dataHorizontalInset + pointSpacing * (index - visibleStartIndex)
                     }
 
                     clipRect(horizontalInset, plotTop, size.width - horizontalInset, plotBottom) {
@@ -480,7 +496,11 @@ internal fun StatisticsTrendChart(
             Row(Modifier.fillMaxWidth()) {
                 Spacer(Modifier.width(Y_AXIS_WIDTH))
                 Box(Modifier.weight(1f).clipToBounds()) {
-                    Row(Modifier.fillMaxWidth()) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = CHART_EDGE_POINT_INSET),
+                    ) {
                         liveTickPoints.forEachIndexed { tickPosition, point ->
                             Box(
                                 modifier = Modifier.weight(1f),
@@ -548,6 +568,9 @@ private fun StatsTrendPoint.untrackedFraction(): Float {
 private const val FLING_PROJECTION_SECONDS = 0.08f
 private const val BOUNDARY_RESISTANCE = 0.2f
 private val CHART_HORIZONTAL_INSET = 12.dp
+
+// Keeps the widest edge bars 4 dp clear of the vertical plot borders.
+private val CHART_EDGE_POINT_INSET = 16.dp
 private val CHART_VERTICAL_INSET = 6.dp
 private val CHART_HEIGHT = 220.dp
 private val Y_AXIS_WIDTH = 48.dp
