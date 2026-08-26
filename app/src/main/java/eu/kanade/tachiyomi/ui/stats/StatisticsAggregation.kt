@@ -48,6 +48,10 @@ internal fun buildWindowActivity(
         activity = snapshot.activity,
         completions = snapshot.completions,
     ),
+    streakTimeline: StatisticsActivityTimeline = StatisticsActivityTimeline(
+        activity = snapshot.activity,
+        completions = snapshot.completions,
+    ),
     navigationStartDate: LocalDate? = window.startDate,
     navigationEndDate: LocalDate = window.endDate,
 ): StatsActivity {
@@ -112,32 +116,20 @@ internal fun buildWindowActivity(
         emptyList()
     }
 
-    fun currentStreak(type: EntryType?): Int {
-        val qualifyingDays = buildSet {
-            snapshot.activity
-                .filter { type == null || it.type == type }
-                .groupBy { it.localDate }
-                .filterValues { rows -> rows.sumOf { it.durationMillis } >= STREAK_DURATION_MILLIS }
-                .keys
-                .mapTo(this) { LocalDate.parse(it) }
-            snapshot.completions
-                .filter { it.count > 0L && (type == null || it.type == type) }
-                .mapTo(this) { LocalDate.parse(it.localDate) }
-        }
-        var streakDay = endDate
-        var streak = 0
-        while (streakDay in qualifyingDays) {
-            streak += 1
-            streakDay = streakDay.minusDays(1L)
-        }
-        return streak
-    }
-
     return StatsActivity(
         window = window.copy(startDate = firstDate),
         totalDurationMillis = snapshot.activity.sumOf { it.durationMillis },
-        currentStreakDays = currentStreak(null),
-        currentStreakDaysByType = types.associateWith(::currentStreak),
+        currentStreakDays = streakTimeline.streakEndingOn(
+            endDate = endDate,
+            preserveThroughIncompleteEndDate = window.isLatest,
+        ),
+        currentStreakDaysByType = types.associateWith { type ->
+            streakTimeline.streakEndingOn(
+                endDate = endDate,
+                type = type,
+                preserveThroughIncompleteEndDate = window.isLatest,
+            )
+        },
         completionCount = snapshot.completions.sumOf { it.count },
         completionCountByType = types.associateWith { type ->
             snapshot.completions.filter { it.type == type }.sumOf { it.count }
@@ -215,5 +207,3 @@ private enum class BucketUnit {
     MONTH,
     YEAR,
 }
-
-private const val STREAK_DURATION_MILLIS = 60_000L
