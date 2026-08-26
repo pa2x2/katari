@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.5.4] - 2026-08-26
+
+### 🐛 Fixed
+
+- Statistics current streaks now remain active through an incomplete current day and continue across activity outside the selected date range.
+
 ## [1.5.3] - 2026-08-25
 
 ### 🐛 Fixed
@@ -311,7 +317,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.5.3...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.5.4...HEAD
+[1.5.4]: https://github.com/pa2x2/katari/releases/tag/v1.5.4
 [1.5.3]: https://github.com/pa2x2/katari/releases/tag/v1.5.3
 [1.5.2]: https://github.com/pa2x2/katari/releases/tag/v1.5.2
 [1.5.1]: https://github.com/pa2x2/katari/releases/tag/v1.5.1
