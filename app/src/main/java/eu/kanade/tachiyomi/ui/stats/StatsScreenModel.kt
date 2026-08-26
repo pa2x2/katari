@@ -110,7 +110,12 @@ class StatsScreenModel(
                                 startLocalDate = navigationWindow.startDate?.toString(),
                                 endLocalDate = navigationWindow.endDate.toString(),
                             ),
-                        ) { snapshot, timeline ->
+                            statisticsRepository.subscribeActivityTimeline(
+                                profileId = profileId,
+                                startLocalDate = null,
+                                endLocalDate = window.endDate.toString(),
+                            ),
+                        ) { snapshot, timeline, streakTimeline ->
                             ActivityLoadEvent.Loaded(
                                 request = request,
                                 data = buildWindowActivity(
@@ -119,6 +124,7 @@ class StatsScreenModel(
                                     types = types.map(StatsType::type),
                                     locale = Locale.getDefault(),
                                     navigationTimeline = timeline,
+                                    streakTimeline = streakTimeline,
                                     navigationStartDate = navigationWindow.startDate,
                                     navigationEndDate = navigationWindow.endDate,
                                 ),

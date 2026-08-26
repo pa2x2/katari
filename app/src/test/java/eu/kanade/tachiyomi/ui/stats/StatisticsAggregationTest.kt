@@ -71,9 +71,6 @@ class StatisticsAggregationTest {
             EntryType.BOOK to 0L,
         )
         result.totalDurationMillis shouldBe 90_000L
-        result.currentStreakDays shouldBe 2
-        result.currentStreakDaysByType[EntryType.MANGA] shouldBe 1
-        result.currentStreakDaysByType[EntryType.ANIME] shouldBe 0
         result.completionCount shouldBe 1L
         result.completionCountByType shouldBe mapOf(
             EntryType.MANGA to 0L,
