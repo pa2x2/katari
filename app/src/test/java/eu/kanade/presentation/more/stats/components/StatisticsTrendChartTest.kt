@@ -6,6 +6,14 @@ import org.junit.jupiter.api.Test
 class StatisticsTrendChartTest {
 
     @Test
+    fun `point centers align to chart interval positions`() {
+        trendPointCenterX(index = 0, width = 140f, pointCount = 7, horizontalInset = 10f) shouldBe 10f
+        trendPointCenterX(index = 1, width = 140f, pointCount = 7, horizontalInset = 10f) shouldBe 30f
+        trendPointCenterX(index = 5, width = 140f, pointCount = 7, horizontalInset = 10f) shouldBe 110f
+        trendPointCenterX(index = 6, width = 140f, pointCount = 7, horizontalInset = 10f) shouldBe 130f
+    }
+
+    @Test
     fun `axis ticks expose every day in seven day range`() {
         trendTickIndices(7) shouldBe listOf(0, 1, 2, 3, 4, 5, 6)
     }

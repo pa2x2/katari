@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -370,18 +371,17 @@ internal fun StatisticsTrendChart(
                         )
                     }
                     if (points.isEmpty()) return@Canvas
-                    val visibleX = { index: Int ->
-                        if (points.size == 1) {
-                            size.width / 2f
-                        } else {
-                            dataHorizontalInset + dataWidth * index / points.lastIndex
-                        }
-                    }
                     tickIndices.forEach { index ->
+                        val tickX = trendPointCenterX(
+                            index = index,
+                            width = size.width,
+                            pointCount = points.size,
+                            horizontalInset = dataHorizontalInset,
+                        )
                         drawLine(
                             color = Color(outlineVariant.value).copy(alpha = 0.2f),
-                            start = Offset(visibleX(index) + axisOffsetPx, plotTop),
-                            end = Offset(visibleX(index) + axisOffsetPx, plotBottom),
+                            start = Offset(tickX + axisOffsetPx, plotTop),
+                            end = Offset(tickX + axisOffsetPx, plotBottom),
                             strokeWidth = 1.dp.toPx(),
                         )
                     }
@@ -517,28 +517,14 @@ internal fun StatisticsTrendChart(
             Row(Modifier.fillMaxWidth()) {
                 Spacer(Modifier.width(Y_AXIS_WIDTH))
                 Box(Modifier.weight(1f).clipToBounds()) {
-                    Row(
-                        Modifier
+                    TrendAxisLabels(
+                        labels = liveTickPoints.map(formatAxisDate),
+                        tickIndices = tickIndices,
+                        pointCount = points.size,
+                        modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = CHART_EDGE_POINT_INSET)
                             .graphicsLayer { translationX = axisOffsetPx },
-                    ) {
-                        liveTickPoints.forEachIndexed { tickPosition, point ->
-                            Box(
-                                modifier = Modifier.weight(1f),
-                                contentAlignment = when (tickPosition) {
-                                    0 -> Alignment.CenterStart
-                                    tickIndices.lastIndex -> Alignment.CenterEnd
-                                    else -> Alignment.Center
-                                },
-                            ) {
-                                Text(
-                                    text = formatAxisDate(point),
-                                    style = MaterialTheme.typography.labelSmall,
-                                )
-                            }
-                        }
-                    }
+                    )
                 }
             }
             periodTotalCaption?.let { caption ->
@@ -562,6 +548,46 @@ internal fun StatisticsTrendChart(
                 actionLabel = selectionActionLabel(selected),
                 onOpenActivity = onOpenActivity,
             )
+        }
+    }
+}
+
+@Composable
+private fun TrendAxisLabels(
+    labels: List<String>,
+    tickIndices: List<Int>,
+    pointCount: Int,
+    modifier: Modifier = Modifier,
+) {
+    Layout(
+        modifier = modifier,
+        content = {
+            labels.forEach { label ->
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
+        },
+    ) { measurables, constraints ->
+        val placeables = measurables.map { measurable ->
+            measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
+        }
+        val height = placeables.maxOfOrNull { it.height } ?: 0
+        val horizontalInset = (CHART_HORIZONTAL_INSET + CHART_EDGE_POINT_INSET).roundToPx().toFloat()
+        layout(constraints.maxWidth, height) {
+            placeables.forEachIndexed { index, placeable ->
+                val centerX = trendPointCenterX(
+                    index = tickIndices[index],
+                    width = constraints.maxWidth.toFloat(),
+                    pointCount = pointCount,
+                    horizontalInset = horizontalInset,
+                )
+                placeable.place(
+                    x = (centerX - placeable.width / 2f).roundToInt(),
+                    y = 0,
+                )
+            }
         }
     }
 }
