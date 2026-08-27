@@ -44,4 +44,31 @@ class StatisticsTrendChartTest {
             horizontalInset = 12f,
         ) shouldBe 29
     }
+
+    @Test
+    fun `settled scrolling retains the exact fractional position`() {
+        settleTrendOffset(
+            offsetPx = 34f,
+            pointSpacingPx = 10f,
+            olderBucketCount = 10,
+            newerBucketCount = 10,
+        ) shouldBe SettledTrendOffset(bucketShift = 3, residualOffsetPx = 4f)
+
+        settleTrendOffset(
+            offsetPx = -26f,
+            pointSpacingPx = 10f,
+            olderBucketCount = 10,
+            newerBucketCount = 10,
+        ) shouldBe SettledTrendOffset(bucketShift = -3, residualOffsetPx = 4f)
+    }
+
+    @Test
+    fun `sub-bucket scrolling stays where the user stopped`() {
+        settleTrendOffset(
+            offsetPx = 4f,
+            pointSpacingPx = 10f,
+            olderBucketCount = 10,
+            newerBucketCount = 10,
+        ) shouldBe SettledTrendOffset(bucketShift = 0, residualOffsetPx = 4f)
+    }
 }

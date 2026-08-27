@@ -1,8 +1,10 @@
 package eu.kanade.presentation.more.stats.components
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.rememberScrollableState
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +21,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -26,6 +29,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -37,7 +41,10 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
@@ -48,8 +55,8 @@ import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import java.time.LocalDate
 import java.time.temporal.ChronoUnit
-import kotlin.math.abs
 import kotlin.math.roundToInt
 
 @Composable
@@ -79,6 +86,9 @@ internal fun StatisticsTrendChart(
     val surfaceColor = MaterialTheme.colorScheme.surface
     val primaryColor = MaterialTheme.colorScheme.primary
     val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+    val dataHorizontalInsetPx = with(LocalDensity.current) {
+        (CHART_HORIZONTAL_INSET + CHART_EDGE_POINT_INSET).toPx()
+    }
     val rawMaximum = niceTrendMaximum(
         navigationPoints.maxOfOrNull(StatsTrendPoint::totalDurationMillis) ?: 0L,
     )
@@ -102,13 +112,14 @@ internal fun StatisticsTrendChart(
     val selectedIndex = points.indexOfFirst { it.startDate.toString() == selectedStartDate }
         .takeIf { it >= 0 }
         ?: points.lastIndex.coerceAtLeast(0)
-    var plotOffsetPx by remember(selectionKey) { mutableFloatStateOf(0f) }
-    var liveBucketShift by remember(selectionKey) { mutableStateOf(0) }
-    LaunchedEffect(navigationPending) {
-        if (!navigationPending) {
-            plotOffsetPx = 0f
-            liveBucketShift = 0
-        }
+    val scrollStateKey = points.size to types.map(StatsType::type)
+    var plotOffsetPx by remember(scrollStateKey) { mutableFloatStateOf(0f) }
+    var pointSpacingPx by remember(scrollStateKey) { mutableFloatStateOf(0f) }
+    var renderedWindowStart by remember(scrollStateKey) {
+        mutableStateOf(points.firstOrNull()?.bucketStartDate)
+    }
+    var pendingNavigation by remember(scrollStateKey) {
+        mutableStateOf<PendingTrendNavigation?>(null)
     }
 
     val tickIndices = trendTickIndices(points.size)
@@ -116,6 +127,65 @@ internal fun StatisticsTrendChart(
         it.bucketStartDate == points.firstOrNull()?.bucketStartDate
     }.coerceAtLeast(0)
     val maximumVisibleStartIndex = (navigationPoints.size - points.size).coerceAtLeast(0)
+    val currentWindowStart = points.firstOrNull()?.bucketStartDate
+    val reconciledPlotOffsetPx = if (
+        currentWindowStart != renderedWindowStart &&
+        pointSpacingPx > 0f
+    ) {
+        val pending = pendingNavigation
+        if (pending != null) {
+            val previousWindowIndex = navigationPoints.indexOfFirst {
+                it.bucketStartDate == pending.sourceWindowStart
+            }
+            val appliedBucketShift = if (previousWindowIndex >= 0) {
+                previousWindowIndex - visibleStartIndex
+            } else {
+                pending.requestedBucketShift
+            }
+            (pending.restingOffsetBuckets - appliedBucketShift) * pointSpacingPx
+        } else {
+            0f
+        }
+    } else {
+        null
+    }
+    // Draw the new window with its reconciled offset immediately; committing it only from an
+    // effect would expose one frame where the new points still use the previous window's offset.
+    val displayedPlotOffsetPx = reconciledPlotOffsetPx ?: plotOffsetPx
+    SideEffect {
+        if (reconciledPlotOffsetPx != null) {
+            plotOffsetPx = reconciledPlotOffsetPx
+            pendingNavigation = null
+            renderedWindowStart = currentWindowStart
+        }
+    }
+    val scrollableState = rememberScrollableState { delta ->
+        if (navigationPending || pendingNavigation != null || pointSpacingPx <= 0f) {
+            return@rememberScrollableState 0f
+        }
+        val oldestOffset = if (canNavigateOlder) {
+            visibleStartIndex * pointSpacingPx
+        } else {
+            0f
+        }
+        val newestOffset = if (canNavigateNewer) {
+            -(maximumVisibleStartIndex - visibleStartIndex) * pointSpacingPx
+        } else {
+            0f
+        }
+        val previousOffset = plotOffsetPx
+        plotOffsetPx = (plotOffsetPx + delta).coerceIn(newestOffset, oldestOffset)
+        plotOffsetPx - previousOffset
+    }
+    val liveBucketShift = if (pointSpacingPx > 0f) {
+        (displayedPlotOffsetPx / pointSpacingPx).roundToInt().coerceIn(
+            visibleStartIndex - maximumVisibleStartIndex,
+            visibleStartIndex,
+        )
+    } else {
+        0
+    }
+    val axisOffsetPx = displayedPlotOffsetPx - liveBucketShift * pointSpacingPx
     val liveVisibleStartIndex = (visibleStartIndex - liveBucketShift)
         .coerceIn(0, maximumVisibleStartIndex)
     val liveTickPoints = tickIndices.mapNotNull { tickIndex ->
@@ -125,6 +195,39 @@ internal fun StatisticsTrendChart(
         liveVisibleStartIndex,
         (liveVisibleStartIndex + points.size).coerceAtMost(navigationPoints.size),
     )
+
+    LaunchedEffect(scrollableState, pointSpacingPx, navigationPending) {
+        snapshotFlow { scrollableState.isScrollInProgress }
+            .collect { isScrolling ->
+                if (
+                    isScrolling ||
+                    navigationPending ||
+                    pendingNavigation != null ||
+                    pointSpacingPx <= 0f
+                ) {
+                    return@collect
+                }
+                val settled = settleTrendOffset(
+                    offsetPx = plotOffsetPx,
+                    pointSpacingPx = pointSpacingPx,
+                    olderBucketCount = if (canNavigateOlder) visibleStartIndex else 0,
+                    newerBucketCount = if (canNavigateNewer) {
+                        maximumVisibleStartIndex - visibleStartIndex
+                    } else {
+                        0
+                    },
+                )
+                if (settled.bucketShift != 0) {
+                    pendingNavigation = PendingTrendNavigation(
+                        sourceWindowStart = points.firstOrNull()?.bucketStartDate,
+                        requestedBucketShift = settled.bucketShift,
+                        restingOffsetBuckets = settled.bucketShift +
+                            settled.residualOffsetPx / pointSpacingPx,
+                    )
+                    onNavigateByBuckets(settled.bucketShift)
+                }
+            }
+    }
     val activityLabel = stringResource(MR.strings.statistics_activity)
     val selectedPoint = points.getOrNull(selectedIndex)
     val selectedSummary = selectedPoint?.let { point ->
@@ -209,115 +312,33 @@ internal fun StatisticsTrendChart(
                 Canvas(
                     modifier = Modifier
                         .fillMaxSize()
-                        .pointerInput(
-                            points,
-                            navigationPoints,
-                            canNavigateOlder,
-                            canNavigateNewer,
-                            navigationPending,
-                        ) {
-                            awaitEachGesture {
-                                val down = awaitFirstDown(requireUnconsumed = false)
-                                val touchSlop = viewConfiguration.touchSlop
-                                var capturedHorizontalDrag = false
-                                var latestPosition = down.position
-                                var latestTime = down.uptimeMillis
-
-                                fun updatePlotOffset(rawOffset: Float) {
-                                    plotOffsetPx = resistedOffset(
-                                        rawOffset,
-                                        size.width.toFloat(),
-                                        canNavigateOlder,
-                                        canNavigateNewer,
+                        .onSizeChanged { chartSize ->
+                            val dataWidth = (chartSize.width - dataHorizontalInsetPx * 2f).coerceAtLeast(1f)
+                            pointSpacingPx = if (points.size <= 1) {
+                                dataWidth
+                            } else {
+                                dataWidth / points.lastIndex
+                            }
+                        }
+                        .scrollable(
+                            state = scrollableState,
+                            orientation = Orientation.Horizontal,
+                            enabled = !navigationPending &&
+                                pendingNavigation == null &&
+                                (canNavigateOlder || canNavigateNewer),
+                        )
+                        .pointerInput(points) {
+                            detectTapGestures { position ->
+                                if (points.isNotEmpty()) {
+                                    val index = trendPointIndexForPosition(
+                                        positionX = position.x - displayedPlotOffsetPx,
+                                        width = size.width.toFloat(),
+                                        pointCount = points.size,
+                                        horizontalInset = (
+                                            CHART_HORIZONTAL_INSET + CHART_EDGE_POINT_INSET
+                                            ).toPx(),
                                     )
-                                    val dataWidth = (
-                                        size.width -
-                                            (CHART_HORIZONTAL_INSET + CHART_EDGE_POINT_INSET).toPx() * 2f
-                                        ).coerceAtLeast(1f)
-                                    val pointSpacing = if (points.size <= 1) {
-                                        dataWidth
-                                    } else {
-                                        dataWidth / points.lastIndex
-                                    }
-                                    liveBucketShift = (plotOffsetPx / pointSpacing).roundToInt()
-                                        .coerceIn(
-                                            visibleStartIndex - maximumVisibleStartIndex,
-                                            visibleStartIndex,
-                                        )
-                                }
-
-                                while (true) {
-                                    val event = awaitPointerEvent()
-                                    val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                                    latestPosition = change.position
-                                    latestTime = change.uptimeMillis
-                                    val displacement = change.position - down.position
-
-                                    if (!capturedHorizontalDrag) {
-                                        if (change.isConsumed) break
-                                        if (!change.pressed) {
-                                            if (displacement.getDistance() <= touchSlop && points.isNotEmpty()) {
-                                                val index = trendPointIndexForPosition(
-                                                    positionX = change.position.x,
-                                                    width = size.width.toFloat(),
-                                                    pointCount = points.size,
-                                                    horizontalInset = (
-                                                        CHART_HORIZONTAL_INSET + CHART_EDGE_POINT_INSET
-                                                        ).toPx(),
-                                                )
-                                                selectedStartDate = points[index].startDate.toString()
-                                            }
-                                            break
-                                        }
-                                        if (
-                                            abs(displacement.y) > touchSlop &&
-                                            abs(displacement.y) >= abs(displacement.x)
-                                        ) {
-                                            break
-                                        }
-                                        if (
-                                            abs(displacement.x) > touchSlop &&
-                                            abs(displacement.x) > abs(displacement.y) &&
-                                            !navigationPending &&
-                                            (canNavigateOlder || canNavigateNewer)
-                                        ) {
-                                            capturedHorizontalDrag = true
-                                            change.consume()
-                                            updatePlotOffset(displacement.x)
-                                        }
-                                    } else {
-                                        updatePlotOffset(displacement.x)
-                                        change.consume()
-                                        if (!change.pressed) break
-                                    }
-                                }
-
-                                if (capturedHorizontalDrag) {
-                                    val elapsedSeconds = ((latestTime - down.uptimeMillis).coerceAtLeast(1L)) / 1_000f
-                                    val displacement = latestPosition.x - down.position.x
-                                    val velocity = displacement / elapsedSeconds
-                                    val projectedOffset = plotOffsetPx + velocity * FLING_PROJECTION_SECONDS
-                                    val dataWidth = (
-                                        size.width -
-                                            (CHART_HORIZONTAL_INSET + CHART_EDGE_POINT_INSET).toPx() * 2f
-                                        ).coerceAtLeast(1f)
-                                    val pointSpacing = if (points.size <= 1) {
-                                        dataWidth
-                                    } else {
-                                        dataWidth / points.lastIndex
-                                    }
-                                    var bucketCount = (projectedOffset / pointSpacing).roundToInt()
-                                        .coerceIn(-points.size.coerceAtLeast(1), points.size.coerceAtLeast(1))
-                                    if (bucketCount > 0 && !canNavigateOlder) bucketCount = 0
-                                    if (bucketCount < 0 && !canNavigateNewer) bucketCount = 0
-                                    if (bucketCount == 0) {
-                                        plotOffsetPx = 0f
-                                        liveBucketShift = 0
-                                    } else {
-                                        plotOffsetPx = bucketCount * pointSpacing
-                                        liveBucketShift = bucketCount
-                                        onNavigateByBuckets(bucketCount)
-                                    }
+                                    selectedStartDate = points[index].startDate.toString()
                                 }
                             }
                         },
@@ -359,8 +380,8 @@ internal fun StatisticsTrendChart(
                     tickIndices.forEach { index ->
                         drawLine(
                             color = Color(outlineVariant.value).copy(alpha = 0.2f),
-                            start = Offset(visibleX(index), plotTop),
-                            end = Offset(visibleX(index), plotBottom),
+                            start = Offset(visibleX(index) + axisOffsetPx, plotTop),
+                            end = Offset(visibleX(index) + axisOffsetPx, plotBottom),
                             strokeWidth = 1.dp.toPx(),
                         )
                     }
@@ -378,7 +399,7 @@ internal fun StatisticsTrendChart(
                     }
 
                     clipRect(horizontalInset, plotTop, size.width - horizontalInset, plotBottom) {
-                        translate(left = plotOffsetPx) {
+                        translate(left = displayedPlotOffsetPx) {
                             navigationPoints.forEachIndexed { index, point ->
                                 val untrackedFraction = point.untrackedFraction()
                                 if (untrackedFraction > 0f) {
@@ -499,7 +520,8 @@ internal fun StatisticsTrendChart(
                     Row(
                         Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = CHART_EDGE_POINT_INSET),
+                            .padding(horizontal = CHART_EDGE_POINT_INSET)
+                            .graphicsLayer { translationX = axisOffsetPx },
                     ) {
                         liveTickPoints.forEachIndexed { tickPosition, point ->
                             Box(
@@ -544,19 +566,31 @@ internal fun StatisticsTrendChart(
     }
 }
 
-private fun resistedOffset(
-    rawOffset: Float,
-    width: Float,
-    canNavigateOlder: Boolean,
-    canNavigateNewer: Boolean,
-): Float {
-    val bounded = rawOffset.coerceIn(-width, width)
-    return when {
-        bounded > 0f && !canNavigateOlder -> bounded * BOUNDARY_RESISTANCE
-        bounded < 0f && !canNavigateNewer -> bounded * BOUNDARY_RESISTANCE
-        else -> bounded
-    }
+internal data class SettledTrendOffset(
+    val bucketShift: Int,
+    val residualOffsetPx: Float,
+)
+
+internal fun settleTrendOffset(
+    offsetPx: Float,
+    pointSpacingPx: Float,
+    olderBucketCount: Int,
+    newerBucketCount: Int,
+): SettledTrendOffset {
+    if (pointSpacingPx <= 0f) return SettledTrendOffset(0, offsetPx)
+    val bucketShift = (offsetPx / pointSpacingPx).roundToInt()
+        .coerceIn(-newerBucketCount, olderBucketCount)
+    return SettledTrendOffset(
+        bucketShift = bucketShift,
+        residualOffsetPx = offsetPx - bucketShift * pointSpacingPx,
+    )
 }
+
+private data class PendingTrendNavigation(
+    val sourceWindowStart: LocalDate?,
+    val requestedBucketShift: Int,
+    val restingOffsetBuckets: Float,
+)
 
 private fun StatsTrendPoint.untrackedFraction(): Float {
     val trackedStart = trackedStartDate ?: return 1f
@@ -565,8 +599,6 @@ private fun StatsTrendPoint.untrackedFraction(): Float {
     return (ChronoUnit.DAYS.between(startDate, trackedStart).toFloat() / bucketDays).coerceIn(0f, 1f)
 }
 
-private const val FLING_PROJECTION_SECONDS = 0.08f
-private const val BOUNDARY_RESISTANCE = 0.2f
 private val CHART_HORIZONTAL_INSET = 12.dp
 
 // Keeps the widest edge bars 4 dp clear of the vertical plot borders.
