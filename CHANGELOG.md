@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.5.5] - 2026-08-27
+
+### 🧩 Improved
+
+- Statistics activity charts now scroll continuously between adjacent periods, preserve the stopping position, and keep date labels aligned with the displayed data.
+
 ## [1.5.4] - 2026-08-26
 
 ### 🐛 Fixed
@@ -317,7 +323,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.5.4...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.5.5...HEAD
+[1.5.5]: https://github.com/pa2x2/katari/releases/tag/v1.5.5
 [1.5.4]: https://github.com/pa2x2/katari/releases/tag/v1.5.4
 [1.5.3]: https://github.com/pa2x2/katari/releases/tag/v1.5.3
 [1.5.2]: https://github.com/pa2x2/katari/releases/tag/v1.5.2

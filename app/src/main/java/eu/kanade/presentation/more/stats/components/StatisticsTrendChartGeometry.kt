@@ -2,6 +2,19 @@ package eu.kanade.presentation.more.stats.components
 
 import kotlin.math.roundToInt
 
+internal fun trendPointCenterX(
+    index: Int,
+    width: Float,
+    pointCount: Int,
+    horizontalInset: Float,
+): Float {
+    if (width <= 0f) return 0f
+    if (pointCount <= 1) return width / 2f
+    val inset = horizontalInset.coerceIn(0f, width / 2f)
+    val chartWidth = (width - inset * 2f).coerceAtLeast(0f)
+    return inset + chartWidth * index.coerceIn(0, pointCount - 1) / (pointCount - 1)
+}
+
 internal fun trendPointIndexForPosition(
     positionX: Float,
     width: Float,
