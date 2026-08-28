@@ -239,7 +239,6 @@ private fun SettledActivityCard(
                     canNavigateNewer = canNavigateNewer && drilledYear == null,
                     navigationPending = isPending,
                     onNavigateByBuckets = onNavigateByBuckets,
-                    showTrendLine = !isAllRange,
                     selectionActionLabel = { point ->
                         if (isYearOverview) {
                             stringResource(MR.strings.statistics_view_year, point.startDate.year)

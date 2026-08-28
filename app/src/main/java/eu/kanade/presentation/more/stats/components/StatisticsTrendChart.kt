@@ -36,9 +36,6 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
@@ -77,7 +74,6 @@ internal fun StatisticsTrendChart(
     navigationPending: Boolean,
     onNavigateByBuckets: (Int) -> Unit,
     onOpenActivity: (StatsTrendPoint) -> Unit,
-    showTrendLine: Boolean = true,
     selectionActionLabel: @Composable (StatsTrendPoint) -> String? = { null },
     periodTotalCaption: String? = null,
     modifier: Modifier = Modifier,
@@ -443,38 +439,6 @@ internal fun StatisticsTrendChart(
                                 }
                             }
 
-                            if (showTrendLine) {
-                                val trackedPaths = buildList {
-                                    var path: Path? = null
-                                    navigationPoints.forEachIndexed { index, point ->
-                                        if (!point.isTracked) {
-                                            path?.let(::add)
-                                            path = null
-                                        } else {
-                                            val currentPath = path
-                                            if (currentPath == null) {
-                                                path = Path().apply {
-                                                    moveTo(navigationX(index), y(point.totalDurationMillis))
-                                                }
-                                            } else {
-                                                currentPath.lineTo(navigationX(index), y(point.totalDurationMillis))
-                                            }
-                                        }
-                                    }
-                                    path?.let(::add)
-                                }
-                                trackedPaths.forEach { path ->
-                                    drawPath(
-                                        path = path,
-                                        color = if (types.size == 1) {
-                                            typeColors.getValue(types.single().type)
-                                        } else {
-                                            primaryColor
-                                        },
-                                        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round),
-                                    )
-                                }
-                            }
                             if (selectedIndex in points.indices) {
                                 val selected = points[selectedIndex]
                                 val selectedNavigationIndex = navigationPoints.indexOfFirst {
