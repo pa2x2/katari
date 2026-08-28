@@ -60,6 +60,9 @@ fun NewUpdateScreen(
             MarkdownRender(
                 content = changelogInfo,
                 flavour = remember { GFMFlavourDescriptor() },
+                listBlockSpacing = MaterialTheme.padding.extraSmall,
+                listItemSpacing = MaterialTheme.padding.extraSmall,
+                listSectionSpacing = MaterialTheme.padding.small,
             )
 
             TextButton(

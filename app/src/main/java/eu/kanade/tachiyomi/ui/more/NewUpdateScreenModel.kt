@@ -22,7 +22,7 @@ class NewUpdateScreenModel(
     changelogInfo: String,
     private val downloadLink: String,
     private val context: Context = Injekt.get(),
-) : StateScreenModel<NewUpdateScreenModel.State>(State(changelogInfo = stripChecksumSection(changelogInfo))) {
+) : StateScreenModel<NewUpdateScreenModel.State>(State(changelogInfo = sanitizeInAppReleaseNotes(changelogInfo))) {
 
     init {
         context.workManager.getWorkInfosForUniqueWorkFlow(AppUpdateDownloadJob.TAG)
