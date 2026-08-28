@@ -15,7 +15,7 @@ Create the workspace before analysing or implementing the requested change. It i
 4. Create `<root>/.agents-workspaces/<harness>-<feature>/`. Never overwrite an existing workspace. If the desired directory exists, create the next numeric sibling, for example `codex-reader-refactor-2`.
 5. Ensure the root `.gitignore` contains exactly `/.agents-workspaces/`. Create the file if needed; do not replace or reorder existing rules.
 6. Copy the six templates from [assets/templates](assets/templates) and replace bracketed placeholders with the initial request, resolved paths, harness, and creation date.
-7. Report the workspace path and state clearly that the workspace has been created from initial assumptions and will be refined as the work and discussion continue.
+7. Treat the workspace as your internal record, keep the actual conversation with user in chat, don't blindly send user to check your files and notes.
 
 ## Fill the initial documents
 
