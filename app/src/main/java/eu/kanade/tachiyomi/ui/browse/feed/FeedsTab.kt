@@ -57,7 +57,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextOverflow
@@ -239,7 +239,7 @@ private fun Screen.FeedsTabContent(
     val haptic = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
     val uriHandler = LocalUriHandler.current
-    val context = LocalContext.current
+    val configuration = LocalConfiguration.current
     LaunchedEffect(activeFeed?.id, immersiveAvailable) {
         if (!immersiveAvailable && feedViewMode == FeedViewMode.Immersive) {
             onFeedViewModeChange(FeedViewMode.Regular)
@@ -325,8 +325,8 @@ private fun Screen.FeedsTabContent(
                 }
                 val sourceItemOrientation = catalogSource?.itemOrientation
                     ?: EntryItemOrientation.VERTICAL
-                val columns = remember(activeDisplayMode) {
-                    val isLandscape = context.resources.configuration.orientation ==
+                val columns = remember(configuration.orientation, sourceItemOrientation) {
+                    val isLandscape = configuration.orientation ==
                         android.content.res.Configuration.ORIENTATION_LANDSCAPE
                     val portraitColumns = 3
                     val landscapeColumns = 5

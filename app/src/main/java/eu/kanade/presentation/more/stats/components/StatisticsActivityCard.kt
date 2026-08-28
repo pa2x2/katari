@@ -28,6 +28,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -46,7 +47,6 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-import java.util.Locale
 
 @Composable
 internal fun StatisticsActivityCard(
@@ -142,25 +142,28 @@ private fun SettledActivityCard(
         activity.trackingStartDate?.let(window.endDate::isAfter) == true &&
         !isPending
     val canNavigateNewer = isFinite && !isLatest && !isPending
-    val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
-    val axisDateFormatter = DateTimeFormatter.ofPattern(
-        when {
-            drilledYear != null -> "MMM"
-            else -> when (window.range) {
-                StatsRange.SEVEN_DAYS -> "EEE"
-                StatsRange.THIRTY_DAYS -> "MMM d"
-                StatsRange.ONE_YEAR -> "MMM yy"
-                StatsRange.ALL -> if (
-                    activity.trendGranularity == StatsTrendGranularity.YEAR
-                ) {
-                    "yyyy"
-                } else {
-                    "MMM yyyy"
-                }
+    val locale = LocalConfiguration.current.locales[0]
+    val dateFormatter = remember(locale) {
+        DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale)
+    }
+    val axisDatePattern = when {
+        drilledYear != null -> "MMM"
+        else -> when (window.range) {
+            StatsRange.SEVEN_DAYS -> "EEE"
+            StatsRange.THIRTY_DAYS -> "MMM d"
+            StatsRange.ONE_YEAR -> "MMM yy"
+            StatsRange.ALL -> if (
+                activity.trendGranularity == StatsTrendGranularity.YEAR
+            ) {
+                "yyyy"
+            } else {
+                "MMM yyyy"
             }
-        },
-        Locale.getDefault(),
-    )
+        }
+    }
+    val axisDateFormatter = remember(axisDatePattern, locale) {
+        DateTimeFormatter.ofPattern(axisDatePattern, locale)
+    }
     val allRangeTotal = if (drilledYear == null) {
         activity.totalDurationMillis
     } else {

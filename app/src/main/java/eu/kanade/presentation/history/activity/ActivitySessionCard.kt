@@ -25,6 +25,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -42,7 +43,6 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-import java.util.Locale
 
 @Composable
 internal fun ActivitySessionCard(
@@ -51,7 +51,10 @@ internal fun ActivitySessionCard(
     onClick: (Long) -> Unit,
 ) {
     val formatDuration = rememberActivityDurationFormatter()
-    val timeFormatter = remember { DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT) }
+    val locale = LocalConfiguration.current.locales[0]
+    val timeFormatter = remember(locale) {
+        DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale)
+    }
     val zone = remember(session.segments) {
         session.segments.firstOrNull()?.timeZoneId
             ?.let { runCatching { ZoneId.of(it) }.getOrNull() }
@@ -241,7 +244,7 @@ private const val MAX_VISIBLE_CHILDREN = 3
 
 @Composable
 private fun rememberActivityDurationFormatter(): (Long) -> String {
-    val locale = Locale.getDefault()
+    val locale = LocalConfiguration.current.locales[0]
     return remember(locale) {
         val numbers = NumberFormat.getIntegerInstance(locale)
         val formatter: (Long) -> String = { durationMillis ->
