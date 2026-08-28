@@ -269,6 +269,7 @@ dependencies {
     implementation(libs.androidx.constraintLayout)
     implementation(libs.androidx.core)
     implementation(libs.androidx.coreSplashScreen)
+    implementation(libs.androidx.localBroadcastManager)
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.exoplayerHls)
     implementation(libs.androidx.media3.session)
