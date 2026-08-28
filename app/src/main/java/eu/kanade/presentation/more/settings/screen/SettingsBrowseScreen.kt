@@ -12,7 +12,7 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
-import eu.kanade.tachiyomi.util.system.AuthenticatorUtil.authenticate
+import eu.kanade.tachiyomi.ui.security.BiometricAuthentication.authenticate
 import kotlinx.collections.immutable.toImmutableMap
 import mihon.core.common.CustomPreferences
 import mihon.domain.extension.interactor.GetExtensionStoreCountAsFlow

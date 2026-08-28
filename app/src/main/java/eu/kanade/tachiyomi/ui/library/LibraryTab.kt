@@ -51,7 +51,7 @@ import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
-import eu.kanade.tachiyomi.util.system.AuthenticatorUtil.authenticate
+import eu.kanade.tachiyomi.ui.security.BiometricAuthentication.authenticate
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.channels.Channel

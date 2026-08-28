@@ -9,8 +9,8 @@ import androidx.fragment.app.FragmentActivity
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.tachiyomi.core.security.PrivacyPreferences
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
-import eu.kanade.tachiyomi.util.system.AuthenticatorUtil.authenticate
-import eu.kanade.tachiyomi.util.system.AuthenticatorUtil.isAuthenticationSupported
+import eu.kanade.tachiyomi.ui.security.BiometricAuthentication.authenticate
+import eu.kanade.tachiyomi.util.system.isAuthenticationSupported
 import eu.kanade.tachiyomi.util.system.telemetryIncluded
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
