@@ -39,6 +39,7 @@ fun MigrateEntrySelectionItem(
     itemOrientation: EntryItemOrientation,
     consumedCount: Int,
     totalCount: Int,
+    modifier: Modifier = Modifier,
     mergeRole: String? = null,
     isSelectable: Boolean = true,
     isSelected: Boolean,
@@ -48,7 +49,6 @@ fun MigrateEntrySelectionItem(
     onInspect: () -> Unit,
     expanded: Boolean? = null,
     onToggleExpanded: (() -> Unit)? = null,
-    modifier: Modifier = Modifier,
 ) {
     val handlesExpansion = expanded != null && onToggleExpanded != null
     val resolvedSelectionState = selectionState ?: if (isSelected) ToggleableState.On else ToggleableState.Off

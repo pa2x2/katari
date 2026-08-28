@@ -75,8 +75,8 @@ internal fun StatisticsTrendChart(
     navigationPending: Boolean,
     onNavigateByBuckets: (Int) -> Unit,
     onOpenActivity: (StatsTrendPoint) -> Unit,
-    selectionActionLabel: @Composable (StatsTrendPoint) -> String? = { null },
     modifier: Modifier = Modifier,
+    selectionActionLabel: @Composable (StatsTrendPoint) -> String? = { null },
 ) {
     val typeColors = types.associate { it.type to it.accent.color() }
     val outlineVariant = MaterialTheme.colorScheme.outlineVariant

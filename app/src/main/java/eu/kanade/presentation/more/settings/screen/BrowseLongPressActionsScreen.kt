@@ -171,7 +171,7 @@ private fun LongPressActionsOverview(
                     action = action,
                     supportingText = defaultActionSupportingText(action),
                     showDragHandle = true,
-                    dragModifier = Modifier.draggableHandle(),
+                    modifier = Modifier.draggableHandle(),
                 )
             }
         }
@@ -285,7 +285,7 @@ private fun SourceLongPressActions(
                         action = action,
                         supportingText = sourceActionSupportingText(action, immersiveAvailable),
                         showDragHandle = true,
-                        dragModifier = Modifier.draggableHandle(),
+                        modifier = Modifier.draggableHandle(),
                     )
                 }
             } else {
@@ -326,8 +326,8 @@ private fun SourceLongPressActions(
 private fun LongPressActionRow(
     action: CustomPreferences.BrowseLongPressAction,
     supportingText: String,
+    modifier: Modifier = Modifier,
     showDragHandle: Boolean = false,
-    dragModifier: Modifier = Modifier,
 ) {
     ListItem(
         supportingContent = { Text(supportingText) },
@@ -337,7 +337,7 @@ private fun LongPressActionRow(
                     imageVector = Icons.Outlined.DragHandle,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = dragModifier.padding(MaterialTheme.padding.small),
+                    modifier = modifier.padding(MaterialTheme.padding.small),
                 )
             }
         },

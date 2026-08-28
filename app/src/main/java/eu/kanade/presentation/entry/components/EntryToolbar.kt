@@ -43,6 +43,7 @@ fun EntryToolbar(
     onClickMigrate: (() -> Unit)?,
     onClickRelatedEntries: (() -> Unit)?,
     onClickEditNotes: () -> Unit,
+    modifier: Modifier = Modifier,
     entryType: EntryType? = null,
 
     // For action mode
@@ -53,7 +54,6 @@ fun EntryToolbar(
 
     titleAlphaProvider: () -> Float,
     backgroundAlphaProvider: () -> Float,
-    modifier: Modifier = Modifier,
 ) {
     val isActionMode = actionModeCounter > 0
     AppBar(

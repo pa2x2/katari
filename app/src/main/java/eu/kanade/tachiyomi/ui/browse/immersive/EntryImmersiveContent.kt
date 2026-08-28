@@ -50,6 +50,7 @@ internal fun EntryImmersiveContent(
     itemContent: @Composable (Int) -> Entry?,
     immersiveModel: EntryImmersiveScreenModel,
     contextLabel: String,
+    modifier: Modifier = Modifier,
     contextLeadingContent: (@Composable () -> Unit)? = null,
     onContextClick: (() -> Unit)?,
     onExitImmersive: () -> Unit,
@@ -62,7 +63,6 @@ internal fun EntryImmersiveContent(
     pageRequest: Int = 0,
     onPageSettled: (Int) -> Unit = {},
     onNearEnd: (Int) -> Unit = {},
-    modifier: Modifier = Modifier,
     overlayContent: @Composable BoxScope.(PagerState) -> Unit = {},
 ) {
     val context = LocalContext.current
