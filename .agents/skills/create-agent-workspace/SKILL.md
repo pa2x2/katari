@@ -35,3 +35,4 @@ Create a narrowly named seventh document only when an independently durable conc
 Read the workspace before each related task. Update it when new user direction, architecture evidence, validation evidence, an accepted decision, or a meaningful scope change appears. Preserve dated evidence and the distinction between accepted, recommended, and open items.
 
 The planning workspace is intentionally ignored. Its creation or revision alone does not authorize production edits, tests, device work, commits, pushes, releases, or pull requests.
+You are not allowed to read or modify other created workspaces unless you ask user and get explicit authorization.
