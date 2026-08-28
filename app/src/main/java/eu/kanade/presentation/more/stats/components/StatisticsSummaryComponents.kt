@@ -184,6 +184,17 @@ internal fun StatisticsProgressCard(progress: StatsProgress?) {
                 Spacer(Modifier.height(12.dp))
             }
         }
+        if (progress.isPartial) {
+            Text(
+                text = stringResource(
+                    MR.strings.statistics_progress_coverage,
+                    progress.total,
+                    progress.libraryTotal,
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 

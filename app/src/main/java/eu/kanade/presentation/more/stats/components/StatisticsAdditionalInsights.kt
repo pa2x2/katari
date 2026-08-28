@@ -25,13 +25,14 @@ import tachiyomi.presentation.core.i18n.stringResource
 @OptIn(ExperimentalLayoutApi::class)
 internal fun StatisticsAdditionalInsightsCard(
     typeLabel: String,
-    sessionCount: Long,
-    averageSessionDurationMillis: Long,
-    longestSessionDurationMillis: Long,
-    activeDays: Int,
+    sessionCount: Long?,
+    averageSessionDurationMillis: Long?,
+    longestSessionDurationMillis: Long?,
+    activeDays: Int?,
     library: StatsLibraryInsights,
     formatDuration: (Long) -> String,
 ) {
+    val hasSessions = sessionCount?.let { it > 0L } == true
     StatisticsSectionCard(
         title = stringResource(MR.strings.statistics_more_type_stats, typeLabel.lowercase()),
     ) {
@@ -41,20 +42,22 @@ internal fun StatisticsAdditionalInsightsCard(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             maxItemsInEachRow = 2,
         ) {
-            if (sessionCount > 0L) {
-                InsightItem(
-                    value = formatDuration(averageSessionDurationMillis),
-                    label = stringResource(MR.strings.statistics_average_visit),
-                    modifier = Modifier.weight(1f).widthIn(min = 150.dp).fillMaxRowHeight(),
-                )
-                InsightItem(
-                    value = formatDuration(longestSessionDurationMillis),
-                    label = stringResource(MR.strings.statistics_longest_visit),
-                    modifier = Modifier.weight(1f).widthIn(min = 150.dp).fillMaxRowHeight(),
-                )
-            }
             InsightItem(
-                value = activeDays.toString(),
+                value = averageSessionDurationMillis
+                    ?.takeIf { hasSessions }
+                    ?.let(formatDuration) ?: "—",
+                label = stringResource(MR.strings.statistics_average_visit),
+                modifier = Modifier.weight(1f).widthIn(min = 150.dp).fillMaxRowHeight(),
+            )
+            InsightItem(
+                value = longestSessionDurationMillis
+                    ?.takeIf { hasSessions }
+                    ?.let(formatDuration) ?: "—",
+                label = stringResource(MR.strings.statistics_longest_visit),
+                modifier = Modifier.weight(1f).widthIn(min = 150.dp).fillMaxRowHeight(),
+            )
+            InsightItem(
+                value = activeDays?.toString() ?: "—",
                 label = stringResource(MR.strings.statistics_active_days),
                 modifier = Modifier.weight(1f).widthIn(min = 150.dp).fillMaxRowHeight(),
             )

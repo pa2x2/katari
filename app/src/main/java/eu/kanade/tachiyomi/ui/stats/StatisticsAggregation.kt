@@ -73,12 +73,16 @@ internal fun buildWindowActivity(
         trendEndDate: LocalDate,
         unit: BucketUnit,
     ): List<StatsTrendPoint> {
-        val durationByBucket = navigationTimeline.activity.groupBy { activity ->
+        val durationByBucket = navigationTimeline.activity.filter { activity ->
+            LocalDate.parse(activity.localDate) in trendStartDate..trendEndDate
+        }.groupBy { activity ->
             LocalDate.parse(activity.localDate).bucketStart(unit, locale)
         }.mapValues { (_, rows) ->
             rows.groupBy { it.type }.mapValues { (_, typeRows) -> typeRows.sumOf { it.durationMillis } }
         }
-        val completionsByBucket = navigationTimeline.completions.groupBy { completion ->
+        val completionsByBucket = navigationTimeline.completions.filter { completion ->
+            LocalDate.parse(completion.localDate) in trendStartDate..trendEndDate
+        }.groupBy { completion ->
             LocalDate.parse(completion.localDate).bucketStart(unit, locale)
         }.mapValues { (_, rows) ->
             rows.groupBy { it.type }.mapValues { (_, typeRows) -> typeRows.sumOf { it.count } }
@@ -119,6 +123,9 @@ internal fun buildWindowActivity(
     return StatsActivity(
         window = window.copy(startDate = firstDate),
         totalDurationMillis = snapshot.activity.sumOf { it.durationMillis },
+        totalDurationByType = types.associateWith { type ->
+            snapshot.activity.filter { it.type == type }.sumOf { it.durationMillis }
+        },
         currentStreakDays = streakTimeline.streakEndingOn(
             endDate = endDate,
             preserveThroughIncompleteEndDate = window.isLatest,
@@ -147,9 +154,15 @@ internal fun buildWindowActivity(
         longestSessionDurationByType = types.associateWith { type ->
             snapshot.sessions.firstOrNull { it.type == type }?.longestDurationMillis ?: 0L
         },
-        activeDays = snapshot.activity.filter { it.durationMillis > 0L }.distinctBy { it.localDate }.size,
+        activeDays = (
+            snapshot.activity.filter { it.durationMillis > 0L }.map { it.localDate } +
+                snapshot.completions.filter { it.count > 0L }.map { it.localDate }
+            ).distinct().size,
         activeDaysByType = types.associateWith { type ->
-            snapshot.activity.filter { it.type == type && it.durationMillis > 0L }.distinctBy { it.localDate }.size
+            (
+                snapshot.activity.filter { it.type == type && it.durationMillis > 0L }.map { it.localDate } +
+                    snapshot.completions.filter { it.type == type && it.count > 0L }.map { it.localDate }
+                ).distinct().size
         },
         trend = trend,
         navigationTrend = navigationTrend,

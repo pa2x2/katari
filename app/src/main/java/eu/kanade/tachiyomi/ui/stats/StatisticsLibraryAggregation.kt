@@ -7,22 +7,29 @@ import tachiyomi.domain.library.model.LibraryItem
 import java.util.Locale
 
 internal fun buildLibraryProgress(items: List<LibraryItem>): StatsProgress? {
-    if (items.any { !it.hasProgressSummary }) return null
+    val supportedItems = items.filter(LibraryItem::hasProgressSummary)
+    if (supportedItems.isEmpty()) return null
     var notStarted = 0
     var inProgress = 0
     var caughtUp = 0
     var completed = 0
-    items.forEach { item ->
+    supportedItems.forEach { item ->
         val consumed = checkNotNull(item.consumedCount)
         val total = checkNotNull(item.totalCount)
         when {
-            consumed <= 0L -> notStarted += 1
+            item.hasStarted != true -> notStarted += 1
             total > 0L && consumed >= total && item.entry.status == EntryStatus.COMPLETED -> completed += 1
             total > 0L && consumed >= total -> caughtUp += 1
             else -> inProgress += 1
         }
     }
-    return StatsProgress(notStarted, inProgress, caughtUp, completed)
+    return StatsProgress(
+        notStarted = notStarted,
+        inProgress = inProgress,
+        caughtUp = caughtUp,
+        completed = completed,
+        unavailable = items.size - supportedItems.size,
+    )
 }
 
 internal fun buildLibraryInsights(items: List<LibraryItem>): StatsLibraryInsights {

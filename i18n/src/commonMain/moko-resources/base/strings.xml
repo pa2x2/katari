@@ -1541,6 +1541,7 @@
     <string name="statistics_ending_streak">Ending streak</string>
     <string name="statistics_library">Your library</string>
     <string name="statistics_progress">Your progress</string>
+    <string name="statistics_progress_coverage">Progress available for %1$d of %2$d titles</string>
     <string name="statistics_not_started">Not started</string>
     <string name="statistics_in_progress">In progress</string>
     <string name="statistics_caught_up">Caught up</string>

@@ -211,7 +211,7 @@ private fun SettledActivityCard(
         Spacer(Modifier.height(16.dp))
         val labels = types.associate { it.type to stringResource(it.displayName) }
         val notTrackedLabel = stringResource(MR.strings.statistics_not_tracked)
-        val hasDisplayedActivity = displayedPoints.any(StatsTrendPoint::hasActivity)
+        val hasDisplayedActivity = displayedPoints.any { it.totalDurationMillis > 0L }
         if (isAllRange && drilledYear == null && !hasDisplayedActivity) {
             AllRangeEmptyActivity()
         } else {

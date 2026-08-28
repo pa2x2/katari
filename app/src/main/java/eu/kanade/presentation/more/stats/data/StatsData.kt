@@ -26,8 +26,11 @@ data class StatsProgress(
     val inProgress: Int,
     val caughtUp: Int,
     val completed: Int,
+    val unavailable: Int = 0,
 ) {
     val total: Int = notStarted + inProgress + caughtUp + completed
+    val libraryTotal: Int = total + unavailable
+    val isPartial: Boolean = unavailable > 0
 }
 
 data class StatsLibrary(
@@ -54,7 +57,6 @@ data class StatsTrendPoint(
 ) {
     val totalDurationMillis: Long = durationByType.values.sum()
     val completionCount: Long = completionCountByType.values.sum()
-    val hasActivity: Boolean = totalDurationMillis > 0L || completionCount > 0L
     val isTracked: Boolean = trackedStartDate != null
 }
 
@@ -75,6 +77,7 @@ data class StatsTopTitle(
 data class StatsActivity(
     val window: StatsActivityWindow,
     val totalDurationMillis: Long,
+    val totalDurationByType: Map<EntryType, Long>,
     val currentStreakDays: Int,
     val currentStreakDaysByType: Map<EntryType, Int>,
     val completionCount: Long,

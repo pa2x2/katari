@@ -50,6 +50,7 @@ import eu.kanade.presentation.more.stats.data.StatsActivity
 import eu.kanade.presentation.more.stats.data.StatsRange
 import eu.kanade.presentation.more.stats.data.StatsTrendPoint
 import eu.kanade.presentation.more.stats.data.StatsType
+import eu.kanade.presentation.more.stats.data.forType
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -204,7 +205,7 @@ private fun StatisticsPage(
     val thirdHeadlineValue = if (selectedStatsType == null) {
         streakDays?.let { pluralStringResource(MR.plurals.day, it, it) } ?: "—"
     } else {
-        NumberFormat.getIntegerInstance().format(visibleActivity?.completionCount ?: 0L)
+        visibleActivity?.completionCount?.let(NumberFormat.getIntegerInstance()::format) ?: "—"
     }
     val thirdHeadlineLabel = selectedStatsType?.let { stringResource(it.consumedUnitLabel) }
         ?: stringResource(
@@ -318,10 +319,10 @@ private fun StatisticsPage(
                 item {
                     StatisticsAdditionalInsightsCard(
                         typeLabel = stringResource(selectedStatsType.displayName),
-                        sessionCount = visibleActivity?.sessionCount ?: 0L,
-                        averageSessionDurationMillis = visibleActivity?.averageSessionDurationMillis ?: 0L,
-                        longestSessionDurationMillis = visibleActivity?.longestSessionDurationMillis ?: 0L,
-                        activeDays = visibleActivity?.activeDays ?: 0,
+                        sessionCount = visibleActivity?.sessionCount,
+                        averageSessionDurationMillis = visibleActivity?.averageSessionDurationMillis,
+                        longestSessionDurationMillis = visibleActivity?.longestSessionDurationMillis,
+                        activeDays = visibleActivity?.activeDays,
                         library = insights,
                         formatDuration = formatter,
                     )
@@ -347,42 +348,4 @@ private fun StatisticsPage(
             }
         }
     }
-}
-
-private fun StatsActivity.forType(type: EntryType?): StatsActivity {
-    if (type == null) return this
-    return copy(
-        totalDurationMillis = trend.sumOf { it.durationByType[type] ?: 0L },
-        completionCount = completionCountByType[type] ?: 0L,
-        completionCountByType = mapOf(type to (completionCountByType[type] ?: 0L)),
-        sessionCount = sessionCountByType[type] ?: 0L,
-        sessionCountByType = mapOf(type to (sessionCountByType[type] ?: 0L)),
-        averageSessionDurationMillis = averageSessionDurationByType[type] ?: 0L,
-        averageSessionDurationByType = mapOf(type to (averageSessionDurationByType[type] ?: 0L)),
-        longestSessionDurationMillis = longestSessionDurationByType[type] ?: 0L,
-        longestSessionDurationByType = mapOf(type to (longestSessionDurationByType[type] ?: 0L)),
-        activeDays = activeDaysByType[type] ?: 0,
-        activeDaysByType = mapOf(type to (activeDaysByType[type] ?: 0)),
-        trend = trend.map { point ->
-            point.copy(
-                durationByType = mapOf(type to (point.durationByType[type] ?: 0L)),
-                completionCountByType = mapOf(type to (point.completionCountByType[type] ?: 0L)),
-            )
-        },
-        navigationTrend = navigationTrend.map { point ->
-            point.copy(
-                durationByType = mapOf(type to (point.durationByType[type] ?: 0L)),
-                completionCountByType = mapOf(type to (point.completionCountByType[type] ?: 0L)),
-            )
-        },
-        allRangeMonthlyTrend = allRangeMonthlyTrend.map { point ->
-            point.copy(
-                durationByType = mapOf(type to (point.durationByType[type] ?: 0L)),
-                completionCountByType = mapOf(type to (point.completionCountByType[type] ?: 0L)),
-            )
-        },
-        topTitles = topTitles.filter { it.type == type },
-        earlierDurationMillis = earlierDurationByType[type] ?: 0L,
-        earlierDurationByType = mapOf(type to (earlierDurationByType[type] ?: 0L)),
-    )
 }
