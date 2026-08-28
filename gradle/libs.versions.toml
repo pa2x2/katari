@@ -7,8 +7,8 @@ androidx-annotation = "1.10.0"
 androidx-appCompat = "1.8.0"
 androidx-baselineProfile = "1.5.0-rc02"
 androidx-benchmark = "1.4.1"
-androidx-biometric = "1.4.0-alpha05"
-androidx-compose-bom = "2026.07.01"
+androidx-biometric = "1.4.0-alpha07"
+androidx-compose-bom = "2026.08.01"
 androidx-concurrent = "1.3.0"
 androidx-constraintLayout = "2.2.2"
 androidx-core = "1.19.0"
@@ -17,7 +17,6 @@ androidx-fragment = "1.9.0"
 androidx-glance = "1.2.0"
 androidx-interpolator = "1.0.0"
 androidx-lifecycle = "2.11.0"
-androidx-localBroadcastManager = "1.0.0"
 androidx-media3 = "1.11.0"
 androidx-paging = "3.5.1"
 androidx-preference = "1.2.1"
@@ -79,7 +78,7 @@ swipe = "1.3.0"
 tapmoc = "0.4.2"
 unifile = "08f224c8f9"
 voyager = "2.2.21-1.10.3"
-xmlutil = "1.0.2"
+xmlutil = "1.0.2.1"
 
 [libraries]
 aboutLibraries-compose = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutLibraries" }
@@ -115,7 +114,6 @@ androidx-interpolator = { module = "androidx.interpolator:interpolator", version
 androidx-lifecycle-common = { module = "androidx.lifecycle:lifecycle-common", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidx-lifecycle" }
-androidx-localBroadcastManager = { module = "androidx.localbroadcastmanager:localbroadcastmanager", version.ref = "androidx-localBroadcastManager" }
 androidx-media3-datasourceOkhttp = { module = "androidx.media3:media3-datasource-okhttp", version.ref = "androidx-media3" }
 androidx-media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "androidx-media3" }
 androidx-media3-exoplayerHls = { module = "androidx.media3:media3-exoplayer-hls", version.ref = "androidx-media3" }

@@ -21,7 +21,7 @@ class UnlockActivity : BaseActivity() {
 
         val request = AuthenticationRequest.biometricRequest(
             title = stringResource(MR.strings.unlock_app_title, stringResource(MR.strings.app_name)),
-            authFallback = AuthenticationRequest.Biometric.Fallback.DeviceCredential,
+            authFallbacks = arrayOf(AuthenticationRequest.Biometric.Fallback.DeviceCredential),
         ) {
             setIsConfirmationRequired(false)
         }
@@ -36,6 +36,10 @@ class UnlockActivity : BaseActivity() {
             }
             is AuthenticationResult.Error -> {
                 logcat(LogPriority.ERROR) { result.errString.toString() }
+                finishAffinity()
+            }
+            is AuthenticationResult.CustomFallbackSelected -> {
+                logcat(LogPriority.ERROR) { "Unexpected custom fallback selected during app unlock" }
                 finishAffinity()
             }
         }

@@ -29,7 +29,7 @@ object BiometricAuthentication {
         val authenticationActivity = this as? BaseActivity ?: return false
         val request = AuthenticationRequest.biometricRequest(
             title = title,
-            authFallback = AuthenticationRequest.Biometric.Fallback.DeviceCredential,
+            authFallbacks = arrayOf(AuthenticationRequest.Biometric.Fallback.DeviceCredential),
         ) {
             setSubtitle(subtitle)
         }
@@ -44,6 +44,7 @@ object BiometricAuthentication {
                         toast(result.errString.toString())
                         continuation.resume(false)
                     }
+                    is AuthenticationResult.CustomFallbackSelected -> continuation.resume(false)
                 }
             }
             if (!launched) continuation.resume(false)
