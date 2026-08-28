@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onSizeChanged
@@ -317,6 +318,7 @@ internal fun StatisticsTrendChart(
                                 dataWidth / points.lastIndex
                             }
                         }
+                        .nestedScroll(StatisticsTrendChartPagerIsolation)
                         .scrollable(
                             state = scrollableState,
                             orientation = Orientation.Horizontal,
