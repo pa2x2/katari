@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.6.0] - 2026-08-28
+
+### 🧩 Improved
+
+- Reworked the Statistics dashboard with clearer activity and current-library sections, including media-specific progress and insight views, top titles, and session patterns.
+- Activity charts now show clearly labeled daily, weekly, monthly, or yearly totals without a trend line.
+- Book reader keeps the reading position stable while adjacent chapters load, and lets manual scrolling override pending navigation.
+- Adaptive feed layouts and back-to-top controls now track the current window and scroll state, while Statistics, activity history, and the Upcoming calendar refresh their date formatting when the locale changes.
+- Legacy extensions now load correctly on older Android versions.
+
+### 🐛 Fixed
+
+- Statistics and activity history no longer let accidental sessions shorter than 10 seconds inflate timed totals; consumption completions from short sessions remain visible in history and completion counts.
+- In-app release notes now render GitHub line endings correctly and omit checksum and download-selection text intended for release downloads.
+- WebView renderer termination now closes the affected page safely instead of leaving the app in a crashed state.
+- External search and share intents now forward only supported data, while app data is explicitly excluded from Android cloud backups and device transfers.
+- Upcoming category filters now follow the active profile immediately.
+
 ## [1.5.5] - 2026-08-27
 
 ### 🧩 Improved
@@ -323,7 +341,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.5.5...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/pa2x2/katari/releases/tag/v1.6.0
 [1.5.5]: https://github.com/pa2x2/katari/releases/tag/v1.5.5
 [1.5.4]: https://github.com/pa2x2/katari/releases/tag/v1.5.4
 [1.5.3]: https://github.com/pa2x2/katari/releases/tag/v1.5.3
