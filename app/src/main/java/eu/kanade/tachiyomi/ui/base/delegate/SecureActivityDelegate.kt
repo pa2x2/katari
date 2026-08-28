@@ -111,6 +111,7 @@ fun SecureActivityDelegate.requestAppUnlock(activity: AppCompatActivity) {
     if (!securityPreferences.useAuthenticator.get()) return
     if (activity.isAuthenticationSupported()) {
         if (!SecureActivityDelegate.requireUnlock) return
+        if (BiometricAuthentication.isAuthenticating) return
         if (!shouldRequestAppUnlock(activity)) return
         activity.startActivity(Intent(activity, UnlockActivity::class.java))
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
