@@ -84,13 +84,13 @@ Katari's changelog focused on behavior that differs from Mihon.
    or GitHub alert. Make the highlight specific to the release; Use only the applicable decorated category
    headings from this mapping:
 
-   - `✨ Added`
-   - `🔄 Changed`
-   - `🧩 Improved`
-   - `🗑️ Removed`
-   - `🐛 Fixed`
-   - `🧩 Other`
-   - `⚡️ Performance`
+   - `✨ Added` - for new features.
+   - `🔄 Changed` - for changes in existing functionality.
+   - `🧩 Improved` - for enhancement in existing functionality.
+   - `🗑️ Removed` - for now removed features.
+   - `🐛 Fixed` - for any bug fixes.
+   - `🧩 Other` - for technical stuff.
+   - `⚡️ Performance` - for optimizations in existing functionality.
 
    Use this shape:
 
@@ -106,11 +106,9 @@ Katari's changelog focused on behavior that differs from Mihon.
    - A distinct user-visible outcome.
    ```
 
-   Omit headings that have no qualifying outcomes.
-2. Describe user-visible outcomes in concise, natural, polished language. Let each heading
+2. Describe outcomes in concise, natural, polished language. Let each heading
    provide the category context. Keep the tone factual rather than promotional, and make
    each bullet understandable without commit or implementation context.
-   Prefer bullets that each communicate one distinct and useful outcome.
 3. Update `CHANGELOG.md` in the worktree. Insert the complete release section in descending
    version order without changing existing release text. Update `[Unreleased]` to compare
    the target tag with `HEAD`, and add or update the target version's release link using the
@@ -119,7 +117,7 @@ Katari's changelog focused on behavior that differs from Mihon.
 4. If changes include merge with upstream repository of Mihon - include information
    on the version which was merged in the following format:
 
-   Based on [Mihon <version>](<link to mihon release on github>)
+   ## Based on [Mihon <version>](<link to mihon release on github>)
 
 ## Safety rules
 
