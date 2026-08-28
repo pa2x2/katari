@@ -156,6 +156,37 @@ internal class BookDocumentViewerDatasetTest : BookDocumentViewerFixture() {
     }
 
     @Test
+    fun `transition with a loaded destination emits no redundant load request`() {
+        val current = section("current", listOf("One", "Two"))
+        val next = section("next", listOf("Three", "Four"))
+        val items = buildBookDocumentViewerItems(
+            window = EntryChildWindow("current", null, "next"),
+            loaded = mapOf("current" to current, "next" to next),
+            keyOf = { it },
+        )
+        val transitionIndex = items.indexOfFirst {
+            it is BookDocumentViewerItem.Transition && it.transition.to == "next"
+        }
+        val transition = assertIs<BookDocumentViewerItem.Transition<String>>(items[transitionIndex])
+
+        val reached = bookDocumentViewerTransitionAtAnchor(
+            items = items,
+            visibleItems = listOf(
+                BookDocumentVisibleItemLayout(
+                    index = transitionIndex,
+                    key = transition.key,
+                    offset = 100,
+                    size = 600,
+                ),
+            ),
+            viewportStartOffset = 0,
+            viewportEndOffset = 800,
+        )
+
+        assertNull(reached)
+    }
+
+    @Test
     fun `compact transitions activate only after reaching their hard scroll boundary`() {
         val previous = BookDocumentViewerItem.Transition(
             EntryChildWindow("current", "previous", null).previousTransition(),

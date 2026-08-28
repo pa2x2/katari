@@ -18,23 +18,40 @@ internal data class BookDocumentSection<T>(
     val initialPosition: BookDocumentPosition,
     val resourceLoader: BookPublicationResourceLoader?,
 ) {
+    private val viewerBlockCache = mutableMapOf<Int, BookDocumentViewerItem.Block<T>>()
+    private val viewerBlockKeyPrefix = "document:$key:${document.document.resourceId}:"
+
     /**
-     * The surrounding viewer window changes while a section stays loaded. Keep its block rows and
-     * their stable keys with the prepared section, instead of allocating the full projection again
-     * every time an adjacent chapter becomes current.
+     * The surrounding viewer window changes while a section stays loaded. Keep each projected row
+     * with the prepared section once requested, while leaving offscreen rows unallocated until the
+     * lazy list or its prefetch strategy actually needs them.
      */
-    val viewerBlocks: List<BookDocumentViewerItem.Block<T>> by lazy(LazyThreadSafetyMode.NONE) {
-        document.blocks.map { block -> BookDocumentViewerItem.Block(this, block) }
+    val viewerBlocks: List<BookDocumentViewerItem.Block<T>> = object : AbstractList<BookDocumentViewerItem.Block<T>>() {
+        override val size: Int
+            get() = document.blocks.size
+
+        override fun get(index: Int): BookDocumentViewerItem.Block<T> = viewerBlockCache.getOrPut(index) {
+            BookDocumentViewerItem.Block(this@BookDocumentSection, document.blocks[index])
+        }
     }
 
     private val viewerBlockIndices by lazy(LazyThreadSafetyMode.NONE) {
         buildMap(document.blocks.size) {
-            document.blocks.forEachIndexed { index, block -> put(block.id, index) }
+            document.blocks.forEachIndexed { index, block -> put(block.id.value, index) }
         }
     }
 
     fun viewerBlockIndex(blockId: mihon.book.api.document.BookDocumentBlockId): Int =
-        viewerBlockIndices[blockId] ?: -1
+        viewerBlockIndices[blockId.value] ?: -1
+
+    fun viewerBlockIndex(key: Any): Int {
+        val stableKey = key as? String ?: return -1
+        if (!stableKey.startsWith(viewerBlockKeyPrefix)) return -1
+        return viewerBlockIndices[stableKey.removePrefix(viewerBlockKeyPrefix)] ?: -1
+    }
+
+    fun viewerBlockKey(blockId: mihon.book.api.document.BookDocumentBlockId): String =
+        viewerBlockKeyPrefix + blockId.value
 
     init {
         require(key.isNotBlank()) { "document section key must not be blank" }
@@ -50,7 +67,7 @@ internal sealed interface BookDocumentViewerItem<T> {
         val section: BookDocumentSection<T>,
         val content: mihon.book.api.document.BookDocumentBlock,
     ) : BookDocumentViewerItem<T> {
-        override val key = "document:${section.key}:${section.document.document.resourceId}:${content.id.value}"
+        override val key = section.viewerBlockKey(content.id)
     }
 
     data class Transition<T>(
@@ -124,7 +141,7 @@ internal class BookDocumentViewerDataset<T>(
 
     fun indexOfKey(key: Any): Int {
         for (section in sections()) {
-            val blockIndex = section.viewerBlocks.indexOfFirst { it.key == key }
+            val blockIndex = section.viewerBlockIndex(key)
             if (blockIndex >= 0) return sectionOffset(section.key) + blockIndex
         }
         return when (key) {
