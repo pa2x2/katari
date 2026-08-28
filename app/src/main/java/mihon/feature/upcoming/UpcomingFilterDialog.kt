@@ -45,7 +45,8 @@ private fun ColumnScope.CategoryFilterSheet(
 
     HorizontalDivider(modifier = Modifier.padding(MaterialTheme.padding.extraSmall))
 
-    val profileId = screenModel.state.value.profileId
+    val screenState by screenModel.state.collectFlowAsState()
+    val profileId = screenState.profileId
     if (profileId == null) {
         LoadingScreen(modifier = Modifier.padding(16.dp))
         return
