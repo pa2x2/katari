@@ -16,6 +16,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.FloatState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -67,6 +68,7 @@ import androidx.compose.ui.res.stringResource as androidStringResource
 @Composable
 internal fun BookDocumentReaderScreen(
     state: BookDocumentReaderState,
+    visualChapterProgression: FloatState,
     settingBindings: BookDocumentReaderSettingBindings,
     selectionCoordinator: BookSelectionActionCoordinator?,
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
@@ -168,7 +170,7 @@ internal fun BookDocumentReaderScreen(
             BookReaderScaffold(
                 progress = if (showReadingProgressSetting.effectiveValue) {
                     BookReaderProgress.Chapter(
-                        value = state.visualChapterProgression,
+                        value = visualChapterProgression,
                         style = readingProgressStyleSetting.effectiveValue,
                         activeColor = readerPalette.accent.copy(alpha = 0.75f),
                         trackColor = readerPalette.surfaceVariant,

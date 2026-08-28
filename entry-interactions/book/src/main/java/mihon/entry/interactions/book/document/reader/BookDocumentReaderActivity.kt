@@ -12,6 +12,7 @@ import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
@@ -69,6 +70,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     private val retainedSessions by viewModels<BookDocumentReaderSessionViewModel>()
     private var surfaceState by mutableStateOf<BookDocumentReaderSurfaceState>(BookDocumentReaderSurfaceState.Loading)
     private var readerState by mutableStateOf<BookDocumentReaderState?>(null)
+    private val visualChapterProgression = mutableFloatStateOf(0f)
     private var selectionCoordinator: BookSelectionActionCoordinator? = null
     private val selectionActionModeAvoidance = BookSelectionActionModeAvoidance()
     private var settingBindings: BookDocumentReaderSettingBindings? = null
@@ -116,6 +118,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             },
             currentState = { readerState },
             updateState = { readerState = it },
+            updateVisualChapterProgression = { visualChapterProgression.floatValue = it },
             onSessionActivated = { session ->
                 selectionCoordinator?.updateCapabilities(session.readerCapabilities)
                 childWebViewResolver.resolve(session)
@@ -148,6 +151,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                 BookDocumentReaderSurfaceState.Ready -> readerState?.let { state ->
                     BookDocumentReaderScreen(
                         state = state,
+                        visualChapterProgression = visualChapterProgression,
                         settingBindings = requireNotNull(settingBindings),
                         selectionCoordinator = selectionCoordinator,
                         onLocation = chapterCoordinator::onLocation,
@@ -319,13 +323,13 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             ?: return showError(getString(R.string.book_document_incompatible))
         ensureSelectionCoordinator(session)
         val progression = section.document.document.progressionAt(section.initialPosition)
+        visualChapterProgression.floatValue = progression
         readerState = BookDocumentReaderState(
             entryTitle = session.entry.displayTitle,
             readingOrder = readingOrder,
             currentChapterId = session.chapter.id,
             window = window,
             loadedSections = mapOf(session.chapter.id to section),
-            visualChapterProgression = progression,
         )
         childWebViewResolver.resolve(session)
         surfaceState = BookDocumentReaderSurfaceState.Ready

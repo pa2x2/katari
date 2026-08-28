@@ -36,6 +36,7 @@ internal class BookDocumentChapterCoordinator(
     private val isNextChapterPreparationEnabled: () -> Boolean,
     private val currentState: () -> BookDocumentReaderState?,
     private val updateState: (BookDocumentReaderState) -> Unit,
+    private val updateVisualChapterProgression: (Float) -> Unit,
     private val onSessionActivated: (OpenedBookReaderSession) -> Unit,
 ) : AutoCloseable {
     private val chapterLoadJobs = mutableMapOf<Long, Job>()
@@ -154,16 +155,15 @@ internal class BookDocumentChapterCoordinator(
         val locator = location.section.document.document.locatorAt(location.position).copy(totalProgression = total)
         retainedSessions.updateLocation(chapterId, locator)
         if (!chapterActivated) {
+            updateVisualChapterProgression(location.visualProgression)
             currentState()?.let { current ->
-                updateState(
-                    current.copy(
-                        visualChapterProgression = location.visualProgression,
-                        navigationRequest = current.navigationRequest.afterAcceptedLocation(
-                            observedRequest = navigationRequest,
-                            chapterId = chapterId,
-                        ),
-                    ),
+                val acceptedNavigationRequest = current.navigationRequest.afterAcceptedLocation(
+                    observedRequest = navigationRequest,
+                    chapterId = chapterId,
                 )
+                if (acceptedNavigationRequest != current.navigationRequest) {
+                    updateState(current.copy(navigationRequest = acceptedNavigationRequest))
+                }
             }
         }
         persistLocationJob?.cancel()
@@ -256,9 +256,9 @@ internal class BookDocumentChapterCoordinator(
             section.document.document.locatorAt(position).copy(totalProgression = total),
         )
         navigationRequestId += 1
+        updateVisualChapterProgression(progression)
         updateState(
             state.copy(
-                visualChapterProgression = progression,
                 navigationRequest = BookDocumentNavigationRequest(
                     id = navigationRequestId,
                     chapterId = section.owner.id,
@@ -301,7 +301,6 @@ internal class BookDocumentChapterCoordinator(
                 window = window,
                 loadedSections = current.loadedSections.filterKeys(retainedIds::contains),
                 loadStates = current.loadStates.filterKeys(retainedIds::contains),
-                visualChapterProgression = observedLocation?.visualProgression ?: progression,
                 childWebView = null,
                 navigationRequest = current.navigationRequest.afterAcceptedLocation(
                     observedRequest = observedNavigationRequest,
@@ -309,6 +308,7 @@ internal class BookDocumentChapterCoordinator(
                 ),
             ),
         )
+        updateVisualChapterProgression(observedLocation?.visualProgression ?: progression)
         onSessionActivated(session)
         readingStartedAt = SystemClock.elapsedRealtime()
         return true
