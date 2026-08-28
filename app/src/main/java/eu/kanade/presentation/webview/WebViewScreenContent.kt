@@ -3,8 +3,10 @@ package eu.kanade.presentation.webview
 import android.content.pm.ApplicationInfo
 import android.graphics.Bitmap
 import android.os.Message
+import android.view.ViewGroup
 import android.webkit.JsPromptResult
 import android.webkit.JsResult
+import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import androidx.activity.compose.BackHandler
@@ -53,6 +55,8 @@ import eu.kanade.tachiyomi.util.system.getHtml
 import eu.kanade.tachiyomi.util.system.setDefaultSettings
 import eu.kanade.tachiyomi.util.system.setUserAgent
 import kotlinx.coroutines.launch
+import logcat.LogPriority
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
@@ -100,9 +104,16 @@ fun WebViewScreenContent(
     var currentUrl by remember { mutableStateOf(url) }
     var showCloudflareHelp by remember { mutableStateOf(false) }
     var isActive by remember { mutableStateOf(true) }
+    var renderProcessGone by remember { mutableStateOf(false) }
 
     DisposableEffect(Unit) {
-        onDispose { isActive = false }
+        onDispose {
+            isActive = false
+            windowStack.items.forEach { window ->
+                window.webView?.destroy()
+                window.webView = null
+            }
+        }
     }
 
     val webClient = remember {
@@ -121,6 +132,20 @@ fun WebViewScreenContent(
                     val html = view.getHtml()
                     showCloudflareHelp = "window._cf_chl_opt" in html || "Ray ID is" in html
                 }
+            }
+
+            override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
+                logcat(if (detail.didCrash()) LogPriority.ERROR else LogPriority.WARN) {
+                    "WebView renderer process exited; closing the affected WebView screen"
+                }
+                windowStack.items.find { it.webView === view }?.webView = null
+                (view.parent as? ViewGroup)?.removeView(view)
+                view.destroy()
+                if (!renderProcessGone) {
+                    renderProcessGone = true
+                    onNavigateUp()
+                }
+                return true
             }
 
             override fun doUpdateVisitedHistory(
