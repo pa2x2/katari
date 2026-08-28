@@ -42,7 +42,9 @@
     <application
         android:name=".App"
         android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:enableOnBackInvokedCallback="true"
+        android:fullBackupContent="@xml/backup_rules"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -122,8 +124,9 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <data android:scheme="app.katari" />
-                <data android:pathPrefix="/entry/" />
+                <data
+                    android:scheme="app.katari"
+                    android:sspPrefix="/entry/" />
             </intent-filter>
 
             <!--suppress AndroidDomInspection -->
