@@ -201,22 +201,42 @@ internal fun BookDocumentEndlessViewer(
     }
 
     LaunchedEffect(listState, items) {
+        var observedLocation: BookDocumentViewerLocation<EntryChapter>? = null
+        var observedTransition: EntryChapter? = null
         snapshotFlow {
             val info = listState.layoutInfo
-            bookDocumentViewerLocation(
-                currentItems,
-                info.visibleBookDocumentLayouts(),
-                info.viewportStartOffset,
-                info.viewportEndOffset,
+            val visibleItems = info.visibleBookDocumentLayouts()
+            BookDocumentReadingLayoutObservation(
+                location = bookDocumentViewerLocation(
+                    currentItems,
+                    visibleItems,
+                    info.viewportStartOffset,
+                    info.viewportEndOffset,
+                ),
+                transition = bookDocumentViewerTransitionAtAnchor(
+                    currentItems,
+                    visibleItems,
+                    info.viewportStartOffset,
+                    info.viewportEndOffset,
+                    listState.canScrollBackward,
+                    listState.canScrollForward,
+                )?.to,
             )
-        }.filterNotNull().distinctUntilChanged().collect { location ->
-            if (
-                textSizeReflowAnchor == null &&
-                currentTextSizePercent == observedTextSizePercent
-            ) {
-                lastObservedLocation = location
+        }.collect { observation ->
+            observation.location?.takeIf { it != observedLocation }?.let { location ->
+                observedLocation = location
+                if (
+                    textSizeReflowAnchor == null &&
+                    currentTextSizePercent == observedTextSizePercent
+                ) {
+                    lastObservedLocation = location
+                }
+                onLocation(location)
             }
-            onLocation(location)
+            observation.transition?.takeIf { it != observedTransition }?.let { transition ->
+                observedTransition = transition
+                currentOnTransitionReached(transition)
+            }
         }
     }
     LaunchedEffect(listState) {
@@ -231,19 +251,6 @@ internal fun BookDocumentEndlessViewer(
         listState.interactionSource.interactions
             .filterIsInstance<DragInteraction.Start>()
             .collect { currentOnUserScrollStarted() }
-    }
-    LaunchedEffect(listState, items) {
-        snapshotFlow {
-            val info = listState.layoutInfo
-            bookDocumentViewerTransitionAtAnchor(
-                currentItems,
-                info.visibleBookDocumentLayouts(),
-                info.viewportStartOffset,
-                info.viewportEndOffset,
-                listState.canScrollBackward,
-                listState.canScrollForward,
-            )?.to
-        }.filterNotNull().distinctUntilChanged().collect(onTransitionReached)
     }
     LaunchedEffect(listState, items, currentChapterId) {
         snapshotFlow {
@@ -320,4 +327,9 @@ private data class TerminalLayoutObservation(
     val terminalVisible: Boolean,
     val canScrollForward: Boolean,
     val scrollInProgress: Boolean,
+)
+
+private data class BookDocumentReadingLayoutObservation(
+    val location: BookDocumentViewerLocation<EntryChapter>?,
+    val transition: EntryChapter?,
 )
