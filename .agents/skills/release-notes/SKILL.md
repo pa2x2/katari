@@ -78,9 +78,7 @@ Katari's changelog focused on behavior that differs from Mihon.
 ## Update the changelog
 
 1. Write a polished, Keep a Changelog-compatible section named `[X.Y.Z]` with the current
-   date. For major and minor release versions follow the heading with a `🌟 Highlights`
-   subsection containing one concise sentence that summarizes the release's most meaningful
-   verified user benefit. Write the sentence as normal paragraph text, not a blockquote, list item,
+   date. Write the sentence as normal paragraph text, not a blockquote, list item,
    or GitHub alert. Make the highlight specific to the release; Use only the applicable decorated category
    headings from this mapping:
 
