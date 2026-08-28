@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.ui.setting
 
-import android.app.Activity
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -13,7 +13,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -46,7 +45,7 @@ class SettingsScreen(
     @Composable
     override fun Content() {
         val parentNavigator = LocalNavigator.currentOrThrow
-        val activity = LocalContext.current as? Activity
+        val activity = LocalActivity.current
         val close: () -> Unit = {
             if (!parentNavigator.pop()) {
                 activity?.finish()
