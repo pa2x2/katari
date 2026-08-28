@@ -5,6 +5,7 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.core.content.pm.PackageInfoCompat
 import dalvik.system.DelegateLastClassLoader
 import eu.kanade.domain.extension.interactor.TrustExtension
@@ -457,7 +458,10 @@ internal object ExtensionLoader {
         context: Context,
         libVersionName: String,
     ): ClassLoader {
-        if (shouldUseDelegateLastClassLoader(libVersionName, Build.VERSION.SDK_INT)) {
+        if (
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1 &&
+            shouldUseDelegateLastClassLoader(libVersionName, Build.VERSION.SDK_INT)
+        ) {
             try {
                 // Installed APKs are optimized for PathClassLoader. Loading a private cache copy
                 // prevents ART from reusing that incompatible context with DelegateLastClassLoader.
@@ -466,7 +470,7 @@ internal object ExtensionLoader {
                     cacheDir = File(context.codeCacheDir, "extension_apks"),
                     packageName = appInfo.packageName,
                 )
-                return DelegateLastClassLoader(cachedExtension.absolutePath, null, context.classLoader)
+                return createDelegateLastClassLoader(cachedExtension, context.classLoader)
             } catch (e: Exception) {
                 logcat(LogPriority.WARN, e) {
                     "Failed to prepare the optimized extension class loader for ${appInfo.packageName}"
@@ -475,6 +479,11 @@ internal object ExtensionLoader {
         }
 
         return ChildFirstPathClassLoader(appInfo.sourceDir, null, context.classLoader)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O_MR1)
+    private fun createDelegateLastClassLoader(extensionApk: File, parent: ClassLoader): ClassLoader {
+        return DelegateLastClassLoader(extensionApk.absolutePath, null, parent)
     }
 
     internal fun cacheExtensionApk(source: File, cacheDir: File, packageName: String): File {
