@@ -13,6 +13,7 @@ import tachiyomi.domain.statistics.model.StatisticsEarlierActivityDetails
 import tachiyomi.domain.statistics.model.StatisticsSessionSummary
 import tachiyomi.domain.statistics.model.StatisticsTopEntry
 import tachiyomi.domain.statistics.repository.StatisticsRepository
+import tachiyomi.domain.statistics.service.StatisticsActivityPolicy
 
 class StatisticsRepositoryImpl(
     private val handler: DatabaseHandler,
@@ -125,7 +126,13 @@ class StatisticsRepositoryImpl(
                 durationMillis = duration ?: 0L,
             )
         }
-        statisticsViewQueries.activityTotalsInWindow(profileId, startLocalDate, endLocalDate, mapper)
+        statisticsViewQueries.activityTotalsInWindow(
+            profileId = profileId,
+            minimumSessionDurationMillis = StatisticsActivityPolicy.MINIMUM_SESSION_DURATION_MILLIS,
+            startLocalDate = startLocalDate,
+            endLocalDate = endLocalDate,
+            mapper = mapper,
+        )
     }
 
     private fun subscribeCompletions(
@@ -156,7 +163,13 @@ class StatisticsRepositoryImpl(
                 durationMillis = duration ?: 0L,
             )
         }
-        statisticsViewQueries.topActivityEntriesInWindow(profileId, startLocalDate, endLocalDate, mapper)
+        statisticsViewQueries.topActivityEntriesInWindow(
+            profileId = profileId,
+            minimumSessionDurationMillis = StatisticsActivityPolicy.MINIMUM_SESSION_DURATION_MILLIS,
+            startLocalDate = startLocalDate,
+            endLocalDate = endLocalDate,
+            mapper = mapper,
+        )
     }
 
     private fun subscribeSessionSummaries(
@@ -177,7 +190,13 @@ class StatisticsRepositoryImpl(
                 longestDurationMillis = longestDuration ?: 0L,
             )
         }
-        statisticsViewQueries.sessionSummariesInWindow(profileId, startLocalDate, endLocalDate, mapper)
+        statisticsViewQueries.sessionSummariesInWindow(
+            profileId = profileId,
+            minimumSessionDurationMillis = StatisticsActivityPolicy.MINIMUM_SESSION_DURATION_MILLIS,
+            startLocalDate = startLocalDate,
+            endLocalDate = endLocalDate,
+            mapper = mapper,
+        )
     }
 }
 

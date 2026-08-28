@@ -228,6 +228,17 @@ LEFT JOIN (
     GROUP BY session_id
 ) CMP ON CMP.session_id = SES.session_id
 WHERE ENT.profile_id = :profileId
+AND (
+    SES.duration >= :minimumSessionDurationMillis
+    OR EXISTS (
+        SELECT 1
+        FROM activity_completion_events QUALIFYING_CMP
+        WHERE QUALIFYING_CMP.session_id = SES.session_id
+        AND QUALIFYING_CMP.local_date >= :startLocalDate
+        AND QUALIFYING_CMP.local_date <= :endLocalDate
+        AND QUALIFYING_CMP.cause = 'consumption'
+    )
+)
 AND SEG.local_date >= :startLocalDate
 AND SEG.local_date <= :endLocalDate
 GROUP BY SES.session_id
@@ -262,6 +273,17 @@ LEFT JOIN (
 ) CMP ON CMP.session_id = SES.session_id
 WHERE ENT.profile_id = :profileId
 AND ENT.type = :type
+AND (
+    SES.duration >= :minimumSessionDurationMillis
+    OR EXISTS (
+        SELECT 1
+        FROM activity_completion_events QUALIFYING_CMP
+        WHERE QUALIFYING_CMP.session_id = SES.session_id
+        AND QUALIFYING_CMP.local_date >= :startLocalDate
+        AND QUALIFYING_CMP.local_date <= :endLocalDate
+        AND QUALIFYING_CMP.cause = 'consumption'
+    )
+)
 AND SEG.local_date >= :startLocalDate
 AND SEG.local_date <= :endLocalDate
 GROUP BY SES.session_id

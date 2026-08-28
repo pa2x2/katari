@@ -22,6 +22,11 @@ SELECT
     CAST(sum(duration) AS INTEGER) AS duration
 FROM statisticsView
 WHERE profile_id = :profileId
+AND session_id IN (
+    SELECT session_id
+    FROM activity_sessions
+    WHERE duration >= :minimumSessionDurationMillis
+)
 AND (:startLocalDate IS NULL OR local_date >= :startLocalDate)
 AND (:endLocalDate IS NULL OR local_date <= :endLocalDate)
 GROUP BY type, local_date
@@ -69,6 +74,11 @@ WITH session_totals AS (
     SELECT session_id, type, CAST(sum(duration) AS INTEGER) AS duration
     FROM statisticsView
     WHERE profile_id = :profileId
+    AND session_id IN (
+        SELECT session_id
+        FROM activity_sessions
+        WHERE duration >= :minimumSessionDurationMillis
+    )
     AND (:startLocalDate IS NULL OR local_date >= :startLocalDate)
     AND (:endLocalDate IS NULL OR local_date <= :endLocalDate)
     GROUP BY session_id, type
@@ -105,6 +115,11 @@ WITH entry_totals AS (
         CAST(sum(duration) AS INTEGER) AS duration
     FROM statisticsView
     WHERE profile_id = :profileId
+    AND session_id IN (
+        SELECT session_id
+        FROM activity_sessions
+        WHERE duration >= :minimumSessionDurationMillis
+    )
     AND (:startLocalDate IS NULL OR local_date >= :startLocalDate)
     AND (:endLocalDate IS NULL OR local_date <= :endLocalDate)
     GROUP BY entry_id

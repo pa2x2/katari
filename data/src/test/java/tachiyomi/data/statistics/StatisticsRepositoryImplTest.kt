@@ -23,48 +23,36 @@ class StatisticsRepositoryImplTest {
     @Test
     fun `activity read model groups media contributions and isolates profiles`() = runTest {
         withDatabase { database, repository ->
-            database.activityQueries.insertActivitySession("manga-session", 1L, 1_000L, 2_000L)
-            database.activityQueries.upsertActivitySegment(
-                "manga-session",
-                null,
-                "2026-08-23",
-                "UTC",
-                1_000L,
-                2_000L,
-                1_000L,
+            database.recordActivitySession(
+                sessionId = "manga-session",
+                entryId = 1L,
+                startedAt = 1_000L,
+                durationMillis = 12_000L,
             )
-            database.activityQueries.insertActivitySession("anime-session", 2L, 1_000L, 4_000L)
-            database.activityQueries.upsertActivitySegment(
-                "anime-session",
-                null,
-                "2026-08-23",
-                "UTC",
-                1_000L,
-                4_000L,
-                3_000L,
+            database.recordActivitySession(
+                sessionId = "anime-session",
+                entryId = 2L,
+                startedAt = 1_000L,
+                durationMillis = 30_000L,
             )
-            database.activityQueries.insertActivitySession("other-profile", 3L, 1_000L, 9_000L)
-            database.activityQueries.upsertActivitySegment(
-                "other-profile",
-                null,
-                "2026-08-23",
-                "UTC",
-                1_000L,
-                9_000L,
-                8_000L,
+            database.recordActivitySession(
+                sessionId = "other-profile",
+                entryId = 3L,
+                startedAt = 1_000L,
+                durationMillis = 80_000L,
             )
 
             val snapshot = repository.subscribeActivity(1L, "2026-08-23").first()
 
             snapshot.activity.associate { it.type to it.durationMillis } shouldBe mapOf(
-                EntryType.ANIME to 3_000L,
-                EntryType.MANGA to 1_000L,
+                EntryType.ANIME to 30_000L,
+                EntryType.MANGA to 12_000L,
             )
             snapshot.topEntries.map { it.title } shouldBe listOf("Anime", "Manga")
             snapshot.sessions.associateBy { it.type }.let { sessions ->
                 sessions.getValue(EntryType.MANGA).sessionCount shouldBe 1L
-                sessions.getValue(EntryType.MANGA).averageDurationMillis shouldBe 1_000L
-                sessions.getValue(EntryType.ANIME).longestDurationMillis shouldBe 3_000L
+                sessions.getValue(EntryType.MANGA).averageDurationMillis shouldBe 12_000L
+                sessions.getValue(EntryType.ANIME).longestDurationMillis shouldBe 30_000L
             }
             snapshot.earlierActivity.associate { it.type to it.durationMillis } shouldBe mapOf(
                 EntryType.MANGA to 5_000L,
@@ -81,6 +69,69 @@ class StatisticsRepositoryImplTest {
             earlierDetails.topEntries.map { it.title to it.durationMillis } shouldBe listOf(
                 "Manga" to 5_000L,
             )
+        }
+    }
+
+    @Test
+    fun `statistics ignores short sessions without trimming qualifying sessions or completions`() = runTest {
+        withDatabase { database, repository ->
+            database.activityQueries.insertActivitySession("qualifying-session", 1L, 1_000L, 12_000L)
+            database.activityQueries.upsertActivitySegment(
+                "qualifying-session",
+                null,
+                "2026-08-22",
+                "UTC",
+                1_000L,
+                7_000L,
+                6_000L,
+            )
+            database.activityQueries.upsertActivitySegment(
+                "qualifying-session",
+                null,
+                "2026-08-23",
+                "UTC",
+                7_000L,
+                12_000L,
+                5_000L,
+            )
+            database.activityQueries.updateActivitySession(1_000L, 12_000L, 11_000L, 1L, "qualifying-session")
+            database.recordActivitySession(
+                sessionId = "short-session",
+                entryId = 2L,
+                startedAt = 20_000L,
+                durationMillis = 9_999L,
+            )
+            database.activityQueries.insertCompletionEvent(
+                "short-session-completion",
+                2L,
+                12L,
+                "short-session",
+                29_999L,
+                "2026-08-23",
+                "UTC",
+                "consumption",
+            )
+
+            val snapshot = repository.subscribeActivity(1L, "2026-08-22").first()
+
+            snapshot.activity.map { it.localDate to it.durationMillis } shouldBe listOf(
+                "2026-08-22" to 6_000L,
+                "2026-08-23" to 5_000L,
+            )
+            snapshot.sessions.single().let { session ->
+                session.type shouldBe EntryType.MANGA
+                session.sessionCount shouldBe 1L
+                session.averageDurationMillis shouldBe 11_000L
+                session.longestDurationMillis shouldBe 11_000L
+            }
+            snapshot.topEntries.single().let { entry ->
+                entry.title shouldBe "Manga"
+                entry.durationMillis shouldBe 11_000L
+            }
+            snapshot.completions.single().let { completion ->
+                completion.type shouldBe EntryType.ANIME
+                completion.count shouldBe 1L
+            }
         }
     }
 
@@ -121,8 +172,8 @@ class StatisticsRepositoryImplTest {
                 """
                     INSERT INTO history(entry_id, chapter_id, last_read, time_read)
                     VALUES
-                        (1, 11, 1000, 6000),
-                        (2, 12, 1000, 3000)
+                        (1, 11, 1000, 17000),
+                        (2, 12, 1000, 30000)
                 """.trimIndent(),
                 0,
             )
@@ -142,4 +193,24 @@ class StatisticsRepositoryImplTest {
             driver.close()
         }
     }
+}
+
+private suspend fun Database.recordActivitySession(
+    sessionId: String,
+    entryId: Long,
+    startedAt: Long,
+    durationMillis: Long,
+) {
+    val endedAt = startedAt + durationMillis
+    activityQueries.insertActivitySession(sessionId, entryId, startedAt, endedAt)
+    activityQueries.upsertActivitySegment(
+        sessionId,
+        null,
+        "2026-08-23",
+        "UTC",
+        startedAt,
+        endedAt,
+        durationMillis,
+    )
+    activityQueries.updateActivitySession(startedAt, endedAt, durationMillis, 0L, sessionId)
 }

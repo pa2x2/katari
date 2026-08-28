@@ -29,9 +29,10 @@ class HistoryActivityRepositoryImplTest {
                 "2026-08-22",
                 "UTC",
                 1_000L,
-                2_000L,
-                1_000L,
+                11_000L,
+                10_000L,
             )
+            database.activityQueries.updateActivitySession(1_000L, 11_000L, 10_000L, 0L, "older")
             database.activityQueries.insertActivitySession("newer", 1L, 3_000L, 5_000L)
             database.activityQueries.upsertActivitySegment(
                 "newer",
@@ -39,9 +40,10 @@ class HistoryActivityRepositoryImplTest {
                 "2026-08-23",
                 "UTC",
                 3_000L,
-                5_000L,
-                2_000L,
+                23_000L,
+                20_000L,
             )
+            database.activityQueries.updateActivitySession(3_000L, 23_000L, 20_000L, 0L, "newer")
             database.activityQueries.insertCompletionEvent(
                 "completion",
                 1L,
@@ -59,9 +61,10 @@ class HistoryActivityRepositoryImplTest {
                 "2026-08-23",
                 "UTC",
                 3_000L,
-                6_000L,
-                3_000L,
+                33_000L,
+                30_000L,
             )
+            database.activityQueries.updateActivitySession(3_000L, 33_000L, 30_000L, 0L, "anime")
 
             val firstPage = repository.getActivityPage(
                 profileId = 1L,
@@ -88,6 +91,36 @@ class HistoryActivityRepositoryImplTest {
 
             secondPage.hasMore shouldBe false
             secondPage.sessions.single().sessionId shouldBe "older"
+        }
+    }
+
+    @Test
+    fun `details omit short sessions unless they contain a completion`() = runTest {
+        withRepository { database, repository ->
+            database.recordSession("short", durationMillis = 9_999L)
+            database.recordSession("qualifying", durationMillis = 10_000L)
+            database.recordSession("completed-short", durationMillis = 1_000L)
+            database.activityQueries.insertCompletionEvent(
+                "completed-short-event",
+                1L,
+                11L,
+                "completed-short",
+                2_000L,
+                "2026-08-23",
+                "UTC",
+                "consumption",
+            )
+
+            val page = repository.getActivityPage(
+                profileId = 1L,
+                startLocalDate = "2026-08-23",
+                endLocalDate = "2026-08-23",
+                type = null,
+                offset = 0L,
+                limit = 20L,
+            )
+
+            page.sessions.map { it.sessionId } shouldBe listOf("qualifying", "completed-short")
         }
     }
 
@@ -133,4 +166,20 @@ class HistoryActivityRepositoryImplTest {
             driver.close()
         }
     }
+}
+
+private suspend fun Database.recordSession(sessionId: String, durationMillis: Long) {
+    val startedAt = 1_000L
+    val endedAt = startedAt + durationMillis
+    activityQueries.insertActivitySession(sessionId, 1L, startedAt, endedAt)
+    activityQueries.upsertActivitySegment(
+        sessionId,
+        11L,
+        "2026-08-23",
+        "UTC",
+        startedAt,
+        endedAt,
+        durationMillis,
+    )
+    activityQueries.updateActivitySession(startedAt, endedAt, durationMillis, 0L, sessionId)
 }
