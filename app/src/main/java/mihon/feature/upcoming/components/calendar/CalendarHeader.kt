@@ -20,9 +20,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.YearMonth
@@ -32,7 +33,6 @@ import kotlinx.datetime.yearMonth
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 import kotlin.time.Clock
 
 @Composable
@@ -94,9 +94,9 @@ private fun AnimatedContentTransitionScope<YearMonth>.getAnimation(): ContentTra
 }
 
 @Composable
-@ReadOnlyComposable
 private fun getTitleText(monthYear: YearMonth): String {
-    val formatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+    val locale = LocalConfiguration.current.locales[0]
+    val formatter = remember(locale) { DateTimeFormatter.ofPattern("MMMM yyyy", locale) }
     return formatter.format(monthYear.toJavaYearMonth())
 }
 

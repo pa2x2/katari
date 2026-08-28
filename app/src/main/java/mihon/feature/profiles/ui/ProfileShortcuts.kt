@@ -5,7 +5,7 @@ import androidx.fragment.app.FragmentActivity
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
-import eu.kanade.tachiyomi.util.system.AuthenticatorUtil.authenticate
+import eu.kanade.tachiyomi.ui.security.BiometricAuthentication.authenticate
 import eu.kanade.tachiyomi.util.system.toast
 import mihon.feature.profiles.core.Profile
 import mihon.feature.profiles.core.ProfileManager

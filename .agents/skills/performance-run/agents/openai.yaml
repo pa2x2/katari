@@ -1,0 +1,4 @@
+interface:
+  display_name: "Performance Run"
+  short_description: "Measure feature performance with verified runs"
+  default_prompt: "Use $performance-run to measure and diagnose the performance of a named feature with repeated, validated runs."

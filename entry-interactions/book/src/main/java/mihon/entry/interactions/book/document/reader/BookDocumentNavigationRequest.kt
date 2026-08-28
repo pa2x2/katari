@@ -25,3 +25,6 @@ internal fun BookDocumentNavigationRequest?.afterAcceptedLocation(
             currentRequest.chapterId == chapterId
     }
 }
+
+/** A reader gesture supersedes an explicit navigation that has not finished restoring yet. */
+internal fun BookDocumentNavigationRequest?.afterUserScrollStarted(): BookDocumentNavigationRequest? = null

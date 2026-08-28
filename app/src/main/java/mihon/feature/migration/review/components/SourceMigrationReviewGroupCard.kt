@@ -44,10 +44,10 @@ internal fun SourceMigrationReviewGroupCard(
     group: SourceMigrationReviewGroup,
     onIncludedChange: (sourceEntryId: Long, included: Boolean) -> Unit,
     onToggleGroup: (groupId: Long) -> Unit,
+    modifier: Modifier = Modifier,
     onTargetClick: ((sourceEntryId: Long) -> Unit)? = null,
     onSourceDetailsClick: (entryId: Long) -> Unit,
     onTargetDetailsClick: (entryId: Long) -> Unit,
-    modifier: Modifier = Modifier,
 ) {
     val replacements = group.mappings.filter { mapping -> mapping.item.targetTitle != null }
     val unresolved = group.mappings.filter { mapping -> mapping.item.targetTitle == null }

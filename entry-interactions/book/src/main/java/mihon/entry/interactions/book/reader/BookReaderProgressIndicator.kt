@@ -2,6 +2,7 @@ package mihon.entry.interactions.book.reader
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.FloatState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -23,7 +24,7 @@ internal sealed interface BookReaderProgress {
     ) : BookReaderProgress
 
     data class Chapter(
-        val value: Float,
+        val value: FloatState,
         val style: BookDocumentReaderProgressStyle,
         val activeColor: Color,
         val trackColor: Color,
@@ -59,7 +60,7 @@ internal fun BookReaderFooterProgressIndicator(
         is BookReaderProgress.Chapter -> {
             if (progress.style == BookDocumentReaderProgressStyle.PERCENTAGE) {
                 ReaderProgressIndicator(
-                    text = "${(progress.value.coerceIn(0f, 1f) * 100).roundToInt()}%",
+                    text = "${(progress.value.floatValue.coerceIn(0f, 1f) * 100).roundToInt()}%",
                     modifier = modifier,
                 )
             }
@@ -76,7 +77,7 @@ internal fun BookReaderAmbientProgressIndicator(
     if (progress !is BookReaderProgress.Chapter || progress.style == BookDocumentReaderProgressStyle.PERCENTAGE) {
         return
     }
-    val value = progress.value.coerceIn(0f, 1f)
+    val value = progress.value.floatValue.coerceIn(0f, 1f)
     Canvas(
         modifier = modifier.semantics {
             progressBarRangeInfo = ProgressBarRangeInfo(value, 0f..1f)

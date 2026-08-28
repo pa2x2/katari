@@ -1,23 +1,24 @@
 [versions]
-aboutLibraries = "15.0.4"
+aboutLibraries = "15.2.0"
 android-desugar = "2.1.5"
-android-gradle = "9.3.1"
+android-gradle = "9.3.2"
 androidx-activity-compose = "1.13.0"
 androidx-annotation = "1.10.0"
-androidx-appCompat = "1.7.1"
-androidx-baselineProfile = "1.5.0-beta01"
+androidx-appCompat = "1.8.0"
+androidx-baselineProfile = "1.5.0-rc02"
 androidx-benchmark = "1.4.1"
-androidx-biometric = "1.2.0-alpha05"
-androidx-compose-bom = "2026.07.01"
+androidx-biometric = "1.4.0-alpha07"
+androidx-compose-bom = "2026.08.01"
+androidx-concurrent = "1.3.0"
 androidx-constraintLayout = "2.2.2"
 androidx-core = "1.19.0"
 androidx-coreSplashScreen = "1.2.0"
-androidx-fragment = "1.8.9"
-androidx-glance = "1.1.1"
+androidx-fragment = "1.9.0"
+androidx-glance = "1.2.0"
 androidx-interpolator = "1.0.0"
 androidx-lifecycle = "2.11.0"
-androidx-media3 = "1.10.0"
-androidx-paging = "3.5.0"
+androidx-media3 = "1.11.0"
+androidx-paging = "3.5.1"
 androidx-preference = "1.2.1"
 androidx-profileInstaller = "1.4.1"
 androidx-recyclerView = "1.4.0"
@@ -26,28 +27,28 @@ androidx-test-espresso = "3.7.0"
 androidx-test-junit = "1.3.0"
 androidx-test-uiautomator = "2.4.0"
 androidx-viewPager = "1.1.0"
-androidx-webkit = "1.16.0"
+androidx-webkit = "1.17.0"
 androidx-work = "2.11.2"
 archive = "1.1.6"
-coil = "3.5.0"
+coil = "3.6.0"
 composeGrid = "1.2.2"
 composeMaterialMotion = "2.0.1"
-composeRichEditor = "1.0.0-rc13"
+composeRichEditor = "1.0.0"
 composeWebview = "0.33.6"
-conscrypt = "2.6.1"
+conscrypt = "2.6.3"
 directionalViewPager = "1.0.0"
 diskLruCache = "2.0.2"
-firebase-bom = "34.17.0"
-firebase-crashlytics = "3.0.7"
+firebase-bom = "34.18.0"
+firebase-crashlytics = "3.0.8"
 flexibleAdapter = "c8013533"
 google-services = "4.5.0"
 image-decoder = "ab6db1e"
 injekt = "91edab2317"
 japicmp = "0.26.1"
-jsoup = "1.23.1"
-junit = "6.1.2"
+jsoup = "1.23.2"
+junit = "6.1.3"
 junit4 = "4.13.2"
-kotest-assertions = "6.2.3"
+kotest-assertions = "6.2.4"
 kotlin-gradle = "2.4.10"
 kotlinx-coroutines = "1.11.0"
 kotlinx-datetime = "0.8.0"
@@ -55,12 +56,12 @@ kotlinx-serialization = "1.11.0"
 ktlint = "1.8.0"
 leakCanary = "2.14"
 logcat = "0.4"
-markdown = "0.43.0"
-material = "1.12.0"
-materialKolor = "5.0.0"
+markdown = "0.45.0"
+material = "1.14.0"
+materialKolor = "5.0.1"
 mockk = "1.14.11"
 moko-resources = "0.26.4"
-okhttp = "5.4.0"
+okhttp = "5.5.0"
 okio = "3.18.1"
 photoView = "2.3.0"
 quickJs = "547f5b1597"
@@ -68,7 +69,7 @@ reorderable = "3.1.0"
 robolectric = "4.16.1"
 rxJava = "1.3.8"
 shizuku = "13.1.5"
-spotless = "8.9.0"
+spotless = "8.10.1"
 sqldelight = "2.3.2"
 sqldelight-androidx-driver = "0637a964a1"
 stringSimilarity = "0.1.0"
@@ -77,7 +78,7 @@ swipe = "1.3.0"
 tapmoc = "0.4.2"
 unifile = "08f224c8f9"
 voyager = "2.2.21-1.10.3"
-xmlutil = "1.0.1"
+xmlutil = "1.0.2.1"
 
 [libraries]
 aboutLibraries-compose = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutLibraries" }
@@ -88,7 +89,7 @@ androidx-activity-compose = { module = "androidx.activity:activity-compose", ver
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidx-annotation" }
 androidx-appCompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appCompat" }
 androidx-benchmark-macroJunit4 = { module = "androidx.benchmark:benchmark-macro-junit4", version.ref = "androidx-benchmark" }
-androidx-biometric = { module = "androidx.biometric:biometric-ktx", version.ref = "androidx-biometric" }
+androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "androidx-biometric" }
 androidx-compose-animation = { module = "androidx.compose.animation:animation" }
 androidx-compose-animationGraphics = { module = "androidx.compose.animation:animation-graphics" }
 androidx-compose-bom = { module = "androidx.compose:compose-bom-alpha", version.ref = "androidx-compose-bom" }
@@ -101,8 +102,8 @@ androidx-compose-uiTooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-compose-uiToolingPreview = { module = "androidx.compose.ui:ui-tooling-preview" }
 androidx-compose-uiTestJunit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 androidx-compose-uiTestManifest = { module = "androidx.compose.ui:ui-test-manifest" }
-androidx-concurrent-futures = { module = "androidx.concurrent:concurrent-futures", version = "1.2.0" }
-androidx-concurrent-futures-ktx = { module = "androidx.concurrent:concurrent-futures-ktx", version = "1.2.0" }
+androidx-concurrent-futures = { module = "androidx.concurrent:concurrent-futures", version.ref = "androidx-concurrent" }
+androidx-concurrent-futures-ktx = { module = "androidx.concurrent:concurrent-futures-ktx", version.ref = "androidx-concurrent" }
 androidx-compose-uiUtil = { module = "androidx.compose.ui:ui-util" }
 androidx-constraintLayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "androidx-constraintLayout" }
 androidx-core = { module = "androidx.core:core", version.ref = "androidx-core" }

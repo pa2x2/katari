@@ -63,6 +63,44 @@ internal class BookDocumentViewerRestorationTest : BookDocumentViewerFixture() {
     }
 
     @Test
+    fun `chapter activation resolves the visible block in the shifted window`() {
+        val first = section("first", listOf("One", "Two"))
+        val second = section("second", listOf("Three", "Four"))
+        val third = section("third", listOf("Five", "Six"))
+        val loaded = listOf(first, second, third).associateBy { it.owner }
+        val beforeCrossing = buildBookDocumentViewerItems(
+            window = EntryChildWindow("second", "first", "third"),
+            loaded = loaded,
+            keyOf = { it },
+        )
+        val afterCrossing = buildBookDocumentViewerItems(
+            window = EntryChildWindow("third", "second", null),
+            loaded = loaded,
+            keyOf = { it },
+        )
+        val visibleBlock = beforeCrossing
+            .filterIsInstance<BookDocumentViewerItem.Block<String>>()
+            .first { it.section === third }
+
+        val anchor = bookDocumentViewerDatasetAnchor(
+            items = afterCrossing,
+            visibleItems = listOf(
+                BookDocumentVisibleItemLayout(
+                    index = beforeCrossing.indexOfFirst { it.key == visibleBlock.key },
+                    key = visibleBlock.key,
+                    offset = -120,
+                    size = 700,
+                ),
+            ),
+            viewportStartOffset = 0,
+        )
+
+        assertNotNull(anchor)
+        assertEquals(afterCrossing.indexOfFirst { it.key == visibleBlock.key }, anchor.index)
+        assertEquals(120, anchor.scrollOffset)
+    }
+
+    @Test
     fun `explicit chapter navigation discards a retained position and targets the beginning`() {
         val restored = section("selected", listOf("First", "Second", "Third")).let { section ->
             section.copy(initialPosition = section.document.document.positionAtProgression(0.9f))

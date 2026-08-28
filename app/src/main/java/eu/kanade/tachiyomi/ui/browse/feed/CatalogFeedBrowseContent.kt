@@ -36,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -287,12 +288,15 @@ fun CatalogFeedBrowseContent(
             }
         }
 
-        if (
-            when (displayMode) {
-                LibraryDisplayMode.List -> listState.firstVisibleItemIndex > 0 && listState.lastScrolledBackward
-                else -> gridState.firstVisibleItemIndex > 0 && gridState.lastScrolledBackward
+        val showBackToTop by remember(displayMode, listState, gridState) {
+            derivedStateOf {
+                when (displayMode) {
+                    LibraryDisplayMode.List -> listState.firstVisibleItemIndex > 0 && listState.lastScrolledBackward
+                    else -> gridState.firstVisibleItemIndex > 0 && gridState.lastScrolledBackward
+                }
             }
-        ) {
+        }
+        if (showBackToTop) {
             FeedBackToTopButton(
                 onClick = {
                     scope.launch {

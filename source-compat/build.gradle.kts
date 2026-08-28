@@ -1,5 +1,5 @@
+import mihon.gradle.tasks.PrepareLegacyFixtureTask
 import org.gradle.api.tasks.testing.Test
-import java.util.Base64
 
 plugins {
     alias(mihonx.plugins.android.library)
@@ -7,18 +7,9 @@ plugins {
 }
 
 val legacy14FixtureJar = layout.buildDirectory.file("legacy-fixtures/legacy14-fixture.jar")
-val decodeLegacy14Fixture = tasks.register("decodeLegacy14Fixture") {
-    notCompatibleWithConfigurationCache("Decodes the embedded legacy fixture in a build-script task action")
-
-    val encodedFixture = layout.projectDirectory.file("fixtures/upstream14/legacy14-fixture.jar.b64")
-    inputs.file(encodedFixture)
-    outputs.file(legacy14FixtureJar)
-
-    doLast {
-        val output = legacy14FixtureJar.get().asFile
-        output.parentFile.mkdirs()
-        output.writeBytes(Base64.getMimeDecoder().decode(encodedFixture.asFile.readBytes()))
-    }
+val decodeLegacy14Fixture = tasks.register<PrepareLegacyFixtureTask>("decodeLegacy14Fixture") {
+    encodedFixture.set(layout.projectDirectory.file("fixtures/upstream14/legacy14-fixture.jar.b64"))
+    outputFile.set(legacy14FixtureJar)
 }
 
 android {

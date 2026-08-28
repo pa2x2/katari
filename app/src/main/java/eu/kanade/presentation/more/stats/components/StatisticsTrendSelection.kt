@@ -43,7 +43,7 @@ internal fun StatisticsTrendSelection(
     actionLabel: String?,
     onOpenActivity: (StatsTrendPoint) -> Unit,
 ) {
-    val isActionable = selected.isTracked && (selected.hasActivity || actionLabel != null)
+    val isActionable = isTrendSelectionActionable(selected, hasAlternateAction = actionLabel != null)
     val breakdownRowHeight = with(LocalDensity.current) {
         MaterialTheme.typography.bodySmall.lineHeight.toDp()
     }
@@ -135,6 +135,11 @@ internal fun StatisticsTrendSelection(
         }
     }
 }
+
+internal fun isTrendSelectionActionable(
+    selected: StatsTrendPoint,
+    hasAlternateAction: Boolean,
+): Boolean = selected.isTracked && (selected.totalDurationMillis > 0L || hasAlternateAction)
 
 private data class SelectionBreakdown(
     val label: String,

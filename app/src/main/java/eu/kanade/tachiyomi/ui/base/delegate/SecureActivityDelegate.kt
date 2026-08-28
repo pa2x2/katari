@@ -9,9 +9,9 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
+import eu.kanade.tachiyomi.ui.security.BiometricAuthentication
 import eu.kanade.tachiyomi.ui.security.UnlockActivity
-import eu.kanade.tachiyomi.util.system.AuthenticatorUtil
-import eu.kanade.tachiyomi.util.system.AuthenticatorUtil.isAuthenticationSupported
+import eu.kanade.tachiyomi.util.system.isAuthenticationSupported
 import eu.kanade.tachiyomi.util.view.setSecureScreen
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
@@ -37,7 +37,7 @@ interface SecureActivityDelegate {
             val preferences = Injekt.get<SecurityPreferences>()
             if (!preferences.useAuthenticator.get()) return
 
-            if (!AuthenticatorUtil.isAuthenticating) {
+            if (!BiometricAuthentication.isAuthenticating) {
                 // Return if app is closed in locked state
                 if (requireUnlock) return
                 // Save app close time if lock is delayed
@@ -57,7 +57,7 @@ interface SecureActivityDelegate {
             val lastClosedPref = preferences.lastAppClosed
 
             // `requireUnlock` can be true on process start or if app was closed in locked state
-            if (!AuthenticatorUtil.isAuthenticating && !requireUnlock) {
+            if (!BiometricAuthentication.isAuthenticating && !requireUnlock) {
                 requireUnlock = when (val lockDelay = preferences.lockAppAfter.get()) {
                     -1 -> false // Never
                     0 -> true // Always
@@ -111,6 +111,7 @@ fun SecureActivityDelegate.requestAppUnlock(activity: AppCompatActivity) {
     if (!securityPreferences.useAuthenticator.get()) return
     if (activity.isAuthenticationSupported()) {
         if (!SecureActivityDelegate.requireUnlock) return
+        if (BiometricAuthentication.isAuthenticating) return
         if (!shouldRequestAppUnlock(activity)) return
         activity.startActivity(Intent(activity, UnlockActivity::class.java))
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {

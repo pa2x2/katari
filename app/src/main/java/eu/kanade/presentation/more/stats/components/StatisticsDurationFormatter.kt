@@ -2,12 +2,12 @@ package eu.kanade.presentation.more.stats.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalConfiguration
 import java.text.NumberFormat
-import java.util.Locale
 
 @Composable
 internal fun rememberStatisticsDurationFormatter(): (Long) -> String {
-    val locale = Locale.getDefault()
+    val locale = LocalConfiguration.current.locales[0]
     return remember(locale) {
         val numbers = NumberFormat.getIntegerInstance(locale)
         val formatter: (Long) -> String = { durationMillis ->

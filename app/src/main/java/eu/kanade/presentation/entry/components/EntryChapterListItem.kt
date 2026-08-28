@@ -40,6 +40,7 @@ fun EntryChapterListItem(
     downloadIndicatorEnabled: Boolean,
     downloadStateProvider: () -> EntryDownloadState,
     downloadProgressProvider: () -> Int,
+    modifier: Modifier = Modifier,
     unconsumedIndicatorLabel: StringResource = MR.strings.action_filter_unconsumed,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
@@ -48,7 +49,6 @@ fun EntryChapterListItem(
     onDownloadClick: ((ChapterDownloadAction) -> Unit)?,
     onChapterSwipe: (LibraryPreferences.ChapterSwipeAction) -> Unit,
     highlightTrigger: Int? = null,
-    modifier: Modifier = Modifier,
 ) {
     val start = getSwipeAction(
         action = chapterSwipeStartAction,

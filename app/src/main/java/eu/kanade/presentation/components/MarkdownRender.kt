@@ -39,11 +39,13 @@ import com.mikepenz.markdown.compose.elements.listDepth
 import com.mikepenz.markdown.model.DefaultMarkdownColors
 import com.mikepenz.markdown.model.DefaultMarkdownInlineContent
 import com.mikepenz.markdown.model.DefaultMarkdownTypography
+import com.mikepenz.markdown.model.MarkdownAlertPadding
 import com.mikepenz.markdown.model.MarkdownAnnotator
 import com.mikepenz.markdown.model.MarkdownColors
 import com.mikepenz.markdown.model.MarkdownPadding
 import com.mikepenz.markdown.model.MarkdownTypography
 import com.mikepenz.markdown.model.NoOpImageTransformerImpl
+import com.mikepenz.markdown.model.markdownAlertPadding
 import com.mikepenz.markdown.model.markdownAnnotator
 import com.mikepenz.markdown.model.rememberMarkdownState
 import org.intellij.markdown.MarkdownTokenTypes.Companion.HTML_TAG
@@ -75,18 +77,27 @@ fun MarkdownRender(
     flavour: MarkdownFlavourDescriptor = SimpleMarkdownFlavourDescriptor,
     annotator: MarkdownAnnotator = remember { markdownAnnotator() },
     loadImages: Boolean = true,
+    listBlockSpacing: Dp = 0.dp,
+    listItemSpacing: Dp = 0.dp,
+    listSectionSpacing: Dp = 0.dp,
 ) {
+    val normalizedContent = remember(content) { normalizeMarkdownLineEndings(content) }
+    val padding = remember(listBlockSpacing, listItemSpacing) {
+        getMarkdownPadding(listBlockSpacing, listItemSpacing)
+    }
+    val components = remember(listSectionSpacing) { getMarkdownComponents(listSectionSpacing) }
+
     Markdown(
         markdownState = rememberMarkdownState(
-            content = content,
+            content = normalizedContent,
             flavour = flavour,
             immediate = false,
         ),
         annotator = annotator,
         colors = getMarkdownColors(),
         typography = getMarkdownTypography(),
-        padding = markdownPadding,
-        components = markdownComponents,
+        padding = padding,
+        components = components,
         imageTransformer = remember(loadImages) {
             if (loadImages) Coil3ImageTransformerImpl else NoOpImageTransformerImpl()
         },
@@ -139,7 +150,7 @@ private fun getMarkdownTypography(): MarkdownTypography {
     )
 }
 
-private val markdownPadding = object : MarkdownPadding {
+private fun getMarkdownPadding(listBlockSpacing: Dp, listItemSpacing: Dp) = object : MarkdownPadding {
     override val block: Dp = 2.dp
     override val blockQuote: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 0.dp)
     override val blockQuoteBar: PaddingValues.Absolute = PaddingValues.Absolute(
@@ -150,13 +161,18 @@ private val markdownPadding = object : MarkdownPadding {
     )
     override val blockQuoteText: PaddingValues = PaddingValues(vertical = 4.dp)
     override val codeBlock: PaddingValues = PaddingValues(8.dp)
-    override val list: Dp = 0.dp
+    override val alert: MarkdownAlertPadding = markdownAlertPadding()
+    override val list: Dp = listBlockSpacing
     override val listIndent: Dp = 8.dp
-    override val listItemBottom: Dp = 0.dp
+    override val listItemBottom: Dp = listItemSpacing
     override val listItemTop: Dp = 0.dp
 }
 
-private val markdownComponents = markdownComponents(
+internal fun normalizeMarkdownLineEndings(content: String): String {
+    return content.replace("\r\n", "\n").replace('\r', '\n')
+}
+
+private fun getMarkdownComponents(listSectionSpacing: Dp) = markdownComponents(
     horizontalRule = {
         MarkdownDivider(
             modifier = Modifier
@@ -165,7 +181,12 @@ private val markdownComponents = markdownComponents(
         )
     },
     orderedList = { ol ->
-        Column(modifier = Modifier.padding(start = MaterialTheme.padding.small)) {
+        Column(
+            modifier = Modifier.padding(
+                start = MaterialTheme.padding.small,
+                bottom = listSectionSpacing,
+            ),
+        ) {
             MarkdownOrderedList(
                 content = ol.content,
                 node = ol.node,
@@ -182,7 +203,12 @@ private val markdownComponents = markdownComponents(
         CompositionLocalProvider(
             LocalBulletListHandler provides { _, _, _, _, _ -> "${markers[ul.listDepth % markers.size]} " },
         ) {
-            Column(modifier = Modifier.padding(start = MaterialTheme.padding.small)) {
+            Column(
+                modifier = Modifier.padding(
+                    start = MaterialTheme.padding.small,
+                    bottom = listSectionSpacing,
+                ),
+            ) {
                 MarkdownBulletList(
                     content = ul.content,
                     node = ul.node,

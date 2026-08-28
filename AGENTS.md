@@ -52,6 +52,7 @@
 - Use `refactor` when restructuring production code without changing observable behavior.
 - Use `docs`, `test`, `build`, or `ci` only when that concern is the commit's primary purpose.
 - Use `style` only for source formatting without behavioral changes; never use it for visual or UI changes.
+- Use `deps` when adding, removing, or updating external dependencies is the commit's primary purpose.
 - Use `chore` for maintenance that does not fit a more specific type; it is the fallback, not the default.
 - Use `revert` when reversing an earlier commit.
 - Supporting tests, documentation, formatting, or refactoring do not determine the type when the commit primarily fixes or adds behavior. A bug fix with regression tests is still `fix`.

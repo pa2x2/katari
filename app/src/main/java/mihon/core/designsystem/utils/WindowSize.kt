@@ -2,21 +2,22 @@ package mihon.core.designsystem.utils
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 
 @Composable
 @ReadOnlyComposable
 fun isMediumWidthWindow(): Boolean {
-    val configuration = LocalConfiguration.current
-    return configuration.screenWidthDp > MediumWidthWindowSize.value
+    val containerWidth = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() }
+    return containerWidth > MediumWidthWindowSize
 }
 
 @Composable
 @ReadOnlyComposable
 fun isExpandedWidthWindow(): Boolean {
-    val configuration = LocalConfiguration.current
-    return configuration.screenWidthDp > ExpandedWidthWindowSize.value
+    val containerWidth = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() }
+    return containerWidth > ExpandedWidthWindowSize
 }
 
 val MediumWidthWindowSize = 600.dp

@@ -5,8 +5,8 @@ import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.ThemeMode
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
-import eu.kanade.tachiyomi.util.system.AuthenticatorUtil
-import eu.kanade.tachiyomi.util.system.AuthenticatorUtil.authenticate
+import eu.kanade.tachiyomi.ui.security.BiometricAuthentication
+import eu.kanade.tachiyomi.ui.security.BiometricAuthentication.authenticate
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
@@ -37,10 +37,10 @@ class ProfileShortcutsTest {
         coEvery { profileManager.setActiveProfile(profile.id) } just runs
         every { uiPreferences.themeMode } returns themeMode
         every { themeMode.get() } returns ThemeMode.SYSTEM
-        mockkObject(AuthenticatorUtil)
+        mockkObject(BiometricAuthentication)
         mockkStatic(::setAppCompatDelegateThemeMode)
         coEvery {
-            AuthenticatorUtil.run {
+            BiometricAuthentication.run {
                 activity.authenticate(any(), any())
             }
         } returns true

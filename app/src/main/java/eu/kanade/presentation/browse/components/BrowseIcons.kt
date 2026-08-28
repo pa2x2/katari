@@ -42,9 +42,10 @@ private val defaultModifier = Modifier
 @Composable
 fun SourceIcon(
     source: Source,
-    modifier: Modifier = defaultModifier,
+    modifier: Modifier = Modifier,
 ) {
     val icon = source.icon
+    val iconModifier = modifier.then(defaultModifier)
 
     when {
         source.isStub && icon == null -> {
@@ -52,28 +53,28 @@ fun SourceIcon(
                 imageVector = Icons.Filled.Warning,
                 contentDescription = null,
                 colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.error),
-                modifier = modifier,
+                modifier = iconModifier,
             )
         }
         icon != null -> {
             Image(
                 bitmap = icon,
                 contentDescription = null,
-                modifier = modifier,
+                modifier = iconModifier,
             )
         }
         source.isLocal() -> {
             Image(
                 painter = painterResource(R.mipmap.ic_local_source),
                 contentDescription = null,
-                modifier = modifier,
+                modifier = iconModifier,
             )
         }
         else -> {
             Image(
                 painter = painterResource(R.mipmap.ic_default_source),
                 contentDescription = null,
-                modifier = modifier,
+                modifier = iconModifier,
             )
         }
     }

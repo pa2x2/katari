@@ -24,6 +24,11 @@ class BookDocumentNavigationRequestTest {
         newer.afterAcceptedLocation(observed, chapterId = 20) shouldBe newer
     }
 
+    @Test
+    fun `user scrolling supersedes a pending navigation`() {
+        request(id = 1, chapterId = 20).afterUserScrollStarted() shouldBe null
+    }
+
     private fun request(id: Long, chapterId: Long) = BookDocumentNavigationRequest(
         id = id,
         chapterId = chapterId,

@@ -251,11 +251,11 @@ fun LibraryBottomActionMenu(
     onDeleteClicked: (() -> Unit)?,
     onMigrateClicked: (() -> Unit)?,
     onMoveToProfileClicked: (() -> Unit)?,
+    modifier: Modifier = Modifier,
     markAsReadLabel: StringResource = MR.strings.action_mark_as_read,
     markAsUnreadLabel: StringResource = MR.strings.action_mark_as_unread,
     downloadPresentation: EntryTypePresentation = null.entryTypePresentation(),
     bookmarkedDownloadsSupported: Boolean,
-    modifier: Modifier = Modifier,
 ) {
     AnimatedVisibility(
         visible = visible,

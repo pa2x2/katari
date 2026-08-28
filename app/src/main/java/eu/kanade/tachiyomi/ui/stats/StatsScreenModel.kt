@@ -6,7 +6,6 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.more.stats.ActivityState
 import eu.kanade.presentation.more.stats.StatsScreenState
-import eu.kanade.presentation.more.stats.data.StatsActivity
 import eu.kanade.presentation.more.stats.data.StatsActivityWindow
 import eu.kanade.presentation.more.stats.data.StatsLibrary
 import eu.kanade.presentation.more.stats.data.StatsRange
@@ -22,6 +21,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.update
@@ -89,7 +89,7 @@ class StatsScreenModel(
                             StatsRange.ALL -> today
                             else -> historicalEndDate?.coerceAtMost(today) ?: today
                         }
-                        ActivityLoadRequest(
+                        StatisticsActivityLoadRequest(
                             window = range.windowEndingOn(
                                 endDate = endDate,
                                 isLatest = range == StatsRange.ALL || historicalEndDate == null,
@@ -99,7 +99,7 @@ class StatsScreenModel(
                     }.distinctUntilChanged().flatMapLatest { request ->
                         val window = request.window
                         val navigationWindow = window.navigationWindow(today.value)
-                        val loadEvents: Flow<ActivityLoadEvent> = combine(
+                        val loadEvents: Flow<StatisticsActivityLoadEvent> = combine(
                             statisticsRepository.subscribeActivity(
                                 profileId = profileId,
                                 startLocalDate = window.startDate?.toString(),
@@ -116,7 +116,7 @@ class StatsScreenModel(
                                 endLocalDate = window.endDate.toString(),
                             ),
                         ) { snapshot, timeline, streakTimeline ->
-                            ActivityLoadEvent.Loaded(
+                            StatisticsActivityLoadEvent.Loaded(
                                 request = request,
                                 data = buildWindowActivity(
                                     snapshot = snapshot,
@@ -131,30 +131,15 @@ class StatsScreenModel(
                             )
                         }
                         loadEvents.onStart {
-                            emit(ActivityLoadEvent.Loading(request))
+                            emit(StatisticsActivityLoadEvent.Loading(request))
                         }.catch { error ->
                             logcat(LogPriority.ERROR, error)
-                            emit(ActivityLoadEvent.Failed(request))
+                            emit(StatisticsActivityLoadEvent.Failed(request))
                         }
-                    }.runningFold<ActivityLoadEvent, ActivityState?>(null) { previous, event ->
-                        when (event) {
-                            is ActivityLoadEvent.Loading -> when (previous) {
-                                is ActivityState.Available -> previous.copy(
-                                    loadingTarget = event.request.window,
-                                    failedTarget = null,
-                                )
-                                else -> ActivityState.Loading(event.request.window)
-                            }
-                            is ActivityLoadEvent.Loaded -> ActivityState.Available(event.data)
-                            is ActivityLoadEvent.Failed -> when (previous) {
-                                is ActivityState.Available -> previous.copy(
-                                    loadingTarget = null,
-                                    failedTarget = event.request.window,
-                                )
-                                else -> ActivityState.Failed(event.request.window)
-                            }
-                        }
-                    }.filterNotNull().map { activity -> activity.targetRange to activity },
+                    }.runningFold<StatisticsActivityLoadEvent, ActivityState?>(null, ::reduceStatisticsActivityRequest)
+                        .filterNotNull()
+                        .onEach(::restoreDisplayedActivitySelectionAfterFailure)
+                        .map { activity -> activity.displayedRange to activity },
                     statisticsPreferences.selectedType.changes(),
                     basePreferences.incognitoMode.changes(),
                 ) { library, (range, activity), selectedTypeName, incognito ->
@@ -194,6 +179,15 @@ class StatsScreenModel(
     }
 
     fun retryActivity() {
+        val failedTarget = when (val activity = (state.value as? StatsScreenState.Success)?.activity) {
+            is ActivityState.Available -> activity.failedTarget
+            is ActivityState.Failed -> activity.target
+            else -> null
+        }
+        if (failedTarget != null) {
+            finiteWindowEndDate.value = failedTarget.endDate.takeUnless { failedTarget.isLatest }
+            statisticsPreferences.selectedRange.set(failedTarget.range.name)
+        }
         activityReload.update { it + 1L }
     }
 
@@ -220,29 +214,12 @@ class StatsScreenModel(
     fun refreshToday() {
         today.value = LocalDate.now()
     }
-}
 
-private data class ActivityLoadRequest(
-    val window: StatsActivityWindow,
-    val reloadToken: Long,
-)
-
-private sealed interface ActivityLoadEvent {
-    val request: ActivityLoadRequest
-
-    data class Loading(override val request: ActivityLoadRequest) : ActivityLoadEvent
-
-    data class Loaded(
-        override val request: ActivityLoadRequest,
-        val data: StatsActivity,
-    ) : ActivityLoadEvent
-
-    data class Failed(override val request: ActivityLoadRequest) : ActivityLoadEvent
-}
-
-private val ActivityState.targetRange: StatsRange
-    get() = when (this) {
-        is ActivityState.Loading -> target.range
-        is ActivityState.Available -> loadingTarget?.range ?: failedTarget?.range ?: data.window.range
-        is ActivityState.Failed -> target.range
+    private fun restoreDisplayedActivitySelectionAfterFailure(activity: ActivityState) {
+        val available = activity as? ActivityState.Available ?: return
+        if (available.failedTarget == null) return
+        val displayedWindow = available.data.window
+        finiteWindowEndDate.value = displayedWindow.endDate.takeUnless { displayedWindow.isLatest }
+        statisticsPreferences.selectedRange.set(displayedWindow.range.name)
     }
+}

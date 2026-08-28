@@ -9,7 +9,7 @@ case "$subject" in
   ;;
 esac
 
-if printf '%s\n' "$subject" | grep -Eq '^\((feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)\): [^[:space:]].*$'; then
+if printf '%s\n' "$subject" | grep -Eq '^\((feat|fix|docs|style|refactor|perf|test|build|ci|chore|deps|revert)\): [^[:space:]].*$'; then
   exit 0
 fi
 
@@ -19,7 +19,7 @@ Invalid commit subject: $subject
 Commit subjects must use: (type): summary
 
 Allowed types:
-  feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert
+  feat, fix, docs, style, refactor, perf, test, build, ci, chore, deps, revert
 
 Examples:
   (feat): add profile export

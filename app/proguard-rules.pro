@@ -5,6 +5,7 @@
 -keep,allowoptimization class mihon.**
 
 # Keep common dependencies used in extensions
+-keep,allowoptimization class androidx.core.content.ContextCompat { public protected *; }
 -keep,allowoptimization class androidx.preference.** { public protected *; }
 -keep,allowoptimization class kotlin.** { public protected *; }
 -keep,allowoptimization class kotlinx.coroutines.** { public protected *; }

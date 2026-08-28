@@ -90,6 +90,7 @@ fun EntryCompactGridItem(
     coverData: EntryCoverModel,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
+    modifier: Modifier = Modifier,
     isSelected: Boolean = false,
     title: String? = null,
     coverType: EntryCover = EntryCover.Book,
@@ -104,7 +105,6 @@ fun EntryCompactGridItem(
     coverModifier: Modifier = Modifier,
     coverBadgeStart: @Composable (RowScope.() -> Unit)? = null,
     coverBadgeEnd: @Composable (RowScope.() -> Unit)? = null,
-    modifier: Modifier = Modifier,
 ) {
     GridItemSelectable(
         isSelected = isSelected,
@@ -225,6 +225,7 @@ fun EntryComfortableGridItem(
     title: String,
     onClick: () -> Unit,
     onLongClick: (() -> Unit)?,
+    modifier: Modifier = Modifier,
     isSelected: Boolean = false,
     titleMaxLines: Int = 2,
     coverType: EntryCover = EntryCover.Book,
@@ -239,7 +240,6 @@ fun EntryComfortableGridItem(
     onClickContinueReading: (() -> Unit)? = null,
     continueReadingProgress: Float? = null,
     continueReadingContentDescription: StringResource = MR.strings.action_resume,
-    modifier: Modifier = Modifier,
 ) {
     GridItemSelectable(
         isSelected = isSelected,
@@ -403,6 +403,7 @@ fun EntryListItem(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     badge: @Composable (RowScope.() -> Unit),
+    modifier: Modifier = Modifier,
     isSelected: Boolean = false,
     coverType: EntryCover = EntryCover.Square,
     coverContentScale: ContentScale = ContentScale.Crop,
@@ -414,7 +415,6 @@ fun EntryListItem(
     onClickContinueReading: (() -> Unit)? = null,
     continueReadingProgress: Float? = null,
     continueReadingContentDescription: StringResource = MR.strings.action_resume,
-    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier
@@ -479,9 +479,9 @@ private fun ContinueReadingButton(
     size: Dp,
     iconSize: Dp,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     progress: Float? = null,
     contentDescription: StringResource = MR.strings.action_resume,
-    modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
         FilledIconButton(

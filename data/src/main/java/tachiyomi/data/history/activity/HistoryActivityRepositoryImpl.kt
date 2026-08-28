@@ -7,6 +7,7 @@ import tachiyomi.domain.history.model.activity.HistoryActivityPage
 import tachiyomi.domain.history.model.activity.HistoryActivitySegmentDetail
 import tachiyomi.domain.history.model.activity.HistoryActivitySessionDetail
 import tachiyomi.domain.history.repository.HistoryActivityRepository
+import tachiyomi.domain.statistics.service.StatisticsActivityPolicy
 
 class HistoryActivityRepositoryImpl(
     private val handler: DatabaseHandler,
@@ -63,6 +64,7 @@ class HistoryActivityRepositoryImpl(
                     startLocalDate = startLocalDate,
                     endLocalDate = endLocalDate,
                     profileId = profileId,
+                    minimumSessionDurationMillis = StatisticsActivityPolicy.MINIMUM_SESSION_DURATION_MILLIS,
                     limit = limit + 1L,
                     offset = offset,
                     mapper = mapper,
@@ -73,6 +75,7 @@ class HistoryActivityRepositoryImpl(
                     endLocalDate = endLocalDate,
                     profileId = profileId,
                     type = type.name.lowercase(),
+                    minimumSessionDurationMillis = StatisticsActivityPolicy.MINIMUM_SESSION_DURATION_MILLIS,
                     limit = limit + 1L,
                     offset = offset,
                     mapper = mapper,

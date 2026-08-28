@@ -1,10 +1,10 @@
+import mihon.gradle.tasks.PrepareLegacyFixtureTask
 import org.gradle.api.attributes.Bundling
 import org.gradle.api.attributes.Category
 import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.attributes.Usage
 import org.gradle.api.attributes.java.TargetJvmEnvironment
-import java.security.MessageDigest
-import java.util.Base64
+import org.gradle.api.tasks.TaskProvider
 
 buildscript {
     dependencies {
@@ -56,43 +56,38 @@ fun registerLegacySourceAbiCheck(
     taskName: String,
     baselineName: String,
     baselineLabel: String,
-    expectedSha256: String,
+    expectedSha256Value: String,
     additionalExcludes: List<String> = emptyList(),
-) = tasks.register<JavaExec>(taskName) {
-    group = "verification"
-    description = "Checks the current source-api against the $baselineLabel ABI"
-    notCompatibleWithConfigurationCache("Prepares and verifies the legacy ABI baseline in a build-script task action")
-
-    dependsOn(":source-api:assemble")
-    classpath = legacySourceAbiVerifier
-    mainClass.set("japicmp.JApiCmp")
-
+): TaskProvider<JavaExec> {
     val encodedBaseline = layout.projectDirectory.file("source-api/abi/$baselineName.jar.b64")
     val decodedBaseline = layout.buildDirectory.file("legacy-source-abi/$baselineName.jar")
-    inputs.file(encodedBaseline)
-    inputs.file(currentLegacySourceApiJar)
+    val prepareBaseline = tasks.register<PrepareLegacyFixtureTask>(
+        "prepare${taskName.replaceFirstChar(Char::uppercase)}Baseline",
+    ) {
+        encodedFixture.set(encodedBaseline)
+        expectedSha256.set(expectedSha256Value)
+        outputFile.set(decodedBaseline)
+    }
 
-    doFirst {
-        val output = decodedBaseline.get().asFile
-        output.parentFile.mkdirs()
-        output.writeBytes(Base64.getMimeDecoder().decode(encodedBaseline.asFile.readBytes()))
-        val actualSha256 = MessageDigest.getInstance("SHA-256")
-            .digest(output.readBytes())
-            .joinToString("") { "%02x".format(it) }
-        check(actualSha256 == expectedSha256) {
-            "Legacy ABI baseline $baselineName has SHA-256 $actualSha256, expected $expectedSha256"
-        }
+    val excludedElements = listOf(
+        "eu.kanade.tachiyomi.source.ConfigurableSource\$getSourcePreferences\$\$inlined\$get\$1",
+        "eu.kanade.tachiyomi.source.ConfigurableSourceKt\$sourcePreferences\$\$inlined\$get\$1",
+        "eu.kanade.tachiyomi.source.ConfigurableSourceKt\$sourcePreferences\$\$inlined\$get\$2",
+        "eu.kanade.tachiyomi.source.online.HttpSource\$special\$\$inlined\$injectLazy\$1",
+        "eu.kanade.tachiyomi.source.online.HttpSource\$special\$\$inlined\$injectLazy\$1\$1",
+    ) + additionalExcludes
 
-        val excludedElements = listOf(
-            "eu.kanade.tachiyomi.source.ConfigurableSource\$getSourcePreferences\$\$inlined\$get\$1",
-            "eu.kanade.tachiyomi.source.ConfigurableSourceKt\$sourcePreferences\$\$inlined\$get\$1",
-            "eu.kanade.tachiyomi.source.ConfigurableSourceKt\$sourcePreferences\$\$inlined\$get\$2",
-            "eu.kanade.tachiyomi.source.online.HttpSource\$special\$\$inlined\$injectLazy\$1",
-            "eu.kanade.tachiyomi.source.online.HttpSource\$special\$\$inlined\$injectLazy\$1\$1",
-        ) + additionalExcludes
+    return tasks.register<JavaExec>(taskName) {
+        group = "verification"
+        description = "Checks the current source-api against the $baselineLabel ABI"
+
+        dependsOn(":source-api:assemble", prepareBaseline)
+        classpath = legacySourceAbiVerifier
+        mainClass.set("japicmp.JApiCmp")
+        inputs.file(currentLegacySourceApiJar)
 
         args = listOf(
-            "--old", output.absolutePath,
+            "--old", decodedBaseline.get().asFile.absolutePath,
             "--new", currentLegacySourceApiJar.asFile.absolutePath,
             "--include", "eu.kanade.tachiyomi.source.*",
             "--exclude", excludedElements.joinToString(";"),
@@ -109,13 +104,13 @@ val verifyLegacySourceAbi14 = registerLegacySourceAbiCheck(
     taskName = "verifyLegacySourceAbi14",
     baselineName = "upstream-mihon-source-api-1.4",
     baselineLabel = "original upstream Mihon 1.4",
-    expectedSha256 = "fcb9fd3b0f246a88e248d5582a9ec88910502a2597586ac36698294344f8634f",
+    expectedSha256Value = "fcb9fd3b0f246a88e248d5582a9ec88910502a2597586ac36698294344f8634f",
 )
 val verifyLegacySourceAbi16 = registerLegacySourceAbiCheck(
     taskName = "verifyLegacySourceAbi16",
     baselineName = "upstream-mihon-source-api-1.6",
     baselineLabel = "original upstream Mihon 1.6",
-    expectedSha256 = "2204a07ed2e89bcee8fac8808269808a00d629880bd8c5b720ad75c7c7901d90",
+    expectedSha256Value = "2204a07ed2e89bcee8fac8808269808a00d629880bd8c5b720ad75c7c7901d90",
     additionalExcludes = listOf(
         // The 1.4 baseline already requires this exact descriptor as a default method. Making the
         // 1.6 abstract declaration default again restores 1.4 bytecode without removing the 1.6 symbol.
@@ -126,7 +121,7 @@ val verifyKeiyoushiSourceAbi16 = registerLegacySourceAbiCheck(
     taskName = "verifyKeiyoushiSourceAbi16",
     baselineName = "keiyoushi-extensions-lib-1.6-6e0c96cea8",
     baselineLabel = "Keiyoushi extensions-lib 1.6 (6e0c96cea8)",
-    expectedSha256 = "b77f2f2d01ca03a5362eb6477c272f0392ebf5725b62a17ac657b7e1ad9791a2",
+    expectedSha256Value = "b77f2f2d01ca03a5362eb6477c272f0392ebf5725b62a17ac657b7e1ad9791a2",
     additionalExcludes = listOf(
         // The runtime keeps this method default to preserve original upstream 1.4 linkage. An
         // extension compiled against Keiyoushi's abstract declaration remains binary-compatible.

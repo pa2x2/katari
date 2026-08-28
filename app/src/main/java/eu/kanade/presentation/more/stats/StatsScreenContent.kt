@@ -14,10 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CollectionsBookmark
-import androidx.compose.material.icons.outlined.LocalFireDepartment
-import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryScrollableTabRow
@@ -38,18 +34,22 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.components.StatisticsActivityCard
-import eu.kanade.presentation.more.stats.components.StatisticsAdditionalInsightsCard
+import eu.kanade.presentation.more.stats.components.StatisticsActivityHeader
+import eu.kanade.presentation.more.stats.components.StatisticsActivityPatternsCard
+import eu.kanade.presentation.more.stats.components.StatisticsActivitySummaryCards
+import eu.kanade.presentation.more.stats.components.StatisticsCurrentLibraryHeader
 import eu.kanade.presentation.more.stats.components.StatisticsEarlierActivityCard
-import eu.kanade.presentation.more.stats.components.StatisticsHeadlineCards
 import eu.kanade.presentation.more.stats.components.StatisticsLibraryCard
+import eu.kanade.presentation.more.stats.components.StatisticsLibraryInsightsCard
 import eu.kanade.presentation.more.stats.components.StatisticsProgressCard
 import eu.kanade.presentation.more.stats.components.StatisticsTopTitlesCard
 import eu.kanade.presentation.more.stats.components.color
+import eu.kanade.presentation.more.stats.components.formatStatisticsWindow
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
-import eu.kanade.presentation.more.stats.data.StatsActivity
 import eu.kanade.presentation.more.stats.data.StatsRange
 import eu.kanade.presentation.more.stats.data.StatsTrendPoint
 import eu.kanade.presentation.more.stats.data.StatsType
+import eu.kanade.presentation.more.stats.data.forType
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -120,11 +120,6 @@ fun StatsScreenContent(
                 )
             }
         }
-        StatisticsRangeSelector(
-            selected = state.range,
-            onSelected = onRangeSelected,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-        )
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxSize(),
@@ -135,6 +130,8 @@ fun StatsScreenContent(
                 state = state,
                 selectedType = pages[page],
                 bottomPadding = paddingValues.calculateBottomPadding(),
+                onRangeSelected = onRangeSelected,
+                onTypeSelected = onTypeSelected,
                 onNavigateActivity = onNavigateActivity,
                 onShowToday = onShowToday,
                 onRetryActivity = onRetryActivity,
@@ -181,6 +178,8 @@ private fun StatisticsPage(
     state: StatsScreenState.Success,
     selectedType: EntryType?,
     bottomPadding: androidx.compose.ui.unit.Dp,
+    onRangeSelected: (StatsRange) -> Unit,
+    onTypeSelected: (EntryType?) -> Unit,
     onNavigateActivity: (Int) -> Unit,
     onShowToday: () -> Unit,
     onRetryActivity: () -> Unit,
@@ -201,12 +200,12 @@ private fun StatisticsPage(
         else -> activity.currentStreakDaysByType[selectedType] ?: 0
     }
     val selectedStatsType = state.types.firstOrNull { it.type == selectedType }
-    val thirdHeadlineValue = if (selectedStatsType == null) {
+    val secondaryMetricValue = if (selectedStatsType == null) {
         streakDays?.let { pluralStringResource(MR.plurals.day, it, it) } ?: "—"
     } else {
-        NumberFormat.getIntegerInstance().format(visibleActivity?.completionCount ?: 0L)
+        visibleActivity?.completionCount?.let(NumberFormat.getIntegerInstance()::format) ?: "—"
     }
-    val thirdHeadlineLabel = selectedStatsType?.let { stringResource(it.consumedUnitLabel) }
+    val secondaryMetricLabel = selectedStatsType?.let { stringResource(it.consumedUnitLabel) }
         ?: stringResource(
             if (visibleActivity?.window?.isLatest == false) {
                 MR.strings.statistics_ending_streak
@@ -222,7 +221,12 @@ private fun StatisticsPage(
         visibleActivity.earlierDurationMillis == 0L
 
     LazyColumn(
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = bottomPadding + 20.dp),
+        contentPadding = PaddingValues(
+            start = 16.dp,
+            top = 16.dp,
+            end = 16.dp,
+            bottom = bottomPadding + 20.dp,
+        ),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         if (state.incognito) {
@@ -272,15 +276,23 @@ private fun StatisticsPage(
             return@LazyColumn
         }
         item {
-            StatisticsHeadlineCards(
-                time = visibleActivity?.let { formatter(it.totalDurationMillis) } ?: "—",
-                titles = titleCount,
-                thirdValue = thirdHeadlineValue,
-                thirdLabel = thirdHeadlineLabel,
-                timeIcon = Icons.Outlined.Schedule,
-                titlesIcon = Icons.Outlined.CollectionsBookmark,
-                thirdIcon = selectedStatsType?.icon ?: Icons.Outlined.LocalFireDepartment,
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                StatisticsActivityHeader(
+                    showToday = visibleActivity?.window?.let { window ->
+                        window.range != StatsRange.ALL && !window.isLatest
+                    } == true,
+                    onToday = onShowToday,
+                )
+                StatisticsRangeSelector(
+                    selected = state.range,
+                    onSelected = onRangeSelected,
+                )
+                StatisticsActivitySummaryCards(
+                    time = visibleActivity?.let { formatter(it.totalDurationMillis) } ?: "—",
+                    secondaryValue = secondaryMetricValue,
+                    secondaryLabel = secondaryMetricLabel,
+                )
+            }
         }
         item {
             StatisticsActivityCard(
@@ -289,7 +301,6 @@ private fun StatisticsPage(
                 types = visibleTypes,
                 formatter = formatter,
                 onNavigateByBuckets = onNavigateActivity,
-                onToday = onShowToday,
                 onRetry = onRetryActivity,
                 onOpenActivity = { point -> onOpenActivity(selectedType, point) },
             )
@@ -299,36 +310,31 @@ private fun StatisticsPage(
                 StatisticsTopTitlesCard(
                     titles = visibleActivity.topTitles,
                     typesById = state.types.associateBy(StatsType::type),
+                    periodLabel = if (visibleActivity.window.range == StatsRange.ALL) {
+                        stringResource(MR.strings.statistics_all_recorded_activity)
+                    } else {
+                        formatStatisticsWindow(visibleActivity.window)
+                    },
                     formatDuration = formatter,
                     onTitleClick = onOpenEntry,
                 )
             }
         }
-        item {
-            StatisticsProgressCard(progress)
-        }
-        item {
-            StatisticsLibraryCard(
-                titleCounts = titleCounts,
-                types = visibleTypes,
-            )
-        }
         if (selectedStatsType != null) {
-            state.library.insightsByType[selectedStatsType.type]?.let { insights ->
-                item {
-                    StatisticsAdditionalInsightsCard(
-                        typeLabel = stringResource(selectedStatsType.displayName),
-                        sessionCount = visibleActivity?.sessionCount ?: 0L,
-                        averageSessionDurationMillis = visibleActivity?.averageSessionDurationMillis ?: 0L,
-                        longestSessionDurationMillis = visibleActivity?.longestSessionDurationMillis ?: 0L,
-                        activeDays = visibleActivity?.activeDays ?: 0,
-                        library = insights,
-                        formatDuration = formatter,
-                    )
-                }
+            item {
+                StatisticsActivityPatternsCard(
+                    sessionCount = visibleActivity?.sessionCount,
+                    averageSessionDurationMillis = visibleActivity?.averageSessionDurationMillis,
+                    longestSessionDurationMillis = visibleActivity?.longestSessionDurationMillis,
+                    activeDays = visibleActivity?.activeDays,
+                    formatDuration = formatter,
+                )
             }
         }
-        if (visibleActivity?.earlierDurationMillis?.let { it > 0L } == true) {
+        if (
+            visibleActivity?.window?.range == StatsRange.ALL &&
+            visibleActivity.earlierDurationMillis > 0L
+        ) {
             item {
                 val beforeDate = visibleActivity.trackingStartedAtEpochMillis?.let { startedAt ->
                     val date = Instant.ofEpochMilli(startedAt)
@@ -346,43 +352,26 @@ private fun StatisticsPage(
                 )
             }
         }
+        item {
+            StatisticsCurrentLibraryHeader(titleCount)
+        }
+        item {
+            StatisticsProgressCard(progress)
+        }
+        if (selectedStatsType == null) {
+            item {
+                StatisticsLibraryCard(
+                    titleCounts = titleCounts,
+                    types = visibleTypes,
+                    onTypeClick = { onTypeSelected(it) },
+                )
+            }
+        } else {
+            state.library.insightsByType[selectedStatsType.type]?.let { insights ->
+                item {
+                    StatisticsLibraryInsightsCard(insights)
+                }
+            }
+        }
     }
-}
-
-private fun StatsActivity.forType(type: EntryType?): StatsActivity {
-    if (type == null) return this
-    return copy(
-        totalDurationMillis = trend.sumOf { it.durationByType[type] ?: 0L },
-        completionCount = completionCountByType[type] ?: 0L,
-        completionCountByType = mapOf(type to (completionCountByType[type] ?: 0L)),
-        sessionCount = sessionCountByType[type] ?: 0L,
-        sessionCountByType = mapOf(type to (sessionCountByType[type] ?: 0L)),
-        averageSessionDurationMillis = averageSessionDurationByType[type] ?: 0L,
-        averageSessionDurationByType = mapOf(type to (averageSessionDurationByType[type] ?: 0L)),
-        longestSessionDurationMillis = longestSessionDurationByType[type] ?: 0L,
-        longestSessionDurationByType = mapOf(type to (longestSessionDurationByType[type] ?: 0L)),
-        activeDays = activeDaysByType[type] ?: 0,
-        activeDaysByType = mapOf(type to (activeDaysByType[type] ?: 0)),
-        trend = trend.map { point ->
-            point.copy(
-                durationByType = mapOf(type to (point.durationByType[type] ?: 0L)),
-                completionCountByType = mapOf(type to (point.completionCountByType[type] ?: 0L)),
-            )
-        },
-        navigationTrend = navigationTrend.map { point ->
-            point.copy(
-                durationByType = mapOf(type to (point.durationByType[type] ?: 0L)),
-                completionCountByType = mapOf(type to (point.completionCountByType[type] ?: 0L)),
-            )
-        },
-        allRangeMonthlyTrend = allRangeMonthlyTrend.map { point ->
-            point.copy(
-                durationByType = mapOf(type to (point.durationByType[type] ?: 0L)),
-                completionCountByType = mapOf(type to (point.completionCountByType[type] ?: 0L)),
-            )
-        },
-        topTitles = topTitles.filter { it.type == type },
-        earlierDurationMillis = earlierDurationByType[type] ?: 0L,
-        earlierDurationByType = mapOf(type to (earlierDurationByType[type] ?: 0L)),
-    )
 }
