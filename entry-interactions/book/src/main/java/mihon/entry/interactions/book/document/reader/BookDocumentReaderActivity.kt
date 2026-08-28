@@ -156,6 +156,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                         onChapterSelected = ::selectChapterFromNavigation,
                         onChromeToggle = ::toggleChrome,
                         onChromeHide = { setChromeVisible(false) },
+                        onUserScrollStarted = chapterCoordinator::onUserScrollStarted,
                         onNavigationVisibilityChange = ::setNavigationVisible,
                         onSettingsVisibilityChange = { visible ->
                             readerState = readerState?.copy(settingsVisible = visible)

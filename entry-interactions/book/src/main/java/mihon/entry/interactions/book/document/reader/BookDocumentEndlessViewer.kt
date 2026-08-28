@@ -1,6 +1,7 @@
 package mihon.entry.interactions.book.document.reader
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
@@ -17,6 +18,7 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import mihon.entry.interactions.viewer.EntryChildDirection
@@ -40,6 +42,7 @@ internal fun BookDocumentEndlessViewer(
     onAnchorMissing: (String) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     onScrollStarted: () -> Unit,
+    onUserScrollStarted: () -> Unit,
     onReaderTap: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -58,6 +61,7 @@ internal fun BookDocumentEndlessViewer(
     )
     val currentItems by rememberUpdatedState(items)
     val currentOnScrollStarted by rememberUpdatedState(onScrollStarted)
+    val currentOnUserScrollStarted by rememberUpdatedState(onUserScrollStarted)
     val currentOnAnchorMissing by rememberUpdatedState(onAnchorMissing)
     val currentOnExternalLinkClick by rememberUpdatedState(onExternalLinkClick)
     val currentOnReaderTap by rememberUpdatedState(onReaderTap)
@@ -222,6 +226,11 @@ internal fun BookDocumentEndlessViewer(
             .collect {
                 if (textSizeReflowAnchor == null) currentOnScrollStarted()
             }
+    }
+    LaunchedEffect(listState) {
+        listState.interactionSource.interactions
+            .filterIsInstance<DragInteraction.Start>()
+            .collect { currentOnUserScrollStarted() }
     }
     LaunchedEffect(listState, items) {
         snapshotFlow {

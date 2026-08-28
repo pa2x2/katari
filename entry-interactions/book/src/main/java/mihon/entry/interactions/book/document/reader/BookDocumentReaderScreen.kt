@@ -75,6 +75,7 @@ internal fun BookDocumentReaderScreen(
     onChapterSelected: (EntryChapter) -> Unit,
     onChromeToggle: () -> Unit,
     onChromeHide: () -> Unit,
+    onUserScrollStarted: () -> Unit,
     onNavigationVisibilityChange: (Boolean) -> Unit,
     onSettingsVisibilityChange: (Boolean) -> Unit,
     onOpenDefaultSettings: () -> Unit,
@@ -199,6 +200,7 @@ internal fun BookDocumentReaderScreen(
                         onAnchorMissing = onAnchorMissing,
                         onExternalLinkClick = onExternalLinkClick,
                         onScrollStarted = onChromeHide,
+                        onUserScrollStarted = onUserScrollStarted,
                         onReaderTap = {
                             if (selectionCoordinator?.dismissTranslationOnReaderTap() != true) {
                                 currentOnChromeToggle()

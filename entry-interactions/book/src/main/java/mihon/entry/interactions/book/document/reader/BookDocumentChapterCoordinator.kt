@@ -174,6 +174,13 @@ internal class BookDocumentChapterCoordinator(
         prepareNextChapterIfNeeded(location.progression.toDouble())
     }
 
+    fun onUserScrollStarted() {
+        val state = currentState() ?: return
+        val navigationRequest = state.navigationRequest.afterUserScrollStarted()
+        if (navigationRequest == state.navigationRequest) return
+        updateState(state.copy(navigationRequest = navigationRequest))
+    }
+
     fun onTerminalObservation(
         chapter: EntryChapter,
         terminalBoundaryVisible: Boolean,
