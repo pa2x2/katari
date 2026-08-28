@@ -25,10 +25,23 @@ class StatisticsTrendChartTest {
     }
 
     @Test
-    fun `vertical scale rounds up to a readable duration`() {
-        niceTrendMaximum(70L * 60_000L) shouldBe 90L * 60_000L
-        niceTrendMaximum(91L * 60_000L) shouldBe 120L * 60_000L
-        niceTrendMaximum(0L) shouldBe 60_000L
+    fun `vertical scale exposes granular rounded duration intervals`() {
+        buildTrendDurationAxis(18L * 60_000L) shouldBe TrendDurationAxis(
+            maximumMillis = 20L * 60_000L,
+            ticksDescending = listOf(20L, 15L, 10L, 5L, 0L).map { it * 60_000L },
+        )
+        buildTrendDurationAxis(32L * 60_000L) shouldBe TrendDurationAxis(
+            maximumMillis = 40L * 60_000L,
+            ticksDescending = listOf(40L, 30L, 20L, 10L, 0L).map { it * 60_000L },
+        )
+        buildTrendDurationAxis(329L * 60_000L) shouldBe TrendDurationAxis(
+            maximumMillis = 360L * 60_000L,
+            ticksDescending = listOf(360L, 270L, 180L, 90L, 0L).map { it * 60_000L },
+        )
+        buildTrendDurationAxis(0L) shouldBe TrendDurationAxis(
+            maximumMillis = 3L * 60_000L,
+            ticksDescending = listOf(3L, 2L, 1L, 0L).map { it * 60_000L },
+        )
     }
 
     @Test

@@ -21,14 +21,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 
 @Composable
 internal fun AllRangeSummary(
     totalDuration: String,
-    trackingStartDate: LocalDate?,
     year: Int?,
 ) {
     Column {
@@ -45,18 +41,6 @@ internal fun AllRangeSummary(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodySmall,
         )
-        if (year == null && trackingStartDate != null) {
-            val formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
-            Text(
-                text = stringResource(
-                    MR.strings.statistics_precisely_dated_since,
-                    trackingStartDate.format(formatter),
-                ),
-                modifier = Modifier.padding(top = 4.dp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.labelSmall,
-            )
-        }
     }
 }
 

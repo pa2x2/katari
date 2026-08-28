@@ -55,7 +55,6 @@ internal fun StatisticsActivityCard(
     types: List<StatsType>,
     formatter: (Long) -> String,
     onNavigateByBuckets: (Int) -> Unit,
-    onToday: () -> Unit,
     onRetry: () -> Unit,
     onOpenActivity: (StatsTrendPoint) -> Unit,
 ) {
@@ -70,7 +69,6 @@ internal fun StatisticsActivityCard(
                 types = types,
                 formatter = formatter,
                 onNavigateByBuckets = onNavigateByBuckets,
-                onToday = onToday,
                 onRetry = onRetry,
                 onOpenActivity = onOpenActivity,
             )
@@ -84,8 +82,8 @@ private fun InitialActivityCard(
     onRetry: () -> Unit,
     failed: Boolean = false,
 ) {
-    val targetLabel = formatWindow(target)
-    StatisticsSectionCard(stringResource(MR.strings.statistics_activity)) {
+    val targetLabel = formatStatisticsWindow(target)
+    StatisticsSectionCard {
         if (failed) {
             Row(
                 modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite },
@@ -114,7 +112,6 @@ private fun SettledActivityCard(
     types: List<StatsType>,
     formatter: (Long) -> String,
     onNavigateByBuckets: (Int) -> Unit,
-    onToday: () -> Unit,
     onRetry: () -> Unit,
     onOpenActivity: (StatsTrendPoint) -> Unit,
 ) {
@@ -172,14 +169,22 @@ private fun SettledActivityCard(
     val cardTitle = when {
         drilledYear != null -> stringResource(MR.strings.statistics_year_activity, drilledYear)
         isAllRange -> stringResource(MR.strings.statistics_all_recorded_activity)
-        else -> stringResource(MR.strings.statistics_activity)
+        else -> null
     }
+    val bucketLabel = stringResource(
+        when {
+            drilledYear != null -> MR.strings.statistics_monthly_total
+            else -> when (activity.trendGranularity) {
+                StatsTrendGranularity.DAY -> MR.strings.statistics_daily_total
+                StatsTrendGranularity.WEEK -> MR.strings.statistics_weekly_total
+                StatsTrendGranularity.MONTH -> MR.strings.statistics_monthly_total
+                StatsTrendGranularity.YEAR -> MR.strings.statistics_yearly_total
+            }
+        },
+    )
 
     StatisticsSectionCard(
         title = cardTitle,
-        actionLabel = stringResource(MR.strings.statistics_today).takeIf { isFinite && !isLatest },
-        onActionClick = onToday,
-        reserveActionHeight = true,
         contentSpacing = 0.dp,
     ) {
         if (isAllRange) {
@@ -196,7 +201,6 @@ private fun SettledActivityCard(
             }
             AllRangeSummary(
                 totalDuration = formatter(allRangeTotal),
-                trackingStartDate = activity.trackingStartDate,
                 year = drilledYear,
             )
         } else {
@@ -235,6 +239,7 @@ private fun SettledActivityCard(
                     notTrackedLabel = notTrackedLabel,
                     previousPointLabel = stringResource(MR.strings.statistics_previous_data_point),
                     nextPointLabel = stringResource(MR.strings.statistics_next_data_point),
+                    bucketLabel = bucketLabel,
                     canNavigateOlder = canNavigateOlder && drilledYear == null,
                     canNavigateNewer = canNavigateNewer && drilledYear == null,
                     navigationPending = isPending,
@@ -245,17 +250,6 @@ private fun SettledActivityCard(
                         } else {
                             null
                         }
-                    },
-                    periodTotalCaption = if (isAllRange) {
-                        stringResource(
-                            if (drilledYear == null && activity.trendGranularity == StatsTrendGranularity.YEAR) {
-                                MR.strings.statistics_year_bars_caption
-                            } else {
-                                MR.strings.statistics_month_bars_caption
-                            },
-                        )
-                    } else {
-                        null
                     },
                     onOpenActivity = { point ->
                         if (isYearOverview) {
@@ -312,7 +306,7 @@ private fun ActivityWindowNavigation(
             }
         }
         Text(
-            text = formatWindow(window),
+            text = formatStatisticsWindow(window),
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.titleSmall,
             textAlign = TextAlign.Center,
@@ -359,7 +353,10 @@ private fun ActivityRequestStatus(
                 ) {
                     CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
                     Text(
-                        text = stringResource(MR.strings.statistics_loading_period, formatWindow(target)),
+                        text = stringResource(
+                            MR.strings.statistics_loading_period,
+                            formatStatisticsWindow(target),
+                        ),
                         modifier = Modifier.padding(start = 8.dp),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -381,7 +378,10 @@ private fun ActivityRequestStatus(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = stringResource(MR.strings.statistics_could_not_load_period, formatWindow(target)),
+                        text = stringResource(
+                            MR.strings.statistics_could_not_load_period,
+                            formatStatisticsWindow(target),
+                        ),
                         modifier = Modifier.weight(1f).padding(start = 12.dp),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error,
@@ -402,12 +402,3 @@ private fun ActivityRequestStatus(
 }
 
 private const val LOADING_STATUS_DELAY_MILLIS = 500L
-
-private fun formatWindow(window: StatsActivityWindow): String {
-    val formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(Locale.getDefault())
-    val start = window.startDate
-    return when {
-        start == null || start == window.endDate -> window.endDate.format(formatter)
-        else -> "${start.format(formatter)} – ${window.endDate.format(formatter)}"
-    }
-}

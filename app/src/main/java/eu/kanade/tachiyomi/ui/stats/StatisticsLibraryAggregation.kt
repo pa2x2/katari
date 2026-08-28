@@ -49,7 +49,6 @@ internal fun buildLibraryInsights(items: List<LibraryItem>): StatsLibraryInsight
     return StatsLibraryInsights(
         topGenre = topGenre,
         categoryCount = items.flatMap(LibraryItem::categories).distinct().size,
-        sourceCount = items.flatMap { it.sourceIds }.distinct().size,
     )
 }
 

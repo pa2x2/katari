@@ -41,37 +41,51 @@ internal fun trendTickIndices(pointCount: Int): List<Int> {
     }.distinct()
 }
 
-internal fun niceTrendMaximum(rawMaximumMillis: Long): Long {
-    val minutes = ((rawMaximumMillis.coerceAtLeast(0L) + 59_999L) / 60_000L).coerceAtLeast(1L)
-    val commonMinutes = longArrayOf(
-        1L,
-        2L,
-        5L,
-        10L,
-        15L,
-        30L,
-        45L,
-        60L,
-        90L,
-        120L,
-        180L,
-        240L,
-        360L,
-        480L,
-        720L,
-        1_440L,
-    )
-    val ceilingMinutes = commonMinutes.firstOrNull { it >= minutes } ?: run {
-        val days = (minutes + 1_439L) / 1_440L
-        niceWholeNumberCeiling(days) * 1_440L
+internal data class TrendDurationAxis(
+    val maximumMillis: Long,
+    val ticksDescending: List<Long>,
+)
+
+internal fun buildTrendDurationAxis(rawMaximumMillis: Long): TrendDurationAxis {
+    val normalizedMaximum = rawMaximumMillis.coerceAtLeast(0L)
+    val rawMinutes = if (normalizedMaximum == 0L) {
+        1L
+    } else {
+        (normalizedMaximum - 1L) / 60_000L + 1L
     }
-    return ceilingMinutes * 60_000L
+    val candidateSteps = buildList {
+        addAll(listOf(1L, 2L, 5L, 10L, 15L, 20L, 30L, 45L, 60L, 90L, 120L, 180L, 240L, 360L, 480L, 720L))
+        var dayMagnitude = 1_440L
+        repeat(10) {
+            listOf(1L, 2L, 5L).forEach { multiplier -> add(multiplier * dayMagnitude) }
+            dayMagnitude *= 10L
+        }
+    }.distinct().sorted()
+    val selected = candidateSteps
+        .mapNotNull { step ->
+            val requiredIntervals = ((rawMinutes - 1L) / step + 1L).coerceAtLeast(3L)
+            if (requiredIntervals > 5L) return@mapNotNull null
+            val maximum = step * requiredIntervals
+            val intervalPenalty = kotlin.math.abs(requiredIntervals - 4L).toDouble()
+            val headroomPenalty = (maximum - rawMinutes).toDouble() / rawMinutes
+            DurationAxisCandidate(
+                stepMinutes = step,
+                intervals = requiredIntervals.toInt(),
+                score = intervalPenalty + headroomPenalty,
+            )
+        }
+        .minBy(DurationAxisCandidate::score)
+    val ticks = (selected.intervals downTo 0).map { interval ->
+        selected.stepMinutes * interval * 60_000L
+    }
+    return TrendDurationAxis(
+        maximumMillis = ticks.first(),
+        ticksDescending = ticks,
+    )
 }
 
-private fun niceWholeNumberCeiling(value: Long): Long {
-    var magnitude = 1L
-    while (value > magnitude * 10L) magnitude *= 10L
-    return longArrayOf(1L, 2L, 5L, 10L)
-        .map { it * magnitude }
-        .first { it >= value }
-}
+private data class DurationAxisCandidate(
+    val stepMinutes: Long,
+    val intervals: Int,
+    val score: Double,
+)

@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <plurals name="statistics_title_count">
+        <item quantity="one">%d title</item>
+        <item quantity="other">%d titles</item>
+    </plurals>
     <plurals name="lock_after_mins">
         <item quantity="one">After %1$s minute</item>
         <item quantity="other">After %1$s minutes</item>

@@ -14,32 +14,28 @@ import tachiyomi.domain.library.model.LibraryItemKey
 class StatisticsLibraryInsightsTest {
 
     @Test
-    fun `library insights normalize genres and include merged sources`() {
+    fun `library insights normalize genres and count distinct categories`() {
         val first = item(
             id = 1L,
             genres = listOf("Science   Fiction", "Drama"),
             categories = listOf(1L, 2L),
-            sourceIds = setOf(10L, 11L),
         )
         val second = item(
             id = 2L,
             genres = listOf(" science fiction "),
             categories = listOf(2L),
-            sourceIds = setOf(12L),
         )
 
         val result = buildLibraryInsights(listOf(first, second))
 
         result.topGenre shouldBe "Science Fiction"
         result.categoryCount shouldBe 2
-        result.sourceCount shouldBe 3
     }
 
     private fun item(
         id: Long,
         genres: List<String>,
         categories: List<Long>,
-        sourceIds: Set<Long>,
     ): LibraryItem {
         val entry = Entry.create().copy(id = id, type = EntryType.MANGA, title = "Title $id", genre = genres)
         return LibraryItem(
@@ -49,9 +45,9 @@ class StatisticsLibraryInsightsTest {
             sourceLanguage = "en",
             sourceItemOrientation = EntryItemOrientation.VERTICAL,
             displaySourceId = entry.source,
-            sourceIds = sourceIds,
+            sourceIds = setOf(entry.source),
             isLocal = false,
-            isMerged = sourceIds.size > 1,
+            isMerged = false,
             memberEntryIds = listOf(LibraryItemKey(entry.type, entry.id)),
             memberEntries = listOf(entry),
             progressSummary = EntryLibraryProgressResolution.Available(

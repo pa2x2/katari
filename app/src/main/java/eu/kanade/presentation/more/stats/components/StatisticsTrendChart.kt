@@ -24,7 +24,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -48,6 +47,7 @@ import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.more.stats.data.StatsTrendPoint
 import eu.kanade.presentation.more.stats.data.StatsType
@@ -55,7 +55,6 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import java.time.LocalDate
-import java.time.temporal.ChronoUnit
 import kotlin.math.roundToInt
 
 @Composable
@@ -70,13 +69,13 @@ internal fun StatisticsTrendChart(
     notTrackedLabel: String,
     previousPointLabel: String,
     nextPointLabel: String,
+    bucketLabel: String,
     canNavigateOlder: Boolean,
     canNavigateNewer: Boolean,
     navigationPending: Boolean,
     onNavigateByBuckets: (Int) -> Unit,
     onOpenActivity: (StatsTrendPoint) -> Unit,
     selectionActionLabel: @Composable (StatsTrendPoint) -> String? = { null },
-    periodTotalCaption: String? = null,
     modifier: Modifier = Modifier,
 ) {
     val typeColors = types.associate { it.type to it.accent.color() }
@@ -87,17 +86,6 @@ internal fun StatisticsTrendChart(
     val dataHorizontalInsetPx = with(LocalDensity.current) {
         (CHART_HORIZONTAL_INSET + CHART_EDGE_POINT_INSET).toPx()
     }
-    val rawMaximum = niceTrendMaximum(
-        navigationPoints.maxOfOrNull(StatsTrendPoint::totalDurationMillis) ?: 0L,
-    )
-    var retainedMaximum by remember(types.map(StatsType::type), points.size) {
-        mutableLongStateOf(rawMaximum)
-    }
-    val maximum = maxOf(rawMaximum, retainedMaximum)
-    LaunchedEffect(rawMaximum) {
-        retainedMaximum = maxOf(retainedMaximum, rawMaximum)
-    }
-
     val selectionKey = buildString {
         append(points.firstOrNull()?.startDate)
         append(':')
@@ -193,6 +181,24 @@ internal fun StatisticsTrendChart(
         liveVisibleStartIndex,
         (liveVisibleStartIndex + points.size).coerceAtMost(navigationPoints.size),
     )
+    val visibleDurationAxis = remember(liveVisiblePoints) {
+        buildTrendDurationAxis(
+            liveVisiblePoints.maxOfOrNull(StatsTrendPoint::totalDurationMillis) ?: 0L,
+        )
+    }
+    var settledDurationAxis by remember(scrollStateKey) {
+        mutableStateOf(visibleDurationAxis)
+    }
+    val keepScaleStable = scrollableState.isScrollInProgress ||
+        navigationPending ||
+        pendingNavigation != null
+    val durationAxis = if (keepScaleStable) settledDurationAxis else visibleDurationAxis
+    val maximum = durationAxis.maximumMillis
+    SideEffect {
+        if (!keepScaleStable && settledDurationAxis != visibleDurationAxis) {
+            settledDurationAxis = visibleDurationAxis
+        }
+    }
 
     LaunchedEffect(scrollableState, pointSpacingPx, navigationPending) {
         snapshotFlow { scrollableState.isScrollInProgress }
@@ -272,6 +278,14 @@ internal fun StatisticsTrendChart(
             customActions = accessibilityActions
         },
     ) {
+        Text(
+            text = bucketLabel,
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.labelSmall,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(12.dp))
         if (types.size > 1) {
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 types.forEach { type ->
@@ -300,9 +314,9 @@ internal fun StatisticsTrendChart(
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.End,
             ) {
-                Text(formatDuration(maximum), style = MaterialTheme.typography.labelSmall)
-                Text(formatDuration(maximum / 2L), style = MaterialTheme.typography.labelSmall)
-                Text(formatDuration(0L), style = MaterialTheme.typography.labelSmall)
+                durationAxis.ticksDescending.forEach { tick ->
+                    Text(formatDuration(tick), style = MaterialTheme.typography.labelSmall)
+                }
             }
             Box(
                 modifier = Modifier.weight(1f).height(CHART_HEIGHT),
@@ -352,7 +366,7 @@ internal fun StatisticsTrendChart(
                     val y = { value: Long ->
                         plotBottom - plotHeight * value.coerceIn(0L, maximum).toFloat() / maximum.toFloat()
                     }
-                    listOf(maximum, maximum / 2L, 0L).forEach { value ->
+                    durationAxis.ticksDescending.forEach { value ->
                         drawLine(
                             color = Color(outlineVariant.value).copy(alpha = 0.45f),
                             start = Offset(horizontalInset, y(value)),
@@ -399,31 +413,6 @@ internal fun StatisticsTrendChart(
                     clipRect(horizontalInset, plotTop, size.width - horizontalInset, plotBottom) {
                         translate(left = displayedPlotOffsetPx) {
                             navigationPoints.forEachIndexed { index, point ->
-                                val untrackedFraction = point.untrackedFraction()
-                                if (untrackedFraction > 0f) {
-                                    val left = navigationX(index) - pointSpacing / 2f
-                                    val pointRight = navigationX(index) + pointSpacing / 2f
-                                    val right = left + (pointRight - left) * untrackedFraction
-                                    drawRect(
-                                        color = Color(outlineVariant.value).copy(alpha = 0.18f),
-                                        topLeft = Offset(left, plotTop),
-                                        size = Size((right - left).coerceAtLeast(1f), plotHeight),
-                                    )
-                                    clipRect(left, plotTop, right, plotBottom) {
-                                        var hatchX = left - plotHeight
-                                        while (hatchX < right) {
-                                            drawLine(
-                                                color = onSurfaceVariant.copy(alpha = 0.16f),
-                                                start = Offset(hatchX, plotBottom),
-                                                end = Offset(hatchX + plotHeight, plotTop),
-                                                strokeWidth = 1.dp.toPx(),
-                                            )
-                                            hatchX += 10.dp.toPx()
-                                        }
-                                    }
-                                }
-                            }
-                            navigationPoints.forEachIndexed { index, point ->
                                 if (!point.isTracked) return@forEachIndexed
                                 var cumulative = 0L
                                 types.forEach { type ->
@@ -466,16 +455,6 @@ internal fun StatisticsTrendChart(
                         }
                     }
                 }
-                if (liveVisiblePoints.any { it.untrackedFraction() > 0f }) {
-                    Text(
-                        text = notTrackedLabel,
-                        modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .padding(start = CHART_HORIZONTAL_INSET + 4.dp, top = CHART_VERTICAL_INSET + 4.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.labelSmall,
-                    )
-                }
             }
         }
 
@@ -492,14 +471,6 @@ internal fun StatisticsTrendChart(
                             .graphicsLayer { translationX = axisOffsetPx },
                     )
                 }
-            }
-            periodTotalCaption?.let { caption ->
-                Text(
-                    text = caption,
-                    modifier = Modifier.padding(start = Y_AXIS_WIDTH, top = 8.dp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.labelSmall,
-                )
             }
             val selected = points[selectedIndex.coerceIn(points.indices)]
             StatisticsTrendSelection(
@@ -584,19 +555,12 @@ private data class PendingTrendNavigation(
     val restingOffsetBuckets: Float,
 )
 
-private fun StatsTrendPoint.untrackedFraction(): Float {
-    val trackedStart = trackedStartDate ?: return 1f
-    if (!trackedStart.isAfter(startDate)) return 0f
-    val bucketDays = ChronoUnit.DAYS.between(startDate, endDate).toFloat() + 1f
-    return (ChronoUnit.DAYS.between(startDate, trackedStart).toFloat() / bucketDays).coerceIn(0f, 1f)
-}
-
 private val CHART_HORIZONTAL_INSET = 12.dp
 
 // Keeps the widest edge bars 4 dp clear of the vertical plot borders.
 private val CHART_EDGE_POINT_INSET = 16.dp
 private val CHART_VERTICAL_INSET = 6.dp
-private val CHART_HEIGHT = 220.dp
+private val CHART_HEIGHT = 180.dp
 private val Y_AXIS_WIDTH = 48.dp
 private val MINIMUM_BAR_WIDTH = 1.dp
 private val MAXIMUM_BAR_WIDTH = 24.dp

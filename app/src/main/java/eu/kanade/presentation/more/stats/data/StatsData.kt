@@ -44,7 +44,6 @@ data class StatsLibrary(
 data class StatsLibraryInsights(
     val topGenre: String?,
     val categoryCount: Int,
-    val sourceCount: Int,
 )
 
 data class StatsTrendPoint(
