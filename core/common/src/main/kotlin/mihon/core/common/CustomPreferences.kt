@@ -1,6 +1,8 @@
 package mihon.core.common
 
 import dev.icerock.moko.resources.StringResource
+import mihon.core.common.navigation.toHomeNavigationPrimaryTabs
+import mihon.core.common.navigation.toHomeNavigationPrimaryTabsPreferenceValue
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.getEnum
@@ -13,6 +15,8 @@ class CustomPreferences(
         const val HOME_SCREEN_STARTUP_TAB_KEY = "home_screen_startup_tab"
         const val HOME_SCREEN_TABS_KEY = "home_screen_tabs"
         const val HOME_SCREEN_TAB_ORDER_KEY = "home_screen_tab_order"
+        const val HOME_SCREEN_PRIMARY_TABS_KEY = "home_screen_primary_tabs"
+        const val HOME_SCREEN_NAVIGATION_DRAFT_KEY = "home_screen_navigation_draft"
         const val ENABLE_FEEDS_KEY = "enable_feeds"
         const val BROWSE_LONG_PRESS_ACTION_KEY = "browse_long_press_action"
         const val BROWSE_LONG_PRESS_ACTION_OVERRIDES_KEY = "browse_long_press_action_overrides"
@@ -21,6 +25,7 @@ class CustomPreferences(
             HOME_SCREEN_STARTUP_TAB_KEY,
             HOME_SCREEN_TABS_KEY,
             HOME_SCREEN_TAB_ORDER_KEY,
+            HOME_SCREEN_PRIMARY_TABS_KEY,
             ENABLE_FEEDS_KEY,
             BROWSE_LONG_PRESS_ACTION_KEY,
             BROWSE_LONG_PRESS_ACTION_OVERRIDES_KEY,
@@ -42,6 +47,18 @@ class CustomPreferences(
         defaultHomeScreenTabOrder(),
         serializer = { it.toHomeScreenTabOrderPreferenceValue() },
         deserializer = { it.toHomeScreenTabOrder() },
+    )
+
+    val homeScreenPrimaryTabs: Preference<List<HomeScreenTabs>> = preferenceStore.getObjectFromString(
+        HOME_SCREEN_PRIMARY_TABS_KEY,
+        emptyList(),
+        serializer = { it.toHomeNavigationPrimaryTabsPreferenceValue() },
+        deserializer = { it.toHomeNavigationPrimaryTabs() },
+    )
+
+    val homeScreenNavigationDraft: Preference<String> = preferenceStore.getString(
+        HOME_SCREEN_NAVIGATION_DRAFT_KEY,
+        "",
     )
 
     val enableFeeds: Preference<Boolean> = preferenceStore.getBoolean(

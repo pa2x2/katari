@@ -55,6 +55,8 @@ interface AssistContentScreen {
     fun onProvideAssistUrl(): String?
 }
 
+interface HandlesOwnBackPress
+
 @Composable
 fun DefaultNavigatorScreenTransition(
     navigator: Navigator,
@@ -91,5 +93,8 @@ fun ScreenTransition(
         }
     }
 
-    BackHandler(enabled = navigator.canPop, onBack = navigator::pop)
+    BackHandler(
+        enabled = navigator.canPop && navigator.lastItem !is HandlesOwnBackPress,
+        onBack = navigator::pop,
+    )
 }

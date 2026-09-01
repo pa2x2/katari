@@ -188,6 +188,7 @@
     <string name="pref_library_pinned_style_shelf">Pinned shelf</string>
     <string name="action_apply">Apply</string>
     <string name="action_cancel">Cancel</string>
+    <string name="action_discard">Discard</string>
     <string name="action_ok">OK</string>
     <string name="action_done">Done</string>
     <string name="action_switch">Switch</string>
@@ -1040,6 +1041,18 @@
     <string name="pref_category_home_screen">Home screen</string>
     <string name="pref_home_screen_tabs">Home screen tabs</string>
     <string name="pref_startup_screen">Application startup screen</string>
+    <string name="home_navigation_editor_title">Navigation</string>
+    <string name="home_navigation_editor_instructions">Press and hold a destination, then drop it exactly where you want it.</string>
+    <string name="home_navigation_overflow">Overflow</string>
+    <string name="home_navigation_drop_here">Drop items here</string>
+    <string name="home_navigation_startup">Startup</string>
+    <string name="home_navigation_startup_tab">Startup tab</string>
+    <string name="home_navigation_discard_title">Discard navigation changes?</string>
+    <string name="home_navigation_discard_message">Your saved navigation will stay unchanged.</string>
+    <string name="home_navigation_keep_editing">Keep editing</string>
+    <string name="home_navigation_primary_required">Keep at least one item directly in the navigation bar.</string>
+    <string name="home_navigation_more_required">More cannot be hidden.</string>
+    <string name="home_navigation_startup_required">Choose another startup destination before hiding this one.</string>
     <string name="pref_extensions_auto_update">Enable extensions auto-update</string>
     <string name="pref_enable_feeds">Enable feeds</string>
     <string name="pref_enable_feeds_summary">Show the Feeds tab and feed preset actions in Browse</string>
@@ -1879,4 +1892,5 @@
     <string name="donationCampaign.paragraph3">Regardless, Mihon will continue to be maintained by me and the volunteers, and it will stay open source.</string>
     <string name="donationCampaign.contactPlatform">Discord</string>
     <string name="donationCampaign.dismiss">Dismiss</string>
+    <string name="home_navigation_menu">Menu</string>
 </resources>
