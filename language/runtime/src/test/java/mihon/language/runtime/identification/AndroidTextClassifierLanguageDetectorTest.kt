@@ -15,7 +15,7 @@ class AndroidTextClassifierLanguageDetectorTest {
     fun `platform locale and confidence cross the detector boundary`() = runTest {
         val detector = AndroidTextClassifierLanguageDetector(
             classify = {
-                AndroidTextClassifierLanguageDetector.LanguageCandidate("fr-FR", 0.8f)
+                listOf(AndroidTextClassifierLanguageDetector.LanguageCandidate("fr-FR", 0.8f))
             },
             workerDispatcher = StandardTestDispatcher(testScheduler),
         )
@@ -29,12 +29,12 @@ class AndroidTextClassifierLanguageDetectorTest {
     @Test
     fun `missing or indeterminate platform candidate stays undetermined`() = runTest {
         val missing = AndroidTextClassifierLanguageDetector(
-            classify = { null },
+            classify = { emptyList() },
             workerDispatcher = StandardTestDispatcher(testScheduler),
         )
         val indeterminate = AndroidTextClassifierLanguageDetector(
             classify = {
-                AndroidTextClassifierLanguageDetector.LanguageCandidate("und", 0f)
+                listOf(AndroidTextClassifierLanguageDetector.LanguageCandidate("und", 0f))
             },
             workerDispatcher = StandardTestDispatcher(testScheduler),
         )
@@ -44,15 +44,27 @@ class AndroidTextClassifierLanguageDetectorTest {
     }
 
     @Test
-    fun `low confidence platform candidate stays undetermined for user correction`() = runTest {
+    fun `ranked platform hypotheses cross the detector boundary without product filtering`() = runTest {
         val detector = AndroidTextClassifierLanguageDetector(
             classify = {
-                AndroidTextClassifierLanguageDetector.LanguageCandidate("fr", 0.49f)
+                listOf(
+                    AndroidTextClassifierLanguageDetector.LanguageCandidate("fr", 0.49f),
+                    AndroidTextClassifierLanguageDetector.LanguageCandidate("en", 0.4f),
+                )
             },
             workerDispatcher = StandardTestDispatcher(testScheduler),
         )
 
-        detector.detect("Ambiguous text") shouldBe TextLanguageDetection.Undetermined
+        detector.detect("Ambiguous text") shouldBe TextLanguageDetection.Detected(
+            language = LanguageTag.require("fr"),
+            confidence = 0.49f,
+            alternatives = listOf(
+                mihon.language.api.identification.TextLanguageCandidate(
+                    language = LanguageTag.require("en"),
+                    confidence = 0.4f,
+                ),
+            ),
+        )
     }
 
     @Test

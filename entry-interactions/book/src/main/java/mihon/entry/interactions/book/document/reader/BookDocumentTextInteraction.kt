@@ -44,6 +44,7 @@ internal sealed interface BookDocumentTextSelection {
         override val ownerIdentity: String,
         val identity: String,
         val text: String,
+        val languageContextText: String,
         val boundsInReaderRoot: RectF,
     ) : BookDocumentTextSelection
 

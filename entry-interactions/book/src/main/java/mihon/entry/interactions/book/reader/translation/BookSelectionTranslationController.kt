@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import mihon.entry.interactions.book.reader.language.BookSelectionLanguageSession
 import mihon.entry.viewer.settings.ResolvedViewerSetting
 import mihon.entry.viewer.settings.shared.ReaderCapabilityId
 import mihon.entry.viewer.settings.shared.StandardReaderCapabilities
@@ -28,12 +29,14 @@ internal data class BookReaderTextSelection(
     val ownerIdentity: String,
     val identity: String,
     val text: String,
+    val languageContextText: String,
     val anchor: TranslationSelectionAnchor?,
 ) {
     init {
         require(ownerIdentity.isNotBlank())
         require(identity.isNotBlank())
         require(text.isNotBlank())
+        require(languageContextText.isNotBlank())
     }
 }
 
@@ -41,6 +44,7 @@ internal class BookSelectionTranslationController(
     feature: TranslationFeature,
     private val hostActions: TranslationHostActions,
     private val automaticSelectionSetting: StateFlow<ResolvedViewerSetting<Boolean>>,
+    private val languageSession: BookSelectionLanguageSession,
     private val scope: CoroutineScope,
     initialCapabilities: Set<ReaderCapabilityId>,
 ) : AutoCloseable {
@@ -144,6 +148,7 @@ internal class BookSelectionTranslationController(
                     sourceLanguage = TranslationSourceLanguageSelection.Automatic,
                     targetLanguage = TranslationTargetLanguageSelection.Default,
                     engine = TranslationEngineSelection.ProfileDefault,
+                    languageContext = languageSession.context(selection.languageContextText),
                 ),
                 anchor = selection.anchor,
             ),
@@ -218,6 +223,7 @@ private fun NeutralBookReaderTextSelection.toTranslationSelection() = BookReader
     ownerIdentity = ownerIdentity,
     identity = identity,
     text = text,
+    languageContextText = languageContextText,
     anchor = anchor?.let { anchor ->
         TranslationSelectionAnchor(
             left = anchor.left,

@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import mihon.entry.interactions.book.document.reader.BookDocumentSelectionAction
 import mihon.entry.interactions.book.document.reader.BookDocumentTextSelection
+import mihon.entry.interactions.book.reader.language.BookSelectionLanguageSession
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechController
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechOwner
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechRequest
@@ -24,6 +25,7 @@ import mihon.tts.api.request.TtsLanguageSelection
 internal class BookSelectionActionCoordinator(
     val translationController: BookSelectionTranslationController,
     private val speechController: BookShortFormSpeechController,
+    private val languageSession: BookSelectionLanguageSession,
     scope: CoroutineScope,
     initialCapabilities: Set<ReaderCapabilityId>,
 ) : AutoCloseable {
@@ -42,6 +44,9 @@ internal class BookSelectionActionCoordinator(
         .launchIn(scope)
     private val translationSpeechJob: Job = translationController.hostCoordinator.controller.state
         .onEach { state ->
+            if (state is TranslationSessionState.Success) {
+                languageSession.record(state.result.sourceLanguage)
+            }
             val active = speechController.state.value.owner as? BookShortFormSpeechOwner.TranslationResult
                 ?: return@onEach
             if (active.target !in state.speechTargets()) speechController.clearTranslationResult()
@@ -106,6 +111,7 @@ internal class BookSelectionActionCoordinator(
                     owner = BookShortFormSpeechOwner.Selection(selection.identity),
                     text = selection.text,
                     language = TtsLanguageSelection.Automatic,
+                    languageContext = languageSession.context(selection.languageContextText),
                 ),
             )
             BookDocumentSelectionAction.Translate -> translationController.translateSelection(selection)
@@ -163,6 +169,7 @@ internal class BookSelectionActionCoordinator(
         ownerIdentity = ownerIdentity,
         identity = identity,
         text = text,
+        languageContextText = languageContextText,
         anchor = boundsInReaderRoot.let { bounds ->
             BookReaderTextSelectionAnchor(bounds.left, bounds.top, bounds.right, bounds.bottom)
         },

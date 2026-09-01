@@ -14,6 +14,7 @@ dependencies {
     api(projects.domain)
     api(projects.entryInteractions.spi)
     api(projects.entryViewerSettingsApi)
+    implementation(projects.language.api)
     implementation(projects.translation.api)
     implementation(projects.tts.api)
     implementation(projects.tts.ui)

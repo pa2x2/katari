@@ -22,14 +22,40 @@ interface TextLanguageDetector {
     suspend fun detect(text: String): TextLanguageDetection
 }
 
+data class TextLanguageCandidate(
+    val language: LanguageTag,
+    val confidence: Float? = null,
+) {
+    init {
+        require(confidence == null || confidence in 0f..1f)
+    }
+}
+
+data class TextLanguageResolutionContext(
+    val surroundingText: String? = null,
+    val sessionLanguage: LanguageTag? = null,
+    val declaredLanguages: List<LanguageTag> = emptyList(),
+) {
+    init {
+        require(surroundingText == null || surroundingText.isNotBlank())
+        require(declaredLanguages.distinct().size == declaredLanguages.size)
+    }
+}
+
 sealed interface TextLanguageDetection {
     data class Detected(
         val language: LanguageTag,
         val confidence: Float? = null,
+        val alternatives: List<TextLanguageCandidate> = emptyList(),
     ) : TextLanguageDetection {
         init {
             require(confidence == null || confidence in 0f..1f)
+            require(alternatives.none { it.language == language })
+            require(alternatives.distinctBy(TextLanguageCandidate::language).size == alternatives.size)
         }
+
+        val candidates: List<TextLanguageCandidate>
+            get() = listOf(TextLanguageCandidate(language, confidence)) + alternatives
     }
 
     data object Undetermined : TextLanguageDetection

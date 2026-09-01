@@ -2,6 +2,7 @@ package mihon.entry.interactions.book.content
 
 import eu.kanade.tachiyomi.source.entry.BookResourceHierarchyNode
 import eu.kanade.tachiyomi.source.entry.BookResourceLocation
+import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
@@ -48,6 +49,8 @@ internal class SourceBookContentSession(
     override val descriptor = media.descriptor
     override val publicationId = buildPublicationId(source.id, entry.url, media.publicationKeyOverride)
     override val revision = media.publicationRevision ?: UNVERSIONED_REVISION
+    override val languages = listOfNotNull((source as? EntryCatalogueSource)?.lang)
+        .normalizedBookContentLanguages()
     override val catalogRevision = media.catalog.revision
     override val catalogCoverage = media.catalog.coverage
     override val resourceHierarchy = media.hierarchy.map(BookResourceHierarchyNode::toProcessorGroup)

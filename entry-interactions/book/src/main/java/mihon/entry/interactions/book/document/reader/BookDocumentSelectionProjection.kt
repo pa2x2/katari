@@ -25,6 +25,7 @@ internal data class BookDocumentSelectionProjection(
     val selectedTokens: Set<String>,
     val identity: String,
     val text: String,
+    val languageContextText: String,
     val boundsInReaderRoot: RectF?,
 )
 
@@ -74,6 +75,11 @@ internal fun projectBookDocumentSelection(
             append(fragment.endExclusive)
         }
     }
+    val languageContextText = resolvedFragments
+        .map(ResolvedBookDocumentSelectionFragment::languageContextText)
+        .distinct()
+        .joinToString(separator = "\n")
+        .takeCodePoints(MAX_LANGUAGE_CONTEXT_CODE_POINTS)
     val bounds = resolvedFragments
         .mapNotNull { fragment ->
             fragment.boundsInReaderRoot(
@@ -88,6 +94,7 @@ internal fun projectBookDocumentSelection(
         selectedTokens = fragments.mapTo(linkedSetOf()) { it.metadata.token },
         identity = identity,
         text = text,
+        languageContextText = languageContextText,
         boundsInReaderRoot = bounds,
     )
 }
@@ -116,6 +123,27 @@ private data class ResolvedBookDocumentSelectionFragment(
     val start: Int,
     val endExclusive: Int,
 ) {
+    fun languageContextText(): String {
+        val fullText = fragment.metadata.fullText
+        val fullCodePoints = fullText.codePointCount(0, fullText.length)
+        if (fullCodePoints <= MAX_LANGUAGE_CONTEXT_CODE_POINTS) return fullText
+
+        val selectionStart = fullText.codePointCount(0, start)
+        val selectionEnd = fullText.codePointCount(0, endExclusive)
+        val selectionLength = selectionEnd - selectionStart
+        if (selectionLength >= MAX_LANGUAGE_CONTEXT_CODE_POINTS) {
+            return fragment.text.takeCodePoints(MAX_LANGUAGE_CONTEXT_CODE_POINTS)
+        }
+
+        val surroundingCapacity = MAX_LANGUAGE_CONTEXT_CODE_POINTS - selectionLength
+        var windowStart = (selectionStart - surroundingCapacity / 2).coerceAtLeast(0)
+        var windowEnd = (windowStart + MAX_LANGUAGE_CONTEXT_CODE_POINTS).coerceAtMost(fullCodePoints)
+        windowStart = (windowEnd - MAX_LANGUAGE_CONTEXT_CODE_POINTS).coerceAtLeast(0)
+        val startOffset = fullText.offsetByCodePoints(0, windowStart)
+        val endOffset = fullText.offsetByCodePoints(0, windowEnd)
+        return fullText.substring(startOffset, endOffset)
+    }
+
     fun boundsInReaderRoot(
         layout: BookDocumentSelectionLayout?,
         readerRootPositionInWindow: Offset,
@@ -138,4 +166,11 @@ private data class ResolvedBookDocumentSelectionFragment(
 
 private fun RectF.unionWith(other: RectF): RectF = RectF(this).apply { union(other) }
 
+private fun String.takeCodePoints(maximum: Int): String {
+    val count = codePointCount(0, length)
+    if (count <= maximum) return this
+    return substring(0, offsetByCodePoints(0, maximum))
+}
+
 internal const val BOOK_DOCUMENT_SELECTION_TOKEN_TAG = "book-document-selection-token"
+private const val MAX_LANGUAGE_CONTEXT_CODE_POINTS = 1_000

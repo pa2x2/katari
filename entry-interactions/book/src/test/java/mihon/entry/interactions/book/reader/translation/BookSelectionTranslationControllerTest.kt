@@ -7,6 +7,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import mihon.entry.interactions.book.reader.language.BookSelectionLanguageSession
 import mihon.entry.viewer.settings.ResolvedViewerSetting
 import mihon.entry.viewer.settings.ViewerSettingSource
 import mihon.entry.viewer.settings.shared.StandardReaderCapabilities
@@ -53,6 +54,8 @@ class BookSelectionTranslationControllerTest {
 
         feature.requests.map(TranslationRequest::text) shouldBe listOf("second")
         feature.requests.single().engine shouldBe TranslationEngineSelection.ProfileDefault
+        feature.requests.single().languageContext.surroundingText shouldBe "surrounding second prose"
+        feature.requests.single().languageContext.declaredLanguages shouldBe listOf(LanguageTag.require("en"))
         controller.close()
     }
 
@@ -142,6 +145,7 @@ class BookSelectionTranslationControllerTest {
         feature = feature,
         hostActions = host,
         automaticSelectionSetting = automaticSelectionSetting,
+        languageSession = BookSelectionLanguageSession(listOf("en")),
         scope = backgroundScope,
         initialCapabilities = setOf(
             StandardReaderCapabilities.StableTextSelection,
@@ -163,6 +167,7 @@ class BookSelectionTranslationControllerTest {
         ownerIdentity = "owner",
         identity = "selection-$generation",
         text = text,
+        languageContextText = "surrounding $text prose",
         anchor = TranslationSelectionAnchor(10f, 20f, 30f, 40f),
     )
 

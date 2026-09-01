@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import mihon.language.api.identification.TextLanguageResolutionContext
+import mihon.language.api.tag.LanguageTag
 import mihon.tts.api.TtsFeature
 import mihon.tts.api.playback.TtsPlaybackSession
 import mihon.tts.api.playback.TtsPlaybackStart
@@ -29,6 +31,7 @@ data class ShortFormSpeechRequest<Owner : Any>(
     val owner: Owner,
     val text: String,
     val language: TtsLanguageSelection,
+    val languageContext: TextLanguageResolutionContext = TextLanguageResolutionContext(),
 ) {
     init {
         require(text.isNotBlank())
@@ -55,6 +58,7 @@ class ShortFormSpeechController<Owner : Any>(
     private val feature: TtsFeature,
     private val scope: CoroutineScope,
     private val onFailure: (ShortFormSpeechFailure) -> Unit,
+    private val onLanguageResolved: (LanguageTag) -> Unit = {},
 ) : AutoCloseable {
     private val mutableState = MutableStateFlow(ShortFormSpeechState<Owner>())
     val state: StateFlow<ShortFormSpeechState<Owner>> = mutableState.asStateFlow()
@@ -102,6 +106,7 @@ class ShortFormSpeechController<Owner : Any>(
                         TtsRequest(
                             text = request.text,
                             language = request.language,
+                            languageContext = request.languageContext,
                         ),
                     )
                 ) {
@@ -122,6 +127,7 @@ class ShortFormSpeechController<Owner : Any>(
         activeGeneration: Long,
     ) {
         if (!isCurrent(activeGeneration)) return
+        onLanguageResolved(preparation.request.language)
         when (val start = feature.play(preparation.speech)) {
             is TtsPlaybackStart.Started -> observe(start.session, owner, activeGeneration)
             is TtsPlaybackStart.PreparationChanged -> fail(activeGeneration, start.preparation.failure())

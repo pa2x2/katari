@@ -1,8 +1,9 @@
 package mihon.translation.runtime.feature
 
-import mihon.language.api.identification.TextLanguageDetection
 import mihon.language.api.identification.TextLanguageDetector
 import mihon.language.api.tag.LanguageTag
+import mihon.language.runtime.identification.AutomaticTextLanguageResolution
+import mihon.language.runtime.identification.AutomaticTextLanguageResolver
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationEngineSelection
@@ -38,6 +39,8 @@ class DefaultTranslationFeature(
     private val defaultTargetLanguageResolver: TranslationDefaultTargetLanguageResolver,
     private val selectedEngine: suspend () -> TranslationEngineId?,
 ) : TranslationFeature {
+    private val automaticLanguageResolver = AutomaticTextLanguageResolver(textLanguageDetectors)
+
     override suspend fun prepare(request: TranslationRequest): TranslationPreparation {
         if (request.text.isBlank()) {
             return TranslationPreparation.Rejected(TranslationRejectionReason.BlankInput)
@@ -48,8 +51,12 @@ class DefaultTranslationFeature(
             return inputTooLarge(codePointCount, SHARED_MAXIMUM_CODE_POINTS)
         }
 
-        val sourceLanguage = resolveSourceLanguage(request)
-            ?: return TranslationPreparation.SourceUndetermined()
+        val sourceLanguage = when (val resolution = resolveSourceLanguage(request)) {
+            is AutomaticTextLanguageResolution.Resolved -> resolution.language
+            is AutomaticTextLanguageResolution.Undetermined -> {
+                return TranslationPreparation.SourceUndetermined(resolution.suggestedLanguages)
+            }
+        }
         val targetLanguage = when (val selection = request.targetLanguage) {
             TranslationTargetLanguageSelection.Default -> defaultTargetLanguageResolver.resolve()
                 ?: return TranslationPreparation.TargetLanguageRequired(
@@ -132,17 +139,14 @@ class DefaultTranslationFeature(
         }
     }
 
-    private suspend fun resolveSourceLanguage(request: TranslationRequest): LanguageTag? {
+    private suspend fun resolveSourceLanguage(request: TranslationRequest): AutomaticTextLanguageResolution {
         return when (val selection = request.sourceLanguage) {
-            is TranslationSourceLanguageSelection.Explicit -> selection.language
-            TranslationSourceLanguageSelection.Automatic -> textLanguageDetectors.firstNotNullOfOrNull { detector ->
-                when (val result = detector.detect(request.text)) {
-                    is TextLanguageDetection.Detected -> result.language
-                    TextLanguageDetection.Undetermined,
-                    is TextLanguageDetection.Unavailable,
-                    -> null
-                }
-            }
+            is TranslationSourceLanguageSelection.Explicit ->
+                AutomaticTextLanguageResolution.Resolved(selection.language)
+            TranslationSourceLanguageSelection.Automatic -> automaticLanguageResolver.resolve(
+                text = request.text,
+                context = request.languageContext,
+            )
         }
     }
 

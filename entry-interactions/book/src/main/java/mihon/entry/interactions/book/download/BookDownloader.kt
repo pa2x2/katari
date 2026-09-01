@@ -223,6 +223,7 @@ internal class BookDownloader(
                         descriptor = session.descriptor,
                         publicationId = session.publicationId,
                         publicationRevision = session.revision,
+                        languages = session.languages,
                         catalogRevision = session.catalogRevision,
                         catalogCoverage = session.catalogCoverage,
                         resourceHierarchy = session.resourceHierarchy,

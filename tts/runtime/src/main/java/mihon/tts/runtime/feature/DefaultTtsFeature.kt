@@ -2,9 +2,10 @@ package mihon.tts.runtime.feature
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import mihon.language.api.identification.TextLanguageDetection
 import mihon.language.api.identification.TextLanguageDetector
 import mihon.language.api.tag.LanguageTag
+import mihon.language.runtime.identification.AutomaticTextLanguageResolution
+import mihon.language.runtime.identification.AutomaticTextLanguageResolver
 import mihon.tts.api.TtsFeature
 import mihon.tts.api.engine.KnownTtsEngine
 import mihon.tts.api.engine.TtsEngineId
@@ -53,6 +54,7 @@ internal class DefaultTtsFeature(
     audioFocus: TtsAudioFocus,
 ) : TtsFeature {
     private val owner = Any()
+    private val automaticLanguageResolver = AutomaticTextLanguageResolver(textLanguageDetectors)
     private val knownEngines: List<KnownTtsEngine> = knownEngineCatalog.knownEngines
     private val playbackCoordinator = TtsPlaybackCoordinator(
         scope = scope,
@@ -69,8 +71,19 @@ internal class DefaultTtsFeature(
             )
         }
 
-        val language = resolveLanguage(request)
-            ?: return TtsPreparation.LanguageChoiceRequired(TtsLanguageChoiceReason.Undetermined)
+        val language = when (val resolution = resolveLanguage(request)) {
+            is AutomaticTextLanguageResolution.Resolved -> resolution.language
+            is AutomaticTextLanguageResolution.Undetermined -> {
+                return TtsPreparation.LanguageChoiceRequired(
+                    reason = if (resolution.suggestedLanguages.size > 1) {
+                        TtsLanguageChoiceReason.Ambiguous
+                    } else {
+                        TtsLanguageChoiceReason.Undetermined
+                    },
+                    suggestedLanguages = resolution.suggestedLanguages,
+                )
+            }
+        }
         val engineId = when (val selection = request.engine) {
             TtsEngineSelection.ProfileDefault -> selectedEngine()
                 ?: return TtsPreparation.EngineChoiceRequired(
@@ -197,17 +210,13 @@ internal class DefaultTtsFeature(
 
     internal fun onAudioFocusLost() = playbackCoordinator.onAudioFocusLost()
 
-    private suspend fun resolveLanguage(request: TtsRequest): LanguageTag? {
+    private suspend fun resolveLanguage(request: TtsRequest): AutomaticTextLanguageResolution {
         return when (val selection = request.language) {
-            is TtsLanguageSelection.Explicit -> selection.language
-            TtsLanguageSelection.Automatic -> textLanguageDetectors.firstNotNullOfOrNull { detector ->
-                when (val detection = detector.detect(request.text)) {
-                    is TextLanguageDetection.Detected -> detection.language
-                    TextLanguageDetection.Undetermined,
-                    is TextLanguageDetection.Unavailable,
-                    -> null
-                }
-            }
+            is TtsLanguageSelection.Explicit -> AutomaticTextLanguageResolution.Resolved(selection.language)
+            TtsLanguageSelection.Automatic -> automaticLanguageResolver.resolve(
+                text = request.text,
+                context = request.languageContext,
+            )
         }
     }
 

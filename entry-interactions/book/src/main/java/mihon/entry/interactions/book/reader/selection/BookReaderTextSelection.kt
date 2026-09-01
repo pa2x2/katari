@@ -4,12 +4,14 @@ internal data class BookReaderTextSelection(
     val ownerIdentity: String,
     val identity: String,
     val text: String,
+    val languageContextText: String,
     val anchor: BookReaderTextSelectionAnchor?,
 ) {
     init {
         require(ownerIdentity.isNotBlank())
         require(identity.isNotBlank())
         require(text.isNotBlank())
+        require(languageContextText.isNotBlank())
     }
 }
 

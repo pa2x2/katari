@@ -2,6 +2,7 @@ package mihon.entry.interactions.book.reader.speech
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.StateFlow
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.ui.presentation.TranslationResultSpeechTarget
 import mihon.tts.api.TtsFeature
 import mihon.tts.ui.playback.ShortFormSpeechController
@@ -27,8 +28,14 @@ internal class BookShortFormSpeechController(
     feature: TtsFeature,
     scope: CoroutineScope,
     onFailure: (BookShortFormSpeechFailure) -> Unit,
+    onLanguageResolved: (LanguageTag) -> Unit = {},
 ) : AutoCloseable {
-    private val delegate = ShortFormSpeechController<BookShortFormSpeechOwner>(feature, scope, onFailure)
+    private val delegate = ShortFormSpeechController<BookShortFormSpeechOwner>(
+        feature = feature,
+        scope = scope,
+        onFailure = onFailure,
+        onLanguageResolved = onLanguageResolved,
+    )
     val state: StateFlow<BookShortFormSpeechState> = delegate.state
 
     fun toggle(request: BookShortFormSpeechRequest) = delegate.toggle(request)
