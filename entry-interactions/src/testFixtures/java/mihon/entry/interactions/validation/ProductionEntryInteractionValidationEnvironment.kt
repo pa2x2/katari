@@ -168,6 +168,9 @@ class ProductionEntryInteractionValidationEnvironment(
         return mockk<Application>(relaxed = true).also { application ->
             every { application.cacheDir } returns temporaryDirectory.resolve("cache").also(File::mkdirs)
             every { application.filesDir } returns temporaryDirectory.resolve("files").also(File::mkdirs)
+            // Production graph validation runs without Android system services. Keep that boundary
+            // explicit so generic service lookups return absence instead of relaxed mock placeholders.
+            every { application.getSystemService(any<Class<Any>>()) } returns null
         }
     }
 
