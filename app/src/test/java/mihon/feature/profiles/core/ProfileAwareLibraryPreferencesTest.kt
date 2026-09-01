@@ -491,6 +491,7 @@ class ProfileAwareLibraryPreferencesTest {
             HomeScreenTabs.Browse,
             HomeScreenTabs.Profiles,
             HomeScreenTabs.Translator,
+            HomeScreenTabs.Statistics,
         )
     }
 

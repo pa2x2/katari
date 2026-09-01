@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Menu
+import androidx.compose.material.icons.outlined.QueryStats
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -236,6 +237,7 @@ fun homeNavigationTitle(tab: HomeScreenTabs): String {
         HomeScreenTabs.More -> stringResource(MR.strings.label_more)
         HomeScreenTabs.Profiles -> stringResource(MR.strings.action_switch)
         HomeScreenTabs.Translator -> stringResource(MR.strings.translator_title)
+        HomeScreenTabs.Statistics -> stringResource(MR.strings.label_stats)
     }
 }
 
@@ -335,6 +337,12 @@ private fun HomeNavigationBaseIcon(
                 contentDescription = homeNavigationTitle(tab),
                 modifier = modifier,
             )
+        } else if (tab == HomeScreenTabs.Statistics) {
+            Icon(
+                imageVector = Icons.Outlined.QueryStats,
+                contentDescription = homeNavigationTitle(tab),
+                modifier = modifier,
+            )
         } else {
             val iconResource = when (tab) {
                 HomeScreenTabs.Library -> R.drawable.anim_library_enter
@@ -344,6 +352,7 @@ private fun HomeNavigationBaseIcon(
                 HomeScreenTabs.More -> R.drawable.anim_more_enter
                 HomeScreenTabs.Profiles -> error("Handled above")
                 HomeScreenTabs.Translator -> error("Handled above")
+                HomeScreenTabs.Statistics -> error("Handled above")
             }
             val image = AnimatedImageVector.animatedVectorResource(iconResource)
             Icon(

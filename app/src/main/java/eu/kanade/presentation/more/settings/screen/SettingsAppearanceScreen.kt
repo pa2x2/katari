@@ -27,6 +27,7 @@ import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toLocalDateTime
 import mihon.core.common.CustomPreferences
 import mihon.core.common.HomeScreenTabs
+import mihon.core.common.homeScreenContentTabOrder
 import mihon.core.common.navigation.resolveHomeNavigationConfiguration
 import mihon.core.common.resolveHomeScreenTab
 import mihon.core.common.toHomeScreenTabs
@@ -187,7 +188,7 @@ object SettingsAppearanceScreen : SearchableSettings {
         val resolvedStartupTab = remember(startupTab, configuration) {
             resolveHomeScreenTab(
                 requestedTab = startupTab,
-                enabledTabs = configuration.enabledTabs.filterNot { it == HomeScreenTabs.Profiles },
+                enabledTabs = configuration.enabledTabs.filter { it in homeScreenContentTabOrder },
                 tabOrder = configuration.tabOrder,
             )
         }
@@ -228,6 +229,7 @@ object SettingsAppearanceScreen : SearchableSettings {
             HomeScreenTabs.More to stringResource(MR.strings.label_more),
             HomeScreenTabs.Profiles to stringResource(MR.strings.profiles_switch_summary),
             HomeScreenTabs.Translator to stringResource(MR.strings.translator_title),
+            HomeScreenTabs.Statistics to stringResource(MR.strings.label_stats),
         )
     }
 }

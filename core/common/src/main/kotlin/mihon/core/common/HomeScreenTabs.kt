@@ -8,6 +8,7 @@ enum class HomeScreenTabs {
     More,
     Profiles,
     Translator,
+    Statistics,
 }
 
 val homeScreenTabOrder = listOf(
@@ -18,9 +19,12 @@ val homeScreenTabOrder = listOf(
     HomeScreenTabs.More,
     HomeScreenTabs.Profiles,
     HomeScreenTabs.Translator,
+    HomeScreenTabs.Statistics,
 )
 
-val homeScreenContentTabOrder = homeScreenTabOrder.filterNot { it == HomeScreenTabs.Profiles }
+val homeScreenContentTabOrder = homeScreenTabOrder.filterNot {
+    it == HomeScreenTabs.Profiles || it == HomeScreenTabs.Statistics
+}
 
 fun defaultHomeScreenTabOrder(): List<HomeScreenTabs> {
     return homeScreenTabOrder.toList()

@@ -47,6 +47,7 @@ import eu.kanade.tachiyomi.ui.home.navigation.HomeNavigationIcon
 import eu.kanade.tachiyomi.ui.home.navigation.HomeNavigationOverflowItems
 import eu.kanade.tachiyomi.ui.home.navigation.homeNavigationTitle
 import mihon.core.common.HomeScreenTabs
+import mihon.core.common.homeScreenContentTabOrder
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -57,7 +58,7 @@ internal fun StartupTabSelector(
 ) {
     var expanded by remember { mutableStateOf(false) }
     val availableTabs = draft.configuration.tabOrder.filter { tab ->
-        tab in draft.configuration.enabledTabs && tab != HomeScreenTabs.Profiles
+        tab in draft.configuration.enabledTabs && tab in homeScreenContentTabOrder
     }
 
     ExposedDropdownMenuBox(

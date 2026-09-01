@@ -3,6 +3,7 @@ package eu.kanade.presentation.more.settings.screen.navigation
 import androidx.compose.runtime.saveable.Saver
 import mihon.core.common.CustomPreferences
 import mihon.core.common.HomeScreenTabs
+import mihon.core.common.homeScreenContentTabOrder
 import mihon.core.common.navigation.HomeNavigationConfiguration
 import mihon.core.common.navigation.defaultHomeNavigationConfiguration
 import mihon.core.common.navigation.resolveHomeNavigationConfiguration
@@ -42,7 +43,7 @@ internal fun defaultHomeNavigationEditorDraft(): HomeNavigationEditorDraft {
         configuration = configuration,
         startupTab = resolveHomeScreenTab(
             requestedTab = HomeScreenTabs.Library,
-            enabledTabs = configuration.enabledTabs.filterNot { it == HomeScreenTabs.Profiles },
+            enabledTabs = configuration.enabledTabs.filter { it in homeScreenContentTabOrder },
             tabOrder = configuration.tabOrder,
         ),
         previewTab = HomeScreenTabs.Library,
@@ -76,7 +77,7 @@ internal fun CustomPreferences.readCommittedNavigationDraft(): HomeNavigationEdi
     )
     val startupTab = resolveHomeScreenTab(
         requestedTab = homeScreenStartupTab.get(),
-        enabledTabs = configuration.enabledTabs.filterNot { it == HomeScreenTabs.Profiles },
+        enabledTabs = configuration.enabledTabs.filter { it in homeScreenContentTabOrder },
         tabOrder = configuration.tabOrder,
     )
     return HomeNavigationEditorDraft(

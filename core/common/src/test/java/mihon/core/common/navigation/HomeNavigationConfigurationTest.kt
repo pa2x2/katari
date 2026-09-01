@@ -31,6 +31,7 @@ class HomeNavigationConfigurationTest {
             HomeScreenTabs.History,
             HomeScreenTabs.Updates,
             HomeScreenTabs.Translator,
+            HomeScreenTabs.Statistics,
         )
     }
 
@@ -89,6 +90,7 @@ class HomeNavigationConfigurationTest {
             HomeScreenTabs.Browse,
             HomeScreenTabs.Profiles,
             HomeScreenTabs.Translator,
+            HomeScreenTabs.Statistics,
         )
     }
 

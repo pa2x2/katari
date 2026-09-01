@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 class HomeScreenTabsTest {
 
     @Test
-    fun `default home tabs exclude profiles and translator`() {
+    fun `default home tabs exclude optional destinations`() {
         defaultHomeScreenTabs() shouldBe setOf(
             HomeScreenTabs.Library.name,
             HomeScreenTabs.Updates.name,
@@ -61,6 +61,7 @@ class HomeScreenTabsTest {
             HomeScreenTabs.More,
             HomeScreenTabs.Profiles,
             HomeScreenTabs.Translator,
+            HomeScreenTabs.Statistics,
         )
     }
 

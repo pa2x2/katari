@@ -18,7 +18,11 @@ class HomeNavigationEditorDraftTest {
                     HomeScreenTabs.Updates,
                 ),
                 overflowTabs = listOf(HomeScreenTabs.Browse),
-                hiddenTabs = listOf(HomeScreenTabs.Profiles, HomeScreenTabs.Translator),
+                hiddenTabs = listOf(
+                    HomeScreenTabs.Profiles,
+                    HomeScreenTabs.Translator,
+                    HomeScreenTabs.Statistics,
+                ),
             ),
             startupTab = HomeScreenTabs.History,
             previewTab = HomeScreenTabs.Browse,

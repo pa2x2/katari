@@ -37,6 +37,7 @@ import eu.kanade.tachiyomi.ui.home.navigation.HomeNavigationBar
 import eu.kanade.tachiyomi.ui.home.navigation.HomeNavigationRail
 import eu.kanade.tachiyomi.ui.library.LibraryTab
 import eu.kanade.tachiyomi.ui.more.MoreTab
+import eu.kanade.tachiyomi.ui.stats.StatsScreen
 import eu.kanade.tachiyomi.ui.translator.TranslatorTab
 import eu.kanade.tachiyomi.ui.updates.UpdatesTab
 import kotlinx.coroutines.channels.Channel
@@ -133,22 +134,27 @@ object HomeScreen : Screen() {
         ) { tabNavigator ->
             val selectedTab = tabNavigator.current.toHomeScreenTab()
             val onNavigationClick: (HomeScreenTabs) -> Unit = { tab ->
-                if (tab == HomeScreenTabs.Profiles) {
-                    scope.launch {
-                        handleProfileShortcut(
-                            context = context,
-                            profileManager = profileManager,
-                            uiPreferences = uiPreferences,
-                            onOpenProfilePicker = { navigator.push(ProfilePickerScreen()) },
-                            onBeforeSwitch = { navigator.popUntilRoot() },
-                        )
+                when (tab) {
+                    HomeScreenTabs.Profiles -> {
+                        scope.launch {
+                            handleProfileShortcut(
+                                context = context,
+                                profileManager = profileManager,
+                                uiPreferences = uiPreferences,
+                                onOpenProfilePicker = { navigator.push(ProfilePickerScreen()) },
+                                onBeforeSwitch = { navigator.popUntilRoot() },
+                            )
+                        }
                     }
-                } else {
-                    val destination = resolveContentTab(tab)
-                    if (tabNavigator.current::class != destination::class) {
-                        tabNavigator.current = destination
-                    } else {
-                        scope.launch { destination.onReselect(navigator) }
+
+                    HomeScreenTabs.Statistics -> navigator.push(StatsScreen())
+                    else -> {
+                        val destination = resolveContentTab(tab)
+                        if (tabNavigator.current::class != destination::class) {
+                            tabNavigator.current = destination
+                        } else {
+                            scope.launch { destination.onReselect(navigator) }
+                        }
                     }
                 }
             }
@@ -349,6 +355,7 @@ object HomeScreen : Screen() {
             HomeScreenTabs.More -> MoreTab
             HomeScreenTabs.Profiles -> error("Profiles is a navigation item, not a content tab")
             HomeScreenTabs.Translator -> TranslatorTab
+            HomeScreenTabs.Statistics -> error("Statistics is a navigation shortcut, not a content tab")
         }
     }
 
