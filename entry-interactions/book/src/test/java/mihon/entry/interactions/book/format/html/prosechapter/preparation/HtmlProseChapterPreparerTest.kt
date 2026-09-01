@@ -40,12 +40,18 @@ class HtmlProseChapterPreparerTest {
     @Test
     fun `preparation produces a generic document publication`() = runTest {
         val result = assertIs<BookPreparationResult.Success>(
-            preparer.prepare(FakeHtmlContentSession("<h1 id='start'>Title</h1><p>Body</p>")),
+            preparer.prepare(
+                FakeHtmlContentSession(
+                    "<html lang='fr-FR'><body><h1 id='start'>Title</h1><p>Body</p></body></html>",
+                    languages = listOf("en"),
+                ),
+            ),
         )
 
         val model = assertIs<BookDocumentPublicationModel>(result.publication.model)
         assertEquals("book.document", model.descriptor.id)
         assertEquals(listOf("chapter.html"), result.publication.publication.readingOrder.map { it.id })
+        assertEquals(listOf("fr-FR", "en"), result.publication.publication.languages)
         assertEquals(setOf("start"), model.documents.single().anchors.keys)
     }
 
@@ -62,6 +68,7 @@ class HtmlProseChapterPreparerTest {
 private class FakeHtmlContentSession(
     html: String,
     mediaType: String? = "text/html; charset=utf-8",
+    override val languages: List<String> = emptyList(),
 ) : BookContentSession {
     private val bytes = html.encodeToByteArray()
     private val resource = BookContentResource(

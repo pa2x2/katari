@@ -12,6 +12,8 @@ internal interface BookContentSession : AutoCloseable {
     val descriptor: BookContentDescriptor
     val publicationId: String
     val revision: String
+    val languages: List<String>
+        get() = emptyList()
     val catalogRevision: String?
     val catalogCoverage: BookCatalogCoverage
     val resourceHierarchy: List<BookContentResourceGroup>

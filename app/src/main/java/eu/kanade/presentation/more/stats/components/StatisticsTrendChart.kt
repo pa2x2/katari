@@ -181,24 +181,12 @@ internal fun StatisticsTrendChart(
         liveVisibleStartIndex,
         (liveVisibleStartIndex + points.size).coerceAtMost(navigationPoints.size),
     )
-    val visibleDurationAxis = remember(liveVisiblePoints) {
+    val durationAxis = remember(liveVisiblePoints) {
         buildTrendDurationAxis(
             liveVisiblePoints.maxOfOrNull(StatsTrendPoint::totalDurationMillis) ?: 0L,
         )
     }
-    var settledDurationAxis by remember(scrollStateKey) {
-        mutableStateOf(visibleDurationAxis)
-    }
-    val keepScaleStable = scrollableState.isScrollInProgress ||
-        navigationPending ||
-        pendingNavigation != null
-    val durationAxis = if (keepScaleStable) settledDurationAxis else visibleDurationAxis
     val maximum = durationAxis.maximumMillis
-    SideEffect {
-        if (!keepScaleStable && settledDurationAxis != visibleDurationAxis) {
-            settledDurationAxis = visibleDurationAxis
-        }
-    }
 
     LaunchedEffect(scrollableState, pointSpacingPx, navigationPending) {
         snapshotFlow { scrollableState.isScrollInProgress }

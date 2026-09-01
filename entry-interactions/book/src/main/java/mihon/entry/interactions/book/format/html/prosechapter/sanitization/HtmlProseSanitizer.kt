@@ -23,9 +23,19 @@ internal object HtmlProseSanitizer {
         document.select(UNSUPPORTED_PASSIVE_ELEMENTS).forEach(::replaceUnsupportedElement)
         document.select("script, style, link, meta, base, title, noscript").remove()
         document.body().getAllElements().forEach(css::applyTo)
+        preserveDocumentLanguage(document)
         sanitizeElements(document.body())
         validateShape(document.body())
         return document.body()
+    }
+
+    private fun preserveDocumentLanguage(document: Document) {
+        val body = document.body()
+        if (body.attr("lang").isNotBlank()) return
+        val documentElement = document.selectFirst("html") ?: return
+        val documentLanguage = documentElement.attr("lang")
+            .ifBlank { documentElement.attr("xml:lang") }
+        if (documentLanguage.isNotBlank()) body.attr("lang", documentLanguage)
     }
 
     private fun sanitizeElements(body: Element) {
@@ -114,7 +124,7 @@ private val ALLOWED_ELEMENTS = setOf(
     "tr", "u", "ul", "var",
 )
 
-private val GLOBAL_ATTRIBUTES = setOf("id", "role", "dir", "data-katari-unsupported")
+private val GLOBAL_ATTRIBUTES = setOf("id", "role", "dir", "lang", "data-katari-unsupported")
 private val TAG_ATTRIBUTES = mapOf(
     "a" to setOf("href", "name"),
     "img" to setOf("src", "alt", "width", "height"),

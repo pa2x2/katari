@@ -1,5 +1,6 @@
 package mihon.tts.api.request
 
+import mihon.language.api.identification.TextLanguageResolutionContext
 import mihon.language.api.tag.LanguageTag
 import mihon.tts.api.engine.TtsEngineId
 import mihon.tts.api.engine.TtsEngineSelection
@@ -13,6 +14,7 @@ data class TtsRequest(
     val voice: TtsVoiceSelection = TtsVoiceSelection.LanguageDefault,
     val parameters: TtsParameterSelection = TtsParameterSelection.ProfileDefault,
     val processingPolicy: TtsProcessingPolicy = TtsProcessingPolicy.ProfileDefault,
+    val languageContext: TextLanguageResolutionContext = TextLanguageResolutionContext(),
 )
 
 sealed interface TtsLanguageSelection {

@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.7.0] - 2026-09-01
+
+### ✨ Added
+
+- Added a home-navigation editor that lets you reorder destinations, move them between the primary bar, More menu, and hidden list, and choose a startup destination.
+- Added Translator as an optional home destination for translating typed text with configurable languages and engines, detected source languages, result swapping, copy and share actions, and text-to-speech playback.
+- Added Statistics as an optional home-navigation shortcut.
+
+### 🧩 Improved
+
+- Automatic language selection for book-reader translations now uses the selected text's context, the book's declared languages, and recently recognized languages for more reliable results.
+
+### 🔄 Changed
+
+- Katari now requires Android 10 or later.
+
+### 🐛 Fixed
+
+- Statistics activity-chart scales now update to match the visible period while scrolling.
+- Translation popups now remain anchored to the selected text while their content is remeasured and no longer slide horizontally.
+
 ## [1.6.0] - 2026-08-28
 
 ### 🧩 Improved
@@ -341,7 +362,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.7.0...HEAD
+[1.7.0]: https://github.com/pa2x2/katari/releases/tag/v1.7.0
 [1.6.0]: https://github.com/pa2x2/katari/releases/tag/v1.6.0
 [1.5.5]: https://github.com/pa2x2/katari/releases/tag/v1.5.5
 [1.5.4]: https://github.com/pa2x2/katari/releases/tag/v1.5.4

@@ -38,15 +38,13 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 internal fun TranslationEngineCard(
     model: TranslationEngineCardModel,
-    density: TranslationEnginePickerDensity,
     onSelect: (TranslationEngineId) -> Unit,
     onOpenSetup: (TranslationEngineId) -> Unit,
     onOpenDetails: () -> Unit,
+    showManagementActions: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val engine = model.state.engine
-    val contentPadding = if (density == TranslationEnginePickerDensity.Full) 16.dp else 12.dp
-    val artworkSize = if (density == TranslationEnginePickerDensity.Full) 56.dp else 40.dp
     val containerColor = if (model.selected) {
         MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.42f)
     } else {
@@ -72,14 +70,14 @@ internal fun TranslationEngineCard(
         colors = CardDefaults.outlinedCardColors(containerColor = containerColor),
         border = BorderStroke(if (model.selected) 2.dp else 1.dp, borderColor),
     ) {
-        Column(modifier = Modifier.padding(contentPadding)) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.Top,
             ) {
                 TranslationEngineArtwork(
                     artwork = engine.artwork,
-                    size = artworkSize,
+                    size = 56.dp,
                 )
                 Column(
                     modifier = Modifier.weight(1f),
@@ -90,13 +88,11 @@ internal fun TranslationEngineCard(
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
-                    if (density == TranslationEnginePickerDensity.Full) {
-                        Text(
-                            text = engine.details.description,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                    Text(
+                        text = engine.details.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
                 RadioButton(
                     selected = model.selected,
@@ -104,7 +100,7 @@ internal fun TranslationEngineCard(
                     onClick = null,
                 )
             }
-            Spacer(modifier = Modifier.height(if (density == TranslationEnginePickerDensity.Full) 12.dp else 8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             TranslationEngineStatusPill(model.status)
             model.status.explanation?.let { explanation ->
                 Spacer(modifier = Modifier.height(8.dp))
@@ -120,9 +116,11 @@ internal fun TranslationEngineCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                model.action?.let { action ->
-                    FilledTonalButton(onClick = { onOpenSetup(engine.id) }) {
-                        Text(action.label())
+                if (showManagementActions) {
+                    model.action?.let { action ->
+                        FilledTonalButton(onClick = { onOpenSetup(engine.id) }) {
+                            Text(action.label())
+                        }
                     }
                 }
                 TextButton(onClick = onOpenDetails) {

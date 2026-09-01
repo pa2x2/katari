@@ -33,8 +33,8 @@ android {
     defaultConfig {
         applicationId = "app.katari"
 
-        versionCode = 54
-        versionName = "1.6.0"
+        versionCode = 55
+        versionName = "1.7.0"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getLatestCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getLatestCommitSha()}\"")
@@ -142,7 +142,6 @@ android {
             keepDebugSymbols += listOf(
                 "libandroidx.graphics.path",
                 "libarchive-jni",
-                "libconscrypt_jni",
                 "libimagedecoder",
                 "libquickjs",
                 "libsqlite3x",
@@ -289,7 +288,6 @@ dependencies {
     // Networking
     implementation(libs.bundles.okhttp)
     implementation(libs.okio)
-    implementation(libs.conscrypt) // TLS 1.3 support for Android < 10
 
     // Data serialization (JSON, protobuf, xml)
     implementation(libs.bundles.serialization)

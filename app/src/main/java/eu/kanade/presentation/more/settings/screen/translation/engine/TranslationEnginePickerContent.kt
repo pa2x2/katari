@@ -8,7 +8,6 @@ import eu.kanade.presentation.components.AppBar
 import mihon.translation.api.engine.KnownTranslationEngine
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationEngineState
-import mihon.translation.ui.picker.engine.TranslationEnginePickerDensity
 import mihon.translation.ui.picker.engine.TranslationEnginePickerList
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -35,10 +34,10 @@ internal fun TranslationEnginePickerContent(
         TranslationEnginePickerList(
             engines = engines,
             selected = selected,
-            density = TranslationEnginePickerDensity.Full,
             onSelect = onSelect,
             onOpenSetup = onOpenSetup,
             onOpenDocumentation = onOpenDocumentation,
+            showManagementActions = true,
             showMissingSelectionNotice = true,
             modifier = Modifier
                 .fillMaxSize()

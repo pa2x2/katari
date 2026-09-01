@@ -8,11 +8,6 @@ import mihon.translation.api.engine.TranslationEngineStatus
 import mihon.translation.api.preparation.TranslationSystemSetupReason
 import mihon.translation.api.preparation.TranslationUnavailableReason
 
-enum class TranslationEnginePickerDensity {
-    Full,
-    Compact,
-}
-
 internal enum class TranslationEngineStatusLabel {
     Checking,
     Ready,
@@ -68,17 +63,14 @@ internal data class TranslationEngineCardModel(
 )
 
 internal data class TranslationEnginePickerModel(
-    val density: TranslationEnginePickerDensity,
     val cards: List<TranslationEngineCardModel>,
 )
 
 internal fun projectTranslationEnginePicker(
     states: List<TranslationEngineState>,
     selectedEngine: TranslationEngineId?,
-    density: TranslationEnginePickerDensity,
 ): TranslationEnginePickerModel {
     return TranslationEnginePickerModel(
-        density = density,
         cards = states.map { projectTranslationEngineCard(it, selectedEngine) },
     )
 }

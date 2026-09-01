@@ -40,6 +40,7 @@ import mihon.entry.interactions.book.reader.BookReaderOpenResult
 import mihon.entry.interactions.book.reader.BookReaderSessionFactory
 import mihon.entry.interactions.book.reader.BookReaderSessionRegistry
 import mihon.entry.interactions.book.reader.OpenedBookReaderSession
+import mihon.entry.interactions.book.reader.language.BookSelectionLanguageSession
 import mihon.entry.interactions.book.reader.navigation.BookReaderNavigationPresenter
 import mihon.entry.interactions.book.reader.selection.BookSelectionActionCoordinator
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechController
@@ -366,10 +367,14 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     private fun ensureSelectionCoordinator(session: OpenedBookReaderSession) {
         if (session.readerSettingsSurfaceId != BookDocumentReaderProcessor.SETTINGS_SURFACE_ID) return
         val automaticTranslation = settingBindings?.automaticTranslation ?: return
+        val languageSession = BookSelectionLanguageSession(
+            session.preparedPublication.publication.languages,
+        )
         val translationController = BookSelectionTranslationController(
             feature = Injekt.get<TranslationFeature>(),
             hostActions = Injekt.get<TranslationHostActions>(),
             automaticSelectionSetting = automaticTranslation.state,
+            languageSession = languageSession,
             scope = lifecycleScope,
             initialCapabilities = session.readerCapabilities,
         )
@@ -379,7 +384,9 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                 feature = Injekt.get<TtsFeature>(),
                 scope = lifecycleScope,
                 onFailure = ::showSpeechFailure,
+                onLanguageResolved = languageSession::record,
             ),
+            languageSession = languageSession,
             scope = lifecycleScope,
             initialCapabilities = session.readerCapabilities,
         )

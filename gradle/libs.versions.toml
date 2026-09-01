@@ -35,7 +35,6 @@ composeGrid = "1.2.2"
 composeMaterialMotion = "2.0.1"
 composeRichEditor = "1.0.0"
 composeWebview = "0.33.6"
-conscrypt = "2.6.3"
 directionalViewPager = "1.0.0"
 diskLruCache = "2.0.2"
 firebase-bom = "34.18.0"
@@ -140,7 +139,6 @@ composeGrid = { module = "io.woong.compose.grid:grid", version.ref = "composeGri
 composeMaterialMotion = { module = "io.github.fornewid:material-motion-compose-core", version.ref = "composeMaterialMotion" }
 composeRichEditor = { module = "com.mohamedrejeb.richeditor:richeditor-compose", version.ref = "composeRichEditor" }
 composeWebview = { module = "io.github.kevinnzou:compose-webview", version.ref = "composeWebview" }
-conscrypt = { module = "org.conscrypt:conscrypt-android", version.ref = "conscrypt" }
 directionalViewPager = { module = "com.github.tachiyomiorg:DirectionalViewPager", version.ref = "directionalViewPager" }
 diskLruCache = { module = "com.jakewharton:disklrucache", version.ref = "diskLruCache" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }

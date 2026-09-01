@@ -7,6 +7,8 @@ enum class HomeScreenTabs {
     Browse,
     More,
     Profiles,
+    Translator,
+    Statistics,
 }
 
 val homeScreenTabOrder = listOf(
@@ -16,9 +18,13 @@ val homeScreenTabOrder = listOf(
     HomeScreenTabs.Browse,
     HomeScreenTabs.More,
     HomeScreenTabs.Profiles,
+    HomeScreenTabs.Translator,
+    HomeScreenTabs.Statistics,
 )
 
-val homeScreenContentTabOrder = homeScreenTabOrder.filterNot { it == HomeScreenTabs.Profiles }
+val homeScreenContentTabOrder = homeScreenTabOrder.filterNot {
+    it == HomeScreenTabs.Profiles || it == HomeScreenTabs.Statistics
+}
 
 fun defaultHomeScreenTabOrder(): List<HomeScreenTabs> {
     return homeScreenTabOrder.toList()
@@ -61,7 +67,9 @@ fun resolveVisibleHomeScreenTabs(
 }
 
 fun defaultHomeScreenTabs(): Set<String> {
-    return homeScreenContentTabOrder.mapTo(linkedSetOf()) { it.name }
+    return homeScreenContentTabOrder
+        .filterNot { it == HomeScreenTabs.Translator }
+        .mapTo(linkedSetOf()) { it.name }
 }
 
 fun Collection<HomeScreenTabs>.toHomeScreenTabPreferenceValue(): Set<String> {

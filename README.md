@@ -11,7 +11,7 @@ Read, watch, and explore in one familiar Android app—built to welcome new ways
 [Download](https://github.com/pa2x2/katari/releases/latest)
 
 [![Latest release](https://img.shields.io/github/v/release/pa2x2/katari?display_name=tag&sort=semver&label=release)](https://github.com/pa2x2/katari/releases/latest)
-![Android 8+](https://img.shields.io/badge/Android-8%2B-3DDC84?logo=android&logoColor=white)
+![Android 10+](https://img.shields.io/badge/Android-10%2B-3DDC84?logo=android&logoColor=white)
 [![License](https://img.shields.io/github/license/pa2x2/katari)](./LICENSE)
 
 </div>

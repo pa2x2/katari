@@ -75,7 +75,7 @@ internal fun TranslationSpeechSectionHeader(
 }
 
 @Composable
-internal fun TranslationSpeechActionButton(
+fun TranslationSpeechActionButton(
     target: TranslationResultSpeechTarget,
     speechState: TranslationResultSpeechState,
     onSpeechToggle: (TranslationResultSpeechTarget) -> Unit,

@@ -41,6 +41,7 @@ internal class SourceBookContentCatalogTest : SourceBookContentSessionFixture() 
 
         assertEquals("source:42:entry:/books/fixture", session.publicationId)
         assertEquals("publication-v2", session.revision)
+        assertEquals(listOf("en"), session.languages)
         assertEquals("catalog-v3", session.catalogRevision)
         assertEquals(BookCatalogCoverage.COMPLETE, session.catalogCoverage)
         assertEquals("volume-1", session.resourceHierarchy.single().id)

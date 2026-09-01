@@ -123,9 +123,7 @@ class TranslationSessionControllerTest {
         controller.submit(input("first"))
         advanceTimeBy(100)
         runCurrent()
-        val previousResult = controller.state.value
-            .shouldBeInstanceOf<TranslationSessionState.Success>()
-            .result
+        val previousResult = controller.state.value.displayedSessionResult()
 
         controller.submit(input("second"))
         controller.state.value

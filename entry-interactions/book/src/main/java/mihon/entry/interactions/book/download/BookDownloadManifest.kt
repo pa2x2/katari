@@ -31,6 +31,7 @@ internal data class BookDownloadManifest(
     val descriptor: BookContentDescriptor,
     val publicationId: String,
     val publicationRevision: String,
+    val languages: List<String> = emptyList(),
     val catalogRevision: String? = null,
     val catalogCoverage: BookCatalogCoverage = BookCatalogCoverage.UNKNOWN,
     val resourceHierarchy: List<BookContentResourceGroup> = emptyList(),
@@ -52,6 +53,8 @@ internal data class BookDownloadManifest(
         require(childUrl.isNotBlank()) { "child URL must not be blank" }
         require(publicationId.isNotBlank()) { "publication id must not be blank" }
         require(publicationRevision.isNotBlank()) { "publication revision must not be blank" }
+        require(languages.none(String::isBlank)) { "publication languages must not be blank" }
+        require(languages.distinct().size == languages.size) { "publication languages must be unique" }
         require(catalogRevision == null || catalogRevision.isNotBlank()) { "catalog revision must not be blank" }
         require(primaryResourceIds.isNotEmpty()) { "a BOOK download must have a primary resource" }
         require(primaryResourceIds.none(String::isBlank)) { "primary resource ids must not be blank" }

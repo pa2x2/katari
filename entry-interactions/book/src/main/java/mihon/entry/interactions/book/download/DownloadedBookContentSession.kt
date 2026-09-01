@@ -43,6 +43,7 @@ internal class DownloadedBookContentSession(
     override val descriptor = manifest.descriptor
     override val publicationId = manifest.publicationId
     override val revision = manifest.publicationRevision
+    override val languages = manifest.languages
     override val catalogRevision = manifest.catalogRevision
     override val catalogCoverage = manifest.catalogCoverage
     override val resourceHierarchy = manifest.resourceHierarchy

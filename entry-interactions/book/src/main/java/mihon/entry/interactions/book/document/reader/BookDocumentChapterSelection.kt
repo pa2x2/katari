@@ -117,6 +117,7 @@ internal class BookDocumentChapterSelection(
                 ownerIdentity = ownerIdentity,
                 identity = projection.identity,
                 text = projection.text,
+                languageContextText = projection.languageContextText,
                 boundsInReaderRoot = bounds,
             ),
         )

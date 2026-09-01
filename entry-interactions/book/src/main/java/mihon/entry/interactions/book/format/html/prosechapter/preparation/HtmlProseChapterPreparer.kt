@@ -16,6 +16,7 @@ import mihon.book.api.document.BookDocumentPublicationModel
 import mihon.entry.interactions.book.content.BookContentSession
 import mihon.entry.interactions.book.content.BookContentSessionResourceLoader
 import mihon.entry.interactions.book.content.isReadableBookResource
+import mihon.entry.interactions.book.content.normalizedBookContentLanguages
 import mihon.entry.interactions.book.content.normalizedBookMediaType
 import mihon.entry.interactions.book.content.readBoundedBookResource
 import mihon.entry.interactions.book.document.preparation.PreparedBookDocumentPublication
@@ -92,6 +93,7 @@ internal class HtmlProseChapterPreparer : BookContentPreparer {
                         } else {
                             BookReadingDirection.LEFT_TO_RIGHT
                         },
+                        language = body.attr("lang").takeIf(String::isNotBlank),
                     )
                 }
             }
@@ -99,7 +101,9 @@ internal class HtmlProseChapterPreparer : BookContentPreparer {
                 id = content.publicationId,
                 revision = content.revision,
                 title = resource.title,
-                languages = emptyList(),
+                languages = (listOf(prepared.language) + content.languages)
+                    .filterNotNull()
+                    .normalizedBookContentLanguages(),
                 readingDirection = prepared.readingDirection,
                 readingOrder = listOf(BookResource(resource.id, HtmlProseChapterContract.FORMAT, resource.title)),
                 navigation = listOf(
@@ -154,4 +158,5 @@ private val RETRYABLE_HTTP_STATUS_CODES = setOf(408, 425, 429, 500, 502, 503, 50
 private data class PreparedHtmlProseChapter(
     val document: BookDocument,
     val readingDirection: BookReadingDirection,
+    val language: String?,
 )

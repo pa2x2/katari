@@ -5,10 +5,10 @@ import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.BookResourceCatalog
 import eu.kanade.tachiyomi.source.entry.BookResourceLocation
 import eu.kanade.tachiyomi.source.entry.BookSourceResource
+import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.EntryHttpSource
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryType
-import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -84,9 +84,10 @@ internal class BookDownloadPackagingTest : BookDownloaderFixture() {
             ),
             initialResourceId = "chapter",
         )
-        val source = mockk<UnifiedSource> {
+        val source = mockk<EntryCatalogueSource> {
             every { id } returns entry.source
             every { name } returns "Fixture"
+            every { lang } returns "en"
             coEvery { getMedia(any(), any()) } returns media
         }
         val sourceManager = mockk<SourceManager> {
@@ -117,6 +118,7 @@ internal class BookDownloadPackagingTest : BookDownloaderFixture() {
         val completed = cache.get(BookDownloadPackageKey(entry.source, entry.url, chapter.url))
         assertEquals(123L, completed?.manifest?.createdAt)
         assertEquals("chapter", completed?.manifest?.progressResourceId)
+        assertEquals(listOf("en"), completed?.manifest?.languages)
         assertEquals(
             "<p>Offline</p>",
             completed?.resources?.get("chapter")?.openInputStream()?.reader()?.use { it.readText() },
@@ -201,6 +203,7 @@ internal class BookDownloadPackagingTest : BookDownloaderFixture() {
         val source = mockk<EntryHttpSource> {
             every { id } returns entry.source
             every { name } returns "Fixture"
+            every { lang } returns "en"
             every { client } returns sourceClient
             coEvery { getMedia(any(), any()) } returns media
         }

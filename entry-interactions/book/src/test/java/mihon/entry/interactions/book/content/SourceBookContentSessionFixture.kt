@@ -5,6 +5,7 @@ import eu.kanade.tachiyomi.source.entry.BookResourceCatalog
 import eu.kanade.tachiyomi.source.entry.BookResourceHierarchyNode
 import eu.kanade.tachiyomi.source.entry.BookResourceLocation
 import eu.kanade.tachiyomi.source.entry.BookSourceResource
+import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
@@ -46,9 +47,10 @@ internal abstract class SourceBookContentSessionFixture {
 
     protected fun application(): Application = mockk(relaxed = true)
 
-    protected fun source(): UnifiedSource = mockk {
+    protected fun source(): EntryCatalogueSource = mockk {
         every { id } returns 42L
         every { name } returns "Fixture"
+        every { lang } returns "en"
     }
 
     protected fun bookMedia(

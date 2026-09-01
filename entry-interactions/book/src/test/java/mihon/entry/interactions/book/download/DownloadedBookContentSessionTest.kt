@@ -38,6 +38,7 @@ class DownloadedBookContentSessionTest {
         val page = session.listResources(limit = 10).getOrThrow()
         val metadata = page.resources.single()
         assertEquals("publication-v1", session.revision)
+        assertEquals(listOf("fr"), session.languages)
         assertEquals(BookCatalogCoverage.PARTIAL, session.catalogCoverage)
         assertEquals(listOf("chapter"), session.primaryResourceIds)
         assertEquals(BookResourceCacheState.CACHED, metadata.cacheState)
@@ -111,6 +112,7 @@ private fun downloadedPackage(content: String): VerifiedBookDownloadPackage {
         descriptor = BookContentDescriptor("text/html", profile = "prose-chapter"),
         publicationId = "source:42:entry:/book/fixture",
         publicationRevision = "publication-v1",
+        languages = listOf("fr"),
         catalogRevision = "catalog-v1",
         catalogCoverage = BookCatalogCoverage.PARTIAL,
         primaryResourceIds = listOf("chapter"),

@@ -1,7 +1,9 @@
 package mihon.translation.runtime
 
 import android.app.Application
+import android.view.textclassifier.TextClassificationManager
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.mockk.every
 import io.mockk.mockk
 import mihon.feature.graph.ApplicableFeatureIntegration
 import mihon.feature.runtime.application.ApplicationFeatureRuntimeDependencies
@@ -25,11 +27,14 @@ class TranslationFeatureGraphTest {
         val previousInjekt = Injekt
         try {
             Injekt = InjektScope(DefaultRegistrar())
+            val application = mockk<Application>(relaxed = true) {
+                every { getSystemService(TextClassificationManager::class.java) } returns null
+            }
             val installation = installApplicationFeatureRuntimeModules(
                 registrar = Injekt,
                 modules = listOf(translationFeatureRuntimeModule),
                 context = ApplicationFeatureRuntimeInstallationContext(
-                    application = mockk<Application>(relaxed = true),
+                    application = application,
                     dependencies = ApplicationFeatureRuntimeDependencies(
                         profilePreferenceOwners = ProfilePreferenceOwnerInstaller(
                             owners = ProfilePreferenceOwnerRegistry(),

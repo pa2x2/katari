@@ -119,7 +119,7 @@ class TranslationSessionSurfaceTest {
     }
 
     @Test
-    fun `platform popup keeps measured overflow inside viewport during sheet fallback`() {
+    fun `unplaceable remeasurement remains attached below the selection during sheet transition`() {
         var availability: TranslationPopupPlacementAvailability? = null
         val provider = TranslationPopupPositionProvider(
             anchor = TranslationSelectionAnchor(400f, 420f, 600f, 460f),
@@ -134,8 +134,45 @@ class TranslationSessionSurfaceTest {
             anchorBounds = IntRect(50, 70, 1050, 1070),
             windowSize = IntSize(1200, 1300),
             layoutDirection = LayoutDirection.Ltr,
-            popupContentSize = IntSize(400, 520),
-        ) shouldBe IntOffset(350, 86)
+            popupContentSize = IntSize(300, 200),
+        ) shouldBe IntOffset(400, 538)
+        availability shouldBe TranslationPopupPlacementAvailability.Fits
+
+        provider.calculatePosition(
+            anchorBounds = IntRect(50, 70, 1050, 1070),
+            windowSize = IntSize(1200, 1300),
+            layoutDirection = LayoutDirection.Ltr,
+            popupContentSize = IntSize(400, 700),
+        ) shouldBe IntOffset(350, 538)
+        availability shouldBe TranslationPopupPlacementAvailability.NeedsSheet
+    }
+
+    @Test
+    fun `unplaceable remeasurement remains attached above the selection during sheet transition`() {
+        var availability: TranslationPopupPlacementAvailability? = null
+        val provider = TranslationPopupPositionProvider(
+            anchor = TranslationSelectionAnchor(400f, 780f, 600f, 820f),
+            hostSize = IntSize(1000, 1000),
+            windowInsets = TranslationWindowInsets(0, 0, 0, 0),
+            edgeMargin = 16,
+            anchorGap = 8,
+            onPlacementAvailabilityChanged = { availability = it },
+        )
+
+        provider.calculatePosition(
+            anchorBounds = IntRect(50, 70, 1050, 1070),
+            windowSize = IntSize(1200, 1300),
+            layoutDirection = LayoutDirection.Ltr,
+            popupContentSize = IntSize(300, 200),
+        ) shouldBe IntOffset(400, 642)
+        availability shouldBe TranslationPopupPlacementAvailability.Fits
+
+        provider.calculatePosition(
+            anchorBounds = IntRect(50, 70, 1050, 1070),
+            windowSize = IntSize(1200, 1300),
+            layoutDirection = LayoutDirection.Ltr,
+            popupContentSize = IntSize(400, 900),
+        ) shouldBe IntOffset(350, -58)
         availability shouldBe TranslationPopupPlacementAvailability.NeedsSheet
     }
 

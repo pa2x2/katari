@@ -6,6 +6,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.test.runTest
+import mihon.language.api.identification.TextLanguageCandidate
 import mihon.language.api.identification.TextLanguageDetection
 import mihon.language.api.identification.TextLanguageDetector
 import mihon.language.api.identification.TextLanguageDetectorId
@@ -310,6 +311,30 @@ class DefaultTranslationFeatureTest {
         val request = explicitRequest().copy(sourceLanguage = TranslationSourceLanguageSelection.Automatic)
 
         feature.prepare(request) shouldBe TranslationPreparation.SourceUndetermined()
+    }
+
+    @Test
+    fun `automatic source ambiguity preserves ranked suggestions for correction`() = runTest {
+        val feature = feature(
+            registry = DefaultTranslationEngineRegistry(
+                listOf(TranslationEngineContribution(FakeTranslationEngine())),
+            ),
+            textLanguageDetectors = listOf(
+                FakeDetector(
+                    "ambiguous",
+                    TextLanguageDetection.Detected(
+                        language = ENGLISH,
+                        confidence = 0.4f,
+                        alternatives = listOf(TextLanguageCandidate(SPANISH, 0.35f)),
+                    ),
+                ),
+            ),
+        )
+        val request = explicitRequest().copy(sourceLanguage = TranslationSourceLanguageSelection.Automatic)
+
+        feature.prepare(request) shouldBe TranslationPreparation.SourceUndetermined(
+            suggestedLanguages = listOf(ENGLISH, SPANISH),
+        )
     }
 
     private fun feature(engine: TranslationEngine): DefaultTranslationFeature {

@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +31,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.toClipEntry
+import androidx.compose.ui.semantics.hideFromAccessibility
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
@@ -246,8 +248,7 @@ internal fun TranslationSessionOverlay(
                 maximumWidth = with(density) {
                     minOf(popupMaximumWidth, safeWidth).toDp()
                 },
-                visible = placementAvailability != null &&
-                    placementAvailability != TranslationPopupPlacementAvailability.NeedsSheet,
+                visible = placementAvailability == TranslationPopupPlacementAvailability.Fits,
                 onDismiss = onDismiss,
                 onExecute = onExecute,
                 onRetry = onRetry,
@@ -337,7 +338,10 @@ private fun TranslationSessionPopup(
     Box(modifier = Modifier.alpha(if (visible) 1f else 0f)) {
         Surface(
             modifier = Modifier
-                .widthIn(max = maximumWidth)
+                .width(maximumWidth)
+                .then(
+                    if (visible) Modifier else Modifier.semantics { hideFromAccessibility() },
+                )
                 .testTag(TRANSLATION_SESSION_POPUP_TAG),
             shape = MaterialTheme.shapes.extraLarge,
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -391,6 +395,8 @@ internal class TranslationPopupPositionProvider(
     private val onPlacementAvailabilityChanged: (TranslationPopupPlacementAvailability) -> Unit,
     private val onPopupBoundsChanged: (Rect?) -> Unit = {},
 ) : PopupPositionProvider {
+    private var lastPlacementSide: TranslationPopupAnchorSide? = null
+
     override fun calculatePosition(
         anchorBounds: IntRect,
         windowSize: IntSize,
@@ -437,6 +443,13 @@ internal class TranslationPopupPositionProvider(
                 TranslationPopupPlacementAvailability.AnchorOutsideViewport
             else -> TranslationPopupPlacementAvailability.NeedsSheet
         }
+        placement?.let {
+            lastPlacementSide = if (it.y >= anchor.bottom.roundToInt()) {
+                TranslationPopupAnchorSide.Below
+            } else {
+                TranslationPopupAnchorSide.Above
+            }
+        }
         val resolvedPosition = placement?.let {
             IntOffset(rootLeft + it.x, rootTop + it.y)
         } ?: calculateTranslationPopupFallbackPosition(
@@ -450,6 +463,7 @@ internal class TranslationPopupPositionProvider(
             rootTop = rootTop,
             edgeMargin = edgeMargin,
             anchorGap = anchorGap,
+            lastPlacementSide = lastPlacementSide,
         )
         onPlacementAvailabilityChanged(availability)
         onPopupBoundsChanged(
@@ -479,27 +493,44 @@ private fun calculateTranslationPopupFallbackPosition(
     rootTop: Int,
     edgeMargin: Int,
     anchorGap: Int,
+    lastPlacementSide: TranslationPopupAnchorSide?,
 ): IntOffset {
     val safeLeft = (viewportLeft + edgeMargin).coerceAtMost(viewportRight)
     val safeTop = (viewportTop + edgeMargin).coerceAtMost(viewportBottom)
     val safeRight = (viewportRight - edgeMargin).coerceAtLeast(safeLeft)
     val safeBottom = (viewportBottom - edgeMargin).coerceAtLeast(safeTop)
     val maximumX = (safeRight - popupContentSize.width).coerceAtLeast(safeLeft)
-    val maximumY = (safeBottom - popupContentSize.height).coerceAtLeast(safeTop)
     val anchorCenterX = ((anchor.left + anchor.right) / 2f)
         .takeIf(Float::isFinite)
         ?.roundToInt()
         ?: safeLeft
     val preferredX = anchorCenterX - popupContentSize.width / 2
-    val preferredY = anchor.top
-        .takeIf(Float::isFinite)
-        ?.roundToInt()
-        ?.minus(anchorGap + popupContentSize.height)
-        ?: safeTop
+    val fallbackSide = lastPlacementSide ?: anchor.takeIf { it.isUsable() }?.let {
+        val availableAbove = it.top - anchorGap - safeTop
+        val availableBelow = safeBottom - anchorGap - it.bottom
+        if (availableBelow >= availableAbove) {
+            TranslationPopupAnchorSide.Below
+        } else {
+            TranslationPopupAnchorSide.Above
+        }
+    }
+    // Compose applies the returned WindowManager position before it can recompose the popup into
+    // its sheet. Keep an unavailable remeasurement attached to the selection so that transient
+    // content sizes cannot expose a viewport-clamped jump or cover the selected text.
+    val preferredY = when (fallbackSide) {
+        TranslationPopupAnchorSide.Below -> anchor.bottom.roundToInt() + anchorGap
+        TranslationPopupAnchorSide.Above -> anchor.top.roundToInt() - anchorGap - popupContentSize.height
+        null -> safeTop
+    }
     return IntOffset(
         x = rootLeft + preferredX.coerceIn(safeLeft, maximumX),
-        y = rootTop + preferredY.coerceIn(safeTop, maximumY),
+        y = rootTop + preferredY,
     )
+}
+
+private enum class TranslationPopupAnchorSide {
+    Above,
+    Below,
 }
 
 private val POPUP_EDGE_MARGIN = 16.dp

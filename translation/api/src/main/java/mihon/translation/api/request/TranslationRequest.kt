@@ -1,5 +1,6 @@
 package mihon.translation.api.request
 
+import mihon.language.api.identification.TextLanguageResolutionContext
 import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationEngineSelection
@@ -9,6 +10,7 @@ data class TranslationRequest(
     val sourceLanguage: TranslationSourceLanguageSelection = TranslationSourceLanguageSelection.Automatic,
     val targetLanguage: TranslationTargetLanguageSelection = TranslationTargetLanguageSelection.Default,
     val engine: TranslationEngineSelection = TranslationEngineSelection.ProfileDefault,
+    val languageContext: TextLanguageResolutionContext = TextLanguageResolutionContext(),
 )
 
 sealed interface TranslationSourceLanguageSelection {
