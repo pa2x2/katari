@@ -4,6 +4,7 @@ import androidx.compose.runtime.saveable.Saver
 import mihon.core.common.CustomPreferences
 import mihon.core.common.HomeScreenTabs
 import mihon.core.common.navigation.HomeNavigationConfiguration
+import mihon.core.common.navigation.defaultHomeNavigationConfiguration
 import mihon.core.common.navigation.resolveHomeNavigationConfiguration
 import mihon.core.common.resolveHomeScreenTab
 import mihon.core.common.toHomeScreenTabs
@@ -29,6 +30,23 @@ internal data class HomeNavigationEditorDraft(
             previewTab.name,
         ).joinToString(";")
     }
+}
+
+internal fun HomeNavigationEditorDraft.hasPersistedChangesFrom(other: HomeNavigationEditorDraft): Boolean {
+    return configuration != other.configuration || startupTab != other.startupTab
+}
+
+internal fun defaultHomeNavigationEditorDraft(): HomeNavigationEditorDraft {
+    val configuration = defaultHomeNavigationConfiguration()
+    return HomeNavigationEditorDraft(
+        configuration = configuration,
+        startupTab = resolveHomeScreenTab(
+            requestedTab = HomeScreenTabs.Library,
+            enabledTabs = configuration.enabledTabs.filterNot { it == HomeScreenTabs.Profiles },
+            tabOrder = configuration.tabOrder,
+        ),
+        previewTab = HomeScreenTabs.Library,
+    )
 }
 
 internal fun String.toNavigationDraftOrNull(): HomeNavigationEditorDraft? {

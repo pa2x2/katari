@@ -51,6 +51,8 @@ internal fun HomeNavigationEditorContent(
     onNavigateUp: () -> Unit,
     onReset: () -> Unit,
     onSave: () -> Unit,
+    resetEnabled: Boolean,
+    saveEnabled: Boolean,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -177,10 +179,16 @@ internal fun HomeNavigationEditorContent(
                     title = stringResource(MR.strings.home_navigation_editor_title),
                     navigateUp = onNavigateUp,
                     actions = {
-                        TextButton(onClick = onReset) {
+                        TextButton(
+                            onClick = onReset,
+                            enabled = resetEnabled,
+                        ) {
                             Text(stringResource(MR.strings.action_reset))
                         }
-                        TextButton(onClick = onSave) {
+                        TextButton(
+                            onClick = onSave,
+                            enabled = saveEnabled,
+                        ) {
                             Text(stringResource(MR.strings.action_save))
                         }
                     },

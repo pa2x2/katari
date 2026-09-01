@@ -5,6 +5,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -15,9 +16,6 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.util.HandlesOwnBackPress
 import eu.kanade.presentation.util.Screen
 import mihon.core.common.CustomPreferences
-import mihon.core.common.HomeScreenTabs
-import mihon.core.common.navigation.defaultHomeNavigationConfiguration
-import mihon.core.common.resolveHomeScreenTab
 import mihon.core.common.toHomeScreenTabPreferenceValue
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
@@ -31,16 +29,30 @@ class HomeNavigationEditorScreen : Screen(), HandlesOwnBackPress {
         val navigator = LocalNavigator.currentOrThrow
         val preferences = remember { Injekt.get<CustomPreferences>() }
         val committedDraft = remember(preferences) { preferences.readCommittedNavigationDraft() }
-        val initialDraft = remember(preferences, committedDraft) {
-            preferences.homeScreenNavigationDraft.get().toNavigationDraftOrNull() ?: committedDraft
+        val restoredDraft = remember(preferences) {
+            preferences.homeScreenNavigationDraft.get().toNavigationDraftOrNull()
         }
+        val initialDraft = remember(restoredDraft, committedDraft) {
+            restoredDraft
+                ?.takeIf { it.hasPersistedChangesFrom(committedDraft) }
+                ?: committedDraft
+        }
+        val defaultDraft = remember { defaultHomeNavigationEditorDraft() }
         var draft by rememberSaveable(stateSaver = HomeNavigationEditorDraft.Saver) {
             mutableStateOf(initialDraft)
         }
         var showDiscardConfirmation by rememberSaveable { mutableStateOf(false) }
+        val hasUnsavedChanges = draft.hasPersistedChangesFrom(committedDraft)
+        val canReset = draft.hasPersistedChangesFrom(defaultDraft)
+
+        LaunchedEffect(restoredDraft, committedDraft) {
+            if (restoredDraft != null && !restoredDraft.hasPersistedChangesFrom(committedDraft)) {
+                preferences.homeScreenNavigationDraft.delete()
+            }
+        }
 
         fun leave() {
-            if (draft == committedDraft) {
+            if (!hasUnsavedChanges) {
                 preferences.homeScreenNavigationDraft.delete()
                 navigator.pop()
             } else {
@@ -50,7 +62,7 @@ class HomeNavigationEditorScreen : Screen(), HandlesOwnBackPress {
 
         fun updateDraft(updatedDraft: HomeNavigationEditorDraft) {
             draft = updatedDraft
-            if (updatedDraft == committedDraft) {
+            if (!updatedDraft.hasPersistedChangesFrom(committedDraft)) {
                 preferences.homeScreenNavigationDraft.delete()
             } else {
                 preferences.homeScreenNavigationDraft.set(updatedDraft.serialize())
@@ -63,20 +75,7 @@ class HomeNavigationEditorScreen : Screen(), HandlesOwnBackPress {
             draft = draft,
             onDraftChange = ::updateDraft,
             onNavigateUp = ::leave,
-            onReset = {
-                val defaults = defaultHomeNavigationConfiguration()
-                updateDraft(
-                    HomeNavigationEditorDraft(
-                        configuration = defaults,
-                        startupTab = resolveHomeScreenTab(
-                            requestedTab = HomeScreenTabs.Library,
-                            enabledTabs = defaults.enabledTabs.filterNot { it == HomeScreenTabs.Profiles },
-                            tabOrder = defaults.tabOrder,
-                        ),
-                        previewTab = HomeScreenTabs.Library,
-                    ),
-                )
-            },
+            onReset = { updateDraft(defaultDraft) },
             onSave = {
                 preferences.homeScreenTabOrder.set(draft.configuration.tabOrder)
                 preferences.homeScreenTabs.set(draft.configuration.enabledTabs.toHomeScreenTabPreferenceValue())
@@ -85,6 +84,8 @@ class HomeNavigationEditorScreen : Screen(), HandlesOwnBackPress {
                 preferences.homeScreenNavigationDraft.delete()
                 navigator.pop()
             },
+            resetEnabled = canReset,
+            saveEnabled = hasUnsavedChanges,
         )
 
         if (showDiscardConfirmation) {
