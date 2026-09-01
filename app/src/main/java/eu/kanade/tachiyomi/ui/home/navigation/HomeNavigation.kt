@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.outlined.AccountCircle
@@ -42,7 +41,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
-import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.tachiyomi.R
 import mihon.core.common.HomeScreenTabs
 import tachiyomi.i18n.MR
@@ -122,7 +120,7 @@ private fun RowScope.HomeNavigationOverflowBarItem(
             alwaysShowLabel = true,
         )
         if (onOverflowClick == null) {
-            DropdownMenu(
+            HomeNavigationOverflowMenu(
                 expanded = expanded,
                 onDismissRequest = { onExpandedChange(false) },
             ) {
@@ -196,7 +194,7 @@ fun HomeNavigationOverflowItems(
                 modifier = itemModifier(tab)
                     .background(
                         color = if (selected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = HomeNavigationOverflowShape,
                     ),
             )
         }
