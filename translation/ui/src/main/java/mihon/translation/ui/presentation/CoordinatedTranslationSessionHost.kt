@@ -28,7 +28,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationSetupDestination
-import mihon.translation.ui.picker.engine.TranslationEnginePickerDensity
 import mihon.translation.ui.picker.engine.TranslationEnginePickerList
 import mihon.translation.ui.picker.language.TranslationLanguagePairSelector
 import mihon.translation.ui.picker.language.TranslationLanguageRole
@@ -201,14 +200,8 @@ private fun TranslationSessionPickerDialog(
                             TranslationEnginePickerList(
                                 engines = engineStates,
                                 selected = coordinator.activeEngine(),
-                                density = TranslationEnginePickerDensity.Compact,
                                 onSelect = coordinator::selectEngine,
-                                onOpenSetup = coordinator::openEngineSetup,
-                                onOpenDocumentation = { url ->
-                                    runCatching {
-                                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-                                    }
-                                },
+                                selectableOnly = true,
                                 modifier = Modifier.weight(1f, fill = false),
                             )
                         }

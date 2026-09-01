@@ -227,6 +227,7 @@ object SettingsAppearanceScreen : SearchableSettings {
             HomeScreenTabs.Browse to stringResource(MR.strings.browse),
             HomeScreenTabs.More to stringResource(MR.strings.label_more),
             HomeScreenTabs.Profiles to stringResource(MR.strings.profiles_switch_summary),
+            HomeScreenTabs.Translator to stringResource(MR.strings.translator_title),
         )
     }
 }

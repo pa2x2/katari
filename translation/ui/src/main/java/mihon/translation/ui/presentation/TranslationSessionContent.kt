@@ -37,6 +37,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.TextStyle
@@ -59,6 +62,7 @@ import mihon.translation.api.result.TranslationFailureReason
 import mihon.translation.api.result.TranslationResult
 import mihon.translation.ui.session.TranslationSessionFailure
 import mihon.translation.ui.session.TranslationSessionState
+import mihon.translation.ui.session.displayedSessionResult
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import java.util.Locale
@@ -85,21 +89,15 @@ internal fun TranslationSessionContent(
     onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)? = null,
     modifier: Modifier = Modifier,
     compact: Boolean = false,
+    showProgress: Boolean = true,
+    showResultLanguage: Boolean = true,
+    flushContent: Boolean = false,
 ) {
     val inProgress = state is TranslationSessionState.Settling ||
         state is TranslationSessionState.Preparing ||
         state is TranslationSessionState.Translating
-    val displayedResult = when (state) {
-        is TranslationSessionState.Settling -> state.previousResult
-        is TranslationSessionState.Preparing -> state.previousResult
-        is TranslationSessionState.Translating -> state.previousResult
-        is TranslationSessionState.Success -> state.result
-        is TranslationSessionState.Ready,
-        is TranslationSessionState.PreparationRequired,
-        is TranslationSessionState.ProviderSurfaceOpened,
-        is TranslationSessionState.Failed,
-        -> null
-    }
+    val displayedSessionResult = state.displayedSessionResult()
+    val displayedResult = displayedSessionResult?.result
 
     val compactResult = compact && displayedResult != null
     Column(
@@ -113,7 +111,7 @@ internal fun TranslationSessionContent(
             )
             .testTag(TRANSLATION_SESSION_CONTENT_TAG),
     ) {
-        if (inProgress) {
+        if (showProgress && inProgress) {
             LinearProgressIndicator(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -138,10 +136,14 @@ internal fun TranslationSessionContent(
             HorizontalDivider()
         }
         Column(
-            modifier = Modifier.padding(
-                horizontal = if (compact) 16.dp else 20.dp,
-                vertical = if (compact) 12.dp else 20.dp,
-            ),
+            modifier = if (flushContent) {
+                Modifier
+            } else {
+                Modifier.padding(
+                    horizontal = if (compact) 16.dp else 20.dp,
+                    vertical = if (compact) 12.dp else 20.dp,
+                )
+            },
             verticalArrangement = Arrangement.spacedBy(
                 when {
                     compactResult -> 4.dp
@@ -153,11 +155,7 @@ internal fun TranslationSessionContent(
             if (displayedResult != null) {
                 SuccessContent(
                     result = displayedResult,
-                    sourceText = (state as? TranslationSessionState.Success)
-                        ?.takeIf { it.result == displayedResult }
-                        ?.input
-                        ?.request
-                        ?.text,
+                    sourceText = displayedSessionResult.input.request.text,
                     expanded = expanded,
                     compact = compact,
                     showExpand = showExpand,
@@ -170,38 +168,38 @@ internal fun TranslationSessionContent(
                     onExternalAction = onExternalAction,
                     speechState = speechState,
                     onSpeechToggle = onSpeechToggle,
+                    showResultLanguage = showResultLanguage,
                 )
-            } else {
-                when (state) {
-                    is TranslationSessionState.Settling,
-                    is TranslationSessionState.Preparing,
-                    is TranslationSessionState.Translating,
-                    is TranslationSessionState.Success,
-                    -> Unit
-                    is TranslationSessionState.Ready -> ReadyContent(state, onExecute, compact)
-                    is TranslationSessionState.PreparationRequired -> PreparationContent(
-                        preparation = state.preparation,
-                        onRetry = onRetry,
-                        onSelectSource = onSelectSource,
-                        onSelectEngine = onSelectEngine,
-                        useExternalEnginePicker = useExternalEnginePicker,
-                        onExternalAction = onExternalAction,
-                        compact = compact,
-                    )
-                    is TranslationSessionState.ProviderSurfaceOpened -> SessionMessage(
-                        text = stringResource(
-                            MR.strings.translation_provider_surface_opened,
-                            state.presentation.providerName,
-                        ),
-                        compact = compact,
-                    )
-                    is TranslationSessionState.Failed -> FailedContent(
-                        state = state,
-                        onRetry = onRetry,
-                        onExternalAction = onExternalAction,
-                        compact = compact,
-                    )
-                }
+            }
+            when (state) {
+                is TranslationSessionState.Settling,
+                is TranslationSessionState.Preparing,
+                is TranslationSessionState.Translating,
+                is TranslationSessionState.Success,
+                -> Unit
+                is TranslationSessionState.Ready -> ReadyContent(state, onExecute, compact)
+                is TranslationSessionState.PreparationRequired -> PreparationContent(
+                    preparation = state.preparation,
+                    onRetry = onRetry,
+                    onSelectSource = onSelectSource,
+                    onSelectEngine = onSelectEngine,
+                    useExternalEnginePicker = useExternalEnginePicker,
+                    onExternalAction = onExternalAction,
+                    compact = compact,
+                )
+                is TranslationSessionState.ProviderSurfaceOpened -> SessionMessage(
+                    text = stringResource(
+                        MR.strings.translation_provider_surface_opened,
+                        state.presentation.providerName,
+                    ),
+                    compact = compact,
+                )
+                is TranslationSessionState.Failed -> FailedContent(
+                    state = state,
+                    onRetry = onRetry,
+                    onExternalAction = onExternalAction,
+                    compact = compact,
+                )
             }
         }
     }
@@ -302,6 +300,7 @@ private fun SuccessContent(
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
     speechState: TranslationResultSpeechState,
     onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)?,
+    showResultLanguage: Boolean,
 ) {
     val showOverflowAction = showExpand && !expanded
     val languagePair = stringResource(
@@ -354,7 +353,7 @@ private fun SuccessContent(
                 speechState = speechState,
                 onSpeechToggle = speechContent.onToggle,
             )
-        } else {
+        } else if (showResultLanguage) {
             TranslationLanguagePair(
                 languagePair = languagePair,
                 style = MaterialTheme.typography.labelLarge,
@@ -387,6 +386,7 @@ private fun SuccessContent(
         SelectionContainer {
             Text(
                 text = result.translatedText,
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
                 style = MaterialTheme.typography.bodyLarge,
             )
         }

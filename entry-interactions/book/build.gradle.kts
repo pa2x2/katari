@@ -16,6 +16,7 @@ dependencies {
     api(projects.entryViewerSettingsApi)
     implementation(projects.translation.api)
     implementation(projects.tts.api)
+    implementation(projects.tts.ui)
 
     implementation(projects.core.common)
     implementation(projects.i18n)

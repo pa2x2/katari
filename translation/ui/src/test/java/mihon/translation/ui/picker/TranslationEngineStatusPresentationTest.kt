@@ -16,12 +16,10 @@ import mihon.translation.api.model.TranslationModelId
 import mihon.translation.api.preparation.TranslationSystemSetupReason
 import mihon.translation.api.preparation.TranslationUnavailableReason
 import mihon.translation.api.provider.TranslationProviderDisclosure
-import mihon.translation.ui.picker.engine.TranslationEnginePickerDensity
 import mihon.translation.ui.picker.engine.TranslationEngineStatusExplanation
 import mihon.translation.ui.picker.engine.TranslationEngineStatusLabel
 import mihon.translation.ui.picker.engine.isTranslationEngineSelectionMissing
 import mihon.translation.ui.picker.engine.projectTranslationEngineCard
-import mihon.translation.ui.picker.engine.projectTranslationEnginePicker
 import org.junit.jupiter.api.Test
 
 class TranslationEngineStatusPresentationTest {
@@ -127,23 +125,6 @@ class TranslationEngineStatusPresentationTest {
             model.action shouldBe action
             model.selected shouldBe false
         }
-    }
-
-    @Test
-    fun `projection is independent of picker density`() {
-        val state = state(TranslationEngineStatus.Ready)
-        val full = projectTranslationEnginePicker(
-            states = listOf(state),
-            selectedEngine = ENGINE_ID,
-            density = TranslationEnginePickerDensity.Full,
-        )
-        val compact = projectTranslationEnginePicker(
-            states = listOf(state),
-            selectedEngine = ENGINE_ID,
-            density = TranslationEnginePickerDensity.Compact,
-        )
-
-        full.cards shouldBe compact.cards
     }
 
     @Test

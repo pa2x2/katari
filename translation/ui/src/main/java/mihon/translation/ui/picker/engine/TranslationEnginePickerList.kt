@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,15 +47,21 @@ import tachiyomi.presentation.core.i18n.stringResource
 fun TranslationEnginePickerList(
     engines: List<TranslationEngineState>,
     selected: TranslationEngineId?,
-    density: TranslationEnginePickerDensity,
     onSelect: (TranslationEngineId) -> Unit,
     modifier: Modifier = Modifier,
     onOpenSetup: (TranslationEngineId) -> Unit = {},
     onOpenDocumentation: (String) -> Unit = {},
+    selectableOnly: Boolean = false,
+    showManagementActions: Boolean = false,
     showMissingSelectionNotice: Boolean = false,
+    footerLabel: String? = null,
+    onFooterClick: (() -> Unit)? = null,
 ) {
-    val picker = remember(engines, selected, density) {
-        projectTranslationEnginePicker(engines, selected, density)
+    val picker = remember(engines, selected) {
+        projectTranslationEnginePicker(engines, selected)
+    }
+    val visibleCards = remember(picker.cards, selectableOnly) {
+        picker.cards.filter { !selectableOnly || it.selectable }
     }
     var detailsEngineId by remember { mutableStateOf<TranslationEngineId?>(null) }
     val detailsModel = picker.cards.firstOrNull { it.state.engine.id == detailsEngineId }
@@ -68,11 +75,6 @@ fun TranslationEnginePickerList(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            if (density == TranslationEnginePickerDensity.Full) {
-                item(key = "policy") {
-                    TranslationEnginePolicyBanner()
-                }
-            }
             if (
                 showMissingSelectionNotice &&
                 selected != null &&
@@ -82,14 +84,24 @@ fun TranslationEnginePickerList(
                     MissingTranslationEngineCard(selected)
                 }
             }
-            items(picker.cards, key = { it.state.engine.id.value }) { model ->
+            items(visibleCards, key = { it.state.engine.id.value }) { model ->
                 TranslationEngineCard(
                     model = model,
-                    density = picker.density,
                     onSelect = onSelect,
                     onOpenSetup = onOpenSetup,
                     onOpenDetails = { detailsEngineId = model.state.engine.id },
+                    showManagementActions = showManagementActions,
                 )
+            }
+            if (footerLabel != null && onFooterClick != null) {
+                item(key = "footer") {
+                    TextButton(
+                        onClick = onFooterClick,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(footerLabel)
+                    }
+                }
             }
         }
     }
@@ -99,32 +111,6 @@ fun TranslationEnginePickerList(
             onDismissRequest = { detailsEngineId = null },
             onOpenUrl = onOpenDocumentation,
         )
-    }
-}
-
-@Composable
-private fun TranslationEnginePolicyBanner() {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        contentColor = MaterialTheme.colorScheme.onSurface,
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.Top,
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Info,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-            )
-            Text(
-                text = stringResource(MR.strings.translation_settings_explicit_engine_notice),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        }
     }
 }
 
@@ -166,8 +152,8 @@ private fun TranslationEnginePickerPreview() {
             TranslationEnginePickerList(
                 engines = previewEngineStates(),
                 selected = PREVIEW_READY_ENGINE.id,
-                density = TranslationEnginePickerDensity.Full,
                 onSelect = {},
+                showManagementActions = true,
                 showMissingSelectionNotice = true,
             )
         }
@@ -177,14 +163,14 @@ private fun TranslationEnginePickerPreview() {
 @Preview(name = "Compact picker", widthDp = 360, heightDp = 640)
 @Preview(name = "Large font", widthDp = 360, heightDp = 800, fontScale = 2f)
 @Composable
-private fun TranslationEngineCompactPickerPreview() {
+private fun TranslationEngineSessionPickerPreview() {
     TachiyomiPreviewTheme {
         Surface {
             TranslationEnginePickerList(
                 engines = previewEngineStates(),
                 selected = PREVIEW_UNAVAILABLE_ENGINE.id,
-                density = TranslationEnginePickerDensity.Compact,
                 onSelect = {},
+                selectableOnly = true,
             )
         }
     }
@@ -198,8 +184,8 @@ private fun TranslationEngineMissingSelectionPreview() {
             TranslationEnginePickerList(
                 engines = previewEngineStates(),
                 selected = TranslationEngineId("removed-engine"),
-                density = TranslationEnginePickerDensity.Full,
                 onSelect = {},
+                showManagementActions = true,
                 showMissingSelectionNotice = true,
             )
         }

@@ -112,7 +112,7 @@ class TranslationSessionController(
         val operationGeneration = nextGeneration()
         activeJob?.cancel()
         activeJob = scope.launch {
-            executeReady(operationGeneration, ready.input, ready.preparation)
+            executeReady(operationGeneration, ready.input, ready.preparation, ready.previousResult)
         }
     }
 
@@ -177,6 +177,7 @@ class TranslationSessionController(
                         mutableState.value = TranslationSessionState.Failed(
                             input = latestInput,
                             failure = TranslationSessionFailure.UnexpectedPreparationFailure,
+                            previousResult = previousResult,
                         )
                     }
                     return@launch
@@ -204,11 +205,11 @@ class TranslationSessionController(
         input: TranslationSessionInput,
         preparation: TranslationPreparation,
         autoExecuteImmediate: Boolean,
-        previousResult: TranslationResult? = null,
+        previousResult: TranslationSessionResult? = null,
     ) {
         when (preparation) {
             is TranslationPreparation.Ready -> {
-                mutableState.value = TranslationSessionState.Ready(input, preparation)
+                mutableState.value = TranslationSessionState.Ready(input, preparation, previousResult)
                 if (
                     autoExecuteImmediate &&
                     executionMode == TranslationSessionExecutionMode.FollowProviderPolicy &&
@@ -218,7 +219,7 @@ class TranslationSessionController(
                 }
             }
             else -> {
-                mutableState.value = TranslationSessionState.PreparationRequired(input, preparation)
+                mutableState.value = TranslationSessionState.PreparationRequired(input, preparation, previousResult)
             }
         }
     }
@@ -227,7 +228,7 @@ class TranslationSessionController(
         operationGeneration: Long,
         input: TranslationSessionInput,
         ready: TranslationPreparation.Ready,
-        previousResult: TranslationResult? = null,
+        previousResult: TranslationSessionResult? = null,
     ) {
         if (!isCurrent(operationGeneration)) return
         mutableState.value = TranslationSessionState.Translating(
@@ -243,6 +244,7 @@ class TranslationSessionController(
                 input = latestInput,
                 failure = TranslationSessionFailure.ExecutionTimedOut,
                 presentation = ready.presentation,
+                previousResult = previousResult,
             )
             activeJob?.cancel()
         }
@@ -258,6 +260,7 @@ class TranslationSessionController(
                     input = latestInput,
                     failure = TranslationSessionFailure.UnexpectedExecutionFailure,
                     presentation = ready.presentation,
+                    previousResult = previousResult,
                 )
             }
             return
@@ -280,15 +283,17 @@ class TranslationSessionController(
                     input = latestInput,
                     preparation = execution.preparation,
                     autoExecuteImmediate = false,
+                    previousResult = previousResult,
                 )
                 if (execution.preparation is TranslationPreparation.SetupInProgress) {
-                    pollSetupProgress(operationGeneration, latestInput)
+                    pollSetupProgress(operationGeneration, latestInput, previousResult)
                 }
             }
             is TranslationExecution.ProviderSurfaceOpened -> {
                 mutableState.value = TranslationSessionState.ProviderSurfaceOpened(
                     input = latestInput,
                     presentation = execution.presentation,
+                    previousResult = previousResult,
                 )
             }
             is TranslationExecution.Failed -> {
@@ -296,6 +301,7 @@ class TranslationSessionController(
                     input = latestInput,
                     failure = TranslationSessionFailure.ExecutionFailure(execution),
                     presentation = ready.presentation,
+                    previousResult = previousResult,
                 )
             }
         }
@@ -304,6 +310,7 @@ class TranslationSessionController(
     private suspend fun pollSetupProgress(
         operationGeneration: Long,
         input: TranslationSessionInput,
+        previousResult: TranslationSessionResult?,
     ) {
         var lastInput = input
         while (isCurrent(operationGeneration)) {
@@ -317,13 +324,20 @@ class TranslationSessionController(
                     mutableState.value = TranslationSessionState.Failed(
                         input = latestInput,
                         failure = TranslationSessionFailure.UnexpectedPreparationFailure,
+                        previousResult = previousResult,
                     )
                 }
                 return
             }
             if (!isCurrent(operationGeneration)) return
             lastInput = latestInput(operationGeneration, lastInput) ?: return
-            acceptPreparation(operationGeneration, lastInput, preparation, autoExecuteImmediate = true)
+            acceptPreparation(
+                operationGeneration,
+                lastInput,
+                preparation,
+                autoExecuteImmediate = true,
+                previousResult = previousResult,
+            )
             if (preparation !is TranslationPreparation.SetupInProgress) return
         }
     }
@@ -335,10 +349,12 @@ class TranslationSessionController(
         val timeoutJob = scope.launch {
             delay(preparationTimeoutMillis)
             val latestInput = latestInput(operationGeneration, input) ?: return@launch
+            val previousResult = mutableState.value.resultForRefresh()
             nextGeneration()
             mutableState.value = TranslationSessionState.Failed(
                 input = latestInput,
                 failure = TranslationSessionFailure.PreparationTimedOut,
+                previousResult = previousResult,
             )
             activeJob?.cancel()
         }

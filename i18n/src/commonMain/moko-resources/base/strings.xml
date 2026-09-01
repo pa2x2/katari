@@ -261,6 +261,19 @@
 
     <!-- Translation -->
     <string name="translation_title">Translation</string>
+    <string name="translator_title">Translator</string>
+    <string name="translator_detect_language">Detect language</string>
+    <string name="translator_detected_language">%1$s (detected)</string>
+    <string name="translator_detect_language_summary">Let the translation engine detect the source language</string>
+    <string name="translator_profile_default">Profile default</string>
+    <string name="translator_profile_default_engine">Uses the translation engine from this profile</string>
+    <string name="translator_profile_default_target">Uses the target language from this profile</string>
+    <string name="translator_input_label">Text to translate</string>
+    <string name="translator_output_label">Translation</string>
+    <string name="translator_clear_input">Clear text</string>
+    <string name="translator_open_settings">Open Translation settings</string>
+    <string name="translator_configuration_required">Translation needs to be configured before it can run.</string>
+    <string name="translator_speech_failed">Speech could not be played.</string>
     <string name="translation_original">Original</string>
     <string name="translation_listen_original">Listen to original</string>
     <string name="translation_stop_original">Stop original speech</string>
@@ -346,7 +359,6 @@
     <string name="translation_settings_provider_not_installed">Provider app is not installed</string>
     <string name="translation_settings_configure_provider">Configure</string>
     <string name="translation_settings_missing_engine_no_fallback">Katari will not switch engines automatically. Choose an available engine to continue.</string>
-    <string name="translation_settings_explicit_engine_notice">Katari always uses the engine you select. It never switches automatically.</string>
 
     <!-- Text to speech -->
     <string name="tts_title">Text to speech</string>

@@ -30,6 +30,7 @@ class HomeNavigationConfigurationTest {
         configuration.overflowTabs shouldBe listOf(
             HomeScreenTabs.History,
             HomeScreenTabs.Updates,
+            HomeScreenTabs.Translator,
         )
     }
 
@@ -87,6 +88,7 @@ class HomeNavigationConfigurationTest {
             HomeScreenTabs.Updates,
             HomeScreenTabs.Browse,
             HomeScreenTabs.Profiles,
+            HomeScreenTabs.Translator,
         )
     }
 

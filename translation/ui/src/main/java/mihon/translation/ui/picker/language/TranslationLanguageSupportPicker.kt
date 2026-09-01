@@ -29,6 +29,10 @@ fun TranslationLanguageSupportPicker(
     onSelect: (LanguageTag) -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
+    defaultOptionLabel: String? = null,
+    defaultOptionSupporting: String? = null,
+    defaultSelected: Boolean = false,
+    onSelectDefault: (() -> Unit)? = null,
 ) {
     when (state) {
         is TranslationLanguageSupportState.Available -> {
@@ -44,6 +48,10 @@ fun TranslationLanguageSupportPicker(
                 selected = selected,
                 onSelect = onSelect,
                 modifier = modifier,
+                defaultOptionLabel = defaultOptionLabel,
+                defaultOptionSupporting = defaultOptionSupporting,
+                defaultSelected = defaultSelected,
+                onSelectDefault = onSelectDefault,
             )
         }
         TranslationLanguageSupportState.Idle -> {

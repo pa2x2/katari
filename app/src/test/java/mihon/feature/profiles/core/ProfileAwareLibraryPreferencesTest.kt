@@ -490,6 +490,7 @@ class ProfileAwareLibraryPreferencesTest {
             HomeScreenTabs.History,
             HomeScreenTabs.Browse,
             HomeScreenTabs.Profiles,
+            HomeScreenTabs.Translator,
         )
     }
 

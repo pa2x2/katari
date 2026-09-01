@@ -37,6 +37,7 @@ import eu.kanade.tachiyomi.ui.home.navigation.HomeNavigationBar
 import eu.kanade.tachiyomi.ui.home.navigation.HomeNavigationRail
 import eu.kanade.tachiyomi.ui.library.LibraryTab
 import eu.kanade.tachiyomi.ui.more.MoreTab
+import eu.kanade.tachiyomi.ui.translator.TranslatorTab
 import eu.kanade.tachiyomi.ui.updates.UpdatesTab
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
@@ -281,6 +282,7 @@ object HomeScreen : Screen() {
                             Tab.History -> HomeScreenTabs.History
                             is Tab.Browse -> HomeScreenTabs.Browse
                             is Tab.More -> HomeScreenTabs.More
+                            Tab.Translator -> HomeScreenTabs.Translator
                             Tab.Profiles -> error("Handled above")
                         }
                         val resolvedTab =
@@ -346,6 +348,7 @@ object HomeScreen : Screen() {
             HomeScreenTabs.Browse -> BrowseTab
             HomeScreenTabs.More -> MoreTab
             HomeScreenTabs.Profiles -> error("Profiles is a navigation item, not a content tab")
+            HomeScreenTabs.Translator -> TranslatorTab
         }
     }
 
@@ -356,6 +359,7 @@ object HomeScreen : Screen() {
             is HistoryTab -> HomeScreenTabs.History
             is BrowseTab -> HomeScreenTabs.Browse
             is MoreTab -> HomeScreenTabs.More
+            is TranslatorTab -> HomeScreenTabs.Translator
             else -> HomeScreenTabs.More
         }
     }
@@ -368,6 +372,7 @@ object HomeScreen : Screen() {
         data object History : Tab
         data class Browse(val toExtensions: Boolean = false) : Tab
         data class More(val toDownloads: Boolean) : Tab
+        data object Translator : Tab
         data object Profiles : Tab
     }
 }

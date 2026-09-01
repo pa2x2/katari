@@ -14,7 +14,6 @@ import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationEngineSelection
-import mihon.translation.api.engine.TranslationEngineState
 import mihon.translation.api.engine.TranslationEngineStatus
 import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationHostActions
@@ -26,9 +25,9 @@ import mihon.translation.api.request.TranslationTargetLanguageSelection
 import mihon.translation.ui.picker.language.TranslationLanguageRole
 import mihon.translation.ui.picker.language.supportsPair
 import mihon.translation.ui.picker.language.supportsSelection
-import mihon.translation.ui.session.TranslationLanguageSupportController
 import mihon.translation.ui.session.TranslationLanguageSupportState
 import mihon.translation.ui.session.TranslationSessionController
+import mihon.translation.ui.session.TranslationSessionEnvironmentController
 import mihon.translation.ui.session.TranslationSessionExecutionMode
 import mihon.translation.ui.session.TranslationSessionInput
 import uy.kohesive.injekt.Injekt
@@ -39,35 +38,25 @@ internal class TranslationSettingsScreenModel(
     feature: TranslationFeature = Injekt.get(),
     private val hostActions: TranslationHostActions = Injekt.get(),
 ) : ScreenModel {
-    private val mutableEngines = MutableStateFlow(
-        hostActions.knownEngines.map { engine ->
-            TranslationEngineState(
-                engine = engine,
-                presentation = null,
-                status = TranslationEngineStatus.Checking,
-            )
-        },
-    )
-    val engines = mutableEngines.asStateFlow()
+    private val environment = TranslationSessionEnvironmentController(hostActions, screenModelScope)
+    val engines = environment.engineStates
     val controller = TranslationSessionController(
         feature = feature,
         parentScope = screenModelScope,
         executionMode = TranslationSessionExecutionMode.FollowProviderPolicy,
         selectionSettleDelayMillis = PLAYGROUND_DEBOUNCE_MILLIS,
     )
-    private val languageSupportController = TranslationLanguageSupportController(
-        hostActions = hostActions,
-        scope = screenModelScope,
-    )
-    val languageSupport = languageSupportController.state
+    val languageSupport = environment.languageSupport
     private var savedDefaults = initialPlaygroundDefaults()
-    private var engineRefreshJob: Job? = null
+    private var environmentObservationJob: Job? = null
+    private var appliedResolvedSelection = false
+    private var lastResolvedSelection: TranslationEngineId? = null
     private var retryAfterSetupResume = false
     private val mutablePlayground = MutableStateFlow(initialPlaygroundState(savedDefaults))
     val playground = mutablePlayground.asStateFlow()
 
     init {
-        refreshEngineStates()
+        observeEnvironment()
         submitPlayground()
     }
 
@@ -99,7 +88,7 @@ internal class TranslationSettingsScreenModel(
     }
 
     fun setEngine(engine: TranslationEngineId) {
-        if (mutableEngines.value.none { it.engine.id == engine && it.status == TranslationEngineStatus.Ready }) {
+        if (engines.value.none { it.engine.id == engine && it.status == TranslationEngineStatus.Ready }) {
             return
         }
         updatePlayground {
@@ -108,33 +97,11 @@ internal class TranslationSettingsScreenModel(
                 engineSelectionResolved = true,
             )
         }
-        languageSupportController.load(engine)
+        environment.loadLanguageSupport(engine)
     }
 
     fun refreshEngineStates() {
-        engineRefreshJob?.cancel()
-        engineRefreshJob = screenModelScope.launch {
-            var selectionApplied = false
-            hostActions.inspectEngineStates().collect { inspection ->
-                mutableEngines.value = inspection.engines
-                if (selectionApplied || !inspection.selectionResolved) {
-                    return@collect
-                }
-                selectionApplied = true
-                val current = mutablePlayground.value
-                val engineChanged = current.engineSelectionResolved &&
-                    current.engine != savedDefaults.engine
-                savedDefaults = savedDefaults.copy(engine = inspection.selectedEngine)
-                mutablePlayground.update { state ->
-                    state.copy(
-                        engine = if (engineChanged) state.engine else inspection.selectedEngine,
-                        engineSelectionResolved = true,
-                    ).withUnsavedState()
-                }
-                languageSupportController.load(mutablePlayground.value.engine)
-                submitPlayground()
-            }
-        }
+        environment.refreshEngineStates()
     }
 
     fun onResume() {
@@ -217,13 +184,35 @@ internal class TranslationSettingsScreenModel(
     }
 
     override fun onDispose() {
-        engineRefreshJob?.cancel()
-        languageSupportController.clear()
+        environmentObservationJob?.cancel()
+        environment.close()
         controller.close()
     }
 
     fun retryLanguageSupport() {
-        languageSupportController.retry()
+        environment.retryLanguageSupport()
+    }
+
+    private fun observeEnvironment() {
+        environmentObservationJob = screenModelScope.launch {
+            environment.inspection.collect { inspection ->
+                if (!inspection.selectionResolved) return@collect
+                if (appliedResolvedSelection && inspection.selectedEngine == lastResolvedSelection) return@collect
+                appliedResolvedSelection = true
+                lastResolvedSelection = inspection.selectedEngine
+                val current = mutablePlayground.value
+                val engineChanged = current.engineSelectionResolved && current.engine != savedDefaults.engine
+                savedDefaults = savedDefaults.copy(engine = inspection.selectedEngine)
+                mutablePlayground.update { state ->
+                    state.copy(
+                        engine = if (engineChanged) state.engine else inspection.selectedEngine,
+                        engineSelectionResolved = true,
+                    ).withUnsavedState()
+                }
+                environment.loadLanguageSupport(mutablePlayground.value.engine)
+                submitPlayground()
+            }
+        }
     }
 
     private fun initialPlaygroundDefaults(): TranslationPlaygroundDefaults {

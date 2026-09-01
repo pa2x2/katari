@@ -14,7 +14,6 @@ import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationEngineSelection
-import mihon.translation.api.engine.TranslationEngineState
 import mihon.translation.api.engine.TranslationEngineStatus
 import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationHostActions
@@ -34,20 +33,11 @@ class TranslationSessionHostCoordinator(
     executionMode: TranslationSessionExecutionMode = TranslationSessionExecutionMode.FollowProviderPolicy,
     selectionSettleDelayMillis: Long = 250L,
 ) {
-    private val mutableEngineStates = MutableStateFlow(
-        hostActions.knownEngines.map { engine ->
-            TranslationEngineState(
-                engine = engine,
-                presentation = null,
-                status = TranslationEngineStatus.Checking,
-            )
-        },
-    )
-    val engineStates: StateFlow<List<TranslationEngineState>> = mutableEngineStates.asStateFlow()
-    private var resolvedProfileSelectedEngine =
-        hostActions.selectedEngine.get().takeIf { hostActions.selectedEngine.isSet() }
+    private val environment = TranslationSessionEnvironmentController(hostActions, scope)
+    val engineInspection = environment.inspection
+    val engineStates = environment.engineStates
     val profileSelectedEngine: TranslationEngineId?
-        get() = resolvedProfileSelectedEngine
+        get() = environment.inspection.value.selectedEngine
 
     val controller = TranslationSessionController(
         feature = feature,
@@ -55,11 +45,7 @@ class TranslationSessionHostCoordinator(
         executionMode = executionMode,
         selectionSettleDelayMillis = selectionSettleDelayMillis,
     )
-    private val languageSupportController = TranslationLanguageSupportController(
-        hostActions = hostActions,
-        scope = scope,
-    )
-    val languageSupport: StateFlow<TranslationLanguageSupportState> = languageSupportController.state
+    val languageSupport: StateFlow<TranslationLanguageSupportState> = environment.languageSupport
 
     private val mutablePicker = MutableStateFlow<TranslationSessionPicker?>(null)
     val picker: StateFlow<TranslationSessionPicker?> = mutablePicker.asStateFlow()
@@ -68,15 +54,10 @@ class TranslationSessionHostCoordinator(
     val results: SharedFlow<TranslationHostActionResult> = mutableResults.asSharedFlow()
 
     private var actionJob: Job? = null
-    private var engineRefreshJob: Job? = null
     private var retryAfterResume = false
     private val mutableLanguagePair = MutableStateFlow(TranslationSessionLanguagePair())
     val languagePair: StateFlow<TranslationSessionLanguagePair> = mutableLanguagePair.asStateFlow()
     private var editingLanguagePair = false
-
-    init {
-        refreshEngineStates()
-    }
 
     fun handleExternalAction(
         action: TranslationSessionExternalAction,
@@ -92,7 +73,7 @@ class TranslationSessionHostCoordinator(
             is TranslationSessionExternalAction.ChangeLanguages -> {
                 mutableLanguagePair.value = TranslationSessionLanguagePair(action.source, action.target)
                 editingLanguagePair = true
-                languageSupportController.load(activeEngine())
+                environment.loadLanguageSupport(activeEngine())
                 mutablePicker.value = TranslationSessionPicker.LanguagePair
             }
             TranslationSessionExternalAction.ChooseEngine ->
@@ -205,11 +186,11 @@ class TranslationSessionHostCoordinator(
     }
 
     fun selectEngine(engine: TranslationEngineId) {
-        if (mutableEngineStates.value.none { it.engine.id == engine && it.status == TranslationEngineStatus.Ready }) {
+        if (engineStates.value.none { it.engine.id == engine && it.status == TranslationEngineStatus.Ready }) {
             return
         }
         controller.selectEngine(TranslationEngineSelection.Explicit(engine))
-        languageSupportController.load(engine)
+        environment.loadLanguageSupport(engine)
         mutablePicker.value = null
     }
 
@@ -247,9 +228,9 @@ class TranslationSessionHostCoordinator(
         }
     }
 
-    fun retryLanguageSupport() {
-        languageSupportController.retry()
-    }
+    fun retryLanguageSupport() = environment.retryLanguageSupport()
+
+    fun loadLanguageSupport(engine: TranslationEngineId?) = environment.loadLanguageSupport(engine)
 
     fun dismissPicker() {
         editingLanguagePair = false
@@ -257,9 +238,9 @@ class TranslationSessionHostCoordinator(
     }
 
     fun onResume() {
-        refreshEngineStates()
+        environment.refreshEngineStates()
         if (mutablePicker.value != null && mutablePicker.value != TranslationSessionPicker.Engine) {
-            languageSupportController.load(activeEngine())
+            environment.loadLanguageSupport(activeEngine())
         }
         if (!retryAfterResume) return
         retryAfterResume = false
@@ -268,10 +249,9 @@ class TranslationSessionHostCoordinator(
 
     fun close() {
         actionJob?.cancel()
-        engineRefreshJob?.cancel()
         editingLanguagePair = false
         mutablePicker.value = null
-        languageSupportController.clear()
+        environment.close()
         controller.close()
     }
 
@@ -298,28 +278,14 @@ class TranslationSessionHostCoordinator(
                 -> Unit
             }
             mutableResults.emit(result)
-            refreshEngineStates()
-        }
-    }
-
-    private fun refreshEngineStates() {
-        engineRefreshJob?.cancel()
-        engineRefreshJob = scope.launch {
-            var selectionApplied = false
-            hostActions.inspectEngineStates().collect { inspection ->
-                mutableEngineStates.value = inspection.engines
-                if (!selectionApplied && inspection.selectionResolved) {
-                    selectionApplied = true
-                    resolvedProfileSelectedEngine = inspection.selectedEngine
-                }
-            }
+            environment.refreshEngineStates()
         }
     }
 
     private fun openLanguagePicker(picker: TranslationSessionPicker) {
         val context = resolvedLanguageContext()
         mutableLanguagePair.value = TranslationSessionLanguagePair(context.first, context.second)
-        languageSupportController.load(activeEngine())
+        environment.loadLanguageSupport(activeEngine())
         mutablePicker.value = picker
     }
 
@@ -336,13 +302,13 @@ class TranslationSessionHostCoordinator(
             is TranslationSessionState.Success ->
                 state.result.sourceLanguage to state.result.targetLanguage
             is TranslationSessionState.Settling ->
-                state.previousResult?.let { it.sourceLanguage to it.targetLanguage }
+                state.previousResult?.result?.let { it.sourceLanguage to it.targetLanguage }
                     ?: (explicitSource to explicitTarget)
             is TranslationSessionState.Preparing ->
-                state.previousResult?.let { it.sourceLanguage to it.targetLanguage }
+                state.previousResult?.result?.let { it.sourceLanguage to it.targetLanguage }
                     ?: (explicitSource to explicitTarget)
             is TranslationSessionState.Translating ->
-                state.previousResult?.let { it.sourceLanguage to it.targetLanguage }
+                state.previousResult?.result?.let { it.sourceLanguage to it.targetLanguage }
                     ?: (explicitSource to explicitTarget)
             is TranslationSessionState.PreparationRequired -> when (val preparation = state.preparation) {
                 is TranslationPreparation.TargetLanguageRequired ->

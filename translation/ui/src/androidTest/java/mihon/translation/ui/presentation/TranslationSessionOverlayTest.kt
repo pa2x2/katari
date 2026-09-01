@@ -10,6 +10,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertHeightIsEqualTo
@@ -47,6 +50,7 @@ import mihon.translation.api.result.TranslationResult
 import mihon.translation.ui.session.TranslationSelectionAnchor
 import mihon.translation.ui.session.TranslationSessionFailure
 import mihon.translation.ui.session.TranslationSessionInput
+import mihon.translation.ui.session.TranslationSessionResult
 import mihon.translation.ui.session.TranslationSessionState
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -86,14 +90,14 @@ class TranslationSessionOverlayTest {
         composeRule.onNodeWithContentDescription(
             composeRule.activity.stringResource(MR.strings.copy),
         )
-            .assertWidthIsEqualTo(36.dp)
-            .assertHeightIsEqualTo(36.dp)
+            .assertWidthIsEqualTo(48.dp)
+            .assertHeightIsEqualTo(48.dp)
         composeRule.onNodeWithContentDescription(
-            composeRule.activity.stringResource(MR.strings.translation_choose_engine),
+            composeRule.activity.stringResource(MR.strings.label_more),
         )
             .assertIsDisplayed()
-            .assertWidthIsEqualTo(36.dp)
-            .assertHeightIsEqualTo(36.dp)
+            .assertWidthIsEqualTo(48.dp)
+            .assertHeightIsEqualTo(48.dp)
     }
 
     @Test
@@ -108,6 +112,9 @@ class TranslationSessionOverlayTest {
         )
 
         composeRule.onNodeWithContentDescription(
+            composeRule.activity.stringResource(MR.strings.label_more),
+        ).performClick()
+        composeRule.onNodeWithText(
             composeRule.activity.stringResource(MR.strings.translation_choose_engine),
         ).performClick()
 
@@ -170,7 +177,9 @@ class TranslationSessionOverlayTest {
             )
         }
 
-        composeRule.onAllNodesWithTag(TRANSLATION_SESSION_POPUP_TAG).assertCountEquals(0)
+        composeRule.onNodeWithTag(TRANSLATION_SESSION_POPUP_TAG).assert(
+            SemanticsMatcher.keyIsDefined(SemanticsProperties.HideFromAccessibility),
+        )
         composeRule.onAllNodesWithTag(TRANSLATION_SESSION_SHEET_TAG).assertCountEquals(0)
 
         composeRule.runOnIdle {
@@ -297,10 +306,14 @@ class TranslationSessionOverlayTest {
 
     @Test
     fun embedded_progress_keeps_the_previous_result_and_its_actions() {
-        val previousResult = success(
+        val previousSuccess = success(
             translatedText = "Previous translation",
             anchor = null,
-        ).result
+        )
+        val previousResult = TranslationSessionResult(
+            input = previousSuccess.input,
+            result = previousSuccess.result,
+        )
         val state = TranslationSessionState.Translating(
             input = input(anchor = null),
             presentation = PRESENTATION,

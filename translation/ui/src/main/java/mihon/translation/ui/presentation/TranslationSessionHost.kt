@@ -31,6 +31,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.toClipEntry
+import androidx.compose.ui.semantics.hideFromAccessibility
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
@@ -246,8 +248,7 @@ internal fun TranslationSessionOverlay(
                 maximumWidth = with(density) {
                     minOf(popupMaximumWidth, safeWidth).toDp()
                 },
-                visible = placementAvailability != null &&
-                    placementAvailability != TranslationPopupPlacementAvailability.NeedsSheet,
+                visible = placementAvailability == TranslationPopupPlacementAvailability.Fits,
                 onDismiss = onDismiss,
                 onExecute = onExecute,
                 onRetry = onRetry,
@@ -338,6 +339,9 @@ private fun TranslationSessionPopup(
         Surface(
             modifier = Modifier
                 .widthIn(max = maximumWidth)
+                .then(
+                    if (visible) Modifier else Modifier.semantics { hideFromAccessibility() },
+                )
                 .testTag(TRANSLATION_SESSION_POPUP_TAG),
             shape = MaterialTheme.shapes.extraLarge,
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
