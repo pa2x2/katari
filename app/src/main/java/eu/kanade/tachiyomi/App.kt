@@ -7,7 +7,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.os.Build
 import android.webkit.WebView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.DefaultLifecycleObserver
@@ -56,7 +55,6 @@ import mihon.core.migration.migrations.migrations
 import mihon.entry.interactions.library.EntryLibraryUpdateNotificationFeature
 import mihon.entry.interactions.runtime.addEntryInteractionImageComponents
 import mihon.telemetry.TelemetryConfig
-import org.conscrypt.Conscrypt
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
@@ -67,7 +65,6 @@ import tachiyomi.presentation.widget.WidgetManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
-import java.security.Security
 
 class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factory {
 
@@ -85,16 +82,9 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
 
         GlobalExceptionHandler.initialize(applicationContext, CrashActivity::class.java)
 
-        // TLS 1.3 support for Android < 10
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            Security.insertProviderAt(Conscrypt.newProvider(), 1)
-        }
-
         // Avoid potential crashes
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            val process = getProcessName()
-            if (packageName != process) WebView.setDataDirectorySuffix(process)
-        }
+        val process = getProcessName()
+        if (packageName != process) WebView.setDataDirectorySuffix(process)
 
         Injekt.importModule(PreferenceModule(this))
         Injekt.importModule(DomainModule())
