@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -338,7 +338,7 @@ private fun TranslationSessionPopup(
     Box(modifier = Modifier.alpha(if (visible) 1f else 0f)) {
         Surface(
             modifier = Modifier
-                .widthIn(max = maximumWidth)
+                .width(maximumWidth)
                 .then(
                     if (visible) Modifier else Modifier.semantics { hideFromAccessibility() },
                 )

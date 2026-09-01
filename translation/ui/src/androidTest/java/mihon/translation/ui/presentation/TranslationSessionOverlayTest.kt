@@ -52,6 +52,7 @@ import mihon.translation.ui.session.TranslationSessionFailure
 import mihon.translation.ui.session.TranslationSessionInput
 import mihon.translation.ui.session.TranslationSessionResult
 import mihon.translation.ui.session.TranslationSessionState
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -138,13 +139,17 @@ class TranslationSessionOverlayTest {
     }
 
     @Test
-    fun anchored_popup_stays_visible_when_translation_state_changes() {
+    fun anchored_popup_keeps_its_width_when_translation_state_changes() {
         val anchor = TranslationSelectionAnchor(400f, 280f, 680f, 340f)
         var state by mutableStateOf<TranslationSessionState>(
             TranslationSessionState.Settling(input(anchor)),
         )
         render(stateProvider = { state })
-        composeRule.onNodeWithTag(TRANSLATION_SESSION_POPUP_TAG).assertIsDisplayed()
+        val loadingWidth = composeRule.onNodeWithTag(TRANSLATION_SESSION_POPUP_TAG)
+            .assertIsDisplayed()
+            .fetchSemanticsNode()
+            .boundsInRoot
+            .width
 
         composeRule.runOnIdle {
             state = success(
@@ -154,7 +159,12 @@ class TranslationSessionOverlayTest {
         }
 
         composeRule.onNodeWithText("Witaj świecie").assertIsDisplayed()
-        composeRule.onNodeWithTag(TRANSLATION_SESSION_POPUP_TAG).assertIsDisplayed()
+        val resultWidth = composeRule.onNodeWithTag(TRANSLATION_SESSION_POPUP_TAG)
+            .assertIsDisplayed()
+            .fetchSemanticsNode()
+            .boundsInRoot
+            .width
+        assertEquals(loadingWidth, resultWidth, 0.5f)
         composeRule.onAllNodesWithTag(TRANSLATION_SESSION_SHEET_TAG).assertCountEquals(0)
     }
 
