@@ -47,7 +47,17 @@
     <string name="book_document_chapter_unavailable">Chapter unavailable</string>
     <string name="book_document_image_loading">Loading image…</string>
     <string name="book_document_image_unavailable">Image unavailable. Tap to retry.</string>
+    <string name="book_document_image_description_unavailable">Image description unavailable</string>
     <string name="book_document_anchor_missing">The linked section could not be found.</string>
     <string name="book_document_external_link_unavailable">The link could not be opened.</string>
+    <string name="book_document_external_link_title">Open external link?</string>
+    <string name="book_document_external_link_message">This leaves Katari and opens %1$s in another app.</string>
+    <string name="book_document_external_link_open">Open link</string>
+    <string name="book_document_external_link_cancel">Cancel</string>
+    <string name="book_remote_resources_title">Load remote book resources?</string>
+    <string name="book_remote_resource_images">images</string>
+    <string name="book_remote_resource_fonts">fonts</string>
+    <string name="book_remote_resources_allow">Allow</string>
+    <string name="book_remote_resources_block">Keep blocked</string>
     <string name="book_document_unsupported">Unsupported %1$s</string>
 </resources>

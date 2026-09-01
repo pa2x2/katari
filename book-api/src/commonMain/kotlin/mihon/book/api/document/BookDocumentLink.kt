@@ -46,6 +46,44 @@ sealed interface BookDocumentLinkTarget {
     }
 
     /**
+     * A location in another semantic document of the same publication.
+     *
+     * @property resourceId publication-scoped document identity.
+     * @property fragment optional anchor fragment without `#`.
+     */
+    @Serializable
+    @SerialName("resource")
+    data class Resource(
+        val resourceId: String,
+        val fragment: String? = null,
+    ) : BookDocumentLinkTarget {
+        init {
+            require(resourceId.isNotBlank()) { "document link resource id must not be blank" }
+            require(fragment == null || fragment.isNotBlank()) {
+                "document link resource fragment must not be blank"
+            }
+            require(fragment == null || !fragment.startsWith("#")) {
+                "document link resource fragment must not include the fragment marker"
+            }
+        }
+    }
+
+    /** A contextual reference presented without replacing the primary reading position. */
+    @Serializable
+    @SerialName("reference")
+    data class Reference(
+        val resourceId: String? = null,
+        val fragment: String,
+    ) : BookDocumentLinkTarget {
+        init {
+            require(resourceId == null || resourceId.isNotBlank()) { "reference resource id must not be blank" }
+            require(fragment.isNotBlank() && !fragment.startsWith("#")) {
+                "reference fragment must be non-blank and omit the fragment marker"
+            }
+        }
+    }
+
+    /**
      * External HTTP(S) destination handed off to the host.
      *
      * @property url absolute HTTP(S) URL.

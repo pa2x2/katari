@@ -184,13 +184,23 @@ internal class BookReaderSessionFactory(
                     check(readerProcessor.supports(publication.model.descriptor)) {
                         "The selected reader no longer supports the prepared publication model"
                     }
+                    val effectiveProgressIdentity = progressIdentity.copy(
+                        resourceRevision = publication.locatorRevision ?: progressIdentity.resourceRevision,
+                    )
                     val progress = resolveProgress(
                         chapter = chapter,
-                        progressIdentity = progressIdentity,
+                        progressIdentity = effectiveProgressIdentity,
                         preparedPublication = publication,
                     )
                     val decodedLocator = progress
-                        ?.takeIf { !chapter.read && it.hasPartialBookProgress }
+                        ?.takeIf {
+                            !chapter.read &&
+                                it.hasPartialBookProgress &&
+                                (
+                                    effectiveProgressIdentity.resourceRevision == null ||
+                                        it.resourceRevision == effectiveProgressIdentity.resourceRevision
+                                    )
+                        }
                         ?.locator
                         ?.let { locator ->
                             BookProgressLocatorCodec.decode(
@@ -204,7 +214,7 @@ internal class BookReaderSessionFactory(
                             entry = visibleEntry,
                             owner = owner,
                             chapter = chapter,
-                            progressIdentity = progressIdentity,
+                            progressIdentity = effectiveProgressIdentity,
                             contentSession = contentSession,
                             preparedPublication = publication,
                             initialLocator = initialLocator,

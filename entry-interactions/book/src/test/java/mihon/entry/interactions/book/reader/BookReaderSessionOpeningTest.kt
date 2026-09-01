@@ -137,7 +137,7 @@ internal class BookReaderSessionOpeningTest : BookReaderSessionFixture() {
         session.saveLocation(latestLocator, completed = true)
         val progressEvent = assertIs<EntryMediaSessionEvent.Progressed>(events.single())
         assertEquals(latestLocator, BookProgressLocatorCodec.decode(progressEvent.progress.locator))
-        assertEquals(latestLocator.progression, progressEvent.fraction)
+        assertEquals(latestLocator.totalProgression, progressEvent.fraction)
         assertTrue(progressEvent.progress.completed)
         assertEquals(100L, progressEvent.progress.completionUpdatedAt)
         assertEquals(100L, progressEvent.progress.locatorUpdatedAt)

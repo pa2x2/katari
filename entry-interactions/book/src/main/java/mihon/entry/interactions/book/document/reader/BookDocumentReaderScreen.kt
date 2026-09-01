@@ -8,10 +8,15 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -31,6 +36,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
+import mihon.book.api.BookLocator
+import mihon.book.api.BookNavigationItem
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderNavigationBarSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderProgressSettings
@@ -65,6 +72,7 @@ import tachiyomi.presentation.core.components.reader.ReaderChromeTopBar
 import tachiyomi.presentation.core.i18n.stringResource
 import androidx.compose.ui.res.stringResource as androidStringResource
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun BookDocumentReaderScreen(
     state: BookDocumentReaderState,
@@ -75,6 +83,7 @@ internal fun BookDocumentReaderScreen(
     onTransitionReached: (EntryChapter) -> Unit,
     onTerminalObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
     onChapterSelected: (EntryChapter) -> Unit,
+    onPublicationLocationSelected: (BookLocator) -> Unit,
     onChromeToggle: () -> Unit,
     onChromeHide: () -> Unit,
     onUserScrollStarted: () -> Unit,
@@ -84,7 +93,9 @@ internal fun BookDocumentReaderScreen(
     onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
     snackbarHostState: SnackbarHostState,
     onAnchorMissing: (String) -> Unit,
+    onInternalLinkClick: (BookDocumentSection<EntryChapter>, mihon.book.api.document.BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
+    onAuxiliaryDismiss: () -> Unit,
     onTranslationPopupBoundsChanged: (Rect?) -> Unit,
     onClose: () -> Unit,
 ) {
@@ -97,8 +108,10 @@ internal fun BookDocumentReaderScreen(
     val focusManager = LocalFocusManager.current
     var rootPosition by remember { mutableStateOf(Offset.Zero) }
     var pendingChapterSelection by remember { mutableStateOf<EntryChapter?>(null) }
+    var pendingPublicationLocation by remember { mutableStateOf<BookLocator?>(null) }
     val currentOnChromeToggle by rememberUpdatedState(onChromeToggle)
     val currentOnChapterSelected by rememberUpdatedState(onChapterSelected)
+    val currentOnPublicationLocationSelected by rememberUpdatedState(onPublicationLocationSelected)
     val observeSelections = selectionCoordinator?.observeSelections?.collectAsState()?.value == true
     val automaticTranslationEnabled =
         selectionCoordinator?.automaticTranslationEnabled?.collectAsState()?.value == true
@@ -200,6 +213,7 @@ internal fun BookDocumentReaderScreen(
                         onTransitionReached = onTransitionReached,
                         onTerminalObservation = onTerminalObservation,
                         onAnchorMissing = onAnchorMissing,
+                        onInternalLinkClick = onInternalLinkClick,
                         onExternalLinkClick = onExternalLinkClick,
                         onScrollStarted = onChromeHide,
                         onUserScrollStarted = onUserScrollStarted,
@@ -273,28 +287,56 @@ internal fun BookDocumentReaderScreen(
                 currentOnChapterSelected(chapter)
             }
 
+            LaunchedEffect(state.navigationVisible, pendingPublicationLocation) {
+                val locator = pendingPublicationLocation ?: return@LaunchedEffect
+                if (state.navigationVisible) return@LaunchedEffect
+                withFrameNanos { }
+                focusManager.clearFocus(force = true)
+                withFrameNanos { }
+                pendingPublicationLocation = null
+                currentOnPublicationLocationSelected(locator)
+            }
+
             if (state.navigationVisible) {
-                val navigationRows = remember(state.navigationPresentation) {
-                    state.navigationPresentation.chapters.map { chapter ->
-                        BookReaderNavigationRow(
-                            item = chapter,
-                            title = chapter.name,
-                            read = chapter.read,
-                            bookmark = chapter.bookmark,
-                            progressLabel = state.navigationPresentation.progressLabels[chapter.id],
+                val usesPublicationNavigation = state.publicationNavigation.isNotEmpty() &&
+                    (
+                        state.publicationNavigation.size > 1 ||
+                            state.loadedSections[state.currentChapterId]?.sections?.size.orZero() > 1
                         )
+                if (usesPublicationNavigation) {
+                    val navigationRows = remember(state.publicationNavigation) {
+                        state.publicationNavigation.toReaderRows()
                     }
+                    BookReaderNavigationSheet(
+                        visible = true,
+                        rows = navigationRows,
+                        selectedIndex = -1,
+                        onItemClick = { pendingPublicationLocation = it },
+                        onDismissRequest = { onNavigationVisibilityChange(false) },
+                    )
+                } else {
+                    val navigationRows = remember(state.navigationPresentation) {
+                        state.navigationPresentation.chapters.map { chapter ->
+                            BookReaderNavigationRow(
+                                item = chapter,
+                                title = chapter.name,
+                                read = chapter.read,
+                                bookmark = chapter.bookmark,
+                                progressLabel = state.navigationPresentation.progressLabels[chapter.id],
+                            )
+                        }
+                    }
+                    val selectedIndex = remember(state.navigationPresentation, state.currentChapterId) {
+                        state.navigationPresentation.chapters.indexOfFirst { it.id == state.currentChapterId }
+                    }
+                    BookReaderNavigationSheet(
+                        visible = true,
+                        rows = navigationRows,
+                        selectedIndex = selectedIndex,
+                        onItemClick = { pendingChapterSelection = it },
+                        onDismissRequest = { onNavigationVisibilityChange(false) },
+                    )
                 }
-                val selectedIndex = remember(state.navigationPresentation, state.currentChapterId) {
-                    state.navigationPresentation.chapters.indexOfFirst { it.id == state.currentChapterId }
-                }
-                BookReaderNavigationSheet(
-                    visible = true,
-                    rows = navigationRows,
-                    selectedIndex = selectedIndex,
-                    onItemClick = { pendingChapterSelection = it },
-                    onDismissRequest = { onNavigationVisibilityChange(false) },
-                )
             }
             if (state.settingsVisible) {
                 BookReaderSettingsDialog(
@@ -337,6 +379,47 @@ internal fun BookDocumentReaderScreen(
                     },
                 )
             }
+            state.auxiliarySection?.let { section ->
+                val auxiliaryListState = rememberLazyListState(
+                    initialFirstVisibleItemIndex = section.viewerBlockIndex(section.initialPosition.blockId)
+                        .coerceAtLeast(0),
+                )
+                ModalBottomSheet(onDismissRequest = onAuxiliaryDismiss) {
+                    BookDocumentChapterSelectionContainer(chapterId = section.owner.id) { _ ->
+                        LazyColumn(
+                            state = auxiliaryListState,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(bottom = 24.dp),
+                        ) {
+                            items(
+                                items = section.viewerBlocks,
+                                key = { item -> item.key },
+                            ) { item ->
+                                BookDocumentViewerBlock(
+                                    item = item,
+                                    onAnchorClick = onInternalLinkClick,
+                                    onExternalLinkClick = onExternalLinkClick,
+                                    onReaderTap = {},
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
+
+private fun List<BookNavigationItem>.toReaderRows(depth: Int = 0): List<BookReaderNavigationRow<BookLocator>> =
+    flatMap { item ->
+        listOf(
+            BookReaderNavigationRow(
+                item = item.target,
+                title = item.title.orEmpty(),
+                depth = depth,
+            ),
+        ) + item.children.toReaderRows(depth + 1)
+    }
+
+private fun Int?.orZero(): Int = this ?: 0

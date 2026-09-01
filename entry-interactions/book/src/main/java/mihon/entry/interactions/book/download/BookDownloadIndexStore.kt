@@ -208,6 +208,7 @@ internal data class BookDownloadIndexManifest(
     val childTitle: String,
     val childUrl: String,
     val createdAt: Long,
+    val publicationId: String? = null,
 ) {
     val packageKey: BookDownloadPackageKey
         get() = BookDownloadPackageKey(sourceId, entryUrl, childUrl)
@@ -222,6 +223,7 @@ internal data class BookDownloadIndexManifest(
             childTitle = manifest.childTitle,
             childUrl = manifest.childUrl,
             createdAt = manifest.createdAt,
+            publicationId = manifest.publicationId,
         )
     }
 }

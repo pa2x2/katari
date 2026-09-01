@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import mihon.book.api.document.BookDocumentLinkTarget
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.presentation.core.util.clickableNoIndication
 
@@ -15,7 +16,7 @@ internal fun BookDocumentViewerList(
     state: LazyListState,
     selection: BookDocumentChapterSelection,
     chapterLoadState: (Long) -> BookDocumentChapterLoadState?,
-    onAnchorClick: (BookDocumentSection<EntryChapter>, String) -> Unit,
+    onAnchorClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     onReaderTap: () -> Unit,
     onTransitionRetry: (EntryChapter) -> Unit,

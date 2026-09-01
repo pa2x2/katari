@@ -29,6 +29,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.materialIcons)
     implementation(libs.androidx.fragment)
+    implementation(libs.androidsvg)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.bundles.serialization)
     implementation(libs.injekt)

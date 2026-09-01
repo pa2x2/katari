@@ -65,7 +65,7 @@ internal object ExtensionLoader {
         libVersionRange("1.4", "1.4"),
         libVersionRange("1.6", "1.6"),
     )
-    private val ENTRY_SOURCE_API_VERSION_FAMILY_RANGE = libVersionRange("2.0", "2.5")
+    private val ENTRY_SOURCE_API_VERSION_FAMILY_RANGE = libVersionRange("2.0", "2.6")
 
     @Suppress("DEPRECATION")
     private val PACKAGE_FLAGS = PackageManager.GET_CONFIGURATIONS or

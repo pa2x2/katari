@@ -4,15 +4,19 @@ import android.app.Application
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.book.content.BookMaterializationCache
 import mihon.entry.interactions.book.content.BookMaterializationStore
+import mihon.entry.interactions.book.document.preparation.BookDocumentPreparedCache
 import mihon.entry.interactions.book.document.reader.BookDocumentReaderProcessor
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderPreferences
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingsProvider
+import mihon.entry.interactions.book.document.resource.BookPublicationResourceGatewayFactory
+import mihon.entry.interactions.book.document.resource.BookRemoteResourceConsentPreferences
 import mihon.entry.interactions.book.download.BookDownloadCache
 import mihon.entry.interactions.book.download.BookDownloadIndexStore
 import mihon.entry.interactions.book.download.BookDownloadManager
 import mihon.entry.interactions.book.download.BookDownloadProvider
 import mihon.entry.interactions.book.download.BookDownloadStore
 import mihon.entry.interactions.book.download.BookDownloader
+import mihon.entry.interactions.book.format.epub.preparation.EpubBookPreparer
 import mihon.entry.interactions.book.format.html.prosechapter.preparation.HtmlProseChapterPreparer
 import mihon.entry.interactions.book.media.session.BookMediaSessionProcessor
 import mihon.entry.interactions.book.navigation.BookChapterNavigationResolver
@@ -81,6 +85,9 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
     profilePreferenceOwners: ProfilePreferenceOwnerInstaller,
 ): BookRuntimeArtifacts {
     val materializationCache = BookMaterializationCache(app)
+    val preparedDocumentCache = BookDocumentPreparedCache(app)
+    val resourceGatewayFactory =
+        BookPublicationResourceGatewayFactory(app, get<eu.kanade.tachiyomi.network.NetworkHelper>().client)
     val processorPreferencesOwner = profilePreferenceOwners.register(
         id = ProfilePreferenceOwnerId("entry-interactions.book.processor-selection"),
         keyPatterns = BookReaderProcessorPreferences.profileKeyPatterns,
@@ -100,20 +107,34 @@ private fun InjektRegistrar.addBookEntryInteractionRuntime(
         ),
         factory = ::BookDocumentReaderPreferences,
     )
+    val remoteResourceConsentOwner = profilePreferenceOwners.register(
+        id = ProfilePreferenceOwnerId("entry-interactions.book.remote-resource-consent"),
+        keyPatterns = setOf(
+            ProfilePreferenceKeyPattern.Prefix(BookRemoteResourceConsentPreferences.KEY_PREFIX),
+        ),
+        factory = ::BookRemoteResourceConsentPreferences,
+    )
     val automaticTranslationPreferences = automaticTranslationPreferencesOwner.create()
     val documentReaderPreferences = documentReaderSettingsOwner.create()
+    val remoteResourceConsentPreferences = remoteResourceConsentOwner.create()
     val documentReaderSettingsProvider = BookDocumentReaderSettingsProvider(
         preferences = documentReaderPreferences,
         chapterPreparationPreferences = get(),
         automaticTranslationPreferences = automaticTranslationPreferences,
     )
     val preparerRegistry = BookContentPreparerRegistry(
-        preparers = listOf(HtmlProseChapterPreparer()),
+        preparers = listOf(
+            HtmlProseChapterPreparer(),
+            EpubBookPreparer(preparedDocumentCache, resourceGatewayFactory),
+        ),
     )
     val readerProcessorRegistry = BookReaderProcessorRegistry(
         processors = listOf(BookDocumentReaderProcessor()),
     )
     addSingletonFactory { materializationCache }
+    addSingletonFactory { preparedDocumentCache }
+    addSingletonFactory { resourceGatewayFactory }
+    addSingletonFactory { remoteResourceConsentPreferences }
     addSingletonFactory<BookMaterializationStore> { get<BookMaterializationCache>() }
     addSingletonFactory { BookDownloadProvider(get<StorageManager>(), app) }
     addSingletonFactory {

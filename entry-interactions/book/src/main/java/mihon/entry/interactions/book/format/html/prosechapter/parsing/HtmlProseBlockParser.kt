@@ -110,7 +110,7 @@ internal class HtmlProseBlockParser(
                 element.childNodes(),
                 element,
                 BookDocumentBlockRole(BookDocumentBlockKind.PREFORMATTED),
-                style.copy(whiteSpace = BookDocumentWhiteSpace.PRE),
+                style.copy(whiteSpace = BookDocumentWhiteSpace.PRE).withFlow(style.flow),
                 inheritedFragments,
                 destination,
                 preserveWhitespace = true,
@@ -164,7 +164,7 @@ private fun Node.hasReadableText(): Boolean = when (this) {
 
 private fun Element.isBlockElement(): Boolean = normalName() in setOf(
     "address", "article", "aside", "blockquote", "caption", "dd", "details", "div", "dl", "dt",
-    "figcaption", "figure", "footer", "h1", "h2", "h3", "h4", "h5", "h6", "header", "hr",
+    "figcaption", "figure", "footer", "h1", "h2", "h3", "h4", "h5", "h6", "header", "hr", "img",
     "li", "main", "nav", "ol", "p", "pre", "section", "table", "tbody", "td", "tfoot", "th",
     "thead", "tr", "ul",
 )

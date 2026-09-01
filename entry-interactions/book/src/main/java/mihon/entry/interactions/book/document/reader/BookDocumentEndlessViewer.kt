@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildWindow
 import tachiyomi.domain.entry.model.EntryChapter
@@ -32,7 +33,7 @@ internal fun BookDocumentEndlessViewer(
     currentChapter: EntryChapter,
     currentChapterId: Long,
     window: EntryChildWindow<EntryChapter>,
-    loadedSections: Map<Long, BookDocumentSection<EntryChapter>>,
+    loadedSections: Map<Long, BookDocumentPublicationSections<EntryChapter>>,
     loadStates: Map<Long, BookDocumentChapterLoadState>,
     navigationRequest: BookDocumentNavigationRequest?,
     textSizePercent: Int,
@@ -40,6 +41,7 @@ internal fun BookDocumentEndlessViewer(
     onTransitionReached: (EntryChapter) -> Unit,
     onTerminalObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
     onAnchorMissing: (String) -> Unit,
+    onInternalLinkClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     onScrollStarted: () -> Unit,
     onUserScrollStarted: () -> Unit,
@@ -47,10 +49,10 @@ internal fun BookDocumentEndlessViewer(
     modifier: Modifier = Modifier,
 ) {
     val proposedItems = remember(window, loadedSections) {
-        buildBookDocumentViewerItems(window, loadedSections, EntryChapter::id)
+        buildBookDocumentPublicationViewerItems(window, loadedSections, EntryChapter::id)
     }
     var items by remember { mutableStateOf(proposedItems) }
-    val currentSection = loadedSections[currentChapterId]
+    val currentSection = loadedSections[currentChapterId]?.initialSection
     val initialIndex = currentSection?.let { section ->
         items.indexOfPosition(section.key, section.initialPosition).coerceAtLeast(0)
     } ?: 0
@@ -60,9 +62,11 @@ internal fun BookDocumentEndlessViewer(
         prefetchStrategy = chapterPrefetchStrategy,
     )
     val currentItems by rememberUpdatedState(items)
+    val currentLoadedSections by rememberUpdatedState(loadedSections)
     val currentOnScrollStarted by rememberUpdatedState(onScrollStarted)
     val currentOnUserScrollStarted by rememberUpdatedState(onUserScrollStarted)
     val currentOnAnchorMissing by rememberUpdatedState(onAnchorMissing)
+    val currentOnInternalLinkClick by rememberUpdatedState(onInternalLinkClick)
     val currentOnExternalLinkClick by rememberUpdatedState(onExternalLinkClick)
     val currentOnReaderTap by rememberUpdatedState(onReaderTap)
     val currentOnTransitionReached by rememberUpdatedState(onTransitionReached)
@@ -78,7 +82,7 @@ internal fun BookDocumentEndlessViewer(
         mutableStateOf<BookDocumentViewerLocation<EntryChapter>?>(null)
     }
     val prefetchTarget = remember(window.next?.id, loadedSections, items) {
-        val nextSectionKey = window.next?.id?.let(loadedSections::get)?.key
+        val nextSectionKey = window.next?.id?.let(loadedSections::get)?.sections?.firstOrNull()?.key
         val nextSectionIndex = nextSectionKey?.let { sectionKey ->
             items.indexOfSection(sectionKey)
         } ?: -1
@@ -106,13 +110,13 @@ internal fun BookDocumentEndlessViewer(
     }
 
     val anchorClick = remember(listState) {
-        { section: BookDocumentSection<EntryChapter>, fragment: String ->
-            val target = section.document.document.anchors[fragment]
-            if (target == null) {
-                currentOnAnchorMissing(fragment)
-            } else {
-                val index = currentItems.indexOfPosition(section.key, target)
-                if (index >= 0) listState.requestScrollToItem(index)
+        { section: BookDocumentSection<EntryChapter>, link: BookDocumentLinkTarget ->
+            when (link) {
+                is BookDocumentLinkTarget.Anchor,
+                is BookDocumentLinkTarget.Resource,
+                is BookDocumentLinkTarget.Reference,
+                -> currentOnInternalLinkClick(section, link)
+                is BookDocumentLinkTarget.External -> currentOnAnchorMissing(link.url)
             }
         }
     }
@@ -184,7 +188,7 @@ internal fun BookDocumentEndlessViewer(
     LaunchedEffect(currentChapterId, items, initialPositionRestored) {
         if (!initialPositionRestored) return@LaunchedEffect
         if (navigationRequest != null) return@LaunchedEffect
-        val section = loadedSections[currentChapterId] ?: return@LaunchedEffect
+        val section = loadedSections[currentChapterId]?.initialSection ?: return@LaunchedEffect
         val visibleChapterIds = listState.layoutInfo.visibleItemsInfo.mapNotNull { layout ->
             (items.resolve(layout.index, layout.key) as? BookDocumentViewerItem.Block)?.section?.owner?.id
         }
@@ -196,7 +200,10 @@ internal fun BookDocumentEndlessViewer(
 
     LaunchedEffect(navigationRequest) {
         val request = navigationRequest ?: return@LaunchedEffect
-        val section = loadedSections[request.chapterId] ?: return@LaunchedEffect
+        val section = loadedSections[request.chapterId]
+            ?.sections
+            ?.firstOrNull { it.key == request.sectionKey }
+            ?: return@LaunchedEffect
         scrollToSectionPosition(section, request.position)
     }
 

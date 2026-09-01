@@ -11,6 +11,8 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import mihon.entry.interactions.book.document.preparation.BookDocumentPreparedCache
+import mihon.entry.interactions.book.document.resource.BookPublicationResourceGatewayFactory
 import mihon.entry.interactions.book.download.model.BookDownload
 import mihon.entry.interactions.download.EntryDownloadWorkController
 import org.junit.jupiter.api.Test
@@ -141,6 +143,8 @@ class BookDownloadManagerTest {
                 cache = cache,
                 provider = mockk(relaxed = true),
                 downloader = downloader,
+                preparedDocumentCache = mockk<BookDocumentPreparedCache>(relaxed = true),
+                resourceGatewayFactory = mockk<BookPublicationResourceGatewayFactory>(relaxed = true),
                 sourceManager = mockk(relaxed = true),
                 store = store,
                 workController = workController,

@@ -16,6 +16,8 @@ class ExtensionManagerTest {
             availableExtension(name = "Entry 2.0", libVersionName = "2.0.0"),
             availableExtension(name = "Entry 2.0 patch", libVersionName = "2.0.1"),
             availableExtension(name = "Entry 2.1", libVersionName = "2.1.0"),
+            availableExtension(name = "Entry 2.6", libVersionName = "2.6.0"),
+            availableExtension(name = "Future Entry 2.7", libVersionName = "2.7.0"),
         )
 
         extensions
@@ -26,6 +28,7 @@ class ExtensionManagerTest {
             "Entry 2.0",
             "Entry 2.0 patch",
             "Entry 2.1",
+            "Entry 2.6",
         )
     }
 

@@ -51,7 +51,7 @@ internal class OpenedBookReaderSession(
                 visibleEntry = entry,
                 child = chapter,
                 progress = progress,
-                fraction = locator.progression ?: locator.totalProgression,
+                fraction = locator.totalProgression ?: locator.progression,
                 preserveLocatorExtensions = true,
             ),
         )

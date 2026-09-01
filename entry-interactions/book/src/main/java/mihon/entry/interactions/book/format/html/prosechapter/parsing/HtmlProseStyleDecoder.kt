@@ -3,25 +3,38 @@ package mihon.entry.interactions.book.format.html.prosechapter.parsing
 import mihon.book.api.document.BookDocumentAlignment
 import mihon.book.api.document.BookDocumentBorder
 import mihon.book.api.document.BookDocumentBorderStyle
+import mihon.book.api.document.BookDocumentFlowStyle
 import mihon.book.api.document.BookDocumentFontFamily
 import mihon.book.api.document.BookDocumentInlineStyle
 import mihon.book.api.document.BookDocumentStyle
+import mihon.book.api.document.BookDocumentTextContext
+import mihon.book.api.document.BookDocumentTextDirection
 import mihon.book.api.document.BookDocumentWhiteSpace
 import mihon.entry.interactions.book.format.html.prosechapter.sanitization.DOCUMENT_STYLE_ATTRIBUTE_PREFIX
 import org.jsoup.nodes.Element
 
 internal fun Element.documentBlockStyle(): BookDocumentStyle {
     val properties = documentStyleProperties()
-    return BookDocumentStyle(
+    val base = BookDocumentStyle(
         alignment = properties["text-align"].toAlignment(),
         whiteSpace = properties["white-space"].toWhiteSpace(),
         foregroundArgb = properties["color"].toArgb(),
         backgroundArgb = properties["background-color"].toArgb(),
         border = properties.toBorder(),
         paddingEm = properties["padding"].toEm()?.coerceIn(0f, 4f) ?: 0f,
-        fontFamily = properties["font-family"].toGenericFontFamily(),
+        fontFamily = properties.toFontFamily(),
         fontSizeScale = properties["font-size"].toFontScale() ?: 1f,
         bold = properties["font-weight"].isBold(),
+    )
+    return base.withFlow(
+        BookDocumentFlowStyle(
+            spacingBeforeEm = properties["margin-top"].toEm()?.coerceIn(0f, 8f) ?: 0f,
+            spacingAfterEm = properties["margin-bottom"].toEm()?.coerceIn(0f, 8f) ?: 0f,
+            lineHeightScale = properties["line-height"].toLineHeightScale() ?: 1.25f,
+            firstLineIndentEm = properties["text-indent"].toEm()?.coerceIn(-8f, 8f) ?: 0f,
+            direction = (properties["direction"] ?: attr("dir")).toTextDirection(),
+            languageTag = declaredLanguageTag(),
+        ),
     )
 }
 
@@ -32,7 +45,7 @@ internal fun Element.documentInlineStyle(): BookDocumentInlineStyle? {
     val vertical = properties["vertical-align"].orEmpty().lowercase()
     val foreground = properties["color"].toArgb()
     val background = properties["background-color"].toArgb()
-    val fontFamily = properties["font-family"].toGenericFontFamily()
+    val fontFamily = properties.toFontFamily()
     val fontScale = properties["font-size"].toFontScale()
     val bold = tag in setOf("b", "strong") || properties["font-weight"].isBold()
     val italic = tag in setOf("i", "em", "cite", "dfn", "var") ||
@@ -43,13 +56,16 @@ internal fun Element.documentInlineStyle(): BookDocumentInlineStyle? {
     val superscript = vertical == "super" || (vertical != "sub" && tag == "sup")
     val code = tag in setOf("code", "kbd", "samp")
     val small = tag == "small"
+    val languageTag = declaredLanguageTag()
+    val direction = attr("dir").toTextDirection()
     if (
         foreground == null && background == null && fontFamily == null && fontScale == null &&
-        !bold && !italic && !underline && !strikethrough && !subscript && !superscript && !code && !small
+        !bold && !italic && !underline && !strikethrough && !subscript && !superscript && !code && !small &&
+        languageTag == null && direction == null
     ) {
         return null
     }
-    return BookDocumentInlineStyle(
+    val base = BookDocumentInlineStyle(
         foregroundArgb = foreground,
         backgroundArgb = background,
         fontFamily = fontFamily,
@@ -63,19 +79,35 @@ internal fun Element.documentInlineStyle(): BookDocumentInlineStyle? {
         code = code,
         small = small,
     )
+    return BookDocumentInlineStyle.withTextContext(
+        base = base,
+        textContext = BookDocumentTextContext(languageTag, direction),
+    )
 }
 
-internal fun BookDocumentStyle.mergedWith(child: BookDocumentStyle): BookDocumentStyle = BookDocumentStyle(
-    alignment = child.alignment ?: alignment,
-    whiteSpace = if (child.whiteSpace == BookDocumentWhiteSpace.NORMAL) whiteSpace else child.whiteSpace,
-    foregroundArgb = child.foregroundArgb ?: foregroundArgb,
-    backgroundArgb = child.backgroundArgb ?: backgroundArgb,
-    border = child.border ?: border,
-    paddingEm = if (child.paddingEm == 0f) paddingEm else child.paddingEm,
-    fontFamily = child.fontFamily ?: fontFamily,
-    fontSizeScale = if (child.fontSizeScale == 1f) fontSizeScale else child.fontSizeScale,
-    bold = bold || child.bold,
-)
+internal fun BookDocumentStyle.mergedWith(child: BookDocumentStyle): BookDocumentStyle {
+    val base = BookDocumentStyle(
+        alignment = child.alignment ?: alignment,
+        whiteSpace = if (child.whiteSpace == BookDocumentWhiteSpace.NORMAL) whiteSpace else child.whiteSpace,
+        foregroundArgb = child.foregroundArgb ?: foregroundArgb,
+        backgroundArgb = child.backgroundArgb ?: backgroundArgb,
+        border = child.border ?: border,
+        paddingEm = if (child.paddingEm == 0f) paddingEm else child.paddingEm,
+        fontFamily = child.fontFamily ?: fontFamily,
+        fontSizeScale = if (child.fontSizeScale == 1f) fontSizeScale else child.fontSizeScale,
+        bold = bold || child.bold,
+    )
+    return base.withFlow(
+        BookDocumentFlowStyle(
+            spacingBeforeEm = if (child.spacingBeforeEm == 0f) spacingBeforeEm else child.spacingBeforeEm,
+            spacingAfterEm = if (child.spacingAfterEm == 0f) spacingAfterEm else child.spacingAfterEm,
+            lineHeightScale = if (child.lineHeightScale == 1.25f) lineHeightScale else child.lineHeightScale,
+            firstLineIndentEm = if (child.firstLineIndentEm == 0f) firstLineIndentEm else child.firstLineIndentEm,
+            direction = child.direction ?: direction,
+            languageTag = child.languageTag ?: languageTag,
+        ),
+    )
+}
 
 private fun Element.documentStyleProperties(): Map<String, String> = buildMap {
     attributes().asList().forEach { attribute ->
@@ -98,6 +130,28 @@ private fun String?.toWhiteSpace(): BookDocumentWhiteSpace = when (this?.trim()?
     else -> BookDocumentWhiteSpace.NORMAL
 }
 
+private fun String?.toTextDirection(): BookDocumentTextDirection? = when (this?.trim()?.lowercase()) {
+    "ltr" -> BookDocumentTextDirection.LEFT_TO_RIGHT
+    "rtl" -> BookDocumentTextDirection.RIGHT_TO_LEFT
+    else -> null
+}
+
+private fun Element.declaredLanguageTag(): String? = attr("lang")
+    .ifBlank { attr("xml:lang") }
+    .trim()
+    .take(64)
+    .takeIf(String::isNotEmpty)
+
+private fun String?.toLineHeightScale(): Float? {
+    val value = this?.trim()?.lowercase() ?: return null
+    val scale = when {
+        value.endsWith("%") -> value.removeSuffix("%").toFloatOrNull()?.div(100f)
+        value.endsWith("em") -> value.removeSuffix("em").toFloatOrNull()
+        else -> value.toFloatOrNull()
+    }
+    return scale?.coerceIn(0.8f, 3f)
+}
+
 private fun String?.toGenericFontFamily(): BookDocumentFontFamily.Generic? {
     val family = this?.lowercase()?.split(',')?.map(String::trim)?.firstNotNullOfOrNull { value ->
         when (value.trim('"', '\'')) {
@@ -109,6 +163,10 @@ private fun String?.toGenericFontFamily(): BookDocumentFontFamily.Generic? {
     } ?: return null
     return BookDocumentFontFamily.Generic(family)
 }
+
+private fun Map<String, String>.toFontFamily(): BookDocumentFontFamily? =
+    get("font-resource")?.trim()?.takeIf(String::isNotEmpty)?.let(BookDocumentFontFamily::Resource)
+        ?: get("font-family").toGenericFontFamily()
 
 private fun String?.isBold(): Boolean {
     val value = this?.trim()?.lowercase() ?: return false

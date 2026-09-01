@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.viewer.EntryChildDirection
 import tachiyomi.domain.entry.model.EntryChapter
 
@@ -16,7 +17,7 @@ internal fun BookDocumentViewerRow(
     item: BookDocumentViewerItem<EntryChapter>,
     transitionDirection: EntryChildDirection?,
     loadState: BookDocumentChapterLoadState?,
-    onAnchorClick: (BookDocumentSection<EntryChapter>, String) -> Unit,
+    onAnchorClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     onReaderTap: () -> Unit,
     onTransitionRetry: (EntryChapter) -> Unit,
@@ -57,9 +58,9 @@ internal fun BookDocumentViewerRow(
 }
 
 @Composable
-private fun BookDocumentViewerBlock(
+internal fun BookDocumentViewerBlock(
     item: BookDocumentViewerItem.Block<EntryChapter>,
-    onAnchorClick: (BookDocumentSection<EntryChapter>, String) -> Unit,
+    onAnchorClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     onReaderTap: () -> Unit,
 ) {
@@ -72,7 +73,7 @@ private fun BookDocumentViewerBlock(
             owningContent = item.section.document.document.content,
             sectionKey = item.section.key,
             resourceLoader = item.section.resourceLoader,
-            onAnchorClick = { fragment -> onAnchorClick(item.section, fragment) },
+            onAnchorClick = { target -> onAnchorClick(item.section, target) },
             onExternalLinkClick = onExternalLinkClick,
             onReaderTap = onReaderTap,
             preserveTerminalSpacing = item.content.id != item.section.document.blocks.last().id,

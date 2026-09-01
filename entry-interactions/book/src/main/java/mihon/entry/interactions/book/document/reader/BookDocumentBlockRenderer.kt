@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentBlockContent
 import mihon.book.api.document.BookDocumentContent
+import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.book.api.document.BookDocumentRichText
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
@@ -28,7 +29,7 @@ internal fun BookDocumentBlockRenderer(
     owningContent: BookDocumentContent,
     sectionKey: String,
     resourceLoader: BookPublicationResourceLoader?,
-    onAnchorClick: (String) -> Unit,
+    onAnchorClick: (BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     onReaderTap: () -> Unit,
     selectionIdentity: String = block.id.value,
@@ -42,7 +43,14 @@ internal fun BookDocumentBlockRenderer(
         owningContent.text.substring(block.logicalStart, block.logicalEndExclusive)
     }
     val padding = (block.style.paddingEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp
-    Column(modifier = modifier.padding(padding)) {
+    Column(
+        modifier = modifier.padding(
+            start = padding,
+            top = padding + (block.style.spacingBeforeEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp,
+            end = padding,
+            bottom = padding + (block.style.spacingAfterEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp,
+        ),
+    ) {
         when (val content = block.content) {
             is BookDocumentBlockContent.Text -> BookDocumentSelectableText(
                 text = blockText,
@@ -139,7 +147,7 @@ internal fun BookDocumentRichTextRenderer(
     value: BookDocumentRichText,
     identity: String,
     block: BookDocumentBlock,
-    onAnchorClick: (String) -> Unit,
+    onAnchorClick: (BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     separatorAfter: String = "\n\n",
     leadingSelectionText: String = "",

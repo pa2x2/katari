@@ -80,6 +80,7 @@ internal fun HtmlProseBlockParser.addFigureBlock(
     val alt = image.attr("alt").trim().takeIf(String::isNotEmpty)?.let { text ->
         HtmlProseInlineFragment(text, emptyList(), emptyList(), emptyMap())
     }
+    val decorative = image.hasAttr("alt") && image.attr("alt").isBlank()
     val captionElement = element.takeIf { it.normalName() == "figure" }
         ?.children()
         ?.firstOrNull { it.normalName() == "figcaption" }
@@ -117,9 +118,10 @@ internal fun HtmlProseBlockParser.addFigureBlock(
         plainText = listOfNotNull(alt?.text, caption?.text).joinToString("\n").trim(),
         role = BookDocumentBlockRole(BookDocumentBlockKind.FIGURE),
         content = BookDocumentBlockContent.Figure(
-            image = BookDocumentImage(
+            image = BookDocumentImage.withAccessibility(
                 resourceId = resourceId,
                 alternativeText = altRich,
+                decorative = decorative,
                 width = image.attr("width").toIntOrNull()?.takeIf { it in 1..32_768 },
                 height = image.attr("height").toIntOrNull()?.takeIf { it in 1..32_768 },
             ),

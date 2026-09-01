@@ -23,7 +23,7 @@ data class BookDocumentPublicationModel(
     companion object {
         val DESCRIPTOR = BookPublicationModelDescriptor(
             id = "book.document",
-            version = 1,
+            version = 2,
         )
     }
 }

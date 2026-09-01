@@ -20,9 +20,13 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.intl.Locale
+import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import mihon.book.api.document.BookDocumentAlignment
@@ -33,6 +37,7 @@ import mihon.book.api.document.BookDocumentInlineStyle
 import mihon.book.api.document.BookDocumentInlineStyleRange
 import mihon.book.api.document.BookDocumentLink
 import mihon.book.api.document.BookDocumentLinkTarget
+import mihon.book.api.document.BookDocumentTextDirection
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 
 /** Compose text leaf that keeps document semantics available to the chapter selection owner. */
@@ -44,7 +49,7 @@ internal fun BookDocumentSelectableText(
     identity: String,
     block: BookDocumentBlock,
     separatorAfter: String,
-    onAnchorClick: (String) -> Unit,
+    onAnchorClick: (BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     leadingSelectionText: String = "",
     preserveTerminalSpacing: Boolean = true,
@@ -106,7 +111,10 @@ internal fun BookDocumentSelectableText(
             onLinkClick = { target ->
                 if (selection?.consumeSelectionTap() != true) {
                     when (target) {
-                        is BookDocumentLinkTarget.Anchor -> onAnchorClick(target.fragment)
+                        is BookDocumentLinkTarget.Anchor,
+                        is BookDocumentLinkTarget.Resource,
+                        is BookDocumentLinkTarget.Reference,
+                        -> onAnchorClick(target)
                         is BookDocumentLinkTarget.External -> onExternalLinkClick(target.url)
                     }
                 }
@@ -133,7 +141,14 @@ internal fun BookDocumentSelectableText(
             color = palette.foreground.copy(alpha = contentAlpha),
             style = TextStyle(
                 fontSize = fontSize,
-                lineHeight = fontSize * 1.25f,
+                lineHeight = fontSize * block.style.lineHeightScale,
+                textIndent = TextIndent(firstLine = fontSize * block.style.firstLineIndentEm),
+                textDirection = when (block.style.direction) {
+                    BookDocumentTextDirection.LEFT_TO_RIGHT -> TextDirection.Ltr
+                    BookDocumentTextDirection.RIGHT_TO_LEFT -> TextDirection.Rtl
+                    null -> TextDirection.Content
+                },
+                localeList = block.style.languageTag?.let { language -> LocaleList(Locale(language)) },
                 fontWeight = if (block.style.bold || block.role.kind == BookDocumentBlockKind.HEADING) {
                     FontWeight.Bold
                 } else {
@@ -217,6 +232,7 @@ private fun BookDocumentInlineStyle.toComposeSpanStyle(baseFontSize: Float): Spa
             superscript -> BaselineShift.Superscript
             else -> null
         },
+        localeList = languageTag?.let { language -> LocaleList(Locale(language)) },
     )
 }
 

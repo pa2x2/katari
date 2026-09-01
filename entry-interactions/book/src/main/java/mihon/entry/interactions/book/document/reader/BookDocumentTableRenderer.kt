@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentBlockContent
+import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 
 /** Selectable native-text projection of a bounded semantic table. */
@@ -20,7 +21,7 @@ internal fun BookDocumentTableRenderer(
     content: BookDocumentBlockContent.Table,
     block: BookDocumentBlock,
     selectionIdentity: String,
-    onAnchorClick: (String) -> Unit,
+    onAnchorClick: (BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
 ) {
     val palette = LocalBookDocumentReaderPalette.current
