@@ -48,6 +48,8 @@ class ExtensionsScreenModel(
     private val sourceHomeFeature: EntrySourceHomeFeature = Injekt.get(),
     private val contentTypeFilterController: BrowseContentTypeFilterController =
         BrowseContentTypeFilterController(preferences),
+    private val storeFilterController: ExtensionStoreFilterController =
+        ExtensionStoreFilterController(preferences),
 ) : StateScreenModel<ExtensionListState>(ExtensionListState()) {
 
     init {
@@ -65,12 +67,13 @@ class ExtensionsScreenModel(
                     .debounce(0.25.seconds)
                     .map { searchQueryPredicate(it ?: "") },
                 contentTypeFilterController.changes(),
+                storeFilterController.changes(),
                 extensionManager.installSteps(),
                 getExtensions.subscribe(),
-            ) { searchPredicate, contentTypeFilter, downloads, extensions ->
+            ) { searchPredicate, contentTypeFilter, storeFilter, downloads, extensions ->
                 val (_updates, _installed, _available, _untrusted) = extensions
                 val predicate: (Extension) -> Boolean = {
-                    searchPredicate(it) && contentTypeFilter.matches(it)
+                    searchPredicate(it) && contentTypeFilter.matches(it) && storeFilter.matches(it)
                 }
                 buildMap {
                     val updates = _updates.filter(predicate).map(extensionMapper(downloads))
@@ -112,11 +115,13 @@ class ExtensionsScreenModel(
                 getExtensionLanguages.subscribe(),
                 preferences.enabledLanguages.changes(),
                 contentTypeFilterController.changes(),
-            ) { languages, enabledLanguages, contentTypes ->
+                storeFilterController.changes(),
+            ) { languages, enabledLanguages, contentTypes, stores ->
                 ExtensionFilterState(
                     languages = languages,
                     enabledLanguages = enabledLanguages,
                     contentTypes = contentTypes,
+                    stores = stores,
                 )
             }
                 .catch { throwable -> logcat(LogPriority.ERROR, throwable) }
@@ -197,12 +202,17 @@ class ExtensionsScreenModel(
         contentTypeFilterController.showAll()
     }
 
+    fun toggleStore(storeUrl: String) {
+        storeFilterController.toggle(storeUrl)
+    }
+
     fun toggleLanguage(language: String) {
         toggleLanguage.await(language)
     }
 
     fun resetFilters() {
         showAllContentTypes()
+        storeFilterController.showAll()
         preferences.enabledLanguages.getAndSet { enabledLanguages ->
             enabledLanguages + state.value.filter.languages
         }

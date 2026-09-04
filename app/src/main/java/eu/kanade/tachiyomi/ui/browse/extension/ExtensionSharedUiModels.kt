@@ -48,6 +48,7 @@ data class ExtensionFilterState(
     val languages: List<String> = emptyList(),
     val enabledLanguages: Set<String> = emptySet(),
     val contentTypes: ContentTypeFilter = ContentTypeFilter(),
+    val stores: ExtensionStoreFilter = ExtensionStoreFilter(),
 ) {
     val enabledLanguageCount: Int
         get() = languages.count(enabledLanguages::contains)
@@ -56,7 +57,10 @@ data class ExtensionFilterState(
         get() = languages.isNotEmpty() && enabledLanguageCount < languages.size
 
     val activeFilterCount: Int
-        get() = (if (contentTypes.isActive) 1 else 0) + (if (hasLanguageFilter) 1 else 0)
+        get() =
+            (if (contentTypes.isActive) 1 else 0) +
+                (if (stores.isActive) 1 else 0) +
+                (if (hasLanguageFilter) 1 else 0)
 
     val selectedEntryTypes: Set<EntryType>
         get() = contentTypes.entryTypes

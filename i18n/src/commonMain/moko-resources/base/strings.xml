@@ -712,6 +712,7 @@
     <string name="browse_filter_all_content_types">All content types</string>
     <string name="browse_filter_content_types_summary">Match any selected type. “Not specified” keeps sources without metadata discoverable.</string>
     <string name="browse_filter_not_specified">Not specified</string>
+    <string name="extension_filter_stores_summary">Show extensions from selected stores.</string>
     <string name="extension_filter_languages">Languages</string>
     <string name="extension_filter_languages_summary">Limits available extensions. Installed extensions remain visible.</string>
     <string name="source_filter_title">Filter sources</string>

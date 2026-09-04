@@ -29,6 +29,11 @@
         <item quantity="other">%d languages</item>
     </plurals>
 
+    <plurals name="extension_filter_stores_count">
+        <item quantity="one">%d extension store</item>
+        <item quantity="other">%d extension stores</item>
+    </plurals>
+
     <plurals name="tts_settings_voice_count">
         <item quantity="one">%d voice</item>
         <item quantity="other">%d voices</item>

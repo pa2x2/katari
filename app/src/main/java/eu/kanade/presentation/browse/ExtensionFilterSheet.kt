@@ -28,6 +28,7 @@ fun ExtensionFilterSheet(
     onShowAllContentTypes: () -> Unit,
     onToggleContentType: (EntryType) -> Unit,
     onToggleUnspecifiedContentType: () -> Unit,
+    onToggleStore: (String) -> Unit,
     onToggleLanguage: (String) -> Unit,
 ) {
     BrowseFilterSheet(
@@ -50,6 +51,46 @@ fun ExtensionFilterSheet(
                 HorizontalDivider(
                     modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium),
                 )
+            }
+
+            if (state.stores.stores.isNotEmpty()) {
+                item(key = "stores-heading") {
+                    Column(
+                        modifier = Modifier.padding(
+                            horizontal = MaterialTheme.padding.medium,
+                            vertical = MaterialTheme.padding.medium,
+                        ),
+                    ) {
+                        Text(
+                            text = stringResource(MR.strings.extensionStores),
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        Text(
+                            text = stringResource(MR.strings.extension_filter_stores_summary),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = MaterialTheme.padding.extraSmall),
+                        )
+                    }
+                }
+
+                items(
+                    items = state.stores.stores,
+                    key = { it.indexUrl },
+                ) { store ->
+                    SwitchPreferenceWidget(
+                        title = store.name,
+                        subtitle = store.indexUrl,
+                        checked = state.stores.isEnabled(store),
+                        onCheckedChanged = { onToggleStore(store.indexUrl) },
+                    )
+                }
+
+                item(key = "stores-divider") {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = MaterialTheme.padding.medium),
+                    )
+                }
             }
 
             item(key = "languages-heading") {
