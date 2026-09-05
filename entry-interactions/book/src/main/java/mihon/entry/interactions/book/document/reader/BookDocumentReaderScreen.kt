@@ -36,9 +36,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
-import mihon.book.api.BookLocator
-import mihon.book.api.BookNavigationItem
 import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
+import mihon.entry.interactions.book.document.reader.navigation.documentNavigationPresentation
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderNavigationBarSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderProgressSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderScreenAliveSettings
@@ -50,7 +50,6 @@ import mihon.entry.interactions.book.document.reader.settings.BookDocumentReader
 import mihon.entry.interactions.book.document.reader.theme.BookDocumentReaderMaterialTheme
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.document.reader.theme.bookDocumentReaderPalette
-import mihon.entry.interactions.book.reader.BookReaderNavigationRow
 import mihon.entry.interactions.book.reader.BookReaderNavigationSheet
 import mihon.entry.interactions.book.reader.BookReaderProgress
 import mihon.entry.interactions.book.reader.BookReaderScaffold
@@ -82,8 +81,7 @@ internal fun BookDocumentReaderScreen(
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
     onTransitionReached: (EntryChapter) -> Unit,
     onTerminalObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
-    onChapterSelected: (EntryChapter) -> Unit,
-    onPublicationLocationSelected: (BookLocator) -> Unit,
+    onNavigationSelected: (BookDocumentNavigationTarget) -> Unit,
     onChromeToggle: () -> Unit,
     onChromeHide: () -> Unit,
     onUserScrollStarted: () -> Unit,
@@ -107,11 +105,9 @@ internal fun BookDocumentReaderScreen(
     val readerPalette = bookDocumentReaderPalette(themeSetting.effectiveValue)
     val focusManager = LocalFocusManager.current
     var rootPosition by remember { mutableStateOf(Offset.Zero) }
-    var pendingChapterSelection by remember { mutableStateOf<EntryChapter?>(null) }
-    var pendingPublicationLocation by remember { mutableStateOf<BookLocator?>(null) }
+    var pendingNavigation by remember { mutableStateOf<BookDocumentNavigationTarget?>(null) }
     val currentOnChromeToggle by rememberUpdatedState(onChromeToggle)
-    val currentOnChapterSelected by rememberUpdatedState(onChapterSelected)
-    val currentOnPublicationLocationSelected by rememberUpdatedState(onPublicationLocationSelected)
+    val currentOnNavigationSelected by rememberUpdatedState(onNavigationSelected)
     val observeSelections = selectionCoordinator?.observeSelections?.collectAsState()?.value == true
     val automaticTranslationEnabled =
         selectionCoordinator?.automaticTranslationEnabled?.collectAsState()?.value == true
@@ -277,66 +273,31 @@ internal fun BookDocumentReaderScreen(
                 },
             )
 
-            LaunchedEffect(state.navigationVisible, pendingChapterSelection) {
-                val chapter = pendingChapterSelection ?: return@LaunchedEffect
+            LaunchedEffect(state.navigationVisible, pendingNavigation) {
+                val target = pendingNavigation ?: return@LaunchedEffect
                 if (state.navigationVisible) return@LaunchedEffect
                 withFrameNanos { }
                 focusManager.clearFocus(force = true)
                 withFrameNanos { }
-                pendingChapterSelection = null
-                currentOnChapterSelected(chapter)
-            }
-
-            LaunchedEffect(state.navigationVisible, pendingPublicationLocation) {
-                val locator = pendingPublicationLocation ?: return@LaunchedEffect
-                if (state.navigationVisible) return@LaunchedEffect
-                withFrameNanos { }
-                focusManager.clearFocus(force = true)
-                withFrameNanos { }
-                pendingPublicationLocation = null
-                currentOnPublicationLocationSelected(locator)
+                pendingNavigation = null
+                currentOnNavigationSelected(target)
             }
 
             if (state.navigationVisible) {
-                val usesPublicationNavigation = state.publicationNavigation.isNotEmpty() &&
-                    (
-                        state.publicationNavigation.size > 1 ||
-                            state.loadedSections[state.currentChapterId]?.sections?.size.orZero() > 1
-                        )
-                if (usesPublicationNavigation) {
-                    val navigationRows = remember(state.publicationNavigation) {
-                        state.publicationNavigation.toReaderRows()
-                    }
-                    BookReaderNavigationSheet(
-                        visible = true,
-                        rows = navigationRows,
-                        selectedIndex = -1,
-                        onItemClick = { pendingPublicationLocation = it },
-                        onDismissRequest = { onNavigationVisibilityChange(false) },
-                    )
-                } else {
-                    val navigationRows = remember(state.navigationPresentation) {
-                        state.navigationPresentation.chapters.map { chapter ->
-                            BookReaderNavigationRow(
-                                item = chapter,
-                                title = chapter.name,
-                                read = chapter.read,
-                                bookmark = chapter.bookmark,
-                                progressLabel = state.navigationPresentation.progressLabels[chapter.id],
-                            )
-                        }
-                    }
-                    val selectedIndex = remember(state.navigationPresentation, state.currentChapterId) {
-                        state.navigationPresentation.chapters.indexOfFirst { it.id == state.currentChapterId }
-                    }
-                    BookReaderNavigationSheet(
-                        visible = true,
-                        rows = navigationRows,
-                        selectedIndex = selectedIndex,
-                        onItemClick = { pendingChapterSelection = it },
-                        onDismissRequest = { onNavigationVisibilityChange(false) },
-                    )
-                }
+                val navigation = remember(
+                    state.navigationPresentation,
+                    state.publicationNavigation,
+                    state.currentChapterId,
+                    state.navigationLocator,
+                    state.loadedSections,
+                ) { state.documentNavigationPresentation() }
+                BookReaderNavigationSheet(
+                    visible = true,
+                    rows = navigation.rows,
+                    selectedIndex = navigation.selectedIndex,
+                    onItemClick = { pendingNavigation = it },
+                    onDismissRequest = { onNavigationVisibilityChange(false) },
+                )
             }
             if (state.settingsVisible) {
                 BookReaderSettingsDialog(
@@ -410,16 +371,3 @@ internal fun BookDocumentReaderScreen(
         }
     }
 }
-
-private fun List<BookNavigationItem>.toReaderRows(depth: Int = 0): List<BookReaderNavigationRow<BookLocator>> =
-    flatMap { item ->
-        listOf(
-            BookReaderNavigationRow(
-                item = item.target,
-                title = item.title.orEmpty(),
-                depth = depth,
-            ),
-        ) + item.children.toReaderRows(depth + 1)
-    }
-
-private fun Int?.orZero(): Int = this ?: 0

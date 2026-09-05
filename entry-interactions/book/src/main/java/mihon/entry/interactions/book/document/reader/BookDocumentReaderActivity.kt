@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingsProvider
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeMode
@@ -130,6 +131,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             currentState = { readerState },
             updateState = { readerState = it },
             updateVisualChapterProgression = { visualChapterProgression.floatValue = it },
+            onNavigationMissing = { showReaderFeedback(R.string.book_document_anchor_missing) },
             onSessionActivated = { session ->
                 selectionCoordinator?.updateCapabilities(session.readerCapabilities)
                 childWebViewResolver.resolve(session)
@@ -169,8 +171,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                         onLocation = chapterCoordinator::onLocation,
                         onTransitionReached = { chapterCoordinator.loadChapter(it, activate = false, retry = true) },
                         onTerminalObservation = chapterCoordinator::onTerminalObservation,
-                        onChapterSelected = ::selectChapterFromNavigation,
-                        onPublicationLocationSelected = chapterCoordinator::navigateWithinPublication,
+                        onNavigationSelected = ::selectFromNavigation,
                         onChromeToggle = ::toggleChrome,
                         onChromeHide = { setChromeVisible(false) },
                         onUserScrollStarted = chapterCoordinator::onUserScrollStarted,
@@ -395,7 +396,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             currentChapterId = session.chapter.id,
             window = window,
             loadedSections = mapOf(session.chapter.id to sections),
-            publicationNavigation = session.preparedPublication.publication.navigation,
+            publicationNavigation = mapOf(session.chapter.id to session.preparedPublication.publication.navigation),
         )
         childWebViewResolver.resolve(session)
         surfaceState = BookDocumentReaderSurfaceState.Ready
@@ -426,7 +427,12 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     }
 
     private fun setNavigationVisible(visible: Boolean) {
-        readerState = readerState?.copy(navigationVisible = visible)
+        readerState = readerState?.let { state ->
+            state.copy(
+                navigationVisible = visible,
+                navigationLocator = retainedSessions.locator(state.currentChapterId),
+            )
+        }
         if (!visible) {
             navigationPresentationJob?.cancel()
             navigationPresentationJob = null
@@ -526,9 +532,9 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         }
     }
 
-    private fun selectChapterFromNavigation(chapter: EntryChapter) {
+    private fun selectFromNavigation(target: BookDocumentNavigationTarget) {
         window.decorView.findFocus()?.clearFocus()
-        chapterCoordinator.selectChapter(chapter, retry = true)
+        chapterCoordinator.selectNavigationTarget(target)
     }
 
     private fun setChromeVisible(visible: Boolean) {

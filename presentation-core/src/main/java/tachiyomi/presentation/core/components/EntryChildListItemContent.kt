@@ -37,7 +37,7 @@ fun EntryChildListItemContent(
     date: String?,
     readProgress: String?,
     scanlator: String?,
-    read: Boolean,
+    read: Boolean?,
     bookmark: Boolean,
     unconsumedIndicatorLabel: StringResource = MR.strings.action_filter_unconsumed,
     modifier: Modifier = Modifier,
@@ -53,7 +53,7 @@ fun EntryChildListItemContent(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 var textHeight by remember { mutableIntStateOf(0) }
-                if (!read) {
+                if (read == false) {
                     Icon(
                         imageVector = Icons.Filled.Circle,
                         contentDescription = stringResource(unconsumedIndicatorLabel),
@@ -78,7 +78,7 @@ fun EntryChildListItemContent(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     onTextLayout = { textHeight = it.size.height },
-                    color = LocalContentColor.current.copy(alpha = if (read) DISABLED_ALPHA else 1f),
+                    color = LocalContentColor.current.copy(alpha = if (read == true) DISABLED_ALPHA else 1f),
                 )
             }
 
@@ -86,7 +86,7 @@ fun EntryChildListItemContent(
                 val subtitleStyle = MaterialTheme.typography.bodySmall
                     .merge(
                         color = LocalContentColor.current
-                            .copy(alpha = if (read) DISABLED_ALPHA else SECONDARY_ALPHA),
+                            .copy(alpha = if (read == true) DISABLED_ALPHA else SECONDARY_ALPHA),
                     )
                 ProvideTextStyle(value = subtitleStyle) {
                     if (date != null) {

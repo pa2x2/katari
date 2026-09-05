@@ -17,9 +17,10 @@ import logcat.LogPriority
 import mihon.book.api.BookLocator
 import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.book.api.document.locatorAt
-import mihon.book.api.document.resolvePosition
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.preparation.PreparedBookDocumentPublication
+import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
+import mihon.entry.interactions.book.document.reader.navigation.resolveNavigationDestination
 import mihon.entry.interactions.book.document.render.toPreparedBookDocument
 import mihon.entry.interactions.book.processor.BookReaderRequest
 import mihon.entry.interactions.book.reader.BookReaderOpenResult
@@ -42,6 +43,7 @@ internal class BookDocumentChapterCoordinator(
     private val currentState: () -> BookDocumentReaderState?,
     private val updateState: (BookDocumentReaderState) -> Unit,
     private val updateVisualChapterProgression: (Float) -> Unit,
+    private val onNavigationMissing: () -> Unit,
     private val onSessionActivated: (OpenedBookReaderSession) -> Unit,
 ) : AutoCloseable {
     private val chapterLoadJobs = mutableMapOf<Long, Job>()
@@ -53,6 +55,7 @@ internal class BookDocumentChapterCoordinator(
     private val activitySession = EntryMediaSessionActivitySession()
     private val activityMutex = Mutex()
     private var navigationRequestId = 0L
+    private var pendingNavigationTarget: BookDocumentNavigationTarget? = null
 
     fun startReading() {
         if (retainedSessions.currentSession() != null && readingStartedAt == null) {
@@ -142,96 +145,75 @@ internal class BookDocumentChapterCoordinator(
         loadChapter(chapter, activate = true, retry = retry)
     }
 
-    fun navigateLink(
-        source: BookDocumentSection<EntryChapter>,
-        target: BookDocumentLinkTarget,
-    ) {
-        val resourceId: String
-        val fragment: String?
-        when (target) {
-            is BookDocumentLinkTarget.Anchor -> {
-                resourceId = source.document.document.resourceId
-                fragment = target.fragment
-            }
-            is BookDocumentLinkTarget.Resource -> {
-                resourceId = target.resourceId
-                fragment = target.fragment
-            }
-            is BookDocumentLinkTarget.Reference -> {
-                openContextualReference(source, target)
-                return
-            }
+    fun navigateLink(source: BookDocumentSection<EntryChapter>, target: BookDocumentLinkTarget) {
+        val locator = when (target) {
+            is BookDocumentLinkTarget.Anchor -> BookLocator(
+                source.document.document.resourceId,
+                fragments = listOf(target.fragment),
+            )
+            is BookDocumentLinkTarget.Resource -> BookLocator(
+                target.resourceId,
+                fragments = listOfNotNull(target.fragment),
+            )
+            is BookDocumentLinkTarget.Reference -> BookLocator(
+                target.resourceId ?: source.document.document.resourceId,
+                fragments = listOf(target.fragment),
+            )
             is BookDocumentLinkTarget.External -> return
         }
-        navigateWithinPublication(
-            BookLocator(resourceId = resourceId, fragments = listOfNotNull(fragment)),
-        )
+        navigateWithinPublication(source.owner.id, locator, target is BookDocumentLinkTarget.Reference)
     }
 
-    private fun openContextualReference(
-        sourceSection: BookDocumentSection<EntryChapter>,
-        target: BookDocumentLinkTarget.Reference,
-    ) {
-        val state = currentState() ?: return
-        val session = retainedSessions.currentSession() ?: return
-        val publication = session.preparedPublication as? PreparedBookDocumentPublication ?: return
-        val source = publication.document(target.resourceId ?: sourceSection.document.document.resourceId) ?: return
-        val position = source.anchors[target.fragment] ?: return
-        updateState(
-            state.copy(
-                auxiliarySection = BookDocumentSection(
-                    key = "${state.currentChapterId}:reference:${source.resourceId}:${target.fragment}",
-                    owner = session.chapter,
-                    document = source.toPreparedBookDocument(),
-                    initialPosition = position,
-                    resourceLoader = publication.resourceLoader,
-                ),
-            ),
-        )
+    fun selectNavigationTarget(target: BookDocumentNavigationTarget) {
+        pendingNavigationTarget = null
+        val locator = target.locator
+        if (locator == null) {
+            selectChapter(target.chapter, retry = true)
+        } else if (retainedSessions.session(target.chapter.id) == null) {
+            pendingNavigationTarget = target
+            selectChapter(target.chapter, retry = true)
+        } else {
+            navigateWithinPublication(target.chapter.id, locator)
+        }
     }
 
-    fun navigateWithinPublication(locator: BookLocator) {
-        val state = currentState() ?: return
-        val sections = state.loadedSections[state.currentChapterId] ?: return
-        val section = sections.sections.firstOrNull {
-            it.document.document.resourceId == locator.resourceId
-        } ?: auxiliarySection(locator, state) ?: return
-        val position = locator.fragments.firstNotNullOfOrNull { fragment ->
-            section.document.document.anchors[fragment]
-        } ?: section.document.document.resolvePosition(locator)
-            ?: section.document.document.positionAtProgression(0f)
-        if (section !in sections.sections) {
-            updateState(state.copy(auxiliarySection = section))
+    private fun navigateWithinPublication(chapterId: Long, locator: BookLocator, contextual: Boolean = false) {
+        val session = retainedSessions.session(chapterId)
+        val publication = session?.preparedPublication as? PreparedBookDocumentPublication
+        val destination = publication?.resolveNavigationDestination(locator, contextual)
+        if (session == null || destination == null) {
+            onNavigationMissing()
             return
         }
-        if (state.auxiliarySection != null) updateState(state.copy(auxiliarySection = null))
-        requestNavigation(section, position)
+        val state = currentState() ?: return
+        if (destination.contextual) {
+            updateState(
+                state.copy(
+                    auxiliarySection = BookDocumentSection(
+                        key = "$chapterId:reference:${destination.document.resourceId}:${destination.position}",
+                        owner = session.chapter,
+                        document = destination.document.toPreparedBookDocument(),
+                        initialPosition = destination.position,
+                        resourceLoader = publication.resourceLoader,
+                    ),
+                ),
+            )
+        } else {
+            val section = state.loadedSections[chapterId]?.sections?.firstOrNull {
+                it.document.document.resourceId == locator.resourceId
+            } ?: run {
+                onNavigationMissing()
+                return
+            }
+            if (chapterId != state.currentChapterId) activateChapter(chapterId, completeForwardCrossing = false)
+            dismissAuxiliarySection()
+            requestNavigation(section, destination.position)
+        }
     }
 
     fun dismissAuxiliarySection() {
         val state = currentState() ?: return
         if (state.auxiliarySection != null) updateState(state.copy(auxiliarySection = null))
-    }
-
-    private fun auxiliarySection(
-        locator: BookLocator,
-        state: BookDocumentReaderState,
-    ): BookDocumentSection<EntryChapter>? {
-        val session = retainedSessions.currentSession() ?: return null
-        val publication = session.preparedPublication as? PreparedBookDocumentPublication ?: return null
-        val source = publication.document(locator.resourceId) ?: return null
-        if (source.resourceId in publication.publication.readingOrder.map { it.id }) return null
-        val prepared = source.toPreparedBookDocument()
-        val position = locator.fragments.firstNotNullOfOrNull(source.anchors::get)
-            ?: source.resolvePosition(locator)
-            ?: source.positionAtProgression(0f)
-        return BookDocumentSection(
-            key = "${state.currentChapterId}:auxiliary:${source.resourceId}",
-            owner = session.chapter,
-            document = prepared,
-            initialPosition = position,
-            resourceLoader = publication.resourceLoader,
-        )
     }
 
     fun onLocation(location: BookDocumentViewerLocation<EntryChapter>) {
@@ -307,13 +289,16 @@ internal class BookDocumentChapterCoordinator(
 
     fun prepareCurrentNextChapterIfNeeded() {
         val session = retainedSessions.currentSession() ?: return
-        prepareNextChapterIfNeeded(retainedSessions.locator(session.chapter.id)?.progression ?: 0.0)
+        prepareNextChapterIfNeeded(
+            retainedSessions.locator(session.chapter.id)?.let(session.preparedPublication::progression) ?: 0.0,
+        )
     }
 
     override fun close() {
         chapterLoadJobs.values.forEach(Job::cancel)
         chapterLoadJobs.clear()
         chapterSelectionRequests.clear()
+        pendingNavigationTarget = null
         persistLocationJob?.cancel()
         activityCheckpointJob?.cancel()
         activityCheckpointJob = null
@@ -338,10 +323,18 @@ internal class BookDocumentChapterCoordinator(
             state.copy(
                 loadedSections = state.loadedSections + (session.chapter.id to sections),
                 loadStates = state.loadStates - session.chapter.id,
+                publicationNavigation = state.publicationNavigation +
+                    (session.chapter.id to session.preparedPublication.publication.navigation),
             ),
         )
         if (activate) activateChapter(session.chapter.id, completeForwardCrossing = false)
-        if (explicitSelection) requestNavigation(sections.initialSection)
+        val pending = pendingNavigationTarget?.takeIf { it.chapter.id == session.chapter.id }
+        if (pending != null) {
+            pendingNavigationTarget = null
+            navigateWithinPublication(session.chapter.id, checkNotNull(pending.locator))
+        } else if (explicitSelection) {
+            requestNavigation(sections.initialSection)
+        }
     }
 
     private fun requestNavigation(
@@ -406,7 +399,6 @@ internal class BookDocumentChapterCoordinator(
                 loadedSections = current.loadedSections.filterKeys(retainedIds::contains),
                 loadStates = current.loadStates.filterKeys(retainedIds::contains),
                 childWebView = null,
-                publicationNavigation = session.preparedPublication.publication.navigation,
                 navigationRequest = current.navigationRequest.afterAcceptedLocation(
                     observedRequest = observedNavigationRequest,
                     chapterId = chapterId,
