@@ -2,10 +2,6 @@
 
 ## [2.5.0] - 2026-08-01
 
-### 🌟 Highlights
-
-First SDK publication from this repository, providing shared extension contracts for manga, anime, and books.
-
 ### ✨ Added
 
 - Included unified source APIs for popular entries, latest updates, search, entry details, chapter lists, and media retrieval across manga, anime, and books.
