@@ -11,6 +11,8 @@ import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.viewer.EntryChildDirection
 import tachiyomi.domain.entry.model.EntryChapter
 
+internal val BOOK_DOCUMENT_BLOCK_HORIZONTAL_PADDING = 20.dp
+
 /** Renders one stable-key row without invalidating unchanged prose when the chapter window moves. */
 @Composable
 internal fun BookDocumentViewerRow(
@@ -80,7 +82,7 @@ internal fun BookDocumentViewerBlock(
             preserveTerminalSpacing = item.content.id != item.section.document.blocks.last().id,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 6.dp),
+                .padding(horizontal = BOOK_DOCUMENT_BLOCK_HORIZONTAL_PADDING, vertical = 6.dp),
         )
     }
 }

@@ -3,11 +3,12 @@ package mihon.entry.interactions.book.document.reader.table
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onLayoutRectChanged
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Constraints
@@ -39,17 +40,19 @@ internal fun BookDocumentTableGrid(
             }
         }
     }
-    // SubcomposeLayout treats a new content lambda as invalidation, even for an unchanged cell.
-    val cellContents = remember(content) { mutableMapOf<Int, @Composable () -> Unit>() }
-    SubcomposeLayout(
+    val indices = visibleCells
+    Layout(
+        content = {
+            indices.forEach { index -> key(index) { content(index) } }
+        },
         modifier = modifier.onLayoutRectChanged(throttleMillis = 0, debounceMillis = 0) {
             windowTop = it.positionInWindow.y
         },
-    ) { constraints ->
-        val placeables = visibleCells.map { index ->
+    ) { measurables, constraints ->
+        val placeables = measurables.mapIndexed { position, measurable ->
+            val index = indices[position]
             val bounds = geometry.cells[index]
-            val cellContent = cellContents.getOrPut(index) { { content(index) } }
-            index to subcompose(index, cellContent).single().measure(Constraints.fixedWidth(bounds.width))
+            index to measurable.measure(Constraints.fixedWidth(bounds.width))
         }
         layout(constraints.constrainWidth(geometry.width), constraints.constrainHeight(geometry.height)) {
             placeables.forEach { (index, placeable) ->

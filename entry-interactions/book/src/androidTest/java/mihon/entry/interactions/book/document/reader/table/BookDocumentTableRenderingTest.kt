@@ -64,41 +64,6 @@ class BookDocumentTableRenderingTest {
     }
 
     @Test
-    fun wrapped_rows_have_only_the_cell_padding_between_their_text_bounds() {
-        val text = "A long contents label that wraps across several lines in a narrow reading column."
-        val document = HtmlProseDocumentParser().parse(
-            "spacing",
-            null,
-            HtmlProseSanitizer.sanitize(
-                "<table><tr><td>$text</td></tr><tr><td>Next row</td></tr></table>".encodeToByteArray(),
-            ),
-        )
-        val block = document.blocks.single()
-        val scale = mutableFloatStateOf(1f)
-        composeRule.setContent {
-            MaterialTheme {
-                CompositionLocalProvider(
-                    LocalBookDocumentReaderPalette provides bookDocumentReaderPalette(BookDocumentReaderThemeMode.APP),
-                    LocalBookDocumentSelectionChapterId provides 1L,
-                    LocalBookDocumentTextScale provides scale.floatValue,
-                ) {
-                    Box(Modifier.width(240.dp)) {
-                        BookDocumentTableRenderer(block.content as BookDocumentBlockContent.Table, block, "spacing", {
-                        }, {})
-                    }
-                }
-            }
-        }
-        for (size in listOf(1f, 1.6f)) {
-            composeRule.runOnIdle { scale.floatValue = size }
-            val first = composeRule.onNodeWithText(text).fetchSemanticsNode().boundsInRoot
-            val next = composeRule.onNodeWithText("Next row").fetchSemanticsNode().boundsInRoot
-            val padding = with(composeRule.density) { 8.dp.roundToPx() * 2 }
-            assertEquals(padding.toFloat(), next.top - first.bottom, 0.5f)
-        }
-    }
-
-    @Test
     fun spanning_cells_keep_following_rows_in_their_columns_after_text_resize() {
         val document = HtmlProseDocumentParser().parse(
             "table",

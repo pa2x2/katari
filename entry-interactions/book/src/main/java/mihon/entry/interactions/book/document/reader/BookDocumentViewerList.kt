@@ -1,11 +1,14 @@
 package mihon.entry.interactions.book.document.reader
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import mihon.book.api.document.BookDocumentLinkTarget
+import mihon.entry.interactions.book.document.reader.table.BookDocumentTablePreparation
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.presentation.core.util.clickableNoIndication
 
@@ -22,24 +25,27 @@ internal fun BookDocumentViewerList(
     onTransitionRetry: (EntryChapter) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    LazyColumn(
-        state = state,
-        modifier = modifier.clickableNoIndication {
-            selection.handleReaderTap(onReaderTap)
-        },
-    ) {
-        items(items, key = { it.key }) { item ->
-            BookDocumentViewerRow(
-                item = item,
-                transitionDirection = (item as? BookDocumentViewerItem.Transition)?.transition?.direction,
-                loadState = (item as? BookDocumentViewerItem.Transition)?.transition?.to?.let {
-                    chapterLoadState(it.id)
-                },
-                onAnchorClick = onAnchorClick,
-                onExternalLinkClick = onExternalLinkClick,
-                onReaderTap = onReaderTap,
-                onTransitionRetry = onTransitionRetry,
-            )
+    val sections = remember(items.identity) { items.current + items.next + items.previous }
+    BookDocumentTablePreparation(sections, modifier) {
+        LazyColumn(
+            state = state,
+            modifier = Modifier.fillMaxSize().clickableNoIndication {
+                selection.handleReaderTap(onReaderTap)
+            },
+        ) {
+            items(items, key = { it.key }) { item ->
+                BookDocumentViewerRow(
+                    item = item,
+                    transitionDirection = (item as? BookDocumentViewerItem.Transition)?.transition?.direction,
+                    loadState = (item as? BookDocumentViewerItem.Transition)?.transition?.to?.let {
+                        chapterLoadState(it.id)
+                    },
+                    onAnchorClick = onAnchorClick,
+                    onExternalLinkClick = onExternalLinkClick,
+                    onReaderTap = onReaderTap,
+                    onTransitionRetry = onTransitionRetry,
+                )
+            }
         }
     }
 }

@@ -1,18 +1,8 @@
 package mihon.entry.interactions.book.document.reader.table
 
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.TextMeasurer
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntRect
 import mihon.book.api.document.BookDocumentTableLayout
 import kotlin.math.ceil
-
-internal data class BookDocumentTableCellText(
-    val text: AnnotatedString,
-    val style: TextStyle,
-    val bottomSpacing: Int,
-)
 
 internal data class BookDocumentTableGeometry(
     val cells: List<IntRect>,
@@ -24,7 +14,7 @@ internal data class BookDocumentTableGeometry(
 internal fun measureBookDocumentTable(
     grid: BookDocumentTableLayout,
     texts: List<BookDocumentTableCellText>,
-    measurer: TextMeasurer,
+    measurer: BookDocumentTableTextMeasurer,
     availableWidth: Int,
     cellPadding: Int,
 ): BookDocumentTableGeometry {
@@ -32,11 +22,7 @@ internal fun measureBookDocumentTable(
     val widths = IntArray(grid.columnCount) { cellPadding * 2 }
     val minimumWidths = widths.copyOf()
     texts.forEachIndexed { index, text ->
-        val intrinsics = measurer.measure(
-            text.text,
-            text.style,
-            constraints = Constraints(maxWidth = (availableWidth - cellPadding * 2).coerceAtLeast(0)),
-        ).multiParagraph.intrinsics
+        val intrinsics = measurer.intrinsics(text)
         val placement = cells[index].second
         fun distribute(destination: IntArray, desired: Int) {
             val current = (placement.column until placement.column + placement.cell.columnSpan).sumOf {
@@ -67,11 +53,7 @@ internal fun measureBookDocumentTable(
     val cellHeights = texts.mapIndexed { index, text ->
         val placement = cells[index].second
         val width = (placement.column until placement.column + placement.cell.columnSpan).sumOf { widths[it] }
-        measurer.measure(
-            text.text,
-            text.style,
-            constraints = Constraints.fixedWidth((width - cellPadding * 2).coerceAtLeast(0)),
-        ).size.height + cellPadding * 2 + text.bottomSpacing
+        measurer.height(text, (width - cellPadding * 2).coerceAtLeast(0)) + cellPadding * 2 + text.bottomSpacing
     }
     val heights = IntArray(cells.maxOf { (row, placement) -> row + placement.cell.rowSpan })
     cells.indices.sortedBy { cells[it].second.cell.rowSpan }.forEach { index ->
