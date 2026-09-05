@@ -25,7 +25,12 @@ internal object HtmlProseSanitizer {
         val document = ByteArrayInputStream(bytes).use { input -> Jsoup.parse(input, null, "", parser) }
         validateShape(document)
 
-        val css = HtmlProseCss.parse(document.select("style").map(Element::data) + policy.additionalStyleSheets)
+        val css = HtmlProseCss.parse(
+            document.select("style").map {
+                if (policy.xmlSyntax) it.wholeText() else it.data()
+            } +
+                policy.additionalStyleSheets,
+        )
         document.select(ACTIVE_ELEMENTS).remove()
         document.select("svg").forEach { element -> replaceInlineImage(element, policy) }
         document.select(UNSUPPORTED_PASSIVE_ELEMENTS).forEach(::replaceUnsupportedElement)

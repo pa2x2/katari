@@ -12,10 +12,3 @@ internal data class EpubPackage(
     val languages: List<String>,
     val rightToLeft: Boolean,
 )
-
-internal data class EpubManifestItem(
-    val id: String,
-    val resourceId: String,
-    val mediaType: String,
-    val properties: Set<String>,
-)

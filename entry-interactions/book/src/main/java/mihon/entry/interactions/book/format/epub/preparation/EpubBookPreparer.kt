@@ -107,7 +107,7 @@ internal class EpubBookPreparer(
                     hasReadableContent = document.blocks.any { it.content !is BookDocumentBlockContent.Unsupported },
                 )
             } ?: packageInfo.documents.map { item ->
-                if (documentPreparer.supports(item.mediaType)) {
+                if (!item.isRemote && documentPreparer.supports(item.mediaType)) {
                     documentPreparer.prepare(
                         archive,
                         packageInfo,

@@ -1,14 +1,12 @@
 package mihon.entry.interactions.book.document.preparation
 
 import android.app.Application
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import mihon.book.api.document.BookDocumentPublicationModel
 import java.io.File
+import java.io.IOException
 import java.nio.file.AtomicMoveNotSupportedException
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
-import java.security.MessageDigest
 import java.util.UUID
 
 /** Persistent bounded cache for exact-revision canonical document publications. */
@@ -16,29 +14,30 @@ internal class BookDocumentPreparedCache(
     application: Application,
     private val directory: File = application.noBackupFilesDir.resolve(CACHE_DIRECTORY_NAME),
     private val maxBytes: Long = MAX_CACHE_BYTES,
+    private val maxEntryBytes: Long = MAX_ENTRY_BYTES,
 ) {
     @Synchronized
     fun read(key: BookDocumentPreparedCacheKey): BookDocumentPreparedCacheValue? {
-        ensureDirectory()
         val file = directory.resolve("${key.diskKey()}.json")
-        if (!file.isFile || file.length() !in 1..MAX_ENTRY_BYTES) return null
         return runCatching {
+            ensureDirectory()
+            if (!file.isFile || file.length() !in 1..maxEntryBytes) return null
             JSON.decodeFromString<BookDocumentPreparedCacheEntry>(file.readText())
                 .takeIf { entry -> entry.schemaVersion == SCHEMA_VERSION && entry.key == key }
                 ?.value
                 ?.also { file.setLastModified(System.currentTimeMillis()) }
         }.getOrElse {
-            file.delete()
+            runCatching { file.delete() }
             null
         }
     }
 
     @Synchronized
-    fun write(key: BookDocumentPreparedCacheKey, value: BookDocumentPreparedCacheValue) {
-        ensureDirectory()
+    fun write(key: BookDocumentPreparedCacheKey, value: BookDocumentPreparedCacheValue): Boolean {
         val target = directory.resolve("${key.diskKey()}.json")
         val part = directory.resolve(".${UUID.randomUUID()}.part")
-        try {
+        return try {
+            ensureDirectory()
             part.writeText(
                 JSON.encodeToString(
                     BookDocumentPreparedCacheEntry(
@@ -48,7 +47,7 @@ internal class BookDocumentPreparedCache(
                     ),
                 ),
             )
-            require(part.length() in 1..MAX_ENTRY_BYTES) { "Prepared document cache entry is too large" }
+            if (part.length() !in 1..minOf(maxEntryBytes, maxBytes)) return false
             try {
                 Files.move(
                     part.toPath(),
@@ -61,8 +60,13 @@ internal class BookDocumentPreparedCache(
             }
             target.setLastModified(System.currentTimeMillis())
             prune()
+            true
+        } catch (_: IOException) {
+            false
+        } catch (_: SecurityException) {
+            false
         } finally {
-            part.delete()
+            runCatching { part.delete() }
         }
     }
 
@@ -89,20 +93,22 @@ internal class BookDocumentPreparedCache(
     }
 
     private fun ensureDirectory() {
-        check(directory.mkdirs() || directory.isDirectory) { "Unable to create prepared document cache directory" }
+        if (!directory.mkdirs() && !directory.isDirectory) {
+            throw IOException("Unable to create prepared document cache directory")
+        }
         directory.listFiles().orEmpty()
             .filter { file -> file.name.endsWith(".part") || !file.name.matches(CACHE_FILE_PATTERN) }
             .forEach(File::delete)
     }
 
     private fun File.cacheFiles(): List<File> = listFiles().orEmpty()
-        .filter { file -> file.isFile && file.name.matches(CACHE_FILE_PATTERN) && file.length() in 1..MAX_ENTRY_BYTES }
+        .filter { file -> file.isFile && file.name.matches(CACHE_FILE_PATTERN) && file.length() in 1..maxEntryBytes }
 
     private companion object {
         const val CACHE_DIRECTORY_NAME = "book_prepared_documents_v1"
-        const val SCHEMA_VERSION = 3
+        const val SCHEMA_VERSION = 4
         const val MAX_CACHE_BYTES = 64L * 1024L * 1024L
-        const val MAX_ENTRY_BYTES = 16L * 1024L * 1024L
+        const val MAX_ENTRY_BYTES = 64L * 1024L * 1024L
         val CACHE_FILE_PATTERN = Regex("[a-f0-9]{64}\\.json")
         val JSON = Json {
             encodeDefaults = true
@@ -110,49 +116,3 @@ internal class BookDocumentPreparedCache(
         }
     }
 }
-
-@Serializable
-internal data class BookDocumentPreparedCacheKey(
-    val publicationId: String,
-    val revision: String,
-    val modelId: String = BookDocumentPublicationModel.DESCRIPTOR.id,
-    val modelVersion: Int = BookDocumentPublicationModel.DESCRIPTOR.version,
-) {
-    init {
-        require(publicationId.isNotBlank()) { "prepared document publication id must not be blank" }
-        require(revision.isNotBlank()) { "prepared document revision must not be blank" }
-    }
-
-    fun diskKey(): String = MessageDigest.getInstance("SHA-256")
-        .digest(listOf(publicationId, revision, modelId, modelVersion).joinToString("\u0000").encodeToByteArray())
-        .joinToString("") { byte -> "%02x".format(byte.toInt() and 0xff) }
-}
-
-@Serializable
-internal data class BookDocumentPreparedCacheValue(
-    val model: BookDocumentPublicationModel,
-    val documentTitles: Map<String, String?>,
-    val derivedResources: List<BookDocumentCachedResource> = emptyList(),
-    val remoteResources: List<BookDocumentCachedRemoteResource> = emptyList(),
-)
-
-@Serializable
-internal data class BookDocumentCachedResource(
-    val resourceId: String,
-    val mediaType: String,
-    val bytes: ByteArray,
-)
-
-@Serializable
-internal data class BookDocumentCachedRemoteResource(
-    val resourceId: String,
-    val url: String,
-    val type: String,
-)
-
-@Serializable
-private data class BookDocumentPreparedCacheEntry(
-    val schemaVersion: Int,
-    val key: BookDocumentPreparedCacheKey,
-    val value: BookDocumentPreparedCacheValue,
-)

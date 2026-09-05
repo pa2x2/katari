@@ -35,6 +35,7 @@ internal class EpubArchiveResourceLoader(
         val item = requireNotNull(itemsByResource[resourceId]) {
             "Publication resource is not declared in its manifest"
         }
+        require(!item.isRemote) { "Remote publication resources require the resource gateway" }
         require(item.mediaType in acceptedMediaTypes) {
             "Publication resource has unsupported media type ${item.mediaType}"
         }

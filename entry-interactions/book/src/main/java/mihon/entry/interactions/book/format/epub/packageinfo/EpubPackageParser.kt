@@ -2,9 +2,11 @@ package mihon.entry.interactions.book.format.epub.packageinfo
 
 import mihon.entry.interactions.book.format.epub.EpubContract
 import mihon.entry.interactions.book.format.epub.archive.EpubArchive
-import mihon.entry.interactions.book.format.epub.archive.EpubArchiveReference
 import mihon.entry.interactions.book.format.epub.archive.normalizeArchivePath
-import mihon.entry.interactions.book.format.epub.archive.resolveArchiveReference
+import mihon.entry.interactions.book.format.epub.xml.EPUB_CONTAINER_NAMESPACE
+import mihon.entry.interactions.book.format.epub.xml.EPUB_METADATA_NAMESPACE
+import mihon.entry.interactions.book.format.epub.xml.EPUB_PACKAGE_NAMESPACE
+import mihon.entry.interactions.book.format.epub.xml.hasEpubXmlName
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.parser.Parser
@@ -16,38 +18,45 @@ internal class EpubPackageParser(
         val packageResource = parsePackageResource()
         val packageDocument = parseXml(packageResource)
         rejectFixedLayout(packageDocument)
-        val manifest = parseManifest(packageDocument, packageResource)
-        val spine = packageDocument.getAllElements().firstOrNull { it.normalName() == "spine" }
+        val manifest = parseEpubManifest(archive, packageDocument, packageResource)
+        val spine = packageDocument.getAllElements().firstOrNull { it.hasEpubXmlName("spine", EPUB_PACKAGE_NAMESPACE) }
             ?: error("Publication package has no spine")
         val documents = spine.children()
-            .filter { it.normalName() == "itemref" }
+            .filter { it.hasEpubXmlName("itemref", EPUB_PACKAGE_NAMESPACE) }
             .map { itemRef ->
                 val id = itemRef.attr("idref").trim()
                 requireNotNull(manifest[id]) { "Publication spine references missing manifest item $id" }
             }
         val readingOrderIds = spine.children()
-            .filter { it.normalName() == "itemref" && !it.attr("linear").equals("no", true) }
+            .filter { it.hasEpubXmlName("itemref", EPUB_PACKAGE_NAMESPACE) && !it.attr("linear").equals("no", true) }
             .map { it.attr("idref").trim() }
             .toSet()
         val readingOrder = documents.filter { it.id in readingOrderIds }
         require(readingOrder.isNotEmpty()) { "Publication has no linear reading order" }
-        require(readingOrder.all { it.mediaType in DOCUMENT_MEDIA_TYPES }) {
+        require(readingOrder.all { !it.isRemote && it.mediaType in DOCUMENT_MEDIA_TYPES }) {
             "Publication contains an unsupported required reading-order resource"
         }
         val legacyNavigationId = spine.attr("toc").trim().takeIf(String::isNotEmpty)
         val uniqueIdentifier = packageDocument.getAllElements()
-            .firstOrNull { it.normalName() == "package" }
+            .firstOrNull { it.hasEpubXmlName("package", EPUB_PACKAGE_NAMESPACE) }
             ?.attr("unique-identifier")
             ?.trim()
             ?.takeIf(String::isNotEmpty)
             ?.let { identifierId ->
                 packageDocument.getAllElements()
-                    .firstOrNull { it.normalName() == "identifier" && it.attr("id") == identifierId }
+                    .firstOrNull {
+                        it.hasEpubXmlName("identifier", EPUB_METADATA_NAMESPACE) &&
+                            it.attr("id") == identifierId
+                    }
                     ?.text()
                     ?.trim()
                     ?.takeIf(String::isNotEmpty)
             }
-        val resourceProtectionAlgorithms = parseResourceProtectionAlgorithms()
+        val resourceProtectionAlgorithms = if (archive.contains(ENCRYPTION_RESOURCE)) {
+            parseEpubResourceProtectionAlgorithms(parseXml(ENCRYPTION_RESOURCE))
+        } else {
+            emptyMap()
+        }
         val requiredResources = buildSet {
             add(packageResource)
             addAll(readingOrder.map(EpubManifestItem::resourceId))
@@ -68,7 +77,7 @@ internal class EpubPackageParser(
             uniqueIdentifier = uniqueIdentifier,
             resourceProtectionAlgorithms = resourceProtectionAlgorithms,
             languages = packageDocument.getAllElements()
-                .filter { it.normalName() == "language" }
+                .filter { it.hasEpubXmlName("language", EPUB_METADATA_NAMESPACE) }
                 .map(Element::text)
                 .map(String::trim)
                 .filter(String::isNotEmpty)
@@ -80,7 +89,7 @@ internal class EpubPackageParser(
     private fun parsePackageResource(): String {
         val container = parseXml(CONTAINER_RESOURCE)
         val declared = container.getAllElements()
-            .firstOrNull { it.normalName() == "rootfile" }
+            .firstOrNull { it.hasEpubXmlName("rootfile", EPUB_CONTAINER_NAMESPACE) }
             ?.attr("full-path")
             ?.trim()
             ?.takeIf(String::isNotEmpty)
@@ -88,30 +97,10 @@ internal class EpubPackageParser(
         return normalizeArchivePath(declared)
     }
 
-    private fun parseManifest(document: Element, packageResource: String): Map<String, EpubManifestItem> {
-        val manifest = document.getAllElements().firstOrNull { it.normalName() == "manifest" }
-            ?: error("Publication package has no manifest")
-        return manifest.children().filter { it.normalName() == "item" }.associate { item ->
-            val id = item.attr("id").trim()
-            val href = item.attr("href").trim()
-            val mediaType = item.attr("media-type").substringBefore(';').trim().lowercase()
-            require(id.isNotEmpty() && href.isNotEmpty() && mediaType.isNotEmpty()) {
-                "Publication manifest contains an incomplete item"
-            }
-            val reference = resolveArchiveReference(packageResource, href) as? EpubArchiveReference.Internal
-                ?: error("Publication manifest item must use a contained relative resource")
-            require(archive.contains(reference.path)) { "Publication manifest resource is missing: ${reference.path}" }
-            id to EpubManifestItem(
-                id = id,
-                resourceId = reference.path,
-                mediaType = mediaType,
-                properties = item.attr("properties").split(Regex("\\s+")).filter(String::isNotEmpty).toSet(),
-            )
-        }
-    }
-
     private fun rejectFixedLayout(document: Element) {
-        val values = document.getAllElements().filter { it.normalName() == "meta" }.flatMap { meta ->
+        val values = document.getAllElements().filter {
+            it.hasEpubXmlName("meta", EPUB_PACKAGE_NAMESPACE)
+        }.flatMap { meta ->
             listOfNotNull(
                 meta.takeIf { it.attr("property") == "rendition:layout" }?.text(),
                 meta.takeIf { it.attr("name") == "rendition:layout" }?.attr("content"),
@@ -120,33 +109,6 @@ internal class EpubPackageParser(
         require(values.none { it.trim().equals("pre-paginated", true) }) {
             "Fixed-layout publications are not supported"
         }
-    }
-
-    private fun parseResourceProtectionAlgorithms(): Map<String, String> {
-        if (!archive.contains(ENCRYPTION_RESOURCE)) return emptyMap()
-        val document = parseXml(ENCRYPTION_RESOURCE)
-        return document.getAllElements()
-            .filter { it.normalName() == "encrypteddata" }
-            .mapNotNull { encrypted ->
-                val algorithm = encrypted.getAllElements()
-                    .firstOrNull { it.normalName() == "encryptionmethod" }
-                    ?.attr("Algorithm")
-                    ?.trim()
-                    ?.takeIf(String::isNotEmpty)
-                    ?: return@mapNotNull null
-                val uri = encrypted.getAllElements()
-                    .firstOrNull { it.normalName() == "cipherreference" }
-                    ?.attr("URI")
-                    ?.trim()
-                    ?.takeIf(String::isNotEmpty)
-                    ?: return@mapNotNull null
-                val parsed = runCatching { java.net.URI(uri) }.getOrNull() ?: return@mapNotNull null
-                require(!parsed.isAbsolute && parsed.rawPath.isNotBlank()) {
-                    "Publication encryption reference must identify a contained resource"
-                }
-                normalizeArchivePath(parsed.path.removePrefix("/")) to algorithm
-            }
-            .toMap()
     }
 
     private fun parseXml(resourceId: String): Element = Jsoup.parse(
