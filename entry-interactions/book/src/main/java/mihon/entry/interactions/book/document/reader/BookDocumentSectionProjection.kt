@@ -13,7 +13,7 @@ internal fun OpenedBookReaderSession.toDocumentSections(
     val publication = preparedPublication as? PreparedBookDocumentPublication ?: return null
     val candidateLocator = retainedLocator?.takeIf(publication::validate)
         ?: initialLocator?.takeIf(publication::validate)
-    val progress = mihon.book.api.document.BookDocumentPublicationProgress(publication.documents)
+    val progress = publication.progress
     val sections = publication.documents.map { source ->
         val document = source.toPreparedBookDocument()
         val initialPosition = candidateLocator

@@ -3,6 +3,8 @@ package mihon.entry.interactions.book.document.preparation
 import mihon.book.api.BookLocator
 import mihon.book.api.BookPublication
 import mihon.book.api.document.BookDocumentPublicationModel
+import mihon.book.api.document.BookDocumentPublicationProgress
+import mihon.book.api.document.resolvePosition
 import mihon.entry.interactions.book.preparation.BookPublicationResourceDependencies
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
 import mihon.entry.interactions.book.preparation.BookRemoteResourceAuthorization
@@ -37,6 +39,16 @@ internal class PreparedBookDocumentPublication(
     val documents get() = publication.readingOrder.map { resource -> checkNotNull(model.document(resource.id)) }
 
     val allDocuments get() = model.documents
+
+    val progress by lazy { BookDocumentPublicationProgress(documents) }
+
+    override fun progression(locator: BookLocator): Double? {
+        val document = documents.firstOrNull { it.resourceId == locator.resourceId } ?: return null
+        val local = locator.progression
+            ?: document.resolvePosition(locator)?.let(document::progressionAt)?.toDouble()
+            ?: return null
+        return progress.totalProgression(document.resourceId, local)
+    }
 
     override val remoteResourceRequests: Set<BookRemoteResourceRequest>
         get() = (resourceLoader as? BookRemoteResourceAuthorization)?.remoteResourceRequests.orEmpty()

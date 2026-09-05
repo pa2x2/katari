@@ -33,6 +33,8 @@ internal class OpenedBookReaderSession(
     }
 
     suspend fun saveLocation(locator: BookLocator, completed: Boolean = false) {
+        val publicationProgression = preparedPublication.progression(locator)
+        val publicationLocator = locator.copy(totalProgression = publicationProgression)
         val timestamp = now()
         val shouldBeCompleted = chapter.read || completed
         val progress = EntryProgressState(
@@ -41,7 +43,10 @@ internal class OpenedBookReaderSession(
             contentKey = progressIdentity.contentKey,
             resourceKey = progressIdentity.resourceKey,
             resourceRevision = progressIdentity.resourceRevision,
-            locator = BookProgressLocatorCodec.encode(locator),
+            locator = BookProgressLocatorCodec.encode(
+                publicationLocator,
+                publicationProgression = publicationProgression,
+            ),
             locatorUpdatedAt = timestamp,
             completed = shouldBeCompleted,
             completionUpdatedAt = if (shouldBeCompleted) timestamp else 0L,
@@ -51,7 +56,7 @@ internal class OpenedBookReaderSession(
                 visibleEntry = entry,
                 child = chapter,
                 progress = progress,
-                fraction = locator.totalProgression ?: locator.progression,
+                fraction = publicationProgression,
                 preserveLocatorExtensions = true,
             ),
         )

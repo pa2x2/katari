@@ -249,7 +249,7 @@ internal class BookDocumentChapterCoordinator(
                 )
         val session = retainedSessions.session(chapterId) ?: return
         val publicationProgression = location.section.totalProgression(location.progression)
-        val total = state.readingOrder.totalProgression(chapterId, publicationProgression)
+        val total = publicationProgression.toDouble()
         val locator = location.section.document.document.locatorAt(location.position).copy(totalProgression = total)
         retainedSessions.updateLocation(chapterId, locator)
         if (!chapterActivated) {
@@ -351,7 +351,7 @@ internal class BookDocumentChapterCoordinator(
         val state = currentState() ?: return
         val progression = section.document.document.progressionAt(position)
         val publicationProgression = section.totalProgression(progression)
-        val total = state.readingOrder.totalProgression(section.owner.id, publicationProgression)
+        val total = publicationProgression.toDouble()
         retainedSessions.updateLocation(
             section.owner.id,
             section.document.document.locatorAt(position).copy(totalProgression = total),
@@ -425,7 +425,7 @@ internal class BookDocumentChapterCoordinator(
         val session = retainedSessions.session(chapterId) ?: return
         val state = currentState() ?: return
         val section = state.loadedSections[chapterId]?.sections?.lastOrNull() ?: return
-        val total = state.readingOrder.completedProgression(chapterId)
+        val total = 1.0
         val document = section.document.document
         scope.launchNonCancellable {
             val locator = document.locatorAt(document.positionAtProgression(1f)).copy(totalProgression = total)

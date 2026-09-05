@@ -39,6 +39,9 @@ internal interface PreparedBookPublication : AutoCloseable {
     val locatorRevision: String?
         get() = null
 
+    /** Progress through this publication, independent of its position in the source catalogue. */
+    fun progression(locator: BookLocator): Double? = locator.totalProgression ?: locator.progression
+
     fun validate(locator: BookLocator): Boolean
 
     suspend fun reconcileMigratedLocator(locator: BookLocator): BookLocator? =
