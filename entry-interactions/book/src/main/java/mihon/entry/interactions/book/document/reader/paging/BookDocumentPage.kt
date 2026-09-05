@@ -21,6 +21,8 @@ internal data class BookDocumentPageFragment(
     val item: BookDocumentViewerItem<EntryChapter>,
     val start: Int = 0,
     val end: Int = (item as? BookDocumentViewerItem.Block)?.content?.logicalLength ?: 0,
+    val firstOnPage: Boolean = false,
+    val lastOnPage: Boolean = false,
 ) {
     val key: String get() = "${item.key}:$start:$end"
     val section: BookDocumentSection<EntryChapter>? get() = (item as? BookDocumentViewerItem.Block)?.section

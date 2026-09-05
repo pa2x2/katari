@@ -65,6 +65,7 @@ class BookDocumentPagedRestorationTest {
         (11..20).forEach { step ->
             compose.runOnIdle { scale.floatValue = step / 10f }
             compose.waitForIdle()
+            assertEquals("Reflow step $step must retain the same semantic passage", beforeReflow, location.position)
         }
         compose.runOnIdle {
             val current = pages.first { it.contains(section.key, location.position) }

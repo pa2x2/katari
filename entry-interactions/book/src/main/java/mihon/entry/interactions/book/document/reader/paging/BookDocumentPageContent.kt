@@ -1,11 +1,17 @@
 package mihon.entry.interactions.book.document.reader.paging
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import mihon.book.api.document.BookDocumentBlockContent
 import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.reader.BookDocumentChapterLoadState
@@ -24,20 +30,25 @@ internal fun BookDocumentPageContent(
     onRetry: (EntryChapter) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier.fillMaxSize().then(
-            if (page.scrollable) Modifier.verticalScroll(rememberScrollState()) else Modifier,
-        ),
-    ) {
-        page.fragments.forEach { fragment ->
-            BookDocumentPageFragmentContent(
-                fragment,
-                loadStates,
-                onAnchorClick,
-                onExternalLinkClick,
-                onReaderTap,
-                onRetry,
-            )
+    val isTransition = page.fragments.singleOrNull()?.item is BookDocumentViewerItem.Transition
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier.fillMaxWidth()
+                .then(if (page.scrollable) Modifier.verticalScroll(rememberScrollState()) else Modifier)
+                .heightIn(min = maxHeight),
+            verticalArrangement = if (isTransition) Arrangement.Center else Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            page.fragments.forEach { fragment ->
+                BookDocumentPageFragmentContent(
+                    fragment,
+                    loadStates,
+                    onAnchorClick,
+                    onExternalLinkClick,
+                    onReaderTap,
+                    onRetry,
+                )
+            }
         }
     }
 }
@@ -54,11 +65,7 @@ internal fun BookDocumentPageFragmentContent(
     val item = fragment.item
     val rendered = if (item is BookDocumentViewerItem.Block && item.content.content is BookDocumentBlockContent.Text) {
         item.copy(
-            content = item.content.pageTextSlice(
-                item.section.document.document.content.text,
-                fragment.start,
-                fragment.end,
-            ),
+            content = fragment.renderedTextBlock(),
         )
     } else {
         item
@@ -72,5 +79,7 @@ internal fun BookDocumentPageFragmentContent(
         onExternalLinkClick = onExternalLinkClick,
         onReaderTap = onReaderTap,
         onTransitionRetry = onRetry,
+        transitionVerticalPadding = 0.dp,
+        preserveTerminalSpacing = !fragment.lastOnPage,
     )
 }

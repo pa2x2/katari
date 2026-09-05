@@ -5,6 +5,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import mihon.book.api.document.BookDocumentLinkTarget
+import mihon.entry.interactions.book.reader.BookReaderProgress
 import mihon.entry.interactions.viewer.EntryChildWindow
 import tachiyomi.domain.entry.model.EntryChapter
 
@@ -30,6 +31,7 @@ internal fun BookDocumentReaderViewport(
     settings: mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings,
     chromeVisible: Boolean,
     modifier: Modifier = Modifier,
+    onPageProgress: (BookReaderProgress.Page?) -> Unit = {},
 ) {
     val mode by settings.readingMode.state.collectAsState()
     val tapZones by settings.tapZones.state.collectAsState()
@@ -42,6 +44,6 @@ internal fun BookDocumentReaderViewport(
         onLocation, onTransitionReached, onTerminalObservation, onAnchorMissing, onInternalLinkClick,
         onExternalLinkClick, onScrollStarted, onUserScrollStarted, onReaderTap,
         mode.effectiveValue, tapZones.effectiveValue, inversion.effectiveValue, animation.effectiveValue,
-        volume.effectiveValue, invertVolume.effectiveValue, chromeVisible, modifier,
+        volume.effectiveValue, invertVolume.effectiveValue, chromeVisible, modifier, onPageProgress,
     )
 }

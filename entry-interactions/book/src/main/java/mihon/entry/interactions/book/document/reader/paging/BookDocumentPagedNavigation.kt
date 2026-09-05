@@ -65,6 +65,7 @@ internal fun rememberBookDocumentPagedNavigation(
     LaunchedEffect(chromeVisible, mode) { if (!chromeVisible) focus.requestFocus() }
 
     fun move(delta: Int) {
+        if (pages.isEmpty()) return
         val destination = (pager.currentPage + delta).coerceIn(0, pages.lastIndex)
         if (destination == pager.currentPage) return
         onUserScrollStarted()
@@ -90,9 +91,22 @@ internal fun rememberBookDocumentPagedNavigation(
                 } ?: -1
             }
         }
-        if (target >= 0) pager.scrollToPage(target)
-        snapshotFlow { pager.settledPage to pager.isScrollInProgress }.collect { (index, moving) ->
+        val currentPageKey = pager.layoutInfo.visiblePagesInfo.firstOrNull { it.index == pager.currentPage }?.key
+        val visiblePage = pages.firstOrNull { it.key == currentPageKey }
+        val visiblePageRetained = request == null && visiblePage != null &&
+            (
+                pager.isScrollInProgress ||
+                    anchor.location?.let { visiblePage.contains(it.section.key, it.position) } != false
+                )
+        // Pager preserves keyed pages when neighbours load. A competing scrollToPage during
+        // a user drag is cancelled by the gesture and would also cancel our location observer.
+        if (target >= 0 && !visiblePageRetained) pager.scrollToPage(target)
+        snapshotFlow {
+            val visibleKey = pager.layoutInfo.visiblePagesInfo.firstOrNull { it.index == pager.settledPage }?.key
+            visibleKey to pager.isScrollInProgress
+        }.collect { (visibleKey, moving) ->
             if (moving) return@collect
+            val index = pages.indexOfFirst { it.key == visibleKey }
             val page = pages.getOrNull(index) ?: return@collect
             anchor.pageKey = page.key
             val transition = (page.fragments.first().item as? BookDocumentViewerItem.Transition)?.transition
@@ -126,10 +140,7 @@ internal fun rememberBookDocumentPagedNavigation(
                 )
                 anchor.location = location
                 currentOnLocation(location)
-                val topPosition = requireNotNull(first.position)
-                currentOnViewportLocation(
-                    BookDocumentViewerLocation(section, topPosition, document.progressionAt(topPosition)),
-                )
+                currentOnViewportLocation(location)
                 currentOnTerminalObservation(section.owner, false, index < pages.lastIndex, false)
             }
         }

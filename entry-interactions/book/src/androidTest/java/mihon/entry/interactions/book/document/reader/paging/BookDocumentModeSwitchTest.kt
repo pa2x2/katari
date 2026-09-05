@@ -32,7 +32,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 class BookDocumentModeSwitchTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
 
-    @Test fun repeated_switches_preserve_the_first_visible_line_inside_a_long_paragraph() {
+    @Test fun repeated_switches_keep_the_passage_visible_and_restore_the_scrolled_line() {
         verifyRoundTrips(pagingSection((1..200).joinToString(" ") { "Word$it follows the previous words." }))
     }
 
@@ -85,7 +85,17 @@ class BookDocumentModeSwitchTest {
         repeat(3) {
             compose.runOnIdle { mode.value = BookDocumentReadingMode.PAGED_VERTICAL }
             compose.waitForIdle()
-            assertEquals("Scrolling to paging must retain the first visible lines (cycle $it)", scrolled, firstLines())
+            val visibleText = compose.onAllNodes(hasText("", substring = true), useUnmergedTree = true)
+                .fetchSemanticsNodes().filter { node ->
+                    node.layoutInfo.isPlaced && node.boundsInRoot.height > 0 &&
+                        generateSequence(node.parent) { it.parent }.none { it.config.isClearingSemantics }
+                }.flatMap {
+                    it.config.getOrElse(SemanticsProperties.Text) { emptyList() }
+                }.joinToString(" ") { it.text }
+            assertTrue(
+                "The saved passage must remain on the naturally packed page (cycle $it)",
+                visibleText.contains(scrolled.first()),
+            )
             compose.runOnIdle { mode.value = BookDocumentReadingMode.SCROLL }
             compose.waitForIdle()
             assertEquals(

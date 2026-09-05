@@ -6,6 +6,7 @@ import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.viewer.EntryChildDirection
@@ -23,6 +24,8 @@ internal fun BookDocumentViewerRow(
     onExternalLinkClick: (String) -> Unit,
     onReaderTap: () -> Unit,
     onTransitionRetry: (EntryChapter) -> Unit,
+    transitionVerticalPadding: Dp = 28.dp,
+    preserveTerminalSpacing: Boolean = true,
 ) {
     when (item) {
         is BookDocumentViewerItem.Block -> {
@@ -33,6 +36,7 @@ internal fun BookDocumentViewerRow(
                     onAnchorClick = onAnchorClick,
                     onExternalLinkClick = onExternalLinkClick,
                     onReaderTap = onReaderTap,
+                    preserveTerminalSpacing = preserveTerminalSpacing,
                 )
             } else {
                 DisableSelection {
@@ -41,6 +45,7 @@ internal fun BookDocumentViewerRow(
                         onAnchorClick = onAnchorClick,
                         onExternalLinkClick = onExternalLinkClick,
                         onReaderTap = onReaderTap,
+                        preserveTerminalSpacing = preserveTerminalSpacing,
                     )
                 }
             }
@@ -53,7 +58,7 @@ internal fun BookDocumentViewerRow(
                 onRetry = item.transition.to?.let { chapter -> { onTransitionRetry(chapter) } },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 28.dp),
+                    .padding(horizontal = 24.dp, vertical = transitionVerticalPadding),
             )
         }
     }
@@ -65,6 +70,7 @@ internal fun BookDocumentViewerBlock(
     onAnchorClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     onReaderTap: () -> Unit,
+    preserveTerminalSpacing: Boolean = true,
 ) {
     CompositionLocalProvider(
         LocalBookDocumentSectionKey provides item.section.key,
@@ -79,7 +85,8 @@ internal fun BookDocumentViewerBlock(
             onAnchorClick = { target -> onAnchorClick(item.section, target) },
             onExternalLinkClick = onExternalLinkClick,
             onReaderTap = onReaderTap,
-            preserveTerminalSpacing = item.content.id != item.section.document.blocks.last().id,
+            preserveTerminalSpacing =
+            preserveTerminalSpacing && item.content.id != item.section.document.blocks.last().id,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = BOOK_DOCUMENT_BLOCK_HORIZONTAL_PADDING, vertical = 6.dp),

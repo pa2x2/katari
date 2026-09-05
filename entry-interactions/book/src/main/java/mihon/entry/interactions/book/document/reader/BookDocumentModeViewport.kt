@@ -1,5 +1,6 @@
 package mihon.entry.interactions.book.document.reader
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -7,12 +8,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.reader.paging.BookDocumentPagedViewer
 import mihon.entry.interactions.book.document.reader.paging.BookDocumentPaginationLayout
 import mihon.entry.interactions.book.document.reader.paging.paginationGroup
 import mihon.entry.interactions.book.document.reader.paging.paginationWindow
 import mihon.entry.interactions.book.document.reader.table.BookDocumentTablePreparation
+import mihon.entry.interactions.book.reader.BookReaderProgress
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.viewer.EntryChildWindow
 import tachiyomi.domain.entry.model.EntryChapter
@@ -44,6 +47,7 @@ internal fun BookDocumentModeViewport(
     invertVolume: Boolean,
     chromeVisible: Boolean,
     modifier: Modifier = Modifier,
+    onPageProgress: (BookReaderProgress.Page?) -> Unit = {},
 ) {
     val anchor = rememberSaveable(saver = BookDocumentViewportAnchor.Saver) { BookDocumentViewportAnchor() }
     anchor.resolve(loadedSections)
@@ -67,9 +71,6 @@ internal fun BookDocumentModeViewport(
                 section.document.document.progressionAt(section.initialPosition),
             )
         }
-        // Keep a page boundary at the handoff line for this paged session. Chapter-aligned pages
-        // alone can otherwise move the top of the viewport by almost a full screen on each switch.
-        val pageBreak = remember { initialLocation }
         var centerGroup by remember { mutableStateOf<String?>(null) }
         val center = anchor.location ?: initialLocation
         val centerIndex = center?.let { items.indexOfPosition(it.section.key, it.position) }?.coerceAtLeast(0) ?: 0
@@ -91,7 +92,7 @@ internal fun BookDocumentModeViewport(
             }.distinct(),
             modifier,
         ) {
-            BookDocumentPaginationLayout(pageItems, pageBreak = pageBreak) { pages ->
+            BookDocumentPaginationLayout(pageItems, Modifier.padding(vertical = 12.dp)) { pages ->
                 BookDocumentPagedViewer(
                     pages, mode, initialLocation, navigationRequest, loadStates,
                     tapZones, inversion, animation,
@@ -99,6 +100,7 @@ internal fun BookDocumentModeViewport(
                     pagedLocationChanged, onTransitionReached, onTerminalObservation, onInternalLinkClick,
                     onExternalLinkClick, onScrollStarted, onUserScrollStarted, onReaderTap,
                     onViewportLocation = { anchor.location = it },
+                    onPageProgress = onPageProgress,
                 )
             }
         }

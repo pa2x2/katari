@@ -53,6 +53,7 @@ import mihon.entry.interactions.book.reader.selection.BookSelectionActionCoordin
 import mihon.entry.interactions.book.reader.settings.BookReaderSettingsDialog
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechOwner
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechPhase
+import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewActionsMenu
 import mihon.entry.interactions.source.EntryChildWebViewResolution
@@ -96,6 +97,10 @@ internal fun BookDocumentReaderScreen(
     val textSizeSetting by settingBindings.textSize.state.collectAsState()
     val showTextSelectionMenuSetting by settingBindings.showTextSelectionMenu.state.collectAsState()
     val showReadingProgressSetting by settingBindings.showReadingProgress.state.collectAsState()
+    val readingModeSetting by settingBindings.readingMode.state.collectAsState()
+    var pageProgress by remember(readingModeSetting.effectiveValue) {
+        mutableStateOf<BookReaderProgress.Page?>(BookReaderProgress.Page(1, 1))
+    }
     val readingProgressStyleSetting by settingBindings.readingProgressStyle.state.collectAsState()
     val readerPalette = bookDocumentReaderPalette(themeSetting.effectiveValue)
     val focusManager = LocalFocusManager.current
@@ -173,12 +178,18 @@ internal fun BookDocumentReaderScreen(
         ) {
             BookReaderScaffold(
                 progress = if (showReadingProgressSetting.effectiveValue) {
-                    BookReaderProgress.Chapter(
-                        value = visualChapterProgression,
-                        style = readingProgressStyleSetting.effectiveValue,
-                        activeColor = readerPalette.accent.copy(alpha = 0.75f),
-                        trackColor = readerPalette.surfaceVariant,
-                    )
+                    if (readingModeSetting.effectiveValue !=
+                        BookDocumentReadingMode.SCROLL
+                    ) {
+                        pageProgress ?: BookReaderProgress.Page(1, 1)
+                    } else {
+                        BookReaderProgress.Chapter(
+                            value = visualChapterProgression,
+                            style = readingProgressStyleSetting.effectiveValue,
+                            activeColor = readerPalette.accent.copy(alpha = 0.75f),
+                            trackColor = readerPalette.surfaceVariant,
+                        )
+                    }
                 } else {
                     null
                 },
@@ -194,6 +205,7 @@ internal fun BookDocumentReaderScreen(
                 content = {
                     BookDocumentReaderViewport(
                         settings = settingBindings,
+                        onPageProgress = { pageProgress = it },
                         chromeVisible = state.chromeVisible,
                         currentChapter = state.window.current,
                         currentChapterId = state.currentChapterId,
@@ -341,6 +353,8 @@ internal fun BookDocumentReaderScreen(
                                 BookDocumentReaderProgressSettings(
                                     showProgressBinding = settingBindings.showReadingProgress,
                                     styleBinding = settingBindings.readingProgressStyle,
+                                    showStyleOptions =
+                                    readingModeSetting.effectiveValue == BookDocumentReadingMode.SCROLL,
                                 )
                             }
                         }

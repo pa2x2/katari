@@ -32,7 +32,7 @@ class BookDocumentPagedNavigationTest {
 
     @Test fun chapter_transition_is_a_separate_page_before_the_next_chapter() {
         val first = pagingSection("First chapter text.")
-        val next = pagingSection("Next chapter text.", 2)
+        val next = pagingSection((1..80).joinToString(" ") { "Next chapter word$it." }, 2)
         val items = buildBookDocumentViewerItems(
             EntryChildWindow(first.owner, next = next.owner),
             mapOf(1L to first, 2L to next),
@@ -41,6 +41,7 @@ class BookDocumentPagedNavigationTest {
         val initial = BookDocumentViewerLocation(first, first.initialPosition, 0f)
         var location = initial
         var requestedChapter: Long? = null
+        var progress: mihon.entry.interactions.book.reader.BookReaderProgress.Page? = null
         compose.setContent {
             PagingTheme {
                 BookDocumentPaginationLayout(items, Modifier.size(280.dp, 400.dp).testTag("pager")) { pages ->
@@ -48,6 +49,7 @@ class BookDocumentPagedNavigationTest {
                         pages, BookDocumentReadingMode.PAGED_LTR, initial, null, emptyMap(),
                         0, 0, false, false, false, false,
                         { location = it }, { requestedChapter = it.id }, { _, _, _, _ -> }, { _, _ -> }, {}, {}, {}, {},
+                        onPageProgress = { progress = it },
                     )
                 }
             }
@@ -55,11 +57,14 @@ class BookDocumentPagedNavigationTest {
         compose.waitForIdle()
         compose.onNodeWithTag("pager").performTouchInput { click(Offset(width * .9f, height * .8f)) }
         compose.waitForIdle()
+        assertEquals(mihon.entry.interactions.book.reader.BookReaderProgress.Page(1, 1), progress)
         assertEquals(2L, requestedChapter)
         assertEquals(1L, location.section.owner.id)
         compose.onNodeWithTag("pager").performTouchInput { click(Offset(width * .9f, height * .8f)) }
         compose.waitForIdle()
         assertEquals(2L, location.section.owner.id)
+        assertEquals(1, progress?.currentPage)
+        assertTrue(requireNotNull(progress).totalPages > 1)
     }
 
     @Test

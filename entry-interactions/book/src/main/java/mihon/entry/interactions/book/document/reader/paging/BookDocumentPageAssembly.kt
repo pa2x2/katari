@@ -2,7 +2,6 @@ package mihon.entry.interactions.book.document.reader.paging
 
 import mihon.book.api.document.BookDocumentBlockContent
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
-import mihon.entry.interactions.book.document.reader.BookDocumentViewerLocation
 import tachiyomi.domain.entry.model.EntryChapter
 
 /** Packs measured fragments into pages, preserving source line boundaries and explicit transitions. */
@@ -10,14 +9,16 @@ internal fun assembleBookDocumentPages(
     items: List<BookDocumentViewerItem<EntryChapter>>,
     pageHeight: Int,
     measure: (BookDocumentPageFragment) -> Pair<Int, List<Int>>,
-    pageBreak: BookDocumentViewerLocation<EntryChapter>? = null,
 ): List<BookDocumentPage> {
     val pages = mutableListOf<BookDocumentPage>()
     val fragments = mutableListOf<BookDocumentPageFragment>()
     var used = 0
     var sectionKey: String? = null
     fun flush() {
-        if (fragments.isNotEmpty()) pages += BookDocumentPage(fragments.toList())
+        if (fragments.isNotEmpty()) {
+            fragments[fragments.lastIndex] = fragments.last().copy(lastOnPage = true)
+            pages += BookDocumentPage(fragments.toList())
+        }
         fragments.clear()
         used = 0
     }
@@ -28,7 +29,7 @@ internal fun assembleBookDocumentPages(
         sectionKey = group
         if (item is BookDocumentViewerItem.Transition) {
             flush()
-            val fragment = BookDocumentPageFragment(item)
+            val fragment = BookDocumentPageFragment(item, firstOnPage = true, lastOnPage = true)
             pages += BookDocumentPage(listOf(fragment), scrollable = true)
         } else if (item is BookDocumentViewerItem.Block) {
             if (item.content.content is BookDocumentBlockContent.Disclosure ||
@@ -38,27 +39,27 @@ internal fun assembleBookDocumentPages(
                 // Expansion, resource loading and table adaptation can change height after measurement.
                 // A dedicated scrollable page keeps the complete rich block and its actions accessible.
                 flush()
-                pages += BookDocumentPage(listOf(BookDocumentPageFragment(item)), scrollable = true)
+                pages +=
+                    BookDocumentPage(
+                        listOf(BookDocumentPageFragment(item, firstOnPage = true, lastOnPage = true)),
+                        scrollable = true,
+                    )
                 return@forEach
             }
             var start = 0
             val end = item.content.logicalLength
-            val breakOffset = pageBreak?.takeIf {
-                it.section.key == item.section.key && it.position.blockId == item.content.id
-            }?.position?.offsetWithinBlock?.coerceIn(0, end)
             while (start < end) {
-                if (start == breakOffset) flush()
-                val segmentEnd = if (breakOffset != null && start < breakOffset) breakOffset else end
-                val whole = BookDocumentPageFragment(item, start, segmentEnd)
+                val whole =
+                    BookDocumentPageFragment(item, start, end, firstOnPage = fragments.isEmpty(), lastOnPage = true)
                 val (height, lineEnds) = measure(whole)
                 if (height <= pageHeight - used) {
-                    fragments += whole
-                    used += height
-                    start = segmentEnd
+                    fragments += whole.copy(lastOnPage = false)
+                    used += measure(whole.copy(lastOnPage = false)).first
+                    start = end
                     continue
                 }
                 val candidates = if (item.content.content is BookDocumentBlockContent.Text) {
-                    lineEnds.map { start + it }.filter { it > start && it < segmentEnd }
+                    lineEnds.map { start + it }.filter { it > start && it < end }
                 } else {
                     emptyList()
                 }
@@ -67,7 +68,14 @@ internal fun assembleBookDocumentPages(
                 var fitting: BookDocumentPageFragment? = null
                 while (low <= high) {
                     val middle = (low + high) / 2
-                    val candidate = BookDocumentPageFragment(item, start, candidates[middle])
+                    // Keep source whitespace with the preceding line so a continuation cannot
+                    // start with empty paragraph lines or become a whitespace-only page.
+                    var candidateEnd = candidates[middle]
+                    val text = item.section.document.document.content.text
+                    while (candidateEnd < end && text[item.content.logicalStart + candidateEnd].isWhitespace()) {
+                        candidateEnd++
+                    }
+                    val candidate = whole.copy(end = candidateEnd)
                     if (measure(candidate).first <= pageHeight - used) {
                         fitting = candidate
                         low = middle + 1
@@ -84,7 +92,7 @@ internal fun assembleBookDocumentPages(
                 } else {
                     // A single line or rich block can exceed even an empty page at large text sizes.
                     pages += BookDocumentPage(listOf(whole), scrollable = true)
-                    start = segmentEnd
+                    start = end
                 }
             }
         }

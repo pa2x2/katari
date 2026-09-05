@@ -15,6 +15,7 @@ import mihon.entry.interactions.book.document.reader.BookDocumentNavigationReque
 import mihon.entry.interactions.book.document.reader.BookDocumentSection
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerLocation
+import mihon.entry.interactions.book.reader.BookReaderProgress
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.presentation.core.components.reader.navigation.ReaderTapAction
@@ -43,6 +44,7 @@ internal fun BookDocumentPagedViewer(
     onUserScrollStarted: () -> Unit,
     onReaderTap: () -> Unit,
     onViewportLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit = {},
+    onPageProgress: (BookReaderProgress.Page?) -> Unit = {},
 ) {
     val navigation = rememberBookDocumentPagedNavigation(
         pages, mode, initialLocation, navigationRequest,
@@ -51,6 +53,7 @@ internal fun BookDocumentPagedViewer(
         onViewportLocation,
     )
     val pager = navigation.pager
+    BookDocumentPageProgressEffect(pages, pager, onPageProgress)
     val vertical = mode == BookDocumentReadingMode.PAGED_VERTICAL
     val rtl = mode == BookDocumentReadingMode.PAGED_RTL
     val modifier = navigation.modifier
