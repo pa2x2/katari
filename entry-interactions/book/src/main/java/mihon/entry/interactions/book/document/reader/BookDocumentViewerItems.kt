@@ -311,13 +311,6 @@ internal fun <T> bookDocumentViewerDatasetAnchor(
     return null
 }
 
-internal data class BookDocumentViewerLocation<T>(
-    val section: BookDocumentSection<T>,
-    val position: BookDocumentPosition,
-    val progression: Float,
-    val visualProgression: Float = progression,
-)
-
 internal fun <T> bookDocumentViewerLocation(
     items: List<BookDocumentViewerItem<T>>,
     visibleItems: List<BookDocumentVisibleItemLayout>,

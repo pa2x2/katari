@@ -27,9 +27,11 @@ internal fun BookDocument.navigationPosition(locator: BookLocator): BookDocument
 internal fun PreparedBookDocumentPublication.resolveNavigationDestination(
     locator: BookLocator,
     contextual: Boolean,
+    restorePosition: Boolean = false,
 ): BookDocumentNavigationDestination? {
     val document = document(locator.resourceId) ?: return null
-    val position = document.navigationPosition(locator) ?: return null
+    val position = (if (restorePosition) document.resolvePosition(locator) else document.navigationPosition(locator))
+        ?: return null
     return BookDocumentNavigationDestination(
         document,
         position,

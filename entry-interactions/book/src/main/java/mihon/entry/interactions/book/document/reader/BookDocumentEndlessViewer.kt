@@ -54,6 +54,7 @@ internal fun BookDocumentEndlessViewer(
     initialLocation: BookDocumentViewerLocation<EntryChapter>? = null,
     onViewportLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit = {},
     modifier: Modifier = Modifier,
+    observeViewportExtent: Boolean = false,
 ) {
     val proposedItems = remember(window, loadedSections) {
         buildBookDocumentPublicationViewerItems(window, loadedSections, EntryChapter::id)
@@ -70,8 +71,11 @@ internal fun BookDocumentEndlessViewer(
         initialFirstVisibleItemIndex = initialIndex,
         prefetchStrategy = chapterPrefetchStrategy,
     )
+    val currentObserveViewportExtent by rememberUpdatedState(observeViewportExtent)
     val currentItems by rememberUpdatedState(items)
     val currentLoadedSections by rememberUpdatedState(loadedSections)
+    val currentNavigationRequest by rememberUpdatedState(navigationRequest)
+    val currentOnLocation by rememberUpdatedState(onLocation)
     val currentOnScrollStarted by rememberUpdatedState(onScrollStarted)
     val currentOnUserScrollStarted by rememberUpdatedState(onUserScrollStarted)
     val currentOnAnchorMissing by rememberUpdatedState(onAnchorMissing)
@@ -206,13 +210,41 @@ internal fun BookDocumentEndlessViewer(
         }
     }
 
-    LaunchedEffect(navigationRequest) {
+    LaunchedEffect(navigationRequest, items, initialPositionRestored) {
         val request = navigationRequest ?: return@LaunchedEffect
+        if (!initialPositionRestored) return@LaunchedEffect
         val section = loadedSections[request.chapterId]
             ?.sections
             ?.firstOrNull { it.key == request.sectionKey }
             ?: return@LaunchedEffect
-        scrollToSectionPosition(section, request.position)
+        if (items.indexOfPosition(section.key, request.position) < 0) return@LaunchedEffect
+        if (request.alignToPassage) {
+            listState.scrollToBookDocumentPassage(section, request.position, items, viewportGeometry)
+        } else {
+            scrollToSectionPosition(section, request.position)
+        }
+        // Publish the settled viewport before acknowledging the request, so seek controls can
+        // replace their optimistic value with measured progress without exposing the old position.
+        val settledViewport = viewportGeometry.firstLocation(
+            listState.layoutInfo.visibleItemsInfo.mapNotNull { currentItems.resolve(it.index, it.key) },
+            includeViewportEnd = currentObserveViewportExtent,
+        )
+            ?: BookDocumentViewerLocation(
+                section,
+                request.position,
+                section.document.document.progressionAt(request.position),
+            )
+        currentOnViewportLocation(settledViewport.copy(restoredNavigationId = request.id))
+        // Explicit navigation owns this semantic observation. A viewport estimate may never equal
+        // the exact target (especially at an edge), so it cannot acknowledge restoration itself.
+        currentOnLocation(
+            BookDocumentViewerLocation(
+                section,
+                request.position,
+                section.document.document.progressionAt(request.position),
+                restoredNavigationId = request.id,
+            ),
+        )
     }
 
     LaunchedEffect(listState, items) {
@@ -223,6 +255,12 @@ internal fun BookDocumentEndlessViewer(
             if (initialPositionRestored) {
                 viewportGeometry.firstLocation(
                     listState.layoutInfo.visibleItemsInfo.mapNotNull { currentItems.resolve(it.index, it.key) },
+                    includeViewportEnd = currentObserveViewportExtent,
+                ) ?: bookDocumentViewerLocation(
+                    currentItems,
+                    listState.layoutInfo.visibleBookDocumentLayouts(),
+                    listState.layoutInfo.viewportStartOffset,
+                    listState.layoutInfo.viewportEndOffset,
                 )
             } else {
                 null
@@ -273,7 +311,7 @@ internal fun BookDocumentEndlessViewer(
             .distinctUntilChanged()
             .filter { it }
             .collect {
-                if (textSizeReflowAnchor == null) currentOnScrollStarted()
+                if (textSizeReflowAnchor == null && currentNavigationRequest == null) currentOnScrollStarted()
             }
     }
     LaunchedEffect(listState) {

@@ -1,6 +1,8 @@
 package mihon.entry.interactions.book.document.reader
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.FloatState
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,10 +32,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.document.reader.navigation.BookDocumentJumpHistory
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
+import mihon.entry.interactions.book.document.reader.navigation.BookDocumentSeekControls
+import mihon.entry.interactions.book.document.reader.navigation.BookDocumentSeekState
 import mihon.entry.interactions.book.document.reader.navigation.documentNavigationPresentation
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderNavigationBarSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderProgressSettings
@@ -75,6 +83,9 @@ internal fun BookDocumentReaderScreen(
     settingBindings: BookDocumentReaderSettingBindings,
     selectionCoordinator: BookSelectionActionCoordinator?,
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
+    onViewportLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
+    jumpHistory: BookDocumentJumpHistory,
+    onReturn: () -> Unit,
     onTransitionReached: (EntryChapter) -> Unit,
     onTerminalObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
     onNavigationSelected: (BookDocumentNavigationTarget) -> Unit,
@@ -93,6 +104,8 @@ internal fun BookDocumentReaderScreen(
     onTranslationPopupBoundsChanged: (Rect?) -> Unit,
     onClose: () -> Unit,
 ) {
+    val seekState = remember { BookDocumentSeekState() }
+    SideEffect { seekState.setVisible(state.chromeVisible) }
     val themeSetting by settingBindings.themeMode.state.collectAsState()
     val textSizeSetting by settingBindings.textSize.state.collectAsState()
     val showTextSelectionMenuSetting by settingBindings.showTextSelectionMenu.state.collectAsState()
@@ -206,6 +219,11 @@ internal fun BookDocumentReaderScreen(
                     BookDocumentReaderViewport(
                         settings = settingBindings,
                         onPageProgress = { pageProgress = it },
+                        onSeekPages = seekState::updatePages,
+                        onViewportLocation = {
+                            seekState.observe(it)
+                            onViewportLocation(it)
+                        },
                         chromeVisible = state.chromeVisible,
                         currentChapter = state.window.current,
                         currentChapterId = state.currentChapterId,
@@ -221,7 +239,10 @@ internal fun BookDocumentReaderScreen(
                         onInternalLinkClick = onInternalLinkClick,
                         onExternalLinkClick = onExternalLinkClick,
                         onScrollStarted = onChromeHide,
-                        onUserScrollStarted = onUserScrollStarted,
+                        onUserScrollStarted = {
+                            seekState.cancelSeek()
+                            onUserScrollStarted()
+                        },
                         onReaderTap = {
                             if (selectionCoordinator?.dismissTranslationOnReaderTap() != true) {
                                 currentOnChromeToggle()
@@ -239,8 +260,16 @@ internal fun BookDocumentReaderScreen(
                 overlay = { progressIndicator ->
                     ReaderChrome(
                         visible = state.chromeVisible,
+                        retainBars = true,
                         modifier = Modifier.fillMaxSize(),
-                        persistentBottomContent = progressIndicator,
+                        persistentBottomContent = {
+                            Box(
+                                Modifier.graphicsLayer { alpha = if (state.chromeVisible) 0f else 1f }
+                                    .then(if (state.chromeVisible) Modifier.clearAndSetSemantics { } else Modifier),
+                            ) {
+                                progressIndicator()
+                            }
+                        },
                         topBar = {
                             ReaderChromeTopBar(
                                 title = state.entryTitle,
@@ -255,16 +284,26 @@ internal fun BookDocumentReaderScreen(
                             )
                         },
                         bottomBar = {
-                            ReaderChromeBottomBar {
-                                BookDocumentReadingModeShortcut(settingBindings.readingMode)
-                                ReaderChromeBottomBarAction(onClick = { onNavigationVisibilityChange(true) }) {
-                                    Icon(
-                                        Icons.AutoMirrored.Outlined.ViewList,
-                                        stringResource(MR.strings.book_table_of_contents),
-                                    )
-                                }
-                                ReaderChromeBottomBarAction(onClick = { onSettingsVisibilityChange(true) }) {
-                                    Icon(Icons.Outlined.Settings, stringResource(MR.strings.action_settings))
+                            Column {
+                                BookDocumentSeekControls(
+                                    seekState,
+                                    state,
+                                    readingModeSetting.effectiveValue,
+                                    jumpHistory,
+                                    onNavigate = currentOnNavigationSelected,
+                                    onReturn = onReturn,
+                                )
+                                ReaderChromeBottomBar {
+                                    BookDocumentReadingModeShortcut(settingBindings.readingMode)
+                                    ReaderChromeBottomBarAction(onClick = { onNavigationVisibilityChange(true) }) {
+                                        Icon(
+                                            Icons.AutoMirrored.Outlined.ViewList,
+                                            stringResource(MR.strings.book_table_of_contents),
+                                        )
+                                    }
+                                    ReaderChromeBottomBarAction(onClick = { onSettingsVisibilityChange(true) }) {
+                                        Icon(Icons.Outlined.Settings, stringResource(MR.strings.action_settings))
+                                    }
                                 }
                             }
                         },

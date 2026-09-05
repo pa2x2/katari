@@ -21,9 +21,12 @@ internal class BookDocumentViewportGeometry {
     var viewport by mutableStateOf<LayoutCoordinates?>(null)
     val texts = mutableStateMapOf<String, BookDocumentViewportText>()
 
-    fun firstLocation(items: List<BookDocumentViewerItem<EntryChapter>>): BookDocumentViewerLocation<EntryChapter>? {
+    fun firstLocation(
+        items: List<BookDocumentViewerItem<EntryChapter>>,
+        includeViewportEnd: Boolean = false,
+    ): BookDocumentViewerLocation<EntryChapter>? {
         val viewport = viewport?.takeIf { it.isAttached } ?: return null
-        val first = texts.values.mapNotNull { text ->
+        val visibleTexts = texts.values.mapNotNull { text ->
             val belongsToVisibleBlock = items.any { item ->
                 item is BookDocumentViewerItem.Block && item.section.key == text.sectionKey &&
                     text.logicalStart in item.content.logicalStart until item.content.logicalEndExclusive
@@ -33,7 +36,8 @@ internal class BookDocumentViewportGeometry {
             val layout = text.layout ?: return@mapNotNull null
             if (top + layout.size.height <= 0 || top >= viewport.size.height) return@mapNotNull null
             Triple(text, top, layout)
-        }.minByOrNull { it.second } ?: return null
+        }
+        val first = visibleTexts.minByOrNull { it.second } ?: return null
         val (text, top, layout) = first
         val section = items.asSequence().filterIsInstance<BookDocumentViewerItem.Block<EntryChapter>>()
             .firstOrNull { it.section.key == text.sectionKey }?.section ?: return null
@@ -42,7 +46,23 @@ internal class BookDocumentViewportGeometry {
         val sourceOffset = displayOffset - text.presentation.insertedOffsets.count { it < displayOffset }
         val document = section.document.document
         val position = document.positionAtLogicalOffset(text.logicalStart + sourceOffset)
-        return BookDocumentViewerLocation(section, position, document.progressionAt(position))
+        val endProgression = if (includeViewportEnd) {
+            visibleTexts.filter { it.first.sectionKey == section.key }.maxByOrNull { it.second }?.let { last ->
+                val (lastText, lastTop, lastLayout) = last
+                val lastLine = lastLayout.getLineForVerticalPosition((viewport.size.height - lastTop).coerceAtLeast(0f))
+                val displayEnd = lastLayout.getLineEnd(lastLine)
+                val sourceEnd = displayEnd - lastText.presentation.insertedOffsets.count { it < displayEnd }
+                document.progressionAt(document.positionAtLogicalOffset(lastText.logicalStart + sourceEnd))
+            }
+        } else {
+            null
+        }
+        return BookDocumentViewerLocation(
+            section,
+            position,
+            document.progressionAt(position),
+            viewportEndProgression = endProgression,
+        )
     }
 
     fun lineTop(section: BookDocumentSection<EntryChapter>, position: BookDocumentPosition): Float? {

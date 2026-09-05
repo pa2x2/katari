@@ -2,6 +2,7 @@ package mihon.entry.interactions.book.document.reader
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -10,6 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import mihon.book.api.document.BookDocumentLinkTarget
+import mihon.entry.interactions.book.document.reader.paging.BookDocumentPage
 import mihon.entry.interactions.book.document.reader.paging.BookDocumentPagedViewer
 import mihon.entry.interactions.book.document.reader.paging.BookDocumentPaginationLayout
 import mihon.entry.interactions.book.document.reader.paging.paginationGroup
@@ -48,17 +50,25 @@ internal fun BookDocumentModeViewport(
     chromeVisible: Boolean,
     modifier: Modifier = Modifier,
     onPageProgress: (BookReaderProgress.Page?) -> Unit = {},
+    onSeekPages: (List<BookDocumentPage>) -> Unit = {},
+    onViewportLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit = {},
 ) {
     val anchor = rememberSaveable(saver = BookDocumentViewportAnchor.Saver) { BookDocumentViewportAnchor() }
     anchor.resolve(loadedSections)
+    val observeViewport: (BookDocumentViewerLocation<EntryChapter>) -> Unit = {
+        anchor.location = it
+        onViewportLocation(it)
+    }
     if (mode == BookDocumentReadingMode.SCROLL) {
+        SideEffect { onSeekPages(emptyList()) }
         BookDocumentEndlessViewer(
             currentChapter, currentChapterId, window, loadedSections, loadStates, navigationRequest, textSizePercent,
             onLocation, onTransitionReached, onTerminalObservation, onAnchorMissing, onInternalLinkClick,
             onExternalLinkClick, onScrollStarted, onUserScrollStarted, onReaderTap,
             initialLocation = anchor.location,
-            onViewportLocation = { anchor.location = it },
+            onViewportLocation = observeViewport,
             modifier = modifier,
+            observeViewportExtent = chromeVisible,
         )
     } else {
         val items = remember(window, loadedSections) {
@@ -93,13 +103,14 @@ internal fun BookDocumentModeViewport(
             modifier,
         ) {
             BookDocumentPaginationLayout(pageItems, Modifier.padding(vertical = 12.dp)) { pages ->
+                SideEffect { onSeekPages(pages) }
                 BookDocumentPagedViewer(
                     pages, mode, initialLocation, navigationRequest, loadStates,
                     tapZones, inversion, animation,
                     volume, invertVolume, chromeVisible,
                     pagedLocationChanged, onTransitionReached, onTerminalObservation, onInternalLinkClick,
                     onExternalLinkClick, onScrollStarted, onUserScrollStarted, onReaderTap,
-                    onViewportLocation = { anchor.location = it },
+                    onViewportLocation = observeViewport,
                     onPageProgress = onPageProgress,
                 )
             }

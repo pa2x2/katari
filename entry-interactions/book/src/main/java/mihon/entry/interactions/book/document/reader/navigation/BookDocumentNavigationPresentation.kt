@@ -7,7 +7,12 @@ import mihon.entry.interactions.book.document.reader.BookDocumentReaderState
 import mihon.entry.interactions.book.reader.BookReaderNavigationRow
 import tachiyomi.domain.entry.model.EntryChapter
 
-internal data class BookDocumentNavigationTarget(val chapter: EntryChapter, val locator: BookLocator? = null)
+internal data class BookDocumentNavigationTarget(
+    val chapter: EntryChapter,
+    val locator: BookLocator? = null,
+    val restorePosition: Boolean = false,
+    val returnToOrigin: Boolean = false,
+)
 
 internal data class BookDocumentNavigationPresentation(
     val rows: List<BookReaderNavigationRow<BookDocumentNavigationTarget>>,

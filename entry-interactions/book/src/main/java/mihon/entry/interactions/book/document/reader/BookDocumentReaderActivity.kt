@@ -169,6 +169,13 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                         settingBindings = requireNotNull(settingBindings),
                         selectionCoordinator = selectionCoordinator,
                         onLocation = chapterCoordinator::onLocation,
+                        onViewportLocation = retainedSessions.jumpHistory::observe,
+                        jumpHistory = retainedSessions.jumpHistory,
+                        onReturn = {
+                            retainedSessions.jumpHistory.returnTarget?.let {
+                                chapterCoordinator.selectNavigationTarget(it.copy(returnToOrigin = true))
+                            }
+                        },
                         onTransitionReached = { chapterCoordinator.loadChapter(it, activate = false, retry = true) },
                         onTerminalObservation = chapterCoordinator::onTerminalObservation,
                         onNavigationSelected = ::selectFromNavigation,

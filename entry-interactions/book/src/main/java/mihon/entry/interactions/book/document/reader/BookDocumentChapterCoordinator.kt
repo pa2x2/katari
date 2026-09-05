@@ -165,6 +165,7 @@ internal class BookDocumentChapterCoordinator(
     }
 
     fun selectNavigationTarget(target: BookDocumentNavigationTarget) {
+        if (!target.returnToOrigin) retainedSessions.jumpHistory.rememberOrigin()
         pendingNavigationTarget = null
         val locator = target.locator
         if (locator == null) {
@@ -173,14 +174,27 @@ internal class BookDocumentChapterCoordinator(
             pendingNavigationTarget = target
             selectChapter(target.chapter, retry = true)
         } else {
-            navigateWithinPublication(target.chapter.id, locator)
+            navigateWithinPublication(
+                target.chapter.id,
+                locator,
+                restorePosition = target.restorePosition,
+                returnToOrigin = target.returnToOrigin,
+                rememberOrigin = false,
+            )
         }
     }
 
-    private fun navigateWithinPublication(chapterId: Long, locator: BookLocator, contextual: Boolean = false) {
+    private fun navigateWithinPublication(
+        chapterId: Long,
+        locator: BookLocator,
+        contextual: Boolean = false,
+        restorePosition: Boolean = false,
+        returnToOrigin: Boolean = false,
+        rememberOrigin: Boolean = true,
+    ) {
         val session = retainedSessions.session(chapterId)
         val publication = session?.preparedPublication as? PreparedBookDocumentPublication
-        val destination = publication?.resolveNavigationDestination(locator, contextual)
+        val destination = publication?.resolveNavigationDestination(locator, contextual, restorePosition)
         if (session == null || destination == null) {
             onNavigationMissing()
             return
@@ -205,9 +219,15 @@ internal class BookDocumentChapterCoordinator(
                 onNavigationMissing()
                 return
             }
+            if (rememberOrigin) retainedSessions.jumpHistory.rememberOrigin()
             if (chapterId != state.currentChapterId) activateChapter(chapterId, completeForwardCrossing = false)
             dismissAuxiliarySection()
-            requestNavigation(section, destination.position)
+            requestNavigation(
+                section,
+                destination.position,
+                alignToPassage = restorePosition,
+                returnToOrigin = returnToOrigin,
+            )
         }
     }
 
@@ -220,7 +240,16 @@ internal class BookDocumentChapterCoordinator(
         val state = currentState() ?: return
         val chapterId = location.section.owner.id
         val navigationRequest = state.navigationRequest
-        if (!navigationRequest.acceptsLocation(chapterId, location.position, location.section.key)) return
+        if (!navigationRequest.acceptsLocation(
+                chapterId,
+                location.position,
+                location.section.key,
+                location.restoredNavigationId,
+            )
+        ) {
+            return
+        }
+        if (navigationRequest?.returnToOrigin == true) retainedSessions.jumpHistory.dismiss()
         val chapterActivated =
             chapterId != state.currentChapterId &&
                 activateChapter(
@@ -331,7 +360,13 @@ internal class BookDocumentChapterCoordinator(
         val pending = pendingNavigationTarget?.takeIf { it.chapter.id == session.chapter.id }
         if (pending != null) {
             pendingNavigationTarget = null
-            navigateWithinPublication(session.chapter.id, checkNotNull(pending.locator))
+            navigateWithinPublication(
+                session.chapter.id,
+                checkNotNull(pending.locator),
+                restorePosition = pending.restorePosition,
+                returnToOrigin = pending.returnToOrigin,
+                rememberOrigin = false,
+            )
         } else if (explicitSelection) {
             requestNavigation(sections.initialSection)
         }
@@ -340,6 +375,8 @@ internal class BookDocumentChapterCoordinator(
     private fun requestNavigation(
         section: BookDocumentSection<EntryChapter>,
         position: mihon.book.api.document.BookDocumentPosition = section.initialPosition,
+        alignToPassage: Boolean = false,
+        returnToOrigin: Boolean = false,
     ) {
         val state = currentState() ?: return
         val progression = section.document.document.progressionAt(position)
@@ -358,6 +395,8 @@ internal class BookDocumentChapterCoordinator(
                     chapterId = section.owner.id,
                     sectionKey = section.key,
                     position = position,
+                    alignToPassage = alignToPassage,
+                    returnToOrigin = returnToOrigin,
                 ),
             ),
         )

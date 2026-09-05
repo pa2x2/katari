@@ -137,6 +137,7 @@ internal fun rememberBookDocumentPagedNavigation(
                     position,
                     document.progressionAt(position),
                     document.progressionAt(endPosition),
+                    restoredNavigationId = request?.id,
                 )
                 anchor.location = location
                 currentOnLocation(location)

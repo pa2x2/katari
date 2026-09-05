@@ -42,6 +42,8 @@ fun ReaderChrome(
     modifier: Modifier = Modifier,
     middleContent: @Composable BoxScope.() -> Unit = {},
     persistentBottomContent: @Composable () -> Unit = {},
+    // Retained bars keep middleContent's layout size fixed while their layers slide offscreen.
+    retainBars: Boolean = false,
 ) {
     var bottomBarHeight by remember { mutableIntStateOf(0) }
     val navigationBarHeight = WindowInsets.navigationBarsIgnoringVisibility.getBottom(LocalDensity.current)
@@ -62,12 +64,18 @@ fun ReaderChrome(
 
     Box(modifier = modifier.fillMaxHeight()) {
         Column(modifier = Modifier.fillMaxHeight()) {
-            chromeTransition.AnimatedVisibility(
-                visible = { it },
-                enter = slideInVertically(readerBarsSlideAnimationSpec) { -it } + fadeIn(readerBarsFadeAnimationSpec),
-                exit = slideOutVertically(readerBarsSlideAnimationSpec) { -it } + fadeOut(readerBarsFadeAnimationSpec),
-                content = { topBar() },
-            )
+            if (retainBars) {
+                ReaderChromeRetainedBar(chromeTransition, fromTop = true, content = topBar)
+            } else {
+                chromeTransition.AnimatedVisibility(
+                    visible = { it },
+                    enter =
+                    slideInVertically(readerBarsSlideAnimationSpec) { -it } + fadeIn(readerBarsFadeAnimationSpec),
+                    exit =
+                    slideOutVertically(readerBarsSlideAnimationSpec) { -it } + fadeOut(readerBarsFadeAnimationSpec),
+                    content = { topBar() },
+                )
+            }
 
             Box(
                 modifier = Modifier
@@ -76,16 +84,28 @@ fun ReaderChrome(
                 content = middleContent,
             )
 
-            chromeTransition.AnimatedVisibility(
-                visible = { it },
-                enter = slideInVertically(readerBarsSlideAnimationSpec) { it } + fadeIn(readerBarsFadeAnimationSpec),
-                exit = slideOutVertically(readerBarsSlideAnimationSpec) { it } + fadeOut(readerBarsFadeAnimationSpec),
-                content = {
-                    Box(modifier = Modifier.onSizeChanged { bottomBarHeight = it.height }) {
-                        bottomBar()
-                    }
-                },
-            )
+            if (retainBars) {
+                ReaderChromeRetainedBar(
+                    chromeTransition,
+                    fromTop = false,
+                    modifier = Modifier.onSizeChanged { bottomBarHeight = it.height },
+                    content = bottomBar,
+                )
+            } else {
+                chromeTransition.AnimatedVisibility(
+                    visible = { it },
+                    enter = slideInVertically(readerBarsSlideAnimationSpec) {
+                        it
+                    } + fadeIn(readerBarsFadeAnimationSpec),
+                    exit =
+                    slideOutVertically(readerBarsSlideAnimationSpec) { it } + fadeOut(readerBarsFadeAnimationSpec),
+                    content = {
+                        Box(modifier = Modifier.onSizeChanged { bottomBarHeight = it.height }) {
+                            bottomBar()
+                        }
+                    },
+                )
+            }
         }
 
         Box(
