@@ -136,7 +136,10 @@ internal object HtmlProseSanitizer {
     }
 
     private fun replaceInlineImage(element: Element, policy: HtmlProseSanitizationPolicy) {
-        val resourceId = policy.resolveInlineImage(element.outerHtml())
+        val wrappedImage = element.singleWrappedImage()
+        val resourceId =
+            wrappedImage?.let { policy.resolveImageResource(it.attr("href").ifBlank { it.attr("xlink:href") }) }
+                ?: policy.resolveInlineImage(element.outerHtml())
         if (resourceId.isNullOrBlank()) {
             replaceUnsupportedElement(element)
             return
@@ -144,6 +147,7 @@ internal object HtmlProseSanitizer {
         val replacement = Element("img")
             .attr("src", resourceId.take(2_048))
             .attr(BOOK_RESOLVED_IMAGE_ATTRIBUTE, "true")
+        element.attr("id").takeIf(String::isNotBlank)?.let { replacement.attr("id", it) }
         element.attr("aria-label").trim().ifBlank {
             element.selectFirst("title")?.text()?.trim().orEmpty()
         }.takeIf(String::isNotBlank)?.let { replacement.attr("alt", it.take(2_048)) }

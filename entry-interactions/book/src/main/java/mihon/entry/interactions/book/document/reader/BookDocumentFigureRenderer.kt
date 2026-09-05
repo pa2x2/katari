@@ -3,6 +3,7 @@ package mihon.entry.interactions.book.document.reader
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -92,7 +93,7 @@ internal fun BookDocumentFigureRenderer(
                 modifier = Modifier
                     .fillMaxWidth()
                     .sizeIn(maxHeight = maxWidth * 2)
-                    .clickable {
+                    .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
                         selection?.handleReaderTap(onReaderTap) ?: onReaderTap()
                     },
             )
