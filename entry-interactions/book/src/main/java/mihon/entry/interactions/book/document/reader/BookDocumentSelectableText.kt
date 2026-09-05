@@ -68,6 +68,13 @@ internal fun BookDocumentSelectableText(
     val visibleText = text.dropLast(terminalLineBreaks)
     val token = remember(sectionKey, identity) { "$sectionKey::$identity" }
     val trackSelectionGeometry = selection?.shouldTrackGeometry(token) == true
+    if (trackSelectionGeometry) {
+        DisposableEffect(selection, token) {
+            // Scrolling is unobserved while this leaf has no selection. Its next selection must
+            // wait for the reattached position callback instead of publishing the old anchor.
+            onDispose { selection.clearTextPosition(token) }
+        }
+    }
     val leaf = remember(token, chapterId, visibleText, leadingSelectionText, separatorAfter) {
         BookDocumentSelectableLeaf(
             token = token,

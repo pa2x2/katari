@@ -60,6 +60,12 @@ internal class BookDocumentChapterSelection(
         if (hasSelection) layoutRevision++
     }
 
+    fun clearTextPosition(token: String) {
+        val previous = layouts[token]?.takeIf { it.positionInWindow != null } ?: return
+        layouts[token] = previous.copy(positionInWindow = null)
+        if (hasSelection) layoutRevision++
+    }
+
     fun captureSelectionAtPointerDown() {
         selectionPresentAtPointerDown = hasSelection
     }
