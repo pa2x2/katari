@@ -15,7 +15,6 @@ internal object HtmlProseChapterContract {
     const val MAX_LIST_DEPTH = 8
     const val MAX_CSS_RULES = 256
     const val MAX_CSS_DECLARATIONS_PER_RULE = 64
-    const val MAX_TABLE_ROWS = 200
     const val MAX_TABLE_COLUMNS = 24
 
     val descriptor = BookContentDescriptor(
