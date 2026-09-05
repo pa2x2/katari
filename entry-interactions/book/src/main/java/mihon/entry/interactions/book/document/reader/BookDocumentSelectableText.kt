@@ -38,7 +38,6 @@ internal fun BookDocumentSelectableText(
     contentAlpha: Float = 1f,
     modifier: Modifier = Modifier,
 ) {
-    val pageMeasurement = mihon.entry.interactions.book.document.reader.paging.LocalBookDocumentPageMeasurement.current
     val fonts = rememberBookDocumentFonts(block.style.fontFamily, inlineStyles)
     val palette = LocalBookDocumentReaderPalette.current
     val textScale = LocalBookDocumentTextScale.current
@@ -136,7 +135,6 @@ internal fun BookDocumentSelectableText(
             style = bookDocumentTextStyle(block, fontSize, fonts),
             onTextLayout = { result ->
                 selection?.updateTextLayout(token, result)
-                pageMeasurement?.record(result, presentation.insertedOffsets)
                 viewportText?.layout = result
             },
             modifier = Modifier

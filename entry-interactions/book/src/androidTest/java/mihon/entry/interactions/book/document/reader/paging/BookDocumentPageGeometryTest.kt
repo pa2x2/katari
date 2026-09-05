@@ -40,6 +40,7 @@ class BookDocumentPageGeometryTest {
             }
         }
         compose.waitForIdle()
+        compose.waitUntil(5_000) { pages.isNotEmpty() }
         var firstTop: Float? = null
         pages.indices.forEach { pageIndex ->
             compose.runOnIdle { index.value = pageIndex }
@@ -83,6 +84,7 @@ class BookDocumentPageGeometryTest {
             }
         }
         compose.waitForIdle()
+        compose.waitUntil(5_000) { result.isNotEmpty() }
         compose.runOnIdle {
             assertTrue(result.size > 1)
             assertFalse(result.first().scrollable)

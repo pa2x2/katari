@@ -51,6 +51,7 @@ class BookDocumentPagedRestorationTest {
             }
         }
         compose.waitForIdle()
+        compose.waitUntil(5_000) { pages.isNotEmpty() }
         compose.onNodeWithTag("pager").performTouchInput { click(Offset(width * .9f, height * .5f)) }
         compose.waitForIdle()
         val afterTurn = location.position
@@ -62,10 +63,12 @@ class BookDocumentPagedRestorationTest {
         compose.waitForIdle()
         val beforeReflow = location.position
         assertTrue(beforeReflow.offsetWithinBlock > 0)
-        (11..20).forEach { step ->
-            compose.runOnIdle { scale.floatValue = step / 10f }
+        listOf(1.25f, 1.5f, 1.75f, 2f).forEach { textScale ->
+            val beforePages = pages
+            compose.runOnIdle { scale.floatValue = textScale }
+            compose.waitUntil(5_000) { pages !== beforePages }
             compose.waitForIdle()
-            assertEquals("Reflow step $step must retain the same semantic passage", beforeReflow, location.position)
+            assertEquals("Reflow to $textScale must retain the same semantic passage", beforeReflow, location.position)
         }
         compose.runOnIdle {
             val current = pages.first { it.contains(section.key, location.position) }

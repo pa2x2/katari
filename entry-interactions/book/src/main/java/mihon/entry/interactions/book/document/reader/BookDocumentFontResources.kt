@@ -25,6 +25,11 @@ internal fun rememberBookDocumentFonts(
         (listOf(blockFamily) + inlineStyles.map { it.style.fontFamily })
             .filterIsInstance<BookDocumentFontFamily.Resource>().map { it.resourceId }.toSet()
     }
+    return rememberBookDocumentFontResources(resources)
+}
+
+@Composable
+internal fun rememberBookDocumentFontResources(resources: Set<String>): Map<String, FontFamily> {
     if (resources.isEmpty()) return emptyMap()
     val loader = LocalBookDocumentResourceLoader.current
     val generation = loader?.generation?.collectAsState()?.value ?: 0

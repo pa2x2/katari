@@ -43,6 +43,7 @@ class BookDocumentPageProgressTest {
         val initial = BookDocumentViewerLocation(section, section.initialPosition, 0f)
         var location = initial
         var progress: BookReaderProgress.Page? = null
+        var previousReady = false
         compose.setContent {
             PagingTheme {
                 val items = buildBookDocumentViewerItems(
@@ -57,6 +58,9 @@ class BookDocumentPageProgressTest {
                     EntryChapter::id,
                 )
                 BookDocumentPaginationLayout(items, Modifier.size(280.dp, 300.dp).testTag("pager")) { pages ->
+                    androidx.compose.runtime.SideEffect {
+                        previousReady = pages.any { it.fragments.first().section?.owner?.id == previous.owner.id }
+                    }
                     BookDocumentPagedViewer(
                         pages, BookDocumentReadingMode.PAGED_LTR, initial, null, emptyMap(),
                         0, 0, false, false, false, false,
@@ -67,6 +71,7 @@ class BookDocumentPageProgressTest {
             }
         }
         compose.waitForIdle()
+        compose.waitUntil(5_000) { progress != null }
         val count = requireNotNull(progress).totalPages
         assertTrue(count > 2)
         compose.onNodeWithTag("pager").performTouchInput {
@@ -83,6 +88,7 @@ class BookDocumentPageProgressTest {
         assertEquals("A held gesture must not persist a reading position", initial.position, location.position)
         if (prependDuringDrag) {
             compose.runOnIdle { includePrevious.value = true }
+            compose.waitUntil(5_000) { previousReady }
             compose.waitForIdle()
             assertEquals(
                 "Prepending content must not reset an active page turn",

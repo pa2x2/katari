@@ -55,6 +55,7 @@ class BookDocumentPagedNavigationTest {
             }
         }
         compose.waitForIdle()
+        compose.waitUntil(5_000) { progress != null }
         compose.onNodeWithTag("pager").performTouchInput { click(Offset(width * .9f, height * .8f)) }
         compose.waitForIdle()
         assertEquals(mihon.entry.interactions.book.reader.BookReaderProgress.Page(1, 1), progress)
@@ -72,6 +73,7 @@ class BookDocumentPagedNavigationTest {
         val section = pagingSection((1..100).joinToString(" ") { "Word$it paragraph text." })
         val initial = BookDocumentViewerLocation(section, section.initialPosition, 0f)
         var location = initial
+        var ready = false
         val mode = androidx.compose.runtime.mutableStateOf(BookDocumentReadingMode.PAGED_RTL)
         compose.setContent {
             PagingTheme {
@@ -83,11 +85,13 @@ class BookDocumentPagedNavigationTest {
                         pages, mode.value, initial, null, emptyMap(),
                         0, 0, false, false, false, false,
                         { location = it }, {}, { _, _, _, _ -> }, { _, _ -> }, {}, {}, {}, {},
+                        onPageProgress = { ready = it != null },
                     )
                 }
             }
         }
         compose.waitForIdle()
+        compose.waitUntil(5_000) { ready }
         compose.onNodeWithTag("pager").performTouchInput { swipeRight() }
         compose.waitForIdle()
         val rtlPosition = location.position.offsetWithinBlock

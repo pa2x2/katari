@@ -27,15 +27,18 @@ class BookDocumentPagedRichContentTest {
                 "<p>Last note line.</p></details><p>After note.</p>",
         )
         val index = mutableIntStateOf(0)
+        var ready = false
         compose.setContent {
             PagingTheme {
                 BookDocumentPaginationLayout(section.viewerBlocks, Modifier.size(280.dp, 180.dp)) { pages ->
+                    androidx.compose.runtime.SideEffect { ready = true }
                     BookDocumentChapterSelectionContainer(1L) {
                         BookDocumentPageContent(pages[index.intValue], emptyMap(), { _, _ -> }, {}, {}, {})
                     }
                 }
             }
         }
+        compose.waitUntil(5_000) { ready }
         compose.onNodeWithText("Open note").performClick()
         compose.onNodeWithText("Last note line.").performScrollTo().assertIsDisplayed()
         compose.runOnIdle { index.intValue = 1 }

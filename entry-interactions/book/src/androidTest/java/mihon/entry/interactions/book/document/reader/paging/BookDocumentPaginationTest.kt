@@ -35,6 +35,7 @@ class BookDocumentPaginationTest {
             }
         }
         compose.waitForIdle()
+        compose.waitUntil(5_000) { result.isNotEmpty() }
         compose.runOnIdle {
             assertTrue(result.size > 3)
             assertTrue(result.none { it.scrollable })

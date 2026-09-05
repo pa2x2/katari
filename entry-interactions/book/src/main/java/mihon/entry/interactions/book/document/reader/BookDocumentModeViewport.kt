@@ -89,7 +89,7 @@ internal fun BookDocumentModeViewport(
         BookDocumentTablePreparation(
             pageItems.mapNotNull {
                 (it as? BookDocumentViewerItem.Block)?.section
-            }.distinct(),
+            }.distinctBy { it.key },
             modifier,
         ) {
             BookDocumentPaginationLayout(pageItems, Modifier.padding(vertical = 12.dp)) { pages ->

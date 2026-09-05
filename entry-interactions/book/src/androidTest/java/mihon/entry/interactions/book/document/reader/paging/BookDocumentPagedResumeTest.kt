@@ -70,6 +70,7 @@ class BookDocumentPagedResumeTest {
             }
         }
         compose.waitForIdle()
+        compose.waitUntil(5_000) { progress != null }
         val count = requireNotNull(progress).totalPages
         compose.onNodeWithTag("pager").performTouchInput { click(Offset(width * .9f, height * .5f)) }
         compose.waitForIdle()
@@ -78,6 +79,7 @@ class BookDocumentPagedResumeTest {
         val savedPosition = location.position.copy(offsetWithinBlock = location.position.offsetWithinBlock + 6)
         compose.runOnIdle { section.value = original.copy(initialPosition = savedPosition) }
         compose.waitForIdle()
+        compose.waitUntil(5_000) { location.position == savedPosition }
         assertEquals(savedPosition, location.position)
         assertEquals(BookReaderProgress.Page(2, count), progress)
     }

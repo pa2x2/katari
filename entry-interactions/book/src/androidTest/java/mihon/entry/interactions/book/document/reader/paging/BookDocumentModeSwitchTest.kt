@@ -43,6 +43,7 @@ class BookDocumentModeSwitchTest {
     }
 
     private fun verifyRoundTrips(section: BookDocumentSection<EntryChapter>) {
+        var pagesReady = false
         val mode = mutableStateOf(BookDocumentReadingMode.SCROLL)
         compose.setContent {
             PagingTheme {
@@ -73,6 +74,7 @@ class BookDocumentModeSwitchTest {
                     invertVolume = false,
                     chromeVisible = false,
                     modifier = Modifier.size(280.dp, 300.dp).testTag("viewport"),
+                    onPageProgress = { pagesReady = it != null },
                 )
             }
         }
@@ -83,7 +85,11 @@ class BookDocumentModeSwitchTest {
         val scrolled = firstLines()
         assertTrue("The setup must move to a different passage", original != scrolled)
         repeat(3) {
-            compose.runOnIdle { mode.value = BookDocumentReadingMode.PAGED_VERTICAL }
+            compose.runOnIdle {
+                pagesReady = false
+                mode.value = BookDocumentReadingMode.PAGED_VERTICAL
+            }
+            compose.waitUntil(5_000) { pagesReady }
             compose.waitForIdle()
             val visibleText = compose.onAllNodes(hasText("", substring = true), useUnmergedTree = true)
                 .fetchSemanticsNodes().filter { node ->
@@ -104,7 +110,11 @@ class BookDocumentModeSwitchTest {
                 firstLines(),
             )
         }
-        compose.runOnIdle { mode.value = BookDocumentReadingMode.PAGED_VERTICAL }
+        compose.runOnIdle {
+            pagesReady = false
+            mode.value = BookDocumentReadingMode.PAGED_VERTICAL
+        }
+        compose.waitUntil(5_000) { pagesReady }
         compose.waitForIdle()
         compose.onNodeWithTag("viewport").performTouchInput { swipeUp() }
         compose.waitForIdle()
