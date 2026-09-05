@@ -86,15 +86,14 @@ internal class HtmlProseBlockParser(
     ): Boolean {
         val style = inheritedStyle.mergedWith(element.documentBlockStyle())
         return when (element.normalName()) {
-            "h1", "h2", "h3", "h4", "h5", "h6" -> addTextBlock(
-                element.childNodes(),
+            "h1", "h2", "h3", "h4", "h5", "h6" -> addTextAndImageBlocks(
                 element,
                 BookDocumentBlockRole(BookDocumentBlockKind.HEADING, level = element.normalName().drop(1).toInt()),
                 style,
                 inheritedFragments,
                 destination,
             )
-            "p" -> addParagraphBlocks(
+            "p" -> addTextAndImageBlocks(
                 element = element,
                 role = BookDocumentBlockRole(if (noteContext) BookDocumentBlockKind.NOTE else style.panelKind()),
                 style = style,
