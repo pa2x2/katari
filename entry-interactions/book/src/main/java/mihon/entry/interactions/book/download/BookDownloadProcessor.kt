@@ -50,6 +50,8 @@ internal class BookDownloadProcessor(
         manager.cachePackageUpdates.map(BookDownloadPackageUpdate::toEntryDownloadStatus),
     )
 
+    override suspend fun hasPendingDownloads(): Boolean = manager.hasPendingDownloads()
+
     override suspend fun runDownloadsUntilIdle() {
         manager.runDownloads()
     }

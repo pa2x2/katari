@@ -46,6 +46,8 @@ internal class MangaDownloadProcessor(
         ).map { it.requireManga() }
     }
 
+    override suspend fun hasPendingDownloads(): Boolean = downloadManager.hasPendingDownloads()
+
     override suspend fun runDownloadsUntilIdle() {
         downloadManager.runDownloadsUntilIdle()
     }

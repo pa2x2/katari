@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-class EntryDownloadJobTest {
+class EntryDownloadNetworkTest {
     @Test
     fun `wifi preference blocks cellular but allows validated wifi`() {
         assertFalse(

@@ -24,7 +24,7 @@ internal data class AnimeDownload(
     var subtitles: List<VideoSubtitle> = emptyList()
 
     @Transient
-    private val _statusFlow = MutableStateFlow(State.NOT_DOWNLOADED)
+    private val _statusFlow = MutableStateFlow(State.QUEUE)
 
     @Transient
     val statusFlow = _statusFlow.asStateFlow()

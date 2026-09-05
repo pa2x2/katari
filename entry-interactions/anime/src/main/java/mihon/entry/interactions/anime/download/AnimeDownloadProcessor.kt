@@ -59,6 +59,8 @@ internal class AnimeDownloadProcessor(
         ).map { it.requireAnime() }
     }
 
+    override suspend fun hasPendingDownloads(): Boolean = animeDownloadManager.hasPendingDownloads()
+
     override suspend fun runDownloadsUntilIdle() {
         animeDownloadManager.runDownloadsUntilIdle()
     }

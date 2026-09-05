@@ -101,7 +101,7 @@ internal class AnimeDownloadManager(
                 download.failure = null
             }
         }
-        if (!_isRunning.value) workController.start()
+        workController.start()
     }
 
     fun startDownloadsNow(episodeIds: Collection<Long>) {
@@ -326,19 +326,14 @@ internal class AnimeDownloadManager(
         }
     }
 
+    suspend fun hasPendingDownloads(): Boolean {
+        initialized.await()
+        return queueState.value.any { it.status == AnimeDownload.State.QUEUE }
+    }
+
     suspend fun runDownloadsUntilIdle() {
         initialized.await()
         if (queueState.value.isEmpty()) return
-        queueState.value.forEach { download ->
-            if (
-                download.status != AnimeDownload.State.DOWNLOADED &&
-                download.status != AnimeDownload.State.RESOLVING &&
-                download.status != AnimeDownload.State.DOWNLOADING
-            ) {
-                download.status = AnimeDownload.State.QUEUE
-                download.failure = null
-            }
-        }
         val processorToken = Any()
         processorJob = currentCoroutineContext()[Job]
         _isRunning.value = true

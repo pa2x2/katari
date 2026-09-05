@@ -17,6 +17,8 @@ import tachiyomi.domain.entry.model.EntryChapter
 internal interface EntryDownloadRuntimeCoordinator : EntryDownloadRuntimeFeature {
     fun events(): Flow<EntryDownloadEvent>
 
+    suspend fun hasPendingDownloads(): Boolean
+
     suspend fun runDownloadsUntilIdle()
 }
 
@@ -130,6 +132,9 @@ internal class DefaultEntryDownloadRuntimeFeature(
 
     override fun events(): Flow<EntryDownloadEvent> = interaction.events()
         .filter { event -> event.entryTypeOrNull()?.let(::isApplicable) != false }
+
+    override suspend fun hasPendingDownloads(): Boolean =
+        applicableTypes.isNotEmpty() && interaction.hasPendingDownloads()
 
     override suspend fun runDownloadsUntilIdle() {
         if (applicableTypes.isNotEmpty()) interaction.runDownloadsUntilIdle()

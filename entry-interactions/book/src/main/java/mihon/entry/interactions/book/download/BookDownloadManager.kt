@@ -106,9 +106,10 @@ internal class BookDownloadManager(
             if (!download.status.isActive) {
                 download.failure = null
                 download.status = BookDownload.State.QUEUE
+                statusUpdates.tryEmit(download)
             }
         }
-        if (!_isRunning.value) workController.start()
+        workController.start()
     }
 
     fun pauseDownloads() {
@@ -198,6 +199,11 @@ internal class BookDownloadManager(
             )
             rewriteStoredQueueLocked()
         }
+    }
+
+    suspend fun hasPendingDownloads(): Boolean {
+        initialized.await()
+        return queueState.value.any { it.status == BookDownload.State.QUEUE }
     }
 
     suspend fun runDownloads() {

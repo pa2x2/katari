@@ -2,27 +2,14 @@ package mihon.entry.interactions.download
 
 import android.content.Context
 import android.content.pm.ServiceInfo
-import android.net.ConnectivityManager
-import android.net.ConnectivityManager.NetworkCallback
-import android.net.Network
-import android.net.NetworkCapabilities
 import android.os.Build
-import androidx.core.content.edit
-import androidx.core.content.getSystemService
-import androidx.work.Constraints
 import androidx.work.CoroutineWorker
-import androidx.work.ExistingWorkPolicy
 import androidx.work.ForegroundInfo
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
@@ -53,11 +40,11 @@ class EntryDownloadJob(context: Context, workerParams: WorkerParameters) : Corou
 
     override suspend fun doWork(): Result {
         val dependencies = dependencies()
-        setForegroundSafely(dependencies.notificationProvider)
         while (true) {
+            if (!dependencies.downloads.hasPendingDownloads()) return Result.success()
+            setForegroundSafely(dependencies.notificationProvider)
             allowedNetworkFlow(dependencies.downloadPreferences).first { it }
             if (runUntilNetworkBlocked(dependencies)) return Result.success()
-            setForegroundSafely(dependencies.notificationProvider)
         }
     }
 
@@ -124,78 +111,3 @@ private data class EntryDownloadWorkerDependencies(
     val downloadPreferences: DownloadPreferences,
     val notificationProvider: EntryDownloadForegroundNotificationProvider,
 )
-
-internal class DefaultEntryDownloadWorkController(
-    private val context: Context,
-) : EntryDownloadWorkController {
-    override fun start() {
-        preferences.edit(commit = true) { putBoolean(KEY_EXECUTION_REQUESTED, true) }
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
-        val request = OneTimeWorkRequestBuilder<EntryDownloadJob>()
-            .setConstraints(constraints)
-            .addTag(TAG)
-            .build()
-        WorkManager.getInstance(context)
-            .enqueueUniqueWork(TAG, ExistingWorkPolicy.KEEP, request)
-    }
-
-    override fun stop() {
-        preferences.edit(commit = true) { putBoolean(KEY_EXECUTION_REQUESTED, false) }
-        WorkManager.getInstance(context).cancelUniqueWork(TAG)
-    }
-
-    override fun resumeIfRequested() {
-        if (preferences.getBoolean(KEY_EXECUTION_REQUESTED, true)) start()
-    }
-
-    private val preferences by lazy {
-        context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
-    }
-
-    private companion object {
-        const val TAG = "EntryDownloader"
-        const val PREFERENCES_NAME = "entry_download_execution"
-        const val KEY_EXECUTION_REQUESTED = "requested"
-    }
-}
-
-internal fun isEntryDownloadNetworkAllowed(isOnline: Boolean, isWifi: Boolean, requireWifi: Boolean): Boolean =
-    isOnline && (!requireWifi || isWifi)
-
-private data class EntryDownloadNetworkState(
-    val isConnected: Boolean,
-    val isValidated: Boolean,
-    val isWifi: Boolean,
-) {
-    val isOnline: Boolean = isConnected && isValidated
-}
-
-private val Context.connectivityManager: ConnectivityManager
-    get() = getSystemService()!!
-
-@Suppress("DEPRECATION")
-private fun Context.activeEntryDownloadNetworkState(): EntryDownloadNetworkState {
-    val capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
-    return EntryDownloadNetworkState(
-        isConnected = connectivityManager.activeNetworkInfo?.isConnected ?: false,
-        isValidated = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) ?: false,
-        isWifi = capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ?: false,
-    )
-}
-
-private fun Context.entryDownloadNetworkStateFlow(): Flow<EntryDownloadNetworkState> = callbackFlow {
-    val callback = object : NetworkCallback() {
-        override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
-            trySend(activeEntryDownloadNetworkState())
-        }
-
-        override fun onLost(network: Network) {
-            trySend(activeEntryDownloadNetworkState())
-        }
-    }
-    trySend(activeEntryDownloadNetworkState())
-    connectivityManager.registerDefaultNetworkCallback(callback)
-    awaitClose { connectivityManager.unregisterNetworkCallback(callback) }
-}

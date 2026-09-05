@@ -17,6 +17,8 @@ interface EntryDownloadInteraction {
     fun updates(): Flow<EntryDownloadStatus>
     fun events(): Flow<EntryDownloadEvent>
 
+    suspend fun hasPendingDownloads(): Boolean
+
     /** Runs every media-specific downloader until its current queue is idle. Runtime use only. */
     suspend fun runDownloadsUntilIdle()
 

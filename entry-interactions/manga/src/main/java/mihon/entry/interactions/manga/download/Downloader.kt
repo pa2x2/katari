@@ -147,9 +147,8 @@ internal class Downloader(
             return false
         }
 
-        val pending = queueState.value.filter { it.status != DownloadState.DOWNLOADED }
+        val pending = queueState.value.filter { it.status == DownloadState.QUEUE }
         if (pending.isEmpty()) return false
-        pending.forEach { if (it.status != DownloadState.QUEUE) it.status = DownloadState.QUEUE }
 
         isPaused = false
 

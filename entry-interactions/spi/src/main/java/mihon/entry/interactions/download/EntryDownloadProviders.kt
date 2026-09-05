@@ -25,7 +25,13 @@ interface EntryDownloadProcessor : EntryInteractionProvider {
 
     fun updates(): Flow<EntryDownloadStatus>
 
-    /** Runs this media-specific downloader until its current queue is idle. */
+    /** Awaits queue restoration, then checks for queued work without retrying failed items. */
+    suspend fun hasPendingDownloads(): Boolean
+
+    /**
+     * Awaits queue restoration and drains queued work. May run again within the same worker when
+     * more work arrives; failed items stay failed until an explicit start requests their retry.
+     */
     suspend fun runDownloadsUntilIdle()
 
     fun startDownloads()

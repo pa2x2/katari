@@ -70,7 +70,15 @@ internal class DownloadManager(
      */
     fun startDownloads() {
         if (downloader.isRunning) return
+        queueState.value.forEach { download ->
+            if (download.status != DownloadState.DOWNLOADED) download.status = DownloadState.QUEUE
+        }
         if (queueState.value.isNotEmpty()) workController.start()
+    }
+
+    suspend fun hasPendingDownloads(): Boolean {
+        downloader.awaitInitialized()
+        return queueState.value.any { it.status == DownloadState.QUEUE }
     }
 
     suspend fun runDownloadsUntilIdle() {
@@ -140,7 +148,9 @@ internal class DownloadManager(
      */
     fun downloadChapters(manga: Entry, chapters: List<EntryChapter>, autoStart: Boolean = true) {
         downloader.queueChapters(manga, chapters, autoStart)
-        if (autoStart && !downloader.isRunning && queueState.value.isNotEmpty()) workController.start()
+        if (autoStart && queueState.value.isNotEmpty()) {
+            if (downloader.isRunning) workController.start() else startDownloads()
+        }
     }
 
     /**
