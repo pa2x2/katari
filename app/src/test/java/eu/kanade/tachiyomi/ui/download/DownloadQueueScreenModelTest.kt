@@ -59,7 +59,9 @@ class DownloadQueueScreenModelTest {
                 ),
             )
 
-            model.onUpdateStepProgress(transferring)
+            runtimeState.value = runtimeState.value.copy(
+                queue = listOf(EntryDownloadQueueGroup(3, "Source", EntryType.BOOK, listOf(transferring))),
+            )
 
             assertEquals(42, row.model().progress)
             assertEquals(transferring.presentation, row.model().presentation)
@@ -69,7 +71,9 @@ class DownloadQueueScreenModelTest {
             assertEquals(42, model.state.value.single().subItems.single().model().progress)
 
             val finalizing = transferring.copy(presentation = EntryDownloadPresentation(EntryDownloadPhase.FINALIZING))
-            model.onStatusChange(finalizing)
+            runtimeState.value = runtimeState.value.copy(
+                queue = listOf(EntryDownloadQueueGroup(3, "Source", EntryType.BOOK, listOf(finalizing))),
+            )
 
             assertEquals(EntryDownloadPhase.FINALIZING, row.model().presentation.phase)
         } finally {

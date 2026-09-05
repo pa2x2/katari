@@ -37,14 +37,6 @@ internal class EntryDownloadInteractionDispatch(
         return processors.values.map { it.updates() }.merged()
     }
 
-    override fun queueStatusUpdates(): Flow<EntryDownloadQueueItem> {
-        return processors.values.map { it.queueStatusUpdates() }.merged()
-    }
-
-    override fun queueProgressUpdates(): Flow<EntryDownloadQueueItem> {
-        return processors.values.map { it.queueProgressUpdates() }.merged()
-    }
-
     override fun events(): Flow<EntryDownloadEvent> {
         return processors.values.map { it.events }.merged()
     }

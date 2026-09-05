@@ -13,6 +13,7 @@ import mihon.entry.interactions.download.EntryDownloadQueueItem
 import mihon.entry.interactions.download.EntryDownloadSettingProvider
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.download.EntryDownloadStatus
+import mihon.entry.interactions.download.observeEntryDownloadQueue
 import mihon.entry.interactions.manga.download.model.DownloadState
 import mihon.entry.interactions.manga.runtime.MangaEntryInteractionRuntimeDependencies
 import mihon.entry.interactions.manga.runtime.requireManga
@@ -31,9 +32,11 @@ internal class MangaDownloadProcessor(
     override val changes: Flow<Unit> = dependencies.downloadCache.changes
     override val isInitializing: Flow<Boolean> = dependencies.downloadCache.isInitializing
     override val isRunning: Flow<Boolean> = downloadManager.isDownloaderRunning
-    override val queueState: Flow<List<EntryDownloadQueueGroup>> = downloadManager.queueState
-        .map { downloads -> downloads.toMangaEntryDownloadQueueGroups() }
-        .map { groups -> groups.map { it.requireManga() } }
+    override val queueState: Flow<List<EntryDownloadQueueGroup>> = observeEntryDownloadQueue(
+        queue = downloadManager.queueState,
+        statusUpdates = downloadManager.statusFlow(),
+        progressUpdates = downloadManager.progressFlow(),
+    ) { downloads -> downloads.toMangaEntryDownloadQueueGroups().map { it.requireManga() } }
     override val events = downloadManager.events
 
     override fun updates(): Flow<EntryDownloadStatus> {
@@ -41,16 +44,6 @@ internal class MangaDownloadProcessor(
             downloadManager.statusFlow().map { it.toEntryDownloadStatus() },
             downloadManager.progressFlow().map { it.toEntryDownloadStatus() },
         ).map { it.requireManga() }
-    }
-
-    override fun queueStatusUpdates(): Flow<EntryDownloadQueueItem> {
-        return downloadManager.statusFlow()
-            .map { download -> download.toEntryDownloadQueueItem().requireManga() }
-    }
-
-    override fun queueProgressUpdates(): Flow<EntryDownloadQueueItem> {
-        return downloadManager.progressFlow()
-            .map { download -> download.toEntryDownloadQueueItem().requireManga() }
     }
 
     override suspend fun runDownloadsUntilIdle() {

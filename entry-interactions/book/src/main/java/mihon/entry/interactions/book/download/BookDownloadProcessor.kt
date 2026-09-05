@@ -15,6 +15,7 @@ import mihon.entry.interactions.download.EntryDownloadQueueGroup
 import mihon.entry.interactions.download.EntryDownloadQueueItem
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.download.EntryDownloadStatus
+import mihon.entry.interactions.download.observeEntryDownloadQueue
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -36,9 +37,11 @@ internal class BookDownloadProcessor(
     }
     override val isInitializing: Flow<Boolean> = cache.isInitializing
     override val isRunning: Flow<Boolean> = manager.isRunning
-    override val queueState: Flow<List<EntryDownloadQueueGroup>> = manager.queueState.map {
-        it.toBookEntryDownloadQueueGroups(dependencies.sourceManager)
-    }
+    override val queueState: Flow<List<EntryDownloadQueueGroup>> = observeEntryDownloadQueue(
+        queue = manager.queueState,
+        statusUpdates = manager.statusFlow(),
+        progressUpdates = manager.progressFlow(),
+    ) { downloads -> downloads.toBookEntryDownloadQueueGroups(dependencies.sourceManager) }
     override val events = manager.events
 
     override fun updates(): Flow<EntryDownloadStatus> = merge(
@@ -46,12 +49,6 @@ internal class BookDownloadProcessor(
         manager.progressFlow().map(BookDownload::toEntryDownloadStatus),
         manager.cachePackageUpdates.map(BookDownloadPackageUpdate::toEntryDownloadStatus),
     )
-
-    override fun queueStatusUpdates(): Flow<EntryDownloadQueueItem> =
-        manager.statusFlow().map(BookDownload::toEntryDownloadQueueItem)
-
-    override fun queueProgressUpdates(): Flow<EntryDownloadQueueItem> =
-        manager.progressFlow().map(BookDownload::toEntryDownloadQueueItem)
 
     override suspend fun runDownloadsUntilIdle() {
         manager.runDownloads()

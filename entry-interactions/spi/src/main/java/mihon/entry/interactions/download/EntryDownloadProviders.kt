@@ -14,12 +14,16 @@ interface EntryDownloadProcessor : EntryInteractionProvider {
     val changes: Flow<Unit>
     val isInitializing: Flow<Boolean>
     val isRunning: Flow<Boolean>
+
+    /**
+     * Current immutable queue snapshots. Emit on membership, ordering, status AND progress changes,
+     * and provide the current snapshot to new collectors. Use [observeEntryDownloadQueue] to adapt
+     * a mutable media queue and its transfer signals without losing progress-only changes.
+     */
     val queueState: Flow<List<EntryDownloadQueueGroup>>
     val events: Flow<EntryDownloadEvent>
 
     fun updates(): Flow<EntryDownloadStatus>
-    fun queueStatusUpdates(): Flow<EntryDownloadQueueItem>
-    fun queueProgressUpdates(): Flow<EntryDownloadQueueItem>
 
     /** Runs this media-specific downloader until its current queue is idle. */
     suspend fun runDownloadsUntilIdle()

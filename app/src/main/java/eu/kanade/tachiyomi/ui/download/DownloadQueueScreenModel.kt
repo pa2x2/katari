@@ -69,6 +69,22 @@ class DownloadQueueScreenModel(
     init {
         screenModelScope.launch {
             downloadRuntime.state.map { it.queue }.distinctUntilChanged().collect { groups ->
+                val current = state.value
+                val sameStructure = current.size == groups.size && groups.withIndex().all { (index, group) ->
+                    val header = current[index]
+                    header.model.id == group.sourceId && header.model.entryType == group.entryType &&
+                        header.model.title == group.sourceName &&
+                        header.subItems.map { it.payload.identity } == group.items.map { it.identity }
+                }
+                if (sameStructure) {
+                    // Update existing rows without rebuilding the adapter for every transfer tick.
+                    groups.forEachIndexed { index, group ->
+                        current[index].subItems.zip(group.items).forEach { (row, download) ->
+                            updateDownload(row, download)
+                        }
+                    }
+                    return@collect
+                }
                 val newList = groups.map { group ->
                     DownloadQueueHeaderItem(
                         DownloadQueueHeaderModel(
@@ -101,9 +117,6 @@ class DownloadQueueScreenModel(
     val isDownloaderRunning = downloadRuntime.state.map { it.isRunning }
         .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), false)
 
-    fun getDownloadStatusFlow() = downloadRuntime.queueStatusUpdates()
-    fun getDownloadProgressFlow() = downloadRuntime.queueProgressUpdates()
-
     fun startDownloads() {
         downloadRuntime.start()
     }
@@ -131,24 +144,10 @@ class DownloadQueueScreenModel(
         downloadRuntime.reorderQueue(reorderedItems)
     }
 
-    fun onStatusChange(download: EntryDownloadQueueItem) {
-        updateDownload(download)
-    }
-
-    /**
-     * Called when a page of a download is downloaded.
-     *
-     * @param download the download whose page has been downloaded.
-     */
-    fun onUpdateStepProgress(download: EntryDownloadQueueItem) {
-        updateDownload(download)
-    }
-
-    private fun updateDownload(download: EntryDownloadQueueItem) {
+    private fun updateDownload(row: DownloadQueueItem, download: EntryDownloadQueueItem) {
         // Keep off-screen rows current too, so rebinding cannot restore stale queue values.
-        state.value.asSequence().flatMap { it.subItems.asSequence() }
-            .firstOrNull { it.payload.identity == download.identity }
-            ?.update(download)
+        if (row.payload == download) return
+        row.update(download)
         getHolder(download)?.let { holder ->
             holder.notifyProgress()
             holder.notifyProgressText()

@@ -154,8 +154,6 @@ class EntryDownloadMaintenanceFeatureTest {
             every { queueState } returns flowOf(emptyList())
             every { events } returns emptyFlow()
             every { updates() } returns emptyFlow()
-            every { queueStatusUpdates() } returns emptyFlow()
-            every { queueProgressUpdates() } returns emptyFlow()
             coEvery { runDownloadsUntilIdle() } returns Unit
             coEvery { deleteEntryDownloads(any()) } returns true
         }

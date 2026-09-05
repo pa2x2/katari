@@ -7,9 +7,14 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.runtime.EntryInteractionPlugin
 import mihon.entry.interactions.runtime.EntryInteractionProviderBinding
@@ -18,6 +23,7 @@ import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class EntryDownloadRuntimeFeatureTest {
     private val entry = Entry.create().copy(id = 7L, type = EntryType.BOOK)
 
@@ -27,7 +33,7 @@ class EntryDownloadRuntimeFeatureTest {
         val processor = processor(queueItem)
         val status = EntryDownloadStatus(EntryType.BOOK, queueItem.childId, EntryDownloadState.QUEUE)
         every { processor.getStatus(any(), any(), any(), any(), any(), any()) } returns status
-        val feature = featureFor(EntryDownloadCapability.bind(processor))
+        val feature = featureFor(backgroundScope, EntryDownloadCapability.bind(processor))
 
         feature.state.first().queue.single().items.shouldContainExactly(queueItem)
         feature.status(
@@ -43,7 +49,7 @@ class EntryDownloadRuntimeFeatureTest {
 
     @Test
     fun `missing download provider is valid and exposes no runtime behavior`() = runTest {
-        val feature = featureFor()
+        val feature = featureFor(backgroundScope)
 
         feature.isApplicable(EntryType.BOOK).shouldBeFalse()
         feature.state.first() shouldBe EntryDownloadRuntimeState()
@@ -59,7 +65,26 @@ class EntryDownloadRuntimeFeatureTest {
         ).shouldBeNull()
     }
 
+    @Test
+    fun `resubscribing after observation stops cannot replay an obsolete queue`() = runTest {
+        val item = queueItem()
+        val processor = processor(item)
+        val queue = MutableStateFlow(
+            listOf(EntryDownloadQueueGroup(item.sourceId, "Source", item.entryType, listOf(item))),
+        )
+        every { processor.queueState } returns queue
+        val feature = featureFor(backgroundScope, EntryDownloadCapability.bind(processor))
+        feature.state.first().queue.single().items.single() shouldBe item
+
+        advanceTimeBy(5_001)
+        runCurrent()
+        queue.value = emptyList()
+
+        feature.state.first().queue shouldBe emptyList()
+    }
+
     private fun featureFor(
+        scope: CoroutineScope,
         vararg bindings: EntryInteractionProviderBinding<*>,
     ): EntryDownloadRuntimeFeature {
         val plugins = bindings
@@ -73,6 +98,7 @@ class EntryDownloadRuntimeFeatureTest {
         return DefaultEntryDownloadRuntimeFeature(
             evaluation = composition.featureGraphEvaluation,
             interaction = composition.interactions.download,
+            scope = scope,
         )
     }
 
@@ -105,8 +131,6 @@ class EntryDownloadRuntimeFeatureTest {
             )
             every { events } returns emptyFlow()
             every { updates() } returns emptyFlow()
-            every { queueStatusUpdates() } returns emptyFlow()
-            every { queueProgressUpdates() } returns emptyFlow()
         }
     }
 
