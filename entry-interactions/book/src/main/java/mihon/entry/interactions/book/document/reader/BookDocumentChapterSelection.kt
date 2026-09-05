@@ -20,6 +20,7 @@ internal class BookDocumentChapterSelection(
     private val selectableLeaves = mutableMapOf<String, BookDocumentSelectableLeaf>()
     private val layouts = mutableMapOf<String, BookDocumentSelectionLayout>()
     private var selectionPresentAtPointerDown = false
+    private var isSelectionSettled = false
 
     internal var interaction: BookDocumentTextInteraction = BookDocumentTextInteraction.Disabled
     internal var layoutRevision by mutableIntStateOf(0)
@@ -103,6 +104,11 @@ internal class BookDocumentChapterSelection(
         interaction.onSelectionAction(ownerIdentity, projection.identity, action)
     }
 
+    fun setSelectionSettled(settled: Boolean) {
+        isSelectionSettled = settled
+        publishSelection(project(selectionState.selectedTexts, interaction.rootPositionInWindow))
+    }
+
     fun publishSelection(projection: BookDocumentSelectionProjection?) {
         if (!interaction.observeSelections) {
             clearPublishedSelection()
@@ -125,6 +131,7 @@ internal class BookDocumentChapterSelection(
                 text = projection.text,
                 languageContextText = projection.languageContextText,
                 boundsInReaderRoot = bounds,
+                isSettled = isSelectionSettled,
             ),
         )
     }

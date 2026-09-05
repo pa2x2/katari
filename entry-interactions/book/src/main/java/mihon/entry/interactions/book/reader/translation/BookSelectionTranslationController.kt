@@ -104,12 +104,16 @@ internal class BookSelectionTranslationController(
     }
 
     fun submitSelection(selection: NeutralBookReaderTextSelection) {
+        if (!selection.isSettled) {
+            clearSelection(selection.ownerIdentity)
+            return
+        }
         if (!mutableEffectiveEnabled.value || closed) return
         submit(selection.toTranslationSelection(), automatic = true)
     }
 
     fun translateSelection(selection: NeutralBookReaderTextSelection) {
-        if (closed) return
+        if (closed || !selection.isSettled) return
         dismissedSelectionIdentity = null
         submit(selection.toTranslationSelection(), automatic = false)
     }

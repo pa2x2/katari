@@ -80,6 +80,9 @@ internal class BookSelectionActionCoordinator(
 
         if (previous?.identity == next.identity && previous.text == next.text) {
             translationController.updateSelectionAnchor(next)
+            if (previous.isSettled != next.isSettled) {
+                translationController.submitSelection(next)
+            }
             return
         }
 
@@ -170,6 +173,7 @@ internal class BookSelectionActionCoordinator(
         identity = identity,
         text = text,
         languageContextText = languageContextText,
+        isSettled = isSettled,
         anchor = boundsInReaderRoot.let { bounds ->
             BookReaderTextSelectionAnchor(bounds.left, bounds.top, bounds.right, bounds.bottom)
         },

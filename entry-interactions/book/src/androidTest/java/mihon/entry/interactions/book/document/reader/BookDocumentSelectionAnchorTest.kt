@@ -2,13 +2,6 @@ package mihon.entry.interactions.book.document.reader
 
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -19,16 +12,6 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
-import mihon.book.api.document.BookDocumentBlock
-import mihon.book.api.document.BookDocumentBlockContent
-import mihon.book.api.document.BookDocumentBlockId
-import mihon.book.api.document.BookDocumentBlockKind
-import mihon.book.api.document.BookDocumentBlockRole
-import mihon.book.api.document.BookDocumentRichText
-import mihon.book.api.document.BookDocumentTextRange
-import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeMode
-import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
-import mihon.entry.interactions.book.document.reader.theme.bookDocumentReaderPalette
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -44,49 +27,18 @@ class BookDocumentSelectionAnchorTest {
     fun reselecting_after_scroll_never_publishes_the_previous_text_position() {
         val text = (List(5) { "Opening line." } + "Translate this word." + List(50) { "Following line." })
             .joinToString("\n")
-        val block = BookDocumentBlock(
-            id = BookDocumentBlockId("paragraph"),
-            role = BookDocumentBlockRole(BookDocumentBlockKind.PARAGRAPH),
-            content = BookDocumentBlockContent.Text(
-                BookDocumentRichText(text, BookDocumentTextRange(0, text.length)),
-            ),
-            plainText = text,
-            sourceFragments = emptyList(),
-            logicalStart = 0,
-            logicalEndExclusive = text.length,
-        )
         val selections = mutableListOf<BookDocumentTextSelection.Changed>()
         lateinit var session: BookDocumentChapterSelection
         lateinit var scroll: ScrollState
         composeRule.setContent {
-            scroll = rememberScrollState()
-            MaterialTheme {
-                CompositionLocalProvider(
-                    LocalBookDocumentReaderPalette provides bookDocumentReaderPalette(BookDocumentReaderThemeMode.APP),
-                    LocalBookDocumentTextInteraction provides BookDocumentTextInteraction.Disabled.copy(
-                        observeSelections = true,
-                        showTextSelectionMenu = false,
-                        onSelection = { if (it is BookDocumentTextSelection.Changed) selections += it },
-                    ),
-                    LocalBookDocumentSelectionChapterId provides 1L,
-                ) {
-                    BookDocumentChapterSelectionContainer(chapterId = 1L) { selection ->
-                        session = selection
-                        Box(Modifier.fillMaxSize().verticalScroll(scroll)) {
-                            BookDocumentSelectableText(
-                                text = text,
-                                links = emptyList(),
-                                inlineStyles = emptyList(),
-                                identity = "paragraph",
-                                block = block,
-                                separatorAfter = "\n",
-                                onAnchorClick = {},
-                                onExternalLinkClick = {},
-                            )
-                        }
-                    }
-                }
-            }
+            BookDocumentSelectionFixture(
+                text = text,
+                onSelection = { if (it is BookDocumentTextSelection.Changed) selections += it },
+                onSession = { selection, scrollState ->
+                    session = selection
+                    scroll = scrollState
+                },
+            )
         }
         val node = composeRule.onNodeWithText(text)
         val layouts = mutableListOf<TextLayoutResult>()
