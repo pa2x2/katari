@@ -13,7 +13,13 @@ internal data class BookDocumentSelectableLeaf(
     val fullText: String,
     val leadingText: String = "",
     val separatorAfter: String,
-)
+    val insertedBidiOffsets: Set<Int> = emptySet(),
+) {
+    fun sourceText(start: Int = 0, end: Int = fullText.length): String =
+        fullText.substring(start, end).filterIndexed { index, _ -> start + index !in insertedBidiOffsets }
+
+    fun sourceOffset(displayOffset: Int): Int = displayOffset - insertedBidiOffsets.count { it < displayOffset }
+}
 
 internal data class BookDocumentSelectionLayout(
     val textLayout: TextLayoutResult? = null,
@@ -60,7 +66,7 @@ internal fun projectBookDocumentSelection(
         resolvedFragments.forEachIndexed { index, fragment ->
             if (index > 0) append(resolvedFragments[index - 1].fragment.metadata.separatorAfter)
             if (fragment.start == 0) append(fragment.fragment.metadata.leadingText)
-            append(fragment.fragment.text)
+            append(fragment.selectedText())
         }
     }
     if (text.isBlank()) return null
@@ -123,16 +129,20 @@ private data class ResolvedBookDocumentSelectionFragment(
     val start: Int,
     val endExclusive: Int,
 ) {
+    fun selectedText(): String = fragment.text.filterIndexed { index, _ ->
+        start + index !in fragment.metadata.insertedBidiOffsets
+    }
+
     fun languageContextText(): String {
-        val fullText = fragment.metadata.fullText
+        val fullText = fragment.metadata.sourceText()
         val fullCodePoints = fullText.codePointCount(0, fullText.length)
         if (fullCodePoints <= MAX_LANGUAGE_CONTEXT_CODE_POINTS) return fullText
 
-        val selectionStart = fullText.codePointCount(0, start)
-        val selectionEnd = fullText.codePointCount(0, endExclusive)
+        val selectionStart = fullText.codePointCount(0, fragment.metadata.sourceOffset(start))
+        val selectionEnd = fullText.codePointCount(0, fragment.metadata.sourceOffset(endExclusive))
         val selectionLength = selectionEnd - selectionStart
         if (selectionLength >= MAX_LANGUAGE_CONTEXT_CODE_POINTS) {
-            return fragment.text.takeCodePoints(MAX_LANGUAGE_CONTEXT_CODE_POINTS)
+            return selectedText().takeCodePoints(MAX_LANGUAGE_CONTEXT_CODE_POINTS)
         }
 
         val surroundingCapacity = MAX_LANGUAGE_CONTEXT_CODE_POINTS - selectionLength
