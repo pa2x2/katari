@@ -20,12 +20,17 @@ internal interface BookExternalResourceResolver {
 /** Scoped external stream. Closing it must cancel/release all underlying I/O. */
 internal interface ExternalBookResource : AutoCloseable {
     val stream: InputStream
+
+    /** Byte length of the returned stream, when known. */
+    val contentLength: Long?
+        get() = null
     val mediaType: String?
         get() = null
 }
 
 internal class SimpleExternalBookResource(
     override val stream: InputStream,
+    override val contentLength: Long? = null,
 ) : ExternalBookResource {
     override fun close() = stream.close()
 }

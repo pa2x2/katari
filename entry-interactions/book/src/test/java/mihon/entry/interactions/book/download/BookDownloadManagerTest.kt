@@ -54,10 +54,11 @@ class BookDownloadManagerTest {
     }
 
     @Test
-    fun `worker cancellation preserves a queued book`() = runTest {
+    fun `pausing a finalizing book preserves it for retry`() = runTest {
         val downloadStarted = CompletableDeferred<Unit>()
         val downloader = mockk<BookDownloader> {
             coEvery { download(any()) } coAnswers {
+                firstArg<BookDownload>().status = BookDownload.State.FINALIZING
                 downloadStarted.complete(Unit)
                 awaitCancellation()
             }
@@ -74,7 +75,10 @@ class BookDownloadManagerTest {
         val worker = launch { fixture.manager.runDownloads() }
         downloadStarted.await()
 
+        fixture.manager.startDownloads()
+        assertEquals(BookDownload.State.FINALIZING, fixture.manager.queueState.value.single().status)
         fixture.manager.pauseDownloads()
+        assertEquals(BookDownload.State.QUEUE, fixture.manager.queueState.value.single().status)
         worker.cancelAndJoin()
 
         assertEquals(BookDownload.State.QUEUE, fixture.manager.queueState.value.single().status)

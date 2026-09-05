@@ -5,16 +5,11 @@ import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.EntryHttpSource
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.withContext
 import mihon.entry.interactions.book.content.AndroidBookExternalResourceResolver
 import mihon.entry.interactions.book.content.BookMaterializationStore
 import mihon.entry.interactions.book.content.BookResourceMaterializationLimitException
 import mihon.entry.interactions.book.content.MaterializedBookResource
 import mihon.entry.interactions.book.content.SourceBookContentSession
-import mihon.entry.interactions.book.document.resource.validateBookDocumentResource
 import mihon.entry.interactions.book.download.model.BookDownload
 import mihon.entry.interactions.book.download.model.BookDownloadFailure
 import mihon.entry.interactions.book.preparation.BookContentPreparerRegistry
@@ -27,8 +22,6 @@ import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import java.io.IOException
-import java.security.MessageDigest
 
 internal class BookDownloader(
     private val application: Application = Injekt.get(),
@@ -86,7 +79,9 @@ internal class BookDownloader(
         )
 
         try {
-            val primaryMaterialized = session.materializeResource(
+            val primaryMaterialized = materializeForDownload(
+                session,
+                download,
                 primaryResourceId,
                 resourceBudget.maxEncodedBytes,
             ).getOrElse { error ->
@@ -135,56 +130,11 @@ internal class BookDownloader(
                 }
                 val budgetTracker = resourceBudget.tracker()
                 try {
-                    download.status = BookDownload.State.DOWNLOADING
+                    val writer = BookDownloadResourceWriter(provider, staging, budgetTracker, dependencies.requirements)
 
-                    suspend fun packageResource(
-                        resourceId: String,
-                        resource: MaterializedBookResource,
-                        index: Int,
-                    ): BookDownloadedResource {
-                        budgetTracker.include(resource.file.length(), resourceId)
-                        dependencies.requirements[resourceId]?.let { requirement ->
-                            try {
-                                resource.file.validateBookDocumentResource(
-                                    mediaType = resource.metadata.mediaType,
-                                    requirement = requirement,
-                                )
-                            } catch (error: Exception) {
-                                resource.invalidate()
-                                throw BookResourceValidationException(
-                                    "Required BOOK resource $resourceId is invalid: ${error.message}",
-                                    error,
-                                )
-                            }
-                        }
-                        val fileName = provider.resourceFileName(resource.metadata.id, resource.metadata.mediaType)
-                        val output = staging.directory.createFile(fileName)
-                            ?: throw IOException("Unable to create downloaded BOOK resource")
-                        val progressStart = index * 95 / resourceIds.size
-                        val progressEnd = (index + 1) * 95 / resourceIds.size
-                        val copied = copyResource(
-                            source = resource.file,
-                            target = output,
-                            download = download,
-                            progressStart = progressStart,
-                            progressEnd = progressEnd,
-                        )
-                        return BookDownloadedResource(
-                            id = resource.metadata.id,
-                            title = resource.metadata.title,
-                            order = resource.metadata.order,
-                            groupId = resource.metadata.groupId,
-                            mediaType = resource.metadata.mediaType,
-                            revision = resource.metadata.revision,
-                            fileName = fileName,
-                            storedSize = copied.size,
-                            sha256 = copied.sha256,
-                        )
-                    }
-
-                    val downloadedResources = resourceIds.mapIndexed { index, resourceId ->
+                    val downloadedResources = resourceIds.map { resourceId ->
                         if (resourceId == primaryResourceId) {
-                            packageResource(resourceId, primaryResource, index)
+                            writer.write(resourceId, primaryResource)
                         } else {
                             val metadata = session.getResource(resourceId).getOrElse { error ->
                                 throw BookResourceDownloadException(error.message, error)
@@ -201,13 +151,13 @@ internal class BookDownloader(
                                     "BOOK resource $resourceId would exceed the download byte limit.",
                                 )
                             }
-                            session.materializeResource(resourceId, acquisitionLimit).getOrElse { error ->
+                            materializeForDownload(session, download, resourceId, acquisitionLimit).getOrElse { error ->
                                 if (error is BookResourceMaterializationLimitException) {
                                     throw BookResourceValidationException(error.message, error)
                                 }
                                 throw BookResourceDownloadException(error.message, error)
                             }.use { resource ->
-                                packageResource(resourceId, resource, index)
+                                writer.write(resourceId, resource)
                             }
                         }
                     }
@@ -267,47 +217,29 @@ internal class BookDownloader(
         }
     }
 
-    private suspend fun copyResource(
-        source: java.io.File,
-        target: com.hippo.unifile.UniFile,
+    private suspend fun materializeForDownload(
+        session: SourceBookContentSession,
         download: BookDownload,
-        progressStart: Int,
-        progressEnd: Int,
-    ): CopiedResource = withContext(Dispatchers.IO) {
-        val digest = MessageDigest.getInstance("SHA-256")
-        val expectedSize = source.length().coerceAtLeast(1L)
-        var copied = 0L
-        source.inputStream().buffered().use { input ->
-            target.openOutputStream().buffered().use { output ->
-                val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-                while (true) {
-                    currentCoroutineContext().ensureActive()
-                    val read = input.read(buffer)
-                    if (read < 0) break
-                    output.write(buffer, 0, read)
-                    digest.update(buffer, 0, read)
-                    copied += read
-                    val progressSpan = (progressEnd - progressStart).coerceAtLeast(0)
-                    download.progress = (
-                        progressStart + (copied * progressSpan / expectedSize).toInt()
-                        ).coerceAtMost(progressEnd)
-                }
+        resourceId: String,
+        maxBytes: Long,
+    ): Result<MaterializedBookResource> {
+        download.progress = 0
+        download.status = BookDownload.State.DOWNLOADING
+        return session.materializeResource(resourceId, maxBytes) { bytesRead, totalBytes ->
+            download.progress = if (totalBytes != null && totalBytes > 0L) {
+                // Completion is only reported once the offline package passes verification.
+                (bytesRead.toDouble() / totalBytes * 100).toInt().coerceIn(0, 99)
+            } else {
+                0
             }
+        }.onSuccess {
+            download.status = BookDownload.State.FINALIZING
         }
-        require(copied > 0L) { "Downloaded BOOK resource is empty" }
-        CopiedResource(
-            size = copied,
-            sha256 = digest.digest().joinToString("") { byte ->
-                (byte.toInt() and 0xff).toString(16).padStart(2, '0')
-            },
-        )
     }
 
     private fun failure(reason: BookDownloadFailure.Reason, message: String? = null) =
         BookDownloadFailure(reason, message)
 }
-
-private data class CopiedResource(val size: Long, val sha256: String)
 
 private data class ResolvedBookResourceDependencies(
     val resourceIds: Set<String> = emptySet(),

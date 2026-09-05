@@ -7,10 +7,6 @@ import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.withContext
 import mihon.book.api.BookContentResource
 import mihon.book.api.BookContentResourcePage
 import mihon.book.api.BookResourceAvailability
@@ -18,9 +14,7 @@ import mihon.book.api.BookResourceCacheState
 import mihon.entry.interactions.book.runtime.requireBook
 import tachiyomi.domain.entry.model.Entry
 import java.io.ByteArrayInputStream
-import java.io.File
 import java.io.IOException
-import java.io.InputStream
 
 /**
  * Katari-owned adapter between source BOOK media and content preparers.
@@ -105,7 +99,10 @@ internal class SourceBookContentSession(
         )
         val raw = openTerminalLocation(terminal, range)
         val lease = SessionOpenedBookResource(
-            metadata = raw.mediaType?.let { metadata.copy(mediaType = it) } ?: metadata,
+            metadata = metadata.copy(
+                mediaType = raw.mediaType ?: metadata.mediaType,
+                size = if (range == null) raw.contentLength ?: metadata.size else metadata.size,
+            ),
             stream = raw.stream,
             delegate = raw,
             onClose = ::unregisterLease,
@@ -120,6 +117,7 @@ internal class SourceBookContentSession(
     internal suspend fun materializeResource(
         resourceId: String,
         maxBytes: Long,
+        onProgress: (bytesRead: Long, totalBytes: Long?) -> Unit = { _, _ -> },
     ): Result<MaterializedBookResource> = resultOf {
         checkOpen()
         val boundedMaxBytes = maxBytes.coerceIn(1L, MAX_MATERIALIZED_BYTES)
@@ -136,7 +134,13 @@ internal class SourceBookContentSession(
         val cachedLease = materializationStore.acquire(record.materializationKey(), metadata) { file ->
             val opened = openResource(resourceId).getOrThrow()
             try {
-                copyToMaterialization(opened.stream, file, boundedMaxBytes)
+                copyBookResourceToMaterialization(
+                    opened.stream,
+                    file,
+                    boundedMaxBytes,
+                    opened.metadata.size,
+                    onProgress,
+                )
             } finally {
                 opened.close()
             }
@@ -148,6 +152,7 @@ internal class SourceBookContentSession(
                 "BOOK resource $resourceId exceeds its $boundedMaxBytes-byte acquisition limit",
             )
         }
+        onProgress(cachedLease.file.length(), cachedLease.file.length())
         cachedLease
     }.map { cachedLease ->
         val sessionLease = SessionMaterializedBookResource(
@@ -263,35 +268,7 @@ internal class SourceBookContentSession(
         val start = startLong.toInt()
         val end = range?.endExclusive?.coerceAtMost(bytes.size.toLong())?.toInt() ?: bytes.size
         val stream = ByteArrayInputStream(bytes, start, end - start)
-        return SimpleExternalBookResource(stream)
-    }
-
-    private suspend fun copyToMaterialization(
-        input: InputStream,
-        output: File,
-        maxBytes: Long,
-    ) = withContext(Dispatchers.IO) {
-        output.outputStream().buffered().use { target ->
-            val buffer = ByteArray(COPY_BUFFER_SIZE)
-            var copied = 0L
-            while (true) {
-                currentCoroutineContext().ensureActive()
-                val remainingWithOverflowByte = maxBytes - copied + 1L
-                val read = input.read(
-                    buffer,
-                    0,
-                    minOf(buffer.size.toLong(), remainingWithOverflowByte).toInt(),
-                )
-                if (read < 0) break
-                copied += read
-                if (copied > maxBytes) {
-                    throw BookResourceMaterializationLimitException(
-                        "BOOK resource exceeds its $maxBytes-byte acquisition limit",
-                    )
-                }
-                target.write(buffer, 0, read)
-            }
-        }
+        return SimpleExternalBookResource(stream, (end - start).toLong())
     }
 
     private fun parseCursor(cursor: String?): Int {
@@ -319,7 +296,6 @@ internal class SourceBookContentSession(
     private companion object {
         const val CURSOR_PREFIX = "offset:"
         const val UNVERSIONED_REVISION = "unversioned"
-        const val COPY_BUFFER_SIZE = 32 * 1024
         const val MAX_RESOURCE_PAGE_SIZE = 500
         const val MAX_SOURCE_CHILD_DEPTH = 16
         const val MAX_MATERIALIZED_BYTES = 512L * 1024L * 1024L

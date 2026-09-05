@@ -103,7 +103,7 @@ internal class BookDownloadManager(
     fun startDownloads() {
         if (queueState.value.isEmpty()) return
         queueState.value.forEach { download ->
-            if (download.status != BookDownload.State.RESOLVING && download.status != BookDownload.State.DOWNLOADING) {
+            if (!download.status.isActive) {
                 download.failure = null
                 download.status = BookDownload.State.QUEUE
             }
@@ -118,8 +118,7 @@ internal class BookDownloadManager(
             } else {
                 _queueState.value
                     .filter {
-                        it.status == BookDownload.State.RESOLVING ||
-                            it.status == BookDownload.State.DOWNLOADING
+                        it.status.isActive
                     }
                     .forEach { it.status = BookDownload.State.QUEUE }
                 _isRunning.value = false
@@ -166,8 +165,7 @@ internal class BookDownloadManager(
                 keys = chapterIds,
                 keyOf = { it.chapter.id },
                 isActive = {
-                    it.status == BookDownload.State.RESOLVING ||
-                        it.status == BookDownload.State.DOWNLOADING
+                    it.status.isActive
                 },
             ),
         )
@@ -195,8 +193,7 @@ internal class BookDownloadManager(
                 requested = downloads,
                 keyOf = { it.chapter.id },
                 isActive = {
-                    it.status == BookDownload.State.RESOLVING ||
-                        it.status == BookDownload.State.DOWNLOADING
+                    it.status.isActive
                 },
             )
             rewriteStoredQueueLocked()
