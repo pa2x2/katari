@@ -52,6 +52,7 @@ internal class BookSelectionTranslationController(
         feature = feature,
         hostActions = hostActions,
         scope = scope,
+        selectionSettleDelayMillis = 0,
     )
 
     private val mutableEffectiveEnabled = MutableStateFlow(false)
