@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.stats
 
 import eu.kanade.presentation.more.stats.data.StatsRange
+import eu.kanade.presentation.more.stats.data.StatsTrendGranularity
 import eu.kanade.presentation.more.stats.data.StatsTrendPoint
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.shouldBe
@@ -17,14 +18,21 @@ import java.util.Locale
 class StatisticsAggregationTest {
 
     @Test
-    fun `year trend does not expose dates outside selected range`() {
+    fun `year trend shows calendar months bounded by the selected range`() {
         val today = LocalDate.parse("2026-08-23")
         val result = buildActivity(
             snapshot = StatisticsActivitySnapshot(
                 profileId = 1L,
                 trackingStartedAtEpochMillis = 1L,
-                activity = emptyList(),
-                completions = emptyList(),
+                activity = listOf(
+                    StatisticsActivityBucket(EntryType.MANGA, "2025-08-24", 60_000L),
+                    StatisticsActivityBucket(EntryType.MANGA, "2025-08-31", 120_000L),
+                    StatisticsActivityBucket(EntryType.MANGA, "2025-09-01", 240_000L),
+                ),
+                completions = listOf(
+                    StatisticsCompletionBucket(EntryType.MANGA, "2025-08-24", 1L),
+                    StatisticsCompletionBucket(EntryType.MANGA, "2025-08-31", 2L),
+                ),
                 topEntries = emptyList(),
                 earlierActivity = emptyList(),
             ),
@@ -36,6 +44,12 @@ class StatisticsAggregationTest {
 
         result.trend.first().startDate shouldBe today.minusYears(1L).plusDays(1L)
         result.trend.last().endDate shouldBe today
+        result.trendGranularity shouldBe StatsTrendGranularity.MONTH
+        result.trend.map { it.bucketStartDate } shouldBe (0L..12L).map {
+            LocalDate.parse("2025-08-01").plusMonths(it)
+        }
+        result.trend.take(3).map(StatsTrendPoint::totalDurationMillis) shouldBe listOf(180_000L, 240_000L, 0L)
+        result.trend.first().completionCount shouldBe 3L
     }
 
     @Test

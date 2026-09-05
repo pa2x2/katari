@@ -23,7 +23,7 @@ internal fun StatsActivityWindow.shiftedByBuckets(bucketCount: Int): StatsActivi
     if (range == StatsRange.ALL || bucketCount == 0) return this
     val shiftedEnd = when (range) {
         StatsRange.SEVEN_DAYS, StatsRange.THIRTY_DAYS -> endDate.minusDays(bucketCount.toLong())
-        StatsRange.ONE_YEAR -> endDate.minusWeeks(bucketCount.toLong())
+        StatsRange.ONE_YEAR -> endDate.minusMonths(bucketCount.toLong())
         StatsRange.ALL -> endDate
     }
     return range.windowEndingOn(shiftedEnd, isLatest = false)
@@ -50,8 +50,8 @@ internal fun StatsActivityWindow.navigationWindow(latestEndDate: LocalDate): Sta
             endDate = endDate.plusDays(30L).coerceAtMost(latestEndDate),
         )
         StatsRange.ONE_YEAR -> StatsActivityNavigationWindow(
-            startDate = requireNotNull(startDate).minusWeeks(54L),
-            endDate = endDate.plusWeeks(54L).coerceAtMost(latestEndDate),
+            startDate = requireNotNull(startDate).minusMonths(13L),
+            endDate = endDate.plusMonths(13L).coerceAtMost(latestEndDate),
         )
         StatsRange.ALL -> StatsActivityNavigationWindow(startDate, endDate)
     }

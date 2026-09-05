@@ -187,7 +187,7 @@ private fun BucketUnit.toTrendGranularity(): StatsTrendGranularity = when (this)
 
 private fun StatsRange.bucketUnit(firstDate: LocalDate, today: LocalDate): BucketUnit = when (this) {
     StatsRange.SEVEN_DAYS, StatsRange.THIRTY_DAYS -> BucketUnit.DAY
-    StatsRange.ONE_YEAR -> BucketUnit.WEEK
+    StatsRange.ONE_YEAR -> BucketUnit.MONTH
     StatsRange.ALL -> {
         if (firstDate.isBefore(today.minusYears(2L))) BucketUnit.YEAR else BucketUnit.MONTH
     }
