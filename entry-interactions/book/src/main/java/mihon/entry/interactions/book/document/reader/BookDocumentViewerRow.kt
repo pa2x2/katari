@@ -66,6 +66,7 @@ internal fun BookDocumentViewerBlock(
 ) {
     CompositionLocalProvider(
         LocalBookDocumentSectionKey provides item.section.key,
+        LocalBookDocumentResourceLoader provides item.section.resourceLoader,
         LocalBookDocumentSelectionChapterId provides item.section.owner.id,
     ) {
         BookDocumentBlockRenderer(

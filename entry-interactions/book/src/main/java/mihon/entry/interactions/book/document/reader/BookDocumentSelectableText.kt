@@ -32,7 +32,6 @@ import androidx.compose.ui.unit.sp
 import mihon.book.api.document.BookDocumentAlignment
 import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentBlockKind
-import mihon.book.api.document.BookDocumentFontFamily
 import mihon.book.api.document.BookDocumentInlineStyle
 import mihon.book.api.document.BookDocumentInlineStyleRange
 import mihon.book.api.document.BookDocumentLink
@@ -57,6 +56,7 @@ internal fun BookDocumentSelectableText(
     contentAlpha: Float = 1f,
     modifier: Modifier = Modifier,
 ) {
+    val fonts = rememberBookDocumentFonts(block.style.fontFamily, inlineStyles)
     val palette = LocalBookDocumentReaderPalette.current
     val textScale = LocalBookDocumentTextScale.current
     val selection = LocalBookDocumentChapterSelection.current
@@ -100,6 +100,7 @@ internal fun BookDocumentSelectableText(
     val fontSize = (baseFontSizeSp * textScale * block.style.fontSizeScale * headingScale).sp
     val annotatedText = remember(
         visibleText,
+        fonts,
         links,
         inlineStyles,
         token,
@@ -111,6 +112,7 @@ internal fun BookDocumentSelectableText(
     ) {
         visibleText.toSelectableAnnotatedString(
             links = links,
+            fonts = fonts,
             inlineStyles = inlineStyles,
             token = token,
             baseFontSize = fontSize.value,
@@ -161,7 +163,7 @@ internal fun BookDocumentSelectableText(
                 } else {
                     FontWeight.Normal
                 },
-                fontFamily = block.style.fontFamily.toComposeFontFamily(),
+                fontFamily = block.style.fontFamily.toComposeFontFamily(fonts),
                 textAlign = when (block.style.alignment) {
                     BookDocumentAlignment.CENTER -> TextAlign.Center
                     BookDocumentAlignment.END -> TextAlign.End
@@ -187,6 +189,7 @@ internal fun BookDocumentSelectableText(
 }
 
 private fun String.toSelectableAnnotatedString(
+    fonts: Map<String, FontFamily>,
     links: List<BookDocumentLink>,
     inlineStyles: List<BookDocumentInlineStyleRange>,
     token: String,
@@ -200,7 +203,7 @@ private fun String.toSelectableAnnotatedString(
     inlineStyles.forEach { range ->
         val start = range.start.coerceIn(0, length)
         val end = range.endExclusive.coerceIn(start, length)
-        if (end > start) addStyle(range.style.toComposeSpanStyle(baseFontSize), start, end)
+        if (end > start) addStyle(range.style.toComposeSpanStyle(baseFontSize, fonts), start, end)
     }
     links.forEachIndexed { index, link ->
         val start = link.start.coerceIn(0, length)
@@ -220,7 +223,10 @@ private fun String.toSelectableAnnotatedString(
     }
 }.toAnnotatedString()
 
-private fun BookDocumentInlineStyle.toComposeSpanStyle(baseFontSize: Float): SpanStyle {
+private fun BookDocumentInlineStyle.toComposeSpanStyle(
+    baseFontSize: Float,
+    fonts: Map<String, FontFamily>,
+): SpanStyle {
     val decorations = buildList {
         if (underline) add(TextDecoration.Underline)
         if (strikethrough) add(TextDecoration.LineThrough)
@@ -230,7 +236,7 @@ private fun BookDocumentInlineStyle.toComposeSpanStyle(baseFontSize: Float): Spa
         fontSize = (baseFontSize * scale).sp,
         fontWeight = if (bold) FontWeight.Bold else null,
         fontStyle = if (italic) FontStyle.Italic else null,
-        fontFamily = fontFamily.toComposeFontFamily().takeUnless { it == FontFamily.Default }
+        fontFamily = fontFamily.toComposeFontFamily(fonts).takeUnless { it == FontFamily.Default }
             ?: if (code) FontFamily.Monospace else null,
         textDecoration = decorations.takeIf(List<TextDecoration>::isNotEmpty)
             ?.let(TextDecoration::combine),
@@ -242,13 +248,5 @@ private fun BookDocumentInlineStyle.toComposeSpanStyle(baseFontSize: Float): Spa
         localeList = languageTag?.let { language -> LocaleList(Locale(language)) },
     )
 }
-
-private fun BookDocumentFontFamily?.toComposeFontFamily(): FontFamily =
-    when ((this as? BookDocumentFontFamily.Generic)?.family) {
-        BookDocumentFontFamily.GenericFamily.SERIF -> FontFamily.Serif
-        BookDocumentFontFamily.GenericFamily.SANS_SERIF -> FontFamily.SansSerif
-        BookDocumentFontFamily.GenericFamily.MONOSPACE -> FontFamily.Monospace
-        null -> FontFamily.Default
-    }
 
 private const val SMALL_TEXT_SCALE = 0.8f

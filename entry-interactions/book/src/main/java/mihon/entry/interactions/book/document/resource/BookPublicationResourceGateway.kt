@@ -3,6 +3,8 @@ package mihon.entry.interactions.book.document.resource
 import android.app.Application
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import mihon.entry.interactions.book.preparation.BookPublicationResource
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
@@ -30,6 +32,9 @@ internal class BookPublicationResourceGateway(
         check(directory.mkdirs() || directory.isDirectory) { "Unable to create publication resource snapshots" }
     }
 
+    private val mutableGeneration = MutableStateFlow(0)
+    override val generation = mutableGeneration.asStateFlow()
+
     @Volatile
     private var approvedOrigins = emptySet<String>()
 
@@ -40,7 +45,10 @@ internal class BookPublicationResourceGateway(
         require(origins.all { origin -> remoteResourceRequests.any { it.origin == origin } }) {
             "Publication resource approval contains an undeclared origin"
         }
-        approvedOrigins = origins.toSet()
+        if (approvedOrigins != origins) {
+            approvedOrigins = origins.toSet()
+            mutableGeneration.value += 1
+        }
     }
 
     override suspend fun load(

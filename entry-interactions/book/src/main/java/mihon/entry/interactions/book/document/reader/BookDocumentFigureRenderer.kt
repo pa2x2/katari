@@ -12,6 +12,7 @@ import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.produceState
@@ -45,6 +46,7 @@ internal fun BookDocumentFigureRenderer(
     onReaderTap: () -> Unit,
 ) {
     val selection = LocalBookDocumentChapterSelection.current
+    val resourceGeneration = resourceLoader?.generation?.collectAsState()?.value ?: 0
     var retryGeneration by remember(content.image.resourceId) { mutableIntStateOf(0) }
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val density = LocalDensity.current
@@ -55,6 +57,7 @@ internal fun BookDocumentFigureRenderer(
             resourceLoader,
             targetWidth,
             retryGeneration,
+            resourceGeneration,
         ) {
             value = if (resourceLoader == null) {
                 Result.failure(IllegalStateException("Image resource unavailable"))
