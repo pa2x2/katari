@@ -1906,4 +1906,5 @@
     <string name="donationCampaign.contactPlatform">Discord</string>
     <string name="donationCampaign.dismiss">Dismiss</string>
     <string name="home_navigation_menu">Menu</string>
+    <string name="book_reader_continuous_scroll">Continuous scrolling</string>
 </resources>

@@ -9,6 +9,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onLayoutRectChanged
 import androidx.compose.ui.unit.dp
 import mihon.book.api.document.BookDocumentBlock
@@ -16,6 +17,8 @@ import mihon.book.api.document.BookDocumentBlockKind
 import mihon.book.api.document.BookDocumentInlineStyleRange
 import mihon.book.api.document.BookDocumentLink
 import mihon.book.api.document.BookDocumentLinkTarget
+import mihon.entry.interactions.book.document.reader.position.BookDocumentViewportText
+import mihon.entry.interactions.book.document.reader.position.LocalBookDocumentViewportGeometry
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 
 /** Compose text leaf that keeps document semantics available to the chapter selection owner. */
@@ -35,6 +38,7 @@ internal fun BookDocumentSelectableText(
     contentAlpha: Float = 1f,
     modifier: Modifier = Modifier,
 ) {
+    val pageMeasurement = mihon.entry.interactions.book.document.reader.paging.LocalBookDocumentPageMeasurement.current
     val fonts = rememberBookDocumentFonts(block.style.fontFamily, inlineStyles)
     val palette = LocalBookDocumentReaderPalette.current
     val textScale = LocalBookDocumentTextScale.current
@@ -47,6 +51,14 @@ internal fun BookDocumentSelectableText(
     val visibleText = text.dropLast(terminalLineBreaks)
     val presentation = remember(visibleText, inlineStyles) { bookDocumentTextPresentation(visibleText, inlineStyles) }
     val token = remember(sectionKey, identity) { "$sectionKey::$identity" }
+    val viewportGeometry = LocalBookDocumentViewportGeometry.current
+    val viewportText = remember(viewportGeometry, token, block.logicalStart, presentation) {
+        viewportGeometry?.let { BookDocumentViewportText(sectionKey, block.logicalStart, presentation) }
+    }
+    DisposableEffect(viewportGeometry, viewportText, token) {
+        if (viewportText != null) viewportGeometry?.texts?.set(token, viewportText)
+        onDispose { viewportGeometry?.texts?.remove(token) }
+    }
     val trackSelectionGeometry = selection?.shouldTrackGeometry(token) == true
     if (trackSelectionGeometry) {
         DisposableEffect(selection, token) {
@@ -122,10 +134,15 @@ internal fun BookDocumentSelectableText(
             text = annotatedText,
             color = palette.foreground.copy(alpha = contentAlpha),
             style = bookDocumentTextStyle(block, fontSize, fonts),
-            onTextLayout = { result -> selection?.updateTextLayout(token, result) },
+            onTextLayout = { result ->
+                selection?.updateTextLayout(token, result)
+                pageMeasurement?.record(result, presentation.insertedOffsets)
+                viewportText?.layout = result
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .then(quoteModifier)
+                .then(if (viewportText != null) Modifier.onGloballyPositioned { viewportText.placed(it) } else Modifier)
                 .then(
                     if (trackSelectionGeometry) {
                         Modifier.onLayoutRectChanged(throttleMillis = 0, debounceMillis = 0) { bounds ->

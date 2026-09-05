@@ -42,6 +42,7 @@ import mihon.entry.interactions.book.document.reader.settings.BookDocumentReader
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderTextSelectionMenuSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderTextSizeSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeSettings
+import mihon.entry.interactions.book.document.reader.settings.BookDocumentReadingModeShortcut
 import mihon.entry.interactions.book.document.reader.theme.BookDocumentReaderMaterialTheme
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.document.reader.theme.bookDocumentReaderPalette
@@ -191,7 +192,9 @@ internal fun BookDocumentReaderScreen(
                     .fillMaxSize()
                     .background(readerPalette.background),
                 content = {
-                    BookDocumentEndlessViewer(
+                    BookDocumentReaderViewport(
+                        settings = settingBindings,
+                        chromeVisible = state.chromeVisible,
                         currentChapter = state.window.current,
                         currentChapterId = state.currentChapterId,
                         window = state.window,
@@ -241,6 +244,7 @@ internal fun BookDocumentReaderScreen(
                         },
                         bottomBar = {
                             ReaderChromeBottomBar {
+                                BookDocumentReadingModeShortcut(settingBindings.readingMode)
                                 ReaderChromeBottomBarAction(onClick = { onNavigationVisibilityChange(true) }) {
                                     Icon(
                                         Icons.AutoMirrored.Outlined.ViewList,
@@ -301,6 +305,12 @@ internal fun BookDocumentReaderScreen(
                     onDismissRequest = { onSettingsVisibilityChange(false) },
                     onOpenDefaultSettings = onOpenDefaultSettings,
                     onResetProcessorSettings = {
+                        settingBindings.readingMode.clearEntryOverride()
+                        settingBindings.tapZones.clearEntryOverride()
+                        settingBindings.tapInversion.clearEntryOverride()
+                        settingBindings.animatePages.clearEntryOverride()
+                        settingBindings.volumeKeys.clearEntryOverride()
+                        settingBindings.invertVolumeKeys.clearEntryOverride()
                         settingBindings.themeMode.clearEntryOverride()
                         settingBindings.textSize.clearEntryOverride()
                         settingBindings.keepScreenAlive.clearEntryOverride()
@@ -321,6 +331,9 @@ internal fun BookDocumentReaderScreen(
                                 BookDocumentReaderTextSizeSettings(settingBindings.textSize)
                             }
                             1 -> {
+                                mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderPagingSettings(
+                                    settingBindings,
+                                )
                                 BookDocumentReaderScreenAliveSettings(settingBindings.keepScreenAlive)
                                 BookDocumentReaderTextSelectionMenuSettings(settingBindings.showTextSelectionMenu)
                                 BookDocumentReaderStatusBarSettings(settingBindings.showStatusBar)

@@ -207,25 +207,10 @@ private fun ColumnScope.TapZonesItems(
     invertMode: MangaReaderSettingsProvider.TappingInvertMode,
     onSelectInvertMode: (MangaReaderSettingsProvider.TappingInvertMode) -> Unit,
 ) {
-    SettingsChipRow(MR.strings.pref_viewer_nav) {
-        MangaReaderSettingsProvider.TapZones.mapIndexed { index, it ->
-            FilterChip(
-                selected = selected == index,
-                onClick = { onSelect(index) },
-                label = { Text(stringResource(it)) },
-            )
-        }
-    }
-
-    if (selected != 5) {
-        SettingsChipRow(MR.strings.pref_read_with_tapping_inverted) {
-            MangaReaderSettingsProvider.TappingInvertMode.entries.map {
-                FilterChip(
-                    selected = it == invertMode,
-                    onClick = { onSelectInvertMode(it) },
-                    label = { Text(stringResource(it.titleRes)) },
-                )
-            }
-        }
-    }
+    tachiyomi.presentation.core.components.reader.navigation.ReaderTapZoneSettings(
+        selected,
+        onSelect,
+        invertMode.ordinal,
+        { onSelectInvertMode(MangaReaderSettingsProvider.TappingInvertMode.entries[it]) },
+    )
 }

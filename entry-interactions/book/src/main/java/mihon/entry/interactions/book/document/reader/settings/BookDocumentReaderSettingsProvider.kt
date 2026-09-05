@@ -4,6 +4,7 @@ import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslation
 import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationSettingsProvider
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPreferences
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
+import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.viewer.settings.ViewerSettingCodecs
 import mihon.entry.viewer.settings.ViewerSettingDefinition
 import mihon.entry.viewer.settings.ViewerSettingId
@@ -19,6 +20,61 @@ internal class BookDocumentReaderSettingsProvider(
     override val id = BookDocumentReaderSettings.SURFACE_ID
     override val category = ViewerSettingsCategory.READER
     override val displayName = "Book reader"
+
+    override val readingModeSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.READING_MODE_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = BookDocumentReadingMode.SCROLL,
+        profilePreference = preferences.readingMode,
+        codec = ViewerSettingCodecs.codec(encode = BookDocumentReadingMode::name, decode = { encoded ->
+            BookDocumentReadingMode.entries.firstOrNull {
+                it.name ==
+                    encoded
+            }
+        }),
+    )
+
+    override val tapZonesSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.TAP_ZONES_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = 0,
+        profilePreference = preferences.tapZones,
+        codec = ViewerSettingCodecs.Int,
+        validate = { it in 0..5 },
+    )
+
+    override val tapInversionSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.TAP_INVERSION_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = 0,
+        profilePreference = preferences.tapInversion,
+        codec = ViewerSettingCodecs.Int,
+        validate = { it in 0..3 },
+    )
+
+    override val animatePagesSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.ANIMATE_PAGES_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = true,
+        profilePreference = preferences.animatePages,
+        codec = ViewerSettingCodecs.Boolean,
+    )
+
+    override val volumeKeysSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.VOLUME_KEYS_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = false,
+        profilePreference = preferences.volumeKeys,
+        codec = ViewerSettingCodecs.Boolean,
+    )
+
+    override val invertVolumeKeysSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.INVERT_VOLUME_KEYS_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = false,
+        profilePreference = preferences.invertVolumeKeys,
+        codec = ViewerSettingCodecs.Boolean,
+    )
 
     override val themeModeSetting = ViewerSettingDefinition(
         id = ViewerSettingId(id, BookDocumentReaderPreferences.THEME_MODE_KEY),
@@ -108,6 +164,12 @@ internal class BookDocumentReaderSettingsProvider(
     )
 
     override val settings = listOf(
+        readingModeSetting,
+        tapZonesSetting,
+        tapInversionSetting,
+        animatePagesSetting,
+        volumeKeysSetting,
+        invertVolumeKeysSetting,
         themeModeSetting,
         textSizeSetting,
         keepScreenAliveSetting,

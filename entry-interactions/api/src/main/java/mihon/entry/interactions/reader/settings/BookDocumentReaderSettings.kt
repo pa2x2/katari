@@ -4,6 +4,12 @@ import mihon.entry.viewer.settings.ViewerSettingDefinition
 import mihon.entry.viewer.settings.ViewerSettingsProvider
 
 interface BookDocumentReaderSettings : ViewerSettingsProvider {
+    val readingModeSetting: ViewerSettingDefinition<BookDocumentReadingMode>
+    val tapZonesSetting: ViewerSettingDefinition<Int>
+    val tapInversionSetting: ViewerSettingDefinition<Int>
+    val animatePagesSetting: ViewerSettingDefinition<Boolean>
+    val volumeKeysSetting: ViewerSettingDefinition<Boolean>
+    val invertVolumeKeysSetting: ViewerSettingDefinition<Boolean>
     val themeModeSetting: ViewerSettingDefinition<BookDocumentReaderThemeMode>
     val textSizeSetting: ViewerSettingDefinition<Int>
     val keepScreenAliveSetting: ViewerSettingDefinition<Boolean>

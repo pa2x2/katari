@@ -12,9 +12,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyGridScope
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.ArrowDownward
@@ -453,24 +450,6 @@ fun SettingsChipRow(labelRes: StringResource, content: @Composable FlowRowScope.
                 end = SettingsItemsPaddings.Horizontal,
                 bottom = SettingsItemsPaddings.Vertical,
             ),
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
-            content = content,
-        )
-    }
-}
-
-@Composable
-fun SettingsIconGrid(labelRes: StringResource, content: LazyGridScope.() -> Unit) {
-    Column {
-        HeadingItem(labelRes)
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(128.dp),
-            modifier = Modifier.padding(
-                start = SettingsItemsPaddings.Horizontal,
-                end = SettingsItemsPaddings.Horizontal,
-                bottom = SettingsItemsPaddings.Vertical,
-            ),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small),
             content = content,
         )

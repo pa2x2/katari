@@ -1,10 +1,12 @@
 package mihon.entry.interactions.book.document.reader
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -16,12 +18,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onPlaced
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import mihon.book.api.document.BookDocumentLinkTarget
+import mihon.entry.interactions.book.document.reader.position.BookDocumentViewportGeometry
+import mihon.entry.interactions.book.document.reader.position.LocalBookDocumentViewportGeometry
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildWindow
 import tachiyomi.domain.entry.model.EntryChapter
@@ -46,15 +51,19 @@ internal fun BookDocumentEndlessViewer(
     onScrollStarted: () -> Unit,
     onUserScrollStarted: () -> Unit,
     onReaderTap: () -> Unit,
+    initialLocation: BookDocumentViewerLocation<EntryChapter>? = null,
+    onViewportLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val proposedItems = remember(window, loadedSections) {
         buildBookDocumentPublicationViewerItems(window, loadedSections, EntryChapter::id)
     }
     var items by remember { mutableStateOf(proposedItems) }
-    val currentSection = loadedSections[currentChapterId]?.initialSection
+    val viewportGeometry = remember { BookDocumentViewportGeometry() }
+    val currentOnViewportLocation by rememberUpdatedState(onViewportLocation)
+    val currentSection = initialLocation?.section ?: loadedSections[currentChapterId]?.initialSection
     val initialIndex = currentSection?.let { section ->
-        items.indexOfPosition(section.key, section.initialPosition).coerceAtLeast(0)
+        items.indexOfPosition(section.key, initialLocation?.position ?: section.initialPosition).coerceAtLeast(0)
     } ?: 0
     val chapterPrefetchStrategy = remember { BookDocumentChapterPrefetchStrategy() }
     val listState = rememberLazyListState(
@@ -154,7 +163,22 @@ internal fun BookDocumentEndlessViewer(
 
     LaunchedEffect(items) {
         if (!initialPositionRestored) {
-            currentSection?.let { scrollToSectionPosition(it) }
+            if (initialLocation != null) {
+                val index = items.indexOfPosition(initialLocation.section.key, initialLocation.position)
+                if (index >= 0) {
+                    listState.scrollToItem(index)
+                    if ((items[index] as? BookDocumentViewerItem.Block)?.content?.content is
+                            mihon.book.api.document.BookDocumentBlockContent.Text
+                    ) {
+                        val top = snapshotFlow {
+                            viewportGeometry.lineTop(initialLocation.section, initialLocation.position)
+                        }.filterNotNull().first()
+                        listState.scrollBy(top)
+                    }
+                }
+            } else {
+                currentSection?.let { scrollToSectionPosition(it) }
+            }
             initialPositionRestored = true
         }
     }
@@ -191,6 +215,20 @@ internal fun BookDocumentEndlessViewer(
         scrollToSectionPosition(section, request.position)
     }
 
+    LaunchedEffect(listState, items) {
+        snapshotFlow {
+            // Observe scrolling as well as text layout: coordinates alone retain their identity.
+            listState.firstVisibleItemIndex
+            listState.firstVisibleItemScrollOffset
+            if (initialPositionRestored) {
+                viewportGeometry.firstLocation(
+                    listState.layoutInfo.visibleItemsInfo.mapNotNull { currentItems.resolve(it.index, it.key) },
+                )
+            } else {
+                null
+            }
+        }.filterNotNull().distinctUntilChanged().collect { currentOnViewportLocation(it) }
+    }
     LaunchedEffect(listState, items) {
         var observedLocation: BookDocumentViewerLocation<EntryChapter>? = null
         var observedTransition: EntryChapter? = null
@@ -287,21 +325,23 @@ internal fun BookDocumentEndlessViewer(
         }
     }
 
-    BookDocumentChapterSelectionContainer(
-        chapterId = currentChapterId,
-        modifier = modifier,
-    ) { selection ->
-        BookDocumentViewerList(
-            items = items,
-            state = listState,
-            selection = selection,
-            chapterLoadState = chapterLoadState,
-            onAnchorClick = anchorClick,
-            onExternalLinkClick = externalLinkClick,
-            onReaderTap = readerTap,
-            onTransitionRetry = transitionRetry,
-            modifier = Modifier.fillMaxSize(),
-        )
+    CompositionLocalProvider(LocalBookDocumentViewportGeometry provides viewportGeometry) {
+        BookDocumentChapterSelectionContainer(
+            chapterId = currentChapterId,
+            modifier = modifier.onPlaced { viewportGeometry.viewport = it },
+        ) { selection ->
+            BookDocumentViewerList(
+                items = items,
+                state = listState,
+                selection = selection,
+                chapterLoadState = chapterLoadState,
+                onAnchorClick = anchorClick,
+                onExternalLinkClick = externalLinkClick,
+                onReaderTap = readerTap,
+                onTransitionRetry = transitionRetry,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
     }
 }
 

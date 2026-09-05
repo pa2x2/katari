@@ -1,6 +1,7 @@
 package mihon.entry.interactions.book.document.reader.settings
 
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
+import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.getEnum
@@ -8,6 +9,12 @@ import tachiyomi.core.common.preference.getEnum
 internal class BookDocumentReaderPreferences(
     preferenceStore: PreferenceStore,
 ) {
+    val readingMode = preferenceStore.getEnum(READING_MODE_KEY, BookDocumentReadingMode.SCROLL)
+    val tapZones = preferenceStore.getInt(TAP_ZONES_KEY, 0)
+    val tapInversion = preferenceStore.getInt(TAP_INVERSION_KEY, 0)
+    val animatePages = preferenceStore.getBoolean(ANIMATE_PAGES_KEY, true)
+    val volumeKeys = preferenceStore.getBoolean(VOLUME_KEYS_KEY, false)
+    val invertVolumeKeys = preferenceStore.getBoolean(INVERT_VOLUME_KEYS_KEY, false)
     val themeMode: Preference<BookDocumentReaderThemeMode> =
         preferenceStore.getEnum(THEME_MODE_KEY, BookDocumentReaderThemeMode.APP)
     val textSizePercent: Preference<Int> = preferenceStore.getInt(
@@ -26,6 +33,12 @@ internal class BookDocumentReaderPreferences(
         preferenceStore.getEnum(READING_PROGRESS_STYLE_KEY, BookDocumentReaderProgressStyle.PERCENTAGE)
 
     companion object {
+        const val READING_MODE_KEY = "book_document_reader_reading_mode"
+        const val TAP_ZONES_KEY = "book_document_reader_tap_zones"
+        const val TAP_INVERSION_KEY = "book_document_reader_tap_inversion"
+        const val ANIMATE_PAGES_KEY = "book_document_reader_animate_pages"
+        const val VOLUME_KEYS_KEY = "book_document_reader_volume_keys"
+        const val INVERT_VOLUME_KEYS_KEY = "book_document_reader_invert_volume_keys"
         const val KEY_PREFIX = "book_document_reader_"
         const val THEME_MODE_KEY = "book_document_reader_theme_mode"
         const val TEXT_SIZE_PERCENT_KEY = "book_document_reader_text_size_percent"

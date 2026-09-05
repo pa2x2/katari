@@ -8,6 +8,7 @@ import eu.kanade.presentation.more.settings.Preference
 import mihon.entry.interactions.reader.settings.BookDocumentReaderProgressStyle
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
 import mihon.entry.interactions.reader.settings.BookDocumentReaderThemeMode
+import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.asProfilePreference
 import tachiyomi.i18n.MR
@@ -27,6 +28,15 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
     override fun getSurfacePreferences(): List<Preference> {
         val provider = remember { Injekt.get<BookDocumentReaderSettings>() }
         val binder = remember { Injekt.get<ViewerSettingBinder>() }
+        val readingMode = remember(provider, binder) { binder.bind(provider.readingModeSetting).asProfilePreference() }
+        val tapZones = remember(provider, binder) { binder.bind(provider.tapZonesSetting).asProfilePreference() }
+        val tapInversion =
+            remember(provider, binder) { binder.bind(provider.tapInversionSetting).asProfilePreference() }
+        val animatePages =
+            remember(provider, binder) { binder.bind(provider.animatePagesSetting).asProfilePreference() }
+        val volumeKeys = remember(provider, binder) { binder.bind(provider.volumeKeysSetting).asProfilePreference() }
+        val invertVolumeKeys =
+            remember(provider, binder) { binder.bind(provider.invertVolumeKeysSetting).asProfilePreference() }
         val theme = remember(provider, binder) {
             binder.bind(provider.themeModeSetting).asProfilePreference()
         }
@@ -53,6 +63,41 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
         }
         val readingProgressVisible by showReadingProgress.collectAsState()
         return listOf(
+            Preference.PreferenceGroup(
+                title = stringResource(MR.strings.pref_category_reading_mode),
+                preferenceItems = listOf(
+                    Preference.PreferenceItem.ListPreference(
+                        preference = readingMode,
+                        title = stringResource(MR.strings.pref_viewer_type),
+                        entries = BookDocumentReadingMode.entries.associateWith { stringResource(it.stringRes) },
+                    ),
+                    Preference.PreferenceItem.ListPreference(
+                        preference = tapZones,
+                        title = stringResource(MR.strings.pref_viewer_nav),
+                        entries = tachiyomi.presentation.core.components.reader.navigation.readerTapZoneLabels
+                            .mapIndexed { index, label -> index to stringResource(label) }.toMap(),
+                    ),
+                    Preference.PreferenceItem.ListPreference(
+                        preference = tapInversion,
+                        title = stringResource(MR.strings.pref_read_with_tapping_inverted),
+                        entries = tachiyomi.presentation.core.components.reader.navigation.readerTapInversionLabels
+                            .mapIndexed { index, label -> index to stringResource(label) }.toMap(),
+                    ),
+                    Preference.PreferenceItem.SwitchPreference(
+                        animatePages,
+                        title = stringResource(MR.strings.pref_page_transitions),
+                    ),
+                    Preference.PreferenceItem.SwitchPreference(
+                        volumeKeys,
+                        title = stringResource(MR.strings.pref_read_with_volume_keys),
+                    ),
+                    Preference.PreferenceItem.SwitchPreference(
+                        invertVolumeKeys,
+                        title = stringResource(MR.strings.pref_read_with_volume_keys_inverted),
+                    ),
+                ),
+            ),
+
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.pref_category_appearance),
                 preferenceItems = listOf(
