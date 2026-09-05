@@ -108,7 +108,7 @@ internal class BookDocumentPreparedCache(
         const val CACHE_DIRECTORY_NAME = "book_prepared_documents_v1"
 
         // Also invalidates prepared semantics when parsing or resource projection changes.
-        const val SCHEMA_VERSION = 5
+        const val SCHEMA_VERSION = 6
         const val MAX_CACHE_BYTES = 64L * 1024L * 1024L
         const val MAX_ENTRY_BYTES = 64L * 1024L * 1024L
         val CACHE_FILE_PATTERN = Regex("[a-f0-9]{64}\\.json")

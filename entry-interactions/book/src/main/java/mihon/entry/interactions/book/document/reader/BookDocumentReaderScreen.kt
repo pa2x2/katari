@@ -8,15 +8,10 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -71,7 +66,6 @@ import tachiyomi.presentation.core.components.reader.ReaderChromeTopBar
 import tachiyomi.presentation.core.i18n.stringResource
 import androidx.compose.ui.res.stringResource as androidStringResource
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun BookDocumentReaderScreen(
     state: BookDocumentReaderState,
@@ -341,32 +335,7 @@ internal fun BookDocumentReaderScreen(
                 )
             }
             state.auxiliarySection?.let { section ->
-                val auxiliaryListState = rememberLazyListState(
-                    initialFirstVisibleItemIndex = section.viewerBlockIndex(section.initialPosition.blockId)
-                        .coerceAtLeast(0),
-                )
-                ModalBottomSheet(onDismissRequest = onAuxiliaryDismiss) {
-                    BookDocumentChapterSelectionContainer(chapterId = section.owner.id) { _ ->
-                        LazyColumn(
-                            state = auxiliaryListState,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(bottom = 24.dp),
-                        ) {
-                            items(
-                                items = section.viewerBlocks,
-                                key = { item -> item.key },
-                            ) { item ->
-                                BookDocumentViewerBlock(
-                                    item = item,
-                                    onAnchorClick = onInternalLinkClick,
-                                    onExternalLinkClick = onExternalLinkClick,
-                                    onReaderTap = {},
-                                )
-                            }
-                        }
-                    }
-                }
+                BookDocumentReferenceSheet(section, onAuxiliaryDismiss, onInternalLinkClick, onExternalLinkClick)
             }
         }
     }

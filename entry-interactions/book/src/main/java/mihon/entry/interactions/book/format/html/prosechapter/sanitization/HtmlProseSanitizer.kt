@@ -93,7 +93,7 @@ internal object HtmlProseSanitizer {
         element.removeAttr(BOOK_RESOURCE_FRAGMENT_ATTRIBUTE)
         element.removeAttr(BOOK_RESOURCE_REFERENCE_ATTRIBUTE)
         val resolvedTarget = policy.resolveLink(href)
-        val target = if (element.isContextualReference()) resolvedTarget?.asContextualReference() else resolvedTarget
+        val target = element.contextualReferenceTarget(resolvedTarget)
         when (target) {
             is BookDocumentLinkTarget.Anchor -> element.attr("href", "#${target.fragment}".take(2_048))
             is BookDocumentLinkTarget.External -> element.attr("href", target.url.take(2_048))
@@ -112,19 +112,6 @@ internal object HtmlProseSanitizer {
             }
             null -> element.removeAttr("href")
         }
-    }
-
-    private fun Element.isContextualReference(): Boolean =
-        attr("role").split(Regex("\\s+")).any { it.equals("doc-noteref", true) } ||
-            attr("epub:type").split(Regex("\\s+")).any { it.equals("noteref", true) }
-
-    private fun BookDocumentLinkTarget.asContextualReference(): BookDocumentLinkTarget? = when (this) {
-        is BookDocumentLinkTarget.Anchor -> BookDocumentLinkTarget.Reference(fragment = fragment)
-        is BookDocumentLinkTarget.Resource -> fragment?.let { value ->
-            BookDocumentLinkTarget.Reference(resourceId, value)
-        }
-        is BookDocumentLinkTarget.Reference -> this
-        is BookDocumentLinkTarget.External -> null
     }
 
     private fun sanitizeImage(element: Element, policy: HtmlProseSanitizationPolicy) {

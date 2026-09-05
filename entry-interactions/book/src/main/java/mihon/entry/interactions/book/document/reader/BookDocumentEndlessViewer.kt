@@ -131,23 +131,7 @@ internal fun BookDocumentEndlessViewer(
     ) {
         val index = items.indexOfPosition(section.key, position)
         if (index < 0) return
-        listState.scrollToItem(index)
-        val layout = snapshotFlow {
-            val info = listState.layoutInfo
-            info.visibleItemsInfo.firstOrNull { it.index == index }?.let { item ->
-                Triple(item.size, info.viewportStartOffset, info.viewportEndOffset)
-            }
-        }.filterNotNull().first()
-        listState.scrollToItem(
-            index,
-            bookDocumentScrollOffset(
-                document = section.document,
-                position = position,
-                itemSize = layout.first,
-                viewportStartOffset = layout.second,
-                viewportEndOffset = layout.third,
-            ),
-        )
+        listState.scrollToBookDocumentPosition(section.document, position, index)
     }
 
     SideEffect {

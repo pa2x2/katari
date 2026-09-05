@@ -35,6 +35,7 @@ import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentRead
 internal fun BookDocumentChapterSelectionContainer(
     chapterId: Long,
     modifier: Modifier = Modifier,
+    ownerIdentity: String = "book-document-chapter-$chapterId",
     content: @Composable (BookDocumentChapterSelection) -> Unit,
 ) {
     val selectionState = remember { SelectionState() }
@@ -50,7 +51,7 @@ internal fun BookDocumentChapterSelectionContainer(
     val coroutineScope = rememberCoroutineScope()
     val session = remember(selectionState) {
         BookDocumentChapterSelection(
-            ownerIdentity = "book-document-chapter-$chapterId",
+            ownerIdentity = ownerIdentity,
             selectionState = selectionState,
         )
     }
@@ -60,7 +61,7 @@ internal fun BookDocumentChapterSelectionContainer(
     }
     SideEffect {
         session.interaction = interaction
-        session.updateOwnerIdentity("book-document-chapter-$chapterId")
+        session.updateOwnerIdentity(ownerIdentity)
     }
 
     val selectedTexts = selectionState.selectedTexts
