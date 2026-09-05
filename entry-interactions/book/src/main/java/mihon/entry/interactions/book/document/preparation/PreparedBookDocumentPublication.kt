@@ -64,7 +64,8 @@ internal class PreparedBookDocumentPublication(
         model.document(locator.resourceId) != null &&
             locator.progression?.let { it.isFinite() && it in 0.0..1.0 } != false
 
-    override suspend fun reconcileMigratedLocator(locator: BookLocator): BookLocator? = null
+    override suspend fun reconcileMigratedLocator(locator: BookLocator): BookLocator? =
+        reconcileDocumentLocator(documents, locator)?.let { it.copy(totalProgression = progression(it)) }
 
     override fun close() = closeAction()
 }

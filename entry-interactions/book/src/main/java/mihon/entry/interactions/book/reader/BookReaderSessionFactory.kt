@@ -15,14 +15,12 @@ import mihon.entry.interactions.book.content.SourceBookContentSession
 import mihon.entry.interactions.book.download.BookDownloadCache
 import mihon.entry.interactions.book.download.BookDownloadPackageKey
 import mihon.entry.interactions.book.download.DownloadedBookContentSession
-import mihon.entry.interactions.book.migration.isPendingBookMigration
 import mihon.entry.interactions.book.preparation.BookContentPreparerRegistry
 import mihon.entry.interactions.book.preparation.BookContentPreparerSelection
 import mihon.entry.interactions.book.preparation.BookPreparationResult
 import mihon.entry.interactions.book.preparation.PreparedBookPublication
 import mihon.entry.interactions.book.processor.BookReaderProcessorRegistry
 import mihon.entry.interactions.book.processor.BookReaderRequest
-import mihon.entry.interactions.book.state.BOOK_PROGRESS_LOCATOR_KIND
 import mihon.entry.interactions.book.state.BookProgressIdentity
 import mihon.entry.interactions.book.state.BookProgressLocatorCodec
 import mihon.entry.interactions.book.state.hasPartialBookProgress
@@ -30,8 +28,6 @@ import mihon.entry.interactions.media.EntryMediaSessionProcessor
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.domain.entry.model.EntryProgressLocator
-import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
@@ -187,7 +183,7 @@ internal class BookReaderSessionFactory(
                     val effectiveProgressIdentity = progressIdentity.copy(
                         resourceRevision = publication.locatorRevision ?: progressIdentity.resourceRevision,
                     )
-                    val progress = resolveProgress(
+                    val progress = BookReaderProgressResolver(entryProgressRepository).resolve(
                         chapter = chapter,
                         progressIdentity = effectiveProgressIdentity,
                         preparedPublication = publication,
@@ -236,69 +232,6 @@ internal class BookReaderSessionFactory(
                 }
             }
         }
-    }
-
-    private suspend fun resolveProgress(
-        chapter: EntryChapter,
-        progressIdentity: BookProgressIdentity,
-        preparedPublication: PreparedBookPublication,
-    ): EntryProgressState? {
-        var current = entryProgressRepository.get(
-            chapter.entryId,
-            progressIdentity.contentKey,
-            progressIdentity.resourceKey,
-        )
-        val pendingStates = entryProgressRepository.getByEntryId(chapter.entryId)
-            .filter { state ->
-                state.chapterId == chapter.id && state.isPendingBookMigration
-            }
-            .sortedByDescending { maxOf(it.locatorUpdatedAt, it.completionUpdatedAt) }
-        pendingStates.forEach { pending ->
-            val currentLocator = current
-                ?.locator
-                ?.let(BookProgressLocatorCodec::decode)
-                ?.takeIf(preparedPublication::validate)
-            val migratedLocator = if (currentLocator == null) {
-                val sourceLocator = BookProgressLocatorCodec.decode(pending.locator)
-                try {
-                    sourceLocator
-                        ?.let { preparedPublication.reconcileMigratedLocator(it) }
-                        ?.takeIf(preparedPublication::validate)
-                } catch (error: CancellationException) {
-                    throw error
-                } catch (_: Exception) {
-                    return current
-                }
-            } else {
-                null
-            }
-            val resolvedPending = pending.copy(
-                resourceRevision = progressIdentity.resourceRevision,
-                locator = migratedLocator?.let { locator ->
-                    BookProgressLocatorCodec.encode(locator, pending.locator.extensions)
-                } ?: EntryProgressLocator(kind = BOOK_PROGRESS_LOCATOR_KIND),
-                locatorUpdatedAt = if (migratedLocator == null && current != null) {
-                    0L
-                } else {
-                    pending.locatorUpdatedAt
-                },
-            )
-            entryProgressRepository.upsert(resolvedPending)
-            entryProgressRepository.rekey(
-                entryId = chapter.entryId,
-                chapterId = chapter.id,
-                oldContentKey = resolvedPending.contentKey,
-                oldResourceKey = resolvedPending.resourceKey,
-                newContentKey = progressIdentity.contentKey,
-                newResourceKey = progressIdentity.resourceKey,
-            )
-            current = entryProgressRepository.get(
-                chapter.entryId,
-                progressIdentity.contentKey,
-                progressIdentity.resourceKey,
-            )
-        }
-        return current
     }
 
     private fun failure(
