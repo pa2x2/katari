@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book.document.reader
+package mihon.entry.interactions.book.document.reader.table
 
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
@@ -13,6 +13,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mihon.book.api.document.BookDocumentBlockContent
+import mihon.entry.interactions.book.document.reader.LocalBookDocumentSelectionChapterId
+import mihon.entry.interactions.book.document.reader.LocalBookDocumentTextScale
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeMode
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.document.reader.theme.bookDocumentReaderPalette
@@ -59,6 +61,41 @@ class BookDocumentTableRenderingTest {
         }
         // The cell fills the viewport with its 8dp padding on either side, rather than a fixed column cap.
         composeRule.onNodeWithText(text).assertWidthIsEqualTo(344.dp)
+    }
+
+    @Test
+    fun wrapped_rows_have_only_the_cell_padding_between_their_text_bounds() {
+        val text = "A long contents label that wraps across several lines in a narrow reading column."
+        val document = HtmlProseDocumentParser().parse(
+            "spacing",
+            null,
+            HtmlProseSanitizer.sanitize(
+                "<table><tr><td>$text</td></tr><tr><td>Next row</td></tr></table>".encodeToByteArray(),
+            ),
+        )
+        val block = document.blocks.single()
+        val scale = mutableFloatStateOf(1f)
+        composeRule.setContent {
+            MaterialTheme {
+                CompositionLocalProvider(
+                    LocalBookDocumentReaderPalette provides bookDocumentReaderPalette(BookDocumentReaderThemeMode.APP),
+                    LocalBookDocumentSelectionChapterId provides 1L,
+                    LocalBookDocumentTextScale provides scale.floatValue,
+                ) {
+                    Box(Modifier.width(240.dp)) {
+                        BookDocumentTableRenderer(block.content as BookDocumentBlockContent.Table, block, "spacing", {
+                        }, {})
+                    }
+                }
+            }
+        }
+        for (size in listOf(1f, 1.6f)) {
+            composeRule.runOnIdle { scale.floatValue = size }
+            val first = composeRule.onNodeWithText(text).fetchSemanticsNode().boundsInRoot
+            val next = composeRule.onNodeWithText("Next row").fetchSemanticsNode().boundsInRoot
+            val padding = with(composeRule.density) { 8.dp.roundToPx() * 2 }
+            assertEquals(padding.toFloat(), next.top - first.bottom, 0.5f)
+        }
     }
 
     @Test

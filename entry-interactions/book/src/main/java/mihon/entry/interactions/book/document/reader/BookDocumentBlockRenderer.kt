@@ -17,8 +17,8 @@ import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentBlockContent
 import mihon.book.api.document.BookDocumentContent
 import mihon.book.api.document.BookDocumentLinkTarget
-import mihon.book.api.document.BookDocumentRichText
 import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.document.reader.table.BookDocumentTableRenderer
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
 
@@ -140,31 +140,4 @@ internal fun BookDocumentBlockRenderer(
             )
         }
     }
-}
-
-@Composable
-internal fun BookDocumentRichTextRenderer(
-    value: BookDocumentRichText,
-    identity: String,
-    block: BookDocumentBlock,
-    onAnchorClick: (BookDocumentLinkTarget) -> Unit,
-    onExternalLinkClick: (String) -> Unit,
-    separatorAfter: String = "\n\n",
-    leadingSelectionText: String = "",
-    baseFontSizeSp: Float = BOOK_DOCUMENT_BASE_TEXT_SIZE_SP,
-    modifier: Modifier = Modifier,
-) {
-    BookDocumentSelectableText(
-        text = value.text,
-        links = value.links,
-        inlineStyles = value.inlineStyles,
-        identity = identity,
-        block = block,
-        separatorAfter = separatorAfter,
-        onAnchorClick = onAnchorClick,
-        onExternalLinkClick = onExternalLinkClick,
-        leadingSelectionText = leadingSelectionText,
-        baseFontSizeSp = baseFontSizeSp,
-        modifier = modifier,
-    )
 }

@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book.document.reader
+package mihon.entry.interactions.book.document.reader.table
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -15,6 +15,7 @@ import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentBlockContent
 import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.book.api.document.layoutBookDocumentTable
+import mihon.entry.interactions.book.document.reader.BookDocumentRichTextRenderer
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 
 /** Selectable native-text projection of a bounded semantic table. */
@@ -41,24 +42,26 @@ internal fun BookDocumentTableRenderer(
                     separatorAfter = "\n",
                 )
             }
-            BookDocumentTableGrid(grid, viewportWidth, Modifier.background(palette.surfaceVariant)) {
-                content.rows.forEachIndexed { rowIndex, row ->
-                    row.cells.forEachIndexed { cellIndex, cell ->
-                        BookDocumentRichTextRenderer(
-                            value = cell.content,
-                            identity = "$selectionIdentity:cell:$rowIndex:$cellIndex",
-                            block = if (cell.header) block.copy(style = block.style.copy(bold = true)) else block,
-                            onAnchorClick = onAnchorClick,
-                            onExternalLinkClick = onExternalLinkClick,
-                            separatorAfter = when {
-                                cellIndex < row.cells.lastIndex -> "\t"
-                                rowIndex < content.rows.lastIndex -> "\n"
-                                else -> "\n\n"
-                            },
-                            modifier = Modifier.padding(8.dp),
-                        )
-                    }
-                }
+            val cells = remember(content.rows) {
+                content.rows.flatMapIndexed { rowIndex, row -> row.cells.indices.map { rowIndex to it } }
+            }
+            BookDocumentTableGrid(grid, block, viewportWidth, Modifier.background(palette.surfaceVariant)) { index ->
+                val (rowIndex, cellIndex) = cells[index]
+                val row = content.rows[rowIndex]
+                val cell = row.cells[cellIndex]
+                BookDocumentRichTextRenderer(
+                    value = cell.content,
+                    identity = "$selectionIdentity:cell:$rowIndex:$cellIndex",
+                    block = if (cell.header) block.copy(style = block.style.copy(bold = true)) else block,
+                    onAnchorClick = onAnchorClick,
+                    onExternalLinkClick = onExternalLinkClick,
+                    separatorAfter = when {
+                        cellIndex < row.cells.lastIndex -> "\t"
+                        rowIndex < content.rows.lastIndex -> "\n"
+                        else -> "\n\n"
+                    },
+                    modifier = Modifier.padding(8.dp),
+                )
             }
         }
     }
