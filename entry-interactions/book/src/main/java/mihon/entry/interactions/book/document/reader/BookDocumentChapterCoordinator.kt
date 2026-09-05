@@ -53,7 +53,6 @@ internal class BookDocumentChapterCoordinator(
     private val activitySession = EntryMediaSessionActivitySession()
     private val activityMutex = Mutex()
     private var navigationRequestId = 0L
-    private val publicationNavigationHistory = ArrayDeque<BookLocator>()
 
     fun startReading() {
         if (retainedSessions.currentSession() != null && readingStartedAt == null) {
@@ -143,10 +142,6 @@ internal class BookDocumentChapterCoordinator(
         loadChapter(chapter, activate = true, retry = retry)
     }
 
-    fun navigateWithinPublication(locator: BookLocator) {
-        navigateWithinPublication(locator, rememberReturn = true)
-    }
-
     fun navigateLink(
         source: BookDocumentSection<EntryChapter>,
         target: BookDocumentLinkTarget,
@@ -170,7 +165,6 @@ internal class BookDocumentChapterCoordinator(
         }
         navigateWithinPublication(
             BookLocator(resourceId = resourceId, fragments = listOfNotNull(fragment)),
-            rememberReturn = true,
         )
     }
 
@@ -196,18 +190,7 @@ internal class BookDocumentChapterCoordinator(
         )
     }
 
-    fun navigateBack(): Boolean {
-        val state = currentState() ?: return false
-        if (state.auxiliarySection != null) {
-            updateState(state.copy(auxiliarySection = null))
-            return true
-        }
-        val locator = publicationNavigationHistory.removeLastOrNull() ?: return false
-        navigateWithinPublication(locator, rememberReturn = false)
-        return true
-    }
-
-    private fun navigateWithinPublication(locator: BookLocator, rememberReturn: Boolean) {
+    fun navigateWithinPublication(locator: BookLocator) {
         val state = currentState() ?: return
         val sections = state.loadedSections[state.currentChapterId] ?: return
         val section = sections.sections.firstOrNull {
@@ -220,9 +203,6 @@ internal class BookDocumentChapterCoordinator(
         if (section !in sections.sections) {
             updateState(state.copy(auxiliarySection = section))
             return
-        }
-        if (rememberReturn) {
-            retainedSessions.locator(state.currentChapterId)?.let(publicationNavigationHistory::addLast)
         }
         if (state.auxiliarySection != null) updateState(state.copy(auxiliarySection = null))
         requestNavigation(section, position)
@@ -334,7 +314,6 @@ internal class BookDocumentChapterCoordinator(
         chapterLoadJobs.values.forEach(Job::cancel)
         chapterLoadJobs.clear()
         chapterSelectionRequests.clear()
-        publicationNavigationHistory.clear()
         persistLocationJob?.cancel()
         activityCheckpointJob?.cancel()
         activityCheckpointJob = null

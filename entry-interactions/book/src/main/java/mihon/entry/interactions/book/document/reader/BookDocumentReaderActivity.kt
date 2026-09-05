@@ -227,7 +227,6 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                             readerState = readerState?.copy(settingsVisible = false)
                         }
                         readerState?.auxiliarySection != null -> chapterCoordinator.dismissAuxiliarySection()
-                        chapterCoordinator.navigateBack() -> Unit
                         else -> {
                             isEnabled = false
                             onBackPressedDispatcher.onBackPressed()
