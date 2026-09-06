@@ -30,14 +30,12 @@ import tachiyomi.presentation.core.i18n.stringResource
 internal fun StatisticsTopTitlesCard(
     titles: List<StatsTopTitle>,
     typesById: Map<EntryType, StatsType>,
-    periodLabel: String,
     formatDuration: (Long) -> String,
     onTitleClick: (Long) -> Unit,
 ) {
     val visibleTitles = titles.take(5)
     StatisticsSectionCard(
         title = stringResource(MR.strings.statistics_top_titles),
-        trailingText = periodLabel,
     ) {
         visibleTitles.forEachIndexed { index, title ->
             val type = typesById[title.type]

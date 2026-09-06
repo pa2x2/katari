@@ -125,6 +125,14 @@ internal fun StatisticsDashboardPage(
         }
         Box(Modifier.padding(horizontal = 16.dp)) { StatisticsRangeSelector(state.range, onRangeSelected) }
         if (StatisticsCard.ACTIVITY in layout.hidden) {
+            if (period.isNotEmpty()) {
+                Text(
+                    text = period,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             StatisticsActivityFeedback(state.activity, onRetryActivity)
         }
         LazyColumn(
@@ -151,22 +159,18 @@ internal fun StatisticsDashboardPage(
             layout.order.filter { it in cards && it !in layout.hidden }.forEach { card ->
                 item(key = card.id) {
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(
-                            text = if (card.isCurrentLibrary) {
-                                stringResource(MR.strings.statistics_library) + " · " +
+                        if (card.isCurrentLibrary) {
+                            Text(
+                                text = stringResource(MR.strings.statistics_library) + " · " +
                                     pluralStringResource(
                                         MR.plurals.statistics_title_count,
                                         titleCount,
                                         titleCount,
-                                    )
-                            } else if (card == StatisticsCard.EARLIER) {
-                                stringResource(MR.strings.statistics_earlier_activity)
-                            } else {
-                                period
-                            },
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                                    ),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                         when (card) {
                             StatisticsCard.SUMMARY -> StatisticsActivitySummaryCards(
                                 time = visibleActivity?.let { formatter(it.totalDurationMillis) } ?: "—",
@@ -187,7 +191,6 @@ internal fun StatisticsDashboardPage(
                                 StatisticsTopTitlesCard(
                                     visibleActivity.topTitles,
                                     state.types.associateBy(StatsType::type),
-                                    period,
                                     formatter,
                                     onOpenEntry,
                                 )
