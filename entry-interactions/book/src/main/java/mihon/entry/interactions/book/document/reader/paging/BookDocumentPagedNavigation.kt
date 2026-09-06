@@ -62,7 +62,11 @@ internal fun rememberBookDocumentPagedNavigation(
     val currentOnUserScrollStarted by rememberUpdatedState(onUserScrollStarted)
     val currentOnScrollStarted by rememberUpdatedState(onScrollStarted)
     val focus = remember { FocusRequester() }
-    LaunchedEffect(chromeVisible, mode) { if (!chromeVisible) focus.requestFocus() }
+    LaunchedEffect(chromeVisible, mode, pager.currentPage) {
+        // Selection takes focus inside a page. Return it to the stable pager when that page
+        // changes, so subsequent keys still have a target after its selection container is disposed.
+        if (!chromeVisible) focus.requestFocus()
+    }
 
     fun move(delta: Int) {
         if (pages.isEmpty()) return
