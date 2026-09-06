@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1] - 2026-09-06
+
+### 🐛 Fixed
+
+- Book reader volume keys now keep turning pages after text selection.
+- Book reader page counters no longer reset when switching between left-to-right, right-to-left, and vertical paged reading.
+
 ## [1.8.0] - 2026-09-06
 
 ### ✨ Added
@@ -388,7 +395,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.8.0...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.8.1...HEAD
+[1.8.1]: https://github.com/pa2x2/katari/releases/tag/v1.8.1
 [1.8.0]: https://github.com/pa2x2/katari/releases/tag/v1.8.0
 [1.7.0]: https://github.com/pa2x2/katari/releases/tag/v1.7.0
 [1.6.0]: https://github.com/pa2x2/katari/releases/tag/v1.6.0
