@@ -14,10 +14,13 @@ internal class LegacyFilterSourceFixture(
     override val id = 1L
     override val name = "Legacy filters"
     override val supportsLatest = false
+    var searchCount = 0
+        private set
 
     override fun getFilterList() = filters()
 
     override suspend fun getSearchManga(page: Int, query: String, filters: FilterList): MangasPage {
+        searchCount++
         search(page, query, filters)
         return MangasPage(emptyList(), false)
     }

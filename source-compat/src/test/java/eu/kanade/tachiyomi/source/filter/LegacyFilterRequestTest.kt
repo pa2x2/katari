@@ -43,6 +43,7 @@ class LegacyFilterRequestTest {
         for (page in 1..2) {
             applied.withSourceFilterValues { adapter.getSearchContent(page, "", it) }
         }
+        source.searchCount shouldBe 2
     }
 
     @Test
@@ -62,6 +63,7 @@ class LegacyFilterRequestTest {
             EntryFilter.TriState.STATE_EXCLUDE
         populated = true
         captured.withSourceFilterValues { adapter.getSearchContent(1, "cats", it) }
+        source.searchCount shouldBe 1
     }
 
     @Test
@@ -80,6 +82,7 @@ class LegacyFilterRequestTest {
         for (filters in listOf(captured, EntryFilterList())) {
             filters.withSourceFilterValues { adapter.getSearchContent(1, "cats", it) }
         }
+        source.searchCount shouldBe 2
     }
 
     @Test
@@ -99,6 +102,7 @@ class LegacyFilterRequestTest {
         ((draft[1] as EntryFilter.Group<*>).state.single() as EntryFilter.TriState).state =
             EntryFilter.TriState.STATE_EXCLUDE
         draft.withSourceFilterValues { adapter.getSearchContent(1, "", it) }
+        source.searchCount shouldBe 1
         genres.state.single().isIgnored() shouldBe true
     }
 
@@ -162,6 +166,7 @@ class LegacyFilterRequestTest {
         request.cancelAndJoin()
         genres.state.single().isIgnored() shouldBe true
         filters.withSourceFilterValues { adapter.getSearchContent(1, "retry", it) }
+        source.searchCount shouldBe 2
         genres.state.single().isIgnored() shouldBe true
     }
 }

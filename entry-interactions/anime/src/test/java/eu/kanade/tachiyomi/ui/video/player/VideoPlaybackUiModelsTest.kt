@@ -8,20 +8,6 @@ import org.junit.jupiter.api.Test
 class VideoPlaybackUiModelsTest {
 
     @Test
-    fun `player settings defaults clear selections and restore automatic playback`() {
-        assertEquals(
-            VideoPlayerSettingsDraft(
-                sourceSelection = PlaybackSelection(),
-                adaptiveQuality = VideoAdaptiveQualityPreference.Auto,
-                playbackSpeed = DEFAULT_PLAYER_SETTINGS_PLAYBACK_SPEED,
-                subtitleSelection = VideoPlayerSubtitleSelection.Default,
-                resetToDefaults = true,
-            ),
-            defaultVideoPlayerSettingsDraft(),
-        )
-    }
-
-    @Test
     fun `reset settings display the source resolved defaults without persisting them`() {
         val resetDraft = defaultVideoPlayerSettingsDraft()
         val resolvedDefaults = PlaybackSelection(

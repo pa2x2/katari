@@ -32,17 +32,17 @@ class FeatureArtifactSelectionTest {
     }
 
     @Test
-    fun `applicable contributions select and execute the same feature owned artifacts`() {
+    fun `applicable contributions select the same feature owned artifacts`() {
         val adapterDefinition = specializedAdapterDefinition<ExampleAdapter>(
             id = SpecializedAdapterId("example.adapter"),
             owner = featureOwner,
         )
-        val contract = RecordingContract("example.behavior")
-        val projectionDefinition = featureProjectionDefinition<RecordingProjection>(
+        val contract = TestContract("example.behavior")
+        val projectionDefinition = featureProjectionDefinition<TestProjection>(
             id = FeatureArtifactId("example.reference"),
             owner = featureOwner,
         )
-        val projectionImplementation = RecordingProjection()
+        val projectionImplementation = TestProjection()
         val projection = FeatureProjection(projectionDefinition, projectionImplementation)
         val graph = graph(
             contentTypes = listOf(
@@ -86,16 +86,6 @@ class FeatureArtifactSelectionTest {
                 selection.contextEvidence.isEmpty()
         } shouldBe true
         selected.obligations shouldBe emptyList()
-
-        selected.behavioralContracts.forEach { (it.contract as RecordingContract).execute(it.subject) }
-        selected.projections.forEach {
-            (it.projection.implementation as RecordingProjection).project(it.subject)
-        }
-        contract.executedSubjects shouldContainExactly listOf(ContentTypeId("complete"), ContentTypeId("second"))
-        projectionImplementation.projectedSubjects shouldContainExactly listOf(
-            ContentTypeId("complete"),
-            ContentTypeId("second"),
-        )
     }
 
     @Test
@@ -104,11 +94,11 @@ class FeatureArtifactSelectionTest {
             id = ContractFixtureId("example.fixture"),
             owner = featureOwner,
         )
-        val contract = RecordingContract(
+        val contract = TestContract(
             id = "example.behavior",
             fixtureRequirements = listOf(fixtureDefinition),
         )
-        val secondContract = RecordingContract(
+        val secondContract = TestContract(
             id = "example.second-behavior",
             fixtureRequirements = listOf(fixtureDefinition),
         )
@@ -136,9 +126,9 @@ class FeatureArtifactSelectionTest {
 
         selected.behavioralContracts shouldHaveSize 4
         selected.behavioralContracts.filter { it.subject.entryContentType.value == "missing" }
-            .all { it.fixtures.isEmpty() } shouldBe true
+            .map { it.fixtures } shouldContainExactly listOf(emptyList(), emptyList())
         selected.behavioralContracts.filter { it.subject.entryContentType.value == "supplied" }
-            .all { it.fixtures == listOf(suppliedFixture) } shouldBe true
+            .map { it.fixtures } shouldContainExactly listOf(listOf(suppliedFixture), listOf(suppliedFixture))
         val obligation = selected.obligations.single() as MissingContractFixtureObligation
         obligation.responsibleOwner shouldBe ContributionOwner("missing.type")
         obligation.subject.entryContentType shouldBe ContentTypeId("missing")
@@ -148,8 +138,8 @@ class FeatureArtifactSelectionTest {
 
     @Test
     fun `one missing shared projection obligation names every affected subject`() {
-        val contract = RecordingContract("example.behavior")
-        val projectionDefinition = featureProjectionDefinition<RecordingProjection>(
+        val contract = TestContract("example.behavior")
+        val projectionDefinition = featureProjectionDefinition<TestProjection>(
             id = FeatureArtifactId("example.reference"),
             owner = featureOwner,
         )
@@ -183,8 +173,8 @@ class FeatureArtifactSelectionTest {
 
     @Test
     fun `artifact ordering is deterministic across declared order`() {
-        val alphaContract = RecordingContract("example.alpha-contract")
-        val zetaContract = RecordingContract("example.zeta-contract")
+        val alphaContract = TestContract("example.alpha-contract")
+        val zetaContract = TestContract("example.zeta-contract")
         val alphaProjection = projection("example.alpha-projection")
         val zetaProjection = projection("example.zeta-projection")
         val graph = graph(
@@ -217,7 +207,7 @@ class FeatureArtifactSelectionTest {
 
     @Test
     fun `selection rejects a curated subset of evaluated relationships`() {
-        val contract = RecordingContract("example.behavior")
+        val contract = TestContract("example.behavior")
         val graph = graph(
             contentTypes = listOf(
                 contentType(
@@ -273,34 +263,23 @@ class FeatureArtifactSelectionTest {
         )
     }
 
-    private fun projection(id: String): FeatureProjection<RecordingProjection> {
-        val definition = featureProjectionDefinition<RecordingProjection>(FeatureArtifactId(id), featureOwner)
-        return FeatureProjection(definition, RecordingProjection())
+    private fun projection(id: String): FeatureProjection<TestProjection> {
+        val definition = featureProjectionDefinition<TestProjection>(FeatureArtifactId(id), featureOwner)
+        return FeatureProjection(definition, TestProjection())
     }
 
     private fun behavior(id: String) = object : FeatureBehaviorProjection {
         override val id = FeatureArtifactId(id)
     }
 
-    private class RecordingContract(
+    private class TestContract(
         id: String,
         override val fixtureRequirements: List<ContractFixtureDefinition<*>> = emptyList(),
     ) : FeatureBehaviorContract {
         override val id = FeatureArtifactId(id)
-        val executedSubjects = mutableListOf<ContentTypeId>()
-
-        fun execute(subject: FeatureIntegrationSubject) {
-            executedSubjects += subject.entryContentType
-        }
     }
 
-    private class RecordingProjection {
-        val projectedSubjects = mutableListOf<ContentTypeId>()
-
-        fun project(subject: FeatureIntegrationSubject) {
-            projectedSubjects += subject.entryContentType
-        }
-    }
+    private class TestProjection
 
     private class AlphaProvider
 

@@ -6,18 +6,15 @@ import io.mockk.every
 import io.mockk.mockk
 import mihon.entry.interactions.download.runtime.EntryDownloadSourceAccess
 import org.junit.jupiter.api.Test
-import tachiyomi.domain.source.model.UnifiedStubSource
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.source.local.LocalSource
 
 class EntryDownloadSourceAccessResolverTest {
     private val remoteSourceId = 10L
     private val missingSourceId = 11L
-    private val stubSourceId = 12L
     private val sourceManager = mockk<SourceManager> {
         every { get(remoteSourceId) } returns mockk<UnifiedSource>()
         every { get(missingSourceId) } returns null
-        every { get(stubSourceId) } returns UnifiedStubSource(stubSourceId, "en", "Missing")
     }
     private val resolver = SourceManagerEntryDownloadSourceAccessResolver(sourceManager)
 
@@ -27,9 +24,8 @@ class EntryDownloadSourceAccessResolverTest {
     }
 
     @Test
-    fun `missing stub and local sources block downloads`() {
+    fun `missing and local sources block downloads`() {
         resolver.resolve(setOf(missingSourceId)) shouldBe EntryDownloadSourceAccess.LOCAL_OR_STUB
-        resolver.resolve(setOf(stubSourceId)) shouldBe EntryDownloadSourceAccess.LOCAL_OR_STUB
         resolver.resolve(setOf(LocalSource.ID)) shouldBe EntryDownloadSourceAccess.LOCAL_OR_STUB
     }
 

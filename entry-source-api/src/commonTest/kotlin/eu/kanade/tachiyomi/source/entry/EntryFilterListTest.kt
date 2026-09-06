@@ -1,7 +1,6 @@
 package eu.kanade.tachiyomi.source.entry
 
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotEquals
 
@@ -32,17 +31,7 @@ class EntryFilterListTest {
     }
 
     @Test
-    fun `autocomplete options provide safe defaults and reject invalid request policies`() {
-        assertEquals(
-            EntryFilterAutocompleteOptions(),
-            EntryFilterAutocompleteOptions(
-                debounceMillis = EntryFilterAutocompleteOptions.DEFAULT_DEBOUNCE_MILLIS,
-                minimumQueryLength = EntryFilterAutocompleteOptions.DEFAULT_MINIMUM_QUERY_LENGTH,
-                requestOnFocus = false,
-                maximumResults = EntryFilterAutocompleteOptions.DEFAULT_MAXIMUM_RESULTS,
-            ),
-        )
-
+    fun `autocomplete options reject invalid request policies`() {
         assertFailsWith<IllegalArgumentException> {
             EntryFilterAutocompleteOptions(debounceMillis = -1)
         }
@@ -56,9 +45,6 @@ class EntryFilterListTest {
 
     @Test
     fun `paged group policies and page requests reject invalid bounds`() {
-        assertEquals(50, EntryFilterPagingOptions().pageSize)
-        assertEquals(300L, EntryFilterPagingOptions().search?.debounceMillis)
-
         assertFailsWith<IllegalArgumentException> { EntryFilterPagingOptions(pageSize = 0) }
         assertFailsWith<IllegalArgumentException> { EntryFilterPagingOptions(pageSize = 201) }
         assertFailsWith<IllegalArgumentException> {

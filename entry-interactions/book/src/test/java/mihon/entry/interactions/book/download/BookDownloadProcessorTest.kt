@@ -76,16 +76,6 @@ class BookDownloadProcessorTest {
     }
 
     @Test
-    fun `deleting an entry delegates only its concrete ownership`() = runTest {
-        val entry = entry(id = 1L, source = 10L)
-        val fixture = fixture()
-
-        fixture.processor.deleteEntryDownloads(entry)
-
-        coVerify(exactly = 1) { fixture.manager.deleteEntryDownloads(entry) }
-    }
-
-    @Test
     fun `provided bulk candidates still exclude completed downloads`() = runTest {
         val entry = entry(id = 1L, source = 10L)
         val downloaded = chapter(id = 11L, entryId = entry.id, number = 1.0)

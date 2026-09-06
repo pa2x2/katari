@@ -26,7 +26,6 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 import java.nio.file.Files
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
-import kotlin.test.assertTrue
 
 internal class BookReaderOwnerPolicyTest : BookReaderSessionFixture() {
     @Test
@@ -95,7 +94,12 @@ internal class BookReaderOwnerPolicyTest : BookReaderSessionFixture() {
         session.saveLocation(BookLocator("chapter-1.xhtml", progression = 0.5))
         session.recordHistory(500L)
 
-        assertTrue(events.all { it.visibleEntry == visible && it.child == chapter })
+        val progress = events.filterIsInstance<EntryMediaSessionEvent.Progressed>().single()
+        val activity = events.filterIsInstance<EntryMediaSessionEvent.ActivityRecorded>().single()
+        for (event in listOf(progress, activity)) {
+            assertEquals(visible, event.visibleEntry)
+            assertEquals(chapter, event.child)
+        }
         session.close()
     }
 }

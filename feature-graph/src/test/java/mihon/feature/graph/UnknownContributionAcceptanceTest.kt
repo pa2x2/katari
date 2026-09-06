@@ -18,12 +18,12 @@ class UnknownContributionAcceptanceTest {
             owner = featureOwner,
         )
         val behavior = behavior("example.projection")
-        val contract = RecordingContract()
-        val projectionDefinition = featureProjectionDefinition<RecordingProjection>(
+        val contract = TestContract()
+        val projectionDefinition = featureProjectionDefinition<TestProjection>(
             id = FeatureArtifactId("example.projection"),
             owner = featureOwner,
         )
-        val projectionImplementation = RecordingProjection()
+        val projectionImplementation = TestProjection()
         val projection = FeatureProjection(projectionDefinition, projectionImplementation)
         val types = mutableListOf(
             contentType("existing", typesOwner, alpha, adapterDefinition),
@@ -84,15 +84,8 @@ class UnknownContributionAcceptanceTest {
             "existing",
             "future-complete",
         )
-        selected.behavioralContracts.forEach { (it.contract as RecordingContract).execute(it.subject) }
-        selected.projections.forEach {
-            (it.projection.implementation as RecordingProjection).project(it.subject)
-        }
-        contract.subjects shouldContainExactly listOf(ContentTypeId("existing"), ContentTypeId("future-complete"))
-        projectionImplementation.subjects shouldContainExactly listOf(
-            ContentTypeId("existing"),
-            ContentTypeId("future-complete"),
-        )
+        selected.behavioralContracts.map { it.contract } shouldContainExactly listOf(contract, contract)
+        selected.projections.map { it.projection } shouldContainExactly listOf(projection, projection)
     }
 
     @Test
@@ -228,22 +221,11 @@ class UnknownContributionAcceptanceTest {
         override val id = FeatureArtifactId(id)
     }
 
-    private class RecordingContract : FeatureBehaviorContract {
+    private class TestContract : FeatureBehaviorContract {
         override val id = FeatureArtifactId("example.contract")
-        val subjects = mutableListOf<ContentTypeId>()
-
-        fun execute(subject: FeatureIntegrationSubject) {
-            subjects += subject.entryContentType
-        }
     }
 
-    private class RecordingProjection {
-        val subjects = mutableListOf<ContentTypeId>()
-
-        fun project(subject: FeatureIntegrationSubject) {
-            subjects += subject.entryContentType
-        }
-    }
+    private class TestProjection
 
     private class AlphaProvider
 

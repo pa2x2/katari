@@ -4,8 +4,10 @@ import app.cash.sqldelight.async.coroutines.await
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitCreate
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -21,6 +23,7 @@ import tachiyomi.data.StringListColumnAdapter
 import tachiyomi.data.UpdateStrategyColumnAdapter
 import tachiyomi.domain.entry.model.EntryProgressLocator
 import tachiyomi.domain.entry.model.EntryProgressState
+import java.sql.SQLException
 
 class EntryProgressRepositoryImplTest {
     @Test
@@ -89,7 +92,7 @@ class EntryProgressRepositoryImplTest {
     @Test
     fun `database rejects invalid state that bypasses domain validation`() = runTest {
         withDatabase { database, repository ->
-            val result = runCatching {
+            val failure = shouldThrow<SQLException> {
                 database.entry_progress_stateQueries.upsert(
                     entryId = 1,
                     chapterId = null,
@@ -108,7 +111,7 @@ class EntryProgressRepositoryImplTest {
                 )
             }
 
-            result.isFailure.shouldBeTrue()
+            failure.message shouldContain "CHECK constraint failed"
             repository.getByEntryId(1).isEmpty().shouldBeTrue()
         }
     }
@@ -116,11 +119,11 @@ class EntryProgressRepositoryImplTest {
     @Test
     fun `database rejects a child mapping from another entry`() = runTest {
         withDatabase { _, repository ->
-            val result = runCatching {
+            val failure = shouldThrow<SQLException> {
                 repository.upsert(state().copy(chapterId = 4))
             }
 
-            result.isFailure.shouldBeTrue()
+            failure.message shouldContain "FOREIGN KEY constraint failed"
             repository.getByEntryId(1).isEmpty().shouldBeTrue()
         }
     }

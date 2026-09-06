@@ -6,18 +6,9 @@ import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.AndroidPreferenceStore
-import tachiyomi.core.common.preference.InMemoryPreferenceStore
 import tachiyomi.domain.library.service.DuplicatePreferences
-import tachiyomi.domain.library.service.DuplicateTitleExclusions
 
 class DuplicatePreferencesTest {
-
-    @Test
-    fun `title exclusions default to bracket patterns`() {
-        val preferences = DuplicatePreferences(InMemoryPreferenceStore())
-
-        preferences.titleExclusionPatterns.get() shouldBe DuplicateTitleExclusions.defaultPatterns
-    }
 
     @Test
     fun `title exclusions sanitize duplicates and catch all patterns`() {

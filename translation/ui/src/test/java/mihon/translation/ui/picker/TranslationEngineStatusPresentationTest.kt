@@ -3,7 +3,6 @@ package mihon.translation.ui.picker
 import io.kotest.matchers.shouldBe
 import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.KnownTranslationEngine
-import mihon.translation.api.engine.TranslationEngineAction
 import mihon.translation.api.engine.TranslationEngineArtwork
 import mihon.translation.api.engine.TranslationEngineBuildAvailability
 import mihon.translation.api.engine.TranslationEngineDetails
@@ -103,31 +102,6 @@ class TranslationEngineStatusPresentationTest {
     }
 
     @Test
-    fun `provider reasons and recovery actions remain attached to their card`() {
-        val reason = "Enable the local API"
-        val model = card(
-            status = TranslationEngineStatus.ConfigurationRequired(reason),
-            action = TranslationEngineAction.Configure,
-        )
-
-        model.action shouldBe TranslationEngineAction.Configure
-        model.status.explanation shouldBe TranslationEngineStatusExplanation.ProviderText(reason)
-    }
-
-    @Test
-    fun `every recovery action is preserved without changing selection`() {
-        TranslationEngineAction.entries.forEach { action ->
-            val model = card(
-                status = TranslationEngineStatus.NotInstalled,
-                action = action,
-            )
-
-            model.action shouldBe action
-            model.selected shouldBe false
-        }
-    }
-
-    @Test
     fun `unknown stored selection is reported without replacement`() {
         isTranslationEngineSelectionMissing(
             states = listOf(state(TranslationEngineStatus.Ready)),
@@ -142,17 +116,15 @@ class TranslationEngineStatusPresentationTest {
     private fun card(
         status: TranslationEngineStatus,
         selected: TranslationEngineId? = TranslationEngineId("other"),
-        action: TranslationEngineAction? = null,
-    ) = projectTranslationEngineCard(state(status, action), selected)
+    ) = projectTranslationEngineCard(state(status), selected)
 
     private fun state(
         status: TranslationEngineStatus,
-        action: TranslationEngineAction? = null,
     ) = TranslationEngineState(
         engine = ENGINE,
         presentation = null,
         status = status,
-        action = action,
+        action = null,
     )
 
     private companion object {

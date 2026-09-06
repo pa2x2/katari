@@ -8,6 +8,7 @@ import eu.kanade.tachiyomi.source.entry.filter.EntryFilterValidationCode
 import eu.kanade.tachiyomi.source.entry.filter.validationIssues
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
@@ -41,6 +42,7 @@ class DetachedEntryFiltersTest {
         (draft.single() as EntryFilter.Select<*>).state = 1
         val entered = CompletableDeferred<Unit>()
         val finish = CompletableDeferred<Unit>()
+        val secondEntered = CompletableDeferred<Unit>()
         val first = async {
             draft.withSourceFilterValues {
                 entered.complete(Unit)
@@ -49,14 +51,20 @@ class DetachedEntryFiltersTest {
             }
         }
         entered.await()
-        val second = async { other.withSourceFilterValues { source.state shouldBe 0 } }
+        val second = async(start = CoroutineStart.UNDISPATCHED) {
+            other.withSourceFilterValues {
+                secondEntered.complete(Unit)
+                source.state shouldBe 0
+            }
+        }
+        secondEntered.isCompleted shouldBe false
         finish.complete(Unit)
         first.await()
         second.await()
         source.state shouldBe 0
-        try {
+        assertThrows<IllegalStateException> {
             draft.withSourceFilterValues<Unit> { error("request failed") }
-        } catch (_: IllegalStateException) { }
+        }
         source.state shouldBe 0
     }
 
