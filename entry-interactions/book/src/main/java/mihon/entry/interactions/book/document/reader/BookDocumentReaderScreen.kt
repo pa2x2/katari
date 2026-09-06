@@ -111,7 +111,9 @@ internal fun BookDocumentReaderScreen(
     val showTextSelectionMenuSetting by settingBindings.showTextSelectionMenu.state.collectAsState()
     val showReadingProgressSetting by settingBindings.showReadingProgress.state.collectAsState()
     val readingModeSetting by settingBindings.readingMode.state.collectAsState()
-    var pageProgress by remember(readingModeSetting.effectiveValue) {
+    // Paged modes share the same pager and pages. Keep its last observation when only
+    // the paging direction changes, because the visible page need not emit again.
+    var pageProgress by remember(readingModeSetting.effectiveValue == BookDocumentReadingMode.SCROLL) {
         mutableStateOf<BookReaderProgress.Page?>(BookReaderProgress.Page(1, 1))
     }
     val readingProgressStyleSetting by settingBindings.readingProgressStyle.state.collectAsState()
