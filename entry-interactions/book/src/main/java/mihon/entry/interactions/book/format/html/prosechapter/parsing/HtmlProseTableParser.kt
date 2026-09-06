@@ -21,9 +21,6 @@ internal fun HtmlProseBlockParser.addTableBlock(
 ): Boolean {
     val rowElements = element.select("tr").filter { it.nearestAncestor("table") === element }
     if (rowElements.isEmpty()) return false
-    if (rowElements.size > HtmlProseChapterContract.MAX_TABLE_ROWS) {
-        throw HtmlProseLimitExceededException("HTML table contains too many rows")
-    }
     val captionElement = element.children().firstOrNull { it.normalName() == "caption" }
     val caption = captionElement?.let { parseInline(it.childNodes()) }?.takeIf { it.text.isNotBlank() }
     val parsedRows = rowElements.mapNotNull { row ->
@@ -71,6 +68,7 @@ internal fun HtmlProseBlockParser.addTableBlock(
     }
     val rows = parsedRows.map { row ->
         fragments += row.fragments
+        row.fragments.forEach { fragment -> anchors.putIfAbsent(fragment, canonical.length) }
         val cells = row.cells.mapIndexed { index, cell ->
             val start = canonical.length
             canonical.append(cell.inline.text)

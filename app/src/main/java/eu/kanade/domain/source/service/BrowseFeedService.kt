@@ -8,6 +8,8 @@ import eu.kanade.domain.source.model.SourceFeedTimeline
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
+private val presetMutationLock = Any()
+
 class BrowseFeedService(
     private val preferences: SourcePreferences,
     private val profilePreferences: ProfileSourcePreferences? = null,
@@ -51,51 +53,66 @@ class BrowseFeedService(
         }
     }
 
-    fun savePreset(preset: SourceFeedPreset) {
-        val existingPresets = preferences.savedFeedPresets.get()
-        val previousPreset = existingPresets.firstOrNull { it.id == preset.id }
-        preferences.savedFeedPresets.set(
-            existingPresets
-                .filterNot { it.id == preset.id }
-                .plus(preset)
-                .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name }),
-        )
+    fun migratePresetFilters(original: SourceFeedPreset, filters: List<eu.kanade.domain.source.model.FilterStateNode>) {
+        synchronized(presetMutationLock) {
+            if (original.filters == filters) return
+            val current = preferences.savedFeedPresets.get()
+            if (current.firstOrNull { it.id == original.id } != original) return
+            preferences.savedFeedPresets.set(
+                current.map { if (it.id == original.id) it.copy(filters = filters) else it },
+            )
+        }
+    }
 
-        if (previousPreset != null && previousPreset.feedBehaviorChanged(preset)) {
-            preferences.savedFeeds.get()
-                .filter { it.presetId == preset.id }
-                .map(SourceFeed::id)
-                .forEach(::clearTimeline)
+    fun savePreset(preset: SourceFeedPreset) {
+        synchronized(presetMutationLock) {
+            val existingPresets = preferences.savedFeedPresets.get()
+            val previousPreset = existingPresets.firstOrNull { it.id == preset.id }
+            preferences.savedFeedPresets.set(
+                existingPresets
+                    .filterNot { it.id == preset.id }
+                    .plus(preset)
+                    .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name }),
+            )
+
+            if (previousPreset != null && previousPreset.feedBehaviorChanged(preset)) {
+                preferences.savedFeeds.get()
+                    .filter { it.presetId == preset.id }
+                    .map(SourceFeed::id)
+                    .forEach(::clearTimeline)
+            }
         }
     }
 
     fun removePreset(presetId: String) {
-        preferences.savedFeedPresets.set(
-            preferences.savedFeedPresets.get().filterNot { it.id == presetId },
-        )
-
-        val removedFeedIds = preferences.savedFeeds.get()
-            .filter { it.presetId == presetId }
-            .map(SourceFeed::id)
-        val remainingFeeds = preferences.savedFeeds.get().filterNot { it.presetId == presetId }
-        preferences.savedFeeds.set(remainingFeeds)
-        removedFeedIds.forEach(::clearTimeline)
-
-        val selectedFeedId = preferences.selectedFeedId.get()
-        if (selectedFeedId.isNotBlank() && remainingFeeds.none { it.id == selectedFeedId }) {
-            preferences.selectedFeedId.set(
-                remainingFeeds.firstOrNull {
-                    it.enabled && it.contentMode == SourceFeedContentMode.Browse
-                }?.id.orEmpty(),
+        synchronized(presetMutationLock) {
+            preferences.savedFeedPresets.set(
+                preferences.savedFeedPresets.get().filterNot { it.id == presetId },
             )
-        }
-        val selectedVideoFeedId = preferences.selectedVideoFeedId.get()
-        if (selectedVideoFeedId.isNotBlank() && remainingFeeds.none { it.id == selectedVideoFeedId }) {
-            preferences.selectedVideoFeedId.set(
-                remainingFeeds.firstOrNull {
-                    it.enabled && it.contentMode == SourceFeedContentMode.Video
-                }?.id.orEmpty(),
-            )
+
+            val removedFeedIds = preferences.savedFeeds.get()
+                .filter { it.presetId == presetId }
+                .map(SourceFeed::id)
+            val remainingFeeds = preferences.savedFeeds.get().filterNot { it.presetId == presetId }
+            preferences.savedFeeds.set(remainingFeeds)
+            removedFeedIds.forEach(::clearTimeline)
+
+            val selectedFeedId = preferences.selectedFeedId.get()
+            if (selectedFeedId.isNotBlank() && remainingFeeds.none { it.id == selectedFeedId }) {
+                preferences.selectedFeedId.set(
+                    remainingFeeds.firstOrNull {
+                        it.enabled && it.contentMode == SourceFeedContentMode.Browse
+                    }?.id.orEmpty(),
+                )
+            }
+            val selectedVideoFeedId = preferences.selectedVideoFeedId.get()
+            if (selectedVideoFeedId.isNotBlank() && remainingFeeds.none { it.id == selectedVideoFeedId }) {
+                preferences.selectedVideoFeedId.set(
+                    remainingFeeds.firstOrNull {
+                        it.enabled && it.contentMode == SourceFeedContentMode.Video
+                    }?.id.orEmpty(),
+                )
+            }
         }
     }
 

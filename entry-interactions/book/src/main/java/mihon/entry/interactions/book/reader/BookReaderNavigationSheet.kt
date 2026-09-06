@@ -38,7 +38,7 @@ import tachiyomi.presentation.core.util.selectedBackground
 internal data class BookReaderNavigationRow<T>(
     val item: T,
     val title: String,
-    val read: Boolean = false,
+    val read: Boolean? = null,
     val bookmark: Boolean = false,
     val progressLabel: EntryChildProgressLabel? = null,
     val depth: Int = 0,
@@ -56,7 +56,7 @@ internal fun <T> BookReaderNavigationSheet(
     if (!visible) return
 
     val listState = rememberLazyListState()
-    LaunchedEffect(visible, selectedIndex) {
+    LaunchedEffect(visible, rows, selectedIndex) {
         if (visible && selectedIndex >= 0) listState.scrollToItem(selectedIndex)
     }
 

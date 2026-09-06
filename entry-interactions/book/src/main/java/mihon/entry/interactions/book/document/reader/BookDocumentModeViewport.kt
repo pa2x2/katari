@@ -1,0 +1,119 @@
+package mihon.entry.interactions.book.document.reader
+
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import mihon.book.api.document.BookDocumentLinkTarget
+import mihon.entry.interactions.book.document.reader.paging.BookDocumentPage
+import mihon.entry.interactions.book.document.reader.paging.BookDocumentPagedViewer
+import mihon.entry.interactions.book.document.reader.paging.BookDocumentPaginationLayout
+import mihon.entry.interactions.book.document.reader.paging.paginationGroup
+import mihon.entry.interactions.book.document.reader.paging.paginationWindow
+import mihon.entry.interactions.book.document.reader.table.BookDocumentTablePreparation
+import mihon.entry.interactions.book.reader.BookReaderProgress
+import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
+import mihon.entry.interactions.viewer.EntryChildWindow
+import tachiyomi.domain.entry.model.EntryChapter
+
+/** Switches rendering modes around the first visible line, independently of reading-progress observations. */
+@Composable
+internal fun BookDocumentModeViewport(
+    currentChapter: EntryChapter,
+    currentChapterId: Long,
+    window: EntryChildWindow<EntryChapter>,
+    loadedSections: Map<Long, BookDocumentPublicationSections<EntryChapter>>,
+    loadStates: Map<Long, BookDocumentChapterLoadState>,
+    navigationRequest: BookDocumentNavigationRequest?,
+    textSizePercent: Int,
+    onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
+    onTransitionReached: (EntryChapter) -> Unit,
+    onTerminalObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
+    onAnchorMissing: (String) -> Unit,
+    onInternalLinkClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
+    onExternalLinkClick: (String) -> Unit,
+    onScrollStarted: () -> Unit,
+    onUserScrollStarted: () -> Unit,
+    onReaderTap: () -> Unit,
+    mode: BookDocumentReadingMode,
+    tapZones: Int,
+    inversion: Int,
+    animation: Boolean,
+    volume: Boolean,
+    invertVolume: Boolean,
+    chromeVisible: Boolean,
+    modifier: Modifier = Modifier,
+    onPageProgress: (BookReaderProgress.Page?) -> Unit = {},
+    onSeekPages: (List<BookDocumentPage>) -> Unit = {},
+    onViewportLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit = {},
+) {
+    val anchor = rememberSaveable(saver = BookDocumentViewportAnchor.Saver) { BookDocumentViewportAnchor() }
+    anchor.resolve(loadedSections)
+    val observeViewport: (BookDocumentViewerLocation<EntryChapter>) -> Unit = {
+        anchor.location = it
+        onViewportLocation(it)
+    }
+    if (mode == BookDocumentReadingMode.SCROLL) {
+        SideEffect { onSeekPages(emptyList()) }
+        BookDocumentEndlessViewer(
+            currentChapter, currentChapterId, window, loadedSections, loadStates, navigationRequest, textSizePercent,
+            onLocation, onTransitionReached, onTerminalObservation, onAnchorMissing, onInternalLinkClick,
+            onExternalLinkClick, onScrollStarted, onUserScrollStarted, onReaderTap,
+            initialLocation = anchor.location,
+            onViewportLocation = observeViewport,
+            modifier = modifier,
+            observeViewportExtent = chromeVisible,
+        )
+    } else {
+        val items = remember(window, loadedSections) {
+            buildBookDocumentPublicationViewerItems(window, loadedSections, EntryChapter::id)
+        }
+        val initialLocation = anchor.location ?: loadedSections[currentChapterId]?.initialSection?.let { section ->
+            BookDocumentViewerLocation(
+                section,
+                section.initialPosition,
+                section.document.document.progressionAt(section.initialPosition),
+            )
+        }
+        var centerGroup by remember { mutableStateOf<String?>(null) }
+        val center = anchor.location ?: initialLocation
+        val centerIndex = center?.let { items.indexOfPosition(it.section.key, it.position) }?.coerceAtLeast(0) ?: 0
+        val visibleItems = remember(items, centerGroup) { items.paginationWindow(centerIndex) }
+        val pagedLocationChanged = { location: BookDocumentViewerLocation<EntryChapter> ->
+            onLocation(location)
+            val index = items.indexOfPosition(location.section.key, location.position)
+            if (index >= 0) centerGroup = items[index].paginationGroup()
+        }
+        val requestedIndex = navigationRequest?.let { items.indexOfPosition(it.sectionKey, it.position) }
+        val pageItems = if (requestedIndex != null && requestedIndex >= 0) {
+            remember(items, requestedIndex) { items.paginationWindow(requestedIndex) }
+        } else {
+            visibleItems
+        }
+        BookDocumentTablePreparation(
+            pageItems.mapNotNull {
+                (it as? BookDocumentViewerItem.Block)?.section
+            }.distinctBy { it.key },
+            modifier,
+        ) {
+            BookDocumentPaginationLayout(pageItems, Modifier.padding(vertical = 12.dp)) { pages ->
+                SideEffect { onSeekPages(pages) }
+                BookDocumentPagedViewer(
+                    pages, mode, initialLocation, navigationRequest, loadStates,
+                    tapZones, inversion, animation,
+                    volume, invertVolume, chromeVisible,
+                    pagedLocationChanged, onTransitionReached, onTerminalObservation, onInternalLinkClick,
+                    onExternalLinkClick, onScrollStarted, onUserScrollStarted, onReaderTap,
+                    onViewportLocation = observeViewport,
+                    onPageProgress = onPageProgress,
+                )
+            }
+        }
+    }
+}

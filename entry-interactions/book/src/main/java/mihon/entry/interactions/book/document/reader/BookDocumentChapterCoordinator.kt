@@ -14,8 +14,14 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
+import mihon.book.api.BookLocator
+import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.book.api.document.locatorAt
 import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.document.preparation.PreparedBookDocumentPublication
+import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
+import mihon.entry.interactions.book.document.reader.navigation.resolveNavigationDestination
+import mihon.entry.interactions.book.document.render.toPreparedBookDocument
 import mihon.entry.interactions.book.processor.BookReaderRequest
 import mihon.entry.interactions.book.reader.BookReaderOpenResult
 import mihon.entry.interactions.book.reader.BookReaderSessionFactory
@@ -37,6 +43,7 @@ internal class BookDocumentChapterCoordinator(
     private val currentState: () -> BookDocumentReaderState?,
     private val updateState: (BookDocumentReaderState) -> Unit,
     private val updateVisualChapterProgression: (Float) -> Unit,
+    private val onNavigationMissing: () -> Unit,
     private val onSessionActivated: (OpenedBookReaderSession) -> Unit,
 ) : AutoCloseable {
     private val chapterLoadJobs = mutableMapOf<Long, Job>()
@@ -48,6 +55,7 @@ internal class BookDocumentChapterCoordinator(
     private val activitySession = EntryMediaSessionActivitySession()
     private val activityMutex = Mutex()
     private var navigationRequestId = 0L
+    private var pendingNavigationTarget: BookDocumentNavigationTarget? = null
 
     fun startReading() {
         if (retainedSessions.currentSession() != null && readingStartedAt == null) {
@@ -137,11 +145,111 @@ internal class BookDocumentChapterCoordinator(
         loadChapter(chapter, activate = true, retry = retry)
     }
 
+    fun navigateLink(source: BookDocumentSection<EntryChapter>, target: BookDocumentLinkTarget) {
+        val locator = when (target) {
+            is BookDocumentLinkTarget.Anchor -> BookLocator(
+                source.document.document.resourceId,
+                fragments = listOf(target.fragment),
+            )
+            is BookDocumentLinkTarget.Resource -> BookLocator(
+                target.resourceId,
+                fragments = listOfNotNull(target.fragment),
+            )
+            is BookDocumentLinkTarget.Reference -> BookLocator(
+                target.resourceId ?: source.document.document.resourceId,
+                fragments = listOf(target.fragment),
+            )
+            is BookDocumentLinkTarget.External -> return
+        }
+        navigateWithinPublication(source.owner.id, locator, target is BookDocumentLinkTarget.Reference)
+    }
+
+    fun selectNavigationTarget(target: BookDocumentNavigationTarget) {
+        if (!target.returnToOrigin) retainedSessions.jumpHistory.rememberOrigin()
+        pendingNavigationTarget = null
+        val locator = target.locator
+        if (locator == null) {
+            selectChapter(target.chapter, retry = true)
+        } else if (retainedSessions.session(target.chapter.id) == null) {
+            pendingNavigationTarget = target
+            selectChapter(target.chapter, retry = true)
+        } else {
+            navigateWithinPublication(
+                target.chapter.id,
+                locator,
+                restorePosition = target.restorePosition,
+                returnToOrigin = target.returnToOrigin,
+                rememberOrigin = false,
+            )
+        }
+    }
+
+    private fun navigateWithinPublication(
+        chapterId: Long,
+        locator: BookLocator,
+        contextual: Boolean = false,
+        restorePosition: Boolean = false,
+        returnToOrigin: Boolean = false,
+        rememberOrigin: Boolean = true,
+    ) {
+        val session = retainedSessions.session(chapterId)
+        val publication = session?.preparedPublication as? PreparedBookDocumentPublication
+        val destination = publication?.resolveNavigationDestination(locator, contextual, restorePosition)
+        if (session == null || destination == null) {
+            onNavigationMissing()
+            return
+        }
+        val state = currentState() ?: return
+        if (destination.contextual) {
+            updateState(
+                state.copy(
+                    auxiliarySection = BookDocumentSection(
+                        key = "$chapterId:reference:${destination.document.resourceId}:${destination.position}",
+                        owner = session.chapter,
+                        document = destination.document.toPreparedBookDocument(),
+                        initialPosition = destination.position,
+                        resourceLoader = publication.resourceLoader,
+                    ),
+                ),
+            )
+        } else {
+            val section = state.loadedSections[chapterId]?.sections?.firstOrNull {
+                it.document.document.resourceId == locator.resourceId
+            } ?: run {
+                onNavigationMissing()
+                return
+            }
+            if (rememberOrigin) retainedSessions.jumpHistory.rememberOrigin()
+            if (chapterId != state.currentChapterId) activateChapter(chapterId, completeForwardCrossing = false)
+            dismissAuxiliarySection()
+            requestNavigation(
+                section,
+                destination.position,
+                alignToPassage = restorePosition,
+                returnToOrigin = returnToOrigin,
+            )
+        }
+    }
+
+    fun dismissAuxiliarySection() {
+        val state = currentState() ?: return
+        if (state.auxiliarySection != null) updateState(state.copy(auxiliarySection = null))
+    }
+
     fun onLocation(location: BookDocumentViewerLocation<EntryChapter>) {
         val state = currentState() ?: return
         val chapterId = location.section.owner.id
         val navigationRequest = state.navigationRequest
-        if (!navigationRequest.acceptsLocation(chapterId, location.position)) return
+        if (!navigationRequest.acceptsLocation(
+                chapterId,
+                location.position,
+                location.section.key,
+                location.restoredNavigationId,
+            )
+        ) {
+            return
+        }
+        if (navigationRequest?.returnToOrigin == true) retainedSessions.jumpHistory.dismiss()
         val chapterActivated =
             chapterId != state.currentChapterId &&
                 activateChapter(
@@ -151,11 +259,12 @@ internal class BookDocumentChapterCoordinator(
                     observedNavigationRequest = navigationRequest,
                 )
         val session = retainedSessions.session(chapterId) ?: return
-        val total = state.readingOrder.totalProgression(chapterId, location.progression)
+        val publicationProgression = location.section.totalProgression(location.progression)
+        val total = publicationProgression.toDouble()
         val locator = location.section.document.document.locatorAt(location.position).copy(totalProgression = total)
         retainedSessions.updateLocation(chapterId, locator)
         if (!chapterActivated) {
-            updateVisualChapterProgression(location.visualProgression)
+            updateVisualChapterProgression(location.section.totalProgression(location.visualProgression))
             currentState()?.let { current ->
                 val acceptedNavigationRequest = current.navigationRequest.afterAcceptedLocation(
                     observedRequest = navigationRequest,
@@ -171,7 +280,7 @@ internal class BookDocumentChapterCoordinator(
             delay(LOCATION_PERSIST_DEBOUNCE_MILLIS)
             session.saveLocation(locator)
         }
-        prepareNextChapterIfNeeded(location.progression.toDouble())
+        prepareNextChapterIfNeeded(publicationProgression.toDouble())
     }
 
     fun onUserScrollStarted() {
@@ -209,13 +318,16 @@ internal class BookDocumentChapterCoordinator(
 
     fun prepareCurrentNextChapterIfNeeded() {
         val session = retainedSessions.currentSession() ?: return
-        prepareNextChapterIfNeeded(retainedSessions.locator(session.chapter.id)?.progression ?: 0.0)
+        prepareNextChapterIfNeeded(
+            retainedSessions.locator(session.chapter.id)?.let(session.preparedPublication::progression) ?: 0.0,
+        )
     }
 
     override fun close() {
         chapterLoadJobs.values.forEach(Job::cancel)
         chapterLoadJobs.clear()
         chapterSelectionRequests.clear()
+        pendingNavigationTarget = null
         persistLocationJob?.cancel()
         activityCheckpointJob?.cancel()
         activityCheckpointJob = null
@@ -223,46 +335,68 @@ internal class BookDocumentChapterCoordinator(
 
     private fun addLoadedSession(session: OpenedBookReaderSession, activate: Boolean) {
         val explicitSelection = chapterSelectionRequests.remove(session.chapter.id)
-        val restoredSection = session.toDocumentSection(retainedSessions.locator(session.chapter.id)) ?: run {
+        val restoredSections = session.toDocumentSections(retainedSessions.locator(session.chapter.id)) ?: run {
             setLoadState(
                 session.chapter.id,
                 BookDocumentChapterLoadState.Failed(context.getString(R.string.book_document_incompatible)),
             )
             return
         }
-        val section = if (explicitSelection) {
-            restoredSection.fromBeginningForExplicitNavigation()
+        val sections = if (explicitSelection) {
+            restoredSections.fromBeginningForExplicitNavigation()
         } else {
-            restoredSection
+            restoredSections
         }
         val state = currentState() ?: return
         updateState(
             state.copy(
-                loadedSections = state.loadedSections + (session.chapter.id to section),
+                loadedSections = state.loadedSections + (session.chapter.id to sections),
                 loadStates = state.loadStates - session.chapter.id,
+                publicationNavigation = state.publicationNavigation +
+                    (session.chapter.id to session.preparedPublication.publication.navigation),
             ),
         )
         if (activate) activateChapter(session.chapter.id, completeForwardCrossing = false)
-        if (explicitSelection) requestNavigation(section)
+        val pending = pendingNavigationTarget?.takeIf { it.chapter.id == session.chapter.id }
+        if (pending != null) {
+            pendingNavigationTarget = null
+            navigateWithinPublication(
+                session.chapter.id,
+                checkNotNull(pending.locator),
+                restorePosition = pending.restorePosition,
+                returnToOrigin = pending.returnToOrigin,
+                rememberOrigin = false,
+            )
+        } else if (explicitSelection) {
+            requestNavigation(sections.initialSection)
+        }
     }
 
-    private fun requestNavigation(section: BookDocumentSection<EntryChapter>) {
+    private fun requestNavigation(
+        section: BookDocumentSection<EntryChapter>,
+        position: mihon.book.api.document.BookDocumentPosition = section.initialPosition,
+        alignToPassage: Boolean = false,
+        returnToOrigin: Boolean = false,
+    ) {
         val state = currentState() ?: return
-        val position = section.initialPosition
         val progression = section.document.document.progressionAt(position)
-        val total = state.readingOrder.totalProgression(section.owner.id, progression)
+        val publicationProgression = section.totalProgression(progression)
+        val total = publicationProgression.toDouble()
         retainedSessions.updateLocation(
             section.owner.id,
             section.document.document.locatorAt(position).copy(totalProgression = total),
         )
         navigationRequestId += 1
-        updateVisualChapterProgression(progression)
+        updateVisualChapterProgression(publicationProgression)
         updateState(
             state.copy(
                 navigationRequest = BookDocumentNavigationRequest(
                     id = navigationRequestId,
                     chapterId = section.owner.id,
+                    sectionKey = section.key,
                     position = position,
+                    alignToPassage = alignToPassage,
+                    returnToOrigin = returnToOrigin,
                 ),
             ),
         )
@@ -291,10 +425,12 @@ internal class BookDocumentChapterCoordinator(
             chapterLoadJobs.remove(id)?.cancel()
         }
         chapterSelectionRequests.retainAll(retainedIds)
-        val section = currentState()?.loadedSections?.get(chapterId) ?: return false
+        val section = observedLocation?.section
+            ?: currentState()?.loadedSections?.get(chapterId)?.initialSection
+            ?: return false
         val current = currentState() ?: return false
-        val progression = observedLocation?.progression
-            ?: section.document.document.progressionAt(section.initialPosition)
+        val progression = observedLocation?.let { section.totalProgression(it.progression) }
+            ?: section.totalProgression(section.document.document.progressionAt(section.initialPosition))
         updateState(
             current.copy(
                 currentChapterId = chapterId,
@@ -308,7 +444,9 @@ internal class BookDocumentChapterCoordinator(
                 ),
             ),
         )
-        updateVisualChapterProgression(observedLocation?.visualProgression ?: progression)
+        updateVisualChapterProgression(
+            observedLocation?.let { section.totalProgression(it.visualProgression) } ?: progression,
+        )
         onSessionActivated(session)
         readingStartedAt = SystemClock.elapsedRealtime()
         return true
@@ -317,8 +455,8 @@ internal class BookDocumentChapterCoordinator(
     private fun completeChapter(chapterId: Long) {
         val session = retainedSessions.session(chapterId) ?: return
         val state = currentState() ?: return
-        val section = state.loadedSections[chapterId] ?: return
-        val total = state.readingOrder.completedProgression(chapterId)
+        val section = state.loadedSections[chapterId]?.sections?.lastOrNull() ?: return
+        val total = 1.0
         val document = section.document.document
         scope.launchNonCancellable {
             val locator = document.locatorAt(document.positionAtProgression(1f)).copy(totalProgression = total)

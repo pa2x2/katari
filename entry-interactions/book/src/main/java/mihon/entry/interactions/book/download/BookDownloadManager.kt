@@ -24,6 +24,8 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
+import mihon.entry.interactions.book.document.preparation.BookDocumentPreparedCache
+import mihon.entry.interactions.book.document.resource.BookPublicationResourceGatewayFactory
 import mihon.entry.interactions.book.download.model.BookDownload
 import mihon.entry.interactions.book.download.model.BookDownloadFailure
 import mihon.entry.interactions.download.EntryDownloadEntryIdentity
@@ -43,6 +45,8 @@ internal class BookDownloadManager(
     private val cache: BookDownloadCache = Injekt.get(),
     private val provider: BookDownloadProvider = Injekt.get(),
     private val downloader: BookDownloader = Injekt.get(),
+    private val preparedDocumentCache: BookDocumentPreparedCache = Injekt.get(),
+    private val resourceGatewayFactory: BookPublicationResourceGatewayFactory = Injekt.get(),
     private val sourceManager: SourceManager = Injekt.get(),
     private val store: BookDownloadStore = BookDownloadStore(context),
     private val workController: EntryDownloadWorkController = Injekt.get(),
@@ -99,12 +103,13 @@ internal class BookDownloadManager(
     fun startDownloads() {
         if (queueState.value.isEmpty()) return
         queueState.value.forEach { download ->
-            if (download.status != BookDownload.State.RESOLVING && download.status != BookDownload.State.DOWNLOADING) {
+            if (!download.status.isActive) {
                 download.failure = null
                 download.status = BookDownload.State.QUEUE
+                statusUpdates.tryEmit(download)
             }
         }
-        if (!_isRunning.value) workController.start()
+        workController.start()
     }
 
     fun pauseDownloads() {
@@ -114,8 +119,7 @@ internal class BookDownloadManager(
             } else {
                 _queueState.value
                     .filter {
-                        it.status == BookDownload.State.RESOLVING ||
-                            it.status == BookDownload.State.DOWNLOADING
+                        it.status.isActive
                     }
                     .forEach { it.status = BookDownload.State.QUEUE }
                 _isRunning.value = false
@@ -162,8 +166,7 @@ internal class BookDownloadManager(
                 keys = chapterIds,
                 keyOf = { it.chapter.id },
                 isActive = {
-                    it.status == BookDownload.State.RESOLVING ||
-                        it.status == BookDownload.State.DOWNLOADING
+                    it.status.isActive
                 },
             ),
         )
@@ -191,12 +194,16 @@ internal class BookDownloadManager(
                 requested = downloads,
                 keyOf = { it.chapter.id },
                 isActive = {
-                    it.status == BookDownload.State.RESOLVING ||
-                        it.status == BookDownload.State.DOWNLOADING
+                    it.status.isActive
                 },
             )
             rewriteStoredQueueLocked()
         }
+    }
+
+    suspend fun hasPendingDownloads(): Boolean {
+        initialized.await()
+        return queueState.value.any { it.status == BookDownload.State.QUEUE }
     }
 
     suspend fun runDownloads() {
@@ -277,12 +284,21 @@ internal class BookDownloadManager(
     suspend fun delete(entry: Entry, chapters: List<EntryChapter>) {
         removeFromQueue(chapters.map(EntryChapter::id))
         cache.ensureInitialized()
+        val requestedKeys = chapters.map { chapter ->
+            BookDownloadPackageKey(entry.source, entry.url, chapter.url)
+        }.toSet()
+        val publicationIds = cache.packagesSnapshot()
+            .filter { download -> download.manifest.packageKey in requestedKeys }
+            .mapNotNull { download -> download.manifest.publicationId }
         val deletedKeys = chapters.mapNotNull { chapter ->
             val packageKey = BookDownloadPackageKey(entry.source, entry.url, chapter.url)
             val directory = cache.packageDirectory(packageKey) ?: return@mapNotNull null
             packageKey.takeIf { directory.delete() || !directory.exists() }
         }
         cache.remove(deletedKeys)
+        val remainingPublicationIds = cache.packagesSnapshot().mapNotNull { it.manifest.publicationId }.toSet()
+        publicationIds.filterNot(remainingPublicationIds::contains)
+            .forEach(::removeDerivedPublicationData)
     }
 
     suspend fun deleteEntryDownloads(entry: Entry): Boolean {
@@ -300,7 +316,14 @@ internal class BookDownloadManager(
             }
         }
         cache.remove(deletedKeys)
+        downloads.mapNotNull { it.manifest.publicationId }
+            .forEach(::removeDerivedPublicationData)
         return deletedKeys.size == downloads.size
+    }
+
+    private fun removeDerivedPublicationData(publicationId: String) {
+        preparedDocumentCache.removePublication(publicationId)
+        resourceGatewayFactory.removePublication(publicationId)
     }
 
     fun invalidateCache() {

@@ -17,14 +17,16 @@ import tachiyomi.domain.entry.model.EntryChapter
 internal interface EntryDownloadRuntimeCoordinator : EntryDownloadRuntimeFeature {
     fun events(): Flow<EntryDownloadEvent>
 
+    suspend fun hasPendingDownloads(): Boolean
+
     suspend fun runDownloadsUntilIdle()
 }
 
 internal class DefaultEntryDownloadRuntimeFeature(
     evaluation: FeatureGraphEvaluation,
     private val interaction: EntryDownloadInteraction,
+    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
 ) : EntryDownloadRuntimeCoordinator {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val applicableTypes = EntryDownloadRuntimeBehavior.entries
         .map { behavior ->
             evaluation.applicableProviderTypes<EntryDownloadProcessor>(
@@ -55,17 +57,15 @@ internal class DefaultEntryDownloadRuntimeFeature(
             isRunning = isRunning && applicableTypes.isNotEmpty(),
             isPaused = isPaused && applicableTypes.isNotEmpty(),
         )
-    }.shareIn(scope, SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000), replay = 1)
+    }.shareIn(
+        scope,
+        SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000, replayExpirationMillis = 0),
+        replay = 1,
+    )
 
     override fun isApplicable(type: EntryType): Boolean = type in applicableTypes
 
     override fun statusUpdates(): Flow<EntryDownloadStatus> = interaction.updates()
-        .filter { isApplicable(it.entryType) }
-
-    override fun queueStatusUpdates(): Flow<EntryDownloadQueueItem> = interaction.queueStatusUpdates()
-        .filter { isApplicable(it.entryType) }
-
-    override fun queueProgressUpdates(): Flow<EntryDownloadQueueItem> = interaction.queueProgressUpdates()
         .filter { isApplicable(it.entryType) }
 
     override fun start() {
@@ -132,6 +132,9 @@ internal class DefaultEntryDownloadRuntimeFeature(
 
     override fun events(): Flow<EntryDownloadEvent> = interaction.events()
         .filter { event -> event.entryTypeOrNull()?.let(::isApplicable) != false }
+
+    override suspend fun hasPendingDownloads(): Boolean =
+        applicableTypes.isNotEmpty() && interaction.hasPendingDownloads()
 
     override suspend fun runDownloadsUntilIdle() {
         if (applicableTypes.isNotEmpty()) interaction.runDownloadsUntilIdle()

@@ -42,6 +42,7 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.core.util.ifSourcesLoaded
+import eu.kanade.domain.source.model.snapshot
 import eu.kanade.presentation.browse.CatalogContent
 import eu.kanade.presentation.browse.MissingSourceScreen
 import eu.kanade.presentation.browse.components.BrowseEntryPreviewSheet
@@ -319,7 +320,7 @@ data class CatalogScreen(
         }
 
         val onDismissRequest = screenModel::dismissDialog
-        val appliedCustomPreset = if (feedsEnabled) screenModel.appliedCustomPreset() else null
+        val appliedCustomPreset = if (feedsEnabled) screenModel.draftCustomPreset() else null
         when (val dialog = state.dialog) {
             is CatalogScreenModel.Dialog.Filter -> {
                 SourceFilterDialog(
@@ -329,6 +330,10 @@ data class CatalogScreen(
                     errorMessage = (state.filterState as? FilterUiState.Error)?.throwable?.message,
                     presets = if (feedsEnabled) screenModel.feedPresets() else emptyList(),
                     onReset = screenModel::resetFilters,
+                    onResetGroup = screenModel::resetFilterGroup,
+                    pendingFilterEdits = state.pendingFilterEdits,
+                    draftQuery = state.draftSearchQuery,
+                    onEditPagedItem = screenModel::editPagedFilterItem,
                     onApplyPreset = screenModel::applyPreset,
                     onEditPreset = screenModel::showEditPresetDialog,
                     onDeletePreset = { presetPendingDeletion = it },
@@ -336,7 +341,12 @@ data class CatalogScreen(
                     onSaveAsNewPreset = if (feedsEnabled) screenModel::showSavePresetDialog else null,
                     currentPresetName = appliedCustomPreset?.name,
                     onUpdateCurrentPreset = if (feedsEnabled) screenModel::showUpdateCurrentPresetDialog else null,
-                    onFilter = { screenModel.search(filters = state.filters) },
+                    onFilter = screenModel::applyDraftFilters,
+                    repairIssues = state.repairIssues,
+                    repairNeedsSave = state.repairNeedsSave,
+                    onResolveIssue = screenModel::resolvePresetIssue,
+                    onSaveRepair = screenModel::saveRepairedPreset,
+                    hasUnappliedChanges = state.hasUnappliedFilterChanges,
                     onUpdate = screenModel::setFilters,
                     onRequestSuggestions = screenModel::filterSuggestions,
                     onRequestPagedFilterItems = screenModel::pagedFilterItems,

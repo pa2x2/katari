@@ -32,6 +32,25 @@ class HtmlProseSanitizerTest {
     }
 
     @Test
+    fun `XHTML embedded text and CDATA styles preserve authored flow and inline overrides`() {
+        val body = HtmlProseSanitizer.sanitize(
+            """
+            <html xmlns="http://www.w3.org/1999/xhtml"><head>
+              <style>p { direction: rtl; text-indent: 2em; }</style>
+              <style><![CDATA[p { line-height: 1.5; }]]></style>
+            </head><body><p style="text-indent: 1em">Text</p></body></html>
+            """.trimIndent().encodeToByteArray(),
+            HtmlProseSanitizationPolicy(xmlSyntax = true),
+        )
+
+        val paragraph = body.selectFirst("p")!!
+        assertEquals("rtl", paragraph.attr("data-katari-style-direction"))
+        assertEquals("1em", paragraph.attr("data-katari-style-text-indent"))
+        assertEquals("1.5", paragraph.attr("data-katari-style-line-height"))
+        assertNull(body.selectFirst("style"))
+    }
+
+    @Test
     fun `supported CSS rule count is bounded before application`() {
         val css = (1..257).joinToString("\n") { index -> ".rule$index { color: red }" }
 

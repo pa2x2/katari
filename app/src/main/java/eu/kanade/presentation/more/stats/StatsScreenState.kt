@@ -7,6 +7,7 @@ import eu.kanade.presentation.more.stats.data.StatsLibrary
 import eu.kanade.presentation.more.stats.data.StatsRange
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
+import tachiyomi.domain.statistics.model.StatisticsCardLayout
 
 sealed interface StatsScreenState {
     @Immutable
@@ -21,6 +22,7 @@ sealed interface StatsScreenState {
         val library: StatsLibrary,
         val activity: ActivityState,
         val incognito: Boolean,
+        val cardLayouts: Map<String, StatisticsCardLayout> = emptyMap(),
     ) : StatsScreenState
 }
 

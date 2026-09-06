@@ -12,6 +12,12 @@ import kotlinx.serialization.Serializable
  * @property backgroundArgb optional ARGB background color.
  * @property border optional border decoration.
  * @property paddingEm bounded logical padding in em units.
+ * @property spacingBeforeEm bounded spacing before the block in em units.
+ * @property spacingAfterEm bounded spacing after the block in em units.
+ * @property lineHeightScale bounded line-height multiplier.
+ * @property firstLineIndentEm bounded first-line indentation in em units.
+ * @property direction optional logical text direction.
+ * @property languageTag optional declared language context for accessibility.
  * @property fontFamily optional generic or publication-resource font family.
  * @property fontSizeScale bounded relative font size.
  * @property bold whether the complete block is semantically bold.
@@ -28,6 +34,42 @@ data class BookDocumentStyle(
     val fontSizeScale: Float = 1f,
     val bold: Boolean = false,
 ) {
+    /** Compatibility constructor for serializers compiled against SDK 2.5. */
+    @Suppress("UNUSED_PARAMETER", "DEPRECATION", "DEPRECATION_ERROR")
+    constructor(
+        seen: Int,
+        alignment: BookDocumentAlignment?,
+        whiteSpace: BookDocumentWhiteSpace,
+        foregroundArgb: Long?,
+        backgroundArgb: Long?,
+        border: BookDocumentBorder?,
+        paddingEm: Float,
+        fontFamily: BookDocumentFontFamily?,
+        fontSizeScale: Float,
+        bold: Boolean,
+        marker: kotlinx.serialization.internal.SerializationConstructorMarker?,
+    ) : this(
+        alignment = alignment.takeIf { seen and 0x001 != 0 },
+        whiteSpace = whiteSpace.takeIf { seen and 0x002 != 0 } ?: BookDocumentWhiteSpace.NORMAL,
+        foregroundArgb = foregroundArgb.takeIf { seen and 0x004 != 0 },
+        backgroundArgb = backgroundArgb.takeIf { seen and 0x008 != 0 },
+        border = border.takeIf { seen and 0x010 != 0 },
+        paddingEm = paddingEm.takeIf { seen and 0x020 != 0 } ?: 0f,
+        fontFamily = fontFamily.takeIf { seen and 0x040 != 0 },
+        fontSizeScale = fontSizeScale.takeIf { seen and 0x080 != 0 } ?: 1f,
+        bold = bold.takeIf { seen and 0x100 != 0 } ?: false,
+    )
+
+    var flow: BookDocumentFlowStyle = BookDocumentFlowStyle()
+        private set
+
+    val spacingBeforeEm: Float get() = flow.spacingBeforeEm
+    val spacingAfterEm: Float get() = flow.spacingAfterEm
+    val lineHeightScale: Float get() = flow.lineHeightScale
+    val firstLineIndentEm: Float get() = flow.firstLineIndentEm
+    val direction: BookDocumentTextDirection? get() = flow.direction
+    val languageTag: String? get() = flow.languageTag
+
     init {
         require(foregroundArgb == null || foregroundArgb in 0..MAX_ARGB) {
             "document foreground color must be ARGB"
@@ -41,6 +83,41 @@ data class BookDocumentStyle(
         require(fontSizeScale in MIN_FONT_SCALE..MAX_FONT_SCALE) {
             "document font scale is outside the supported range"
         }
+    }
+
+    /** Returns a copy carrying [flow] without changing the SDK 2.5 constructor ABI. */
+    fun withFlow(flow: BookDocumentFlowStyle): BookDocumentStyle = withFlow(this, flow)
+
+    override fun equals(other: Any?): Boolean =
+        other is BookDocumentStyle &&
+            alignment == other.alignment &&
+            whiteSpace == other.whiteSpace &&
+            foregroundArgb == other.foregroundArgb &&
+            backgroundArgb == other.backgroundArgb &&
+            border == other.border &&
+            paddingEm == other.paddingEm &&
+            flow == other.flow &&
+            fontFamily == other.fontFamily &&
+            fontSizeScale == other.fontSizeScale &&
+            bold == other.bold
+
+    override fun hashCode(): Int = listOf(
+        alignment,
+        whiteSpace,
+        foregroundArgb,
+        backgroundArgb,
+        border,
+        paddingEm,
+        flow,
+        fontFamily,
+        fontSizeScale,
+        bold,
+    ).hashCode()
+
+    companion object {
+        /** Creates a style with the domain-neutral document-flow properties added in SDK 2.6. */
+        fun withFlow(base: BookDocumentStyle, flow: BookDocumentFlowStyle): BookDocumentStyle =
+            base.copy().apply { this.flow = flow }
     }
 }
 
@@ -60,6 +137,7 @@ data class BookDocumentInlineStyleRange(
     init {
         require(start >= 0) { "document inline style start must not be negative" }
         require(endExclusive > start) { "document inline style range must not be empty" }
+        require(style.hasEffect()) { "document inline style must change at least one property" }
     }
 
     internal fun shifted(offset: Int): BookDocumentInlineStyleRange =
@@ -81,6 +159,8 @@ data class BookDocumentInlineStyleRange(
  * @property superscript superscript text.
  * @property code inline code text.
  * @property small semantically small text.
+ * @property languageTag optional declared language for this range.
+ * @property direction optional declared direction for this range.
  */
 @Serializable
 data class BookDocumentInlineStyle(
@@ -97,6 +177,44 @@ data class BookDocumentInlineStyle(
     val code: Boolean = false,
     val small: Boolean = false,
 ) {
+    /** Compatibility constructor for serializers compiled against SDK 2.5. */
+    @Suppress("UNUSED_PARAMETER", "DEPRECATION", "DEPRECATION_ERROR")
+    constructor(
+        seen: Int,
+        foregroundArgb: Long?,
+        backgroundArgb: Long?,
+        fontFamily: BookDocumentFontFamily?,
+        fontSizeScale: Float?,
+        bold: Boolean,
+        italic: Boolean,
+        underline: Boolean,
+        strikethrough: Boolean,
+        subscript: Boolean,
+        superscript: Boolean,
+        code: Boolean,
+        small: Boolean,
+        marker: kotlinx.serialization.internal.SerializationConstructorMarker?,
+    ) : this(
+        foregroundArgb = foregroundArgb.takeIf { seen and 0x001 != 0 },
+        backgroundArgb = backgroundArgb.takeIf { seen and 0x002 != 0 },
+        fontFamily = fontFamily.takeIf { seen and 0x004 != 0 },
+        fontSizeScale = fontSizeScale.takeIf { seen and 0x008 != 0 },
+        bold = bold.takeIf { seen and 0x010 != 0 } ?: false,
+        italic = italic.takeIf { seen and 0x020 != 0 } ?: false,
+        underline = underline.takeIf { seen and 0x040 != 0 } ?: false,
+        strikethrough = strikethrough.takeIf { seen and 0x080 != 0 } ?: false,
+        subscript = subscript.takeIf { seen and 0x100 != 0 } ?: false,
+        superscript = superscript.takeIf { seen and 0x200 != 0 } ?: false,
+        code = code.takeIf { seen and 0x400 != 0 } ?: false,
+        small = small.takeIf { seen and 0x800 != 0 } ?: false,
+    )
+
+    var textContext: BookDocumentTextContext = BookDocumentTextContext()
+        private set
+
+    val languageTag: String? get() = textContext.languageTag
+    val direction: BookDocumentTextDirection? get() = textContext.direction
+
     init {
         require(foregroundArgb == null || foregroundArgb in 0..MAX_ARGB) {
             "document inline foreground color must be ARGB"
@@ -110,21 +228,63 @@ data class BookDocumentInlineStyle(
         require(!subscript || !superscript) {
             "document inline style cannot be both subscript and superscript"
         }
-        require(
-            foregroundArgb != null ||
-                backgroundArgb != null ||
-                fontFamily != null ||
-                fontSizeScale != null ||
-                bold ||
-                italic ||
-                underline ||
-                strikethrough ||
-                subscript ||
-                superscript ||
-                code ||
-                small,
-        ) {
-            "document inline style must change at least one property"
+    }
+
+    internal fun hasEffect(): Boolean =
+        foregroundArgb != null ||
+            backgroundArgb != null ||
+            fontFamily != null ||
+            fontSizeScale != null ||
+            bold ||
+            italic ||
+            underline ||
+            strikethrough ||
+            subscript ||
+            superscript ||
+            code ||
+            small ||
+            !textContext.isEmpty
+
+    override fun equals(other: Any?): Boolean =
+        other is BookDocumentInlineStyle &&
+            foregroundArgb == other.foregroundArgb &&
+            backgroundArgb == other.backgroundArgb &&
+            fontFamily == other.fontFamily &&
+            fontSizeScale == other.fontSizeScale &&
+            bold == other.bold &&
+            italic == other.italic &&
+            underline == other.underline &&
+            strikethrough == other.strikethrough &&
+            subscript == other.subscript &&
+            superscript == other.superscript &&
+            code == other.code &&
+            small == other.small &&
+            textContext == other.textContext
+
+    override fun hashCode(): Int = listOf(
+        foregroundArgb,
+        backgroundArgb,
+        fontFamily,
+        fontSizeScale,
+        bold,
+        italic,
+        underline,
+        strikethrough,
+        subscript,
+        superscript,
+        code,
+        small,
+        textContext,
+    ).hashCode()
+
+    companion object {
+        /** Creates an inline style with the domain-neutral language context added in SDK 2.6. */
+        fun withTextContext(
+            base: BookDocumentInlineStyle,
+            textContext: BookDocumentTextContext,
+        ): BookDocumentInlineStyle = base.copy().apply {
+            this.textContext = textContext
+            require(hasEffect()) { "document inline style must change at least one property" }
         }
     }
 }
@@ -135,6 +295,13 @@ enum class BookDocumentAlignment {
     START,
     CENTER,
     END,
+}
+
+/** Explicit logical direction for semantic document text. */
+@Serializable
+enum class BookDocumentTextDirection {
+    LEFT_TO_RIGHT,
+    RIGHT_TO_LEFT,
 }
 
 /** Canonical whitespace handling. */

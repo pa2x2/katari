@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.8.0] - 2026-09-06
+
+### ✨ Added
+
+- Read and download reflowable EPUB books from supported sources.
+- Book reader now offers left-to-right, right-to-left, and vertical paged reading, with configurable tap zones, page transitions, and volume-key navigation.
+- Book reader now has a position slider and direct page or percentage entry for jumping within a chapter or EPUB section.
+- Book and manga readers now offer a `Return` action to restore the position before the most recent navigation jump.
+- Statistics cards can now be reordered or hidden, with separate layouts for each profile and tab.
+- Extensions can now be filtered by store.
+- Supported source filters now offer date pickers with year, month, or day precision and validation before searching.
+
+### 🧩 Improved
+
+- Source filters now show active selections, collapsible group summaries, and group reset controls. Saved presets preserve selections across filter reordering and renaming when the source supports it, and prompt for repair when a saved selection no longer matches.
+
+### 🔄 Changed
+
+- The Statistics year chart now shows monthly totals, with partial months limited to the selected date range.
+
+### 🐛 Fixed
+
+- Queuing manga, anime, or books while another media type is downloading now starts the new downloads without interrupting the active transfer. Download queue rows also keep their progress up to date.
+- Book translation now waits until you release the text selection and starts without an extra delay.
+- Statistics durations shorter than a minute now display as less than a minute instead of zero minutes.
+
 ## [1.7.0] - 2026-09-01
 
 ### ✨ Added
@@ -362,7 +388,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.7.0...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.8.0...HEAD
+[1.8.0]: https://github.com/pa2x2/katari/releases/tag/v1.8.0
 [1.7.0]: https://github.com/pa2x2/katari/releases/tag/v1.7.0
 [1.6.0]: https://github.com/pa2x2/katari/releases/tag/v1.6.0
 [1.5.5]: https://github.com/pa2x2/katari/releases/tag/v1.5.5

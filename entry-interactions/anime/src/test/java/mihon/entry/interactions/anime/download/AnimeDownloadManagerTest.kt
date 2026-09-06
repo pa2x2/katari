@@ -1,17 +1,21 @@
 package mihon.entry.interactions.anime.download
 
+import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.anime.download.model.AnimeDownload
+import mihon.entry.interactions.anime.download.model.AnimeDownloadFailure
 import mihon.entry.interactions.download.EntryDownloadWorkController
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.DownloadPreferences
@@ -20,6 +24,57 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.VideoDownloadQualityMode
 
 class AnimeDownloadManagerTest {
+
+    @Test
+    fun `pending work check waits for persisted episodes to be restored`() = runTest {
+        val restored = CompletableDeferred<List<AnimeDownload>>()
+        val store = mockk<AnimeDownloadStore>(relaxed = true) {
+            coEvery { restore() } coAnswers { restored.await() }
+        }
+        val manager = manager(mockk(relaxed = true), store)
+        val pending = async(start = CoroutineStart.UNDISPATCHED) { manager.hasPendingDownloads() }
+
+        restored.complete(
+            listOf(
+                AnimeDownload(
+                    anime = Entry.create().copy(id = 1L, type = EntryType.ANIME),
+                    episode = EntryChapter.create().copy(id = 2L, entryId = 1L),
+                    preferences = preferences(),
+                ),
+            ),
+        )
+
+        pending.await() shouldBe true
+        manager.queueState.value.single().status shouldBe AnimeDownload.State.QUEUE
+    }
+
+    @Test
+    fun `runtime wakeups leave failed episodes alone until an explicit retry`() = runTest {
+        var attempts = 0
+        val downloader = mockk<AnimeDownloader> {
+            coEvery { download(any()) } coAnswers {
+                attempts++
+                AnimeDownloadFailure(AnimeDownloadFailure.Reason.NETWORK)
+            }
+        }
+        val manager = manager(downloader)
+        manager.queueEpisodes(
+            anime = Entry.create().copy(id = 1L, type = EntryType.ANIME),
+            episodes = listOf(EntryChapter.create().copy(id = 2L, entryId = 1L)),
+            preferences = preferences(),
+            autoStart = false,
+        )
+
+        manager.runDownloadsUntilIdle()
+        manager.runDownloadsUntilIdle()
+
+        attempts shouldBe 1
+        manager.queueState.value.single().status shouldBe AnimeDownload.State.ERROR
+        manager.hasPendingDownloads() shouldBe false
+        manager.startDownloads()
+        manager.runDownloadsUntilIdle()
+        attempts shouldBe 2
+    }
 
     @Test
     fun `runtime cancellation restores an active anime download to the queue`() = runTest {
@@ -110,10 +165,12 @@ class AnimeDownloadManagerTest {
         every { episode.id } returns episodeId
     }
 
-    private fun manager(downloader: AnimeDownloader): AnimeDownloadManager {
-        val store = mockk<AnimeDownloadStore>(relaxed = true) {
+    private fun manager(
+        downloader: AnimeDownloader,
+        store: AnimeDownloadStore = mockk(relaxed = true) {
             coEvery { restore() } returns emptyList()
-        }
+        },
+    ): AnimeDownloadManager {
         return AnimeDownloadManager(
             context = mockk(relaxed = true),
             cache = mockk { every { changes } returns MutableSharedFlow<Unit>() },

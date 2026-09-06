@@ -281,6 +281,18 @@ private fun ExtensionContent(
 @Composable
 private fun ExtensionFilterSummary(state: ExtensionListState) {
     ContentTypeFilterSummary(filter = state.filter.contentTypes) {
+        if (state.filter.stores.isActive) {
+            Text(
+                text = pluralStringResource(
+                    MR.plurals.extension_filter_stores_count,
+                    count = state.filter.stores.enabledStoreCount,
+                    state.filter.stores.enabledStoreCount,
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(vertical = MaterialTheme.padding.extraSmall),
+            )
+        }
         Text(
             text = pluralStringResource(
                 MR.plurals.extension_filter_languages_count,

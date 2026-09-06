@@ -35,6 +35,13 @@ internal interface PreparedBookPublication : AutoCloseable {
     val publication: BookPublication
     val resourceLoader: BookPublicationResourceLoader
 
+    /** Exact content identity used to decide whether a persisted locator can be restored. */
+    val locatorRevision: String?
+        get() = null
+
+    /** Progress through this publication, independent of its position in the source catalogue. */
+    fun progression(locator: BookLocator): Double? = locator.totalProgression ?: locator.progression
+
     fun validate(locator: BookLocator): Boolean
 
     suspend fun reconcileMigratedLocator(locator: BookLocator): BookLocator? =
@@ -63,6 +70,6 @@ internal data class BookResourceRequirement(
 }
 
 internal enum class BookResourceContentKind {
-    RASTER_IMAGE,
+    DOCUMENT_IMAGE,
     FONT,
 }

@@ -51,7 +51,7 @@ internal fun BookDownload.toEntryDownloadQueueItem(): EntryDownloadQueueItem {
         progressMax = 100,
         presentation = EntryDownloadPresentation(
             phase = statusSnapshot.toEntryDownloadPhase(),
-            progress = if (statusSnapshot == BookDownload.State.DOWNLOADING) {
+            progress = if (statusSnapshot == BookDownload.State.DOWNLOADING && progressSnapshot > 0) {
                 EntryDownloadProgress.Percent(progressSnapshot)
             } else {
                 EntryDownloadProgress.None
@@ -68,6 +68,7 @@ private fun BookDownload.State.toEntryDownloadPhase(): EntryDownloadPhase = when
     BookDownload.State.QUEUE -> EntryDownloadPhase.QUEUED
     BookDownload.State.RESOLVING -> EntryDownloadPhase.RESOLVING
     BookDownload.State.DOWNLOADING -> EntryDownloadPhase.TRANSFERRING
+    BookDownload.State.FINALIZING -> EntryDownloadPhase.FINALIZING
     BookDownload.State.DOWNLOADED -> EntryDownloadPhase.COMPLETED
     BookDownload.State.ERROR -> EntryDownloadPhase.FAILED
 }
@@ -77,6 +78,7 @@ internal fun BookDownload.State.toEntryDownloadState(): EntryDownloadState = whe
     BookDownload.State.QUEUE -> EntryDownloadState.QUEUE
     BookDownload.State.RESOLVING,
     BookDownload.State.DOWNLOADING,
+    BookDownload.State.FINALIZING,
     -> EntryDownloadState.DOWNLOADING
     BookDownload.State.DOWNLOADED -> EntryDownloadState.DOWNLOADED
     BookDownload.State.ERROR -> EntryDownloadState.ERROR

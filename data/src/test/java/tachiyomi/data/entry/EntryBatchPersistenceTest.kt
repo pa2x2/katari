@@ -8,9 +8,9 @@ import app.cash.sqldelight.async.coroutines.awaitCreate
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
@@ -30,6 +30,7 @@ import tachiyomi.data.MemoColumnAdapter
 import tachiyomi.data.StringListColumnAdapter
 import tachiyomi.data.UpdateStrategyColumnAdapter
 import tachiyomi.domain.entry.model.Entry
+import java.sql.SQLException
 
 class EntryBatchPersistenceTest {
 
@@ -103,7 +104,7 @@ class EntryBatchPersistenceTest {
                 parameters = 0,
             )
 
-            shouldThrowAny {
+            shouldThrow<SQLException> {
                 repository.insertOrUpdateBatch(
                     listOf(
                         entry("/persisted", "Persisted", EntryType.BOOK),
@@ -112,7 +113,7 @@ class EntryBatchPersistenceTest {
                     ),
                     PROFILE_ID,
                 )
-            }
+            }.message shouldContain "rejected entry"
 
             database.entriesQueries.getAllEntries(PROFILE_ID).awaitAsList()
                 .map { it.url } shouldContainExactly listOf("/persisted")

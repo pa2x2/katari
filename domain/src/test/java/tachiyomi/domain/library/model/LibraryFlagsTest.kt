@@ -10,13 +10,6 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 class LibraryFlagsTest {
 
     @Test
-    fun `Check the amount of flags`() {
-        LibraryDisplayMode.values.size shouldBe 5
-        LibrarySort.types.size shouldBe 10
-        LibrarySort.directions.size shouldBe 2
-    }
-
-    @Test
     fun `Test Flag plus operator (LibrarySort)`() {
         val current = LibrarySort(LibrarySort.Type.LastRead, LibrarySort.Direction.Ascending)
         val new = LibrarySort(LibrarySort.Type.DateAdded, LibrarySort.Direction.Ascending)

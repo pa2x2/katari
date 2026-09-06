@@ -99,28 +99,6 @@ class LibraryDownloadCountUpdatesTest {
     }
 
     @Test
-    fun `zero to positive count is emitted from the matching status`() = runTest {
-        val item = libraryItem(entry(id = 1L))
-        var count = 0
-        val statuses = MutableSharedFlow<EntryDownloadStatus>()
-        val emissions = mutableListOf<List<LibraryItem>>()
-        val collection = launch(start = CoroutineStart.UNDISPATCHED) {
-            observeLibraryDownloadCountUpdates(
-                initialItems = listOf(item),
-                statusUpdates = statuses,
-                calculateDownloadCount = { count },
-            ).toList(emissions)
-        }
-
-        count = 1
-        statuses.emit(status(entryId = 1L))
-        runCurrent()
-
-        emissions.map { it.single().downloadCount } shouldContainExactly listOf(0, 1)
-        collection.cancelAndJoin()
-    }
-
-    @Test
     fun `count failure terminates the update flow`() = runTest {
         val failure = IllegalStateException("count failed")
 

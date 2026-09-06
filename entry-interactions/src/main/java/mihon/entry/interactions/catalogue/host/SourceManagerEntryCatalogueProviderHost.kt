@@ -13,7 +13,11 @@ import eu.kanade.tachiyomi.source.entry.EntryPageResult
 import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.entry.entryItemOrientation
+import eu.kanade.tachiyomi.source.entry.filter.requireValidFilters
 import eu.kanade.tachiyomi.source.entry.supportedEntryTypes
+import eu.kanade.tachiyomi.source.filter.EntryFilterBinding
+import eu.kanade.tachiyomi.source.filter.detachedCopy
+import eu.kanade.tachiyomi.source.filter.withSourceFilterValues
 import mihon.entry.interactions.catalogue.EntryCatalogueListing
 import mihon.entry.interactions.catalogue.EntryCatalogueUnavailableException
 import mihon.entry.interactions.catalogue.EntryCatalogueUnavailableReason
@@ -21,10 +25,13 @@ import tachiyomi.domain.source.model.EntryCatalogueDescription
 import tachiyomi.domain.source.model.EntrySourceDescription
 import tachiyomi.domain.source.model.UnifiedStubSource
 import tachiyomi.domain.source.service.SourceManager
+import java.util.concurrent.ConcurrentHashMap
 
 internal class SourceManagerEntryCatalogueProviderHost(
     private val sourceManager: SourceManager,
 ) : EntryCatalogueProviderHost {
+    private val filterBindings = ConcurrentHashMap<Long, EntryFilterBinding>()
+
     override val isInitialized = sourceManager.isInitialized
 
     override fun sources(): List<EntryCatalogueHostSource> {
@@ -53,7 +60,9 @@ internal class SourceManagerEntryCatalogueProviderHost(
     }
 
     override suspend fun filters(sourceId: Long): EntryFilterList {
-        return catalogueProvider(sourceId).getFilterList()
+        return filterBindings.getOrPut(sourceId) { EntryFilterBinding() }.captureFilters {
+            catalogueProvider(sourceId).getFilterList()
+        }
     }
 
     override suspend fun filterSuggestions(
@@ -84,8 +93,10 @@ internal class SourceManagerEntryCatalogueProviderHost(
         return filter.getNavigation(request)
     }
 
-    override fun backgroundFilters(sourceId: Long): EntryFilterList {
-        return catalogueProvider(sourceId).getFilterList()
+    override suspend fun backgroundFilters(sourceId: Long): EntryFilterList {
+        return filterBindings.getOrPut(sourceId) { EntryFilterBinding() }.captureFilters {
+            catalogueProvider(sourceId).getFilterList()
+        }
     }
 
     override suspend fun page(
@@ -97,7 +108,10 @@ internal class SourceManagerEntryCatalogueProviderHost(
         return when (listing) {
             EntryCatalogueListing.Popular -> source.getPopularContent(page)
             EntryCatalogueListing.Latest -> source.getLatestUpdates(page)
-            is EntryCatalogueListing.Search -> source.getSearchContent(page, listing.query, listing.filters)
+            is EntryCatalogueListing.Search -> {
+                listing.filters.requireValidFilters()
+                listing.filters.withSourceFilterValues { source.getSearchContent(page, listing.query, it) }
+            }
         }
     }
 

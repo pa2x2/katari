@@ -18,7 +18,7 @@ internal class HtmlProseDocumentParser {
     fun parse(resourceId: String, revision: String?, body: Element): BookDocument {
         val context = HtmlProseParsingContext()
         val parsed = mutableListOf<HtmlProseParsedBlock>()
-        HtmlProseBlockParser(context).collectChildren(body, BookDocumentStyle(), false, parsed)
+        HtmlProseBlockParser(context).collectChildren(body, body.documentBlockStyle(), false, parsed)
         val content = assembleContent(parsed)
         if (content.text.length > HtmlProseChapterContract.MAX_CANONICAL_UTF16) {
             throw HtmlProseLimitExceededException("Canonical chapter text exceeds its UTF-16 limit")

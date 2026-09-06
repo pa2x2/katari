@@ -20,9 +20,11 @@ import eu.kanade.domain.source.interactor.GetIncognitoState
 import eu.kanade.domain.source.model.CATALOGUE_LATEST_QUERY
 import eu.kanade.domain.source.model.CATALOGUE_POPULAR_QUERY
 import eu.kanade.domain.source.model.FeedListingMode
+import eu.kanade.domain.source.model.FilterRestoreIssue
 import eu.kanade.domain.source.model.FilterStateNode
 import eu.kanade.domain.source.model.SourceFeedPreset
 import eu.kanade.domain.source.model.applySnapshot
+import eu.kanade.domain.source.model.restoreSnapshot
 import eu.kanade.domain.source.model.snapshot
 import eu.kanade.domain.source.service.BrowseFeedService
 import eu.kanade.domain.source.service.SourcePreferences
@@ -41,6 +43,8 @@ import eu.kanade.tachiyomi.source.entry.EntryFilterPageScope
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
+import eu.kanade.tachiyomi.source.entry.filter.validationIssues
+import eu.kanade.tachiyomi.source.filter.detachedCopy
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.PagedFilterBrowseSession
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.PagedFilterBrowseSessionStore
 import kotlinx.collections.immutable.ImmutableList
@@ -121,6 +125,7 @@ class CatalogScreenModel(
     listingQuery: String?,
     private val migrationEntryType: EntryType? = null,
     private val initialFilterSnapshot: List<FilterStateNode> = emptyList(),
+    private val initialPresetId: String? = null,
     private val sourceManager: SourceManager = Injekt.get(),
     sourcePreferences: SourcePreferences = Injekt.get(),
     customPreferences: CustomPreferences = Injekt.get(),
@@ -159,6 +164,15 @@ class CatalogScreenModel(
     private val filterLoader = CatalogFilterLoader(entryCatalogueFeature)
     private val presetHelper = CatalogPresetHelper(sourceId, browseFeedService, entryCatalogueFeature)
     private val pagedFilterBrowseSessions = PagedFilterBrowseSessionStore(screenModelScope)
+    private val pagedFilterEdits = CatalogPagedFilterEdits(screenModelScope) { pending ->
+        mutableState.update { it.copy(pendingFilterEdits = pending) }
+    }
+    private val filterReset = CatalogFilterReset(
+        state = mutableState,
+        loadFilters = { filterLoader.load(sourceId) },
+        discardEdits = { pagedFilterEdits.discard() },
+        retainSessions = pagedFilterBrowseSessions::retain,
+    )
     private val mergeTargetSearchController = MergeTargetSearchController<MergeTarget>(screenModelScope)
 
     val catalogSource =
@@ -184,10 +198,10 @@ class CatalogScreenModel(
     private val hideInLibraryItems = sourcePreferences.hideInLibraryItems.get()
     private val catalogEntryStateStore = CatalogEntryStateStore(ioCoroutineScope, getEntry::subscribe)
 
-    val catalogPagerFlowFlow = state.map { it.listing }
+    val catalogPagerFlowFlow = state.map { it.pageableListing }
         .distinctUntilChanged()
         .map { listing ->
-            if (catalogSource == null) {
+            if (catalogSource == null || listing == null) {
                 emptyFlow()
             } else {
                 Pager(PagingConfig(pageSize = 25)) {
@@ -249,8 +263,58 @@ class CatalogScreenModel(
     fun resetFilters() {
         if (catalogSource == null) return
         screenModelScope.launchIO {
-            loadFilters()
+            filterReset.reset()
         }
+    }
+
+    fun resetFilterGroup(filter: SourceModelFilter<*>) {
+        pagedFilterEdits.discard(filter)
+        eu.kanade.tachiyomi.ui.browse.source.browse.filter.resetFilterToDefault(
+            filter,
+            state.value.filters,
+            state.value.defaultFilters,
+        )
+        setFilters(state.value.filters)
+    }
+
+    fun editPagedFilterItem(
+        group: SourceModelFilter.PagedGroup<*>,
+        item: EntryFilterPageItem,
+        updated: SourceModelFilter<*>,
+        onComplete: (Boolean) -> Unit,
+    ) {
+        pagedFilterEdits.submit(group, item, updated) { success ->
+            setFilters(state.value.filters)
+            onComplete(success)
+        }
+    }
+
+    fun applyDraftFilters(): Boolean {
+        val applied = state.value.applyFilterDraft() ?: return false
+        mutableState.value = applied
+        return true
+    }
+
+    fun resolvePresetIssue(issue: FilterRestoreIssue, remove: Boolean) {
+        if (remove && issue.target != null) {
+            eu.kanade.tachiyomi.ui.browse.source.browse.filter.resetFilterToDefault(
+                issue.target,
+                state.value.filters,
+                state.value.defaultFilters,
+            )
+        }
+        mutableState.update { it.copy(repairIssues = it.repairIssues.filterNot { candidate -> candidate === issue }) }
+    }
+
+    fun saveRepairedPreset() {
+        val current = state.value
+        if (!current.canSaveFilterDraft) return
+        val preset = presetHelper.customPreset(current.draftPresetId) ?: return
+        val saved = current.toSavedPresetState(current.defaultFilters)
+        presetHelper.savePreset(
+            preset.copy(filters = saved.filters, listingMode = saved.listingMode, query = saved.query),
+        )
+        mutableState.update { it.copy(repairNeedsSave = false) }
     }
 
     fun setListing(listing: Listing) {
@@ -320,7 +384,7 @@ class CatalogScreenModel(
             it.copy(
                 listing = input.copy(
                     query = query ?: input.query,
-                    filters = filters ?: input.filters,
+                    filters = (filters ?: input.filters).detachedCopy(),
                 ),
                 toolbarQuery = query ?: input.query,
             )
@@ -371,6 +435,7 @@ class CatalogScreenModel(
                     listing = listing,
                     toolbarQuery = listing.query,
                     filterState = FilterUiState.Ready,
+                    appliedFiltersReady = true,
                 )
             }
         }
@@ -389,11 +454,16 @@ class CatalogScreenModel(
     fun retryFilterLoad() {
         if (catalogSource == null) return
         screenModelScope.launchIO {
-            loadFilters()
+            if (state.value.filterResetPending) {
+                filterReset.reset()
+            } else {
+                loadFilters(initialFilterSnapshot)
+            }
         }
     }
 
     private suspend fun loadFilters(initialFilterSnapshot: List<FilterStateNode> = emptyList()) {
+        pagedFilterEdits.discard()
         mutableState.update { it.copy(filterState = FilterUiState.Loading) }
 
         runCatching {
@@ -406,7 +476,13 @@ class CatalogScreenModel(
                     initialFilterSnapshot = initialFilterSnapshot,
                 ).copy(
                     filterState = FilterUiState.Ready,
+                    draftPresetId = initialPresetId,
+                    appliedCustomPresetId = initialPresetId,
                 )
+            }
+            val original = presetHelper.customPreset(initialPresetId)
+            if (original != null && original.filters == initialFilterSnapshot && state.value.canSaveFilterDraft) {
+                browseFeedService.migratePresetFilters(original, state.value.filters.snapshot())
             }
         }.onFailure { throwable ->
             mutableState.update {
@@ -798,7 +874,7 @@ class CatalogScreenModel(
     // region Presets
 
     fun showSavePresetDialog() {
-        if (!feedsEnabled) return
+        if (!feedsEnabled || !state.value.canSaveFilterDraft) return
         setDialog(
             Dialog.SavePreset(
                 mode = Dialog.SavePreset.Mode.Create,
@@ -809,9 +885,9 @@ class CatalogScreenModel(
     }
 
     fun showUpdateCurrentPresetDialog() {
-        if (!feedsEnabled) return
+        if (!feedsEnabled || !state.value.canSaveFilterDraft) return
 
-        val preset = appliedCustomPreset() ?: return
+        val preset = draftCustomPreset() ?: return
 
         setDialog(
             Dialog.SavePreset(
@@ -838,9 +914,9 @@ class CatalogScreenModel(
         )
     }
 
-    fun appliedCustomPreset(): SourceFeedPreset? {
+    fun draftCustomPreset(): SourceFeedPreset? {
         if (!feedsEnabled) return null
-        return presetHelper.customPreset(state.value.appliedCustomPresetId)
+        return presetHelper.customPreset(state.value.draftPresetId)
     }
 
     fun feedPresets(): List<SourceFeedPreset> {
@@ -849,39 +925,31 @@ class CatalogScreenModel(
     }
 
     fun applyPreset(presetId: String) {
-        if (!feedsEnabled) return
-        if (catalogSource == null) return
-
+        if (!feedsEnabled || catalogSource == null) return
         val preset = feedPresets().firstOrNull { it.id == presetId } ?: return
-        when (preset.listingMode) {
-            FeedListingMode.Popular -> {
-                resetFilters()
-                setListing(Listing.Popular)
+        pagedFilterEdits.discard()
+        screenModelScope.launchIO {
+            val filters = freshResolvedFilters() ?: return@launchIO
+            val defaults = filters.detachedCopy()
+            val restoration = filters.restoreSnapshot(preset.filters)
+            if (restoration.isCompatible && filters.validationIssues().isEmpty()) {
+                browseFeedService.migratePresetFilters(preset, filters.snapshot())
             }
-            FeedListingMode.Latest -> {
-                resetFilters()
-                setListing(Listing.Latest)
+            pagedFilterBrowseSessions.retain(filters)
+            mutableState.update {
+                it.copy(
+                    filters = filters,
+                    defaultFilters = defaults,
+                    draftMode = preset.listingMode,
+                    draftQuery = preset.query,
+                    draftPresetId = preset.id.takeIf(presetHelper::canDeletePreset),
+                    filterResetPending = false,
+                    repairIssues = restoration.issues,
+                    repairNeedsSave = preset.filters.isNotEmpty() &&
+                        (restoration.issues.isNotEmpty() || filters.validationIssues().isNotEmpty()),
+                    filterState = FilterUiState.Ready,
+                )
             }
-            FeedListingMode.Search -> {
-                screenModelScope.launchIO {
-                    val filters = freshResolvedFilters()?.applySnapshot(preset.filters) ?: return@launchIO
-                    pagedFilterBrowseSessions.retain(filters)
-                    mutableState.update {
-                        it.copy(
-                            filters = filters,
-                            listing = Listing.Search(query = preset.query, filters = filters),
-                            toolbarQuery = preset.query,
-                            appliedCustomPresetId = preset.id.takeIf(presetHelper::canDeletePreset),
-                            filterState = FilterUiState.Ready,
-                        )
-                    }
-                }
-                return
-            }
-        }
-
-        mutableState.update {
-            it.copy(appliedCustomPresetId = preset.id.takeIf(presetHelper::canDeletePreset))
         }
     }
 
@@ -915,13 +983,13 @@ class CatalogScreenModel(
         if (trimmed.isBlank()) return
 
         val dialog = state.value.dialog as? Dialog.SavePreset ?: return
+        if (dialog.mode != Dialog.SavePreset.Mode.EditMetadata && !state.value.canSaveFilterDraft) return
+        val presetState = state.value.toSavedPresetState(state.value.defaultFilters)
         when (dialog.mode) {
             Dialog.SavePreset.Mode.Create -> {
                 if (catalogSource == null) return
 
                 screenModelScope.launchIO {
-                    val defaultFilters = freshResolvedFilters() ?: return@launchIO
-                    val presetState = state.value.toSavedPresetState(defaultFilters = defaultFilters)
                     val preset = SourceFeedPreset(
                         id = UUID.randomUUID().toString(),
                         sourceId = sourceId,
@@ -934,8 +1002,9 @@ class CatalogScreenModel(
                     presetHelper.savePreset(preset)
                     mutableState.update {
                         it.copy(
-                            appliedCustomPresetId = preset.id,
-                            dialog = null,
+                            draftPresetId = preset.id,
+                            repairNeedsSave = false,
+                            dialog = Dialog.Filter,
                             filterState = FilterUiState.Ready,
                         )
                     }
@@ -957,8 +1026,6 @@ class CatalogScreenModel(
 
                 val preset = presetHelper.customPreset(dialog.presetId) ?: return
                 screenModelScope.launchIO {
-                    val defaultFilters = freshResolvedFilters() ?: return@launchIO
-                    val presetState = state.value.toSavedPresetState(defaultFilters = defaultFilters)
                     presetHelper.savePreset(
                         preset.copy(
                             name = trimmed,
@@ -970,8 +1037,9 @@ class CatalogScreenModel(
                     )
                     mutableState.update {
                         it.copy(
-                            appliedCustomPresetId = preset.id,
-                            dialog = null,
+                            draftPresetId = preset.id,
+                            repairNeedsSave = false,
+                            dialog = Dialog.Filter,
                             filterState = FilterUiState.Ready,
                         )
                     }
@@ -1089,10 +1157,23 @@ class CatalogScreenModel(
         val listing: Listing,
         val filters: EntryFilterList = EntryFilterList(),
         val filterState: FilterUiState = FilterUiState.Uninitialized,
+        val filterResetPending: Boolean = false,
+        val appliedFiltersReady: Boolean = false,
+        val defaultFilters: EntryFilterList = EntryFilterList(),
+        val draftMode: FeedListingMode? = null,
+        val draftQuery: String? = null,
+        val draftPresetId: String? = null,
+        val repairIssues: List<FilterRestoreIssue> = emptyList(),
+        val repairNeedsSave: Boolean = false,
+        val pendingFilterEdits: Int = 0,
         val toolbarQuery: String? = null,
         val appliedCustomPresetId: String? = null,
         val dialog: Dialog? = null,
     ) {
+        val draftSearchQuery get() = if (draftMode != null) draftQuery else (listing as? Listing.Search)?.query
+        val canSaveFilterDraft get() = filterState is FilterUiState.Ready &&
+            pendingFilterEdits == 0 && repairIssues.isEmpty() &&
+            filters.validationIssues().isEmpty()
         val isUserQuery get() = listing is Listing.Search && !listing.query.isNullOrEmpty()
         val hasFilterCapability get() = filterState !is FilterUiState.Unavailable
     }
@@ -1121,24 +1202,6 @@ sealed interface FilterUiState {
     data object Unavailable : FilterUiState
 }
 
-internal fun CatalogScreenModel.State.initializeForSource(
-    sourceFilters: EntryFilterList,
-    initialFilterSnapshot: List<FilterStateNode> = emptyList(),
-): CatalogScreenModel.State {
-    val filters = sourceFilters.applySnapshot(initialFilterSnapshot)
-    val query = (listing as? CatalogScreenModel.Listing.Search)?.query
-    val updatedListing = when (listing) {
-        is CatalogScreenModel.Listing.Search -> CatalogScreenModel.Listing.Search(query, filters)
-        else -> listing
-    }
-
-    return copy(
-        listing = updatedListing,
-        filters = filters,
-        toolbarQuery = query,
-    )
-}
-
 internal fun initialCatalogState(listingQuery: String?): CatalogScreenModel.State {
     return CatalogScreenModel.State(
         listing = CatalogScreenModel.Listing.valueOf(listingQuery),
@@ -1162,30 +1225,4 @@ internal fun resolveBrowseLongPressAction(
             CustomPreferences.BrowseLongPressAction.IMMERSIVE -> immersiveAvailable
         }
     }
-}
-
-internal data class SavedPresetState(
-    val listingMode: FeedListingMode,
-    val query: String?,
-    val filters: List<FilterStateNode>,
-)
-
-internal fun CatalogScreenModel.State.toSavedPresetState(defaultFilters: EntryFilterList): SavedPresetState {
-    val filterSnapshot = filters.snapshot()
-    val hasEditedFilters = filterSnapshot != defaultFilters.snapshot()
-    val listingMode = when {
-        listing is CatalogScreenModel.Listing.Search || hasEditedFilters -> FeedListingMode.Search
-        listing == CatalogScreenModel.Listing.Popular -> FeedListingMode.Popular
-        else -> FeedListingMode.Latest
-    }
-    val query = (listing as? CatalogScreenModel.Listing.Search)
-        ?.query
-        ?.trim()
-        ?.takeIf { listingMode == FeedListingMode.Search && it.isNotEmpty() }
-
-    return SavedPresetState(
-        listingMode = listingMode,
-        query = query,
-        filters = filterSnapshot,
-    )
 }

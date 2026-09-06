@@ -80,13 +80,9 @@ class EntryDownloadNotificationManagerTest {
 
     private fun fixture(scope: CoroutineScope): Fixture {
         val stateFlow = MutableStateFlow(EntryDownloadRuntimeState())
-        val progress = MutableSharedFlow<EntryDownloadQueueItem>()
-        val status = MutableSharedFlow<EntryDownloadQueueItem>()
         val events = MutableSharedFlow<EntryDownloadEvent>()
         val downloads = mockk<EntryDownloadRuntimeCoordinator>(relaxed = true) {
             every { state } returns stateFlow
-            every { queueProgressUpdates() } returns progress
-            every { queueStatusUpdates() } returns status
             every { events() } returns events
         }
         val presenter = mockk<EntryDownloadNotificationPresenter>(relaxed = true)

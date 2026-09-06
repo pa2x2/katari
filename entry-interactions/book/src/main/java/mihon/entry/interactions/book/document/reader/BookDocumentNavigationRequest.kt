@@ -7,12 +7,21 @@ internal data class BookDocumentNavigationRequest(
     val id: Long,
     val chapterId: Long,
     val position: BookDocumentPosition,
+    val sectionKey: String = chapterId.toString(),
+    val alignToPassage: Boolean = false,
+    val returnToOrigin: Boolean = false,
 )
 
 internal fun BookDocumentNavigationRequest?.acceptsLocation(
     chapterId: Long,
     position: BookDocumentPosition,
-): Boolean = this == null || (this.chapterId == chapterId && this.position == position)
+    sectionKey: String = chapterId.toString(),
+    restoredNavigationId: Long? = null,
+): Boolean = this == null ||
+    (
+        this.chapterId == chapterId && this.sectionKey == sectionKey && this.position == position &&
+            (!alignToPassage || restoredNavigationId == id)
+        )
 
 internal fun BookDocumentNavigationRequest?.afterAcceptedLocation(
     observedRequest: BookDocumentNavigationRequest?,

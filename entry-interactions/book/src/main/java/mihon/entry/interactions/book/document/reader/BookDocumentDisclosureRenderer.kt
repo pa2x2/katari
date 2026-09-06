@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentBlockContent
+import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
 
@@ -26,7 +27,7 @@ internal fun BookDocumentDisclosureRenderer(
     selectionIdentity: String,
     sectionKey: String,
     resourceLoader: BookPublicationResourceLoader?,
-    onAnchorClick: (String) -> Unit,
+    onAnchorClick: (BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     onReaderTap: () -> Unit,
     preserveTerminalSpacing: Boolean,

@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.ViewGroup
 import android.view.WindowManager
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
@@ -27,11 +28,16 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingsProvider
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeMode
+import mihon.entry.interactions.book.document.resource.BookRemoteResourceConsentCoordinator
+import mihon.entry.interactions.book.document.resource.BookRemoteResourceConsentPreferences
+import mihon.entry.interactions.book.document.resource.PendingBookRemoteResourceConsent
 import mihon.entry.interactions.book.navigation.BookChapterNavigationResolver
 import mihon.entry.interactions.book.navigation.BookChapterReadingOrder
+import mihon.entry.interactions.book.preparation.BookRemoteResourceAuthorization
 import mihon.entry.interactions.book.processor.BookReaderRequest
 import mihon.entry.interactions.book.reader.BookChildWebViewResolver
 import mihon.entry.interactions.book.reader.BookReaderErrorScreen
@@ -81,6 +87,11 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     private lateinit var readerSystemBars: BookDocumentReaderSystemBars
     private var startupJob: Job? = null
     private var navigationPresentationJob: Job? = null
+    private var pendingExternalLink by mutableStateOf<String?>(null)
+    private var pendingRemoteResourceConsent by mutableStateOf<PendingBookRemoteResourceConsent?>(null)
+    private val remoteResourceConsentCoordinator by lazy {
+        BookRemoteResourceConsentCoordinator(Injekt.get<BookRemoteResourceConsentPreferences>())
+    }
     private val navigationPresenter by lazy {
         BookReaderNavigationPresenter(
             getEntryWithChapters = Injekt.get<GetEntryWithChapters>(),
@@ -120,9 +131,11 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             currentState = { readerState },
             updateState = { readerState = it },
             updateVisualChapterProgression = { visualChapterProgression.floatValue = it },
+            onNavigationMissing = { showReaderFeedback(R.string.book_document_anchor_missing) },
             onSessionActivated = { session ->
                 selectionCoordinator?.updateCapabilities(session.readerCapabilities)
                 childWebViewResolver.resolve(session)
+                promptForRemoteResources(session) {}
             },
         )
         val readerContent = ComposeView(this)
@@ -156,9 +169,16 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                         settingBindings = requireNotNull(settingBindings),
                         selectionCoordinator = selectionCoordinator,
                         onLocation = chapterCoordinator::onLocation,
+                        onViewportLocation = retainedSessions.jumpHistory::observe,
+                        jumpHistory = retainedSessions.jumpHistory,
+                        onReturn = {
+                            retainedSessions.jumpHistory.returnTarget?.let {
+                                chapterCoordinator.selectNavigationTarget(it.copy(returnToOrigin = true))
+                            }
+                        },
                         onTransitionReached = { chapterCoordinator.loadChapter(it, activate = false, retry = true) },
                         onTerminalObservation = chapterCoordinator::onTerminalObservation,
-                        onChapterSelected = ::selectChapterFromNavigation,
+                        onNavigationSelected = ::selectFromNavigation,
                         onChromeToggle = ::toggleChrome,
                         onChromeHide = { setChromeVisible(false) },
                         onUserScrollStarted = chapterCoordinator::onUserScrollStarted,
@@ -172,11 +192,30 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                         onChildWebViewAction = ::launchChildWebViewAction,
                         snackbarHostState = snackbarHostState,
                         onAnchorMissing = { showReaderFeedback(R.string.book_document_anchor_missing) },
-                        onExternalLinkClick = ::launchExternalLink,
+                        onInternalLinkClick = chapterCoordinator::navigateLink,
+                        onExternalLinkClick = ::confirmExternalLink,
+                        onAuxiliaryDismiss = chapterCoordinator::dismissAuxiliarySection,
                         onTranslationPopupBoundsChanged = selectionActionModeAvoidance::updateBounds,
                         onClose = ::finish,
                     )
                 }
+            }
+            pendingExternalLink?.let { url ->
+                BookDocumentExternalLinkDialog(
+                    host = Uri.parse(url).host.orEmpty(),
+                    onOpen = {
+                        pendingExternalLink = null
+                        openExternalLink(url)
+                    },
+                    onDismiss = { pendingExternalLink = null },
+                )
+            }
+            pendingRemoteResourceConsent?.let { pending ->
+                BookRemoteResourceConsentDialog(
+                    pending = pending,
+                    onAllow = { resolveRemoteResourceConsent(allow = true) },
+                    onBlock = { resolveRemoteResourceConsent(allow = false) },
+                )
             }
         }
         if (startupRequest.entryId < 0L || startupRequest.chapterId < 0L) {
@@ -184,6 +223,26 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         } else {
             startOpen()
         }
+        onBackPressedDispatcher.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    when {
+                        pendingExternalLink != null -> pendingExternalLink = null
+                        pendingRemoteResourceConsent != null -> resolveRemoteResourceConsent(allow = false)
+                        readerState?.navigationVisible == true -> setNavigationVisible(false)
+                        readerState?.settingsVisible == true -> {
+                            readerState = readerState?.copy(settingsVisible = false)
+                        }
+                        readerState?.auxiliarySection != null -> chapterCoordinator.dismissAuxiliarySection()
+                        else -> {
+                            isEnabled = false
+                            onBackPressedDispatcher.onBackPressed()
+                        }
+                    }
+                }
+            },
+        )
     }
 
     override fun onStart() {
@@ -315,22 +374,36 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     }
 
     private suspend fun showInitialSession(session: OpenedBookReaderSession) {
+        if (promptForRemoteResources(session) {
+                lifecycleScope.launch { showAuthorizedInitialSession(session) }
+            }
+        ) {
+            return
+        }
+        showAuthorizedInitialSession(session)
+    }
+
+    private suspend fun showAuthorizedInitialSession(session: OpenedBookReaderSession) {
         val readingOrder = BookChapterReadingOrder(
             Injekt.get<BookChapterNavigationResolver>().resolveAll(session.entry),
         )
         val window = readingOrder.window(session.chapter.id)
             ?: return showError(getString(R.string.book_document_chapter_missing))
-        val section = session.toDocumentSection(retainedSessions.locator(session.chapter.id))
+        val sections = session.toDocumentSections(retainedSessions.locator(session.chapter.id))
             ?: return showError(getString(R.string.book_document_incompatible))
         ensureSelectionCoordinator(session)
-        val progression = section.document.document.progressionAt(section.initialPosition)
+        val section = sections.initialSection
+        val progression = section.totalProgression(
+            section.document.document.progressionAt(section.initialPosition),
+        )
         visualChapterProgression.floatValue = progression
         readerState = BookDocumentReaderState(
             entryTitle = session.entry.displayTitle,
             readingOrder = readingOrder,
             currentChapterId = session.chapter.id,
             window = window,
-            loadedSections = mapOf(session.chapter.id to section),
+            loadedSections = mapOf(session.chapter.id to sections),
+            publicationNavigation = mapOf(session.chapter.id to session.preparedPublication.publication.navigation),
         )
         childWebViewResolver.resolve(session)
         surfaceState = BookDocumentReaderSurfaceState.Ready
@@ -339,8 +412,34 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         chapterCoordinator.prepareNextChapterIfNeeded(progression.toDouble())
     }
 
+    private fun promptForRemoteResources(
+        session: OpenedBookReaderSession,
+        onResolved: () -> Unit,
+    ): Boolean {
+        val authorization = session.preparedPublication as? BookRemoteResourceAuthorization ?: return false
+        if (authorization.remoteResourceRequests.isEmpty()) return false
+        val publicationId = session.preparedPublication.publication.id
+        pendingRemoteResourceConsent = remoteResourceConsentCoordinator.pendingConsent(
+            publicationId = publicationId,
+            authorization = authorization,
+            onResolved = onResolved,
+        ) ?: return false
+        return true
+    }
+
+    private fun resolveRemoteResourceConsent(allow: Boolean) {
+        val pending = pendingRemoteResourceConsent ?: return
+        pendingRemoteResourceConsent = null
+        remoteResourceConsentCoordinator.resolve(pending, allow)
+    }
+
     private fun setNavigationVisible(visible: Boolean) {
-        readerState = readerState?.copy(navigationVisible = visible)
+        readerState = readerState?.let { state ->
+            state.copy(
+                navigationVisible = visible,
+                navigationLocator = retainedSessions.locator(state.currentChapterId),
+            )
+        }
         if (!visible) {
             navigationPresentationJob?.cancel()
             navigationPresentationJob = null
@@ -367,9 +466,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     private fun ensureSelectionCoordinator(session: OpenedBookReaderSession) {
         if (session.readerSettingsSurfaceId != BookDocumentReaderProcessor.SETTINGS_SURFACE_ID) return
         val automaticTranslation = settingBindings?.automaticTranslation ?: return
-        val languageSession = BookSelectionLanguageSession(
-            session.preparedPublication.publication.languages,
-        )
+        val languageSession = BookSelectionLanguageSession(emptyList())
         val translationController = BookSelectionTranslationController(
             feature = Injekt.get<TranslationFeature>(),
             hostActions = Injekt.get<TranslationHostActions>(),
@@ -414,7 +511,16 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             .onFailure { error -> logcat(LogPriority.ERROR, error) { "Failed to launch BOOK source action" } }
     }
 
-    private fun launchExternalLink(url: String) {
+    private fun confirmExternalLink(url: String) {
+        val uri = runCatching { Uri.parse(url) }.getOrNull()
+        if (uri?.host.isNullOrBlank() || !(uri.scheme.equals("http", true) || uri.scheme.equals("https", true))) {
+            showReaderFeedback(R.string.book_document_external_link_unavailable)
+            return
+        }
+        pendingExternalLink = url
+    }
+
+    private fun openExternalLink(url: String) {
         runCatching {
             val uri = Uri.parse(url)
             require(uri.scheme.equals("http", true) || uri.scheme.equals("https", true)) {
@@ -433,9 +539,9 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         }
     }
 
-    private fun selectChapterFromNavigation(chapter: EntryChapter) {
+    private fun selectFromNavigation(target: BookDocumentNavigationTarget) {
         window.decorView.findFocus()?.clearFocus()
-        chapterCoordinator.selectChapter(chapter, retry = true)
+        chapterCoordinator.selectNavigationTarget(target)
     }
 
     private fun setChromeVisible(visible: Boolean) {

@@ -123,24 +123,25 @@ class TranslationSessionControllerTest {
         controller.submit(input("first"))
         advanceTimeBy(100)
         runCurrent()
-        val previousResult = controller.state.value.displayedSessionResult()
+        val previousResult = requireNotNull(controller.state.value.displayedSessionResult())
+        previousResult.result.translatedText shouldBe "translated first"
 
         controller.submit(input("second"))
         controller.state.value
             .shouldBeInstanceOf<TranslationSessionState.Settling>()
-            .previousResult shouldBe previousResult
+            .displayedSessionResult() shouldBe previousResult
 
         advanceTimeBy(100)
         runCurrent()
         controller.state.value
             .shouldBeInstanceOf<TranslationSessionState.Preparing>()
-            .previousResult shouldBe previousResult
+            .displayedSessionResult() shouldBe previousResult
 
         preparationGate.complete(Unit)
         runCurrent()
         controller.state.value
             .shouldBeInstanceOf<TranslationSessionState.Translating>()
-            .previousResult shouldBe previousResult
+            .displayedSessionResult() shouldBe previousResult
 
         executionGate.complete(Unit)
         runCurrent()

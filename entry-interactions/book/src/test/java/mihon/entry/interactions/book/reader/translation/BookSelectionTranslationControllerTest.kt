@@ -35,26 +35,69 @@ import mihon.translation.ui.session.TranslationSessionState
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 import tachiyomi.core.common.preference.Preference
+import mihon.entry.interactions.book.reader.selection.BookReaderTextSelection as NeutralBookReaderTextSelection
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class BookSelectionTranslationControllerTest {
     @Test
-    fun `settling prepares only the latest selected text`() = runTest {
+    fun `holding a selection still does not prepare translation until release`() = runTest {
+        val feature = RecordingFeature()
+        val controller = controller(feature, FakeHostActions())
+        runCurrent()
+        val held = readerSelection("selected", isSettled = false)
+
+        controller.submitSelection(held)
+        advanceTimeBy(1_000)
+        runCurrent()
+
+        feature.requests shouldBe emptyList()
+        controller.hostCoordinator.controller.state.value shouldBe TranslationSessionState.Hidden
+
+        controller.submitSelection(held.copy(isSettled = true))
+        runCurrent()
+
+        feature.requests.map(TranslationRequest::text) shouldBe listOf("selected")
+        controller.close()
+    }
+
+    @Test
+    fun `grabbing a handle clears translation before selected text changes`() = runTest {
+        val feature = RecordingFeature()
+        val controller = controller(feature, FakeHostActions())
+        runCurrent()
+        val selected = readerSelection("selected", isSettled = true)
+        controller.submitSelection(selected)
+        runCurrent()
+
+        controller.submitSelection(selected.copy(isSettled = false))
+        controller.submitSelection(readerSelection("expanded selection", isSettled = false))
+        advanceTimeBy(1_000)
+        runCurrent()
+
+        feature.requests.map(TranslationRequest::text) shouldBe listOf("selected")
+        controller.hostCoordinator.controller.state.value shouldBe TranslationSessionState.Hidden
+
+        controller.submitSelection(readerSelection("expanded selection", isSettled = true))
+        runCurrent()
+
+        feature.requests.map(TranslationRequest::text) shouldBe listOf("selected", "expanded selection")
+        controller.close()
+    }
+
+    @Test
+    fun `settled selection immediately prepares its text and language context`() = runTest {
         val feature = RecordingFeature()
         val host = FakeHostActions()
         val automaticSelectionSetting = automaticSelectionSetting(enabled = true)
         val controller = controller(feature, host, automaticSelectionSetting)
         runCurrent()
 
-        controller.submitSelection(selection("first", 1))
-        advanceTimeBy(100)
-        controller.submitSelection(selection("second", 2))
-        advanceTimeBy(250)
+        controller.submitSelection(readerSelection("selected", isSettled = true))
         runCurrent()
 
-        feature.requests.map(TranslationRequest::text) shouldBe listOf("second")
+        feature.requests.map(TranslationRequest::text) shouldBe listOf("selected")
         feature.requests.single().engine shouldBe TranslationEngineSelection.ProfileDefault
-        feature.requests.single().languageContext.surroundingText shouldBe "surrounding second prose"
+        feature.requests.single().languageContext.surroundingText shouldBe "surrounding selected prose"
         feature.requests.single().languageContext.declaredLanguages shouldBe listOf(LanguageTag.require("en"))
         controller.close()
     }
@@ -67,7 +110,6 @@ class BookSelectionTranslationControllerTest {
         val controller = controller(feature, host, automaticSelectionSetting)
         runCurrent()
         controller.submitSelection(selection("selected", 1))
-        advanceTimeBy(250)
         runCurrent()
 
         host.availability = TranslationDeviceAvailability.TranslationServiceMissing
@@ -78,7 +120,6 @@ class BookSelectionTranslationControllerTest {
         controller.effectiveEnabled.value shouldBe false
         controller.hostCoordinator.controller.state.value shouldBe TranslationSessionState.Hidden
         controller.submitSelection(selection("ignored", 2))
-        advanceTimeBy(250)
         runCurrent()
         feature.requests.map(TranslationRequest::text) shouldBe listOf("selected")
         controller.close()
@@ -106,7 +147,6 @@ class BookSelectionTranslationControllerTest {
         runCurrent()
         val first = selection("same", 1)
         controller.submitSelection(first)
-        advanceTimeBy(250)
         runCurrent()
 
         val moved = first.copy(anchor = TranslationSelectionAnchor(40f, 50f, 60f, 70f))
@@ -169,6 +209,15 @@ class BookSelectionTranslationControllerTest {
         text = text,
         languageContextText = "surrounding $text prose",
         anchor = TranslationSelectionAnchor(10f, 20f, 30f, 40f),
+    )
+
+    private fun readerSelection(text: String, isSettled: Boolean) = NeutralBookReaderTextSelection(
+        ownerIdentity = "owner",
+        identity = text,
+        text = text,
+        languageContextText = "surrounding $text prose",
+        anchor = null,
+        isSettled = isSettled,
     )
 
     private class RecordingFeature : TranslationFeature {

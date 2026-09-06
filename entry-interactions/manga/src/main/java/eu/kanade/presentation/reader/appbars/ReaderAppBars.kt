@@ -31,6 +31,7 @@ import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.reader.ReaderChrome
+import tachiyomi.presentation.core.components.reader.ReaderReturnPositionBar
 
 private val readerBarsSlideAnimationSpec = tween<IntOffset>(200)
 private val readerBarsFadeAnimationSpec = tween<Float>(150)
@@ -58,6 +59,9 @@ internal fun ReaderAppBars(
     totalPages: Int,
     onPageIndexChange: (Int) -> Unit,
     onPageIndexChangeFinished: () -> Unit,
+    returnPositionAvailable: Boolean,
+    onReturnToPreviousPosition: () -> Unit,
+    onDismissReturnPosition: () -> Unit,
 
     readingMode: ReadingMode,
     onClickReadingMode: () -> Unit,
@@ -129,6 +133,12 @@ internal fun ReaderAppBars(
         },
         bottomBar = {
             Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.small)) {
+                if (returnPositionAvailable) {
+                    ReaderReturnPositionBar(
+                        onReturn = onReturnToPreviousPosition,
+                        onDismiss = onDismissReturnPosition,
+                    )
+                }
                 if (chapterNavigatorType.isHorizontal()) {
                     ChapterNavigator(
                         type = chapterNavigatorType,

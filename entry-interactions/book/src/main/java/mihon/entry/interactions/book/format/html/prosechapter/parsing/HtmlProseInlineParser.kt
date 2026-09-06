@@ -2,9 +2,13 @@ package mihon.entry.interactions.book.format.html.prosechapter.parsing
 
 import mihon.book.api.document.BookDocumentInlineStyleRange
 import mihon.book.api.document.BookDocumentLink
+import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.book.api.document.BookDocumentRichText
 import mihon.book.api.document.BookDocumentTextRange
 import mihon.book.api.document.toBookDocumentLinkTarget
+import mihon.entry.interactions.book.format.html.prosechapter.sanitization.BOOK_RESOURCE_FRAGMENT_ATTRIBUTE
+import mihon.entry.interactions.book.format.html.prosechapter.sanitization.BOOK_RESOURCE_ID_ATTRIBUTE
+import mihon.entry.interactions.book.format.html.prosechapter.sanitization.BOOK_RESOURCE_REFERENCE_ATTRIBUTE
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode
@@ -115,7 +119,7 @@ internal class HtmlProseInlineParser(
         element.childNodes().forEach(::appendNode)
         val end = text.length
         if (end <= start) return
-        element.attr("href").toBookDocumentLinkTarget()?.let { target ->
+        element.bookDocumentLinkTarget()?.let { target ->
             links += BookDocumentLink(start, end, target)
         }
         element.documentInlineStyle()?.let { style ->
@@ -138,6 +142,21 @@ internal class HtmlProseInlineParser(
             }
         }
     }
+}
+
+private fun Element.bookDocumentLinkTarget(): BookDocumentLinkTarget? {
+    val resourceId = attr(BOOK_RESOURCE_ID_ATTRIBUTE).trim()
+    val fragment = attr(BOOK_RESOURCE_FRAGMENT_ATTRIBUTE).trim().takeIf(String::isNotEmpty)
+    if (attr(BOOK_RESOURCE_REFERENCE_ATTRIBUTE) == "true" && fragment != null) {
+        return BookDocumentLinkTarget.Reference(resourceId.takeIf(String::isNotEmpty), fragment)
+    }
+    if (resourceId.isNotEmpty()) {
+        return BookDocumentLinkTarget.Resource(
+            resourceId = resourceId,
+            fragment = fragment,
+        )
+    }
+    return attr("href").toBookDocumentLinkTarget()
 }
 
 internal fun Element.fragments(): List<String> = buildList {

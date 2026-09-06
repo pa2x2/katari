@@ -29,6 +29,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.materialIcons)
     implementation(libs.androidx.fragment)
+    implementation(libs.androidsvg)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.bundles.serialization)
     implementation(libs.injekt)
@@ -42,6 +43,11 @@ dependencies {
     testImplementation(libs.robolectric)
     testRuntimeOnly(libs.junit.platform.launcher)
     testRuntimeOnly(libs.junit.vintage)
+
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.uiTestJunit4)
+    androidTestImplementation(libs.androidx.test.junit)
+    debugImplementation(libs.androidx.compose.uiTestManifest)
 }
 
 tasks.withType<Test>().configureEach {

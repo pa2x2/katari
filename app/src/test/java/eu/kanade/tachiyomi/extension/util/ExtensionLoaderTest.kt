@@ -24,7 +24,7 @@ class ExtensionLoaderTest {
 
     @Test
     fun `legacy extensions use the platform delegate-last loader when supported`() {
-        ExtensionLoader.shouldUseDelegateLastClassLoader("1.4", Build.VERSION_CODES.O_MR1) shouldBe true
+        ExtensionLoader.shouldUseDelegateLastClassLoader("1.4", Build.VERSION_CODES.Q) shouldBe true
         ExtensionLoader.shouldUseDelegateLastClassLoader("1.6.0", Build.VERSION_CODES.VANILLA_ICE_CREAM) shouldBe true
     }
 
@@ -46,15 +46,13 @@ class ExtensionLoaderTest {
         ExtensionLoader.isLibVersionCompatible("2.3.1") shouldBe true
         ExtensionLoader.isLibVersionCompatible("2.4.1") shouldBe true
         ExtensionLoader.isLibVersionCompatible("2.5.1") shouldBe true
-        ExtensionLoader.isLibVersionCompatible("2.6.1") shouldBe false
+        ExtensionLoader.isLibVersionCompatible("2.6.1") shouldBe true
+        ExtensionLoader.isLibVersionCompatible("2.7.1") shouldBe true
+        ExtensionLoader.isLibVersionCompatible("2.8.1") shouldBe false
 
         ExtensionLoader.isRawLibVersionCompatible("2.0.99") shouldBe true
         ExtensionLoader.isRawLibVersionCompatible("2.3.99") shouldBe true
-    }
-
-    @Test
-    fun `legacy extensions retain the custom loader before Android 8_1`() {
-        ExtensionLoader.shouldUseDelegateLastClassLoader("1.4", Build.VERSION_CODES.O) shouldBe false
+        ExtensionLoader.isRawLibVersionCompatible("2.6.99") shouldBe true
     }
 
     @Test

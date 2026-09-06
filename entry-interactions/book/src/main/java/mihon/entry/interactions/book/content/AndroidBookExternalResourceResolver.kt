@@ -77,7 +77,11 @@ internal class AndroidBookExternalResourceResolver(
                     responseStream.slice(range)
                 }
             }
-            ResponseExternalBookResource(response, rangedStream)
+            ResponseExternalBookResource(
+                response,
+                rangedStream,
+                contentLength = if (range == null) response.body.contentLength().takeIf { it >= 0L } else null,
+            )
         } catch (error: Throwable) {
             response.close()
             throw error
@@ -164,6 +168,7 @@ internal interface BookAppReferenceResolver {
 private class ResponseExternalBookResource(
     private val response: Response,
     override val stream: InputStream,
+    override val contentLength: Long?,
 ) : ExternalBookResource {
     override val mediaType: String? = response.body.contentType()?.toString()
     private var closed = false

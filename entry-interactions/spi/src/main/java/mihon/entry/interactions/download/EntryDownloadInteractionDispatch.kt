@@ -3,9 +3,6 @@ package mihon.entry.interactions.download
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,24 +34,13 @@ internal class EntryDownloadInteractionDispatch(
         return processors.values.map { it.updates() }.merged()
     }
 
-    override fun queueStatusUpdates(): Flow<EntryDownloadQueueItem> {
-        return processors.values.map { it.queueStatusUpdates() }.merged()
-    }
-
-    override fun queueProgressUpdates(): Flow<EntryDownloadQueueItem> {
-        return processors.values.map { it.queueProgressUpdates() }.merged()
-    }
-
     override fun events(): Flow<EntryDownloadEvent> {
         return processors.values.map { it.events }.merged()
     }
 
-    override suspend fun runDownloadsUntilIdle() = coroutineScope {
-        processors.values
-            .map { processor -> async { processor.runDownloadsUntilIdle() } }
-            .awaitAll()
-        Unit
-    }
+    override suspend fun hasPendingDownloads(): Boolean = processors.values.any { it.hasPendingDownloads() }
+
+    override suspend fun runDownloadsUntilIdle() = runEntryDownloadQueuesUntilIdle(processors.values)
 
     override fun startDownloads() {
         paused.value = false

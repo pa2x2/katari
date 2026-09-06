@@ -3,6 +3,7 @@ package mihon.entry.interactions.book.document.reader
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -11,6 +12,7 @@ import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.produceState
@@ -26,6 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentBlockContent
+import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.resource.PROSE_IMAGE_RESOURCE_REQUIREMENT
 import mihon.entry.interactions.book.document.resource.decodeValidatedProseImage
@@ -38,11 +41,12 @@ internal fun BookDocumentFigureRenderer(
     block: BookDocumentBlock,
     selectionIdentity: String,
     resourceLoader: BookPublicationResourceLoader?,
-    onAnchorClick: (String) -> Unit,
+    onAnchorClick: (BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     onReaderTap: () -> Unit,
 ) {
     val selection = LocalBookDocumentChapterSelection.current
+    val resourceGeneration = resourceLoader?.generation?.collectAsState()?.value ?: 0
     var retryGeneration by remember(content.image.resourceId) { mutableIntStateOf(0) }
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val density = LocalDensity.current
@@ -53,6 +57,7 @@ internal fun BookDocumentFigureRenderer(
             resourceLoader,
             targetWidth,
             retryGeneration,
+            resourceGeneration,
         ) {
             value = if (resourceLoader == null) {
                 Result.failure(IllegalStateException("Image resource unavailable"))
@@ -64,22 +69,34 @@ internal fun BookDocumentFigureRenderer(
                         maxBytes = PROSE_IMAGE_RESOURCE_REQUIREMENT.maxBytes,
                     ).getOrThrow()
                     withContext(Dispatchers.Default) {
-                        decodeValidatedProseImage(resource.bytes, targetWidth, targetWidth * 2)
+                        decodeValidatedProseImage(
+                            bytes = resource.bytes,
+                            mediaType = resource.mediaType,
+                            targetWidthPx = targetWidth,
+                            targetHeightPx = targetWidth * 2,
+                        )
                     }
                 }
             }
         }
         val bitmap = bitmapResult?.getOrNull()
+        val alternativeText = content.image.alternativeText?.text
+        val captionText = content.caption?.text
         DisposableEffect(bitmap) { onDispose { bitmap?.recycle() } }
         when {
             bitmap != null -> Image(
                 bitmap = bitmap.asImageBitmap(),
-                contentDescription = content.image.alternativeText?.text,
+                contentDescription = when {
+                    content.image.decorative -> null
+                    alternativeText != null -> alternativeText
+                    captionText != null -> captionText
+                    else -> stringResource(R.string.book_document_image_description_unavailable)
+                },
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
                     .fillMaxWidth()
                     .sizeIn(maxHeight = maxWidth * 2)
-                    .clickable {
+                    .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
                         selection?.handleReaderTap(onReaderTap) ?: onReaderTap()
                     },
             )

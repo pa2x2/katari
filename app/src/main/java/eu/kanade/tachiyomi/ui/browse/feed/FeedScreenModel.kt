@@ -7,8 +7,10 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.domain.source.model.FeedItemRef
 import eu.kanade.domain.source.model.SourceFeedAnchor
 import eu.kanade.domain.source.model.SourceFeedTimeline
+import eu.kanade.domain.source.model.snapshot
 import eu.kanade.domain.source.service.BrowseFeedService
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
+import eu.kanade.tachiyomi.source.entry.filter.requireValidFilters
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -585,6 +587,13 @@ abstract class FeedScreenModel<T : Any>(
     private suspend fun ensureFiltersLoaded(): EntryFilterList {
         resolvedFilters?.let { return it }
         val filters = resolveFilters()
+        filters.requireValidFilters()
+        val savedState = browseFeedService.stateSnapshot()
+        val presetId = savedState.feeds.firstOrNull { it.id == feedId }?.presetId
+        val original = savedState.presets.firstOrNull { it.id == presetId }
+        if (original != null && original.filters == initialFilterSnapshot) {
+            browseFeedService.migratePresetFilters(original, filters.snapshot())
+        }
         resolvedFilters = filters
         return filters
     }

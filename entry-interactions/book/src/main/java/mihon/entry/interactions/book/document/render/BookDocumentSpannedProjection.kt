@@ -74,6 +74,16 @@ private fun String.toBookDocumentSpanned(
     links.forEach { link ->
         val url = when (val target = link.target) {
             is BookDocumentLinkTarget.Anchor -> "#${target.fragment}"
+            is BookDocumentLinkTarget.Resource -> buildString {
+                append("book-resource:")
+                append(target.resourceId)
+                target.fragment?.let { fragment -> append('#').append(fragment) }
+            }
+            is BookDocumentLinkTarget.Reference -> buildString {
+                append("book-reference:")
+                target.resourceId?.let(::append)
+                append('#').append(target.fragment)
+            }
             is BookDocumentLinkTarget.External -> target.url
         }
         setSpan(

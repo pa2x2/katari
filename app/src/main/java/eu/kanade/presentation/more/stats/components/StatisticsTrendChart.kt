@@ -78,6 +78,9 @@ internal fun StatisticsTrendChart(
     modifier: Modifier = Modifier,
     selectionActionLabel: @Composable (StatsTrendPoint) -> String? = { null },
 ) {
+    val displayedNavigationPoints = remember(points, navigationPoints) {
+        buildDisplayedNavigationTrend(points, navigationPoints)
+    }
     val typeColors = types.associate { it.type to it.accent.color() }
     val outlineVariant = MaterialTheme.colorScheme.outlineVariant
     val surfaceColor = MaterialTheme.colorScheme.surface
@@ -175,9 +178,9 @@ internal fun StatisticsTrendChart(
     val liveVisibleStartIndex = (visibleStartIndex - liveBucketShift)
         .coerceIn(0, maximumVisibleStartIndex)
     val liveTickPoints = tickIndices.mapNotNull { tickIndex ->
-        navigationPoints.getOrNull(liveVisibleStartIndex + tickIndex)
+        displayedNavigationPoints.getOrNull(liveVisibleStartIndex + tickIndex)
     }
-    val liveVisiblePoints = navigationPoints.subList(
+    val liveVisiblePoints = displayedNavigationPoints.subList(
         liveVisibleStartIndex,
         (liveVisibleStartIndex + points.size).coerceAtMost(navigationPoints.size),
     )
@@ -400,7 +403,7 @@ internal fun StatisticsTrendChart(
 
                     clipRect(horizontalInset, plotTop, size.width - horizontalInset, plotBottom) {
                         translate(left = displayedPlotOffsetPx) {
-                            navigationPoints.forEachIndexed { index, point ->
+                            displayedNavigationPoints.forEachIndexed { index, point ->
                                 if (!point.isTracked) return@forEachIndexed
                                 var cumulative = 0L
                                 types.forEach { type ->

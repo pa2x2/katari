@@ -7,8 +7,24 @@ import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.util.lang.invert
 import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.components.reader.navigation.ReaderTapAction
+import tachiyomi.presentation.core.components.reader.navigation.readerTapRegions
 
 internal abstract class ViewerNavigation {
+
+    protected fun sharedRegions(mode: Int): List<Region> =
+        readerTapRegions(mode).map { region ->
+            Region(
+                RectF(region.left, region.top, region.right, region.bottom),
+                when (region.action) {
+                    ReaderTapAction.MENU -> NavigationRegion.MENU
+                    ReaderTapAction.PREV -> NavigationRegion.PREV
+                    ReaderTapAction.NEXT -> NavigationRegion.NEXT
+                    ReaderTapAction.LEFT -> NavigationRegion.LEFT
+                    ReaderTapAction.RIGHT -> NavigationRegion.RIGHT
+                },
+            )
+        }
 
     sealed class NavigationRegion(val nameRes: StringResource, val color: Int) {
         data object MENU : NavigationRegion(MR.strings.action_menu, Color.argb(0xCC, 0x95, 0x81, 0x8D))

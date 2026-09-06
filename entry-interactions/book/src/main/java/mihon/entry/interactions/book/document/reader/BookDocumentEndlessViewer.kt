@@ -1,10 +1,12 @@
 package mihon.entry.interactions.book.document.reader
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -16,11 +18,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onPlaced
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import mihon.book.api.document.BookDocumentLinkTarget
+import mihon.entry.interactions.book.document.reader.position.BookDocumentViewportGeometry
+import mihon.entry.interactions.book.document.reader.position.LocalBookDocumentViewportGeometry
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildWindow
 import tachiyomi.domain.entry.model.EntryChapter
@@ -32,7 +38,7 @@ internal fun BookDocumentEndlessViewer(
     currentChapter: EntryChapter,
     currentChapterId: Long,
     window: EntryChildWindow<EntryChapter>,
-    loadedSections: Map<Long, BookDocumentSection<EntryChapter>>,
+    loadedSections: Map<Long, BookDocumentPublicationSections<EntryChapter>>,
     loadStates: Map<Long, BookDocumentChapterLoadState>,
     navigationRequest: BookDocumentNavigationRequest?,
     textSizePercent: Int,
@@ -40,29 +46,40 @@ internal fun BookDocumentEndlessViewer(
     onTransitionReached: (EntryChapter) -> Unit,
     onTerminalObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
     onAnchorMissing: (String) -> Unit,
+    onInternalLinkClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     onScrollStarted: () -> Unit,
     onUserScrollStarted: () -> Unit,
     onReaderTap: () -> Unit,
+    initialLocation: BookDocumentViewerLocation<EntryChapter>? = null,
+    onViewportLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit = {},
     modifier: Modifier = Modifier,
+    observeViewportExtent: Boolean = false,
 ) {
     val proposedItems = remember(window, loadedSections) {
-        buildBookDocumentViewerItems(window, loadedSections, EntryChapter::id)
+        buildBookDocumentPublicationViewerItems(window, loadedSections, EntryChapter::id)
     }
     var items by remember { mutableStateOf(proposedItems) }
-    val currentSection = loadedSections[currentChapterId]
+    val viewportGeometry = remember { BookDocumentViewportGeometry() }
+    val currentOnViewportLocation by rememberUpdatedState(onViewportLocation)
+    val currentSection = initialLocation?.section ?: loadedSections[currentChapterId]?.initialSection
     val initialIndex = currentSection?.let { section ->
-        items.indexOfPosition(section.key, section.initialPosition).coerceAtLeast(0)
+        items.indexOfPosition(section.key, initialLocation?.position ?: section.initialPosition).coerceAtLeast(0)
     } ?: 0
     val chapterPrefetchStrategy = remember { BookDocumentChapterPrefetchStrategy() }
     val listState = rememberLazyListState(
         initialFirstVisibleItemIndex = initialIndex,
         prefetchStrategy = chapterPrefetchStrategy,
     )
+    val currentObserveViewportExtent by rememberUpdatedState(observeViewportExtent)
     val currentItems by rememberUpdatedState(items)
+    val currentLoadedSections by rememberUpdatedState(loadedSections)
+    val currentNavigationRequest by rememberUpdatedState(navigationRequest)
+    val currentOnLocation by rememberUpdatedState(onLocation)
     val currentOnScrollStarted by rememberUpdatedState(onScrollStarted)
     val currentOnUserScrollStarted by rememberUpdatedState(onUserScrollStarted)
     val currentOnAnchorMissing by rememberUpdatedState(onAnchorMissing)
+    val currentOnInternalLinkClick by rememberUpdatedState(onInternalLinkClick)
     val currentOnExternalLinkClick by rememberUpdatedState(onExternalLinkClick)
     val currentOnReaderTap by rememberUpdatedState(onReaderTap)
     val currentOnTransitionReached by rememberUpdatedState(onTransitionReached)
@@ -78,7 +95,7 @@ internal fun BookDocumentEndlessViewer(
         mutableStateOf<BookDocumentViewerLocation<EntryChapter>?>(null)
     }
     val prefetchTarget = remember(window.next?.id, loadedSections, items) {
-        val nextSectionKey = window.next?.id?.let(loadedSections::get)?.key
+        val nextSectionKey = window.next?.id?.let(loadedSections::get)?.sections?.firstOrNull()?.key
         val nextSectionIndex = nextSectionKey?.let { sectionKey ->
             items.indexOfSection(sectionKey)
         } ?: -1
@@ -106,13 +123,13 @@ internal fun BookDocumentEndlessViewer(
     }
 
     val anchorClick = remember(listState) {
-        { section: BookDocumentSection<EntryChapter>, fragment: String ->
-            val target = section.document.document.anchors[fragment]
-            if (target == null) {
-                currentOnAnchorMissing(fragment)
-            } else {
-                val index = currentItems.indexOfPosition(section.key, target)
-                if (index >= 0) listState.requestScrollToItem(index)
+        { section: BookDocumentSection<EntryChapter>, link: BookDocumentLinkTarget ->
+            when (link) {
+                is BookDocumentLinkTarget.Anchor,
+                is BookDocumentLinkTarget.Resource,
+                is BookDocumentLinkTarget.Reference,
+                -> currentOnInternalLinkClick(section, link)
+                is BookDocumentLinkTarget.External -> currentOnAnchorMissing(link.url)
             }
         }
     }
@@ -127,23 +144,7 @@ internal fun BookDocumentEndlessViewer(
     ) {
         val index = items.indexOfPosition(section.key, position)
         if (index < 0) return
-        listState.scrollToItem(index)
-        val layout = snapshotFlow {
-            val info = listState.layoutInfo
-            info.visibleItemsInfo.firstOrNull { it.index == index }?.let { item ->
-                Triple(item.size, info.viewportStartOffset, info.viewportEndOffset)
-            }
-        }.filterNotNull().first()
-        listState.scrollToItem(
-            index,
-            bookDocumentScrollOffset(
-                document = section.document,
-                position = position,
-                itemSize = layout.first,
-                viewportStartOffset = layout.second,
-                viewportEndOffset = layout.third,
-            ),
-        )
+        listState.scrollToBookDocumentPosition(section.document, position, index)
     }
 
     SideEffect {
@@ -166,7 +167,22 @@ internal fun BookDocumentEndlessViewer(
 
     LaunchedEffect(items) {
         if (!initialPositionRestored) {
-            currentSection?.let { scrollToSectionPosition(it) }
+            if (initialLocation != null) {
+                val index = items.indexOfPosition(initialLocation.section.key, initialLocation.position)
+                if (index >= 0) {
+                    listState.scrollToItem(index)
+                    if ((items[index] as? BookDocumentViewerItem.Block)?.content?.content is
+                            mihon.book.api.document.BookDocumentBlockContent.Text
+                    ) {
+                        val top = snapshotFlow {
+                            viewportGeometry.lineTop(initialLocation.section, initialLocation.position)
+                        }.filterNotNull().first()
+                        listState.scrollBy(top)
+                    }
+                }
+            } else {
+                currentSection?.let { scrollToSectionPosition(it) }
+            }
             initialPositionRestored = true
         }
     }
@@ -184,7 +200,7 @@ internal fun BookDocumentEndlessViewer(
     LaunchedEffect(currentChapterId, items, initialPositionRestored) {
         if (!initialPositionRestored) return@LaunchedEffect
         if (navigationRequest != null) return@LaunchedEffect
-        val section = loadedSections[currentChapterId] ?: return@LaunchedEffect
+        val section = loadedSections[currentChapterId]?.initialSection ?: return@LaunchedEffect
         val visibleChapterIds = listState.layoutInfo.visibleItemsInfo.mapNotNull { layout ->
             (items.resolve(layout.index, layout.key) as? BookDocumentViewerItem.Block)?.section?.owner?.id
         }
@@ -194,12 +210,63 @@ internal fun BookDocumentEndlessViewer(
         }
     }
 
-    LaunchedEffect(navigationRequest) {
+    LaunchedEffect(navigationRequest, items, initialPositionRestored) {
         val request = navigationRequest ?: return@LaunchedEffect
-        val section = loadedSections[request.chapterId] ?: return@LaunchedEffect
-        scrollToSectionPosition(section, request.position)
+        if (!initialPositionRestored) return@LaunchedEffect
+        val section = loadedSections[request.chapterId]
+            ?.sections
+            ?.firstOrNull { it.key == request.sectionKey }
+            ?: return@LaunchedEffect
+        if (items.indexOfPosition(section.key, request.position) < 0) return@LaunchedEffect
+        if (request.alignToPassage) {
+            listState.scrollToBookDocumentPassage(section, request.position, items, viewportGeometry)
+        } else {
+            scrollToSectionPosition(section, request.position)
+        }
+        // Publish the settled viewport before acknowledging the request, so seek controls can
+        // replace their optimistic value with measured progress without exposing the old position.
+        val settledViewport = viewportGeometry.firstLocation(
+            listState.layoutInfo.visibleItemsInfo.mapNotNull { currentItems.resolve(it.index, it.key) },
+            includeViewportEnd = currentObserveViewportExtent,
+        )
+            ?: BookDocumentViewerLocation(
+                section,
+                request.position,
+                section.document.document.progressionAt(request.position),
+            )
+        currentOnViewportLocation(settledViewport.copy(restoredNavigationId = request.id))
+        // Explicit navigation owns this semantic observation. A viewport estimate may never equal
+        // the exact target (especially at an edge), so it cannot acknowledge restoration itself.
+        currentOnLocation(
+            BookDocumentViewerLocation(
+                section,
+                request.position,
+                section.document.document.progressionAt(request.position),
+                restoredNavigationId = request.id,
+            ),
+        )
     }
 
+    LaunchedEffect(listState, items) {
+        snapshotFlow {
+            // Observe scrolling as well as text layout: coordinates alone retain their identity.
+            listState.firstVisibleItemIndex
+            listState.firstVisibleItemScrollOffset
+            if (initialPositionRestored) {
+                viewportGeometry.firstLocation(
+                    listState.layoutInfo.visibleItemsInfo.mapNotNull { currentItems.resolve(it.index, it.key) },
+                    includeViewportEnd = currentObserveViewportExtent,
+                ) ?: bookDocumentViewerLocation(
+                    currentItems,
+                    listState.layoutInfo.visibleBookDocumentLayouts(),
+                    listState.layoutInfo.viewportStartOffset,
+                    listState.layoutInfo.viewportEndOffset,
+                )
+            } else {
+                null
+            }
+        }.filterNotNull().distinctUntilChanged().collect { currentOnViewportLocation(it) }
+    }
     LaunchedEffect(listState, items) {
         var observedLocation: BookDocumentViewerLocation<EntryChapter>? = null
         var observedTransition: EntryChapter? = null
@@ -244,7 +311,7 @@ internal fun BookDocumentEndlessViewer(
             .distinctUntilChanged()
             .filter { it }
             .collect {
-                if (textSizeReflowAnchor == null) currentOnScrollStarted()
+                if (textSizeReflowAnchor == null && currentNavigationRequest == null) currentOnScrollStarted()
             }
     }
     LaunchedEffect(listState) {
@@ -296,21 +363,23 @@ internal fun BookDocumentEndlessViewer(
         }
     }
 
-    BookDocumentChapterSelectionContainer(
-        chapterId = currentChapterId,
-        modifier = modifier,
-    ) { selection ->
-        BookDocumentViewerList(
-            items = items,
-            state = listState,
-            selection = selection,
-            chapterLoadState = chapterLoadState,
-            onAnchorClick = anchorClick,
-            onExternalLinkClick = externalLinkClick,
-            onReaderTap = readerTap,
-            onTransitionRetry = transitionRetry,
-            modifier = Modifier.fillMaxSize(),
-        )
+    CompositionLocalProvider(LocalBookDocumentViewportGeometry provides viewportGeometry) {
+        BookDocumentChapterSelectionContainer(
+            chapterId = currentChapterId,
+            modifier = modifier.onPlaced { viewportGeometry.viewport = it },
+        ) { selection ->
+            BookDocumentViewerList(
+                items = items,
+                state = listState,
+                selection = selection,
+                chapterLoadState = chapterLoadState,
+                onAnchorClick = anchorClick,
+                onExternalLinkClick = externalLinkClick,
+                onReaderTap = readerTap,
+                onTransitionRetry = transitionRetry,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
     }
 }
 

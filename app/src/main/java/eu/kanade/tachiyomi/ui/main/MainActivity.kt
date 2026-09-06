@@ -111,15 +111,16 @@ import eu.kanade.tachiyomi.util.view.setComposeContent
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.core.migration.Migrator
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
-import mihon.entry.interactions.download.EntryDownloadRuntimeState
 import mihon.entry.interactions.media.EntryMediaCacheClearResult
 import mihon.entry.interactions.media.EntryMediaCacheFeature
 import mihon.entry.interactions.merge.EntryMergeNavigationFeature
@@ -219,10 +220,9 @@ class MainActivity : BaseActivity() {
 
             var incognito by remember { mutableStateOf(getIncognitoState.await(null)) }
             val downloadOnly by libraryPreferences.downloadedOnly.collectAsState()
-            val downloadRuntimeState by downloadRuntime.state.collectAsState(
-                initial = EntryDownloadRuntimeState(),
-            )
-            val indexing = downloadRuntimeState.isInitializing
+            val indexing by remember(downloadRuntime) {
+                downloadRuntime.state.map { it.isInitializing }.distinctUntilChanged()
+            }.collectAsState(initial = false)
             val visibleProfiles by profileManager.visibleProfiles.collectAsState()
             val activeProfile by profileManager.activeProfile.collectAsState()
             val activeProfileId = activeProfile?.id ?: profileManager.activeProfileId

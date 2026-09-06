@@ -76,6 +76,11 @@ class SourcePreferences(
         emptySet(),
     )
 
+    val disabledExtensionStores: Preference<Set<String>> = preferenceStore.getStringSet(
+        Preference.appStateKey("disabled_extension_stores"),
+        emptySet(),
+    )
+
     val disabledSources: Preference<Set<String>> = preferenceStore.getStringSet(HIDDEN_SOURCES_KEY, emptySet())
 
     val incognitoExtensions: Preference<Set<String>> = preferenceStore.getStringSet("incognito_extensions", emptySet())

@@ -66,8 +66,12 @@ dependencies {
     testImplementation(libs.bundles.serialization)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.unifile)
+    testImplementation(libs.androidx.work.testing)
+    testImplementation(libs.junit4)
+    testImplementation(libs.robolectric)
     testImplementation(projects.featureValidation)
     testRuntimeOnly(libs.junit.platform.launcher)
+    testRuntimeOnly(libs.junit.vintage)
 
     testFixturesImplementation(libs.bundles.test)
     testFixturesImplementation(libs.bundles.serialization)

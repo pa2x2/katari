@@ -126,6 +126,30 @@ internal class BookDocumentViewerDatasetTest : BookDocumentViewerFixture() {
     }
 
     @Test
+    fun `several documents owned by one chapter are seamless and have no internal transition`() {
+        val first = section("current", listOf("One"))
+        val second = section("current", listOf("Two")).copy(key = "current:second")
+        val publication = BookDocumentPublicationSections(
+            sections = listOf(first, second),
+            initialSectionKey = first.key,
+        )
+
+        val items = buildBookDocumentPublicationViewerItems(
+            window = EntryChildWindow("current", null, null),
+            loaded = mapOf("current" to publication),
+            keyOf = { it },
+        )
+
+        assertEquals(
+            listOf("One", "Two"),
+            items.filterIsInstance<BookDocumentViewerItem.Block<String>>().map {
+                it.content.plainText
+            },
+        )
+        assertEquals(2, items.count { it is BookDocumentViewerItem.Transition })
+    }
+
+    @Test
     fun `transition requests its destination only at the reading anchor`() {
         val transition = BookDocumentViewerItem.Transition(
             EntryChildWindow("current", null, "next").nextTransition(),

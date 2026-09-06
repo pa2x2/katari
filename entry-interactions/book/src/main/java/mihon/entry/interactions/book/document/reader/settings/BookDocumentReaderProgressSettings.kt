@@ -21,6 +21,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 internal fun BookDocumentReaderProgressSettings(
     showProgressBinding: ViewerSettingBinding<Boolean>,
     styleBinding: ViewerSettingBinding<BookDocumentReaderProgressStyle>,
+    showStyleOptions: Boolean = true,
 ) {
     val showProgressSetting by showProgressBinding.state.collectAsState()
     val styleSetting by styleBinding.state.collectAsState()
@@ -42,7 +43,7 @@ internal fun BookDocumentReaderProgressSettings(
             }
         },
     )
-    AnimatedVisibility(visible = showProgressSetting.effectiveValue) {
+    AnimatedVisibility(visible = showProgressSetting.effectiveValue && showStyleOptions) {
         Column {
             Text(
                 text = stringResource(MR.strings.pref_book_document_reader_reading_progress_style),

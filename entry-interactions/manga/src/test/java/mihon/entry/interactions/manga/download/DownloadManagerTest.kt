@@ -1,5 +1,6 @@
 package mihon.entry.interactions.manga.download
 
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -10,6 +11,7 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import mihon.entry.interactions.download.EntryDownloadWorkController
 import mihon.entry.interactions.manga.download.model.DownloadState
 import mihon.entry.interactions.manga.download.model.MangaDownload
 import org.junit.jupiter.api.Test
@@ -18,6 +20,21 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.source.service.SourceManager
 
 class DownloadManagerTest {
+
+    @Test
+    fun `explicit resume makes failed chapters eligible again`() {
+        val failed = download(chapterId = 1L, status = DownloadState.ERROR)
+        val workController = mockk<EntryDownloadWorkController>(relaxed = true)
+        val downloader = mockk<Downloader>(relaxed = true) {
+            every { queueState } returns MutableStateFlow(listOf(failed))
+            every { isRunning } returns false
+        }
+
+        manager(downloader, workController).startDownloads()
+
+        failed.status shouldBe DownloadState.QUEUE
+        verify { workController.start() }
+    }
 
     @Test
     fun `runtime cancellation pauses manga work`() = runTest {
@@ -62,7 +79,10 @@ class DownloadManagerTest {
         verify(exactly = 0) { downloader.stop(any()) }
     }
 
-    private fun manager(downloader: Downloader): DownloadManager {
+    private fun manager(
+        downloader: Downloader,
+        workController: EntryDownloadWorkController = mockk(relaxed = true),
+    ): DownloadManager {
         return DownloadManager(
             context = mockk(relaxed = true),
             provider = mockk(),
@@ -70,7 +90,7 @@ class DownloadManagerTest {
             sourceManager = mockk<SourceManager>(),
             downloader = downloader,
             pendingDeleter = mockk<DownloadPendingDeleter>(),
-            workController = mockk(relaxed = true),
+            workController = workController,
         )
     }
 

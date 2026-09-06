@@ -38,8 +38,13 @@ internal data class BookDownload(
         QUEUE,
         RESOLVING,
         DOWNLOADING,
+        FINALIZING,
         DOWNLOADED,
         ERROR,
+        ;
+
+        val isActive: Boolean
+            get() = this == RESOLVING || this == DOWNLOADING || this == FINALIZING
     }
 }
 

@@ -6,14 +6,22 @@ import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.davidea.flexibleadapter.items.AbstractSectionableItem
 import eu.davidea.flexibleadapter.items.IFlexible
 import eu.kanade.tachiyomi.R
+import mihon.entry.interactions.download.EntryDownloadQueueItem
 
 class DownloadQueueItem(
-    val payload: Any,
+    payload: EntryDownloadQueueItem,
     header: DownloadQueueHeaderItem,
-    private val modelProvider: () -> DownloadQueueItemModel,
 ) : AbstractSectionableItem<DownloadQueueHolder, DownloadQueueHeaderItem>(header) {
 
-    fun model(): DownloadQueueItemModel = modelProvider()
+    var payload: EntryDownloadQueueItem = payload
+        private set
+
+    fun model(): DownloadQueueItemModel = payload.toDownloadQueueItemModel()
+
+    fun update(download: EntryDownloadQueueItem) {
+        require(download.identity == payload.identity)
+        payload = download
+    }
 
     inline fun <reified T> payloadAs(): T? = payload as? T
 

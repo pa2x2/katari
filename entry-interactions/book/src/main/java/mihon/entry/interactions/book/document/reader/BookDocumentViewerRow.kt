@@ -6,9 +6,13 @@ import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.viewer.EntryChildDirection
 import tachiyomi.domain.entry.model.EntryChapter
+
+internal val BOOK_DOCUMENT_BLOCK_HORIZONTAL_PADDING = 20.dp
 
 /** Renders one stable-key row without invalidating unchanged prose when the chapter window moves. */
 @Composable
@@ -16,10 +20,12 @@ internal fun BookDocumentViewerRow(
     item: BookDocumentViewerItem<EntryChapter>,
     transitionDirection: EntryChildDirection?,
     loadState: BookDocumentChapterLoadState?,
-    onAnchorClick: (BookDocumentSection<EntryChapter>, String) -> Unit,
+    onAnchorClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     onReaderTap: () -> Unit,
     onTransitionRetry: (EntryChapter) -> Unit,
+    transitionVerticalPadding: Dp = 28.dp,
+    preserveTerminalSpacing: Boolean = true,
 ) {
     when (item) {
         is BookDocumentViewerItem.Block -> {
@@ -30,6 +36,7 @@ internal fun BookDocumentViewerRow(
                     onAnchorClick = onAnchorClick,
                     onExternalLinkClick = onExternalLinkClick,
                     onReaderTap = onReaderTap,
+                    preserveTerminalSpacing = preserveTerminalSpacing,
                 )
             } else {
                 DisableSelection {
@@ -38,6 +45,7 @@ internal fun BookDocumentViewerRow(
                         onAnchorClick = onAnchorClick,
                         onExternalLinkClick = onExternalLinkClick,
                         onReaderTap = onReaderTap,
+                        preserveTerminalSpacing = preserveTerminalSpacing,
                     )
                 }
             }
@@ -50,21 +58,23 @@ internal fun BookDocumentViewerRow(
                 onRetry = item.transition.to?.let { chapter -> { onTransitionRetry(chapter) } },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 28.dp),
+                    .padding(horizontal = 24.dp, vertical = transitionVerticalPadding),
             )
         }
     }
 }
 
 @Composable
-private fun BookDocumentViewerBlock(
+internal fun BookDocumentViewerBlock(
     item: BookDocumentViewerItem.Block<EntryChapter>,
-    onAnchorClick: (BookDocumentSection<EntryChapter>, String) -> Unit,
+    onAnchorClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     onReaderTap: () -> Unit,
+    preserveTerminalSpacing: Boolean = true,
 ) {
     CompositionLocalProvider(
         LocalBookDocumentSectionKey provides item.section.key,
+        LocalBookDocumentResourceLoader provides item.section.resourceLoader,
         LocalBookDocumentSelectionChapterId provides item.section.owner.id,
     ) {
         BookDocumentBlockRenderer(
@@ -72,13 +82,14 @@ private fun BookDocumentViewerBlock(
             owningContent = item.section.document.document.content,
             sectionKey = item.section.key,
             resourceLoader = item.section.resourceLoader,
-            onAnchorClick = { fragment -> onAnchorClick(item.section, fragment) },
+            onAnchorClick = { target -> onAnchorClick(item.section, target) },
             onExternalLinkClick = onExternalLinkClick,
             onReaderTap = onReaderTap,
-            preserveTerminalSpacing = item.content.id != item.section.document.blocks.last().id,
+            preserveTerminalSpacing =
+            preserveTerminalSpacing && item.content.id != item.section.document.blocks.last().id,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 6.dp),
+                .padding(horizontal = BOOK_DOCUMENT_BLOCK_HORIZONTAL_PADDING, vertical = 6.dp),
         )
     }
 }

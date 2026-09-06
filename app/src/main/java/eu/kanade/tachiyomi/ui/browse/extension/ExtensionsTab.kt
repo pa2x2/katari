@@ -111,6 +111,7 @@ fun extensionsTab(
                     onShowAllContentTypes = extensionsScreenModel::showAllContentTypes,
                     onToggleContentType = extensionsScreenModel::toggleContentType,
                     onToggleUnspecifiedContentType = extensionsScreenModel::toggleUnspecifiedContentType,
+                    onToggleStore = extensionsScreenModel::toggleStore,
                     onToggleLanguage = extensionsScreenModel::toggleLanguage,
                 )
             }

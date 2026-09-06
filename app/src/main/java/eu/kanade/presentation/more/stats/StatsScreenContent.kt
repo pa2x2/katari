@@ -1,28 +1,17 @@
 package eu.kanade.presentation.more.stats
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryScrollableTabRow
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -31,37 +20,17 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import eu.kanade.presentation.more.stats.components.StatisticsActivityCard
-import eu.kanade.presentation.more.stats.components.StatisticsActivityHeader
-import eu.kanade.presentation.more.stats.components.StatisticsActivityPatternsCard
-import eu.kanade.presentation.more.stats.components.StatisticsActivitySummaryCards
-import eu.kanade.presentation.more.stats.components.StatisticsCurrentLibraryHeader
-import eu.kanade.presentation.more.stats.components.StatisticsEarlierActivityCard
-import eu.kanade.presentation.more.stats.components.StatisticsLibraryCard
-import eu.kanade.presentation.more.stats.components.StatisticsLibraryInsightsCard
-import eu.kanade.presentation.more.stats.components.StatisticsProgressCard
-import eu.kanade.presentation.more.stats.components.StatisticsTopTitlesCard
-import eu.kanade.presentation.more.stats.components.color
-import eu.kanade.presentation.more.stats.components.formatStatisticsWindow
-import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.more.stats.data.StatsRange
 import eu.kanade.presentation.more.stats.data.StatsTrendPoint
 import eu.kanade.presentation.more.stats.data.StatsType
-import eu.kanade.presentation.more.stats.data.forType
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import tachiyomi.domain.statistics.model.StatisticsCardLayout
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.TabText
-import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
-import java.text.NumberFormat
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 
 @Composable
 fun StatsScreenContent(
@@ -75,6 +44,7 @@ fun StatsScreenContent(
     onOpenActivity: (EntryType?, StatsTrendPoint) -> Unit,
     onOpenEntry: (Long) -> Unit,
     onOpenEarlierActivity: (EntryType?, Long?) -> Unit,
+    onSaveLayout: (Long, String, StatisticsCardLayout) -> Unit,
 ) {
     val pages = remember(state.types) { listOf<EntryType?>(null) + state.types.map(StatsType::type) }
     val selectedPage = pages.indexOf(state.selectedType).coerceAtLeast(0)
@@ -126,7 +96,7 @@ fun StatsScreenContent(
             verticalAlignment = Alignment.Top,
             key = { pages[it]?.name ?: "overview" },
         ) { page ->
-            StatisticsPage(
+            StatisticsDashboardPage(
                 state = state,
                 selectedType = pages[page],
                 bottomPadding = paddingValues.calculateBottomPadding(),
@@ -138,240 +108,8 @@ fun StatsScreenContent(
                 onOpenActivity = onOpenActivity,
                 onOpenEntry = onOpenEntry,
                 onOpenEarlierActivity = onOpenEarlierActivity,
+                onSaveLayout = onSaveLayout,
             )
-        }
-    }
-}
-
-@Composable
-private fun StatisticsRangeSelector(
-    selected: StatsRange,
-    onSelected: (StatsRange) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val ranges = StatsRange.entries
-    SingleChoiceSegmentedButtonRow(modifier = modifier.fillMaxWidth()) {
-        ranges.forEachIndexed { index, range ->
-            SegmentedButton(
-                selected = selected == range,
-                onClick = { onSelected(range) },
-                shape = SegmentedButtonDefaults.itemShape(index, ranges.size),
-                label = {
-                    Text(
-                        stringResource(
-                            when (range) {
-                                StatsRange.SEVEN_DAYS -> MR.strings.statistics_range_7_days
-                                StatsRange.THIRTY_DAYS -> MR.strings.statistics_range_30_days
-                                StatsRange.ONE_YEAR -> MR.strings.statistics_range_1_year
-                                StatsRange.ALL -> MR.strings.all
-                            },
-                        ),
-                    )
-                },
-            )
-        }
-    }
-}
-
-@Composable
-private fun StatisticsPage(
-    state: StatsScreenState.Success,
-    selectedType: EntryType?,
-    bottomPadding: androidx.compose.ui.unit.Dp,
-    onRangeSelected: (StatsRange) -> Unit,
-    onTypeSelected: (EntryType?) -> Unit,
-    onNavigateActivity: (Int) -> Unit,
-    onShowToday: () -> Unit,
-    onRetryActivity: () -> Unit,
-    onOpenActivity: (EntryType?, StatsTrendPoint) -> Unit,
-    onOpenEntry: (Long) -> Unit,
-    onOpenEarlierActivity: (EntryType?, Long?) -> Unit,
-) {
-    val visibleTypes = state.types.filter { selectedType == null || it.type == selectedType }
-    val titleCounts = state.library.titlesByType.filterKeys { selectedType == null || it == selectedType }
-    val titleCount = if (selectedType == null) state.library.totalTitles else titleCounts[selectedType] ?: 0
-    val progress = if (selectedType == null) state.library.progress else state.library.progressByType[selectedType]
-    val activity = (state.activity as? ActivityState.Available)?.data
-    val formatter = rememberStatisticsDurationFormatter()
-    val visibleActivity = activity?.forType(selectedType)
-    val streakDays = when {
-        activity == null -> null
-        selectedType == null -> activity.currentStreakDays
-        else -> activity.currentStreakDaysByType[selectedType] ?: 0
-    }
-    val selectedStatsType = state.types.firstOrNull { it.type == selectedType }
-    val secondaryMetricValue = if (selectedStatsType == null) {
-        streakDays?.let { pluralStringResource(MR.plurals.day, it, it) } ?: "—"
-    } else {
-        visibleActivity?.completionCount?.let(NumberFormat.getIntegerInstance()::format) ?: "—"
-    }
-    val secondaryMetricLabel = selectedStatsType?.let { stringResource(it.consumedUnitLabel) }
-        ?: stringResource(
-            if (visibleActivity?.window?.isLatest == false) {
-                MR.strings.statistics_ending_streak
-            } else {
-                MR.strings.statistics_current_streak
-            },
-        )
-    val emptyType = selectedStatsType != null &&
-        titleCount == 0 &&
-        state.activity is ActivityState.Available &&
-        visibleActivity?.totalDurationMillis == 0L &&
-        visibleActivity.completionCount == 0L &&
-        visibleActivity.earlierDurationMillis == 0L
-
-    LazyColumn(
-        contentPadding = PaddingValues(
-            start = 16.dp,
-            top = 16.dp,
-            end = 16.dp,
-            bottom = bottomPadding + 20.dp,
-        ),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        if (state.incognito) {
-            item {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    shape = MaterialTheme.shapes.medium,
-                ) {
-                    Text(
-                        text = stringResource(MR.strings.statistics_incognito_active),
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    )
-                }
-            }
-        }
-        if (emptyType) {
-            item {
-                Column(
-                    modifier = Modifier.fillMaxWidth().fillParentMaxHeight(0.7f),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Icon(
-                        imageVector = selectedStatsType.icon,
-                        contentDescription = null,
-                        modifier = Modifier.size(40.dp),
-                        tint = selectedStatsType.accent.color(),
-                    )
-                    Spacer(Modifier.height(16.dp))
-                    Text(
-                        text = stringResource(
-                            MR.strings.statistics_no_type_stats,
-                            stringResource(selectedStatsType.displayName),
-                        ),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = stringResource(MR.strings.statistics_empty_type_hint),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-            return@LazyColumn
-        }
-        item {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                StatisticsActivityHeader(
-                    showToday = visibleActivity?.window?.let { window ->
-                        window.range != StatsRange.ALL && !window.isLatest
-                    } == true,
-                    onToday = onShowToday,
-                )
-                StatisticsRangeSelector(
-                    selected = state.range,
-                    onSelected = onRangeSelected,
-                )
-                StatisticsActivitySummaryCards(
-                    time = visibleActivity?.let { formatter(it.totalDurationMillis) } ?: "—",
-                    secondaryValue = secondaryMetricValue,
-                    secondaryLabel = secondaryMetricLabel,
-                )
-            }
-        }
-        item {
-            StatisticsActivityCard(
-                state = state.activity,
-                activity = visibleActivity,
-                types = visibleTypes,
-                formatter = formatter,
-                onNavigateByBuckets = onNavigateActivity,
-                onRetry = onRetryActivity,
-                onOpenActivity = { point -> onOpenActivity(selectedType, point) },
-            )
-        }
-        if (visibleActivity?.topTitles?.isNotEmpty() == true) {
-            item {
-                StatisticsTopTitlesCard(
-                    titles = visibleActivity.topTitles,
-                    typesById = state.types.associateBy(StatsType::type),
-                    periodLabel = if (visibleActivity.window.range == StatsRange.ALL) {
-                        stringResource(MR.strings.statistics_all_recorded_activity)
-                    } else {
-                        formatStatisticsWindow(visibleActivity.window)
-                    },
-                    formatDuration = formatter,
-                    onTitleClick = onOpenEntry,
-                )
-            }
-        }
-        if (selectedStatsType != null) {
-            item {
-                StatisticsActivityPatternsCard(
-                    sessionCount = visibleActivity?.sessionCount,
-                    averageSessionDurationMillis = visibleActivity?.averageSessionDurationMillis,
-                    longestSessionDurationMillis = visibleActivity?.longestSessionDurationMillis,
-                    activeDays = visibleActivity?.activeDays,
-                    formatDuration = formatter,
-                )
-            }
-        }
-        if (
-            visibleActivity?.window?.range == StatsRange.ALL &&
-            visibleActivity.earlierDurationMillis > 0L
-        ) {
-            item {
-                val beforeDate = visibleActivity.trackingStartedAtEpochMillis?.let { startedAt ->
-                    val date = Instant.ofEpochMilli(startedAt)
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDate()
-                        .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
-                    stringResource(MR.strings.statistics_before_date, date)
-                }
-                StatisticsEarlierActivityCard(
-                    duration = formatter(visibleActivity.earlierDurationMillis),
-                    beforeDate = beforeDate,
-                    onClick = {
-                        onOpenEarlierActivity(selectedType, visibleActivity.trackingStartedAtEpochMillis)
-                    },
-                )
-            }
-        }
-        item {
-            StatisticsCurrentLibraryHeader(titleCount)
-        }
-        item {
-            StatisticsProgressCard(progress)
-        }
-        if (selectedStatsType == null) {
-            item {
-                StatisticsLibraryCard(
-                    titleCounts = titleCounts,
-                    types = visibleTypes,
-                    onTypeClick = { onTypeSelected(it) },
-                )
-            }
-        } else {
-            state.library.insightsByType[selectedStatsType.type]?.let { insights ->
-                item {
-                    StatisticsLibraryInsightsCard(insights)
-                }
-            }
         }
     }
 }

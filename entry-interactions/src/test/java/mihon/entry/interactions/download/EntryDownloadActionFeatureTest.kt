@@ -139,8 +139,6 @@ class EntryDownloadActionFeatureTest {
             every { queueState } returns flowOf(emptyList())
             every { events } returns emptyFlow()
             every { updates() } returns emptyFlow()
-            every { queueStatusUpdates() } returns emptyFlow()
-            every { queueProgressUpdates() } returns emptyFlow()
         }
     }
 

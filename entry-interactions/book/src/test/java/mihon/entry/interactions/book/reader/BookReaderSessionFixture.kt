@@ -98,7 +98,7 @@ internal abstract class BookReaderSessionFixture {
             )
         }
         val preparer = SessionFactoryTestPreparer(preparedPublication)
-        val reader = SessionFactoryTestReaderProcessor()
+        val reader = SessionFactoryTestReaderProcessor(preparedPublication.model.descriptor)
         val context = mockk<Context> {
             every { applicationContext } returns this@mockk
             every { contentResolver } returns mockk<ContentResolver>()
@@ -147,7 +147,7 @@ internal class SessionFactoryTestPreparer(
     private val preparedPublication: PreparedBookPublication,
 ) : BookContentPreparer {
     override val id = "test.prose-preparer"
-    override val outputModel = TEST_BOOK_MODEL_DESCRIPTOR
+    override val outputModel = preparedPublication.model.descriptor
     var contentSession: BookContentSession? = null
 
     override fun supports(descriptor: BookContentDescriptor): Boolean =
@@ -159,12 +159,14 @@ internal class SessionFactoryTestPreparer(
     }
 }
 
-internal class SessionFactoryTestReaderProcessor : BookReaderProcessor {
+internal class SessionFactoryTestReaderProcessor(
+    private val supportedModel: BookPublicationModelDescriptor = TEST_BOOK_MODEL_DESCRIPTOR,
+) : BookReaderProcessor {
     override val id = "test.prose-reader"
     override val displayName = "Test prose"
     var receivedModel: BookPublicationModel? = null
 
-    override fun supports(model: BookPublicationModelDescriptor): Boolean = model == TEST_BOOK_MODEL_DESCRIPTOR
+    override fun supports(model: BookPublicationModelDescriptor): Boolean = model == supportedModel
 
     override fun createReaderIntent(
         context: Context,

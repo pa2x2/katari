@@ -9,13 +9,16 @@ import tachiyomi.domain.entry.model.EntryChapter
 interface EntryDownloadRuntimeFeature {
     /** Emits when persisted downloaded content changes. Queue changes are exposed by [state] and [statusUpdates]. */
     val changes: Flow<Unit>
+
+    /**
+     * Current queue membership, ordering, phase and progress, together with runtime flags.
+     * A collector needs only this stream to render the queue, including when it subscribes mid-transfer.
+     */
     val state: Flow<EntryDownloadRuntimeState>
 
     fun isApplicable(type: EntryType): Boolean
 
     fun statusUpdates(): Flow<EntryDownloadStatus>
-    fun queueStatusUpdates(): Flow<EntryDownloadQueueItem>
-    fun queueProgressUpdates(): Flow<EntryDownloadQueueItem>
 
     fun start()
     fun pause()

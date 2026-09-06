@@ -6,6 +6,7 @@ internal data class BookReaderTextSelection(
     val text: String,
     val languageContextText: String,
     val anchor: BookReaderTextSelectionAnchor?,
+    val isSettled: Boolean,
 ) {
     init {
         require(ownerIdentity.isNotBlank())

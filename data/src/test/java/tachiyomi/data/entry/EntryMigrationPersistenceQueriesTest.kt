@@ -6,6 +6,7 @@ import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.cash.sqldelight.async.coroutines.awaitCreate
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -46,7 +47,8 @@ class EntryMigrationPersistenceQueriesTest {
     @Test
     fun `nested participant work rolls back with the outer migration transaction`() = runTest {
         withDatabase { database, handler ->
-            runCatching {
+            val abort = IllegalStateException("abort outer transaction")
+            val failure = shouldThrow<IllegalStateException> {
                 handler.await(inTransaction = true) {
                     entry_migration_operationsQueries.insert("operation", "replace", 2, 10, 11, "REPLACE", 1)
                     handler.await(inTransaction = true) {
@@ -60,9 +62,11 @@ class EntryMigrationPersistenceQueriesTest {
                             createdAt = 1,
                         )
                     }
-                    error("abort outer transaction")
+                    entry_migration_consequencesQueries.countByOperation("operation").awaitAsOne() shouldBe 1
+                    throw abort
                 }
             }
+            failure shouldBe abort
 
             database.entry_migration_operationsQueries.getById("operation").awaitAsOneOrNull() shouldBe null
             database.entry_migration_consequencesQueries.countByOperation("operation").awaitAsOne() shouldBe 0

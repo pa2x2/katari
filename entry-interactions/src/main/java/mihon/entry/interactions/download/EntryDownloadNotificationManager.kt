@@ -32,16 +32,6 @@ internal class EntryDownloadNotificationManager(
         started = true
 
         scope.launch {
-            downloads.queueProgressUpdates().collect {
-                if (it.state == EntryDownloadState.DOWNLOADING) showProgress(it)
-            }
-        }
-        scope.launch {
-            downloads.queueStatusUpdates().collect {
-                if (it.state == EntryDownloadState.DOWNLOADING) showProgress(it)
-            }
-        }
-        scope.launch {
             downloads.events().collect { handleEvent(it) }
         }
         scope.launch {

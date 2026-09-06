@@ -291,19 +291,22 @@ private fun Screen.FeedsTabContent(
         Column(
             modifier = Modifier.pointerInput(Unit) {},
         ) {
-            key(activeProfileId, activeFeed.id) {
+            key(activeProfileId, activeFeed.id, activePreset) {
                 val actionModel = rememberScreenModel(
-                    tag = "feed-actions-$activeProfileId-${activeFeed.id}",
+                    tag = "feed-actions-$activeProfileId-${activeFeed.id}-${activePreset.hashCode()}",
                 ) {
                     CatalogScreenModel(
                         sourceId = activeSource.id,
                         listingQuery = activePreset.toListing().requestQuery,
                         initialFilterSnapshot = activePreset.filters,
+                        initialPresetId = activePreset.id,
+                        browseFeedService = Injekt.get<eu.kanade.domain.source.service.BrowseFeedService>()
+                            .forProfile(activeProfileId),
                     )
                 }
                 val actionState by actionModel.state.collectAsState()
                 val timelineModel = rememberScreenModel(
-                    tag = "feed-timeline-$activeProfileId-${activeFeed.id}",
+                    tag = "feed-timeline-$activeProfileId-${activeFeed.id}-${activePreset.hashCode()}",
                 ) {
                     CatalogChronologicalFeedScreenModel(
                         profileId = activeProfileId,
@@ -347,6 +350,12 @@ private fun Screen.FeedsTabContent(
                     }
                 }
 
+                if (actionState.repairNeedsSave) {
+                    FeedPresetRepairNotice(onRepair = actionModel::openFilterSheet)
+                }
+                if (actionState.dialog == CatalogScreenModel.Dialog.Filter) {
+                    FeedPresetRepairSheet(actionModel, actionState)
+                }
                 Box(
                     modifier = Modifier
                         .weight(1f)

@@ -15,9 +15,9 @@ interface EntryDownloadInteraction {
     val queueState: Flow<List<EntryDownloadQueueGroup>>
 
     fun updates(): Flow<EntryDownloadStatus>
-    fun queueStatusUpdates(): Flow<EntryDownloadQueueItem>
-    fun queueProgressUpdates(): Flow<EntryDownloadQueueItem>
     fun events(): Flow<EntryDownloadEvent>
+
+    suspend fun hasPendingDownloads(): Boolean
 
     /** Runs every media-specific downloader until its current queue is idle. Runtime use only. */
     suspend fun runDownloadsUntilIdle()

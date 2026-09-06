@@ -91,6 +91,7 @@ enum class BookDocumentListMarkerStyle {
  *
  * @property resourceId publication-scoped image resource identity.
  * @property alternativeText optional alternative text mapped into the owning figure block.
+ * @property decorative whether the image is explicitly presentation-only and must stay silent.
  * @property width optional validated intrinsic width in pixels.
  * @property height optional validated intrinsic height in pixels.
  */
@@ -101,6 +102,32 @@ data class BookDocumentImage(
     val width: Int?,
     val height: Int?,
 ) {
+    /** Compatibility constructor for serializers compiled against SDK 2.5. */
+    @Suppress("UNUSED_PARAMETER", "DEPRECATION", "DEPRECATION_ERROR")
+    constructor(
+        seen: Int,
+        resourceId: String,
+        alternativeText: BookDocumentRichText?,
+        width: Int?,
+        height: Int?,
+        marker: kotlinx.serialization.internal.SerializationConstructorMarker?,
+    ) : this(
+        resourceId = resourceId,
+        alternativeText = alternativeText,
+        width = width,
+        height = height,
+    ) {
+        require(seen and 0xF == 0xF) { "serialized document image is missing required fields" }
+    }
+
+    var decorative: Boolean = false
+        private set(value) {
+            require(!value || alternativeText == null) {
+                "a decorative document image must not expose alternative text"
+            }
+            field = value
+        }
+
     init {
         require(resourceId.isNotBlank()) { "document image resource id must not be blank" }
         require(alternativeText == null || alternativeText.text.isNotBlank()) {
@@ -111,6 +138,34 @@ data class BookDocumentImage(
         }
         require(height == null || height in 1..MAX_INTRINSIC_DIMENSION) {
             "document image height is outside the supported range"
+        }
+    }
+
+    override fun equals(other: Any?): Boolean =
+        other is BookDocumentImage &&
+            resourceId == other.resourceId &&
+            alternativeText == other.alternativeText &&
+            width == other.width &&
+            height == other.height &&
+            decorative == other.decorative
+
+    override fun hashCode(): Int = listOf(resourceId, alternativeText, width, height, decorative).hashCode()
+
+    companion object {
+        /** Creates an image with the domain-neutral accessibility semantics added in SDK 2.6. */
+        fun withAccessibility(
+            resourceId: String,
+            alternativeText: BookDocumentRichText?,
+            width: Int?,
+            height: Int?,
+            decorative: Boolean,
+        ): BookDocumentImage = BookDocumentImage(
+            resourceId = resourceId,
+            alternativeText = alternativeText,
+            width = width,
+            height = height,
+        ).apply {
+            this.decorative = decorative
         }
     }
 }

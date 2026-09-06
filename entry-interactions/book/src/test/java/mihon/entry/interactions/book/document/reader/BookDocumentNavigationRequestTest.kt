@@ -29,6 +29,14 @@ class BookDocumentNavigationRequestTest {
         request(id = 1, chapterId = 20).afterUserScrollStarted() shouldBe null
     }
 
+    @Test
+    fun `passage seeking waits for explicit restoration instead of a coincident viewport estimate`() {
+        val request = request(id = 3, chapterId = 20).copy(alignToPassage = true)
+        request.acceptsLocation(20, position(0)) shouldBe false
+        request.acceptsLocation(20, position(0), restoredNavigationId = 2) shouldBe false
+        request.acceptsLocation(20, position(0), restoredNavigationId = 3) shouldBe true
+    }
+
     private fun request(id: Long, chapterId: Long) = BookDocumentNavigationRequest(
         id = id,
         chapterId = chapterId,

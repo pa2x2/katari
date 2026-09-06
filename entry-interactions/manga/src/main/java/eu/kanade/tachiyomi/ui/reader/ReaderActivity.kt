@@ -154,7 +154,8 @@ class ReaderActivity : EntryInteractionActivity() {
     private var appliedRuntimeSettings: ReaderRuntimeSettings? = null
     private var activityCheckpointJob: Job? = null
 
-    var isScrollingThroughPages = false
+    // Slider and return actions keep the chrome visible while moving the viewer.
+    var isNavigatingFromControls = false
         private set
 
     /**
@@ -553,12 +554,26 @@ class ReaderActivity : EntryInteractionActivity() {
             currentPage = state.currentPage,
             totalPages = state.totalPages,
             onPageIndexChange = {
-                isScrollingThroughPages = true
+                viewModel.jumpHistory.beginSeek(it)
+                isNavigatingFromControls = true
                 moveToPageIndex(it)
             },
             onPageIndexChangeFinished = {
-                isScrollingThroughPages = false
+                isNavigatingFromControls = false
+                viewModel.jumpHistory.finishSeek()
             },
+            returnPositionAvailable = viewModel.jumpHistory.returnTarget != null,
+            onReturnToPreviousPosition = {
+                lifecycleScope.launch {
+                    isNavigatingFromControls = true
+                    try {
+                        viewModel.returnToPreviousPosition()?.let(::moveToPageIndex)
+                    } finally {
+                        isNavigatingFromControls = false
+                    }
+                }
+            },
+            onDismissReturnPosition = viewModel.jumpHistory::dismiss,
 
             readingMode = ReadingMode.fromPreference(
                 viewModel.getMangaReadingMode(resolveDefault = false),

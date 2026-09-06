@@ -274,9 +274,3 @@ private class CachedMaterializedBookResource(
 }
 
 private fun BookContentResource.cached(): BookContentResource = copy(cacheState = BookResourceCacheState.CACHED)
-
-internal fun BookContentResource.fileSuffix(): String = when (mediaType) {
-    "text/html", "application/xhtml+xml" -> ".html"
-    "text/plain" -> ".txt"
-    else -> ".bin"
-}

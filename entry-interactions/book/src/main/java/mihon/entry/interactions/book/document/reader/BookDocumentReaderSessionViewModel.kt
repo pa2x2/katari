@@ -2,10 +2,13 @@ package mihon.entry.interactions.book.document.reader
 
 import androidx.lifecycle.ViewModel
 import mihon.book.api.BookLocator
+import mihon.entry.interactions.book.document.reader.navigation.BookDocumentJumpHistory
 import mihon.entry.interactions.book.reader.OpenedBookReaderSession
 
 /** Retains the bounded document-reader session window across configuration changes. */
 internal class BookDocumentReaderSessionViewModel : ViewModel() {
+    val jumpHistory = BookDocumentJumpHistory()
+
     private val sessions = linkedMapOf<Long, OpenedBookReaderSession>()
     private val locators = mutableMapOf<Long, BookLocator>()
 

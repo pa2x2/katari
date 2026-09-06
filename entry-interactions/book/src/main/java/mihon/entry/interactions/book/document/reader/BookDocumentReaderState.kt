@@ -1,5 +1,7 @@
 package mihon.entry.interactions.book.document.reader
 
+import mihon.book.api.BookLocator
+import mihon.book.api.BookNavigationItem
 import mihon.entry.interactions.book.navigation.BookChapterReadingOrder
 import mihon.entry.interactions.book.reader.navigation.BookReaderNavigationPresentation
 import mihon.entry.interactions.source.EntryChildWebViewResolution
@@ -15,13 +17,16 @@ internal data class BookDocumentReaderState(
     ),
     val currentChapterId: Long,
     val window: EntryChildWindow<EntryChapter>,
-    val loadedSections: Map<Long, BookDocumentSection<EntryChapter>>,
+    val loadedSections: Map<Long, BookDocumentPublicationSections<EntryChapter>>,
+    val publicationNavigation: Map<Long, List<BookNavigationItem>> = emptyMap(),
+    val navigationLocator: BookLocator? = null,
     val loadStates: Map<Long, BookDocumentChapterLoadState> = emptyMap(),
     val chromeVisible: Boolean = false,
     val navigationVisible: Boolean = false,
     val settingsVisible: Boolean = false,
     val childWebView: EntryChildWebViewResolution.Available? = null,
     val navigationRequest: BookDocumentNavigationRequest? = null,
+    val auxiliarySection: BookDocumentSection<EntryChapter>? = null,
 )
 
 internal sealed interface BookDocumentChapterLoadState {

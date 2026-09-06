@@ -25,6 +25,7 @@ import mihon.entry.interactions.download.EntryDownloadQueueGroup
 import mihon.entry.interactions.download.EntryDownloadQueueItem
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.download.EntryDownloadStatus
+import mihon.entry.interactions.download.observeEntryDownloadQueue
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.domain.entry.model.DownloadPreferences
 import tachiyomi.domain.entry.model.Entry
@@ -44,9 +45,11 @@ internal class AnimeDownloadProcessor(
     override val changes: Flow<Unit> = animeDownloadManager.cacheChanges
     override val isInitializing: Flow<Boolean> = dependencies.animeDownloadCache.isInitializing
     override val isRunning: Flow<Boolean> = animeDownloadManager.isRunning
-    override val queueState: Flow<List<EntryDownloadQueueGroup>> = animeDownloadManager.queueState
-        .map { downloads -> downloads.toAnimeEntryDownloadQueueGroups(dependencies.sourceManager) }
-        .map { groups -> groups.map { it.requireAnime() } }
+    override val queueState: Flow<List<EntryDownloadQueueGroup>> = observeEntryDownloadQueue(
+        queue = animeDownloadManager.queueState,
+        statusUpdates = animeDownloadManager.statusFlow(),
+        progressUpdates = animeDownloadManager.progressFlow(),
+    ) { downloads -> downloads.toAnimeEntryDownloadQueueGroups(dependencies.sourceManager).map { it.requireAnime() } }
     override val events = animeDownloadManager.events
 
     override fun updates(): Flow<EntryDownloadStatus> {
@@ -56,15 +59,7 @@ internal class AnimeDownloadProcessor(
         ).map { it.requireAnime() }
     }
 
-    override fun queueStatusUpdates(): Flow<EntryDownloadQueueItem> {
-        return animeDownloadManager.statusFlow()
-            .map { download -> download.toEntryDownloadQueueItem().requireAnime() }
-    }
-
-    override fun queueProgressUpdates(): Flow<EntryDownloadQueueItem> {
-        return animeDownloadManager.progressFlow()
-            .map { download -> download.toEntryDownloadQueueItem().requireAnime() }
-    }
+    override suspend fun hasPendingDownloads(): Boolean = animeDownloadManager.hasPendingDownloads()
 
     override suspend fun runDownloadsUntilIdle() {
         animeDownloadManager.runDownloadsUntilIdle()

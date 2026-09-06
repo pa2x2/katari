@@ -22,13 +22,18 @@ internal class HtmlProseBlockParser(
         val isNote = noteContext || parent.attr("role") in setOf("doc-endnote", "doc-endnotes", "note")
         val inline = mutableListOf<Node>()
         var parentFragmentsAssigned = false
+        val pendingFragments = linkedSetOf<String>()
+        val initialSize = destination.size
 
         fun flushInline() {
             if (inline.none(Node::hasReadableText)) {
+                inline.filterIsInstance<Element>().forEach { element ->
+                    element.getAllElements().forEach { pendingFragments += it.fragments() }
+                }
                 inline.clear()
                 return
             }
-            val fragments = if (parentFragmentsAssigned) emptyList() else parent.fragments()
+            val fragments = pendingFragments.toList() + if (parentFragmentsAssigned) emptyList() else parent.fragments()
             addTextBlock(
                 nodes = inline.toList(),
                 element = parent,
@@ -38,6 +43,7 @@ internal class HtmlProseBlockParser(
                 destination = destination,
             )
             if (fragments.isNotEmpty()) parentFragmentsAssigned = true
+            pendingFragments.clear()
             inline.clear()
         }
 
@@ -48,14 +54,27 @@ internal class HtmlProseBlockParser(
                 node is Element && !node.isBlockElement() -> inline.add(node)
                 node is Element -> {
                     flushInline()
-                    val fragments = if (parentFragmentsAssigned) emptyList() else parent.fragments()
+                    val fragments =
+                        pendingFragments.toList() + if (parentFragmentsAssigned) emptyList() else parent.fragments()
                     val added = addBlockElement(node, style, isNote, fragments, destination)
-                    if (added && fragments.isNotEmpty()) parentFragmentsAssigned = true
+                    if (added) {
+                        if (fragments.isNotEmpty()) parentFragmentsAssigned = true
+                        pendingFragments.clear()
+                    } else {
+                        node.getAllElements().forEach { pendingFragments += it.fragments() }
+                    }
                 }
                 else -> inline.add(node)
             }
         }
         flushInline()
+        if (pendingFragments.isNotEmpty() && destination.size > initialSize) {
+            val last = destination.last()
+            destination[destination.lastIndex] = last.copy(
+                fragments = (last.fragments + pendingFragments).distinct(),
+                anchors = pendingFragments.associateWith { last.text.trimEnd().length } + last.anchors,
+            )
+        }
     }
 
     private fun addBlockElement(
@@ -67,15 +86,14 @@ internal class HtmlProseBlockParser(
     ): Boolean {
         val style = inheritedStyle.mergedWith(element.documentBlockStyle())
         return when (element.normalName()) {
-            "h1", "h2", "h3", "h4", "h5", "h6" -> addTextBlock(
-                element.childNodes(),
+            "h1", "h2", "h3", "h4", "h5", "h6" -> addTextAndImageBlocks(
                 element,
                 BookDocumentBlockRole(BookDocumentBlockKind.HEADING, level = element.normalName().drop(1).toInt()),
                 style,
                 inheritedFragments,
                 destination,
             )
-            "p" -> addParagraphBlocks(
+            "p" -> addTextAndImageBlocks(
                 element = element,
                 role = BookDocumentBlockRole(if (noteContext) BookDocumentBlockKind.NOTE else style.panelKind()),
                 style = style,
@@ -98,19 +116,12 @@ internal class HtmlProseBlockParser(
                 inheritedFragments = inheritedFragments,
                 destination = destination,
             )
-            "blockquote" -> addTextBlock(
-                element.childNodes(),
-                element,
-                BookDocumentBlockRole(BookDocumentBlockKind.QUOTE),
-                style,
-                inheritedFragments,
-                destination,
-            )
+            "blockquote" -> addQuoteBlocks(element, style, noteContext, inheritedFragments, destination)
             "pre" -> addTextBlock(
                 element.childNodes(),
                 element,
                 BookDocumentBlockRole(BookDocumentBlockKind.PREFORMATTED),
-                style.copy(whiteSpace = BookDocumentWhiteSpace.PRE),
+                style.copy(whiteSpace = BookDocumentWhiteSpace.PRE).withFlow(style.flow),
                 inheritedFragments,
                 destination,
                 preserveWhitespace = true,
@@ -164,7 +175,7 @@ private fun Node.hasReadableText(): Boolean = when (this) {
 
 private fun Element.isBlockElement(): Boolean = normalName() in setOf(
     "address", "article", "aside", "blockquote", "caption", "dd", "details", "div", "dl", "dt",
-    "figcaption", "figure", "footer", "h1", "h2", "h3", "h4", "h5", "h6", "header", "hr",
+    "figcaption", "figure", "footer", "h1", "h2", "h3", "h4", "h5", "h6", "header", "hr", "img",
     "li", "main", "nav", "ol", "p", "pre", "section", "table", "tbody", "td", "tfoot", "th",
     "thead", "tr", "ul",
 )

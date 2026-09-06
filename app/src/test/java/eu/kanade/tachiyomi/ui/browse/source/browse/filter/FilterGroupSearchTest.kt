@@ -19,16 +19,6 @@ class FilterGroupSearchTest {
             listOf("Romance", "Romance adventure")
     }
 
-    private fun options(count: Int): List<EntryFilter<*>> {
-        return List(count) {
-            if (it % 2 == 0) {
-                option("Option $it")
-            } else {
-                object : EntryFilter.TriState("Option $it") {}
-            }
-        }
-    }
-
     private fun option(name: String): EntryFilter.CheckBox {
         return object : EntryFilter.CheckBox(name) {}
     }

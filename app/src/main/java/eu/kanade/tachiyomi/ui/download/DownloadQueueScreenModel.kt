@@ -8,6 +8,7 @@ import eu.kanade.tachiyomi.databinding.DownloadListBinding
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -67,7 +68,23 @@ class DownloadQueueScreenModel(
 
     init {
         screenModelScope.launch {
-            downloadRuntime.state.map { it.queue }.collect { groups ->
+            downloadRuntime.state.map { it.queue }.distinctUntilChanged().collect { groups ->
+                val current = state.value
+                val sameStructure = current.size == groups.size && groups.withIndex().all { (index, group) ->
+                    val header = current[index]
+                    header.model.id == group.sourceId && header.model.entryType == group.entryType &&
+                        header.model.title == group.sourceName &&
+                        header.subItems.map { it.payload.identity } == group.items.map { it.identity }
+                }
+                if (sameStructure) {
+                    // Update existing rows without rebuilding the adapter for every transfer tick.
+                    groups.forEachIndexed { index, group ->
+                        current[index].subItems.zip(group.items).forEach { (row, download) ->
+                            updateDownload(row, download)
+                        }
+                    }
+                    return@collect
+                }
                 val newList = groups.map { group ->
                     DownloadQueueHeaderItem(
                         DownloadQueueHeaderModel(
@@ -83,7 +100,6 @@ class DownloadQueueScreenModel(
                                 DownloadQueueItem(
                                     payload = download,
                                     header = this,
-                                    modelProvider = download::toDownloadQueueItemModel,
                                 )
                             },
                         )
@@ -100,9 +116,6 @@ class DownloadQueueScreenModel(
 
     val isDownloaderRunning = downloadRuntime.state.map { it.isRunning }
         .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), false)
-
-    fun getDownloadStatusFlow() = downloadRuntime.queueStatusUpdates()
-    fun getDownloadProgressFlow() = downloadRuntime.queueProgressUpdates()
 
     fun startDownloads() {
         downloadRuntime.start()
@@ -131,19 +144,14 @@ class DownloadQueueScreenModel(
         downloadRuntime.reorderQueue(reorderedItems)
     }
 
-    fun onStatusChange(download: EntryDownloadQueueItem) {
-        getHolder(download.childId)?.notifyProgress()
-        getHolder(download.childId)?.notifyProgressText()
-    }
-
-    /**
-     * Called when a page of a download is downloaded.
-     *
-     * @param download the download whose page has been downloaded.
-     */
-    fun onUpdateStepProgress(download: EntryDownloadQueueItem) {
-        getHolder(download.childId)?.notifyProgress()
-        getHolder(download.childId)?.notifyProgressText()
+    private fun updateDownload(row: DownloadQueueItem, download: EntryDownloadQueueItem) {
+        // Keep off-screen rows current too, so rebinding cannot restore stale queue values.
+        if (row.payload == download) return
+        row.update(download)
+        getHolder(download)?.let { holder ->
+            holder.notifyProgress()
+            holder.notifyProgressText()
+        }
     }
 
     private fun moveSeries(selectedItem: DownloadQueueItem, moveToTop: Boolean) {
@@ -167,8 +175,12 @@ class DownloadQueueScreenModel(
         }
     }
 
-    private fun getHolder(itemId: Long): DownloadQueueHolder? {
-        return controllerBinding.root.findViewHolderForItemId(itemId) as? DownloadQueueHolder
+    private fun getHolder(download: EntryDownloadQueueItem): DownloadQueueHolder? {
+        if (!::controllerBinding.isInitialized) return null
+        val position = adapter?.currentItems?.indexOfFirst {
+            it is DownloadQueueItem && it.payload.identity == download.identity
+        }?.takeIf { it >= 0 } ?: return null
+        return controllerBinding.root.findViewHolderForAdapterPosition(position) as? DownloadQueueHolder
     }
 }
 

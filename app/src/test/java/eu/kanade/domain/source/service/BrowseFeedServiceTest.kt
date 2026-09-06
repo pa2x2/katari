@@ -25,7 +25,7 @@ import tachiyomi.core.common.preference.PreferenceStore
 class BrowseFeedServiceTest {
 
     private val preferences = SourcePreferences(
-        preferenceStore = TestPreferenceStore(),
+        preferenceStore = BrowseFeedPreferenceStore(),
         json = Json {
             ignoreUnknownKeys = true
             explicitNulls = false
@@ -291,100 +291,5 @@ class BrowseFeedServiceTest {
 
         service.timelineSnapshot(feed.id) shouldBe SourceFeedTimeline()
         service.anchorSnapshot(feed.id) shouldBe SourceFeedAnchor()
-    }
-}
-
-private class TestPreferenceStore : PreferenceStore {
-    private val values = mutableMapOf<String, TestPreference<*>>()
-
-    override fun getString(key: String, defaultValue: String): Preference<String> {
-        return preference(key, defaultValue)
-    }
-
-    override fun getLong(key: String, defaultValue: Long): Preference<Long> {
-        return preference(key, defaultValue)
-    }
-
-    override fun getInt(key: String, defaultValue: Int): Preference<Int> {
-        return preference(key, defaultValue)
-    }
-
-    override fun getFloat(key: String, defaultValue: Float): Preference<Float> {
-        return preference(key, defaultValue)
-    }
-
-    override fun getBoolean(key: String, defaultValue: Boolean): Preference<Boolean> {
-        return preference(key, defaultValue)
-    }
-
-    override fun getStringSet(key: String, defaultValue: Set<String>): Preference<Set<String>> {
-        return preference(key, defaultValue)
-    }
-
-    override fun <T> getObjectFromString(
-        key: String,
-        defaultValue: T,
-        serializer: (T) -> String,
-        deserializer: (String) -> T,
-    ): Preference<T> {
-        return preference(key, defaultValue)
-    }
-
-    override fun <T> getObjectFromInt(
-        key: String,
-        defaultValue: T,
-        serializer: (T) -> Int,
-        deserializer: (Int) -> T,
-    ): Preference<T> {
-        return preference(key, defaultValue)
-    }
-
-    override fun <T> getObjectSetFromStringSet(
-        key: String,
-        defaultValue: Set<T>,
-        serializer: (T) -> String,
-        deserializer: (String) -> T?,
-    ): Preference<Set<T>> {
-        return preference(key, defaultValue)
-    }
-
-    override fun getAll(): Map<String, *> {
-        return values.mapValues { it.value.get() }
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun <T> preference(key: String, defaultValue: T): TestPreference<T> {
-        return values.getOrPut(key) { TestPreference(key, defaultValue) } as TestPreference<T>
-    }
-}
-
-private class TestPreference<T>(
-    private val preferenceKey: String,
-    private val initialDefault: T,
-) : Preference<T> {
-    private val state = MutableStateFlow<T?>(null)
-
-    override fun key(): String = preferenceKey
-
-    override fun get(): T = state.value ?: initialDefault
-
-    override fun set(value: T) {
-        state.value = value
-    }
-
-    override fun isSet(): Boolean = state.value != null
-
-    override fun delete() {
-        state.value = null
-    }
-
-    override fun defaultValue(): T = initialDefault
-
-    override fun changes(): Flow<T> {
-        return state.asStateFlow().map { it ?: initialDefault }
-    }
-
-    override fun stateIn(scope: CoroutineScope): StateFlow<T> {
-        return changes().stateIn(scope, kotlinx.coroutines.flow.SharingStarted.Eagerly, get())
     }
 }

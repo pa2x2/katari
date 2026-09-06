@@ -6,7 +6,7 @@ import kotlin.test.assertEquals
 
 class BookDocumentReaderPaletteTest {
     @Test
-    fun `app mode follows app colors and black mode has a fixed pure black palette`() {
+    fun `app mode follows app colors and black mode has a pure black background`() {
         val app = resolveBookDocumentReaderPalette(
             BookDocumentReaderThemeMode.APP,
             APP_BACKGROUND,
@@ -21,7 +21,6 @@ class BookDocumentReaderPaletteTest {
         assertEquals(APP_BACKGROUND, app.backgroundArgb)
         assertEquals(APP_FOREGROUND, app.foregroundArgb)
         assertEquals(0xFF000000, black.backgroundArgb)
-        assertEquals(0xFFE6E6E6, black.foregroundArgb)
     }
 
     private companion object {

@@ -58,6 +58,7 @@ class StatsScreen : Screen() {
                 state = state as StatsScreenState.Success,
                 paddingValues = paddingValues,
                 onRangeSelected = screenModel::setRange,
+                onSaveLayout = screenModel::setCardLayout,
                 onTypeSelected = screenModel::setType,
                 onNavigateActivity = screenModel::navigateActivityByBuckets,
                 onShowToday = screenModel::showToday,
