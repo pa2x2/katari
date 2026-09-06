@@ -1907,4 +1907,12 @@
     <string name="donationCampaign.dismiss">Dismiss</string>
     <string name="home_navigation_menu">Menu</string>
     <string name="book_reader_continuous_scroll">Continuous scrolling</string>
+    <string name="statistics_customize">Customize</string>
+    <string name="statistics_reset_layout">Reset layout</string>
+    <string name="statistics_summary">Activity summary</string>
+    <string name="statistics_move_up">Move up</string>
+    <string name="statistics_move_down">Move down</string>
+    <string name="statistics_reorder">Reorder card</string>
+    <string name="statistics_all_cards_hidden">All cards are hidden. Use Customize to show them.</string>
+    <string name="statistics_empty_period">No recorded activity in this period</string>
 </resources>

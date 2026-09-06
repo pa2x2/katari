@@ -6,10 +6,10 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.more.stats.ActivityState
 import eu.kanade.presentation.more.stats.StatsScreenState
-import eu.kanade.presentation.more.stats.data.StatsActivityWindow
 import eu.kanade.presentation.more.stats.data.StatsLibrary
 import eu.kanade.presentation.more.stats.data.StatsRange
 import eu.kanade.presentation.more.stats.data.StatsType
+import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -29,11 +29,13 @@ import logcat.LogPriority
 import mihon.entry.interactions.presentation.EntryTypePresentationFeature
 import mihon.entry.interactions.statistics.EntryStatisticsFeature
 import mihon.feature.profiles.core.ProfileScopedStateEvent
+import mihon.feature.profiles.core.ProfileStore
 import mihon.feature.profiles.core.observeProfileScopedState
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.entry.interactor.GetLibraryEntries
+import tachiyomi.domain.statistics.model.StatisticsCardLayout
 import tachiyomi.domain.statistics.repository.StatisticsRepository
 import tachiyomi.domain.statistics.service.StatisticsPreferences
 import uy.kohesive.injekt.Injekt
@@ -50,6 +52,7 @@ class StatsScreenModel(
     private val statisticsFeature: EntryStatisticsFeature = Injekt.get(),
     private val statisticsRepository: StatisticsRepository = Injekt.get(),
     private val statisticsPreferences: StatisticsPreferences = Injekt.get(),
+    private val profileStore: ProfileStore = Injekt.get(),
     private val basePreferences: BasePreferences = Injekt.get(),
 ) : StateScreenModel<StatsScreenState>(StatsScreenState.Loading) {
 
@@ -142,7 +145,13 @@ class StatsScreenModel(
                         .map { activity -> activity.displayedRange to activity },
                     statisticsPreferences.selectedType.changes(),
                     basePreferences.incognitoMode.changes(),
-                ) { library, (range, activity), selectedTypeName, incognito ->
+                    combine(
+                        (listOf("overview") + types.map { it.type.name }).map { tab ->
+                            StatisticsPreferences(profileStore.profileStore(profileId)).cardLayout(tab).changes()
+                                .map { tab to StatisticsCardLayout.decode(it) }
+                        },
+                    ) { it.toMap() },
+                ) { library, (range, activity), selectedTypeName, incognito, cardLayouts ->
                     StatsScreenState.Success(
                         profileId = profileId,
                         range = range,
@@ -151,6 +160,7 @@ class StatsScreenModel(
                         library = library,
                         activity = activity,
                         incognito = incognito,
+                        cardLayouts = cardLayouts,
                     )
                 }.distinctUntilChanged().flowOn(Dispatchers.IO)
             }.collect { event ->
@@ -170,11 +180,16 @@ class StatsScreenModel(
         }
     }
 
+    fun setCardLayout(profileId: Long, tab: String, layout: StatisticsCardLayout) {
+        if ((state.value as? StatsScreenState.Success)?.profileId != profileId) return
+        StatisticsPreferences(profileStore.profileStore(profileId)).cardLayout(tab).set(layout.encode())
+    }
+
     fun setRange(range: StatsRange) {
         statisticsPreferences.selectedRange.set(range.name)
     }
 
-    fun setType(type: eu.kanade.tachiyomi.source.entry.EntryType?) {
+    fun setType(type: EntryType?) {
         statisticsPreferences.selectedType.set(type?.name.orEmpty())
     }
 
