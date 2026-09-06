@@ -69,8 +69,6 @@
     <string name="book_navigation_start">Start</string>
     <string name="book_navigation_end">End</string>
     <string name="book_navigation_go">Go</string>
-    <string name="book_navigation_return">Return to previous position</string>
-    <string name="book_navigation_dismiss_return">Dismiss return position</string>
     <string name="book_navigation_previous_section">Previous section</string>
     <string name="book_navigation_next_section">Next section</string>
 </resources>

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reader_navigation_return">Return to previous position</string>
+    <string name="reader_navigation_dismiss_return">Dismiss return position</string>
+</resources>

@@ -2,17 +2,10 @@ package mihon.entry.interactions.book.document.reader.navigation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,6 +24,7 @@ import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.reader.ReaderPageNavigatorType
 import tachiyomi.presentation.core.components.reader.ReaderPositionNavigator
+import tachiyomi.presentation.core.components.reader.ReaderReturnPositionBar
 import kotlin.math.roundToInt
 import tachiyomi.presentation.core.i18n.stringResource as sharedStringResource
 
@@ -69,18 +63,7 @@ internal fun BookDocumentSeekControls(
     }
     Column(Modifier.padding(bottom = 8.dp)) {
         if (jumpHistory.returnTarget != null) {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp)
-                    .clip(MaterialTheme.shapes.medium).background(MaterialTheme.colorScheme.surface),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                TextButton(onClick = onReturn, modifier = Modifier.weight(1f)) {
-                    Text(stringResource(R.string.book_navigation_return))
-                }
-                IconButton(onClick = jumpHistory::dismiss) {
-                    Icon(Icons.Outlined.Close, stringResource(R.string.book_navigation_dismiss_return))
-                }
-            }
+            ReaderReturnPositionBar(onReturn = onReturn, onDismiss = jumpHistory::dismiss)
         }
         draft?.let { value ->
             Surface(

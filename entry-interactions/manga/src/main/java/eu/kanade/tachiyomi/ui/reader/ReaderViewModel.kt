@@ -21,6 +21,7 @@ import eu.kanade.tachiyomi.ui.reader.model.removeDuplicates
 import eu.kanade.tachiyomi.ui.reader.model.toEntryChapter
 import eu.kanade.tachiyomi.ui.reader.model.toReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.unref
+import eu.kanade.tachiyomi.ui.reader.navigation.MangaReaderJumpHistory
 import eu.kanade.tachiyomi.ui.reader.startup.ReaderStartupState
 import eu.kanade.tachiyomi.ui.reader.startup.toReaderStartupFailure
 import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
@@ -122,6 +123,8 @@ internal class ReaderViewModel @JvmOverloads constructor(
 
     private val mutableState = MutableStateFlow(State())
     val state = mutableState.asStateFlow()
+
+    val jumpHistory = MangaReaderJumpHistory()
 
     private val initialState = InitialState.from(savedState)
 
@@ -378,6 +381,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
     private suspend fun loadChapter(
         loader: ChapterLoader,
         chapter: ReaderChapter,
+        pageIndex: Int? = null,
     ): ViewerChapters {
         loader.loadChapter(chapter)
 
@@ -385,6 +389,8 @@ internal class ReaderViewModel @JvmOverloads constructor(
             chapter.requestedPage = chapterPageIndex
             initialPageIndexPending = false
         }
+
+        pageIndex?.let { chapter.requestedPage = it.coerceIn(0, chapter.pages!!.lastIndex) }
 
         val chapterPos = chapterList.indexOf(chapter)
         val newChapters = ViewerChapters(
@@ -436,21 +442,23 @@ internal class ReaderViewModel @JvmOverloads constructor(
     /**
      * Called when the user is going to load the prev/next chapter through the toolbar buttons.
      */
-    private suspend fun loadAdjacent(chapter: ReaderChapter) {
-        val loader = loader ?: return
+    private suspend fun loadAdjacent(chapter: ReaderChapter, pageIndex: Int? = null): Boolean {
+        val loader = loader ?: return false
 
         logcat { "Loading adjacent ${chapter.chapter.url}" }
 
         mutableState.update { it.copy(isLoadingAdjacentChapter = true) }
         try {
             withIOContext {
-                loadChapter(loader, chapter)
+                loadChapter(loader, chapter, pageIndex)
             }
+            return true
         } catch (e: Throwable) {
             if (e is CancellationException) {
                 throw e
             }
             logcat(LogPriority.ERROR, e)
+            return false
         } finally {
             mutableState.update { it.copy(isLoadingAdjacentChapter = false) }
         }
@@ -534,6 +542,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
 
         val selectedChapter = page.chapter
         val pages = selectedChapter.pages ?: return
+        selectedChapter.chapter.id?.let { jumpHistory.observe(it, page.index) }
 
         // Save last page read and mark as read if needed
         viewModelScope.launchNonCancellable {
@@ -685,6 +694,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
      */
     suspend fun loadNextChapter() {
         val nextChapter = state.value.viewerChapters?.next ?: return
+        jumpHistory.rememberOrigin()
         loadAdjacent(nextChapter)
     }
 
@@ -693,7 +703,17 @@ internal class ReaderViewModel @JvmOverloads constructor(
      */
     suspend fun loadPreviousChapter() {
         val prevChapter = state.value.viewerChapters?.previous ?: return
+        jumpHistory.rememberOrigin()
         loadAdjacent(prevChapter)
+    }
+
+    suspend fun returnToPreviousPosition(): Int? {
+        val target = jumpHistory.returnTarget ?: return null
+        val chapter = chapterList.firstOrNull { it.chapter.id == target.chapterId } ?: return null
+        if (chapter != getCurrentChapter() && !loadAdjacent(chapter, target.pageIndex)) return null
+        val pageIndex = target.pageIndex.coerceIn(0, chapter.pages?.lastIndex ?: return null)
+        jumpHistory.dismiss()
+        return pageIndex
     }
 
     /**
