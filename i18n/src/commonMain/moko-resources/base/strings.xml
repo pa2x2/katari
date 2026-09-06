@@ -1915,4 +1915,5 @@
     <string name="statistics_reorder">Reorder card</string>
     <string name="statistics_all_cards_hidden">All cards are hidden. Use Customize to show them.</string>
     <string name="statistics_empty_period">No recorded activity in this period</string>
+    <string name="statistics_less_than_minute">&lt;1 min</string>
 </resources>
