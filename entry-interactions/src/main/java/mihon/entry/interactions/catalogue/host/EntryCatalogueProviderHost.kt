@@ -49,7 +49,7 @@ internal interface EntryCatalogueProviderHost {
         return filter.getNavigation(request)
     }
 
-    fun backgroundFilters(sourceId: Long): EntryFilterList
+    suspend fun backgroundFilters(sourceId: Long): EntryFilterList
 
     suspend fun page(
         sourceId: Long,

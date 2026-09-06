@@ -25,7 +25,10 @@ class PagedFilterPresetTest {
     fun `invalid paged group preset retains source default`() {
         val restored = filter("default", reject = "invalid")
 
-        EntryFilterList(restored).applySnapshot(listOf(FilterStateNode.PagedGroup("Options", "invalid")))
+        EntryFilterList(
+            restored,
+        ).restoreSnapshot(listOf(FilterStateNode.PagedGroup("Options", "invalid"))).isCompatible shouldBe
+            false
 
         restored.state shouldBe "default"
     }

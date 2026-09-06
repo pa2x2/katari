@@ -37,9 +37,11 @@ import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.source.sourcePreferences
 import eu.kanade.tachiyomi.source.toEntryFilterList
 import eu.kanade.tachiyomi.source.toEntryUpdateStrategy
-import eu.kanade.tachiyomi.source.toLegacyFilterList
 import eu.kanade.tachiyomi.source.toLegacyPage
 import eu.kanade.tachiyomi.source.toLegacyUpdateStrategy
+import eu.kanade.tachiyomi.source.withLegacyFilterValues
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import okhttp3.Headers
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -70,6 +72,8 @@ open class LegacyMangaSourceAdapter(
     override val supportedEntryTypes: Set<EntryType> = LEGACY_MANGA_SOURCE_SUPPORTED_ENTRY_TYPES
     override val itemOrientation: EntryItemOrientation = EntryItemOrientation.VERTICAL
 
+    private val filterRequests = Mutex()
+
     override fun getFilterList(): EntryFilterList = source.getFilterList().toEntryFilterList()
 
     override suspend fun getPopularContent(page: Int): EntryPageResult<SEntry> =
@@ -83,7 +87,11 @@ open class LegacyMangaSourceAdapter(
         query: String,
         filters: EntryFilterList,
     ): EntryPageResult<SEntry> =
-        source.getSearchManga(page, query, filters.toLegacyFilterList()).toEntryPageResult()
+        filterRequests.withLock {
+            filters.withLegacyFilterValues {
+                source.getSearchManga(page, query, it).toEntryPageResult()
+            }
+        }
 
     override suspend fun getContentDetails(entry: SEntry): SEntry {
         require(entry.type == EntryType.MANGA) {

@@ -48,6 +48,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import eu.kanade.domain.source.model.FeedItemRef
+import eu.kanade.domain.source.model.FilterPresetRepairException
 import eu.kanade.presentation.browse.components.BrowseSourceLoadingItem
 import eu.kanade.presentation.browse.components.CatalogBadges
 import eu.kanade.presentation.entry.components.toGridCoverType
@@ -58,6 +59,7 @@ import eu.kanade.presentation.library.components.EntryCompactGridItem
 import eu.kanade.presentation.library.components.EntryListItem
 import eu.kanade.presentation.util.formattedMessage
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
+import eu.kanade.tachiyomi.source.entry.filter.EntryFilterValidationException
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -100,14 +102,19 @@ fun CatalogFeedBrowseContent(
     // composition-local so returning to the regular feed restores its latest anchor.
     var restoredDisplayMode by remember { mutableStateOf<String?>(null) }
 
+    val requiresRepair = state.error is FilterPresetRepairException || state.error is EntryFilterValidationException
     val getErrorMessage: (Throwable) -> String = { throwable ->
-        with(context) { throwable.formattedMessage }
+        if (requiresRepair) {
+            context.coreStringResource(MR.strings.filter_repair_help)
+        } else {
+            with(context) { throwable.formattedMessage }
+        }
     }
     val savedAnchor = screenModel.savedAnchorSnapshot()
 
     LaunchedEffect(state.error) {
         val error = state.error ?: return@LaunchedEffect
-        if (state.itemRefs.isEmpty()) return@LaunchedEffect
+        if (state.itemRefs.isEmpty() || requiresRepair) return@LaunchedEffect
 
         val result = snackbarHostState.showSnackbar(
             message = getErrorMessage(error),
@@ -196,7 +203,9 @@ fun CatalogFeedBrowseContent(
         EmptyScreen(
             modifier = Modifier.padding(contentPadding),
             message = state.error?.let(getErrorMessage) ?: stringResource(MR.strings.no_results_found),
-            actions = if (source?.id == LocalSource.ID) {
+            actions = if (requiresRepair) {
+                emptyList()
+            } else if (source?.id == LocalSource.ID) {
                 listOf(
                     EmptyScreenAction(
                         stringRes = MR.strings.local_source_help_guide,

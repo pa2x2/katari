@@ -186,7 +186,7 @@ class EntryCatalogueFeatureTest {
         val anime = sourceEntry("/anime", EntryType.ANIME)
         val host = host()
         every { host.source(7L) } returns EntryCatalogueHostSourceResolution.Available(source)
-        every { host.backgroundFilters(7L) } returns filters
+        coEvery { host.backgroundFilters(7L) } returns filters
         coEvery { host.page(7L, 1, any<EntryCatalogueListing.Search>()) } returns
             EntryPageResult(listOf(manga, duplicate, anime), false)
         val networkToLocal = mockk<NetworkToLocalEntry>()
@@ -226,7 +226,7 @@ class EntryCatalogueFeatureTest {
     fun `provider cancellation remains cancellation`() = runTest {
         val host = host()
         every { host.source(7L) } returns EntryCatalogueHostSourceResolution.Available(source)
-        every { host.backgroundFilters(7L) } returns EntryFilterList()
+        coEvery { host.backgroundFilters(7L) } returns EntryFilterList()
         coEvery { host.page(any(), any(), any()) } throws CancellationException()
 
         assertThrows<CancellationException> {

@@ -54,7 +54,7 @@ class EntryCatalogueContractValidationContributor : FeatureValidationContributor
                             every { isInitialized } returns MutableStateFlow(true)
                             every { describe(7L) } returns source.description
                             every { source(7L) } returns EntryCatalogueHostSourceResolution.Available(source)
-                            every { backgroundFilters(7L) } returns filters
+                            coEvery { backgroundFilters(7L) } returns filters
                             coEvery { filters(7L) } returns filters
                             coEvery { page(7L, 1, any()) } returns EntryPageResult(
                                 listOf(

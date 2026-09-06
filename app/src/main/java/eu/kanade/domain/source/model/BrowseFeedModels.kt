@@ -1,7 +1,5 @@
 package eu.kanade.domain.source.model
 
-import eu.kanade.tachiyomi.source.entry.EntryFilter
-import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -183,73 +181,6 @@ enum class FeedListingMode {
     Search,
 }
 
-@Serializable
-sealed interface FilterStateNode {
-    val name: String
-
-    @Serializable
-    @SerialName("header")
-    data class Header(
-        override val name: String,
-    ) : FilterStateNode
-
-    @Serializable
-    @SerialName("separator")
-    data class Separator(
-        override val name: String,
-    ) : FilterStateNode
-
-    @Serializable
-    @SerialName("select")
-    data class Select(
-        override val name: String,
-        val state: Int,
-    ) : FilterStateNode
-
-    @Serializable
-    @SerialName("text")
-    data class Text(
-        override val name: String,
-        val state: String,
-    ) : FilterStateNode
-
-    @Serializable
-    @SerialName("checkbox")
-    data class CheckBox(
-        override val name: String,
-        val state: Boolean,
-    ) : FilterStateNode
-
-    @Serializable
-    @SerialName("tristate")
-    data class TriState(
-        override val name: String,
-        val state: Int,
-    ) : FilterStateNode
-
-    @Serializable
-    @SerialName("sort")
-    data class Sort(
-        override val name: String,
-        val index: Int?,
-        val ascending: Boolean?,
-    ) : FilterStateNode
-
-    @Serializable
-    @SerialName("group")
-    data class Group(
-        override val name: String,
-        val state: List<FilterStateNode>,
-    ) : FilterStateNode
-
-    @Serializable
-    @SerialName("paged_group")
-    data class PagedGroup(
-        override val name: String,
-        val state: String,
-    ) : FilterStateNode
-}
-
 fun SourceFeedPreset.toListing(): FeedSavedListing {
     return FeedSavedListing(
         mode = listingMode,
@@ -269,66 +200,4 @@ data class FeedSavedListing(
             FeedListingMode.Latest -> CATALOGUE_LATEST_QUERY
             FeedListingMode.Search -> query
         }
-}
-
-fun EntryFilterList.snapshot(): List<FilterStateNode> {
-    return map(EntryFilter<*>::toNode)
-}
-
-fun EntryFilterList.applySnapshot(snapshot: List<FilterStateNode>): EntryFilterList {
-    applyNodes(filters = this, nodes = snapshot)
-    return this
-}
-
-private fun applyNodes(filters: List<EntryFilter<*>>, nodes: List<FilterStateNode>) {
-    filters.zip(nodes).forEach { (filter, node) ->
-        when {
-            filter.name != node.name -> return@forEach
-            filter is EntryFilter.Select<*> && node is FilterStateNode.Select -> {
-                filter.state = node.state.coerceIn(0, filter.values.lastIndex)
-            }
-            filter is EntryFilter.Text && node is FilterStateNode.Text -> {
-                filter.state = node.state
-            }
-            filter is EntryFilter.CheckBox && node is FilterStateNode.CheckBox -> {
-                filter.state = node.state
-            }
-            filter is EntryFilter.TriState && node is FilterStateNode.TriState -> {
-                filter.state = node.state
-            }
-            filter is EntryFilter.Sort && node is FilterStateNode.Sort -> {
-                filter.state = if (node.index == null || node.ascending == null) {
-                    null
-                } else {
-                    EntryFilter.Sort.Selection(
-                        index = node.index.coerceIn(0, filter.values.lastIndex),
-                        ascending = node.ascending,
-                    )
-                }
-            }
-            filter is EntryFilter.PagedGroup<*> && node is FilterStateNode.PagedGroup -> {
-                runCatching { filter.restoreEncodedState(node.state) }
-            }
-            filter is EntryFilter.Group<*> && node is FilterStateNode.Group -> {
-                applyNodes(filter.state.filterIsInstance<EntryFilter<*>>(), node.state)
-            }
-        }
-    }
-}
-
-private fun EntryFilter<*>.toNode(): FilterStateNode {
-    return when (this) {
-        is EntryFilter.Header -> FilterStateNode.Header(name)
-        is EntryFilter.Separator -> FilterStateNode.Separator(name)
-        is EntryFilter.Select<*> -> FilterStateNode.Select(name, state)
-        is EntryFilter.Text -> FilterStateNode.Text(name, state)
-        is EntryFilter.CheckBox -> FilterStateNode.CheckBox(name, state)
-        is EntryFilter.TriState -> FilterStateNode.TriState(name, state)
-        is EntryFilter.Sort -> FilterStateNode.Sort(name, state?.index, state?.ascending)
-        is EntryFilter.PagedGroup<*> -> FilterStateNode.PagedGroup(name, encodeCurrentState())
-        is EntryFilter.Group<*> -> FilterStateNode.Group(
-            name = name,
-            state = state.filterIsInstance<EntryFilter<*>>().map(EntryFilter<*>::toNode),
-        )
-    }
 }

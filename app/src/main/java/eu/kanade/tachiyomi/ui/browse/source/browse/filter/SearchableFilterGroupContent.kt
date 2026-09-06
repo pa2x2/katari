@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -24,12 +25,14 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 internal fun SearchableFilterGroupContent(
     group: EntryFilter.Group<*>,
+    selectedOnly: Boolean = false,
     itemContent: @Composable (EntryFilter<*>) -> Unit,
 ) {
     val filters = group.state.filterIsInstance<EntryFilter<*>>()
     val isSearchable = filters.hasSearchableOptionList()
-    var query by remember(group) { mutableStateOf("") }
-    val visibleFilters = if (isSearchable) filters.filterGroupOptions(query) else filters
+    var query by rememberSaveable(group) { mutableStateOf("") }
+    val matchingFilters = if (isSearchable) filters.filterGroupOptions(query) else filters
+    val visibleFilters = if (selectedOnly) matchingFilters.filter { it.activeCount() != 0 } else matchingFilters
 
     Column {
         if (isSearchable) {
@@ -60,6 +63,14 @@ internal fun SearchableFilterGroupContent(
             )
         }
 
+        if (visibleFilters.isEmpty()) {
+            Text(
+                stringResource(
+                    if (query.isNotBlank()) MR.strings.no_results_found else MR.strings.browse_filter_no_selected,
+                ),
+                modifier = Modifier.padding(16.dp),
+            )
+        }
         for (filter in visibleFilters) {
             itemContent(filter)
         }

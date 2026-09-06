@@ -26,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
@@ -38,9 +39,11 @@ import eu.kanade.tachiyomi.source.entry.EntryFilterPageItem
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageLoadReason
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageScope
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
+import eu.kanade.tachiyomi.source.filter.withProjectedState
 import eu.kanade.tachiyomi.ui.browse.source.browse.SourceFilterPagedGroupHeader
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterNavigationResult
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 import tachiyomi.i18n.MR
@@ -53,7 +56,9 @@ internal fun PagedGroupFilterContent(
     filter: EntryFilter.PagedGroup<*>,
     onBack: () -> Unit,
     onFilter: () -> Unit,
-    onUpdate: () -> Unit,
+    onReset: () -> Unit,
+    canApply: Boolean,
+    onEditItem: (EntryFilterPageItem, EntryFilter<*>, (Boolean) -> Unit) -> Unit,
     onRequestSuggestions: suspend (
         EntryFilter.Autocomplete,
         EntryFilterTextInput,
@@ -154,12 +159,12 @@ internal fun PagedGroupFilterContent(
             title = filter.name,
             onBack = onBack,
             onReset = {
-                filter.resetState()
-                onUpdate()
+                onReset()
                 items.refresh()
             },
             onRefresh = { browseSession.refresh(viewKey) },
             onFilter = onFilter,
+            filterEnabled = canApply,
         )
 
         if (searchOptions != null) {
@@ -271,7 +276,7 @@ internal fun PagedGroupFilterContent(
                             group = filter,
                             item = item,
                             encodedState = encodedState,
-                            onUpdate = onUpdate,
+                            onEditItem = onEditItem,
                             onSelectedItemUpdate = items::refresh,
                             selectedScope = scope == EntryFilterPageScope.SELECTED,
                             onRequestSuggestions = onRequestSuggestions,
@@ -308,7 +313,7 @@ private fun ProjectedFilterItem(
     group: EntryFilter.PagedGroup<*>,
     item: EntryFilterPageItem,
     encodedState: String?,
-    onUpdate: () -> Unit,
+    onEditItem: (EntryFilterPageItem, EntryFilter<*>, (Boolean) -> Unit) -> Unit,
     onSelectedItemUpdate: () -> Unit,
     selectedScope: Boolean,
     onRequestSuggestions: suspend (
@@ -316,27 +321,25 @@ private fun ProjectedFilterItem(
         EntryFilterTextInput,
     ) -> EntryCatalogueFilterSuggestionsResult,
 ) {
+    val scope = rememberCoroutineScope()
     var projection by remember(group, item.id) {
-        mutableStateOf(projectFilterItemState(group, item, null))
+        mutableStateOf<ProjectedFilterItemState>(ProjectedFilterItemState.Loading)
     }
     LaunchedEffect(group, encodedState, item) {
         projection = projectFilterItemState(group, item, projection.filterOrNull())
     }
 
     when (val current = projection) {
+        ProjectedFilterItemState.Loading -> CircularProgressIndicator(modifier = Modifier.padding(16.dp))
         ProjectedFilterItemState.Failed -> RetryItem {
-            projection = projectFilterItemState(group, item, null)
+            scope.launch { projection = projectFilterItemState(group, item, null) }
         }
         is ProjectedFilterItemState.Ready -> FilterItem(
             filter = current.filter,
             onUpdate = {
-                val update = runCatching { group.applyItemUpdate(item, current.filter) }
-                if (update.isFailure) {
-                    projection = ProjectedFilterItemState.Failed
-                } else {
-                    projection = projectFilterItemState(group, item, current.filter)
-                    onUpdate()
-                    if (selectedScope) onSelectedItemUpdate()
+                onEditItem(item, current.filter) { success ->
+                    if (!success) projection = ProjectedFilterItemState.Failed
+                    if (success && selectedScope) onSelectedItemUpdate()
                 }
             },
             onOpenPagedGroup = {},
@@ -358,6 +361,7 @@ private fun RetryItem(onRetry: () -> Unit) {
 }
 
 private sealed interface ProjectedFilterItemState {
+    data object Loading : ProjectedFilterItemState
     data class Ready(val filter: EntryFilter<*>) : ProjectedFilterItemState
 
     data object Failed : ProjectedFilterItemState
@@ -366,7 +370,7 @@ private sealed interface ProjectedFilterItemState {
 private fun ProjectedFilterItemState.filterOrNull(): EntryFilter<*>? =
     (this as? ProjectedFilterItemState.Ready)?.filter
 
-private fun projectFilterItemState(
+private suspend fun projectFilterItemState(
     group: EntryFilter.PagedGroup<*>,
     item: EntryFilterPageItem,
     previous: EntryFilter<*>?,
@@ -378,12 +382,12 @@ private fun projectFilterItemState(
         )
 }
 
-private fun projectFilterItem(
+private suspend fun projectFilterItem(
     group: EntryFilter.PagedGroup<*>,
     item: EntryFilterPageItem,
     previous: EntryFilter<*>?,
 ): EntryFilter<*> {
-    val projected = group.projectItem(item, previous)
+    val projected = group.withProjectedState { it.projectItem(item, previous) }
     require(
         projected !is EntryFilter.Header &&
             projected !is EntryFilter.Separator &&
