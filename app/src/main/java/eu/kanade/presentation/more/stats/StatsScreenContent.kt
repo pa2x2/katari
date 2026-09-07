@@ -43,7 +43,7 @@ fun StatsScreenContent(
     onRetryActivity: () -> Unit,
     onOpenActivity: (EntryType?, StatsTrendPoint) -> Unit,
     onOpenEntry: (Long) -> Unit,
-    onOpenEarlierActivity: (EntryType?, Long?) -> Unit,
+    onOpenEarlierActivity: (EntryType?) -> Unit,
     onSaveLayout: (Long, String, StatisticsCardLayout) -> Unit,
 ) {
     val pages = remember(state.types) { listOf<EntryType?>(null) + state.types.map(StatsType::type) }

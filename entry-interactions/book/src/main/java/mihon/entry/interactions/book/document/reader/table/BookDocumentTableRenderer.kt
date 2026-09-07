@@ -77,7 +77,7 @@ private fun TableContent(
             BookDocumentRichTextRenderer(
                 value = cell.content,
                 identity = "$selectionIdentity:cell:$rowIndex:$cellIndex",
-                block = if (cell.header) block.copy(style = block.style.copy(bold = true)) else block,
+                block = block.forTableCell(cell),
                 onAnchorClick = onAnchorClick,
                 onExternalLinkClick = onExternalLinkClick,
                 separatorAfter = when {

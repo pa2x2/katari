@@ -99,6 +99,8 @@ internal fun CatalogScreenModel.State.applyFilterDraft(): CatalogScreenModel.Sta
     return copy(
         listing = applied,
         toolbarQuery = saved.query,
+        draftMode = null,
+        draftQuery = null,
         appliedCustomPresetId = draftPresetId,
         appliedFiltersReady = true,
     )

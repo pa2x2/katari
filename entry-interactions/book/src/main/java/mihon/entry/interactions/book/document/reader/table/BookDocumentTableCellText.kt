@@ -28,7 +28,7 @@ internal fun bookDocumentTableTexts(
     density: Density,
 ): List<BookDocumentTableCellText> =
     cells.map { cell ->
-        val cellBlock = if (cell.header) block.copy(style = block.style.copy(bold = true)) else block
+        val cellBlock = block.forTableCell(cell)
         val fontSize = bookDocumentFontSize(cellBlock, textScale, BOOK_DOCUMENT_BASE_TEXT_SIZE_SP)
         val text = cell.content.text.trimEnd('\n')
         val terminalBreaks = cell.content.text.length - text.length

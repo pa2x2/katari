@@ -42,6 +42,37 @@ class CatalogFilterDraftTest {
     }
 
     @Test
+    fun `filter edits and saved presets follow searches made after applying a preset`() {
+        for (mode in FeedListingMode.entries) {
+            val initial = initialCatalogState("popular").initializeForSource(
+                EntryFilterList(object : EntryFilter.CheckBox("English", true) {}).detachedCopy(),
+            )
+            val preset = initial.copy(
+                draftMode = mode,
+                draftQuery = "Cats".takeIf { mode == FeedListingMode.Search },
+            )
+            val applied = requireNotNull(preset.applyFilterDraft())
+            val searched = applied.copy(
+                listing = CatalogScreenModel.Listing.Search("Dogs", applied.filters.detachedCopy()),
+                toolbarQuery = "Dogs",
+            )
+            searched.hasUnappliedFilterChanges shouldBe false
+
+            (searched.filters.single() as EntryFilter.CheckBox).state = false
+            val saved = searched.toSavedPresetState(searched.defaultFilters)
+            saved.listingMode shouldBe FeedListingMode.Search
+            saved.query shouldBe "Dogs"
+            (saved.filters.single() as FilterStateNode.CheckBox).state shouldBe false
+
+            val reapplied = requireNotNull(searched.applyFilterDraft())
+            val listing = reapplied.listing as CatalogScreenModel.Listing.Search
+            listing.query shouldBe "Dogs"
+            listing.filters.single().state shouldBe false
+            reapplied.hasUnappliedFilterChanges shouldBe false
+        }
+    }
+
+    @Test
     fun `invalid dates and an unsaved repair cannot be applied`() {
         val date = EntryDateFilter("Start", EntryFilterMetadata(id = "start"), EntryPartialDate(2024))
         val state = initialCatalogState("").initializeForSource(EntryFilterList(date).detachedCopy())

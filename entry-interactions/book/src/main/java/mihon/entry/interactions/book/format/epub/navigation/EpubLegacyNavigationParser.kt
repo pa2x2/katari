@@ -6,17 +6,12 @@ import mihon.entry.interactions.book.format.epub.archive.EpubArchive
 import mihon.entry.interactions.book.format.epub.packageinfo.EpubManifestItem
 import mihon.entry.interactions.book.format.epub.xml.EPUB_NCX_NAMESPACE
 import mihon.entry.interactions.book.format.epub.xml.hasEpubXmlName
-import org.jsoup.Jsoup
+import mihon.entry.interactions.book.format.epub.xml.parseEpubXml
 import org.jsoup.nodes.Element
-import org.jsoup.parser.Parser
 
 internal class EpubLegacyNavigationParser(private val archive: EpubArchive) {
     fun parse(item: EpubManifestItem): List<BookNavigationItem> {
-        val document = Jsoup.parse(
-            archive.readText(item.resourceId, EpubContract.MAX_XML_BYTES),
-            "",
-            Parser.xmlParser(),
-        )
+        val document = archive.read(item.resourceId, EpubContract.MAX_XML_BYTES).parseEpubXml()
         val map =
             document.getAllElements().firstOrNull { it.hasEpubXmlName("navmap", EPUB_NCX_NAMESPACE) }
                 ?: return emptyList()

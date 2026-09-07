@@ -1,6 +1,7 @@
 package mihon.entry.interactions.book.format.epub.navigation
 
 import mihon.entry.interactions.book.format.epub.archive.EpubArchive
+import mihon.entry.interactions.book.format.epub.archive.epubArchiveBytesFile
 import mihon.entry.interactions.book.format.epub.archive.epubArchiveFile
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -40,23 +41,23 @@ class EpubNavigationParserTest {
     }
 
     @Test
-    fun `prefixed NCX navigation preserves titles and fragment targets`() {
-        val file = epubArchiveFile(
+    fun `UTF-16 prefixed NCX navigation preserves titles and fragment targets`() {
+        val file = epubArchiveBytesFile(
             mapOf(
                 "toc.ncx" to """
-                    <n:ncx xmlns:n="http://www.daisy.org/z3986/2005/ncx/">
+                    <?xml version="1.0" encoding="UTF-16"?><n:ncx xmlns:n="http://www.daisy.org/z3986/2005/ncx/">
                       <n:navMap><n:navPoint>
-                        <n:navLabel><n:text>First</n:text></n:navLabel>
+                        <n:navLabel><n:text>Été</n:text></n:navLabel>
                         <n:content src="chapter.xhtml#first"/>
                       </n:navPoint></n:navMap>
                     </n:ncx>
-                """.trimIndent(),
+                """.trimIndent().toByteArray(Charsets.UTF_16),
             ),
         )
         try {
             EpubArchive(file).use { archive ->
                 val item = EpubNavigationParser(archive).parse(navigationPackage(legacy = true)).single()
-                assertEquals("First", item.title)
+                assertEquals("Été", item.title)
                 assertEquals("chapter.xhtml", item.target.resourceId)
                 assertEquals(listOf("first"), item.target.fragments)
             }

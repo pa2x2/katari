@@ -61,6 +61,7 @@ internal fun rememberBookDocumentPagedNavigation(
     val currentOnTerminalObservation by rememberUpdatedState(onTerminalObservation)
     val currentOnUserScrollStarted by rememberUpdatedState(onUserScrollStarted)
     val currentOnScrollStarted by rememberUpdatedState(onScrollStarted)
+    val currentAnimatePages by rememberUpdatedState(animatePages)
     val focus = remember { FocusRequester() }
     LaunchedEffect(chromeVisible, mode, pager.currentPage) {
         // Selection takes focus inside a page. Return it to the stable pager when that page
@@ -69,13 +70,14 @@ internal fun rememberBookDocumentPagedNavigation(
     }
 
     fun move(delta: Int) {
-        if (pages.isEmpty()) return
-        val destination = (pager.currentPage + delta).coerceIn(0, pages.lastIndex)
+        // A keyed page can retain its tap handler while adjacent chapters change the page window.
+        if (pager.pageCount == 0) return
+        val destination = (pager.currentPage + delta).coerceIn(0, pager.pageCount - 1)
         if (destination == pager.currentPage) return
-        onUserScrollStarted()
-        onScrollStarted()
+        currentOnUserScrollStarted()
+        currentOnScrollStarted()
         scope.launch {
-            if (animatePages) pager.animateScrollToPage(destination) else pager.scrollToPage(destination)
+            if (currentAnimatePages) pager.animateScrollToPage(destination) else pager.scrollToPage(destination)
         }
     }
 

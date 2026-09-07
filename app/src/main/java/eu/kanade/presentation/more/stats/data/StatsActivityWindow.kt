@@ -7,4 +7,6 @@ data class StatsActivityWindow(
     val startDate: LocalDate?,
     val endDate: LocalDate,
     val isLatest: Boolean,
+    // Retain the intended day when calendar-month navigation crosses a shorter month.
+    val monthAnchorDay: Int = endDate.dayOfMonth,
 )

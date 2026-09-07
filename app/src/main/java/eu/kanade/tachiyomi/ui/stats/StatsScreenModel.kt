@@ -6,6 +6,7 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.more.stats.ActivityState
 import eu.kanade.presentation.more.stats.StatsScreenState
+import eu.kanade.presentation.more.stats.data.StatsActivityWindow
 import eu.kanade.presentation.more.stats.data.StatsLibrary
 import eu.kanade.presentation.more.stats.data.StatsRange
 import eu.kanade.presentation.more.stats.data.StatsType
@@ -58,7 +59,7 @@ class StatsScreenModel(
 
     private val activityReload = MutableStateFlow(0L)
     private val today = MutableStateFlow(LocalDate.now())
-    private val finiteWindowEndDate = MutableStateFlow<LocalDate?>(null)
+    private val finiteWindowSelection = MutableStateFlow<StatsActivityWindow?>(null)
     private val types = buildStatisticsTypes(statisticsFeature, presentationFeature)
 
     init {
@@ -83,20 +84,13 @@ class StatsScreenModel(
                     },
                     combine(
                         statisticsPreferences.selectedRange.changes(),
-                        finiteWindowEndDate,
+                        finiteWindowSelection,
                         today,
                         activityReload,
-                    ) { rangeName, historicalEndDate, today, reloadToken ->
+                    ) { rangeName, historicalSelection, today, reloadToken ->
                         val range = StatsRange.entries.find { it.name == rangeName } ?: StatsRange.THIRTY_DAYS
-                        val endDate = when (range) {
-                            StatsRange.ALL -> today
-                            else -> historicalEndDate?.coerceAtMost(today) ?: today
-                        }
                         StatisticsActivityLoadRequest(
-                            window = range.windowEndingOn(
-                                endDate = endDate,
-                                isLatest = range == StatsRange.ALL || historicalEndDate == null,
-                            ),
+                            window = range.windowForSelection(historicalSelection, today),
                             reloadToken = reloadToken,
                         )
                     }.distinctUntilChanged().flatMapLatest { request ->
@@ -200,7 +194,7 @@ class StatsScreenModel(
             else -> null
         }
         if (failedTarget != null) {
-            finiteWindowEndDate.value = failedTarget.endDate.takeUnless { failedTarget.isLatest }
+            finiteWindowSelection.value = failedTarget.takeUnless { it.isLatest }
             statisticsPreferences.selectedRange.set(failedTarget.range.name)
         }
         activityReload.update { it + 1L }
@@ -218,12 +212,12 @@ class StatsScreenModel(
             .shiftedByBuckets(bucketCount)
             .clampedTo(activity.data.trackingStartDate, latestEndDate)
         if (target.endDate == activity.data.window.endDate) return
-        finiteWindowEndDate.value = target.endDate.takeUnless { it == latestEndDate }
+        finiteWindowSelection.value = target.takeUnless { it.isLatest }
     }
 
     fun showToday() {
         refreshToday()
-        finiteWindowEndDate.value = null
+        finiteWindowSelection.value = null
     }
 
     fun refreshToday() {
@@ -234,7 +228,7 @@ class StatsScreenModel(
         val available = activity as? ActivityState.Available ?: return
         if (available.failedTarget == null) return
         val displayedWindow = available.data.window
-        finiteWindowEndDate.value = displayedWindow.endDate.takeUnless { displayedWindow.isLatest }
+        finiteWindowSelection.value = displayedWindow.takeUnless { it.isLatest }
         statisticsPreferences.selectedRange.set(displayedWindow.range.name)
     }
 }

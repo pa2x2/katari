@@ -16,13 +16,15 @@ import mihon.entry.interactions.book.format.epub.archive.EpubArchiveReference
 import mihon.entry.interactions.book.format.epub.archive.resolveArchiveReference
 import mihon.entry.interactions.book.format.epub.packageinfo.EpubManifestItem
 import mihon.entry.interactions.book.format.epub.packageinfo.EpubPackage
+import mihon.entry.interactions.book.format.epub.resource.decodeEpubStyleSheet
+import mihon.entry.interactions.book.format.epub.xml.parseEpubXml
 import mihon.entry.interactions.book.format.html.prosechapter.parsing.HtmlProseDocumentParser
 import mihon.entry.interactions.book.format.html.prosechapter.sanitization.HtmlProseSanitizationPolicy
 import mihon.entry.interactions.book.format.html.prosechapter.sanitization.HtmlProseSanitizer
 import mihon.entry.interactions.book.preparation.BookPublicationResource
 import mihon.entry.interactions.book.preparation.BookRemoteResourceReference
 import mihon.entry.interactions.book.preparation.BookRemoteResourceType
-import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
 import java.security.MessageDigest
 
 /** Converts one EPUB content document and its authored resource references into the canonical document model. */
@@ -38,12 +40,13 @@ internal class EpubDocumentPreparer {
         remoteResources: MutableMap<String, BookRemoteResourceReference>,
     ): EpubPreparedDocument = withContext(Dispatchers.Default) {
         val bytes = withContext(Dispatchers.IO) { archive.read(item.resourceId, EpubContract.MAX_DOCUMENT_BYTES) }
-        val title = Jsoup.parse(bytes.toString(Charsets.UTF_8)).title().trim().takeIf(String::isNotEmpty)
+        val sourceDocument = bytes.parseEpubXml()
+        val title = sourceDocument.title().trim().takeIf(String::isNotEmpty)
         val linkedStyles = linkedStyleSheets(
             archive,
             packageInfo,
             item.resourceId,
-            bytes,
+            sourceDocument,
             remoteResources,
         )
         val manifestByResource = packageInfo.manifest.values.associateBy(EpubManifestItem::resourceId)
@@ -110,11 +113,11 @@ internal class EpubDocumentPreparer {
         archive: EpubArchive,
         packageInfo: EpubPackage,
         documentResource: String,
-        bytes: ByteArray,
+        document: Document,
         remoteResources: MutableMap<String, BookRemoteResourceReference>,
     ): EpubLinkedStyles {
         val manifestByResource = packageInfo.manifest.values.associateBy(EpubManifestItem::resourceId)
-        val references = Jsoup.parse(bytes.toString(Charsets.UTF_8)).select("link[rel~=stylesheet][href]")
+        val references = document.select("link[rel~=stylesheet][href]")
             .map { it.attr("href") }
         val fontResources = linkedMapOf<String, String>()
         val css = references.mapNotNull { href ->
@@ -123,7 +126,7 @@ internal class EpubDocumentPreparer {
             val item = manifestByResource[reference.path]?.takeIf { it.mediaType == "text/css" }
                 ?: return@mapNotNull null
             val styleSheet = withContext(Dispatchers.IO) {
-                archive.readText(item.resourceId, EpubContract.MAX_STYLE_SHEET_BYTES)
+                archive.read(item.resourceId, EpubContract.MAX_STYLE_SHEET_BYTES).decodeEpubStyleSheet()
             }
             discoverFontResources(styleSheet, item.resourceId, manifestByResource, remoteResources, fontResources)
             styleSheet

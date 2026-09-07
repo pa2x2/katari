@@ -4,12 +4,12 @@ import mihon.book.api.BookNavigationItem
 import mihon.entry.interactions.book.format.epub.EpubContract
 import mihon.entry.interactions.book.format.epub.archive.EpubArchive
 import mihon.entry.interactions.book.format.epub.packageinfo.EpubManifestItem
-import org.jsoup.Jsoup
+import mihon.entry.interactions.book.format.epub.xml.parseEpubXml
 import org.jsoup.nodes.Element
 
 internal class EpubNavigationDocumentParser(private val archive: EpubArchive) {
     fun parse(item: EpubManifestItem): List<BookNavigationItem> {
-        val document = Jsoup.parse(archive.readText(item.resourceId, EpubContract.MAX_DOCUMENT_BYTES))
+        val document = archive.read(item.resourceId, EpubContract.MAX_DOCUMENT_BYTES).parseEpubXml()
         val navigation = document.getAllElements().firstOrNull { element ->
             element.normalName() == "nav" &&
                 listOf(element.attr("epub:type"), element.attr("type"))

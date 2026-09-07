@@ -23,7 +23,6 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 internal fun StatisticsEarlierActivityCard(
     duration: String,
-    beforeDate: String?,
     onClick: () -> Unit,
 ) {
     OutlinedCard(
@@ -45,12 +44,10 @@ internal fun StatisticsEarlierActivityCard(
                     modifier = Modifier.padding(top = 18.dp),
                     style = MaterialTheme.typography.headlineSmall,
                 )
-                beforeDate?.let {
-                    Text(
-                        text = it,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+                Text(
+                    text = stringResource(MR.strings.statistics_activity_without_details),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
             Spacer(Modifier.width(12.dp))
             Icon(

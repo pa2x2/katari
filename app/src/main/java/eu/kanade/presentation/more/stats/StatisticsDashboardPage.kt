@@ -64,7 +64,7 @@ internal fun StatisticsDashboardPage(
     onRetryActivity: () -> Unit,
     onOpenActivity: (EntryType?, StatsTrendPoint) -> Unit,
     onOpenEntry: (Long) -> Unit,
-    onOpenEarlierActivity: (EntryType?, Long?) -> Unit,
+    onOpenEarlierActivity: (EntryType?) -> Unit,
     onSaveLayout: (Long, String, StatisticsCardLayout) -> Unit,
 ) {
     val visibleTypes = state.types.filter { selectedType == null || it.type == selectedType }
@@ -209,12 +209,8 @@ internal fun StatisticsDashboardPage(
                             ) {
                                 StatisticsEarlierActivityCard(
                                     duration = formatter(visibleActivity.earlierDurationMillis),
-                                    beforeDate = null,
                                     onClick = {
-                                        onOpenEarlierActivity(
-                                            selectedType,
-                                            visibleActivity.trackingStartedAtEpochMillis,
-                                        )
+                                        onOpenEarlierActivity(selectedType)
                                     },
 
                                 )
