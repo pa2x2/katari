@@ -8,7 +8,6 @@ import androidx.compose.foundation.text.contextmenu.builder.item
 import androidx.compose.foundation.text.contextmenu.data.TextContextMenuKeys
 import androidx.compose.foundation.text.contextmenu.modifier.appendTextContextMenuComponents
 import androidx.compose.foundation.text.contextmenu.modifier.filterTextContextMenuComponents
-import androidx.compose.foundation.text.contextmenu.provider.LocalTextContextMenuToolbarProvider
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.text.selection.SelectionState
@@ -55,10 +54,6 @@ internal fun BookDocumentChapterSelectionContainer(
             selectionState = selectionState,
         )
     }
-    val platformToolbar = LocalTextContextMenuToolbarProvider.current
-    val selectionToolbar = remember(session, platformToolbar) {
-        BookDocumentSelectionSettlementToolbar(session, platformToolbar)
-    }
     SideEffect {
         session.interaction = interaction
         session.updateOwnerIdentity(ownerIdentity)
@@ -97,45 +92,44 @@ internal fun BookDocumentChapterSelectionContainer(
         }
     }
 
-    CompositionLocalProvider(
-        LocalTextSelectionColors provides selectionColors,
-        LocalTextContextMenuToolbarProvider provides selectionToolbar,
-    ) {
-        SelectionContainer(
-            state = selectionState,
-            modifier = modifier
-                .captureSelectionAtPointerDown(session)
-                .filterTextContextMenuComponents { component ->
-                    interaction.showTextSelectionMenu && component.key !== TextContextMenuKeys.CopyKey
+    ProvideBookDocumentSelectionSettlementToolbar(session, modifier) {
+        CompositionLocalProvider(LocalTextSelectionColors provides selectionColors) {
+            SelectionContainer(
+                state = selectionState,
+                modifier = Modifier
+                    .captureSelectionAtPointerDown(session)
+                    .filterTextContextMenuComponents { component ->
+                        interaction.showTextSelectionMenu && component.key !== TextContextMenuKeys.CopyKey
+                    }
+                    .appendTextContextMenuComponents {
+                        projection ?: return@appendTextContextMenuComponents
+                        item(BookDocumentCopySelectionKey, copyLabel) {
+                            coroutineScope.launch {
+                                clipboard.setClipEntry(
+                                    ClipData.newPlainText(copyLabel, projection.text).toClipEntry(),
+                                )
+                            }
+                            session.clearSelection()
+                            close()
+                        }
+                        val actions = interaction.selectionActions
+                        if (interaction.observeSelections && BookDocumentSelectionAction.Listen in actions) {
+                            item(BookDocumentListenSelectionKey, listenLabel) {
+                                session.performAction(BookDocumentSelectionAction.Listen)
+                                close()
+                            }
+                        }
+                        if (interaction.observeSelections && BookDocumentSelectionAction.Translate in actions) {
+                            item(BookDocumentTranslateSelectionKey, translateLabel) {
+                                session.performAction(BookDocumentSelectionAction.Translate)
+                                close()
+                            }
+                        }
+                    },
+            ) {
+                CompositionLocalProvider(LocalBookDocumentChapterSelection provides session) {
+                    content(session)
                 }
-                .appendTextContextMenuComponents {
-                    projection ?: return@appendTextContextMenuComponents
-                    item(BookDocumentCopySelectionKey, copyLabel) {
-                        coroutineScope.launch {
-                            clipboard.setClipEntry(
-                                ClipData.newPlainText(copyLabel, projection.text).toClipEntry(),
-                            )
-                        }
-                        session.clearSelection()
-                        close()
-                    }
-                    val actions = interaction.selectionActions
-                    if (interaction.observeSelections && BookDocumentSelectionAction.Listen in actions) {
-                        item(BookDocumentListenSelectionKey, listenLabel) {
-                            session.performAction(BookDocumentSelectionAction.Listen)
-                            close()
-                        }
-                    }
-                    if (interaction.observeSelections && BookDocumentSelectionAction.Translate in actions) {
-                        item(BookDocumentTranslateSelectionKey, translateLabel) {
-                            session.performAction(BookDocumentSelectionAction.Translate)
-                            close()
-                        }
-                    }
-                },
-        ) {
-            CompositionLocalProvider(LocalBookDocumentChapterSelection provides session) {
-                content(session)
             }
         }
     }
