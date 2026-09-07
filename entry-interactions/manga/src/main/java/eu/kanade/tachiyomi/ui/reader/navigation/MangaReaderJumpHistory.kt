@@ -17,14 +17,18 @@ internal class MangaReaderJumpHistory {
         location = Position(chapterId, pageIndex)
     }
 
-    fun rememberOrigin() {
-        location?.let { returnTarget = it }
+    suspend fun rememberSuccessfulJump(jump: suspend () -> Boolean): Boolean {
+        // Loading may report the destination before it completes; capture the origin first.
+        val origin = location
+        if (!jump()) return false
+        origin?.let { returnTarget = it }
+        return true
     }
 
     fun beginSeek(pageIndex: Int) {
         val origin = location ?: return
         if (seeking || origin.pageIndex == pageIndex) return
-        rememberOrigin()
+        returnTarget = origin
         seeking = true
     }
 

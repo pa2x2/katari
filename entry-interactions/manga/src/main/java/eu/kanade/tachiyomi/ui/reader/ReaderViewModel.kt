@@ -692,19 +692,17 @@ internal class ReaderViewModel @JvmOverloads constructor(
     /**
      * Called from the activity to load and set the next chapter as active.
      */
-    suspend fun loadNextChapter() {
-        val nextChapter = state.value.viewerChapters?.next ?: return
-        jumpHistory.rememberOrigin()
-        loadAdjacent(nextChapter)
+    suspend fun loadNextChapter(): Boolean {
+        val nextChapter = state.value.viewerChapters?.next ?: return false
+        return jumpHistory.rememberSuccessfulJump { loadAdjacent(nextChapter) }
     }
 
     /**
      * Called from the activity to load and set the previous chapter as active.
      */
-    suspend fun loadPreviousChapter() {
-        val prevChapter = state.value.viewerChapters?.previous ?: return
-        jumpHistory.rememberOrigin()
-        loadAdjacent(prevChapter)
+    suspend fun loadPreviousChapter(): Boolean {
+        val prevChapter = state.value.viewerChapters?.previous ?: return false
+        return jumpHistory.rememberSuccessfulJump { loadAdjacent(prevChapter) }
     }
 
     suspend fun returnToPreviousPosition(): Int? {

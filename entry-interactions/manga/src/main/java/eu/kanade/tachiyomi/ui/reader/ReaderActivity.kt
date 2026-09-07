@@ -743,8 +743,7 @@ class ReaderActivity : EntryInteractionActivity() {
      */
     private fun loadNextChapter() {
         lifecycleScope.launch {
-            viewModel.loadNextChapter()
-            moveToPageIndex(0)
+            if (viewModel.loadNextChapter()) moveToPageIndex(0)
         }
     }
 
@@ -754,8 +753,7 @@ class ReaderActivity : EntryInteractionActivity() {
      */
     private fun loadPreviousChapter() {
         lifecycleScope.launch {
-            viewModel.loadPreviousChapter()
-            moveToPageIndex(0)
+            if (viewModel.loadPreviousChapter()) moveToPageIndex(0)
         }
     }
 
