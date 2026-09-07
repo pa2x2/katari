@@ -73,11 +73,10 @@ class StatsScreen : Screen() {
                     )
                 },
                 onOpenEntry = { navigator.push(EntryScreen(it)) },
-                onOpenEarlierActivity = { type, trackingStartedAtEpochMillis ->
+                onOpenEarlierActivity = { type ->
                     navigator.push(
                         StatisticsEarlierActivityScreen(
                             typeName = type?.name,
-                            trackingStartedAtEpochMillis = trackingStartedAtEpochMillis,
                         ),
                     )
                 },

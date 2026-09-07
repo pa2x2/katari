@@ -33,17 +33,12 @@ import tachiyomi.domain.statistics.model.StatisticsTopEntry
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.LoadingScreen
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 
 @Composable
 fun StatisticsEarlierActivityScreenContent(
     state: StatisticsEarlierActivityScreenModel.State,
     selectedType: EntryType?,
     types: List<StatsType>,
-    trackingStartedAtEpochMillis: Long?,
     paddingValues: PaddingValues,
     onEntryClick: (Long) -> Unit,
 ) {
@@ -82,17 +77,11 @@ fun StatisticsEarlierActivityScreenContent(
                                 style = MaterialTheme.typography.headlineMedium,
                                 fontWeight = FontWeight.SemiBold,
                             )
-                            trackingStartedAtEpochMillis?.let { startedAt ->
-                                Spacer(Modifier.height(4.dp))
-                                val date = Instant.ofEpochMilli(startedAt)
-                                    .atZone(ZoneId.systemDefault())
-                                    .toLocalDate()
-                                    .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
-                                Text(
-                                    text = stringResource(MR.strings.statistics_before_date, date),
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = stringResource(MR.strings.statistics_activity_without_details),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
                         }
                     }
                 }

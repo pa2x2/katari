@@ -19,15 +19,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 
 @Composable
 internal fun StatisticsEarlierActivityCard(
     duration: String,
-    trackingStartedAtEpochMillis: Long?,
     onClick: () -> Unit,
 ) {
     OutlinedCard(
@@ -49,15 +44,8 @@ internal fun StatisticsEarlierActivityCard(
                     modifier = Modifier.padding(top = 18.dp),
                     style = MaterialTheme.typography.headlineSmall,
                 )
-                val cutoff = trackingStartedAtEpochMillis?.let { startedAt ->
-                    val date = Instant.ofEpochMilli(startedAt)
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDate()
-                        .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
-                    stringResource(MR.strings.statistics_before_date, date)
-                } ?: stringResource(MR.strings.statistics_before_tracking)
                 Text(
-                    text = cutoff,
+                    text = stringResource(MR.strings.statistics_activity_without_details),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }

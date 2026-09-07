@@ -16,7 +16,6 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 data class StatisticsEarlierActivityScreen(
     private val typeName: String?,
-    private val trackingStartedAtEpochMillis: Long?,
 ) : Screen() {
 
     @Composable
@@ -38,7 +37,6 @@ data class StatisticsEarlierActivityScreen(
                 state = state,
                 selectedType = screenModel.type,
                 types = screenModel.types,
-                trackingStartedAtEpochMillis = trackingStartedAtEpochMillis,
                 paddingValues = paddingValues,
                 onEntryClick = { navigator.push(EntryScreen(it)) },
             )
