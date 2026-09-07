@@ -27,34 +27,21 @@ class DownloadQueueScreenModel(
 
     lateinit var controllerBinding: DownloadListBinding
     var adapter: DownloadQueueAdapter? = null
+    private val reordering = DownloadQueueReordering(downloadRuntime) { adapter }
 
     val listener = object : DownloadQueueAdapter.DownloadQueueItemListener {
         override fun onItemReleased(position: Int) {
-            val adapter = adapter ?: return
-            val reorderedItems = mutableListOf<EntryDownloadQueueItem>()
-            adapter.headerItems.forEach { header ->
-                (header as DownloadQueueHeaderItem).subItems.forEach { item ->
-                    reorderedItems += item.payloadAsDownloadQueueItem()
-                }
-            }
-            downloadRuntime.reorderQueue(reorderedItems)
+            reordering.submitDraggedOrder()
         }
 
         override fun onMenuItemClick(position: Int, menuItem: MenuItem) {
             val selectedItem = adapter?.getItem(position) as? DownloadQueueItem ?: return
             when (menuItem.itemId) {
                 R.id.move_to_top, R.id.move_to_bottom -> {
-                    val header = selectedItem.header as DownloadQueueHeaderItem
-                    header.removeSubItem(selectedItem)
-                    if (menuItem.itemId == R.id.move_to_top) {
-                        header.addSubItem(0, selectedItem)
-                    } else {
-                        header.addSubItem(selectedItem)
-                    }
-                    onItemReleased(position)
+                    reordering.moveItem(selectedItem, moveToTop = menuItem.itemId == R.id.move_to_top)
                 }
                 R.id.move_to_top_series, R.id.move_to_bottom_series -> {
-                    moveSeries(selectedItem, moveToTop = menuItem.itemId == R.id.move_to_top_series)
+                    reordering.moveSeries(selectedItem, moveToTop = menuItem.itemId == R.id.move_to_top_series)
                 }
                 R.id.cancel_download -> {
                     cancelItem(selectedItem)
@@ -130,18 +117,7 @@ class DownloadQueueScreenModel(
     }
 
     fun <R : Comparable<R>> reorderQueue(selector: (DownloadQueueItem) -> R, reverse: Boolean = false) {
-        val adapter = adapter ?: return
-        val reorderedItems = mutableListOf<EntryDownloadQueueItem>()
-        adapter.headerItems.forEach { headerItem ->
-            val header = headerItem as DownloadQueueHeaderItem
-            header.subItems = header.subItems.sortedBy(selector).toMutableList().apply {
-                if (reverse) reverse()
-            }
-            header.subItems.forEach { item ->
-                reorderedItems += item.payloadAsDownloadQueueItem()
-            }
-        }
-        downloadRuntime.reorderQueue(reorderedItems)
+        reordering.sort(selector, reverse)
     }
 
     private fun updateDownload(row: DownloadQueueItem, download: EntryDownloadQueueItem) {
@@ -152,11 +128,6 @@ class DownloadQueueScreenModel(
             holder.notifyProgress()
             holder.notifyProgressText()
         }
-    }
-
-    private fun moveSeries(selectedItem: DownloadQueueItem, moveToTop: Boolean) {
-        val selected = selectedItem.payloadAsDownloadQueueItem()
-        downloadRuntime.reorderEntry(selected.entryType, selected.entryId, moveToTop)
     }
 
     private fun cancelItem(selectedItem: DownloadQueueItem) {
