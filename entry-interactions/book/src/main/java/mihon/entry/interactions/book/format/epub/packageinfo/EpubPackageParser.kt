@@ -7,9 +7,8 @@ import mihon.entry.interactions.book.format.epub.xml.EPUB_CONTAINER_NAMESPACE
 import mihon.entry.interactions.book.format.epub.xml.EPUB_METADATA_NAMESPACE
 import mihon.entry.interactions.book.format.epub.xml.EPUB_PACKAGE_NAMESPACE
 import mihon.entry.interactions.book.format.epub.xml.hasEpubXmlName
-import org.jsoup.Jsoup
+import mihon.entry.interactions.book.format.epub.xml.parseEpubXml
 import org.jsoup.nodes.Element
-import org.jsoup.parser.Parser
 
 internal class EpubPackageParser(
     private val archive: EpubArchive,
@@ -111,11 +110,8 @@ internal class EpubPackageParser(
         }
     }
 
-    private fun parseXml(resourceId: String): Element = Jsoup.parse(
-        archive.readText(resourceId, EpubContract.MAX_XML_BYTES),
-        "",
-        Parser.xmlParser(),
-    )
+    private fun parseXml(resourceId: String): Element =
+        archive.read(resourceId, EpubContract.MAX_XML_BYTES).parseEpubXml()
 
     private companion object {
         const val CONTAINER_RESOURCE = "META-INF/container.xml"
