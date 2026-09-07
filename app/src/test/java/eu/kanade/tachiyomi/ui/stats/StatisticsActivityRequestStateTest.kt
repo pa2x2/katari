@@ -28,9 +28,9 @@ class StatisticsActivityRequestStateTest {
     }
 
     @Test
-    fun `silent rollback refresh preserves failed target for retry`() {
-        val displayed = window(StatsRange.SEVEN_DAYS, "2026-08-23")
-        val attempted = window(StatsRange.THIRTY_DAYS, "2026-08-23")
+    fun `silent rollback refresh preserves the month navigation anchor for retry`() {
+        val displayed = window(StatsRange.ONE_YEAR, "2026-03-31")
+        val attempted = displayed.shiftedByBuckets(1)
         val failed = ActivityState.Available(activity(displayed), failedTarget = attempted)
         val rollbackRequest = StatisticsActivityLoadRequest(displayed, 0L)
 
@@ -46,6 +46,8 @@ class StatisticsActivityRequestStateTest {
         loaded.data.window shouldBe displayed
         loaded.failedTarget shouldBe attempted
         loaded.loadingTarget shouldBe null
+        val retried = StatsRange.ONE_YEAR.windowForSelection(loaded.failedTarget, displayed.endDate)
+        retried.shiftedByBuckets(-1).endDate shouldBe displayed.endDate
     }
 
     private fun window(range: StatsRange, endDate: String): StatsActivityWindow {
