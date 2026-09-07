@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.8.2] - 2026-09-07
+
+### 🐛 Fixed
+
+- Restored the book reader's text-selection menu when enabled, including the Copy action.
+- Book reader page taps now keep working after an adjacent chapter finishes loading.
+- Book table headers now preserve authored text direction, line spacing, and indentation without overlapping the next row.
+- EPUB books now respect text and stylesheet encodings and correctly resolve resource names and links containing emoji or other supplementary Unicode characters.
+- Failed manga chapter navigation now preserves the current page and the existing `Return` position.
+- Editing filters or saving a preset after a new search now keeps that search instead of restoring the previously applied preset's query or listing mode.
+- Download queue rows now reflect sorting and move-to-top or move-to-bottom actions, including while downloads are paused.
+- Statistics month navigation now preserves the intended day across shorter months and restores the correct date when navigating back.
+- Earlier activity in Statistics now identifies activity without detailed records instead of showing a misleading cutoff date.
+
 ## [1.8.1] - 2026-09-06
 
 ### 🐛 Fixed
@@ -395,7 +409,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.8.1...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.8.2...HEAD
+[1.8.2]: https://github.com/pa2x2/katari/releases/tag/v1.8.2
 [1.8.1]: https://github.com/pa2x2/katari/releases/tag/v1.8.1
 [1.8.0]: https://github.com/pa2x2/katari/releases/tag/v1.8.0
 [1.7.0]: https://github.com/pa2x2/katari/releases/tag/v1.7.0
