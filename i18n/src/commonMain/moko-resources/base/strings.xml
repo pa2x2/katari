@@ -1602,6 +1602,7 @@
     <string name="statistics_episodes_watched">Episodes watched</string>
     <string name="statistics_earlier_activity">Earlier activity</string>
     <string name="statistics_before_date">Before %s</string>
+    <string name="statistics_before_tracking">Before detailed activity tracking</string>
     <string name="statistics_by_media">By media</string>
     <string name="statistics_incognito_active">Activity isn’t recorded in incognito mode</string>
     <string name="statistics_activity_patterns">Activity patterns</string>

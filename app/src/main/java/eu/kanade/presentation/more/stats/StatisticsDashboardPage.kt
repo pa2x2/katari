@@ -209,7 +209,7 @@ internal fun StatisticsDashboardPage(
                             ) {
                                 StatisticsEarlierActivityCard(
                                     duration = formatter(visibleActivity.earlierDurationMillis),
-                                    beforeDate = null,
+                                    trackingStartedAtEpochMillis = visibleActivity.trackingStartedAtEpochMillis,
                                     onClick = {
                                         onOpenEarlierActivity(
                                             selectedType,
