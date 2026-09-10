@@ -29,7 +29,9 @@ internal class BookSelectionActionModeAvoidance {
         // keep the native placement. A resize towards the toolbar must reposition, otherwise the
         // toolbar keeps its previously measured position and overlaps the grown popup. This is
         // most visible in paged mode with selections close to the top/bottom edge, where the
-        // toolbar is forced onto the popup side.
+        // toolbar is forced onto the popup side. Compare the united content rects so a popup
+        // change that leaves the toolbar edge stable (for example growing into the selection
+        // without moving the union top/bottom) does not blink the native menu.
         if (
             requiresActionModeReposition(
                 selectionBounds,
@@ -115,58 +117,44 @@ internal fun requiresActionModeReposition(
     viewportInWindow: ComposeRect? = null,
     toolbarHeightPx: Float = 0f,
 ): Boolean {
-    val previousPlacement = previousPopupBounds.placementRelativeTo(selectionBounds)
-    val placement = popupBounds.placementRelativeTo(selectionBounds)
-    if (previousPlacement != placement) return true
-    if (previousPlacement == null) return false
-    if (previousPopupBounds == null || popupBounds == null) return true
-    if (
-        !previousPopupBounds.hasFiniteBounds() ||
-        !popupBounds.hasFiniteBounds() ||
-        !selectionBounds.hasFiniteBounds()
-    ) {
+    if (!selectionBounds.hasFiniteBounds()) {
         return previousPopupBounds != popupBounds
     }
-    return when (previousPlacement) {
-        BookSelectionPopupPlacement.Below -> {
-            // Pure resizes keep the anchored edge stable. A moved anchor (scroll/page change)
-            // must follow the selection.
-            if (kotlin.math.abs(popupBounds.top - previousPopupBounds.top) > VERTICAL_TOLERANCE_PX) {
-                return true
-            }
-            if (popupBounds.bottom <= previousPopupBounds.bottom + VERTICAL_TOLERANCE_PX) {
-                return false
-            }
-            // The popup grew towards the bottom. When the native toolbar sits above the
-            // selection its position only depends on the stable selection top. When the
-            // selection is close to the viewport top the toolbar is forced below the popup
-            // and must move with the grown bottom edge.
-            val viewport = viewportInWindow?.takeIf { it.hasFiniteBounds() } ?: return true
-            val availableAbove = selectionBounds.top - viewport.top
-            availableAbove < toolbarHeightPx
-        }
-        BookSelectionPopupPlacement.Above -> {
-            if (kotlin.math.abs(popupBounds.bottom - previousPopupBounds.bottom) > VERTICAL_TOLERANCE_PX) {
-                return true
-            }
-            if (popupBounds.top >= previousPopupBounds.top - VERTICAL_TOLERANCE_PX) {
-                return false
-            }
-            val viewport = viewportInWindow?.takeIf { it.hasFiniteBounds() } ?: return true
-            val previousUnionTop = minOf(selectionBounds.top, previousPopupBounds.top)
-            val previousUnionBottom = maxOf(selectionBounds.bottom, previousPopupBounds.bottom)
-            val availableAbove = previousUnionTop - viewport.top
-            val availableBelow = viewport.bottom - previousUnionBottom
-            val toolbarWasAbove = if (availableAbove >= toolbarHeightPx) {
-                true
-            } else if (availableBelow >= toolbarHeightPx) {
-                false
-            } else {
-                true
-            }
-            toolbarWasAbove
-        }
-        BookSelectionPopupPlacement.Overlapping -> previousPopupBounds != popupBounds
+    val previousContent = selectionBounds.unionedWith(previousPopupBounds)
+    val content = selectionBounds.unionedWith(popupBounds)
+    if (!previousContent.hasFiniteBounds() || !content.hasFiniteBounds()) {
+        return previousPopupBounds != popupBounds
+    }
+    // Horizontal-only changes keep the toolbar's vertical anchor stable. Ignoring them avoids
+    // blinking the native menu for width growth that cannot create a new vertical collision.
+    val topChanged = kotlin.math.abs(content.top - previousContent.top) > VERTICAL_TOLERANCE_PX
+    val bottomChanged =
+        kotlin.math.abs(content.bottom - previousContent.bottom) > VERTICAL_TOLERANCE_PX
+    if (!topChanged && !bottomChanged) return false
+    // A moved anchor (scroll/page change) shifts the whole content rect and must follow.
+    if (topChanged && bottomChanged) return true
+    // A single-edge change is a popup growth/shrink. Only growth towards the toolbar side can
+    // overlap it; shrink away from the toolbar keeps the placement stable without blinking.
+    // Dismissal is the exception: when the popup is gone the toolbar must return to the
+    // selection anchor when it had been pushed onto the popup side, otherwise it stays
+    // detached far from the selection.
+    val viewport = viewportInWindow?.takeIf { it.hasFiniteBounds() } ?: return true
+    val availableAbove = previousContent.top - viewport.top
+    val availableBelow = viewport.bottom - previousContent.bottom
+    val toolbarAbove = if (availableAbove >= toolbarHeightPx) {
+        true
+    } else if (availableBelow >= toolbarHeightPx) {
+        false
+    } else {
+        true
+    }
+    if (popupBounds == null && previousPopupBounds?.hasFiniteBounds() == true) {
+        return if (topChanged) toolbarAbove else !toolbarAbove
+    }
+    return if (topChanged) {
+        toolbarAbove && content.top < previousContent.top - VERTICAL_TOLERANCE_PX
+    } else {
+        !toolbarAbove && content.bottom > previousContent.bottom + VERTICAL_TOLERANCE_PX
     }
 }
 
@@ -194,19 +182,14 @@ private fun captureViewportInWindow(view: View): ComposeRect? {
 private const val TOOLBAR_HEIGHT_DP = 72f
 private const val VERTICAL_TOLERANCE_PX = 1f
 
-private fun ComposeRect?.placementRelativeTo(selectionBounds: ComposeRect): BookSelectionPopupPlacement? {
-    if (this == null || !hasFiniteBounds() || !selectionBounds.hasFiniteBounds()) return null
-    return when {
-        bottom <= selectionBounds.top -> BookSelectionPopupPlacement.Above
-        top >= selectionBounds.bottom -> BookSelectionPopupPlacement.Below
-        else -> BookSelectionPopupPlacement.Overlapping
-    }
-}
-
-private enum class BookSelectionPopupPlacement {
-    Above,
-    Below,
-    Overlapping,
+private fun ComposeRect.unionedWith(other: ComposeRect?): ComposeRect {
+    if (other == null || !other.hasFiniteBounds()) return this
+    return ComposeRect(
+        left = minOf(left, other.left),
+        top = minOf(top, other.top),
+        right = maxOf(right, other.right),
+        bottom = maxOf(bottom, other.bottom),
+    )
 }
 
 private fun ComposeRect.hasFiniteBounds(): Boolean =
