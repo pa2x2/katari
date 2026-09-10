@@ -5,6 +5,7 @@
 ### 🐛 Fixed
 
 - Book reader text-selection menu now follows translation popups as they appear, grow, or close, and stays with the selected text when the popup is hidden.
+- Book reader table of contents no longer shows a duplicate nested entry for the current chapter.
 
 ## [1.8.4] - 2026-09-10
 

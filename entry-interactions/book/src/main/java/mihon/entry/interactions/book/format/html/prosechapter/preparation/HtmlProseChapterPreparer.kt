@@ -6,8 +6,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mihon.book.api.BookFailure
 import mihon.book.api.BookFailureReason
-import mihon.book.api.BookLocator
-import mihon.book.api.BookNavigationItem
 import mihon.book.api.BookPublication
 import mihon.book.api.BookReadingDirection
 import mihon.book.api.BookResource
@@ -106,12 +104,9 @@ internal class HtmlProseChapterPreparer : BookContentPreparer {
                     .normalizedBookContentLanguages(),
                 readingDirection = prepared.readingDirection,
                 readingOrder = listOf(BookResource(resource.id, HtmlProseChapterContract.FORMAT, resource.title)),
-                navigation = listOf(
-                    BookNavigationItem(
-                        title = resource.title,
-                        target = BookLocator(resourceId = resource.id, progression = 0.0),
-                    ),
-                ),
+                // Single-resource chapters are already reachable through their chapter row.
+                // Exposing a single start item would duplicate that row as nested navigation.
+                navigation = emptyList(),
             )
             BookPreparationResult.Success(
                 PreparedBookDocumentPublication(
