@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.8.5] - 2026-09-10
+
+### 🐛 Fixed
+
+- Book reader text-selection menu now follows translation popups as they appear, grow, or close, and stays with the selected text when the popup is hidden.
+
 ## [1.8.4] - 2026-09-10
 
 ### 🐛 Fixed
@@ -421,7 +427,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.8.4...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.8.5...HEAD
+[1.8.5]: https://github.com/pa2x2/katari/releases/tag/v1.8.5
 [1.8.4]: https://github.com/pa2x2/katari/releases/tag/v1.8.4
 [1.8.3]: https://github.com/pa2x2/katari/releases/tag/v1.8.3
 [1.8.2]: https://github.com/pa2x2/katari/releases/tag/v1.8.2

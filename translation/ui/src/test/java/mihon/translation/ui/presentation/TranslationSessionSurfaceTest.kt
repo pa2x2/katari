@@ -1,5 +1,6 @@
 package mihon.translation.ui.presentation
 
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
@@ -196,6 +197,53 @@ class TranslationSessionSurfaceTest {
         )
 
         availability shouldBe TranslationPopupPlacementAvailability.AnchorOutsideViewport
+    }
+
+    @Test
+    fun `only visible placements are reported for toolbar avoidance`() {
+        val reported = mutableListOf<Rect?>()
+        val provider = TranslationPopupPositionProvider(
+            anchor = TranslationSelectionAnchor(400f, 200f, 600f, 240f),
+            hostSize = IntSize(1000, 1000),
+            windowInsets = TranslationWindowInsets(0, 0, 0, 0),
+            edgeMargin = 16,
+            anchorGap = 8,
+            onPlacementAvailabilityChanged = {},
+            onPopupBoundsChanged = { reported.add(it) },
+        )
+
+        provider.calculatePosition(
+            anchorBounds = IntRect(50, 70, 1050, 1070),
+            windowSize = IntSize(1200, 1300),
+            layoutDirection = LayoutDirection.Ltr,
+            popupContentSize = IntSize(300, 200),
+        )
+
+        reported.size shouldBe 1
+        (reported.single() != null) shouldBe true
+    }
+
+    @Test
+    fun `invisible fallback positions are reported as null for toolbar avoidance`() {
+        val reported = mutableListOf<Rect?>()
+        val provider = TranslationPopupPositionProvider(
+            anchor = TranslationSelectionAnchor(400f, -100f, 600f, -60f),
+            hostSize = IntSize(1000, 1000),
+            windowInsets = TranslationWindowInsets(0, 0, 0, 0),
+            edgeMargin = 16,
+            anchorGap = 8,
+            onPlacementAvailabilityChanged = {},
+            onPopupBoundsChanged = { reported.add(it) },
+        )
+
+        provider.calculatePosition(
+            anchorBounds = IntRect(50, 70, 1050, 1070),
+            windowSize = IntSize(1200, 1300),
+            layoutDirection = LayoutDirection.Ltr,
+            popupContentSize = IntSize(300, 200),
+        )
+
+        reported shouldBe listOf(null)
     }
 
     private fun calculate(
