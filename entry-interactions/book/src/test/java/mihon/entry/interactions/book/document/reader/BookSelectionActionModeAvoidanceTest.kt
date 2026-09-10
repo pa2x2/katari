@@ -83,7 +83,7 @@ internal class BookSelectionActionModeAvoidanceTest {
     }
 
     @Test
-    fun `popup participation changes reposition the native menu`() {
+    fun `popup appearing away from the native menu keeps it stable`() {
         val popupBounds = Rect(left = 40f, top = 474f, right = 260f, bottom = 700f)
 
         requiresActionModeReposition(
@@ -92,13 +92,63 @@ internal class BookSelectionActionModeAvoidanceTest {
             popupBounds,
             viewport,
             toolbarHeightPx,
-        ) shouldBe true
+        ) shouldBe false
         requiresActionModeReposition(
             selectionBounds,
             popupBounds,
             null,
             viewport,
             toolbarHeightPx,
+        ) shouldBe false
+    }
+
+    @Test
+    fun `popup appearing towards the native menu repositions it`() {
+        val selection = Rect(left = 100f, top = 80f, right = 200f, bottom = 130f)
+        val popupBounds = Rect(left = 40f, top = 154f, right = 260f, bottom = 400f)
+
+        requiresActionModeReposition(
+            selection,
+            null,
+            popupBounds,
+            viewport,
+            toolbarHeightPx,
         ) shouldBe true
+        requiresActionModeReposition(
+            selection,
+            popupBounds,
+            null,
+            viewport,
+            toolbarHeightPx,
+        ) shouldBe true
+    }
+
+    @Test
+    fun `popup growing into the selection without moving the union keeps the native menu stable`() {
+        val selection = Rect(left = 369f, top = 965f, right = 382f, bottom = 1126f)
+        val loadingBounds = Rect(left = 36f, top = 730f, right = 837f, bottom = 911f)
+        val resultBounds = Rect(left = 36f, top = 730f, right = 837f, bottom = 1007f)
+
+        requiresActionModeReposition(
+            selection,
+            loadingBounds,
+            resultBounds,
+            viewport,
+            toolbarHeightPx,
+        ) shouldBe false
+    }
+
+    @Test
+    fun `popup width growth without vertical change keeps the native menu stable`() {
+        val loadingBounds = Rect(left = 80f, top = 474f, right = 220f, bottom = 550f)
+        val resultBounds = Rect(left = 40f, top = 474f, right = 260f, bottom = 550f)
+
+        requiresActionModeReposition(
+            selectionBounds,
+            loadingBounds,
+            resultBounds,
+            viewport,
+            toolbarHeightPx,
+        ) shouldBe false
     }
 }
