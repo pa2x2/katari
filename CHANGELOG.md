@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.8.4] - 2026-09-10
+
+### 🐛 Fixed
+
+- Book reader text-selection menu no longer blinks when translation results arrive without changing its position.
+
 ## [1.8.3] - 2026-09-09
 
 ### 🐛 Fixed
@@ -415,7 +421,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.8.3...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.8.4...HEAD
+[1.8.4]: https://github.com/pa2x2/katari/releases/tag/v1.8.4
 [1.8.3]: https://github.com/pa2x2/katari/releases/tag/v1.8.3
 [1.8.2]: https://github.com/pa2x2/katari/releases/tag/v1.8.2
 [1.8.1]: https://github.com/pa2x2/katari/releases/tag/v1.8.1
