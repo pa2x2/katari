@@ -468,7 +468,7 @@ internal class TranslationPopupPositionProvider(
         onPlacementAvailabilityChanged(availability)
         onPopupBoundsChanged(
             resolvedPosition.takeIf {
-                availability != TranslationPopupPlacementAvailability.NeedsSheet
+                availability == TranslationPopupPlacementAvailability.Fits
             }?.let {
                 Rect(
                     left = it.x.toFloat(),
