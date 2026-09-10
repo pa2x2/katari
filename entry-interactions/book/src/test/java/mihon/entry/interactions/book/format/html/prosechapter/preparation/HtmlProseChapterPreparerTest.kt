@@ -53,6 +53,7 @@ class HtmlProseChapterPreparerTest {
         assertEquals(listOf("chapter.html"), result.publication.publication.readingOrder.map { it.id })
         assertEquals(listOf("fr-FR", "en"), result.publication.publication.languages)
         assertEquals(setOf("start"), model.documents.single().anchors.keys)
+        assertTrue(result.publication.publication.navigation.isEmpty())
     }
 
     @Test

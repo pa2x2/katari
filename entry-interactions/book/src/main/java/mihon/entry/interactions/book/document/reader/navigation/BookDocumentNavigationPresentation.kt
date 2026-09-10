@@ -30,7 +30,9 @@ internal fun BookDocumentReaderState.documentNavigationPresentation(): BookDocum
                 bookmark = chapter.bookmark,
                 progressLabel = navigationPresentation.progressLabels[chapter.id],
             ),
-        ) + publicationNavigation[chapter.id].orEmpty().navigationRows(chapter, 1)
+        ) + publicationNavigation[chapter.id].orEmpty()
+            .withoutRedundantChapterStart()
+            .navigationRows(chapter, 1)
     }
     val sections = loadedSections[currentChapterId]?.sections.orEmpty()
     fun progression(locator: BookLocator, saved: Boolean = false): Float? {
@@ -69,4 +71,26 @@ private fun List<BookNavigationItem>.navigationRows(
             depth = depth,
         ),
     ) + item.children.navigationRows(chapter, depth + 1)
+}
+
+/**
+ * A single top-level item targeting its resource start duplicates its chapter row.
+ *
+ * Single-resource prose publications expose one such item (chapter title at progression 0).
+ * The chapter row already navigates to the beginning, so rendering both produces the
+ * visited-chapter nested duplicates. Meaningful internal navigation either has children
+ * or targets a fragment/non-zero position and is retained.
+ */
+private fun List<BookNavigationItem>.withoutRedundantChapterStart(): List<BookNavigationItem> {
+    if (size != 1) return this
+    val single = single()
+    if (single.children.isNotEmpty()) return this
+    val target = single.target
+    if (target.fragments.isNotEmpty()) return this
+    if (target.logicalPosition != null) return this
+    if (target.progression != null && target.progression != 0.0) return this
+    if (target.totalProgression != null && target.totalProgression != 0.0) return this
+    if (target.textContext != null) return this
+    if (target.extensions.isNotEmpty()) return this
+    return emptyList()
 }
