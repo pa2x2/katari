@@ -24,8 +24,7 @@ internal class CatalogFilterReset(
             val defaults = filters.detachedCopy()
             retainSessions(filters)
             state.update {
-                it.copy(
-                    filters = filters,
+                it.withRepublishedDraftFilters(filters).copy(
                     defaultFilters = defaults,
                     repairIssues = emptyList(),
                     filterState = FilterUiState.Ready,

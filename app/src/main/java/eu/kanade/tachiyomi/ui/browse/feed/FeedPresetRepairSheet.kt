@@ -26,6 +26,7 @@ internal fun FeedPresetRepairSheet(screenModel: CatalogScreenModel, state: Catal
     SourceFilterDialog(
         onDismissRequest = screenModel::dismissDialog,
         filters = state.filters,
+        filterRevision = state.filterRevision,
         presets = emptyList(),
         currentPresetName = screenModel.draftCustomPreset()?.name,
         onReset = screenModel::resetFilters,
