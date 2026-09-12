@@ -60,6 +60,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 fun SourceFilterDialog(
     onDismissRequest: () -> Unit,
     filters: EntryFilterList,
+    filterRevision: Int = 0,
     isLoading: Boolean = false,
     errorMessage: String? = null,
     presets: List<SourceFeedPreset>,
@@ -104,7 +105,7 @@ fun SourceFilterDialog(
     val dateEditor = remember { DateFilterEditorSession() }
     val updateFilters = { onUpdate(filters) }
     val rootListState = rememberLazyListState()
-    var route by rememberSaveable(stateSaver = sourceFilterRouteSaver(filters)) {
+    var route by rememberSaveable(stateSaver = sourceFilterRouteSaver()) {
         mutableStateOf<SourceFilterRoute>(SourceFilterRoute.Root)
     }
     var activeOnly by rememberSaveable { mutableStateOf(false) }
@@ -213,7 +214,9 @@ fun SourceFilterDialog(
                                     onShowAll = { activeOnly = false },
                                 ) { filter, selectedOnly ->
                                     FilterItem(filter, updateFilters, {
-                                        route = SourceFilterRoute.PagedGroup(it)
+                                        filters.pathTo(it)?.let { path ->
+                                            route = SourceFilterRoute.PagedGroup(path)
+                                        }
                                     }, onRequestSuggestions, selectedOnly) {
                                         onResetGroup(it)
                                     }
@@ -245,31 +248,42 @@ fun SourceFilterDialog(
                         }
                     }
                     is SourceFilterRoute.PagedGroup -> {
-                        PagedGroupFilterContent(
-                            filter = currentRoute.filter,
-                            onBack = leavePagedGroup,
-                            onFilter = filterAndDismiss,
-                            onReset = { onResetGroup(currentRoute.filter) },
-                            canApply = !isLoading && !isError && pendingFilterEdits == 0 && validation.isEmpty() &&
-                                repairIssues.isEmpty() && !repairNeedsSave,
-                            onEditItem = { item, value, complete ->
-                                onEditPagedItem(currentRoute.filter, item, value, complete)
-                            },
-                            onRequestSuggestions = onRequestSuggestions,
-                            onRequestNavigation = { scope, query ->
-                                onRequestPagedFilterNavigation(currentRoute.filter, scope, query)
-                            },
-                            browseSession = pagedFilterBrowseSession(currentRoute.filter),
-                            pagingSourceFactory = { scope, query, reason, initialAnchor ->
-                                onRequestPagedFilterItems(
-                                    currentRoute.filter,
-                                    scope,
-                                    query,
-                                    reason,
-                                    initialAnchor,
-                                )
-                            },
-                        )
+                        val liveFilter = filters.resolvePagedGroup(currentRoute.path)
+                        if (liveFilter == null) {
+                            androidx.compose.runtime.LaunchedEffect(currentRoute.path) {
+                                leavePagedGroup()
+                            }
+                            androidx.compose.foundation.layout.Box(
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        } else {
+                            PagedGroupFilterContent(
+                                filter = liveFilter,
+                                filterRevision = filterRevision,
+                                onBack = leavePagedGroup,
+                                onFilter = filterAndDismiss,
+                                onReset = { onResetGroup(liveFilter) },
+                                canApply = !isLoading && !isError && pendingFilterEdits == 0 && validation.isEmpty() &&
+                                    repairIssues.isEmpty() && !repairNeedsSave,
+                                onEditItem = { item, value, complete ->
+                                    onEditPagedItem(liveFilter, item, value, complete)
+                                },
+                                onRequestSuggestions = onRequestSuggestions,
+                                onRequestNavigation = { scope, query ->
+                                    onRequestPagedFilterNavigation(liveFilter, scope, query)
+                                },
+                                browseSession = pagedFilterBrowseSession(liveFilter),
+                                pagingSourceFactory = { scope, query, reason, initialAnchor ->
+                                    onRequestPagedFilterItems(
+                                        liveFilter,
+                                        scope,
+                                        query,
+                                        reason,
+                                        initialAnchor,
+                                    )
+                                },
+                            )
+                        }
                     }
                 }
             }

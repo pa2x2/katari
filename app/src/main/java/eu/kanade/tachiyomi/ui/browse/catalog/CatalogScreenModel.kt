@@ -303,7 +303,16 @@ class CatalogScreenModel(
                 state.value.defaultFilters,
             )
         }
-        mutableState.update { it.copy(repairIssues = it.repairIssues.filterNot { candidate -> candidate === issue }) }
+        mutableState.update {
+            val withDraft = if (remove && issue.target != null) {
+                it.withRepublishedDraftFilters(it.filters)
+            } else {
+                it
+            }
+            withDraft.copy(
+                repairIssues = withDraft.repairIssues.filterNot { candidate -> candidate === issue },
+            )
+        }
     }
 
     fun saveRepairedPreset() {
@@ -323,7 +332,7 @@ class CatalogScreenModel(
 
     fun setFilters(filters: EntryFilterList) {
         pagedFilterBrowseSessions.retain(filters)
-        mutableState.update { it.copy(filters = filters) }
+        mutableState.update { it.withRepublishedDraftFilters(filters) }
     }
 
     suspend fun filterSuggestions(
@@ -430,8 +439,7 @@ class CatalogScreenModel(
                 } else {
                     Listing.Search(query = genreName, filters = defaultFilters)
                 }
-                it.copy(
-                    filters = defaultFilters,
+                it.withRepublishedDraftFilters(defaultFilters).copy(
                     listing = listing,
                     toolbarQuery = listing.query,
                     filterState = FilterUiState.Ready,
@@ -937,8 +945,7 @@ class CatalogScreenModel(
             }
             pagedFilterBrowseSessions.retain(filters)
             mutableState.update {
-                it.copy(
-                    filters = filters,
+                it.withRepublishedDraftFilters(filters).copy(
                     defaultFilters = defaults,
                     draftMode = preset.listingMode,
                     draftQuery = preset.query,
@@ -1156,6 +1163,7 @@ class CatalogScreenModel(
     data class State(
         val listing: Listing,
         val filters: EntryFilterList = EntryFilterList(),
+        val filterRevision: Int = 0,
         val filterState: FilterUiState = FilterUiState.Uninitialized,
         val filterResetPending: Boolean = false,
         val appliedFiltersReady: Boolean = false,

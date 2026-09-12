@@ -21,11 +21,10 @@ internal fun CatalogScreenModel.State.initializeForSource(
         else -> listing
     }
 
-    return copy(
+    return withRepublishedDraftFilters(filters).copy(
         filterState = FilterUiState.Ready,
         filterResetPending = false,
         listing = updatedListing,
-        filters = filters,
         defaultFilters = defaults,
         appliedFiltersReady = restoration.isCompatible && filters.validationIssues().isEmpty(),
         repairIssues = restoration.issues,

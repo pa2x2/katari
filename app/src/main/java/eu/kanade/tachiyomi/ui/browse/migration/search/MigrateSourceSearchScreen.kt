@@ -168,6 +168,7 @@ data class MigrateSourceSearchScreen(
                 SourceFilterDialog(
                     onDismissRequest = onDismissRequest,
                     filters = state.filters,
+                    filterRevision = state.filterRevision,
                     isLoading = state.filterState is FilterUiState.Loading,
                     errorMessage = (state.filterState as? FilterUiState.Error)?.throwable?.message,
                     presets = emptyList(),

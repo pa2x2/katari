@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -54,6 +55,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 internal fun PagedGroupFilterContent(
     filter: EntryFilter.PagedGroup<*>,
+    filterRevision: Int,
     onBack: () -> Unit,
     onFilter: () -> Unit,
     onReset: () -> Unit,
@@ -152,7 +154,12 @@ internal fun PagedGroupFilterContent(
         }
     }
     val refreshing = items.loadState.refresh is LoadState.Loading && items.itemCount > 0
-    val encodedState = runCatching(filter::encodeCurrentState).getOrNull()
+    // filterRevision forces recomposition when the mutable draft is republished in place.
+    // Without it AnimatedContent keeps the paged sheet composition alive with the same filter
+    // instance (equal by ===) and the same canApply, so the new durable state never renders.
+    val encodedState = remember(filter, filterRevision) {
+        runCatching(filter::encodeCurrentState).getOrNull()
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         SourceFilterPagedGroupHeader(
@@ -334,17 +341,23 @@ private fun ProjectedFilterItem(
         ProjectedFilterItemState.Failed -> RetryItem {
             scope.launch { projection = projectFilterItemState(group, item, null) }
         }
-        is ProjectedFilterItemState.Ready -> FilterItem(
-            filter = current.filter,
-            onUpdate = {
-                onEditItem(item, current.filter) { success ->
-                    if (!success) projection = ProjectedFilterItemState.Failed
-                    if (success && selectedScope) onSelectedItemUpdate()
-                }
-            },
-            onOpenPagedGroup = {},
-            onRequestSuggestions = onRequestSuggestions,
-        )
+        // Sources may update and return the previous leaf to preserve focus. It is the same
+        // mutable instance, so FilterItem would otherwise be skipped as equal and keep showing
+        // the previous visual. Keying on the durable encoded state forces a fresh FilterItem
+        // composition that reads the current leaf state.
+        is ProjectedFilterItemState.Ready -> key(encodedState) {
+            FilterItem(
+                filter = current.filter,
+                onUpdate = {
+                    onEditItem(item, current.filter) { success ->
+                        if (!success) projection = ProjectedFilterItemState.Failed
+                        if (success && selectedScope) onSelectedItemUpdate()
+                    }
+                },
+                onOpenPagedGroup = {},
+                onRequestSuggestions = onRequestSuggestions,
+            )
+        }
     }
 }
 
