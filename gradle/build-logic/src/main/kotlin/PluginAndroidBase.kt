@@ -4,6 +4,7 @@ import com.android.build.api.dsl.CompileOptions
 import com.android.build.api.dsl.DefaultConfig
 import mihon.gradle.configurations.configureKotlin
 import mihon.gradle.extensions.android
+import mihon.gradle.extensions.compileSdkFromMihonx
 import mihon.gradle.extensions.configureTest
 import mihon.gradle.extensions.coreLibraryDesugaring
 import mihon.gradle.extensions.libs
@@ -28,7 +29,7 @@ class PluginAndroidBase : Plugin<Project> {
                 ndkVersion = mihonx.versions.android.ndk.get()
             }
 
-            compileSdk = mihonx.versions.android.sdk.compile.get().toInt()
+            compileSdk(compileSdkFromMihonx())
 
             compileOptions {
                 isCoreLibraryDesugaringEnabled = true
