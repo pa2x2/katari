@@ -14,7 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 enum class EntryChildWebViewAction {

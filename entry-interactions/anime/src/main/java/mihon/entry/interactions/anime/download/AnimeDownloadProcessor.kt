@@ -31,7 +31,7 @@ import tachiyomi.domain.entry.model.DownloadPreferences
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.VideoDownloadQualityMode
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 internal class AnimeDownloadProcessor(
     private val dependencies: AnimeEntryInteractionRuntimeDependencies,

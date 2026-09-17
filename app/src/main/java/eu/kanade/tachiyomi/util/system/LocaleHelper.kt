@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.core.os.LocaleListCompat
 import eu.kanade.domain.source.interactor.SourceListState
 import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import java.util.Locale
 
 /**

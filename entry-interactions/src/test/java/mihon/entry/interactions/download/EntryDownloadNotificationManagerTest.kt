@@ -22,7 +22,7 @@ import mihon.entry.interactions.merge.EntryMergeDownloadOwners
 import mihon.entry.interactions.merge.EntryMergeDownloadOwnershipProjection
 import mihon.entry.interactions.merge.EntryMergeSubject
 import org.junit.jupiter.api.Test
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class EntryDownloadNotificationManagerTest {

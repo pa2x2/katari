@@ -76,7 +76,7 @@ import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.tracking.EntryTrackingSearchCandidate
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding

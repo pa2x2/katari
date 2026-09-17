@@ -41,7 +41,7 @@ import mihon.feature.migration.session.model.SourceMigrationDiscoveryDepth
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.core.common.preference.toggle
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.Button
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource

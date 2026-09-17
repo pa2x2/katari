@@ -6,7 +6,7 @@ import mihon.entry.interactions.media.EntryMediaCacheAutoClearPreference
 import mihon.entry.interactions.media.EntryMediaCacheId
 import mihon.entry.interactions.media.EntryMediaCacheProvider
 import mihon.entry.interactions.runtime.EntryPageImageCache
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 internal class MangaMediaCacheProvider(
     pageImageCache: () -> EntryPageImageCache,

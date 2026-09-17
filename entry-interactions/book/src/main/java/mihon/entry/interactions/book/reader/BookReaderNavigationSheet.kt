@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import mihon.entry.interactions.child.EntryChildProgressLabel
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.AdaptiveSheet
 import tachiyomi.presentation.core.components.EntryChildListItemContent
 import tachiyomi.presentation.core.i18n.stringResource

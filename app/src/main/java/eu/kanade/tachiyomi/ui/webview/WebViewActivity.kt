@@ -21,7 +21,7 @@ import mihon.entry.interactions.source.EntryWebViewFeature
 import mihon.entry.interactions.source.EntryWebViewHeadersResolution
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import uy.kohesive.injekt.injectLazy
 
 class WebViewActivity : BaseActivity() {

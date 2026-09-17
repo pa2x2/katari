@@ -45,7 +45,7 @@ import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.ui.updates.UpdatesItem
 import mihon.entry.interactions.download.EntryDownloadState
 import tachiyomi.domain.updates.model.UpdateItem
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.DotSeparatorText
 import tachiyomi.presentation.core.components.ListGroupHeader
 import tachiyomi.presentation.core.components.material.DISABLED_ALPHA

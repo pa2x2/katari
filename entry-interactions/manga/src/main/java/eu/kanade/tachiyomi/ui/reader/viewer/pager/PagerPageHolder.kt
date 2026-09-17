@@ -31,7 +31,7 @@ import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 /**
  * View of the ViewPager that contains a page of a chapter.

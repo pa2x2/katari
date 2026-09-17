@@ -41,7 +41,7 @@ import eu.kanade.presentation.util.formattedMessage
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryCover
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen

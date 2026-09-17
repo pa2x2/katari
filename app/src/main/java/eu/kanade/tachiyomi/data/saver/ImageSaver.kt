@@ -19,7 +19,7 @@ import okio.IOException
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File

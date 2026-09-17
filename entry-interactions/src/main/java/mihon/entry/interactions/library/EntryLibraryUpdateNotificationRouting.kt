@@ -1,6 +1,6 @@
 package mihon.entry.interactions.library
 
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 /**
  * Single shared Android identity for every library-update notification, regardless of content type.

@@ -49,7 +49,7 @@ import mihon.translation.ui.presentation.TranslationSessionExternalAction
 import mihon.translation.ui.presentation.TranslationWorkbench
 import mihon.translation.ui.session.TranslationLanguageSupportState
 import mihon.translation.ui.session.displayedSessionResult
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource

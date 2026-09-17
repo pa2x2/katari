@@ -41,7 +41,7 @@ import eu.kanade.presentation.util.Screen
 import kotlinx.coroutines.delay
 import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.domain.library.service.DuplicateTitleExclusions
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.material.topSmallPaddingValues

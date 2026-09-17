@@ -40,7 +40,7 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.entry.components.EntryActionIcons
 import eu.kanade.presentation.entry.entryTypePresentation
 import tachiyomi.domain.entry.model.Entry
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable

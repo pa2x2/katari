@@ -32,7 +32,7 @@ import eu.kanade.presentation.components.TabbedDialogPaddings
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.library.service.LibraryPreferences
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.LabeledCheckbox
 import tachiyomi.presentation.core.components.RadioItem
 import tachiyomi.presentation.core.components.SortItem

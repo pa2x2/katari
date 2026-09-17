@@ -40,7 +40,7 @@ import mihon.core.common.homeScreenTabOrder
 import mihon.core.common.navigation.HomeNavigationMoveResult
 import mihon.core.common.navigation.HomeNavigationSection
 import mihon.core.common.navigation.move
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 

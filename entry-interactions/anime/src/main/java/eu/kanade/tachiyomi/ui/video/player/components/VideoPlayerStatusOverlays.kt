@@ -48,7 +48,7 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSideGestureFeedbackState
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSideGestureType
 import kotlinx.coroutines.delay
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 private const val SIDE_GESTURE_FEEDBACK_VISIBLE_DURATION_MS = 900L

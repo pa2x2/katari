@@ -3,7 +3,7 @@ package mihon.entry.interactions.reader.settings
 import androidx.annotation.DrawableRes
 import dev.icerock.moko.resources.StringResource
 import mihon.entry.interactions.api.R
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 /** BOOK layout preference; persisted by name independently of document locators. */
 enum class BookDocumentReadingMode(val stringRes: StringResource, @DrawableRes val iconRes: Int) {

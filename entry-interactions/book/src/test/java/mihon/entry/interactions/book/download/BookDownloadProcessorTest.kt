@@ -20,7 +20,7 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.source.service.SourceManager
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import kotlin.test.assertEquals
 
 class BookDownloadProcessorTest {

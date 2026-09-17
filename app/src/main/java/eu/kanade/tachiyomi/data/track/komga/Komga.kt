@@ -11,7 +11,7 @@ import okhttp3.Dns
 import okhttp3.OkHttpClient
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.track.model.EntryTrack
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 class Komga(id: Long) : BaseTracker(id, "Komga"), EnhancedTracker {
 

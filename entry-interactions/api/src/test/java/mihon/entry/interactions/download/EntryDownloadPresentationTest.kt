@@ -4,7 +4,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 class EntryDownloadPresentationTest {
 

@@ -6,7 +6,7 @@ import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildTransition
 import tachiyomi.domain.entry.service.calculateChapterGap
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransition
 import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransitionDestinationSlot
 import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransitionItem

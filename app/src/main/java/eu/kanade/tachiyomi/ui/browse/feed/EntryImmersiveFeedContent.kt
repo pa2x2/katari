@@ -35,7 +35,7 @@ import kotlinx.coroutines.launch
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.domain.source.model.Source
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.EmptyScreenAction

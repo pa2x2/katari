@@ -13,7 +13,7 @@ import org.junit.runner.RunWith
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.domain.library.model.LibraryManga
 import tachiyomi.domain.manga.model.Manga
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 @RunWith(AndroidJUnit4::class)
 class MergeLibraryEntriesDialogTest {

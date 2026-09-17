@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.source.service.SourceManager
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 class EntryLibraryUpdateNotificationFeatureTest {
     private val entry = Entry.create().copy(id = 7L, source = 11L, type = EntryType.BOOK)

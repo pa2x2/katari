@@ -17,7 +17,7 @@ import eu.kanade.presentation.util.HandlesOwnBackPress
 import eu.kanade.presentation.util.Screen
 import mihon.core.common.CustomPreferences
 import mihon.core.common.toHomeScreenTabPreferenceValue
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get

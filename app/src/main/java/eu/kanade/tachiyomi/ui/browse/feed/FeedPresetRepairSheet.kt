@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreenModel
 import eu.kanade.tachiyomi.ui.browse.source.browse.SourceFilterDialog
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable

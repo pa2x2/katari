@@ -14,7 +14,7 @@ import eu.kanade.tachiyomi.util.system.toast
 import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationSetupDestination
 import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 internal class TranslationEnginePickerScreen : Screen() {
 

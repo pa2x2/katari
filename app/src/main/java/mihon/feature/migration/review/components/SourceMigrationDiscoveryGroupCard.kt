@@ -42,7 +42,7 @@ import mihon.feature.migration.review.SourceMigrationReviewMapping
 import mihon.feature.migration.review.SourceMigrationReviewMember
 import mihon.feature.migration.session.model.SourceMigrationItemState
 import mihon.feature.migration.session.model.SourceMigrationMatchKind
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.Badge
 import tachiyomi.presentation.core.components.BadgeGroup
 import tachiyomi.presentation.core.components.ListGroupHeader

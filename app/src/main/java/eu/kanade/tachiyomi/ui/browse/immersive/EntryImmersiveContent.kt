@@ -34,7 +34,7 @@ import mihon.entry.interactions.media.EntryImmersiveRendererResult
 import mihon.entry.interactions.media.EntryImmersiveUnavailableReason
 import mihon.entry.interactions.navigation.EntryOpenFeature
 import tachiyomi.domain.entry.model.Entry
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.reader.ReaderMediaLoadOverlay
 import tachiyomi.presentation.core.components.reader.ReaderMediaLoadState

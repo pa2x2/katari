@@ -39,7 +39,7 @@ import mihon.feature.profiles.core.Profile
 import mihon.feature.profiles.core.ProfileConstants
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.core.hasNameConflict
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt

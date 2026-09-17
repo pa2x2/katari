@@ -9,7 +9,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import dev.icerock.moko.resources.PluralsResource
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.source.entry.EntryType
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 /** Type-owned vocabulary and imagery. These values describe a type; they never authorize product behavior. */
 data class EntryTypePresentation(

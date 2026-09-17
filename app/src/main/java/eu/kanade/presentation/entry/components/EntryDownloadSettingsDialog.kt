@@ -25,7 +25,7 @@ import eu.kanade.presentation.components.AdaptiveSheet
 import mihon.entry.interactions.download.EntryDownloadOptionGroup
 import mihon.entry.interactions.download.EntryDownloadOptionSelection
 import mihon.entry.interactions.download.EntryDownloadOptions
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable

@@ -33,7 +33,7 @@ import mihon.entry.interactions.anime.state.positionMs
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.OverlayActionButton
 import tachiyomi.presentation.core.components.reader.OverlayListDrawer
 import tachiyomi.presentation.core.i18n.stringResource

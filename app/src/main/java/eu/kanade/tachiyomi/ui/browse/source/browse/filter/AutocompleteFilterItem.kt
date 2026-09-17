@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable

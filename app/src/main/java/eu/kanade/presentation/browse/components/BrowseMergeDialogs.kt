@@ -19,7 +19,7 @@ import eu.kanade.presentation.entry.components.MergeEditorEntry
 import eu.kanade.presentation.entry.components.MergeTarget
 import eu.kanade.presentation.entry.components.MergeTargetPickerSheet
 import kotlinx.collections.immutable.toPersistentList
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.ActionButton
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource

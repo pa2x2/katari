@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import kotlin.test.assertEquals
 
 class BookReaderNavigationPresenterTest {

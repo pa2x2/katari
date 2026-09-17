@@ -64,7 +64,7 @@ import eu.kanade.tachiyomi.ui.video.player.MIN_SUBTITLE_OFFSET_Y
 import eu.kanade.tachiyomi.ui.video.player.MIN_SUBTITLE_TEXT_SIZE
 import eu.kanade.tachiyomi.ui.video.player.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.applyAppearance
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 @OptIn(ExperimentalLayoutApi::class)

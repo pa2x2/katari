@@ -13,7 +13,7 @@ import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import mihon.entry.interactions.manga.download.DownloadManager
 import mihon.entry.interactions.runtime.EntryInteractionTheme
 import mihon.entry.interactions.viewer.EntryChildTransition
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransitionLoadState
 import tachiyomi.presentation.core.i18n.stringResource
 

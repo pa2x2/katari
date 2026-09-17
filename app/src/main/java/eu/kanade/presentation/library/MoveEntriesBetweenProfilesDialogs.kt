@@ -26,7 +26,7 @@ import mihon.entry.interactions.lifecycle.profile.EntryProfileMoveConflict
 import mihon.entry.interactions.lifecycle.profile.EntryProfileMoveConflictResolution
 import mihon.feature.profiles.core.Profile
 import tachiyomi.domain.category.model.Category
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable

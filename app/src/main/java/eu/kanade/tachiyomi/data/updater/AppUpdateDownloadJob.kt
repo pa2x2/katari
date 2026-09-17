@@ -24,7 +24,7 @@ import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.coroutines.CancellationException
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.withIOContext
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import uy.kohesive.injekt.injectLazy
 import java.io.File
 import java.io.IOException

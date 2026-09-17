@@ -13,7 +13,7 @@ import mihon.entry.interactions.download.EntryDownloadQueueItem
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.download.EntryDownloadStatus
 import tachiyomi.domain.source.service.SourceManager
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 internal fun List<AnimeDownload>.toAnimeEntryDownloadQueueGroups(
     sourceManager: SourceManager,

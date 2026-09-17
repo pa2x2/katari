@@ -48,7 +48,7 @@ import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.AppSnackbarHost
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.entry.EditCoverAction
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.clickableNoIndication

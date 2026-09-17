@@ -14,7 +14,7 @@ import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.coerceIn
 import tachiyomi.core.common.preference.getEnum
 import tachiyomi.core.common.preference.getEnumSet
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 class MangaReaderSettingsProvider(
     preferenceStore: PreferenceStore,

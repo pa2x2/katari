@@ -51,7 +51,7 @@ import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.source.interactor.GetSourcesWithNonLibraryEntries
 import tachiyomi.domain.source.model.Source
 import tachiyomi.domain.source.model.SourceWithCount
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.LazyColumnWithAction
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding

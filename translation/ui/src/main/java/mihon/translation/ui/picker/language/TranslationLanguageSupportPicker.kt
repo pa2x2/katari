@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.ui.session.TranslationLanguageSupportState
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable

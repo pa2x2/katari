@@ -1,7 +1,7 @@
 package eu.kanade.domain.ui.model
 
 import dev.icerock.moko.resources.StringResource
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 enum class TabletUiMode(val titleRes: StringResource) {
     AUTOMATIC(MR.strings.automatic_background),

@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import okhttp3.OkHttpClient
 import tachiyomi.domain.track.model.EntryTrack
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 data class DummyTracker(
     override val id: Long,

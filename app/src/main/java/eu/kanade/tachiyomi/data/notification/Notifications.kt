@@ -10,7 +10,7 @@ import eu.kanade.tachiyomi.util.system.buildNotificationChannelGroup
 import mihon.entry.interactions.download.EntryDownloadNotifications
 import mihon.entry.interactions.library.EntryLibraryUpdateNotificationRoute
 import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 /**
  * Class to manage the basic information of all the notifications used in the app.

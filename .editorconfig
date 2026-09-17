@@ -19,6 +19,10 @@ ij_kotlin_allow_trailing_comma = true
 ij_kotlin_allow_trailing_comma_on_call_site = true
 ij_kotlin_name_count_to_use_star_import = 2147483647
 ij_kotlin_name_count_to_use_star_import_for_members = 2147483647
+# moko-resources 0.27+ generates public resource accessors as top-level extension
+# properties in the resources package; wildcard imports are the sanctioned way to
+# use the generated catalog from consumer files.
+ij_kotlin_packages_to_use_import_on_demand = tachiyomi.i18n.**
 
 ktlint_code_style = intellij_idea
 ktlint_function_naming_ignore_when_annotated_with = Composable

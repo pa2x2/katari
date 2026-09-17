@@ -17,7 +17,7 @@ import eu.kanade.presentation.reader.components.AdaptiveSheet
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
 import mihon.entry.interactions.reader.settings.ReaderOrientation
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.SettingsIconGrid
 import tachiyomi.presentation.core.components.material.IconToggleButton
 import tachiyomi.presentation.core.components.reader.ModeSelectionDialog

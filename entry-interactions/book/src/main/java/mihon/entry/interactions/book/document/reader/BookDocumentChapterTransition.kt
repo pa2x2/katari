@@ -6,7 +6,7 @@ import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentRead
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildTransition
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransition
 import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransitionDestinationSlot
 import tachiyomi.presentation.core.components.reader.ReaderEntryChildTransitionItem

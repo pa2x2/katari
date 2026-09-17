@@ -34,7 +34,7 @@ import mihon.entry.interactions.media.EntryImmersiveActiveSessionEffect
 import mihon.entry.interactions.media.EntryImmersiveHandle
 import mihon.entry.interactions.media.EntryImmersiveProgress
 import mihon.entry.interactions.media.EntryImmersiveRenderer
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get

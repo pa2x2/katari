@@ -17,7 +17,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.service.sortedForMergedDisplay
 import tachiyomi.domain.entry.service.sortedForReading
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 internal class AnimeChildListProcessor(
     private val entryProgressRepository: EntryProgressRepository,

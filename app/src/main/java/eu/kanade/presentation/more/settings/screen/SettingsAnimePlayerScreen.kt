@@ -7,7 +7,7 @@ import eu.kanade.presentation.more.settings.Preference
 import mihon.entry.interactions.settings.AnimePlayerPreferences
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.asProfilePreference
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get

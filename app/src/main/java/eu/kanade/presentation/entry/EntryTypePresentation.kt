@@ -15,7 +15,7 @@ import eu.kanade.tachiyomi.util.lang.toTimestampString
 import mihon.entry.interactions.presentation.EntryHistorySubtitlePresentation
 import mihon.entry.interactions.presentation.EntryPartialProgressPresentation
 import mihon.entry.interactions.presentation.EntryTypePresentationFeature
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt

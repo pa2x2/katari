@@ -41,7 +41,7 @@ import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedOptions
 import eu.kanade.tachiyomi.ui.video.player.withSelectedDub
 import eu.kanade.tachiyomi.ui.video.player.withSelectedSourceQuality
 import eu.kanade.tachiyomi.ui.video.player.withSelectedStream
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.SettingsChipRow
 import tachiyomi.presentation.core.components.SettingsItemsPaddings
 import tachiyomi.presentation.core.components.ViewerSettingsSheet

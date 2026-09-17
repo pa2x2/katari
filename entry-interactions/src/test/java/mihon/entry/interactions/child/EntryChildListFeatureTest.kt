@@ -19,7 +19,7 @@ import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 class EntryChildListFeatureTest {
     private val entry = Entry.create().copy(id = 7L, type = EntryType.BOOK)

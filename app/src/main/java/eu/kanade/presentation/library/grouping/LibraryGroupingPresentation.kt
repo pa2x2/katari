@@ -3,7 +3,7 @@ package eu.kanade.presentation.library.grouping
 import androidx.compose.runtime.Composable
 import tachiyomi.domain.library.model.LibraryGrouping
 import tachiyomi.domain.library.model.LibraryGroupingDimension
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable

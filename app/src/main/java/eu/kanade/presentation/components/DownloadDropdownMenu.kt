@@ -8,7 +8,7 @@ import androidx.compose.ui.unit.DpOffset
 import eu.kanade.presentation.entry.DownloadAction
 import eu.kanade.presentation.entry.EntryTypePresentation
 import eu.kanade.presentation.entry.entryTypePresentation
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 

@@ -11,7 +11,7 @@ import mihon.tts.api.preparation.TtsPreparation
 import mihon.tts.api.preparation.TtsSystemSetupReason
 import mihon.tts.api.provider.TtsProviderDisclosure
 import mihon.tts.ui.settings.TtsPreviewState
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 

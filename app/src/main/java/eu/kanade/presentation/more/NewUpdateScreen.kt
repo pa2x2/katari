@@ -20,7 +20,7 @@ import eu.kanade.presentation.components.MarkdownRender
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.tachiyomi.ui.more.NewUpdateScreenModel
 import org.intellij.markdown.flavours.gfm.GFMFlavourDescriptor
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.InfoScreen

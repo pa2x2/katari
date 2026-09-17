@@ -6,7 +6,7 @@ import mihon.entry.interactions.presentation.EntryTypePresentationFeature
 import mihon.entry.interactions.presentation.EntryTypePresentationResult
 import mihon.entry.interactions.presentation.genericEntryTypePresentation
 import org.junit.jupiter.api.Test
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 class EntrySelectionActionLabelsTest {
 

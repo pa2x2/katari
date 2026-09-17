@@ -5,7 +5,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
 import mihon.entry.interactions.tracking.EntryTrackingAccount
 import mihon.feature.profiles.core.ProfileAwarePreferenceStore
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import androidx.annotation.IntRange as AndroidXIntRange
 import tachiyomi.core.common.preference.Preference as CorePreference

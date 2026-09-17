@@ -33,7 +33,7 @@ import mihon.translation.api.engine.TranslationEngineSelection
 import mihon.translation.ui.session.TranslationSessionState
 import mihon.translation.ui.session.displayedResult
 import mihon.translation.ui.session.isTranslationInProgress
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable

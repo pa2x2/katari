@@ -10,7 +10,7 @@ import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.duplicate.DuplicateTitleExclusionsScreen
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.domain.library.service.DuplicatePreferences
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState

@@ -5,7 +5,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.category.visualName
 import tachiyomi.domain.category.model.Category
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**

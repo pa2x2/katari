@@ -38,7 +38,7 @@ import mihon.feature.migration.review.components.SourceMigrationEntryListItem
 import mihon.feature.migration.session.model.SourceMigrationMatchKind
 import mihon.feature.migration.session.model.SourceMigrationSessionId
 import mihon.feature.migration.session.model.SourceMigrationSessionItem
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.Badge
 import tachiyomi.presentation.core.components.BadgeGroup
 import tachiyomi.presentation.core.components.material.Button

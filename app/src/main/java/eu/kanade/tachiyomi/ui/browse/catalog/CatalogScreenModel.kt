@@ -111,7 +111,7 @@ import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.domain.source.model.SourceDisplayInfo
 import tachiyomi.domain.source.service.SourceManager
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.UUID

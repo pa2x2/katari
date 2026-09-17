@@ -35,7 +35,7 @@ import tachiyomi.core.metadata.comicinfo.ComicInfo
 import tachiyomi.core.metadata.tachiyomi.MangaDetails
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.service.ChapterRecognition
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.source.local.filter.OrderBy
 import tachiyomi.source.local.image.LocalCoverManager
 import tachiyomi.source.local.io.Archive

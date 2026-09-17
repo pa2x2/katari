@@ -19,7 +19,7 @@ import eu.kanade.presentation.more.settings.screen.tts.presentation.TtsSettingsC
 import eu.kanade.presentation.more.settings.screen.tts.voice.TtsDefaultVoicePickerScreen
 import eu.kanade.presentation.more.settings.screen.tts.voice.TtsVoiceOverridesScreen
 import eu.kanade.presentation.util.LocalBackPress
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 object SettingsTtsScreen : SearchableSettings {

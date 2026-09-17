@@ -13,7 +13,7 @@ import androidx.compose.ui.semantics.stateDescription
 import mihon.entry.interactions.manga.R
 import mihon.entry.interactions.reader.settings.ReaderOrientation
 import mihon.entry.interactions.reader.settings.ReadingMode
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.reader.ReaderChromeBottomBar
 import tachiyomi.presentation.core.components.reader.ReaderChromeBottomBarAction
 import tachiyomi.presentation.core.i18n.stringResource

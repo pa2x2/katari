@@ -12,7 +12,7 @@ import eu.kanade.tachiyomi.util.system.notificationBuilder
 import eu.kanade.tachiyomi.util.system.notify
 import mihon.feature.migration.session.model.SourceMigrationSessionId
 import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 class SourceMigrationNotifier(private val context: Context) {
 

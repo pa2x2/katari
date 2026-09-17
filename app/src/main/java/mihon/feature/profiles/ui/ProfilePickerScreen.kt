@@ -64,7 +64,7 @@ import eu.kanade.tachiyomi.R
 import kotlinx.coroutines.launch
 import mihon.feature.profiles.core.Profile
 import mihon.feature.profiles.core.ProfileManager
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get

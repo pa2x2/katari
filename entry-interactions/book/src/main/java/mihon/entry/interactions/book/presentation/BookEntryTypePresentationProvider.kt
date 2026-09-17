@@ -9,7 +9,7 @@ import mihon.entry.interactions.presentation.EntryPartialProgressPresentation
 import mihon.entry.interactions.presentation.EntryTypePresentation
 import mihon.entry.interactions.presentation.EntryUpdateNotificationVocabulary
 import mihon.entry.interactions.runtime.EntryTypePresentationProvider
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 internal object BookEntryTypePresentationProvider : EntryTypePresentationProvider {
     override val type = EntryType.BOOK

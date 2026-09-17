@@ -6,7 +6,7 @@ import eu.kanade.presentation.components.DownloadIndicator
 import eu.kanade.presentation.components.DownloadIndicatorAction
 import eu.kanade.presentation.components.DownloadIndicatorState
 import mihon.entry.interactions.download.EntryDownloadState
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 enum class ChapterDownloadAction {

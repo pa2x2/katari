@@ -9,7 +9,7 @@ import androidx.compose.material.icons.filled.StayCurrentLandscape
 import androidx.compose.material.icons.filled.StayCurrentPortrait
 import androidx.compose.ui.graphics.vector.ImageVector
 import dev.icerock.moko.resources.StringResource
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 enum class ReaderOrientation(
     val flag: Int,

@@ -6,7 +6,7 @@ import mihon.entry.interactions.media.EntryMediaCacheArtifact
 import mihon.entry.interactions.media.EntryMediaCacheAutoClearPreference
 import mihon.entry.interactions.media.EntryMediaCacheId
 import mihon.entry.interactions.media.EntryMediaCacheProvider
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 internal class BookMediaCacheProvider(
     cache: () -> BookMaterializationCache,

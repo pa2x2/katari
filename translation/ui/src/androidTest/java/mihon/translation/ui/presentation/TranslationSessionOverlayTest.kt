@@ -58,7 +58,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 @RunWith(AndroidJUnit4::class)
 class TranslationSessionOverlayTest {

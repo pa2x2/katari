@@ -28,7 +28,7 @@ import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.asEntryCover
 import tachiyomi.domain.entry.repository.EntryRepository
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.time.Instant

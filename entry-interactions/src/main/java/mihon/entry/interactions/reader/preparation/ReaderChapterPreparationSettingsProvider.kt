@@ -9,7 +9,7 @@ import mihon.entry.viewer.settings.shared.ReaderSharedToggleSetting
 import mihon.entry.viewer.settings.shared.StandardReaderCapabilities
 import mihon.entry.viewer.settings.shared.StandardReaderSharedSettingIds
 import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 class ReaderChapterPreparationSettingsProvider(
     preferences: ReaderChapterPreparationPreferences,

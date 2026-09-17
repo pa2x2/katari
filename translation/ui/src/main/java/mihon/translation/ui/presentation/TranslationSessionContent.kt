@@ -63,7 +63,7 @@ import mihon.translation.api.result.TranslationResult
 import mihon.translation.ui.session.TranslationSessionFailure
 import mihon.translation.ui.session.TranslationSessionState
 import mihon.translation.ui.session.displayedSessionResult
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import java.util.Locale
 

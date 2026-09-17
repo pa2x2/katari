@@ -9,7 +9,7 @@ import eu.kanade.tachiyomi.data.track.EntryTrackingSource
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.track.model.EntryTrack
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 class Suwayomi(id: Long) : BaseTracker(id, "Suwayomi"), EnhancedTracker {
 

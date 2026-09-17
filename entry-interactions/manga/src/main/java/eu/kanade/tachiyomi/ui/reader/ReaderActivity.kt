@@ -103,7 +103,7 @@ import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.reader.ReaderPageIndicator
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt

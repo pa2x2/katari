@@ -5,7 +5,7 @@ import eu.kanade.tachiyomi.util.system.toast
 import mihon.tts.api.host.TtsHostActionResult
 import mihon.tts.api.host.TtsSetupDestination
 import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 internal fun Context.presentTtsHostActionResult(result: TtsHostActionResult) {
     when (result) {

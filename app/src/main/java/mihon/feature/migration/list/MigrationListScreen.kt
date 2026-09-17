@@ -20,7 +20,7 @@ import mihon.entry.interactions.migration.EntryMigrationSubject
 import mihon.feature.migration.list.components.MigrationEntryDialog
 import mihon.feature.migration.list.components.MigrationExitDialog
 import mihon.feature.migration.list.components.MigrationProgressDialog
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 class MigrationListScreen(
     private val subjects: Collection<EntryMigrationSubject>,

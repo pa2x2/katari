@@ -11,7 +11,7 @@ import mihon.entry.interactions.child.EntryChildProgressLabel
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 @RunWith(AndroidJUnit4::class)
 class BookReaderNavigationSheetTest {

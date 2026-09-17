@@ -57,7 +57,7 @@ import eu.kanade.tachiyomi.R
 import mihon.feature.migration.list.models.MigratingEntry
 import mihon.feature.migration.list.models.MigrationMergeContext
 import tachiyomi.domain.entry.model.Entry
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.Badge
 import tachiyomi.presentation.core.components.BadgeGroup
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
