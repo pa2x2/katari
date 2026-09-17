@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 private const val WEB_VIEW_ACTIVITY_CLASS_NAME = "eu.kanade.tachiyomi.ui.webview.WebViewActivity"
 private const val WEB_VIEW_URL_KEY = "url_key"

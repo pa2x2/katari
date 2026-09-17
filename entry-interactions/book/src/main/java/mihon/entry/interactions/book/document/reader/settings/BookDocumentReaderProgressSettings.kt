@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import mihon.entry.viewer.settings.ViewerSettingBinding
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.CheckboxItem
 import tachiyomi.presentation.core.components.RadioItem
 import tachiyomi.presentation.core.i18n.stringResource

@@ -3,7 +3,7 @@ package tachiyomi.source.local.filter
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 sealed class OrderBy(context: Context, selection: Selection) : EntryFilter.Sort(
     context.stringResource(MR.strings.local_filter_order_by),

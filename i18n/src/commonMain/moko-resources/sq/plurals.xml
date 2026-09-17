@@ -40,10 +40,6 @@
         <item quantity="one">Kapitujt %1$s dhe 1 më shumë</item>
         <item quantity="other">Kapitujt %1$s dhe %2$d të tjerë</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">Për %d hyrje</item>
-        <item quantity="other">Për %d hyrjet</item>
-    </plurals>
     <plurals name="num_trackers">
         <item quantity="one">%d gjurmues</item>
         <item quantity="other">%d gjurmuesit</item>

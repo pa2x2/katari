@@ -6,7 +6,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import eu.kanade.presentation.entry.selectionEntryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryType
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable

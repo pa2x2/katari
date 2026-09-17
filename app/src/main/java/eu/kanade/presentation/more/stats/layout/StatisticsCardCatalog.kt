@@ -2,7 +2,7 @@ package eu.kanade.presentation.more.stats.layout
 
 import dev.icerock.moko.resources.StringResource
 import tachiyomi.domain.statistics.model.StatisticsCard
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 internal fun StatisticsCard.label(): StringResource = when (this) {
     StatisticsCard.SUMMARY -> MR.strings.statistics_summary

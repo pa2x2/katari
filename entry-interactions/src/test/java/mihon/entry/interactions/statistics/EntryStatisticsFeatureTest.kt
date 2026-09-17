@@ -11,7 +11,7 @@ import mihon.entry.interactions.runtime.EntryTypePresentationProvider
 import mihon.entry.interactions.runtime.createEntryInteractionComposition
 import mihon.feature.graph.ContributionOwner
 import org.junit.jupiter.api.Test
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 class EntryStatisticsFeatureTest {
 

@@ -14,7 +14,7 @@ import mihon.entry.interactions.download.notification.entryDownloadForegroundNot
 import mihon.entry.interactions.merge.EntryMergeDownloadOwnershipProjection
 import mihon.entry.interactions.merge.EntryMergeSubject
 import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 internal class EntryDownloadNotificationManager(
     private val context: Context,

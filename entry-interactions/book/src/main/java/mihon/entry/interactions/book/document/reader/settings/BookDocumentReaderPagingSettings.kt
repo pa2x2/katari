@@ -9,7 +9,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.viewer.settings.ViewerSettingBinding
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.CheckboxItem
 import tachiyomi.presentation.core.components.SettingsChipRow
 import tachiyomi.presentation.core.components.reader.navigation.ReaderTapZoneSettings

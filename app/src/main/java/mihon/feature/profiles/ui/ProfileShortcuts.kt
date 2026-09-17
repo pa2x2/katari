@@ -10,7 +10,7 @@ import eu.kanade.tachiyomi.util.system.toast
 import mihon.feature.profiles.core.Profile
 import mihon.feature.profiles.core.ProfileManager
 import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 internal fun resolveProfileShortcutTarget(
     profiles: List<Profile>,

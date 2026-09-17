@@ -201,7 +201,6 @@
     <string name="action_sort_latest_chapter">Lasta ĉapitro</string>
     <string name="spen_next_page">Sekva paĝo</string>
     <string name="spen_previous_page">Antaŭa paĝo</string>
-    <string name="channel_new_chapters">Ĉapitraj ĝisdatigoj</string>
     <string name="channel_errors">Eraroj</string>
     <string name="channel_complete">Finitaj</string>
     <string name="channel_progress">Progreso</string>
@@ -214,7 +213,6 @@
     <string name="notification_chapters_multiple">Ĉapitroj %1$s</string>
     <string name="notification_chapters_single_and_more">Ĉapitro %1$s kaj %2$d pli</string>
     <string name="notification_chapters_single">Ĉapitro %1$s</string>
-    <string name="notification_new_chapters">Novaj ĉapitroj trovitaj</string>
     <string name="copy">Kopii</string>
     <string name="migrate">Migri</string>
     <string name="clear_history_confirmation">Ĉu vi certas? La tuta historio estos forigota.</string>

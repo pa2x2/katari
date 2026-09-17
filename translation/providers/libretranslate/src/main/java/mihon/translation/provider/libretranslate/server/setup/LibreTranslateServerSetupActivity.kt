@@ -6,25 +6,31 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.TextObfuscationMode
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedSecureTextField
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -159,8 +165,7 @@ private fun LibreTranslateServerSetupScreen(
             lines = listOf(stringResource(R.string.libretranslate_server_security_description)),
         )
         OutlinedTextField(
-            value = endpoint,
-            onValueChange = onEndpointChange,
+            state = rememberSyncedTextFieldState(endpoint, onEndpointChange),
             modifier = Modifier.fillMaxWidth(),
             enabled = !testing,
             label = { Text(stringResource(R.string.libretranslate_server_endpoint)) },
@@ -172,21 +177,19 @@ private fun LibreTranslateServerSetupScreen(
                 null
             },
             isError = endpointInvalid,
-            singleLine = true,
+            lineLimits = TextFieldLineLimits.SingleLine,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
         )
-        OutlinedTextField(
-            value = apiKey,
-            onValueChange = onApiKeyChange,
+        OutlinedSecureTextField(
+            state = rememberSyncedTextFieldState(apiKey, onApiKeyChange),
             modifier = Modifier.fillMaxWidth(),
             enabled = !testing,
             label = { Text(stringResource(R.string.libretranslate_server_api_key)) },
-            singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            visualTransformation = if (apiKeyVisible) {
-                VisualTransformation.None
+            textObfuscationMode = if (apiKeyVisible) {
+                TextObfuscationMode.Visible
             } else {
-                PasswordVisualTransformation()
+                TextObfuscationMode.Hidden
             },
             trailingIcon = {
                 IconButton(
@@ -232,6 +235,28 @@ private fun LibreTranslateServerSetupScreen(
             )
         }
     }
+}
+
+/** Bridges a hoisted [String] value with a state-based text field, preserving external updates. */
+@Composable
+private fun rememberSyncedTextFieldState(
+    text: String,
+    onTextChange: (String) -> Unit,
+): TextFieldState {
+    val state = rememberTextFieldState(text)
+    val currentText by rememberUpdatedState(text)
+    val currentOnTextChange by rememberUpdatedState(onTextChange)
+    LaunchedEffect(text) {
+        if (state.text.toString() != text) {
+            state.edit { replace(0, length, text) }
+        }
+    }
+    LaunchedEffect(state) {
+        snapshotFlow { state.text.toString() }.collect {
+            if (it != currentText) currentOnTextChange(it)
+        }
+    }
+    return state
 }
 
 @Preview(name = "LibreTranslate setup states", showBackground = true)

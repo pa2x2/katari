@@ -13,7 +13,7 @@ import eu.kanade.presentation.more.settings.screen.rememberTtsSettingsScreenMode
 import eu.kanade.presentation.more.settings.screen.tts.presentTtsHostActionResult
 import eu.kanade.presentation.util.Screen
 import mihon.tts.ui.picker.voice.TtsVoiceOverridesList
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 internal class TtsVoiceOverridesScreen : Screen() {

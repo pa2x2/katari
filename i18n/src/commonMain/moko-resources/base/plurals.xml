@@ -155,14 +155,6 @@
         <item quantity="other">Skipping %d chapters, either the source is missing them or they have been filtered out</item>
     </plurals>
 
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">For %d entry</item>
-        <item quantity="other">For %d entries</item>
-    </plurals>
-    <plurals name="notification_new_episodes_summary">
-        <item quantity="one">For %d entry</item>
-        <item quantity="other">For %d entries</item>
-    </plurals>
     <plurals name="notification_new_items_summary">
         <item quantity="one">For %d entry</item>
         <item quantity="other">For %d entries</item>

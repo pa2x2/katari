@@ -21,9 +21,6 @@
     <plurals name="notification_chapters_multiple_and_more">
         <item quantity="other">%1$s 章とその他 %2$d 章</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="other">%d 件の項目</item>
-    </plurals>
     <plurals name="manga_num_chapters">
         <item quantity="other">%1$s 章</item>
     </plurals>

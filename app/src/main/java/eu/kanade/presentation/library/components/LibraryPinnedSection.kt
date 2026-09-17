@@ -41,7 +41,7 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryPinnedDisplayStyle
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.math.floor
 import androidx.compose.foundation.lazy.grid.items as gridItems

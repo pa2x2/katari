@@ -240,7 +240,6 @@
     <string name="migration_dialog_what_to_include">Velg data å inkludere</string>
     <string name="migrate">Flytt</string>
     <string name="copy">Kopier</string>
-    <string name="notification_new_chapters">Nye kapitler funnet</string>
     <string name="notification_cover_update_failed">Klarte ikke å oppdatere omslag</string>
     <string name="update_check_confirm">Last ned</string>
     <string name="channel_common">Vanlig</string>
@@ -304,7 +303,6 @@
     <string name="lock_always">Alltid</string>
     <string name="lock_never">Aldri</string>
     <string name="secure_screen">Sikker skjerm</string>
-    <string name="channel_new_chapters">Kapitteloppdateringer</string>
     <string name="notification_chapters_single">Kapittel %1$s</string>
     <string name="email">E-postadresse</string>
     <string name="in_library">I biblioteket</string>

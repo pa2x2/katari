@@ -6,7 +6,7 @@ import mihon.core.common.navigation.toHomeNavigationPrimaryTabsPreferenceValue
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.getEnum
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 class CustomPreferences(
     private val preferenceStore: PreferenceStore,

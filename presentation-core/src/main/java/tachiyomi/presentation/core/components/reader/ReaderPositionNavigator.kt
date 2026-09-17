@@ -72,7 +72,7 @@ fun ReaderPositionNavigator(
 ) {
     val haptic = LocalHapticFeedback.current
     val state = remember(valueRange, steps) {
-        SliderState(value = value.coerceIn(valueRange), steps = steps, valueRange = valueRange)
+        SliderState(value = value.coerceIn(valueRange), steps = steps, trackRange = valueRange)
     }
     val currentOnCancel by rememberUpdatedState(onValueChangeCancelled)
     val interactionSource = remember { ReaderPositionInteractionSource(onCancel = { currentOnCancel?.invoke() }) }
@@ -80,11 +80,11 @@ fun ReaderPositionNavigator(
     LaunchedEffect(value, sliderDragged) {
         if (!sliderDragged) state.value = value.coerceIn(valueRange)
     }
-    state.onValueChange = {
+    val onSliderValueChange: (Float) -> Unit = {
         state.value = it
         onValueChange(it)
     }
-    state.onValueChangeFinished = {
+    val onSliderValueChangeFinished: () -> Unit = {
         val cancelled = interactionSource.consumeCancellation()
         if (!cancelled || onValueChangeCancelled == null) onValueChangeFinished(state.value)
     }
@@ -102,6 +102,8 @@ fun ReaderPositionNavigator(
         HorizontalReaderPageNavigator(
             isRtl = type == ReaderPageNavigatorType.HORIZONTAL_RTL,
             state = state,
+            onValueChange = onSliderValueChange,
+            onValueChangeFinished = onSliderValueChangeFinished,
             onNextSection = onNextSection,
             nextSectionEnabled = nextSectionEnabled,
             onPreviousSection = onPreviousSection,
@@ -121,6 +123,8 @@ fun ReaderPositionNavigator(
     } else {
         VerticalReaderPageNavigator(
             state = state,
+            onValueChange = onSliderValueChange,
+            onValueChangeFinished = onSliderValueChangeFinished,
             onNextSection = onNextSection,
             nextSectionEnabled = nextSectionEnabled,
             onPreviousSection = onPreviousSection,
@@ -144,6 +148,8 @@ private fun HorizontalReaderPageNavigator(
     isRtl: Boolean,
     onPositionClick: (() -> Unit)?,
     state: SliderState,
+    onValueChange: (Float) -> Unit,
+    onValueChangeFinished: () -> Unit,
     onNextSection: () -> Unit,
     nextSectionEnabled: Boolean,
     onPreviousSection: () -> Unit,
@@ -175,7 +181,7 @@ private fun HorizontalReaderPageNavigator(
                 colors = buttonColor,
             )
 
-            if (state.valueRange.endInclusive > state.valueRange.start) {
+            if (state.trackRange.endInclusive > state.trackRange.start) {
                 CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
                     Row(
                         modifier = Modifier
@@ -206,6 +212,8 @@ private fun HorizontalReaderPageNavigator(
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(horizontal = 8.dp),
+                            onValueChange = onValueChange,
+                            onValueChangeFinished = onValueChangeFinished,
                             interactionSource = interactionSource,
                         )
                         Text(totalLabel)
@@ -248,6 +256,8 @@ private fun HorizontalReaderPageNavigator(
 @Composable
 private fun VerticalReaderPageNavigator(
     state: SliderState,
+    onValueChange: (Float) -> Unit,
+    onValueChangeFinished: () -> Unit,
     onNextSection: () -> Unit,
     nextSectionEnabled: Boolean,
     onPreviousSection: () -> Unit,
@@ -278,7 +288,7 @@ private fun VerticalReaderPageNavigator(
             modifier = Modifier.rotate(90f),
         )
 
-        if (state.valueRange.endInclusive > state.valueRange.start) {
+        if (state.trackRange.endInclusive > state.trackRange.start) {
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -293,6 +303,8 @@ private fun VerticalReaderPageNavigator(
                     modifier = Modifier
                         .weight(1f)
                         .padding(vertical = 8.dp),
+                    onValueChange = onValueChange,
+                    onValueChangeFinished = onValueChangeFinished,
                     interactionSource = interactionSource,
                 )
                 Text(totalLabel)

@@ -130,7 +130,6 @@
     <string name="migrate">Přesunout</string>
     <string name="copy">Kopírovat</string>
     <string name="download_queue_error">Došlo k chybě při stahování kapitol. Zkuste to znovu v sekci stahování</string>
-    <string name="notification_new_chapters">Nalezeny nové kapitoly</string>
     <string name="file_select_backup">Vybrat záložní soubor</string>
     <string name="update_check_confirm">Stáhnout</string>
     <string name="update_check_no_new_updates">Žádné nové aktualizace</string>
@@ -393,7 +392,6 @@
     <string name="action_display_show_number_of_items">Zobrazovat počet položek</string>
     <string name="action_start">Začít</string>
     <string name="channel_ext_updates">Aktualizace rozšíření</string>
-    <string name="channel_new_chapters">Aktualizace kapitol</string>
     <string name="channel_errors">Chyby</string>
     <string name="channel_complete">Dokončeno</string>
     <string name="channel_progress">Postup</string>

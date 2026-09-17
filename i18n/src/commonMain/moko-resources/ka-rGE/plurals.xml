@@ -12,10 +12,6 @@
         <item quantity="one">ნაპოვნია ახალი თავი</item>
         <item quantity="other">ნაპოვნია %1$d ახალი თავი</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">%d ჩანაწერისთვის</item>
-        <item quantity="other">%d ჩანაწერისთვის</item>
-    </plurals>
     <plurals name="manga_num_chapters">
         <item quantity="one">1 თავი</item>
         <item quantity="other">%1$s თავი</item>

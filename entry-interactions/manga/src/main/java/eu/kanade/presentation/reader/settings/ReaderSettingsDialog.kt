@@ -6,7 +6,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.window.DialogWindowProvider
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.ViewerSettingsTabbedDialog
 import tachiyomi.presentation.core.i18n.stringResource
 

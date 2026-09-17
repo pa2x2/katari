@@ -15,11 +15,6 @@
         <item quantity="few">Capitolele %1$s și încă %2$d în plus</item>
         <item quantity="other">Capitolele %1$s și încă %2$d mai multe</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">Pentru %d intrare</item>
-        <item quantity="few">Pentru %d intrări</item>
-        <item quantity="other">Pentru %d intrări</item>
-    </plurals>
     <plurals name="update_check_notification_ext_updates">
         <item quantity="one">Actualizare de extensie disponibilă</item>
         <item quantity="few">%d actualizări de extensii sunt disponibile</item>

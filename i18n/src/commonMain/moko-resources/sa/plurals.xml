@@ -36,10 +36,6 @@
         <item quantity="one">%1$d नव अध्यायः</item>
         <item quantity="other">%1$d नव अध्यायाः</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">%d प्रविष्ट्यर्थम्</item>
-        <item quantity="other">%d प्रविष्ट्यर्थम्</item>
-    </plurals>
     <plurals name="notification_chapters_multiple_and_more">
         <item quantity="one">अध्यायाः %1$s तथा 1 अधिकः</item>
         <item quantity="other">अध्यायाः %1$s तथा %2$d अधिकाः</item>

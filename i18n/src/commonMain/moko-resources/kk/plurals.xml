@@ -48,10 +48,6 @@
         <item quantity="one">Кеңейту үшін жаңарту бар</item>
         <item quantity="other">%d кеңейту үшін жаңарту бар</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">%d жазбасы үшін</item>
-        <item quantity="other">%d жазбасы үшін</item>
-    </plurals>
     <plurals name="download_amount">
         <item quantity="one">Келесі тарау</item>
         <item quantity="other">Келесі %d тарау</item>

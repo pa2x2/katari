@@ -9,7 +9,7 @@ import mihon.entry.interactions.presentation.EntryPartialProgressPresentation
 import mihon.entry.interactions.presentation.EntryTypePresentation
 import mihon.entry.interactions.presentation.EntryUpdateNotificationVocabulary
 import mihon.entry.interactions.runtime.EntryTypePresentationProvider
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 internal object AnimeEntryTypePresentationProvider : EntryTypePresentationProvider {
     override val type = EntryType.ANIME
@@ -49,9 +49,6 @@ internal object AnimeEntryTypePresentationProvider : EntryTypePresentationProvid
         historySubtitle = EntryHistorySubtitlePresentation.NameTimestampAndDuration,
         partialProgress = EntryPartialProgressPresentation.Fixed(MR.strings.label_started),
         updateNotification = EntryUpdateNotificationVocabulary(
-            channelLabel = MR.strings.channel_new_episodes,
-            summaryTitle = MR.strings.notification_new_episodes,
-            summaryText = MR.plurals.notification_new_episodes_summary,
             childGeneric = MR.plurals.notification_episodes_generic,
             childSingle = MR.strings.notification_episodes_single,
             childSingleAndMore = MR.strings.notification_episodes_single_and_more,

@@ -7,7 +7,6 @@ import mihon.entry.interactions.download.EntryDownloadActionFeature
 import mihon.entry.interactions.navigation.EntryOpenFeature
 import mihon.entry.interactions.presentation.EntryTypePresentationFeature
 import mihon.entry.interactions.presentation.EntryTypePresentationResult
-import mihon.entry.interactions.runtime.toContentTypeId
 import mihon.entry.interactions.state.EntryConsumptionFeature
 import mihon.feature.graph.FeatureGraphEvaluation
 import tachiyomi.domain.entry.model.Entry
@@ -51,9 +50,6 @@ internal class DefaultEntryLibraryUpdateNotificationFeature(
         ENTRY_LIBRARY_UPDATE_NOTIFICATION_DOWNLOAD_INTEGRATION_ID,
         ENTRY_LIBRARY_UPDATE_NOTIFICATION_DOWNLOAD_BEHAVIOR_ID,
     )
-    private val routesByType = participatingTypes
-        .associateWith(::createRoute)
-        .also(::validateLibraryUpdateNotificationRoutes)
 
     init {
         check(participatingTypes == renderTypes) {
@@ -65,7 +61,9 @@ internal class DefaultEntryLibraryUpdateNotificationFeature(
         require(queueWarningThreshold >= 0) { "Library-update queue warning threshold must be non-negative" }
     }
 
-    override fun routes(): List<EntryLibraryUpdateNotificationRoute> = routesByType.values.toList()
+    override fun routes(): List<EntryLibraryUpdateNotificationRoute> = listOf(
+        sharedLibraryUpdateNotificationRoute,
+    )
 
     override fun queueWarning(entries: List<Entry>): EntryLibraryUpdateQueueWarning {
         entries.forEach { entry ->
@@ -89,108 +87,96 @@ internal class DefaultEntryLibraryUpdateNotificationFeature(
         updates: List<EntryLibraryUpdateNotificationInput>,
     ): EntryLibraryUpdateNotificationProjection {
         val omissions = mutableListOf<EntryLibraryUpdateNotificationOmission>()
-        val groups = updates.groupBy { it.entry.type }.mapNotNull { (type, typeUpdates) ->
-            val route = routesByType[type]
-            if (route == null) {
+        val participatingUpdates = mutableListOf<EntryLibraryUpdateNotificationInput>()
+        updates.groupBy { it.entry.type }.forEach { (type, typeUpdates) ->
+            if (type in participatingTypes) {
+                participatingUpdates += typeUpdates
+            } else {
                 omissions += EntryLibraryUpdateNotificationOmission(
                     type = type,
                     updateCount = typeUpdates.size,
                     reason = EntryLibraryUpdateNotificationOmissionReason.NOT_AN_UPDATE_PARTICIPANT,
                 )
-                return@mapNotNull null
             }
-
-            val presentationResult = presentationFeature.presentation(type)
-            checkPresentationRelationship(type, presentationResult)
-            val presentation = presentationResult.presentation
-            val vocabulary = presentation.updateNotification
-            EntryLibraryUpdateNotificationGroup(
-                route = route.copy(channelLabel = vocabulary.channelLabel),
-                summaryTitle = vocabulary.summaryTitle,
-                summaryText = vocabulary.summaryText,
-                updates = typeUpdates.map { update ->
-                    val visibleEntry = resolveVisibleEntry(update.entry)
-                    check(visibleEntry.type == update.entry.type) {
-                        "Visible notification target ${visibleEntry.id} has type ${visibleEntry.type}, " +
-                            "but origin ${update.entry.id} has type ${update.entry.type}"
-                    }
-                    val hasChildren = update.children.isNotEmpty()
-                    val destination = if (visibleEntry.type in openTypes) {
-                        evaluation.requireLibraryUpdateNotificationOpenContext(visibleEntry.type, hasChildren)
-                        if (hasChildren) {
-                            check(openFeature.isApplicable(visibleEntry.type)) {
-                                "Library-update notifications selected Open for ${visibleEntry.type}, " +
-                                    "but Open rejected it"
-                            }
-                            EntryLibraryUpdateNotificationDestination.OPEN_CHILD
-                        } else {
-                            EntryLibraryUpdateNotificationDestination.ENTRY_DETAILS
-                        }
-                    } else {
-                        EntryLibraryUpdateNotificationDestination.ENTRY_DETAILS
-                    }
-                    val actions = buildSet {
-                        add(EntryLibraryUpdateNotificationAction.VIEW_ENTRY)
-                        if (update.entry.type in consumptionTypes) {
-                            evaluation.requireLibraryUpdateNotificationConsumptionContext(
-                                update.entry.type,
-                                hasChildren,
-                            )
-                            if (hasChildren) {
-                                check(consumptionFeature.isApplicable(update.entry.type)) {
-                                    "Library-update notifications selected Consumption for ${update.entry.type}, " +
-                                        "but Consumption rejected it"
-                                }
-                                add(EntryLibraryUpdateNotificationAction.MARK_CONSUMED)
-                            }
-                        }
-                        if (update.entry.type in downloadTypes) {
-                            val availability = downloadActionFeature.notificationAvailability(
-                                entry = update.entry,
-                                childCount = update.children.size,
-                            )
-                            when (availability) {
-                                EntryDownloadActionAvailability.Available -> {
-                                    add(EntryLibraryUpdateNotificationAction.DOWNLOAD)
-                                }
-
-                                is EntryDownloadActionAvailability.Blocked -> Unit
-                                is EntryDownloadActionAvailability.Inapplicable -> error(
-                                    "Library-update notifications selected Download for ${update.entry.type}, " +
-                                        "but Download rejected it",
-                                )
-                            }
-                        }
-                    }
-                    EntryLibraryUpdateNotificationItem(
-                        originEntry = update.entry,
-                        visibleEntry = visibleEntry,
-                        children = update.children,
-                        description = vocabulary.describeLibraryUpdate(update.children),
-                        destination = destination,
-                        actions = actions,
-                        markConsumedLabel = presentation.markAsConsumedLabel,
-                        viewChildrenLabel = vocabulary.viewChildrenLabel,
-                    )
-                },
+        }
+        val items = participatingUpdates.map { buildNotificationItem(it) }
+        val groups = if (items.isEmpty()) {
+            emptyList()
+        } else {
+            listOf(
+                EntryLibraryUpdateNotificationGroup(
+                    route = sharedLibraryUpdateNotificationRoute,
+                    updates = items,
+                ),
             )
         }
         return EntryLibraryUpdateNotificationProjection(groups = groups, omissions = omissions)
     }
 
-    private fun createRoute(type: EntryType): EntryLibraryUpdateNotificationRoute {
-        val legacy = LegacyLibraryUpdateNotificationRouteCompatibility.route(type)
-        val typeKey = type.toContentTypeId().value
+    private suspend fun buildNotificationItem(
+        update: EntryLibraryUpdateNotificationInput,
+    ): EntryLibraryUpdateNotificationItem {
+        val visibleEntry = resolveVisibleEntry(update.entry)
+        check(visibleEntry.type == update.entry.type) {
+            "Visible notification target ${visibleEntry.id} has type ${visibleEntry.type}, " +
+                "but origin ${update.entry.id} has type ${update.entry.type}"
+        }
+        val type = visibleEntry.type
         val presentationResult = presentationFeature.presentation(type)
         checkPresentationRelationship(type, presentationResult)
-        val presentation = presentationResult.presentation.updateNotification
-        return EntryLibraryUpdateNotificationRoute(
-            type = type,
-            channelId = legacy?.channelId ?: "entry_library_updates_${typeKey}_channel",
-            channelLabel = presentation.channelLabel,
-            groupKey = legacy?.groupKey ?: "mihon.entry.library_updates.$typeKey",
-            summaryNotificationId = legacy?.summaryNotificationId
-                ?: derivedLibraryUpdateSummaryNotificationId(typeKey),
+        val presentation = presentationResult.presentation
+        val vocabulary = presentation.updateNotification
+        val hasChildren = update.children.isNotEmpty()
+        val destination = if (type in openTypes) {
+            evaluation.requireLibraryUpdateNotificationOpenContext(type, hasChildren)
+            if (hasChildren) {
+                check(openFeature.isApplicable(type)) {
+                    "Library-update notifications selected Open for $type, but Open rejected it"
+                }
+                EntryLibraryUpdateNotificationDestination.OPEN_CHILD
+            } else {
+                EntryLibraryUpdateNotificationDestination.ENTRY_DETAILS
+            }
+        } else {
+            EntryLibraryUpdateNotificationDestination.ENTRY_DETAILS
+        }
+        val actions = buildSet {
+            add(EntryLibraryUpdateNotificationAction.VIEW_ENTRY)
+            if (type in consumptionTypes) {
+                evaluation.requireLibraryUpdateNotificationConsumptionContext(type, hasChildren)
+                if (hasChildren) {
+                    check(consumptionFeature.isApplicable(type)) {
+                        "Library-update notifications selected Consumption for $type, but Consumption rejected it"
+                    }
+                    add(EntryLibraryUpdateNotificationAction.MARK_CONSUMED)
+                }
+            }
+            if (type in downloadTypes) {
+                val availability = downloadActionFeature.notificationAvailability(
+                    entry = update.entry,
+                    childCount = update.children.size,
+                )
+                when (availability) {
+                    EntryDownloadActionAvailability.Available -> {
+                        add(EntryLibraryUpdateNotificationAction.DOWNLOAD)
+                    }
+
+                    is EntryDownloadActionAvailability.Blocked -> Unit
+                    is EntryDownloadActionAvailability.Inapplicable -> error(
+                        "Library-update notifications selected Download for $type, but Download rejected it",
+                    )
+                }
+            }
+        }
+        return EntryLibraryUpdateNotificationItem(
+            originEntry = update.entry,
+            visibleEntry = visibleEntry,
+            children = update.children,
+            description = vocabulary.describeLibraryUpdate(update.children),
+            destination = destination,
+            actions = actions,
+            markConsumedLabel = presentation.markAsConsumedLabel,
+            viewChildrenLabel = vocabulary.viewChildrenLabel,
         )
     }
 

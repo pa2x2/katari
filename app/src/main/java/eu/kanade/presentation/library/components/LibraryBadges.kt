@@ -10,7 +10,7 @@ import eu.kanade.presentation.browse.components.CatalogTypeBadge
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.domain.library.model.LibraryItem
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.Badge
 import tachiyomi.presentation.core.i18n.stringResource
 

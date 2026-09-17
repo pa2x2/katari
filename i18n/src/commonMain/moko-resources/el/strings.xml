@@ -246,7 +246,6 @@
     <string name="migrate">Μεταφορά</string>
     <string name="copy">Αντιγραφή</string>
     <string name="download_queue_error">Δεν ήταν δυνατή η λήψη κεφαλαίων. Μπορείτε να δοκιμάσετε ξανά στο τμήμα λήψεων</string>
-    <string name="notification_new_chapters">Βρέθηκαν νέα κεφάλαια</string>
     <string name="notification_cover_update_failed">Δεν ήταν δυνατή η ενημέρωση του εξώφυλλου</string>
     <string name="notification_first_add_to_library">Παρακαλώ προσθέστε την καταχώρηση στη βιβλιοθήκη σας πριν το κάνετε αυτό</string>
     <string name="file_select_cover">Επιλέξτε εικόνα εξωφύλλου</string>
@@ -292,7 +291,6 @@
     <string name="restore_duration">%1$02d λεπτά, %2$02d δευτερόλεπτα</string>
     <string name="action_select_inverse">Επιλογή αντίστροφου</string>
     <string name="channel_ext_updates">Ενημερώσεις επεκτάσεων</string>
-    <string name="channel_new_chapters">Ενημερώσεις κεφαλαίων</string>
     <string name="information_webview_outdated">Παρακαλώ ενημερώστε την εφαρμογή WebView για καλύτερη συμβατότητα</string>
     <string name="information_webview_required">Το WebView απαιτείται για τη λειτουργία της εφαρμογής</string>
     <string name="notification_chapters_single_and_more">Κεφάλαιο %1$s και %2$d ακόμη</string>

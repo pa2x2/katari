@@ -20,10 +20,6 @@
         <item quantity="one">%1$d nova ĉapitro</item>
         <item quantity="other">%1$d novaj ĉapitroj</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">Por 1 elemento</item>
-        <item quantity="other">Por %d elementoj</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="one">Preterpasas %d ĉapitron, aŭ ĝi mankas ĉe la fonto aŭ ĝi estis elfiltrita</item>
         <item quantity="other">Preterpasas %d ĉapitrojn, aŭ ili mankas ĉe la fonto aŭ ili estis elfiltritaj</item>

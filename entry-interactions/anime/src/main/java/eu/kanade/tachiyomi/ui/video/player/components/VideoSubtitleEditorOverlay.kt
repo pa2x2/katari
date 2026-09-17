@@ -35,6 +35,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -64,7 +65,7 @@ import eu.kanade.tachiyomi.ui.video.player.MIN_SUBTITLE_OFFSET_Y
 import eu.kanade.tachiyomi.ui.video.player.MIN_SUBTITLE_TEXT_SIZE
 import eu.kanade.tachiyomi.ui.video.player.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.applyAppearance
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -342,10 +343,11 @@ private fun SliderSection(
             text = title,
             style = MaterialTheme.typography.labelLarge,
         )
+        val state = remember(valueRange) { SliderState(value = value, trackRange = valueRange) }
+        state.value = value
         Slider(
-            value = value,
+            state = state,
             onValueChange = onValueChange,
-            valueRange = valueRange,
         )
     }
 }

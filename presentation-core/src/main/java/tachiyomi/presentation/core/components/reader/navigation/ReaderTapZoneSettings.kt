@@ -3,7 +3,7 @@ package tachiyomi.presentation.core.components.reader.navigation
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.SettingsChipRow
 import tachiyomi.presentation.core.i18n.stringResource
 

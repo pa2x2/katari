@@ -66,7 +66,7 @@ import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.service.EntryChildOwnershipResolution
 import tachiyomi.domain.entry.service.EntryChildOwnershipResolutionPort
 import tachiyomi.domain.source.service.SourceManager
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 class AnimeEntryInteractionPluginTest {
     private val context = mockk<Context>(relaxed = true)

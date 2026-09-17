@@ -24,10 +24,6 @@
         <item quantity="one">%1$d ҫӗнӗ сыпӑк</item>
         <item quantity="other">%1$d ҫӗнӗ сыпӑк</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">%d хайлав валли</item>
-        <item quantity="other">%d хайлав валли</item>
-    </plurals>
     <plurals name="manga_num_chapters">
         <item quantity="one">%1$s сыпӑк</item>
         <item quantity="other">%1$s сыпӑк</item>

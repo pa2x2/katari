@@ -48,7 +48,7 @@ import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.TranslationEngineSelection
 import mihon.translation.ui.session.TranslationSessionController
 import mihon.translation.ui.session.TranslationSessionState
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.AdaptiveSheet
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.math.roundToInt

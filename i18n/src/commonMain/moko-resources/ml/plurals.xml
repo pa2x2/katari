@@ -72,8 +72,4 @@
         <item quantity="one">1 പേജ്</item>
         <item quantity="other">%1$s പേജ്</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">%d എൻട്രിക്ക്</item>
-        <item quantity="other">%d എൻട്രികൾക്കായി</item>
-    </plurals>
 </resources>

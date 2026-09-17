@@ -4,7 +4,7 @@ import dev.icerock.moko.resources.StringResource
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.getEnum
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 class SecurityPreferences(
     preferenceStore: PreferenceStore,

@@ -64,10 +64,6 @@
         <item quantity="one">%d অধ্যায় স্কিপ কৰা হৈছে, উৎসত নাইবা ফিল্টাৰ কৰি আঁতৰোৱা হৈছে</item>
         <item quantity="other">%d অধ্যায়সমূহ স্কিপ কৰা হৈছে, উৎসত নাইবা ফিল্টাৰ কৰি আঁতৰোৱা হৈছে</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">%d প্ৰৱিষ্টিৰ বাবে</item>
-        <item quantity="other">%d প্ৰৱিষ্টিসমূহৰ বাবে</item>
-    </plurals>
     <plurals name="notification_chapters_generic">
         <item quantity="one">%1$d নতুন অধ্যায়</item>
         <item quantity="other">%1$d নতুন অধ্যায়সমূহ</item>

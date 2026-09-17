@@ -13,7 +13,7 @@ import eu.kanade.presentation.more.settings.widget.ProfileSpecificChip
 import kotlinx.coroutines.delay
 import mihon.tts.api.provider.TtsProviderDisclosure
 import mihon.tts.ui.settings.TtsSettingsState
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding

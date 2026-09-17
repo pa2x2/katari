@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.9.0] - 2026-09-17
+
+### 🔄 Changed
+
+- Library updates for manga, anime, and books now arrive in one grouped notification under a single Library updates channel.
+
 ## [1.8.6] - 2026-09-12
 
 ### 🐛 Fixed
@@ -434,7 +440,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.8.6...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.9.0...HEAD
+[1.9.0]: https://github.com/pa2x2/katari/releases/tag/v1.9.0
 [1.8.6]: https://github.com/pa2x2/katari/releases/tag/v1.8.6
 [1.8.5]: https://github.com/pa2x2/katari/releases/tag/v1.8.5
 [1.8.4]: https://github.com/pa2x2/katari/releases/tag/v1.8.4

@@ -316,7 +316,6 @@
     <string name="label_network">नेटवर्किङ</string>
     <string name="restoring_backup_error">ब्याकअप रिस्टोर असफल भयो</string>
     <string name="backup_info">तपाईंले ब्याकअपको प्रतिलिपिहरू अन्य ठाउँहरूमा पनि राख्नु पर्छ। ब्याकअपहरूमा कुनै पनि भण्डारण गरिएका पासवर्डहरू सहित संवेदनशील डेटा समावेश हुन सक्छ; साझा गर्दा होसियार ।</string>
-    <string name="notification_new_chapters">नयाँ अध्यायहरू फेला पर्यो</string>
     <string name="pref_highest">सबैभन्दा उच्च</string>
     <string name="disabled">असक्षम</string>
     <string name="enhanced_services">परिष्कृत ट्र्याकरहरू</string>
@@ -536,7 +535,6 @@
     <string name="reading">पढ्दै</string>
     <string name="file_picker_error">कुनै फाइल पिकर एप फेला परेन</string>
     <string name="update_check_confirm">डाउनलोड गर्नुहोस्</string>
-    <string name="channel_new_chapters">अध्याय अपडेट्स</string>
     <string name="skipped_reason_completed">श्रृङ्खला पूरा भएकोले छोडियो</string>
     <string name="learn_more">थप जान्नका लागि ट्याप गर्नुहोस्</string>
     <string name="update_check_no_new_updates">कुनै नयाँ अपडेट उपलब्ध छैन</string>

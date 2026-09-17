@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="channel_ext_updates">עדכונים לתוסף</string>
-    <string name="channel_new_chapters">עדכונים לפרק</string>
     <string name="channel_common">נפוץ</string>
     <string name="download_notifier_download_paused">ההורדות מושהות</string>
     <string name="download_notifier_no_network">אין חיבור רשת זמין</string>
@@ -24,7 +23,6 @@
     <string name="notification_chapters_multiple">פרקים %1$s</string>
     <string name="notification_chapters_single_and_more">פרק %1$s ו-%2$d נוספים</string>
     <string name="notification_chapters_single">פרק %1$s</string>
-    <string name="notification_new_chapters">נמצאו פרקים חדשים</string>
     <string name="download_queue_error">לא ניתן להוריד פרקים. אפשר לנסות שוב בדף ההורדות</string>
     <string name="copy">העתק</string>
     <string name="migrate">העברה</string>

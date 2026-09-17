@@ -3,7 +3,7 @@ package mihon.entry.interactions.reader.settings
 import androidx.annotation.DrawableRes
 import dev.icerock.moko.resources.StringResource
 import mihon.entry.interactions.api.R
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 enum class ReadingMode(
     val stringRes: StringResource,

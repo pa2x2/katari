@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekDirection
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekFeedbackState
 import kotlinx.coroutines.delay
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 private const val SEEK_FEEDBACK_VISIBLE_DURATION_MS = 700L

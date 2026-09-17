@@ -12,10 +12,6 @@
         <item quantity="one">Kapitel %1$s och 1 till</item>
         <item quantity="other">Kapitlen %1$s och %2$d till</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">För %d post</item>
-        <item quantity="other">För %d poster</item>
-    </plurals>
     <plurals name="update_check_notification_ext_updates">
         <item quantity="one">Tilläggsuppdatering tillgänglig</item>
         <item quantity="other">%d tilläggsuppdateringar tillgängliga</item>

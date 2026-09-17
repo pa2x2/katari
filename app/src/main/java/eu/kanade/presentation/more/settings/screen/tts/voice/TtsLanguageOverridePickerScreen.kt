@@ -14,7 +14,7 @@ import eu.kanade.presentation.more.settings.screen.tts.presentTtsHostActionResul
 import eu.kanade.presentation.util.Screen
 import mihon.tts.ui.picker.voice.TtsLanguagePickerList
 import mihon.tts.ui.settings.ttsLanguageOptions
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 internal class TtsLanguageOverridePickerScreen : Screen() {

@@ -2,7 +2,7 @@ package eu.kanade.tachiyomi.ui.browse.source.browse.filter
 
 import androidx.compose.runtime.Composable
 import eu.kanade.tachiyomi.source.entry.EntryFilter
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.NavigationItem
 import tachiyomi.presentation.core.i18n.stringResource
 

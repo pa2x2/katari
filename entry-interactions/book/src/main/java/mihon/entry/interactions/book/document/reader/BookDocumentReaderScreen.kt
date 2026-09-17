@@ -68,7 +68,7 @@ import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.translation.ui.presentation.TranslationResultSpeechPhase
 import mihon.translation.ui.presentation.TranslationResultSpeechState
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.reader.ReaderChrome
 import tachiyomi.presentation.core.components.reader.ReaderChromeBottomBar
 import tachiyomi.presentation.core.components.reader.ReaderChromeBottomBarAction

@@ -84,12 +84,6 @@
         <item quantity="many">Прапускаецца %d раздзелаў: адсутнічаюць у крыніцы або адфільтраваныя</item>
         <item quantity="other">Прапускаецца %d раздзелаў: адсутнічаюць у крыніцы або адфільтраваныя</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">Для %d твора</item>
-        <item quantity="few">Для %d твораў</item>
-        <item quantity="many">Для %d твораў</item>
-        <item quantity="other">Для %d твораў</item>
-    </plurals>
     <plurals name="notification_chapters_generic">
         <item quantity="one">%1$d новы раздзел</item>
         <item quantity="few">%1$d новыя раздзелы</item>

@@ -15,11 +15,6 @@
         <item quantity="many">Capítols %1$s i %2$d més</item>
         <item quantity="other">Capítols %1$s i %2$d més</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">Per a %d element</item>
-        <item quantity="many">Per a %d elements</item>
-        <item quantity="other">Per a %d elements</item>
-    </plurals>
     <plurals name="update_check_notification_ext_updates">
         <item quantity="one">Hi ha una actualització d’una extensió</item>
         <item quantity="many">Hi ha actualitzacions de %d extensions</item>

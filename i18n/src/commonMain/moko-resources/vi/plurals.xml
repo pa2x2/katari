@@ -6,9 +6,6 @@
     <plurals name="notification_chapters_generic">
         <item quantity="other">%1$d chương mới có</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="other">Cho %d chương</item>
-    </plurals>
     <plurals name="lock_after_mins">
         <item quantity="other">Sau %1$s phút</item>
     </plurals>

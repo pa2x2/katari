@@ -29,7 +29,7 @@ import eu.kanade.core.preference.asToggleableState
 import eu.kanade.presentation.category.visualName
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.domain.category.model.Category
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 

@@ -238,7 +238,6 @@
     <string name="migrate">Taşı</string>
     <string name="copy">Kopyala</string>
     <string name="download_queue_error">Bölümler indirilemedi. İndirmeler bölümünden yeniden deneyebilirsiniz</string>
-    <string name="notification_new_chapters">Yeni bölümler bulundu</string>
     <string name="notification_cover_update_failed">Kapak güncellenemedi</string>
     <string name="notification_first_add_to_library">Lütfen bunu yapmadan önce girdiyi kitaplığınıza ekleyin</string>
     <string name="file_select_cover">Kapak görselini seç</string>
@@ -309,7 +308,6 @@
     <string name="pref_cutout_short">Ekran kesimi bölgesinde içerik göster</string>
     <string name="information_cloudflare_bypass_failure">Cloudflare geçilemedi</string>
     <string name="information_webview_outdated">Daha iyi uyumluluk için lütfen WebView uygulamasını güncelleyin</string>
-    <string name="channel_new_chapters">Bölüm güncellemeleri</string>
     <string name="secure_screen_summary">Güvenli ekran, uygulamalar arasında geçiş yaparken uygulama içeriğini gizler ve ekran görüntüsü alınmasını engeller</string>
     <string name="pref_category_display">Ekran</string>
     <string name="notification_chapters_single">Bölüm %1$s</string>

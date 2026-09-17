@@ -12,10 +12,6 @@
         <item quantity="one">Kapitel %1$s und 1 weiteres</item>
         <item quantity="other">Kapitel %1$s und %2$d weitere</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">Für %d Eintrag</item>
-        <item quantity="other">Für %d Einträge</item>
-    </plurals>
     <plurals name="update_check_notification_ext_updates">
         <item quantity="one">Erweiterungsaktualisierung verfügbar</item>
         <item quantity="other">%d Erweiterungsaktualisierungen verfügbar</item>

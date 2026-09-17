@@ -13,7 +13,7 @@ import mihon.entry.interactions.download.EntryDownloadEntryIdentity
 import mihon.entry.interactions.download.EntryDownloadNotificationActions
 import mihon.entry.interactions.download.EntryDownloadNotifications
 import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 

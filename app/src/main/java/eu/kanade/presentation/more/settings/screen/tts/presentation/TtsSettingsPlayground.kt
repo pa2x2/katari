@@ -34,7 +34,7 @@ import mihon.tts.ui.settings.TtsPreviewState
 import mihon.tts.ui.settings.TtsSettingsState
 import mihon.tts.ui.settings.displayName
 import mihon.tts.ui.settings.previewSample
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.pulsingHighlightBackground
 import tachiyomi.presentation.core.i18n.stringResource

@@ -9,7 +9,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import dev.icerock.moko.resources.PluralsResource
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.source.entry.EntryType
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 /** Type-owned vocabulary and imagery. These values describe a type; they never authorize product behavior. */
 data class EntryTypePresentation(
@@ -63,9 +63,6 @@ sealed interface EntryPartialProgressPresentation {
 
 /** Vocabulary for library-update notifications; routing, identity, actions, and applicability remain notification-owned. */
 data class EntryUpdateNotificationVocabulary(
-    val channelLabel: StringResource,
-    val summaryTitle: StringResource,
-    val summaryText: PluralsResource,
     val childGeneric: PluralsResource,
     val childSingle: StringResource,
     val childSingleAndMore: StringResource,
@@ -140,9 +137,6 @@ val genericEntryTypePresentation = EntryTypePresentation(
     historySubtitle = EntryHistorySubtitlePresentation.NameAndTimestamp,
     partialProgress = EntryPartialProgressPresentation.Fixed(MR.strings.label_started),
     updateNotification = EntryUpdateNotificationVocabulary(
-        channelLabel = MR.strings.channel_new_items,
-        summaryTitle = MR.strings.notification_new_items,
-        summaryText = MR.plurals.notification_new_items_summary,
         childGeneric = MR.plurals.notification_items_generic,
         childSingle = MR.strings.notification_items_single,
         childSingleAndMore = MR.strings.notification_items_single_and_more,

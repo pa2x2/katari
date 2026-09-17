@@ -25,7 +25,7 @@ import mihon.language.api.tag.LanguageTag
 import mihon.tts.api.voice.TtsVoice
 import mihon.tts.api.voice.TtsVoiceId
 import mihon.tts.ui.settings.displayName
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable

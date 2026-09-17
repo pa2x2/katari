@@ -8,7 +8,7 @@ import eu.kanade.tachiyomi.util.system.isAuthenticationSupported
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.suspendCancellableCoroutine
 import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import kotlin.coroutines.resume
 
 object BiometricAuthentication {

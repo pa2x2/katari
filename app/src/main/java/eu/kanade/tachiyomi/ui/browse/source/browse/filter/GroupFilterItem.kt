@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.filter.EntryFilterGroupSummary
 import eu.kanade.tachiyomi.source.entry.filter.validationIssues
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable

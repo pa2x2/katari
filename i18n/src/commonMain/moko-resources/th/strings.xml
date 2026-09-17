@@ -255,7 +255,6 @@
     <string name="migrate">โยกย้าย</string>
     <string name="copy">คัดลอก</string>
     <string name="download_queue_error">ไม่สามารถดาวน์โหลดตอน สามารถลองอีกครั้งได้ในส่วนการดาวน์โหลด</string>
-    <string name="notification_new_chapters">พบตอนใหม่</string>
     <string name="notification_cover_update_failed">อัปเดตหน้าปกล้มเหลว</string>
     <string name="notification_first_add_to_library">เพิ่มรายการไปยังในคลังก่อนที่จะดำเนินการนี้</string>
     <string name="file_select_cover">เลือกภาพหน้าปก</string>
@@ -466,7 +465,6 @@
     <string name="notification_chapters_single">ตอนที่ %1$s</string>
     <string name="spen_previous_page">หน้าก่อน</string>
     <string name="channel_ext_updates">การอัปเดตส่วนขยาย</string>
-    <string name="channel_new_chapters">อัปเดตตอน</string>
     <string name="channel_errors">ข้อผิดพลาด</string>
     <string name="channel_complete">เสร็จสมบูรณ์</string>
     <string name="channel_progress">ความคืบหน้า</string>

@@ -6,7 +6,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 enum class EntryDownloadState(val value: Int) {
     NOT_DOWNLOADED(0),

@@ -206,7 +206,6 @@
     <string name="decode_image_error">छवि को लोड नहीं किया जा सका</string>
     <string name="confirm_set_image_as_cover">कवर कला के रूप में इस छवि का उपयोग करें?</string>
     <string name="download_queue_error">अध्याय डाउनलोड नहीं कर सका। आप डाउनलोड अनुभाग में फिर से कोशिश कर सकते हैं</string>
-    <string name="notification_new_chapters">नए अध्याय पाए गए</string>
     <string name="notification_cover_update_failed">कवर को अपडेट करने में विफल</string>
     <string name="notification_first_add_to_library">कृपया यह करने से पहले प्रविष्टि को पुस्तकालय में जोड़ें</string>
     <string name="file_select_cover">कवर छवि का चयन करें</string>
@@ -311,7 +310,6 @@
     <string name="pref_cutout_short">कटआउट क्षेत्र में सामग्री दिखाएं</string>
     <string name="information_cloudflare_bypass_failure">Cloudflare को बायपास करने में विफल</string>
     <string name="information_webview_outdated">बेहतर संगतता के लिए कृपया WebView ऐप को अपडेट करें</string>
-    <string name="channel_new_chapters">अध्याय अद्यतन</string>
     <string name="secure_screen_summary">सुरक्षित स्क्रीन एप्लिकेशन स्विच करते समय एप्लिकेशन सामग्री छिपाता हैं और स्क्रीनशॉट ब्लॉक करता हैं</string>
     <string name="pref_category_display">प्रदर्शन</string>
     <string name="notification_chapters_single">अध्याय %1$s</string>

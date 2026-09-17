@@ -19,7 +19,7 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.filter.FilterPresetRepairItem
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.activeCount
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.displayMessage
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.isOrdering
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.HeadingItem
 import tachiyomi.presentation.core.i18n.stringResource
 

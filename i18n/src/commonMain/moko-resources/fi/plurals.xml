@@ -12,10 +12,6 @@
         <item quantity="one">Luku %1$s ja 1 lisää</item>
         <item quantity="other">Luvut %1$s ja %2$d lisää</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">Yhdelle sarjalle</item>
-        <item quantity="other">%d sarjalle</item>
-    </plurals>
     <plurals name="update_check_notification_ext_updates">
         <item quantity="one">Laajennuspäivitys saatavilla</item>
         <item quantity="other">%d laajennuspäivitystä saatavilla</item>

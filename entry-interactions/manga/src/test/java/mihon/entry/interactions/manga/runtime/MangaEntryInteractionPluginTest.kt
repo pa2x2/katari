@@ -59,7 +59,7 @@ import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.source.service.SourceManager
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 class MangaEntryInteractionPluginTest {
     private val context = mockk<Context>(relaxed = true)

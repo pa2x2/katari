@@ -9,7 +9,7 @@ import mihon.entry.interactions.presentation.EntryPartialProgressPresentation
 import mihon.entry.interactions.presentation.EntryTypePresentation
 import mihon.entry.interactions.presentation.EntryUpdateNotificationVocabulary
 import mihon.entry.interactions.runtime.EntryTypePresentationProvider
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 internal object MangaEntryTypePresentationProvider : EntryTypePresentationProvider {
     override val type = EntryType.MANGA
@@ -49,9 +49,6 @@ internal object MangaEntryTypePresentationProvider : EntryTypePresentationProvid
         historySubtitle = EntryHistorySubtitlePresentation.NumberAndTimestamp(MR.strings.recent_manga_time),
         partialProgress = EntryPartialProgressPresentation.NumberedPosition(MR.strings.chapter_progress),
         updateNotification = EntryUpdateNotificationVocabulary(
-            channelLabel = MR.strings.channel_new_chapters,
-            summaryTitle = MR.strings.notification_new_chapters,
-            summaryText = MR.plurals.notification_new_chapters_summary,
             childGeneric = MR.plurals.notification_chapters_generic,
             childSingle = MR.strings.notification_chapters_single,
             childSingleAndMore = MR.strings.notification_chapters_single_and_more,

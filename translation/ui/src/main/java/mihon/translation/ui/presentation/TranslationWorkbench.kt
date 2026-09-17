@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
@@ -24,6 +25,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
@@ -33,7 +38,7 @@ import mihon.translation.api.engine.TranslationEngineSelection
 import mihon.translation.ui.session.TranslationSessionState
 import mihon.translation.ui.session.displayedResult
 import mihon.translation.ui.session.isTranslationInProgress
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -125,9 +130,21 @@ private fun TranslationSourcePane(
             .padding(WORKBENCH_PADDING),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        val state = rememberTextFieldState(text)
+        val currentText by rememberUpdatedState(text)
+        val currentOnTextChange by rememberUpdatedState(onTextChange)
+        LaunchedEffect(text) {
+            if (state.text.toString() != text) {
+                state.edit { replace(0, length, text) }
+            }
+        }
+        LaunchedEffect(state) {
+            snapshotFlow { state.text.toString() }.collect {
+                if (it != currentText) currentOnTextChange(it)
+            }
+        }
         BasicTextField(
-            value = text,
-            onValueChange = onTextChange,
+            state = state,
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
@@ -135,7 +152,7 @@ private fun TranslationSourcePane(
                 color = MaterialTheme.colorScheme.onSurface,
             ),
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-            decorationBox = { innerTextField ->
+            decorator = { innerTextField ->
                 Box {
                     if (text.isEmpty()) {
                         Text(

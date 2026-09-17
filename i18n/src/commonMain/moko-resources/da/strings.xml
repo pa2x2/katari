@@ -312,5 +312,4 @@
     <string name="second_to_last">Næstsidst læste kapitel</string>
     <string name="creating_backup">Opretter sikkerhedskopi</string>
     <string name="exception_unknown_host">Kunne ikke nå %s</string>
-    <string name="channel_new_chapters">Kapitelopdateringer</string>
 </resources>

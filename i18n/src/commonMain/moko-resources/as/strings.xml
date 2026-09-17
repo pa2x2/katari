@@ -64,7 +64,6 @@
     <string name="update_check_open">GitHub ত খোলক</string>
     <string name="information_no_downloads">কোনো ডাউনলোড নাই</string>
     <string name="channel_errors">ত্ৰুটিসমূহ</string>
-    <string name="channel_new_chapters">অধ্যায় আপডেট</string>
     <string name="exception_http">HTTP %d, WebView ত ৱেবছাইট পৰীক্ষা কৰক</string>
     <string name="selected">নিৰ্বাচিত</string>
     <string name="not_selected">নিৰ্বাচিত নহয়</string>
@@ -727,7 +726,6 @@
     <string name="download_queue_size_warning">সতৰ্কবাণী: বৃহৎ বাল্ক ডাউনলোডে উৎসসমূহ লেহুৱা আৰু/অথবা %s ব্লক কৰিব পাৰে। অধিক জানিবলৈ টাপ কৰক।</string>
     <string name="notification_updating_progress">পুথিভঁৰাল আপডেট কৰি আছে… (%s)</string>
     <string name="notification_size_warning">বৃহৎ আপডেটে উৎসৰ ক্ষতি কৰে আৰু লেহুৱা আপডেট আৰু অধিক বেটাৰী ব্যৱহাৰৰ কাৰণ হ\'ব পাৰে। অধিক জানিবলৈ টাপ কৰক।</string>
-    <string name="notification_new_chapters">নতুন অধ্যায় পোৱা গৈছে</string>
     <string name="notification_chapters_single">অধ্যায় %1$s</string>
     <string name="notification_chapters_single_and_more">অধ্যায় %1$s আৰু %2$d অধিক</string>
     <string name="notification_chapters_multiple">অধ্যায়সমূহ %1$s</string>

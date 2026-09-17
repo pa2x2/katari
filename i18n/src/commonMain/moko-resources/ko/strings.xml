@@ -203,7 +203,6 @@
     <string name="transition_no_previous">이전 화가 없습니다</string>
     <string name="transition_pages_loading">페이지 로딩중…</string>
     <string name="transition_pages_error">페이지 로딩 실패: %1$s</string>
-    <string name="notification_new_chapters">새로운 회차 발견</string>
     <string name="notification_cover_update_failed">표지 업데이트 실패</string>
     <string name="file_select_cover">표지 이미지 선택</string>
     <string name="file_select_backup">백업 파일 선택</string>
@@ -421,7 +420,6 @@
     <string name="database_clean">지울 것이 없습니다</string>
     <string name="learn_more">터치하여 자세히 알아보기</string>
     <string name="chapter_settings_updated">기본 회차 설정을 업데이트 했습니다</string>
-    <string name="channel_new_chapters">회차 업데이트</string>
     <string name="include">포함: %s</string>
     <string name="label_background_activity">백그라운드 활동</string>
     <string name="pref_update_only_completely_read">안 읽은 회차가 있을 때 항목 건너뛰기</string>

@@ -21,7 +21,7 @@ import tachiyomi.domain.entry.service.calculateChapterGap
 import tachiyomi.domain.entry.service.missingChaptersCount
 import tachiyomi.domain.entry.service.sortedForMergedDisplay
 import tachiyomi.domain.entry.service.sortedForReading
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import kotlin.math.floor
 
 internal class MangaChildListProcessor(

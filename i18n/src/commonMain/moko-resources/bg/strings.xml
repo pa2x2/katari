@@ -174,7 +174,6 @@
     <string name="decode_image_error">Неуспешно декодиране на изображението</string>
     <string name="confirm_set_image_as_cover">Желаете ли да използвате това изображение за корица?</string>
     <string name="download_queue_error">Не можахме да изтеглим главите. Може да опитате пак в секцията на изтеглянията</string>
-    <string name="notification_new_chapters">Нови глави</string>
     <string name="notification_cover_update_failed">Грешка при обновяването на корицата</string>
     <string name="notification_first_add_to_library">Моля, добавете мангата в библиотеката си, преди да направите това</string>
     <string name="file_select_cover">Изберете корица</string>
@@ -295,7 +294,6 @@
     <string name="paused">На пауза</string>
     <string name="secure_screen">Сигурност</string>
     <string name="channel_ext_updates">Ъпдейти на разширенията</string>
-    <string name="channel_new_chapters">Нови глави</string>
     <string name="information_webview_outdated">Моля, обновете WebView за по-добра съвместимост</string>
     <string name="information_webview_required">WebView е необходим за Mihon</string>
     <string name="information_cloudflare_bypass_failure">Грешка при минаването през Cloudflare</string>

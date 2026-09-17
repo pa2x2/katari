@@ -11,7 +11,7 @@ import androidx.compose.material.icons.outlined.Verified
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import tachiyomi.domain.entry.model.EntryStatus
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 internal data class EntryStatusPresentation(

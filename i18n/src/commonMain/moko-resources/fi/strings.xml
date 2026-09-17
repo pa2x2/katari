@@ -44,7 +44,6 @@
     <string name="migrate">Vaihda</string>
     <string name="copy">Kopioi</string>
     <string name="download_queue_error">Lukujen lataaminen epäonnistui. Voit yrittää uudelleen lataukset-osiossa</string>
-    <string name="notification_new_chapters">Uusia lukuja löydetty</string>
     <string name="notification_cover_update_failed">Kansikuvan päivitys epäonnistui</string>
     <string name="notification_first_add_to_library">Lisää sarja kirjastoosi ensin</string>
     <string name="file_select_cover">Valitse kansikuva</string>
@@ -304,7 +303,6 @@
     <string name="lock_always">Aina</string>
     <string name="lock_never">Ei koskaan</string>
     <string name="information_cloudflare_bypass_failure">Cloudflaren ohittaminen epäonnistui</string>
-    <string name="channel_new_chapters">Lukujen päivitykset</string>
     <string name="pref_category_display">Näyttö</string>
     <string name="ext_updates_pending">Päivitettävät</string>
     <string name="information_webview_outdated">Päivitä WebView-sovellus yhteensopivuuden parantamiseksi</string>

@@ -18,12 +18,6 @@
         <item quantity="many">%1$d новых глав</item>
         <item quantity="other">%1$d новых глав</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">Для %d серии</item>
-        <item quantity="few">Для %d серий</item>
-        <item quantity="many">Для %d серий</item>
-        <item quantity="other">Для %d серий</item>
-    </plurals>
     <plurals name="update_check_notification_ext_updates">
         <item quantity="one">Доступно обновление для %d расширения</item>
         <item quantity="few">Доступны обновления для %d расширений</item>

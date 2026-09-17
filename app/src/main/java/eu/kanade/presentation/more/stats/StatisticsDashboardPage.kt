@@ -47,7 +47,7 @@ import eu.kanade.presentation.more.stats.layout.statisticsCards
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.domain.statistics.model.StatisticsCard
 import tachiyomi.domain.statistics.model.StatisticsCardLayout
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import java.text.NumberFormat

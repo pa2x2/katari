@@ -12,7 +12,7 @@ import eu.kanade.presentation.util.Screen
 import mihon.language.api.tag.LanguageTag
 import mihon.tts.api.voice.TtsDefaultVoiceSelection
 import mihon.tts.ui.settings.displayName
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 internal class TtsVoicePickerScreen(

@@ -16,10 +16,6 @@
         <item quantity="one">Kapitulu bat saltatzen, iturria falta da edo iragazia izan da</item>
         <item quantity="other">%d kapitulu saltatzen, iturria falta da edo iragaziak izan dira</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">Titulu baterako</item>
-        <item quantity="other">%d titulurako</item>
-    </plurals>
     <plurals name="download_queue_summary">
         <item quantity="one">1 geratzen da</item>
         <item quantity="other">%1$s geratzen dira</item>

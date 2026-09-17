@@ -15,7 +15,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.json.Json
 import mihon.feature.profiles.core.ProfileStore
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import uy.kohesive.injekt.injectLazy
 import java.security.SecureRandom
 import java.util.Base64

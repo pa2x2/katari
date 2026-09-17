@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.data.backup.restore
 
 import dev.icerock.moko.resources.StringResource
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 data class RestoreOptions(
     val libraryEntries: Boolean = true,

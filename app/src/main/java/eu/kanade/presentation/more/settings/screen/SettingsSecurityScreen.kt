@@ -13,7 +13,7 @@ import eu.kanade.tachiyomi.ui.security.BiometricAuthentication.authenticate
 import eu.kanade.tachiyomi.util.system.isAuthenticationSupported
 import eu.kanade.tachiyomi.util.system.telemetryIncluded
 import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState

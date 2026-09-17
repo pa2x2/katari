@@ -24,7 +24,7 @@ import mihon.entry.viewer.settings.shared.ReaderSharedSettingAvailability
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingText
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
 import mihon.entry.viewer.settings.shared.ResolvedReaderSharedToggleSetting
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get

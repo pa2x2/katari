@@ -18,7 +18,7 @@ import coil3.request.ImageRequest
 import coil3.size.ScaleDrawable
 import mihon.entry.interactions.manga.R
 import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 /**
  * Class used to show BigPictureStyle notifications

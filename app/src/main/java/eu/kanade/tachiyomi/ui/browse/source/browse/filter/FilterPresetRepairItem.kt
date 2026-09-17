@@ -21,7 +21,7 @@ import eu.kanade.domain.source.model.FilterStateNode
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.filter.validationIssues
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.SelectItem
 import tachiyomi.presentation.core.i18n.stringResource
 

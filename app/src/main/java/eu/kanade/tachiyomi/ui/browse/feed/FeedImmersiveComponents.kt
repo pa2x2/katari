@@ -32,7 +32,7 @@ import eu.kanade.domain.source.model.SourceFeed
 import eu.kanade.presentation.browse.components.SourceIcon
 import eu.kanade.presentation.components.AdaptiveSheet
 import tachiyomi.domain.source.model.Source
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable

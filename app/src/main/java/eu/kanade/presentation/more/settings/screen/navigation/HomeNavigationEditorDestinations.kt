@@ -48,7 +48,7 @@ import eu.kanade.tachiyomi.ui.home.navigation.HomeNavigationOverflowItems
 import eu.kanade.tachiyomi.ui.home.navigation.homeNavigationTitle
 import mihon.core.common.HomeScreenTabs
 import mihon.core.common.homeScreenContentTabOrder
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable

@@ -10,7 +10,7 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.more.stats.earlier.StatisticsEarlierActivityScreenContent
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 

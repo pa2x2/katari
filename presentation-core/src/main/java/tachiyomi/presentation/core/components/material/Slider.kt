@@ -33,13 +33,16 @@ fun Slider(
         SliderDefaults.Track(colors = colors, enabled = enabled, sliderState = sliderState)
     },
 ) {
+    val trackRange = with(valueRange) { first.toFloat()..last.toFloat() }
+    val state = remember(steps, trackRange) {
+        SliderState(value = value.toFloat(), steps = steps, trackRange = trackRange)
+    }
+    state.value = value.toFloat()
     Slider(
-        value = value.toFloat(),
-        onValueChange = { onValueChange(it.roundToInt()) },
+        state = state,
         modifier = modifier,
         enabled = enabled,
-        valueRange = with(valueRange) { first.toFloat()..last.toFloat() },
-        steps = steps,
+        onValueChange = { onValueChange(it.roundToInt()) },
         onValueChangeFinished = onValueChangeFinished,
         colors = colors,
         interactionSource = interactionSource,

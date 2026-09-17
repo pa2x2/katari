@@ -23,7 +23,7 @@ import dev.icerock.moko.resources.StringResource
 import me.saket.swipe.SwipeableActionsBox
 import mihon.entry.interactions.download.EntryDownloadState
 import tachiyomi.domain.library.service.LibraryPreferences
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.EntryChildListItemContent
 import tachiyomi.presentation.core.components.pulsingHighlightBackground
 import tachiyomi.presentation.core.util.selectedBackground

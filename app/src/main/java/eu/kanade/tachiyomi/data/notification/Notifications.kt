@@ -10,7 +10,7 @@ import eu.kanade.tachiyomi.util.system.buildNotificationChannelGroup
 import mihon.entry.interactions.download.EntryDownloadNotifications
 import mihon.entry.interactions.library.EntryLibraryUpdateNotificationRoute
 import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 /**
  * Class to manage the basic information of all the notifications used in the app.
@@ -81,7 +81,16 @@ object Notifications {
         "downloader_cache_renewal",
         "crash_logs_channel",
         "library_skipped_channel",
+        // Per-type library-update channels consolidated into the shared library update route.
+        "new_chapters_channel",
+        "new_episodes_channel",
     )
+
+    /** Prefix of the derived per-type library-update channels superseded by the shared route. */
+    private const val LEGACY_LIBRARY_UPDATE_CHANNEL_PREFIX = "entry_library_updates_"
+
+    /** Legacy per-type library-update summary notifications replaced by the shared summary. */
+    private val deprecatedSummaryIds = listOf(-301, -302)
 
     /**
      * Creates the notification channels introduced in Android Oreo.
@@ -97,6 +106,15 @@ object Notifications {
 
         // Delete old notification channels
         deprecatedChannels.forEach(notificationManager::deleteNotificationChannel)
+
+        // Delete the derived per-type library-update channels superseded by the shared route
+        notificationManager.notificationChannels
+            .map { it.id }
+            .filter { it.startsWith(LEGACY_LIBRARY_UPDATE_CHANNEL_PREFIX) }
+            .forEach(notificationManager::deleteNotificationChannel)
+
+        // Remove stale legacy per-type summary notifications replaced by the shared summary
+        deprecatedSummaryIds.forEach(notificationManager::cancel)
 
         notificationManager.createNotificationChannelGroupsCompat(
             listOf(

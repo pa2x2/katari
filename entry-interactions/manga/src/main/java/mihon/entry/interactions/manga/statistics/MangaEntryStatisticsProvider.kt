@@ -3,7 +3,7 @@ package mihon.entry.interactions.manga.statistics
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.runtime.EntryStatisticsProvider
 import mihon.entry.interactions.statistics.EntryStatisticsAccent
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 internal object MangaEntryStatisticsProvider : EntryStatisticsProvider {
     override val type = EntryType.MANGA

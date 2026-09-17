@@ -16,7 +16,7 @@ import eu.kanade.presentation.more.settings.screen.tts.presentTtsHostActionResul
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import mihon.tts.ui.picker.engine.TtsEnginePickerList
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 

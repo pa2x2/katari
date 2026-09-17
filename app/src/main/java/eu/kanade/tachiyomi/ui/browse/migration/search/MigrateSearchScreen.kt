@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 import mihon.entry.interactions.migration.EntryMigrationSubject
 import mihon.feature.migration.dialog.MigrateEntryDialog
 import mihon.feature.migration.list.MigrationListScreen
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 class MigrateSearchScreen(private val subject: EntryMigrationSubject) : Screen() {
 

@@ -2,7 +2,7 @@ package mihon.feature.migration.options
 
 import dev.icerock.moko.resources.StringResource
 import mihon.domain.migration.models.MigrationFlag
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 internal fun MigrationFlag.getLabel(): StringResource {
     return when (this) {

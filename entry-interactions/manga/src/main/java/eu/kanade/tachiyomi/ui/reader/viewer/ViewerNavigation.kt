@@ -6,7 +6,7 @@ import android.graphics.RectF
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.util.lang.invert
 import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.reader.navigation.ReaderTapAction
 import tachiyomi.presentation.core.components.reader.navigation.readerTapRegions
 

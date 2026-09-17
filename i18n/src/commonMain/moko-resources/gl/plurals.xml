@@ -44,10 +44,6 @@
         <item quantity="one">Saltouse %d capítulo: falta na fonte ou ignorouse</item>
         <item quantity="other">Saltáronse %d capítulos: faltan na fonte ou ignoráronse</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">Por %d elemento</item>
-        <item quantity="other">Por %d elementos</item>
-    </plurals>
     <plurals name="notification_chapters_generic">
         <item quantity="one">%1$d capítulo novo</item>
         <item quantity="other">%1$d capítulos novos</item>

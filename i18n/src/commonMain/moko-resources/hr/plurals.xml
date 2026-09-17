@@ -15,11 +15,6 @@
         <item quantity="few">Poglavlja %1$s i još %2$d</item>
         <item quantity="other">Poglavlja %1$s i još %2$d</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">Za %d unos</item>
-        <item quantity="few">Za %d unosa</item>
-        <item quantity="other">Za %d unosa</item>
-    </plurals>
     <plurals name="download_queue_summary">
         <item quantity="one">%1$s preostalo</item>
         <item quantity="few">%1$s preostala</item>

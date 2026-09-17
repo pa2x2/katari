@@ -239,7 +239,6 @@
     <string name="no_next_chapter">找不到下一章</string>
     <string name="transition_finished">已閱畢：</string>
     <string name="transition_next">接下來：</string>
-    <string name="notification_new_chapters">發現新章節</string>
     <string name="pref_skip_read_chapters">略過已讀的章節</string>
     <string name="pref_remove_after_read">翻閱過後自動刪除</string>
     <string name="transition_no_next">以下空白</string>
@@ -347,7 +346,6 @@
     <string name="label_sources">來源</string>
     <string name="pref_webtoon_side_padding">頁緣留白</string>
     <string name="add_tracking">新增閱讀歷程</string>
-    <string name="channel_new_chapters">章節更新</string>
     <string name="in_library">在書櫃中</string>
     <string name="viewer">閱讀模式</string>
     <string name="action_disable">停用</string>

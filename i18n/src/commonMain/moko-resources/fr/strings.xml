@@ -164,7 +164,6 @@
     <string name="decode_image_error">L\'image n\'a pas pu être chargée</string>
     <string name="confirm_set_image_as_cover">Voulez-vous mettre cette image comme couverture ?</string>
     <string name="download_queue_error">Une erreur est survenue lors du téléchargement des chapitres. Vous pouvez réessayer dans la section téléchargements</string>
-    <string name="notification_new_chapters">Des nouveaux chapitres ont été trouvés</string>
     <string name="notification_cover_update_failed">La mise à jour de la couverture a échoué</string>
     <string name="notification_first_add_to_library">Veuillez ajouter cette série à votre bibliothèque avant de faire cela</string>
     <string name="file_select_cover">Sélectionner l\'image de couverture</string>
@@ -309,7 +308,6 @@
     <string name="pref_cutout_short">Utiliser la zone de l\'encoche</string>
     <string name="information_cloudflare_bypass_failure">Impossible de contourner Cloudflare</string>
     <string name="information_webview_outdated">Veuillez mettre à jour l\'application WebView pour une meilleure compatibilité</string>
-    <string name="channel_new_chapters">Mises à jour des chapitres</string>
     <string name="secure_screen_summary">L\'écran sécurisé cache le contenu lors du changement d\'application et bloque les captures d\'écran</string>
     <string name="pref_category_display">Affichage</string>
     <string name="notification_chapters_single">Chapitre %1$s</string>

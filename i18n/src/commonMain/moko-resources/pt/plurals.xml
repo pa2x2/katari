@@ -10,11 +10,6 @@
         <item quantity="many">Capítulos %1$s e %2$d mais</item>
         <item quantity="other">Capítulos %1$s e %2$d mais</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">Para %d entrada</item>
-        <item quantity="many">Para %d entradas</item>
-        <item quantity="other">Para %d o acesso</item>
-    </plurals>
     <plurals name="notification_chapters_generic">
         <item quantity="one">%1$d novo capítulo</item>
         <item quantity="many">%1$d novos capítulos</item>

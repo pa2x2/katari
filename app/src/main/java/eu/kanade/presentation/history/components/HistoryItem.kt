@@ -27,7 +27,7 @@ import eu.kanade.presentation.entry.components.EntryCover
 import eu.kanade.presentation.entry.historySubtitle
 import eu.kanade.presentation.history.HistoryUiItem
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource

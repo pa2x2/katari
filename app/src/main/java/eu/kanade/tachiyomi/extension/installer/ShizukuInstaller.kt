@@ -21,7 +21,7 @@ import mihon.app.shizuku.IShellInterface
 import mihon.app.shizuku.ShellInterface
 import rikka.shizuku.Shizuku
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 
 internal class ShizukuInstaller(
     private val service: Service,

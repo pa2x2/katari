@@ -21,7 +21,7 @@ import mihon.book.api.BookLocator
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.reader.BookDocumentReaderState
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
-import tachiyomi.i18n.MR
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.reader.ReaderPageNavigatorType
 import tachiyomi.presentation.core.components.reader.ReaderPositionNavigator
 import tachiyomi.presentation.core.components.reader.ReaderReturnPositionBar

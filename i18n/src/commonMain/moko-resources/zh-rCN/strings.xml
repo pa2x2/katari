@@ -246,7 +246,6 @@
     <string name="migrate">迁移</string>
     <string name="copy">共存</string>
     <string name="download_queue_error">下载章节失败，可以在下载页面中重试</string>
-    <string name="notification_new_chapters">发现新章节</string>
     <string name="notification_cover_update_failed">封面更新失败</string>
     <string name="notification_first_add_to_library">请先将作品添加到书架</string>
     <string name="file_select_cover">选择封面图片</string>
@@ -309,7 +308,6 @@
     <string name="information_webview_outdated">请更新 WebView 应用提高兼容性</string>
     <string name="secure_screen_summary">阻止截屏，并在切换后台时隐藏预览图</string>
     <string name="pref_category_display">显示</string>
-    <string name="channel_new_chapters">章节更新</string>
     <string name="hide_notification_content">隐藏通知内容</string>
     <string name="lock_with_biometrics">应用锁</string>
     <string name="pref_cutout_short">在屏幕刘海区域显示内容</string>
