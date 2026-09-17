@@ -139,7 +139,6 @@
     <string name="no_next_chapter">Siguiente capítulo no encontrado</string>
     <string name="decode_image_error">No se pudo cargar la imagen</string>
     <string name="download_queue_error">No se pudieron descargar los capítulos. Puedes volver a intentarlo en la sección de descargas</string>
-    <string name="notification_new_chapters">Nuevos capítulos encontrados</string>
     <string name="notification_first_add_to_library">Primero tienes que añadir el título a tu biblioteca</string>
     <string name="file_select_cover">Elige una imagen de portada</string>
     <string name="file_select_backup">Elige una copia de respaldo</string>
@@ -308,7 +307,6 @@
     <string name="pref_cutout_short">Mostrar contenido en el área recortada</string>
     <string name="information_cloudflare_bypass_failure">Fallo al evitar Cloudflare</string>
     <string name="information_webview_outdated">Actualiza la aplicación WebView para mejorar la compatibilidad</string>
-    <string name="channel_new_chapters">Nuevos capítulos</string>
     <string name="secure_screen_summary">Activando «pantalla segura» ocultas la vista previa del contenido de la ventana al cambiar de aplicación y se bloquean las capturas de pantalla</string>
     <string name="pref_category_display">Visualización</string>
     <string name="notification_chapters_single">Capítulo %1$s</string>

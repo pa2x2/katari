@@ -233,7 +233,6 @@
     <string name="migrate">移行</string>
     <string name="copy">コピー</string>
     <string name="download_queue_error">章のダウンロードに失敗しました。「ダウンロード」にて再試行してください</string>
-    <string name="notification_new_chapters">新しい章が見つかりました</string>
     <string name="notification_cover_update_failed">表紙を更新できませんでした</string>
     <string name="notification_first_add_to_library">まずは項目をライブラリに追加してください</string>
     <string name="file_select_cover">表紙画像を選択</string>
@@ -354,7 +353,6 @@
     <string name="action_enable_all">すべて有効にする</string>
     <string name="action_select_inverse">選択を反転</string>
     <string name="action_menu">メニュー</string>
-    <string name="channel_new_chapters">章の更新</string>
     <string name="information_webview_outdated">互換性向上のため、WebView アプリをアップデートしてください</string>
     <string name="information_webview_required">アプリの動作には WebView が必要です</string>
     <string name="updating_library">ライブラリを更新中</string>

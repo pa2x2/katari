@@ -175,7 +175,6 @@
     <string name="decode_image_error">Hình ảnh không thể hiển thị được</string>
     <string name="confirm_set_image_as_cover">Dùng hình ảnh này làm ảnh bìa?</string>
     <string name="download_queue_error">Có lỗi đã xảy ra khi đang tải các chương. Bạn có thể thử lại trong phần Tải xuống</string>
-    <string name="notification_new_chapters">Đã tìm thấy chương mới</string>
     <string name="notification_cover_update_failed">Cập nhật ảnh bìa thất bại</string>
     <string name="notification_first_add_to_library">Hãy thêm truyện vào thư viện trước khi thực hiện</string>
     <string name="file_select_cover">Chọn ảnh bìa</string>
@@ -376,7 +375,6 @@
     <string name="file_picker_error">Không tìm thấy ứng dụng chọn tệp</string>
     <string name="spen_previous_page">Trang trước</string>
     <string name="spen_next_page">Trang sau</string>
-    <string name="channel_new_chapters">Cập nhật chương</string>
     <string name="chapter_settings_updated">Đã cập nhật tuỳ chỉnh mặc định cho chương</string>
     <string name="channel_errors">Lỗi</string>
     <string name="channel_complete">Hoàn thành</string>

@@ -269,7 +269,6 @@
     <string name="notification_chapters_multiple">Поглавља %1$s</string>
     <string name="notification_chapters_single_and_more">Поглавље %1$s и још %2$d</string>
     <string name="notification_chapters_single">Поглавље %1$s</string>
-    <string name="notification_new_chapters">Пронађена су нова поглавља</string>
     <string name="download_queue_error">Неуспешно преузимање поглавља. Покушајте поново у секцији за преузимања</string>
     <string name="copy">Копирај</string>
     <string name="migrate">Мигрирај</string>
@@ -456,7 +455,6 @@
     <string name="unread">Непрочитано</string>
     <string name="channel_progress">Напредак</string>
     <string name="channel_complete">Завршено</string>
-    <string name="channel_new_chapters">Ажурирања поглавља</string>
     <string name="download_insufficient_space">Неуспешно преузимање поглавља због недовољне меморије</string>
     <string name="getting_started_guide">Почетни водич</string>
     <string name="update_check_eol">Ова Android верзија више није подржана</string>

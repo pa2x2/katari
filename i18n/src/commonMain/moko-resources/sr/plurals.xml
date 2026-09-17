@@ -10,11 +10,6 @@
         <item quantity="few">%1$d нова поглавља</item>
         <item quantity="other">%1$d нових поглавља</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">За %d наслов</item>
-        <item quantity="few">За %d наслова</item>
-        <item quantity="other">За %d наслова</item>
-    </plurals>
     <plurals name="update_check_notification_ext_updates">
         <item quantity="one">Доступно је %d ново ажурирање додатака</item>
         <item quantity="few">Доступна су %d нова ажурирања додатака</item>

@@ -20,10 +20,6 @@
         <item quantity="one">%1$d bagong kabanata</item>
         <item quantity="other">%1$d na mga bagong kabanata</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">Para sa %d na entry</item>
-        <item quantity="other">Para sa %d na mga entry</item>
-    </plurals>
     <plurals name="manga_num_chapters">
         <item quantity="one">%1$s kabanata</item>
         <item quantity="other">%1$s na mga kabanata</item>

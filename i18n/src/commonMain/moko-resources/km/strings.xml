@@ -185,7 +185,6 @@
     <string name="label_downloaded">បានទាញយក</string>
     <string name="information_cloudflare_bypass_failure">បរាជ័យក្នុងការឆ្លងកាត់Cloudflare</string>
     <string name="action_search_hint">ស្វែងរក…</string>
-    <string name="notification_new_chapters">មានភាគថ្មី</string>
     <string name="action_copy_to_clipboard">ចម្លងទៅក្ដារតម្បៀតខ្ទាស់</string>
     <string name="label_backup">បម្រុងទុក និងស្ដារឡើងវិញ</string>
     <string name="delete_downloaded">លុបអ្វីដែលបានទាញហើយ</string>

@@ -34,6 +34,7 @@ import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.i18n.MR
 
 class EntryLibraryUpdateNotificationFeatureTest {
     private val entry = Entry.create().copy(id = 7L, source = 11L, type = EntryType.BOOK)
@@ -50,8 +51,6 @@ class EntryLibraryUpdateNotificationFeatureTest {
         val group = feature.project(listOf(input())).groups.single()
         val item = group.updates.single()
 
-        group.route.channelLabel shouldBe genericEntryTypePresentation.updateNotification.channelLabel
-        group.summaryTitle shouldBe genericEntryTypePresentation.updateNotification.summaryTitle
         item.destination shouldBe EntryLibraryUpdateNotificationDestination.ENTRY_DETAILS
         item.actions.shouldContainExactly(EntryLibraryUpdateNotificationAction.VIEW_ENTRY)
     }
@@ -65,9 +64,9 @@ class EntryLibraryUpdateNotificationFeatureTest {
 
         item.destination shouldBe EntryLibraryUpdateNotificationDestination.ENTRY_DETAILS
         item.actions.shouldContainExactly(EntryLibraryUpdateNotificationAction.VIEW_ENTRY)
-        group.route.channelId shouldBe "entry_library_updates_book_channel"
-        group.route.groupKey shouldBe "mihon.entry.library_updates.book"
-        group.route.summaryNotificationId shouldBe -18739594
+        group.route.channelId shouldBe "library_updates_channel"
+        group.route.groupKey shouldBe "mihon.entry.library_updates"
+        group.route.summaryNotificationId shouldBe -303
     }
 
     @Test
@@ -219,22 +218,50 @@ class EntryLibraryUpdateNotificationFeatureTest {
     }
 
     @Test
-    fun `legacy routes are frozen while Book uses derived neutral routing`() {
+    fun `every participating content type shares one notification route`() {
         val feature = featureFor(
             plugin(EntryType.MANGA, presentationBinding(EntryType.MANGA)),
             plugin(EntryType.ANIME, presentationBinding(EntryType.ANIME)),
             plugin(EntryType.BOOK, presentationBinding(EntryType.BOOK)),
         )
 
-        feature.routes().associateBy { it.type }.let { routes ->
-            routes.getValue(EntryType.MANGA).summaryNotificationId shouldBe -301
-            routes.getValue(EntryType.MANGA).channelId shouldBe "new_chapters_channel"
-            routes.getValue(EntryType.MANGA).groupKey shouldBe "eu.kanade.tachiyomi.NEW_CHAPTERS"
-            routes.getValue(EntryType.ANIME).summaryNotificationId shouldBe -302
-            routes.getValue(EntryType.ANIME).channelId shouldBe "new_episodes_channel"
-            routes.getValue(EntryType.ANIME).groupKey shouldBe "eu.kanade.tachiyomi.NEW_EPISODES"
-            routes.getValue(EntryType.BOOK).channelId shouldBe "entry_library_updates_book_channel"
-        }
+        val routes = feature.routes()
+
+        routes.size shouldBe 1
+        routes.single().channelId shouldBe "library_updates_channel"
+        routes.single().channelLabel shouldBe MR.strings.channel_library_updates
+        routes.single().groupKey shouldBe "mihon.entry.library_updates"
+        routes.single().summaryNotificationId shouldBe -303
+    }
+
+    @Test
+    fun `mixed-type updates merge into a single group with omissions per omitted type`() = runTest {
+        val feature = featureFor(
+            plugin(EntryType.MANGA, presentationBinding(EntryType.MANGA)),
+            plugin(EntryType.ANIME, presentationBinding(EntryType.ANIME)),
+        )
+        val mangaEntry = entry.copy(id = 1L, type = EntryType.MANGA)
+        val animeEntry = entry.copy(id = 2L, type = EntryType.ANIME)
+        val nonParticipatingEntry = entry.copy(id = 3L, type = EntryType.BOOK)
+
+        val projection = feature.project(
+            listOf(
+                EntryLibraryUpdateNotificationInput(mangaEntry, listOf(child.copy(entryId = mangaEntry.id))),
+                EntryLibraryUpdateNotificationInput(
+                    nonParticipatingEntry,
+                    listOf(child.copy(entryId = nonParticipatingEntry.id)),
+                ),
+                EntryLibraryUpdateNotificationInput(animeEntry, listOf(child.copy(entryId = animeEntry.id))),
+            ),
+        )
+
+        val group = projection.groups.single()
+        group.route shouldBe sharedLibraryUpdateNotificationRoute
+        group.updates.map { it.originEntry.id } shouldContainExactly listOf(mangaEntry.id, animeEntry.id)
+        val omission = projection.omissions.single()
+        omission.type shouldBe EntryType.BOOK
+        omission.updateCount shouldBe 1
+        omission.reason shouldBe EntryLibraryUpdateNotificationOmissionReason.NOT_AN_UPDATE_PARTICIPANT
     }
 
     @Test

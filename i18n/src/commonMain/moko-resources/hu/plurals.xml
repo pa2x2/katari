@@ -28,10 +28,6 @@
         <item quantity="one">%d nyilvántartó</item>
         <item quantity="other">%d nyilvántartó</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">%d elemnek</item>
-        <item quantity="other">%d elemnek</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="one">%d fejezet kihagyása, hiányzik a forrás, vagy ki lett szűrve</item>
         <item quantity="other">%d fejezet kihagyása, hiányoznak a források, vagy ki lettek szűrve</item>

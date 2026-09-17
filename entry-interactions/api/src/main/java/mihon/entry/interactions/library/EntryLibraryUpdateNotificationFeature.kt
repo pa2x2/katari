@@ -8,7 +8,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 
 /** Feature-owned projection for library-update notification routing, vocabulary, and actions. */
 interface EntryLibraryUpdateNotificationFeature {
-    /** Every route selected from contributed content types, including explicit generic presentation outcomes. */
+    /** The single shared route used by every participating content type. */
     fun routes(): List<EntryLibraryUpdateNotificationRoute>
 
     /** Resolves whether metered-source queue concentration requires the shared warning. */
@@ -38,8 +38,6 @@ data class EntryLibraryUpdateNotificationProjection(
 
 data class EntryLibraryUpdateNotificationGroup(
     val route: EntryLibraryUpdateNotificationRoute,
-    val summaryTitle: StringResource,
-    val summaryText: PluralsResource,
     val updates: List<EntryLibraryUpdateNotificationItem>,
 )
 
@@ -54,12 +52,19 @@ data class EntryLibraryUpdateNotificationItem(
     val viewChildrenLabel: StringResource,
 )
 
+/**
+ * Single shared Android identity for library-update notifications, independent of content type.
+ *
+ * Every participating content type posts into this one channel, group, and summary, so mixed-type
+ * library updates surface as a single notification.
+ */
 data class EntryLibraryUpdateNotificationRoute(
-    val type: EntryType,
     val channelId: String,
     val channelLabel: StringResource,
     val groupKey: String,
     val summaryNotificationId: Int,
+    val summaryTitle: StringResource,
+    val summaryText: PluralsResource,
 )
 
 enum class EntryLibraryUpdateNotificationDestination {

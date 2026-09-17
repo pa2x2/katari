@@ -80,7 +80,6 @@
     <string name="cover_updated">Okładka zaktualizowana</string>
     <string name="chapter_progress">Strona: %1$d</string>
     <string name="no_next_chapter">Nie znaleziono następnego rozdziału</string>
-    <string name="notification_new_chapters">Znaleziono nowe rozdziały</string>
     <string name="file_select_cover">Wybierz okładkę</string>
     <string name="update_check_confirm">Pobierz</string>
     <string name="update_check_no_new_updates">Brak nowych aktualizacji</string>
@@ -299,7 +298,6 @@
     <string name="pref_category_display">Wyświetlanie</string>
     <string name="hide_notification_content">Ukryj zawartość powiadomienia</string>
     <string name="lock_when_idle">Zablokuj podczas bezczynności</string>
-    <string name="channel_new_chapters">Aktualizacje rozdziałów</string>
     <string name="information_webview_outdated">Zaktualizuj aplikację WebView dla lepszej kompatybilności</string>
     <string name="information_cloudflare_bypass_failure">Nie udało się obejść Cloudflare</string>
     <string name="label_more">Więcej</string>

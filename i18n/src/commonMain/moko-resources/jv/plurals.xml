@@ -42,9 +42,6 @@
     <plurals name="missing_chapters_warning">
         <item quantity="other">Nglangkungi %d bab, embuh sumbere ilang utawa wis difilter</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="other">kanggo entri %d</item>
-    </plurals>
     <plurals name="notification_chapters_generic">
         <item quantity="other">%1$d bab anyar</item>
     </plurals>

@@ -4,10 +4,6 @@
         <item quantity="one">%1$d νέο κεφάλαιο</item>
         <item quantity="other">%1$d νέα κεφάλαια</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">Για %d καταχώριση</item>
-        <item quantity="other">Για %d καταχωρίσεις</item>
-    </plurals>
     <plurals name="update_check_notification_ext_updates">
         <item quantity="one">Διαθέσιμη ενημέρωση επέκτασης</item>
         <item quantity="other">%d διαθέσιμες ενημερώσεις επεκτάσεων</item>

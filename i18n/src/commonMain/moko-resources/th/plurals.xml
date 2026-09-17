@@ -27,9 +27,6 @@
     <plurals name="notification_chapters_generic">
         <item quantity="other">%1$d ตอนใหม่</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="other">มี %d รายการ</item>
-    </plurals>
     <plurals name="update_check_notification_ext_updates">
         <item quantity="other">มีการอัปเดตส่วนขยาย %d รายการพร้อมใช้งาน</item>
     </plurals>

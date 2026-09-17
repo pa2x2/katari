@@ -15,11 +15,6 @@
         <item quantity="two">%1$d פרקים חדשים</item>
         <item quantity="other">%1$d פרקים חדשים</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">עבור פריט אחד</item>
-        <item quantity="two">עבור %d פריטים</item>
-        <item quantity="other">עבור %d פריטים</item>
-    </plurals>
     <plurals name="lock_after_mins">
         <item quantity="one">לאחר דקה אחת</item>
         <item quantity="two">לאחר %1$s דקות</item>

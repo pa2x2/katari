@@ -544,7 +544,6 @@
     <string name="label_completed_titles">Elementos rematados</string>
     <string name="not_applicable">Non dispoñible</string>
     <string name="notification_size_warning">As actualizacións grandes perxudican ás fontes e poden supoñer actualizacións máis lentas e un maior uso da batería. Preme para saber máis.</string>
-    <string name="notification_new_chapters">Encontráronse capítulos novos</string>
     <string name="notification_first_add_to_library">Engade o elemento a túa biblioteca antes de facer isto</string>
     <string name="download_notifier_unknown_error">Non se puido descargar o capítulo por un erro inesperado</string>
     <string name="sort_by_source">Por fonte</string>
@@ -610,7 +609,6 @@
     <string name="show_chapter_number">Número do capítulo</string>
     <string name="download_notifier_split_page_path_not_found">Non se atopou a ruta do ficheiro da páxina %d</string>
     <string name="channel_complete">Rematada</string>
-    <string name="channel_new_chapters">Actualizacións de capítulos</string>
     <string name="information_webview_required">Mihon necesita WebView</string>
     <string name="download_notifier_split_page_not_found">Non se atopou a páxina %d ao separar</string>
     <string name="channel_common">Xeral</string>

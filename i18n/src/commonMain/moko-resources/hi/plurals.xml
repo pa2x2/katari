@@ -12,10 +12,6 @@
         <item quantity="one">अध्याय %1$s और 1 और</item>
         <item quantity="other">अध्याय %1$s और %2$d और</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">%d प्रविष्टि के लिए</item>
-        <item quantity="other">%d प्रविष्टियों के लिए</item>
-    </plurals>
     <plurals name="update_check_notification_ext_updates">
         <item quantity="one">एक्सटेंशन अपडेट उपलब्ध है</item>
         <item quantity="other">%d एक्सटेंशन अपडेट उपलब्ध हैं</item>

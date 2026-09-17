@@ -30,11 +30,6 @@
         <item quantity="few">Atlikta %1$s su %2$s klaidomis</item>
         <item quantity="other">Atlikta %1$s su %2$s klaidomis</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">%d įrašui</item>
-        <item quantity="few">%d įrašams</item>
-        <item quantity="other">%d įrašų</item>
-    </plurals>
     <plurals name="update_check_notification_ext_updates">
         <item quantity="one">%d plėtinio atnaujinimas pasiekiamas</item>
         <item quantity="few">%d plėtinių atnaujinimai pasiekiami</item>

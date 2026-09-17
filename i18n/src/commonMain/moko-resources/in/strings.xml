@@ -198,7 +198,6 @@
     <string name="decode_image_error">Gambar tidak dapat dimuat</string>
     <string name="confirm_set_image_as_cover">Gunakan gambar ini sebagai sampul?</string>
     <string name="download_queue_error">Tidak dapat mengunduh bab. Anda bisa mencoba lagi di bagian unduhan</string>
-    <string name="notification_new_chapters">Bab baru ditemukan</string>
     <string name="notification_cover_update_failed">Gagal memperbarui sampul</string>
     <string name="notification_first_add_to_library">Tolong tambahkan entri ke pustaka Anda sebelum melakukan ini</string>
     <string name="file_select_cover">Pilih gambar sampul</string>
@@ -313,7 +312,6 @@
     <string name="paused">Dijeda</string>
     <string name="information_cloudflare_bypass_failure">Gagal untuk menembus Cloudflare</string>
     <string name="information_webview_outdated">Harap perbarui aplikasi WebView untuk kompatibilitas yang lebih baik</string>
-    <string name="channel_new_chapters">Pembaruan bab</string>
     <string name="pref_disable_battery_optimization">Nonaktifkan optimisasi baterai</string>
     <string name="battery_optimization_disabled">Optimalisasi baterai sudah dimatikan</string>
     <string name="email">Alamat surel</string>

@@ -1,10 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">Pre %d titul</item>
-        <item quantity="few">Pre %d tituly</item>
-        <item quantity="other">Pre %d titulov</item>
-    </plurals>
     <plurals name="update_check_notification_ext_updates">
         <item quantity="one">Dostupná aktualizácia rozšírenia</item>
         <item quantity="few">%d dostupných aktualizácii rozšírenia</item>

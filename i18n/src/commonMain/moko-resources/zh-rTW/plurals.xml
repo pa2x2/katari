@@ -30,9 +30,6 @@
     <plurals name="missing_chapters_warning">
         <item quantity="other">略過了 %d 章，也許是來源沒有這些章節，或其已被篩選規則排除</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="other">共 %d 部作品</item>
-    </plurals>
     <plurals name="relative_time">
         <item quantity="other">%1$d 天前</item>
     </plurals>

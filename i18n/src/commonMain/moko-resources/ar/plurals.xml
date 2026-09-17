@@ -24,14 +24,6 @@
         <item quantity="many">%1$d فصل جديد</item>
         <item quantity="other">%1$d فصل جديد</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="zero">لا شيء</item>
-        <item quantity="one">إدخال واحد</item>
-        <item quantity="two">إدخالين</item>
-        <item quantity="few">ادخالات %d ل</item>
-        <item quantity="many">ادخالات %d ل</item>
-        <item quantity="other">ادخالات %d ل</item>
-    </plurals>
     <plurals name="download_queue_summary">
         <item quantity="zero">لا عناصر متبقية</item>
         <item quantity="one">عنصر واحد متبقي</item>

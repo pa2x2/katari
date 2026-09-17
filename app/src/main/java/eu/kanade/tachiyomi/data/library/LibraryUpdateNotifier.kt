@@ -202,12 +202,12 @@ class LibraryUpdateNotifier(
             route.summaryNotificationId,
             route.channelId,
         ) {
-            setContentTitle(context.stringResource(group.summaryTitle))
+            setContentTitle(context.stringResource(group.route.summaryTitle))
             if (childUpdates.size == 1 && !securityPreferences.hideNotificationContent.get()) {
                 setContentText(childUpdates.first().originEntry.displayTitle.chop(NOTIF_TITLE_MAX_LEN))
             } else {
                 setContentText(
-                    context.pluralStringResource(group.summaryText, childUpdates.size, childUpdates.size),
+                    context.pluralStringResource(group.route.summaryText, childUpdates.size, childUpdates.size),
                 )
 
                 if (!securityPreferences.hideNotificationContent.get()) {

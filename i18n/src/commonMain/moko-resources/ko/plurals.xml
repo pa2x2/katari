@@ -27,9 +27,6 @@
     <plurals name="update_check_notification_ext_updates">
         <item quantity="other">%d개의 확장 앱 업데이트가 있습니다</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="other">%d개의 항목</item>
-    </plurals>
     <plurals name="notification_chapters_generic">
         <item quantity="other">%1$d개의 새로운 회차</item>
     </plurals>

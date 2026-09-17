@@ -240,7 +240,6 @@
     <string name="tapping_inverted_horizontal">Pahiga</string>
     <string name="channel_ext_updates">Mga update sa extension</string>
     <string name="tapping_inverted_none">Wala</string>
-    <string name="channel_new_chapters">Mga update sa kabanata</string>
     <string name="channel_common">Pangkaraniwan</string>
     <string name="download_notifier_download_paused">Naka-pause ang mga download</string>
     <string name="download_notifier_no_network">Walang koneksyon sa Internet</string>
@@ -262,7 +261,6 @@
     <string name="notification_chapters_multiple">Mga kabanata %1$s</string>
     <string name="notification_chapters_single_and_more">Kabanata %1$s at karagdagang %2$d iba pa</string>
     <string name="notification_chapters_single">Kabanata %1$s</string>
-    <string name="notification_new_chapters">May mga bagong kabanata</string>
     <string name="download_insufficient_space">Di ma-download ang mga kabanata dahil sa mababang espasyo sa storage</string>
     <string name="download_queue_error">Di ma-download ang mga kabanata. Subukan mo uli ito sa mga download na seksyon</string>
     <string name="copy">Kopyahin</string>

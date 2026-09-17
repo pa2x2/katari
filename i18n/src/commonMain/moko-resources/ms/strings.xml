@@ -206,7 +206,6 @@
     <string name="decode_image_error">Imej tidak dapat dimuatkan</string>
     <string name="confirm_set_image_as_cover">Guna imej ini sebagai muka hadapan?</string>
     <string name="download_queue_error">Tidak dapat memuat turun bab. Anda boleh mencuba semula di bahagian muat turun</string>
-    <string name="notification_new_chapters">Bab baharu dijumpai</string>
     <string name="notification_cover_update_failed">Gagal untuk kemas kini muka hadapan</string>
     <string name="notification_first_add_to_library">Sila tambahkan entri ke pustaka sebelum melakukan ini</string>
     <string name="file_select_cover">Pilih imej muka hadapan</string>
@@ -307,7 +306,6 @@
     <string name="pref_cutout_short">Tunjuk kandungan dalam kawasan bertakuk</string>
     <string name="information_cloudflare_bypass_failure">Gagal untuk memintas Cloudflare</string>
     <string name="information_webview_outdated">Sila kemas kini aplikasi WebView untuk keserasian yang lebih baik</string>
-    <string name="channel_new_chapters">Pengemaskinian bab</string>
     <string name="secure_screen_summary">Skrin keselamatan menyembunyikan kandungan aplikasi apabila menukar aplikasi dan menyekat tangkapan skrin</string>
     <string name="pref_category_display">Paparan</string>
     <string name="notification_chapters_single">Bab %1$s</string>

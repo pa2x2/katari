@@ -126,7 +126,6 @@
     <string name="download_notifier_title_error">Йӑнӑш</string>
     <string name="update_check_notification_update_available">Ҫӗнӗ версси пур!</string>
     <string name="notification_chapters_single">%1$s-мӗш сыпӑк</string>
-    <string name="notification_new_chapters">Ҫӗнӗ сыпӑксем тупӑнман</string>
     <string name="information_no_recent_manga">Йулашки вӑхӑтра нимӗн те вуламан</string>
     <string name="information_no_recent">Пӗр ҫӗнетӳ те ҫук</string>
     <string name="information_no_downloads">Пӗр тийев те ҫук</string>
@@ -248,7 +247,6 @@
     <string name="tapping_inverted_horizontal">Тӑрӑх</string>
     <string name="tapping_inverted_none">Ҫук</string>
     <string name="channel_ext_updates">Хушмасен ҫӗнетӗвӗсем</string>
-    <string name="channel_new_chapters">Сыпӑксен ҫӗнетӗвӗсем</string>
     <string name="channel_common">Яланхи</string>
     <string name="download_notifier_download_paused">Тийеве вӑхӑтлӑха чарнӑ</string>
     <string name="download_notifier_unknown_error">Кӗтмен йӑнӑша пула сыпӑксене тийесе илеймест</string>

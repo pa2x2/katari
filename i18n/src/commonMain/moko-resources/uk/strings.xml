@@ -246,7 +246,6 @@
     <string name="migrate">Мігрувати</string>
     <string name="copy">Копіювати</string>
     <string name="download_queue_error">Не вдалося завантажити розділи. Ви можете повторити спробу в розділі завантажень</string>
-    <string name="notification_new_chapters">Знайдено нові розділи</string>
     <string name="notification_cover_update_failed">Не вдалось оновити обкладинку</string>
     <string name="notification_first_add_to_library">Будь ласка, додайте запис до своєї бібліотеки перед тим як робити це</string>
     <string name="file_select_cover">Вибрати обкладинку</string>
@@ -309,7 +308,6 @@
     <string name="pref_cutout_short">Відображати вміст обітнутої області</string>
     <string name="information_cloudflare_bypass_failure">Не вдалось обійти Cloudflare</string>
     <string name="information_webview_outdated">Будь ласка, оновіть WebView для кращої сумісності</string>
-    <string name="channel_new_chapters">Оновлення розділів</string>
     <string name="secure_screen_summary">Ховати вміст застосунку при перемиканні застосунків та блокувати скріншоти</string>
     <string name="pref_category_display">Відображення</string>
     <string name="notification_chapters_single">Розділ %1$s</string>

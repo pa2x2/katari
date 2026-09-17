@@ -264,7 +264,6 @@
     <string name="migrate">Migrovať</string>
     <string name="copy">Kopírovať</string>
     <string name="download_queue_error">Nepodarilo sa stiahnuť kapitoly. Môžete to skúsiť znova v sekcii na stiahnutie</string>
-    <string name="notification_new_chapters">Boli nájdené nové kapitoly</string>
     <string name="notification_cover_update_failed">Chyba pri aktualizácii obalu</string>
     <string name="notification_first_add_to_library">Predtým, ako to urobíte, pridajte do svojej knižnice mangu</string>
     <string name="file_select_cover">Vyberte obrázok obalu</string>
@@ -489,7 +488,6 @@
     <string name="set_chapter_settings_as_default">Nastaviť ako predvolené</string>
     <string name="tracking_info">Jednosmerná synchronizácia postupu v mange na externé sledovacie služby (sledovače). Nastavte sledovanie pre jednotlivé položky mangy z ich tlačidla sledovania.</string>
     <string name="pref_category_reading_mode">Režim čítania</string>
-    <string name="channel_new_chapters">Aktualizácie kapitol</string>
     <string name="clear_database_source_item_count">V databáze je manga %1$d, ktorá sa nenachádza v knižnici</string>
     <string name="updating_library">Aktualizácia knižnice</string>
     <string name="track_started_reading_date">Dátum začatia</string>

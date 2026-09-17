@@ -24,10 +24,6 @@
         <item quantity="one">1 ಹೊಸ ಅಧ್ಯಾಯ</item>
         <item quantity="other">%1$d ಹೊಸ ಅಧ್ಯಾಯಗಳು</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">1 ಶೀರ್ಷಿಕೆಗಾಗಿ</item>
-        <item quantity="other">%d ಶೀರ್ಷಿಕೆಗಳಿಗಾಗಿ</item>
-    </plurals>
     <plurals name="download_queue_summary">
         <item quantity="one">1 ಉಳಿದಿದೆ</item>
         <item quantity="other">%1$s ಉಳಿದಿದೆ</item>

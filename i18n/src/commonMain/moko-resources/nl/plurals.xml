@@ -16,10 +16,6 @@
         <item quantity="one">%1$d nieuw hoofdstuk</item>
         <item quantity="other">%1$d nieuwe hoofdstukken</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">Voor %d titel</item>
-        <item quantity="other">Voor %d titels</item>
-    </plurals>
     <plurals name="download_queue_summary">
         <item quantity="one">%1$s resterend</item>
         <item quantity="other">%1$s resterende</item>

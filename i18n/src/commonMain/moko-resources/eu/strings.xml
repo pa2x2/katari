@@ -201,7 +201,6 @@
     <string name="download_notifier_downloader_title">Deskargatzailea</string>
     <string name="download_notifier_unknown_error">Ezin izan da kapitulua deskargatu ustekabeko errore baten ondorioz</string>
     <string name="download_notifier_no_network">Ez dago sare-konexiorik erabilgarri</string>
-    <string name="channel_new_chapters">Kapituluaren eguneraketak</string>
     <string name="channel_app_updates">Aplikazioen eguneraketak</string>
     <string name="spen_next_page">Hurrengo orrialdea</string>
     <string name="channel_ext_updates">Luzapenen eguneraketak</string>
@@ -417,7 +416,6 @@
     <string name="clear_history_confirmation">Ziur zaude? Historia guztia galduko da.</string>
     <string name="migration_help_guide">Iturrien migrazio gida</string>
     <string name="migration_dialog_what_to_include">Hautatu sartu nahi dituzun datuak</string>
-    <string name="notification_new_chapters">Kapitulu berriak aurkituak</string>
     <string name="information_no_recent_manga">Ez da ezer irakurri azkenaldian</string>
     <string name="information_no_downloads">Deskargarik ez</string>
     <string name="information_no_recent">Ez dago azkenaldiko eguneraketarik</string>

@@ -9,9 +9,6 @@
     <plurals name="notification_chapters_multiple_and_more">
         <item quantity="other">第 %1$s 章及另外 %2$d 章</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="other">共 %d 部作品</item>
-    </plurals>
     <plurals name="update_check_notification_ext_updates">
         <item quantity="other">%d 个插件可更新</item>
     </plurals>

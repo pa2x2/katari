@@ -12,10 +12,6 @@
         <item quantity="one">%1$d nytt kapittel</item>
         <item quantity="other">%1$d nye kapitler</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">For %d oppføring</item>
-        <item quantity="other">For %d oppføringer</item>
-    </plurals>
     <plurals name="manga_num_chapters">
         <item quantity="one">%1$s kapittel</item>
         <item quantity="other">%1$s kapitler</item>

@@ -222,7 +222,6 @@
     <string name="pref_library_update_interval">ನವೀಕರಣ ಆವರ್ತನ</string>
     <string name="pref_category_library_update">ನವೀಕರಣಗಳು</string>
     <string name="channel_ext_updates">ವಿಸ್ತರಣೆ ನವೀಕರಣಗಳು</string>
-    <string name="channel_new_chapters">ಅಧ್ಯಾಯ ನವೀಕರಣಗಳು</string>
     <string name="channel_common">ಸಾಮಾನ್ಯ</string>
     <string name="download_notifier_download_paused">ಡೌನ್‌ಲೋಡ್ ವಿರಾಮಗೊಳಿಸಲಾಗಿದೆ</string>
     <string name="download_notifier_no_network">ಯಾವುದೇ ನೆಟ್‌ವರ್ಕ್ ಸಂಪರ್ಕ ಲಭ್ಯವಿಲ್ಲ</string>
@@ -244,7 +243,6 @@
     <string name="notification_chapters_multiple">ಅಧ್ಯಾಯಗಳು %1$s</string>
     <string name="notification_chapters_single_and_more">ಅಧ್ಯಾಯ %1$s ಮತ್ತು %2$d ಹೆಚ್ಚು</string>
     <string name="notification_chapters_single">ಅಧ್ಯಾಯ %1$s</string>
-    <string name="notification_new_chapters">ಹೊಸ ಅಧ್ಯಾಯಗಳು ಕಂಡುಬಂದಿವೆ</string>
     <string name="download_queue_error">ಅಧ್ಯಾಯಗಳನ್ನು ಡೌನ್‌ಲೋಡ್ ಮಾಡಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ಡೌನ್‌ಲೋಡ್‌ಗಳ ವಿಭಾಗದಲ್ಲಿ ನೀವು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಬಹುದು</string>
     <string name="copy">ನಕಲಿಸಿ</string>
     <string name="migrate">ಸ್ಥಳಾಂತರಿಸಿ</string>

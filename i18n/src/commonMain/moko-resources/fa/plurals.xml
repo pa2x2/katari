@@ -12,10 +12,6 @@
         <item quantity="one">1 قسمت جدید</item>
         <item quantity="other">%1$d قسمت جدید</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">برای ۱ مانگا</item>
-        <item quantity="other">برای %d مانگا</item>
-    </plurals>
     <plurals name="num_categories">
         <item quantity="one">%d دسته</item>
         <item quantity="other">%d دسته</item>

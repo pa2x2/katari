@@ -243,7 +243,6 @@
     <string name="migrate">Migra</string>
     <string name="copy">Copia</string>
     <string name="download_queue_error">No s’han pogut baixar els capítols. Podeu tornar-ho a provar a la secció de baixades</string>
-    <string name="notification_new_chapters">S’han trobat nous capítols</string>
     <string name="notification_cover_update_failed">No s’ha pogut actualitzar la portada</string>
     <string name="notification_first_add_to_library">Afegiu l’element a la vostra biblioteca abans de fer això</string>
     <string name="file_select_cover">Seleccioneu la imatge de portada</string>
@@ -306,7 +305,6 @@
     <string name="pref_cutout_short">Mostra el contingut a l’àrea de retall</string>
     <string name="information_cloudflare_bypass_failure">No s’ha pogut evitar el Cloudflare</string>
     <string name="information_webview_outdated">Actualitzeu l’aplicació WebView per a tenir més bona compatibilitat</string>
-    <string name="channel_new_chapters">Novetats de capítols</string>
     <string name="secure_screen_summary">El mode discret amaga el contingut de l’aplicació en canviar entre aplicacions i bloca les captures de pantalla</string>
     <string name="pref_category_display">Visualització</string>
     <string name="notification_chapters_single">Capítol %1$s</string>

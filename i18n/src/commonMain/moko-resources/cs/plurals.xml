@@ -40,11 +40,6 @@
         <item quantity="few">%1$d nové kapitoly</item>
         <item quantity="other">%1$d nových kapitol</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">Pro %d položku</item>
-        <item quantity="few">Pro %d položky</item>
-        <item quantity="other">Pro %d položek</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="one">Přeskočena %d kapitola, buď chybí ve zdroji nebo byla vyfiltrována</item>
         <item quantity="few">Přeskočeny %d kapitoly, buď chybí ve zdroji nebo byly vyfiltrovány</item>

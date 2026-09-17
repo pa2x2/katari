@@ -30,11 +30,6 @@
         <item quantity="one">%d izsekotājs</item>
         <item quantity="other">%d izsekotāji</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="zero">Priekš %d ierakstiem</item>
-        <item quantity="one">Priekš %d ieraksta</item>
-        <item quantity="other">Priekš %d ierakstiem</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="zero">Izlaisti %d nodaļu, vai nu to nav avotā, vai arī tie ir izfiltrēti</item>
         <item quantity="one">Izlaists %d nodaļa, vai nu tā nav avotā, vai arī tā ir izfiltrēta</item>

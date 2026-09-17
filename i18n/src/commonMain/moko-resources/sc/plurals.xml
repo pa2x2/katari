@@ -12,10 +12,6 @@
         <item quantity="one">Capìtulos %1$s e 1 àteru</item>
         <item quantity="other">Capìtulos %1$s e àteros %2$d</item>
     </plurals>
-    <plurals name="notification_new_chapters_summary">
-        <item quantity="one">Pro %d elementu</item>
-        <item quantity="other">Pro %d elementos</item>
-    </plurals>
     <plurals name="update_check_notification_ext_updates">
         <item quantity="one">B\'at un\'agiornamentu disponìbile pro un\'estensione</item>
         <item quantity="other">B\'ant agiornamentos disponìbiles pro %d estensiones</item>

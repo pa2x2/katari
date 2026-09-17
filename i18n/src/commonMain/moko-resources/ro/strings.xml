@@ -246,7 +246,6 @@
     <string name="migrate">Migrează</string>
     <string name="copy">Copiază</string>
     <string name="download_queue_error">Nu s-au putut descărca capitole. Puteți încerca din nou în secțiunea descărcări</string>
-    <string name="notification_new_chapters">Capitole noi găsite</string>
     <string name="notification_cover_update_failed">Actualizarea copertei a eșuat</string>
     <string name="notification_first_add_to_library">Vă rugăm să adăugați intrarea în biblioteca dumneavoastră înainte de a face acest lucru</string>
     <string name="file_select_cover">Selectează imagine de copertă</string>
@@ -309,7 +308,6 @@
     <string name="pref_cutout_short">Afișare conținut în zona decupată</string>
     <string name="information_cloudflare_bypass_failure">A eșuat evitarea Cloudflare</string>
     <string name="information_webview_outdated">Actualizați aplicația WebView pentru o compatibilitate mai bună</string>
-    <string name="channel_new_chapters">Actualizări de capitole</string>
     <string name="secure_screen_summary">Ecranul securizat ascunde conținutul aplicațiilor la schimbarea aplicațiilor și blochează capturile de ecran</string>
     <string name="pref_category_display">Afișare</string>
     <string name="notification_chapters_single">Capitolul %1$s</string>

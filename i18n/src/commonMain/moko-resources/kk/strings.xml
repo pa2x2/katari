@@ -578,7 +578,6 @@
     <string name="update_check_eol">Бұл Android нұсқасы қолжетімсіз</string>
     <string name="download_notifier_unknown_error">Белгісіз қателіктің кесірінен тарау жүктеп алынбады</string>
     <string name="download_notifier_split_page_path_not_found">Бет файлының жолы %d табылмады</string>
-    <string name="channel_new_chapters">Тарау жаңартулары</string>
     <string name="channel_app_updates">Қолданба жаңартулары</string>
     <string name="channel_ext_updates">Кеңейту жаңартулары</string>
     <string name="spen_previous_page">Алдыңғы бет</string>
@@ -622,7 +621,6 @@
     <string name="notification_size_warning">Көп жаңалтулар саны дереккөздер жұмысын баяулата және батарея жұмысын өтімін көбейте алады. Көбірек білу үшін басыңыз.</string>
     <string name="notification_chapters_single">%1$s-Тарау</string>
     <string name="download_queue_size_warning">Ескерту: Көп жүктеулер саны дереккөздер жұмысын баяулата алады және/немесе %s бұғатталына алады. Толығырақ оқу үшін басыңыз.</string>
-    <string name="notification_new_chapters">Жаңа тараулар табылды</string>
     <string name="pref_downloads_summary">Автоматты жүктеу, алдын ала жүктеу</string>
     <string name="manga_info_expand">Көбірек</string>
     <string name="delete_downloads_for_manga">Жүктелген тарауларды жоямыз ба?</string>

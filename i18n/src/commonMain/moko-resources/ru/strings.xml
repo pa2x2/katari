@@ -103,7 +103,6 @@
     <string name="no_next_chapter">Следующая глава не найдена</string>
     <string name="notification_cover_update_failed">Не удалось обновить обложку</string>
     <string name="notification_first_add_to_library">Пожалуйста, добавьте серию в библиотеку перед тем, как делать это</string>
-    <string name="notification_new_chapters">Найдены новые главы</string>
     <string name="on_hold">Отложено</string>
     <string name="ongoing">Выпускается</string>
     <string name="password">Пароль</string>
@@ -309,7 +308,6 @@
     <string name="pref_cutout_short">Показывать содержимое в вырезанной области</string>
     <string name="information_cloudflare_bypass_failure">Не удалось обойти Cloudflare</string>
     <string name="information_webview_outdated">Пожалуйста, обновите WebView для лучшей совместимости</string>
-    <string name="channel_new_chapters">Обновления глав</string>
     <string name="notification_chapters_single_and_more">Глава %1$s и ещё %2$d</string>
     <string name="notification_chapters_multiple">Главы %1$s</string>
     <string name="notification_chapters_single">Глава %1$s</string>
