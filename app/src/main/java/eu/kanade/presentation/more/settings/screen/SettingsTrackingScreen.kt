@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.TextObfuscationMode
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Close
@@ -18,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedSecureTextField
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,9 +41,6 @@ import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import eu.kanade.domain.track.model.AutoTrackState
@@ -196,8 +197,8 @@ object SettingsTrackingScreen : SearchableSettings {
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
 
-        var username by remember { mutableStateOf(TextFieldValue(storedUsername)) }
-        var password by remember { mutableStateOf(TextFieldValue(storedPassword)) }
+        val username = remember(storedUsername) { TextFieldState(storedUsername) }
+        val password = remember(storedPassword) { TextFieldState(storedPassword) }
         var processing by remember { mutableStateOf(false) }
         var inputError by remember { mutableStateOf(false) }
 
@@ -223,8 +224,7 @@ object SettingsTrackingScreen : SearchableSettings {
                         modifier = Modifier
                             .fillMaxWidth()
                             .semantics { contentType = ContentType.Username + ContentType.EmailAddress },
-                        value = username,
-                        onValueChange = { username = it },
+                        state = username,
                         label = {
                             val label = when (
                                 (account.loginMethod as EntryTrackingLoginMethod.Credentials).identity
@@ -235,17 +235,16 @@ object SettingsTrackingScreen : SearchableSettings {
                             Text(text = stringResource(label))
                         },
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                        singleLine = true,
+                        lineLimits = TextFieldLineLimits.SingleLine,
                         isError = inputError && !processing,
                     )
 
                     var hidePassword by remember { mutableStateOf(true) }
-                    OutlinedTextField(
+                    OutlinedSecureTextField(
                         modifier = Modifier
                             .fillMaxWidth()
                             .semantics { contentType = ContentType.Password },
-                        value = password,
-                        onValueChange = { password = it },
+                        state = password,
                         label = { Text(text = stringResource(MR.strings.password)) },
                         trailingIcon = {
                             IconButton(onClick = { hidePassword = !hidePassword }) {
@@ -265,16 +264,15 @@ object SettingsTrackingScreen : SearchableSettings {
                                 )
                             }
                         },
-                        visualTransformation = if (hidePassword) {
-                            PasswordVisualTransformation()
+                        textObfuscationMode = if (hidePassword) {
+                            TextObfuscationMode.Hidden
                         } else {
-                            VisualTransformation.None
+                            TextObfuscationMode.Visible
                         },
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password,
                             imeAction = ImeAction.Done,
                         ),
-                        singleLine = true,
                         isError = inputError && !processing,
                     )
                 }
@@ -288,8 +286,8 @@ object SettingsTrackingScreen : SearchableSettings {
                             processing = true
                             val result = trackingFeature.loginWithCredentials(
                                 serviceId = account.service.id,
-                                username = username.text,
-                                password = password.text,
+                                username = username.text.toString(),
+                                password = password.text.toString(),
                             )
                             inputError = result !is EntryTrackingAccountOperationResult.Completed
                             when (result) {

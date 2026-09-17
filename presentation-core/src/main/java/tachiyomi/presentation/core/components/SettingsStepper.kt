@@ -10,8 +10,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,7 +30,6 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
@@ -167,11 +168,22 @@ private fun SettingsStepperValue(
             modifier = Modifier.padding(horizontal = 12.dp),
         ) {
             if (isEditing) {
-                var input by remember(value) {
-                    val text = value.toString()
-                    mutableStateOf(TextFieldValue(text, TextRange(0, text.length)))
+                val initialText = value.toString()
+                val state = remember(value) {
+                    TextFieldState(
+                        initialText = initialText,
+                        initialSelection = TextRange(0, initialText.length),
+                    )
                 }
-                val parsedValue = input.text.toIntOrNull()
+                val digitsOnly = InputTransformation {
+                    if (
+                        length > valueRange.last.toString().length ||
+                        asCharSequence().any { !it.isDigit() }
+                    ) {
+                        revertAllChanges()
+                    }
+                }
+                val parsedValue = state.text.toString().toIntOrNull()
                 val isValid = parsedValue != null && parsedValue in valueRange
                 val finishEditing = {
                     if (isValid) onValueChange(requireNotNull(parsedValue))
@@ -180,29 +192,20 @@ private fun SettingsStepperValue(
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     BasicTextField(
-                        value = input,
-                        onValueChange = { candidate ->
-                            if (
-                                candidate.text.length <= valueRange.last.toString().length &&
-                                candidate.text.all(Char::isDigit)
-                            ) {
-                                input = candidate
-                            }
-                        },
+                        state = state,
+                        inputTransformation = digitsOnly,
                         modifier = Modifier
                             .width(40.dp)
                             .showSoftKeyboard(true)
                             .clearFocusOnSoftKeyboardHide(finishEditing),
-                        singleLine = true,
+                        lineLimits = TextFieldLineLimits.SingleLine,
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Number,
                             imeAction = ImeAction.Done,
                         ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
-                                if (isValid) finishEditing()
-                            },
-                        ),
+                        onKeyboardAction = {
+                            if (isValid) finishEditing()
+                        },
                         textStyle = MaterialTheme.typography.bodyMedium + TextStyle(
                             color = if (isValid) {
                                 MaterialTheme.colorScheme.onSurface

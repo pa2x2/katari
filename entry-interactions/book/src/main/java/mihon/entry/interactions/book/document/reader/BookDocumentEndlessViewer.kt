@@ -1,6 +1,5 @@
 package mihon.entry.interactions.book.document.reader
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,7 +31,6 @@ import mihon.entry.interactions.viewer.EntryChildWindow
 import tachiyomi.domain.entry.model.EntryChapter
 
 /** Stable-key, adjacent-session vertical document stream. */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun BookDocumentEndlessViewer(
     currentChapter: EntryChapter,
@@ -66,10 +64,8 @@ internal fun BookDocumentEndlessViewer(
     val initialIndex = currentSection?.let { section ->
         items.indexOfPosition(section.key, initialLocation?.position ?: section.initialPosition).coerceAtLeast(0)
     } ?: 0
-    val chapterPrefetchStrategy = remember { BookDocumentChapterPrefetchStrategy() }
     val listState = rememberLazyListState(
         initialFirstVisibleItemIndex = initialIndex,
-        prefetchStrategy = chapterPrefetchStrategy,
     )
     val currentObserveViewportExtent by rememberUpdatedState(observeViewportExtent)
     val currentItems by rememberUpdatedState(items)
@@ -93,13 +89,6 @@ internal fun BookDocumentEndlessViewer(
     }
     var textSizeReflowAnchor by remember(listState) {
         mutableStateOf<BookDocumentViewerLocation<EntryChapter>?>(null)
-    }
-    val prefetchTarget = remember(window.next?.id, loadedSections, items) {
-        val nextSectionKey = window.next?.id?.let(loadedSections::get)?.sections?.firstOrNull()?.key
-        val nextSectionIndex = nextSectionKey?.let { sectionKey ->
-            items.indexOfSection(sectionKey)
-        } ?: -1
-        nextSectionKey to nextSectionIndex
     }
 
     LaunchedEffect(proposedItems, listState) {
@@ -148,8 +137,6 @@ internal fun BookDocumentEndlessViewer(
     }
 
     SideEffect {
-        chapterPrefetchStrategy.updateTarget(prefetchTarget.first, prefetchTarget.second)
-
         if (
             items.identity != observedDatasetIdentity &&
             !listState.isScrollInProgress &&
