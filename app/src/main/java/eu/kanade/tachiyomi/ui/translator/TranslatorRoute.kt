@@ -25,11 +25,13 @@ internal fun TranslatorRoute(
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val speechFailureMessage = stringResource(MR.strings.translator_speech_failed)
+    val swapUnavailableMessage = stringResource(MR.strings.translator_swap_unavailable)
 
     LaunchedEffect(screenModel) {
         screenModel.events.collect { event ->
             when (event) {
                 TranslatorEvent.SpeechFailed -> snackbarHostState.showSnackbar(speechFailureMessage)
+                TranslatorEvent.SwapUnavailable -> snackbarHostState.showSnackbar(swapUnavailableMessage)
             }
         }
     }

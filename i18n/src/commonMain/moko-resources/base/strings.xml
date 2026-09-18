@@ -274,6 +274,7 @@
     <string name="translator_open_settings">Open Translation settings</string>
     <string name="translator_configuration_required">Translation needs to be configured before it can run.</string>
     <string name="translator_speech_failed">Speech could not be played.</string>
+    <string name="translator_swap_unavailable">Swap isn\'t available with the current languages.</string>
     <string name="translation_original">Original</string>
     <string name="translation_listen_original">Listen to original</string>
     <string name="translation_stop_original">Stop original speech</string>
@@ -289,6 +290,7 @@
     <string name="translation_engine_not_configured">Choose a translation engine to continue.</string>
     <string name="translation_selected_engine_unavailable">The selected translation engine is unavailable.</string>
     <string name="translation_choose_engine">Choose translation engine</string>
+    <string name="translation_recent_languages">Recent</string>
     <string name="translation_models_required">Language data is required before translation can continue.</string>
     <string name="translation_system_setup_required">Complete translation/language setup in Android settings.</string>
     <string name="translation_service_disabled">Enable the Android translation service to continue.</string>

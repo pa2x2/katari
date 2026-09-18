@@ -23,6 +23,7 @@ class ProfileTranslationPreferencesTest {
 
         registry.ownership().profileKeys shouldContainExactlyInAnyOrder setOf(
             "translation_engine",
+            "translation_recent_languages",
             "translation_target_language",
         )
     }
@@ -40,7 +41,34 @@ class ProfileTranslationPreferencesTest {
         preferences.targetLanguage.get() shouldBe target
     }
 
+    @Test
+    fun `recent languages round-trip as an ordered distinct list`() {
+        val preferences = ProfileTranslationPreferences(InMemoryPreferenceStore(), DEFAULT_ENGINE)
+
+        preferences.recentLanguages.set(listOf(SPANISH, SIMPLIFIED_CHINESE, PORTUGUESE_BRAZIL))
+
+        preferences.recentLanguages.get() shouldBe listOf(SPANISH, SIMPLIFIED_CHINESE, PORTUGUESE_BRAZIL)
+    }
+
+    @Test
+    fun `recent language use moves the language to the front and caps the list`() {
+        val recents = listOf(SPANISH, SIMPLIFIED_CHINESE, PORTUGUESE_BRAZIL)
+
+        recents.withRecentUse(SIMPLIFIED_CHINESE, limit = 3) shouldBe
+            listOf(SIMPLIFIED_CHINESE, SPANISH, PORTUGUESE_BRAZIL)
+        recents.withRecentUse(PORTUGUESE_BRAZIL, limit = 2) shouldBe listOf(PORTUGUESE_BRAZIL, SPANISH)
+    }
+
+    @Test
+    fun `recent language use appends unseen languages`() {
+        emptyList<LanguageTag>().withRecentUse(SPANISH) shouldBe listOf(SPANISH)
+        listOf(SPANISH).withRecentUse(SIMPLIFIED_CHINESE) shouldBe listOf(SIMPLIFIED_CHINESE, SPANISH)
+    }
+
     private companion object {
         val DEFAULT_ENGINE = TranslationEngineId("android-system")
+        val SPANISH = LanguageTag.require("es")
+        val SIMPLIFIED_CHINESE = LanguageTag.require("zh-Hans")
+        val PORTUGUESE_BRAZIL = LanguageTag.require("pt-BR")
     }
 }

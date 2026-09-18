@@ -26,6 +26,7 @@ internal data class TranslatorState(
     val engineSelectionResolved: Boolean = false,
     val engines: List<TranslationEngineState> = emptyList(),
     val languageSupport: TranslationLanguageSupportState = TranslationLanguageSupportState.Idle,
+    val recentLanguages: List<LanguageTag> = emptyList(),
     val session: TranslationSessionState = TranslationSessionState.Hidden,
     val picker: TranslatorPicker? = null,
     val speech: TranslationResultSpeechState = TranslationResultSpeechState(),
@@ -45,4 +46,7 @@ internal data class TranslatorState(
 
 internal sealed interface TranslatorEvent {
     data object SpeechFailed : TranslatorEvent
+
+    /** Emitted when the current selections cannot be exchanged by the swap control. */
+    data object SwapUnavailable : TranslatorEvent
 }

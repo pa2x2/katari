@@ -311,6 +311,8 @@ class TranslationSessionHostCoordinatorTest {
             null,
             TranslationTargetLanguageSelection.Explicit(TARGET),
         )
+        override val recentLanguages: Preference<List<LanguageTag>> =
+            InMemoryPreference("recent", null, emptyList())
         var inspectionCount = 0
         var inspectedSelection: TranslationEngineId? = PROFILE_ENGINE.id
         var openedEngine: TranslationEngineId? = null

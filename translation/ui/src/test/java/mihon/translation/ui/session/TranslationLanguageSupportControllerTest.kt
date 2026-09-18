@@ -87,6 +87,8 @@ class TranslationLanguageSupportControllerTest {
             InMemoryPreference("engine", null, FIRST_ENGINE)
         override val defaultTargetLanguage: Preference<TranslationTargetLanguageSelection> =
             InMemoryPreference("target", null, TranslationTargetLanguageSelection.Default)
+        override val recentLanguages: Preference<List<LanguageTag>> =
+            InMemoryPreference("recent", null, emptyList())
 
         override suspend fun deviceAvailability() = TranslationDeviceAvailability.Available
 

@@ -5,6 +5,7 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -178,6 +179,64 @@ class TranslatorScreenModelTest {
         }
     }
 
+    @Test
+    fun `swap without a result exchanges explicit supported selections and records recents`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+        val hostActions = FakeHostActions()
+        val model = TranslatorScreenModel(
+            feature = FakeTranslationFeature(),
+            hostActions = hostActions,
+            ttsFeature = FakeTtsFeature,
+        )
+
+        try {
+            advanceUntilIdle()
+            model.selectSource(ENGLISH)
+            model.selectTarget(FRENCH)
+            model.swapLanguages()
+
+            with(model.state.value) {
+                sourceLanguage shouldBe TranslationSourceLanguageSelection.Explicit(FRENCH)
+                targetLanguage shouldBe TranslationTargetLanguageSelection.Explicit(ENGLISH)
+            }
+            hostActions.recentLanguages.get() shouldBe listOf(FRENCH, ENGLISH)
+
+            model.setText("bonjour")
+            advanceUntilIdle()
+            model.state.value.session.displayedSessionResult()?.result?.translatedText shouldBe "hello"
+        } finally {
+            model.onDispose()
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun `swap with nothing to exchange reports unavailability`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+        val model = TranslatorScreenModel(
+            feature = FakeTranslationFeature(),
+            hostActions = FakeHostActions(),
+            ttsFeature = FakeTtsFeature,
+        )
+
+        try {
+            advanceUntilIdle()
+            val events = mutableListOf<TranslatorEvent>()
+            val collector = launch { model.events.collect { events += it } }
+            runCurrent()
+            model.swapLanguages()
+            advanceUntilIdle()
+            collector.cancel()
+
+            events shouldBe listOf(TranslatorEvent.SwapUnavailable)
+        } finally {
+            model.onDispose()
+            Dispatchers.resetMain()
+        }
+    }
+
     private class FakeTranslationFeature : TranslationFeature {
         val requests = mutableListOf<TranslationRequest>()
 
@@ -243,6 +302,13 @@ class TranslatorScreenModelTest {
                 TranslationTargetLanguageSelection.Explicit(FRENCH),
                 { (it as TranslationTargetLanguageSelection.Explicit).language.value },
                 { TranslationTargetLanguageSelection.Explicit(LanguageTag.require(it)) },
+            )
+        override val recentLanguages: tachiyomi.core.common.preference.Preference<List<LanguageTag>> =
+            store.getObjectFromString(
+                "recent",
+                emptyList<LanguageTag>(),
+                { languages -> languages.joinToString(",") { it.value } },
+                { raw -> raw.split(",").mapNotNull(LanguageTag::parse) },
             )
 
         override suspend fun deviceAvailability() = TranslationDeviceAvailability.Available

@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationEngineSelection
@@ -18,6 +19,7 @@ import mihon.translation.api.host.TranslationHostActions
 import mihon.translation.api.request.TranslationRequest
 import mihon.translation.api.request.TranslationSourceLanguageSelection
 import mihon.translation.api.request.TranslationTargetLanguageSelection
+import mihon.translation.runtime.preference.withRecentUse
 import mihon.translation.ui.picker.language.supportsPair
 import mihon.translation.ui.presentation.TranslationResultSpeechPhase
 import mihon.translation.ui.presentation.TranslationResultSpeechSide
@@ -56,6 +58,7 @@ internal class TranslatorScreenModel(
         TranslatorState(
             text = initialText,
             profileTargetLanguage = resolveProfileTargetLanguage(hostActions),
+            recentLanguages = hostActions.recentLanguages.get(),
             engines = coordinator.engineStates.value,
         ),
     )
@@ -120,6 +123,7 @@ internal class TranslatorScreenModel(
                 picker = null,
             )
         }
+        recordRecentLanguage(language)
         submit()
     }
 
@@ -131,6 +135,7 @@ internal class TranslatorScreenModel(
                 picker = null,
             )
         }
+        recordRecentLanguage(language)
         submit()
     }
 
@@ -150,23 +155,45 @@ internal class TranslatorScreenModel(
 
     fun swapLanguages() {
         val current = mutableState.value
-        val successful = current.session.displayedSessionResult() ?: return
         val support = (current.languageSupport as? TranslationLanguageSupportState.Available)
             ?.takeIf { it.engine == current.activeEngine }
             ?.support
-            ?: return
-        val result = successful.result
-        if (!support.supportsPair(result.targetLanguage, result.sourceLanguage)) return
-        speechController.stopPlayback()
-        mutableState.update {
-            it.copy(
-                text = result.translatedText,
-                sourceLanguage = TranslationSourceLanguageSelection.Explicit(result.targetLanguage),
-                targetLanguage = TranslationTargetLanguageSelection.Explicit(result.sourceLanguage),
-                picker = null,
-            )
+        val successful = current.session.displayedSessionResult()
+        if (successful != null && support != null) {
+            val result = successful.result
+            if (support.supportsPair(result.targetLanguage, result.sourceLanguage)) {
+                speechController.stopPlayback()
+                mutableState.update {
+                    it.copy(
+                        text = result.translatedText,
+                        sourceLanguage = TranslationSourceLanguageSelection.Explicit(result.targetLanguage),
+                        targetLanguage = TranslationTargetLanguageSelection.Explicit(result.sourceLanguage),
+                        picker = null,
+                    )
+                }
+                recordRecentLanguage(result.sourceLanguage)
+                recordRecentLanguage(result.targetLanguage)
+                submit()
+                return
+            }
         }
-        submit()
+        val source = current.explicitSourceLanguage
+        val target = current.explicitTargetLanguage
+        if (support != null && source != null && target != null && support.supportsPair(target, source)) {
+            speechController.stopPlayback()
+            mutableState.update {
+                it.copy(
+                    sourceLanguage = TranslationSourceLanguageSelection.Explicit(target),
+                    targetLanguage = TranslationTargetLanguageSelection.Explicit(source),
+                    picker = null,
+                )
+            }
+            recordRecentLanguage(source)
+            recordRecentLanguage(target)
+            submit()
+            return
+        }
+        eventChannel.trySend(TranslatorEvent.SwapUnavailable)
     }
 
     fun retry() = controller.retry()
@@ -267,6 +294,12 @@ internal class TranslatorScreenModel(
     private fun loadActiveEngineAndSubmit() {
         coordinator.loadLanguageSupport(mutableState.value.activeEngine)
         submit()
+    }
+
+    private fun recordRecentLanguage(language: mihon.language.api.tag.LanguageTag) {
+        val updated = hostActions.recentLanguages.get().withRecentUse(language)
+        hostActions.recentLanguages.set(updated)
+        mutableState.update { it.copy(recentLanguages = updated) }
     }
 
     private fun submit() {

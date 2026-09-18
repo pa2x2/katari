@@ -248,6 +248,12 @@ class BookSelectionTranslationControllerTest {
                 { "default" },
                 { TranslationTargetLanguageSelection.Default },
             )
+        override val recentLanguages: Preference<List<LanguageTag>> = store.getObjectFromString(
+            "recent",
+            emptyList(),
+            { languages -> languages.joinToString(",") { it.value } },
+            { raw -> raw.split(",").mapNotNull(LanguageTag::parse) },
+        )
         var availability: TranslationDeviceAvailability = TranslationDeviceAvailability.Available
 
         override suspend fun deviceAvailability() = availability

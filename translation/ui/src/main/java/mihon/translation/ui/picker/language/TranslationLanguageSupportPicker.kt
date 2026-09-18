@@ -33,6 +33,7 @@ fun TranslationLanguageSupportPicker(
     defaultOptionSupporting: String? = null,
     defaultSelected: Boolean = false,
     onSelectDefault: (() -> Unit)? = null,
+    recentLanguages: List<LanguageTag> = emptyList(),
 ) {
     when (state) {
         is TranslationLanguageSupportState.Available -> {
@@ -43,6 +44,9 @@ fun TranslationLanguageSupportPicker(
             val options = remember(state.support, role, counterpart) {
                 translationLanguageOptions(state.support, role, counterpart)
             }
+            val recentOptions = remember(options, recentLanguages) {
+                recentLanguages.mapNotNull { recent -> options.firstOrNull { it.tag == recent } }
+            }
             TranslationLanguagePickerList(
                 options = options,
                 selected = selected,
@@ -52,6 +56,7 @@ fun TranslationLanguageSupportPicker(
                 defaultOptionSupporting = defaultOptionSupporting,
                 defaultSelected = defaultSelected,
                 onSelectDefault = onSelectDefault,
+                recents = recentOptions,
             )
         }
         TranslationLanguageSupportState.Idle -> {
