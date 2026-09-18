@@ -21,8 +21,9 @@ internal fun BookDocumentReaderViewport(
     navigationRequest: BookDocumentNavigationRequest?,
     textSizePercent: Int,
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
-    onTransitionReached: (EntryChapter) -> Unit,
-    onTerminalObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
+    onChapterBoundaryReached: (EntryChapter) -> Unit,
+    onTransitionRetry: (EntryChapter) -> Unit,
+    onChapterEndObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
     onAnchorMissing: (String) -> Unit,
     onInternalLinkClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
@@ -44,7 +45,8 @@ internal fun BookDocumentReaderViewport(
     val invertVolume by settings.invertVolumeKeys.state.collectAsState()
     BookDocumentModeViewport(
         currentChapter, currentChapterId, window, loadedSections, loadStates, navigationRequest, textSizePercent,
-        onLocation, onTransitionReached, onTerminalObservation, onAnchorMissing, onInternalLinkClick,
+        onLocation, onChapterBoundaryReached, onTransitionRetry, onChapterEndObservation, onAnchorMissing,
+        onInternalLinkClick,
         onExternalLinkClick, onScrollStarted, onUserScrollStarted, onReaderTap,
         mode.effectiveValue, tapZones.effectiveValue, inversion.effectiveValue, animation.effectiveValue,
         volume.effectiveValue, invertVolume.effectiveValue, chromeVisible, modifier, onPageProgress,

@@ -290,16 +290,21 @@ internal class BookDocumentChapterCoordinator(
         updateState(state.copy(navigationRequest = navigationRequest))
     }
 
-    fun onTerminalObservation(
+    /**
+     * Consumes content-derived chapter-end observations from the viewers. Completion evidence
+     * reaches here through reading-mode layouts (settled end of the terminal chapter), never
+     * through the chapter-transition row's visibility.
+     */
+    fun onChapterEndObservation(
         chapter: EntryChapter,
-        terminalBoundaryVisible: Boolean,
+        chapterEndVisible: Boolean,
         canScrollForward: Boolean,
         scrollInProgress: Boolean,
     ) {
         if (chapter.id != retainedSessions.currentChapterId) return
         completionTracker.onTerminalObservation(
             chapter.id,
-            terminalBoundaryVisible,
+            chapterEndVisible,
             canScrollForward,
             scrollInProgress,
         )?.let(::completeChapter)

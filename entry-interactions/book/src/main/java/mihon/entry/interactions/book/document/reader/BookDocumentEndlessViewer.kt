@@ -26,7 +26,6 @@ import kotlinx.coroutines.flow.first
 import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.reader.position.BookDocumentViewportGeometry
 import mihon.entry.interactions.book.document.reader.position.LocalBookDocumentViewportGeometry
-import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildWindow
 import tachiyomi.domain.entry.model.EntryChapter
 
@@ -40,9 +39,11 @@ internal fun BookDocumentEndlessViewer(
     loadStates: Map<Long, BookDocumentChapterLoadState>,
     navigationRequest: BookDocumentNavigationRequest?,
     textSizePercent: Int,
+    chapterEnd: BookDocumentChapterEnd?,
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
-    onTransitionReached: (EntryChapter) -> Unit,
-    onTerminalObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
+    onChapterBoundaryReached: (EntryChapter) -> Unit,
+    onTransitionRetry: (EntryChapter) -> Unit,
+    onChapterEndObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
     onAnchorMissing: (String) -> Unit,
     onInternalLinkClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
@@ -78,7 +79,10 @@ internal fun BookDocumentEndlessViewer(
     val currentOnInternalLinkClick by rememberUpdatedState(onInternalLinkClick)
     val currentOnExternalLinkClick by rememberUpdatedState(onExternalLinkClick)
     val currentOnReaderTap by rememberUpdatedState(onReaderTap)
-    val currentOnTransitionReached by rememberUpdatedState(onTransitionReached)
+    val currentOnChapterBoundaryReached by rememberUpdatedState(onChapterBoundaryReached)
+    val currentOnTransitionRetry by rememberUpdatedState(onTransitionRetry)
+    val currentOnChapterEndObservation by rememberUpdatedState(onChapterEndObservation)
+    val currentChapterEnd by rememberUpdatedState(chapterEnd)
     val currentLoadStates by rememberUpdatedState(loadStates)
     val currentTextSizePercent by rememberUpdatedState(textSizePercent)
     var observedDatasetIdentity by remember(listState) { mutableStateOf(items.identity) }
@@ -124,7 +128,7 @@ internal fun BookDocumentEndlessViewer(
     }
     val externalLinkClick = remember { { url: String -> currentOnExternalLinkClick(url) } }
     val readerTap = remember { { currentOnReaderTap() } }
-    val transitionRetry = remember { { chapter: EntryChapter -> currentOnTransitionReached(chapter) } }
+    val transitionRetry = remember { { chapter: EntryChapter -> currentOnTransitionRetry(chapter) } }
     val chapterLoadState = remember { { chapterId: Long -> currentLoadStates[chapterId] } }
 
     suspend fun scrollToSectionPosition(
@@ -289,7 +293,7 @@ internal fun BookDocumentEndlessViewer(
             }
             observation.transition?.takeIf { it != observedTransition }?.let { transition ->
                 observedTransition = transition
-                currentOnTransitionReached(transition)
+                currentOnChapterBoundaryReached(transition)
             }
         }
     }
@@ -306,46 +310,28 @@ internal fun BookDocumentEndlessViewer(
             .filterIsInstance<DragInteraction.Start>()
             .collect { currentOnUserScrollStarted() }
     }
-    LaunchedEffect(listState, items, currentChapterId) {
+    LaunchedEffect(listState, currentChapterId) {
         snapshotFlow {
             val info = listState.layoutInfo
-            val terminalVisible = info.visibleItemsInfo.any { layout ->
-                val transition = (currentItems.resolve(layout.index, layout.key) as? BookDocumentViewerItem.Transition)
-                    ?.transition
-                transition?.direction == EntryChildDirection.NEXT &&
-                    transition.to == null &&
-                    layout.offset < info.viewportEndOffset &&
-                    layout.offset + layout.size > info.viewportStartOffset
-            }
-            TerminalLayoutObservation(
+            // Completion evidence is stream geometry: the terminal chapter at the hard scroll
+            // end. The chapter-transition row's size and visibility play no part in it.
+            ChapterEndLayoutObservation(
                 currentChapterId,
-                terminalVisible,
+                currentChapterEnd != null && !listState.canScrollForward,
                 listState.canScrollForward,
                 listState.isScrollInProgress,
             )
         }.distinctUntilChanged().collect { observation ->
             if (currentChapter.id != observation.chapterId) return@collect
-            onTerminalObservation(
+            currentOnChapterEndObservation(
                 currentChapter,
-                observation.terminalVisible,
+                observation.chapterEndReached,
                 observation.canScrollForward,
                 observation.scrollInProgress,
             )
-            if (observation.terminalVisible && !observation.canScrollForward && !observation.scrollInProgress) {
+            if (observation.chapterEndReached && !observation.scrollInProgress) {
                 withFrameNanos { }
-                val info = listState.layoutInfo
-                val stillVisible = info.visibleItemsInfo.any { layout ->
-                    val transition = (
-                        currentItems.resolve(layout.index, layout.key)
-                            as? BookDocumentViewerItem.Transition
-                        )?.transition
-                    transition?.direction == EntryChildDirection.NEXT && transition.to == null &&
-                        layout.offset < info.viewportEndOffset &&
-                        layout.offset + layout.size > info.viewportStartOffset
-                }
-                if (stillVisible && !listState.canScrollForward && !listState.isScrollInProgress) {
-                    onTerminalObservation(currentChapter, true, false, false)
-                }
+                currentOnChapterEndObservation(currentChapter, true, false, false)
             }
         }
     }
@@ -378,9 +364,9 @@ private fun androidx.compose.foundation.lazy.LazyListLayoutInfo.visibleBookDocum
 private fun <T> List<BookDocumentViewerItem<T>>.resolve(index: Int, key: Any): BookDocumentViewerItem<T>? =
     getOrNull(index)?.takeIf { it.key == key } ?: firstOrNull { it.key == key }
 
-private data class TerminalLayoutObservation(
+private data class ChapterEndLayoutObservation(
     val chapterId: Long,
-    val terminalVisible: Boolean,
+    val chapterEndReached: Boolean,
     val canScrollForward: Boolean,
     val scrollInProgress: Boolean,
 )

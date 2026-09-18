@@ -33,8 +33,9 @@ internal fun BookDocumentModeViewport(
     navigationRequest: BookDocumentNavigationRequest?,
     textSizePercent: Int,
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
-    onTransitionReached: (EntryChapter) -> Unit,
-    onTerminalObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
+    onChapterBoundaryReached: (EntryChapter) -> Unit,
+    onTransitionRetry: (EntryChapter) -> Unit,
+    onChapterEndObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
     onAnchorMissing: (String) -> Unit,
     onInternalLinkClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
@@ -59,11 +60,17 @@ internal fun BookDocumentModeViewport(
         anchor.location = it
         onViewportLocation(it)
     }
+    // Chapter-completion evidence: content end of the terminal chapter. Computed here so both
+    // reading modes observe the same content, never the chapter-transition row.
+    val chapterEnd = remember(window, loadedSections) {
+        bookDocumentChapterEnd(window, loadedSections)
+    }
     if (mode == BookDocumentReadingMode.SCROLL) {
         SideEffect { onSeekPages(emptyList()) }
         BookDocumentEndlessViewer(
             currentChapter, currentChapterId, window, loadedSections, loadStates, navigationRequest, textSizePercent,
-            onLocation, onTransitionReached, onTerminalObservation, onAnchorMissing, onInternalLinkClick,
+            chapterEnd, onLocation, onChapterBoundaryReached, onTransitionRetry, onChapterEndObservation,
+            onAnchorMissing, onInternalLinkClick,
             onExternalLinkClick, onScrollStarted, onUserScrollStarted, onReaderTap,
             initialLocation = anchor.location,
             onViewportLocation = observeViewport,
@@ -108,7 +115,9 @@ internal fun BookDocumentModeViewport(
                     pages, mode, initialLocation, navigationRequest, loadStates,
                     tapZones, inversion, animation,
                     volume, invertVolume, chromeVisible,
-                    pagedLocationChanged, onTransitionReached, onTerminalObservation, onInternalLinkClick,
+                    chapterEnd,
+                    pagedLocationChanged, onChapterBoundaryReached, onTransitionRetry, onChapterEndObservation,
+                    onInternalLinkClick,
                     onExternalLinkClick, onScrollStarted, onUserScrollStarted, onReaderTap,
                     onViewportLocation = observeViewport,
                     onPageProgress = onPageProgress,

@@ -176,8 +176,11 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                                 chapterCoordinator.selectNavigationTarget(it.copy(returnToOrigin = true))
                             }
                         },
-                        onTransitionReached = { chapterCoordinator.loadChapter(it, activate = false, retry = true) },
-                        onTerminalObservation = chapterCoordinator::onTerminalObservation,
+                        onChapterBoundaryReached = {
+                            chapterCoordinator.loadChapter(it, activate = false, retry = true)
+                        },
+                        onTransitionRetry = { chapterCoordinator.loadChapter(it, activate = false, retry = true) },
+                        onChapterEndObservation = chapterCoordinator::onChapterEndObservation,
                         onNavigationSelected = ::selectFromNavigation,
                         onChromeToggle = ::toggleChrome,
                         onChromeHide = { setChromeVisible(false) },

@@ -27,7 +27,7 @@ internal fun BookDocumentPageContent(
     onAnchorClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     onReaderTap: () -> Unit,
-    onRetry: (EntryChapter) -> Unit,
+    onTransitionRetry: (EntryChapter) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val isTransition = page.fragments.singleOrNull()?.item is BookDocumentViewerItem.Transition
@@ -46,7 +46,7 @@ internal fun BookDocumentPageContent(
                     onAnchorClick,
                     onExternalLinkClick,
                     onReaderTap,
-                    onRetry,
+                    onTransitionRetry,
                 )
             }
         }
@@ -60,7 +60,7 @@ internal fun BookDocumentPageFragmentContent(
     onAnchorClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     onReaderTap: () -> Unit,
-    onRetry: (EntryChapter) -> Unit,
+    onTransitionRetry: (EntryChapter) -> Unit,
 ) {
     val item = fragment.item
     val rendered = if (item is BookDocumentViewerItem.Block && item.content.content is BookDocumentBlockContent.Text) {
@@ -78,7 +78,7 @@ internal fun BookDocumentPageFragmentContent(
         onAnchorClick = onAnchorClick,
         onExternalLinkClick = onExternalLinkClick,
         onReaderTap = onReaderTap,
-        onTransitionRetry = onRetry,
+        onTransitionRetry = onTransitionRetry,
         transitionVerticalPadding = 0.dp,
         preserveTerminalSpacing = !fragment.lastOnPage,
     )

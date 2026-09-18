@@ -1,7 +1,8 @@
-package mihon.entry.interactions.book.document.reader
+package mihon.entry.interactions.book.document.reader.transition
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import mihon.entry.interactions.book.document.reader.BookDocumentChapterLoadState
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildTransition

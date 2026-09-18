@@ -9,11 +9,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import mihon.book.api.document.BookDocumentLinkTarget
+import mihon.entry.interactions.book.document.reader.BookDocumentChapterEnd
 import mihon.entry.interactions.book.document.reader.BookDocumentChapterLoadState
 import mihon.entry.interactions.book.document.reader.BookDocumentChapterSelectionContainer
 import mihon.entry.interactions.book.document.reader.BookDocumentNavigationRequest
 import mihon.entry.interactions.book.document.reader.BookDocumentSection
-import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerLocation
 import mihon.entry.interactions.book.reader.BookReaderProgress
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
@@ -35,9 +35,11 @@ internal fun BookDocumentPagedViewer(
     volumeKeys: Boolean,
     invertVolumeKeys: Boolean,
     chromeVisible: Boolean,
+    chapterEnd: BookDocumentChapterEnd?,
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
-    onTransitionReached: (EntryChapter) -> Unit,
-    onTerminalObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
+    onChapterBoundaryReached: (EntryChapter) -> Unit,
+    onTransitionRetry: (EntryChapter) -> Unit,
+    onChapterEndObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
     onAnchorClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     onScrollStarted: () -> Unit,
@@ -49,7 +51,8 @@ internal fun BookDocumentPagedViewer(
     val navigation = rememberBookDocumentPagedNavigation(
         pages, mode, initialLocation, navigationRequest,
         animatePages, volumeKeys, invertVolumeKeys, chromeVisible,
-        onLocation, onTransitionReached, onTerminalObservation, onScrollStarted, onUserScrollStarted,
+        chapterEnd,
+        onLocation, onChapterBoundaryReached, onChapterEndObservation, onScrollStarted, onUserScrollStarted,
         onViewportLocation,
     )
     val pager = navigation.pager
@@ -60,8 +63,7 @@ internal fun BookDocumentPagedViewer(
     val move = navigation.move
     val pageContent: @Composable (Int) -> Unit = { index ->
         val page = pages[index]
-        val chapterId = page.fragments.first().section?.owner?.id
-            ?: (page.fragments.first().item as BookDocumentViewerItem.Transition).transition.from.id
+        val chapterId = page.ownerChapter.id
         BookDocumentChapterSelectionContainer(
             chapterId = chapterId,
             ownerIdentity = "book-page:${page.key}",
@@ -76,7 +78,7 @@ internal fun BookDocumentPagedViewer(
                 onAnchorClick,
                 onExternalLinkClick,
                 onReaderTap,
-                onTransitionReached,
+                onTransitionRetry,
                 modifier = Modifier.pointerInput(page.key, tapZones, tapInversion, vertical, rtl, animatePages) {
                     detectTapGestures { offset ->
                         if (!selection.consumeSelectionTap()) {
