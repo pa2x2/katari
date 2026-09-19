@@ -225,7 +225,6 @@
     <string name="color_filter_r_value">R</string>
     <string name="color_filter_g_value">G</string>
     <string name="color_filter_a_value">A</string>
-    <string name="pref_always_show_chapter_transition">هەمیشە تێپەڕینی چاپتەر پیشان بدە</string>
     <string name="off">کوژاوە</string>
     <string name="on">پێکراو</string>
     <string name="action_show_manga">نیشاندانی مانگا</string>

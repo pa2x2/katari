@@ -410,7 +410,6 @@
     <string name="color_filter_g_value">সেউজীয়া</string>
     <string name="color_filter_b_value">নীলা</string>
     <string name="color_filter_a_value">আলফা</string>
-    <string name="pref_always_show_chapter_transition">সদায় অধ্যায় স্থানান্তৰ দেখুৱাওক</string>
     <string name="pref_category_reading_mode">পঢ়াৰ মোড</string>
     <string name="pref_highest">সৰ্বোচ্চ</string>
     <string name="pref_high">উচ্চ</string>

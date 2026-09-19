@@ -317,7 +317,6 @@
     <string name="email">Correo electrónico</string>
     <string name="pref_disable_battery_optimization_summary">Mejora la cadencia de las actualizaciones y las copias de respaldo que se hagan en segundo plano</string>
     <string name="battery_optimization_disabled">La optimización de la batería ya está desactivada</string>
-    <string name="pref_always_show_chapter_transition">Hacer transición entre capítulos</string>
     <string name="action_menu">Menú</string>
     <string name="action_newest">Lo más nuevo</string>
     <string name="action_oldest">Lo más antiguo</string>

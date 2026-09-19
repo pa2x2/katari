@@ -327,7 +327,6 @@
     <string name="restore_duration">%1$02d мин, %2$02d сек</string>
     <string name="pref_webtoon_side_padding">Растојање од ивице</string>
     <string name="pref_category_reading">Читање</string>
-    <string name="pref_always_show_chapter_transition">Увек прикажи транзицију поглавља</string>
     <string name="vertical_plus_viewer">Дуги стрип са размацима</string>
     <string name="pref_skip_filtered_chapters">Прескочи филтрирана поглавља</string>
     <string name="pref_cutout_short">Прикажи садржај у исечку</string>

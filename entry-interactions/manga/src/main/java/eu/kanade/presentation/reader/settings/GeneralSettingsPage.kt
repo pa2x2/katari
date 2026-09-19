@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import eu.kanade.tachiyomi.ui.reader.hasDisplayCutout
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
+import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import mihon.entry.interactions.reader.settings.ReadingMode
 import tachiyomi.i18n.*
@@ -48,7 +49,7 @@ internal fun ColumnScope.GeneralPage(screenModel: ReaderSettingsScreenModel) {
     val flashColor by flashColorPref.collectAsState()
 
     SettingsChipRow(MR.strings.pref_reader_theme) {
-        themes.map { (labelRes, value) ->
+        themes.forEach { (labelRes, value) ->
             FilterChip(
                 selected = readerTheme == value,
                 onClick = { screenModel.preferences.readerTheme.set(value) },
@@ -122,10 +123,18 @@ internal fun ColumnScope.GeneralPage(screenModel: ReaderSettingsScreenModel) {
         pref = screenModel.preferences.readWithLongTap,
     )
 
-    CheckboxItem(
-        label = stringResource(MR.strings.pref_always_show_chapter_transition),
-        pref = screenModel.preferences.alwaysShowChapterTransition,
-    )
+    val chapterTransitionModePref = screenModel.preferences.chapterTransitionMode
+    val chapterTransitionMode by chapterTransitionModePref.collectAsState()
+
+    SettingsChipRow(MR.strings.pref_chapter_transition) {
+        ChapterTransitionMode.entries.forEach { mode ->
+            FilterChip(
+                selected = chapterTransitionMode == mode,
+                onClick = { chapterTransitionModePref.set(mode) },
+                label = { Text(stringResource(mode.titleRes)) },
+            )
+        }
+    }
 
     CheckboxItem(
         label = stringResource(MR.strings.pref_prepare_next_chapter),
@@ -161,7 +170,7 @@ internal fun ColumnScope.GeneralPage(screenModel: ReaderSettingsScreenModel) {
             pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
         )
         SettingsChipRow(MR.strings.pref_flash_with) {
-            flashColors.map { (labelRes, value) ->
+            flashColors.forEach { (labelRes, value) ->
                 FilterChip(
                     selected = flashColor == value,
                     onClick = { flashColorPref.set(value) },

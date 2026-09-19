@@ -1,9 +1,13 @@
 package eu.kanade.tachiyomi.ui.reader.viewer
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import tachiyomi.core.common.preference.Preference
 
@@ -25,7 +29,11 @@ internal abstract class ViewerConfig(
     var doubleTapAnimDuration = 500
     var volumeKeysEnabled = false
     var volumeKeysInverted = false
-    var alwaysShowChapterTransition = true
+
+    /**
+     * Snapshot state so transition views already on screen follow mode changes without rebinding.
+     */
+    var chapterTransitionMode: ChapterTransitionMode by mutableStateOf(ChapterTransitionMode.ALWAYS)
     var navigationMode = 0
         protected set
 
@@ -64,8 +72,8 @@ internal abstract class ViewerConfig(
         readerPreferences.readWithVolumeKeysInverted
             .register({ volumeKeysInverted = it })
 
-        readerPreferences.alwaysShowChapterTransition
-            .register({ alwaysShowChapterTransition = it })
+        readerPreferences.chapterTransitionMode
+            .register({ chapterTransitionMode = it })
 
         forceNavigationOverlay = readerPreferences.showNavigationOverlayNewUser.get()
         if (forceNavigationOverlay) {

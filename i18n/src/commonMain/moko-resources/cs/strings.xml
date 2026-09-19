@@ -414,7 +414,6 @@
     <string name="myanimelist_relogin">Prosím přihlašte se do MAL znovu</string>
     <string name="track_finished_reading_date">Datum dokončení čtení</string>
     <string name="track_started_reading_date">Datum zahájení čtení</string>
-    <string name="pref_always_show_chapter_transition">Vždy zobrazovat přechod mezi kapitolami</string>
     <string name="kindlish_nav">Podobné Kindlu</string>
     <string name="action_move_to_bottom">Přesunout dolů</string>
     <string name="action_cancel_all">Zrušit vše</string>

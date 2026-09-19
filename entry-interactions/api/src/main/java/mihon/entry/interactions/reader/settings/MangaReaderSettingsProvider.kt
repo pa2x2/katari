@@ -102,9 +102,9 @@ class MangaReaderSettingsProvider(
 
     val readerTheme: Preference<Int> = preferenceStore.getInt("pref_reader_theme_key", 1)
 
-    val alwaysShowChapterTransition: Preference<Boolean> = preferenceStore.getBoolean(
-        "always_show_chapter_transition",
-        true,
+    val chapterTransitionMode: Preference<ChapterTransitionMode> = preferenceStore.getEnum(
+        "chapter_transition",
+        ChapterTransitionMode.ALWAYS,
     )
 
     val cropBorders: Preference<Boolean> = preferenceStore.getBoolean("crop_borders", false)
@@ -244,7 +244,7 @@ class MangaReaderSettingsProvider(
         intSetting("image_scale_type", imageScaleType) { it in ImageScaleType.indices },
         intSetting("zoom_start", zoomStart) { it in ZoomStart.indices },
         intSetting("reader_theme", readerTheme),
-        booleanSetting("always_show_chapter_transition", alwaysShowChapterTransition),
+        profileOnly("chapter_transition", chapterTransitionMode, enumCodec(ChapterTransitionMode.entries)),
         booleanSetting("crop_borders", cropBorders),
         booleanSetting("navigate_to_pan", navigateToPan),
         booleanSetting("landscape_zoom", landscapeZoom),

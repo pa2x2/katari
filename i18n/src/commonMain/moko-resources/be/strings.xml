@@ -291,7 +291,6 @@
     <string name="pref_webtoon_side_padding">Бакавы водступ</string>
     <string name="pref_category_reading">Чытанне</string>
     <string name="pref_category_reading_mode">Рэжым чытання</string>
-    <string name="pref_always_show_chapter_transition">Заўсёды паказваць пераход раздзелаў</string>
     <string name="color_filter_a_value">Празрыстасць</string>
     <string name="color_filter_b_value">Сіні</string>
     <string name="color_filter_g_value">Зялёны</string>

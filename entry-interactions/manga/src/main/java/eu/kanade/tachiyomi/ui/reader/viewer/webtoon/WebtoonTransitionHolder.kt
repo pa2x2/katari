@@ -4,9 +4,9 @@ import android.view.Gravity
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.LinearLayout
+import eu.kanade.presentation.reader.ChapterTransitionPlacement
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderTransitionView
-import eu.kanade.tachiyomi.util.system.dpToPx
 import mihon.entry.interactions.viewer.EntryChildTransition
 
 /**
@@ -24,10 +24,6 @@ internal class WebtoonTransitionHolder(
         layout.orientation = LinearLayout.VERTICAL
         layout.gravity = Gravity.CENTER
 
-        val paddingVertical = 128.dpToPx
-        val paddingHorizontal = 32.dpToPx
-        layout.setPadding(paddingHorizontal, paddingVertical, paddingHorizontal, paddingVertical)
-
         layout.addView(transitionView)
     }
 
@@ -38,6 +34,8 @@ internal class WebtoonTransitionHolder(
         transitionView.bind(
             transition = transition,
             downloadManager = viewer.downloadManager,
+            config = viewer.config,
+            placement = ChapterTransitionPlacement.WEBTOON,
             onRetry = viewer.activity::requestTransitionChapterLoad,
         )
     }

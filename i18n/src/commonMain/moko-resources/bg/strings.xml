@@ -327,7 +327,6 @@
     <string name="restore_duration">%1$02d мин, %2$02d сек</string>
     <string name="pref_webtoon_side_padding">Странично разстояние</string>
     <string name="pref_category_reading">Четене</string>
-    <string name="pref_always_show_chapter_transition">Винаги показвай прехода между главите</string>
     <string name="vertical_plus_viewer">Безкраен вертикален изглед</string>
     <string name="pref_skip_filtered_chapters">Пропускай филтрирани глави</string>
     <string name="pref_cutout_short">Показвай съдържанието в изрязаната част</string>

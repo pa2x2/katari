@@ -266,7 +266,6 @@
     <string name="pref_browse_summary">Kilder, udvidelser, global søgning</string>
     <string name="nav_zone_left">Venstre</string>
     <string name="backup_created">Sikkerhedskopi oprettet</string>
-    <string name="pref_always_show_chapter_transition">Vis altid kapitelovergang</string>
     <string name="action_create">Opret</string>
     <string name="pref_restore_backup">Gendan sikkerhedskopi</string>
     <string name="used_cache">Brugt: %1$s</string>

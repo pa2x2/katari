@@ -326,7 +326,6 @@
     <string name="zoom_start_automatic">स्वचालित</string>
     <string name="rotation_force_portrait">लक गरिएको पोर्ट्रेट</string>
     <string name="color_filter_a_value">अल्फा</string>
-    <string name="pref_always_show_chapter_transition">अध्याय ट्रान्जिसन सधैँ देखाउनुहोस्</string>
     <string name="color_filter_b_value">निलो</string>
     <string name="pref_category_reading">पढ्दै</string>
     <string name="pref_webtoon_side_padding">साइड प्याडिङ</string>

@@ -2,6 +2,7 @@ package mihon.entry.interactions.book.document.reader.settings
 
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
+import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.getEnum
@@ -31,9 +32,14 @@ internal class BookDocumentReaderPreferences(
     val showReadingProgress: Preference<Boolean> = preferenceStore.getBoolean(SHOW_READING_PROGRESS_KEY, true)
     val readingProgressStyle: Preference<BookDocumentReaderProgressStyle> =
         preferenceStore.getEnum(READING_PROGRESS_STYLE_KEY, BookDocumentReaderProgressStyle.PERCENTAGE)
+    val chapterTransitionMode: Preference<ChapterTransitionMode> = preferenceStore.getEnum(
+        CHAPTER_TRANSITION_MODE_KEY,
+        ChapterTransitionMode.ALWAYS,
+    )
 
     companion object {
         const val READING_MODE_KEY = "book_document_reader_reading_mode"
+        const val CHAPTER_TRANSITION_MODE_KEY = "book_document_reader_chapter_transition"
         const val TAP_ZONES_KEY = "book_document_reader_tap_zones"
         const val TAP_INVERSION_KEY = "book_document_reader_tap_inversion"
         const val ANIMATE_PAGES_KEY = "book_document_reader_animate_pages"

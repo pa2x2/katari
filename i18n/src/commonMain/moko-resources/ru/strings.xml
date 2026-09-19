@@ -317,7 +317,6 @@
     <string name="pref_disable_battery_optimization_summary">Помогает с обновлением библиотеки и резервной копией в фоне</string>
     <string name="pref_disable_battery_optimization">Отключить оптимизацию батареи</string>
     <string name="email">Адрес электронной почты</string>
-    <string name="pref_always_show_chapter_transition">Переход между главами</string>
     <string name="hide_notification_content">Скрыть содержимое уведомлений</string>
     <string name="secure_screen_summary">Защита экрана скрывает содержимое при переключении между приложениями, а также блокирует создание скриншотов</string>
     <string name="action_oldest">Старейший</string>

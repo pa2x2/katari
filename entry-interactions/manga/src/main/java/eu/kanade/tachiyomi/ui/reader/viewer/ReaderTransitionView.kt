@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.AbstractComposeView
 import eu.kanade.presentation.reader.ChapterTransition
+import eu.kanade.presentation.reader.ChapterTransitionPlacement
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import mihon.entry.interactions.manga.download.DownloadManager
 import mihon.entry.interactions.runtime.EntryInteractionTheme
@@ -29,6 +30,8 @@ internal class ReaderTransitionView @JvmOverloads constructor(context: Context, 
     internal fun bind(
         transition: EntryChildTransition<ReaderChapter>,
         downloadManager: DownloadManager,
+        config: ViewerConfig,
+        placement: ChapterTransitionPlacement,
         onRetry: (ReaderChapter) -> Unit,
     ) {
         val toChapter = transition.to
@@ -51,6 +54,8 @@ internal class ReaderTransitionView @JvmOverloads constructor(context: Context, 
                         skipCache = true,
                     )
             },
+            config = config,
+            placement = placement,
             onRetry = onRetry,
         )
     }
@@ -88,6 +93,8 @@ internal class ReaderTransitionView @JvmOverloads constructor(context: Context, 
                     goingToChapterDownloaded = transitionData.goingToChapterDownloaded,
                     loadState = loadState,
                     onRetry = onRetryAction,
+                    displayMode = transitionData.config.chapterTransitionMode,
+                    placement = transitionData.placement,
                 )
             }
         }
@@ -97,6 +104,8 @@ internal class ReaderTransitionView @JvmOverloads constructor(context: Context, 
         val transition: EntryChildTransition<ReaderChapter>,
         val currChapterDownloaded: Boolean,
         val goingToChapterDownloaded: Boolean,
+        val config: ViewerConfig,
+        val placement: ChapterTransitionPlacement,
         val onRetry: (ReaderChapter) -> Unit,
     )
 }

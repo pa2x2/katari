@@ -113,7 +113,6 @@
     <string name="zoom_start_left">Ezkerra</string>
     <string name="pref_rotation_type">Biraketa mota lehenetsia</string>
     <string name="pref_webtoon_side_padding">Alboko betegarria</string>
-    <string name="pref_always_show_chapter_transition">Erakutsi beti kapituluaren trantsizioa</string>
     <string name="last_read_chapter">Azkenik irakurritako kapitulua</string>
     <string name="pref_category_delete_chapters">Ezabatu kapituluak</string>
     <string name="fourth_to_last">Atzetik hasita laugarren irakurritako kapitulua</string>

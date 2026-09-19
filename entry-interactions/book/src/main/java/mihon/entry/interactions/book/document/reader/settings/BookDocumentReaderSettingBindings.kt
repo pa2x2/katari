@@ -2,6 +2,7 @@ package mihon.entry.interactions.book.document.reader.settings
 
 import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationSettingsProvider
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
+import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.ViewerSettingBinding
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingId
@@ -22,6 +23,7 @@ internal class BookDocumentReaderSettingBindings private constructor(
     val showTextSelectionMenu: ViewerSettingBinding<Boolean>,
     val showReadingProgress: ViewerSettingBinding<Boolean>,
     val readingProgressStyle: ViewerSettingBinding<BookDocumentReaderProgressStyle>,
+    val chapterTransitionMode: ViewerSettingBinding<ChapterTransitionMode>,
     val sharedSettings: Map<ReaderSharedSettingId, ViewerSettingBinding<Boolean>>,
 ) {
     val prepareNextChapter: ViewerSettingBinding<Boolean>
@@ -52,6 +54,7 @@ internal class BookDocumentReaderSettingBindings private constructor(
                 showTextSelectionMenu = entryBinder.bind(provider.showTextSelectionMenuSetting),
                 showReadingProgress = entryBinder.bind(provider.showReadingProgressSetting),
                 readingProgressStyle = entryBinder.bind(provider.readingProgressStyleSetting),
+                chapterTransitionMode = entryBinder.bind(provider.chapterTransitionModeSetting),
                 sharedSettings = provider.sharedSettingDefinitions.mapValues { (_, definition) ->
                     entryBinder.bind(definition)
                 },

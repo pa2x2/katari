@@ -630,7 +630,6 @@
     <string name="pref_hide_threshold">Sentemo por kaŝi menuon dum rulumo</string>
     <string name="pref_low">Malalta</string>
     <string name="pref_download_new_unread_chapters_only">Ne elŝuti duoblaĵojn de legitaj ĉapitroj</string>
-    <string name="pref_always_show_chapter_transition">Ĉiam montri ĉapitrajn transpaŝojn</string>
     <string name="pref_landscape_zoom">Aŭtomate zomi larĝajn bildojn</string>
     <string name="split_tall_images">Dividi altajn bildojn</string>
     <string name="enhanced_services_not_installed">Disponebla sed fonto ne estas instalita: %s</string>

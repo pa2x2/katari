@@ -9,6 +9,7 @@ import mihon.entry.interactions.reader.settings.BookDocumentReaderProgressStyle
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
 import mihon.entry.interactions.reader.settings.BookDocumentReaderThemeMode
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
+import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.asProfilePreference
 import tachiyomi.i18n.*
@@ -60,6 +61,9 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
         }
         val readingProgressStyle = remember(provider, binder) {
             binder.bind(provider.readingProgressStyleSetting).asProfilePreference()
+        }
+        val chapterTransitionMode = remember(provider, binder) {
+            binder.bind(provider.chapterTransitionModeSetting).asProfilePreference()
         }
         val readingProgressVisible by showReadingProgress.collectAsState()
         return listOf(
@@ -134,6 +138,11 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
                     Preference.PreferenceItem.SwitchPreference(
                         preference = keepScreenAlive,
                         title = stringResource(MR.strings.pref_book_document_reader_keep_screen_alive),
+                    ),
+                    Preference.PreferenceItem.ListPreference(
+                        preference = chapterTransitionMode,
+                        entries = ChapterTransitionMode.entries.associateWith { stringResource(it.titleRes) },
+                        title = stringResource(MR.strings.pref_chapter_transition),
                     ),
                     Preference.PreferenceItem.SwitchPreference(
                         preference = showTextSelectionMenu,

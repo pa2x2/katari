@@ -5,6 +5,7 @@ import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslation
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPreferences
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
+import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.viewer.settings.ViewerSettingCodecs
 import mihon.entry.viewer.settings.ViewerSettingDefinition
 import mihon.entry.viewer.settings.ViewerSettingId
@@ -147,6 +148,17 @@ internal class BookDocumentReaderSettingsProvider(
         ),
     )
 
+    override val chapterTransitionModeSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.CHAPTER_TRANSITION_MODE_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = ChapterTransitionMode.ALWAYS,
+        profilePreference = preferences.chapterTransitionMode,
+        codec = ViewerSettingCodecs.codec(
+            encode = ChapterTransitionMode::name,
+            decode = { encoded -> ChapterTransitionMode.entries.firstOrNull { it.name == encoded } },
+        ),
+    )
+
     val prepareNextChapterSetting = ViewerSettingDefinition(
         id = ViewerSettingId(id, StandardReaderSharedSettingIds.NextChapterPreparation.value),
         scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
@@ -178,6 +190,7 @@ internal class BookDocumentReaderSettingsProvider(
         showTextSelectionMenuSetting,
         showReadingProgressSetting,
         readingProgressStyleSetting,
+        chapterTransitionModeSetting,
         prepareNextChapterSetting,
         automaticTranslationSetting,
     )

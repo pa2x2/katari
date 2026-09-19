@@ -16,7 +16,9 @@ import mihon.entry.interactions.book.document.reader.paging.BookDocumentPagedVie
 import mihon.entry.interactions.book.document.reader.paging.BookDocumentPaginationLayout
 import mihon.entry.interactions.book.document.reader.paging.paginationGroup
 import mihon.entry.interactions.book.document.reader.paging.paginationWindow
+import mihon.entry.interactions.book.document.reader.paging.withoutResolvedBoundaries
 import mihon.entry.interactions.book.document.reader.table.BookDocumentTablePreparation
+import mihon.entry.interactions.book.document.reader.transition.LocalBookDocumentChapterTransitionMode
 import mihon.entry.interactions.book.reader.BookReaderProgress
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.viewer.EntryChildWindow
@@ -98,10 +100,18 @@ internal fun BookDocumentModeViewport(
             if (index >= 0) centerGroup = items[index].paginationGroup()
         }
         val requestedIndex = navigationRequest?.let { items.indexOfPosition(it.sectionKey, it.position) }
-        val pageItems = if (requestedIndex != null && requestedIndex >= 0) {
+        val windowItems = if (requestedIndex != null && requestedIndex >= 0) {
             remember(items, requestedIndex) { items.paginationWindow(requestedIndex) }
         } else {
             visibleItems
+        }
+        val transitionDisplayMode = LocalBookDocumentChapterTransitionMode.current
+        val pageItems = remember(windowItems, transitionDisplayMode, loadStates, loadedSections) {
+            windowItems.withoutResolvedBoundaries(
+                transitionDisplayMode,
+                loadedSections.keys,
+                loadStates::get,
+            )
         }
         BookDocumentTablePreparation(
             pageItems.mapNotNull {

@@ -134,7 +134,6 @@
     <string name="pref_remove_after_marked_as_read">بعد از آن‌هایی که به صورت دستی به عنوان خوانده‌شده علامت‌گذاری شده‌اند</string>
     <string name="pref_webtoon_side_padding">فاصله از کنار صفحه</string>
     <string name="pref_category_reading">درحال خواندن</string>
-    <string name="pref_always_show_chapter_transition">همیشه انتقال قسمت را نشان داده شود</string>
     <string name="pref_category_for_this_series">برای این مجموعه</string>
     <string name="decode_image_error">بازکردن عکس با خطا مواجه شد</string>
     <string name="plan_to_read">قصد خواندن دارم(Plan to read)</string>
