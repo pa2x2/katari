@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.10.0] - 2026-09-19
+
+### ✨ Added
+
+- Manga and book readers can now show the chapter transition card `Always`, only `When needed`, or `Hidden`. Hidden mode replaces the card between contiguous chapters with a compact loading indicator while the next chapter loads, keeping the full card for chapter gaps, load failures, and the end of content. Existing "always show chapter transition" choices carry over.
+- The Translator's language pickers now show recently used languages as one-tap chips above the list, remembering the last six per profile.
+
+### 🧩 Improved
+
+- Translation language lists now show each language's native name beside its code, and searching matches native names and ignores accents, so `espanol` finds `Español`.
+- The Translator's swap action now works from explicitly chosen languages even before a translation completes, and explains when the current pair cannot be swapped.
+
 ## [1.9.0] - 2026-09-17
 
 ### 🔄 Changed
@@ -440,7 +452,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.9.0...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.10.0...HEAD
+[1.10.0]: https://github.com/pa2x2/katari/releases/tag/v1.10.0
 [1.9.0]: https://github.com/pa2x2/katari/releases/tag/v1.9.0
 [1.8.6]: https://github.com/pa2x2/katari/releases/tag/v1.8.6
 [1.8.5]: https://github.com/pa2x2/katari/releases/tag/v1.8.5
