@@ -457,7 +457,6 @@
     <string name="color_filter_g_value">பச்சை</string>
     <string name="color_filter_b_value">நீலம்</string>
     <string name="color_filter_a_value">அகர</string>
-    <string name="pref_always_show_chapter_transition">எப்போதும் அத்தியாய மாற்றத்தைக் காட்டுங்கள்</string>
     <string name="pref_category_reading_mode">படித்தல் பயன்முறை</string>
     <string name="pref_category_reading">படித்தல்</string>
     <string name="pref_webtoon_side_padding">பக்க திணிப்பு</string>

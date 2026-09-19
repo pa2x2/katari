@@ -322,7 +322,6 @@
     <string name="backup_in_progress">Η δημιουργία αντιγράφων ασφαλείας βρίσκεται ήδη σε εξέλιξη</string>
     <string name="pref_webtoon_side_padding">Πλευρικό γέμισμα</string>
     <string name="pref_category_reading">Ανάγνωση</string>
-    <string name="pref_always_show_chapter_transition">Να εμφανίζεται πάντα η μετάβαση κεφαλαίου</string>
     <string name="vertical_plus_viewer">Μακριά λωρίδα με κενά</string>
     <string name="pref_skip_filtered_chapters">Παράλειψη φιλτραρισμένων κεφαλαίων</string>
     <string name="pref_cutout_short">Εμφάνιση περιεχομένου στην περιοχή αποκοπής</string>

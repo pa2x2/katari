@@ -287,7 +287,6 @@
     <string name="pref_disable_battery_optimization_summary">Giúp cập nhật và sao lưu thư viện trong nền</string>
     <string name="pref_disable_battery_optimization">Tắt tối ưu pin</string>
     <string name="pref_category_reading">Đang đọc</string>
-    <string name="pref_always_show_chapter_transition">Luôn hiển thị chuyển tiếp chương</string>
     <string name="pref_skip_filtered_chapters">Bỏ qua các chương đã lọc</string>
     <string name="filter_mode_screen">Màn hình</string>
     <string name="pref_cutout_short">Hiển thị nội dung ở phần rìa</string>

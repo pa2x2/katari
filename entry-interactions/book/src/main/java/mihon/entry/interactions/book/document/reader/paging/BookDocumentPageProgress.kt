@@ -6,24 +6,35 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
-import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
 import mihon.entry.interactions.book.reader.BookReaderProgress
-import mihon.entry.interactions.viewer.EntryChildDirection
 
-/** Counts content pages in the current document section, independently of prefetched neighbours. */
+/**
+ * Counts content pages in the section the settled page reports progress for. Page ownership comes
+ * from [BookDocumentPage.ownerChapter], so a transition page inherits the position it leads from
+ * without the progress reporter inspecting the transition itself.
+ */
 internal fun List<BookDocumentPage>.pageProgress(index: Int): BookReaderProgress.Page? {
     val page = getOrNull(index) ?: return null
-    val transition = (page.fragments.first().item as? BookDocumentViewerItem.Transition)?.transition
-    val contentIndex = if (transition == null) {
-        index
-    } else if (transition.direction == EntryChildDirection.NEXT) {
-        (index - 1 downTo 0).firstOrNull { get(it).fragments.first().section?.owner?.id == transition.from.id }
-    } else {
-        (index + 1..lastIndex).firstOrNull { get(it).fragments.first().section?.owner?.id == transition.from.id }
-    } ?: return null
+    val owner = page.ownerChapter
+    val contentIndex = page.fragments.first().section?.let { index }
+        ?: nearestContentPageIndex(index, owner.id)
+        ?: return null
     val section = get(contentIndex).fragments.first().section ?: return null
     val indices = indices.filter { get(it).fragments.first().section?.key == section.key }
     return BookReaderProgress.Page(indices.indexOf(contentIndex) + 1, indices.size)
+}
+
+private fun List<BookDocumentPage>.nearestContentPageIndex(index: Int, ownerId: Long): Int? {
+    val maxDistance = maxOf(index, lastIndex - index)
+    for (distance in 1..maxDistance) {
+        (index - distance).takeIf { it >= 0 }?.let { previous ->
+            if (get(previous).fragments.first().section?.owner?.id == ownerId) return previous
+        }
+        (index + distance).takeIf { it <= lastIndex }?.let { next ->
+            if (get(next).fragments.first().section?.owner?.id == ownerId) return next
+        }
+    }
+    return null
 }
 
 /** Publishes the live displayed page while logical resume observations wait for settlement. */

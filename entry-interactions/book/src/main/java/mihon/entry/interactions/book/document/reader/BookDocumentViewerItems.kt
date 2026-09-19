@@ -3,6 +3,7 @@ package mihon.entry.interactions.book.document.reader
 import androidx.compose.runtime.Stable
 import mihon.book.api.document.BookDocumentPosition
 import mihon.book.api.document.BookDocumentPublicationProgress
+import mihon.entry.interactions.book.document.reader.transition.toViewerItem
 import mihon.entry.interactions.book.document.render.PreparedBookDocument
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
 import mihon.entry.interactions.viewer.EntryChildTransition
@@ -143,8 +144,8 @@ internal class BookDocumentViewerDataset<T>(
         previous = previous.map(System::identityHashCode),
         current = current.map(System::identityHashCode),
         next = next.map(System::identityHashCode),
-        previousTransitionKey = previousTransition.key,
-        nextTransitionKey = nextTransition.key,
+        previousBoundary = previousTransition.transition,
+        nextBoundary = nextTransition.transition,
     )
 
     override val size = sectionItemCount(previous) + 1 + sectionItemCount(current) + 1 + sectionItemCount(next)
@@ -211,8 +212,8 @@ internal class BookDocumentViewerDataset<T>(
             other.next.isNotEmpty() &&
             identity.previous == other.identity.previous &&
             identity.current == other.identity.current &&
-            identity.previousTransitionKey == other.identity.previousTransitionKey &&
-            identity.nextTransitionKey == other.identity.nextTransitionKey
+            identity.previousBoundary == other.identity.previousBoundary &&
+            identity.nextBoundary == other.identity.nextBoundary
 
     /**
      * Advancing into the already appended next section only removes content before that section
@@ -223,7 +224,7 @@ internal class BookDocumentViewerDataset<T>(
         next.isNotEmpty() &&
             other.identity.previous == identity.current &&
             other.identity.current == identity.next &&
-            identity.nextTransitionKey == other.identity.previousTransitionKey
+            identity.nextBoundary == other.identity.previousBoundary
 
     /**
      * Moving back into the already prepended previous section only removes content after that
@@ -235,7 +236,7 @@ internal class BookDocumentViewerDataset<T>(
         previous.isNotEmpty() &&
             other.identity.current == identity.previous &&
             other.identity.next == identity.current &&
-            identity.previousTransitionKey == other.identity.nextTransitionKey
+            identity.previousBoundary == other.identity.nextBoundary
 
     private fun sectionOffset(sectionKey: String): Int {
         var offset = 0
@@ -261,26 +262,19 @@ internal class BookDocumentViewerDataset<T>(
     private fun sectionItemCount(sections: List<BookDocumentSection<T>>) = sections.sumOf { it.viewerBlocks.size }
 }
 
-internal data class BookDocumentViewerDatasetIdentity(
+/**
+ * The reading-position identity of a dataset window. Section identity is what scroll restoration
+ * anchors to; chapter boundaries are compared through the [EntryChildTransition] identity
+ * contract (populated edges are direction-free, terminals stay direction-sensitive), never
+ * through the rendered transition row's key.
+ */
+internal data class BookDocumentViewerDatasetIdentity<T>(
     val previous: List<Int>,
     val current: List<Int>,
     val next: List<Int>,
-    val previousTransitionKey: String,
-    val nextTransitionKey: String,
+    val previousBoundary: EntryChildTransition<T>,
+    val nextBoundary: EntryChildTransition<T>,
 )
-
-private fun <T, K> EntryChildTransition<T>.toViewerItem(
-    keyOf: (T) -> K,
-): BookDocumentViewerItem.Transition<T> {
-    val fromKey = keyOf(from).toString()
-    val toKey = to?.let(keyOf)?.toString()
-    val key = if (toKey == null) {
-        "document-transition:$direction:$fromKey:terminal"
-    } else {
-        "document-transition:${listOf(fromKey, toKey).sorted().joinToString(":")}"
-    }
-    return BookDocumentViewerItem.Transition(this, key)
-}
 
 internal data class BookDocumentVisibleItemLayout(
     val index: Int,

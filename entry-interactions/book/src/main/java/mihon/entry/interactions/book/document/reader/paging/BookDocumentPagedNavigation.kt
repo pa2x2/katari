@@ -23,11 +23,13 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
+import mihon.entry.interactions.book.document.reader.BookDocumentChapterEnd
 import mihon.entry.interactions.book.document.reader.BookDocumentNavigationRequest
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerLocation
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.viewer.EntryChildDirection
+import mihon.entry.interactions.viewer.EntryChildTransition
 import tachiyomi.domain.entry.model.EntryChapter
 
 /** Coordinates page turns and semantic restoration independently of page rendering and selection. */
@@ -41,9 +43,10 @@ internal fun rememberBookDocumentPagedNavigation(
     volumeKeys: Boolean,
     invertVolumeKeys: Boolean,
     chromeVisible: Boolean,
+    chapterEnd: BookDocumentChapterEnd?,
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
-    onTransitionReached: (EntryChapter) -> Unit,
-    onTerminalObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
+    onChapterBoundaryReached: (EntryChapter) -> Unit,
+    onChapterEndObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
     onScrollStarted: () -> Unit,
     onUserScrollStarted: () -> Unit,
     onViewportLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
@@ -57,8 +60,9 @@ internal fun rememberBookDocumentPagedNavigation(
     val rtl = mode == BookDocumentReadingMode.PAGED_RTL
     val currentOnLocation by rememberUpdatedState(onLocation)
     val currentOnViewportLocation by rememberUpdatedState(onViewportLocation)
-    val currentOnTransitionReached by rememberUpdatedState(onTransitionReached)
-    val currentOnTerminalObservation by rememberUpdatedState(onTerminalObservation)
+    val currentOnChapterBoundaryReached by rememberUpdatedState(onChapterBoundaryReached)
+    val currentOnChapterEndObservation by rememberUpdatedState(onChapterEndObservation)
+    val currentChapterEnd by rememberUpdatedState(chapterEnd)
     val currentOnUserScrollStarted by rememberUpdatedState(onUserScrollStarted)
     val currentOnScrollStarted by rememberUpdatedState(onScrollStarted)
     val currentAnimatePages by rememberUpdatedState(animatePages)
@@ -67,6 +71,24 @@ internal fun rememberBookDocumentPagedNavigation(
         // Selection takes focus inside a page. Return it to the stable pager when that page
         // changes, so subsequent keys still have a target after its selection container is disposed.
         if (!chromeVisible) focus.requestFocus()
+    }
+
+    // Chapter completion evidence is stream-relative: the settled page renders the tail of the
+    // terminal chapter's final content block. The chapter-transition row and the transient
+    // pagination window play no part in it. Pages away from the end still report their owning
+    // chapter so a stale candidate resets.
+    suspend fun observeChapterEnd(index: Int, page: BookDocumentPage) {
+        val chapterEndReached = currentChapterEnd?.let(page::endsChapterContent) == true
+        currentOnChapterEndObservation(
+            page.ownerChapter,
+            chapterEndReached,
+            !chapterEndReached && index < pages.lastIndex,
+            false,
+        )
+        if (chapterEndReached) {
+            withFrameNanos { }
+            currentOnChapterEndObservation(page.ownerChapter, true, false, false)
+        }
     }
 
     fun move(delta: Int) {
@@ -89,12 +111,16 @@ internal fun rememberBookDocumentPagedNavigation(
             val sameTransition = pages.indexOfFirst {
                 it.key == anchor.pageKey && it.fragments.first().item is BookDocumentViewerItem.Transition
             }
-            if (sameTransition >= 0) {
-                sameTransition
-            } else {
-                anchor.location?.let { location ->
-                    pages.indexOfFirst { it.contains(location.section.key, location.position) }
-                } ?: -1
+            when {
+                sameTransition >= 0 -> sameTransition
+                // A resolved boundary page disappears once its destination resolves. Keep the
+                // direction of travel by settling on the destination content the boundary led to,
+                // instead of bouncing back to the page the reader came from.
+                else -> pages.resolvedBoundaryTargetIndex(anchor.settledTransition)
+                    ?: anchor.location?.let { location ->
+                        pages.indexOfFirst { it.contains(location.section.key, location.position) }
+                    }
+                    ?: -1
             }
         }
         val currentPageKey = pager.layoutInfo.visiblePagesInfo.firstOrNull { it.index == pager.currentPage }?.key
@@ -116,14 +142,9 @@ internal fun rememberBookDocumentPagedNavigation(
             val page = pages.getOrNull(index) ?: return@collect
             anchor.pageKey = page.key
             val transition = (page.fragments.first().item as? BookDocumentViewerItem.Transition)?.transition
+            anchor.settledTransition = transition
             if (transition != null) {
-                transition.to?.let(currentOnTransitionReached)
-                val terminal = transition.direction == EntryChildDirection.NEXT && transition.to == null
-                currentOnTerminalObservation(transition.from, terminal, index < pages.lastIndex, false)
-                if (terminal) {
-                    withFrameNanos { }
-                    currentOnTerminalObservation(transition.from, true, false, false)
-                }
+                transition.to?.let(currentOnChapterBoundaryReached)
             } else {
                 val first = page.fragments.first()
                 val section = requireNotNull(first.section)
@@ -148,8 +169,8 @@ internal fun rememberBookDocumentPagedNavigation(
                 anchor.location = location
                 currentOnLocation(location)
                 currentOnViewportLocation(location)
-                currentOnTerminalObservation(section.owner, false, index < pages.lastIndex, false)
             }
+            observeChapterEnd(index, page)
         }
     }
     LaunchedEffect(pager) {
@@ -184,4 +205,24 @@ internal class BookDocumentPagedNavigation(
     val move: (Int) -> Unit,
 )
 
-private class PageAnchor(var location: BookDocumentViewerLocation<EntryChapter>?, var pageKey: String? = null)
+/**
+ * The page a vanished chapter boundary resolves into: the destination content it was leading to,
+ * taken from the reader's direction of travel. The first page of the chapter a NEXT boundary led
+ * to, or the last page of the chapter a PREVIOUS boundary led back to. Null when the destination
+ * content is not part of the pages, so the caller falls back to the last content location.
+ */
+internal fun List<BookDocumentPage>.resolvedBoundaryTargetIndex(
+    transition: EntryChildTransition<EntryChapter>?,
+): Int? {
+    val destinationId = transition?.to?.id ?: return null
+    return when (transition.direction) {
+        EntryChildDirection.NEXT -> indexOfFirst { it.fragments.first().section?.owner?.id == destinationId }
+        EntryChildDirection.PREVIOUS -> indexOfLast { it.fragments.first().section?.owner?.id == destinationId }
+    }.takeIf { it >= 0 }
+}
+
+private class PageAnchor(
+    var location: BookDocumentViewerLocation<EntryChapter>? = null,
+    var pageKey: String? = null,
+    var settledTransition: EntryChildTransition<EntryChapter>? = null,
+)

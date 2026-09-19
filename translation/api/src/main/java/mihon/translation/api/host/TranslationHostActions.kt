@@ -27,6 +27,13 @@ interface TranslationHostActions {
     val selectedEngine: Preference<TranslationEngineId>
     val defaultTargetLanguage: Preference<TranslationTargetLanguageSelection>
 
+    /**
+     * Recently used translation languages, most recently used first.
+     *
+     * Hosts record explicit user selections so pickers can surface them as one-tap candidates.
+     */
+    val recentLanguages: Preference<List<LanguageTag>>
+
     suspend fun deviceAvailability(): TranslationDeviceAvailability
 
     suspend fun inspectEngines(): TranslationEngineInspection

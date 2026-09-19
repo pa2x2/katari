@@ -117,8 +117,9 @@ class BookDocumentSeekControlsTest {
                                     request.value = null
                                 }
                             },
-                            onTransitionReached = {},
-                            onTerminalObservation = { _, _, _, _ -> },
+                            onChapterBoundaryReached = {},
+                            onTransitionRetry = {},
+                            onChapterEndObservation = { _, _, _, _ -> },
                             onAnchorMissing = {},
                             onInternalLinkClick = { _, _ -> },
                             onExternalLinkClick = {},

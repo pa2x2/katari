@@ -16,7 +16,9 @@ import mihon.entry.interactions.book.document.reader.paging.BookDocumentPagedVie
 import mihon.entry.interactions.book.document.reader.paging.BookDocumentPaginationLayout
 import mihon.entry.interactions.book.document.reader.paging.paginationGroup
 import mihon.entry.interactions.book.document.reader.paging.paginationWindow
+import mihon.entry.interactions.book.document.reader.paging.withoutResolvedBoundaries
 import mihon.entry.interactions.book.document.reader.table.BookDocumentTablePreparation
+import mihon.entry.interactions.book.document.reader.transition.LocalBookDocumentChapterTransitionMode
 import mihon.entry.interactions.book.reader.BookReaderProgress
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.viewer.EntryChildWindow
@@ -33,8 +35,9 @@ internal fun BookDocumentModeViewport(
     navigationRequest: BookDocumentNavigationRequest?,
     textSizePercent: Int,
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
-    onTransitionReached: (EntryChapter) -> Unit,
-    onTerminalObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
+    onChapterBoundaryReached: (EntryChapter) -> Unit,
+    onTransitionRetry: (EntryChapter) -> Unit,
+    onChapterEndObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
     onAnchorMissing: (String) -> Unit,
     onInternalLinkClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
@@ -59,11 +62,17 @@ internal fun BookDocumentModeViewport(
         anchor.location = it
         onViewportLocation(it)
     }
+    // Chapter-completion evidence: content end of the terminal chapter. Computed here so both
+    // reading modes observe the same content, never the chapter-transition row.
+    val chapterEnd = remember(window, loadedSections) {
+        bookDocumentChapterEnd(window, loadedSections)
+    }
     if (mode == BookDocumentReadingMode.SCROLL) {
         SideEffect { onSeekPages(emptyList()) }
         BookDocumentEndlessViewer(
             currentChapter, currentChapterId, window, loadedSections, loadStates, navigationRequest, textSizePercent,
-            onLocation, onTransitionReached, onTerminalObservation, onAnchorMissing, onInternalLinkClick,
+            chapterEnd, onLocation, onChapterBoundaryReached, onTransitionRetry, onChapterEndObservation,
+            onAnchorMissing, onInternalLinkClick,
             onExternalLinkClick, onScrollStarted, onUserScrollStarted, onReaderTap,
             initialLocation = anchor.location,
             onViewportLocation = observeViewport,
@@ -91,10 +100,18 @@ internal fun BookDocumentModeViewport(
             if (index >= 0) centerGroup = items[index].paginationGroup()
         }
         val requestedIndex = navigationRequest?.let { items.indexOfPosition(it.sectionKey, it.position) }
-        val pageItems = if (requestedIndex != null && requestedIndex >= 0) {
+        val windowItems = if (requestedIndex != null && requestedIndex >= 0) {
             remember(items, requestedIndex) { items.paginationWindow(requestedIndex) }
         } else {
             visibleItems
+        }
+        val transitionDisplayMode = LocalBookDocumentChapterTransitionMode.current
+        val pageItems = remember(windowItems, transitionDisplayMode, loadStates, loadedSections) {
+            windowItems.withoutResolvedBoundaries(
+                transitionDisplayMode,
+                loadedSections.keys,
+                loadStates::get,
+            )
         }
         BookDocumentTablePreparation(
             pageItems.mapNotNull {
@@ -108,7 +125,9 @@ internal fun BookDocumentModeViewport(
                     pages, mode, initialLocation, navigationRequest, loadStates,
                     tapZones, inversion, animation,
                     volume, invertVolume, chromeVisible,
-                    pagedLocationChanged, onTransitionReached, onTerminalObservation, onInternalLinkClick,
+                    chapterEnd,
+                    pagedLocationChanged, onChapterBoundaryReached, onTransitionRetry, onChapterEndObservation,
+                    onInternalLinkClick,
                     onExternalLinkClick, onScrollStarted, onUserScrollStarted, onReaderTap,
                     onViewportLocation = observeViewport,
                     onPageProgress = onPageProgress,

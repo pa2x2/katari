@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.view.Gravity
 import android.widget.LinearLayout
+import eu.kanade.presentation.reader.ChapterTransitionPlacement
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderTransitionView
 import eu.kanade.tachiyomi.util.system.dpToPx
@@ -37,6 +38,8 @@ internal class PagerTransitionHolder(
         transitionView.bind(
             transition = transition,
             downloadManager = viewer.downloadManager,
+            config = viewer.config,
+            placement = ChapterTransitionPlacement.PAGER,
             onRetry = viewer.activity::requestTransitionChapterLoad,
         )
     }

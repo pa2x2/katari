@@ -139,7 +139,8 @@ class BookDocumentPagedSelectionTest {
                         BookDocumentPagedViewer(
                             pages, BookDocumentReadingMode.PAGED_LTR, initial, null, emptyMap(),
                             0, 0, animatePages, volumeKeys, false, false,
-                            { state.location = it }, {}, { _, _, _, _ -> }, { _, _ -> }, {}, {}, {}, {},
+                            null,
+                            { state.location = it }, {}, {}, { _, _, _, _ -> }, { _, _ -> }, {}, {}, {}, {},
                             onPageProgress = { ready = it != null },
                         )
                     }

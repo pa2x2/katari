@@ -24,6 +24,7 @@ import eu.kanade.tachiyomi.ui.reader.viewer.ViewerNavigation.NavigationRegion
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import mihon.entry.interactions.manga.download.DownloadManager
+import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildTransition
@@ -288,7 +289,13 @@ internal class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boo
      * Tells this viewer to set the given [chapters] as active.
      */
     override fun setChapters(chapters: ViewerChapters) {
-        val forceTransition = config.alwaysShowChapterTransition || currentItem is ReaderViewerItem.Transition
+        val forceTransition = when (config.chapterTransitionMode) {
+            ChapterTransitionMode.ALWAYS -> true
+            ChapterTransitionMode.WHEN_NEEDED -> currentItem is ReaderViewerItem.Transition
+            // Hidden mode drops the transition slot as soon as the destination chapter is loaded so
+            // the slot the user is parked on turns into content instead of waiting for another scroll.
+            ChapterTransitionMode.HIDDEN -> false
+        }
         adapter.setChapters(chapters, forceTransition)
 
         if (recycler.isGone) {

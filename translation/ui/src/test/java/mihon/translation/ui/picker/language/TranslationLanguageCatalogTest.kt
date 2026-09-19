@@ -75,6 +75,21 @@ class TranslationLanguageCatalogTest {
         ).map { it.tag }.shouldContainExactlyInAnyOrder(ENGLISH, FRENCH)
     }
 
+    @Test
+    fun `catalog exposes each language written in itself`() {
+        val options = translationLanguageOptions(
+            availableLocales = arrayOf(Locale.ENGLISH, Locale.forLanguageTag("zh-Hans")),
+            displayLocale = Locale.ENGLISH,
+        )
+
+        val english = options.first { it.tag.value == "en" }
+        english.nativeName shouldBe english.displayName
+        val simplifiedChinese = options.first { it.tag.value == "zh-Hans" }
+        // The native name is written in the language's own script (the JDK qualifies script
+        // variants as "中文 (简体)"), never falling back to the English display name.
+        simplifiedChinese.nativeName shouldBe "中文 (简体)"
+    }
+
     private companion object {
         val ENGLISH = LanguageTag.require("en")
         val FRENCH = LanguageTag.require("fr")

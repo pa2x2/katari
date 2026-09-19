@@ -7,6 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalView
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.tachiyomi.util.system.hasDisplayCutout
+import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import mihon.entry.interactions.reader.settings.ReaderOrientation
 import mihon.entry.interactions.reader.settings.ReadingMode
@@ -200,9 +201,11 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     preference = readerPreferences.skipDupe,
                     title = stringResource(MR.strings.pref_skip_dupe_chapters),
                 ),
-                Preference.PreferenceItem.SwitchPreference(
-                    preference = readerPreferences.alwaysShowChapterTransition,
-                    title = stringResource(MR.strings.pref_always_show_chapter_transition),
+                Preference.PreferenceItem.ListPreference(
+                    preference = readerPreferences.chapterTransitionMode,
+                    entries = ChapterTransitionMode.entries
+                        .associateWith { stringResource(it.titleRes) },
+                    title = stringResource(MR.strings.pref_chapter_transition),
                 ),
             ),
         )

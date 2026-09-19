@@ -316,7 +316,6 @@
     <string name="pref_disable_battery_optimization_summary">Membantu dengan pengemaskinian latar belakang pustaka dan sandaran</string>
     <string name="battery_optimization_disabled">Pengoptimuman bateri sudah dinyahdayakan</string>
     <string name="email">Alamat e-mel</string>
-    <string name="pref_always_show_chapter_transition">Sentiasa tunjuk peralihan bab</string>
     <string name="action_menu">Menu</string>
     <string name="action_newest">Terbaru</string>
     <string name="action_oldest">Terlama</string>

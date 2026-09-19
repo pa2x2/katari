@@ -49,7 +49,10 @@ class BookDocumentPagedChapterLoadingTest {
                         prepared, BookDocumentReadingMode.PAGED_LTR, initial, null,
                         if (loaded.value) emptyMap() else mapOf(2L to BookDocumentChapterLoadState.Loading),
                         0, 0, false, false, false, false,
-                        { location = it }, { requestedChapter = it.id }, { _, _, _, _ -> }, { _, _ -> }, {}, {}, {}, {},
+                        null,
+                        {
+                            location = it
+                        }, { requestedChapter = it.id }, {}, { _, _, _, _ -> }, { _, _ -> }, {}, {}, {}, {},
                     )
                 }
             }

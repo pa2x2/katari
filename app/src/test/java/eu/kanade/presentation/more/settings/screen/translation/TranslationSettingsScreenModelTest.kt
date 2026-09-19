@@ -409,6 +409,13 @@ class TranslationSettingsScreenModelTest {
                     }
                 },
             )
+        override val recentLanguages: tachiyomi.core.common.preference.Preference<List<LanguageTag>> =
+            store.getObjectFromString(
+                "recent",
+                emptyList<LanguageTag>(),
+                { languages -> languages.joinToString(",") { it.value } },
+                { raw -> raw.split(",").mapNotNull(LanguageTag::parse) },
+            )
 
         override suspend fun deviceAvailability() = TranslationDeviceAvailability.Available
 

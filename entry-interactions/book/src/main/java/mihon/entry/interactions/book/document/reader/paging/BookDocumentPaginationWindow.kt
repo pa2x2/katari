@@ -1,7 +1,12 @@
 package mihon.entry.interactions.book.document.reader.paging
 
+import mihon.entry.interactions.book.document.reader.BookDocumentChapterLoadState
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerDataset
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
+import mihon.entry.interactions.book.document.reader.transition.boundaryChapterGap
+import mihon.entry.interactions.book.document.reader.transition.isSeamlessWhenNeededBoundary
+import mihon.entry.interactions.book.document.reader.transition.rendersCompactHiddenBoundary
+import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import tachiyomi.domain.entry.model.EntryChapter
 
 /** Natural document sections bound measurement without inventing page breaks between arbitrary blocks. */
@@ -33,4 +38,25 @@ internal fun BookDocumentViewerDataset<EntryChapter>.paginationWindow(
         while (end < lastIndex && get(end + 1).paginationGroup() == nextGroup) end++
     }
     return (start..end).map(::get)
+}
+
+/**
+ * Pagination input for the paged viewer. A resolved boundary must not spend a page between the
+ * two chapters: hidden mode renders pure spacing once a contiguous destination is prepared, and
+ * when-needed mode joins contiguous chapters seamlessly. Boundaries that still need the reader's
+ * attention - terminal, failed, preparing, unrequested or gapped destinations - keep their page,
+ * because settling on it is what requests the destination chapter.
+ */
+internal fun List<BookDocumentViewerItem<EntryChapter>>.withoutResolvedBoundaries(
+    displayMode: ChapterTransitionMode,
+    preparedChapterIds: Set<Long>,
+    loadStateOf: (Long) -> BookDocumentChapterLoadState?,
+): List<BookDocumentViewerItem<EntryChapter>> = filterNot { item ->
+    if (item !is BookDocumentViewerItem.Transition) return@filterNot false
+    val destination = item.transition.to ?: return@filterNot false
+    if (destination.id !in preparedChapterIds) return@filterNot false
+    val loadState = loadStateOf(destination.id)
+    val chapterGap = boundaryChapterGap(item.transition)
+    rendersCompactHiddenBoundary(displayMode, item.transition, loadState, chapterGap) ||
+        isSeamlessWhenNeededBoundary(displayMode, item.transition, true, loadState)
 }

@@ -24,6 +24,17 @@ class ProfileTranslationPreferences(
         deserializer = ::deserializeTargetLanguage,
     )
 
+    val recentLanguages: Preference<List<LanguageTag>> = preferenceStore.getObjectFromString(
+        key = "translation_recent_languages",
+        defaultValue = emptyList(),
+        serializer = { languages -> languages.joinToString(RECENT_LANGUAGE_SEPARATOR) { it.value } },
+        deserializer = { raw ->
+            raw.split(RECENT_LANGUAGE_SEPARATOR)
+                .mapNotNull(LanguageTag::parse)
+                .distinct()
+        },
+    )
+
     private fun serializeTargetLanguage(selection: TranslationTargetLanguageSelection): String {
         return when (selection) {
             TranslationTargetLanguageSelection.Default -> DEFAULT_TARGET_VALUE
@@ -40,5 +51,17 @@ class ProfileTranslationPreferences(
 
     private companion object {
         const val DEFAULT_TARGET_VALUE = "default"
+        const val RECENT_LANGUAGE_SEPARATOR = ","
     }
 }
+
+/**
+ * Moves [language] to the front of the recently used languages, dropping its previous occurrence
+ * and capping the list at [limit] entries, most recently used first.
+ */
+fun List<LanguageTag>.withRecentUse(
+    language: LanguageTag,
+    limit: Int = DEFAULT_RECENT_LANGUAGES_LIMIT,
+): List<LanguageTag> = (listOf(language) + filterNot { it == language }).take(limit)
+
+const val DEFAULT_RECENT_LANGUAGES_LIMIT = 6

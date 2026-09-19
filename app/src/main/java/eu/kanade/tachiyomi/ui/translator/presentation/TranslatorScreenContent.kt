@@ -41,7 +41,6 @@ import mihon.translation.ui.picker.language.TranslationLanguagePairSelectorStyle
 import mihon.translation.ui.picker.language.TranslationLanguageRole
 import mihon.translation.ui.picker.language.TranslationLanguageSupportPicker
 import mihon.translation.ui.picker.language.displayName
-import mihon.translation.ui.picker.language.supportsPair
 import mihon.translation.ui.presentation.TranslationPickerSheet
 import mihon.translation.ui.presentation.TranslationResultSpeechSide
 import mihon.translation.ui.presentation.TranslationResultSpeechTarget
@@ -124,7 +123,9 @@ internal fun TranslatorScreenContent(
             TranslationLanguagePairSelector(
                 source = sourceLanguageLabel(state),
                 target = targetLanguageLabel(state),
-                canSwap = canSwap(state),
+                // The swap control stays enabled; TranslatorScreenModel answers every click either
+                // by exchanging the languages or with a SwapUnavailable event.
+                canSwap = true,
                 onChooseSource = { onShowPicker(TranslatorPicker.SourceLanguage) },
                 onChooseTarget = { onShowPicker(TranslatorPicker.TargetLanguage) },
                 onSwap = onSwap,
@@ -239,6 +240,7 @@ private fun TranslatorPicker(
                     defaultSelected = sourcePicker &&
                         state.sourceLanguage == TranslationSourceLanguageSelection.Automatic,
                     onSelectDefault = onSelectAutomaticSource.takeIf { sourcePicker },
+                    recentLanguages = state.recentLanguages,
                 )
             }
         }
@@ -274,12 +276,3 @@ private fun effectiveTargetLanguage(state: TranslatorState): LanguageTag? =
         TranslationTargetLanguageSelection.Default ->
             state.session.displayedSessionResult()?.result?.targetLanguage ?: state.profileTargetLanguage
     }
-
-private fun canSwap(state: TranslatorState): Boolean {
-    val successful = state.session.displayedSessionResult() ?: return false
-    val support = (state.languageSupport as? TranslationLanguageSupportState.Available)
-        ?.takeIf { it.engine == state.activeEngine }
-        ?.support
-        ?: return false
-    return support.supportsPair(successful.result.targetLanguage, successful.result.sourceLanguage)
-}

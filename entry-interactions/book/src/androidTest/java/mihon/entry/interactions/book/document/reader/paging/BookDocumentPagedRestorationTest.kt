@@ -44,7 +44,8 @@ class BookDocumentPagedRestorationTest {
                         BookDocumentPagedViewer(
                             measured, BookDocumentReadingMode.PAGED_LTR, initial, null, emptyMap(),
                             0, 0, false, false, false, false,
-                            { location = it }, {}, { _, _, _, _ -> }, { _, _ -> }, {}, {}, {}, {},
+                            null,
+                            { location = it }, {}, {}, { _, _, _, _ -> }, { _, _ -> }, {}, {}, {}, {},
                         )
                     }
                 }

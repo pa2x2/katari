@@ -23,6 +23,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import mihon.entry.interactions.manga.R
 import mihon.entry.interactions.manga.download.DownloadManager
+import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildTransition
 import tachiyomi.core.common.util.system.logcat
@@ -249,8 +250,15 @@ internal abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
         // Remove listener so the change in item doesn't trigger it
         pager.removeOnPageChangeListener(pagerListener)
 
-        val forceTransition = config.alwaysShowChapterTransition ||
-            adapter.items.getOrNull(pager.currentItem) is ReaderViewerItem.Transition
+        val forceTransition = when (config.chapterTransitionMode) {
+            ChapterTransitionMode.ALWAYS -> true
+            ChapterTransitionMode.WHEN_NEEDED -> adapter.items.getOrNull(
+                pager.currentItem,
+            ) is ReaderViewerItem.Transition
+            // Hidden mode drops the transition slot as soon as the destination chapter is loaded so
+            // the slot the user is parked on turns into pages instead of waiting for another swipe.
+            ChapterTransitionMode.HIDDEN -> false
+        }
         adapter.setChapters(chapters, forceTransition)
 
         // Layout the pager once a chapter is being set

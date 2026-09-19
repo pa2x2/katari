@@ -5,6 +5,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -123,6 +124,89 @@ internal class BookDocumentViewerDatasetTest : BookDocumentViewerFixture() {
         assertIs<BookDocumentViewerItem.Transition<String>>(items[0])
         assertIs<BookDocumentViewerItem.Block<String>>(items[1])
         assertIs<BookDocumentViewerItem.Transition<String>>(items[2])
+    }
+
+    @Test
+    fun `advancing into a loaded next section matches the shared boundary across directions`() {
+        val first = section("first", listOf("One", "Two"))
+        val second = section("second", listOf("Three", "Four"))
+        val third = section("third", listOf("Five", "Six"))
+        val loaded = listOf(first, second, third).associateBy { it.owner }
+
+        val whileReadingSecond = buildBookDocumentViewerItems(
+            window = EntryChildWindow("second", "first", "third"),
+            loaded = loaded,
+            keyOf = { it },
+        )
+        val afterActivatingThird = buildBookDocumentViewerItems(
+            window = EntryChildWindow("third", "second", null),
+            loaded = loaded,
+            keyOf = { it },
+        )
+
+        assertTrue(whileReadingSecond.advancesToLoadedNext(afterActivatingThird))
+    }
+
+    @Test
+    fun `retreating into a loaded previous section matches the shared boundary across directions`() {
+        val first = section("first", listOf("One", "Two"))
+        val second = section("second", listOf("Three", "Four"))
+        val loaded = listOf(first, second).associateBy { it.owner }
+
+        val whileReadingSecond = buildBookDocumentViewerItems(
+            window = EntryChildWindow("second", "first", null),
+            loaded = loaded,
+            keyOf = { it },
+        )
+        val afterActivatingFirst = buildBookDocumentViewerItems(
+            window = EntryChildWindow("first", null, "second"),
+            loaded = loaded,
+            keyOf = { it },
+        )
+
+        assertTrue(whileReadingSecond.retreatsToLoadedPrevious(afterActivatingFirst))
+    }
+
+    @Test
+    fun `a window rebased onto an unrelated chapter does not adopt mid-scroll`() {
+        val second = section("second", listOf("One", "Two"))
+        val third = section("third", listOf("Three"))
+        val fourth = section("fourth", listOf("Four"))
+        val loaded = listOf(second, third, fourth).associateBy { it.owner }
+
+        val whileReadingSecond = buildBookDocumentViewerItems(
+            window = EntryChildWindow("second", "first", "third"),
+            loaded = loaded.filterKeys { it == "second" || it == "third" },
+            keyOf = { it },
+        )
+        val rebased = buildBookDocumentViewerItems(
+            window = EntryChildWindow("fourth", "second", null),
+            loaded = loaded.filterKeys { it == "second" || it == "fourth" },
+            keyOf = { it },
+        )
+
+        assertFalse(whileReadingSecond.advancesToLoadedNext(rebased))
+    }
+
+    @Test
+    fun `a tail expansion keeps the window boundaries while sections change`() {
+        val first = section("first", listOf("One"))
+        val second = section("second", listOf("Two"))
+        val third = section("third", listOf("Three"))
+        val fourth = section("fourth", listOf("Four"))
+        val loaded = listOf(first, second, third, fourth).associateBy { it.owner }
+        val window = EntryChildWindow("second", "first", "third")
+
+        val before = buildBookDocumentViewerItems(window, loaded.filterKeys { it != "third" }, keyOf = { it })
+        val after = buildBookDocumentViewerItems(window, loaded, keyOf = { it })
+        assertTrue(before.isStablePrefixOf(after))
+
+        val rebased = buildBookDocumentViewerItems(
+            EntryChildWindow("second", "first", "fourth"),
+            loaded.filterKeys { it != "third" },
+            keyOf = { it },
+        )
+        assertFalse(before.isStablePrefixOf(rebased))
     }
 
     @Test

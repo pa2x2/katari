@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import mihon.language.api.tag.LanguageTag
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
+import java.text.Normalizer
 
 @Composable
 fun TranslationLanguagePickerList(
@@ -37,20 +38,25 @@ fun TranslationLanguagePickerList(
     defaultOptionSupporting: String? = null,
     defaultSelected: Boolean = false,
     onSelectDefault: (() -> Unit)? = null,
+    recents: List<TranslationLanguageOption> = emptyList(),
 ) {
     var query by remember { mutableStateOf("") }
-    val filtered = remember(options, query) {
-        val normalized = query.trim()
-        if (normalized.isEmpty()) {
+    val normalizedQuery = remember(query) { query.trim().normalizedForSearch() }
+    val filtered = remember(options, normalizedQuery) {
+        if (normalizedQuery.isEmpty()) {
             options
         } else {
-            options.filter { option ->
-                option.displayName.contains(normalized, ignoreCase = true) ||
-                    option.tag.value.contains(normalized, ignoreCase = true)
-            }
+            options.filter { option -> option.matches(normalizedQuery) }
         }
     }
     Column(modifier = modifier) {
+        if (recents.isNotEmpty()) {
+            TranslationLanguageRecentsRow(
+                recents = recents,
+                selected = selected,
+                onSelect = onSelect,
+            )
+        }
         OutlinedTextField(
             value = query,
             onValueChange = { query = it },
@@ -61,7 +67,9 @@ fun TranslationLanguagePickerList(
             singleLine = true,
         )
         LazyColumn {
-            if (defaultOptionLabel != null && defaultOptionSupporting != null && onSelectDefault != null) {
+            if (defaultOptionLabel != null && defaultOptionSupporting != null && onSelectDefault != null &&
+                normalizedQuery.isEmpty()
+            ) {
                 item(key = "default") {
                     TranslationPickerRow(
                         label = defaultOptionLabel,
@@ -75,7 +83,7 @@ fun TranslationLanguagePickerList(
             items(filtered, key = { it.tag.value }) { option ->
                 TranslationPickerRow(
                     label = option.displayName,
-                    supporting = option.tag.value,
+                    supporting = option.supportingText(),
                     selected = option.tag == selected,
                     enabled = true,
                     onClick = { onSelect(option.tag) },
@@ -96,6 +104,32 @@ fun TranslationLanguagePickerList(
             }
         }
     }
+}
+
+/**
+ * Search matches the localized name, the language's own native name, and the raw tag, so a query
+ * succeeds regardless of which name the user knows the language by. Accents are ignored, so an
+ * ASCII query such as "espanol" still finds "Español".
+ */
+private fun TranslationLanguageOption.matches(normalizedQuery: String): Boolean =
+    displayName.normalizedForSearch().contains(normalizedQuery) ||
+        nativeName.normalizedForSearch().contains(normalizedQuery) ||
+        tag.value.contains(normalizedQuery, ignoreCase = true)
+
+private fun String.normalizedForSearch(): String = Normalizer
+    .normalize(this, Normalizer.Form.NFD)
+    .replace(diacriticalMarks, "")
+    .lowercase()
+
+private val diacriticalMarks = Regex("\\p{Mn}+")
+
+/**
+ * Secondary line pairs the language's native name with its tag, replacing the bare tag line so the
+ * language can be recognized both by what it calls itself and by its code.
+ */
+private fun TranslationLanguageOption.supportingText(): String {
+    if (nativeName.equals(displayName, ignoreCase = true)) return tag.value
+    return "$nativeName · ${tag.value}"
 }
 
 @Composable

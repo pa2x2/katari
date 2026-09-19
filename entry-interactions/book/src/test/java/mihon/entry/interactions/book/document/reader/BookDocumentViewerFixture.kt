@@ -11,6 +11,7 @@ import mihon.book.api.document.BookDocumentPosition
 import mihon.book.api.document.BookDocumentRichText
 import mihon.book.api.document.BookDocumentTextRange
 import mihon.entry.interactions.book.document.render.PreparedBookDocument
+import tachiyomi.domain.entry.model.EntryChapter
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 internal abstract class BookDocumentViewerFixture {
@@ -46,7 +47,15 @@ internal abstract class BookDocumentViewerFixture {
         assertEquals(offsetWithinBlock, restored.position.offsetWithinBlock)
     }
 
-    protected fun section(owner: String, texts: List<String>): BookDocumentSection<String> {
+    protected fun section(owner: String, texts: List<String>): BookDocumentSection<String> =
+        textSection(owner, texts)
+
+    protected fun chapter(id: Long): EntryChapter = EntryChapter.create().copy(id = id, name = "Chapter $id")
+
+    protected fun chapterSection(chapter: EntryChapter, texts: List<String>): BookDocumentSection<EntryChapter> =
+        textSection(chapter, texts)
+
+    private fun <T> textSection(owner: T, texts: List<String>): BookDocumentSection<T> {
         var offset = 0
         val blocks = texts.mapIndexed { index, text ->
             if (index > 0) offset += 2
@@ -78,7 +87,7 @@ internal abstract class BookDocumentViewerFixture {
         )
         val prepared = PreparedBookDocument(document)
         return BookDocumentSection(
-            key = owner,
+            key = owner.toString(),
             owner = owner,
             document = prepared,
             initialPosition = BookDocumentPosition(blocks.first().id, 0),

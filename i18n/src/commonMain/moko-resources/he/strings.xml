@@ -214,7 +214,6 @@
     <string name="last_read_chapter">פרק שנקרא בפעם האחרונה</string>
     <string name="pref_remove_after_read">אוטומטי לאחר סיום הקריאה</string>
     <string name="pref_remove_after_marked_as_read">אחרי שמסומן ידנית כנקרא</string>
-    <string name="pref_always_show_chapter_transition">הצג תמיד מעברי פרקים</string>
     <string name="color_filter_a_value">אלפא</string>
     <string name="color_filter_b_value">כחול</string>
     <string name="color_filter_g_value">ירוק</string>

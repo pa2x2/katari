@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mihon.book.api.document.BookDocumentLinkTarget
+import mihon.entry.interactions.book.document.reader.transition.BookDocumentChapterTransition
 import mihon.entry.interactions.viewer.EntryChildDirection
 import tachiyomi.domain.entry.model.EntryChapter
 

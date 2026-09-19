@@ -42,6 +42,7 @@ import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavi
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentSeekControls
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentSeekState
 import mihon.entry.interactions.book.document.reader.navigation.documentNavigationPresentation
+import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderChapterTransitionSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderNavigationBarSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderProgressSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderScreenAliveSettings
@@ -54,6 +55,7 @@ import mihon.entry.interactions.book.document.reader.settings.BookDocumentReadin
 import mihon.entry.interactions.book.document.reader.theme.BookDocumentReaderMaterialTheme
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.document.reader.theme.bookDocumentReaderPalette
+import mihon.entry.interactions.book.document.reader.transition.LocalBookDocumentChapterTransitionMode
 import mihon.entry.interactions.book.reader.BookReaderNavigationSheet
 import mihon.entry.interactions.book.reader.BookReaderProgress
 import mihon.entry.interactions.book.reader.BookReaderScaffold
@@ -62,6 +64,7 @@ import mihon.entry.interactions.book.reader.settings.BookReaderSettingsDialog
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechOwner
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechPhase
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
+import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewActionsMenu
 import mihon.entry.interactions.source.EntryChildWebViewResolution
@@ -74,6 +77,7 @@ import tachiyomi.presentation.core.components.reader.ReaderChromeBottomBar
 import tachiyomi.presentation.core.components.reader.ReaderChromeBottomBarAction
 import tachiyomi.presentation.core.components.reader.ReaderChromeTopBar
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.collectAsState
 import androidx.compose.ui.res.stringResource as androidStringResource
 
 @Composable
@@ -86,8 +90,9 @@ internal fun BookDocumentReaderScreen(
     onViewportLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
     jumpHistory: BookDocumentJumpHistory,
     onReturn: () -> Unit,
-    onTransitionReached: (EntryChapter) -> Unit,
-    onTerminalObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
+    onChapterBoundaryReached: (EntryChapter) -> Unit,
+    onTransitionRetry: (EntryChapter) -> Unit,
+    onChapterEndObservation: (EntryChapter, Boolean, Boolean, Boolean) -> Unit,
     onNavigationSelected: (BookDocumentNavigationTarget) -> Unit,
     onChromeToggle: () -> Unit,
     onChromeHide: () -> Unit,
@@ -106,6 +111,7 @@ internal fun BookDocumentReaderScreen(
 ) {
     val seekState = remember { BookDocumentSeekState() }
     SideEffect { seekState.setVisible(state.chromeVisible) }
+    val chapterTransitionModeSetting by settingBindings.chapterTransitionMode.state.collectAsState()
     val themeSetting by settingBindings.themeMode.state.collectAsState()
     val textSizeSetting by settingBindings.textSize.state.collectAsState()
     val showTextSelectionMenuSetting by settingBindings.showTextSelectionMenu.state.collectAsState()
@@ -186,6 +192,7 @@ internal fun BookDocumentReaderScreen(
         LocalBookDocumentTextInteraction provides textInteraction,
         LocalBookDocumentTextScale provides textSizeSetting.effectiveValue / 100f,
         LocalBookDocumentReaderPalette provides readerPalette,
+        LocalBookDocumentChapterTransitionMode provides chapterTransitionModeSetting.effectiveValue,
     ) {
         BookDocumentReaderMaterialTheme(
             mode = themeSetting.effectiveValue,
@@ -235,8 +242,9 @@ internal fun BookDocumentReaderScreen(
                         navigationRequest = state.navigationRequest,
                         textSizePercent = textSizeSetting.effectiveValue,
                         onLocation = onLocation,
-                        onTransitionReached = onTransitionReached,
-                        onTerminalObservation = onTerminalObservation,
+                        onChapterBoundaryReached = onChapterBoundaryReached,
+                        onTransitionRetry = onTransitionRetry,
+                        onChapterEndObservation = onChapterEndObservation,
                         onAnchorMissing = onAnchorMissing,
                         onInternalLinkClick = onInternalLinkClick,
                         onExternalLinkClick = onExternalLinkClick,
@@ -372,6 +380,7 @@ internal fun BookDocumentReaderScreen(
                         settingBindings.showTextSelectionMenu.clearEntryOverride()
                         settingBindings.showReadingProgress.clearEntryOverride()
                         settingBindings.readingProgressStyle.clearEntryOverride()
+                        settingBindings.chapterTransitionMode.clearEntryOverride()
                     },
                     processorTabTitles = listOf(
                         androidStringResource(R.string.book_reader_appearance_settings),
@@ -387,6 +396,7 @@ internal fun BookDocumentReaderScreen(
                                 mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderPagingSettings(
                                     settingBindings,
                                 )
+                                BookDocumentReaderChapterTransitionSettings(settingBindings.chapterTransitionMode)
                                 BookDocumentReaderScreenAliveSettings(settingBindings.keepScreenAlive)
                                 BookDocumentReaderTextSelectionMenuSettings(settingBindings.showTextSelectionMenu)
                                 BookDocumentReaderStatusBarSettings(settingBindings.showStatusBar)

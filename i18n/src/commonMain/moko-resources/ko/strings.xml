@@ -347,7 +347,6 @@
     <string name="automatic_background">자동</string>
     <string name="kindlish_nav">Kindle식</string>
     <string name="pref_cutout_short">빈 공간 채우기</string>
-    <string name="pref_always_show_chapter_transition">회차 변경 항상 표시</string>
     <string name="unknown_author">작가 미상</string>
     <string name="pref_category_reading_mode">읽기 모드</string>
     <string name="whats_new">업데이트 내역</string>

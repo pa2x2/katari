@@ -342,7 +342,6 @@
     <string name="pref_hide_threshold">Görgetés közbeni menü-elrejtés érzékenysége</string>
     <string name="pref_webtoon_side_padding">Bélés oldalon</string>
     <string name="pref_category_reading_mode">Olvasási mód</string>
-    <string name="pref_always_show_chapter_transition">Mindig mutasson fejezet áttűnést</string>
     <string name="color_filter_a_value">Áttetszőség</string>
     <string name="color_filter_b_value">Kék</string>
     <string name="color_filter_g_value">Zöld</string>

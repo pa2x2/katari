@@ -419,7 +419,6 @@
     <string name="appwidget_updates_description">Pozrite si svoju nedávno aktualizovanú mangu</string>
     <string name="pref_hide_threshold">Citlivosť pre skrytie ponuky pri posúvaní</string>
     <string name="page_list_empty_error">Nenašli sa žiadne stránky</string>
-    <string name="pref_always_show_chapter_transition">Vždy zobraziť prechod medzi kapitolami</string>
     <string name="pref_low">Nízke</string>
     <string name="backup_restore_content_full">Údaje zo záložného súboru sa obnovia.
 \n

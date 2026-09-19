@@ -337,7 +337,6 @@
     <string name="action_menu">選單</string>
     <string name="information_cloudflare_bypass_failure">無法繞過 Cloudflare</string>
     <string name="action_start">開始</string>
-    <string name="pref_always_show_chapter_transition">一律顯示章節間的隔頁</string>
     <string name="pref_cutout_short">使用螢幕凹口區域</string>
     <string name="email">電子郵件地址</string>
     <string name="pref_skip_filtered_chapters">略過已篩選的章節</string>

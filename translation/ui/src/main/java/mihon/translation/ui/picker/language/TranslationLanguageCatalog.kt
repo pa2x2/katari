@@ -8,7 +8,29 @@ import java.util.Locale
 data class TranslationLanguageOption(
     val tag: LanguageTag,
     val displayName: String,
+    val nativeName: String,
 )
+
+/**
+ * Builds the picker entry for [tag]: [displayName] is localized for the UI, [nativeName] is the
+ * language written in itself (for example "Español"), falling back to [displayName] when the
+ * runtime has no native display data for the tag.
+ */
+fun translationLanguageOption(
+    tag: LanguageTag,
+    displayLocale: Locale = Locale.getDefault(),
+): TranslationLanguageOption {
+    val tagLocale = Locale.forLanguageTag(tag.value)
+    val displayName = tagLocale.getDisplayName(displayLocale).ifBlank { tag.value }
+    val nativeName = tagLocale.getDisplayName(tagLocale)
+    return TranslationLanguageOption(
+        tag = tag,
+        displayName = displayName,
+        nativeName = nativeName
+            .takeUnless { it.isBlank() || it.equals(tag.value, ignoreCase = true) }
+            ?: displayName,
+    )
+}
 
 fun translationLanguageOptions(
     availableLocales: Array<Locale> = Locale.getAvailableLocales(),
@@ -21,14 +43,7 @@ fun translationLanguageOptions(
             LanguageTag.parse(candidate)
         }
         .distinctBy(LanguageTag::value)
-        .map { tag ->
-            TranslationLanguageOption(
-                tag = tag,
-                displayName = Locale.forLanguageTag(tag.value)
-                    .getDisplayName(displayLocale)
-                    .ifBlank { tag.value },
-            )
-        }
+        .map { translationLanguageOption(it, displayLocale) }
         .sortedWith { first, second ->
             collator.compare(first.displayName, second.displayName)
                 .takeUnless { it == 0 }
@@ -58,14 +73,7 @@ fun translationLanguageOptions(
 ): List<TranslationLanguageOption> {
     val collator = Collator.getInstance(displayLocale)
     return tags
-        .map { tag ->
-            TranslationLanguageOption(
-                tag = tag,
-                displayName = Locale.forLanguageTag(tag.value)
-                    .getDisplayName(displayLocale)
-                    .ifBlank { tag.value },
-            )
-        }
+        .map { translationLanguageOption(it, displayLocale) }
         .sortedWith { first, second ->
             collator.compare(first.displayName, second.displayName)
                 .takeUnless { it == 0 }

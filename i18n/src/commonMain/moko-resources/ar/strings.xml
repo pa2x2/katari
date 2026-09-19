@@ -304,7 +304,6 @@
     <string name="pref_disable_battery_optimization_summary">يساعد في عملية تحديث المكتبة والنسخ الإحتياطي في الخلفية</string>
     <string name="pref_disable_battery_optimization">إطفاء وضع تحسين البطارية</string>
     <string name="pref_category_reading">اعدادات القرآءة</string>
-    <string name="pref_always_show_chapter_transition">اظهار فواصل الانتقال بين الفصول</string>
     <string name="pref_skip_filtered_chapters">تخطي الفصول المُرشحة</string>
     <string name="pref_cutout_short">إظهار المحتوى في المناطق المقطوعة</string>
     <string name="obsolete_extension_message">هذه الإضافة لم تعد متوفرة. قد لا تعمل بشكل صحيح ويمكن أن تسبب بمشاكل في التطبيق. يوصى بإلغاء تثبيتها.</string>

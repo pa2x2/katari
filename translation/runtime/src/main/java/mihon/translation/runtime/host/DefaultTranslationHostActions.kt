@@ -54,6 +54,7 @@ internal class DefaultTranslationHostActions(
     override val knownEngines: List<KnownTranslationEngine> = knownEngineCatalog.knownEngines
     override val selectedEngine: Preference<TranslationEngineId> = preferences.engine
     override val defaultTargetLanguage: Preference<TranslationTargetLanguageSelection> = preferences.targetLanguage
+    override val recentLanguages: Preference<List<LanguageTag>> = preferences.recentLanguages
 
     init {
         require(inspectionTimeoutMillis > 0)

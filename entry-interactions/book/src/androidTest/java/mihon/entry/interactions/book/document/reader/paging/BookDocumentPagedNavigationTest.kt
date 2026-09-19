@@ -48,7 +48,10 @@ class BookDocumentPagedNavigationTest {
                     BookDocumentPagedViewer(
                         pages, BookDocumentReadingMode.PAGED_LTR, initial, null, emptyMap(),
                         0, 0, false, false, false, false,
-                        { location = it }, { requestedChapter = it.id }, { _, _, _, _ -> }, { _, _ -> }, {}, {}, {}, {},
+                        null,
+                        {
+                            location = it
+                        }, { requestedChapter = it.id }, {}, { _, _, _, _ -> }, { _, _ -> }, {}, {}, {}, {},
                         onPageProgress = { progress = it },
                     )
                 }
@@ -84,7 +87,8 @@ class BookDocumentPagedNavigationTest {
                     BookDocumentPagedViewer(
                         pages, mode.value, initial, null, emptyMap(),
                         0, 0, false, false, false, false,
-                        { location = it }, {}, { _, _, _, _ -> }, { _, _ -> }, {}, {}, {}, {},
+                        null,
+                        { location = it }, {}, {}, { _, _, _, _ -> }, { _, _ -> }, {}, {}, {}, {},
                         onPageProgress = { ready = it != null },
                     )
                 }
