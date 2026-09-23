@@ -52,6 +52,7 @@ class ProfileManager(
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val switchRequests = MutableStateFlow(profilesPreferences.activeProfileId.get())
+    private val lockGate = ProfileLockGate(profileStore)
 
     val activeProfileId: Long
         get() = profileStore.currentProfileId
@@ -107,6 +108,10 @@ class ProfileManager(
     }
 
     private fun activateProfile(profile: Profile, rescheduleJobs: Boolean) {
+        val previousProfileId = profileStore.currentProfileId
+        if (previousProfileId != profile.id) {
+            lockGate.markInactive(previousProfileId)
+        }
         profileStore.setCurrentProfileId(profile.id)
         switchRequests.value = profile.id
         if (rescheduleJobs) {
@@ -181,9 +186,21 @@ class ProfileManager(
         profileStore.deleteProfileState(profileId)
     }
 
+    /** Whether this profile is protected by biometrics at all, regardless of its current lock state. */
     fun profileRequiresUnlock(profileId: Long): Boolean {
         return SecurityPreferences(profileStore.profileStore(profileId)).useAuthenticator.get()
     }
+
+    /**
+     * Whether entering [profileId] must authenticate now, honoring the profile's "Lock when idle" delay.
+     *
+     * Unlike [profileRequiresUnlock], this reflects the current lock state: a protected profile that was
+     * left within its idle delay is entered without prompting.
+     */
+    fun profileRequiresAuthNow(profileId: Long): Boolean = lockGate.requiresAuthNow(profileId)
+
+    /** Records that [profileId] proved presence through authentication during this process. */
+    fun markProfileAuthenticated(profileId: Long) = lockGate.markAuthenticated(profileId)
 
     private suspend fun migrateLegacyPreferencesIfNeeded() {
         val currentVersion = profilesPreferences.legacyPreferenceMigrationVersion.get()

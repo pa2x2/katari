@@ -333,7 +333,7 @@ data object LibraryTab : Tab {
                     onDismissRequest = onDismissRequest,
                     onProfileSelected = { profile ->
                         scope.launch {
-                            val authenticated = if (profileManager.profileRequiresUnlock(profile.id)) {
+                            val authenticated = if (profileManager.profileRequiresAuthNow(profile.id)) {
                                 (context as? FragmentActivity)?.authenticate(
                                     title = context.stringResource(MR.strings.move_entries_auth_title),
                                     subtitle = context.stringResource(

@@ -346,6 +346,7 @@ class MainActivity : BaseActivity() {
                 val profile = pendingAuthProfile ?: return@LaunchedEffect
 
                 if (authenticateProfile(profile)) {
+                    profileManager.markProfileAuthenticated(profile.id)
                     SecureActivityDelegate.unlock()
                     val selectedProfileId = pendingSelectedProfileId
                     if (selectedProfileId != null) {
@@ -879,8 +880,9 @@ class MainActivity : BaseActivity() {
         }
         val profile = profileManager.visibleProfiles.value.firstOrNull { it.id == profileId }
             ?: return IntentProfileRouting.REJECTED
-        if (profileManager.profileRequiresUnlock(profileId)) {
+        if (profileManager.profileRequiresAuthNow(profileId)) {
             if (!authenticateProfile(profile)) return IntentProfileRouting.REJECTED
+            profileManager.markProfileAuthenticated(profileId)
             SecureActivityDelegate.unlock()
         }
         profileManager.storePendingIntent(intent)
