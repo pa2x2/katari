@@ -23,7 +23,6 @@ import androidx.core.net.toUri
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.ThemeMode
 import eu.kanade.tachiyomi.util.system.toast
-import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
 import mihon.entry.interactions.runtime.registerEntryInteractionSecureScreen
 import mihon.entry.interactions.runtime.setEntryInteractionContent
 import tachiyomi.core.common.i18n.stringResource
@@ -174,11 +173,10 @@ fun View?.isVisibleOnScreen(): Boolean {
     return actualPosition.intersect(screen)
 }
 
-fun Context.createReaderThemeContext(): Context {
+fun Context.createReaderThemeContext(readerTheme: Int): Context {
     val preferences = Injekt.get<UiPreferences>()
-    val readerPreferences = Injekt.get<MangaReaderSettingsProvider>()
     val themeMode = preferences.themeMode.get()
-    val isDarkBackground = when (readerPreferences.readerTheme.get()) {
+    val isDarkBackground = when (readerTheme) {
         1, 2 -> true
         3 -> when (themeMode) {
             ThemeMode.SYSTEM -> applicationContext.isNightMode()

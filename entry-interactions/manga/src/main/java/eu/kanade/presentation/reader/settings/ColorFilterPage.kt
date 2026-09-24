@@ -5,16 +5,18 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.core.graphics.alpha
 import androidx.core.graphics.blue
 import androidx.core.graphics.green
 import androidx.core.graphics.red
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
-import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider.Companion.ColorFilterMode
-import tachiyomi.core.common.preference.getAndSet
+import kotlinx.coroutines.launch
+import mihon.entry.interactions.reader.settings.MangaReaderSettings.Companion.ColorFilterMode
+import mihon.entry.viewer.settings.updateEntry
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.CheckboxItem
 import tachiyomi.presentation.core.components.SettingsChipRow
 import tachiyomi.presentation.core.components.SliderItem
 import tachiyomi.presentation.core.i18n.stringResource
@@ -22,10 +24,13 @@ import tachiyomi.presentation.core.util.collectAsState
 
 @Composable
 internal fun ColumnScope.ColorFilterPage(screenModel: ReaderSettingsScreenModel) {
-    val customBrightness by screenModel.preferences.customBrightness.collectAsState()
-    CheckboxItem(
+    val settings = screenModel.settings
+    val scope = rememberCoroutineScope()
+
+    val customBrightness by settings.customBrightness.state.collectAsState()
+    BindingCheckboxItem(
         label = stringResource(MR.strings.pref_custom_brightness),
-        pref = screenModel.preferences.customBrightness,
+        binding = settings.customBrightness,
     )
 
     /*
@@ -34,93 +39,89 @@ internal fun ColumnScope.ColorFilterPage(screenModel: ReaderSettingsScreenModel)
      * From 1 to 100 it sets that value as brightness.
      * 0 sets system brightness and hides the overlay.
      */
-    if (customBrightness) {
-        val customBrightnessValue by screenModel.preferences.customBrightnessValue.collectAsState()
+    if (customBrightness.effectiveValue) {
+        val customBrightnessValue by settings.customBrightnessValue.state.collectAsState()
         SliderItem(
-            value = customBrightnessValue,
+            value = customBrightnessValue.effectiveValue,
             valueRange = -75..100,
             steps = 0,
             label = stringResource(MR.strings.pref_custom_brightness),
-            onChange = { screenModel.preferences.customBrightnessValue.set(it) },
+            onChange = { value -> scope.launch { settings.customBrightnessValue.updateEntry(value) } },
             pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
         )
     }
 
-    val colorFilter by screenModel.preferences.colorFilter.collectAsState()
-    CheckboxItem(
+    val colorFilter by settings.colorFilter.state.collectAsState()
+    BindingCheckboxItem(
         label = stringResource(MR.strings.pref_custom_color_filter),
-        pref = screenModel.preferences.colorFilter,
+        binding = settings.colorFilter,
     )
-    if (colorFilter) {
-        val colorFilterValue by screenModel.preferences.colorFilterValue.collectAsState()
+    if (colorFilter.effectiveValue) {
+        val colorFilterValue by settings.colorFilterValue.state.collectAsState()
         SliderItem(
-            value = colorFilterValue.red,
+            value = colorFilterValue.effectiveValue.red,
             valueRange = 0..255,
             steps = 0,
             label = stringResource(MR.strings.color_filter_r_value),
             onChange = { newRValue ->
-                screenModel.preferences.colorFilterValue.getAndSet {
-                    getColorValue(it, newRValue, RED_MASK, 16)
-                }
+                val newValue = getColorValue(colorFilterValue.effectiveValue, newRValue, RED_MASK, 16)
+                scope.launch { settings.colorFilterValue.updateEntry(newValue) }
             },
             pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
         )
         SliderItem(
-            value = colorFilterValue.green,
+            value = colorFilterValue.effectiveValue.green,
             valueRange = 0..255,
             steps = 0,
             label = stringResource(MR.strings.color_filter_g_value),
             onChange = { newGValue ->
-                screenModel.preferences.colorFilterValue.getAndSet {
-                    getColorValue(it, newGValue, GREEN_MASK, 8)
-                }
+                val newValue = getColorValue(colorFilterValue.effectiveValue, newGValue, GREEN_MASK, 8)
+                scope.launch { settings.colorFilterValue.updateEntry(newValue) }
             },
             pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
         )
         SliderItem(
-            value = colorFilterValue.blue,
+            value = colorFilterValue.effectiveValue.blue,
             valueRange = 0..255,
             steps = 0,
             label = stringResource(MR.strings.color_filter_b_value),
             onChange = { newBValue ->
-                screenModel.preferences.colorFilterValue.getAndSet {
-                    getColorValue(it, newBValue, BLUE_MASK, 0)
-                }
+                val newValue = getColorValue(colorFilterValue.effectiveValue, newBValue, BLUE_MASK, 0)
+                scope.launch { settings.colorFilterValue.updateEntry(newValue) }
             },
             pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
         )
         SliderItem(
-            value = colorFilterValue.alpha,
+            value = colorFilterValue.effectiveValue.alpha,
             valueRange = 0..255,
             steps = 0,
             label = stringResource(MR.strings.color_filter_a_value),
             onChange = { newAValue ->
-                screenModel.preferences.colorFilterValue.getAndSet {
-                    getColorValue(it, newAValue, ALPHA_MASK, 24)
-                }
+                val newValue = getColorValue(colorFilterValue.effectiveValue, newAValue, ALPHA_MASK, 24)
+                scope.launch { settings.colorFilterValue.updateEntry(newValue) }
             },
             pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
         )
 
-        val colorFilterMode by screenModel.preferences.colorFilterMode.collectAsState()
+        val colorFilterMode by settings.colorFilterMode.state.collectAsState()
         SettingsChipRow(MR.strings.pref_color_filter_mode) {
             ColorFilterMode.mapIndexed { index, it ->
                 FilterChip(
-                    selected = colorFilterMode == index,
-                    onClick = { screenModel.preferences.colorFilterMode.set(index) },
+                    selected = colorFilterMode.effectiveValue == index,
+                    onClick = { scope.launch { settings.colorFilterMode.updateEntry(index) } },
                     label = { Text(stringResource(it.first)) },
                 )
             }
         }
     }
 
-    CheckboxItem(
+    BindingCheckboxItem(
         label = stringResource(MR.strings.pref_grayscale),
-        pref = screenModel.preferences.grayscale,
+        binding = settings.grayscale,
     )
-    CheckboxItem(
+    BindingCheckboxItem(
         label = stringResource(MR.strings.pref_inverted_colors),
-        pref = screenModel.preferences.invertedColors,
+        binding = settings.invertedColors,
     )
 }
 

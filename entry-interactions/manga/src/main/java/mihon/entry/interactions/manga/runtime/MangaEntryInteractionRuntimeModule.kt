@@ -9,16 +9,17 @@ import mihon.entry.interactions.manga.media.session.MangaMediaSessionProcessor
 import mihon.entry.interactions.manga.page.MangaPageStore
 import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquisitionCoordinator
 import mihon.entry.interactions.manga.reader.addMangaReaderImageComponents
+import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsProvider
 import mihon.entry.interactions.media.DefaultEntryViewerSettingsProvider
 import mihon.entry.interactions.media.ENTRY_VIEWER_SETTINGS_LEGACY_PREFERENCE_OWNER_GROUP_ID
 import mihon.entry.interactions.media.session.EntryMediaSessionEventSink
-import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
+import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPreferences
+import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.runtime.EntryImageComponentInstaller
 import mihon.entry.interactions.runtime.EntryPageImageCache
 import mihon.entry.interactions.runtime.EntryTypeRuntimeContribution
 import mihon.entry.interactions.runtime.EntryTypeRuntimeModule
 import mihon.entry.interactions.settings.EntryInteractionPreferences
-import mihon.entry.viewer.settings.shared.StandardReaderCapabilities
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerGroupId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
@@ -30,12 +31,13 @@ import uy.kohesive.injekt.api.get
 fun mangaEntryTypeRuntimeModule(profilePreferenceOwners: ProfilePreferenceOwnerInstaller): EntryTypeRuntimeModule {
     return EntryTypeRuntimeModule(EntryType.MANGA) { app ->
         val warmup = addMangaEntryInteractionRuntime(app)
+        val chapterPreparationPreferences = get<ReaderChapterPreparationPreferences>()
         val viewerSettingsOwner = profilePreferenceOwners.register(
             id = ProfilePreferenceOwnerId("entry-interactions.manga.viewer-settings"),
             groups = setOf(
                 ProfilePreferenceOwnerGroupId(ENTRY_VIEWER_SETTINGS_LEGACY_PREFERENCE_OWNER_GROUP_ID),
             ),
-            factory = ::MangaReaderSettingsProvider,
+            factory = { store -> MangaReaderSettingsProvider(store, chapterPreparationPreferences) },
         )
         val viewerSettingsProvider = viewerSettingsOwner.create()
         val typeViewerSettingsProvider = DefaultEntryViewerSettingsProvider(
@@ -44,6 +46,7 @@ fun mangaEntryTypeRuntimeModule(profilePreferenceOwners: ProfilePreferenceOwnerI
             legacyViewerFlagsNormalization = { flags -> flags and LEGACY_MANGA_VIEWER_MASK.inv() },
         )
         addSingletonFactory { viewerSettingsProvider }
+        addSingletonFactory<MangaReaderSettings> { get<MangaReaderSettingsProvider>() }
         val progressRepository = get<EntryProgressRepository>()
         val mediaSession = MangaMediaSessionProcessor(get<EntryMediaSessionEventSink>())
         addSingletonFactory { mediaSession }
@@ -63,8 +66,7 @@ fun mangaEntryTypeRuntimeModule(profilePreferenceOwners: ProfilePreferenceOwnerI
             warmups = listOf(warmup),
             imageComponentInstallers = listOf(EntryImageComponentInstaller(::addMangaReaderImageComponents)),
             potentialReaderCapabilitiesBySettingsSurface = mapOf(
-                MangaReaderSettingsProvider.PROVIDER_ID to
-                    setOf(StandardReaderCapabilities.NextChapterPreparation),
+                MangaReaderSettings.PROVIDER_ID to MangaReaderSettings.READER_CAPABILITIES,
             ),
         )
     }

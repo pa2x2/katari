@@ -11,21 +11,20 @@ import eu.kanade.tachiyomi.ui.reader.viewer.navigation.RightAndLeftNavigation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
+import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
 
 /**
  * Configuration used by pager viewers.
  */
 internal class PagerConfig(
     private val viewer: PagerViewer,
+    settings: MangaReaderSettingsBindings,
     scope: CoroutineScope,
-    readerPreferences: MangaReaderSettingsProvider = Injekt.get(),
-) : ViewerConfig(readerPreferences, scope) {
+) : ViewerConfig(settings, scope) {
 
-    var theme = readerPreferences.readerTheme.get()
+    var theme = settings.readerTheme.state.value.effectiveValue
         private set
 
     var automaticBackground = false
@@ -49,7 +48,7 @@ internal class PagerConfig(
         private set
 
     init {
-        readerPreferences.readerTheme
+        settings.readerTheme
             .register(
                 {
                     theme = it
@@ -58,32 +57,33 @@ internal class PagerConfig(
                 { imagePropertyChangedListener?.invoke() },
             )
 
-        readerPreferences.imageScaleType
+        settings.imageScaleType
             .register({ imageScaleType = it }, { imagePropertyChangedListener?.invoke() })
 
-        readerPreferences.zoomStart
+        settings.zoomStart
             .register({ zoomTypeFromPreference(it) }, { imagePropertyChangedListener?.invoke() })
 
-        readerPreferences.cropBorders
+        settings.cropBorders
             .register({ imageCropBorders = it }, { imagePropertyChangedListener?.invoke() })
 
-        readerPreferences.navigateToPan
+        settings.navigateToPan
             .register({ navigateToPan = it })
 
-        readerPreferences.landscapeZoom
+        settings.landscapeZoom
             .register({ landscapeZoom = it }, { imagePropertyChangedListener?.invoke() })
 
-        readerPreferences.navigationModePager
+        settings.pagerNavigationMode
             .register({ navigationMode = it }, { updateNavigation(navigationMode) })
 
-        readerPreferences.pagerNavInverted
+        settings.pagerNavigationInverted
             .register({ tappingInverted = it }, { navigator.invertMode = it })
-        readerPreferences.pagerNavInverted.changes()
+        settings.pagerNavigationInverted.state
+            .map { it.effectiveValue }
             .drop(1)
             .onEach { navigationModeChangedListener?.invoke() }
             .launchIn(scope)
 
-        readerPreferences.dualPageSplitPaged
+        settings.dualPageSplitPaged
             .register(
                 { dualPageSplit = it },
                 {
@@ -92,16 +92,16 @@ internal class PagerConfig(
                 },
             )
 
-        readerPreferences.dualPageInvertPaged
+        settings.dualPageInvertPaged
             .register({ dualPageInvert = it }, { imagePropertyChangedListener?.invoke() })
 
-        readerPreferences.dualPageRotateToFit
+        settings.dualPageRotateToFit
             .register(
                 { dualPageRotateToFit = it },
                 { imagePropertyChangedListener?.invoke() },
             )
 
-        readerPreferences.dualPageRotateToFitInvert
+        settings.dualPageRotateToFitInvert
             .register(
                 { dualPageRotateToFitInvert = it },
                 { imagePropertyChangedListener?.invoke() },

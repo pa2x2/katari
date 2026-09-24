@@ -36,6 +36,7 @@ dependencies {
     implementation(projects.core.archive)
     implementation(projects.core.common)
     implementation(projects.coreMetadata)
+    implementation(projects.entryViewerSettingsUi)
     implementation(projects.i18n)
     implementation(projects.presentationCore)
     implementation(projects.sourceApi)

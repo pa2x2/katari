@@ -25,7 +25,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import mihon.entry.interactions.manga.download.DownloadManager
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
-import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
+import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildTransition
 import tachiyomi.core.common.util.system.logcat
@@ -65,7 +65,7 @@ internal class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boo
     /**
      * Configuration used by this viewer, like allow taps, or crop image borders.
      */
-    val config = WebtoonConfig(scope)
+    val config = WebtoonConfig(activity.readerSettings, scope)
 
     /**
      * Adapter of the recycler view.
@@ -78,7 +78,7 @@ internal class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boo
     private var currentItem: ReaderViewerItem? = null
     private var anchoredTransition: EntryChildTransition<ReaderChapter>? = null
 
-    private var autoScrollLevel = MangaReaderSettingsProvider.AUTO_SCROLL_LEVEL_DEFAULT
+    private var autoScrollLevel = MangaReaderSettings.AUTO_SCROLL_LEVEL_DEFAULT
     private var autoScrollRemainderPx = 0.0
     private var lastAutoScrollFrameNanos = 0L
     private var autoScrollRunning = false
@@ -201,7 +201,7 @@ internal class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boo
     }
 
     override fun updateAutoScrollSpeed(speed: Int) {
-        autoScrollLevel = speed.coerceIn(MangaReaderSettingsProvider.AUTO_SCROLL_SPEED_RANGE)
+        autoScrollLevel = speed.coerceIn(MangaReaderSettings.AUTO_SCROLL_SPEED_RANGE)
     }
 
     override fun stopAutoScroll() {

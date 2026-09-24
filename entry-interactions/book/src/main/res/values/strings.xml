@@ -9,7 +9,6 @@
     <string name="book_reader_confirm">Continue</string>
     <string name="book_reader_close">Close</string>
     <string name="book_reader_invalid_request">The selected book item is invalid.</string>
-    <string name="book_reader_general_settings">General</string>
     <string name="book_reader_appearance_settings">Appearance</string>
     <string name="book_reader_behavior_settings">Behavior</string>
     <string name="book_document_reader_theme">Theme</string>

@@ -29,7 +29,7 @@ internal class WebtoonAdapter(val viewer: WebtoonViewer) : RecyclerView.Adapter<
      * Context that has been wrapped to use the correct theme values based on the
      * current app theme and reader background color
      */
-    private var readerThemedContext = viewer.activity.createReaderThemeContext()
+    private var readerThemedContext = viewer.activity.createReaderThemeContext(viewer.config.theme)
 
     /**
      * Updates this adapter with the given [chapters]. It handles setting a few pages of the
@@ -75,7 +75,7 @@ internal class WebtoonAdapter(val viewer: WebtoonViewer) : RecyclerView.Adapter<
     }
 
     fun refresh() {
-        readerThemedContext = viewer.activity.createReaderThemeContext()
+        readerThemedContext = viewer.activity.createReaderThemeContext(viewer.config.theme)
     }
 
     /**

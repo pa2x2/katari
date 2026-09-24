@@ -3,10 +3,11 @@ package mihon.core.migration.migrations
 import mihon.core.migration.Migration
 import mihon.core.migration.MigrationContext
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
-import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
+import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.feature.profiles.core.ProfileConstants
 import mihon.feature.profiles.core.ProfileDatabase
 import mihon.feature.profiles.core.ProfileStore
+import tachiyomi.core.common.preference.getEnum
 import tachiyomi.core.common.util.lang.withIOContext
 
 /**
@@ -31,7 +32,10 @@ class ChapterTransitionMigration : Migration {
             val store = profileStore.profileStore(profileId)
             val oldAlwaysShowTransition = store.getBoolean(LEGACY_ALWAYS_SHOW_CHAPTER_TRANSITION, true)
             if (oldAlwaysShowTransition.isSet()) {
-                MangaReaderSettingsProvider(store).chapterTransitionMode.set(
+                store.getEnum(
+                    MangaReaderSettings.CHAPTER_TRANSITION_PREFERENCE_KEY,
+                    ChapterTransitionMode.ALWAYS,
+                ).set(
                     if (oldAlwaysShowTransition.get()) {
                         ChapterTransitionMode.ALWAYS
                     } else {

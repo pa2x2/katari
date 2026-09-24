@@ -33,7 +33,7 @@ import mihon.entry.interactions.merge.EntryMergeBackupIdentity
 import mihon.entry.interactions.merge.EntryMergeBackupMember
 import mihon.entry.interactions.persistence.backup.EntryBackupStateCodec
 import mihon.entry.interactions.persistence.backup.EntryFeatureStateEnvelope
-import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
+import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.reader.settings.ReaderOrientation
 import mihon.entry.interactions.reader.settings.ReadingMode
 import mihon.entry.interactions.state.EntryProgressSnapshot
@@ -178,13 +178,13 @@ private fun BackupEntry.legacyViewerSettings(entry: Entry): EntryViewerSettingsB
     if (entry.type == EntryType.MANGA) {
         val restoredIds = values.mapTo(mutableSetOf()) { it.providerId to it.settingKey }
         val readingMode = viewerFlags and ReadingMode.MASK.toLong()
-        val readingModeId = MangaReaderSettingsProvider.PROVIDER_ID to MangaReaderSettingsProvider.READING_MODE_KEY
+        val readingModeId = MangaReaderSettings.PROVIDER_ID to MangaReaderSettings.READING_MODE_KEY
         if (readingMode != ReadingMode.DEFAULT.flagValue.toLong() && readingModeId !in restoredIds) {
             values +=
                 EntryViewerSettingBackupValue(readingModeId.first, readingModeId.second, readingMode.toString(), 0)
         }
         val orientation = viewerFlags and ReaderOrientation.MASK.toLong()
-        val orientationId = MangaReaderSettingsProvider.PROVIDER_ID to MangaReaderSettingsProvider.ORIENTATION_KEY
+        val orientationId = MangaReaderSettings.PROVIDER_ID to MangaReaderSettings.ORIENTATION_KEY
         if (orientation != ReaderOrientation.DEFAULT.flagValue.toLong() && orientationId !in restoredIds) {
             values +=
                 EntryViewerSettingBackupValue(orientationId.first, orientationId.second, orientation.toString(), 0)
