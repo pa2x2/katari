@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -12,25 +13,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.delay
-import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
-import tachiyomi.presentation.core.util.collectAsState
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
+import mihon.entry.interactions.reader.settings.MangaReaderSettings
+import mihon.entry.viewer.settings.ViewerSettingBinding
 import kotlin.time.Duration.Companion.milliseconds
 
 @Stable
-internal class DisplayRefreshHost {
+internal class DisplayRefreshHost(
+    internal val flashDurationMillis: ViewerSettingBinding<Int>,
+    internal val flashColor: ViewerSettingBinding<MangaReaderSettings.FlashColor>,
+    internal val flashPageInterval: ViewerSettingBinding<Int>,
+) {
 
     internal var currentDisplayRefresh by mutableStateOf(false)
-    private val readerPreferences = Injekt.get<MangaReaderSettingsProvider>()
-
-    internal val flashMillis = readerPreferences.flashDurationMillis
-    internal val flashMode = readerPreferences.flashColor
-
-    internal val flashIntervalPref = readerPreferences.flashPageInterval
 
     // Internal State for Flash
-    private var flashInterval = flashIntervalPref.get()
+    private var flashInterval = flashPageInterval.state.value.effectiveValue
     private var timesCalled = 0
 
     fun flash() {
@@ -52,9 +49,9 @@ internal fun DisplayRefreshHost(
     modifier: Modifier = Modifier,
 ) {
     val currentDisplayRefresh = hostState.currentDisplayRefresh
-    val refreshDuration by hostState.flashMillis.collectAsState()
-    val flashMode by hostState.flashMode.collectAsState()
-    val flashInterval by hostState.flashIntervalPref.collectAsState()
+    val refreshDuration by hostState.flashDurationMillis.state.collectAsState()
+    val flashMode by hostState.flashColor.state.collectAsState()
+    val flashInterval by hostState.flashPageInterval.state.collectAsState()
 
     var currentColor by remember { mutableStateOf<Color?>(null) }
 
@@ -64,22 +61,22 @@ internal fun DisplayRefreshHost(
             return@LaunchedEffect
         }
 
-        val refreshDurationHalf = refreshDuration.milliseconds / 2
-        currentColor = if (flashMode == MangaReaderSettingsProvider.FlashColor.BLACK) {
+        val refreshDurationHalf = refreshDuration.effectiveValue.milliseconds / 2
+        currentColor = if (flashMode.effectiveValue == MangaReaderSettings.FlashColor.BLACK) {
             Color.Black
         } else {
             Color.White
         }
         delay(refreshDurationHalf)
-        if (flashMode == MangaReaderSettingsProvider.FlashColor.WHITE_BLACK) {
+        if (flashMode.effectiveValue == MangaReaderSettings.FlashColor.WHITE_BLACK) {
             currentColor = Color.Black
         }
         delay(refreshDurationHalf)
         hostState.currentDisplayRefresh = false
     }
 
-    LaunchedEffect(flashInterval) {
-        hostState.setInterval(flashInterval)
+    LaunchedEffect(flashInterval.effectiveValue) {
+        hostState.setInterval(flashInterval.effectiveValue)
     }
 
     Canvas(

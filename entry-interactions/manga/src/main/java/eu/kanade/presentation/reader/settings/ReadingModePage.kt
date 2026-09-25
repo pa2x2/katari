@@ -8,13 +8,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
 import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonViewer
-import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
+import kotlinx.coroutines.launch
+import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.reader.settings.ReaderOrientation
 import mihon.entry.interactions.reader.settings.ReadingMode
+import mihon.entry.viewer.settings.updateEntry
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.CheckboxItem
 import tachiyomi.presentation.core.components.HeadingItem
 import tachiyomi.presentation.core.components.SettingsChipRow
 import tachiyomi.presentation.core.components.SliderItem
@@ -57,146 +59,148 @@ internal fun ColumnScope.ReadingModePage(screenModel: ReaderSettingsScreenModel)
 
 @Composable
 private fun ColumnScope.PagerViewerSettings(screenModel: ReaderSettingsScreenModel) {
+    val settings = screenModel.settings
+    val scope = rememberCoroutineScope()
     HeadingItem(MR.strings.pager_viewer)
 
-    val navigationModePager by screenModel.preferences.navigationModePager.collectAsState()
-    val pagerNavInverted by screenModel.preferences.pagerNavInverted.collectAsState()
+    val navigationMode by settings.pagerNavigationMode.state.collectAsState()
+    val pagerNavInverted by settings.pagerNavigationInverted.state.collectAsState()
     TapZonesItems(
-        selected = navigationModePager,
-        onSelect = screenModel.preferences.navigationModePager::set,
-        invertMode = pagerNavInverted,
-        onSelectInvertMode = screenModel.preferences.pagerNavInverted::set,
+        selected = navigationMode.effectiveValue,
+        onSelect = { selected -> scope.launch { settings.pagerNavigationMode.updateEntry(selected) } },
+        invertMode = pagerNavInverted.effectiveValue,
+        onSelectInvertMode = { mode -> scope.launch { settings.pagerNavigationInverted.updateEntry(mode) } },
     )
 
-    val imageScaleType by screenModel.preferences.imageScaleType.collectAsState()
+    val imageScaleType by settings.imageScaleType.state.collectAsState()
     SettingsChipRow(MR.strings.pref_image_scale_type) {
-        MangaReaderSettingsProvider.ImageScaleType.mapIndexed { index, it ->
+        MangaReaderSettings.ImageScaleType.mapIndexed { index, it ->
             FilterChip(
-                selected = imageScaleType == index + 1,
-                onClick = { screenModel.preferences.imageScaleType.set(index + 1) },
+                selected = imageScaleType.effectiveValue == index + 1,
+                onClick = { scope.launch { settings.imageScaleType.updateEntry(index + 1) } },
                 label = { Text(stringResource(it)) },
             )
         }
     }
 
-    val zoomStart by screenModel.preferences.zoomStart.collectAsState()
+    val zoomStart by settings.zoomStart.state.collectAsState()
     SettingsChipRow(MR.strings.pref_zoom_start) {
-        MangaReaderSettingsProvider.ZoomStart.mapIndexed { index, it ->
+        MangaReaderSettings.ZoomStart.mapIndexed { index, it ->
             FilterChip(
-                selected = zoomStart == index + 1,
-                onClick = { screenModel.preferences.zoomStart.set(index + 1) },
+                selected = zoomStart.effectiveValue == index + 1,
+                onClick = { scope.launch { settings.zoomStart.updateEntry(index + 1) } },
                 label = { Text(stringResource(it)) },
             )
         }
     }
 
-    CheckboxItem(
+    BindingCheckboxItem(
         label = stringResource(MR.strings.pref_crop_borders),
-        pref = screenModel.preferences.cropBorders,
+        binding = settings.cropBorders,
     )
 
-    CheckboxItem(
+    BindingCheckboxItem(
         label = stringResource(MR.strings.pref_landscape_zoom),
-        pref = screenModel.preferences.landscapeZoom,
+        binding = settings.landscapeZoom,
     )
 
-    CheckboxItem(
+    BindingCheckboxItem(
         label = stringResource(MR.strings.pref_navigate_pan),
-        pref = screenModel.preferences.navigateToPan,
+        binding = settings.navigateToPan,
     )
 
-    val dualPageSplitPaged by screenModel.preferences.dualPageSplitPaged.collectAsState()
-    CheckboxItem(
+    val dualPageSplitPaged by settings.dualPageSplitPaged.state.collectAsState()
+    BindingCheckboxItem(
         label = stringResource(MR.strings.pref_dual_page_split),
-        pref = screenModel.preferences.dualPageSplitPaged,
+        binding = settings.dualPageSplitPaged,
     )
 
-    if (dualPageSplitPaged) {
-        CheckboxItem(
+    if (dualPageSplitPaged.effectiveValue) {
+        BindingCheckboxItem(
             label = stringResource(MR.strings.pref_dual_page_invert),
-            pref = screenModel.preferences.dualPageInvertPaged,
+            binding = settings.dualPageInvertPaged,
         )
     }
 
-    val dualPageRotateToFit by screenModel.preferences.dualPageRotateToFit.collectAsState()
-    CheckboxItem(
+    val dualPageRotateToFit by settings.dualPageRotateToFit.state.collectAsState()
+    BindingCheckboxItem(
         label = stringResource(MR.strings.pref_page_rotate),
-        pref = screenModel.preferences.dualPageRotateToFit,
+        binding = settings.dualPageRotateToFit,
     )
 
-    if (dualPageRotateToFit) {
-        CheckboxItem(
+    if (dualPageRotateToFit.effectiveValue) {
+        BindingCheckboxItem(
             label = stringResource(MR.strings.pref_page_rotate_invert),
-            pref = screenModel.preferences.dualPageRotateToFitInvert,
+            binding = settings.dualPageRotateToFitInvert,
         )
     }
 }
 
 @Composable
 private fun ColumnScope.WebtoonViewerSettings(screenModel: ReaderSettingsScreenModel) {
+    val settings = screenModel.settings
+    val scope = rememberCoroutineScope()
     val numberFormat = remember { NumberFormat.getPercentInstance() }
 
     HeadingItem(MR.strings.webtoon_viewer)
 
-    val navigationModeWebtoon by screenModel.preferences.navigationModeWebtoon.collectAsState()
-    val webtoonNavInverted by screenModel.preferences.webtoonNavInverted.collectAsState()
+    val navigationModeWebtoon by settings.webtoonNavigationMode.state.collectAsState()
+    val webtoonNavInverted by settings.webtoonNavigationInverted.state.collectAsState()
     TapZonesItems(
-        selected = navigationModeWebtoon,
-        onSelect = screenModel.preferences.navigationModeWebtoon::set,
-        invertMode = webtoonNavInverted,
-        onSelectInvertMode = screenModel.preferences.webtoonNavInverted::set,
+        selected = navigationModeWebtoon.effectiveValue,
+        onSelect = { selected -> scope.launch { settings.webtoonNavigationMode.updateEntry(selected) } },
+        invertMode = webtoonNavInverted.effectiveValue,
+        onSelectInvertMode = { mode -> scope.launch { settings.webtoonNavigationInverted.updateEntry(mode) } },
     )
 
-    val webtoonSidePadding by screenModel.preferences.webtoonSidePadding.collectAsState()
+    val webtoonSidePadding by settings.webtoonSidePadding.state.collectAsState()
     SliderItem(
-        value = webtoonSidePadding,
-        valueRange = MangaReaderSettingsProvider.let { it.WEBTOON_PADDING_MIN..it.WEBTOON_PADDING_MAX },
+        value = webtoonSidePadding.effectiveValue,
+        valueRange = MangaReaderSettings.WEBTOON_PADDING_MIN..MangaReaderSettings.WEBTOON_PADDING_MAX,
         label = stringResource(MR.strings.pref_webtoon_side_padding),
-        valueString = numberFormat.format(webtoonSidePadding / 100f),
-        onChange = {
-            screenModel.preferences.webtoonSidePadding.set(it)
-        },
+        valueString = numberFormat.format(webtoonSidePadding.effectiveValue / 100f),
+        onChange = { value -> scope.launch { settings.webtoonSidePadding.updateEntry(value) } },
         pillColor = MaterialTheme.colorScheme.surfaceContainerHighest,
     )
 
-    CheckboxItem(
+    BindingCheckboxItem(
         label = stringResource(MR.strings.pref_crop_borders),
-        pref = screenModel.preferences.cropBordersWebtoon,
+        binding = settings.cropBordersWebtoon,
     )
 
-    val dualPageSplitWebtoon by screenModel.preferences.dualPageSplitWebtoon.collectAsState()
-    CheckboxItem(
+    val dualPageSplitWebtoon by settings.dualPageSplitWebtoon.state.collectAsState()
+    BindingCheckboxItem(
         label = stringResource(MR.strings.pref_dual_page_split),
-        pref = screenModel.preferences.dualPageSplitWebtoon,
+        binding = settings.dualPageSplitWebtoon,
     )
 
-    if (dualPageSplitWebtoon) {
-        CheckboxItem(
+    if (dualPageSplitWebtoon.effectiveValue) {
+        BindingCheckboxItem(
             label = stringResource(MR.strings.pref_dual_page_invert),
-            pref = screenModel.preferences.dualPageInvertWebtoon,
+            binding = settings.dualPageInvertWebtoon,
         )
     }
 
-    val dualPageRotateToFitWebtoon by screenModel.preferences.dualPageRotateToFitWebtoon.collectAsState()
-    CheckboxItem(
+    val dualPageRotateToFitWebtoon by settings.dualPageRotateToFitWebtoon.state.collectAsState()
+    BindingCheckboxItem(
         label = stringResource(MR.strings.pref_page_rotate),
-        pref = screenModel.preferences.dualPageRotateToFitWebtoon,
+        binding = settings.dualPageRotateToFitWebtoon,
     )
 
-    if (dualPageRotateToFitWebtoon) {
-        CheckboxItem(
+    if (dualPageRotateToFitWebtoon.effectiveValue) {
+        BindingCheckboxItem(
             label = stringResource(MR.strings.pref_page_rotate_invert),
-            pref = screenModel.preferences.dualPageRotateToFitInvertWebtoon,
+            binding = settings.dualPageRotateToFitInvertWebtoon,
         )
     }
 
-    CheckboxItem(
+    BindingCheckboxItem(
         label = stringResource(MR.strings.pref_double_tap_zoom),
-        pref = screenModel.preferences.webtoonDoubleTapZoomEnabled,
+        binding = settings.webtoonDoubleTapZoom,
     )
-    CheckboxItem(
+    BindingCheckboxItem(
         label = stringResource(MR.strings.pref_webtoon_disable_zoom_out),
-        pref = screenModel.preferences.webtoonDisableZoomOut,
+        binding = settings.webtoonDisableZoomOut,
     )
 }
 
@@ -204,13 +208,13 @@ private fun ColumnScope.WebtoonViewerSettings(screenModel: ReaderSettingsScreenM
 private fun ColumnScope.TapZonesItems(
     selected: Int,
     onSelect: (Int) -> Unit,
-    invertMode: MangaReaderSettingsProvider.TappingInvertMode,
-    onSelectInvertMode: (MangaReaderSettingsProvider.TappingInvertMode) -> Unit,
+    invertMode: MangaReaderSettings.TappingInvertMode,
+    onSelectInvertMode: (MangaReaderSettings.TappingInvertMode) -> Unit,
 ) {
     tachiyomi.presentation.core.components.reader.navigation.ReaderTapZoneSettings(
         selected,
         onSelect,
         invertMode.ordinal,
-        { onSelectInvertMode(MangaReaderSettingsProvider.TappingInvertMode.entries[it]) },
+        { onSelectInvertMode(MangaReaderSettings.TappingInvertMode.entries[it]) },
     )
 }

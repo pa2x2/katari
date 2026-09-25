@@ -801,7 +801,7 @@ private class EntryInteractionBoundaryRules(
         }
 
         if (file.findReference("EntryDownloadActionFeature") == null) return
-        listOf("MangaReaderSettingsProvider", "skipFiltered", "isLocalOrStub").forEach { policyInput ->
+        listOf("MangaReaderSettings", "skipFiltered", "isLocalOrStub").forEach { policyInput ->
             file.findReference(policyInput)?.let { reference ->
                 findings += Finding(
                     relativePath = file.relativePath,

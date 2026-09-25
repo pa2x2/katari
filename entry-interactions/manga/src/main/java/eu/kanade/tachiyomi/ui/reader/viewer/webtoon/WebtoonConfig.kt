@@ -11,18 +11,17 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
+import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
 
 /**
  * Configuration used by webtoon viewers.
  */
 internal class WebtoonConfig(
+    settings: MangaReaderSettingsBindings,
     scope: CoroutineScope,
-    readerPreferences: MangaReaderSettingsProvider = Injekt.get(),
-) : ViewerConfig(readerPreferences, scope) {
+) : ViewerConfig(settings, scope) {
 
     var themeChangedListener: (() -> Unit)? = null
 
@@ -42,65 +41,71 @@ internal class WebtoonConfig(
 
     var doubleTapZoomChangedListener: ((Boolean) -> Unit)? = null
 
-    var scrollHideThreshold = readerPreferences.readerHideThreshold.get().threshold
+    var scrollHideThreshold = settings.readerHideThreshold.state.value.effectiveValue.threshold
         private set
 
-    val theme = readerPreferences.readerTheme.get()
+    var theme = settings.readerTheme.state.value.effectiveValue
+        private set
 
     init {
-        readerPreferences.readerHideThreshold
+        settings.readerHideThreshold
             .register({ scrollHideThreshold = it.threshold })
 
-        readerPreferences.cropBordersWebtoon
+        settings.cropBordersWebtoon
             .register({ imageCropBorders = it }, { imagePropertyChangedListener?.invoke() })
 
-        readerPreferences.webtoonSidePadding
+        settings.webtoonSidePadding
             .register({ sidePadding = it }, { imagePropertyChangedListener?.invoke() })
 
-        readerPreferences.navigationModeWebtoon
+        settings.webtoonNavigationMode
             .register({ navigationMode = it }, { updateNavigation(it) })
 
-        readerPreferences.webtoonNavInverted
+        settings.webtoonNavigationInverted
             .register({ tappingInverted = it }, { navigator.invertMode = it })
-        readerPreferences.webtoonNavInverted.changes()
+        settings.webtoonNavigationInverted.state
+            .map { it.effectiveValue }
             .drop(1)
             .onEach { navigationModeChangedListener?.invoke() }
             .launchIn(scope)
 
-        readerPreferences.dualPageSplitWebtoon
+        settings.dualPageSplitWebtoon
             .register({ dualPageSplit = it }, { imagePropertyChangedListener?.invoke() })
 
-        readerPreferences.dualPageInvertWebtoon
+        settings.dualPageInvertWebtoon
             .register({ dualPageInvert = it }, { imagePropertyChangedListener?.invoke() })
 
-        readerPreferences.dualPageRotateToFitWebtoon
+        settings.dualPageRotateToFitWebtoon
             .register(
                 { dualPageRotateToFit = it },
                 { imagePropertyChangedListener?.invoke() },
             )
 
-        readerPreferences.dualPageRotateToFitInvertWebtoon
+        settings.dualPageRotateToFitInvertWebtoon
             .register(
                 { dualPageRotateToFitInvert = it },
                 { imagePropertyChangedListener?.invoke() },
             )
 
-        readerPreferences.webtoonDisableZoomOut
+        settings.webtoonDisableZoomOut
             .register(
                 { zoomOutDisabled = it },
                 { zoomPropertyChangedListener?.invoke(it) },
             )
 
-        readerPreferences.webtoonDoubleTapZoomEnabled
+        settings.webtoonDoubleTapZoom
             .register(
                 { doubleTapZoom = it },
                 { doubleTapZoomChangedListener?.invoke(it) },
             )
 
-        readerPreferences.readerTheme.changes()
+        settings.readerTheme.state
+            .map { it.effectiveValue }
             .distinctUntilChanged()
             .drop(1)
-            .onEach { themeChangedListener?.invoke() }
+            .onEach {
+                theme = it
+                themeChangedListener?.invoke()
+            }
             .launchIn(scope)
     }
 

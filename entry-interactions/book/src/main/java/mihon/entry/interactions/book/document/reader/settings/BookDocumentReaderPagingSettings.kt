@@ -9,6 +9,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.viewer.settings.ViewerSettingBinding
+import mihon.entry.viewer.settings.updateEntry
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.CheckboxItem
 import tachiyomi.presentation.core.components.SettingsChipRow
@@ -50,9 +51,4 @@ private fun PagingCheckbox(binding: ViewerSettingBinding<Boolean>, label: String
     CheckboxItem(label = label, checked = state.effectiveValue, onClick = {
         scope.launch { binding.updateEntry(!state.effectiveValue) }
     })
-}
-
-private suspend fun <T : Any> ViewerSettingBinding<T>.updateEntry(value: T) {
-    val current = state.value
-    if (value == (current.profileValue ?: current.processorDefault)) clearEntryOverride() else setEntryOverride(value)
 }

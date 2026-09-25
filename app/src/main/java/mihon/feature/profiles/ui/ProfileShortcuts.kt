@@ -33,8 +33,8 @@ internal suspend fun switchToProfile(
     showToast: Boolean = false,
     onBeforeSwitch: () -> Unit = {},
 ): Boolean {
-    val requiresUnlock = profileManager.profileRequiresUnlock(profile.id)
-    val authenticated = if (requiresUnlock && context is FragmentActivity) {
+    val requiresAuth = profileManager.profileRequiresAuthNow(profile.id)
+    val authenticated = if (requiresAuth && context is FragmentActivity) {
         context.authenticate(
             title = context.stringResource(MR.strings.unlock_app_title, profile.name),
             subtitle = null,
@@ -44,7 +44,8 @@ internal suspend fun switchToProfile(
     }
     if (!authenticated) return false
 
-    if (requiresUnlock) {
+    if (requiresAuth) {
+        profileManager.markProfileAuthenticated(profile.id)
         SecureActivityDelegate.unlock()
     }
     onBeforeSwitch()

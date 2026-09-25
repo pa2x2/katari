@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.10.1] - 2026-09-25
+
+### ✨ Added
+
+- Manga reader options changed inside the reader now apply to that series only. Profile defaults stay in Settings. The dialog shows shared options in a Common tab, and Reset clears only the current series' overrides.
+
+### 🐛 Fixed
+
+- Entering a locked profile now follows its Lock when idle setting. Switching back within the delay no longer asks again, while longer gaps and restarts still require authentication.
+
 ## [1.10.0] - 2026-09-19
 
 ### ✨ Added
@@ -452,7 +462,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.10.0...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.10.1...HEAD
+[1.10.1]: https://github.com/pa2x2/katari/releases/tag/v1.10.1
 [1.10.0]: https://github.com/pa2x2/katari/releases/tag/v1.10.0
 [1.9.0]: https://github.com/pa2x2/katari/releases/tag/v1.9.0
 [1.8.6]: https://github.com/pa2x2/katari/releases/tag/v1.8.6

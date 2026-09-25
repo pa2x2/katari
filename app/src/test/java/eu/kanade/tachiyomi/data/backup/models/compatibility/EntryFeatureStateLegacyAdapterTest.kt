@@ -10,7 +10,7 @@ import io.kotest.matchers.shouldBe
 import mihon.entry.interactions.media.backup.ENTRY_VIEWER_SETTINGS_BACKUP_STATE_ID
 import mihon.entry.interactions.media.backup.EntryViewerSettingsBackupState
 import mihon.entry.interactions.persistence.backup.EntryBackupStateCodec
-import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
+import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.state.EntryProgressSnapshot
 import mihon.entry.interactions.state.backup.ENTRY_PROGRESS_BACKUP_STATE_ID
 import org.junit.jupiter.api.Test
@@ -26,8 +26,8 @@ class EntryFeatureStateLegacyAdapterTest {
             viewerFlags = 27,
             viewerSettingOverrides = listOf(
                 BackupViewerSettingOverride(
-                    MangaReaderSettingsProvider.PROVIDER_ID,
-                    MangaReaderSettingsProvider.READING_MODE_KEY,
+                    MangaReaderSettings.PROVIDER_ID,
+                    MangaReaderSettings.READING_MODE_KEY,
                     "5",
                 ),
                 BackupViewerSettingOverride("unknown.reader", "theme", "sepia"),
@@ -42,9 +42,9 @@ class EntryFeatureStateLegacyAdapterTest {
         val state = EntryBackupStateCodec.decode(EntryViewerSettingsBackupState.serializer(), envelope.payload)
 
         state.overrides.map { it.settingKey to it.encodedValue }.shouldContainExactly(
-            MangaReaderSettingsProvider.READING_MODE_KEY to "5",
+            MangaReaderSettings.READING_MODE_KEY to "5",
             "theme" to "sepia",
-            MangaReaderSettingsProvider.ORIENTATION_KEY to "24",
+            MangaReaderSettings.ORIENTATION_KEY to "24",
         )
     }
 

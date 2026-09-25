@@ -5,7 +5,7 @@ import android.graphics.PointF
 import android.graphics.RectF
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.util.lang.invert
-import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
+import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.reader.navigation.ReaderTapAction
 import tachiyomi.presentation.core.components.reader.navigation.readerTapRegions
@@ -38,8 +38,8 @@ internal abstract class ViewerNavigation {
         val rectF: RectF,
         val type: NavigationRegion,
     ) {
-        fun invert(invertMode: MangaReaderSettingsProvider.TappingInvertMode): Region {
-            if (invertMode == MangaReaderSettingsProvider.TappingInvertMode.NONE) return this
+        fun invert(invertMode: MangaReaderSettings.TappingInvertMode): Region {
+            if (invertMode == MangaReaderSettings.TappingInvertMode.NONE) return this
             return this.copy(
                 rectF = this.rectF.invert(invertMode),
             )
@@ -48,7 +48,7 @@ internal abstract class ViewerNavigation {
 
     private var constantMenuRegion: RectF = RectF(0f, 0f, 1f, 0.05f)
 
-    var invertMode: MangaReaderSettingsProvider.TappingInvertMode = MangaReaderSettingsProvider.TappingInvertMode.NONE
+    var invertMode: MangaReaderSettings.TappingInvertMode = MangaReaderSettings.TappingInvertMode.NONE
 
     protected abstract var regionList: List<Region>
 

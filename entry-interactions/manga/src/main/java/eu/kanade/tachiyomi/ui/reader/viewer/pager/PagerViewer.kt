@@ -49,7 +49,7 @@ internal abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
     /**
      * Configuration used by the pager, like allow taps, scale mode on images, page transitions...
      */
-    val config = PagerConfig(this, scope)
+    val config = PagerConfig(this, activity.readerSettings, scope)
 
     /**
      * Adapter of the pager.

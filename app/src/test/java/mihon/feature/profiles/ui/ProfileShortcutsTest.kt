@@ -10,6 +10,7 @@ import eu.kanade.tachiyomi.ui.security.BiometricAuthentication.authenticate
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -17,6 +18,7 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.runs
 import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import mihon.feature.profiles.core.Profile
 import mihon.feature.profiles.core.ProfileManager
@@ -33,7 +35,8 @@ class ProfileShortcutsTest {
         val themeMode = mockk<Preference<ThemeMode>>()
         val profile = profile(id = 2L, name = "Work")
 
-        every { profileManager.profileRequiresUnlock(profile.id) } returns true
+        every { profileManager.profileRequiresAuthNow(profile.id) } returns true
+        every { profileManager.markProfileAuthenticated(profile.id) } just runs
         coEvery { profileManager.setActiveProfile(profile.id) } just runs
         every { uiPreferences.themeMode } returns themeMode
         every { themeMode.get() } returns ThemeMode.SYSTEM
@@ -56,6 +59,49 @@ class ProfileShortcutsTest {
             ) shouldBe true
 
             SecureActivityDelegate.requireUnlock shouldBe false
+        } finally {
+            SecureActivityDelegate.requireUnlock = true
+            unmockkAll()
+        }
+    }
+
+    @Test
+    fun `switching within the idle window skips authentication and records no authentication`() = runTest {
+        val activity = mockk<FragmentActivity>(relaxed = true)
+        val profileManager = mockk<ProfileManager>()
+        val uiPreferences = mockk<UiPreferences>()
+        val themeMode = mockk<Preference<ThemeMode>>()
+        val profile = profile(id = 2L, name = "Work")
+
+        every { profileManager.profileRequiresAuthNow(profile.id) } returns false
+        coEvery { profileManager.setActiveProfile(profile.id) } just runs
+        every { uiPreferences.themeMode } returns themeMode
+        every { themeMode.get() } returns ThemeMode.SYSTEM
+        mockkObject(BiometricAuthentication)
+        mockkStatic(::setAppCompatDelegateThemeMode)
+        coEvery {
+            BiometricAuthentication.run {
+                activity.authenticate(any(), any())
+            }
+        } returns true
+        every { setAppCompatDelegateThemeMode(any()) } just runs
+
+        SecureActivityDelegate.requireUnlock = true
+        try {
+            switchToProfile(
+                context = activity,
+                profileManager = profileManager,
+                uiPreferences = uiPreferences,
+                profile = profile,
+            ) shouldBe true
+
+            coVerify(exactly = 0) {
+                BiometricAuthentication.run {
+                    activity.authenticate(any(), any())
+                }
+            }
+            verify(exactly = 0) { profileManager.markProfileAuthenticated(profile.id) }
+            SecureActivityDelegate.requireUnlock shouldBe true
         } finally {
             SecureActivityDelegate.requireUnlock = true
             unmockkAll()

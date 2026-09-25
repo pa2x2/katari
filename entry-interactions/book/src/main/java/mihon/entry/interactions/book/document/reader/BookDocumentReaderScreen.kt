@@ -60,7 +60,6 @@ import mihon.entry.interactions.book.reader.BookReaderNavigationSheet
 import mihon.entry.interactions.book.reader.BookReaderProgress
 import mihon.entry.interactions.book.reader.BookReaderScaffold
 import mihon.entry.interactions.book.reader.selection.BookSelectionActionCoordinator
-import mihon.entry.interactions.book.reader.settings.BookReaderSettingsDialog
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechOwner
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechPhase
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
@@ -68,6 +67,7 @@ import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewActionsMenu
 import mihon.entry.interactions.source.EntryChildWebViewResolution
+import mihon.entry.viewer.settings.ui.ReaderSettingsDialogHost
 import mihon.translation.ui.presentation.TranslationResultSpeechPhase
 import mihon.translation.ui.presentation.TranslationResultSpeechState
 import tachiyomi.domain.entry.model.EntryChapter
@@ -359,10 +359,11 @@ internal fun BookDocumentReaderScreen(
                 )
             }
             if (state.settingsVisible) {
-                BookReaderSettingsDialog(
+                ReaderSettingsDialogHost(
                     settingsSurfaceId = BookDocumentReaderProcessor.SETTINGS_SURFACE_ID,
                     capabilities = BookDocumentReaderProcessor.CAPABILITIES,
                     sharedSettingBindings = settingBindings.sharedSettings,
+                    sharedTabTitle = stringResource(MR.strings.reader_shared_settings),
                     onDismissRequest = { onSettingsVisibilityChange(false) },
                     onOpenDefaultSettings = onOpenDefaultSettings,
                     onResetProcessorSettings = {

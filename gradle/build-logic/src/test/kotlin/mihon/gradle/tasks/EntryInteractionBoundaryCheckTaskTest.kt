@@ -594,7 +594,7 @@ class EntryInteractionBoundaryCheckTaskTest {
 
                 class AppFeature(
                     val downloads: EntryDownloadActionFeature,
-                    val readerSettings: MangaReaderSettingsProvider,
+                    val readerSettings: MangaReaderSettings,
                 ) {
                     val candidates = if (readerSettings.skipFiltered.get()) filtered else all
                     val available = source.isLocalOrStub()
@@ -605,7 +605,7 @@ class EntryInteractionBoundaryCheckTaskTest {
         val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
 
         error.message shouldContain "must not select generic Download behavior"
-        error.message shouldContain "MangaReaderSettingsProvider"
+        error.message shouldContain "MangaReaderSettings"
         error.message shouldContain "skipFiltered"
         error.message shouldContain "isLocalOrStub"
     }

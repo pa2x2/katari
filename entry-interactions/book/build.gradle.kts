@@ -20,6 +20,7 @@ dependencies {
     implementation(projects.tts.ui)
 
     implementation(projects.core.common)
+    implementation(projects.entryViewerSettingsUi)
     implementation(projects.i18n)
     implementation(projects.presentationCore)
     implementation(projects.translation.ui)

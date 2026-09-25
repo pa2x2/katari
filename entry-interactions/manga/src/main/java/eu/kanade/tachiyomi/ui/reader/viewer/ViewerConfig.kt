@@ -6,16 +6,20 @@ import androidx.compose.runtime.setValue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
-import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
-import tachiyomi.core.common.preference.Preference
+import mihon.entry.interactions.reader.settings.MangaReaderSettings
+import mihon.entry.viewer.settings.ViewerSettingBinding
 
 /**
  * Common configuration for all viewers.
+ *
+ * Values are read from the opened entry's settings bindings so a per-series override is reflected by the live viewer.
  */
 internal abstract class ViewerConfig(
-    readerPreferences: MangaReaderSettingsProvider,
+    protected val settings: MangaReaderSettingsBindings,
     private val scope: CoroutineScope,
 ) {
 
@@ -23,7 +27,7 @@ internal abstract class ViewerConfig(
 
     var navigationModeChangedListener: (() -> Unit)? = null
 
-    var tappingInverted = MangaReaderSettingsProvider.TappingInvertMode.NONE
+    var tappingInverted = MangaReaderSettings.TappingInvertMode.NONE
     var longTapEnabled = true
     var usePageTransitions = false
     var doubleTapAnimDuration = 500
@@ -57,45 +61,41 @@ internal abstract class ViewerConfig(
         protected set
 
     init {
-        readerPreferences.readWithLongTap
-            .register({ longTapEnabled = it })
+        settings.readWithLongTap.register({ longTapEnabled = it })
 
-        readerPreferences.pageTransitions
-            .register({ usePageTransitions = it })
+        settings.pageTransitions.register({ usePageTransitions = it })
 
-        readerPreferences.doubleTapAnimSpeed
-            .register({ doubleTapAnimDuration = it })
+        settings.doubleTapAnimSpeed.register({ doubleTapAnimDuration = it })
 
-        readerPreferences.readWithVolumeKeys
-            .register({ volumeKeysEnabled = it })
+        settings.volumeKeys.register({ volumeKeysEnabled = it })
 
-        readerPreferences.readWithVolumeKeysInverted
-            .register({ volumeKeysInverted = it })
+        settings.volumeKeysInverted.register({ volumeKeysInverted = it })
 
-        readerPreferences.chapterTransitionMode
-            .register({ chapterTransitionMode = it })
+        settings.chapterTransition.register({ chapterTransitionMode = it })
 
-        forceNavigationOverlay = readerPreferences.showNavigationOverlayNewUser.get()
+        forceNavigationOverlay = settings.showNavigationOverlayNewUser.state.value.effectiveValue
         if (forceNavigationOverlay) {
-            readerPreferences.showNavigationOverlayNewUser.set(false)
+            settings.showNavigationOverlayNewUser.setProfileValue(false)
         }
 
-        readerPreferences.showNavigationOverlayOnStart
-            .register({ navigationOverlayOnStart = it })
+        settings.showNavigationOverlayOnStart.register({ navigationOverlayOnStart = it })
     }
 
     protected abstract fun defaultNavigation(): ViewerNavigation
 
     abstract fun updateNavigation(navigationMode: Int)
 
-    fun <T> Preference<T>.register(
+    protected fun <T> ViewerSettingBinding<T>.register(
         valueAssignment: (T) -> Unit,
         onChanged: (T) -> Unit = {},
     ) {
-        changes()
-            .onEach { valueAssignment(it) }
+        state
+            .map { it.effectiveValue }
             .distinctUntilChanged()
-            .onEach { onChanged(it) }
+            .onEach { value ->
+                valueAssignment(value)
+                onChanged(value)
+            }
             .launchIn(scope)
     }
 }

@@ -5,7 +5,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import mihon.core.migration.MigrationContext
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
-import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
+import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.feature.profiles.core.Profile
 import mihon.feature.profiles.core.ProfileDatabase
 import mihon.feature.profiles.core.ProfileStore
@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import tachiyomi.core.common.preference.getEnum
 
 class ChapterTransitionMigrationTest {
 
@@ -23,7 +24,7 @@ class ChapterTransitionMigrationTest {
 
         assertTrue(invokeMigration(store))
 
-        assertEquals(ChapterTransitionMode.ALWAYS, MangaReaderSettingsProvider(store).chapterTransitionMode.get())
+        assertEquals(ChapterTransitionMode.ALWAYS, store.chapterTransitionMode().get())
         assertFalse(store.getBoolean(LEGACY_ALWAYS_SHOW_CHAPTER_TRANSITION, true).isSet())
     }
 
@@ -34,7 +35,7 @@ class ChapterTransitionMigrationTest {
 
         assertTrue(invokeMigration(store))
 
-        assertEquals(ChapterTransitionMode.WHEN_NEEDED, MangaReaderSettingsProvider(store).chapterTransitionMode.get())
+        assertEquals(ChapterTransitionMode.WHEN_NEEDED, store.chapterTransitionMode().get())
         assertFalse(store.getBoolean(LEGACY_ALWAYS_SHOW_CHAPTER_TRANSITION, true).isSet())
     }
 
@@ -44,8 +45,8 @@ class ChapterTransitionMigrationTest {
 
         assertTrue(invokeMigration(store))
 
-        assertFalse(MangaReaderSettingsProvider(store).chapterTransitionMode.isSet())
-        assertEquals(ChapterTransitionMode.ALWAYS, MangaReaderSettingsProvider(store).chapterTransitionMode.get())
+        assertFalse(store.chapterTransitionMode().isSet())
+        assertEquals(ChapterTransitionMode.ALWAYS, store.chapterTransitionMode().get())
     }
 
     @Test
@@ -70,12 +71,9 @@ class ChapterTransitionMigrationTest {
 
         assertTrue(ChapterTransitionMigration().invoke(context))
 
-        assertEquals(ChapterTransitionMode.ALWAYS, MangaReaderSettingsProvider(first).chapterTransitionMode.get())
-        assertEquals(
-            ChapterTransitionMode.WHEN_NEEDED,
-            MangaReaderSettingsProvider(second).chapterTransitionMode.get(),
-        )
-        assertFalse(MangaReaderSettingsProvider(unregistered).chapterTransitionMode.isSet())
+        assertEquals(ChapterTransitionMode.ALWAYS, first.chapterTransitionMode().get())
+        assertEquals(ChapterTransitionMode.WHEN_NEEDED, second.chapterTransitionMode().get())
+        assertFalse(unregistered.chapterTransitionMode().isSet())
     }
 
     @Test
@@ -96,10 +94,7 @@ class ChapterTransitionMigrationTest {
 
         assertTrue(ChapterTransitionMigration().invoke(context))
 
-        assertEquals(
-            ChapterTransitionMode.WHEN_NEEDED,
-            MangaReaderSettingsProvider(onlyDefault).chapterTransitionMode.get(),
-        )
+        assertEquals(ChapterTransitionMode.WHEN_NEEDED, onlyDefault.chapterTransitionMode().get())
         assertFalse(onlyDefault.getBoolean(LEGACY_ALWAYS_SHOW_CHAPTER_TRANSITION, true).isSet())
     }
 
@@ -124,6 +119,11 @@ class ChapterTransitionMigrationTest {
     }
 
     private fun profile(id: Long) = Profile(id, "uuid-$id", "Profile $id", 0, id, false, false)
+
+    private fun MigrationTestPreferenceStore.chapterTransitionMode() = getEnum(
+        MangaReaderSettings.CHAPTER_TRANSITION_PREFERENCE_KEY,
+        ChapterTransitionMode.ALWAYS,
+    )
 
     private companion object {
         const val LEGACY_ALWAYS_SHOW_CHAPTER_TRANSITION = "always_show_chapter_transition"

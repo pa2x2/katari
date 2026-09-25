@@ -8,10 +8,11 @@ import androidx.compose.ui.platform.LocalView
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.tachiyomi.util.system.hasDisplayCutout
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
-import mihon.entry.interactions.reader.settings.MangaReaderSettingsProvider
+import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.reader.settings.ReaderOrientation
 import mihon.entry.interactions.reader.settings.ReadingMode
 import mihon.entry.viewer.settings.ViewerSettingBinder
+import mihon.entry.viewer.settings.ViewerSettingDefinition
 import mihon.entry.viewer.settings.asProfilePreference
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
@@ -24,7 +25,7 @@ import tachiyomi.core.common.preference.Preference as CorePreference
 
 object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
 
-    override val surfaceId: String = MangaReaderSettingsProvider.PROVIDER_ID
+    override val surfaceId: String = MangaReaderSettings.PROVIDER_ID
 
     @ReadOnlyComposable
     @Composable
@@ -32,14 +33,10 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
 
     @Composable
     override fun getSurfacePreferences(): List<Preference> {
-        val readerPref = remember { Injekt.get<MangaReaderSettingsProvider>() }
+        val settings = remember { Injekt.get<MangaReaderSettings>() }
         val settingBinder = remember { Injekt.get<ViewerSettingBinder>() }
-        val defaultReadingMode = remember(readerPref, settingBinder) {
-            settingBinder.bind(readerPref.readingModeSetting).asProfilePreference()
-        }
-        val defaultOrientation = remember(readerPref, settingBinder) {
-            settingBinder.bind(readerPref.orientationSetting).asProfilePreference()
-        }
+        val defaultReadingMode = settings.profilePreference(settingBinder, settings.reading.readingMode)
+        val defaultOrientation = settings.profilePreference(settingBinder, settings.reading.orientation)
 
         return listOf(
             Preference.PreferenceItem.ListPreference(
@@ -49,7 +46,7 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                 title = stringResource(MR.strings.pref_viewer_type),
             ),
             Preference.PreferenceItem.ListPreference(
-                preference = readerPref.doubleTapAnimSpeed,
+                preference = settings.profilePreference(settingBinder, settings.display.doubleTapAnimSpeed),
                 entries = mapOf(
                     1 to stringResource(MR.strings.double_tap_anim_speed_0),
                     500 to stringResource(MR.strings.double_tap_anim_speed_normal),
@@ -58,36 +55,41 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                 title = stringResource(MR.strings.pref_double_tap_anim_speed),
             ),
             Preference.PreferenceItem.SwitchPreference(
-                preference = readerPref.showReadingMode,
+                preference = settings.profilePreference(settingBinder, settings.display.showReadingMode),
                 title = stringResource(MR.strings.pref_show_reading_mode),
                 subtitle = stringResource(MR.strings.pref_show_reading_mode_summary),
             ),
             Preference.PreferenceItem.SwitchPreference(
-                preference = readerPref.showNavigationOverlayOnStart,
+                preference = settings.profilePreference(
+                    settingBinder,
+                    settings.display.showNavigationOverlayOnStart,
+                ),
                 title = stringResource(MR.strings.pref_show_navigation_mode),
                 subtitle = stringResource(MR.strings.pref_show_navigation_mode_summary),
             ),
             Preference.PreferenceItem.SwitchPreference(
-                preference = readerPref.pageTransitions,
+                preference = settings.profilePreference(settingBinder, settings.reading.pageTransitions),
                 title = stringResource(MR.strings.pref_page_transitions),
             ),
-            getDisplayGroup(readerPreferences = readerPref, defaultOrientation = defaultOrientation),
-            getEInkGroup(readerPreferences = readerPref),
-            getReadingGroup(readerPreferences = readerPref),
-            getPagedGroup(readerPreferences = readerPref),
-            getWebtoonGroup(readerPreferences = readerPref),
-            getNavigationGroup(readerPreferences = readerPref),
-            getAutoScrollGroup(readerPreferences = readerPref),
-            getActionsGroup(readerPreferences = readerPref),
+            getDisplayGroup(settings, settingBinder, defaultOrientation),
+            getEInkGroup(settings, settingBinder),
+            getReadingGroup(settings, settingBinder),
+            getPagedGroup(settings, settingBinder),
+            getWebtoonGroup(settings, settingBinder),
+            getNavigationGroup(settings, settingBinder),
+            getAutoScrollGroup(settings, settingBinder),
+            getActionsGroup(settings, settingBinder),
         )
     }
 
     @Composable
     private fun getDisplayGroup(
-        readerPreferences: MangaReaderSettingsProvider,
+        settings: MangaReaderSettings,
+        settingBinder: ViewerSettingBinder,
         defaultOrientation: CorePreference<Int>,
     ): Preference.PreferenceGroup {
-        val fullscreen by readerPreferences.fullscreen.collectAsState()
+        val fullscreenPreference = settings.profilePreference(settingBinder, settings.display.fullscreen)
+        val fullscreen by fullscreenPreference.collectAsState()
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_category_display),
             preferenceItems = listOf(
@@ -98,7 +100,7 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     title = stringResource(MR.strings.pref_rotation_type),
                 ),
                 Preference.PreferenceItem.ListPreference(
-                    preference = readerPreferences.readerTheme,
+                    preference = settings.profilePreference(settingBinder, settings.display.readerTheme),
                     entries = mapOf(
                         1 to stringResource(MR.strings.black_background),
                         2 to stringResource(MR.strings.gray_background),
@@ -108,20 +110,20 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     title = stringResource(MR.strings.pref_reader_theme),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = readerPreferences.fullscreen,
+                    preference = fullscreenPreference,
                     title = stringResource(MR.strings.pref_fullscreen),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = readerPreferences.drawUnderCutout,
+                    preference = settings.profilePreference(settingBinder, settings.display.drawUnderCutout),
                     title = stringResource(MR.strings.pref_cutout_short),
                     enabled = LocalView.current.hasDisplayCutout() && fullscreen,
                 ),
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = readerPreferences.keepScreenOn,
+                    preference = settings.profilePreference(settingBinder, settings.display.keepScreenOn),
                     title = stringResource(MR.strings.pref_keep_screen_on),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = readerPreferences.showPageNumber,
+                    preference = settings.profilePreference(settingBinder, settings.display.showPageNumber),
                     title = stringResource(MR.strings.pref_show_page_number),
                 ),
             ),
@@ -129,34 +131,38 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
     }
 
     @Composable
-    private fun getEInkGroup(readerPreferences: MangaReaderSettingsProvider): Preference.PreferenceGroup {
-        val flashPageState by readerPreferences.flashOnPageChange.collectAsState()
+    private fun getEInkGroup(
+        settings: MangaReaderSettings,
+        settingBinder: ViewerSettingBinder,
+    ): Preference.PreferenceGroup {
+        val flashPageStatePreference = settings.profilePreference(settingBinder, settings.eInk.flashOnPageChange)
+        val flashPageState by flashPageStatePreference.collectAsState()
 
-        val flashMillisPref = readerPreferences.flashDurationMillis
+        val flashMillisPref = settings.profilePreference(settingBinder, settings.eInk.flashDurationMillis)
         val flashMillis by flashMillisPref.collectAsState()
 
-        val flashIntervalPref = readerPreferences.flashPageInterval
+        val flashIntervalPref = settings.profilePreference(settingBinder, settings.eInk.flashPageInterval)
         val flashInterval by flashIntervalPref.collectAsState()
 
-        val flashColorPref = readerPreferences.flashColor
+        val flashColorPref = settings.profilePreference(settingBinder, settings.eInk.flashColor)
 
         return Preference.PreferenceGroup(
             title = "E-Ink",
             preferenceItems = listOf(
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = readerPreferences.flashOnPageChange,
+                    preference = flashPageStatePreference,
                     title = stringResource(MR.strings.pref_flash_page),
                     subtitle = stringResource(MR.strings.pref_flash_page_summ),
                 ),
                 Preference.PreferenceItem.SliderPreference(
-                    value = flashMillis / MangaReaderSettingsProvider.MILLI_CONVERSION,
+                    value = flashMillis / MangaReaderSettings.MILLI_CONVERSION,
                     preference = flashMillisPref,
                     valueRange = 1..15,
                     title = stringResource(MR.strings.pref_flash_duration),
                     valueString = stringResource(MR.strings.pref_flash_duration_summary, flashMillis),
                     isProfileSpecific = false,
                     enabled = flashPageState,
-                    onValueChanged = { flashMillisPref.set(it * MangaReaderSettingsProvider.MILLI_CONVERSION) },
+                    onValueChanged = { flashMillisPref.set(it * MangaReaderSettings.MILLI_CONVERSION) },
                 ),
                 Preference.PreferenceItem.SliderPreference(
                     value = flashInterval,
@@ -170,11 +176,11 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                 Preference.PreferenceItem.ListPreference(
                     preference = flashColorPref,
                     entries = mapOf(
-                        MangaReaderSettingsProvider.FlashColor.BLACK to
+                        MangaReaderSettings.FlashColor.BLACK to
                             stringResource(MR.strings.pref_flash_style_black),
-                        MangaReaderSettingsProvider.FlashColor.WHITE to
+                        MangaReaderSettings.FlashColor.WHITE to
                             stringResource(MR.strings.pref_flash_style_white),
-                        MangaReaderSettingsProvider.FlashColor.WHITE_BLACK
+                        MangaReaderSettings.FlashColor.WHITE_BLACK
                             to stringResource(MR.strings.pref_flash_style_white_black),
                     ),
                     title = stringResource(MR.strings.pref_flash_with),
@@ -185,24 +191,27 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
     }
 
     @Composable
-    private fun getReadingGroup(readerPreferences: MangaReaderSettingsProvider): Preference.PreferenceGroup {
+    private fun getReadingGroup(
+        settings: MangaReaderSettings,
+        settingBinder: ViewerSettingBinder,
+    ): Preference.PreferenceGroup {
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_category_reading),
             preferenceItems = listOf(
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = readerPreferences.skipRead,
+                    preference = settings.profilePreference(settingBinder, settings.reading.skipRead),
                     title = stringResource(MR.strings.pref_skip_read_chapters),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = readerPreferences.skipFiltered,
+                    preference = settings.profilePreference(settingBinder, settings.reading.skipFiltered),
                     title = stringResource(MR.strings.pref_skip_filtered_chapters),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = readerPreferences.skipDupe,
+                    preference = settings.profilePreference(settingBinder, settings.reading.skipDuplicate),
                     title = stringResource(MR.strings.pref_skip_dupe_chapters),
                 ),
                 Preference.PreferenceItem.ListPreference(
-                    preference = readerPreferences.chapterTransitionMode,
+                    preference = settings.profilePreference(settingBinder, settings.reading.chapterTransition),
                     entries = ChapterTransitionMode.entries
                         .associateWith { stringResource(it.titleRes) },
                     title = stringResource(MR.strings.pref_chapter_transition),
@@ -212,11 +221,14 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
     }
 
     @Composable
-    private fun getPagedGroup(readerPreferences: MangaReaderSettingsProvider): Preference.PreferenceGroup {
-        val navModePref = readerPreferences.navigationModePager
-        val imageScaleTypePref = readerPreferences.imageScaleType
-        val dualPageSplitPref = readerPreferences.dualPageSplitPaged
-        val rotateToFitPref = readerPreferences.dualPageRotateToFit
+    private fun getPagedGroup(
+        settings: MangaReaderSettings,
+        settingBinder: ViewerSettingBinder,
+    ): Preference.PreferenceGroup {
+        val navModePref = settings.profilePreference(settingBinder, settings.pager.navigationMode)
+        val imageScaleTypePref = settings.profilePreference(settingBinder, settings.pager.imageScaleType)
+        val dualPageSplitPref = settings.profilePreference(settingBinder, settings.pager.dualPageSplit)
+        val rotateToFitPref = settings.profilePreference(settingBinder, settings.pager.dualPageRotateToFit)
 
         val navMode by navModePref.collectAsState()
         val imageScaleType by imageScaleTypePref.collectAsState()
@@ -228,48 +240,43 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
             preferenceItems = listOf(
                 Preference.PreferenceItem.ListPreference(
                     preference = navModePref,
-                    entries = MangaReaderSettingsProvider.TapZones
+                    entries = MangaReaderSettings.TapZones
                         .mapIndexed { index, it -> index to stringResource(it) }
                         .toMap(),
                     title = stringResource(MR.strings.pref_viewer_nav),
                 ),
                 Preference.PreferenceItem.ListPreference(
-                    preference = readerPreferences.pagerNavInverted,
-                    entries = listOf(
-                        MangaReaderSettingsProvider.TappingInvertMode.NONE,
-                        MangaReaderSettingsProvider.TappingInvertMode.HORIZONTAL,
-                        MangaReaderSettingsProvider.TappingInvertMode.VERTICAL,
-                        MangaReaderSettingsProvider.TappingInvertMode.BOTH,
-                    )
+                    preference = settings.profilePreference(settingBinder, settings.pager.navigationInverted),
+                    entries = MangaReaderSettings.TappingInvertMode.entries
                         .associateWith { stringResource(it.titleRes) },
                     title = stringResource(MR.strings.pref_read_with_tapping_inverted),
                     enabled = navMode != 5,
                 ),
                 Preference.PreferenceItem.ListPreference(
                     preference = imageScaleTypePref,
-                    entries = MangaReaderSettingsProvider.ImageScaleType
+                    entries = MangaReaderSettings.ImageScaleType
                         .mapIndexed { index, it -> index + 1 to stringResource(it) }
                         .toMap(),
                     title = stringResource(MR.strings.pref_image_scale_type),
                 ),
                 Preference.PreferenceItem.ListPreference(
-                    preference = readerPreferences.zoomStart,
-                    entries = MangaReaderSettingsProvider.ZoomStart
+                    preference = settings.profilePreference(settingBinder, settings.pager.zoomStart),
+                    entries = MangaReaderSettings.ZoomStart
                         .mapIndexed { index, it -> index + 1 to stringResource(it) }
                         .toMap(),
                     title = stringResource(MR.strings.pref_zoom_start),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = readerPreferences.cropBorders,
+                    preference = settings.profilePreference(settingBinder, settings.pager.cropBorders),
                     title = stringResource(MR.strings.pref_crop_borders),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = readerPreferences.landscapeZoom,
+                    preference = settings.profilePreference(settingBinder, settings.pager.landscapeZoom),
                     title = stringResource(MR.strings.pref_landscape_zoom),
                     enabled = imageScaleType == 1,
                 ),
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = readerPreferences.navigateToPan,
+                    preference = settings.profilePreference(settingBinder, settings.pager.navigateToPan),
                     title = stringResource(MR.strings.pref_navigate_pan),
                     enabled = navMode != 5,
                 ),
@@ -282,7 +289,7 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     },
                 ),
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = readerPreferences.dualPageInvertPaged,
+                    preference = settings.profilePreference(settingBinder, settings.pager.dualPageInvert),
                     title = stringResource(MR.strings.pref_dual_page_invert),
                     subtitle = stringResource(MR.strings.pref_dual_page_invert_summary),
                     enabled = dualPageSplit,
@@ -296,7 +303,10 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     },
                 ),
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = readerPreferences.dualPageRotateToFitInvert,
+                    preference = settings.profilePreference(
+                        settingBinder,
+                        settings.pager.dualPageRotateToFitInvert,
+                    ),
                     title = stringResource(MR.strings.pref_page_rotate_invert),
                     enabled = rotateToFit,
                 ),
@@ -305,13 +315,17 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
     }
 
     @Composable
-    private fun getWebtoonGroup(readerPreferences: MangaReaderSettingsProvider): Preference.PreferenceGroup {
+    private fun getWebtoonGroup(
+        settings: MangaReaderSettings,
+        settingBinder: ViewerSettingBinder,
+    ): Preference.PreferenceGroup {
         val numberFormat = remember { NumberFormat.getPercentInstance() }
 
-        val navModePref = readerPreferences.navigationModeWebtoon
-        val dualPageSplitPref = readerPreferences.dualPageSplitWebtoon
-        val rotateToFitPref = readerPreferences.dualPageRotateToFitWebtoon
-        val webtoonSidePaddingPref = readerPreferences.webtoonSidePadding
+        val navModePref = settings.profilePreference(settingBinder, settings.webtoon.navigationMode)
+        val dualPageSplitPref = settings.profilePreference(settingBinder, settings.webtoon.dualPageSplit)
+        val rotateToFitPref = settings.profilePreference(settingBinder, settings.webtoon.dualPageRotateToFit)
+        val webtoonSidePaddingPref =
+            settings.profilePreference(settingBinder, settings.webtoon.sidePadding)
 
         val navMode by navModePref.collectAsState()
         val dualPageSplit by dualPageSplitPref.collectAsState()
@@ -323,19 +337,14 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
             preferenceItems = listOf(
                 Preference.PreferenceItem.ListPreference(
                     preference = navModePref,
-                    entries = MangaReaderSettingsProvider.TapZones
+                    entries = MangaReaderSettings.TapZones
                         .mapIndexed { index, it -> index to stringResource(it) }
                         .toMap(),
                     title = stringResource(MR.strings.pref_viewer_nav),
                 ),
                 Preference.PreferenceItem.ListPreference(
-                    preference = readerPreferences.webtoonNavInverted,
-                    entries = listOf(
-                        MangaReaderSettingsProvider.TappingInvertMode.NONE,
-                        MangaReaderSettingsProvider.TappingInvertMode.HORIZONTAL,
-                        MangaReaderSettingsProvider.TappingInvertMode.VERTICAL,
-                        MangaReaderSettingsProvider.TappingInvertMode.BOTH,
-                    )
+                    preference = settings.profilePreference(settingBinder, settings.webtoon.navigationInverted),
+                    entries = MangaReaderSettings.TappingInvertMode.entries
                         .associateWith { stringResource(it.titleRes) },
                     title = stringResource(MR.strings.pref_read_with_tapping_inverted),
                     enabled = navMode != 5,
@@ -343,28 +352,26 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                 Preference.PreferenceItem.SliderPreference(
                     value = webtoonSidePadding,
                     preference = webtoonSidePaddingPref,
-                    valueRange = MangaReaderSettingsProvider.let {
-                        it.WEBTOON_PADDING_MIN..it.WEBTOON_PADDING_MAX
-                    },
+                    valueRange = MangaReaderSettings.WEBTOON_PADDING_MIN..MangaReaderSettings.WEBTOON_PADDING_MAX,
                     title = stringResource(MR.strings.pref_webtoon_side_padding),
                     valueString = numberFormat.format(webtoonSidePadding / 100f),
                     onValueChanged = { webtoonSidePaddingPref.set(it) },
                 ),
                 Preference.PreferenceItem.ListPreference(
-                    preference = readerPreferences.readerHideThreshold,
+                    preference = settings.profilePreference(settingBinder, settings.webtoon.hideThreshold),
                     entries = mapOf(
-                        MangaReaderSettingsProvider.ReaderHideThreshold.HIGHEST to
+                        MangaReaderSettings.ReaderHideThreshold.HIGHEST to
                             stringResource(MR.strings.pref_highest),
-                        MangaReaderSettingsProvider.ReaderHideThreshold.HIGH to stringResource(MR.strings.pref_high),
-                        MangaReaderSettingsProvider.ReaderHideThreshold.LOW to stringResource(MR.strings.pref_low),
-                        MangaReaderSettingsProvider.ReaderHideThreshold.LOWEST to stringResource(
+                        MangaReaderSettings.ReaderHideThreshold.HIGH to stringResource(MR.strings.pref_high),
+                        MangaReaderSettings.ReaderHideThreshold.LOW to stringResource(MR.strings.pref_low),
+                        MangaReaderSettings.ReaderHideThreshold.LOWEST to stringResource(
                             MR.strings.pref_lowest,
                         ),
                     ),
                     title = stringResource(MR.strings.pref_hide_threshold),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = readerPreferences.cropBordersWebtoon,
+                    preference = settings.profilePreference(settingBinder, settings.webtoon.cropBorders),
                     title = stringResource(MR.strings.pref_crop_borders),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
@@ -376,7 +383,7 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     },
                 ),
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = readerPreferences.dualPageInvertWebtoon,
+                    preference = settings.profilePreference(settingBinder, settings.webtoon.dualPageInvert),
                     title = stringResource(MR.strings.pref_dual_page_invert),
                     subtitle = stringResource(MR.strings.pref_dual_page_invert_summary),
                     enabled = dualPageSplit,
@@ -390,16 +397,19 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     },
                 ),
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = readerPreferences.dualPageRotateToFitInvertWebtoon,
+                    preference = settings.profilePreference(
+                        settingBinder,
+                        settings.webtoon.dualPageRotateToFitInvert,
+                    ),
                     title = stringResource(MR.strings.pref_page_rotate_invert),
                     enabled = rotateToFit,
                 ),
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = readerPreferences.webtoonDoubleTapZoomEnabled,
+                    preference = settings.profilePreference(settingBinder, settings.webtoon.doubleTapZoom),
                     title = stringResource(MR.strings.pref_double_tap_zoom),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = readerPreferences.webtoonDisableZoomOut,
+                    preference = settings.profilePreference(settingBinder, settings.webtoon.disableZoomOut),
                     title = stringResource(MR.strings.pref_webtoon_disable_zoom_out),
                 ),
             ),
@@ -407,12 +417,17 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
     }
 
     @Composable
-    private fun getNavigationGroup(readerPreferences: MangaReaderSettingsProvider): Preference.PreferenceGroup {
-        val readWithVolumeKeysPref = readerPreferences.readWithVolumeKeys
+    private fun getNavigationGroup(
+        settings: MangaReaderSettings,
+        settingBinder: ViewerSettingBinder,
+    ): Preference.PreferenceGroup {
+        val readWithVolumeKeysPref = settings.profilePreference(settingBinder, settings.navigation.volumeKeys)
         val readWithVolumeKeys by readWithVolumeKeysPref.collectAsState()
 
-        val verticalNavigator by readerPreferences.verticalNavigator.collectAsState()
-        val verticalNavigatorHeightPref = readerPreferences.verticalNavigatorHeight
+        val verticalNavigator by settings.profilePreference(settingBinder, settings.navigation.verticalNavigator)
+            .collectAsState()
+        val verticalNavigatorHeightPref =
+            settings.profilePreference(settingBinder, settings.navigation.verticalNavigatorHeight)
         val verticalNavigatorHeight by verticalNavigatorHeightPref.collectAsState()
 
         return Preference.PreferenceGroup(
@@ -423,18 +438,21 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     title = stringResource(MR.strings.pref_read_with_volume_keys),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = readerPreferences.readWithVolumeKeysInverted,
+                    preference = settings.profilePreference(settingBinder, settings.navigation.volumeKeysInverted),
                     title = stringResource(MR.strings.pref_read_with_volume_keys_inverted),
                     enabled = readWithVolumeKeys,
                 ),
                 Preference.PreferenceItem.MultiSelectListPreference(
-                    preference = readerPreferences.verticalNavigator,
+                    preference = settings.profilePreference(settingBinder, settings.navigation.verticalNavigator),
                     entries = ReadingMode.entries.filter { it != ReadingMode.DEFAULT }
                         .associate { it to stringResource(it.stringRes) },
                     title = stringResource(MR.strings.pref_vertical_navigator),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = readerPreferences.verticalNavigatorOnLeft,
+                    preference = settings.profilePreference(
+                        settingBinder,
+                        settings.navigation.verticalNavigatorOnLeft,
+                    ),
                     title = stringResource(MR.strings.pref_webtoon_vertical_navigator_on_left),
                     enabled = verticalNavigator.isNotEmpty(),
                 ),
@@ -451,46 +469,62 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
     }
 
     @Composable
-    private fun getAutoScrollGroup(readerPreferences: MangaReaderSettingsProvider): Preference.PreferenceGroup {
-        val autoScrollEnabled by readerPreferences.autoScrollEnabled.collectAsState()
-        val autoScrollSpeed by readerPreferences.autoScrollSpeed.collectAsState()
+    private fun getAutoScrollGroup(
+        settings: MangaReaderSettings,
+        settingBinder: ViewerSettingBinder,
+    ): Preference.PreferenceGroup {
+        val autoScrollEnabledPref = settings.profilePreference(settingBinder, settings.navigation.autoScrollEnabled)
+        val autoScrollEnabled by autoScrollEnabledPref.collectAsState()
+        val autoScrollSpeedPref = settings.profilePreference(settingBinder, settings.navigation.autoScrollSpeed)
+        val autoScrollSpeed by autoScrollSpeedPref.collectAsState()
 
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_auto_scroll),
             preferenceItems = listOf(
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = readerPreferences.autoScrollEnabled,
+                    preference = autoScrollEnabledPref,
                     title = stringResource(MR.strings.pref_enable_auto_scroll),
                     subtitle = stringResource(MR.strings.pref_auto_scroll_summary),
                 ),
                 Preference.PreferenceItem.SliderPreference(
                     value = autoScrollSpeed,
-                    preference = readerPreferences.autoScrollSpeed,
-                    valueRange = MangaReaderSettingsProvider.AUTO_SCROLL_SPEED_RANGE,
+                    preference = autoScrollSpeedPref,
+                    valueRange = MangaReaderSettings.AUTO_SCROLL_SPEED_RANGE,
                     title = stringResource(MR.strings.pref_auto_scroll_speed),
-                    valueString = stringResource(MangaReaderSettingsProvider.AutoScrollLevelLabels[autoScrollSpeed]),
+                    valueString = stringResource(MangaReaderSettings.AutoScrollLevelLabels[autoScrollSpeed]),
                     enabled = autoScrollEnabled,
-                    onValueChanged = { readerPreferences.autoScrollSpeed.set(it) },
+                    onValueChanged = { autoScrollSpeedPref.set(it) },
                 ),
             ),
         )
     }
 
     @Composable
-    private fun getActionsGroup(readerPreferences: MangaReaderSettingsProvider): Preference.PreferenceGroup {
+    private fun getActionsGroup(
+        settings: MangaReaderSettings,
+        settingBinder: ViewerSettingBinder,
+    ): Preference.PreferenceGroup {
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_reader_actions),
             preferenceItems = listOf(
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = readerPreferences.readWithLongTap,
+                    preference = settings.profilePreference(settingBinder, settings.reading.readWithLongTap),
                     title = stringResource(MR.strings.pref_read_with_long_tap),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = readerPreferences.folderPerManga,
+                    preference = settings.profilePreference(settingBinder, settings.reading.folderPerManga),
                     title = stringResource(MR.strings.pref_create_folder_per_manga),
                     subtitle = stringResource(MR.strings.pref_create_folder_per_manga_summary),
                 ),
             ),
         )
     }
+}
+
+@Composable
+private fun <T> MangaReaderSettings.profilePreference(
+    binder: ViewerSettingBinder,
+    definition: ViewerSettingDefinition<T>,
+): CorePreference<T> {
+    return remember(binder, definition) { binder.bind(definition).asProfilePreference() }
 }
