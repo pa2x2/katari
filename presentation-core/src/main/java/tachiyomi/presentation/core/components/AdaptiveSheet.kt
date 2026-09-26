@@ -11,14 +11,16 @@ import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.anchoredDraggable
 import androidx.compose.foundation.gestures.animateTo
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidthIn
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -92,7 +94,7 @@ fun AdaptiveSheet(
                         indication = null,
                         onClick = {},
                     )
-                    .systemBarsPadding()
+                    .windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.ime))
                     .padding(vertical = 16.dp)
                     .then(modifier),
                 shape = MaterialTheme.shapes.extraLarge,
@@ -178,8 +180,7 @@ fun AdaptiveSheet(
                         enabled = enableImplicitDismiss,
                         flingBehavior = flingBehavior,
                     )
-                    .navigationBarsPadding()
-                    .statusBarsPadding(),
+                    .windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.ime)),
                 shape = MaterialTheme.shapes.extraLarge,
                 color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 content = {

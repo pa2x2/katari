@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -147,7 +146,7 @@ fun SourceFilterDialog(
             ) { currentRoute ->
                 when (currentRoute) {
                     SourceFilterRoute.Root -> {
-                        Column(Modifier.fillMaxHeight(0.9f).imePadding()) {
+                        Column(Modifier.fillMaxHeight(0.9f)) {
                             Text(
                                 stringResource(MR.strings.filter_title),
                                 style = MaterialTheme.typography.headlineSmall,

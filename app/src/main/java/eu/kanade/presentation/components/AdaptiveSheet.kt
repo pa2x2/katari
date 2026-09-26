@@ -83,7 +83,10 @@ fun AdaptiveSheet(
     }
 }
 
+// The sheet owns window insets, including the IME. Letting the platform fit them would leave the
+// keyboard to pan the window based on where the focused field was when it appeared, which misplaces
+// sheets that request text focus while still sliding in.
 private val dialogProperties = DialogProperties(
     usePlatformDefaultWidth = false,
-    decorFitsSystemWindows = true,
+    decorFitsSystemWindows = false,
 )
