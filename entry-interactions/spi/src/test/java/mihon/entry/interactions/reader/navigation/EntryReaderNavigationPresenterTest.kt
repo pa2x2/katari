@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book.reader.navigation
+package mihon.entry.interactions.reader.navigation
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.mockk.every
@@ -19,7 +19,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.*
 import kotlin.test.assertEquals
 
-class BookReaderNavigationPresenterTest {
+class EntryReaderNavigationPresenterTest {
     @Test
     fun `refreshes status in stable reader order and reuses child progress presentation`() = runTest {
         val entry = Entry.create().copy(id = 1L, type = EntryType.BOOK)
@@ -40,7 +40,7 @@ class BookReaderNavigationPresenterTest {
             )
         }
 
-        val result = BookReaderNavigationPresenter(getEntryWithChapters, childListFeature)
+        val result = EntryReaderNavigationPresenter(getEntryWithChapters, childListFeature)
             .observe(entry, readingOrder = listOf(second, first))
             .first()
 

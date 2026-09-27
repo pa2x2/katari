@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book.reader
+package mihon.entry.interactions.reader.navigation
 
 import androidx.activity.ComponentActivity
 import androidx.compose.material3.MaterialTheme
@@ -14,16 +14,16 @@ import org.junit.runner.RunWith
 import tachiyomi.i18n.*
 
 @RunWith(AndroidJUnit4::class)
-class BookReaderNavigationSheetTest {
+class EntryReaderNavigationSheetTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<ComponentActivity>()
 
     @Test
     fun current_section_stays_visible_when_progress_labels_arrive() {
-        val rows = mutableStateOf((1..40).map { BookReaderNavigationRow(it, "Chapter $it") })
+        val rows = mutableStateOf((1..40).map { EntryReaderNavigationRow(it, "Chapter $it") })
         composeRule.setContent {
             MaterialTheme {
-                BookReaderNavigationSheet(true, rows.value, 39, {}, {})
+                EntryReaderNavigationSheet(true, rows.value, 39, {}, {})
             }
         }
         composeRule.onNodeWithText("Chapter 40").assertIsDisplayed()

@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book.reader
+package mihon.entry.interactions.reader.navigation
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -35,7 +35,7 @@ import tachiyomi.presentation.core.components.EntryChildListItemContent
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.selectedBackground
 
-internal data class BookReaderNavigationRow<T>(
+data class EntryReaderNavigationRow<T>(
     val item: T,
     val title: String,
     val read: Boolean? = null,
@@ -44,11 +44,11 @@ internal data class BookReaderNavigationRow<T>(
     val depth: Int = 0,
 )
 
-/** Shared table-of-contents surface for built-in BOOK readers. */
+/** Shared table-of-contents surface for built-in readers. */
 @Composable
-internal fun <T> BookReaderNavigationSheet(
+fun <T> EntryReaderNavigationSheet(
     visible: Boolean,
-    rows: List<BookReaderNavigationRow<T>>,
+    rows: List<EntryReaderNavigationRow<T>>,
     selectedIndex: Int,
     onItemClick: (T) -> Unit,
     onDismissRequest: () -> Unit,
@@ -83,7 +83,7 @@ internal fun <T> BookReaderNavigationSheet(
                             contentDescription = null,
                         )
                         Text(
-                            text = stringResource(MR.strings.book_table_of_contents),
+                            text = stringResource(MR.strings.reader_table_of_contents),
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(horizontal = 16.dp),

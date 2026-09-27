@@ -20,4 +20,19 @@ dependencies {
     implementation(libs.androidx.compose.materialIcons)
     implementation(libs.androidx.compose.material3)
     implementation(libs.injekt)
+
+    testImplementation(libs.bundles.test)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(kotlin("test"))
+    testRuntimeOnly(libs.junit.platform.launcher)
+
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.uiTestJunit4)
+    androidTestImplementation(libs.androidx.test.junit)
+    debugImplementation(libs.androidx.compose.uiTestManifest)
+}
+
+tasks.withType<Test>().configureEach {
+    // MockK/Byte Buddy instruments the test JVM, which is incompatible with class-data sharing.
+    jvmArgs("-XX:+EnableDynamicAgentLoading", "-Xshare:off")
 }

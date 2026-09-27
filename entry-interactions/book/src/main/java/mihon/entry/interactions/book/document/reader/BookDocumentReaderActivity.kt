@@ -47,12 +47,12 @@ import mihon.entry.interactions.book.reader.BookReaderSessionFactory
 import mihon.entry.interactions.book.reader.BookReaderSessionRegistry
 import mihon.entry.interactions.book.reader.OpenedBookReaderSession
 import mihon.entry.interactions.book.reader.language.BookSelectionLanguageSession
-import mihon.entry.interactions.book.reader.navigation.BookReaderNavigationPresenter
 import mihon.entry.interactions.book.reader.selection.BookSelectionActionCoordinator
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechController
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechFailure
 import mihon.entry.interactions.book.reader.translation.BookSelectionTranslationController
 import mihon.entry.interactions.child.EntryChildListFeature
+import mihon.entry.interactions.reader.navigation.EntryReaderNavigationPresenter
 import mihon.entry.interactions.runtime.EntryInteractionActivity
 import mihon.entry.interactions.runtime.registerEntryInteractionSecureScreen
 import mihon.entry.interactions.runtime.setEntryInteractionContent
@@ -93,7 +93,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         BookRemoteResourceConsentCoordinator(Injekt.get<BookRemoteResourceConsentPreferences>())
     }
     private val navigationPresenter by lazy {
-        BookReaderNavigationPresenter(
+        EntryReaderNavigationPresenter(
             getEntryWithChapters = Injekt.get<GetEntryWithChapters>(),
             childListFeature = Injekt.get<EntryChildListFeature>(),
         )

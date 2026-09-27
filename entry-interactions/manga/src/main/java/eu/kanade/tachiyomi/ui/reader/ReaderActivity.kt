@@ -51,6 +51,7 @@ import com.google.android.material.transition.platform.MaterialContainerTransfor
 import com.hippo.unifile.UniFile
 import eu.kanade.presentation.reader.DisplayRefreshHost
 import eu.kanade.presentation.reader.OrientationSelectDialog
+import eu.kanade.presentation.reader.ReaderChapterNavigationSheet
 import eu.kanade.presentation.reader.ReaderContentOverlay
 import eu.kanade.presentation.reader.ReaderPageActionsDialog
 import eu.kanade.presentation.reader.ReadingModeSelectDialog
@@ -341,7 +342,7 @@ class ReaderActivity : EntryInteractionActivity() {
         }
 
         val onDismissRequest = viewModel::closeDialog
-        when (state.dialog) {
+        when (val dialog = state.dialog) {
             is ReaderViewModel.Dialog.Loading -> {
                 AlertDialog(
                     onDismissRequest = {},
@@ -388,6 +389,14 @@ class ReaderActivity : EntryInteractionActivity() {
                         menuToggleToast?.cancel()
                         menuToggleToast = toast(stringRes)
                     },
+                )
+            }
+            is ReaderViewModel.Dialog.ChapterNavigation -> {
+                ReaderChapterNavigationSheet(
+                    presentation = dialog.presentation,
+                    currentChapterId = state.currentChapter?.chapter?.id,
+                    onChapterClick = ::loadNavigationChapter,
+                    onDismissRequest = onDismissRequest,
                 )
             }
             is ReaderViewModel.Dialog.PageActions -> {
@@ -620,6 +629,7 @@ class ReaderActivity : EntryInteractionActivity() {
             showAutoScrollToggle = showAutoScrollToggle,
             autoScrollActive = isAutoScrollRunning,
             onClickAutoScroll = ::toggleAutoScroll,
+            onClickChapterNavigation = viewModel::openChapterNavigationDialog,
             onClickSettings = viewModel::openSettingsDialog,
         )
     }
@@ -787,6 +797,10 @@ class ReaderActivity : EntryInteractionActivity() {
         lifecycleScope.launch {
             if (viewModel.loadPreviousChapter()) moveToPageIndex(0)
         }
+    }
+
+    private fun loadNavigationChapter(chapterId: Long) {
+        lifecycleScope.launch { viewModel.loadNavigationChapter(chapterId) }
     }
 
     /**

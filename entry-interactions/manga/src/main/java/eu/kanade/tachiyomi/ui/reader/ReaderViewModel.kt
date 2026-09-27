@@ -28,15 +28,23 @@ import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
 import eu.kanade.tachiyomi.util.lang.byteSize
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -57,6 +65,8 @@ import mihon.entry.interactions.manga.state.mangaProgressState
 import mihon.entry.interactions.manga.state.pageIndex
 import mihon.entry.interactions.media.session.EntryMediaSessionActivitySession
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
+import mihon.entry.interactions.reader.navigation.EntryReaderNavigationPresentation
+import mihon.entry.interactions.reader.navigation.EntryReaderNavigationPresenter
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPolicy
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.reader.settings.ReaderOrientation
@@ -112,6 +122,10 @@ internal class ReaderViewModel @JvmOverloads constructor(
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
     private val localCoverManager: LocalCoverManager = Injekt.get(),
     private val mediaSession: MangaMediaSessionProcessor = Injekt.get(),
+    private val navigationPresenter: EntryReaderNavigationPresenter = EntryReaderNavigationPresenter(
+        getEntryWithChapters = Injekt.get(),
+        childListFeature = Injekt.get(),
+    ),
 ) : ViewModel() {
 
     private val downloadManager: DownloadManager = Injekt.get()
@@ -293,6 +307,20 @@ internal class ReaderViewModel @JvmOverloads constructor(
             }
             .launchIn(viewModelScope)
 
+        state.map { it.dialog is Dialog.ChapterNavigation }
+            .distinctUntilChanged()
+            .flatMapLatest { visible -> if (visible) observeChapterNavigation() else emptyFlow() }
+            .onEach { presentation ->
+                mutableState.update { state ->
+                    if (state.dialog is Dialog.ChapterNavigation) {
+                        state.copy(dialog = Dialog.ChapterNavigation(presentation))
+                    } else {
+                        state
+                    }
+                }
+            }
+            .launchIn(viewModelScope)
+
         if (hasValidArgs) {
             startInitialChapterLoad()
         }
@@ -434,7 +462,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
     }
 
     /**
-     * Called when the user is going to load the prev/next chapter through the toolbar buttons.
+     * Called when the user explicitly moves to another chapter through the reader controls.
      */
     private suspend fun loadAdjacent(chapter: ReaderChapter, pageIndex: Int? = null): Boolean {
         val loader = loader ?: return false
@@ -699,6 +727,22 @@ internal class ReaderViewModel @JvmOverloads constructor(
         return jumpHistory.rememberSuccessfulJump { loadAdjacent(prevChapter) }
     }
 
+    /** Opens a chapter chosen from the table of contents at its saved reading position. */
+    suspend fun loadNavigationChapter(chapterId: Long): Boolean {
+        val chapter = chapterList.firstOrNull { it.chapter.id == chapterId } ?: return false
+        if (chapter == getCurrentChapter()) return false
+        return jumpHistory.rememberSuccessfulJump { loadAdjacent(chapter) }
+    }
+
+    /** Live status of the reader's navigable chapters, observed only while the table of contents is shown. */
+    private fun observeChapterNavigation(): Flow<EntryReaderNavigationPresentation> = flow {
+        val manga = manga ?: return@flow
+        val readingOrder = chapterList.mapNotNull { it.chapter.toDomainChapter()?.toEntryChapter() }
+        emitAll(navigationPresenter.observe(manga, readingOrder))
+    }
+        .catch { error -> logcat(LogPriority.ERROR, error) { "Failed to observe reader table-of-contents state" } }
+        .flowOn(Dispatchers.IO)
+
     suspend fun returnToPreviousPosition(): Int? {
         val target = jumpHistory.returnTarget ?: return null
         val chapter = chapterList.firstOrNull { it.chapter.id == target.chapterId } ?: return null
@@ -913,6 +957,10 @@ internal class ReaderViewModel @JvmOverloads constructor(
 
     fun openPageDialog(page: ReaderPage) {
         mutableState.update { it.copy(dialog = Dialog.PageActions(page)) }
+    }
+
+    fun openChapterNavigationDialog() {
+        mutableState.update { it.copy(dialog = Dialog.ChapterNavigation()) }
     }
 
     fun openSettingsDialog() {
@@ -1138,6 +1186,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
         data object ReadingModeSelect : Dialog
         data object OrientationModeSelect : Dialog
         data class PageActions(val page: ReaderPage) : Dialog
+        data class ChapterNavigation(val presentation: EntryReaderNavigationPresentation? = null) : Dialog
     }
 
     sealed interface Event {

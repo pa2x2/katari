@@ -1,4 +1,4 @@
-package mihon.entry.interactions.book.reader.navigation
+package mihon.entry.interactions.reader.navigation
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -14,12 +14,21 @@ import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
-internal data class BookReaderNavigationPresentation(
+data class EntryReaderNavigationPresentation(
     val chapters: List<EntryChapter>,
     val progressLabels: Map<Long, EntryChildProgressLabel>,
-)
+) {
+    /** Top-level row for one reader chapter, carrying its live status and progress label. */
+    fun <T> chapterRow(chapter: EntryChapter, item: T): EntryReaderNavigationRow<T> = EntryReaderNavigationRow(
+        item = item,
+        title = chapter.name,
+        read = chapter.read,
+        bookmark = chapter.bookmark,
+        progressLabel = progressLabels[chapter.id],
+    )
+}
 
-internal class BookReaderNavigationPresenter(
+class EntryReaderNavigationPresenter(
     private val getEntryWithChapters: GetEntryWithChapters,
     private val childListFeature: EntryChildListFeature,
 ) {
@@ -27,7 +36,7 @@ internal class BookReaderNavigationPresenter(
     fun observe(
         entry: Entry,
         readingOrder: List<EntryChapter>,
-    ): Flow<BookReaderNavigationPresentation> {
+    ): Flow<EntryReaderNavigationPresentation> {
         return getEntryWithChapters.subscribe(entry)
             .map { (_, latestChapters) ->
                 val latestById = latestChapters.associateBy(EntryChapter::id)
@@ -40,7 +49,7 @@ internal class BookReaderNavigationPresenter(
                     is EntryChildProgressResult.Available -> result.labels
                     is EntryChildProgressResult.Inapplicable -> flowOf(emptyMap())
                 }
-                labels.map { BookReaderNavigationPresentation(chapters, it) }
+                labels.map { EntryReaderNavigationPresentation(chapters, it) }
             }
     }
 }

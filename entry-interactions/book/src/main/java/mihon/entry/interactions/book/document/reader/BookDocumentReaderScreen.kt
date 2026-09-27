@@ -56,12 +56,12 @@ import mihon.entry.interactions.book.document.reader.theme.BookDocumentReaderMat
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.document.reader.theme.bookDocumentReaderPalette
 import mihon.entry.interactions.book.document.reader.transition.LocalBookDocumentChapterTransitionMode
-import mihon.entry.interactions.book.reader.BookReaderNavigationSheet
 import mihon.entry.interactions.book.reader.BookReaderProgress
 import mihon.entry.interactions.book.reader.BookReaderScaffold
 import mihon.entry.interactions.book.reader.selection.BookSelectionActionCoordinator
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechOwner
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechPhase
+import mihon.entry.interactions.reader.navigation.EntryReaderNavigationSheet
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.source.EntryChildWebViewAction
@@ -308,7 +308,7 @@ internal fun BookDocumentReaderScreen(
                                     ReaderChromeBottomBarAction(onClick = { onNavigationVisibilityChange(true) }) {
                                         Icon(
                                             Icons.AutoMirrored.Outlined.ViewList,
-                                            stringResource(MR.strings.book_table_of_contents),
+                                            stringResource(MR.strings.reader_table_of_contents),
                                         )
                                     }
                                     ReaderChromeBottomBarAction(onClick = { onSettingsVisibilityChange(true) }) {
@@ -350,7 +350,7 @@ internal fun BookDocumentReaderScreen(
                     state.navigationLocator,
                     state.loadedSections,
                 ) { state.documentNavigationPresentation() }
-                BookReaderNavigationSheet(
+                EntryReaderNavigationSheet(
                     visible = true,
                     rows = navigation.rows,
                     selectedIndex = navigation.selectedIndex,

@@ -4,7 +4,7 @@ import mihon.book.api.BookLocator
 import mihon.book.api.BookNavigationItem
 import mihon.book.api.document.resolvePosition
 import mihon.entry.interactions.book.document.reader.BookDocumentReaderState
-import mihon.entry.interactions.book.reader.BookReaderNavigationRow
+import mihon.entry.interactions.reader.navigation.EntryReaderNavigationRow
 import tachiyomi.domain.entry.model.EntryChapter
 
 internal data class BookDocumentNavigationTarget(
@@ -15,24 +15,17 @@ internal data class BookDocumentNavigationTarget(
 )
 
 internal data class BookDocumentNavigationPresentation(
-    val rows: List<BookReaderNavigationRow<BookDocumentNavigationTarget>>,
+    val rows: List<EntryReaderNavigationRow<BookDocumentNavigationTarget>>,
     val selectedIndex: Int,
 )
 
 /** Source chapters remain reachable regardless of the shape or size of their internal contents. */
 internal fun BookDocumentReaderState.documentNavigationPresentation(): BookDocumentNavigationPresentation {
     val rows = navigationPresentation.chapters.flatMap { chapter ->
-        listOf(
-            BookReaderNavigationRow(
-                item = BookDocumentNavigationTarget(chapter),
-                title = chapter.name,
-                read = chapter.read,
-                bookmark = chapter.bookmark,
-                progressLabel = navigationPresentation.progressLabels[chapter.id],
-            ),
-        ) + publicationNavigation[chapter.id].orEmpty()
-            .withoutRedundantChapterStart()
-            .navigationRows(chapter, 1)
+        listOf(navigationPresentation.chapterRow(chapter, BookDocumentNavigationTarget(chapter))) +
+            publicationNavigation[chapter.id].orEmpty()
+                .withoutRedundantChapterStart()
+                .navigationRows(chapter, 1)
     }
     val sections = loadedSections[currentChapterId]?.sections.orEmpty()
     fun progression(locator: BookLocator, saved: Boolean = false): Float? {
@@ -63,9 +56,9 @@ internal fun BookDocumentReaderState.documentNavigationPresentation(): BookDocum
 private fun List<BookNavigationItem>.navigationRows(
     chapter: EntryChapter,
     depth: Int,
-): List<BookReaderNavigationRow<BookDocumentNavigationTarget>> = flatMap { item ->
+): List<EntryReaderNavigationRow<BookDocumentNavigationTarget>> = flatMap { item ->
     listOf(
-        BookReaderNavigationRow(
+        EntryReaderNavigationRow(
             item = BookDocumentNavigationTarget(chapter, item.target),
             title = item.title.orEmpty(),
             depth = depth,

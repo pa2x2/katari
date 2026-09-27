@@ -1,6 +1,7 @@
 package eu.kanade.presentation.reader.appbars
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Settings
@@ -29,6 +30,7 @@ fun ReaderBottomBar(
     showAutoScrollToggle: Boolean,
     autoScrollActive: Boolean,
     onClickAutoScroll: () -> Unit,
+    onClickChapterNavigation: () -> Unit,
     onClickSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -69,6 +71,13 @@ fun ReaderBottomBar(
                     contentDescription = stringResource(MR.strings.pref_auto_scroll),
                 )
             }
+        }
+
+        ReaderChromeBottomBarAction(onClick = onClickChapterNavigation) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.ViewList,
+                contentDescription = stringResource(MR.strings.reader_table_of_contents),
+            )
         }
 
         ReaderChromeBottomBarAction(onClick = onClickSettings) {
