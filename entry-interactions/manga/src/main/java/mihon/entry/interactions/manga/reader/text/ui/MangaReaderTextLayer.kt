@@ -130,7 +130,7 @@ internal fun MangaReaderTextLayer(
     }
     val languageBlocker = state.blocker as? MangaReaderTextBlocker.LanguageRequired
     if (choosingLanguage && languageBlocker != null) {
-        MangaReaderTextLanguageDialog(
+        MangaReaderTextLanguageSheet(
             languages = languageBlocker.languages,
             onChoose = { language ->
                 choosingLanguage = false
