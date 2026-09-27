@@ -21,6 +21,12 @@ import mihon.translation.ui.session.TranslationSessionHostCoordinator
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
+/**
+ * The translation popup and its pickers for a reader.
+ *
+ * [snackbarHostState] announces languages the content starts keeping; without it they are kept silently.
+ * [onChooseSourceLanguage] replaces the source picker, for readers that own the language their text was read in.
+ */
 @Composable
 fun CoordinatedTranslationSessionHost(
     coordinator: TranslationSessionHostCoordinator,
@@ -31,6 +37,7 @@ fun CoordinatedTranslationSessionHost(
     speechState: TranslationResultSpeechState = TranslationResultSpeechState(),
     onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)? = null,
     snackbarHostState: SnackbarHostState? = null,
+    onChooseSourceLanguage: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val picker by coordinator.picker.collectAsState()
@@ -41,9 +48,13 @@ fun CoordinatedTranslationSessionHost(
         controller = coordinator.controller,
         isTabletUi = isTabletUi,
         onExternalAction = { action ->
-            coordinator.handleExternalAction(action) { url ->
-                runCatching {
-                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+            if (action == TranslationSessionExternalAction.ChooseSourceLanguage && onChooseSourceLanguage != null) {
+                onChooseSourceLanguage()
+            } else {
+                coordinator.handleExternalAction(action) { url ->
+                    runCatching {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                    }
                 }
             }
         },

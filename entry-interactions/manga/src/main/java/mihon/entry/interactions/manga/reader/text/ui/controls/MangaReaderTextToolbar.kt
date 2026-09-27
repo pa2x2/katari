@@ -7,11 +7,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.HighlightAlt
 import androidx.compose.material.icons.outlined.Subtitles
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -26,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.Flow
 import mihon.entry.interactions.manga.reader.text.session.MangaPageTranslationIssue
@@ -45,10 +48,12 @@ internal fun MangaReaderTextToolbar(
     progress: MangaReaderTextProgress,
     overlay: Boolean,
     showOriginal: Boolean,
+    languages: String,
     observeModels: (List<ModelArtifactDescriptor>) -> Flow<List<ModelArtifactState>>,
     onDownloadModels: (List<ModelArtifactDescriptor>) -> Unit,
     onDownloadPlatformModels: (MangaReaderTextBlocker.PlatformModelsRequired) -> Unit,
     onChooseLanguage: () -> Unit,
+    onOpenLanguages: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenTranslationSettings: () -> Unit,
     onToggleOverlay: () -> Unit,
@@ -71,10 +76,19 @@ internal fun MangaReaderTextToolbar(
             if (progress.isWorking) {
                 CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
             }
-            Text(
-                text = progressText(progress, overlay, observeModels),
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.weight(1f, fill = false).padding(vertical = 12.dp),
+            // Once pages are ready the languages say everything the hint would.
+            if (progress != MangaReaderTextProgress.Ready) {
+                Text(
+                    text = progressText(progress, observeModels),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f, fill = false).padding(vertical = 12.dp),
+                )
+            }
+            AssistChip(
+                onClick = onOpenLanguages,
+                label = { Text(languages, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                modifier = Modifier.weight(1f, fill = false),
+                trailingIcon = { Icon(Icons.Filled.ArrowDropDown, contentDescription = null) },
             )
             when (val blocker = (progress as? MangaReaderTextProgress.Blocked)?.blocker) {
                 is MangaReaderTextBlocker.ModelsRequired -> TextButton(onClick = { onDownloadModels(blocker.models) }) {
@@ -135,7 +149,6 @@ internal fun MangaReaderTextToolbar(
 @Composable
 private fun progressText(
     progress: MangaReaderTextProgress,
-    overlay: Boolean,
     observeModels: (List<ModelArtifactDescriptor>) -> Flow<List<ModelArtifactState>>,
 ): String = when (progress) {
     MangaReaderTextProgress.Waiting -> stringResource(MR.strings.reader_text_waiting)
@@ -145,9 +158,7 @@ private fun progressText(
         MangaPageTranslationIssue.SetupRequired -> stringResource(MR.strings.reader_text_translation_setup)
         MangaPageTranslationIssue.EngineUnsupported -> stringResource(MR.strings.reader_text_translation_surface)
     }
-    MangaReaderTextProgress.Ready -> stringResource(
-        if (overlay) MR.strings.reader_text_overlay_on else MR.strings.reader_text_ready,
-    )
+    MangaReaderTextProgress.Ready -> stringResource(MR.strings.reader_text_ready)
     MangaReaderTextProgress.NoText -> stringResource(MR.strings.reader_text_no_text)
     is MangaReaderTextProgress.Failed -> stringResource(MR.strings.reader_text_failed, progress.message.orEmpty())
     is MangaReaderTextProgress.Blocked -> when (val blocker = progress.blocker) {

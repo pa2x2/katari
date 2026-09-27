@@ -42,7 +42,8 @@ import mihon.text.recognition.api.result.TextRecognitionResult
  * Recognizes the text of the pages a reader displays while text features are active.
  *
  * The session recognizes only pages it is told are visible, stops at the first prerequisite the user must resolve,
- * and resumes on its own once that prerequisite is met.
+ * and resumes on its own once that prerequisite is met. Pages are read in the [pageLanguage] kept for the series, or
+ * else in the source's [declaredLanguage]; a different page language reads them again.
  */
 internal class MangaReaderTextSession(
     private val recognition: TextRecognitionFeature,
@@ -54,24 +55,36 @@ internal class MangaReaderTextSession(
     ) -> TextRecognitionPlatformModelsResult,
     private val scope: CoroutineScope,
     private val declaredLanguage: suspend () -> LanguageTag?,
+    pageLanguage: Flow<LanguageTag?>,
     private val sampleBackground: suspend (TextRecognitionImage, ImageRect) -> Int = ::sampleTextBackground,
 ) {
     private val mutableState = MutableStateFlow(MangaReaderTextState())
     val state: StateFlow<MangaReaderTextState> = mutableState.asStateFlow()
 
-    private var chosenLanguage: LanguageTag? = null
+    private var keptLanguage: LanguageTag? = null
     private var visible: List<MangaPageTextSurface> = emptyList()
     private var ahead: List<MangaPageTextSurface> = emptyList()
     private val jobs = mutableMapOf<ReaderPage, Job>()
     private val translationJobs = mutableMapOf<ReaderPage, Job>()
     private var modelWait: Job? = null
 
+    init {
+        scope.launch { pageLanguage.distinctUntilChanged().collect(::usePageLanguage) }
+    }
+
     fun setActive(active: Boolean) {
         if (mutableState.value.active == active) return
         if (!active) {
             cancelRecognition()
             cancelTranslation()
-            mutableState.update { MangaReaderTextState(language = it.language, overlay = it.overlay) }
+            mutableState.update {
+                MangaReaderTextState(
+                    language = it.language,
+                    declaredLanguage = it.declaredLanguage,
+                    languageKept = it.languageKept,
+                    overlay = it.overlay,
+                )
+            }
             return
         }
         mutableState.update { it.copy(active = true, blocker = null) }
@@ -116,11 +129,6 @@ internal class MangaReaderTextSession(
             }
         }
         recognizeVisible()
-    }
-
-    fun chooseLanguage(language: LanguageTag) {
-        chosenLanguage = language
-        resume()
     }
 
     /** Downloads approved models and resumes recognition when all of them are installed. */
@@ -325,7 +333,30 @@ internal class MangaReaderTextSession(
         mutableState.update { it.copy(translating = emptySet()) }
     }
 
-    private suspend fun language(): LanguageTag? = chosenLanguage ?: declaredLanguage()
+    private suspend fun language(): LanguageTag? = keptLanguage ?: declaredLanguage()
+
+    /** Reads pages in [kept], or in the declared language without one, starting over when that changes the language. */
+    private suspend fun usePageLanguage(kept: LanguageTag?) {
+        keptLanguage = kept
+        val declared = declaredLanguage()
+        val language = kept ?: declared
+        val previous = mutableState.value
+        mutableState.update { it.copy(declaredLanguage = declared, languageKept = kept != null) }
+        if (language != null && language == previous.language) return
+        cancelRecognition()
+        cancelTranslation()
+        mutableState.update {
+            it.copy(
+                language = language,
+                blocker = null,
+                translationIssue = null,
+                pages = emptyMap(),
+                overlays = emptyMap(),
+                highlighted = null,
+            )
+        }
+        recognizeVisible()
+    }
 
     private fun setStatus(page: ReaderPage, status: MangaPageTextStatus) {
         mutableState.update { state -> state.copy(pages = state.pages + (page to status)) }

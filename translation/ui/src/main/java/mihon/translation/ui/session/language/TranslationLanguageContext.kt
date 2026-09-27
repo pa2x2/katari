@@ -81,6 +81,11 @@ class TranslationLanguageContext(
         return targetSelection(kept)
     }
 
+    /** The target requests use with [choices]: the kept one, else the default; null when there is neither. */
+    fun effectiveTarget(choices: TranslationLanguageChoices = this.choices.value): TranslationEffectiveTarget? =
+        choices.target?.let(TranslationEffectiveTarget::Kept)
+            ?: defaultTarget()?.let(TranslationEffectiveTarget::Default)
+
     /** Uses [engine] for the rest of the session, or the profile's engine when it is null. */
     fun selectEngine(engine: TranslationEngineId?) {
         mutableChoices.update { it.copy(engine = engine) }
@@ -99,3 +104,14 @@ data class TranslationLanguageChoices(
     val target: LanguageTag? = null,
     val engine: TranslationEngineId? = null,
 )
+
+/** The target language requests use, and whether it was kept for the content or follows the default. */
+sealed interface TranslationEffectiveTarget {
+    val language: LanguageTag
+
+    data class Kept(override val language: LanguageTag) : TranslationEffectiveTarget
+
+    data class Default(val target: TranslationDefaultTarget) : TranslationEffectiveTarget {
+        override val language: LanguageTag get() = target.language
+    }
+}

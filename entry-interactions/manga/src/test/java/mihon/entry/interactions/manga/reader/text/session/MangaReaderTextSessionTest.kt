@@ -5,6 +5,7 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
@@ -29,6 +30,7 @@ class MangaReaderTextSessionTest {
     private val recognition = FakeTextRecognition()
     private val store = FakeModelStore()
     private val translation = FakeTranslation()
+    private val pageLanguage = MutableStateFlow<LanguageTag?>(null)
     private val text = ImageRect(420, 140, 480, 330)
     private val container = ImageRect(380, 100, 520, 360)
 
@@ -115,10 +117,40 @@ class MangaReaderTextSessionTest {
         runCurrent()
         session.state.value.blocker shouldBe MangaReaderTextBlocker.LanguageRequired(listOf(JAPANESE))
 
-        session.chooseLanguage(JAPANESE)
+        pageLanguage.value = JAPANESE
         runCurrent()
 
         session.state.value.progress.shouldBeInstanceOf<MangaReaderTextProgress.NoText>()
+    }
+
+    @Test
+    fun `pages are read in the language kept for the series instead of the declared one`() = runTest {
+        pageLanguage.value = KOREAN
+        val session = session()
+        session.onVisibleSurfaces(listOf(FakeSurface(0)))
+        session.setActive(true)
+        runCurrent()
+
+        recognition.recognizedLanguages shouldContainExactly listOf(KOREAN)
+        session.state.value.language shouldBe KOREAN
+        session.state.value.languageKept shouldBe true
+    }
+
+    @Test
+    fun `another page language reads recognized pages again in it`() = runTest {
+        recognition.regions = listOf(bubble("素直にあやまるしか", text, container))
+        val surface = FakeSurface(0)
+        val session = session()
+        session.onVisibleSurfaces(listOf(surface))
+        session.setActive(true)
+        runCurrent()
+
+        pageLanguage.value = KOREAN
+        runCurrent()
+
+        recognition.recognized shouldContainExactly listOf(ImageContentKey("page-0"), ImageContentKey("page-0"))
+        recognition.recognizedLanguages shouldContainExactly listOf(JAPANESE, KOREAN)
+        session.state.value.progress shouldBe MangaReaderTextProgress.Ready
     }
 
     @Test
@@ -192,6 +224,7 @@ class MangaReaderTextSessionTest {
             installPlatformModels = { _, _ -> TextRecognitionPlatformModelsResult.Installed },
             scope = backgroundScope,
             declaredLanguage = { declaredLanguage },
+            pageLanguage = pageLanguage,
             sampleBackground = { _, _ -> Color.WHITE },
         )
 }

@@ -292,6 +292,31 @@ class TranslationSessionHostCoordinatorTest {
     }
 
     @Test
+    fun `the target picker follows the series choice when no translation is on screen`() = runTest {
+        val store = FakeLanguageStore().apply { stored.value = TranslationStoredLanguages(target = FRENCH) }
+        val coordinator = TranslationSessionHostCoordinator(
+            feature = RecordingFeature(),
+            hostActions = FakeHostActions(),
+            scope = backgroundScope,
+            languageStore = store,
+        )
+        runCurrent()
+        val picker = TranslationSessionPicker.TargetLanguage
+
+        coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseTargetLanguage) {}
+        runCurrent()
+        coordinator.languageDefault(picker) shouldBe TranslationSessionLanguageDefault.Target(
+            TranslationDefaultTarget(TARGET, followsAppLanguage = false),
+            selected = false,
+        )
+        coordinator.selectedLanguage(picker) shouldBe FRENCH
+
+        coordinator.selectLanguageDefault()
+        runCurrent()
+        store.stored.value.target shouldBe null
+    }
+
+    @Test
     fun `setup refreshes state without selecting the engine`() = runTest {
         val host = FakeHostActions()
         val coordinator = TranslationSessionHostCoordinator(

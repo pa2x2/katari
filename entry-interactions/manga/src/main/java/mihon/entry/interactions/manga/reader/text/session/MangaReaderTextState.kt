@@ -14,7 +14,12 @@ import mihon.text.recognition.api.result.TextRecognitionResult
  */
 internal data class MangaReaderTextState(
     val active: Boolean = false,
+    /** The language pages are read in, once known. */
     val language: LanguageTag? = null,
+    /** The language the source declares for its content; null for sources in several languages. */
+    val declaredLanguage: LanguageTag? = null,
+    /** Whether [language] was chosen for the series rather than taken from the source. */
+    val languageKept: Boolean = false,
     val blocker: MangaReaderTextBlocker? = null,
     val visiblePages: List<ReaderPage> = emptyList(),
     val pages: Map<ReaderPage, MangaPageTextStatus> = emptyMap(),

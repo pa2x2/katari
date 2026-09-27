@@ -27,12 +27,13 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * Asks which language the text of a multi-language source is in, with the searchable language list the reader's
- * translation pickers use.
+ * Chooses the language pages are read in, with the searchable language list the reader's translation pickers use.
+ * A [required] choice asks which language the text of a multi-language source is in.
  */
 @Composable
 internal fun MangaReaderTextLanguageSheet(
     languages: List<LanguageTag>,
+    required: Boolean,
     selected: LanguageTag?,
     recentLanguages: List<LanguageTag>,
     onChoose: (LanguageTag) -> Unit,
@@ -55,7 +56,13 @@ internal fun MangaReaderTextLanguageSheet(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = stringResource(MR.strings.reader_text_language_required),
+                        text = stringResource(
+                            if (required) {
+                                MR.strings.reader_text_language_required
+                            } else {
+                                MR.strings.reader_text_page_language
+                            },
+                        ),
                         modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.titleMedium,
                     )

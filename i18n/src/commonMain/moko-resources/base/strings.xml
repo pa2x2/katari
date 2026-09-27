@@ -285,6 +285,9 @@
     <string name="translation_change_source_language">Change source language</string>
     <string name="translation_translate_from">Translate from</string>
     <string name="translation_translate_to">Translate to</string>
+    <string name="translation_language_this_series">%1$s · this series</string>
+    <string name="translation_language_app_language">%1$s · app language</string>
+    <string name="translation_language_profile_default">%1$s · profile default</string>
     <string name="translation_change_target_language">Change target language</string>
     <string name="translation_target_required">Choose a target language for this translation.</string>
     <string name="translation_target_required_suggestions">Choose a language to translate to:</string>
@@ -526,10 +529,15 @@
     <string name="reader_text_platform_models_installing">Downloading recognition data…</string>
     <string name="reader_text_show_original">Show original text</string>
     <string name="reader_text_show_translations">Show translations</string>
-    <string name="reader_text_overlay_on">Translations shown on the page</string>
     <string name="reader_text_translating">Translating…</string>
     <string name="reader_text_translation_setup">Translation needs setup before it can show on the page</string>
     <string name="reader_text_translation_surface">This translation engine cannot show translations on the page</string>
+    <string name="reader_text_languages">Languages for this series</string>
+    <string name="reader_text_page_language">Page language</string>
+    <string name="reader_text_page_language_unknown">Not chosen yet</string>
+    <string name="reader_text_page_language_source_lists">%1$s · the source lists %2$s</string>
+    <string name="reader_text_page_language_from_source">%1$s · from the source</string>
+    <string name="reader_text_page_language_rereads">Changing the page language reads the pages again.</string>
     <string name="pref_page_text_translation">Page translation</string>
     <string name="pref_page_text_translation_overlay">Show translations on the page</string>
     <string name="pref_page_text_translation_overlay_summary">Translate every recognized text while translate mode is on, instead of only tapped text</string>

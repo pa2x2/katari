@@ -1,6 +1,8 @@
 package mihon.entry.interactions.manga.reader.text.translation
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import mihon.language.api.identification.TextLanguageResolutionContext
 import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.TranslationFeature
@@ -29,6 +31,15 @@ internal class MangaTextTranslationController(
         selectionSettleDelayMillis = 0,
         languageStore = languageStore,
     )
+
+    /** The page language kept for the series; null follows the language the source declares. */
+    val pageLanguage: Flow<LanguageTag?> = hostCoordinator.languages.choices.map { it.source }
+
+    /** Keeps [language] as the series' page language. A translation of text read in the old language is closed. */
+    fun choosePageLanguage(language: LanguageTag) {
+        dismiss()
+        hostCoordinator.languages.selectSource(language)
+    }
 
     fun translate(
         text: String,

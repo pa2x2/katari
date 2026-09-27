@@ -156,20 +156,8 @@ internal class ReaderViewModel @JvmOverloads constructor(
 
     val jumpHistory = MangaReaderJumpHistory()
 
-    /** Recognizes page text while the reader's translate mode is on. */
-    val textSession = MangaReaderTextSession(
-        recognition = Injekt.get(),
-        modelStore = Injekt.get(),
-        translator = MangaPageTranslator(Injekt.get()),
-        installPlatformModels = Injekt.get<TextRecognitionHostActions>()::installPlatformModels,
-        scope = viewModelScope,
-        declaredLanguage = {
-            val source = manga?.let { sourceManager.get(it.source) } as? EntryCatalogueSource
-            declaredContentLanguage(source?.lang)
-        },
-    )
-
     private val translationHostActions: TranslationHostActions = Injekt.get()
+    private val textRecognitionHostActions: TextRecognitionHostActions = Injekt.get()
 
     /** Translates text recognized on pages. */
     val textTranslation = MangaTextTranslationController(
@@ -182,10 +170,31 @@ internal class ReaderViewModel @JvmOverloads constructor(
         ),
     )
 
-    /** Recognizes pages in [language], which also becomes a recent language in every translation picker. */
+    /** Recognizes page text while the reader's translate mode is on. */
+    val textSession = MangaReaderTextSession(
+        recognition = Injekt.get(),
+        modelStore = Injekt.get(),
+        translator = MangaPageTranslator(Injekt.get()),
+        installPlatformModels = textRecognitionHostActions::installPlatformModels,
+        scope = viewModelScope,
+        declaredLanguage = {
+            val source = manga?.let { sourceManager.get(it.source) } as? EntryCatalogueSource
+            declaredContentLanguage(source?.lang)
+        },
+        pageLanguage = textTranslation.pageLanguage,
+    )
+
+    /** Languages page text can be read in. */
+    val textRecognitionLanguages: List<LanguageTag>
+        get() = textRecognitionHostActions.supportedLanguages
+
+    /**
+     * Reads the series' pages in [language] from now on, which also becomes a recent language in every translation
+     * picker.
+     */
     fun chooseTextLanguage(language: LanguageTag) {
         translationHostActions.recordRecentLanguage(language)
-        textSession.chooseLanguage(language)
+        textTranslation.choosePageLanguage(language)
     }
 
     init {

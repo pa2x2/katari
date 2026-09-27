@@ -228,22 +228,28 @@ class TranslationSessionHostCoordinator(
         mutablePicker.value = null
     }
 
-    /** The default the [picker] offers as its first row. */
+    /**
+     * The default the [picker] offers as its first row. Without a translation on screen, the session's languages
+     * decide whether the default is followed.
+     */
     fun languageDefault(picker: TranslationSessionPicker): TranslationSessionLanguageDefault? {
-        val request = (controller.state.value as? TranslationSessionState.Active)?.input?.request ?: return null
+        val request = (controller.state.value as? TranslationSessionState.Active)?.input?.request
+        val choices = languages.choices.value
         return when (picker) {
             TranslationSessionPicker.SourceLanguage -> {
-                val automatic = request.sourceLanguage == TranslationSourceLanguageSelection.Automatic
+                val automatic = request?.let { it.sourceLanguage == TranslationSourceLanguageSelection.Automatic }
+                    ?: (choices.source == null)
                 TranslationSessionLanguageDefault.AutomaticSource(
-                    detected = pickerLanguages.source.takeIf { automatic },
-                    declared = request.languageContext.declaredLanguages.firstOrNull(),
+                    detected = pickerLanguages.source.takeIf { automatic && request != null },
+                    declared = request?.languageContext?.declaredLanguages?.firstOrNull(),
                     selected = automatic,
                 )
             }
             TranslationSessionPicker.TargetLanguage -> hostActions.defaultTarget()?.let { target ->
                 TranslationSessionLanguageDefault.Target(
                     target = target,
-                    selected = request.targetLanguage == TranslationTargetLanguageSelection.Default,
+                    selected = request?.let { it.targetLanguage == TranslationTargetLanguageSelection.Default }
+                        ?: (choices.target == null),
                 )
             }
             TranslationSessionPicker.Engine -> null
@@ -391,7 +397,7 @@ class TranslationSessionHostCoordinator(
 
     private fun resolvedLanguageContext(): PickerLanguages {
         val state = controller.state.value as? TranslationSessionState.Active
-            ?: return PickerLanguages()
+            ?: return languages.choices.value.let { PickerLanguages(it.source, it.target) }
         val explicit = PickerLanguages(
             source = (state.input.request.sourceLanguage as? TranslationSourceLanguageSelection.Explicit)?.language,
             target = (state.input.request.targetLanguage as? TranslationTargetLanguageSelection.Explicit)?.language,
