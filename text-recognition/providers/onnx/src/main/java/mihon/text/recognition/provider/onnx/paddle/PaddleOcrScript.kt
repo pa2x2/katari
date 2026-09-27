@@ -7,6 +7,7 @@ import mihon.language.api.tag.LanguageTag
  * those of the pinned commit.
  *
  * @property spaced whether words are separated by spaces, so lines of one region are joined with a space.
+ * @property vertical whether the script is also printed in vertical columns, which are read turned on their side.
  */
 internal enum class PaddleOcrScript(
     val folder: String,
@@ -17,6 +18,7 @@ internal enum class PaddleOcrScript(
     val dictionarySize: Long,
     val dictionarySha256: String,
     val spaced: Boolean = true,
+    val vertical: Boolean = false,
 ) {
     English(
         folder = "english",
@@ -66,6 +68,7 @@ internal enum class PaddleOcrScript(
         dictionarySize = 74_012,
         dictionarySha256 = "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b",
         spaced = false,
+        vertical = true,
     ),
     Arabic(
         folder = "arabic",

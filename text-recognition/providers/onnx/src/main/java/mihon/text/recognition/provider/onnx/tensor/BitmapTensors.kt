@@ -6,21 +6,33 @@ import java.nio.FloatBuffer
 /**
  * Resizes [bitmap] to [width]×[height] and writes it as a planar (channel, row, column) float tensor. [channel]
  * converts one ARGB pixel to the three channel values.
+ *
+ * The tensor is [tensorWidth] columns wide; columns right of the image hold [padding], as recognizers that read
+ * lines of different lengths expect.
  */
 internal inline fun planarTensor(
     bitmap: Bitmap,
     width: Int,
     height: Int,
+    tensorWidth: Int = width,
+    padding: Float = 0f,
     channel: (pixel: Int, index: Int) -> Float,
 ): FloatBuffer {
+    require(tensorWidth >= width)
     val pixels = resamplePixels(bitmap.pixels(), bitmap.width, bitmap.height, width, height)
-    val plane = width * height
+    val plane = tensorWidth * height
     val buffer = FloatBuffer.allocate(3 * plane)
-    for (index in pixels.indices) {
-        val pixel = pixels[index]
-        buffer.put(index, channel(pixel, 0))
-        buffer.put(plane + index, channel(pixel, 1))
-        buffer.put(2 * plane + index, channel(pixel, 2))
+    if (tensorWidth > width) {
+        for (index in 0 until buffer.capacity()) buffer.put(index, padding)
+    }
+    for (y in 0 until height) {
+        for (x in 0 until width) {
+            val pixel = pixels[y * width + x]
+            val index = y * tensorWidth + x
+            buffer.put(index, channel(pixel, 0))
+            buffer.put(plane + index, channel(pixel, 1))
+            buffer.put(2 * plane + index, channel(pixel, 2))
+        }
     }
     return buffer
 }
