@@ -18,6 +18,7 @@ internal fun resolveSettingsStartScreen(
         SettingsScreen.Destination.DataAndStorage -> SettingsDataScreen
         SettingsScreen.Destination.Tracking -> SettingsTrackingScreen
         SettingsScreen.Destination.Translation -> SettingsTranslationScreen
+        SettingsScreen.Destination.TextRecognition -> SettingsTextRecognitionScreen
         SettingsScreen.Destination.Readers -> viewerSettingsScreen ?: SettingsReaderScreen
         null -> if (twoPane) SettingsAppearanceScreen else SettingsMainScreen
     }

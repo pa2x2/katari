@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.reader.viewer.webtoon
 
 import android.graphics.PointF
+import android.graphics.Rect
 import android.view.Choreographer
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -8,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import androidx.core.app.ActivityCompat
+import androidx.core.view.children
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
@@ -24,6 +26,7 @@ import eu.kanade.tachiyomi.ui.reader.viewer.ViewerNavigation.NavigationRegion
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import mihon.entry.interactions.manga.download.DownloadManager
+import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextSurface
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.viewer.EntryChildDirection
@@ -115,7 +118,8 @@ internal class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boo
                 }
             },
         )
-        recycler.tapListener = { event ->
+        recycler.tapListener = tap@{ event ->
+            if (activity.onTextTap(event)) return@tap
             val viewPosition = IntArray(2)
             recycler.getLocationOnScreen(viewPosition)
             val viewPositionRelativeToWindow = IntArray(2)
@@ -173,6 +177,14 @@ internal class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boo
     /**
      * Returns the view this viewer uses.
      */
+    override fun visibleTextSurfaces(): List<MangaPageTextSurface> {
+        val visibleArea = Rect()
+        return recycler.children
+            .filter { child -> child.getGlobalVisibleRect(visibleArea) }
+            .mapNotNull { child -> (recycler.getChildViewHolder(child) as? WebtoonPageHolder)?.textSurface() }
+            .toList()
+    }
+
     override fun getView(): View {
         return frame
     }

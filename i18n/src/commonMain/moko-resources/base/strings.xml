@@ -466,6 +466,23 @@
     <string name="text_recognition_settings_models">Models</string>
     <string name="text_recognition_settings_models_ready">All models downloaded</string>
     <string name="text_recognition_settings_models_needed">Needs %s of models</string>
+    <!-- Manga reader text -->
+    <string name="reader_text_translate">Translate text</string>
+    <string name="reader_text_recognizing">Recognizing text…</string>
+    <string name="reader_text_ready">Tap a speech bubble to translate it</string>
+    <string name="reader_text_no_text">No text found on this page</string>
+    <string name="reader_text_waiting">Waiting for the page to load</string>
+    <string name="reader_text_failed">Text recognition failed: %s</string>
+    <string name="reader_text_select_area">Select area</string>
+    <string name="reader_text_select_area_hint">Drag over the text to translate</string>
+    <string name="reader_text_area_empty">No text found in the selected area</string>
+    <string name="reader_text_models_required">Recognizing text needs %s of on-device models</string>
+    <string name="reader_text_models_downloading">Downloading models · %1$s of %2$s</string>
+    <string name="reader_text_pipeline_required">Choose how to read %s text</string>
+    <string name="reader_text_language_required">Which language is the text in?</string>
+    <string name="reader_text_unsupported_language">%s text cannot be recognized yet</string>
+    <string name="reader_text_unavailable">Text recognition is unavailable: %s</string>
+    <string name="reader_text_choose_language">Choose language</string>
     <string name="not_found">Not found</string>
     <string name="internal_error">InternalError: Check crash logs for further information</string>
 

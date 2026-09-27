@@ -8,6 +8,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import eu.kanade.tachiyomi.data.database.models.toDomainChapter
+import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.ui.reader.loader.ChapterLoader
 import eu.kanade.tachiyomi.ui.reader.loader.ReaderLoadException
@@ -61,6 +62,9 @@ import mihon.entry.interactions.manga.download.DownloadProvider
 import mihon.entry.interactions.manga.download.model.MangaDownload
 import mihon.entry.interactions.manga.media.session.MangaMediaSessionProcessor
 import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
+import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextSession
+import mihon.entry.interactions.manga.reader.text.session.declaredContentLanguage
+import mihon.entry.interactions.manga.reader.text.translation.MangaTextTranslationController
 import mihon.entry.interactions.manga.state.mangaProgressState
 import mihon.entry.interactions.manga.state.pageIndex
 import mihon.entry.interactions.media.session.EntryMediaSessionActivitySession
@@ -144,6 +148,24 @@ internal class ReaderViewModel @JvmOverloads constructor(
         }
 
     val jumpHistory = MangaReaderJumpHistory()
+
+    /** Recognizes page text while the reader's translate mode is on. */
+    val textSession = MangaReaderTextSession(
+        recognition = Injekt.get(),
+        modelStore = Injekt.get(),
+        scope = viewModelScope,
+        declaredLanguage = {
+            val source = manga?.let { sourceManager.get(it.source) } as? EntryCatalogueSource
+            declaredContentLanguage(source?.lang)
+        },
+    )
+
+    /** Translates text recognized on pages. */
+    val textTranslation = MangaTextTranslationController(
+        feature = Injekt.get(),
+        hostActions = Injekt.get(),
+        scope = viewModelScope,
+    )
 
     private val initialState = InitialState.from(savedState)
 
@@ -327,6 +349,7 @@ internal class ReaderViewModel @JvmOverloads constructor(
     }
 
     override fun onCleared() {
+        textTranslation.close()
         val currentChapters = state.value.viewerChapters
         if (currentChapters != null) {
             currentChapters.unref()

@@ -5,7 +5,10 @@ import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -31,6 +34,8 @@ fun ReaderBottomBar(
     autoScrollActive: Boolean,
     onClickAutoScroll: () -> Unit,
     onClickChapterNavigation: () -> Unit,
+    textTranslationActive: Boolean,
+    onClickTextTranslation: () -> Unit,
     onClickSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -77,6 +82,18 @@ fun ReaderBottomBar(
             Icon(
                 imageVector = Icons.AutoMirrored.Outlined.ViewList,
                 contentDescription = stringResource(MR.strings.reader_table_of_contents),
+            )
+        }
+
+        val textTranslationState = stringResource(if (textTranslationActive) MR.strings.on else MR.strings.off)
+        ReaderChromeBottomBarAction(
+            onClick = onClickTextTranslation,
+            modifier = Modifier.semantics { stateDescription = textTranslationState },
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Translate,
+                contentDescription = stringResource(MR.strings.reader_text_translate),
+                tint = if (textTranslationActive) MaterialTheme.colorScheme.primary else LocalContentColor.current,
             )
         }
 

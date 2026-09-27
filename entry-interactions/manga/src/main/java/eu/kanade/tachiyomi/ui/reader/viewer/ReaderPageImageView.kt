@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.reader.viewer
 
 import android.content.Context
+import android.graphics.Matrix
 import android.graphics.PointF
 import android.graphics.RectF
 import android.graphics.drawable.Animatable
@@ -43,8 +44,16 @@ import eu.kanade.tachiyomi.ui.reader.viewer.progressive.ReaderPageProgressivePre
 import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonSubsamplingImageView
 import mihon.core.common.image.progressive.ProgressiveImageState
 import mihon.core.common.image.progressive.ProgressiveImageVisual
+import mihon.entry.interactions.manga.reader.text.overlay.MangaPageTextOverlayPainter
+import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextDecoration
+import mihon.entry.interactions.manga.reader.text.surface.imageToView
+import mihon.entry.interactions.manga.reader.text.surface.viewToImage
 import mihon.entry.interactions.reader.settings.ReaderBasePreferences
+import mihon.text.recognition.api.image.ImageRect
+import mihon.text.recognition.api.image.ImageSize
+import okio.Buffer
 import okio.BufferedSource
+import okio.ByteString
 import tachiyomi.core.common.util.system.ImageUtil
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -75,6 +84,11 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
     private var finalImageReady = false
 
     private var config: Config? = null
+
+    /** Encoded bytes of the still image currently shown, as displayed (after any split or rotation). */
+    private var displayedStill: DisplayedStill? = null
+    private var textDecoration: MangaPageTextDecoration? = null
+    private val textOverlayPainter by lazy { MangaPageTextOverlayPainter(context) }
 
     var onImageLoaded: (() -> Unit)? = null
     var onImageLoadError: ((Throwable?) -> Unit)? = null
@@ -177,9 +191,11 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
     }
 
     fun setImage(source: BufferedSource, isAnimated: Boolean, config: Config) {
+        val still = if (isAnimated) null else DisplayedStill(source.encodedSnapshot(), config.cropBorders)
         val setFinalImage = {
             finalImageReady = false
             this.config = config
+            displayedStill = still
             if (isAnimated) {
                 prepareAnimatedImageView()
                 setAnimatedImage(source, config)
@@ -265,6 +281,38 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
     fun recycle() {
         recycleFinalImage()
         clearProgressiveImage()
+        displayedStill = null
+        setTextDecoration(null)
+    }
+
+    /** The still image currently shown and the border cropping it is shown with, or `null` if none is. */
+    fun displayedStillImage(): Pair<ByteString, Boolean>? {
+        if (!finalImageReady) return null
+        val still = displayedStill ?: return null
+        return still.encoded to still.cropBorders
+    }
+
+    /** Where [rect] of the displayed image appears in window coordinates, if it is currently laid out. */
+    fun imageToWindow(rect: ImageRect, imageSize: ImageSize): RectF? {
+        val view = pageView as? SubsamplingScaleImageView ?: return null
+        val target = RectF()
+        if (!view.imageToView(rect, imageSize, target)) return null
+        Matrix().also(view::transformMatrixToGlobal).mapRect(target)
+        return target
+    }
+
+    /** Displayed-image coordinates of window point ([x], [y]), possibly outside the image bounds. */
+    fun windowToImage(x: Float, y: Float, imageSize: ImageSize): Pair<Int, Int>? {
+        val view = pageView as? SubsamplingScaleImageView ?: return null
+        val point = floatArrayOf(x, y)
+        Matrix().also(view::transformMatrixToLocal).mapPoints(point)
+        return view.viewToImage(point[0], point[1], imageSize)
+    }
+
+    fun setTextDecoration(decoration: MangaPageTextDecoration?) {
+        if (textDecoration == decoration) return
+        textDecoration = decoration
+        pageView?.invalidate()
     }
 
     private fun deferFinalAnimation(setFinalImage: () -> Unit): Boolean {
@@ -365,8 +413,11 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
         pageView = if (isWebtoon) {
             WebtoonSubsamplingImageView(context)
         } else {
-            SubsamplingScaleImageView(context)
+            ReaderSubsamplingImageView(context)
         }.apply {
+            foregroundPainter = { view, canvas ->
+                textDecoration?.let { decoration -> textOverlayPainter.draw(view, canvas, decoration) }
+            }
             setMaxTileSize(ImageUtil.hardwareBitmapThreshold)
             setDoubleTapZoomStyle(SubsamplingScaleImageView.ZOOM_FOCUS_CENTER)
             setPanLimit(SubsamplingScaleImageView.PAN_LIMIT_INSIDE)
@@ -548,6 +599,11 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
         return (this * context.animatorDurationScale).toInt().coerceAtLeast(1)
     }
 
+    private class DisplayedStill(
+        val encoded: ByteString,
+        val cropBorders: Boolean,
+    )
+
     /**
      * All of the config except [zoomDuration] will only be used for non-animated image.
      */
@@ -568,6 +624,10 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
 
 private const val MAX_ZOOM_SCALE = 5F
 private const val ZOOM_SCALE_TOLERANCE = 0.001F
+
+/** The encoded bytes of this source without consuming it; buffers share their segments instead of copying. */
+private fun BufferedSource.encodedSnapshot(): ByteString =
+    if (this is Buffer) snapshot() else peek().readByteString()
 
 internal fun isScaleZoomed(scale: Float, minimumScale: Float): Boolean {
     return scale > minimumScale * (1F + ZOOM_SCALE_TOLERANCE)

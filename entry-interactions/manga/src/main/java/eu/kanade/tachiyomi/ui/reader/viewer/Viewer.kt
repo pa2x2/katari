@@ -5,6 +5,7 @@ import android.view.MotionEvent
 import android.view.View
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
+import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextSurface
 
 /**
  * Interface for implementing a viewer.
@@ -30,6 +31,11 @@ internal interface Viewer {
      * Tells this viewer to move to the given [page].
      */
     fun moveToPage(page: ReaderPage)
+
+    /**
+     * Pages this viewer currently shows to the reader, for text features.
+     */
+    fun visibleTextSurfaces(): List<MangaPageTextSurface>
 
     /**
      * Whether this viewer supports automatic scrolling.
