@@ -21,6 +21,13 @@ sealed interface TextRecognitionComponent {
      */
     fun models(language: LanguageTag): List<ModelArtifactDescriptor>
 
+    /**
+     * Revision of the component's own processing. Bump it when a change makes the component read images differently,
+     * so results cached from the earlier revision are not reused; model changes are covered by model revisions.
+     */
+    val processingRevision: Int
+        get() = 1
+
     /** Whether this device can run the component for [language] now. */
     suspend fun inspectDevice(language: LanguageTag): TextRecognitionComponentAvailability
 

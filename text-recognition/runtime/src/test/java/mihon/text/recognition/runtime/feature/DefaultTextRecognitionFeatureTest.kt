@@ -167,6 +167,17 @@ class DefaultTextRecognitionFeatureTest {
     }
 
     @Test
+    fun `results of an earlier component revision are read again`() = runTest {
+        feature().recognizeReady(TextRecognitionRequest(strip, JAPANESE))
+        val recognizerRuns = recognizer.runs
+
+        recognizer.processingRevision = 2
+        feature().recognizeReady(TextRecognitionRequest(strip, JAPANESE))
+
+        recognizer.runs shouldBe recognizerRuns * 2
+    }
+
+    @Test
     fun `an outlined area without detected text is read as a whole`() = runTest {
         val outline = ImageRect(40, 3480, 860, 3620)
         val silentDetector = FakeDetector(strip, emptyList(), declaredModels = detector.declaredModels)

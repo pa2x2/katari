@@ -165,7 +165,7 @@ internal class DefaultTextRecognitionFeature(
             add("${area.left},${area.top},${area.right},${area.bottom}")
             add(prepared.request.scope::class.simpleName.orEmpty())
             add(prepared.language.recognitionLanguage)
-            prepared.pipeline.components.forEach { add(it.value) }
+            prepared.components.forEach { add("${it.catalogEntry.id.value}#${it.processingRevision}") }
             installed.sortedBy { it.descriptor.id.value }.forEach { model ->
                 add("${model.descriptor.id.value}@${model.descriptor.revision}")
             }
