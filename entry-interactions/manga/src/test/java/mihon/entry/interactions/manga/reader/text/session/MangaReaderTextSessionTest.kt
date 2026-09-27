@@ -11,6 +11,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextDecoration
+import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslationIssue
 import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslator
 import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.download.ModelArtifactDownloadApproval
@@ -23,6 +24,8 @@ import mihon.text.recognition.api.result.TextOrientation
 import mihon.text.recognition.api.result.TextRegionKind
 import mihon.translation.api.preparation.TranslationPreparation
 import mihon.translation.api.preparation.TranslationTargetChoiceReason
+import mihon.translation.api.request.TranslationTargetLanguageSelection
+import mihon.translation.ui.session.language.TranslationLanguageContext
 import org.junit.jupiter.api.Test
 
 class MangaReaderTextSessionTest {
@@ -31,6 +34,7 @@ class MangaReaderTextSessionTest {
     private val store = FakeModelStore()
     private val translation = FakeTranslation()
     private val pageLanguage = MutableStateFlow<LanguageTag?>(null)
+    private lateinit var languages: TranslationLanguageContext
     private val text = ImageRect(420, 140, 480, 330)
     private val container = ImageRect(380, 100, 520, 360)
 
@@ -181,7 +185,28 @@ class MangaReaderTextSessionTest {
     }
 
     @Test
-    fun `a translation engine that needs setup stops drawing translations but not tapping`() = runTest {
+    fun `another target replaces translations drawn on the page`() = runTest {
+        recognition.regions = listOf(bubble("素直に", text, container))
+        val surface = FakeSurface(0)
+        val session = session()
+        session.onVisibleSurfaces(listOf(surface))
+        session.setOverlay(true)
+        session.setActive(true)
+        runCurrent()
+
+        languages.selectTarget(FRENCH)
+        runCurrent()
+
+        translation.requests.map { it.targetLanguage } shouldContainExactly listOf(
+            TranslationTargetLanguageSelection.Default,
+            TranslationTargetLanguageSelection.Explicit(FRENCH),
+        )
+        session.decoration(surface.page).first()!!.overlays.map { it.text } shouldContainExactly
+            listOf("素直に".uppercase())
+    }
+
+    @Test
+    fun `a missing target stops drawing translations but not tapping`() = runTest {
         recognition.regions = listOf(bubble("素直に", text, container))
         translation.preparation = TranslationPreparation.TargetLanguageRequired(
             sourceLanguage = JAPANESE,
@@ -195,7 +220,7 @@ class MangaReaderTextSessionTest {
         runCurrent()
 
         session.state.value.progress shouldBe
-            MangaReaderTextProgress.TranslationUnavailable(MangaPageTranslationIssue.SetupRequired)
+            MangaReaderTextProgress.TranslationUnavailable(MangaPageTranslationIssue.TargetRequired)
         session.regionAt(surface.page, x = 390, y = 350)?.text shouldBe "素直に"
     }
 
@@ -216,15 +241,17 @@ class MangaReaderTextSessionTest {
         recognition.recognized shouldContainExactly listOf(ImageContentKey("page-0"), ImageContentKey("page-1"))
     }
 
-    private fun TestScope.session(declaredLanguage: LanguageTag? = JAPANESE) =
-        MangaReaderTextSession(
+    private fun TestScope.session(declaredLanguage: LanguageTag? = JAPANESE): MangaReaderTextSession {
+        languages = TranslationLanguageContext(defaultTarget = { null }, store = null, scope = backgroundScope)
+        return MangaReaderTextSession(
             recognition = recognition,
             modelStore = store,
-            translator = MangaPageTranslator(translation),
+            translator = MangaPageTranslator(translation, languages, engineName = { null }),
             installPlatformModels = { _, _ -> TextRecognitionPlatformModelsResult.Installed },
             scope = backgroundScope,
             declaredLanguage = { declaredLanguage },
             pageLanguage = pageLanguage,
             sampleBackground = { _, _ -> Color.WHITE },
         )
+    }
 }

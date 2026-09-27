@@ -1,6 +1,7 @@
 package mihon.entry.interactions.manga.reader.text.session
 
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
+import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslationIssue
 import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
 import mihon.text.recognition.api.component.TextRecognitionComponentId
@@ -121,14 +122,6 @@ internal data class MangaPageTextOverlay(
     val text: String,
     val background: Int,
 )
-
-internal enum class MangaPageTranslationIssue {
-    /** The translation engine needs the user (setup, consent, or language data) first. */
-    SetupRequired,
-
-    /** The chosen engine opens its own surface or needs an action per text, so nothing can be drawn. */
-    EngineUnsupported,
-}
 
 internal data class MangaPageTextHighlight(
     val page: ReaderPage,

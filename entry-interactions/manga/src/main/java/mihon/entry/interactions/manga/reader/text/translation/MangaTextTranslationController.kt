@@ -41,6 +41,12 @@ internal class MangaTextTranslationController(
         hostCoordinator.languages.selectSource(language)
     }
 
+    /** The name of the engine page translations use: the one chosen in this session, else the profile's. */
+    fun pageEngineName(): String? {
+        val engine = hostCoordinator.languages.choices.value.engine ?: hostCoordinator.profileSelectedEngine
+        return hostCoordinator.engineStates.value.firstOrNull { it.engine.id == engine }?.engine?.engineName
+    }
+
     fun translate(
         text: String,
         language: LanguageTag,

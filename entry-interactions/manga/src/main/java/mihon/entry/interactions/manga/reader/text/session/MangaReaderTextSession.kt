@@ -19,6 +19,7 @@ import mihon.entry.interactions.manga.reader.text.overlay.sampleTextBackground
 import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextDecoration
 import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextSurface
 import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslation
+import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslationIssue
 import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslator
 import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.ModelArtifactStore
@@ -70,6 +71,7 @@ internal class MangaReaderTextSession(
 
     init {
         scope.launch { pageLanguage.distinctUntilChanged().collect(::usePageLanguage) }
+        scope.launch { translator.choicesChanged.collect { translateAgain() } }
     }
 
     fun setActive(active: Boolean) {
@@ -299,12 +301,8 @@ internal class MangaReaderTextSession(
                 val text = when (val translation = translator.translate(region.text, result.language, pageText)) {
                     is MangaPageTranslation.Translated -> translation.text
                     MangaPageTranslation.Skipped -> continue
-                    MangaPageTranslation.SetupRequired -> {
-                        reportTranslationIssue(MangaPageTranslationIssue.SetupRequired)
-                        return false
-                    }
-                    MangaPageTranslation.EngineUnsupported -> {
-                        reportTranslationIssue(MangaPageTranslationIssue.EngineUnsupported)
+                    is MangaPageTranslation.Blocked -> {
+                        reportTranslationIssue(translation.issue)
                         return false
                     }
                 }
@@ -320,6 +318,13 @@ internal class MangaReaderTextSession(
             mutableState.update { it.copy(overlays = it.overlays + (page to overlays.toList())) }
         }
         return true
+    }
+
+    /** Replaces drawn translations with ones made with the current target and engine. */
+    private fun translateAgain() {
+        cancelTranslation()
+        mutableState.update { it.copy(overlays = emptyMap(), translationIssue = null) }
+        translateRecognized()
     }
 
     private fun reportTranslationIssue(issue: MangaPageTranslationIssue) {

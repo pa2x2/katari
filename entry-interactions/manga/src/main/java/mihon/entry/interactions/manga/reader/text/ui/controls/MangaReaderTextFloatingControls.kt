@@ -67,7 +67,14 @@ internal fun MangaReaderTextFloatingControls(
             toolbar(
                 Modifier
                     .layout { measurable, constraints ->
-                        val placeable = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
+                        // Measured against the area it is placed in, so a toolbar that fills its width stays on screen.
+                        val placeable = measurable.measure(
+                            constraints.copy(
+                                minWidth = 0,
+                                minHeight = 0,
+                                maxWidth = area.width.coerceIn(0, constraints.maxWidth),
+                            ),
+                        )
                         size = IntSize(placeable.width, placeable.height)
                         layout(placeable.width, placeable.height) {
                             placeable.place(dragged ?: placement.offsetIn(area, size))

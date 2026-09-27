@@ -51,6 +51,7 @@ import java.io.File
 
 internal val JAPANESE = LanguageTag.require("ja")
 internal val KOREAN = LanguageTag.require("ko")
+internal val FRENCH = LanguageTag.require("fr")
 internal val PAGE_SIZE = ImageSize(1200, 1800)
 internal val PIPELINE = TextRecognitionPipeline.Staged(
     TextRecognitionComponentId("example.detector"),
@@ -156,9 +157,11 @@ internal class FakeModelStore : ModelArtifactStore {
 internal class FakeTranslation : TranslationFeature {
     var preparation: TranslationPreparation? = null
     val translated = mutableListOf<String>()
+    val requests = mutableListOf<TranslationRequest>()
 
-    override suspend fun prepare(request: TranslationRequest): TranslationPreparation = preparation
-        ?: TranslationPreparation.Ready(
+    override suspend fun prepare(request: TranslationRequest): TranslationPreparation {
+        requests += request
+        return preparation ?: TranslationPreparation.Ready(
             translation = Ready(request.text),
             request = ResolvedTranslationRequest(
                 text = request.text,
@@ -168,6 +171,7 @@ internal class FakeTranslation : TranslationFeature {
             ),
             presentation = PRESENTATION,
         )
+    }
 
     override suspend fun translate(ready: ReadyTranslation): TranslationExecution {
         val text = (ready as Ready).text

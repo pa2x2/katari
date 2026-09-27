@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.Flow
 import mihon.entry.interactions.manga.reader.text.interaction.MangaReaderTextInteraction
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextBlocker
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextState
+import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslationIssue
 import mihon.entry.interactions.manga.reader.text.ui.controls.MangaReaderTextControlsEdge
 import mihon.entry.interactions.manga.reader.text.ui.controls.MangaReaderTextControlsPlacement
 import mihon.entry.interactions.manga.reader.text.ui.controls.MangaReaderTextFloatingControls
@@ -71,6 +72,7 @@ internal fun MangaReaderTextLayer(
     var approvingPlatform by remember { mutableStateOf<MangaReaderTextBlocker.PlatformModelsRequired?>(null) }
     var choosingLanguage by remember { mutableStateOf(false) }
     var showingLanguages by remember { mutableStateOf(false) }
+    var disclosing by remember { mutableStateOf<MangaPageTranslationIssue.DisclosureRequired?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val choices by translationCoordinator.languages.choices.collectAsState()
     val target = remember(choices) { translationCoordinator.languages.effectiveTarget(choices) }
@@ -115,7 +117,13 @@ internal fun MangaReaderTextLayer(
                     onChooseLanguage = { choosingLanguage = true },
                     onOpenLanguages = { showingLanguages = true },
                     onOpenSettings = onOpenSettings,
-                    onOpenTranslationSettings = onOpenTranslationSettings,
+                    onFixTranslationIssue = { issue ->
+                        translationCoordinator.fixPageTranslation(
+                            issue = issue,
+                            openSettings = onOpenTranslationSettings,
+                            askDisclosure = { disclosing = it },
+                        )
+                    },
                     onToggleOverlay = onToggleOverlay,
                     onToggleOriginal = onToggleOriginal,
                     onSelectArea = { selectingArea = true },
@@ -162,6 +170,18 @@ internal fun MangaReaderTextLayer(
                 onApprovePlatformModels(blocker)
             },
             onDismiss = { approvingPlatform = null },
+        )
+    }
+    disclosing?.let { issue ->
+        MangaPageTranslationDisclosureDialog(
+            issue = issue,
+            onConfirm = {
+                disclosing = null
+                translationCoordinator.handleExternalAction(
+                    TranslationSessionExternalAction.ConfirmProviderDisclosure(issue.engine, issue.disclosure),
+                ) {}
+            },
+            onDismiss = { disclosing = null },
         )
     }
     if (showingLanguages) {

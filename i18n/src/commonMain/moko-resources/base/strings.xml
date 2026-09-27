@@ -530,7 +530,16 @@
     <string name="reader_text_show_original">Show original text</string>
     <string name="reader_text_show_translations">Show translations</string>
     <string name="reader_text_translating">Translating…</string>
-    <string name="reader_text_translation_setup">Translation needs setup before it can show on the page</string>
+    <string name="reader_text_translation_same_language">This page is already in %1$s</string>
+    <string name="reader_text_translation_target_required">Choose a language to show translations on the page</string>
+    <string name="reader_text_translation_unsupported_pair">%1$s can\'t translate %2$s → %3$s</string>
+    <string name="reader_text_translation_unsupported_pair_unnamed">%1$s → %2$s can\'t be translated</string>
+    <string name="reader_text_translation_language_data">%1$s needs language data</string>
+    <string name="reader_text_translation_not_set_up">%1$s isn\'t set up yet</string>
+    <string name="reader_text_translation_engine_required">Choose a translation engine to show translations on the page</string>
+    <string name="reader_text_translation_change">Change</string>
+    <string name="reader_text_translation_set_up">Set up</string>
+    <string name="reader_text_translation_choose">Choose</string>
     <string name="reader_text_translation_surface">This translation engine cannot show translations on the page</string>
     <string name="reader_text_languages">Languages for this series</string>
     <string name="reader_text_page_language">Page language</string>

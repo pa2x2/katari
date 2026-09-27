@@ -1,6 +1,7 @@
 package mihon.entry.interactions.manga.reader.text.ui.controls
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -31,9 +32,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.Flow
-import mihon.entry.interactions.manga.reader.text.session.MangaPageTranslationIssue
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextBlocker
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextProgress
+import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslationIssue
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
 import mihon.model.artifacts.api.state.ModelArtifactState
 import mihon.model.artifacts.ui.state.formatModelArtifactSize
@@ -55,7 +56,7 @@ internal fun MangaReaderTextToolbar(
     onChooseLanguage: () -> Unit,
     onOpenLanguages: () -> Unit,
     onOpenSettings: () -> Unit,
-    onOpenTranslationSettings: () -> Unit,
+    onFixTranslationIssue: (MangaPageTranslationIssue) -> Unit,
     onToggleOverlay: () -> Unit,
     onToggleOriginal: () -> Unit,
     onSelectArea: () -> Unit,
@@ -68,79 +69,83 @@ internal fun MangaReaderTextToolbar(
         tonalElevation = 6.dp,
         shadowElevation = 6.dp,
     ) {
-        Row(
-            modifier = Modifier.padding(start = 16.dp, end = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            if (progress.isWorking) {
-                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
-            }
-            // Once pages are ready the languages say everything the hint would.
-            if (progress != MangaReaderTextProgress.Ready) {
-                Text(
-                    text = progressText(progress, observeModels),
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.weight(1f, fill = false).padding(vertical = 12.dp),
-                )
-            }
-            AssistChip(
-                onClick = onOpenLanguages,
-                label = { Text(languages, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                modifier = Modifier.weight(1f, fill = false),
-                trailingIcon = { Icon(Icons.Filled.ArrowDropDown, contentDescription = null) },
-            )
-            when (val blocker = (progress as? MangaReaderTextProgress.Blocked)?.blocker) {
-                is MangaReaderTextBlocker.ModelsRequired -> TextButton(onClick = { onDownloadModels(blocker.models) }) {
-                    Text(stringResource(MR.strings.action_download))
+        Column {
+            Row(
+                modifier = Modifier.padding(start = 16.dp, end = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                if (progress.isWorking) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
                 }
-                is MangaReaderTextBlocker.PlatformModelsRequired -> if (!blocker.installing) {
-                    TextButton(onClick = { onDownloadPlatformModels(blocker) }) {
+                // Once pages are ready the languages say everything the hint would; page translation problems get a row
+                // of their own below.
+                val showsProgress = progress != MangaReaderTextProgress.Ready &&
+                    progress !is MangaReaderTextProgress.TranslationUnavailable
+                if (showsProgress) {
+                    Text(
+                        text = progressText(progress, observeModels),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f, fill = false).padding(vertical = 12.dp),
+                    )
+                }
+                AssistChip(
+                    onClick = onOpenLanguages,
+                    label = { Text(languages, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                    modifier = Modifier.weight(1f, fill = false),
+                    trailingIcon = { Icon(Icons.Filled.ArrowDropDown, contentDescription = null) },
+                )
+                when (val blocker = (progress as? MangaReaderTextProgress.Blocked)?.blocker) {
+                    is MangaReaderTextBlocker.ModelsRequired -> TextButton(
+                        onClick = { onDownloadModels(blocker.models) },
+                    ) {
                         Text(stringResource(MR.strings.action_download))
                     }
-                }
-                is MangaReaderTextBlocker.PipelineChoiceRequired -> TextButton(onClick = onOpenSettings) {
-                    Text(stringResource(MR.strings.action_settings))
-                }
-                is MangaReaderTextBlocker.LanguageRequired -> TextButton(onClick = onChooseLanguage) {
-                    Text(stringResource(MR.strings.reader_text_choose_language))
-                }
-                else -> if (progress is MangaReaderTextProgress.TranslationUnavailable) {
-                    TextButton(onClick = onOpenTranslationSettings) {
+                    is MangaReaderTextBlocker.PlatformModelsRequired -> if (!blocker.installing) {
+                        TextButton(onClick = { onDownloadPlatformModels(blocker) }) {
+                            Text(stringResource(MR.strings.action_download))
+                        }
+                    }
+                    is MangaReaderTextBlocker.PipelineChoiceRequired -> TextButton(onClick = onOpenSettings) {
                         Text(stringResource(MR.strings.action_settings))
                     }
-                } else {
-                    IconButton(onClick = onSelectArea) {
+                    is MangaReaderTextBlocker.LanguageRequired -> TextButton(onClick = onChooseLanguage) {
+                        Text(stringResource(MR.strings.reader_text_choose_language))
+                    }
+                    else -> IconButton(onClick = onSelectArea) {
                         Icon(
                             Icons.Outlined.HighlightAlt,
                             contentDescription = stringResource(MR.strings.reader_text_select_area),
                         )
                     }
                 }
-            }
-            IconButton(onClick = onToggleOverlay) {
-                Icon(
-                    imageVector = Icons.Outlined.Subtitles,
-                    contentDescription = stringResource(MR.strings.pref_page_text_translation_overlay),
-                    tint = if (overlay) MaterialTheme.colorScheme.primary else LocalContentColor.current,
-                )
-            }
-            if (overlay) {
-                IconButton(onClick = onToggleOriginal) {
+                IconButton(onClick = onToggleOverlay) {
                     Icon(
-                        imageVector = if (showOriginal) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
-                        contentDescription = stringResource(
-                            if (showOriginal) {
-                                MR.strings.reader_text_show_translations
-                            } else {
-                                MR.strings.reader_text_show_original
-                            },
-                        ),
+                        imageVector = Icons.Outlined.Subtitles,
+                        contentDescription = stringResource(MR.strings.pref_page_text_translation_overlay),
+                        tint = if (overlay) MaterialTheme.colorScheme.primary else LocalContentColor.current,
                     )
                 }
+                if (overlay) {
+                    IconButton(onClick = onToggleOriginal) {
+                        Icon(
+                            imageVector = if (showOriginal) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
+                            contentDescription = stringResource(
+                                if (showOriginal) {
+                                    MR.strings.reader_text_show_translations
+                                } else {
+                                    MR.strings.reader_text_show_original
+                                },
+                            ),
+                        )
+                    }
+                }
+                IconButton(onClick = onClose) {
+                    Icon(Icons.Outlined.Close, contentDescription = stringResource(MR.strings.action_close))
+                }
             }
-            IconButton(onClick = onClose) {
-                Icon(Icons.Outlined.Close, contentDescription = stringResource(MR.strings.action_close))
+            (progress as? MangaReaderTextProgress.TranslationUnavailable)?.let {
+                MangaPageTranslationIssueRow(issue = it.issue, onFix = onFixTranslationIssue)
             }
         }
     }
@@ -154,10 +159,7 @@ private fun progressText(
     MangaReaderTextProgress.Waiting -> stringResource(MR.strings.reader_text_waiting)
     MangaReaderTextProgress.Recognizing -> stringResource(MR.strings.reader_text_recognizing)
     MangaReaderTextProgress.Translating -> stringResource(MR.strings.reader_text_translating)
-    is MangaReaderTextProgress.TranslationUnavailable -> when (progress.issue) {
-        MangaPageTranslationIssue.SetupRequired -> stringResource(MR.strings.reader_text_translation_setup)
-        MangaPageTranslationIssue.EngineUnsupported -> stringResource(MR.strings.reader_text_translation_surface)
-    }
+    is MangaReaderTextProgress.TranslationUnavailable -> mangaPageTranslationIssueMessage(progress.issue)
     MangaReaderTextProgress.Ready -> stringResource(MR.strings.reader_text_ready)
     MangaReaderTextProgress.NoText -> stringResource(MR.strings.reader_text_no_text)
     is MangaReaderTextProgress.Failed -> stringResource(MR.strings.reader_text_failed, progress.message.orEmpty())

@@ -42,6 +42,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -89,6 +90,7 @@ import mihon.entry.viewer.settings.ViewerSettingSource
 import mihon.entry.viewer.settings.updateEntry
 import mihon.language.api.tag.LanguageTag
 import mihon.text.recognition.api.host.TextRecognitionHostActions
+import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationHostActions
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
@@ -174,7 +176,11 @@ internal class ReaderViewModel @JvmOverloads constructor(
     val textSession = MangaReaderTextSession(
         recognition = Injekt.get(),
         modelStore = Injekt.get(),
-        translator = MangaPageTranslator(Injekt.get()),
+        translator = MangaPageTranslator(
+            feature = Injekt.get(),
+            languages = textTranslation.hostCoordinator.languages,
+            engineName = textTranslation::pageEngineName,
+        ),
         installPlatformModels = textRecognitionHostActions::installPlatformModels,
         scope = viewModelScope,
         declaredLanguage = {
@@ -203,6 +209,11 @@ internal class ReaderViewModel @JvmOverloads constructor(
             .flatMapLatest { settings -> settings.pageTextTranslationOverlay.state.map { it.effectiveValue } }
             .distinctUntilChanged()
             .onEach(textSession::setOverlay)
+            .launchIn(viewModelScope)
+        // A download or disclosure accepted from the translate toolbar lets page translations continue.
+        textTranslation.hostCoordinator.results
+            .filter { it == TranslationHostActionResult.Completed || it == TranslationHostActionResult.ModelsReady }
+            .onEach { textSession.resume() }
             .launchIn(viewModelScope)
     }
 
