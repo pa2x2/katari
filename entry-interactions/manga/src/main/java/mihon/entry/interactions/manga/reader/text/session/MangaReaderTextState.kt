@@ -1,6 +1,7 @@
 package mihon.entry.interactions.manga.reader.text.session
 
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
+import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslationIssue
 import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
 import mihon.text.recognition.api.component.TextRecognitionComponentId
@@ -14,7 +15,12 @@ import mihon.text.recognition.api.result.TextRecognitionResult
  */
 internal data class MangaReaderTextState(
     val active: Boolean = false,
+    /** The language pages are read in, once known. */
     val language: LanguageTag? = null,
+    /** The language the source declares for its content; null for sources in several languages. */
+    val declaredLanguage: LanguageTag? = null,
+    /** Whether [language] was chosen for the series rather than taken from the source. */
+    val languageKept: Boolean = false,
     val blocker: MangaReaderTextBlocker? = null,
     val visiblePages: List<ReaderPage> = emptyList(),
     val pages: Map<ReaderPage, MangaPageTextStatus> = emptyMap(),
@@ -116,14 +122,6 @@ internal data class MangaPageTextOverlay(
     val text: String,
     val background: Int,
 )
-
-internal enum class MangaPageTranslationIssue {
-    /** The translation engine needs the user (setup, consent, or language data) first. */
-    SetupRequired,
-
-    /** The chosen engine opens its own surface or needs an action per text, so nothing can be drawn. */
-    EngineUnsupported,
-}
 
 internal data class MangaPageTextHighlight(
     val page: ReaderPage,

@@ -3,6 +3,7 @@ package mihon.translation.runtime.language
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import mihon.language.api.tag.LanguageTag
+import mihon.translation.api.language.TranslationDefaultTarget
 import mihon.translation.api.request.TranslationTargetLanguageSelection
 import mihon.translation.runtime.feature.TranslationDefaultTargetLanguageResolver
 import mihon.translation.runtime.preference.ProfileTranslationPreferences
@@ -12,12 +13,16 @@ internal class ProfileTranslationDefaultTargetLanguageResolver(
     private val preferences: ProfileTranslationPreferences,
     private val effectiveUiLocale: () -> Locale? = ::effectiveUiLocale,
 ) : TranslationDefaultTargetLanguageResolver {
-    override fun resolve(): LanguageTag? {
+    override fun resolve(): TranslationDefaultTarget? {
         return when (val selection = preferences.targetLanguage.get()) {
             TranslationTargetLanguageSelection.Default ->
-                effectiveUiLocale()?.toLanguageTag()?.let(LanguageTag::parse)
+                effectiveUiLocale()
+                    ?.toLanguageTag()
+                    ?.let(LanguageTag::parse)
+                    ?.let { TranslationDefaultTarget(it, followsAppLanguage = true) }
 
-            is TranslationTargetLanguageSelection.Explicit -> selection.language
+            is TranslationTargetLanguageSelection.Explicit ->
+                TranslationDefaultTarget(selection.language, followsAppLanguage = false)
         }
     }
 }

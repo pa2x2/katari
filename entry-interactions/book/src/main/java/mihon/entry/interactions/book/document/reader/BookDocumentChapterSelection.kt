@@ -130,6 +130,7 @@ internal class BookDocumentChapterSelection(
                 identity = projection.identity,
                 text = projection.text,
                 languageContextText = projection.languageContextText,
+                languageTags = projection.languageTags,
                 boundsInReaderRoot = bounds,
                 isSettled = isSelectionSettled,
             ),

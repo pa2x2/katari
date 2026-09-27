@@ -38,6 +38,7 @@ import mihon.translation.api.engine.TranslationProviderId
 import mihon.translation.api.preparation.TranslationEngineChoiceReason
 import mihon.translation.api.preparation.TranslationPreparation
 import mihon.translation.api.preparation.TranslationSystemSetupReason
+import mihon.translation.api.preparation.TranslationTargetChoiceReason
 import mihon.translation.api.preparation.TranslationUnavailableReason
 import mihon.translation.api.provider.TranslationInvocationPolicy
 import mihon.translation.api.provider.TranslationProviderDisclosure
@@ -47,11 +48,13 @@ import mihon.translation.api.request.TranslationRequest
 import mihon.translation.api.request.TranslationSourceLanguageSelection
 import mihon.translation.api.request.TranslationTargetLanguageSelection
 import mihon.translation.api.result.TranslationResult
+import mihon.translation.ui.picker.language.translationLanguageOption
 import mihon.translation.ui.session.TranslationSelectionAnchor
 import mihon.translation.ui.session.TranslationSessionFailure
 import mihon.translation.ui.session.TranslationSessionInput
 import mihon.translation.ui.session.TranslationSessionResult
 import mihon.translation.ui.session.TranslationSessionState
+import mihon.translation.ui.session.language.TranslationLanguageSuggestions
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -428,7 +431,7 @@ class TranslationSessionOverlayTest {
     }
 
     @Test
-    fun unsupported_language_pair_opens_existing_language_correction_instead_of_retrying() {
+    fun unsupported_language_pair_opens_the_target_picker_instead_of_retrying() {
         var externalAction: TranslationSessionExternalAction? = null
         render(
             state = TranslationSessionState.PreparationRequired(
@@ -446,15 +449,42 @@ class TranslationSessionOverlayTest {
             composeRule.activity.stringResource(MR.strings.action_retry),
         ).assertCountEquals(0)
         composeRule.onNodeWithText(
-            composeRule.activity.stringResource(MR.strings.translation_change_languages),
+            composeRule.activity.stringResource(MR.strings.translation_choose_target_language),
         )
             .assertIsDisplayed()
             .performClick()
 
         composeRule.runOnIdle {
-            assertTrue(
-                externalAction == TranslationSessionExternalAction.ChangeLanguages(CATALAN, TARGET),
-            )
+            assertTrue(externalAction == TranslationSessionExternalAction.ChooseTargetLanguage)
+        }
+    }
+
+    @Test
+    fun suggested_target_translates_from_the_compact_popup() {
+        val preparation = TranslationPreparation.TargetLanguageRequired(
+            sourceLanguage = SOURCE,
+            reason = TranslationTargetChoiceReason.SourceEqualsTarget,
+        )
+        var selectedTarget: LanguageTag? = null
+        var externalAction: TranslationSessionExternalAction? = null
+        render(
+            state = TranslationSessionState.PreparationRequired(
+                input = input(anchor = TranslationSelectionAnchor(400f, 280f, 680f, 340f)),
+                preparation = preparation,
+            ),
+            onExternalAction = { externalAction = it },
+            languageSuggestions = TranslationLanguageSuggestions(preparation, listOf(TARGET), engineName = null),
+            onSelectTarget = { selectedTarget = it },
+        )
+
+        composeRule.onNodeWithText(
+            composeRule.activity.stringResource(MR.strings.translation_language_more),
+        ).performClick()
+        composeRule.onNodeWithText(translationLanguageOption(TARGET).nativeName).performClick()
+
+        composeRule.runOnIdle {
+            assertTrue(externalAction == TranslationSessionExternalAction.ChooseTargetLanguage)
+            assertTrue(selectedTarget == TARGET)
         }
     }
 
@@ -475,7 +505,7 @@ class TranslationSessionOverlayTest {
             composeRule.activity.stringResource(MR.strings.action_retry),
         ).assertIsDisplayed()
         composeRule.onAllNodesWithText(
-            composeRule.activity.stringResource(MR.strings.translation_change_languages),
+            composeRule.activity.stringResource(MR.strings.translation_choose_target_language),
         ).assertCountEquals(0)
     }
 
@@ -564,13 +594,22 @@ class TranslationSessionOverlayTest {
     private fun render(
         state: TranslationSessionState,
         onExternalAction: (TranslationSessionExternalAction) -> Unit = {},
+        languageSuggestions: TranslationLanguageSuggestions? = null,
+        onSelectTarget: (LanguageTag) -> Unit = {},
     ) {
-        render(stateProvider = { state }, onExternalAction = onExternalAction)
+        render(
+            stateProvider = { state },
+            onExternalAction = onExternalAction,
+            languageSuggestions = languageSuggestions,
+            onSelectTarget = onSelectTarget,
+        )
     }
 
     private fun render(
         stateProvider: () -> TranslationSessionState,
         onExternalAction: (TranslationSessionExternalAction) -> Unit = {},
+        languageSuggestions: TranslationLanguageSuggestions? = null,
+        onSelectTarget: (LanguageTag) -> Unit = {},
     ) {
         composeRule.setContent {
             MaterialTheme {
@@ -591,6 +630,8 @@ class TranslationSessionOverlayTest {
                         onSelectSource = {},
                         onSelectEngine = {},
                         onExternalAction = onExternalAction,
+                        onSelectTarget = onSelectTarget,
+                        languageSuggestions = languageSuggestions,
                     )
                 }
             }

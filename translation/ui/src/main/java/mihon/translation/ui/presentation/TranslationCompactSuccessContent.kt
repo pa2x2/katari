@@ -1,18 +1,17 @@
 package mihon.translation.ui.presentation
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.OpenInFull
 import androidx.compose.material.icons.outlined.Settings
@@ -31,9 +30,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import mihon.translation.api.result.TranslationResult
+import mihon.translation.ui.presentation.language.TranslationLanguageArrow
+import mihon.translation.ui.presentation.language.TranslationLanguageChipPair
+import mihon.translation.ui.presentation.language.TranslationSourceLanguageChip
+import mihon.translation.ui.presentation.language.TranslationTargetLanguageChip
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun TranslationCompactSuccessContent(
     result: TranslationResult,
@@ -52,7 +56,8 @@ internal fun TranslationCompactSuccessContent(
     onDismiss: (() -> Unit)?,
     onCopy: (String) -> Unit,
     onExpand: () -> Unit,
-    onChangeLanguages: () -> Unit,
+    onChooseSource: () -> Unit,
+    onChooseTarget: () -> Unit,
     onChangeEngine: () -> Unit,
 ) {
     var resultOverflowed by remember(result.translatedText) { mutableStateOf(false) }
@@ -91,53 +96,88 @@ internal fun TranslationCompactSuccessContent(
         )
     }
 
-    Row(
+    // Changeable languages are wider than their names, so the actions move below them when both do not fit.
+    FlowRow(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
+        itemVerticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(modifier = Modifier.weight(1f)) {
-            if (sourceSpeechTarget != null && targetSpeechTarget != null && onSpeechToggle != null) {
-                TranslationCompactSpeechLanguagePair(
-                    sourceLanguage = sourceLanguage,
-                    targetLanguage = targetLanguage,
-                    sourceTarget = sourceSpeechTarget,
-                    targetTarget = targetSpeechTarget,
-                    speechState = speechState,
-                    onSpeechToggle = onSpeechToggle,
-                    modifier = Modifier.widthIn(max = COMPACT_SPEECH_LANGUAGE_PAIR_MAXIMUM_WIDTH),
-                )
-            } else {
-                TranslationLanguagePair(
-                    languagePair = languagePair,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
-        if (showCopy) {
-            TranslationCompactIconButton(
-                icon = Icons.Outlined.ContentCopy,
-                contentDescription = stringResource(MR.strings.copy),
-                onClick = { onCopy(result.translatedText) },
-            )
-        }
-        if (showOverflowAction) {
-            TranslationCompactIconButton(
-                icon = Icons.Outlined.OpenInFull,
-                contentDescription = stringResource(MR.strings.action_expand),
-                onClick = onExpand,
-            )
-        }
-        if (showLanguageChange || showEngineChange) {
-            TranslationCompactMoreMenu(
+        if (sourceSpeechTarget != null && targetSpeechTarget != null && onSpeechToggle != null) {
+            TranslationCompactSpeechLanguagePair(
+                sourceLanguage = sourceLanguage,
+                targetLanguage = targetLanguage,
+                sourceTarget = sourceSpeechTarget,
+                targetTarget = targetSpeechTarget,
+                speechState = speechState,
+                onSpeechToggle = onSpeechToggle,
                 showLanguageChange = showLanguageChange,
+                onChooseSource = onChooseSource,
+                onChooseTarget = onChooseTarget,
+                modifier = if (showLanguageChange) {
+                    Modifier
+                } else {
+                    Modifier.widthIn(max = COMPACT_SPEECH_LANGUAGE_PAIR_MAXIMUM_WIDTH)
+                },
+            )
+        } else if (showLanguageChange) {
+            TranslationLanguageChipPair(
+                sourceLanguage = sourceLanguage,
+                targetLanguage = targetLanguage,
+                onChooseSource = onChooseSource,
+                onChooseTarget = onChooseTarget,
+            )
+        } else {
+            TranslationLanguagePair(
+                languagePair = languagePair,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Row(
+            modifier = Modifier.weight(1f),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            TranslationCompactActions(
+                result = result,
+                showCopy = showCopy,
+                showOverflowAction = showOverflowAction,
                 showEngineChange = showEngineChange,
-                onChangeLanguages = onChangeLanguages,
+                onCopy = onCopy,
+                onExpand = onExpand,
                 onChangeEngine = onChangeEngine,
             )
         }
+    }
+}
+
+@Composable
+private fun TranslationCompactActions(
+    result: TranslationResult,
+    showCopy: Boolean,
+    showOverflowAction: Boolean,
+    showEngineChange: Boolean,
+    onCopy: (String) -> Unit,
+    onExpand: () -> Unit,
+    onChangeEngine: () -> Unit,
+) {
+    if (showCopy) {
+        TranslationCompactIconButton(
+            icon = Icons.Outlined.ContentCopy,
+            contentDescription = stringResource(MR.strings.copy),
+            onClick = { onCopy(result.translatedText) },
+        )
+    }
+    if (showOverflowAction) {
+        TranslationCompactIconButton(
+            icon = Icons.Outlined.OpenInFull,
+            contentDescription = stringResource(MR.strings.action_expand),
+            onClick = onExpand,
+        )
+    }
+    if (showEngineChange) {
+        TranslationCompactMoreMenu(onChangeEngine = onChangeEngine)
     }
 }
 
@@ -149,6 +189,9 @@ private fun TranslationCompactSpeechLanguagePair(
     targetTarget: TranslationResultSpeechTarget,
     speechState: TranslationResultSpeechState,
     onSpeechToggle: (TranslationResultSpeechTarget) -> Unit,
+    showLanguageChange: Boolean,
+    onChooseSource: () -> Unit,
+    onChooseTarget: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -156,41 +199,35 @@ private fun TranslationCompactSpeechLanguagePair(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TranslationSpeechActionButton(sourceTarget, speechState, onSpeechToggle, compact = true)
-        Text(
-            text = sourceLanguage,
-            modifier = Modifier.widthIn(max = COMPACT_LANGUAGE_MAXIMUM_WIDTH),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Icon(
-            imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
-            contentDescription = null,
-            modifier = Modifier
-                .padding(horizontal = 4.dp)
-                .size(16.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        if (showLanguageChange) {
+            TranslationSourceLanguageChip(sourceLanguage, onChooseSource)
+        } else {
+            TranslationCompactLanguageName(sourceLanguage)
+        }
+        TranslationLanguageArrow()
         TranslationSpeechActionButton(targetTarget, speechState, onSpeechToggle, compact = true)
-        Text(
-            text = targetLanguage,
-            modifier = Modifier.widthIn(max = COMPACT_LANGUAGE_MAXIMUM_WIDTH),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        if (showLanguageChange) {
+            TranslationTargetLanguageChip(targetLanguage, onChooseTarget)
+        } else {
+            TranslationCompactLanguageName(targetLanguage)
+        }
     }
 }
 
 @Composable
-private fun TranslationCompactMoreMenu(
-    showLanguageChange: Boolean,
-    showEngineChange: Boolean,
-    onChangeLanguages: () -> Unit,
-    onChangeEngine: () -> Unit,
-) {
+private fun TranslationCompactLanguageName(language: String) {
+    Text(
+        text = language,
+        modifier = Modifier.widthIn(max = COMPACT_LANGUAGE_MAXIMUM_WIDTH),
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
+}
+
+@Composable
+private fun TranslationCompactMoreMenu(onChangeEngine: () -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd)) {
         TranslationCompactIconButton(
@@ -202,36 +239,19 @@ private fun TranslationCompactMoreMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
         ) {
-            if (showLanguageChange) {
-                DropdownMenuItem(
-                    text = { Text(stringResource(MR.strings.action_change_language)) },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Outlined.Language,
-                            contentDescription = null,
-                        )
-                    },
-                    onClick = {
-                        expanded = false
-                        onChangeLanguages()
-                    },
-                )
-            }
-            if (showEngineChange) {
-                DropdownMenuItem(
-                    text = { Text(stringResource(MR.strings.translation_choose_engine)) },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Outlined.Settings,
-                            contentDescription = null,
-                        )
-                    },
-                    onClick = {
-                        expanded = false
-                        onChangeEngine()
-                    },
-                )
-            }
+            DropdownMenuItem(
+                text = { Text(stringResource(MR.strings.translation_choose_engine)) },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Settings,
+                        contentDescription = null,
+                    )
+                },
+                onClick = {
+                    expanded = false
+                    onChangeEngine()
+                },
+            )
         }
     }
 }

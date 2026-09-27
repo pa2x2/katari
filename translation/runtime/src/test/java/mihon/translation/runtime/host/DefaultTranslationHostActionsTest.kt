@@ -287,6 +287,7 @@ class DefaultTranslationHostActionsTest {
             knownEngineCatalog = registry,
             setupRegistry = registry,
             profileEngineResolver = ProfileTranslationEngineResolver(preferences, registry),
+            defaultTargetResolver = { null },
             inspectionDispatcher = inspectionDispatcher ?: Dispatchers.IO,
             inspectionTimeoutMillis = inspectionTimeoutMillis,
         )

@@ -29,6 +29,7 @@ import mihon.translation.api.engine.TranslationProviderId
 import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationHostActions
 import mihon.translation.api.host.TranslationSetupDestination
+import mihon.translation.api.language.TranslationDefaultTarget
 import mihon.translation.api.language.TranslationLanguagePair
 import mihon.translation.api.language.TranslationLanguageSupport
 import mihon.translation.api.language.TranslationLanguageSupportInspection
@@ -416,6 +417,14 @@ class TranslationSettingsScreenModelTest {
                 { languages -> languages.joinToString(",") { it.value } },
                 { raw -> raw.split(",").mapNotNull(LanguageTag::parse) },
             )
+
+        override fun defaultTarget(): TranslationDefaultTarget? =
+            (defaultTargetLanguage.get() as? TranslationTargetLanguageSelection.Explicit)
+                ?.let { TranslationDefaultTarget(it.language, followsAppLanguage = false) }
+
+        override fun recordRecentLanguage(language: LanguageTag) {
+            recentLanguages.set(listOf(language) + recentLanguages.get().filterNot { it == language })
+        }
 
         override suspend fun deviceAvailability() = TranslationDeviceAvailability.Available
 

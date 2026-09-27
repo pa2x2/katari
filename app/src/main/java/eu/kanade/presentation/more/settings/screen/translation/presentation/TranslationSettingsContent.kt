@@ -25,6 +25,7 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.more.settings.screen.translation.TranslationPlaygroundState
 import eu.kanade.presentation.more.settings.screen.translation.engine.translationEngineLabel
+import eu.kanade.presentation.more.settings.screen.translation.series.SeriesTranslationLanguagesEntry
 import eu.kanade.presentation.more.settings.widget.ProfileSpecificChip
 import kotlinx.coroutines.delay
 import mihon.translation.api.engine.TranslationEngineState
@@ -64,6 +65,8 @@ internal fun TranslationSettingsContent(
     onOpenSetup: () -> Unit,
     onSave: () -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
+    seriesLanguageCount: Int?,
+    onOpenSeriesLanguages: () -> Unit,
 ) {
     val playgroundTitle = stringResource(MR.strings.translation_settings_playground)
     val engineTitle = stringResource(MR.strings.translation_settings_engine)
@@ -118,6 +121,9 @@ internal fun TranslationSettingsContent(
                     onExternalAction = onExternalAction,
                     highlighted = highlightPlayground,
                 )
+            }
+            item {
+                SeriesTranslationLanguagesEntry(count = seriesLanguageCount, onClick = onOpenSeriesLanguages)
             }
         }
     }

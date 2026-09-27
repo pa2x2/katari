@@ -1,7 +1,5 @@
 package eu.kanade.presentation.more.settings.screen.translation
 
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.os.LocaleListCompat
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.CancellationException
@@ -216,10 +214,7 @@ internal class TranslationSettingsScreenModel(
     }
 
     private fun initialPlaygroundDefaults(): TranslationPlaygroundDefaults {
-        val target = when (val selection = hostActions.defaultTargetLanguage.get()) {
-            TranslationTargetLanguageSelection.Default -> effectiveUiLanguage()
-            is TranslationTargetLanguageSelection.Explicit -> selection.language
-        } ?: ENGLISH
+        val target = hostActions.defaultTarget()?.language ?: ENGLISH
         return TranslationPlaygroundDefaults(
             engine = hostActions.selectedEngine.get().takeIf { hostActions.selectedEngine.isSet() },
             targetLanguage = target,
@@ -313,13 +308,6 @@ private data class TranslationPlaygroundDefaults(
     val engine: TranslationEngineId?,
     val targetLanguage: LanguageTag,
 )
-
-private fun effectiveUiLanguage(): LanguageTag? {
-    val locale = AppCompatDelegate.getApplicationLocales().get(0)
-        ?: LocaleListCompat.getAdjustedDefault().get(0)
-        ?: Locale.getDefault()
-    return LanguageTag.parse(locale.toLanguageTag())
-}
 
 private fun LanguageTag.languageCode(): String {
     return Locale.forLanguageTag(value).language

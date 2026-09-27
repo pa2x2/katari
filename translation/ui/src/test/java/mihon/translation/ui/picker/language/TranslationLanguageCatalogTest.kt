@@ -54,6 +54,38 @@ class TranslationLanguageCatalogTest {
     }
 
     @Test
+    fun `exact pairs report targets reachable only from other sources as unpairable`() {
+        val support = TranslationLanguageSupport.ExactPairs(
+            setOf(
+                TranslationLanguagePair(ENGLISH, POLISH),
+                TranslationLanguagePair(ENGLISH, FRENCH),
+                TranslationLanguagePair(SPANISH, FRENCH),
+                TranslationLanguagePair(FRENCH, ENGLISH),
+            ),
+        )
+
+        support.unpairableLanguages(TranslationLanguageRole.Target, SPANISH)
+            .shouldContainExactlyInAnyOrder(POLISH, ENGLISH)
+        support.unpairableLanguages(TranslationLanguageRole.Target, FRENCH)
+            .shouldContainExactlyInAnyOrder(POLISH)
+        support.unpairableLanguages(TranslationLanguageRole.Target, ITALIAN) shouldBe emptySet()
+        support.unpairableLanguages(TranslationLanguageRole.Target, null) shouldBe emptySet()
+        support.unpairableLanguages(TranslationLanguageRole.Source, POLISH) shouldBe emptySet()
+    }
+
+    @Test
+    fun `engines that pair every supported language report nothing unpairable`() {
+        val byRole = TranslationLanguageSupport.ByRole(
+            sourceLanguages = setOf(ENGLISH),
+            targetLanguages = setOf(POLISH, FRENCH),
+        )
+
+        byRole.unpairableLanguages(TranslationLanguageRole.Target, ENGLISH) shouldBe emptySet()
+        TranslationLanguageSupport.AnyLanguage.unpairableLanguages(TranslationLanguageRole.Target, ENGLISH) shouldBe
+            emptySet()
+    }
+
+    @Test
     fun `role support filters independently while broad support uses the global catalog`() {
         val byRole = TranslationLanguageSupport.ByRole(
             sourceLanguages = setOf(ENGLISH, GERMAN),

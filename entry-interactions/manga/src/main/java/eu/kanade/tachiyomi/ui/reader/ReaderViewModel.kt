@@ -35,12 +35,14 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -50,6 +52,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -66,6 +69,7 @@ import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextSession
 import mihon.entry.interactions.manga.reader.text.session.declaredContentLanguage
 import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslator
 import mihon.entry.interactions.manga.reader.text.translation.MangaTextTranslationController
+import mihon.entry.interactions.manga.reader.text.translation.MangaTranslationLanguageStore
 import mihon.entry.interactions.manga.state.mangaProgressState
 import mihon.entry.interactions.manga.state.pageIndex
 import mihon.entry.interactions.media.session.EntryMediaSessionActivitySession
@@ -84,7 +88,10 @@ import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.ViewerSettingBinding
 import mihon.entry.viewer.settings.ViewerSettingSource
 import mihon.entry.viewer.settings.updateEntry
+import mihon.language.api.tag.LanguageTag
 import mihon.text.recognition.api.host.TextRecognitionHostActions
+import mihon.translation.api.host.TranslationHostActionResult
+import mihon.translation.api.host.TranslationHostActions
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withIOContext
@@ -151,25 +158,50 @@ internal class ReaderViewModel @JvmOverloads constructor(
 
     val jumpHistory = MangaReaderJumpHistory()
 
+    private val translationHostActions: TranslationHostActions = Injekt.get()
+    private val textRecognitionHostActions: TextRecognitionHostActions = Injekt.get()
+
+    /** Translates text recognized on pages. */
+    val textTranslation = MangaTextTranslationController(
+        feature = Injekt.get(),
+        hostActions = translationHostActions,
+        scope = viewModelScope,
+        languageStore = MangaTranslationLanguageStore(
+            feature = Injekt.get(),
+            series = state.map { it.manga }.stateIn(viewModelScope, SharingStarted.Eagerly, null),
+        ),
+    )
+
     /** Recognizes page text while the reader's translate mode is on. */
     val textSession = MangaReaderTextSession(
         recognition = Injekt.get(),
         modelStore = Injekt.get(),
-        translator = MangaPageTranslator(Injekt.get()),
-        installPlatformModels = Injekt.get<TextRecognitionHostActions>()::installPlatformModels,
+        translator = MangaPageTranslator(
+            feature = Injekt.get(),
+            languages = textTranslation.hostCoordinator.languages,
+            engineName = textTranslation::pageEngineName,
+        ),
+        installPlatformModels = textRecognitionHostActions::installPlatformModels,
         scope = viewModelScope,
         declaredLanguage = {
             val source = manga?.let { sourceManager.get(it.source) } as? EntryCatalogueSource
             declaredContentLanguage(source?.lang)
         },
+        pageLanguage = textTranslation.pageLanguage,
     )
 
-    /** Translates text recognized on pages. */
-    val textTranslation = MangaTextTranslationController(
-        feature = Injekt.get(),
-        hostActions = Injekt.get(),
-        scope = viewModelScope,
-    )
+    /** Languages page text can be read in. */
+    val textRecognitionLanguages: List<LanguageTag>
+        get() = textRecognitionHostActions.supportedLanguages
+
+    /**
+     * Reads the series' pages in [language] from now on, which also becomes a recent language in every translation
+     * picker.
+     */
+    fun chooseTextLanguage(language: LanguageTag) {
+        translationHostActions.recordRecentLanguage(language)
+        textTranslation.choosePageLanguage(language)
+    }
 
     init {
         settingsBindings
@@ -177,6 +209,11 @@ internal class ReaderViewModel @JvmOverloads constructor(
             .flatMapLatest { settings -> settings.pageTextTranslationOverlay.state.map { it.effectiveValue } }
             .distinctUntilChanged()
             .onEach(textSession::setOverlay)
+            .launchIn(viewModelScope)
+        // A download or disclosure accepted from the translate toolbar lets page translations continue.
+        textTranslation.hostCoordinator.results
+            .filter { it == TranslationHostActionResult.Completed || it == TranslationHostActionResult.ModelsReady }
+            .onEach { textSession.resume() }
             .launchIn(viewModelScope)
     }
 

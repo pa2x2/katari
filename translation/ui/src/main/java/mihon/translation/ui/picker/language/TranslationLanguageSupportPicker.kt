@@ -28,11 +28,10 @@ fun TranslationLanguageSupportPicker(
     selected: LanguageTag?,
     onSelect: (LanguageTag) -> Unit,
     onRetry: () -> Unit,
+    engineName: String?,
     modifier: Modifier = Modifier,
-    defaultOptionLabel: String? = null,
-    defaultOptionSupporting: String? = null,
-    defaultSelected: Boolean = false,
-    onSelectDefault: (() -> Unit)? = null,
+    defaultOption: TranslationLanguageDefaultOption? = null,
+    onSelectDefault: () -> Unit = {},
     recentLanguages: List<LanguageTag> = emptyList(),
 ) {
     when (state) {
@@ -45,18 +44,26 @@ fun TranslationLanguageSupportPicker(
                 translationLanguageOptions(state.support, role, counterpart)
             }
             val recentOptions = remember(options, recentLanguages) {
-                recentLanguages.mapNotNull { recent -> options.firstOrNull { it.tag == recent } }
+                translationRecentLanguageOptions(recentLanguages, options)
+            }
+            val unpairable = remember(state.support, role, counterpart, engineName) {
+                counterpart?.let { source ->
+                    TranslationUnpairableLanguages(
+                        source = source,
+                        engineName = engineName ?: state.engine.value,
+                        options = translationLanguageOptions(state.support.unpairableLanguages(role, source)),
+                    )
+                }
             }
             TranslationLanguagePickerList(
                 options = options,
                 selected = selected,
                 onSelect = onSelect,
                 modifier = modifier,
-                defaultOptionLabel = defaultOptionLabel,
-                defaultOptionSupporting = defaultOptionSupporting,
-                defaultSelected = defaultSelected,
+                defaultOption = defaultOption,
                 onSelectDefault = onSelectDefault,
                 recents = recentOptions,
+                unpairable = unpairable,
             )
         }
         TranslationLanguageSupportState.Idle -> {

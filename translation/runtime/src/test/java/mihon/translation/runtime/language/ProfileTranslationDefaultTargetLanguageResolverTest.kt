@@ -3,6 +3,7 @@ package mihon.translation.runtime.language
 import io.kotest.matchers.shouldBe
 import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.TranslationEngineId
+import mihon.translation.api.language.TranslationDefaultTarget
 import mihon.translation.api.request.TranslationTargetLanguageSelection
 import mihon.translation.runtime.preference.ProfileTranslationPreferences
 import org.junit.jupiter.api.Test
@@ -17,9 +18,9 @@ class ProfileTranslationDefaultTargetLanguageResolverTest {
         var locale = Locale.forLanguageTag("pl-PL")
         val resolver = ProfileTranslationDefaultTargetLanguageResolver(preferences) { locale }
 
-        resolver.resolve() shouldBe LanguageTag.require("pl-PL")
+        resolver.resolve() shouldBe TranslationDefaultTarget(LanguageTag.require("pl-PL"), followsAppLanguage = true)
         locale = Locale.forLanguageTag("de-DE")
-        resolver.resolve() shouldBe LanguageTag.require("de-DE")
+        resolver.resolve() shouldBe TranslationDefaultTarget(LanguageTag.require("de-DE"), followsAppLanguage = true)
     }
 
     @Test
@@ -32,7 +33,7 @@ class ProfileTranslationDefaultTargetLanguageResolverTest {
             Locale.forLanguageTag("pl-PL")
         }
 
-        resolver.resolve() shouldBe LanguageTag.require("es")
+        resolver.resolve() shouldBe TranslationDefaultTarget(LanguageTag.require("es"), followsAppLanguage = false)
     }
 
     private companion object {

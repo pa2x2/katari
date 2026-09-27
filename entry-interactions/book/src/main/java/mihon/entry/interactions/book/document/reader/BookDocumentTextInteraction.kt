@@ -45,6 +45,7 @@ internal sealed interface BookDocumentTextSelection {
         val identity: String,
         val text: String,
         val languageContextText: String,
+        val languageTags: List<String>,
         val boundsInReaderRoot: RectF,
         val isSettled: Boolean,
     ) : BookDocumentTextSelection

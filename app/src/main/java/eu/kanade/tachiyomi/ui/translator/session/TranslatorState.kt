@@ -4,6 +4,7 @@ import mihon.language.api.tag.LanguageTag
 import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.engine.TranslationEngineSelection
 import mihon.translation.api.engine.TranslationEngineState
+import mihon.translation.api.language.TranslationDefaultTarget
 import mihon.translation.api.request.TranslationSourceLanguageSelection
 import mihon.translation.api.request.TranslationTargetLanguageSelection
 import mihon.translation.ui.presentation.TranslationResultSpeechState
@@ -20,7 +21,7 @@ internal data class TranslatorState(
     val text: String,
     val sourceLanguage: TranslationSourceLanguageSelection = TranslationSourceLanguageSelection.Automatic,
     val targetLanguage: TranslationTargetLanguageSelection = TranslationTargetLanguageSelection.Default,
-    val profileTargetLanguage: LanguageTag? = null,
+    val defaultTarget: TranslationDefaultTarget? = null,
     val engine: TranslationEngineSelection = TranslationEngineSelection.ProfileDefault,
     val profileEngine: TranslationEngineId? = null,
     val engineSelectionResolved: Boolean = false,

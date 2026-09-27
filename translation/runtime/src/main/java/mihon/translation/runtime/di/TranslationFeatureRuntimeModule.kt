@@ -55,13 +55,12 @@ val translationFeatureRuntimeModule = ApplicationFeatureRuntimeModule(
         preferences = profilePreferences,
         engineRegistry = registry,
     )
+    val defaultTargetResolver = ProfileTranslationDefaultTargetLanguageResolver(profilePreferences)
     val feature = DefaultTranslationFeature(
         engineRegistry = registry,
         knownEngineCatalog = registry,
         textLanguageDetectors = createPlatformTextLanguageDetectors(context.application),
-        defaultTargetLanguageResolver = ProfileTranslationDefaultTargetLanguageResolver(
-            profilePreferences,
-        ),
+        defaultTargetLanguageResolver = defaultTargetResolver,
         selectedEngine = profileEngineResolver::resolve,
         resultCache = TranslationResultCache(
             directory = { File(context.application.cacheDir, TRANSLATION_CACHE_DIRECTORY) },
@@ -74,6 +73,7 @@ val translationFeatureRuntimeModule = ApplicationFeatureRuntimeModule(
         knownEngineCatalog = registry,
         setupRegistry = registry,
         profileEngineResolver = profileEngineResolver,
+        defaultTargetResolver = defaultTargetResolver,
     )
 
     addSingletonFactory { profilePreferences }

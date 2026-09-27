@@ -36,11 +36,13 @@ import mihon.translation.api.request.TranslationSourceLanguageSelection
 import mihon.translation.api.request.TranslationTargetLanguageSelection
 import mihon.translation.ui.picker.engine.TranslationEnginePickerList
 import mihon.translation.ui.picker.engine.TranslationEngineSelectorRow
+import mihon.translation.ui.picker.language.TranslationLanguageDefaultOption
 import mihon.translation.ui.picker.language.TranslationLanguagePairSelector
 import mihon.translation.ui.picker.language.TranslationLanguagePairSelectorStyle
 import mihon.translation.ui.picker.language.TranslationLanguageRole
 import mihon.translation.ui.picker.language.TranslationLanguageSupportPicker
 import mihon.translation.ui.picker.language.displayName
+import mihon.translation.ui.picker.language.translationDefaultTargetOption
 import mihon.translation.ui.presentation.TranslationPickerSheet
 import mihon.translation.ui.presentation.TranslationResultSpeechSide
 import mihon.translation.ui.presentation.TranslationResultSpeechTarget
@@ -66,6 +68,7 @@ internal fun TranslatorScreenContent(
     onSelectAutomaticSource: () -> Unit,
     onSelectSource: (LanguageTag) -> Unit,
     onSelectTarget: (LanguageTag) -> Unit,
+    onSelectDefaultTarget: () -> Unit,
     onSelectEngine: (TranslationEngineId) -> Unit,
     onSwap: () -> Unit,
     onRetry: () -> Unit,
@@ -180,6 +183,7 @@ internal fun TranslatorScreenContent(
             onSelectAutomaticSource = onSelectAutomaticSource,
             onSelectSource = onSelectSource,
             onSelectTarget = onSelectTarget,
+            onSelectDefaultTarget = onSelectDefaultTarget,
             onSelectEngine = onSelectEngine,
             onRetryLanguageSupport = onRetryLanguageSupport,
         )
@@ -195,6 +199,7 @@ private fun TranslatorPicker(
     onSelectAutomaticSource: () -> Unit,
     onSelectSource: (LanguageTag) -> Unit,
     onSelectTarget: (LanguageTag) -> Unit,
+    onSelectDefaultTarget: () -> Unit,
     onSelectEngine: (TranslationEngineId) -> Unit,
     onRetryLanguageSupport: () -> Unit,
 ) {
@@ -230,16 +235,26 @@ private fun TranslatorPicker(
                     engine = state.activeEngine,
                     role = if (sourcePicker) TranslationLanguageRole.Source else TranslationLanguageRole.Target,
                     counterpart = if (sourcePicker) effectiveTargetLanguage(state) else effectiveSourceLanguage(state),
-                    selected = if (sourcePicker) state.explicitSourceLanguage else effectiveTargetLanguage(state),
+                    selected = if (sourcePicker) state.explicitSourceLanguage else state.explicitTargetLanguage,
                     onSelect = if (sourcePicker) onSelectSource else onSelectTarget,
                     onRetry = onRetryLanguageSupport,
+                    engineName = state.engines.firstOrNull { it.engine.id == state.activeEngine }?.engine?.engineName,
                     modifier = Modifier.weight(1f, fill = false),
-                    defaultOptionLabel = stringResource(MR.strings.translator_detect_language).takeIf { sourcePicker },
-                    defaultOptionSupporting = stringResource(MR.strings.translator_detect_language_summary)
-                        .takeIf { sourcePicker },
-                    defaultSelected = sourcePicker &&
-                        state.sourceLanguage == TranslationSourceLanguageSelection.Automatic,
-                    onSelectDefault = onSelectAutomaticSource.takeIf { sourcePicker },
+                    defaultOption = if (sourcePicker) {
+                        TranslationLanguageDefaultOption(
+                            label = stringResource(MR.strings.translator_detect_language),
+                            supporting = stringResource(MR.strings.translator_detect_language_summary),
+                            selected = state.sourceLanguage == TranslationSourceLanguageSelection.Automatic,
+                        )
+                    } else {
+                        state.defaultTarget?.let { target ->
+                            translationDefaultTargetOption(
+                                target = target,
+                                selected = state.targetLanguage == TranslationTargetLanguageSelection.Default,
+                            )
+                        }
+                    },
+                    onSelectDefault = if (sourcePicker) onSelectAutomaticSource else onSelectDefaultTarget,
                     recentLanguages = state.recentLanguages,
                 )
             }
@@ -274,5 +289,5 @@ private fun effectiveTargetLanguage(state: TranslatorState): LanguageTag? =
     when (val target = state.targetLanguage) {
         is TranslationTargetLanguageSelection.Explicit -> target.language
         TranslationTargetLanguageSelection.Default ->
-            state.session.displayedSessionResult()?.result?.targetLanguage ?: state.profileTargetLanguage
+            state.session.displayedSessionResult()?.result?.targetLanguage ?: state.defaultTarget?.language
     }

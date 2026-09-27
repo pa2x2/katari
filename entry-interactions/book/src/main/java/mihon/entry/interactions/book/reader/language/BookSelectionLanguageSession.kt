@@ -6,16 +6,24 @@ import mihon.language.api.tag.LanguageTag
 internal class BookSelectionLanguageSession(
     declaredLanguageTags: List<String>,
 ) {
-    private val declaredLanguages = declaredLanguageTags
-        .mapNotNull(LanguageTag::parse)
-        .distinct()
+    private val declaredLanguages = declaredLanguageTags.toLanguageTags()
     private var learnedLanguage: LanguageTag? = null
 
-    fun context(surroundingText: String): TextLanguageResolutionContext {
+    /** The language the publication says it is written in. */
+    val declaredLanguage: LanguageTag? = declaredLanguages.firstOrNull()
+
+    /**
+     * Languages the selected text declares for itself come before the publication's, so a quotation marked as
+     * another language is not resolved as the book's language.
+     */
+    fun context(
+        surroundingText: String,
+        selectionLanguageTags: List<String>,
+    ): TextLanguageResolutionContext {
         return TextLanguageResolutionContext(
             surroundingText = surroundingText,
             sessionLanguage = learnedLanguage,
-            declaredLanguages = declaredLanguages,
+            declaredLanguages = (selectionLanguageTags.toLanguageTags() + declaredLanguages).distinct(),
         )
     }
 
@@ -23,3 +31,5 @@ internal class BookSelectionLanguageSession(
         learnedLanguage = language
     }
 }
+
+private fun List<String>.toLanguageTags(): List<LanguageTag> = mapNotNull(LanguageTag::parse).distinct()

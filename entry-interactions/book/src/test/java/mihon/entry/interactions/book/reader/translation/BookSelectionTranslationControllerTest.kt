@@ -21,6 +21,7 @@ import mihon.translation.api.engine.TranslationEngineSelection
 import mihon.translation.api.engine.TranslationEngineState
 import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationHostActions
+import mihon.translation.api.language.TranslationDefaultTarget
 import mihon.translation.api.language.TranslationLanguageSupport
 import mihon.translation.api.language.TranslationLanguageSupportInspection
 import mihon.translation.api.model.TranslationModelDescriptor
@@ -208,6 +209,7 @@ class BookSelectionTranslationControllerTest {
         identity = "selection-$generation",
         text = text,
         languageContextText = "surrounding $text prose",
+        languageTags = emptyList(),
         anchor = TranslationSelectionAnchor(10f, 20f, 30f, 40f),
     )
 
@@ -216,6 +218,7 @@ class BookSelectionTranslationControllerTest {
         identity = text,
         text = text,
         languageContextText = "surrounding $text prose",
+        languageTags = emptyList(),
         anchor = null,
         isSettled = isSettled,
     )
@@ -255,6 +258,14 @@ class BookSelectionTranslationControllerTest {
             { raw -> raw.split(",").mapNotNull(LanguageTag::parse) },
         )
         var availability: TranslationDeviceAvailability = TranslationDeviceAvailability.Available
+
+        override fun defaultTarget(): TranslationDefaultTarget? =
+            (defaultTargetLanguage.get() as? TranslationTargetLanguageSelection.Explicit)
+                ?.let { TranslationDefaultTarget(it.language, followsAppLanguage = false) }
+
+        override fun recordRecentLanguage(language: LanguageTag) {
+            recentLanguages.set(listOf(language) + recentLanguages.get().filterNot { it == language })
+        }
 
         override suspend fun deviceAvailability() = availability
 

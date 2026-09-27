@@ -23,13 +23,16 @@ import mihon.translation.api.engine.TranslationEngineState
 import mihon.translation.api.engine.TranslationEngineStatus
 import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationHostActions
+import mihon.translation.api.language.TranslationDefaultTarget
 import mihon.translation.api.language.TranslationLanguageSupportInspection
 import mihon.translation.api.model.TranslationModelDescriptor
 import mihon.translation.api.model.TranslationModelOperationResult
 import mihon.translation.api.preparation.TranslationUnavailableReason
 import mihon.translation.api.provider.TranslationProviderDisclosure
 import mihon.translation.api.request.TranslationTargetLanguageSelection
+import mihon.translation.runtime.feature.TranslationDefaultTargetLanguageResolver
 import mihon.translation.runtime.preference.ProfileTranslationPreferences
+import mihon.translation.runtime.preference.withRecentUse
 import mihon.translation.runtime.selection.ProfileTranslationEngineResolver
 import mihon.translation.spi.engine.KnownTranslationEngineCatalog
 import mihon.translation.spi.engine.TranslationEngine
@@ -47,6 +50,7 @@ internal class DefaultTranslationHostActions(
     knownEngineCatalog: KnownTranslationEngineCatalog,
     private val setupRegistry: TranslationEngineSetupRegistry,
     private val profileEngineResolver: ProfileTranslationEngineResolver,
+    private val defaultTargetResolver: TranslationDefaultTargetLanguageResolver,
     inspectionDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val inspectionTimeoutMillis: Long = DEFAULT_ENGINE_INSPECTION_TIMEOUT_MILLIS,
 ) : TranslationHostActions {
@@ -58,6 +62,12 @@ internal class DefaultTranslationHostActions(
 
     init {
         require(inspectionTimeoutMillis > 0)
+    }
+
+    override fun defaultTarget(): TranslationDefaultTarget? = defaultTargetResolver.resolve()
+
+    override fun recordRecentLanguage(language: LanguageTag) {
+        recentLanguages.set(recentLanguages.get().withRecentUse(language))
     }
 
     override suspend fun deviceAvailability(): TranslationDeviceAvailability {

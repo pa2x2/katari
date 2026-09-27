@@ -3,15 +3,22 @@ package mihon.entry.interactions.manga.reader.text.ui
 import android.graphics.RectF
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -20,6 +27,7 @@ import kotlinx.coroutines.flow.Flow
 import mihon.entry.interactions.manga.reader.text.interaction.MangaReaderTextInteraction
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextBlocker
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextState
+import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslationIssue
 import mihon.entry.interactions.manga.reader.text.ui.controls.MangaReaderTextControlsEdge
 import mihon.entry.interactions.manga.reader.text.ui.controls.MangaReaderTextControlsPlacement
 import mihon.entry.interactions.manga.reader.text.ui.controls.MangaReaderTextFloatingControls
@@ -30,7 +38,10 @@ import mihon.model.artifacts.api.download.ModelArtifactDownloadApproval
 import mihon.model.artifacts.api.state.ModelArtifactState
 import mihon.model.artifacts.ui.approval.ModelArtifactDownloadApprovalDialog
 import mihon.text.recognition.ui.approval.TextRecognitionPlatformModelsDialog
+import mihon.translation.ui.picker.language.displayName
 import mihon.translation.ui.presentation.CoordinatedTranslationSessionHost
+import mihon.translation.ui.presentation.TranslationSessionExternalAction
+import mihon.translation.ui.presentation.language.translationEffectiveTargetSummary
 import mihon.translation.ui.session.TranslationSessionHostCoordinator
 import tachiyomi.i18n.*
 
@@ -40,6 +51,7 @@ internal fun MangaReaderTextLayer(
     state: MangaReaderTextState,
     menuVisible: Boolean,
     translationCoordinator: TranslationSessionHostCoordinator,
+    recognitionLanguages: List<LanguageTag>,
     areaResult: MangaReaderTextInteraction.AreaResult?,
     observeModels: (List<ModelArtifactDescriptor>) -> Flow<List<ModelArtifactState>>,
     onConsumeAreaResult: () -> Unit,
@@ -59,6 +71,11 @@ internal fun MangaReaderTextLayer(
     var approving by remember { mutableStateOf<List<ModelArtifactDescriptor>?>(null) }
     var approvingPlatform by remember { mutableStateOf<MangaReaderTextBlocker.PlatformModelsRequired?>(null) }
     var choosingLanguage by remember { mutableStateOf(false) }
+    var showingLanguages by remember { mutableStateOf(false) }
+    var disclosing by remember { mutableStateOf<MangaPageTranslationIssue.DisclosureRequired?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val choices by translationCoordinator.languages.choices.collectAsState()
+    val target = remember(choices) { translationCoordinator.languages.effectiveTarget(choices) }
     var controlsPlacement by rememberSaveable(stateSaver = MangaReaderTextControlsPlacementSaver) {
         mutableStateOf(MangaReaderTextControlsPlacement())
     }
@@ -91,12 +108,22 @@ internal fun MangaReaderTextLayer(
                     progress = state.progress,
                     overlay = state.overlay,
                     showOriginal = state.showOriginal,
+                    languages = listOfNotNull(state.language, target?.language).joinToString(" → ") {
+                        it.displayName()
+                    },
                     observeModels = observeModels,
                     onDownloadModels = { approving = it },
                     onDownloadPlatformModels = { approvingPlatform = it },
                     onChooseLanguage = { choosingLanguage = true },
+                    onOpenLanguages = { showingLanguages = true },
                     onOpenSettings = onOpenSettings,
-                    onOpenTranslationSettings = onOpenTranslationSettings,
+                    onFixTranslationIssue = { issue ->
+                        translationCoordinator.fixPageTranslation(
+                            issue = issue,
+                            openSettings = onOpenTranslationSettings,
+                            askDisclosure = { disclosing = it },
+                        )
+                    },
                     onToggleOverlay = onToggleOverlay,
                     onToggleOriginal = onToggleOriginal,
                     onSelectArea = { selectingArea = true },
@@ -112,8 +139,16 @@ internal fun MangaReaderTextLayer(
                 isTabletUi = maxWidth >= 720.dp,
                 modifier = Modifier.fillMaxSize(),
                 onDismiss = onDismissTranslation,
+                snackbarHostState = snackbarHostState,
+                onChooseSourceLanguage = { choosingLanguage = true },
             )
         }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .windowInsetsPadding(WindowInsets.safeDrawing),
+        )
     }
 
     approving?.let { models ->
@@ -137,10 +172,41 @@ internal fun MangaReaderTextLayer(
             onDismiss = { approvingPlatform = null },
         )
     }
-    val languageBlocker = state.blocker as? MangaReaderTextBlocker.LanguageRequired
-    if (choosingLanguage && languageBlocker != null) {
+    disclosing?.let { issue ->
+        MangaPageTranslationDisclosureDialog(
+            issue = issue,
+            onConfirm = {
+                disclosing = null
+                translationCoordinator.handleExternalAction(
+                    TranslationSessionExternalAction.ConfirmProviderDisclosure(issue.engine, issue.disclosure),
+                ) {}
+            },
+            onDismiss = { disclosing = null },
+        )
+    }
+    if (showingLanguages) {
+        MangaReaderTextLanguagesSheet(
+            pageLanguage = mangaPageLanguageSummary(state),
+            target = target?.let { translationEffectiveTargetSummary(it) },
+            onChoosePageLanguage = {
+                showingLanguages = false
+                choosingLanguage = true
+            },
+            onChooseTarget = {
+                showingLanguages = false
+                translationCoordinator.handleExternalAction(TranslationSessionExternalAction.ChooseTargetLanguage) {}
+            },
+            onDismiss = { showingLanguages = false },
+        )
+    }
+    if (choosingLanguage) {
+        val recentLanguages by translationCoordinator.recentLanguages.collectAsState()
+        val languageBlocker = state.blocker as? MangaReaderTextBlocker.LanguageRequired
         MangaReaderTextLanguageSheet(
-            languages = languageBlocker.languages,
+            languages = languageBlocker?.languages ?: recognitionLanguages,
+            required = languageBlocker != null,
+            selected = state.language,
+            recentLanguages = recentLanguages,
             onChoose = { language ->
                 choosingLanguage = false
                 onChooseLanguage(language)

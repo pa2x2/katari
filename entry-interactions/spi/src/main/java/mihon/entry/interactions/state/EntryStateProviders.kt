@@ -94,3 +94,11 @@ val EntryPlaybackPreferencesCapability =
     entryInteractionCapability<EntryPlaybackPreferencesProcessor>(
         id = CapabilityId("entry.playback-preferences-transfer"),
     )
+
+/** Declares that an Entry type's readers translate text, so each series can keep its own translation languages. */
+interface EntryTranslationLanguagesProvider : EntryInteractionProvider
+
+val EntryTranslationLanguagesCapability =
+    entryInteractionCapability<EntryTranslationLanguagesProvider>(
+        id = CapabilityId("entry.translation-languages"),
+    )

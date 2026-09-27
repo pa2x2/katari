@@ -21,6 +21,7 @@ internal class TranslationLanguagePickerScreen(
         val model = rememberTranslationSettingsScreenModel()
         val playground by model.playground.collectAsState()
         val support by model.languageSupport.collectAsState()
+        val engines by model.engines.collectAsState()
 
         TranslationLanguagePickerContent(
             title = stringResource(
@@ -33,6 +34,7 @@ internal class TranslationLanguagePickerScreen(
             ),
             support = support,
             engine = playground.engine,
+            engineName = engines.firstOrNull { it.engine.id == playground.engine }?.engine?.engineName,
             role = when (target) {
                 TranslationLanguagePickerTarget.PlaygroundSource -> TranslationLanguageRole.Source
                 TranslationLanguagePickerTarget.PlaygroundTarget -> TranslationLanguageRole.Target
