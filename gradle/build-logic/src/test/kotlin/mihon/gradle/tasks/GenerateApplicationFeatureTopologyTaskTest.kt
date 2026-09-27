@@ -60,6 +60,24 @@ class GenerateApplicationFeatureTopologyTaskTest {
     }
 
     @Test
+    fun `components limited to other variants are not registered`() {
+        val components = listOf(
+            component("text-recognition.proprietary", "example.ProprietaryComponent", setOf("debug", "release")),
+            component("text-recognition.catalog", "example.CatalogOnlyComponent", setOf("foss")),
+            component("text-recognition.everywhere", "example.EverywhereComponent"),
+        )
+
+        val foss = generateApplicationFeatureProductionTopology("foss", emptyList(), components)
+        val release = generateApplicationFeatureProductionTopology("release", emptyList(), components)
+
+        foss shouldNotContain "example.ProprietaryComponent"
+        foss shouldContain "example.CatalogOnlyComponent"
+        foss shouldContain "example.EverywhereComponent"
+        release shouldContain "example.ProprietaryComponent"
+        release shouldNotContain "example.CatalogOnlyComponent"
+    }
+
+    @Test
     fun `duplicate ids and symbols fail generation`() {
         shouldThrow<GradleException> {
             generateApplicationFeatureProductionTopology(
@@ -129,5 +147,6 @@ class GenerateApplicationFeatureTopologyTaskTest {
     private fun component(
         id: String,
         symbol: String,
-    ) = ApplicationFeatureRuntimeComponentDescriptor(id, symbol, "$id.component-descriptor")
+        variants: Set<String>? = null,
+    ) = ApplicationFeatureRuntimeComponentDescriptor(id, symbol, "$id.component-descriptor", variants)
 }
