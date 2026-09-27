@@ -35,13 +35,21 @@ fun translationLanguageOption(
 fun translationLanguageOptions(
     availableLocales: Array<Locale> = Locale.getAvailableLocales(),
     displayLocale: Locale = Locale.getDefault(),
+): List<TranslationLanguageOption> = translationLanguageOptionsOf(
+    tags = availableLocales.mapNotNull { locale ->
+        val candidate = if (locale.script.isBlank()) locale.language else "${locale.language}-${locale.script}"
+        LanguageTag.parse(candidate)
+    },
+    displayLocale = displayLocale,
+)
+
+/** Picker entries for [tags], without duplicates and ordered by their name in [displayLocale]. */
+fun translationLanguageOptionsOf(
+    tags: Collection<LanguageTag>,
+    displayLocale: Locale = Locale.getDefault(),
 ): List<TranslationLanguageOption> {
     val collator = Collator.getInstance(displayLocale)
-    return availableLocales
-        .mapNotNull { locale ->
-            val candidate = if (locale.script.isBlank()) locale.language else "${locale.language}-${locale.script}"
-            LanguageTag.parse(candidate)
-        }
+    return tags
         .distinctBy(LanguageTag::value)
         .map { translationLanguageOption(it, displayLocale) }
         .sortedWith { first, second ->

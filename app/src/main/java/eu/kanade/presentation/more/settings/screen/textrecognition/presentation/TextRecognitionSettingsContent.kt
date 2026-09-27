@@ -12,7 +12,6 @@ import eu.kanade.presentation.components.AppBarTitle
 import eu.kanade.presentation.more.settings.widget.ProfileSpecificChip
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
 import mihon.model.artifacts.api.download.ModelArtifactDownloadApproval
 import mihon.model.artifacts.api.state.ModelArtifactState
@@ -37,7 +36,7 @@ internal fun TextRecognitionSettingsContent(
     onChooseEngine: () -> Unit,
     onChooseOverrides: () -> Unit,
     onOpenModels: () -> Unit,
-    onChoosePlaygroundLanguage: (LanguageTag) -> Unit,
+    onChoosePlaygroundLanguage: () -> Unit,
     onChooseImage: () -> Unit,
     onApprovePlaygroundModels: (List<ModelArtifactDownloadApproval>) -> Unit,
     onApprovePlaygroundPlatformModels: (TextRecognitionPlaygroundState.PlatformModelsRequired) -> Unit,

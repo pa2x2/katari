@@ -15,6 +15,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.textrecognition.TextRecognitionSettingsScreenModel
 import eu.kanade.presentation.more.settings.screen.textrecognition.engine.TextRecognitionEnginePickerScreen
+import eu.kanade.presentation.more.settings.screen.textrecognition.language.TextRecognitionPlaygroundLanguageScreen
 import eu.kanade.presentation.more.settings.screen.textrecognition.models.ModelArtifactStorageScreen
 import eu.kanade.presentation.more.settings.screen.textrecognition.overrides.TextRecognitionOverridesScreen
 import eu.kanade.presentation.more.settings.screen.textrecognition.presentation.TextRecognitionSettingsContent
@@ -85,7 +86,7 @@ object SettingsTextRecognitionScreen : SearchableSettings {
             onChooseEngine = { navigator.push(TextRecognitionEnginePickerScreen()) },
             onChooseOverrides = { navigator.push(TextRecognitionOverridesScreen()) },
             onOpenModels = { navigator.push(ModelArtifactStorageScreen()) },
-            onChoosePlaygroundLanguage = model.controller::setPlaygroundLanguage,
+            onChoosePlaygroundLanguage = { navigator.push(TextRecognitionPlaygroundLanguageScreen()) },
             onChooseImage = {
                 pickImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
             },

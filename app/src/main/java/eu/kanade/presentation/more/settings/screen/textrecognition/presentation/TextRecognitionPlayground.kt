@@ -1,7 +1,6 @@
 package eu.kanade.presentation.more.settings.screen.textrecognition.presentation
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,8 +12,6 @@ import androidx.compose.material.icons.outlined.SdStorage
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -34,7 +31,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import kotlinx.coroutines.flow.Flow
-import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
 import mihon.model.artifacts.api.download.ModelArtifactDownloadApproval
 import mihon.model.artifacts.api.state.ModelArtifactState
@@ -62,7 +58,7 @@ internal fun TextRecognitionPlayground(
     onChooseEngine: () -> Unit,
     onChooseOverrides: () -> Unit,
     onOpenModels: () -> Unit,
-    onChooseLanguage: (LanguageTag) -> Unit,
+    onChooseLanguage: () -> Unit,
     onChooseImage: () -> Unit,
     onApproveModels: (List<ModelArtifactDownloadApproval>) -> Unit,
     onApprovePlatformModels: (TextRecognitionPlaygroundState.PlatformModelsRequired) -> Unit,
@@ -135,33 +131,19 @@ internal fun TextRecognitionPlayground(
 private fun PlaygroundLanguageSelector(
     state: TextRecognitionSettingsState,
     hostActions: TextRecognitionHostActions,
-    onChooseLanguage: (LanguageTag) -> Unit,
+    onChooseLanguage: () -> Unit,
 ) {
-    var expanded by remember { mutableStateOf(false) }
     val language = state.playgroundLanguage
     val resolution = language?.let { hostActions.resolve(state.draft, it) }
-    Box {
-        PlaygroundSelector(
-            label = stringResource(MR.strings.text_recognition_settings_text_language),
-            value = listOfNotNull(
-                language?.displayName(),
-                resolution?.let { hostActions.resolutionLabel(it) },
-            ).joinToString(" · "),
-            icon = Icons.Outlined.Language,
-            onClick = { expanded = true },
-        )
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            state.languages.sortedBy { it.displayName() }.forEach { candidate ->
-                DropdownMenuItem(
-                    text = { Text(candidate.displayName()) },
-                    onClick = {
-                        expanded = false
-                        onChooseLanguage(candidate)
-                    },
-                )
-            }
-        }
-    }
+    PlaygroundSelector(
+        label = stringResource(MR.strings.text_recognition_settings_text_language),
+        value = listOfNotNull(
+            language?.displayName(),
+            resolution?.let { hostActions.resolutionLabel(it) },
+        ).joinToString(" · "),
+        icon = Icons.Outlined.Language,
+        onClick = onChooseLanguage,
+    )
 }
 
 @Composable

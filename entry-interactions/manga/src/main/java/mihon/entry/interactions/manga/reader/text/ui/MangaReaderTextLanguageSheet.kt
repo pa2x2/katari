@@ -21,10 +21,9 @@ import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.reader.components.AdaptiveSheet
 import mihon.language.api.tag.LanguageTag
 import mihon.translation.ui.picker.language.TranslationLanguagePickerList
-import mihon.translation.ui.picker.language.translationLanguageOption
+import mihon.translation.ui.picker.language.translationLanguageOptionsOf
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import java.text.Collator
 
 /**
  * Asks which language the text of a multi-language source is in, with the searchable language list the reader's
@@ -36,12 +35,7 @@ internal fun MangaReaderTextLanguageSheet(
     onChoose: (LanguageTag) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val options = remember(languages) {
-        val collator = Collator.getInstance()
-        languages.map { translationLanguageOption(it) }.sortedWith { first, second ->
-            collator.compare(first.displayName, second.displayName)
-        }
-    }
+    val options = remember(languages) { translationLanguageOptionsOf(languages) }
     BoxWithConstraints {
         AdaptiveSheet(
             onDismissRequest = onDismiss,
