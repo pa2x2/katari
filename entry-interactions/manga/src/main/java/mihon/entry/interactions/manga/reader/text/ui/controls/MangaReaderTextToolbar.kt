@@ -1,4 +1,4 @@
-package mihon.entry.interactions.manga.reader.text.ui
+package mihon.entry.interactions.manga.reader.text.ui.controls
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -68,7 +68,7 @@ internal fun MangaReaderTextToolbar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            if (progress == MangaReaderTextProgress.Recognizing || progress == MangaReaderTextProgress.Translating) {
+            if (progress.isWorking) {
                 CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
             }
             Text(
