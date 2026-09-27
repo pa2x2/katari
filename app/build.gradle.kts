@@ -230,6 +230,7 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.telemetry.path)))
     implementation(dependencies.project(mapOf("path" to projects.modelArtifacts.runtime.path)))
     implementation(dependencies.project(mapOf("path" to projects.textRecognition.runtime.path)))
+    implementation(dependencies.project(mapOf("path" to projects.textRecognition.providers.onnx.path)))
     implementation(dependencies.project(mapOf("path" to projects.translation.runtime.path)))
     implementation(dependencies.project(mapOf("path" to projects.translation.ui.path)))
     implementation(dependencies.project(mapOf("path" to projects.translation.providers.libretranslate.path)))
