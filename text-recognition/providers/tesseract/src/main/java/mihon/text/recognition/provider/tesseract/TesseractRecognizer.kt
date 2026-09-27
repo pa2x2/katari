@@ -10,14 +10,17 @@ import mihon.text.recognition.spi.component.TextRecognitionComponentAvailability
 import mihon.text.recognition.spi.component.TextRecognizer
 import mihon.text.recognition.spi.model.TextRecognitionModels
 import java.io.File
+import kotlin.math.roundToInt
 
 /**
- * Reads a detected region with Tesseract. Tall regions of scripts with a vertical model are read as vertical text.
+ * Reads a detected region with Tesseract. Regions of scripts with a vertical model are read both ways, and the
+ * reading Tesseract is more confident in wins: a region's shape does not tell whether it holds columns or lines.
  * Engines are kept per model because initializing one loads its data from disk.
  */
 internal class TesseractRecognizer : TextRecognizer {
     override val catalogEntry = TesseractTextRecognitionCatalog.recognizer
     override val inputEdge: Int = INPUT_EDGE
+    override val processingRevision: Int = 2
 
     private val engines = mutableMapOf<File, TessBaseAPI>()
 
@@ -30,34 +33,44 @@ internal class TesseractRecognizer : TextRecognizer {
         crop: Bitmap,
         language: LanguageTag,
         models: TextRecognitionModels,
-    ): RecognizedCropText? = read(crop, language, models)
+    ): RecognizedCropText? {
+        val tesseractLanguage = TesseractLanguage.forLanguage(language) ?: return null
+        val installed = models[TesseractModelArtifacts.artifact(tesseractLanguage)]
+        val input = enlarged(crop)
+        try {
+            fun readWith(model: TesseractModelFile, vertical: Boolean) =
+                read(input, installed.file(TesseractModelArtifacts.fileName(model)), model.code, vertical)
+            val best = listOfNotNull(
+                readWith(tesseractLanguage.model, vertical = false),
+                tesseractLanguage.vertical?.let { readWith(it, vertical = true) },
+            ).maxBy(Reading::confidence)
+            val normalized = if (tesseractLanguage.spaced) {
+                best.text.lines().joinToString(" ") { it.trim() }.replace(WHITESPACE_RUN, " ")
+            } else {
+                best.text.filterNot(Char::isWhitespace)
+            }.trim()
+            return normalized.takeIf(String::isNotEmpty)?.let {
+                RecognizedCropText(it, if (best.vertical) TextOrientation.Vertical else TextOrientation.Horizontal)
+            }
+        } finally {
+            if (input !== crop) input.recycle()
+        }
+    }
 
     /** Tesseract engines are not thread-safe, so every read holds this recognizer. */
     @Synchronized
-    private fun read(crop: Bitmap, language: LanguageTag, models: TextRecognitionModels): RecognizedCropText? {
-        val tesseractLanguage = TesseractLanguage.forLanguage(language) ?: return null
-        val installed = models[TesseractModelArtifacts.artifact(tesseractLanguage)]
-        val vertical = tesseractLanguage.vertical?.takeIf { crop.height > crop.width * VERTICAL_ASPECT }
-        val model = vertical ?: tesseractLanguage.model
-        val engine = engine(installed.file(TesseractModelArtifacts.fileName(model)), model.code)
-        engine.pageSegMode = if (vertical != null) {
+    private fun read(image: Bitmap, modelFile: File, code: String, vertical: Boolean): Reading {
+        val engine = engine(modelFile, code)
+        engine.pageSegMode = if (vertical) {
             TessBaseAPI.PageSegMode.PSM_SINGLE_BLOCK_VERT_TEXT
         } else {
             TessBaseAPI.PageSegMode.PSM_SINGLE_BLOCK
         }
-        engine.setImage(crop)
-        val text = try {
-            engine.utF8Text.orEmpty()
+        engine.setImage(image)
+        return try {
+            Reading(engine.utF8Text.orEmpty(), engine.meanConfidence(), vertical)
         } finally {
             engine.clear()
-        }
-        val normalized = if (tesseractLanguage.spaced) {
-            text.lines().joinToString(" ") { it.trim() }.replace(WHITESPACE_RUN, " ")
-        } else {
-            text.filterNot(Char::isWhitespace)
-        }.trim()
-        return normalized.takeIf(String::isNotEmpty)?.let {
-            RecognizedCropText(it, if (vertical != null) TextOrientation.Vertical else TextOrientation.Horizontal)
         }
     }
 
@@ -70,10 +83,28 @@ internal class TesseractRecognizer : TextRecognizer {
         }
     }
 
+    /**
+     * Bubble lettering is small for Tesseract, whose line finding and binarization work better on larger glyphs, so
+     * crops are enlarged unless they are already large.
+     */
+    private fun enlarged(crop: Bitmap): Bitmap {
+        val scale = (MAXIMUM_ENLARGED_EDGE.toFloat() / maxOf(crop.width, crop.height)).coerceIn(1f, ENLARGEMENT)
+        if (scale <= 1f) return crop
+        return Bitmap.createScaledBitmap(
+            crop,
+            (crop.width * scale).roundToInt(),
+            (crop.height * scale).roundToInt(),
+            true,
+        )
+    }
+
+    private class Reading(val text: String, val confidence: Int, val vertical: Boolean)
+
     private companion object {
         /** Tesseract reads text best at around 30 px per line, which crops of this size preserve. */
         const val INPUT_EDGE = 600
-        const val VERTICAL_ASPECT = 1.5f
+        const val ENLARGEMENT = 2f
+        const val MAXIMUM_ENLARGED_EDGE = 2400
         val WHITESPACE_RUN = Regex("""\s+""")
     }
 }
