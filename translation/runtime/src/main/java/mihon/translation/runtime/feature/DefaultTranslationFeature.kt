@@ -1,5 +1,8 @@
 package mihon.translation.runtime.feature
 
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import mihon.language.api.identification.TextLanguageDetector
 import mihon.language.api.tag.LanguageTag
 import mihon.language.runtime.identification.AutomaticTextLanguageResolution
@@ -21,6 +24,7 @@ import mihon.translation.api.request.TranslationTargetLanguageSelection
 import mihon.translation.api.result.TranslationExecution
 import mihon.translation.api.result.TranslationFailureReason
 import mihon.translation.api.result.TranslationResult
+import mihon.translation.runtime.cache.TranslationResultCache
 import mihon.translation.spi.engine.KnownTranslationEngineCatalog
 import mihon.translation.spi.engine.ReadyTranslationEngineRequest
 import mihon.translation.spi.engine.TranslationEngine
@@ -38,6 +42,8 @@ class DefaultTranslationFeature(
     private val textLanguageDetectors: List<TextLanguageDetector>,
     private val defaultTargetLanguageResolver: TranslationDefaultTargetLanguageResolver,
     private val selectedEngine: suspend () -> TranslationEngineId?,
+    private val resultCache: TranslationResultCache? = null,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : TranslationFeature {
     private val automaticLanguageResolver = AutomaticTextLanguageResolver(textLanguageDetectors)
 
@@ -97,6 +103,12 @@ class DefaultTranslationFeature(
             )
         }
 
+        if (prepared.presentation.outputMode == TranslationProviderOutputMode.InlineResult) {
+            cached(prepared.request)?.let { translatedText ->
+                return TranslationExecution.Success(prepared.result(translatedText))
+            }
+        }
+
         val refreshed = prepared.engine.revalidate(prepared.engineRequest)
         if (refreshed !is TranslationEnginePreparation.Ready) {
             return TranslationExecution.PreparationChanged(
@@ -107,14 +119,8 @@ class DefaultTranslationFeature(
         return when (val execution = prepared.engine.translate(refreshed.request)) {
             is TranslationEngineExecution.Success ->
                 if (prepared.presentation.outputMode == TranslationProviderOutputMode.InlineResult) {
-                    TranslationExecution.Success(
-                        TranslationResult(
-                            translatedText = execution.translatedText,
-                            sourceLanguage = prepared.request.sourceLanguage,
-                            targetLanguage = prepared.request.targetLanguage,
-                            presentation = prepared.presentation,
-                        ),
-                    )
+                    remember(prepared.request, execution.translatedText)
+                    TranslationExecution.Success(prepared.result(execution.translatedText))
                 } else {
                     invalidProviderOutput(prepared.request.engine)
                 }
@@ -255,6 +261,20 @@ class DefaultTranslationFeature(
             ),
         )
     }
+
+    private suspend fun cached(request: ResolvedTranslationRequest): String? =
+        resultCache?.let { cache -> withContext(ioDispatcher) { cache.get(request) } }
+
+    private suspend fun remember(request: ResolvedTranslationRequest, translatedText: String) {
+        resultCache?.let { cache -> withContext(ioDispatcher) { cache.put(request, translatedText) } }
+    }
+
+    private fun RuntimeReadyTranslation.result(translatedText: String) = TranslationResult(
+        translatedText = translatedText,
+        sourceLanguage = request.sourceLanguage,
+        targetLanguage = request.targetLanguage,
+        presentation = presentation,
+    )
 
     private data class RuntimeReadyTranslation(
         val engine: TranslationEngine,

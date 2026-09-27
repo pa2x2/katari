@@ -3,6 +3,7 @@ package mihon.translation.runtime
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.test.runTest
@@ -37,6 +38,7 @@ import mihon.translation.api.request.TranslationTargetLanguageSelection
 import mihon.translation.api.result.TranslationExecution
 import mihon.translation.api.result.TranslationFailureReason
 import mihon.translation.api.result.TranslationResult
+import mihon.translation.runtime.cache.TranslationResultCache
 import mihon.translation.runtime.feature.DefaultTranslationFeature
 import mihon.translation.runtime.feature.TranslationDefaultTargetLanguageResolver
 import mihon.translation.runtime.registry.DefaultTranslationEngineRegistry
@@ -47,8 +49,45 @@ import mihon.translation.spi.engine.TranslationEngineDeviceAvailability
 import mihon.translation.spi.engine.TranslationEngineExecution
 import mihon.translation.spi.engine.TranslationEnginePreparation
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
+import java.io.File
 
 class DefaultTranslationFeatureTest {
+    @TempDir
+    lateinit var cacheDirectory: File
+
+    @Test
+    fun `a repeated inline translation is answered from the cache without the engine`() = runTest {
+        val engine = FakeTranslationEngine()
+        val registry = DefaultTranslationEngineRegistry(listOf(TranslationEngineContribution(engine)))
+        val cache = TranslationResultCache({ cacheDirectory }, maximumBytes = 1_000_000)
+        val first = feature(registry, resultCache = cache)
+        val firstResult = first.translate(
+            (first.prepare(explicitRequest()) as TranslationPreparation.Ready).translation,
+        )
+
+        val second = feature(registry, resultCache = TranslationResultCache({ cacheDirectory }, 1_000_000))
+        val secondResult = second.translate(
+            (second.prepare(explicitRequest()) as TranslationPreparation.Ready).translation,
+        )
+
+        secondResult shouldBe firstResult
+        engine.translationCount shouldBe 1
+    }
+
+    @Test
+    fun `failed translations are not reused`() = runTest {
+        val engine = FakeTranslationEngine(execution = TranslationEngineExecution.Failed("offline"))
+        val registry = DefaultTranslationEngineRegistry(listOf(TranslationEngineContribution(engine)))
+        val feature = feature(registry, resultCache = TranslationResultCache({ cacheDirectory }, 1_000_000))
+
+        repeat(2) {
+            feature.translate((feature.prepare(explicitRequest()) as TranslationPreparation.Ready).translation)
+        }
+
+        engine.translationCount shouldBe 2
+    }
+
     @Test
     fun `provider surfaces are a typed execution outcome and must match declared output mode`() = runTest {
         val surfacePresentation = PRESENTATION.copy(
@@ -345,6 +384,7 @@ class DefaultTranslationFeatureTest {
         registry: DefaultTranslationEngineRegistry,
         selectedEngine: suspend () -> TranslationEngineId? = { ENGINE_ID },
         textLanguageDetectors: List<TextLanguageDetector> = emptyList(),
+        resultCache: TranslationResultCache? = null,
     ): DefaultTranslationFeature {
         return DefaultTranslationFeature(
             engineRegistry = registry,
@@ -352,6 +392,8 @@ class DefaultTranslationFeatureTest {
             textLanguageDetectors = textLanguageDetectors,
             defaultTargetLanguageResolver = TranslationDefaultTargetLanguageResolver { null },
             selectedEngine = selectedEngine,
+            resultCache = resultCache,
+            ioDispatcher = Dispatchers.Unconfined,
         )
     }
 

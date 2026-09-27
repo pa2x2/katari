@@ -7,6 +7,7 @@ import mihon.feature.runtime.application.applicationFeatureRuntimeBoundary
 import mihon.language.runtime.identification.createPlatformTextLanguageDetectors
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.host.TranslationHostActions
+import mihon.translation.runtime.cache.TranslationResultCache
 import mihon.translation.runtime.component.TranslationRuntimeContribution
 import mihon.translation.runtime.component.createTranslationRuntimeContributions
 import mihon.translation.runtime.feature.DefaultTranslationFeature
@@ -25,6 +26,7 @@ import mihon.translation.spi.engine.TranslationEngineRegistry
 import mihon.translation.spi.setup.TranslationEngineSetupRegistry
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
 import uy.kohesive.injekt.api.addSingletonFactory
+import java.io.File
 
 val translationFeatureRuntimeModule = ApplicationFeatureRuntimeModule(
     id = "translation",
@@ -61,6 +63,10 @@ val translationFeatureRuntimeModule = ApplicationFeatureRuntimeModule(
             profilePreferences,
         ),
         selectedEngine = profileEngineResolver::resolve,
+        resultCache = TranslationResultCache(
+            directory = { File(context.application.cacheDir, TRANSLATION_CACHE_DIRECTORY) },
+            maximumBytes = TRANSLATION_CACHE_MAXIMUM_BYTES,
+        ),
     )
     val hostActions = DefaultTranslationHostActions(
         preferences = profilePreferences,
@@ -89,3 +95,8 @@ val translationFeatureRuntimeModule = ApplicationFeatureRuntimeModule(
         ),
     )
 }
+
+private const val TRANSLATION_CACHE_DIRECTORY = "translation"
+
+/** Translations are short texts, so this keeps tens of thousands of them. */
+private const val TRANSLATION_CACHE_MAXIMUM_BYTES = 8L * 1024 * 1024
